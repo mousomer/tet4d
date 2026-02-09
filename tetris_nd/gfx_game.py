@@ -6,6 +6,7 @@ from typing import Tuple, Optional
 import pygame
 
 from .game2d import GameState, GameConfig
+from .keybindings import CONTROL_LINES_2D
 
 
 # ---------- Visual config & colors ----------
@@ -151,7 +152,7 @@ def draw_button_with_arrow(
 
 def _draw_menu_header(screen: pygame.Surface, fonts: GfxFonts) -> None:
     width, _ = screen.get_size()
-    title_text = "4D Tetris – Setup"
+    title_text = "2D Tetris – Setup"
     subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
@@ -345,7 +346,8 @@ def compute_game_layout(screen: pygame.Surface,
 
 
 def draw_board(surface: pygame.Surface, state: GameState,
-               board_offset: Tuple[int, int]) -> None:
+               board_offset: Tuple[int, int],
+               show_grid: bool = True) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
     w, h = state.config.width, state.config.height
@@ -355,12 +357,13 @@ def draw_board(surface: pygame.Surface, state: GameState,
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
 
     # Grid
-    for x in range(w + 1):
-        x_px = ox + x * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
-    for y in range(h + 1):
-        y_px = oy + y * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
+    if show_grid:
+        for x in range(w + 1):
+            x_px = ox + x * CELL_SIZE
+            pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
+        for y in range(h + 1):
+            y_px = oy + y * CELL_SIZE
+            pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
 
     # Locked cells
     for (x, y), cell_id in state.board.cells.items():
@@ -393,30 +396,24 @@ def _draw_cell(surface: pygame.Surface, x: int, y: int, cell_id: int,
 def _draw_side_panel_text(surface: pygame.Surface,
                           state: GameState,
                           panel_offset: Tuple[int, int],
-                          fonts: GfxFonts) -> int:
+                          fonts: GfxFonts,
+                          show_grid: bool) -> int:
     """Draw the textual part of the side panel. Returns the current y after text."""
     px, py = panel_offset
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
     lines = [
-        "4D Tetris – 2D mode",
+        "2D Tetris",
         "",
         f"Score: {state.score}",
         f"Lines: {state.lines_cleared}",
         f"Speed level: {state.config.speed_level}",
         f"Fall: {rows_per_sec:.2f} rows/s",
+        f"Grid: {'ON' if show_grid else 'OFF'}",
         "",
-        "Controls:",
-        " Left / Right : move",
-        " Up / X       : rot CW",
-        " Z            : rot CCW",
-        " Down         : soft drop",
-        " SPACE        : hard drop",
-        "",
-        "M: back to menu",
-        "Esc: quit",
-        "R: restart",
+        *CONTROL_LINES_2D,
+        " G          : toggle grid",
     ]
 
     y = py
@@ -488,9 +485,10 @@ def _draw_side_panel_dpad(surface: pygame.Surface,
 def draw_side_panel(surface: pygame.Surface,
                     state: GameState,
                     panel_offset: Tuple[int, int],
-                    fonts: GfxFonts) -> None:
+                    fonts: GfxFonts,
+                    show_grid: bool = True) -> None:
     """Top-level side panel draw."""
-    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts)
+    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, show_grid)
     y_after_dpad = _draw_side_panel_dpad(surface, y_after_text, panel_offset, fonts)
 
     # Game over message below D-pad (if needed)
@@ -519,9 +517,10 @@ def gravity_interval_ms_from_config(cfg: GameConfig) -> int:
 def draw_game_frame(screen: pygame.Surface,
                     cfg: GameConfig,
                     state: GameState,
-                    fonts: GfxFonts) -> None:
+                    fonts: GfxFonts,
+                    show_grid: bool = True) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, cfg)
-    draw_board(screen, state, board_offset)
-    draw_side_panel(screen, state, panel_offset, fonts)
+    draw_board(screen, state, board_offset, show_grid=show_grid)
+    draw_side_panel(screen, state, panel_offset, fonts, show_grid=show_grid)
