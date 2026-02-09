@@ -23,7 +23,16 @@ class GameConfig:
     width: int = 10
     height: int = 20
     gravity_axis: int = 1   # for 2D, dims=(width, height), so y-axis
-    speed_level: int = 5    # 1..10, used by frontend to pick gravity speed
+    speed_level: int = 1    # 1..10, used by frontend to pick gravity speed
+
+    def __post_init__(self):
+        if self.width <= 0 or self.height <= 0:
+            raise ValueError("width and height must be > 0")
+        # 2D mode is defined as gravity along y (axis 1), clearing full x-rows.
+        if self.gravity_axis != 1:
+            raise ValueError("2D mode requires gravity_axis=1 (y-axis)")
+        if not (1 <= self.speed_level <= 10):
+            raise ValueError("speed_level must be in [1, 10]")
 
 
 @dataclass
