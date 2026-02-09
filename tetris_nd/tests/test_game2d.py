@@ -16,6 +16,10 @@ class TestGame2D(unittest.TestCase):
         state = GameState(config=cfg, board=board)
         return state
 
+    def test_config_rejects_non_y_gravity_for_2d(self):
+        with self.assertRaises(ValueError):
+            GameConfig(width=10, height=20, gravity_axis=0)
+
     def test_spawn_uses_bag_if_provided(self):
         cfg = GameConfig(width=10, height=20)
         board = BoardND((cfg.width, cfg.height))

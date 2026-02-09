@@ -1,0 +1,2 @@
+# Tetris project runtime dependency
+pygame-ce
