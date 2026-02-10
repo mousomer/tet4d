@@ -125,6 +125,7 @@ SYSTEM_KEYS: KeyBindingMap = {
     "quit": (pygame.K_ESCAPE,),
     "menu": (pygame.K_m,),
     "restart": (pygame.K_r,),
+    "toggle_grid": (pygame.K_g,),
 }
 
 
@@ -176,6 +177,16 @@ _DEFAULT_CAMERA_KEYS_3D: KeyBindingMap = {
     "reset": (pygame.K_0,),
     "cycle_projection": (pygame.K_p,),
 }
+_DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
+    "yaw_neg": (pygame.K_j,),
+    "yaw_pos": (pygame.K_l,),
+    "pitch_pos": (pygame.K_i,),
+    "pitch_neg": (pygame.K_k,),
+    "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
+    "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
+    "reset": (pygame.K_0,),
+    "cycle_projection": (pygame.K_p,),
+}
 _DEFAULT_SLICE_KEYS_3D: KeyBindingMap = {
     "slice_z_neg": (pygame.K_LEFTBRACKET,),
     "slice_z_pos": (pygame.K_RIGHTBRACKET,),
@@ -192,6 +203,7 @@ KEYS_2D: KeyBindingMap = dict(_DEFAULT_KEYS_2D)
 KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
 CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
+CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
 SLICE_KEYS_3D: KeyBindingMap = dict(_DEFAULT_SLICE_KEYS_3D)
 SLICE_KEYS_4D: KeyBindingMap = dict(_DEFAULT_SLICE_KEYS_4D)
 
@@ -227,6 +239,7 @@ CONTROL_LINES_3D_GAME: List[str] = []
 CONTROL_LINES_ND_3D: List[str] = []
 CONTROL_LINES_ND_4D: List[str] = []
 CONTROL_LINES_3D_CAMERA: List[str] = []
+CONTROL_LINES_4D_VIEW: List[str] = []
 
 
 _KEY_NAME_OVERRIDES = {
@@ -293,6 +306,7 @@ def _rebuild_control_lines() -> None:
         _line(_format_action(KEYS_2D, "soft_drop"), "soft drop"),
         _line(_format_action(KEYS_2D, "hard_drop"), "hard drop"),
         "",
+        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
         _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
         _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
         _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
@@ -307,6 +321,7 @@ def _rebuild_control_lines() -> None:
         _line(_format_pair(KEYS_3D, "rotate_xy_pos", "rotate_xy_neg"), "rotate x-y"),
         _line(_format_pair(KEYS_3D, "rotate_xz_pos", "rotate_xz_neg"), "rotate x-z"),
         _line(_format_pair(KEYS_3D, "rotate_yz_pos", "rotate_yz_neg"), "rotate y-z"),
+        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
     ]
 
     CONTROL_LINES_ND_3D[:] = [
@@ -319,6 +334,7 @@ def _rebuild_control_lines() -> None:
         _line(_format_pair(KEYS_3D, "rotate_xz_pos", "rotate_xz_neg"), "rotate x-z"),
         _line(_format_pair(KEYS_3D, "rotate_yz_pos", "rotate_yz_neg"), "rotate y-z"),
         _line(_format_pair(SLICE_KEYS_3D, "slice_z_neg", "slice_z_pos"), "slice z"),
+        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
         _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
         _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
         _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
@@ -339,6 +355,7 @@ def _rebuild_control_lines() -> None:
         _line(_format_pair(KEYS_4D, "rotate_zw_pos", "rotate_zw_neg"), "rotate z-w"),
         _line(_format_pair(SLICE_KEYS_4D, "slice_z_neg", "slice_z_pos"), "slice z"),
         _line(_format_pair(SLICE_KEYS_4D, "slice_w_neg", "slice_w_pos"), "slice w"),
+        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
         _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
         _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
         _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
@@ -346,11 +363,19 @@ def _rebuild_control_lines() -> None:
 
     CONTROL_LINES_3D_CAMERA[:] = [
         "Camera:",
-        _line(_format_pair(CAMERA_KEYS_3D, "yaw_neg", "yaw_pos"), "yaw"),
-        _line(_format_pair(CAMERA_KEYS_3D, "pitch_neg", "pitch_pos"), "pitch"),
+        _line(_format_pair(CAMERA_KEYS_3D, "yaw_neg", "yaw_pos"), "yaw +/-90"),
+        _line(_format_pair(CAMERA_KEYS_3D, "pitch_neg", "pitch_pos"), "pitch +/-90"),
         _line(_format_pair(CAMERA_KEYS_3D, "zoom_out", "zoom_in"), "zoom"),
         _line(_format_action(CAMERA_KEYS_3D, "cycle_projection"), "projection"),
         _line(_format_action(CAMERA_KEYS_3D, "reset"), "reset camera"),
+    ]
+
+    CONTROL_LINES_4D_VIEW[:] = [
+        "View:",
+        _line(_format_pair(CAMERA_KEYS_4D, "yaw_neg", "yaw_pos"), "yaw +/-90"),
+        _line(_format_pair(CAMERA_KEYS_4D, "pitch_neg", "pitch_pos"), "pitch +/-90"),
+        _line(_format_pair(CAMERA_KEYS_4D, "zoom_out", "zoom_in"), "zoom"),
+        _line(_format_action(CAMERA_KEYS_4D, "reset"), "reset view"),
     ]
 
 
@@ -428,6 +453,7 @@ def _binding_groups_for_dimension(dimension: int) -> Dict[str, MutableMapping[st
         return {
             "game": KEYS_4D,
             "slice": SLICE_KEYS_4D,
+            "camera": CAMERA_KEYS_4D,
         }
     raise ValueError("dimension must be one of: 2, 3, 4")
 
@@ -504,7 +530,13 @@ def load_keybindings_file(dimension: int, file_path: str | None = None) -> Tuple
     return True, f"Loaded keybindings from {path}"
 
 
-def _initialize_keybinding_files() -> None:
+_KEYBINDINGS_INITIALIZED = False
+
+
+def initialize_keybinding_files() -> None:
+    global _KEYBINDINGS_INITIALIZED
+    if _KEYBINDINGS_INITIALIZED:
+        return
     for dimension in (2, 3, 4):
         path = keybinding_file_path(dimension)
         if path.exists():
@@ -512,7 +544,7 @@ def _initialize_keybinding_files() -> None:
             if ok:
                 continue
         save_keybindings_file(dimension)
+    _KEYBINDINGS_INITIALIZED = True
 
 
 _rebuild_control_lines()
-_initialize_keybinding_files()

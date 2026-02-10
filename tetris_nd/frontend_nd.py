@@ -1,12 +1,13 @@
 # tetris_nd/frontend_nd.py
+import random
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import pygame
 
 from .board import BoardND
 from .game_nd import GameConfigND, GameStateND
+from .game_loop_common import process_game_events
 from .keybindings import (
     CONTROL_LINES_ND_3D,
     CONTROL_LINES_ND_4D,
@@ -15,11 +16,10 @@ from .keybindings import (
     SLICE_KEYS_3D,
     SLICE_KEYS_4D,
     SYSTEM_KEYS,
-    key_matches,
 )
+from .key_dispatch import dispatch_bound_action, match_bound_action
+from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import (
-    apply_menu_binding_action,
-    menu_binding_action_for_key,
     menu_binding_hint_line,
     menu_binding_status_color,
 )
@@ -45,6 +45,7 @@ COLOR_MAP = {
 }
 
 AXIS_NAMES = ["x", "y", "z", "w", "v", "u", "t", "s"]
+DEFAULT_GAME_SEED = 1337
 
 
 def axis_name(axis: int) -> str:
@@ -105,18 +106,6 @@ class GameSettingsND:
     speed_level: int = 1
 
 
-class MenuAction(Enum):
-    QUIT = auto()
-    START_GAME = auto()
-    SELECT_UP = auto()
-    SELECT_DOWN = auto()
-    VALUE_LEFT = auto()
-    VALUE_RIGHT = auto()
-    LOAD_BINDINGS = auto()
-    SAVE_BINDINGS = auto()
-    NO_OP = auto()
-
-
 @dataclass
 class MenuState:
     settings: GameSettingsND = field(default_factory=GameSettingsND)
@@ -127,11 +116,8 @@ class MenuState:
     bindings_status_error: bool = False
 
 
-FieldSpec = Tuple[str, str, int, int]
-
-
-def menu_fields_for_dimension(dimension: int) -> List[FieldSpec]:
-    fields: List[FieldSpec] = [
+def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
+    fields: list[FieldSpec] = [
         ("Board width", "width", 6, 16),
         ("Board height", "height", 12, 30),
     ]
@@ -141,78 +127,6 @@ def menu_fields_for_dimension(dimension: int) -> List[FieldSpec]:
         fields.append(("Board axis w", "fourth", 3, 10))
     fields.append(("Speed level", "speed_level", 1, 10))
     return fields
-
-
-def gather_menu_actions() -> List[MenuAction]:
-    actions: List[MenuAction] = []
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            actions.append(MenuAction.QUIT)
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                actions.append(MenuAction.QUIT)
-            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                actions.append(MenuAction.START_GAME)
-            elif event.key == pygame.K_UP:
-                actions.append(MenuAction.SELECT_UP)
-            elif event.key == pygame.K_DOWN:
-                actions.append(MenuAction.SELECT_DOWN)
-            elif event.key == pygame.K_LEFT:
-                actions.append(MenuAction.VALUE_LEFT)
-            elif event.key == pygame.K_RIGHT:
-                actions.append(MenuAction.VALUE_RIGHT)
-            else:
-                binding_action = menu_binding_action_for_key(
-                    event.key, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS
-                )
-                if binding_action is not None:
-                    actions.append(binding_action)
-    if not actions:
-        actions.append(MenuAction.NO_OP)
-    return actions
-
-
-def apply_menu_actions(state: MenuState,
-                       actions: List[MenuAction],
-                       dimension: int) -> None:
-    fields = menu_fields_for_dimension(dimension)
-    num_fields = len(fields)
-
-    for action in actions:
-        if action == MenuAction.NO_OP:
-            continue
-
-        if action == MenuAction.QUIT:
-            state.running = False
-            continue
-
-        if action == MenuAction.START_GAME:
-            state.start_game = True
-            continue
-
-        if action == MenuAction.SELECT_UP:
-            state.selected_index = (state.selected_index - 1) % num_fields
-            continue
-
-        if action == MenuAction.SELECT_DOWN:
-            state.selected_index = (state.selected_index + 1) % num_fields
-            continue
-
-        if action not in (MenuAction.VALUE_LEFT, MenuAction.VALUE_RIGHT):
-            apply_menu_binding_action(
-                action, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS, dimension, state
-            )
-            continue
-
-        label, attr_name, min_val, max_val = fields[state.selected_index]
-        del label
-        current_val = getattr(state.settings, attr_name)
-        if action == MenuAction.VALUE_LEFT:
-            current_val -= 1
-        else:
-            current_val += 1
-        current_val = max(min_val, min(max_val, current_val))
-        setattr(state.settings, attr_name, current_val)
 
 
 def draw_menu(screen: pygame.Surface,
@@ -289,7 +203,8 @@ def run_menu(screen: pygame.Surface,
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions()
-        apply_menu_actions(state, actions, dimension)
+        fields = menu_fields_for_dimension(dimension)
+        apply_menu_actions(state, actions, fields, dimension)
         draw_menu(screen, fonts, state, dimension)
         pygame.display.flip()
 
@@ -319,7 +234,7 @@ def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
-    return GameStateND(config=cfg, board=board)
+    return GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
 
 
 @dataclass
@@ -389,7 +304,8 @@ def compute_game_layout(screen: pygame.Surface,
 def draw_board(surface: pygame.Surface,
                state: GameStateND,
                slice_state: SliceState,
-               board_offset: Tuple[int, int]) -> None:
+               board_offset: Tuple[int, int],
+               show_grid: bool = True) -> None:
     cfg = state.config
     w = cfg.dims[0]
     h = cfg.dims[cfg.gravity_axis]
@@ -398,12 +314,13 @@ def draw_board(surface: pygame.Surface,
     board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
 
-    for gx in range(w + 1):
-        x_px = ox + gx * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
-    for gy in range(h + 1):
-        y_px = oy + gy * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
+    if show_grid:
+        for gx in range(w + 1):
+            x_px = ox + gx * CELL_SIZE
+            pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
+        for gy in range(h + 1):
+            y_px = oy + gy * CELL_SIZE
+            pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
 
     for coord, cell_id in state.board.cells.items():
         x = coord[0]
@@ -424,7 +341,7 @@ def draw_board(surface: pygame.Surface,
                 _draw_cell(surface, x, y, color_id, board_offset, outline=True)
 
 
-def control_lines_for_dimension(dimension: int) -> List[str]:
+def control_lines_for_dimension(dimension: int) -> list[str]:
     if dimension >= 4:
         return list(CONTROL_LINES_ND_4D)
     if dimension == 3:
@@ -446,7 +363,8 @@ def draw_side_panel(surface: pygame.Surface,
                     state: GameStateND,
                     slice_state: SliceState,
                     panel_offset: Tuple[int, int],
-                    fonts: GfxFonts) -> None:
+                    fonts: GfxFonts,
+                    show_grid: bool) -> None:
     cfg = state.config
     px, py = panel_offset
     gravity_ms = gravity_interval_ms_from_config(cfg)
@@ -461,6 +379,7 @@ def draw_side_panel(surface: pygame.Surface,
         f"Cleared: {state.lines_cleared}",
         f"Speed level: {cfg.speed_level}",
         f"Fall: {rows_per_sec:.2f} / sec",
+        f"Grid: {'ON' if show_grid else 'OFF'}",
         "",
         "Active slice:",
     ]
@@ -487,11 +406,12 @@ def draw_side_panel(surface: pygame.Surface,
 def draw_game_frame(screen: pygame.Surface,
                     state: GameStateND,
                     slice_state: SliceState,
-                    fonts: GfxFonts) -> None:
+                    fonts: GfxFonts,
+                    show_grid: bool = True) -> None:
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, state.config)
-    draw_board(screen, state, slice_state, board_offset)
-    draw_side_panel(screen, state, slice_state, panel_offset, fonts)
+    draw_board(screen, state, slice_state, board_offset, show_grid=show_grid)
+    draw_side_panel(screen, state, slice_state, panel_offset, fonts, show_grid=show_grid)
 
 
 def handle_game_keydown(event: pygame.event.Event,
@@ -501,100 +421,63 @@ def handle_game_keydown(event: pygame.event.Event,
     ndim = cfg.ndim
     key = event.key
 
-    if key_matches(SYSTEM_KEYS, "quit", key):
+    system_action = match_bound_action(
+        key,
+        SYSTEM_KEYS,
+        ("quit", "menu", "restart", "toggle_grid"),
+    )
+    if system_action == "quit":
         return "quit"
-    if key_matches(SYSTEM_KEYS, "menu", key):
+    if system_action == "menu":
         return "menu"
-    if key_matches(SYSTEM_KEYS, "restart", key):
+    if system_action == "restart":
         return "restart"
+    if system_action == "toggle_grid":
+        return "toggle_grid"
 
-    if ndim >= 3:
-        if key_matches(SLICE_KEYS_3D, "slice_z_neg", key):
-            adjust_slice_axis(slice_state, cfg, axis=2, delta=-1)
-            return "continue"
-        if key_matches(SLICE_KEYS_3D, "slice_z_pos", key):
-            adjust_slice_axis(slice_state, cfg, axis=2, delta=1)
-            return "continue"
+    slice_bindings = SLICE_KEYS_4D if ndim >= 4 else SLICE_KEYS_3D
+    slice_handlers = {
+        "slice_z_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=-1),
+        "slice_z_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=1),
+    }
     if ndim >= 4:
-        if key_matches(SLICE_KEYS_4D, "slice_w_neg", key):
-            adjust_slice_axis(slice_state, cfg, axis=3, delta=-1)
-            return "continue"
-        if key_matches(SLICE_KEYS_4D, "slice_w_pos", key):
-            adjust_slice_axis(slice_state, cfg, axis=3, delta=1)
-            return "continue"
+        slice_handlers.update({
+            "slice_w_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=-1),
+            "slice_w_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=1),
+        })
+    if dispatch_bound_action(key, slice_bindings, slice_handlers):
+        return "continue"
 
     if state.game_over:
         return "continue"
 
+    gameplay_keys = KEYS_4D if ndim >= 4 else KEYS_3D
+    gameplay_handlers = {
+        "move_x_neg": lambda: state.try_move_axis(0, -1),
+        "move_x_pos": lambda: state.try_move_axis(0, 1),
+        "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
+        "hard_drop": state.hard_drop,
+        "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
+        "rotate_xy_neg": lambda: state.try_rotate(0, cfg.gravity_axis, -1),
+        "move_z_neg": lambda: state.try_move_axis(2, -1),
+        "move_z_pos": lambda: state.try_move_axis(2, 1),
+        "rotate_xz_pos": lambda: state.try_rotate(0, 2, 1),
+        "rotate_xz_neg": lambda: state.try_rotate(0, 2, -1),
+        "rotate_yz_pos": lambda: state.try_rotate(cfg.gravity_axis, 2, 1),
+        "rotate_yz_neg": lambda: state.try_rotate(cfg.gravity_axis, 2, -1),
+    }
     if ndim >= 4:
-        gameplay_keys = KEYS_4D
-    else:
-        gameplay_keys = KEYS_3D
-
-    if key_matches(gameplay_keys, "move_x_neg", key):
-        state.try_move_axis(0, -1)
-        return "continue"
-    if key_matches(gameplay_keys, "move_x_pos", key):
-        state.try_move_axis(0, 1)
-        return "continue"
-    if key_matches(gameplay_keys, "soft_drop", key):
-        state.try_move_axis(cfg.gravity_axis, 1)
-        return "continue"
-    if key_matches(gameplay_keys, "hard_drop", key):
-        state.hard_drop()
-        return "continue"
-    if key_matches(gameplay_keys, "rotate_xy_pos", key):
-        state.try_rotate(0, cfg.gravity_axis, 1)
-        return "continue"
-    if key_matches(gameplay_keys, "rotate_xy_neg", key):
-        state.try_rotate(0, cfg.gravity_axis, -1)
-        return "continue"
-
-    if ndim >= 3:
-        if key_matches(gameplay_keys, "move_z_neg", key):
-            state.try_move_axis(2, -1)
-            return "continue"
-        if key_matches(gameplay_keys, "move_z_pos", key):
-            state.try_move_axis(2, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_xz_pos", key):
-            state.try_rotate(0, 2, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_xz_neg", key):
-            state.try_rotate(0, 2, -1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_yz_pos", key):
-            state.try_rotate(cfg.gravity_axis, 2, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_yz_neg", key):
-            state.try_rotate(cfg.gravity_axis, 2, -1)
-            return "continue"
-
-    if ndim >= 4:
-        if key_matches(gameplay_keys, "move_w_neg", key):
-            state.try_move_axis(3, -1)
-            return "continue"
-        if key_matches(gameplay_keys, "move_w_pos", key):
-            state.try_move_axis(3, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_xw_pos", key):
-            state.try_rotate(0, 3, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_xw_neg", key):
-            state.try_rotate(0, 3, -1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_yw_pos", key):
-            state.try_rotate(cfg.gravity_axis, 3, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_yw_neg", key):
-            state.try_rotate(cfg.gravity_axis, 3, -1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_zw_pos", key):
-            state.try_rotate(2, 3, 1)
-            return "continue"
-        if key_matches(gameplay_keys, "rotate_zw_neg", key):
-            state.try_rotate(2, 3, -1)
-            return "continue"
+        gameplay_handlers.update({
+            "move_w_neg": lambda: state.try_move_axis(3, -1),
+            "move_w_pos": lambda: state.try_move_axis(3, 1),
+            "rotate_xw_pos": lambda: state.try_rotate(0, 3, 1),
+            "rotate_xw_neg": lambda: state.try_rotate(0, 3, -1),
+            "rotate_yw_pos": lambda: state.try_rotate(cfg.gravity_axis, 3, 1),
+            "rotate_yw_neg": lambda: state.try_rotate(cfg.gravity_axis, 3, -1),
+            "rotate_zw_pos": lambda: state.try_rotate(2, 3, 1),
+            "rotate_zw_neg": lambda: state.try_rotate(2, 3, -1),
+        })
+    dispatch_bound_action(key, gameplay_keys, gameplay_handlers)
 
     return "continue"
 
@@ -604,6 +487,7 @@ def run_game_loop(screen: pygame.Surface,
                   fonts: GfxFonts) -> bool:
     state = create_initial_state(cfg)
     slice_state = create_initial_slice_state(cfg)
+    show_grid = True
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     gravity_accumulator = 0
     clock = pygame.time.Clock()
@@ -612,25 +496,31 @@ def run_game_loop(screen: pygame.Surface,
         dt = clock.tick(60)
         gravity_accumulator += dt
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            if event.type == pygame.KEYDOWN:
-                result = handle_game_keydown(event, state, slice_state)
-                if result == "quit":
-                    return False
-                if result == "menu":
-                    return True
-                if result == "restart":
-                    state = create_initial_state(cfg)
-                    slice_state = create_initial_slice_state(cfg)
-                    gravity_accumulator = 0
+        def on_restart() -> None:
+            nonlocal state, slice_state, gravity_accumulator
+            state = create_initial_state(cfg)
+            slice_state = create_initial_slice_state(cfg)
+            gravity_accumulator = 0
+
+        def on_toggle_grid() -> None:
+            nonlocal show_grid
+            show_grid = not show_grid
+
+        decision = process_game_events(
+            keydown_handler=lambda event: handle_game_keydown(event, state, slice_state),
+            on_restart=on_restart,
+            on_toggle_grid=on_toggle_grid,
+        )
+        if decision == "quit":
+            return False
+        if decision == "menu":
+            return True
 
         while not state.game_over and gravity_accumulator >= gravity_interval_ms:
             state.step_gravity()
             gravity_accumulator -= gravity_interval_ms
 
-        draw_game_frame(screen, state, slice_state, fonts)
+        draw_game_frame(screen, state, slice_state, fonts, show_grid=show_grid)
         pygame.display.flip()
 
 

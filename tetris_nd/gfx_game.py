@@ -48,6 +48,12 @@ class GfxFonts:
     panel_font: pygame.font.Font
 
 
+@dataclass(frozen=True)
+class ClearEffect2D:
+    levels: Tuple[int, ...]
+    progress: float  # 0.0 .. 1.0
+
+
 def init_fonts() -> GfxFonts:
     """Initialize a set of fonts, with fallbacks."""
     try:
@@ -365,9 +371,64 @@ def compute_game_layout(screen: pygame.Surface,
     return board_offset, panel_offset
 
 
+def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None:
+    """
+    Draw a subtle board silhouette when grid lines are hidden.
+    """
+    shadow = pygame.Surface(board_rect.size, pygame.SRCALPHA)
+    pygame.draw.rect(shadow, (16, 24, 52, 170), shadow.get_rect())
+
+    step = max(6, CELL_SIZE)
+    for y in range(0, board_rect.height, step):
+        alpha = 20 if (y // step) % 2 == 0 else 10
+        pygame.draw.line(shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1)
+
+    for x in range(0, board_rect.width, step * 2):
+        pygame.draw.line(
+            shadow,
+            (170, 190, 220, 16),
+            (x, 0),
+            (min(board_rect.width, x + board_rect.height), board_rect.height),
+            1,
+        )
+
+    surface.blit(shadow, board_rect.topleft)
+    pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
+
+
+def _draw_clear_effect(surface: pygame.Surface,
+                       board_rect: pygame.Rect,
+                       width_cells: int,
+                       clear_effect: Optional[ClearEffect2D]) -> None:
+    if clear_effect is None or not clear_effect.levels:
+        return
+
+    progress = max(0.0, min(1.0, clear_effect.progress))
+    fade = 1.0 - progress
+    base_alpha = int(170 * fade)
+    if base_alpha <= 0:
+        return
+
+    row_width = width_cells * CELL_SIZE
+    for level in clear_effect.levels:
+        row_top = board_rect.y + level * CELL_SIZE
+        row_rect = pygame.Rect(board_rect.x, row_top, row_width, CELL_SIZE)
+
+        overlay = pygame.Surface(row_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(overlay, (255, 245, 210, base_alpha), overlay.get_rect())
+
+        sweep_center = int(progress * row_rect.width)
+        sweep_rect = pygame.Rect(max(0, sweep_center - 24), 0, 48, row_rect.height)
+        pygame.draw.rect(overlay, (120, 220, 255, min(255, base_alpha + 45)), sweep_rect)
+        pygame.draw.rect(overlay, (255, 255, 255, min(255, base_alpha + 55)), overlay.get_rect(), 2)
+
+        surface.blit(overlay, row_rect.topleft)
+
+
 def draw_board(surface: pygame.Surface, state: GameState,
                board_offset: Tuple[int, int],
-               show_grid: bool = True) -> None:
+               show_grid: bool = True,
+               clear_effect: Optional[ClearEffect2D] = None) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
     w, h = state.config.width, state.config.height
@@ -375,6 +436,8 @@ def draw_board(surface: pygame.Surface, state: GameState,
     # Board background
     board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
+    if not show_grid:
+        _draw_board_shadow(surface, board_rect)
 
     # Grid
     if show_grid:
@@ -396,6 +459,8 @@ def draw_board(surface: pygame.Surface, state: GameState,
         for (x, y) in state.current_piece.cells():
             if 0 <= x < w and 0 <= y < h:
                 _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
+
+    _draw_clear_effect(surface, board_rect, w, clear_effect)
 
 
 def _draw_cell(surface: pygame.Surface, x: int, y: int, cell_id: int,
@@ -433,7 +498,6 @@ def _draw_side_panel_text(surface: pygame.Surface,
         f"Grid: {'ON' if show_grid else 'OFF'}",
         "",
         *CONTROL_LINES_2D,
-        " G          : toggle grid",
     ]
 
     y = py
@@ -538,9 +602,16 @@ def draw_game_frame(screen: pygame.Surface,
                     cfg: GameConfig,
                     state: GameState,
                     fonts: GfxFonts,
-                    show_grid: bool = True) -> None:
+                    show_grid: bool = True,
+                    clear_effect: Optional[ClearEffect2D] = None) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, cfg)
-    draw_board(screen, state, board_offset, show_grid=show_grid)
+    draw_board(
+        screen,
+        state,
+        board_offset,
+        show_grid=show_grid,
+        clear_effect=clear_effect,
+    )
     draw_side_panel(screen, state, panel_offset, fonts, show_grid=show_grid)

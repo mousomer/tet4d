@@ -64,6 +64,21 @@ class TestBoard2D(unittest.TestCase):
             self.assertIn(x, range(3))
             self.assertIn(y, range(4))
 
+    def test_clear_metadata_tracks_removed_levels_and_cells(self):
+        board = BoardND((3, 3))
+        # Fill y=2 level completely.
+        for x in range(3):
+            board.cells[(x, 2)] = x + 1
+        # Add one non-cleared cell.
+        board.cells[(1, 1)] = 9
+
+        cleared = board.clear_planes(gravity_axis=1)
+        self.assertEqual(cleared, 1)
+        self.assertEqual(board.last_cleared_levels, [2])
+        removed_coords = {coord for coord, _cell_id in board.last_cleared_cells}
+        self.assertSetEqual(removed_coords, {(0, 2), (1, 2), (2, 2)})
+        self.assertEqual(len(board.last_cleared_cells), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

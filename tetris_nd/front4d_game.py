@@ -2,7 +2,7 @@
 import math
 import sys
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Optional, Tuple
 
 import pygame
 
@@ -11,14 +11,38 @@ from .frontend_nd import (
     create_initial_slice_state,
     create_initial_state,
     gravity_interval_ms_from_config,
-    handle_game_keydown,
+    handle_game_keydown as handle_nd_game_keydown,
     init_fonts,
     run_menu,
     GfxFonts,
     SliceState,
 )
 from .game_nd import GameConfigND, GameStateND
-from .keybindings import CONTROL_LINES_ND_4D
+from .game_loop_common import process_game_events
+from .key_dispatch import dispatch_bound_action
+from .keybindings import (
+    CAMERA_KEYS_4D,
+    CONTROL_LINES_4D_VIEW,
+    CONTROL_LINES_ND_4D,
+    initialize_keybinding_files,
+)
+from .projection3d import (
+    Face,
+    Cell3,
+    Point2,
+    build_cube_faces,
+    color_for_cell,
+    draw_projected_box_shadow,
+    draw_gradient_background,
+    draw_projected_lattice,
+    fit_orthographic_zoom,
+    interpolate_angle_deg,
+    normalize_angle_deg,
+    orthographic_point,
+    raw_to_world,
+    smoothstep01,
+    transform_point,
+)
 
 
 MARGIN = 16
@@ -42,211 +66,138 @@ COLOR_MAP = {
     7: (255, 165, 0),
 }
 
-_CUBE_VERTS = [
-    (-0.5, -0.5, -0.5),
-    (0.5, -0.5, -0.5),
-    (0.5, 0.5, -0.5),
-    (-0.5, 0.5, -0.5),
-    (-0.5, -0.5, 0.5),
-    (0.5, -0.5, 0.5),
-    (0.5, 0.5, 0.5),
-    (-0.5, 0.5, 0.5),
-]
-
-_CUBE_FACES = [
-    ([0, 1, 2, 3], 0.58),
-    ([4, 5, 6, 7], 0.95),
-    ([0, 3, 7, 4], 0.72),
-    ([1, 2, 6, 5], 0.84),
-    ([0, 1, 5, 4], 0.63),
-    ([3, 2, 6, 7], 1.10),
-]
-
-_BOX_EDGES = [
-    (0, 1), (1, 2), (2, 3), (3, 0),
-    (4, 5), (5, 6), (6, 7), (7, 4),
-    (0, 4), (1, 5), (2, 6), (3, 7),
-]
-
-
-def _shade(color: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
-    return (
-        max(0, min(255, int(color[0] * factor))),
-        max(0, min(255, int(color[1] * factor))),
-        max(0, min(255, int(color[2] * factor))),
-    )
-
-
-def _color_for_cell(cell_id: int) -> Tuple[int, int, int]:
-    if cell_id <= 0:
-        return (200, 200, 200)
-    return COLOR_MAP.get(cell_id, (200, 200, 200))
-
-
-def _draw_gradient_background(surface: pygame.Surface,
-                              top_color: Tuple[int, int, int],
-                              bottom_color: Tuple[int, int, int]) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
-
 
 @dataclass
 class LayerView3D:
     # Fixed camera for every w-layer board.
     yaw_deg: float = 32.0
     pitch_deg: float = -26.0
+    zoom_scale: float = 1.0
+    anim_axis: str | None = None
+    anim_start: float = 0.0
+    anim_target: float = 0.0
+    anim_elapsed_ms: float = 0.0
+    anim_duration_ms: float = 240.0
+
+    def _start_turn(self, axis: str, target: float) -> None:
+        self.anim_axis = axis
+        self.anim_elapsed_ms = 0.0
+        if axis == "yaw":
+            self.anim_start = normalize_angle_deg(self.yaw_deg)
+            self.anim_target = normalize_angle_deg(target)
+        else:
+            self.anim_start = self.pitch_deg
+            self.anim_target = max(-89.0, min(89.0, target))
+
+    def start_yaw_turn(self, delta_deg: float) -> None:
+        self._start_turn("yaw", self.yaw_deg + delta_deg)
+
+    def start_pitch_turn(self, delta_deg: float) -> None:
+        self._start_turn("pitch", self.pitch_deg + delta_deg)
+
+    def step_animation(self, dt_ms: float) -> None:
+        if self.anim_axis is None:
+            return
+        self.anim_elapsed_ms += max(0.0, dt_ms)
+        t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
+        if self.anim_axis == "yaw":
+            self.yaw_deg = interpolate_angle_deg(self.anim_start, self.anim_target, t)
+        else:
+            eased = smoothstep01(t)
+            self.pitch_deg = self.anim_start + (self.anim_target - self.anim_start) * eased
+        if t >= 1.0:
+            if self.anim_axis == "yaw":
+                self.yaw_deg = normalize_angle_deg(self.anim_target)
+            else:
+                self.pitch_deg = self.anim_target
+            self.anim_axis = None
 
 
-def _raw_to_world(raw: Tuple[float, float, float], dims: Tuple[int, int, int]) -> Tuple[float, float, float]:
-    w, h, d = dims
-    x = raw[0] - (w - 1) / 2.0
-    y = -(raw[1] - (h - 1) / 2.0)
-    z = raw[2] - (d - 1) / 2.0
-    return x, y, z
+@dataclass
+class ClearAnimation4D:
+    ghost_cells: tuple[tuple[tuple[int, int, int, int], tuple[int, int, int]], ...]
+    elapsed_ms: float = 0.0
+    duration_ms: float = 380.0
+
+    @property
+    def progress(self) -> float:
+        if self.duration_ms <= 0:
+            return 1.0
+        return max(0.0, min(1.0, self.elapsed_ms / self.duration_ms))
+
+    @property
+    def done(self) -> bool:
+        return self.progress >= 1.0
+
+    def step(self, dt_ms: float) -> None:
+        self.elapsed_ms += max(0.0, dt_ms)
 
 
-def _transform_point(world: Tuple[float, float, float], view: LayerView3D) -> Tuple[float, float, float]:
-    x, y, z = world
-    yaw = math.radians(view.yaw_deg)
-    pitch = math.radians(view.pitch_deg)
-
-    x1 = math.cos(yaw) * x + math.sin(yaw) * z
-    z1 = -math.sin(yaw) * x + math.cos(yaw) * z
-    y1 = y
-
-    y2 = math.cos(pitch) * y1 - math.sin(pitch) * z1
-    z2 = math.sin(pitch) * y1 + math.cos(pitch) * z1
-    return x1, y2, z2
+def _transform_raw_point(raw: tuple[float, float, float],
+                         dims: Cell3,
+                         view: LayerView3D) -> tuple[float, float, float]:
+    world = raw_to_world(raw, dims)
+    return transform_point(world, view.yaw_deg, view.pitch_deg)
 
 
-def _fit_zoom(dims: Tuple[int, int, int], view: LayerView3D, rect: pygame.Rect) -> float:
-    raw_corners = [
-        (-0.5, -0.5, -0.5),
-        (dims[0] - 0.5, -0.5, -0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, -0.5),
-        (-0.5, dims[1] - 0.5, -0.5),
-        (-0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5),
-        (-0.5, dims[1] - 0.5, dims[2] - 0.5),
-    ]
-    transformed = [_transform_point(_raw_to_world(c, dims), view) for c in raw_corners]
-    min_x = min(t[0] for t in transformed)
-    max_x = max(t[0] for t in transformed)
-    min_y = min(t[1] for t in transformed)
-    max_y = max(t[1] for t in transformed)
-    span_x = max(0.01, max_x - min_x)
-    span_y = max(0.01, max_y - min_y)
-    zoom_x = (rect.width - 14) / span_x
-    zoom_y = (rect.height - 24) / span_y
-    return max(8.0, min(120.0, min(zoom_x, zoom_y)))
+def _fit_zoom(dims: Cell3, view: LayerView3D, rect: pygame.Rect) -> float:
+    base_zoom = fit_orthographic_zoom(
+        dims=dims,
+        yaw_deg=view.yaw_deg,
+        pitch_deg=view.pitch_deg,
+        rect=rect,
+        pad_x=14,
+        pad_y=24,
+        min_zoom=8.0,
+        max_zoom=120.0,
+    )
+    return max(8.0, min(170.0, base_zoom * view.zoom_scale))
 
 
-def _project_point(trans: Tuple[float, float, float],
-                   center_px: Tuple[float, float],
-                   zoom: float) -> Tuple[float, float]:
-    tx, ty, _tz = trans
-    cx, cy = center_px
-    return cx + zoom * tx, cy - zoom * ty
-
-
-def _project_raw_point(raw: Tuple[float, float, float],
-                       dims: Tuple[int, int, int],
+def _project_raw_point(raw: tuple[float, float, float],
+                       dims: Cell3,
                        view: LayerView3D,
-                       center_px: Tuple[float, float],
-                       zoom: float) -> Tuple[float, float]:
-    world = _raw_to_world(raw, dims)
-    trans = _transform_point(world, view)
-    return _project_point(trans, center_px, zoom)
+                       center_px: Point2,
+                       zoom: float) -> Point2:
+    trans = _transform_raw_point(raw, dims, view)
+    return orthographic_point(trans, center_px, zoom)
 
 
 def _draw_board_grid(surface: pygame.Surface,
-                     dims: Tuple[int, int, int],
+                     dims: Cell3,
                      view: LayerView3D,
                      rect: pygame.Rect,
                      zoom: float) -> None:
-    """Draw projected lattice grid using the same projection path as cubes."""
     center_px = (rect.centerx, rect.centery)
-    grid_inner = (52, 64, 95)
-
-    # y-axis lines
-    for x in range(dims[0] + 1):
-        xr = x - 0.5
-        for z in range(dims[2] + 1):
-            zr = z - 0.5
-            p0 = _project_raw_point((xr, -0.5, zr), dims, view, center_px, zoom)
-            p1 = _project_raw_point((xr, dims[1] - 0.5, zr), dims, view, center_px, zoom)
-            pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # x-axis lines
-    for y in range(dims[1] + 1):
-        yr = y - 0.5
-        for z in range(dims[2] + 1):
-            zr = z - 0.5
-            p0 = _project_raw_point((-0.5, yr, zr), dims, view, center_px, zoom)
-            p1 = _project_raw_point((dims[0] - 0.5, yr, zr), dims, view, center_px, zoom)
-            pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # z-axis lines
-    for x in range(dims[0] + 1):
-        xr = x - 0.5
-        for y in range(dims[1] + 1):
-            yr = y - 0.5
-            p0 = _project_raw_point((xr, yr, -0.5), dims, view, center_px, zoom)
-            p1 = _project_raw_point((xr, yr, dims[2] - 0.5), dims, view, center_px, zoom)
-            pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # Emphasize the outer box frame.
-    raw_corners = [
-        (-0.5, -0.5, -0.5),
-        (dims[0] - 0.5, -0.5, -0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, -0.5),
-        (-0.5, dims[1] - 0.5, -0.5),
-        (-0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5),
-        (-0.5, dims[1] - 0.5, dims[2] - 0.5),
-    ]
-    projected: List[Tuple[float, float]] = []
-    for raw in raw_corners:
-        projected.append(_project_raw_point(raw, dims, view, center_px, zoom))
-    for a, b in _BOX_EDGES:
-        pygame.draw.line(surface, GRID_COLOR, projected[a], projected[b], 2)
+    draw_projected_lattice(
+        surface,
+        dims,
+        lambda raw: _project_raw_point(raw, dims, view, center_px, zoom),
+        inner_color=(52, 64, 95),
+        frame_color=GRID_COLOR,
+        frame_width=2,
+    )
 
 
-def _build_cell_faces(cell: Tuple[int, int, int],
-                      color: Tuple[int, int, int],
+def _build_cell_faces(cell: Cell3,
+                      color: tuple[int, int, int],
                       view: LayerView3D,
-                      center_px: Tuple[float, float],
-                      dims: Tuple[int, int, int],
+                      center_px: Point2,
+                      dims: Cell3,
                       zoom: float,
-                      active: bool) -> List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]]:
-    transformed: List[Tuple[float, float, float]] = []
-    projected: List[Tuple[float, float]] = []
-    for ox, oy, oz in _CUBE_VERTS:
-        raw = (cell[0] + ox, cell[1] + oy, cell[2] + oz)
-        world = _raw_to_world(raw, dims)
-        trans = _transform_point(world, view)
-        transformed.append(trans)
-        projected.append(_project_raw_point(raw, dims, view, center_px, zoom))
-
-    items: List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]] = []
-    for face_indices, shade_factor in _CUBE_FACES:
-        poly = [projected[i] for i in face_indices]
-        avg_depth = sum(transformed[i][2] for i in face_indices) / 4.0
-        face_color = _shade(color, shade_factor * (1.08 if active else 1.0))
-        items.append((avg_depth, poly, face_color, active))
-    return items
+                      active: bool) -> list[Face]:
+    return build_cube_faces(
+        cell=cell,
+        color=color,
+        project_raw=lambda raw: _project_raw_point(raw, dims, view, center_px, zoom),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims, view),
+        active=active,
+    )
 
 
-def _layer_cells(state: GameStateND, w_layer: int) -> List[Tuple[Tuple[int, int, int], int, bool]]:
+def _layer_cells(state: GameStateND, w_layer: int) -> list[tuple[Cell3, int, bool]]:
     dims = state.config.dims
-    cells: List[Tuple[Tuple[int, int, int], int, bool]] = []
+    cells: list[tuple[Cell3, int, bool]] = []
 
     for coord, cell_id in state.board.cells.items():
         x, y, z, w = coord
@@ -273,7 +224,8 @@ def _draw_layer_board(surface: pygame.Surface,
                       w_layer: int,
                       active_w: int,
                       fonts: GfxFonts,
-                      show_grid: bool) -> None:
+                      show_grid: bool,
+                      clear_anim: Optional[ClearAnimation4D] = None) -> None:
     border = LAYER_ACTIVE if w_layer == active_w else LAYER_FRAME
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, border, rect, 2, border_radius=8)
@@ -287,14 +239,22 @@ def _draw_layer_board(surface: pygame.Surface,
     zoom = _fit_zoom(dims3, view, draw_rect)
     if show_grid:
         _draw_board_grid(surface, dims3, view, draw_rect, zoom)
+    else:
+        center_px = (draw_rect.centerx, draw_rect.centery)
+        draw_projected_box_shadow(
+            surface,
+            dims3,
+            project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        )
 
     center_px = (draw_rect.centerx, draw_rect.centery)
-    faces: List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]] = []
+    faces: list[Face] = []
     for coord3, cell_id, is_active in _layer_cells(state, w_layer):
         faces.extend(
             _build_cell_faces(
                 cell=coord3,
-                color=_color_for_cell(cell_id),
+                color=color_for_cell(cell_id, COLOR_MAP),
                 view=view,
                 center_px=center_px,
                 dims=dims3,
@@ -308,8 +268,50 @@ def _draw_layer_board(surface: pygame.Surface,
         border_col = (255, 255, 255) if active else (24, 24, 34)
         pygame.draw.polygon(surface, border_col, poly, 2 if active else 1)
 
+    if clear_anim is None or not clear_anim.ghost_cells:
+        return
 
-def _layer_grid_rects(area: pygame.Rect, layer_count: int) -> List[pygame.Rect]:
+    fade = 1.0 - clear_anim.progress
+    if fade <= 0.0:
+        return
+
+    ghost_faces: list[Face] = []
+    for coord4, base_color in clear_anim.ghost_cells:
+        x, y, z, w = coord4
+        if w != w_layer:
+            continue
+        if not (0 <= x < dims3[0] and 0 <= y < dims3[1] and 0 <= z < dims3[2]):
+            continue
+        glow_color = tuple(
+            min(255, int(channel * (0.62 + 0.38 * fade) + 160 * fade))
+            for channel in base_color
+        )
+        ghost_faces.extend(
+            _build_cell_faces(
+                cell=(x, y, z),
+                color=glow_color,
+                view=view,
+                center_px=center_px,
+                dims=dims3,
+                zoom=zoom,
+                active=True,
+            )
+        )
+
+    if not ghost_faces:
+        return
+
+    ghost_faces.sort(key=lambda x: x[0], reverse=True)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    fill_alpha = int(160 * fade)
+    outline_alpha = int(220 * fade)
+    for _depth, poly, color, _active in ghost_faces:
+        pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
+        pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), poly, 2)
+    surface.blit(overlay, (0, 0))
+
+
+def _layer_grid_rects(area: pygame.Rect, layer_count: int) -> list[pygame.Rect]:
     if layer_count <= 0:
         return []
     cols = max(1, math.ceil(math.sqrt(layer_count)))
@@ -317,7 +319,7 @@ def _layer_grid_rects(area: pygame.Rect, layer_count: int) -> List[pygame.Rect]:
 
     cell_w = (area.width - (cols + 1) * LAYER_GAP) // cols
     cell_h = (area.height - (rows + 1) * LAYER_GAP) // rows
-    rects: List[pygame.Rect] = []
+    rects: list[pygame.Rect] = []
     idx = 0
     for row in range(rows):
         for col in range(cols):
@@ -362,7 +364,8 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Active w layer: {w_slice}/{max_w}",
         "",
         *CONTROL_LINES_ND_4D,
-        " G          : toggle grid",
+        "",
+        *CONTROL_LINES_4D_VIEW,
     ]
 
     y = panel_rect.y + 14
@@ -381,8 +384,9 @@ def draw_game_frame(screen: pygame.Surface,
                     slice_state: SliceState,
                     view: LayerView3D,
                     fonts: GfxFonts,
-                    show_grid: bool) -> None:
-    _draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
+                    show_grid: bool,
+                    clear_anim: Optional[ClearAnimation4D] = None) -> None:
+    draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
 
     panel_rect = pygame.Rect(
@@ -411,9 +415,39 @@ def draw_game_frame(screen: pygame.Surface,
             active_w,
             fonts,
             show_grid=show_grid,
+            clear_anim=clear_anim,
         )
 
     _draw_side_panel(screen, state, slice_state, panel_rect, fonts, show_grid=show_grid)
+
+
+def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
+    key = event.key
+
+    def reset_view() -> None:
+        view.yaw_deg = 32.0
+        view.pitch_deg = -26.0
+        view.zoom_scale = 1.0
+        view.anim_axis = None
+        view.anim_elapsed_ms = 0.0
+
+    return (
+        dispatch_bound_action(
+            key,
+            CAMERA_KEYS_4D,
+            {
+                "yaw_neg": lambda: view.start_yaw_turn(-90.0),
+                "yaw_pos": lambda: view.start_yaw_turn(90.0),
+                "pitch_pos": lambda: view.start_pitch_turn(90.0),
+                "pitch_neg": lambda: view.start_pitch_turn(-90.0),
+                "zoom_in": lambda: setattr(view, "zoom_scale", min(2.6, view.zoom_scale * 1.08)),
+                "zoom_out": lambda: setattr(view, "zoom_scale", max(0.45, view.zoom_scale / 1.08)),
+                "reset": reset_view,
+                "cycle_projection": lambda: None,
+            },
+        )
+        is not None
+    )
 
 
 def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) -> bool:
@@ -421,6 +455,8 @@ def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) ->
     slice_state = create_initial_slice_state(cfg)
     view = LayerView3D()
     show_grid = True
+    clear_anim: Optional[ClearAnimation4D] = None
+    last_lines_cleared = state.lines_cleared
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     gravity_accumulator = 0
     clock = pygame.time.Clock()
@@ -429,30 +465,66 @@ def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) ->
         dt = clock.tick(60)
         gravity_accumulator += dt
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            if event.type != pygame.KEYDOWN:
-                continue
-            if event.key == pygame.K_g:
-                show_grid = not show_grid
-                continue
+        def on_restart() -> None:
+            nonlocal state, slice_state, gravity_accumulator, clear_anim, last_lines_cleared
+            state = create_initial_state(cfg)
+            slice_state = create_initial_slice_state(cfg)
+            gravity_accumulator = 0
+            clear_anim = None
+            last_lines_cleared = state.lines_cleared
 
-            result = handle_game_keydown(event, state, slice_state)
-            if result == "quit":
-                return False
-            if result == "menu":
-                return True
-            if result == "restart":
-                state = create_initial_state(cfg)
-                slice_state = create_initial_slice_state(cfg)
-                gravity_accumulator = 0
+        def on_toggle_grid() -> None:
+            nonlocal show_grid
+            show_grid = not show_grid
+
+        def keydown_handler(event: pygame.event.Event) -> str:
+            if handle_view_keydown(event, view):
+                return "continue"
+            return handle_nd_game_keydown(event, state, slice_state)
+
+        decision = process_game_events(
+            keydown_handler=keydown_handler,
+            on_restart=on_restart,
+            on_toggle_grid=on_toggle_grid,
+        )
+        if decision == "quit":
+            return False
+        if decision == "menu":
+            return True
 
         while not state.game_over and gravity_accumulator >= gravity_interval_ms:
             state.step_gravity()
             gravity_accumulator -= gravity_interval_ms
 
-        draw_game_frame(screen, state, slice_state, view, fonts, show_grid=show_grid)
+        if state.lines_cleared != last_lines_cleared:
+            ghost_cells: list[tuple[tuple[int, int, int, int], tuple[int, int, int]]] = []
+            for coord, cell_id in state.board.last_cleared_cells:
+                if len(coord) != 4:
+                    continue
+                x, y, z, w = coord
+                ghost_cells.append(((x, y, z, w), color_for_cell(cell_id, COLOR_MAP)))
+            if ghost_cells:
+                clear_anim = ClearAnimation4D(ghost_cells=tuple(ghost_cells))
+            else:
+                clear_anim = None
+            last_lines_cleared = state.lines_cleared
+
+        view.step_animation(dt)
+
+        if clear_anim is not None:
+            clear_anim.step(dt)
+            if clear_anim.done:
+                clear_anim = None
+
+        draw_game_frame(
+            screen,
+            state,
+            slice_state,
+            view,
+            fonts,
+            show_grid=show_grid,
+            clear_anim=clear_anim,
+        )
         pygame.display.flip()
 
 
@@ -467,6 +539,7 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 
 def run() -> None:
     pygame.init()
+    initialize_keybinding_files()
     fonts = init_fonts()
 
     running = True
