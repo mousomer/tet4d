@@ -182,7 +182,6 @@ def _draw_menu_header(screen: pygame.Surface,
 def _draw_menu_settings_panel(screen: pygame.Surface,
                               fonts: GfxFonts,
                               width: int,
-                              height: int,
                               settings,
                               selected_index: int) -> Tuple[int, int, int, int]:
     """
@@ -237,9 +236,7 @@ def _draw_menu_settings_panel(screen: pygame.Surface,
 
 def _draw_menu_dpad_and_commands(screen: pygame.Surface,
                                  fonts: GfxFonts,
-                                 panel_x: int,
                                  panel_y: int,
-                                 panel_w: int,
                                  panel_h: int) -> None:
     """Draw small D-pad and Enter/Esc buttons under the settings panel."""
     width, _ = screen.get_size()
@@ -334,7 +331,7 @@ def draw_menu(screen: pygame.Surface,
               bindings_status_error: bool = False) -> None:
     """Top-level menu draw call."""
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
-    width, height = screen.get_size()
+    width, _ = screen.get_size()
 
     _draw_menu_header(
         screen,
@@ -343,10 +340,10 @@ def draw_menu(screen: pygame.Surface,
         bindings_status,
         bindings_status_error,
     )
-    panel_x, panel_y, panel_w, panel_h = _draw_menu_settings_panel(
-        screen, fonts, width, height, settings, selected_index
+    _panel_x, panel_y, _panel_w, panel_h = _draw_menu_settings_panel(
+        screen, fonts, width, settings, selected_index
     )
-    _draw_menu_dpad_and_commands(screen, fonts, panel_x, panel_y, panel_w, panel_h)
+    _draw_menu_dpad_and_commands(screen, fonts, panel_y, panel_h)
 
 
 # ---------- Game drawing ----------

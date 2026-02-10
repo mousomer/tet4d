@@ -1,5 +1,4 @@
 # tetris_nd/frontend_nd.py
-import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Tuple
@@ -641,31 +640,3 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
     window_w = board_px_w + SIDE_PANEL + 3 * MARGIN
     window_h = board_px_h + 2 * MARGIN
     return max(window_w, 900), max(window_h, 640)
-
-
-def run_dimension(dimension: int) -> None:
-    if dimension not in (3, 4):
-        raise ValueError("dimension must be 3 or 4")
-
-    pygame.init()
-    fonts = init_fonts()
-
-    running = True
-    while running:
-        pygame.display.set_caption(f"{dimension}D Tetris – Setup")
-        menu_screen = pygame.display.set_mode((900, 680), pygame.RESIZABLE)
-        settings = run_menu(menu_screen, fonts, dimension)
-        if settings is None:
-            break
-
-        cfg = build_config(settings, dimension)
-        win_w, win_h = suggested_window_size(cfg)
-        pygame.display.set_caption(f"{dimension}D Tetris")
-        game_screen = pygame.display.set_mode((win_w, win_h), pygame.RESIZABLE)
-
-        back_to_menu = run_game_loop(game_screen, cfg, fonts)
-        if not back_to_menu:
-            running = False
-
-    pygame.quit()
-    sys.exit()

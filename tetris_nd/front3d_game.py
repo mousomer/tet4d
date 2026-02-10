@@ -406,37 +406,6 @@ def _project_point(trans: Tuple[float, float, float],
     return cx + camera.zoom * (tx / denom), cy - camera.zoom * (ty / denom)
 
 
-def _draw_board_box(surface: pygame.Surface,
-                    dims: Tuple[int, int, int],
-                    camera: Camera3D,
-                    board_rect: pygame.Rect) -> None:
-    w, h, d = dims
-    raw_corners = [
-        (-0.5, -0.5, -0.5),
-        (w - 0.5, -0.5, -0.5),
-        (w - 0.5, h - 0.5, -0.5),
-        (-0.5, h - 0.5, -0.5),
-        (-0.5, -0.5, d - 0.5),
-        (w - 0.5, -0.5, d - 0.5),
-        (w - 0.5, h - 0.5, d - 0.5),
-        (-0.5, h - 0.5, d - 0.5),
-    ]
-
-    center_px = (board_rect.centerx, board_rect.centery)
-    projected: List[Optional[Tuple[float, float]]] = []
-    for raw in raw_corners:
-        world = _raw_to_world(raw, dims)
-        trans = _transform_point(world, camera)
-        projected.append(_project_point(trans, camera, center_px))
-
-    for a, b in _BOX_EDGES:
-        pa = projected[a]
-        pb = projected[b]
-        if pa is None or pb is None:
-            continue
-        pygame.draw.line(surface, GRID_COLOR, pa, pb, 1)
-
-
 def _project_raw_point(raw: Tuple[float, float, float],
                        dims: Tuple[int, int, int],
                        camera: Camera3D,
