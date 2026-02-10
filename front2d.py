@@ -17,7 +17,16 @@ from tetris_nd.gfx_game import (
     draw_game_frame,
     gravity_interval_ms_from_config,
 )
-from tetris_nd.keybindings import DISABLED_KEYS_2D, KEYS_2D, SYSTEM_KEYS, key_matches
+from tetris_nd.keybindings import (
+    DISABLED_KEYS_2D,
+    KEYS_2D,
+    SYSTEM_KEYS,
+    key_matches,
+)
+from tetris_nd.menu_keybinding_shortcuts import (
+    apply_menu_binding_action,
+    menu_binding_action_for_key,
+)
 
 DEFAULT_GAME_SEED = 1337
 
@@ -38,6 +47,8 @@ class MenuAction(Enum):
     SELECT_DOWN = auto()
     VALUE_LEFT = auto()
     VALUE_RIGHT = auto()
+    LOAD_BINDINGS = auto()
+    SAVE_BINDINGS = auto()
     NO_OP = auto()
 
 
@@ -47,6 +58,8 @@ class MenuState:
     selected_index: int = 0  # 0=width, 1=height, 2=speed
     running: bool = True
     start_game: bool = False
+    bindings_status: str = ""
+    bindings_status_error: bool = False
 
 
 # ---------- Menu logic helpers ----------
@@ -69,6 +82,12 @@ def gather_menu_actions() -> List[MenuAction]:
                 actions.append(MenuAction.VALUE_LEFT)
             elif event.key == pygame.K_RIGHT:
                 actions.append(MenuAction.VALUE_RIGHT)
+            else:
+                binding_action = menu_binding_action_for_key(
+                    event.key, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS
+                )
+                if binding_action is not None:
+                    actions.append(binding_action)
     if not actions:
         actions.append(MenuAction.NO_OP)
     return actions
@@ -107,6 +126,11 @@ def apply_menu_actions(state: MenuState, actions: List[MenuAction]) -> None:
             elif state.selected_index == 2:
                 state.settings.speed_level = min(10, state.settings.speed_level + 1)
 
+        elif apply_menu_binding_action(
+            action, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS, 2, state
+        ):
+            continue
+
 
 # ---------- Menu loop ----------
 
@@ -122,7 +146,15 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
         _dt = clock.tick(60)
         actions = gather_menu_actions()
         apply_menu_actions(state, actions)
-        draw_menu(screen, fonts, state.settings, state.selected_index)
+        draw_menu(
+            screen,
+            fonts,
+            state.settings,
+            state.selected_index,
+            bindings_file_hint="keybindings/2d.json",
+            bindings_status=state.bindings_status,
+            bindings_status_error=state.bindings_status_error,
+        )
         pygame.display.flip()
 
     if state.start_game and state.running:

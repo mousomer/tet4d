@@ -18,6 +18,12 @@ from .keybindings import (
     SYSTEM_KEYS,
     key_matches,
 )
+from .menu_keybinding_shortcuts import (
+    apply_menu_binding_action,
+    menu_binding_action_for_key,
+    menu_binding_hint_line,
+    menu_binding_status_color,
+)
 
 
 CELL_SIZE = 28
@@ -107,6 +113,8 @@ class MenuAction(Enum):
     SELECT_DOWN = auto()
     VALUE_LEFT = auto()
     VALUE_RIGHT = auto()
+    LOAD_BINDINGS = auto()
+    SAVE_BINDINGS = auto()
     NO_OP = auto()
 
 
@@ -116,6 +124,8 @@ class MenuState:
     selected_index: int = 0
     running: bool = True
     start_game: bool = False
+    bindings_status: str = ""
+    bindings_status_error: bool = False
 
 
 FieldSpec = Tuple[str, str, int, int]
@@ -152,6 +162,12 @@ def gather_menu_actions() -> List[MenuAction]:
                 actions.append(MenuAction.VALUE_LEFT)
             elif event.key == pygame.K_RIGHT:
                 actions.append(MenuAction.VALUE_RIGHT)
+            else:
+                binding_action = menu_binding_action_for_key(
+                    event.key, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS
+                )
+                if binding_action is not None:
+                    actions.append(binding_action)
     if not actions:
         actions.append(MenuAction.NO_OP)
     return actions
@@ -184,6 +200,9 @@ def apply_menu_actions(state: MenuState,
             continue
 
         if action not in (MenuAction.VALUE_LEFT, MenuAction.VALUE_RIGHT):
+            apply_menu_binding_action(
+                action, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS, dimension, state
+            )
             continue
 
         label, attr_name, min_val, max_val = fields[state.selected_index]
@@ -245,6 +264,7 @@ def draw_menu(screen: pygame.Surface,
 
     hint_lines = [
         "Esc = quit",
+        menu_binding_hint_line(dimension),
         "Controls are shown in-game on the side panel.",
     ]
     hint_y = panel_y + panel_h + 24
@@ -253,6 +273,12 @@ def draw_menu(screen: pygame.Surface,
         hint_x = (width - surf.get_width()) // 2
         screen.blit(surf, (hint_x, hint_y))
         hint_y += surf.get_height() + 4
+
+    if state.bindings_status:
+        status_color = menu_binding_status_color(state.bindings_status_error)
+        status_surf = fonts.hint_font.render(state.bindings_status, True, status_color)
+        status_x = (width - status_surf.get_width()) // 2
+        screen.blit(status_surf, (status_x, hint_y))
 
 
 def run_menu(screen: pygame.Surface,

@@ -61,6 +61,48 @@ def lift_2d_blocks_to_nd(blocks_2d: Sequence[Tuple[int, int]],
     return tuple((x, y) + extra_zeros for (x, y) in blocks_2d)
 
 
+def _embed_blocks_to_nd(blocks: Sequence[Sequence[int]],
+                        ndim: int) -> Tuple[RelCoordND, ...]:
+    """
+    Embed lower-dimensional blocks into ndim by appending trailing zeros.
+    """
+    _validate_ndim(ndim)
+    if not blocks:
+        raise ValueError("blocks must be non-empty")
+    src_dim = len(blocks[0])
+    if src_dim > ndim:
+        raise ValueError("source block dimension cannot exceed target ndim")
+    for block in blocks:
+        if len(block) != src_dim:
+            raise ValueError("all blocks must have equal dimension")
+    tail = (0,) * (ndim - src_dim)
+    return tuple(tuple(block) + tail for block in blocks)
+
+
+# True 3D polycube set (4 cells per piece).
+_PIECES_3D: Tuple[Tuple[str, Tuple[Tuple[int, int, int], ...], int], ...] = (
+    ("I3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (2, 0, 0)), 1),
+    ("O3", ((0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0)), 2),
+    ("L3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)), 3),
+    ("T3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (0, 1, 0)), 4),
+    ("S3", ((0, 0, 0), (1, 0, 0), (-1, 1, 0), (0, 1, 0)), 5),
+    ("J3D", ((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)), 6),
+    ("SCREW3", ((0, 0, 0), (1, 0, 0), (1, 1, 0), (1, 1, 1)), 7),
+)
+
+
+# True 4D polycube set (4 cells per piece), including explicit w-axis structure.
+_PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
+    ("I4", ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), 1),
+    ("O4", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0)), 2),
+    ("L4W", ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)), 3),
+    ("T4W", ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (0, 0, 0, 1)), 4),
+    ("HCORNER", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, 1)), 5),
+    ("ZWORM4", ((0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1), (2, 0, 0, 1)), 6),
+    ("STAIR4", ((0, 0, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)), 7),
+)
+
+
 @dataclass(frozen=True)
 class PieceShapeND:
     name: str
@@ -70,18 +112,34 @@ class PieceShapeND:
 
 def get_standard_pieces_nd(ndim: int) -> List[PieceShapeND]:
     """
-    Reuse the classic tetromino set as scaffolding, then lift it into ND.
-    In 3D/4D these pieces can still rotate in higher-dimensional planes.
+    Return dimension-native piece sets:
+    - 2D: classic tetrominoes
+    - 3D: true 3D polycubes
+    - 4D: true 4D polycubes
+    - >4D: embed the 4D set and keep extra axes at 0
     """
     _validate_ndim(ndim)
-    shapes_2d = get_standard_tetrominoes()
+    if ndim == 2:
+        shapes_2d = get_standard_tetrominoes()
+        return [
+            PieceShapeND(
+                name=shape.name,
+                blocks=lift_2d_blocks_to_nd(shape.blocks, ndim),
+                color_id=shape.color_id,
+            )
+            for shape in shapes_2d
+        ]
+
+    if ndim == 3:
+        return [
+            PieceShapeND(name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id)
+            for name, blocks, color_id in _PIECES_3D
+        ]
+
+    # ndim >= 4
     return [
-        PieceShapeND(
-            name=shape.name,
-            blocks=lift_2d_blocks_to_nd(shape.blocks, ndim),
-            color_id=shape.color_id,
-        )
-        for shape in shapes_2d
+        PieceShapeND(name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id)
+        for name, blocks, color_id in _PIECES_4D
     ]
 
 
