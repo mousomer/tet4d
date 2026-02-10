@@ -1,28 +1,44 @@
 # tetris_nd/front3d_game.py
-import math
 import random
 import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import pygame
 
 from .board import BoardND
 from .game_nd import GameConfigND, GameStateND
+from .game_loop_common import process_game_events
+from .key_dispatch import dispatch_bound_action, match_bound_action
 from .keybindings import (
     CAMERA_KEYS_3D,
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
     KEYS_3D,
     SYSTEM_KEYS,
-    key_matches,
+    initialize_keybinding_files,
 )
-from .menu_keybinding_shortcuts import (
-    apply_menu_binding_action,
-    menu_binding_action_for_key,
-    menu_binding_hint_line,
-    menu_binding_status_color,
+from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
+from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
+from .projection3d import (
+    Face,
+    Cell3,
+    Point2,
+    build_cube_faces,
+    color_for_cell,
+    draw_projected_box_shadow,
+    draw_gradient_background,
+    draw_projected_lattice,
+    fit_orthographic_zoom,
+    interpolate_angle_deg,
+    normalize_angle_deg,
+    orthographic_point,
+    perspective_point,
+    projective_point,
+    raw_to_world,
+    smoothstep01,
+    transform_point,
 )
 
 
@@ -45,48 +61,6 @@ COLOR_MAP = {
     6: (0, 0, 255),
     7: (255, 165, 0),
 }
-
-_CUBE_VERTS = [
-    (-0.5, -0.5, -0.5),
-    (0.5, -0.5, -0.5),
-    (0.5, 0.5, -0.5),
-    (-0.5, 0.5, -0.5),
-    (-0.5, -0.5, 0.5),
-    (0.5, -0.5, 0.5),
-    (0.5, 0.5, 0.5),
-    (-0.5, 0.5, 0.5),
-]
-
-# (indices, shade factor)
-_CUBE_FACES = [
-    ([0, 1, 2, 3], 0.58),
-    ([4, 5, 6, 7], 0.95),
-    ([0, 3, 7, 4], 0.72),
-    ([1, 2, 6, 5], 0.84),
-    ([0, 1, 5, 4], 0.63),
-    ([3, 2, 6, 7], 1.10),
-]
-
-_BOX_EDGES = [
-    (0, 1), (1, 2), (2, 3), (3, 0),
-    (4, 5), (5, 6), (6, 7), (7, 4),
-    (0, 4), (1, 5), (2, 6), (3, 7),
-]
-
-
-def _shade(color: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
-    return (
-        max(0, min(255, int(color[0] * factor))),
-        max(0, min(255, int(color[1] * factor))),
-        max(0, min(255, int(color[2] * factor))),
-    )
-
-
-def _color_for_cell(cell_id: int) -> Tuple[int, int, int]:
-    if cell_id <= 0:
-        return (200, 200, 200)
-    return COLOR_MAP.get(cell_id, (200, 200, 200))
-
 
 @dataclass
 class GfxFonts:
@@ -112,37 +86,12 @@ def init_fonts() -> GfxFonts:
             panel_font=pygame.font.Font(None, 17),
         )
 
-
-def draw_gradient_background(surface: pygame.Surface,
-                             top_color: Tuple[int, int, int],
-                             bottom_color: Tuple[int, int, int]) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
-
-
 @dataclass
 class GameSettings3D:
     width: int = 6
     height: int = 18
     depth: int = 6
     speed_level: int = 1
-
-
-class MenuAction(Enum):
-    QUIT = auto()
-    START_GAME = auto()
-    SELECT_UP = auto()
-    SELECT_DOWN = auto()
-    VALUE_LEFT = auto()
-    VALUE_RIGHT = auto()
-    LOAD_BINDINGS = auto()
-    SAVE_BINDINGS = auto()
-    NO_OP = auto()
 
 
 @dataclass
@@ -155,70 +104,12 @@ class MenuState:
     bindings_status_error: bool = False
 
 
-_MENU_FIELDS = [
+_MENU_FIELDS: list[FieldSpec] = [
     ("Board width", "width", 4, 12),
     ("Board height", "height", 12, 30),
     ("Board depth", "depth", 4, 12),
     ("Speed level", "speed_level", 1, 10),
 ]
-
-
-def gather_menu_actions() -> List[MenuAction]:
-    actions: List[MenuAction] = []
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            actions.append(MenuAction.QUIT)
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                actions.append(MenuAction.QUIT)
-            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                actions.append(MenuAction.START_GAME)
-            elif event.key == pygame.K_UP:
-                actions.append(MenuAction.SELECT_UP)
-            elif event.key == pygame.K_DOWN:
-                actions.append(MenuAction.SELECT_DOWN)
-            elif event.key == pygame.K_LEFT:
-                actions.append(MenuAction.VALUE_LEFT)
-            elif event.key == pygame.K_RIGHT:
-                actions.append(MenuAction.VALUE_RIGHT)
-            else:
-                binding_action = menu_binding_action_for_key(
-                    event.key, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS
-                )
-                if binding_action is not None:
-                    actions.append(binding_action)
-    if not actions:
-        actions.append(MenuAction.NO_OP)
-    return actions
-
-
-def apply_menu_actions(state: MenuState, actions: List[MenuAction]) -> None:
-    for action in actions:
-        if action == MenuAction.NO_OP:
-            continue
-        if action == MenuAction.QUIT:
-            state.running = False
-            continue
-        if action == MenuAction.START_GAME:
-            state.start_game = True
-            continue
-        if action == MenuAction.SELECT_UP:
-            state.selected_index = (state.selected_index - 1) % len(_MENU_FIELDS)
-            continue
-        if action == MenuAction.SELECT_DOWN:
-            state.selected_index = (state.selected_index + 1) % len(_MENU_FIELDS)
-            continue
-        if action in (MenuAction.VALUE_LEFT, MenuAction.VALUE_RIGHT):
-            _, attr_name, min_val, max_val = _MENU_FIELDS[state.selected_index]
-            value = getattr(state.settings, attr_name)
-            value = value - 1 if action == MenuAction.VALUE_LEFT else value + 1
-            value = max(min_val, min(max_val, value))
-            setattr(state.settings, attr_name, value)
-            continue
-        if apply_menu_binding_action(
-            action, MenuAction.LOAD_BINDINGS, MenuAction.SAVE_BINDINGS, 3, state
-        ):
-            continue
 
 
 def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None:
@@ -283,7 +174,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions()
-        apply_menu_actions(state, actions)
+        apply_menu_actions(state, actions, _MENU_FIELDS, 3)
         draw_menu(screen, fonts, state)
         pygame.display.flip()
 
@@ -312,6 +203,26 @@ def projection_label(mode: ProjectionMode3D) -> str:
 
 
 @dataclass
+class ClearAnimation3D:
+    ghost_cells: tuple[tuple[Cell3, tuple[int, int, int]], ...]
+    elapsed_ms: float = 0.0
+    duration_ms: float = 360.0
+
+    @property
+    def progress(self) -> float:
+        if self.duration_ms <= 0:
+            return 1.0
+        return max(0.0, min(1.0, self.elapsed_ms / self.duration_ms))
+
+    @property
+    def done(self) -> bool:
+        return self.progress >= 1.0
+
+    def step(self, dt_ms: float) -> None:
+        self.elapsed_ms += max(0.0, dt_ms)
+
+
+@dataclass
 class Camera3D:
     # Default to the same angled preset used by 4D layer views.
     projection: ProjectionMode3D = ProjectionMode3D.ORTHOGRAPHIC
@@ -322,6 +233,11 @@ class Camera3D:
     projective_strength: float = 0.22
     projective_bias: float = 3.0
     auto_fit_once: bool = True
+    anim_axis: str | None = None
+    anim_start: float = 0.0
+    anim_target: float = 0.0
+    anim_elapsed_ms: float = 0.0
+    anim_duration_ms: float = 240.0
 
     def reset(self) -> None:
         self.projection = ProjectionMode3D.ORTHOGRAPHIC
@@ -330,6 +246,8 @@ class Camera3D:
         self.zoom = 52.0
         self.cam_dist = 6.5
         self.auto_fit_once = True
+        self.anim_axis = None
+        self.anim_elapsed_ms = 0.0
 
     def cycle_projection(self) -> None:
         if self.projection == ProjectionMode3D.PROJECTIVE:
@@ -339,6 +257,43 @@ class Camera3D:
             self.projection = ProjectionMode3D.PERSPECTIVE
         else:
             self.projection = ProjectionMode3D.PROJECTIVE
+
+    def _start_turn(self, axis: str, target: float) -> None:
+        self.anim_axis = axis
+        self.anim_elapsed_ms = 0.0
+        if axis == "yaw":
+            self.anim_start = normalize_angle_deg(self.yaw_deg)
+            self.anim_target = normalize_angle_deg(target)
+        else:
+            self.anim_start = self.pitch_deg
+            self.anim_target = max(-89.0, min(89.0, target))
+        self.auto_fit_once = True
+
+    def start_yaw_turn(self, delta_deg: float) -> None:
+        self._start_turn("yaw", self.yaw_deg + delta_deg)
+
+    def start_pitch_turn(self, delta_deg: float) -> None:
+        self._start_turn("pitch", self.pitch_deg + delta_deg)
+
+    def is_animating(self) -> bool:
+        return self.anim_axis is not None
+
+    def step_animation(self, dt_ms: float) -> None:
+        if self.anim_axis is None:
+            return
+        self.anim_elapsed_ms += max(0.0, dt_ms)
+        t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
+        if self.anim_axis == "yaw":
+            self.yaw_deg = interpolate_angle_deg(self.anim_start, self.anim_target, t)
+        else:
+            eased = smoothstep01(t)
+            self.pitch_deg = self.anim_start + (self.anim_target - self.anim_start) * eased
+        if t >= 1.0:
+            if self.anim_axis == "yaw":
+                self.yaw_deg = normalize_angle_deg(self.anim_target)
+            else:
+                self.pitch_deg = self.anim_target
+            self.anim_axis = None
 
 
 def build_config(settings: GameSettings3D) -> GameConfigND:
@@ -354,166 +309,87 @@ def create_initial_state(cfg: GameConfigND) -> GameStateND:
     return GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
 
 
-def _world_center(cell: Tuple[int, int, int], dims: Tuple[int, int, int]) -> Tuple[float, float, float]:
-    w, h, d = dims
-    x = cell[0] - (w - 1) / 2.0
-    y = -(cell[1] - (h - 1) / 2.0)
-    z = cell[2] - (d - 1) / 2.0
-    return x, y, z
+def _transform_raw_point(raw: Cell3 | tuple[float, float, float],
+                         dims: Cell3,
+                         camera: Camera3D) -> tuple[float, float, float]:
+    world = raw_to_world(raw, dims)
+    return transform_point(world, camera.yaw_deg, camera.pitch_deg)
 
 
-def _raw_to_world(raw: Tuple[float, float, float], dims: Tuple[int, int, int]) -> Tuple[float, float, float]:
-    w, h, d = dims
-    x = raw[0] - (w - 1) / 2.0
-    y = -(raw[1] - (h - 1) / 2.0)
-    z = raw[2] - (d - 1) / 2.0
-    return x, y, z
-
-
-def _transform_point(world: Tuple[float, float, float], camera: Camera3D) -> Tuple[float, float, float]:
-    x, y, z = world
-    yaw = math.radians(camera.yaw_deg)
-    pitch = math.radians(camera.pitch_deg)
-
-    x1 = math.cos(yaw) * x + math.sin(yaw) * z
-    z1 = -math.sin(yaw) * x + math.cos(yaw) * z
-    y1 = y
-
-    y2 = math.cos(pitch) * y1 - math.sin(pitch) * z1
-    z2 = math.sin(pitch) * y1 + math.cos(pitch) * z1
-    return x1, y2, z2
-
-
-def _project_point(trans: Tuple[float, float, float],
+def _project_point(trans: tuple[float, float, float],
                    camera: Camera3D,
-                   center_px: Tuple[float, float]) -> Optional[Tuple[float, float]]:
-    tx, ty, tz = trans
-    cx, cy = center_px
-
+                   center_px: Point2) -> Point2 | None:
     if camera.projection == ProjectionMode3D.ORTHOGRAPHIC:
-        return cx + camera.zoom * tx, cy - camera.zoom * ty
-
+        return orthographic_point(trans, center_px, camera.zoom)
     if camera.projection == ProjectionMode3D.PERSPECTIVE:
-        zc = tz + camera.cam_dist
-        if zc <= 0.08:
-            return None
-        return cx + camera.zoom * (tx / zc), cy - camera.zoom * (ty / zc)
-
-    # Projective transform (default per RDS)
-    denom = 1.0 + camera.projective_strength * (tz + camera.projective_bias)
-    if denom <= 0.15:
-        denom = 0.15
-    return cx + camera.zoom * (tx / denom), cy - camera.zoom * (ty / denom)
+        return perspective_point(trans, center_px, camera.zoom, camera.cam_dist)
+    return projective_point(
+        trans,
+        center_px,
+        camera.zoom,
+        camera.projective_strength,
+        camera.projective_bias,
+    )
 
 
-def _project_raw_point(raw: Tuple[float, float, float],
-                       dims: Tuple[int, int, int],
+def _project_raw_point(raw: tuple[float, float, float],
+                       dims: Cell3,
                        camera: Camera3D,
-                       center_px: Tuple[float, float]) -> Optional[Tuple[float, float]]:
-    world = _raw_to_world(raw, dims)
-    trans = _transform_point(world, camera)
+                       center_px: Point2) -> Point2 | None:
+    trans = _transform_raw_point(raw, dims, camera)
     return _project_point(trans, camera, center_px)
 
 
 def _draw_board_grid(surface: pygame.Surface,
-                     dims: Tuple[int, int, int],
+                     dims: Cell3,
                      camera: Camera3D,
                      board_rect: pygame.Rect) -> None:
-    """Draw full projected lattice (x/y/z lines), not just bounding edges."""
     center_px = (board_rect.centerx, board_rect.centery)
-    grid_inner = (52, 64, 95)
-
-    # y-axis lines
-    for x in range(dims[0] + 1):
-        xr = x - 0.5
-        for z in range(dims[2] + 1):
-            zr = z - 0.5
-            p0 = _project_raw_point((xr, -0.5, zr), dims, camera, center_px)
-            p1 = _project_raw_point((xr, dims[1] - 0.5, zr), dims, camera, center_px)
-            if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # x-axis lines
-    for y in range(dims[1] + 1):
-        yr = y - 0.5
-        for z in range(dims[2] + 1):
-            zr = z - 0.5
-            p0 = _project_raw_point((-0.5, yr, zr), dims, camera, center_px)
-            p1 = _project_raw_point((dims[0] - 0.5, yr, zr), dims, camera, center_px)
-            if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # z-axis lines
-    for x in range(dims[0] + 1):
-        xr = x - 0.5
-        for y in range(dims[1] + 1):
-            yr = y - 0.5
-            p0 = _project_raw_point((xr, yr, -0.5), dims, camera, center_px)
-            p1 = _project_raw_point((xr, yr, dims[2] - 0.5), dims, camera, center_px)
-            if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, grid_inner, p0, p1, 1)
-
-    # Emphasize outer frame.
-    raw_corners = [
-        (-0.5, -0.5, -0.5),
-        (dims[0] - 0.5, -0.5, -0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, -0.5),
-        (-0.5, dims[1] - 0.5, -0.5),
-        (-0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5),
-        (-0.5, dims[1] - 0.5, dims[2] - 0.5),
-    ]
-    projected: List[Optional[Tuple[float, float]]] = [
-        _project_raw_point(raw, dims, camera, center_px) for raw in raw_corners
-    ]
-    for a, b in _BOX_EDGES:
-        pa = projected[a]
-        pb = projected[b]
-        if pa is not None and pb is not None:
-            pygame.draw.line(surface, GRID_COLOR, pa, pb, 2)
+    draw_projected_lattice(
+        surface,
+        dims,
+        lambda raw: _project_raw_point(raw, dims, camera, center_px),
+        inner_color=(52, 64, 95),
+        frame_color=GRID_COLOR,
+        frame_width=2,
+    )
 
 
-def _build_cell_faces(cell: Tuple[int, int, int],
-                      color: Tuple[int, int, int],
+def _build_cell_faces(cell: Cell3,
+                      color: tuple[int, int, int],
                       camera: Camera3D,
-                      center_px: Tuple[float, float],
-                      dims: Tuple[int, int, int],
-                      active: bool) -> List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]]:
-    center_world = _world_center(cell, dims)
-    transformed: List[Tuple[float, float, float]] = []
-    projected: List[Optional[Tuple[float, float]]] = []
-
-    for ox, oy, oz in _CUBE_VERTS:
-        world = (center_world[0] + ox, center_world[1] + oy, center_world[2] + oz)
-        trans = _transform_point(world, camera)
-        transformed.append(trans)
-        projected.append(_project_point(trans, camera, center_px))
-
-    if any(p is None for p in projected):
-        return []
-
-    items: List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]] = []
-    for face_indices, shade_factor in _CUBE_FACES:
-        poly = [projected[i] for i in face_indices]  # type: ignore[arg-type]
-        avg_depth = sum(transformed[i][2] for i in face_indices) / 4.0
-        face_color = _shade(color, shade_factor * (1.08 if active else 1.0))
-        items.append((avg_depth, poly, face_color, active))
-    return items
+                      center_px: Point2,
+                      dims: Cell3,
+                      active: bool) -> list[Face]:
+    return build_cube_faces(
+        cell=cell,
+        color=color,
+        project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        active=active,
+    )
 
 
 def _draw_board_3d(surface: pygame.Surface,
                    state: GameStateND,
                    camera: Camera3D,
                    board_rect: pygame.Rect,
-                   show_grid: bool = True) -> None:
+                   show_grid: bool = True,
+                   clear_anim: Optional[ClearAnimation3D] = None) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
 
     if show_grid:
         _draw_board_grid(surface, dims, camera, board_rect)
+    else:
+        draw_projected_box_shadow(
+            surface,
+            dims,
+            project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        )
 
-    cells: List[Tuple[Tuple[int, int, int], int, bool]] = []
+    cells: list[tuple[Cell3, int, bool]] = []
     for coord, cell_id in state.board.cells.items():
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
@@ -526,15 +402,15 @@ def _draw_board_3d(surface: pygame.Surface,
             if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
                 cells.append(((x, y, z), cell_id, True))
 
-    faces: List[Tuple[float, List[Tuple[float, float]], Tuple[int, int, int], bool]] = []
+    faces: list[Face] = []
     for coord, cell_id, active in cells:
         faces.extend(
             _build_cell_faces(
                 cell=coord,
-                color=_color_for_cell(cell_id),
+                color=color_for_cell(cell_id, COLOR_MAP),
                 camera=camera,
                 center_px=center_px,
-                dims=dims,  # type: ignore[arg-type]
+                dims=dims,
                 active=active,
             )
         )
@@ -547,6 +423,42 @@ def _draw_board_3d(surface: pygame.Surface,
         border = (255, 255, 255) if active else (25, 25, 35)
         border_w = 2 if active else 1
         pygame.draw.polygon(surface, border, poly, border_w)
+
+    if clear_anim is None or not clear_anim.ghost_cells:
+        return
+
+    fade = 1.0 - clear_anim.progress
+    if fade <= 0.0:
+        return
+
+    ghost_faces: list[Face] = []
+    for coord, base_color in clear_anim.ghost_cells:
+        glow_color = tuple(
+            min(255, int(channel * (0.65 + 0.35 * fade) + 160 * fade))
+            for channel in base_color
+        )
+        ghost_faces.extend(
+            _build_cell_faces(
+                cell=coord,
+                color=glow_color,
+                camera=camera,
+                center_px=center_px,
+                dims=dims,
+                active=True,
+            )
+        )
+
+    if not ghost_faces:
+        return
+
+    ghost_faces.sort(key=lambda x: x[0], reverse=True)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    fill_alpha = int(160 * fade)
+    outline_alpha = int(220 * fade)
+    for _depth, poly, color, _active in ghost_faces:
+        pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
+        pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), poly, 2)
+    surface.blit(overlay, (0, 0))
 
 
 def _draw_side_panel(surface: pygame.Surface,
@@ -580,7 +492,6 @@ def _draw_side_panel(surface: pygame.Surface,
         *CONTROL_LINES_3D_GAME,
         "",
         *CONTROL_LINES_3D_CAMERA,
-        " G          = toggle grid",
         "",
         "R = restart   M = menu",
         "Esc = quit",
@@ -604,39 +515,31 @@ def _auto_fit_orthographic_zoom(camera: Camera3D,
     One-shot fit so the entire board is visible for orthographic projection
     at the current yaw/pitch.
     """
-    if not camera.auto_fit_once:
+    if not camera.auto_fit_once and not camera.is_animating():
         return
     if camera.projection != ProjectionMode3D.ORTHOGRAPHIC:
         return
 
-    raw_corners = [
-        (-0.5, -0.5, -0.5),
-        (dims[0] - 0.5, -0.5, -0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, -0.5),
-        (-0.5, dims[1] - 0.5, -0.5),
-        (-0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5),
-        (-0.5, dims[1] - 0.5, dims[2] - 0.5),
-    ]
-    transformed = [_transform_point(_raw_to_world(raw, dims), camera) for raw in raw_corners]
-    min_x = min(t[0] for t in transformed)
-    max_x = max(t[0] for t in transformed)
-    min_y = min(t[1] for t in transformed)
-    max_y = max(t[1] for t in transformed)
-    span_x = max(0.01, max_x - min_x)
-    span_y = max(0.01, max_y - min_y)
-    fit_x = (board_rect.width - 18) / span_x
-    fit_y = (board_rect.height - 18) / span_y
-    camera.zoom = max(12.0, min(140.0, min(fit_x, fit_y)))
-    camera.auto_fit_once = False
+    camera.zoom = fit_orthographic_zoom(
+        dims=dims,
+        yaw_deg=camera.yaw_deg,
+        pitch_deg=camera.pitch_deg,
+        rect=board_rect,
+        pad_x=18,
+        pad_y=18,
+        min_zoom=12.0,
+        max_zoom=140.0,
+    )
+    if not camera.is_animating():
+        camera.auto_fit_once = False
 
 
 def draw_game_frame(screen: pygame.Surface,
                     state: GameStateND,
                     camera: Camera3D,
                     fonts: GfxFonts,
-                    show_grid: bool) -> None:
+                    show_grid: bool,
+                    clear_anim: Optional[ClearAnimation3D] = None) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
 
@@ -656,37 +559,36 @@ def draw_game_frame(screen: pygame.Surface,
     _auto_fit_orthographic_zoom(camera, state.config.dims, board_rect)
 
     pygame.draw.rect(screen, (16, 20, 40), board_rect, border_radius=10)
-    _draw_board_3d(screen, state, camera, board_rect, show_grid=show_grid)
+    _draw_board_3d(
+        screen,
+        state,
+        camera,
+        board_rect,
+        show_grid=show_grid,
+        clear_anim=clear_anim,
+    )
     _draw_side_panel(screen, state, camera, panel_rect, fonts, show_grid=show_grid)
 
 
 def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
     key = event.key
-    if key_matches(CAMERA_KEYS_3D, "yaw_neg", key):
-        camera.yaw_deg = (camera.yaw_deg - 5.0) % 360.0
-        return True
-    if key_matches(CAMERA_KEYS_3D, "yaw_pos", key):
-        camera.yaw_deg = (camera.yaw_deg + 5.0) % 360.0
-        return True
-    if key_matches(CAMERA_KEYS_3D, "pitch_pos", key):
-        camera.pitch_deg = min(89.0, camera.pitch_deg + 5.0)
-        return True
-    if key_matches(CAMERA_KEYS_3D, "pitch_neg", key):
-        camera.pitch_deg = max(-89.0, camera.pitch_deg - 5.0)
-        return True
-    if key_matches(CAMERA_KEYS_3D, "zoom_in", key):
-        camera.zoom = min(140.0, camera.zoom + 3.0)
-        return True
-    if key_matches(CAMERA_KEYS_3D, "zoom_out", key):
-        camera.zoom = max(18.0, camera.zoom - 3.0)
-        return True
-    if key_matches(CAMERA_KEYS_3D, "reset", key):
-        camera.reset()
-        return True
-    if key_matches(CAMERA_KEYS_3D, "cycle_projection", key):
-        camera.cycle_projection()
-        return True
-    return False
+    return (
+        dispatch_bound_action(
+            key,
+            CAMERA_KEYS_3D,
+            {
+                "yaw_neg": lambda: camera.start_yaw_turn(-90.0),
+                "yaw_pos": lambda: camera.start_yaw_turn(90.0),
+                "pitch_pos": lambda: camera.start_pitch_turn(90.0),
+                "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
+                "zoom_in": lambda: setattr(camera, "zoom", min(140.0, camera.zoom + 3.0)),
+                "zoom_out": lambda: setattr(camera, "zoom", max(18.0, camera.zoom - 3.0)),
+                "reset": camera.reset,
+                "cycle_projection": camera.cycle_projection,
+            },
+        )
+        is not None
+    )
 
 
 def handle_game_keydown(event: pygame.event.Event,
@@ -694,60 +596,41 @@ def handle_game_keydown(event: pygame.event.Event,
                         cfg: GameConfigND) -> str:
     key = event.key
 
-    if key_matches(SYSTEM_KEYS, "quit", key):
+    system_action = match_bound_action(
+        key,
+        SYSTEM_KEYS,
+        ("quit", "menu", "restart", "toggle_grid"),
+    )
+    if system_action == "quit":
         return "quit"
-    if key_matches(SYSTEM_KEYS, "menu", key):
+    if system_action == "menu":
         return "menu"
-    if key_matches(SYSTEM_KEYS, "restart", key):
+    if system_action == "restart":
         return "restart"
-    if key == pygame.K_g:
+    if system_action == "toggle_grid":
         return "toggle_grid"
 
     if state.game_over:
         return "continue"
 
-    if key_matches(KEYS_3D, "move_x_neg", key):
-        state.try_move_axis(0, -1)
-        return "continue"
-    if key_matches(KEYS_3D, "move_x_pos", key):
-        state.try_move_axis(0, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "move_z_neg", key):
-        state.try_move_axis(2, -1)
-        return "continue"
-    if key_matches(KEYS_3D, "move_z_pos", key):
-        state.try_move_axis(2, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "soft_drop", key):
-        state.try_move_axis(cfg.gravity_axis, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "hard_drop", key):
-        state.hard_drop()
-        return "continue"
-
-    # x-y rotations
-    if key_matches(KEYS_3D, "rotate_xy_pos", key):
-        state.try_rotate(0, cfg.gravity_axis, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "rotate_xy_neg", key):
-        state.try_rotate(0, cfg.gravity_axis, -1)
-        return "continue"
-
-    # x-z rotations
-    if key_matches(KEYS_3D, "rotate_xz_pos", key):
-        state.try_rotate(0, 2, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "rotate_xz_neg", key):
-        state.try_rotate(0, 2, -1)
-        return "continue"
-
-    # y-z rotations
-    if key_matches(KEYS_3D, "rotate_yz_pos", key):
-        state.try_rotate(cfg.gravity_axis, 2, 1)
-        return "continue"
-    if key_matches(KEYS_3D, "rotate_yz_neg", key):
-        state.try_rotate(cfg.gravity_axis, 2, -1)
-        return "continue"
+    dispatch_bound_action(
+        key,
+        KEYS_3D,
+        {
+            "move_x_neg": lambda: state.try_move_axis(0, -1),
+            "move_x_pos": lambda: state.try_move_axis(0, 1),
+            "move_z_neg": lambda: state.try_move_axis(2, -1),
+            "move_z_pos": lambda: state.try_move_axis(2, 1),
+            "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
+            "hard_drop": state.hard_drop,
+            "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
+            "rotate_xy_neg": lambda: state.try_rotate(0, cfg.gravity_axis, -1),
+            "rotate_xz_pos": lambda: state.try_rotate(0, 2, 1),
+            "rotate_xz_neg": lambda: state.try_rotate(0, 2, -1),
+            "rotate_yz_pos": lambda: state.try_rotate(cfg.gravity_axis, 2, 1),
+            "rotate_yz_neg": lambda: state.try_rotate(cfg.gravity_axis, 2, -1),
+        },
+    )
 
     return "continue"
 
@@ -758,6 +641,8 @@ def run_game_loop(screen: pygame.Surface,
     state = create_initial_state(cfg)
     camera = Camera3D()
     show_grid = True
+    clear_anim: Optional[ClearAnimation3D] = None
+    last_lines_cleared = state.lines_cleared
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     gravity_accumulator = 0
     clock = pygame.time.Clock()
@@ -766,31 +651,64 @@ def run_game_loop(screen: pygame.Surface,
         dt = clock.tick(60)
         gravity_accumulator += dt
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            if event.type != pygame.KEYDOWN:
-                continue
+        def on_restart() -> None:
+            nonlocal state, gravity_accumulator, clear_anim, last_lines_cleared
+            state = create_initial_state(cfg)
+            gravity_accumulator = 0
+            clear_anim = None
+            last_lines_cleared = state.lines_cleared
 
+        def on_toggle_grid() -> None:
+            nonlocal show_grid
+            show_grid = not show_grid
+
+        def keydown_handler(event: pygame.event.Event) -> str:
             if handle_camera_keydown(event, camera):
-                continue
+                return "continue"
+            return handle_game_keydown(event, state, cfg)
 
-            result = handle_game_keydown(event, state, cfg)
-            if result == "quit":
-                return False
-            if result == "menu":
-                return True
-            if result == "restart":
-                state = create_initial_state(cfg)
-                gravity_accumulator = 0
-            if result == "toggle_grid":
-                show_grid = not show_grid
+        decision = process_game_events(
+            keydown_handler=keydown_handler,
+            on_restart=on_restart,
+            on_toggle_grid=on_toggle_grid,
+        )
+        if decision == "quit":
+            return False
+        if decision == "menu":
+            return True
 
         while not state.game_over and gravity_accumulator >= gravity_interval_ms:
             state.step_gravity()
             gravity_accumulator -= gravity_interval_ms
 
-        draw_game_frame(screen, state, camera, fonts, show_grid=show_grid)
+        if state.lines_cleared != last_lines_cleared:
+            ghost_cells: list[tuple[Cell3, tuple[int, int, int]]] = []
+            for coord, cell_id in state.board.last_cleared_cells:
+                if len(coord) != 3:
+                    continue
+                x, y, z = coord
+                ghost_cells.append(((x, y, z), color_for_cell(cell_id, COLOR_MAP)))
+            if ghost_cells:
+                clear_anim = ClearAnimation3D(ghost_cells=tuple(ghost_cells))
+            else:
+                clear_anim = None
+            last_lines_cleared = state.lines_cleared
+
+        camera.step_animation(dt)
+
+        if clear_anim is not None:
+            clear_anim.step(dt)
+            if clear_anim.done:
+                clear_anim = None
+
+        draw_game_frame(
+            screen,
+            state,
+            camera,
+            fonts,
+            show_grid=show_grid,
+            clear_anim=clear_anim,
+        )
         pygame.display.flip()
 
 
@@ -802,6 +720,7 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 
 def run() -> None:
     pygame.init()
+    initialize_keybinding_files()
     fonts = init_fonts()
 
     running = True

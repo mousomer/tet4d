@@ -169,6 +169,23 @@ class GameState:
         if not self.game_over:
             self.spawn_new_piece()
 
+    def _apply_action(self, action: Action) -> bool:
+        if action == Action.HARD_DROP:
+            self.hard_drop()
+            return True
+
+        action_handlers = {
+            Action.MOVE_LEFT: lambda: self.try_move(-1, 0),
+            Action.MOVE_RIGHT: lambda: self.try_move(1, 0),
+            Action.SOFT_DROP: lambda: self.try_move(0, 1),
+            Action.ROTATE_CW: lambda: self.try_rotate(+1),
+            Action.ROTATE_CCW: lambda: self.try_rotate(-1),
+        }
+        handler = action_handlers.get(action)
+        if handler is not None:
+            handler()
+        return False
+
     # --- Main step function ---
 
     def step(self, action: Action = Action.NONE):
@@ -179,20 +196,9 @@ class GameState:
         if self.game_over:
             return
 
-        # Handle user action
-        if action == Action.MOVE_LEFT:
-            self.try_move(-1, 0)
-        elif action == Action.MOVE_RIGHT:
-            self.try_move(1, 0)
-        elif action == Action.SOFT_DROP:
-            self.try_move(0, 1)
-        elif action == Action.ROTATE_CW:
-            self.try_rotate(+1)
-        elif action == Action.ROTATE_CCW:
-            self.try_rotate(-1)
-        elif action == Action.HARD_DROP:
-            self.hard_drop()
-            return  # hard drop already locked & possibly spawned a new piece
+        # Hard drop locks immediately and already handles spawning.
+        if self._apply_action(action):
+            return
 
         # Gravity tick
         if self.current_piece is None:
