@@ -2,7 +2,7 @@
 import unittest
 
 from tetris_nd.board import BoardND
-from tetris_nd.game2d import GameConfig, GameState, Action
+from tetris_nd.game2d import GameConfig, GameState
 from tetris_nd.pieces2d import PieceShape2D, ActivePiece2D
 
 
