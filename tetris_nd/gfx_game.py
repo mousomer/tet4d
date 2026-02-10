@@ -150,19 +150,33 @@ def draw_button_with_arrow(
 
 # ---------- Menu drawing ----------
 
-def _draw_menu_header(screen: pygame.Surface, fonts: GfxFonts) -> None:
+def _draw_menu_header(screen: pygame.Surface,
+                      fonts: GfxFonts,
+                      bindings_file_hint: str,
+                      bindings_status: str,
+                      bindings_status_error: bool) -> None:
     width, _ = screen.get_size()
     title_text = "2D Tetris – Setup"
     subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
+    bindings_hint_text = f"L = load keys, S = save keys ({bindings_file_hint})"
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
+    bindings_hint_surf = fonts.hint_font.render(bindings_hint_text, True, (200, 200, 220))
 
     title_x = (width - title_surf.get_width()) // 2
     screen.blit(title_surf, (title_x, 60))
 
     subtitle_x = (width - subtitle_surf.get_width()) // 2
     screen.blit(subtitle_surf, (subtitle_x, 60 + title_surf.get_height() + 10))
+    hint_x = (width - bindings_hint_surf.get_width()) // 2
+    screen.blit(bindings_hint_surf, (hint_x, 60 + title_surf.get_height() + 34))
+
+    if bindings_status:
+        status_color = (255, 150, 150) if bindings_status_error else (170, 240, 170)
+        status_surf = fonts.hint_font.render(bindings_status, True, status_color)
+        status_x = (width - status_surf.get_width()) // 2
+        screen.blit(status_surf, (status_x, 60 + title_surf.get_height() + 58))
 
 
 def _draw_menu_settings_panel(screen: pygame.Surface,
@@ -314,12 +328,21 @@ def _draw_menu_dpad_and_commands(screen: pygame.Surface,
 def draw_menu(screen: pygame.Surface,
               fonts: GfxFonts,
               settings,
-              selected_index: int) -> None:
+              selected_index: int,
+              bindings_file_hint: str = "keybindings/2d.json",
+              bindings_status: str = "",
+              bindings_status_error: bool = False) -> None:
     """Top-level menu draw call."""
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     width, height = screen.get_size()
 
-    _draw_menu_header(screen, fonts)
+    _draw_menu_header(
+        screen,
+        fonts,
+        bindings_file_hint,
+        bindings_status,
+        bindings_status_error,
+    )
     panel_x, panel_y, panel_w, panel_h = _draw_menu_settings_panel(
         screen, fonts, width, height, settings, selected_index
     )
