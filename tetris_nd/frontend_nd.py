@@ -7,57 +7,15 @@ import pygame
 
 from .board import BoardND
 from .game_nd import GameConfigND, GameStateND
-from .game_loop_common import process_game_events
-from .keybindings import (
-    CONTROL_LINES_ND_3D,
-    CONTROL_LINES_ND_4D,
-    KEYS_3D,
-    KEYS_4D,
-    SLICE_KEYS_3D,
-    SLICE_KEYS_4D,
-    SYSTEM_KEYS,
-)
 from .key_dispatch import dispatch_bound_action, match_bound_action
+from .keybindings import KEYS_3D, KEYS_4D, SLICE_KEYS_3D, SLICE_KEYS_4D, SYSTEM_KEYS
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
-from .menu_keybinding_shortcuts import (
-    menu_binding_hint_line,
-    menu_binding_status_color,
-)
+from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
 
 
-CELL_SIZE = 28
-MARGIN = 20
-SIDE_PANEL = 340
-
-BG_COLOR = (10, 10, 30)
-GRID_COLOR = (40, 40, 80)
 TEXT_COLOR = (230, 230, 230)
 HIGHLIGHT_COLOR = (255, 215, 0)
-
-COLOR_MAP = {
-    1: (0, 255, 255),
-    2: (255, 255, 0),
-    3: (160, 0, 240),
-    4: (0, 255, 0),
-    5: (255, 0, 0),
-    6: (0, 0, 255),
-    7: (255, 165, 0),
-}
-
-AXIS_NAMES = ["x", "y", "z", "w", "v", "u", "t", "s"]
 DEFAULT_GAME_SEED = 1337
-
-
-def axis_name(axis: int) -> str:
-    if 0 <= axis < len(AXIS_NAMES):
-        return AXIS_NAMES[axis]
-    return f"a{axis}"
-
-
-def color_for_cell(cell_id: int) -> Tuple[int, int, int]:
-    if cell_id <= 0:
-        return (0, 0, 0)
-    return COLOR_MAP.get(cell_id, (200, 200, 200))
 
 
 @dataclass
@@ -154,23 +112,21 @@ def draw_menu(screen: pygame.Surface,
     panel_y = 160
 
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel_surf, (0, 0, 0, 140),
-                     panel_surf.get_rect(), border_radius=16)
+    pygame.draw.rect(panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16)
     screen.blit(panel_surf, (panel_x, panel_y))
 
     y = panel_y + 28
     for idx, (label, attr_name, _, _) in enumerate(fields):
         value = getattr(state.settings, attr_name)
         text = f"{label}: {value}"
-        selected = (idx == state.selected_index)
+        selected = idx == state.selected_index
         txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
         text_surf = fonts.menu_font.render(text, True, txt_color)
         text_rect = text_surf.get_rect(topleft=(panel_x + 36, y))
         if selected:
             highlight_rect = text_rect.inflate(20, 10)
             highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(highlight_surf, (255, 255, 255, 40),
-                             highlight_surf.get_rect(), border_radius=10)
+            pygame.draw.rect(highlight_surf, (255, 255, 255, 40), highlight_surf.get_rect(), border_radius=10)
             screen.blit(highlight_surf, highlight_rect.topleft)
         screen.blit(text_surf, text_rect.topleft)
         y += 44
@@ -227,8 +183,7 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
 
 
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
-    base_ms = 1000
-    interval = base_ms // max(1, min(10, cfg.speed_level))
+    interval = 1000 // max(1, min(10, cfg.speed_level))
     return max(80, interval)
 
 
@@ -251,13 +206,6 @@ def create_initial_slice_state(cfg: GameConfigND) -> SliceState:
     return SliceState(axis_values=values)
 
 
-def coord_visible_in_slice(coord: Tuple[int, ...], slice_state: SliceState) -> bool:
-    for axis, value in slice_state.axis_values.items():
-        if coord[axis] != value:
-            return False
-    return True
-
-
 def adjust_slice_axis(slice_state: SliceState,
                       cfg: GameConfigND,
                       axis: int,
@@ -266,191 +214,19 @@ def adjust_slice_axis(slice_state: SliceState,
         return
     size = cfg.dims[axis]
     curr = slice_state.axis_values[axis]
-    curr = max(0, min(size - 1, curr + delta))
-    slice_state.axis_values[axis] = curr
+    slice_state.axis_values[axis] = max(0, min(size - 1, curr + delta))
 
 
-def _draw_cell(surface: pygame.Surface,
-               x: int,
-               y: int,
-               cell_id: int,
-               board_offset: Tuple[int, int],
-               outline: bool = False) -> None:
-    ox, oy = board_offset
-    rect = pygame.Rect(
-        ox + x * CELL_SIZE + 1,
-        oy + y * CELL_SIZE + 1,
-        CELL_SIZE - 2,
-        CELL_SIZE - 2,
-    )
-    pygame.draw.rect(surface, color_for_cell(cell_id), rect)
-    if outline:
-        pygame.draw.rect(surface, (255, 255, 255), rect, 2)
+_SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid")
 
 
-def compute_game_layout(screen: pygame.Surface,
-                        cfg: GameConfigND) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-    window_w, window_h = screen.get_size()
-    board_px_w = cfg.dims[0] * CELL_SIZE
-    board_px_h = cfg.dims[cfg.gravity_axis] * CELL_SIZE
-
-    board_x = max(MARGIN, (window_w - SIDE_PANEL - board_px_w) // 2)
-    board_y = max(MARGIN, (window_h - board_px_h) // 2)
-    board_offset = (board_x, board_y)
-    panel_offset = (board_x + board_px_w + MARGIN, board_y)
-    return board_offset, panel_offset
+def system_key_action(key: int) -> str | None:
+    return match_bound_action(key, SYSTEM_KEYS, _SYSTEM_ACTIONS)
 
 
-def draw_board(surface: pygame.Surface,
-               state: GameStateND,
-               slice_state: SliceState,
-               board_offset: Tuple[int, int],
-               show_grid: bool = True) -> None:
-    cfg = state.config
-    w = cfg.dims[0]
-    h = cfg.dims[cfg.gravity_axis]
-    ox, oy = board_offset
-
-    board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
-    pygame.draw.rect(surface, (20, 20, 50), board_rect)
-
-    if show_grid:
-        for gx in range(w + 1):
-            x_px = ox + gx * CELL_SIZE
-            pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
-        for gy in range(h + 1):
-            y_px = oy + gy * CELL_SIZE
-            pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
-
-    for coord, cell_id in state.board.cells.items():
-        x = coord[0]
-        y = coord[cfg.gravity_axis]
-        if 0 <= x < w and 0 <= y < h and coord_visible_in_slice(coord, slice_state):
-            _draw_cell(surface, x, y, cell_id, board_offset)
-
-    if state.current_piece is not None:
-        color_id = state.current_piece.shape.color_id
-        for coord in state.current_piece.cells():
-            x = coord[0]
-            y = coord[cfg.gravity_axis]
-            if (
-                0 <= x < w
-                and 0 <= y < h
-                and coord_visible_in_slice(coord, slice_state)
-            ):
-                _draw_cell(surface, x, y, color_id, board_offset, outline=True)
-
-
-def control_lines_for_dimension(dimension: int) -> list[str]:
-    if dimension >= 4:
-        return list(CONTROL_LINES_ND_4D)
-    if dimension == 3:
-        return list(CONTROL_LINES_ND_3D)
-    return [
-        "Controls:",
-        " Left/Right : move x",
-        " Down       : soft drop",
-        " Space      : hard drop",
-        " Up/X       : rotate x-y +",
-        " Z          : rotate x-y -",
-        " R          : restart",
-        " M          : menu",
-        " Esc        : quit",
-    ]
-
-
-def draw_side_panel(surface: pygame.Surface,
-                    state: GameStateND,
-                    slice_state: SliceState,
-                    panel_offset: Tuple[int, int],
-                    fonts: GfxFonts,
-                    show_grid: bool) -> None:
-    cfg = state.config
-    px, py = panel_offset
-    gravity_ms = gravity_interval_ms_from_config(cfg)
-    rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
-
-    lines = [
-        f"{cfg.ndim}D Tetris",
-        "",
-        f"Dims: {cfg.dims}",
-        f"Gravity axis: {axis_name(cfg.gravity_axis)}",
-        f"Score: {state.score}",
-        f"Cleared: {state.lines_cleared}",
-        f"Speed level: {cfg.speed_level}",
-        f"Fall: {rows_per_sec:.2f} / sec",
-        f"Grid: {'ON' if show_grid else 'OFF'}",
-        "",
-        "Active slice:",
-    ]
-    for axis, value in sorted(slice_state.axis_values.items()):
-        lines.append(f" {axis_name(axis)} = {value} / {cfg.dims[axis] - 1}")
-    lines.append("")
-    lines.extend(control_lines_for_dimension(cfg.ndim))
-
-    y = py
-    for line in lines:
-        surf = fonts.panel_font.render(line, True, TEXT_COLOR)
-        surface.blit(surf, (px, y))
-        y += surf.get_height() + 3
-
-    if state.game_over:
-        y += 8
-        over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
-        surface.blit(over, (px, y))
-        y += over.get_height() + 3
-        hint = fonts.panel_font.render("Press R to restart", True, (255, 200, 200))
-        surface.blit(hint, (px, y))
-
-
-def draw_game_frame(screen: pygame.Surface,
-                    state: GameStateND,
-                    slice_state: SliceState,
-                    fonts: GfxFonts,
-                    show_grid: bool = True) -> None:
-    screen.fill(BG_COLOR)
-    board_offset, panel_offset = compute_game_layout(screen, state.config)
-    draw_board(screen, state, slice_state, board_offset, show_grid=show_grid)
-    draw_side_panel(screen, state, slice_state, panel_offset, fonts, show_grid=show_grid)
-
-
-def handle_game_keydown(event: pygame.event.Event,
-                        state: GameStateND,
-                        slice_state: SliceState) -> str:
+def dispatch_nd_gameplay_key(key: int, state: GameStateND) -> None:
     cfg = state.config
     ndim = cfg.ndim
-    key = event.key
-
-    system_action = match_bound_action(
-        key,
-        SYSTEM_KEYS,
-        ("quit", "menu", "restart", "toggle_grid"),
-    )
-    if system_action == "quit":
-        return "quit"
-    if system_action == "menu":
-        return "menu"
-    if system_action == "restart":
-        return "restart"
-    if system_action == "toggle_grid":
-        return "toggle_grid"
-
-    slice_bindings = SLICE_KEYS_4D if ndim >= 4 else SLICE_KEYS_3D
-    slice_handlers = {
-        "slice_z_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=-1),
-        "slice_z_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=1),
-    }
-    if ndim >= 4:
-        slice_handlers.update({
-            "slice_w_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=-1),
-            "slice_w_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=1),
-        })
-    if dispatch_bound_action(key, slice_bindings, slice_handlers):
-        return "continue"
-
-    if state.game_over:
-        return "continue"
-
     gameplay_keys = KEYS_4D if ndim >= 4 else KEYS_3D
     gameplay_handlers = {
         "move_x_neg": lambda: state.try_move_axis(0, -1),
@@ -479,54 +255,43 @@ def handle_game_keydown(event: pygame.event.Event,
         })
     dispatch_bound_action(key, gameplay_keys, gameplay_handlers)
 
+
+def _dispatch_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) -> bool:
+    ndim = cfg.ndim
+    slice_bindings = SLICE_KEYS_4D if ndim >= 4 else SLICE_KEYS_3D
+    slice_handlers = {
+        "slice_z_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=-1),
+        "slice_z_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=1),
+    }
+    if ndim >= 4:
+        slice_handlers.update({
+            "slice_w_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=-1),
+            "slice_w_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=1),
+        })
+    return dispatch_bound_action(key, slice_bindings, slice_handlers) is not None
+
+
+def handle_game_keydown(event: pygame.event.Event,
+                        state: GameStateND,
+                        slice_state: SliceState) -> str:
+    cfg = state.config
+    key = event.key
+
+    system_action = system_key_action(key)
+    if system_action == "quit":
+        return "quit"
+    if system_action == "menu":
+        return "menu"
+    if system_action == "restart":
+        return "restart"
+    if system_action == "toggle_grid":
+        return "toggle_grid"
+
+    if _dispatch_slice_key(key, cfg, slice_state):
+        return "continue"
+
+    if state.game_over:
+        return "continue"
+
+    dispatch_nd_gameplay_key(key, state)
     return "continue"
-
-
-def run_game_loop(screen: pygame.Surface,
-                  cfg: GameConfigND,
-                  fonts: GfxFonts) -> bool:
-    state = create_initial_state(cfg)
-    slice_state = create_initial_slice_state(cfg)
-    show_grid = True
-    gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    gravity_accumulator = 0
-    clock = pygame.time.Clock()
-
-    while True:
-        dt = clock.tick(60)
-        gravity_accumulator += dt
-
-        def on_restart() -> None:
-            nonlocal state, slice_state, gravity_accumulator
-            state = create_initial_state(cfg)
-            slice_state = create_initial_slice_state(cfg)
-            gravity_accumulator = 0
-
-        def on_toggle_grid() -> None:
-            nonlocal show_grid
-            show_grid = not show_grid
-
-        decision = process_game_events(
-            keydown_handler=lambda event: handle_game_keydown(event, state, slice_state),
-            on_restart=on_restart,
-            on_toggle_grid=on_toggle_grid,
-        )
-        if decision == "quit":
-            return False
-        if decision == "menu":
-            return True
-
-        while not state.game_over and gravity_accumulator >= gravity_interval_ms:
-            state.step_gravity()
-            gravity_accumulator -= gravity_interval_ms
-
-        draw_game_frame(screen, state, slice_state, fonts, show_grid=show_grid)
-        pygame.display.flip()
-
-
-def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
-    board_px_w = cfg.dims[0] * CELL_SIZE
-    board_px_h = cfg.dims[cfg.gravity_axis] * CELL_SIZE
-    window_w = board_px_w + SIDE_PANEL + 3 * MARGIN
-    window_h = board_px_h + 2 * MARGIN
-    return max(window_w, 900), max(window_h, 640)

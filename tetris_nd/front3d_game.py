@@ -8,15 +8,14 @@ from typing import Optional, Tuple
 import pygame
 
 from .board import BoardND
+from .frontend_nd import dispatch_nd_gameplay_key, system_key_action
 from .game_nd import GameConfigND, GameStateND
 from .game_loop_common import process_game_events
-from .key_dispatch import dispatch_bound_action, match_bound_action
+from .key_dispatch import dispatch_bound_action
 from .keybindings import (
     CAMERA_KEYS_3D,
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
-    KEYS_3D,
-    SYSTEM_KEYS,
     initialize_keybinding_files,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
@@ -40,6 +39,7 @@ from .projection3d import (
     smoothstep01,
     transform_point,
 )
+from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
 
 
 MARGIN = 20
@@ -78,7 +78,7 @@ def init_fonts() -> GfxFonts:
             hint_font=pygame.font.SysFont("consolas", 18),
             panel_font=pygame.font.SysFont("consolas", 17),
         )
-    except Exception:
+    except (pygame.error, OSError):
         return GfxFonts(
             title_font=pygame.font.Font(None, 36),
             menu_font=pygame.font.Font(None, 24),
@@ -370,38 +370,30 @@ def _build_cell_faces(cell: Cell3,
     )
 
 
-def _draw_board_3d(surface: pygame.Surface,
-                   state: GameStateND,
-                   camera: Camera3D,
-                   board_rect: pygame.Rect,
-                   show_grid: bool = True,
-                   clear_anim: Optional[ClearAnimation3D] = None) -> None:
+def _collect_visible_cells(state: GameStateND) -> list[tuple[Cell3, int, bool]]:
     dims = state.config.dims
-    center_px = (board_rect.centerx, board_rect.centery)
-
-    if show_grid:
-        _draw_board_grid(surface, dims, camera, board_rect)
-    else:
-        draw_projected_box_shadow(
-            surface,
-            dims,
-            project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
-            transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
-        )
-
     cells: list[tuple[Cell3, int, bool]] = []
+
     for coord, cell_id in state.board.cells.items():
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
             cells.append(((x, y, z), cell_id, False))
 
-    if state.current_piece is not None:
-        cell_id = state.current_piece.shape.color_id
-        for coord in state.current_piece.cells():
-            x, y, z = coord
-            if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-                cells.append(((x, y, z), cell_id, True))
+    if state.current_piece is None:
+        return cells
 
+    piece_id = state.current_piece.shape.color_id
+    for coord in state.current_piece.cells():
+        x, y, z = coord
+        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
+            cells.append(((x, y, z), piece_id, True))
+    return cells
+
+
+def _faces_for_cells(cells: list[tuple[Cell3, int, bool]],
+                     camera: Camera3D,
+                     center_px: Point2,
+                     dims: Cell3) -> list[Face]:
     faces: list[Face] = []
     for coord, cell_id, active in cells:
         faces.extend(
@@ -414,16 +406,22 @@ def _draw_board_3d(surface: pygame.Surface,
                 active=active,
             )
         )
+    return faces
 
-    # Draw far-to-near by camera-space depth.
+
+def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
     faces.sort(key=lambda x: x[0], reverse=True)
-
     for _depth, poly, color, active in faces:
         pygame.draw.polygon(surface, color, poly)
         border = (255, 255, 255) if active else (25, 25, 35)
-        border_w = 2 if active else 1
-        pygame.draw.polygon(surface, border, poly, border_w)
+        pygame.draw.polygon(surface, border, poly, 2 if active else 1)
 
+
+def _draw_clear_animation(surface: pygame.Surface,
+                          clear_anim: Optional[ClearAnimation3D],
+                          camera: Camera3D,
+                          center_px: Point2,
+                          dims: Cell3) -> None:
     if clear_anim is None or not clear_anim.ghost_cells:
         return
 
@@ -459,6 +457,32 @@ def _draw_board_3d(surface: pygame.Surface,
         pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
         pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), poly, 2)
     surface.blit(overlay, (0, 0))
+
+
+def _draw_board_3d(surface: pygame.Surface,
+                   state: GameStateND,
+                   camera: Camera3D,
+                   board_rect: pygame.Rect,
+                   show_grid: bool = True,
+                   clear_anim: Optional[ClearAnimation3D] = None) -> None:
+    dims = state.config.dims
+    center_px = (board_rect.centerx, board_rect.centery)
+
+    if show_grid:
+        _draw_board_grid(surface, dims, camera, board_rect)
+    else:
+        draw_projected_box_shadow(
+            surface,
+            dims,
+            project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        )
+
+    _draw_sorted_faces(
+        surface,
+        _faces_for_cells(_collect_visible_cells(state), camera, center_px, dims),
+    )
+    _draw_clear_animation(surface, clear_anim, camera, center_px, dims)
 
 
 def _draw_side_panel(surface: pygame.Surface,
@@ -593,14 +617,10 @@ def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
 
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameStateND,
-                        cfg: GameConfigND) -> str:
+                        _cfg: GameConfigND | None = None) -> str:
     key = event.key
 
-    system_action = match_bound_action(
-        key,
-        SYSTEM_KEYS,
-        ("quit", "menu", "restart", "toggle_grid"),
-    )
+    system_action = system_key_action(key)
     if system_action == "quit":
         return "quit"
     if system_action == "menu":
@@ -613,101 +633,103 @@ def handle_game_keydown(event: pygame.event.Event,
     if state.game_over:
         return "continue"
 
-    dispatch_bound_action(
-        key,
-        KEYS_3D,
-        {
-            "move_x_neg": lambda: state.try_move_axis(0, -1),
-            "move_x_pos": lambda: state.try_move_axis(0, 1),
-            "move_z_neg": lambda: state.try_move_axis(2, -1),
-            "move_z_pos": lambda: state.try_move_axis(2, 1),
-            "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
-            "hard_drop": state.hard_drop,
-            "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
-            "rotate_xy_neg": lambda: state.try_rotate(0, cfg.gravity_axis, -1),
-            "rotate_xz_pos": lambda: state.try_rotate(0, 2, 1),
-            "rotate_xz_neg": lambda: state.try_rotate(0, 2, -1),
-            "rotate_yz_pos": lambda: state.try_rotate(cfg.gravity_axis, 2, 1),
-            "rotate_yz_neg": lambda: state.try_rotate(cfg.gravity_axis, 2, -1),
-        },
-    )
-
+    dispatch_nd_gameplay_key(key, state)
     return "continue"
+
+
+def _spawn_clear_animation_if_needed(state: GameStateND,
+                                     last_lines_cleared: int) -> tuple[Optional[ClearAnimation3D], int]:
+    if state.lines_cleared == last_lines_cleared:
+        return None, last_lines_cleared
+
+    raw_ghost_cells = collect_cleared_ghost_cells(
+        state,
+        expected_coord_len=3,
+        color_for_cell=lambda cell_id: color_for_cell(cell_id, COLOR_MAP),
+    )
+    ghost_cells = tuple(
+        ((coord[0], coord[1], coord[2]), color)
+        for coord, color in raw_ghost_cells
+    )
+    if not ghost_cells:
+        return None, state.lines_cleared
+    return ClearAnimation3D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
+
+
+@dataclass
+class LoopContext3D:
+    cfg: GameConfigND
+    state: GameStateND
+    camera: Camera3D = field(default_factory=Camera3D)
+    show_grid: bool = True
+    clear_anim: Optional[ClearAnimation3D] = None
+    last_lines_cleared: int = 0
+    gravity_accumulator: int = 0
+
+    @classmethod
+    def create(cls, cfg: GameConfigND) -> "LoopContext3D":
+        state = create_initial_state(cfg)
+        return cls(cfg=cfg, state=state, last_lines_cleared=state.lines_cleared)
+
+    def keydown_handler(self, event: pygame.event.Event) -> str:
+        if handle_camera_keydown(event, self.camera):
+            return "continue"
+        return handle_game_keydown(event, self.state)
+
+    def on_restart(self) -> None:
+        self.state = create_initial_state(self.cfg)
+        self.gravity_accumulator = 0
+        self.clear_anim = None
+        self.last_lines_cleared = self.state.lines_cleared
+
+    def on_toggle_grid(self) -> None:
+        self.show_grid = not self.show_grid
 
 
 def run_game_loop(screen: pygame.Surface,
                   cfg: GameConfigND,
                   fonts: GfxFonts) -> bool:
-    state = create_initial_state(cfg)
-    camera = Camera3D()
-    show_grid = True
-    clear_anim: Optional[ClearAnimation3D] = None
-    last_lines_cleared = state.lines_cleared
+    loop = LoopContext3D.create(cfg)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    gravity_accumulator = 0
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60)
-        gravity_accumulator += dt
-
-        def on_restart() -> None:
-            nonlocal state, gravity_accumulator, clear_anim, last_lines_cleared
-            state = create_initial_state(cfg)
-            gravity_accumulator = 0
-            clear_anim = None
-            last_lines_cleared = state.lines_cleared
-
-        def on_toggle_grid() -> None:
-            nonlocal show_grid
-            show_grid = not show_grid
-
-        def keydown_handler(event: pygame.event.Event) -> str:
-            if handle_camera_keydown(event, camera):
-                return "continue"
-            return handle_game_keydown(event, state, cfg)
+        loop.gravity_accumulator += dt
 
         decision = process_game_events(
-            keydown_handler=keydown_handler,
-            on_restart=on_restart,
-            on_toggle_grid=on_toggle_grid,
+            keydown_handler=loop.keydown_handler,
+            on_restart=loop.on_restart,
+            on_toggle_grid=loop.on_toggle_grid,
         )
         if decision == "quit":
             return False
         if decision == "menu":
             return True
 
-        while not state.game_over and gravity_accumulator >= gravity_interval_ms:
-            state.step_gravity()
-            gravity_accumulator -= gravity_interval_ms
+        loop.gravity_accumulator = advance_gravity(
+            loop.state,
+            loop.gravity_accumulator,
+            gravity_interval_ms,
+        )
 
-        if state.lines_cleared != last_lines_cleared:
-            ghost_cells: list[tuple[Cell3, tuple[int, int, int]]] = []
-            for coord, cell_id in state.board.last_cleared_cells:
-                if len(coord) != 3:
-                    continue
-                x, y, z = coord
-                ghost_cells.append(((x, y, z), color_for_cell(cell_id, COLOR_MAP)))
-            if ghost_cells:
-                clear_anim = ClearAnimation3D(ghost_cells=tuple(ghost_cells))
-            else:
-                clear_anim = None
-            last_lines_cleared = state.lines_cleared
+        new_clear_anim, loop.last_lines_cleared = _spawn_clear_animation_if_needed(
+            loop.state,
+            loop.last_lines_cleared,
+        )
+        if new_clear_anim is not None:
+            loop.clear_anim = new_clear_anim
 
-        camera.step_animation(dt)
-
-        if clear_anim is not None:
-            clear_anim.step(dt)
-            if clear_anim.done:
-                clear_anim = None
+        loop.camera.step_animation(dt)
+        loop.clear_anim = tick_animation(loop.clear_anim, dt)
 
         draw_game_frame(
             screen,
-            state,
-            camera,
+            loop.state,
+            loop.camera,
             fonts,
-            show_grid=show_grid,
-            clear_anim=clear_anim,
+            show_grid=loop.show_grid,
+            clear_anim=loop.clear_anim,
         )
         pygame.display.flip()
 
