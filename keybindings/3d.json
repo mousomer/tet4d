@@ -1,0 +1,79 @@
+{
+  "bindings": {
+    "camera": {
+      "cycle_projection": [
+        "p"
+      ],
+      "pitch_neg": [
+        "k"
+      ],
+      "pitch_pos": [
+        "i"
+      ],
+      "reset": [
+        "0"
+      ],
+      "yaw_neg": [
+        "j"
+      ],
+      "yaw_pos": [
+        "l"
+      ],
+      "zoom_in": [
+        "="
+      ],
+      "zoom_out": [
+        "-"
+      ]
+    },
+    "game": {
+      "hard_drop": [
+        "space"
+      ],
+      "move_x_neg": [
+        "left"
+      ],
+      "move_x_pos": [
+        "right"
+      ],
+      "move_z_neg": [
+        "up"
+      ],
+      "move_z_pos": [
+        "down"
+      ],
+      "rotate_xy_neg": [
+        "w"
+      ],
+      "rotate_xy_pos": [
+        "q"
+      ],
+      "rotate_xz_neg": [
+        "s"
+      ],
+      "rotate_xz_pos": [
+        "a"
+      ],
+      "rotate_yz_neg": [
+        "x"
+      ],
+      "rotate_yz_pos": [
+        "z"
+      ],
+      "soft_drop": [
+        "left shift",
+        "right shift"
+      ]
+    },
+    "slice": {
+      "slice_z_neg": [
+        "["
+      ],
+      "slice_z_pos": [
+        "]"
+      ]
+    }
+  },
+  "dimension": 3,
+  "profile": "small"
+}

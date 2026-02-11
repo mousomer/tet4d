@@ -3,21 +3,36 @@
 import sys
 import random
 from dataclasses import dataclass, field
-from typing import Optional, List
-from enum import Enum, auto
+from typing import Optional
 
 import pygame
 
 from tetris_nd.board import BoardND
 from tetris_nd.game2d import GameConfig, GameState, Action
+from tetris_nd.game_loop_common import process_game_events
 from tetris_nd.gfx_game import (
+    ClearEffect2D,
     GfxFonts,
     init_fonts,
     draw_menu,
     draw_game_frame,
     gravity_interval_ms_from_config,
 )
-from tetris_nd.keybindings import DISABLED_KEYS_2D, KEYS_2D, SYSTEM_KEYS, key_matches
+from tetris_nd.keybindings import (
+    DISABLED_KEYS_2D,
+    KEYS_2D,
+    SYSTEM_KEYS,
+    initialize_keybinding_files,
+)
+from tetris_nd.key_dispatch import (
+    dispatch_bound_action,
+    match_bound_action,
+)
+from tetris_nd.menu_controls import (
+    FieldSpec,
+    apply_menu_actions,
+    gather_menu_actions,
+)
 
 DEFAULT_GAME_SEED = 1337
 
@@ -31,81 +46,21 @@ class GameSettings:
     speed_level: int = 1  # 1..10, mapped to gravity interval
 
 
-class MenuAction(Enum):
-    QUIT = auto()
-    START_GAME = auto()
-    SELECT_UP = auto()
-    SELECT_DOWN = auto()
-    VALUE_LEFT = auto()
-    VALUE_RIGHT = auto()
-    NO_OP = auto()
-
-
 @dataclass
 class MenuState:
     settings: GameSettings = field(default_factory=GameSettings)
     selected_index: int = 0  # 0=width, 1=height, 2=speed
     running: bool = True
     start_game: bool = False
+    bindings_status: str = ""
+    bindings_status_error: bool = False
 
 
-# ---------- Menu logic helpers ----------
-
-def gather_menu_actions() -> List[MenuAction]:
-    actions: List[MenuAction] = []
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            actions.append(MenuAction.QUIT)
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                actions.append(MenuAction.QUIT)
-            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                actions.append(MenuAction.START_GAME)
-            elif event.key == pygame.K_UP:
-                actions.append(MenuAction.SELECT_UP)
-            elif event.key == pygame.K_DOWN:
-                actions.append(MenuAction.SELECT_DOWN)
-            elif event.key == pygame.K_LEFT:
-                actions.append(MenuAction.VALUE_LEFT)
-            elif event.key == pygame.K_RIGHT:
-                actions.append(MenuAction.VALUE_RIGHT)
-    if not actions:
-        actions.append(MenuAction.NO_OP)
-    return actions
-
-
-def apply_menu_actions(state: MenuState, actions: List[MenuAction]) -> None:
-    for action in actions:
-        if action == MenuAction.NO_OP:
-            continue
-
-        if action == MenuAction.QUIT:
-            state.running = False
-
-        elif action == MenuAction.START_GAME:
-            state.start_game = True
-
-        elif action == MenuAction.SELECT_UP:
-            state.selected_index = (state.selected_index - 1) % 3
-
-        elif action == MenuAction.SELECT_DOWN:
-            state.selected_index = (state.selected_index + 1) % 3
-
-        elif action == MenuAction.VALUE_LEFT:
-            if state.selected_index == 0:
-                state.settings.width = max(6, state.settings.width - 1)
-            elif state.selected_index == 1:
-                state.settings.height = max(12, state.settings.height - 1)
-            elif state.selected_index == 2:
-                state.settings.speed_level = max(1, state.settings.speed_level - 1)
-
-        elif action == MenuAction.VALUE_RIGHT:
-            if state.selected_index == 0:
-                state.settings.width = min(16, state.settings.width + 1)
-            elif state.selected_index == 1:
-                state.settings.height = min(30, state.settings.height + 1)
-            elif state.selected_index == 2:
-                state.settings.speed_level = min(10, state.settings.speed_level + 1)
+_MENU_FIELDS: list[FieldSpec] = [
+    ("Board width", "width", 6, 16),
+    ("Board height", "height", 12, 30),
+    ("Speed level", "speed_level", 1, 10),
+]
 
 
 # ---------- Menu loop ----------
@@ -121,8 +76,16 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions()
-        apply_menu_actions(state, actions)
-        draw_menu(screen, fonts, state.settings, state.selected_index)
+        apply_menu_actions(state, actions, _MENU_FIELDS, 2)
+        draw_menu(
+            screen,
+            fonts,
+            state.settings,
+            state.selected_index,
+            bindings_file_hint="keybindings/2d.json",
+            bindings_status=state.bindings_status,
+            bindings_status_error=state.bindings_status_error,
+        )
         pygame.display.flip()
 
     if state.start_game and state.running:
@@ -145,30 +108,24 @@ def handle_game_keydown(event: pygame.event.Event,
     Returns:
         "quit"        -> user wants to quit the program
         "menu"        -> user wants to go back to the menu
+        "restart"     -> restart game with current config
         "toggle_grid" -> toggle board grid visibility
         "continue"    -> keep running
     """
     key = event.key
 
-    if key_matches(SYSTEM_KEYS, "quit", key):
+    system_action = match_bound_action(
+        key,
+        SYSTEM_KEYS,
+        ("quit", "menu", "restart", "toggle_grid"),
+    )
+    if system_action == "quit":
         return "quit"
-
-    if key_matches(SYSTEM_KEYS, "menu", key):
+    if system_action == "menu":
         return "menu"
-
-    if key_matches(SYSTEM_KEYS, "restart", key):
-        # Restart game with same config
-        new_state = create_initial_state(cfg)
-        state.board = new_state.board
-        state.current_piece = new_state.current_piece
-        state.next_bag = new_state.next_bag
-        state.rng = new_state.rng
-        state.score = 0
-        state.lines_cleared = 0
-        state.game_over = False
-        return "continue"
-
-    if key == pygame.K_g:
+    if system_action == "restart":
+        return "restart"
+    if system_action == "toggle_grid":
         return "toggle_grid"
 
     if state.game_over:
@@ -180,20 +137,84 @@ def handle_game_keydown(event: pygame.event.Event,
         return "continue"
 
     # Movement / rotation / drops
-    if key_matches(KEYS_2D, "move_x_neg", key):
-        state.try_move(-1, 0)
-    elif key_matches(KEYS_2D, "move_x_pos", key):
-        state.try_move(1, 0)
-    elif key_matches(KEYS_2D, "rotate_xy_pos", key):
-        state.try_rotate(+1)
-    elif key_matches(KEYS_2D, "rotate_xy_neg", key):
-        state.try_rotate(-1)
-    elif key_matches(KEYS_2D, "hard_drop", key):
-        state.hard_drop()
-    elif key_matches(KEYS_2D, "soft_drop", key):
-        state.try_move(0, 1)
+    dispatch_bound_action(
+        key,
+        KEYS_2D,
+        {
+            "move_x_neg": lambda: state.try_move(-1, 0),
+            "move_x_pos": lambda: state.try_move(1, 0),
+            "rotate_xy_pos": lambda: state.try_rotate(+1),
+            "rotate_xy_neg": lambda: state.try_rotate(-1),
+            "hard_drop": state.hard_drop,
+            "soft_drop": lambda: state.try_move(0, 1),
+        },
+    )
 
     return "continue"
+
+
+def _step_gravity_tick(state: GameState, gravity_accumulator: int, gravity_interval_ms: int) -> int:
+    if not state.game_over and gravity_accumulator >= gravity_interval_ms:
+        state.step(Action.NONE)
+        return 0
+    return gravity_accumulator
+
+
+def _update_clear_animation(state: GameState,
+                            last_lines_cleared: int,
+                            clear_anim_levels: tuple[int, ...],
+                            clear_anim_elapsed_ms: float,
+                            clear_anim_duration_ms: float,
+                            dt_ms: int) -> tuple[tuple[int, ...], float, int]:
+    if state.lines_cleared != last_lines_cleared:
+        clear_anim_levels = tuple(state.board.last_cleared_levels)
+        clear_anim_elapsed_ms = 0.0
+        last_lines_cleared = state.lines_cleared
+    if clear_anim_levels:
+        clear_anim_elapsed_ms += dt_ms
+        if clear_anim_elapsed_ms >= clear_anim_duration_ms:
+            return (), 0.0, last_lines_cleared
+    return clear_anim_levels, clear_anim_elapsed_ms, last_lines_cleared
+
+
+def _clear_effect(levels: tuple[int, ...],
+                  elapsed_ms: float,
+                  duration_ms: float) -> Optional[ClearEffect2D]:
+    if not levels:
+        return None
+    return ClearEffect2D(
+        levels=levels,
+        progress=min(1.0, elapsed_ms / duration_ms),
+    )
+
+
+@dataclass
+class LoopContext2D:
+    cfg: GameConfig
+    state: GameState
+    gravity_accumulator: int = 0
+    show_grid: bool = True
+    clear_anim_levels: tuple[int, ...] = ()
+    clear_anim_elapsed_ms: float = 0.0
+    last_lines_cleared: int = 0
+
+    @classmethod
+    def create(cls, cfg: GameConfig) -> "LoopContext2D":
+        state = create_initial_state(cfg)
+        return cls(cfg=cfg, state=state, last_lines_cleared=state.lines_cleared)
+
+    def keydown_handler(self, event: pygame.event.Event) -> str:
+        return handle_game_keydown(event, self.state, self.cfg)
+
+    def on_restart(self) -> None:
+        self.state = create_initial_state(self.cfg)
+        self.gravity_accumulator = 0
+        self.clear_anim_levels = ()
+        self.clear_anim_elapsed_ms = 0.0
+        self.last_lines_cleared = self.state.lines_cleared
+
+    def on_toggle_grid(self) -> None:
+        self.show_grid = not self.show_grid
 
 
 def run_game_loop(screen: pygame.Surface,
@@ -205,38 +226,53 @@ def run_game_loop(screen: pygame.Surface,
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
-    state = create_initial_state(cfg)
+    loop = LoopContext2D.create(cfg)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    gravity_accumulator = 0
-    show_grid = True
+    clear_anim_duration_ms = 320.0
 
     clock = pygame.time.Clock()
-    running = True
-
-    while running:
+    while True:
         dt = clock.tick(60)
-        gravity_accumulator += dt
+        loop.gravity_accumulator += dt
 
-        # ----- Events -----
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            elif event.type == pygame.KEYDOWN:
-                result = handle_game_keydown(event, state, cfg)
-                if result == "quit":
-                    return False
-                if result == "menu":
-                    return True
-                if result == "toggle_grid":
-                    show_grid = not show_grid
+        decision = process_game_events(
+            keydown_handler=loop.keydown_handler,
+            on_restart=loop.on_restart,
+            on_toggle_grid=loop.on_toggle_grid,
+        )
+        if decision == "quit":
+            return False
+        if decision == "menu":
+            return True
 
-        # ----- Gravity tick -----
-        if not state.game_over and gravity_accumulator >= gravity_interval_ms:
-            gravity_accumulator = 0
-            state.step(Action.NONE)  # just gravity
+        loop.gravity_accumulator = _step_gravity_tick(
+            loop.state,
+            loop.gravity_accumulator,
+            gravity_interval_ms,
+        )
+        loop.clear_anim_levels, loop.clear_anim_elapsed_ms, loop.last_lines_cleared = _update_clear_animation(
+            state=loop.state,
+            last_lines_cleared=loop.last_lines_cleared,
+            clear_anim_levels=loop.clear_anim_levels,
+            clear_anim_elapsed_ms=loop.clear_anim_elapsed_ms,
+            clear_anim_duration_ms=clear_anim_duration_ms,
+            dt_ms=dt,
+        )
+        clear_effect = _clear_effect(
+            loop.clear_anim_levels,
+            loop.clear_anim_elapsed_ms,
+            clear_anim_duration_ms,
+        )
 
         # ----- Drawing -----
-        draw_game_frame(screen, cfg, state, fonts, show_grid=show_grid)
+        draw_game_frame(
+            screen,
+            cfg,
+            loop.state,
+            fonts,
+            show_grid=loop.show_grid,
+            clear_effect=clear_effect,
+        )
         pygame.display.flip()
 
     # Normally not reached
@@ -247,6 +283,7 @@ def run_game_loop(screen: pygame.Surface,
 
 def run():
     pygame.init()
+    initialize_keybinding_files()
     fonts = init_fonts()
 
     running = True

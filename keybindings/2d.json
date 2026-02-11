@@ -1,0 +1,27 @@
+{
+  "bindings": {
+    "game": {
+      "hard_drop": [
+        "space"
+      ],
+      "move_x_neg": [
+        "left"
+      ],
+      "move_x_pos": [
+        "right"
+      ],
+      "rotate_xy_neg": [
+        "z"
+      ],
+      "rotate_xy_pos": [
+        "up",
+        "x"
+      ],
+      "soft_drop": [
+        "down"
+      ]
+    }
+  },
+  "dimension": 2,
+  "profile": "small"
+}
