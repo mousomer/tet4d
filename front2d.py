@@ -153,6 +153,70 @@ def handle_game_keydown(event: pygame.event.Event,
     return "continue"
 
 
+def _step_gravity_tick(state: GameState, gravity_accumulator: int, gravity_interval_ms: int) -> int:
+    if not state.game_over and gravity_accumulator >= gravity_interval_ms:
+        state.step(Action.NONE)
+        return 0
+    return gravity_accumulator
+
+
+def _update_clear_animation(state: GameState,
+                            last_lines_cleared: int,
+                            clear_anim_levels: tuple[int, ...],
+                            clear_anim_elapsed_ms: float,
+                            clear_anim_duration_ms: float,
+                            dt_ms: int) -> tuple[tuple[int, ...], float, int]:
+    if state.lines_cleared != last_lines_cleared:
+        clear_anim_levels = tuple(state.board.last_cleared_levels)
+        clear_anim_elapsed_ms = 0.0
+        last_lines_cleared = state.lines_cleared
+    if clear_anim_levels:
+        clear_anim_elapsed_ms += dt_ms
+        if clear_anim_elapsed_ms >= clear_anim_duration_ms:
+            return (), 0.0, last_lines_cleared
+    return clear_anim_levels, clear_anim_elapsed_ms, last_lines_cleared
+
+
+def _clear_effect(levels: tuple[int, ...],
+                  elapsed_ms: float,
+                  duration_ms: float) -> Optional[ClearEffect2D]:
+    if not levels:
+        return None
+    return ClearEffect2D(
+        levels=levels,
+        progress=min(1.0, elapsed_ms / duration_ms),
+    )
+
+
+@dataclass
+class LoopContext2D:
+    cfg: GameConfig
+    state: GameState
+    gravity_accumulator: int = 0
+    show_grid: bool = True
+    clear_anim_levels: tuple[int, ...] = ()
+    clear_anim_elapsed_ms: float = 0.0
+    last_lines_cleared: int = 0
+
+    @classmethod
+    def create(cls, cfg: GameConfig) -> "LoopContext2D":
+        state = create_initial_state(cfg)
+        return cls(cfg=cfg, state=state, last_lines_cleared=state.lines_cleared)
+
+    def keydown_handler(self, event: pygame.event.Event) -> str:
+        return handle_game_keydown(event, self.state, self.cfg)
+
+    def on_restart(self) -> None:
+        self.state = create_initial_state(self.cfg)
+        self.gravity_accumulator = 0
+        self.clear_anim_levels = ()
+        self.clear_anim_elapsed_ms = 0.0
+        self.last_lines_cleared = self.state.lines_cleared
+
+    def on_toggle_grid(self) -> None:
+        self.show_grid = not self.show_grid
+
+
 def run_game_loop(screen: pygame.Surface,
                   cfg: GameConfig,
                   fonts: GfxFonts) -> bool:
@@ -162,74 +226,51 @@ def run_game_loop(screen: pygame.Surface,
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
-    state = create_initial_state(cfg)
+    loop = LoopContext2D.create(cfg)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    gravity_accumulator = 0
-    show_grid = True
-    clear_anim_levels: tuple[int, ...] = ()
-    clear_anim_elapsed_ms = 0.0
     clear_anim_duration_ms = 320.0
-    last_lines_cleared = state.lines_cleared
 
     clock = pygame.time.Clock()
-    running = True
-
-    while running:
+    while True:
         dt = clock.tick(60)
-        gravity_accumulator += dt
-
-        # ----- Events -----
-        def on_restart() -> None:
-            nonlocal state, gravity_accumulator, clear_anim_levels, clear_anim_elapsed_ms, last_lines_cleared
-            state = create_initial_state(cfg)
-            gravity_accumulator = 0
-            clear_anim_levels = ()
-            clear_anim_elapsed_ms = 0.0
-            last_lines_cleared = state.lines_cleared
-
-        def on_toggle_grid() -> None:
-            nonlocal show_grid
-            show_grid = not show_grid
+        loop.gravity_accumulator += dt
 
         decision = process_game_events(
-            keydown_handler=lambda event: handle_game_keydown(event, state, cfg),
-            on_restart=on_restart,
-            on_toggle_grid=on_toggle_grid,
+            keydown_handler=loop.keydown_handler,
+            on_restart=loop.on_restart,
+            on_toggle_grid=loop.on_toggle_grid,
         )
         if decision == "quit":
             return False
         if decision == "menu":
             return True
 
-        # ----- Gravity tick -----
-        if not state.game_over and gravity_accumulator >= gravity_interval_ms:
-            gravity_accumulator = 0
-            state.step(Action.NONE)  # just gravity
-
-        if state.lines_cleared != last_lines_cleared:
-            clear_anim_levels = tuple(state.board.last_cleared_levels)
-            clear_anim_elapsed_ms = 0.0
-            last_lines_cleared = state.lines_cleared
-        if clear_anim_levels:
-            clear_anim_elapsed_ms += dt
-            if clear_anim_elapsed_ms >= clear_anim_duration_ms:
-                clear_anim_levels = ()
-                clear_anim_elapsed_ms = 0.0
-
-        clear_effect = None
-        if clear_anim_levels:
-            clear_effect = ClearEffect2D(
-                levels=clear_anim_levels,
-                progress=min(1.0, clear_anim_elapsed_ms / clear_anim_duration_ms),
-            )
+        loop.gravity_accumulator = _step_gravity_tick(
+            loop.state,
+            loop.gravity_accumulator,
+            gravity_interval_ms,
+        )
+        loop.clear_anim_levels, loop.clear_anim_elapsed_ms, loop.last_lines_cleared = _update_clear_animation(
+            state=loop.state,
+            last_lines_cleared=loop.last_lines_cleared,
+            clear_anim_levels=loop.clear_anim_levels,
+            clear_anim_elapsed_ms=loop.clear_anim_elapsed_ms,
+            clear_anim_duration_ms=clear_anim_duration_ms,
+            dt_ms=dt,
+        )
+        clear_effect = _clear_effect(
+            loop.clear_anim_levels,
+            loop.clear_anim_elapsed_ms,
+            clear_anim_duration_ms,
+        )
 
         # ----- Drawing -----
         draw_game_frame(
             screen,
             cfg,
-            state,
+            loop.state,
             fonts,
-            show_grid=show_grid,
+            show_grid=loop.show_grid,
             clear_effect=clear_effect,
         )
         pygame.display.flip()

@@ -297,86 +297,112 @@ def _line(label: str, description: str) -> str:
     return f" {label:<11}: {description}"
 
 
+def _build_control_section(
+    title: str,
+    specs: Sequence[tuple[object, ...]],
+) -> list[str]:
+    lines = [title]
+    for spec in specs:
+        kind = spec[0]
+        if kind == "sep":
+            lines.append("")
+            continue
+
+        bindings = spec[1]
+        if kind == "action":
+            lines.append(_line(_format_action(bindings, spec[2]), spec[3]))
+            continue
+
+        # pair
+        lines.append(_line(_format_pair(bindings, spec[2], spec[3]), spec[4]))
+    return lines
+
+
 def _rebuild_control_lines() -> None:
-    CONTROL_LINES_2D[:] = [
+    CONTROL_LINES_2D[:] = _build_control_section(
         "Controls:",
-        _line(_format_pair(KEYS_2D, "move_x_neg", "move_x_pos"), "move x"),
-        _line(_format_action(KEYS_2D, "rotate_xy_pos"), "rotate x-y +"),
-        _line(_format_action(KEYS_2D, "rotate_xy_neg"), "rotate x-y -"),
-        _line(_format_action(KEYS_2D, "soft_drop"), "soft drop"),
-        _line(_format_action(KEYS_2D, "hard_drop"), "hard drop"),
-        "",
-        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
-        _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
-        _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
-        _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
-    ]
+        (
+            ("pair", KEYS_2D, "move_x_neg", "move_x_pos", "move x"),
+            ("action", KEYS_2D, "rotate_xy_pos", "rotate x-y +"),
+            ("action", KEYS_2D, "rotate_xy_neg", "rotate x-y -"),
+            ("action", KEYS_2D, "soft_drop", "soft drop"),
+            ("action", KEYS_2D, "hard_drop", "hard drop"),
+            ("sep",),
+            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "menu", "menu"),
+            ("action", SYSTEM_KEYS, "quit", "quit"),
+            ("action", SYSTEM_KEYS, "restart", "restart"),
+        ),
+    )
 
-    CONTROL_LINES_3D_GAME[:] = [
+    common_3d_specs = (
+        ("pair", KEYS_3D, "move_x_neg", "move_x_pos", "move x"),
+        ("pair", KEYS_3D, "move_z_neg", "move_z_pos", "move z"),
+        ("action", KEYS_3D, "soft_drop", "soft drop"),
+        ("action", KEYS_3D, "hard_drop", "hard drop"),
+        ("pair", KEYS_3D, "rotate_xy_pos", "rotate_xy_neg", "rotate x-y"),
+        ("pair", KEYS_3D, "rotate_xz_pos", "rotate_xz_neg", "rotate x-z"),
+        ("pair", KEYS_3D, "rotate_yz_pos", "rotate_yz_neg", "rotate y-z"),
+    )
+    CONTROL_LINES_3D_GAME[:] = _build_control_section(
         "Game:",
-        _line(_format_pair(KEYS_3D, "move_x_neg", "move_x_pos"), "move x"),
-        _line(_format_pair(KEYS_3D, "move_z_neg", "move_z_pos"), "move z"),
-        _line(_format_action(KEYS_3D, "soft_drop"), "soft drop"),
-        _line(_format_action(KEYS_3D, "hard_drop"), "hard drop"),
-        _line(_format_pair(KEYS_3D, "rotate_xy_pos", "rotate_xy_neg"), "rotate x-y"),
-        _line(_format_pair(KEYS_3D, "rotate_xz_pos", "rotate_xz_neg"), "rotate x-z"),
-        _line(_format_pair(KEYS_3D, "rotate_yz_pos", "rotate_yz_neg"), "rotate y-z"),
-        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
-    ]
-
-    CONTROL_LINES_ND_3D[:] = [
+        (*common_3d_specs, ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid")),
+    )
+    CONTROL_LINES_ND_3D[:] = _build_control_section(
         "Controls:",
-        _line(_format_pair(KEYS_3D, "move_x_neg", "move_x_pos"), "move x"),
-        _line(_format_pair(KEYS_3D, "move_z_neg", "move_z_pos"), "move z"),
-        _line(_format_action(KEYS_3D, "soft_drop"), "soft drop"),
-        _line(_format_action(KEYS_3D, "hard_drop"), "hard drop"),
-        _line(_format_pair(KEYS_3D, "rotate_xy_pos", "rotate_xy_neg"), "rotate x-y"),
-        _line(_format_pair(KEYS_3D, "rotate_xz_pos", "rotate_xz_neg"), "rotate x-z"),
-        _line(_format_pair(KEYS_3D, "rotate_yz_pos", "rotate_yz_neg"), "rotate y-z"),
-        _line(_format_pair(SLICE_KEYS_3D, "slice_z_neg", "slice_z_pos"), "slice z"),
-        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
-        _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
-        _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
-        _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
-    ]
+        (
+            *common_3d_specs,
+            ("pair", SLICE_KEYS_3D, "slice_z_neg", "slice_z_pos", "slice z"),
+            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "restart", "restart"),
+            ("action", SYSTEM_KEYS, "menu", "menu"),
+            ("action", SYSTEM_KEYS, "quit", "quit"),
+        ),
+    )
 
-    CONTROL_LINES_ND_4D[:] = [
+    CONTROL_LINES_ND_4D[:] = _build_control_section(
         "Controls:",
-        _line(_format_pair(KEYS_4D, "move_x_neg", "move_x_pos"), "move x"),
-        _line(_format_pair(KEYS_4D, "move_z_neg", "move_z_pos"), "move z"),
-        _line(_format_pair(KEYS_4D, "move_w_neg", "move_w_pos"), "move w"),
-        _line(_format_action(KEYS_4D, "soft_drop"), "soft drop"),
-        _line(_format_action(KEYS_4D, "hard_drop"), "hard drop"),
-        _line(_format_pair(KEYS_4D, "rotate_xy_pos", "rotate_xy_neg"), "rotate x-y"),
-        _line(_format_pair(KEYS_4D, "rotate_xz_pos", "rotate_xz_neg"), "rotate x-z"),
-        _line(_format_pair(KEYS_4D, "rotate_yz_pos", "rotate_yz_neg"), "rotate y-z"),
-        _line(_format_pair(KEYS_4D, "rotate_xw_pos", "rotate_xw_neg"), "rotate x-w"),
-        _line(_format_pair(KEYS_4D, "rotate_yw_pos", "rotate_yw_neg"), "rotate y-w"),
-        _line(_format_pair(KEYS_4D, "rotate_zw_pos", "rotate_zw_neg"), "rotate z-w"),
-        _line(_format_pair(SLICE_KEYS_4D, "slice_z_neg", "slice_z_pos"), "slice z"),
-        _line(_format_pair(SLICE_KEYS_4D, "slice_w_neg", "slice_w_pos"), "slice w"),
-        _line(_format_action(SYSTEM_KEYS, "toggle_grid"), "toggle grid"),
-        _line(_format_action(SYSTEM_KEYS, "restart"), "restart"),
-        _line(_format_action(SYSTEM_KEYS, "menu"), "menu"),
-        _line(_format_action(SYSTEM_KEYS, "quit"), "quit"),
-    ]
+        (
+            ("pair", KEYS_4D, "move_x_neg", "move_x_pos", "move x"),
+            ("pair", KEYS_4D, "move_z_neg", "move_z_pos", "move z"),
+            ("pair", KEYS_4D, "move_w_neg", "move_w_pos", "move w"),
+            ("action", KEYS_4D, "soft_drop", "soft drop"),
+            ("action", KEYS_4D, "hard_drop", "hard drop"),
+            ("pair", KEYS_4D, "rotate_xy_pos", "rotate_xy_neg", "rotate x-y"),
+            ("pair", KEYS_4D, "rotate_xz_pos", "rotate_xz_neg", "rotate x-z"),
+            ("pair", KEYS_4D, "rotate_yz_pos", "rotate_yz_neg", "rotate y-z"),
+            ("pair", KEYS_4D, "rotate_xw_pos", "rotate_xw_neg", "rotate x-w"),
+            ("pair", KEYS_4D, "rotate_yw_pos", "rotate_yw_neg", "rotate y-w"),
+            ("pair", KEYS_4D, "rotate_zw_pos", "rotate_zw_neg", "rotate z-w"),
+            ("pair", SLICE_KEYS_4D, "slice_z_neg", "slice_z_pos", "slice z"),
+            ("pair", SLICE_KEYS_4D, "slice_w_neg", "slice_w_pos", "slice w"),
+            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "restart", "restart"),
+            ("action", SYSTEM_KEYS, "menu", "menu"),
+            ("action", SYSTEM_KEYS, "quit", "quit"),
+        ),
+    )
 
-    CONTROL_LINES_3D_CAMERA[:] = [
+    CONTROL_LINES_3D_CAMERA[:] = _build_control_section(
         "Camera:",
-        _line(_format_pair(CAMERA_KEYS_3D, "yaw_neg", "yaw_pos"), "yaw +/-90"),
-        _line(_format_pair(CAMERA_KEYS_3D, "pitch_neg", "pitch_pos"), "pitch +/-90"),
-        _line(_format_pair(CAMERA_KEYS_3D, "zoom_out", "zoom_in"), "zoom"),
-        _line(_format_action(CAMERA_KEYS_3D, "cycle_projection"), "projection"),
-        _line(_format_action(CAMERA_KEYS_3D, "reset"), "reset camera"),
-    ]
+        (
+            ("pair", CAMERA_KEYS_3D, "yaw_neg", "yaw_pos", "yaw +/-90"),
+            ("pair", CAMERA_KEYS_3D, "pitch_neg", "pitch_pos", "pitch +/-90"),
+            ("pair", CAMERA_KEYS_3D, "zoom_out", "zoom_in", "zoom"),
+            ("action", CAMERA_KEYS_3D, "cycle_projection", "projection"),
+            ("action", CAMERA_KEYS_3D, "reset", "reset camera"),
+        ),
+    )
 
-    CONTROL_LINES_4D_VIEW[:] = [
+    CONTROL_LINES_4D_VIEW[:] = _build_control_section(
         "View:",
-        _line(_format_pair(CAMERA_KEYS_4D, "yaw_neg", "yaw_pos"), "yaw +/-90"),
-        _line(_format_pair(CAMERA_KEYS_4D, "pitch_neg", "pitch_pos"), "pitch +/-90"),
-        _line(_format_pair(CAMERA_KEYS_4D, "zoom_out", "zoom_in"), "zoom"),
-        _line(_format_action(CAMERA_KEYS_4D, "reset"), "reset view"),
-    ]
+        (
+            ("pair", CAMERA_KEYS_4D, "yaw_neg", "yaw_pos", "yaw +/-90"),
+            ("pair", CAMERA_KEYS_4D, "pitch_neg", "pitch_pos", "pitch +/-90"),
+            ("pair", CAMERA_KEYS_4D, "zoom_out", "zoom_in", "zoom"),
+            ("action", CAMERA_KEYS_4D, "reset", "reset view"),
+        ),
+    )
 
 
 def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> Dict[str, List[str]]:
@@ -397,7 +423,7 @@ def _parse_key(raw_key: object) -> int | None:
     for candidate in (token, token.lower()):
         try:
             return pygame.key.key_code(candidate)
-        except Exception:
+        except ValueError:
             continue
     aliases = {
         "esc": "escape",
@@ -410,7 +436,7 @@ def _parse_key(raw_key: object) -> int | None:
         return None
     try:
         return pygame.key.key_code(alias)
-    except Exception:
+    except ValueError:
         return None
 
 
@@ -469,7 +495,7 @@ def keybinding_file_label(dimension: int) -> str:
     path = keybinding_file_path(dimension)
     try:
         return str(path.relative_to(Path.cwd()))
-    except Exception:
+    except ValueError:
         return str(path)
 
 

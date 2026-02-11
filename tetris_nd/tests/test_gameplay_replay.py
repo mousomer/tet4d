@@ -1,0 +1,284 @@
+import unittest
+
+import pygame
+
+import front2d
+from tetris_nd import front3d_game, front4d_game, frontend_nd
+from tetris_nd.game2d import Action, GameConfig
+from tetris_nd.game_nd import GameConfigND
+from tetris_nd.keybindings import (
+    CAMERA_KEYS_3D,
+    CAMERA_KEYS_4D,
+    KEYS_2D,
+    KEYS_3D,
+    KEYS_4D,
+    SLICE_KEYS_4D,
+    SYSTEM_KEYS,
+)
+from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
+from tetris_nd.pieces_nd import ActivePieceND, PieceShapeND
+
+
+def _keydown(key: int) -> pygame.event.Event:
+    return pygame.event.Event(pygame.KEYDOWN, key=key)
+
+
+def _state_signature_2d(state) -> tuple:
+    board = tuple(sorted(state.board.cells.items()))
+    if state.current_piece is None:
+        piece = None
+    else:
+        piece = (
+            state.current_piece.shape.name,
+            state.current_piece.pos,
+            state.current_piece.rotation,
+            tuple(sorted(state.current_piece.cells())),
+        )
+    next_bag = tuple(shape.name for shape in state.next_bag)
+    return (
+        state.score,
+        state.lines_cleared,
+        state.game_over,
+        board,
+        piece,
+        next_bag,
+    )
+
+
+def _state_signature_nd(state, slice_state=None) -> tuple:
+    board = tuple(sorted(state.board.cells.items()))
+    if state.current_piece is None:
+        piece = None
+    else:
+        piece = (
+            state.current_piece.shape.name,
+            state.current_piece.pos,
+            tuple(sorted(state.current_piece.rel_blocks)),
+            tuple(sorted(state.current_piece.cells())),
+        )
+    next_bag = tuple(shape.name for shape in state.next_bag)
+    slice_sig = ()
+    if slice_state is not None:
+        slice_sig = tuple(sorted(slice_state.axis_values.items()))
+    return (
+        state.score,
+        state.lines_cleared,
+        state.game_over,
+        board,
+        piece,
+        next_bag,
+        slice_sig,
+    )
+
+
+class TestGameplayReplay(unittest.TestCase):
+    def _key_for(self, bindings: dict[str, tuple[int, ...]], action: str) -> int:
+        keys = bindings.get(action, ())
+        self.assertTrue(keys, f"missing key binding for action: {action}")
+        return keys[0]
+
+    def test_replay_determinism_2d(self):
+        cfg = GameConfig(width=10, height=20, gravity_axis=1, speed_level=1)
+        script = [
+            self._key_for(KEYS_2D, action)
+            for action in (
+                "move_x_neg",
+                "rotate_xy_pos",
+                "soft_drop",
+                "move_x_pos",
+                "rotate_xy_neg",
+                "hard_drop",
+                "move_x_pos",
+                "soft_drop",
+                "hard_drop",
+            )
+        ] * 5
+
+        def run_once() -> tuple:
+            state = front2d.create_initial_state(cfg)
+            for key in script:
+                result = front2d.handle_game_keydown(_keydown(key), state, cfg)
+                self.assertEqual(result, "continue")
+                state.step(Action.NONE)
+            return _state_signature_2d(state)
+
+        self.assertEqual(run_once(), run_once())
+
+    def test_replay_determinism_3d(self):
+        cfg = GameConfigND(dims=(6, 14, 6), gravity_axis=1, speed_level=1)
+        script = [
+            self._key_for(KEYS_3D, action)
+            for action in (
+                "move_x_neg",
+                "move_z_neg",
+                "rotate_xy_pos",
+                "soft_drop",
+                "rotate_xz_pos",
+                "move_x_pos",
+                "rotate_yz_neg",
+                "hard_drop",
+                "move_z_pos",
+                "hard_drop",
+            )
+        ] * 4
+
+        def run_once() -> tuple:
+            state = front3d_game.create_initial_state(cfg)
+            for key in script:
+                result = front3d_game.handle_game_keydown(_keydown(key), state, cfg)
+                self.assertEqual(result, "continue")
+                state.step_gravity()
+            return _state_signature_nd(state)
+
+        self.assertEqual(run_once(), run_once())
+
+    def test_replay_determinism_4d(self):
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        script = [
+            self._key_for(KEYS_4D, action)
+            for action in (
+                "move_x_neg",
+                "move_z_neg",
+                "move_w_pos",
+                "rotate_xy_pos",
+                "rotate_xz_neg",
+                "rotate_xw_pos",
+                "rotate_yw_neg",
+                "soft_drop",
+                "hard_drop",
+                "move_w_neg",
+                "hard_drop",
+            )
+        ] * 4
+
+        def run_once() -> tuple:
+            state = frontend_nd.create_initial_state(cfg)
+            slice_state = frontend_nd.create_initial_slice_state(cfg)
+            for key in script:
+                result = frontend_nd.handle_game_keydown(_keydown(key), state, slice_state)
+                self.assertEqual(result, "continue")
+                state.step_gravity()
+            return _state_signature_nd(state, slice_state)
+
+        self.assertEqual(run_once(), run_once())
+
+    def test_2d_controls_smoke(self):
+        cfg = GameConfig(width=8, height=16, gravity_axis=1, speed_level=1)
+        state = front2d.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePiece2D(
+            PieceShape2D("tri", [(0, 0), (1, 0), (0, 1)], color_id=8),
+            pos=(4, 1),
+            rotation=0,
+        )
+
+        move_left = self._key_for(KEYS_2D, "move_x_neg")
+        rotate = self._key_for(KEYS_2D, "rotate_xy_pos")
+        hard_drop = self._key_for(KEYS_2D, "hard_drop")
+
+        self.assertEqual(front2d.handle_game_keydown(_keydown(move_left), state, cfg), "continue")
+        self.assertEqual(state.current_piece.pos, (3, 1))
+
+        before_cells = tuple(sorted(state.current_piece.cells()))
+        self.assertEqual(front2d.handle_game_keydown(_keydown(rotate), state, cfg), "continue")
+        self.assertNotEqual(tuple(sorted(state.current_piece.cells())), before_cells)
+
+        self.assertEqual(front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertGreater(len(state.board.cells), 0)
+
+        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "quit")), state, cfg), "quit")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "menu")), state, cfg), "menu")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "restart")), state, cfg), "restart")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
+            "toggle_grid",
+        )
+
+    def test_3d_controls_and_camera_smoke(self):
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = front3d_game.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=8),
+            pos=(3, 2, 3),
+        )
+
+        move_z_neg = self._key_for(KEYS_3D, "move_z_neg")
+        rotate_xz = self._key_for(KEYS_3D, "rotate_xz_pos")
+        hard_drop = self._key_for(KEYS_3D, "hard_drop")
+
+        self.assertEqual(front3d_game.handle_game_keydown(_keydown(move_z_neg), state, cfg), "continue")
+        self.assertEqual(state.current_piece.pos, (3, 2, 2))
+
+        before_blocks = tuple(sorted(state.current_piece.rel_blocks))
+        self.assertEqual(front3d_game.handle_game_keydown(_keydown(rotate_xz), state, cfg), "continue")
+        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+        self.assertEqual(front3d_game.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertGreater(len(state.board.cells), 0)
+
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
+            "toggle_grid",
+        )
+
+        camera = front3d_game.Camera3D()
+        yaw_pos = self._key_for(CAMERA_KEYS_3D, "yaw_pos")
+        self.assertTrue(front3d_game.handle_camera_keydown(_keydown(yaw_pos), camera))
+        self.assertEqual(camera.anim_axis, "yaw")
+        camera.step_animation(1000)
+        self.assertIsNone(camera.anim_axis)
+
+    def test_4d_controls_slice_and_view_smoke(self):
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        slice_state = frontend_nd.create_initial_slice_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND(
+                "tri4",
+                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+                color_id=8,
+            ),
+            pos=(3, 2, 3, 2),
+        )
+
+        move_z_neg = self._key_for(KEYS_4D, "move_z_neg")
+        move_w_pos = self._key_for(KEYS_4D, "move_w_pos")
+        rotate_xw = self._key_for(KEYS_4D, "rotate_xw_pos")
+        hard_drop = self._key_for(KEYS_4D, "hard_drop")
+
+        before_blocks = tuple(sorted(state.current_piece.rel_blocks))
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_z_neg), state, slice_state), "continue")
+        self.assertEqual(state.current_piece.pos, (3, 2, 2, 2))
+        self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_w_pos), state, slice_state), "continue")
+        self.assertEqual(state.current_piece.pos, (3, 2, 2, 3))
+
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(rotate_xw), state, slice_state), "continue")
+        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state, slice_state), "continue")
+        self.assertGreater(len(state.board.cells), 0)
+
+        start_z = slice_state.axis_values[2]
+        slice_z_neg = self._key_for(SLICE_KEYS_4D, "slice_z_neg")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(slice_z_neg), state, slice_state), "continue")
+        self.assertEqual(slice_state.axis_values[2], max(0, start_z - 1))
+
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, slice_state),
+            "toggle_grid",
+        )
+
+        view = front4d_game.LayerView3D()
+        pitch_neg = self._key_for(CAMERA_KEYS_4D, "pitch_neg")
+        self.assertTrue(front4d_game.handle_view_keydown(_keydown(pitch_neg), view))
+        self.assertEqual(view.anim_axis, "pitch")
+        view.step_animation(1000)
+        self.assertIsNone(view.anim_axis)
+
+
+if __name__ == "__main__":
+    unittest.main()

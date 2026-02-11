@@ -28,6 +28,22 @@ class TestPiecesND(unittest.TestCase):
             any(any(block[3] != 0 for block in shape.blocks) for shape in shapes)
         )
 
+    def test_4d_shapes_are_dedicated_and_span_all_axes(self):
+        shapes = get_standard_pieces_nd(4)
+        self.assertTrue(shapes)
+
+        for shape in shapes:
+            # Dedicated 4D bag uses 5-cell pieces (not lifted 2D/3D tetrominoes).
+            self.assertEqual(len(shape.blocks), 5)
+
+            axis_values = [set() for _ in range(4)]
+            for block in shape.blocks:
+                for axis in range(4):
+                    axis_values[axis].add(block[axis])
+
+            # Each shape varies along x, y, z, and w.
+            self.assertTrue(all(len(values) > 1 for values in axis_values))
+
     def test_5d_shapes_embed_4d_set_with_zero_extra_axis(self):
         shapes_4d = get_standard_pieces_nd(4)
         shapes_5d = get_standard_pieces_nd(5)
