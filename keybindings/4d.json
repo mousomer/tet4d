@@ -1,0 +1,83 @@
+{
+  "bindings": {
+    "game": {
+      "hard_drop": [
+        "space"
+      ],
+      "move_w_neg": [
+        ","
+      ],
+      "move_w_pos": [
+        "."
+      ],
+      "move_x_neg": [
+        "left"
+      ],
+      "move_x_pos": [
+        "right"
+      ],
+      "move_z_neg": [
+        "up"
+      ],
+      "move_z_pos": [
+        "down"
+      ],
+      "rotate_xw_neg": [
+        "6"
+      ],
+      "rotate_xw_pos": [
+        "5"
+      ],
+      "rotate_xy_neg": [
+        "z"
+      ],
+      "rotate_xy_pos": [
+        "x"
+      ],
+      "rotate_xz_neg": [
+        "2"
+      ],
+      "rotate_xz_pos": [
+        "1"
+      ],
+      "rotate_yw_neg": [
+        "8"
+      ],
+      "rotate_yw_pos": [
+        "7"
+      ],
+      "rotate_yz_neg": [
+        "4"
+      ],
+      "rotate_yz_pos": [
+        "3"
+      ],
+      "rotate_zw_neg": [
+        "0"
+      ],
+      "rotate_zw_pos": [
+        "9"
+      ],
+      "soft_drop": [
+        "left shift",
+        "right shift"
+      ]
+    },
+    "slice": {
+      "slice_w_neg": [
+        ";"
+      ],
+      "slice_w_pos": [
+        "'"
+      ],
+      "slice_z_neg": [
+        "["
+      ],
+      "slice_z_pos": [
+        "]"
+      ]
+    }
+  },
+  "dimension": 4,
+  "profile": "small"
+}
