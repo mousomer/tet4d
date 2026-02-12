@@ -1,8 +1,8 @@
 # 2D Tetris RDS
 
-Status: Active v0.3  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-10  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -27,8 +27,18 @@ Define requirements for the classic `(x, y)` mode implemented by:
 
 ## 4. Piece Set
 
-1. Classic tetromino bag (`I,O,T,S,Z,J,L`).
-2. Piece blocks are relative to pivot coordinates.
+1. Default set: classic tetromino bag (`I,O,T,S,Z,J,L`).
+2. Optional set: `random_cells_2d` (connected random cells).
+3. `random_cells_2d` defaults to `4` cells per piece and supports configurable range `3..6`.
+4. Piece blocks are relative to pivot coordinates.
+5. Setup menu must expose piece set selection (`classic`, `random_cells_2d`).
+
+## 4.1 Random-cell generator requirements (2D)
+
+1. Generated coordinates must form a single connected component (4-neighborhood).
+2. Piece coordinates must be normalized so spawn origin is deterministic.
+3. Duplicate coordinate generation must be rejected and regenerated.
+4. With a fixed RNG seed, generated sequence must be deterministic.
 
 ## 5. Controls and UX
 
@@ -70,3 +80,4 @@ Relevant test files:
 2. Only `x` line fullness triggers clears.
 3. ND-only keys do not alter state.
 4. Tests pass under Python 3.14 compatibility checks.
+5. Random-cell 2D piece set is selectable and playable without crashes.

@@ -1,8 +1,8 @@
 # Keybindings RDS
 
-Status: Active v0.3  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-11  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -11,6 +11,7 @@ Define keybinding requirements for all game dimensions and keyboard profiles:
 1. 2D gameplay
 2. 3D gameplay + camera + slicing
 3. 4D gameplay + view + slicing
+4. Shared in-app keybinding editor with local save/load
 
 Implementation references:
 1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings.py`
@@ -176,7 +177,21 @@ Both menu contexts must expose the same keybinding profile actions:
 6. Save to selected profile.
 7. Rebind mode must be available from both main/setup and pause menus.
 
-### 5.5 Non-default profile support
+### 5.5 Keybinding editor menu requirements
+
+1. The editor must be reachable from:
+2. Setup menu (`Controls` -> `Edit Keybindings`)
+3. Pause menu (`Settings` -> `Controls` -> `Edit Keybindings`)
+4. The editor must list bindable actions grouped as:
+5. `game`
+6. `camera` (3D/4D only)
+7. `slice` (3D/4D only)
+8. `system`
+9. Each row must show action name plus currently assigned keys.
+10. Footer hints must expose: `Rebind`, `Clear`, `Load`, `Save`, `Save As`, `Reset`.
+11. Failed operations (invalid file, duplicate profile, write error) must show non-blocking error text.
+
+### 5.6 Non-default profile support
 
 1. Profiles are not limited to `small` and `full`; user-defined names are required.
 2. Required operations:
@@ -186,6 +201,15 @@ Both menu contexts must expose the same keybinding profile actions:
 6. Select active profile
 7. Save/load per profile and per dimension
 8. Built-in profiles (`small`, `full`) remain available as defaults and reset baselines.
+
+### 5.7 Local save/load policy
+
+1. Save/load operations are local filesystem operations only (no network/cloud dependency).
+2. Default save target for the active profile is:
+3. `/Users/omer/workspace/test-code/tet4d/keybindings/profiles/<profile>/<dimension>.json`
+4. `Save As` must allow writing to a new local profile folder name.
+5. `Load` must read the selected local profile file for the current dimension.
+6. Invalid/missing files must not crash; loader falls back to defaults and reports status.
 
 ## 6. JSON/Profile Storage Requirements
 
@@ -234,6 +258,12 @@ Both menu contexts must expose the same keybinding profile actions:
 1. 2D loader must accept both canonical grouped format and legacy flat game-action format under `bindings`.
 2. Legacy default files must keep loading even when profile storage is introduced.
 
+### 6.5 Storage validation requirements
+
+1. JSON writes should be atomic (`temp file` then `replace`) to avoid partial files.
+2. Unknown actions in loaded JSON should be ignored with warning status, not crash.
+3. Missing required actions should inherit defaults for those actions only.
+
 ## 7. Change Safety Rules
 
 1. Keep keybindings external; do not hardcode per-mode keys in frontend loops.
@@ -255,6 +285,9 @@ Manual checks:
 2. Edit a key in JSON, press `L` in setup menu, and verify behavior in game.
 3. Press `S` in setup menu and confirm JSON is updated.
 4. Verify 2D ignores ND-only keys.
+5. Rebind one action from setup menu and one from pause menu; verify parity.
+6. Trigger a key conflict and verify conflict-resolution flow.
+7. Save profile locally, restart app, load profile, and verify key behavior persists.
 
 ## 9. Acceptance Criteria
 
@@ -264,3 +297,12 @@ Manual checks:
 4. Main/setup and in-game pause sections provide the same keybinding profile actions.
 5. JSON schema and group handling are explicit and consistent with code.
 6. Tests pass and menu feedback is visible for load/save/rebind/reset actions.
+7. Keybinding editor supports local save/load and conflict-safe rebinding.
+
+## 10. Implementation Plan (Keybindings)
+
+1. Implement a shared keybinding editor model and renderer for setup/pause menus.
+2. Add action-group metadata so each dimension can render only valid groups/actions.
+3. Add rebind capture state with conflict resolution (`replace`, `swap`, `cancel`).
+4. Add local profile IO helpers (`load`, `save`, `save_as`, `reset`) with atomic writes.
+5. Add test coverage for editor-state transitions and profile file round-trips.

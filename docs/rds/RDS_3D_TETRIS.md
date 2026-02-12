@@ -1,8 +1,8 @@
 # 3D Tetris RDS
 
-Status: Active v0.3  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-10  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -27,8 +27,25 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 
 ## 4. Piece Set
 
-1. Uses dedicated true 3D pieces (not only lifted 2D pieces).
-2. Piece definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+1. Default set: dedicated true 3D pieces.
+2. Optional set: embedded 2D pieces (`2D->3D` lift).
+3. Optional set: `random_cells_3d` (connected random cells).
+4. Piece definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+5. Setup menu must expose piece set source selection (`native_3d`, `embedded_2d`, `random_cells_3d`).
+
+## 4.1 Lower-dimensional set embedding requirements (3D)
+
+1. 2D coordinates `(x, y)` embed into 3D as `(x, y, 0)` by default.
+2. Optional embedding plane selection is allowed (`xy`, `xz`, `yz`); default is `xy`.
+3. After spawn, embedded pieces must support full 3D movement/rotation rules.
+4. Embedding must preserve deterministic replay behavior under fixed seed.
+
+## 4.2 Random-cell generator requirements (3D)
+
+1. Generated coordinates must form a single connected component (6-neighborhood).
+2. Default cell count is `5`, configurable range `4..8`.
+3. Coordinates are normalized before spawn to maintain stable positioning.
+4. Duplicate generated shapes in the same bag cycle should be avoided when feasible.
 
 ## 5. Controls
 
@@ -96,3 +113,4 @@ Relevant tests:
 2. `x-z` layer clearing works and scores correctly.
 3. Camera controls do not interfere with gameplay controls.
 4. Replay/smoke tests pass.
+5. Embedded 2D and random-cell 3D sets are selectable and playable.
