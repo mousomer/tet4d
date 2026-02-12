@@ -16,10 +16,13 @@ from .keybindings import (
     CAMERA_KEYS_3D,
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
+    active_key_profile,
     initialize_keybinding_files,
+    keybinding_file_label,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
+from .menu_settings_state import load_menu_settings
 from .projection3d import (
     Face,
     Cell3,
@@ -102,6 +105,10 @@ class MenuState:
     start_game: bool = False
     bindings_status: str = ""
     bindings_status_error: bool = False
+    active_profile: str = field(default_factory=active_key_profile)
+    rebind_mode: bool = False
+    rebind_index: int = 0
+    rebind_targets: list[tuple[str, str]] = field(default_factory=list)
 
 
 _MENU_FIELDS: list[FieldSpec] = [
@@ -150,9 +157,18 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
         screen.blit(surf, rect.topleft)
         y += 50
 
+    rebind_target = "-"
+    if state.rebind_targets:
+        group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
+        rebind_target = f"{group}.{action_name}"
+
     hints = [
         "Esc = quit",
         menu_binding_hint_line(3),
+        f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
+        "F5 save settings   F9 load settings   F8 reset defaults",
+        f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   Tab/` target",
+        f"Profile file: {keybinding_file_label(3)}",
         "Projection modes are available during gameplay (P).",
     ]
     hy = panel_y + panel_h + 20
@@ -170,10 +186,14 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
 def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D]:
     clock = pygame.time.Clock()
     state = MenuState()
+    ok, msg = load_menu_settings(state, 3)
+    if not ok:
+        state.bindings_status = msg
+        state.bindings_status_error = True
 
     while state.running and not state.start_game:
         _dt = clock.tick(60)
-        actions = gather_menu_actions()
+        actions = gather_menu_actions(state, 3)
         apply_menu_actions(state, actions, _MENU_FIELDS, 3)
         draw_menu(screen, fonts, state)
         pygame.display.flip()
