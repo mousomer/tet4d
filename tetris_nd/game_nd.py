@@ -4,7 +4,13 @@ import random
 from typing import List, Optional, Sequence
 
 from .board import BoardND
-from .pieces_nd import ActivePieceND, PieceShapeND, get_standard_pieces_nd
+from .pieces_nd import (
+    ActivePieceND,
+    PIECE_SET_4D_STANDARD,
+    PieceShapeND,
+    get_standard_pieces_nd,
+    normalize_piece_set_4d,
+)
 from .types import Coord
 
 
@@ -27,6 +33,7 @@ class GameConfigND:
     dims: Coord = (10, 20, 6)
     gravity_axis: int = 1
     speed_level: int = 1  # 1..10, used by frontend timing
+    piece_set_4d: str = PIECE_SET_4D_STANDARD
 
     def __post_init__(self) -> None:
         if len(self.dims) < 2:
@@ -37,6 +44,7 @@ class GameConfigND:
             raise ValueError("invalid gravity_axis")
         if not (1 <= self.speed_level <= 10):
             raise ValueError("speed_level must be in [1, 10]")
+        self.piece_set_4d = normalize_piece_set_4d(self.piece_set_4d)
 
     @property
     def ndim(self) -> int:
@@ -67,7 +75,10 @@ class GameStateND:
     # --- Bag and spawning ---
 
     def _refill_bag(self) -> None:
-        self.next_bag = get_standard_pieces_nd(self.config.ndim)
+        self.next_bag = get_standard_pieces_nd(
+            self.config.ndim,
+            piece_set_4d=self.config.piece_set_4d,
+        )
         self.rng.shuffle(self.next_bag)
 
     def draw_next_piece_shape(self) -> PieceShapeND:

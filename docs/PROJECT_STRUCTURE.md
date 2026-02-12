@@ -32,6 +32,8 @@ tet4d/
     │   └── structure.txt        # original structure snapshot
     └── rds/
         ├── RDS_TETRIS_GENERAL.md
+        ├── RDS_KEYBINDINGS.md
+        ├── RDS_MENU_STRUCTURE.md
         ├── RDS_2D_TETRIS.md
         ├── RDS_3D_TETRIS.md
         └── RDS_4D_TETRIS.md
