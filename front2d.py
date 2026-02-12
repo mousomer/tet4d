@@ -21,8 +21,13 @@ from tetris_nd.gfx_game import (
 from tetris_nd.keybindings import (
     DISABLED_KEYS_2D,
     KEYS_2D,
+    PROFILE_SMALL,
     SYSTEM_KEYS,
+    active_key_profile,
     initialize_keybinding_files,
+    keybinding_file_label,
+    load_active_profile_bindings,
+    set_active_key_profile,
 )
 from tetris_nd.key_dispatch import (
     dispatch_bound_action,
@@ -33,6 +38,7 @@ from tetris_nd.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
+from tetris_nd.menu_settings_state import load_menu_settings
 
 DEFAULT_GAME_SEED = 1337
 
@@ -54,6 +60,10 @@ class MenuState:
     start_game: bool = False
     bindings_status: str = ""
     bindings_status_error: bool = False
+    active_profile: str = field(default_factory=active_key_profile)
+    rebind_mode: bool = False
+    rebind_index: int = 0
+    rebind_targets: list[tuple[str, str]] = field(default_factory=list)
 
 
 _MENU_FIELDS: list[FieldSpec] = [
@@ -71,18 +81,35 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     Returns GameSettings if user starts the game, or None if user quits.
     """
     clock = pygame.time.Clock()
+    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
+    if set_ok:
+        load_active_profile_bindings()
     state = MenuState()
+    ok, msg = load_menu_settings(state, 2, include_profile=False)
+    if not ok:
+        state.bindings_status = msg
+        state.bindings_status_error = True
 
     while state.running and not state.start_game:
         _dt = clock.tick(60)
-        actions = gather_menu_actions()
+        actions = gather_menu_actions(state, 2)
         apply_menu_actions(state, actions, _MENU_FIELDS, 2)
+
+        rebind_target = "-"
+        if state.rebind_targets:
+            group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
+            rebind_target = f"{group}.{action_name}"
         draw_menu(
             screen,
             fonts,
             state.settings,
             state.selected_index,
-            bindings_file_hint="keybindings/2d.json",
+            bindings_file_hint=keybinding_file_label(2),
+            extra_hint_lines=(
+                f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
+                "F5 save settings   F9 load settings   F8 reset defaults",
+                f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   Tab/` change target",
+            ),
             bindings_status=state.bindings_status,
             bindings_status_error=state.bindings_status_error,
         )

@@ -14,6 +14,12 @@ Mode-specific requirements are defined in:
 2. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_3D_TETRIS.md`
 3. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_4D_TETRIS.md`
 
+Keybinding-specific requirements are defined in:
+1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_KEYBINDINGS.md`
+
+Menu-structure and settings-flow requirements are defined in:
+1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`
+
 ## 2. Current Project Intentions
 
 1. Keep one shared deterministic gameplay core with mode-specific frontends.
@@ -41,8 +47,10 @@ Mode-specific requirements are defined in:
 
 1. Keybindings must be loaded from external JSON files.
 2. Small and full keyboard profiles are supported.
-3. System actions (`quit`, `menu`, `restart`, `toggle_grid`) are shared and discoverable.
-4. 2D must ignore ND-only movement/rotation keys.
+3. User-defined non-default profiles are supported (create/redefine/save/load).
+4. Main/setup and in-game pause menus must provide equivalent profile actions.
+5. System actions (`quit`, `menu`, `restart`, `toggle_grid`) are shared and discoverable.
+6. 2D must ignore ND-only movement/rotation keys.
 
 ## 6. Technical Requirements
 

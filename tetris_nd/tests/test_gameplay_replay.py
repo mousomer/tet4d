@@ -1,6 +1,14 @@
+from __future__ import annotations
+
 import unittest
 
-import pygame
+try:
+    import pygame
+except ModuleNotFoundError:  # pragma: no cover - exercised in environments without pygame-ce
+    pygame = None
+
+if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
+    raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
 import front2d
 from tetris_nd import front3d_game, front4d_game, frontend_nd
@@ -20,6 +28,8 @@ from tetris_nd.pieces_nd import ActivePieceND, PieceShapeND
 
 
 def _keydown(key: int) -> pygame.event.Event:
+    if pygame is None:
+        raise RuntimeError("pygame-ce is required for gameplay replay tests")
     return pygame.event.Event(pygame.KEYDOWN, key=key)
 
 
