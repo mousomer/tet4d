@@ -1,8 +1,8 @@
 # 4D Tetris RDS
 
-Status: Active v0.3  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-10  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -28,9 +28,29 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 
 ## 4. Piece Set
 
-1. Uses a dedicated true 4D piece bag.
-2. Current 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
-3. Definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+1. Default set: dedicated true 4D piece bag.
+2. Optional set: dedicated 4D six-cell piece bag.
+3. Optional set: embedded 3D pieces (`3D->4D` lift).
+4. Optional set: embedded 2D pieces (`2D->4D` lift).
+5. Optional set: `random_cells_4d` (connected random cells).
+6. Current baseline 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
+7. Definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+8. Setup menu must expose piece set source selection (`native_4d`, `native_4d_6cell`, `embedded_3d`, `embedded_2d`, `random_cells_4d`).
+
+## 4.1 Lower-dimensional set embedding requirements (4D)
+
+1. 3D coordinates `(x, y, z)` embed into 4D as `(x, y, z, 0)` by default.
+2. 2D coordinates `(x, y)` embed into 4D as `(x, y, 0, 0)` by default.
+3. Optional embedding hyperplane selection is allowed; defaults are deterministic.
+4. After spawn, embedded pieces must support full 4D movement/rotation rules.
+5. Embedding must preserve deterministic replay behavior under fixed seed.
+
+## 4.2 Random-cell generator requirements (4D)
+
+1. Generated coordinates must form a single connected component (8-neighborhood in 4D axis-adjacent space).
+2. Default cell count is `5`, configurable range `4..8`.
+3. Coordinates are normalized before spawn to maintain stable positioning.
+4. Duplicate generated shapes in the same bag cycle should be avoided when feasible.
 
 ## 5. Controls
 
@@ -105,3 +125,4 @@ Relevant tests:
 2. Hyperlayer clear behavior is correct for `x-z-w` at each `y`.
 3. Dedicated 4D piece set is used and validated by tests.
 4. Replay/smoke tests pass.
+5. Embedded 2D/3D and random-cell 4D sets are selectable and playable.

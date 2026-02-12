@@ -1,8 +1,8 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.3  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-10  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -26,6 +26,9 @@ Menu-structure and settings-flow requirements are defined in:
 2. Keep controls configurable via external JSON files (`keybindings/2d.json`, `3d.json`, `4d.json`).
 3. Maintain playable and testable 2D, 3D, and 4D experiences with the same quality bar.
 4. Preserve Python 3.14 compatibility while staying runnable on local Python 3.11+.
+5. Add a dedicated in-app keybinding edit menu with local save/load workflow.
+6. Add random-cell piece sets for 2D, 3D, and 4D as selectable options.
+7. Allow lower-dimensional piece sets to be used on higher-dimensional boards through defined embedding rules.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -42,6 +45,7 @@ Menu-structure and settings-flow requirements are defined in:
 3. Toggleable grid in all modes.
 4. When grid is off, a board shadow/silhouette must still provide spatial context.
 5. Layer/line clear feedback should be animated.
+6. Setup and pause menus must expose equivalent controls/keybinding editing actions.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -51,6 +55,7 @@ Menu-structure and settings-flow requirements are defined in:
 4. Main/setup and in-game pause menus must provide equivalent profile actions.
 5. System actions (`quit`, `menu`, `restart`, `toggle_grid`) are shared and discoverable.
 6. 2D must ignore ND-only movement/rotation keys.
+7. Keybinding edit flow must support per-action rebind, conflict handling, and local save/load.
 
 ## 6. Technical Requirements
 
@@ -60,6 +65,8 @@ Menu-structure and settings-flow requirements are defined in:
 4. `front3d.py`
 5. `front4d.py`
 6. Game loops must be frame-rate independent for gravity.
+7. Piece set registration must include metadata (`id`, `dimension`, `cell_count`, `generator`, `is_embedded`).
+8. Embedding helpers must convert lower-dimensional piece offsets into target board dimensions deterministically.
 
 ## 7. Engineering Best Practices
 
@@ -92,3 +99,30 @@ Expected test categories:
 2. Clear and scoring logic match the mode RDS files.
 3. Keybindings remain external and loadable.
 4. Test and lint suites pass.
+5. Keybindings can be edited in-app and saved/loaded locally by profile.
+6. Random-cell piece sets are selectable and playable in each dimension.
+7. Lower-dimensional piece sets are selectable and playable on higher-dimensional boards.
+
+## 10. Implementation Plan (Next Milestone)
+
+### 10.1 Keyboard bindings edit menu (with local save/load)
+
+1. Add a shared keybinding-editor model used by setup and pause menus.
+2. Implement action-group navigation (`game`, `camera`, `slice`, `system`) and per-action capture mode.
+3. Implement conflict flow (`replace`, `swap`, `cancel`) before committing a binding.
+4. Persist bindings locally under profile files in `keybindings/profiles/<profile>/<dimension>.json`.
+5. Add explicit `Load`, `Save`, `Save As`, and `Reset To Defaults` actions with status messages.
+
+### 10.2 Random-cell piece sets (2D/3D/4D)
+
+1. Add random piece generators per dimension with configurable cell count and deterministic seed support.
+2. Enforce validity constraints (connected cells, no duplicate coordinates, normalized offsets).
+3. Register these sets in setup menus as named options per mode.
+4. Add tests for generator invariants and replay determinism under fixed seeds.
+
+### 10.3 Lower-dimensional piece sets on higher-dimensional boards
+
+1. Add piece-set adapters for 2D->3D, 2D->4D, and 3D->4D embedding.
+2. Define default embedding planes/hyperplanes and expose selection where relevant.
+3. Ensure embedded pieces fully support target-dimension movement/rotation after spawn.
+4. Add tests for spawn validity, collision behavior, and clear/scoring parity.

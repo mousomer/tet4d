@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Draft v0.1  
+Status: Draft v0.2  
 Author: Omer + Codex  
-Date: 2026-02-11  
+Date: 2026-02-12  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -13,6 +13,7 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 3. Settings navigation and editing
 4. Reset-to-defaults flow
 5. Persistent save/load of menu and settings state
+6. Keybinding editor flow with local profile save/load
 
 Primary files impacted by future implementation:
 1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
@@ -55,6 +56,7 @@ Main Menu
 │   ├── Gameplay
 │   ├── Visual
 │   ├── Controls
+│   │   └── Edit Keybindings
 │   └── Accessibility
 ├── Profiles
 │   ├── Select Profile
@@ -73,7 +75,7 @@ Main Menu
 Pause Menu
 ├── Resume
 ├── Restart Run
-├── Settings (same shared sections)
+├── Settings (same shared sections, including Edit Keybindings)
 ├── Profiles (same actions as Main Menu)
 ├── Back To Main Menu
 └── Quit
@@ -84,7 +86,8 @@ Pause Menu
 1. 2D setup must expose at least: width, height, speed.
 2. 3D setup must expose at least: width, height, depth, speed.
 3. 4D setup must expose at least: width, height, depth, w, speed, 4D piece set.
-4. Setup screens must use the same layout skeleton and footer shortcuts.
+4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell).
+5. Setup screens must use the same layout skeleton and footer shortcuts.
 
 ## 5. Layout and Readability Requirements
 
@@ -139,6 +142,9 @@ Pause Menu
 5. `Cancel` (discard unsaved changes in current menu session)
 6. `Rebind Control` (interactive per-action key capture)
 7. `Profile Management` (select/create/rename/delete non-default profiles)
+8. `Save Keybindings Locally`
+9. `Load Keybindings Locally`
+10. `Save Keybindings As New Profile`
 
 ### 7.2 Persistence model
 
@@ -165,6 +171,7 @@ Minimum schema:
 2. Save/load must be profile-scoped.
 3. Optional auto-save on successful game start is allowed only after explicit opt-in.
 4. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
+5. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -178,6 +185,7 @@ Minimum schema:
 1. File read/write errors must not crash menu flow.
 2. Error messages must be plain language and include next step.
 3. If settings file is missing, recreate with defaults.
+4. If keybinding profile files are missing, recreate from selected profile defaults.
 
 ## 9. Implementation Plan (Recommended)
 
@@ -204,8 +212,20 @@ Manual tests:
 4. Reset-to-defaults confirmation works and is reversible via cancel.
 5. Corrupt `menu_settings.json` fallback path.
 6. Non-default profile create/rename/delete and profile-specific load/save.
+7. Edit keybindings in setup and pause menus; save and reload locally.
 
-## 11. Acceptance Criteria
+## 11. Implementation Plan Additions
+
+1. Add a shared `Edit Keybindings` submenu component reused by setup and pause flows.
+2. Keep menu depth shallow: no more than 3 levels from top-level to rebind action.
+3. Integrate local profile file actions directly in footer shortcuts (`Load`, `Save`, `Save As`, `Reset`).
+4. Add setup control for piece set source per mode:
+5. native set
+6. lower-dimensional embedded set
+7. random-cell generated set
+8. Ensure switching piece set source is immediate in preview and persisted in settings state.
+
+## 12. Acceptance Criteria
 
 1. Menu hierarchy is consistent in 2D/3D/4D entrypoints and pause menu.
 2. All required actions exist: settings change, reset defaults, save state, load state.
