@@ -37,10 +37,10 @@
         "right"
       ],
       "move_z_neg": [
-        "up"
+        "down"
       ],
       "move_z_pos": [
-        "down"
+        "up"
       ],
       "rotate_xy_neg": [
         "w"
