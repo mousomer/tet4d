@@ -61,7 +61,7 @@ def init_fonts() -> GfxFonts:
         menu_font = pygame.font.SysFont("consolas", 24)
         hint_font = pygame.font.SysFont("consolas", 18)
         panel_font = pygame.font.SysFont("consolas", 18)
-    except Exception:
+    except (pygame.error, OSError):
         title_font = pygame.font.Font(None, 36)
         menu_font = pygame.font.Font(None, 24)
         hint_font = pygame.font.Font(None, 18)
@@ -159,6 +159,7 @@ def draw_button_with_arrow(
 def _draw_menu_header(screen: pygame.Surface,
                       fonts: GfxFonts,
                       bindings_file_hint: str,
+                      extra_hint_lines: Tuple[str, ...],
                       bindings_status: str,
                       bindings_status_error: bool) -> None:
     width, _ = screen.get_size()
@@ -168,21 +169,25 @@ def _draw_menu_header(screen: pygame.Surface,
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
-    bindings_hint_surf = fonts.hint_font.render(bindings_hint_text, True, (200, 200, 220))
 
     title_x = (width - title_surf.get_width()) // 2
     screen.blit(title_surf, (title_x, 60))
 
     subtitle_x = (width - subtitle_surf.get_width()) // 2
     screen.blit(subtitle_surf, (subtitle_x, 60 + title_surf.get_height() + 10))
-    hint_x = (width - bindings_hint_surf.get_width()) // 2
-    screen.blit(bindings_hint_surf, (hint_x, 60 + title_surf.get_height() + 34))
+
+    hint_y = 60 + title_surf.get_height() + 34
+    for line in (bindings_hint_text, *extra_hint_lines):
+        hint_surf = fonts.hint_font.render(line, True, (200, 200, 220))
+        hint_x = (width - hint_surf.get_width()) // 2
+        screen.blit(hint_surf, (hint_x, hint_y))
+        hint_y += hint_surf.get_height() + 2
 
     if bindings_status:
         status_color = (255, 150, 150) if bindings_status_error else (170, 240, 170)
         status_surf = fonts.hint_font.render(bindings_status, True, status_color)
         status_x = (width - status_surf.get_width()) // 2
-        screen.blit(status_surf, (status_x, 60 + title_surf.get_height() + 58))
+        screen.blit(status_surf, (status_x, hint_y + 2))
 
 
 def _draw_menu_settings_panel(screen: pygame.Surface,
@@ -333,6 +338,7 @@ def draw_menu(screen: pygame.Surface,
               settings,
               selected_index: int,
               bindings_file_hint: str = "keybindings/2d.json",
+              extra_hint_lines: Tuple[str, ...] = (),
               bindings_status: str = "",
               bindings_status_error: bool = False) -> None:
     """Top-level menu draw call."""
@@ -343,6 +349,7 @@ def draw_menu(screen: pygame.Surface,
         screen,
         fonts,
         bindings_file_hint,
+        extra_hint_lines,
         bindings_status,
         bindings_status_error,
     )
