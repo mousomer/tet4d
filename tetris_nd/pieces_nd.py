@@ -8,6 +8,10 @@ from .types import Coord
 
 RelCoordND = Coord
 
+PIECE_SET_4D_STANDARD = "standard_4d_5"
+PIECE_SET_4D_SIX = "standard_4d_6"
+PIECE_SET_4D_OPTIONS = (PIECE_SET_4D_STANDARD, PIECE_SET_4D_SIX)
+
 
 def _validate_ndim(ndim: int) -> None:
     if ndim < 2:
@@ -102,6 +106,25 @@ _PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] =
     ("FORK4", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 1), (0, 0, 1, 1)), 7),
 )
 
+# Optional dedicated 4D set (6 cells per piece).
+_PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
+    ("CROSS6", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)), 1),
+    ("RIBBON6_A", ((0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1), (0, 1, 1, 1)), 2),
+    ("RIBBON6_B", ((0, 0, 0, 0), (-1, 0, 0, 0), (-1, 1, 0, 0), (-1, 1, 1, 0), (-1, 1, 1, 1), (0, 1, 1, 1)), 3),
+    ("STAIR6", ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1), (2, 1, 1, 1)), 4),
+    ("FORK6", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 1), (0, 1, 1, 1)), 5),
+    ("TWIST6", ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (2, 1, 1, 0), (2, 1, 1, 1)), 6),
+    ("PLANE6", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)), 7),
+)
+
+
+def normalize_piece_set_4d(piece_set_4d: str | None) -> str:
+    if piece_set_4d is None:
+        return PIECE_SET_4D_STANDARD
+    if piece_set_4d in PIECE_SET_4D_OPTIONS:
+        return piece_set_4d
+    raise ValueError(f"unsupported 4D piece set: {piece_set_4d}")
+
 
 @dataclass(frozen=True)
 class PieceShapeND:
@@ -110,15 +133,16 @@ class PieceShapeND:
     color_id: int
 
 
-def get_standard_pieces_nd(ndim: int) -> List[PieceShapeND]:
+def get_standard_pieces_nd(ndim: int, piece_set_4d: str | None = None) -> List[PieceShapeND]:
     """
     Return dimension-native piece sets:
     - 2D: classic tetrominoes
     - 3D: true 3D polycubes
-    - 4D: true 4D polycubes
-    - >4D: embed the 4D set and keep extra axes at 0
+    - 4D: true 4D polycubes (5-cell default, optional 6-cell set)
+    - >4D: embed the selected 4D set and keep extra axes at 0
     """
     _validate_ndim(ndim)
+    normalized_set_4d = normalize_piece_set_4d(piece_set_4d)
     if ndim == 2:
         shapes_2d = get_standard_tetrominoes()
         return [
@@ -137,9 +161,10 @@ def get_standard_pieces_nd(ndim: int) -> List[PieceShapeND]:
         ]
 
     # ndim >= 4
+    source_set = _PIECES_4D if normalized_set_4d == PIECE_SET_4D_STANDARD else _PIECES_4D_SIX
     return [
         PieceShapeND(name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id)
-        for name, blocks, color_id in _PIECES_4D
+        for name, blocks, color_id in source_set
     ]
 
 

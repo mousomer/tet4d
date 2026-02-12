@@ -70,16 +70,21 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     return True, f"Saved menu state to {STATE_FILE}"
 
 
-def apply_saved_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
+def apply_saved_menu_settings(
+    state: Any,
+    dimension: int,
+    include_profile: bool = True,
+) -> tuple[bool, str]:
     payload = _load_payload()
-    profile = payload.get("active_profile")
-    if isinstance(profile, str):
-        ok_profile, msg_profile = set_active_key_profile(profile)
-        if not ok_profile:
-            return False, msg_profile
-        ok_bindings, msg_bindings = load_active_profile_bindings()
-        if not ok_bindings:
-            return False, msg_bindings
+    if include_profile:
+        profile = payload.get("active_profile")
+        if isinstance(profile, str):
+            ok_profile, msg_profile = set_active_key_profile(profile)
+            if not ok_profile:
+                return False, msg_profile
+            ok_bindings, msg_bindings = load_active_profile_bindings()
+            if not ok_bindings:
+                return False, msg_bindings
     mode_key = _mode_key_for_dimension(dimension)
     mode_settings = payload.get("settings", {}).get(mode_key, {})
     if isinstance(mode_settings, dict):
@@ -107,8 +112,12 @@ def save_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
     return _save_payload(payload)
 
 
-def load_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
-    return apply_saved_menu_settings(state, dimension)
+def load_menu_settings(
+    state: Any,
+    dimension: int,
+    include_profile: bool = True,
+) -> tuple[bool, str]:
+    return apply_saved_menu_settings(state, dimension, include_profile=include_profile)
 
 
 def reset_menu_settings_to_defaults(state: Any, dimension: int) -> tuple[bool, str]:

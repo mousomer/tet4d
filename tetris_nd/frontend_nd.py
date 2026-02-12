@@ -11,11 +11,14 @@ from .key_dispatch import dispatch_bound_action, match_bound_action
 from .keybindings import (
     KEYS_3D,
     KEYS_4D,
+    PROFILE_SMALL,
     SLICE_KEYS_3D,
     SLICE_KEYS_4D,
     SYSTEM_KEYS,
     active_key_profile,
     keybinding_file_label,
+    load_active_profile_bindings,
+    set_active_key_profile,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
@@ -205,8 +208,11 @@ def run_menu(screen: pygame.Surface,
              fonts: GfxFonts,
              dimension: int) -> Optional[GameSettingsND]:
     clock = pygame.time.Clock()
+    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
+    if set_ok:
+        load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, dimension)
+    ok, msg = load_menu_settings(state, dimension, include_profile=False)
     if not ok:
         state.bindings_status = msg
         state.bindings_status_error = True

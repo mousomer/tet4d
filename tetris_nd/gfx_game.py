@@ -161,7 +161,7 @@ def _draw_menu_header(screen: pygame.Surface,
                       bindings_file_hint: str,
                       extra_hint_lines: Tuple[str, ...],
                       bindings_status: str,
-                      bindings_status_error: bool) -> None:
+                      bindings_status_error: bool) -> int:
     width, _ = screen.get_size()
     title_text = "2D Tetris – Setup"
     subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
@@ -188,21 +188,26 @@ def _draw_menu_header(screen: pygame.Surface,
         status_surf = fonts.hint_font.render(bindings_status, True, status_color)
         status_x = (width - status_surf.get_width()) // 2
         screen.blit(status_surf, (status_x, hint_y + 2))
+        hint_y += status_surf.get_height() + 4
+    return hint_y
 
 
 def _draw_menu_settings_panel(screen: pygame.Surface,
                               fonts: GfxFonts,
-                              width: int,
                               settings,
-                              selected_index: int) -> Tuple[int, int, int, int]:
+                              selected_index: int,
+                              panel_top: int) -> Tuple[int, int, int, int]:
     """
     Draw the glass panel with width/height/speed settings.
     Returns (panel_x, panel_y, panel_w, panel_h).
     """
+    width, height = screen.get_size()
     panel_w = int(width * 0.6)
     panel_h = 220
     panel_x = (width - panel_w) // 2
-    panel_y = 160
+    panel_y = max(160, panel_top)
+    max_panel_y = max(160, height - 430)
+    panel_y = min(panel_y, max_panel_y)
 
     # Semi-transparent dark panel
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
@@ -343,9 +348,7 @@ def draw_menu(screen: pygame.Surface,
               bindings_status_error: bool = False) -> None:
     """Top-level menu draw call."""
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
-    width, _ = screen.get_size()
-
-    _draw_menu_header(
+    header_bottom = _draw_menu_header(
         screen,
         fonts,
         bindings_file_hint,
@@ -354,7 +357,11 @@ def draw_menu(screen: pygame.Surface,
         bindings_status_error,
     )
     _panel_x, panel_y, _panel_w, panel_h = _draw_menu_settings_panel(
-        screen, fonts, width, settings, selected_index
+        screen,
+        fonts,
+        settings,
+        selected_index,
+        panel_top=header_bottom + 12,
     )
     _draw_menu_dpad_and_commands(screen, fonts, panel_y, panel_h)
 
