@@ -1,0 +1,14 @@
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Runtime state
+state/
+keybindings/profiles/
+
+# Local virtual env
+.venv/
