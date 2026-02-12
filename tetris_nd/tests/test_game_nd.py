@@ -2,7 +2,7 @@ import unittest
 
 from tetris_nd.board import BoardND
 from tetris_nd.game_nd import GameConfigND, GameStateND
-from tetris_nd.pieces_nd import ActivePieceND, PieceShapeND
+from tetris_nd.pieces_nd import ActivePieceND, PIECE_SET_4D_SIX, PieceShapeND
 
 
 class TestGameND(unittest.TestCase):
@@ -59,6 +59,17 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(cleared, 1)
         self.assertEqual(state.lines_cleared, 1)
         self.assertEqual(state.board.cells.get((1, 2, 1)), 2)
+
+    def test_4d_config_can_use_six_cell_piece_set(self):
+        cfg = GameConfigND(dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d=PIECE_SET_4D_SIX)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+
+        self.assertIsNotNone(state.current_piece)
+        self.assertEqual(len(state.current_piece.shape.blocks), 6)
+
+    def test_invalid_4d_piece_set_rejected_by_config(self):
+        with self.assertRaises(ValueError):
+            GameConfigND(dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d="invalid")
 
 
 if __name__ == "__main__":

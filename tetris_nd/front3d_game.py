@@ -16,9 +16,12 @@ from .keybindings import (
     CAMERA_KEYS_3D,
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
+    PROFILE_SMALL,
     active_key_profile,
     initialize_keybinding_files,
     keybinding_file_label,
+    load_active_profile_bindings,
+    set_active_key_profile,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
@@ -185,8 +188,11 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
 
 def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D]:
     clock = pygame.time.Clock()
+    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
+    if set_ok:
+        load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, 3)
+    ok, msg = load_menu_settings(state, 3, include_profile=False)
     if not ok:
         state.bindings_status = msg
         state.bindings_status_error = True
