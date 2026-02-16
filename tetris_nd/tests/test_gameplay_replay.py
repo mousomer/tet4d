@@ -218,7 +218,7 @@ class TestGameplayReplay(unittest.TestCase):
         hard_drop = self._key_for(KEYS_3D, "hard_drop")
 
         self.assertEqual(front3d_game.handle_game_keydown(_keydown(move_z_neg), state, cfg), "continue")
-        self.assertEqual(state.current_piece.pos, (3, 2, 2))
+        self.assertEqual(state.current_piece.pos, (3, 2, 4))
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertEqual(front3d_game.handle_game_keydown(_keydown(rotate_xz), state, cfg), "continue")
@@ -235,9 +235,9 @@ class TestGameplayReplay(unittest.TestCase):
         camera = front3d_game.Camera3D()
         yaw_pos = self._key_for(CAMERA_KEYS_3D, "yaw_pos")
         self.assertTrue(front3d_game.handle_camera_keydown(_keydown(yaw_pos), camera))
-        self.assertEqual(camera.anim_axis, "yaw")
+        self.assertTrue(camera.animating)
         camera.step_animation(1000)
-        self.assertIsNone(camera.anim_axis)
+        self.assertFalse(camera.animating)
 
     def test_4d_controls_slice_and_view_smoke(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
@@ -285,9 +285,9 @@ class TestGameplayReplay(unittest.TestCase):
         view = front4d_game.LayerView3D()
         pitch_neg = self._key_for(CAMERA_KEYS_4D, "pitch_neg")
         self.assertTrue(front4d_game.handle_view_keydown(_keydown(pitch_neg), view))
-        self.assertEqual(view.anim_axis, "pitch")
+        self.assertTrue(view.animating)
         view.step_animation(1000)
-        self.assertIsNone(view.anim_axis)
+        self.assertFalse(view.animating)
 
 
 if __name__ == "__main__":

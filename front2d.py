@@ -7,7 +7,9 @@ from typing import Optional
 
 import pygame
 
+from tetris_nd.audio import AudioSettings, initialize_audio, play_sfx
 from tetris_nd.board import BoardND
+from tetris_nd.display import DisplaySettings, apply_display_mode
 from tetris_nd.game2d import GameConfig, GameState, Action
 from tetris_nd.game_loop_common import process_game_events
 from tetris_nd.gfx_game import (
@@ -21,13 +23,11 @@ from tetris_nd.gfx_game import (
 from tetris_nd.keybindings import (
     DISABLED_KEYS_2D,
     KEYS_2D,
-    PROFILE_SMALL,
     SYSTEM_KEYS,
     active_key_profile,
     initialize_keybinding_files,
     keybinding_file_label,
     load_active_profile_bindings,
-    set_active_key_profile,
 )
 from tetris_nd.key_dispatch import (
     dispatch_bound_action,
@@ -38,7 +38,13 @@ from tetris_nd.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from tetris_nd.menu_settings_state import load_menu_settings
+from tetris_nd.menu_settings_state import (
+    get_audio_settings,
+    get_display_settings,
+    load_menu_settings,
+    save_display_settings,
+)
+from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 
 DEFAULT_GAME_SEED = 1337
 
@@ -49,6 +55,7 @@ DEFAULT_GAME_SEED = 1337
 class GameSettings:
     width: int = 10
     height: int = 20
+    piece_set_index: int = 0
     speed_level: int = 1  # 1..10, mapped to gravity interval
 
 
@@ -64,13 +71,28 @@ class MenuState:
     rebind_mode: bool = False
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
+    rebind_conflict_mode: str = "replace"
 
 
 _MENU_FIELDS: list[FieldSpec] = [
     ("Board width", "width", 6, 16),
     ("Board height", "height", 12, 30),
+    ("Piece set", "piece_set_index", 0, len(PIECE_SET_2D_OPTIONS) - 1),
     ("Speed level", "speed_level", 1, 10),
 ]
+
+
+def _piece_set_index_to_id(index: int) -> str:
+    safe_index = max(0, min(len(PIECE_SET_2D_OPTIONS) - 1, int(index)))
+    return PIECE_SET_2D_OPTIONS[safe_index]
+
+
+def _menu_value_formatter(attr_name: str, value: object) -> str:
+    if attr_name == "piece_set_index":
+        return piece_set_2d_label(_piece_set_index_to_id(int(value)))
+    if attr_name == "speed_level":
+        return f"{value}   (1 = slow, 10 = fast)"
+    return str(value)
 
 
 # ---------- Menu loop ----------
@@ -81,11 +103,9 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     Returns GameSettings if user starts the game, or None if user quits.
     """
     clock = pygame.time.Clock()
-    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
-    if set_ok:
-        load_active_profile_bindings()
+    load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, 2, include_profile=False)
+    ok, msg = load_menu_settings(state, 2, include_profile=True)
     if not ok:
         state.bindings_status = msg
         state.bindings_status_error = True
@@ -107,11 +127,16 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             bindings_file_hint=keybinding_file_label(2),
             extra_hint_lines=(
                 f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-                "F5 save settings   F9 load settings   F8 reset defaults",
-                f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   Tab/` change target",
+                "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+                (
+                    f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
+                    f"Tab/` change target   C conflict={state.rebind_conflict_mode}"
+                ),
             ),
             bindings_status=state.bindings_status,
             bindings_status_error=state.bindings_status_error,
+            menu_fields=_MENU_FIELDS,
+            value_formatter=_menu_value_formatter,
         )
         pygame.display.flip()
 
@@ -149,10 +174,13 @@ def handle_game_keydown(event: pygame.event.Event,
     if system_action == "quit":
         return "quit"
     if system_action == "menu":
+        play_sfx("menu_confirm")
         return "menu"
     if system_action == "restart":
+        play_sfx("menu_confirm")
         return "restart"
     if system_action == "toggle_grid":
+        play_sfx("menu_move")
         return "toggle_grid"
 
     if state.game_over:
@@ -164,7 +192,7 @@ def handle_game_keydown(event: pygame.event.Event,
         return "continue"
 
     # Movement / rotation / drops
-    dispatch_bound_action(
+    action = dispatch_bound_action(
         key,
         KEYS_2D,
         {
@@ -176,6 +204,13 @@ def handle_game_keydown(event: pygame.event.Event,
             "soft_drop": lambda: state.try_move(0, 1),
         },
     )
+    if action is not None:
+        if action.startswith("rotate_"):
+            play_sfx("rotate")
+        elif action == "hard_drop":
+            play_sfx("drop")
+        else:
+            play_sfx("move")
 
     return "continue"
 
@@ -256,6 +291,7 @@ def run_game_loop(screen: pygame.Surface,
     loop = LoopContext2D.create(cfg)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     clear_anim_duration_ms = 320.0
+    was_game_over = loop.state.game_over
 
     clock = pygame.time.Clock()
     while True:
@@ -277,6 +313,11 @@ def run_game_loop(screen: pygame.Surface,
             loop.gravity_accumulator,
             gravity_interval_ms,
         )
+        if loop.state.lines_cleared != loop.last_lines_cleared:
+            play_sfx("clear")
+        if loop.state.game_over and not was_game_over:
+            play_sfx("game_over")
+        was_game_over = loop.state.game_over
         loop.clear_anim_levels, loop.clear_anim_elapsed_ms, loop.last_lines_cleared = _update_clear_animation(
             state=loop.state,
             last_lines_cleared=loop.last_lines_cleared,
@@ -311,13 +352,30 @@ def run_game_loop(screen: pygame.Surface,
 def run():
     pygame.init()
     initialize_keybinding_files()
+    audio_settings = get_audio_settings()
+    initialize_audio(
+        AudioSettings(
+            master_volume=audio_settings["master_volume"],
+            sfx_volume=audio_settings["sfx_volume"],
+            mute=audio_settings["mute"],
+        )
+    )
     fonts = init_fonts()
+
+    display_settings_payload = get_display_settings()
+    display_settings = DisplaySettings(
+        fullscreen=display_settings_payload["fullscreen"],
+        windowed_size=tuple(display_settings_payload["windowed_size"]),
+    )
 
     running = True
     while running:
         # --- MENU ---
         pygame.display.set_caption("2D Tetris – Setup")
-        menu_screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+        menu_screen = apply_display_mode(
+            display_settings,
+            preferred_windowed_size=display_settings.windowed_size,
+        )
         settings = run_menu(menu_screen, fonts)
         if settings is None:
             break  # user quit from menu
@@ -328,6 +386,7 @@ def run():
             height=settings.height,
             gravity_axis=1,
             speed_level=settings.speed_level,
+            piece_set=_piece_set_index_to_id(settings.piece_set_index),
         )
 
         # Initial suggested window size; user can resize afterwards
@@ -337,11 +396,21 @@ def run():
         window_h = board_px_h + 2 * 20
 
         pygame.display.set_caption("2D Tetris")
-        game_screen = pygame.display.set_mode((window_w, window_h), pygame.RESIZABLE)
+        preferred_size = (
+            max(window_w, display_settings.windowed_size[0]),
+            max(window_h, display_settings.windowed_size[1]),
+        )
+        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
+            continue
+
+        if not display_settings.fullscreen:
+            current_size = pygame.display.get_surface().get_size()
+            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
+            save_display_settings(windowed_size=current_size)
 
     pygame.quit()
     sys.exit()

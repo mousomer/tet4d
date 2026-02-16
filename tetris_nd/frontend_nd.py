@@ -7,23 +7,21 @@ import pygame
 
 from .board import BoardND
 from .game_nd import GameConfigND, GameStateND
-from .key_dispatch import dispatch_bound_action, match_bound_action
+from .key_dispatch import match_bound_action
 from .keybindings import (
     KEYS_3D,
     KEYS_4D,
-    PROFILE_SMALL,
     SLICE_KEYS_3D,
     SLICE_KEYS_4D,
     SYSTEM_KEYS,
     active_key_profile,
     keybinding_file_label,
     load_active_profile_bindings,
-    set_active_key_profile,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
 from .menu_settings_state import load_menu_settings
-from .pieces_nd import PIECE_SET_4D_SIX, PIECE_SET_4D_STANDARD
+from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 
 
 TEXT_COLOR = (230, 230, 230)
@@ -79,13 +77,9 @@ class GameSettingsND:
 
 
 _PIECE_SET_4D_CHOICES = (
-    PIECE_SET_4D_STANDARD,
-    PIECE_SET_4D_SIX,
+    *piece_set_options_for_dimension(4),
 )
-_PIECE_SET_4D_LABELS = (
-    "True 4D (5-cell)",
-    "True 4D (6-cell)",
-)
+_PIECE_SET_4D_LABELS = tuple(piece_set_label(piece_set_id) for piece_set_id in _PIECE_SET_4D_CHOICES)
 
 
 def _piece_set_index_to_id(index: int) -> str:
@@ -94,9 +88,7 @@ def _piece_set_index_to_id(index: int) -> str:
 
 
 def piece_set_4d_label(piece_set_4d: str) -> str:
-    if piece_set_4d == PIECE_SET_4D_SIX:
-        return _PIECE_SET_4D_LABELS[1]
-    return _PIECE_SET_4D_LABELS[0]
+    return piece_set_label(piece_set_4d)
 
 
 @dataclass
@@ -111,6 +103,7 @@ class MenuState:
     rebind_mode: bool = False
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
+    rebind_conflict_mode: str = "replace"
 
 
 def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
@@ -185,8 +178,11 @@ def draw_menu(screen: pygame.Surface,
         "Esc = quit",
         menu_binding_hint_line(dimension),
         f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-        "F5 save settings   F9 load settings   F8 reset defaults",
-        f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   Tab/` target",
+        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+        (
+            f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
+            f"Tab/` target   C conflict={state.rebind_conflict_mode}"
+        ),
         f"Profile file: {keybinding_file_label(dimension)}",
         "Controls are shown in-game on the side panel.",
     ]
@@ -208,11 +204,9 @@ def run_menu(screen: pygame.Surface,
              fonts: GfxFonts,
              dimension: int) -> Optional[GameSettingsND]:
     clock = pygame.time.Clock()
-    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
-    if set_ok:
-        load_active_profile_bindings()
+    load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, dimension, include_profile=False)
+    ok, msg = load_menu_settings(state, dimension, include_profile=True)
     if not ok:
         state.bindings_status = msg
         state.bindings_status_error = True
@@ -236,12 +230,12 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         dims.append(settings.depth)
     if dimension >= 4:
         dims.append(settings.fourth)
-    piece_set_4d = _piece_set_index_to_id(settings.piece_set_index)
+    piece_set_id = _piece_set_index_to_id(settings.piece_set_index)
     return GameConfigND(
         dims=tuple(dims),
         gravity_axis=1,
         speed_level=settings.speed_level,
-        piece_set_4d=piece_set_4d,
+        piece_set_id=piece_set_id,
     )
 
 
@@ -281,16 +275,46 @@ def adjust_slice_axis(slice_state: SliceState,
 
 
 _SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid")
+_GAMEPLAY_ACTIONS_3D = (
+    "move_x_neg",
+    "move_x_pos",
+    "soft_drop",
+    "hard_drop",
+    "rotate_xy_pos",
+    "rotate_xy_neg",
+    "move_z_neg",
+    "move_z_pos",
+    "rotate_xz_pos",
+    "rotate_xz_neg",
+    "rotate_yz_pos",
+    "rotate_yz_neg",
+)
+_GAMEPLAY_ACTIONS_4D = (
+    *_GAMEPLAY_ACTIONS_3D,
+    "move_w_neg",
+    "move_w_pos",
+    "rotate_xw_pos",
+    "rotate_xw_neg",
+    "rotate_yw_pos",
+    "rotate_yw_neg",
+    "rotate_zw_pos",
+    "rotate_zw_neg",
+)
 
 
 def system_key_action(key: int) -> str | None:
     return match_bound_action(key, SYSTEM_KEYS, _SYSTEM_ACTIONS)
 
 
-def dispatch_nd_gameplay_key(key: int, state: GameStateND) -> None:
+def gameplay_action_for_key(key: int, cfg: GameConfigND) -> str | None:
+    gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
+    action_order = _GAMEPLAY_ACTIONS_4D if cfg.ndim >= 4 else _GAMEPLAY_ACTIONS_3D
+    return match_bound_action(key, gameplay_keys, action_order)
+
+
+def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     cfg = state.config
     ndim = cfg.ndim
-    gameplay_keys = KEYS_4D if ndim >= 4 else KEYS_3D
     gameplay_handlers = {
         "move_x_neg": lambda: state.try_move_axis(0, -1),
         "move_x_pos": lambda: state.try_move_axis(0, 1),
@@ -316,10 +340,22 @@ def dispatch_nd_gameplay_key(key: int, state: GameStateND) -> None:
             "rotate_zw_pos": lambda: state.try_rotate(2, 3, 1),
             "rotate_zw_neg": lambda: state.try_rotate(2, 3, -1),
         })
-    dispatch_bound_action(key, gameplay_keys, gameplay_handlers)
+    handler = gameplay_handlers.get(action)
+    if handler is None:
+        return False
+    handler()
+    return True
 
 
-def _dispatch_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) -> bool:
+def dispatch_nd_gameplay_key(key: int, state: GameStateND) -> str | None:
+    action = gameplay_action_for_key(key, state.config)
+    if action is None:
+        return None
+    apply_nd_gameplay_action(state, action)
+    return action
+
+
+def dispatch_nd_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) -> str | None:
     ndim = cfg.ndim
     slice_bindings = SLICE_KEYS_4D if ndim >= 4 else SLICE_KEYS_3D
     slice_handlers = {
@@ -331,7 +367,11 @@ def _dispatch_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) ->
             "slice_w_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=-1),
             "slice_w_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=1),
         })
-    return dispatch_bound_action(key, slice_bindings, slice_handlers) is not None
+    action = match_bound_action(key, slice_bindings, tuple(slice_handlers.keys()))
+    if action is None:
+        return None
+    slice_handlers[action]()
+    return action
 
 
 def handle_game_keydown(event: pygame.event.Event,
@@ -350,7 +390,8 @@ def handle_game_keydown(event: pygame.event.Event,
     if system_action == "toggle_grid":
         return "toggle_grid"
 
-    if _dispatch_slice_key(key, cfg, slice_state):
+    slice_action = dispatch_nd_slice_key(key, cfg, slice_state)
+    if slice_action is not None:
         return "continue"
 
     if state.game_over:

@@ -10,11 +10,14 @@ import pygame
 from .keybindings import (
     active_key_profile,
     binding_actions_for_dimension,
+    cycle_rebind_conflict_mode,
     create_auto_profile,
     cycle_key_profile,
     delete_key_profile,
     load_active_profile_bindings,
+    normalize_rebind_conflict_mode,
     rebind_action_key,
+    reset_active_profile_bindings,
     set_active_key_profile,
 )
 from .menu_settings_state import (
@@ -54,6 +57,8 @@ class MenuAction(Enum):
     REBIND_TOGGLE = auto()
     REBIND_TARGET_NEXT = auto()
     REBIND_TARGET_PREV = auto()
+    REBIND_CONFLICT_NEXT = auto()
+    RESET_BINDINGS = auto()
     NO_OP = auto()
 
 
@@ -75,6 +80,8 @@ _MENU_KEY_ACTIONS = {
     pygame.K_b: MenuAction.REBIND_TOGGLE,
     pygame.K_TAB: MenuAction.REBIND_TARGET_NEXT,
     pygame.K_BACKQUOTE: MenuAction.REBIND_TARGET_PREV,
+    pygame.K_c: MenuAction.REBIND_CONFLICT_NEXT,
+    pygame.K_F6: MenuAction.RESET_BINDINGS,
 }
 
 
@@ -94,6 +101,8 @@ def _ensure_rebind_state(state: Any, dimension: int) -> None:
         state.rebind_targets = targets
     if not hasattr(state, "active_profile"):
         state.active_profile = active_key_profile()
+    if not hasattr(state, "rebind_conflict_mode"):
+        state.rebind_conflict_mode = normalize_rebind_conflict_mode(None)
 
 
 def gather_menu_actions(state: Any | None = None, dimension: int | None = None) -> list[MenuInput]:
@@ -153,7 +162,13 @@ def apply_menu_actions(
             if not state.rebind_targets:
                 continue
             group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-            ok, msg = rebind_action_key(dimension, group, action_name, raw_action.key)
+            ok, msg = rebind_action_key(
+                dimension,
+                group,
+                action_name,
+                raw_action.key,
+                conflict_mode=state.rebind_conflict_mode,
+            )
             if ok and state.rebind_targets:
                 state.rebind_index = (state.rebind_index + 1) % len(state.rebind_targets)
             state.bindings_status = msg
@@ -170,7 +185,10 @@ def apply_menu_actions(
             state.rebind_mode = not state.rebind_mode
             if state.rebind_mode and state.rebind_targets:
                 group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-                state.bindings_status = f"Rebind mode: press key for {group}.{action_name} (Esc to exit)"
+                state.bindings_status = (
+                    f"Rebind mode: press key for {group}.{action_name} "
+                    f"(mode={state.rebind_conflict_mode}, Esc to exit)"
+                )
                 state.bindings_status_error = False
             else:
                 state.bindings_status = "Rebind mode disabled"
@@ -191,6 +209,16 @@ def apply_menu_actions(
                     group, action_name = state.rebind_targets[state.rebind_index]
                     state.bindings_status = f"Rebind target: {group}.{action_name}"
                     state.bindings_status_error = False
+            continue
+        if action == MenuAction.REBIND_CONFLICT_NEXT:
+            state.rebind_conflict_mode = cycle_rebind_conflict_mode(state.rebind_conflict_mode, 1)
+            state.bindings_status = f"Rebind conflict mode: {state.rebind_conflict_mode}"
+            state.bindings_status_error = False
+            continue
+        if action == MenuAction.RESET_BINDINGS:
+            ok, msg = reset_active_profile_bindings(dimension)
+            state.bindings_status = msg
+            state.bindings_status_error = not ok
             continue
         if action == MenuAction.START_GAME:
             state.start_game = True
