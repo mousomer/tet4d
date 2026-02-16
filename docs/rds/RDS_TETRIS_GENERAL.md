@@ -1,8 +1,8 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.4  
+Status: Active v0.5  
 Author: Omer + Codex  
-Date: 2026-02-12  
+Date: 2026-02-16  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -29,6 +29,12 @@ Menu-structure and settings-flow requirements are defined in:
 5. Add a dedicated in-app keybinding edit menu with local save/load workflow.
 6. Add random-cell piece sets for 2D, 3D, and 4D as selectable options.
 7. Allow lower-dimensional piece sets to be used on higher-dimensional boards through defined embedding rules.
+8. Verify and harden scoring behavior with explicit automated scoring tests.
+9. Add debug piece sets (simple large rectangular blocks) for 2D/3D/4D validation workflows.
+10. Add non-intrusive sound effects with volume controls and mute toggles.
+11. Clarify slicing semantics and decouple slicing from rotation concerns.
+12. Unify frontend entry into one main menu for 2D/3D/4D.
+13. Make settings persistence and display mode transitions reliable (including fullscreen).
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -46,6 +52,9 @@ Menu-structure and settings-flow requirements are defined in:
 4. When grid is off, a board shadow/silhouette must still provide spatial context.
 5. Layer/line clear feedback should be animated.
 6. Setup and pause menus must expose equivalent controls/keybinding editing actions.
+7. A unified startup menu must allow choosing 2D/3D/4D and shared settings.
+8. Audio controls (master volume, SFX volume, mute) must be available in settings.
+9. Fullscreen/windowed toggle must be supported without layout corruption.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -56,6 +65,7 @@ Menu-structure and settings-flow requirements are defined in:
 5. System actions (`quit`, `menu`, `restart`, `toggle_grid`) are shared and discoverable.
 6. 2D must ignore ND-only movement/rotation keys.
 7. Keybinding edit flow must support per-action rebind, conflict handling, and local save/load.
+8. Keybindings setup must be reachable from unified main menu and in-game pause menu.
 
 ## 6. Technical Requirements
 
@@ -67,6 +77,8 @@ Menu-structure and settings-flow requirements are defined in:
 6. Game loops must be frame-rate independent for gravity.
 7. Piece set registration must include metadata (`id`, `dimension`, `cell_count`, `generator`, `is_embedded`).
 8. Embedding helpers must convert lower-dimensional piece offsets into target board dimensions deterministically.
+9. Display mode changes (windowed/fullscreen) must run through a shared display-state manager.
+10. Settings/keybindings/state writes must be atomic and recover from corrupt files with warning.
 
 ## 7. Engineering Best Practices
 
@@ -92,6 +104,9 @@ Expected test categories:
 1. Unit tests for board, pieces, and game state transitions.
 2. Replay determinism tests for 2D/3D/4D.
 3. Smoke tests for key routing and system controls per mode.
+4. Scoring matrix tests for 1/2/3/4+ clears across modes.
+5. Random/debug piece stress tests for spawn validity and non-premature game-over.
+6. Menu/settings/display-mode integration tests (windowed <-> fullscreen).
 
 ## 9. Acceptance Criteria (Family)
 
@@ -102,6 +117,9 @@ Expected test categories:
 5. Keybindings can be edited in-app and saved/loaded locally by profile.
 6. Random-cell piece sets are selectable and playable in each dimension.
 7. Lower-dimensional piece sets are selectable and playable on higher-dimensional boards.
+8. Scoring behavior is verified by automated tests and matches defined tables.
+9. Audio can be muted/unmuted and volume-controlled from settings.
+10. Fullscreen toggling preserves correct menu and game layout state.
 
 ## 10. Implementation Plan (Next Milestone)
 
@@ -126,3 +144,27 @@ Expected test categories:
 2. Define default embedding planes/hyperplanes and expose selection where relevant.
 3. Ensure embedded pieces fully support target-dimension movement/rotation after spawn.
 4. Add tests for spawn validity, collision behavior, and clear/scoring parity.
+
+## 11. Stabilization Plan (Issues 1-10)
+
+1. Scoring verification:
+2. Add explicit unit tests for scoring increments and cumulative score after multi-clear sequences.
+3. Add deterministic replay assertions that include score snapshots.
+4. Debug piece sets:
+5. Add `debug_rectangles_2d`, `debug_rectangles_3d`, `debug_rectangles_4d` piece sets for quick layer-fill testing.
+6. Audio:
+7. Add subtle SFX events (move, rotate, lock, clear, game-over, menu confirm), plus `master/sfx volume` and `mute`.
+8. Slicing semantics:
+9. Document slicing as a visualization/filter tool, not a rotation requirement; keep rotation controls independent.
+10. 4D `9/0` rotation stability:
+11. Deconflict overlapping key actions and add robust rotation-failure handling diagnostics.
+12. Random piece premature game-over:
+13. Add spawn-fit constraints and random-shape validation against board dimensions before bag inclusion.
+14. Unified frontend:
+15. Replace per-mode startup menus with one main menu and mode-specific setup subpages.
+16. Settings persistence:
+17. Centralize state save/load, schema versioning, atomic writes, and fallback messaging.
+18. Keybindings setup menu:
+19. Add dedicated keybindings UI screen with grouped actions and conflict-resolution UX.
+20. Fullscreen behavior:
+21. Add shared display mode manager that recalculates scene layout after mode transitions and on return-to-menu.

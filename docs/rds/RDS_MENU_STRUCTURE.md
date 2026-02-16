@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Draft v0.2  
+Status: Active v0.4  
 Author: Omer + Codex  
-Date: 2026-02-12  
+Date: 2026-02-16  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -14,6 +14,8 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 4. Reset-to-defaults flow
 5. Persistent save/load of menu and settings state
 6. Keybinding editor flow with local profile save/load
+7. Unified main menu for choosing 2D/3D/4D with shared options
+8. Audio and display settings (including fullscreen/windowed mode)
 
 Primary files impacted by future implementation:
 1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
@@ -29,6 +31,7 @@ Primary files impacted by future implementation:
 3. Consistent interaction model across all menus and modes.
 4. Allow quick settings changes without extra navigation depth.
 5. Support safe reset-to-defaults and explicit save state actions.
+6. Ensure display mode transitions never corrupt menu/game layout.
 
 ## 3. Research Basis (Best Practices)
 
@@ -49,12 +52,13 @@ This design is based on:
 ```text
 Main Menu
 ├── Play
-│   ├── 2D Setup
-│   ├── 3D Setup
-│   └── 4D Setup
+│   ├── Choose Mode (2D/3D/4D)
+│   └── Mode Setup (selected mode)
 ├── Settings
 │   ├── Gameplay
 │   ├── Visual
+│   ├── Audio
+│   ├── Display
 │   ├── Controls
 │   │   └── Edit Keybindings
 │   └── Accessibility
@@ -86,7 +90,7 @@ Pause Menu
 1. 2D setup must expose at least: width, height, speed.
 2. 3D setup must expose at least: width, height, depth, speed.
 3. 4D setup must expose at least: width, height, depth, w, speed, 4D piece set.
-4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell).
+4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell, debug).
 5. Setup screens must use the same layout skeleton and footer shortcuts.
 
 ## 5. Layout and Readability Requirements
@@ -145,6 +149,8 @@ Pause Menu
 8. `Save Keybindings Locally`
 9. `Load Keybindings Locally`
 10. `Save Keybindings As New Profile`
+11. `Toggle Fullscreen`
+12. `Adjust Audio`
 
 ### 7.2 Persistence model
 
@@ -157,9 +163,18 @@ Minimum schema:
   "version": 1,
   "last_mode": "4d",
   "active_profile": "small",
+  "display": {
+    "fullscreen": false,
+    "windowed_size": [1200, 760]
+  },
+  "audio": {
+    "master_volume": 0.8,
+    "sfx_volume": 0.7,
+    "mute": false
+  },
   "settings": {
-    "2d": {"width": 10, "height": 20, "speed_level": 1},
-    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1},
+    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0},
+    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0},
     "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0}
   }
 }
@@ -172,6 +187,7 @@ Minimum schema:
 3. Optional auto-save on successful game start is allowed only after explicit opt-in.
 4. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
 5. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
+6. Display and audio settings are persisted in the same settings state.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -186,6 +202,7 @@ Minimum schema:
 2. Error messages must be plain language and include next step.
 3. If settings file is missing, recreate with defaults.
 4. If keybinding profile files are missing, recreate from selected profile defaults.
+5. If fullscreen toggle fails, continue in windowed mode and show warning.
 
 ## 9. Implementation Plan (Recommended)
 
@@ -213,6 +230,8 @@ Manual tests:
 5. Corrupt `menu_settings.json` fallback path.
 6. Non-default profile create/rename/delete and profile-specific load/save.
 7. Edit keybindings in setup and pause menus; save and reload locally.
+8. Toggle fullscreen in setup, start game, return to menu, and verify layout size remains correct.
+9. Change audio settings, restart app, and verify persistence.
 
 ## 11. Implementation Plan Additions
 
@@ -225,12 +244,36 @@ Manual tests:
 7. random-cell generated set
 8. Ensure switching piece set source is immediate in preview and persisted in settings state.
 
-## 12. Acceptance Criteria
+## 12. Stabilization Additions (Current Issues)
+
+1. Implement one shared startup flow: `Main Menu -> Mode Select -> Mode Setup -> Start`.
+2. Add a dedicated `Keybindings Setup` screen with grouped action lists and conflict strategy selector.
+3. Add `Audio` settings page with `master`, `sfx`, and `mute`.
+4. Add `Display` settings page with `fullscreen toggle`, `windowed size`, and `reset display`.
+5. Add a shared display-state manager that recalculates menu/game layouts after display mode changes.
+6. Ensure returning from fullscreen gameplay to menu rebuilds the menu surface and metrics.
+## 13. Acceptance Criteria
 
 1. Menu hierarchy is consistent in 2D/3D/4D entrypoints and pause menu.
 2. All required actions exist: settings change, reset defaults, save state, load state.
 3. Profile actions are identical in main/setup and pause menus.
 4. Non-default profiles can be redefined, saved, and loaded.
+
+## 14. Implementation Status (2026-02-16)
+
+Implemented in code:
+1. Unified launcher added at `/Users/omer/workspace/test-code/tet4d/front.py`.
+2. Main menu includes mode select (`2D/3D/4D`), keybindings setup, audio settings, display settings, and quit.
+3. Display settings include fullscreen toggle and windowed size controls with apply/save/reset.
+4. Audio settings include master volume, SFX volume, and mute with save/reset.
+5. Keybindings setup is a dedicated screen (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
+6. Launcher persists and restores global state (`last_mode`, `active_profile`, display/audio payload).
+
+Stabilization details:
+1. Returning from gameplay to menu now reapplies persisted display mode.
+2. Windowed size is captured and persisted after game sessions in windowed mode.
 5. Focus and contrast states remain readable in default window sizes.
 6. No crashes on missing/corrupt settings files.
 7. Tests and lint pass after implementation.
+8. Fullscreen/window transitions no longer produce shrunken menu layouts.
+9. Unified main menu controls 2D/3D/4D startup consistently.

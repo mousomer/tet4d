@@ -5,9 +5,10 @@ Usage guide for the 2D/3D/4D Tetris project.
 ## What this is
 
 This repository contains:
-- `2D Tetris` (`front2d.py`)
-- `3D Tetris` (`front3d.py`)
-- `4D Tetris` (`front4d.py`)
+- Unified launcher (`front.py`)
+- `2D Tetris` direct mode (`front2d.py`)
+- `3D Tetris` direct mode (`front3d.py`)
+- `4D Tetris` direct mode (`front4d.py`)
 
 All modes share core logic under `tetris_nd/`, with mode-specific frontends and external keybindings JSON files.
 
@@ -28,15 +29,24 @@ pip install -r requirements.txt
 ## Run
 
 ```bash
-# 2D
+# Unified launcher (recommended)
+python /Users/omer/workspace/test-code/tet4d/front.py
+
+# Direct 2D
 python /Users/omer/workspace/test-code/tet4d/front2d.py
 
-# 3D
+# Direct 3D
 python /Users/omer/workspace/test-code/tet4d/front3d.py
 
-# 4D
+# Direct 4D
 python /Users/omer/workspace/test-code/tet4d/front4d.py
 ```
+
+Unified launcher includes:
+- Mode selection (`2D/3D/4D`)
+- Keybindings setup menu (load/save/rebind/reset, profile cycle/create/delete)
+- Audio settings (`master`, `sfx`, `mute`)
+- Display settings (`fullscreen`, windowed size, apply/save/reset)
 
 ## Keybindings
 
@@ -60,7 +70,7 @@ export TETRIS_KEY_PROFILE=full
 ruff check /Users/omer/workspace/test-code/tet4d
 
 # Unit and gameplay replay tests
-pytest -q
+SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q
 
 # Python 3.14 compatibility compile check
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd

@@ -1,12 +1,22 @@
 # tests/test_game2d.py
 import unittest
+import random
 
 from tetris_nd.board import BoardND
-from tetris_nd.game2d import GameConfig, GameState
+from tetris_nd.game2d import GameConfig, GameState, _score_for_clear
 from tetris_nd.pieces2d import PieceShape2D, ActivePiece2D
+from tetris_nd.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
 
 
 class TestGame2D(unittest.TestCase):
+    def test_score_table(self):
+        self.assertEqual(_score_for_clear(0), 0)
+        self.assertEqual(_score_for_clear(1), 40)
+        self.assertEqual(_score_for_clear(2), 100)
+        self.assertEqual(_score_for_clear(3), 300)
+        self.assertEqual(_score_for_clear(4), 1200)
+        self.assertEqual(_score_for_clear(5), 1600)
+
 
     def make_empty_state(self, width=10, height=20) -> GameState:
         cfg = GameConfig(width=width, height=height)
@@ -68,6 +78,26 @@ class TestGame2D(unittest.TestCase):
         for x in range(cfg.width):
             self.assertNotIn((x, 3), state.board.cells)
 
+    def test_lock_current_piece_and_clear_two_lines_scores_100(self):
+        cfg = GameConfig(width=2, height=2)
+        board = BoardND((cfg.width, cfg.height))
+        state = GameState(config=cfg, board=board)
+        state.board.cells.clear()
+
+        # Leave one gap in each row at x=1.
+        state.board.cells[(0, 0)] = 1
+        state.board.cells[(0, 1)] = 1
+
+        domino = PieceShape2D("domino", [(0, 0), (0, 1)], color_id=2)
+        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 0), rotation=0)
+
+        cleared = state.lock_current_piece()
+
+        self.assertEqual(cleared, 2)
+        self.assertEqual(state.lines_cleared, 2)
+        self.assertEqual(state.score, 100)
+        self.assertEqual(state.board.cells, {})
+
     def test_hard_drop_places_piece_at_bottom(self):
         cfg = GameConfig(width=4, height=4)
         board = BoardND((cfg.width, cfg.height))
@@ -107,6 +137,33 @@ class TestGame2D(unittest.TestCase):
         self.assertFalse(state._can_exist(left_piece))
         self.assertFalse(state._can_exist(right_piece))
         self.assertFalse(state._can_exist(below_piece))
+
+    def test_random_piece_set_uses_configured_cell_count(self):
+        cfg = GameConfig(
+            width=10,
+            height=20,
+            piece_set=PIECE_SET_2D_RANDOM,
+            random_cell_count=5,
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        self.assertIsNotNone(state.current_piece)
+        self.assertEqual(len(state.current_piece.shape.blocks), 5)
+
+    def test_debug_piece_set_does_not_immediately_game_over(self):
+        cfg = GameConfig(
+            width=10,
+            height=20,
+            piece_set=PIECE_SET_2D_DEBUG,
+        )
+        state = GameState(
+            config=cfg,
+            board=BoardND((cfg.width, cfg.height)),
+            rng=random.Random(0),
+        )
+        for _ in range(6):
+            self.assertFalse(state.game_over)
+            state.hard_drop()
+        self.assertFalse(state.game_over)
 
 
 if __name__ == "__main__":
