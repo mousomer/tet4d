@@ -5,7 +5,27 @@ from typing import List, Optional
 import random
 
 from .board import BoardND
-from .pieces2d import PieceShape2D, ActivePiece2D, get_standard_tetrominoes
+from .pieces2d import (
+    ActivePiece2D,
+    PieceShape2D,
+    PIECE_SET_2D_CLASSIC,
+    get_piece_bag_2d,
+    normalize_piece_set_2d,
+)
+
+
+def _score_for_clear(cleared_lines: int) -> int:
+    if cleared_lines <= 0:
+        return 0
+    table = {
+        1: 40,
+        2: 100,
+        3: 300,
+        4: 1200,
+    }
+    if cleared_lines in table:
+        return table[cleared_lines]
+    return table[4] + (cleared_lines - 4) * 400
 
 
 class Action(Enum):
@@ -24,6 +44,8 @@ class GameConfig:
     height: int = 20
     gravity_axis: int = 1   # for 2D, dims=(width, height), so y-axis
     speed_level: int = 1    # 1..10, used by frontend to pick gravity speed
+    piece_set: str = PIECE_SET_2D_CLASSIC
+    random_cell_count: int = 4
 
     def __post_init__(self):
         if self.width <= 0 or self.height <= 0:
@@ -33,6 +55,9 @@ class GameConfig:
             raise ValueError("2D mode requires gravity_axis=1 (y-axis)")
         if not (1 <= self.speed_level <= 10):
             raise ValueError("speed_level must be in [1, 10]")
+        self.piece_set = normalize_piece_set_2d(self.piece_set)
+        if not (3 <= self.random_cell_count <= 8):
+            raise ValueError("random_cell_count must be in [3, 8]")
 
 
 @dataclass
@@ -58,7 +83,24 @@ class GameState:
 
     def _refill_bag(self):
         """Refill the 7-bag for random piece selection."""
-        self.next_bag = get_standard_tetrominoes()
+        generated = get_piece_bag_2d(
+            self.config.piece_set,
+            rng=self.rng,
+            random_cell_count=self.config.random_cell_count,
+            board_dims=(self.config.width, self.config.height),
+        )
+        self.next_bag = [shape for shape in generated if self._shape_fits_spawn(shape)]
+        if not self.next_bag:
+            # Fallback to a stable baseline bag if selected set cannot spawn on this board.
+            self.next_bag = [
+                shape
+                for shape in get_piece_bag_2d(
+                    PIECE_SET_2D_CLASSIC,
+                    rng=self.rng,
+                    board_dims=(self.config.width, self.config.height),
+                )
+                if self._shape_fits_spawn(shape)
+            ]
         self.rng.shuffle(self.next_bag)
 
     def draw_next_piece_shape(self) -> PieceShape2D:
@@ -74,11 +116,25 @@ class GameState:
         We allow negative y so pieces can start above the visible board.
         """
         shape = self.draw_next_piece_shape()
-        spawn_x = self.config.width // 2
+        min_x = min(block[0] for block in shape.blocks)
+        max_x = max(block[0] for block in shape.blocks)
+        span_x = max_x - min_x + 1
+        spawn_x = ((self.config.width - span_x) // 2) - min_x
         spawn_y = -2  # above the visible area
         self.current_piece = ActivePiece2D(shape, (spawn_x, spawn_y), rotation=0)
         if not self._can_exist(self.current_piece):
             self.game_over = True
+
+    def _shape_fits_spawn(self, shape: PieceShape2D) -> bool:
+        if not shape.blocks:
+            return False
+        min_x = min(block[0] for block in shape.blocks)
+        max_x = max(block[0] for block in shape.blocks)
+        span_x = max_x - min_x + 1
+        min_y = min(block[1] for block in shape.blocks)
+        max_y = max(block[1] for block in shape.blocks)
+        span_y = max_y - min_y + 1
+        return span_x <= self.config.width and span_y <= self.config.height
 
     def _can_exist(self, piece: ActivePiece2D) -> bool:
         """
@@ -125,16 +181,7 @@ class GameState:
 
         cleared = self.board.clear_planes(self.config.gravity_axis)
         self.lines_cleared += cleared
-
-        # Simple scoring (tweak as you wish)
-        if cleared == 1:
-            self.score += 40
-        elif cleared == 2:
-            self.score += 100
-        elif cleared == 3:
-            self.score += 300
-        elif cleared == 4:
-            self.score += 1200
+        self.score += _score_for_clear(cleared)
 
         return cleared
 

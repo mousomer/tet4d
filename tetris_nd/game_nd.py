@@ -6,10 +6,12 @@ from typing import List, Optional, Sequence
 from .board import BoardND
 from .pieces_nd import (
     ActivePieceND,
+    PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_STANDARD,
     PieceShapeND,
-    get_standard_pieces_nd,
-    normalize_piece_set_4d,
+    get_piece_shapes_nd,
+    normalize_piece_set_for_dimension,
+    normalize_piece_set_4d,  # backward-compatible parameter support
 )
 from .types import Coord
 
@@ -33,7 +35,9 @@ class GameConfigND:
     dims: Coord = (10, 20, 6)
     gravity_axis: int = 1
     speed_level: int = 1  # 1..10, used by frontend timing
+    piece_set_id: str | None = None
     piece_set_4d: str = PIECE_SET_4D_STANDARD
+    random_cell_count: int = 5
 
     def __post_init__(self) -> None:
         if len(self.dims) < 2:
@@ -44,7 +48,18 @@ class GameConfigND:
             raise ValueError("invalid gravity_axis")
         if not (1 <= self.speed_level <= 10):
             raise ValueError("speed_level must be in [1, 10]")
-        self.piece_set_4d = normalize_piece_set_4d(self.piece_set_4d)
+        if not (3 <= self.random_cell_count <= 8):
+            raise ValueError("random_cell_count must be in [3, 8]")
+
+        ndim = len(self.dims)
+        selected_piece_set = self.piece_set_id
+        if selected_piece_set is None and ndim >= 4:
+            selected_piece_set = normalize_piece_set_4d(self.piece_set_4d)
+        if selected_piece_set is None and ndim == 3:
+            selected_piece_set = PIECE_SET_3D_STANDARD
+        self.piece_set_id = normalize_piece_set_for_dimension(ndim, selected_piece_set)
+        # Keep legacy field populated for existing callers/UI labels.
+        self.piece_set_4d = self.piece_set_id
 
     @property
     def ndim(self) -> int:
@@ -75,10 +90,32 @@ class GameStateND:
     # --- Bag and spawning ---
 
     def _refill_bag(self) -> None:
-        self.next_bag = get_standard_pieces_nd(
-            self.config.ndim,
-            piece_set_4d=self.config.piece_set_4d,
-        )
+        attempts = 0
+        while True:
+            generated = get_piece_shapes_nd(
+                self.config.ndim,
+                piece_set_id=self.config.piece_set_id,
+                random_cell_count=self.config.random_cell_count,
+                rng=self.rng,
+                board_dims=self.config.dims,
+            )
+            self.next_bag = [shape for shape in generated if self._shape_fits_board(shape)]
+            if self.next_bag:
+                break
+            attempts += 1
+            if attempts >= 4:
+                # Stable fallback for tiny boards.
+                fallback_id = PIECE_SET_3D_STANDARD if self.config.ndim == 3 else PIECE_SET_4D_STANDARD
+                fallback = get_piece_shapes_nd(
+                    self.config.ndim,
+                    piece_set_id=fallback_id,
+                    rng=self.rng,
+                    board_dims=self.config.dims,
+                )
+                self.next_bag = [shape for shape in fallback if self._shape_fits_board(shape)]
+                if self.next_bag:
+                    break
+                raise RuntimeError("no spawnable pieces for current board dimensions")
         self.rng.shuffle(self.next_bag)
 
     def draw_next_piece_shape(self) -> PieceShapeND:
@@ -86,16 +123,34 @@ class GameStateND:
             self._refill_bag()
         return self.next_bag.pop()
 
-    def _spawn_pos(self) -> Coord:
-        coords = [d // 2 for d in self.config.dims]
-        coords[self.config.gravity_axis] = -2
+    def _spawn_pos_for_shape(self, shape: PieceShapeND) -> Coord:
+        g = self.config.gravity_axis
+        coords = [0] * self.config.ndim
+        for axis in range(self.config.ndim):
+            axis_values = [block[axis] for block in shape.blocks]
+            min_axis = min(axis_values)
+            max_axis = max(axis_values)
+            if axis == g:
+                coords[axis] = -2 - min_axis
+            else:
+                span = max_axis - min_axis + 1
+                start = (self.config.dims[axis] - span) // 2
+                coords[axis] = start - min_axis
         return tuple(coords)
 
     def spawn_new_piece(self) -> None:
         shape = self.draw_next_piece_shape()
-        self.current_piece = ActivePieceND.from_shape(shape, self._spawn_pos())
+        self.current_piece = ActivePieceND.from_shape(shape, self._spawn_pos_for_shape(shape))
         if not self._can_exist(self.current_piece):
             self.game_over = True
+
+    def _shape_fits_board(self, shape: PieceShapeND) -> bool:
+        for axis in range(self.config.ndim):
+            axis_values = [block[axis] for block in shape.blocks]
+            span = max(axis_values) - min(axis_values) + 1
+            if span > self.config.dims[axis]:
+                return False
+        return True
 
     # --- Validation and locking ---
 

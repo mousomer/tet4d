@@ -6,6 +6,7 @@ This document is section `1` of the unified documentation layout.
 
 ```text
 tet4d/
+├── front.py                     # unified launcher (2D/3D/4D + settings)
 ├── front2d.py                   # 2D game entrypoint
 ├── front3d.py                   # 3D game entrypoint
 ├── front4d.py                   # 4D game entrypoint
@@ -21,6 +22,9 @@ tet4d/
 │   ├── pieces2d.py              # classic tetromino set
 │   ├── pieces_nd.py             # 3D + 4D native piece sets
 │   ├── keybindings.py           # binding definitions + load/save
+│   ├── keybindings_menu.py      # dedicated keybinding setup screen
+│   ├── audio.py                 # generated SFX + volume/mute runtime
+│   ├── display.py               # shared fullscreen/windowed mode helpers
 │   ├── front3d_game.py          # 3D gameplay frontend
 │   ├── front4d_game.py          # 4D gameplay frontend
 │   ├── projection3d.py          # shared projection/camera helpers
@@ -41,12 +45,14 @@ tet4d/
 
 ## Runtime architecture
 
-1. `front2d.py`, `front3d.py`, and `front4d.py` are startup scripts.
-2. These scripts launch mode-specific frontends in `tetris_nd/`.
+1. `front.py` is the unified startup flow and settings hub.
+2. `front2d.py`, `front3d.py`, and `front4d.py` remain direct mode entrypoints.
 3. Core rule logic lives in `game2d.py` and `game_nd.py`.
 4. Board occupancy and line/layer clearing logic lives in `board.py`.
 5. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
-6. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+6. Shared keybinding editor UI is in `keybindings_menu.py`.
+7. Audio runtime helpers are in `audio.py`; display mode helpers are in `display.py`.
+8. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
 
 ## Unified documentation sections
 
