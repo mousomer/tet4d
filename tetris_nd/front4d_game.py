@@ -6,20 +6,22 @@ from typing import Optional, Tuple
 
 import pygame
 
-from .audio import AudioSettings, initialize_audio, play_sfx
-from .display import DisplaySettings, apply_display_mode
+from .app_runtime import (
+    capture_windowed_display_settings,
+    initialize_runtime,
+    open_display,
+)
+from .audio import play_sfx
+from .display import DisplaySettings
 from .frontend_nd import (
-    apply_nd_gameplay_action,
     build_config,
     create_initial_slice_state,
     create_initial_state,
-    dispatch_nd_slice_key,
-    gameplay_action_for_key,
     gravity_interval_ms_from_config,
     init_fonts,
     piece_set_4d_label,
+    route_nd_keydown,
     run_menu,
-    system_key_action,
     GfxFonts,
     SliceState,
 )
@@ -30,12 +32,7 @@ from .keybindings import (
     CAMERA_KEYS_4D,
     CONTROL_LINES_4D_VIEW,
     CONTROL_LINES_ND_4D,
-    KEYS_4D,
-    SLICE_KEYS_4D,
-    SYSTEM_KEYS,
-    initialize_keybinding_files,
 )
-from .menu_settings_state import get_audio_settings, get_display_settings, save_display_settings
 from .projection3d import (
     Face,
     Cell3,
@@ -46,15 +43,12 @@ from .projection3d import (
     draw_gradient_background,
     draw_projected_lattice,
     fit_orthographic_zoom,
-    interpolate_angle_deg,
-    normalize_angle_deg,
     orthographic_point,
     raw_to_world,
-    smoothstep01,
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
-from .view_controls import viewer_relative_move_axis_delta, wrapped_pitch_target
+from .view_controls import YawPitchTurnAnimator
 
 
 MARGIN = 16
@@ -80,46 +74,9 @@ COLOR_MAP = {
 
 
 @dataclass
-class LayerView3D:
+class LayerView3D(YawPitchTurnAnimator):
     # Fixed camera for every w-layer board.
-    yaw_deg: float = 32.0
-    pitch_deg: float = -26.0
     zoom_scale: float = 1.0
-    animating: bool = False
-    anim_start_yaw: float = 0.0
-    anim_target_yaw: float = 0.0
-    anim_start_pitch: float = 0.0
-    anim_target_pitch: float = 0.0
-    anim_elapsed_ms: float = 0.0
-    anim_duration_ms: float = 240.0
-
-    def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
-        self.animating = True
-        self.anim_elapsed_ms = 0.0
-        self.anim_start_yaw = normalize_angle_deg(self.yaw_deg)
-        self.anim_target_yaw = normalize_angle_deg(target_yaw)
-        self.anim_start_pitch = self.pitch_deg
-        self.anim_target_pitch = target_pitch
-
-    def start_yaw_turn(self, delta_deg: float) -> None:
-        self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
-
-    def start_pitch_turn(self, delta_deg: float) -> None:
-        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
-        self._start_turn(target_yaw, target_pitch)
-
-    def step_animation(self, dt_ms: float) -> None:
-        if not self.animating:
-            return
-        self.anim_elapsed_ms += max(0.0, dt_ms)
-        t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
-        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, t)
-        eased = smoothstep01(t)
-        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
-        if t >= 1.0:
-            self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
-            self.pitch_deg = self.anim_target_pitch
-            self.animating = False
 
 
 @dataclass
@@ -463,13 +420,10 @@ def _reset_view(view: LayerView3D) -> None:
     view.yaw_deg = 32.0
     view.pitch_deg = -26.0
     view.zoom_scale = 1.0
-    view.animating = False
-    view.anim_elapsed_ms = 0.0
+    view.stop_animation()
 
 
-def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
-    key = event.key
-
+def handle_view_key(key: int, view: LayerView3D) -> bool:
     return (
         dispatch_bound_action(
             key,
@@ -487,6 +441,10 @@ def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
         )
         is not None
     )
+
+
+def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
+    return handle_view_key(event.key, view)
 
 
 def _spawn_clear_animation_if_needed(state: GameStateND,
@@ -529,56 +487,14 @@ class LoopContext4D:
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
-        key = event.key
-        system_action = system_key_action(key)
-        if system_action == "quit":
-            return "quit"
-        if system_action == "menu":
-            play_sfx("menu_confirm")
-            return "menu"
-        if system_action == "restart":
-            play_sfx("menu_confirm")
-            return "restart"
-        if system_action == "toggle_grid":
-            play_sfx("menu_move")
-            return "toggle_grid"
-
-        if dispatch_nd_slice_key(key, self.state.config, self.slice_state) is not None:
-            play_sfx("menu_move")
-            return "continue"
-
-        if not self.state.game_over:
-            action_type = gameplay_action_for_key(key, self.state.config)
-            if action_type is not None:
-                if action_type in ("move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"):
-                    intent_by_action = {
-                        "move_x_neg": "left",
-                        "move_x_pos": "right",
-                        "move_z_neg": "away",
-                        "move_z_pos": "closer",
-                    }
-                    axis, delta = viewer_relative_move_axis_delta(self.view.yaw_deg, intent_by_action[action_type])
-                    self.state.try_move_axis(axis, delta)
-                else:
-                    apply_nd_gameplay_action(self.state, action_type)
-                if action_type.startswith("rotate_"):
-                    play_sfx("rotate")
-                elif action_type in ("hard_drop",):
-                    play_sfx("drop")
-                else:
-                    play_sfx("move")
-                return "continue"
-
-        gameplay_occupied = any(key in keys for keys in KEYS_4D.values())
-        slice_occupied = any(key in keys for keys in SLICE_KEYS_4D.values())
-        system_occupied = any(key in keys for keys in SYSTEM_KEYS.values())
-        if gameplay_occupied or slice_occupied or system_occupied:
-            return "continue"
-
-        if handle_view_keydown(event, self.view):
-            play_sfx("menu_move")
-            return "continue"
-        return "continue"
+        return route_nd_keydown(
+            event.key,
+            self.state,
+            slice_state=self.slice_state,
+            yaw_deg_for_view_movement=self.view.yaw_deg,
+            view_key_handler=lambda key: handle_view_key(key, self.view),
+            sfx_handler=play_sfx,
+        )
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
@@ -654,29 +570,18 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 
 
 def run() -> None:
-    pygame.init()
-    initialize_keybinding_files()
-    audio_settings_payload = get_audio_settings()
-    initialize_audio(
-        AudioSettings(
-            master_volume=audio_settings_payload["master_volume"],
-            sfx_volume=audio_settings_payload["sfx_volume"],
-            mute=audio_settings_payload["mute"],
-        )
-    )
-    display_payload = get_display_settings()
+    runtime = initialize_runtime(sync_audio_state=False)
     display_settings = DisplaySettings(
-        fullscreen=display_payload["fullscreen"],
-        windowed_size=tuple(display_payload["windowed_size"]),
+        fullscreen=runtime.display_settings.fullscreen,
+        windowed_size=runtime.display_settings.windowed_size,
     )
     fonts = init_fonts()
 
     running = True
     while running:
-        pygame.display.set_caption("4D Tetris – Setup")
-        menu_screen = apply_display_mode(
+        menu_screen = open_display(
             display_settings,
-            preferred_windowed_size=display_settings.windowed_size,
+            caption="4D Tetris – Setup",
         )
         settings = run_menu(menu_screen, fonts, 4)
         if settings is None:
@@ -684,22 +589,22 @@ def run() -> None:
 
         cfg = build_config(settings, 4)
         win_w, win_h = suggested_window_size(cfg)
-        pygame.display.set_caption("4D Tetris")
         preferred_size = (
             max(display_settings.windowed_size[0], win_w),
             max(display_settings.windowed_size[1], win_h),
         )
-        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
+        game_screen = open_display(
+            display_settings,
+            caption="4D Tetris",
+            preferred_windowed_size=preferred_size,
+        )
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
             continue
 
-        if not display_settings.fullscreen:
-            current_size = pygame.display.get_surface().get_size()
-            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
-            save_display_settings(windowed_size=current_size)
+        display_settings = capture_windowed_display_settings(display_settings)
 
     pygame.quit()
     sys.exit()

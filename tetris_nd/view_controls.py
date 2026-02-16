@@ -1,11 +1,63 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
-from .projection3d import normalize_angle_deg
+from .projection3d import interpolate_angle_deg, normalize_angle_deg, smoothstep01
 
 
 _MAX_SAFE_ABS_PITCH = 74.0
+
+
+@dataclass
+class YawPitchTurnAnimator:
+    yaw_deg: float = 32.0
+    pitch_deg: float = -26.0
+    animating: bool = False
+    anim_start_yaw: float = 0.0
+    anim_target_yaw: float = 0.0
+    anim_start_pitch: float = 0.0
+    anim_target_pitch: float = 0.0
+    anim_elapsed_ms: float = 0.0
+    anim_duration_ms: float = 240.0
+
+    def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
+        self.animating = True
+        self.anim_elapsed_ms = 0.0
+        self.anim_start_yaw = normalize_angle_deg(self.yaw_deg)
+        self.anim_target_yaw = normalize_angle_deg(target_yaw)
+        self.anim_start_pitch = self.pitch_deg
+        self.anim_target_pitch = target_pitch
+
+    def start_yaw_turn(self, delta_deg: float) -> None:
+        self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
+
+    def start_pitch_turn(self, delta_deg: float) -> None:
+        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
+        self._start_turn(target_yaw, target_pitch)
+
+    def is_animating(self) -> bool:
+        return self.animating
+
+    def stop_animation(self) -> None:
+        self.animating = False
+        self.anim_elapsed_ms = 0.0
+
+    def step_animation(self, dt_ms: float) -> None:
+        if not self.animating:
+            return
+        self.anim_elapsed_ms += max(0.0, dt_ms)
+        if self.anim_duration_ms <= 0:
+            progress = 1.0
+        else:
+            progress = min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
+        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, progress)
+        eased = smoothstep01(progress)
+        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
+        if progress >= 1.0:
+            self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
+            self.pitch_deg = self.anim_target_pitch
+            self.animating = False
 
 
 def _dominant_xz_axis_step(vec_x: float, vec_z: float) -> tuple[int, int]:

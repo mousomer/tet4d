@@ -7,9 +7,14 @@ from typing import Optional
 
 import pygame
 
-from tetris_nd.audio import AudioSettings, initialize_audio, play_sfx
+from tetris_nd.app_runtime import (
+    capture_windowed_display_settings,
+    initialize_runtime,
+    open_display,
+)
+from tetris_nd.audio import play_sfx
 from tetris_nd.board import BoardND
-from tetris_nd.display import DisplaySettings, apply_display_mode
+from tetris_nd.display import DisplaySettings
 from tetris_nd.game2d import GameConfig, GameState, Action
 from tetris_nd.game_loop_common import process_game_events
 from tetris_nd.gfx_game import (
@@ -25,7 +30,6 @@ from tetris_nd.keybindings import (
     KEYS_2D,
     SYSTEM_KEYS,
     active_key_profile,
-    initialize_keybinding_files,
     keybinding_file_label,
     load_active_profile_bindings,
 )
@@ -39,10 +43,7 @@ from tetris_nd.menu_controls import (
     gather_menu_actions,
 )
 from tetris_nd.menu_settings_state import (
-    get_audio_settings,
-    get_display_settings,
     load_menu_settings,
-    save_display_settings,
 )
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 
@@ -350,31 +351,20 @@ def run_game_loop(screen: pygame.Surface,
 # ---------- Main run ----------
 
 def run():
-    pygame.init()
-    initialize_keybinding_files()
-    audio_settings = get_audio_settings()
-    initialize_audio(
-        AudioSettings(
-            master_volume=audio_settings["master_volume"],
-            sfx_volume=audio_settings["sfx_volume"],
-            mute=audio_settings["mute"],
-        )
-    )
+    runtime = initialize_runtime(sync_audio_state=False)
     fonts = init_fonts()
 
-    display_settings_payload = get_display_settings()
     display_settings = DisplaySettings(
-        fullscreen=display_settings_payload["fullscreen"],
-        windowed_size=tuple(display_settings_payload["windowed_size"]),
+        fullscreen=runtime.display_settings.fullscreen,
+        windowed_size=runtime.display_settings.windowed_size,
     )
 
     running = True
     while running:
         # --- MENU ---
-        pygame.display.set_caption("2D Tetris – Setup")
-        menu_screen = apply_display_mode(
+        menu_screen = open_display(
             display_settings,
-            preferred_windowed_size=display_settings.windowed_size,
+            caption="2D Tetris – Setup",
         )
         settings = run_menu(menu_screen, fonts)
         if settings is None:
@@ -395,22 +385,22 @@ def run():
         window_w = board_px_w + 200 + 3 * 20  # SIDE_PANEL + margins
         window_h = board_px_h + 2 * 20
 
-        pygame.display.set_caption("2D Tetris")
         preferred_size = (
             max(window_w, display_settings.windowed_size[0]),
             max(window_h, display_settings.windowed_size[1]),
         )
-        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
+        game_screen = open_display(
+            display_settings,
+            caption="2D Tetris",
+            preferred_windowed_size=preferred_size,
+        )
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
             continue
 
-        if not display_settings.fullscreen:
-            current_size = pygame.display.get_surface().get_size()
-            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
-            save_display_settings(windowed_size=current_size)
+        display_settings = capture_windowed_display_settings(display_settings)
 
     pygame.quit()
     sys.exit()

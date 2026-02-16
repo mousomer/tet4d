@@ -66,53 +66,50 @@ This section tracks high-value code simplification targets discovered from struc
 
 ### Current complexity hotspots
 
-1. `/Users/omer/workspace/test-code/tet4d/front.py`
-2. `_run_audio_settings_menu` and `_run_display_settings_menu` are large, stateful loops.
-3. `run` mixes startup, menu event flow, and launch orchestration.
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_controls.py`
-5. `apply_menu_actions` is highly branched and handles many unrelated actions.
-6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`
-7. `_run_menu_action` has dense branch-heavy control flow.
-8. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
-9. `LoopContext4D.keydown_handler` combines system, slice, gameplay, and view dispatch.
-10. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings.py`
-11. `rebind_action_key` combines validation, conflict resolution, and state mutation.
-12. `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`
-13. `get_piece_shapes_nd` is branching across many set variants.
+1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings.py`
+2. `rebind_action_key` combines validation, conflict resolution, and state mutation.
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_settings_state.py`
+4. `apply_saved_menu_settings` is still branch-heavy for mixed menu payload application.
+5. Note: prior hotspots in `front.py`, `menu_controls.py`, `keybindings_menu.py`, `front4d_game.py`, and `pieces_nd.py` were reduced on 2026-02-16.
 
 ### Duplication hotspots
 
-1. Camera/view turn animation logic is duplicated between:
-2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py` (`Camera3D`)
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py` (`LayerView3D`)
-4. Large portions of projected rendering and clear-effect pipelines are parallel in 3D/4D frontends.
-5. Launch/setup/display initialization patterns are repeated across:
-6. `/Users/omer/workspace/test-code/tet4d/front.py`
-7. `/Users/omer/workspace/test-code/tet4d/front2d.py`
-8. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-9. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
+1. 3D and 4D projected rendering stacks remain intentionally parallel in:
+2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
+4. Further unification is possible but should be weighed against readability/regression risk.
 
 ### Recommended simplification backlog
 
-1. Extract shared menu-state action dispatcher.
-2. Move menu action handlers from `if/elif` ladders to table-driven handlers with small pure functions.
-3. Target files: `menu_controls.py`, `keybindings_menu.py`, `front.py`.
+1. Completed: extract shared menu-state action dispatcher (2026-02-16).
+2. Completed in:
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_controls.py`
+4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`
+5. Follow-up completed: same dispatcher/handler pattern applied to `/Users/omer/workspace/test-code/tet4d/front.py`.
 
-4. Extract shared camera pose animator.
-5. Create one reusable yaw/pitch animation component and reuse it in 3D and 4D views.
-6. Target files: `front3d_game.py`, `front4d_game.py`, `view_controls.py`.
+6. Completed: extract shared camera pose animator (2026-02-16).
+7. Completed in:
+8. `/Users/omer/workspace/test-code/tet4d/tetris_nd/view_controls.py`
+9. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
+10. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
 
-7. Extract shared ND movement dispatch pipeline.
-8. Centralize system/slice/gameplay routing order and SFX triggers in one helper to avoid per-frontend drift.
-9. Target files: `frontend_nd.py`, `front3d_game.py`, `front4d_game.py`.
+11. Completed: extract shared ND movement dispatch pipeline (2026-02-16).
+12. Completed in:
+13. `/Users/omer/workspace/test-code/tet4d/tetris_nd/frontend_nd.py`
+14. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
+15. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
 
-10. Replace branching piece-set selector with registry maps.
-11. Use per-dimension registry dictionaries for set id -> generator function.
-12. Target file: `pieces_nd.py`.
+16. Completed: replace branching piece-set selector with registry maps (2026-02-16).
+17. Completed in:
+18. `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`
 
-13. Consolidate app boot and display/audio persistence glue.
-14. Build one startup/session manager used by `front.py` and direct entrypoints.
-15. Target files: `front.py`, `front2d.py`, `front3d_game.py`, `front4d_game.py`.
+19. Completed: consolidate app boot and display/audio persistence glue (2026-02-16).
+20. Completed in:
+21. `/Users/omer/workspace/test-code/tet4d/tetris_nd/app_runtime.py`
+22. `/Users/omer/workspace/test-code/tet4d/front.py`
+23. `/Users/omer/workspace/test-code/tet4d/front2d.py`
+24. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
+25. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
 
 ### Verification requirements for simplification PRs
 

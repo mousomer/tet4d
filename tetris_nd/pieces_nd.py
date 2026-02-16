@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Iterable, List, Sequence, Tuple
 
@@ -40,6 +41,10 @@ PIECE_SET_4D_OPTIONS = (
 DEFAULT_RANDOM_CELL_COUNT_3D = 5
 DEFAULT_RANDOM_CELL_COUNT_4D = 5
 DEFAULT_RANDOM_BAG_SIZE_ND = 7
+_PIECE_SET_OPTIONS_BY_DIM = {
+    3: PIECE_SET_3D_OPTIONS,
+    4: PIECE_SET_4D_OPTIONS,
+}
 
 
 def _validate_ndim(ndim: int) -> None:
@@ -49,10 +54,9 @@ def _validate_ndim(ndim: int) -> None:
 
 def piece_set_options_for_dimension(ndim: int) -> Tuple[str, ...]:
     _validate_ndim(ndim)
-    if ndim == 3:
-        return PIECE_SET_3D_OPTIONS
-    if ndim >= 4:
-        return PIECE_SET_4D_OPTIONS
+    dim_key = 4 if ndim >= 4 else ndim
+    if dim_key in _PIECE_SET_OPTIONS_BY_DIM:
+        return _PIECE_SET_OPTIONS_BY_DIM[dim_key]
     # Kept for generic callers; ND gameplay currently starts at 3D.
     return (PIECE_SET_3D_EMBED_2D,)
 
@@ -389,6 +393,12 @@ class PieceShapeND:
     color_id: int
 
 
+PieceSetFactoryND = Callable[
+    [int, random.Random | None, int | None, Sequence[int] | None],
+    List[PieceShapeND],
+]
+
+
 def _shape_records_to_nd(
     records: Sequence[Tuple[str, Sequence[Sequence[int]], int]],
     ndim: int,
@@ -410,6 +420,141 @@ def _embedded_2d_shapes_nd(ndim: int) -> List[PieceShapeND]:
     ]
 
 
+def _standard_3d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_3D, ndim)
+
+
+def _embedded_2d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _embedded_2d_shapes_nd(ndim)
+
+
+def _debug_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return get_debug_rectangles_nd(ndim, board_dims=board_dims)
+
+
+def _random_piece_set(
+    ndim: int,
+    rng: random.Random | None,
+    random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+    *,
+    default_random_cell_count: int,
+    name_prefix: str,
+) -> List[PieceShapeND]:
+    active_rng = rng if rng is not None else random.Random()
+    count = default_random_cell_count if random_cell_count is None else random_cell_count
+    return _random_piece_bag_nd(
+        ndim,
+        active_rng,
+        cell_count=max(1, count),
+        name_prefix=name_prefix,
+    )
+
+
+def _random_3d_piece_set(
+    ndim: int,
+    rng: random.Random | None,
+    random_cell_count: int | None,
+    board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _random_piece_set(
+        ndim,
+        rng,
+        random_cell_count,
+        board_dims,
+        default_random_cell_count=DEFAULT_RANDOM_CELL_COUNT_3D,
+        name_prefix="R3",
+    )
+
+
+def _standard_4d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_4D, ndim)
+
+
+def _six_cell_4d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_4D_SIX, ndim)
+
+
+def _embedded_3d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_3D, ndim)
+
+
+def _random_4d_piece_set(
+    ndim: int,
+    rng: random.Random | None,
+    random_cell_count: int | None,
+    board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _random_piece_set(
+        ndim,
+        rng,
+        random_cell_count,
+        board_dims,
+        default_random_cell_count=DEFAULT_RANDOM_CELL_COUNT_4D,
+        name_prefix="R4",
+    )
+
+
+_PIECE_SET_FACTORIES_3D: dict[str, PieceSetFactoryND] = {
+    PIECE_SET_3D_STANDARD: _standard_3d_piece_set,
+    PIECE_SET_3D_EMBED_2D: _embedded_2d_piece_set,
+    PIECE_SET_3D_RANDOM: _random_3d_piece_set,
+    PIECE_SET_3D_DEBUG: _debug_piece_set,
+}
+
+_PIECE_SET_FACTORIES_4D: dict[str, PieceSetFactoryND] = {
+    PIECE_SET_4D_STANDARD: _standard_4d_piece_set,
+    PIECE_SET_4D_SIX: _six_cell_4d_piece_set,
+    PIECE_SET_4D_EMBED_3D: _embedded_3d_piece_set,
+    PIECE_SET_4D_EMBED_2D: _embedded_2d_piece_set,
+    PIECE_SET_4D_RANDOM: _random_4d_piece_set,
+    PIECE_SET_4D_DEBUG: _debug_piece_set,
+}
+
+_PIECE_SET_FACTORIES_BY_DIM = {
+    3: _PIECE_SET_FACTORIES_3D,
+    4: _PIECE_SET_FACTORIES_4D,
+}
+
+
+def _piece_set_factories_for_dimension(ndim: int) -> dict[str, PieceSetFactoryND]:
+    dim_key = 4 if ndim >= 4 else ndim
+    factories = _PIECE_SET_FACTORIES_BY_DIM.get(dim_key)
+    if factories is None:
+        raise ValueError(f"unsupported piece-set dimension: {ndim}")
+    return factories
+
+
 def get_piece_shapes_nd(
     ndim: int,
     *,
@@ -428,42 +573,11 @@ def get_piece_shapes_nd(
     if selected is None and ndim >= 4 and piece_set_4d is not None:
         selected = normalize_piece_set_4d(piece_set_4d)
     selected = normalize_piece_set_for_dimension(ndim, selected)
-
-    if ndim == 3:
-        if selected == PIECE_SET_3D_STANDARD:
-            return _shape_records_to_nd(_PIECES_3D, ndim)
-        if selected == PIECE_SET_3D_EMBED_2D:
-            return _embedded_2d_shapes_nd(ndim)
-        if selected == PIECE_SET_3D_DEBUG:
-            return get_debug_rectangles_nd(ndim, board_dims=board_dims)
-        active_rng = rng if rng is not None else random.Random()
-        count = DEFAULT_RANDOM_CELL_COUNT_3D if random_cell_count is None else random_cell_count
-        return _random_piece_bag_nd(
-            ndim,
-            active_rng,
-            cell_count=max(1, count),
-            name_prefix="R3",
-        )
-
-    # ndim >= 4
-    if selected == PIECE_SET_4D_STANDARD:
-        return _shape_records_to_nd(_PIECES_4D, ndim)
-    if selected == PIECE_SET_4D_SIX:
-        return _shape_records_to_nd(_PIECES_4D_SIX, ndim)
-    if selected == PIECE_SET_4D_EMBED_3D:
-        return _shape_records_to_nd(_PIECES_3D, ndim)
-    if selected == PIECE_SET_4D_EMBED_2D:
-        return _embedded_2d_shapes_nd(ndim)
-    if selected == PIECE_SET_4D_DEBUG:
-        return get_debug_rectangles_nd(ndim, board_dims=board_dims)
-    active_rng = rng if rng is not None else random.Random()
-    count = DEFAULT_RANDOM_CELL_COUNT_4D if random_cell_count is None else random_cell_count
-    return _random_piece_bag_nd(
-        ndim,
-        active_rng,
-        cell_count=max(1, count),
-        name_prefix="R4",
-    )
+    factories = _piece_set_factories_for_dimension(ndim)
+    factory = factories.get(selected)
+    if factory is None:
+        raise ValueError(f"unsupported piece set for {ndim}D: {selected}")
+    return factory(ndim, rng, random_cell_count, board_dims)
 
 
 def get_standard_pieces_nd(ndim: int, piece_set_4d: str | None = None) -> List[PieceShapeND]:

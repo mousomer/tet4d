@@ -1,5 +1,6 @@
 # tetris_nd/frontend_nd.py
 import random
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
 
@@ -22,6 +23,7 @@ from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
 from .menu_settings_state import load_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .view_controls import viewer_relative_move_axis_delta
 
 
 TEXT_COLOR = (230, 230, 230)
@@ -300,6 +302,17 @@ _GAMEPLAY_ACTIONS_4D = (
     "rotate_zw_pos",
     "rotate_zw_neg",
 )
+_SYSTEM_SFX = {
+    "menu": "menu_confirm",
+    "restart": "menu_confirm",
+    "toggle_grid": "menu_move",
+}
+_VIEWER_RELATIVE_INTENT_BY_ACTION = {
+    "move_x_neg": "left",
+    "move_x_pos": "right",
+    "move_z_neg": "away",
+    "move_z_pos": "closer",
+}
 
 
 def system_key_action(key: int) -> str | None:
@@ -347,11 +360,64 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     return True
 
 
-def dispatch_nd_gameplay_key(key: int, state: GameStateND) -> str | None:
+def _playback_sfx_for_gameplay_action(action: str) -> str:
+    if action.startswith("rotate_"):
+        return "rotate"
+    if action == "hard_drop":
+        return "drop"
+    return "move"
+
+
+def _binding_contains_key(bindings: Mapping[str, tuple[int, ...]], key: int) -> bool:
+    return any(key in keys for keys in bindings.values())
+
+
+def _is_reserved_nd_key(key: int, cfg: GameConfigND, *, include_slice: bool) -> bool:
+    gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
+    if _binding_contains_key(gameplay_keys, key):
+        return True
+    if include_slice:
+        slice_keys = SLICE_KEYS_4D if cfg.ndim >= 4 else SLICE_KEYS_3D
+        if _binding_contains_key(slice_keys, key):
+            return True
+    return _binding_contains_key(SYSTEM_KEYS, key)
+
+
+def _emit_sfx(sfx_handler: Callable[[str], None] | None, cue: str | None) -> None:
+    if cue is None or sfx_handler is None:
+        return
+    sfx_handler(cue)
+
+
+def apply_nd_gameplay_action_with_view(
+    state: GameStateND,
+    action: str,
+    *,
+    yaw_deg_for_view_movement: float | None = None,
+) -> bool:
+    if yaw_deg_for_view_movement is not None:
+        intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
+        if intent is not None:
+            axis, delta = viewer_relative_move_axis_delta(yaw_deg_for_view_movement, intent)
+            state.try_move_axis(axis, delta)
+            return True
+    return apply_nd_gameplay_action(state, action)
+
+
+def dispatch_nd_gameplay_key(
+    key: int,
+    state: GameStateND,
+    *,
+    yaw_deg_for_view_movement: float | None = None,
+) -> str | None:
     action = gameplay_action_for_key(key, state.config)
     if action is None:
         return None
-    apply_nd_gameplay_action(state, action)
+    apply_nd_gameplay_action_with_view(
+        state,
+        action,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+    )
     return action
 
 
@@ -374,28 +440,53 @@ def dispatch_nd_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) 
     return action
 
 
+def route_nd_keydown(
+    key: int,
+    state: GameStateND,
+    *,
+    slice_state: SliceState | None = None,
+    yaw_deg_for_view_movement: float | None = None,
+    view_key_handler: Callable[[int], bool] | None = None,
+    sfx_handler: Callable[[str], None] | None = None,
+) -> str:
+    cfg = state.config
+    system_action = system_key_action(key)
+    if system_action is not None:
+        _emit_sfx(sfx_handler, _SYSTEM_SFX.get(system_action))
+        return system_action
+
+    if slice_state is not None:
+        slice_action = dispatch_nd_slice_key(key, cfg, slice_state)
+        if slice_action is not None:
+            _emit_sfx(sfx_handler, "menu_move")
+            return "continue"
+
+    gameplay_action = None
+    if not state.game_over:
+        gameplay_action = dispatch_nd_gameplay_key(
+            key,
+            state,
+            yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        )
+        if gameplay_action is not None:
+            _emit_sfx(sfx_handler, _playback_sfx_for_gameplay_action(gameplay_action))
+            return "continue"
+
+    if view_key_handler is None:
+        return "continue"
+
+    if _is_reserved_nd_key(key, cfg, include_slice=slice_state is not None):
+        return "continue"
+    if view_key_handler(key):
+        _emit_sfx(sfx_handler, "menu_move")
+    return "continue"
+
+
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameStateND,
                         slice_state: SliceState) -> str:
-    cfg = state.config
-    key = event.key
-
-    system_action = system_key_action(key)
-    if system_action == "quit":
-        return "quit"
-    if system_action == "menu":
-        return "menu"
-    if system_action == "restart":
-        return "restart"
-    if system_action == "toggle_grid":
-        return "toggle_grid"
-
-    slice_action = dispatch_nd_slice_key(key, cfg, slice_state)
-    if slice_action is not None:
-        return "continue"
-
-    if state.game_over:
-        return "continue"
-
-    dispatch_nd_gameplay_key(key, state)
-    return "continue"
+    return route_nd_keydown(
+        event.key,
+        state,
+        slice_state=slice_state,
+    )
