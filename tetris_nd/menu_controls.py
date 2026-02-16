@@ -88,6 +88,11 @@ _MENU_KEY_ACTIONS = {
 MenuInput = MenuAction | RebindCapture
 
 
+def _set_bindings_status(state: Any, ok: bool, message: str) -> None:
+    state.bindings_status = message
+    state.bindings_status_error = not ok
+
+
 def _ensure_rebind_state(state: Any, dimension: int) -> None:
     if not hasattr(state, "rebind_mode"):
         state.rebind_mode = False
@@ -105,6 +110,27 @@ def _ensure_rebind_state(state: Any, dimension: int) -> None:
         state.rebind_conflict_mode = normalize_rebind_conflict_mode(None)
 
 
+def _action_for_rebind_key(key: int) -> MenuInput:
+    if key == pygame.K_ESCAPE:
+        return MenuAction.REBIND_TOGGLE
+    if key == pygame.K_TAB:
+        return MenuAction.REBIND_TARGET_NEXT
+    if key == pygame.K_BACKQUOTE:
+        return MenuAction.REBIND_TARGET_PREV
+    return RebindCapture(key)
+
+
+def _action_for_menu_key(key: int) -> MenuAction | None:
+    mapped = _MENU_KEY_ACTIONS.get(key)
+    if mapped is not None:
+        return mapped
+    return menu_binding_action_for_key(
+        key,
+        MenuAction.LOAD_BINDINGS,
+        MenuAction.SAVE_BINDINGS,
+    )
+
+
 def gather_menu_actions(state: Any | None = None, dimension: int | None = None) -> list[MenuInput]:
     actions: list[MenuInput] = []
     rebind_mode = bool(getattr(state, "rebind_mode", False))
@@ -116,34 +142,202 @@ def gather_menu_actions(state: Any | None = None, dimension: int | None = None) 
             continue
 
         if rebind_mode:
-            if event.key == pygame.K_ESCAPE:
-                actions.append(MenuAction.REBIND_TOGGLE)
-                continue
-            if event.key == pygame.K_TAB:
-                actions.append(MenuAction.REBIND_TARGET_NEXT)
-                continue
-            if event.key == pygame.K_BACKQUOTE:
-                actions.append(MenuAction.REBIND_TARGET_PREV)
-                continue
-            actions.append(RebindCapture(event.key))
+            actions.append(_action_for_rebind_key(event.key))
             continue
 
-        mapped = _MENU_KEY_ACTIONS.get(event.key)
-        if mapped is not None:
-            actions.append(mapped)
-            continue
-
-        binding_action = menu_binding_action_for_key(
-            event.key,
-            MenuAction.LOAD_BINDINGS,
-            MenuAction.SAVE_BINDINGS,
-        )
-        if binding_action is not None:
-            actions.append(binding_action)
+        action = _action_for_menu_key(event.key)
+        if action is not None:
+            actions.append(action)
 
     if not actions:
         actions.append(MenuAction.NO_OP)
     return actions
+
+
+def _current_rebind_target(state: Any) -> tuple[str, str] | None:
+    if not state.rebind_targets:
+        return None
+    return state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
+
+
+def _set_rebind_target_status(state: Any, prefix: str) -> None:
+    target = _current_rebind_target(state)
+    if target is None:
+        return
+    group, action_name = target
+    state.bindings_status = f"{prefix}{group}.{action_name}"
+    state.bindings_status_error = False
+
+
+def _handle_rebind_capture(state: Any, dimension: int, capture: RebindCapture) -> None:
+    target = _current_rebind_target(state)
+    if target is None:
+        return
+    group, action_name = target
+    ok, msg = rebind_action_key(
+        dimension,
+        group,
+        action_name,
+        capture.key,
+        conflict_mode=state.rebind_conflict_mode,
+    )
+    if ok and state.rebind_targets:
+        state.rebind_index = (state.rebind_index + 1) % len(state.rebind_targets)
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_rebind_toggle(state: Any) -> None:
+    state.rebind_mode = not state.rebind_mode
+    if state.rebind_mode:
+        target = _current_rebind_target(state)
+        if target is None:
+            state.bindings_status = "Rebind mode: no actions available"
+            state.bindings_status_error = True
+            return
+        group, action_name = target
+        state.bindings_status = (
+            f"Rebind mode: press key for {group}.{action_name} "
+            f"(mode={state.rebind_conflict_mode}, Esc to exit)"
+        )
+    else:
+        state.bindings_status = "Rebind mode disabled"
+    state.bindings_status_error = False
+
+
+def _shift_rebind_target(state: Any, step: int) -> None:
+    if not state.rebind_targets:
+        return
+    state.rebind_index = (state.rebind_index + step) % len(state.rebind_targets)
+    if state.rebind_mode:
+        _set_rebind_target_status(state, "Rebind target: ")
+
+
+def _handle_reset_bindings(state: Any, dimension: int) -> None:
+    ok, msg = reset_active_profile_bindings(dimension)
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_profile_cycle(state: Any, step: int) -> None:
+    ok, msg, profile = cycle_key_profile(step)
+    state.active_profile = profile
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_profile_create(state: Any) -> None:
+    ok, msg, profile = create_auto_profile()
+    if ok and profile is not None:
+        set_ok, set_msg = set_active_key_profile(profile)
+        if not set_ok:
+            ok = False
+            msg = set_msg
+        else:
+            load_ok, load_msg = load_active_profile_bindings()
+            if not load_ok:
+                ok = False
+                msg = load_msg
+            else:
+                state.active_profile = profile
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_profile_delete(state: Any) -> None:
+    profile_name = str(getattr(state, "active_profile", active_key_profile()))
+    ok, msg = delete_key_profile(profile_name)
+    state.active_profile = active_key_profile()
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_settings_action(state: Any, dimension: int, action: MenuAction) -> None:
+    if action == MenuAction.SAVE_SETTINGS:
+        ok, msg = save_menu_settings(state, dimension)
+    elif action == MenuAction.LOAD_SETTINGS:
+        ok, msg = load_menu_settings(state, dimension)
+    else:
+        ok, msg = reset_menu_settings_to_defaults(state, dimension)
+    _set_bindings_status(state, ok, msg)
+
+
+def _handle_save_settings(state: Any, dimension: int) -> None:
+    _handle_settings_action(state, dimension, MenuAction.SAVE_SETTINGS)
+
+
+def _handle_load_settings(state: Any, dimension: int) -> None:
+    _handle_settings_action(state, dimension, MenuAction.LOAD_SETTINGS)
+
+
+def _handle_reset_settings(state: Any, dimension: int) -> None:
+    _handle_settings_action(state, dimension, MenuAction.RESET_SETTINGS)
+
+
+def _handle_profile_next(state: Any, _dimension: int) -> None:
+    _handle_profile_cycle(state, 1)
+
+
+def _handle_profile_prev(state: Any, _dimension: int) -> None:
+    _handle_profile_cycle(state, -1)
+
+
+def _handle_profile_new(state: Any, _dimension: int) -> None:
+    _handle_profile_create(state)
+
+
+def _handle_profile_remove(state: Any, _dimension: int) -> None:
+    _handle_profile_delete(state)
+
+
+def _handle_value_delta(state: Any, fields: Sequence[FieldSpec], delta: int) -> None:
+    _, attr_name, min_val, max_val = fields[state.selected_index]
+    current = getattr(state.settings, attr_name)
+    current = max(min_val, min(max_val, current + delta))
+    setattr(state.settings, attr_name, current)
+
+
+def _apply_state_only_action(state: Any, action: MenuAction) -> bool:
+    if action == MenuAction.NO_OP:
+        return True
+    if action == MenuAction.QUIT:
+        state.running = False
+        return True
+    if action == MenuAction.START_GAME:
+        state.start_game = True
+        return True
+    if action == MenuAction.REBIND_TOGGLE:
+        _handle_rebind_toggle(state)
+        return True
+    if action == MenuAction.REBIND_TARGET_NEXT:
+        _shift_rebind_target(state, 1)
+        return True
+    if action == MenuAction.REBIND_TARGET_PREV:
+        _shift_rebind_target(state, -1)
+        return True
+    if action == MenuAction.REBIND_CONFLICT_NEXT:
+        state.rebind_conflict_mode = cycle_rebind_conflict_mode(state.rebind_conflict_mode, 1)
+        state.bindings_status = f"Rebind conflict mode: {state.rebind_conflict_mode}"
+        state.bindings_status_error = False
+        return True
+    return False
+
+
+_SIMPLE_ACTION_HANDLERS = {
+    MenuAction.RESET_BINDINGS: _handle_reset_bindings,
+    MenuAction.SAVE_SETTINGS: _handle_save_settings,
+    MenuAction.LOAD_SETTINGS: _handle_load_settings,
+    MenuAction.RESET_SETTINGS: _handle_reset_settings,
+    MenuAction.PROFILE_NEXT: _handle_profile_next,
+    MenuAction.PROFILE_PREV: _handle_profile_prev,
+    MenuAction.PROFILE_NEW: _handle_profile_new,
+    MenuAction.PROFILE_DELETE: _handle_profile_remove,
+}
+
+_SELECTION_ACTION_STEP = {
+    MenuAction.SELECT_UP: -1,
+    MenuAction.SELECT_DOWN: 1,
+}
+
+_VALUE_ACTION_DELTA = {
+    MenuAction.VALUE_LEFT: -1,
+    MenuAction.VALUE_RIGHT: 1,
+}
 
 
 def apply_menu_actions(
@@ -159,133 +353,26 @@ def apply_menu_actions(
     field_count = len(fields)
     for raw_action in actions:
         if isinstance(raw_action, RebindCapture):
-            if not state.rebind_targets:
-                continue
-            group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-            ok, msg = rebind_action_key(
-                dimension,
-                group,
-                action_name,
-                raw_action.key,
-                conflict_mode=state.rebind_conflict_mode,
-            )
-            if ok and state.rebind_targets:
-                state.rebind_index = (state.rebind_index + 1) % len(state.rebind_targets)
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
+            _handle_rebind_capture(state, dimension, raw_action)
             continue
 
         action = raw_action
-        if action == MenuAction.NO_OP:
+        if _apply_state_only_action(state, action):
             continue
-        if action == MenuAction.QUIT:
-            state.running = False
+
+        simple_handler = _SIMPLE_ACTION_HANDLERS.get(action)
+        if simple_handler is not None:
+            simple_handler(state, dimension)
             continue
-        if action == MenuAction.REBIND_TOGGLE:
-            state.rebind_mode = not state.rebind_mode
-            if state.rebind_mode and state.rebind_targets:
-                group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-                state.bindings_status = (
-                    f"Rebind mode: press key for {group}.{action_name} "
-                    f"(mode={state.rebind_conflict_mode}, Esc to exit)"
-                )
-                state.bindings_status_error = False
-            else:
-                state.bindings_status = "Rebind mode disabled"
-                state.bindings_status_error = False
+
+        step = _SELECTION_ACTION_STEP.get(action)
+        if step is not None:
+            state.selected_index = (state.selected_index + step) % field_count
             continue
-        if action == MenuAction.REBIND_TARGET_NEXT:
-            if state.rebind_targets:
-                state.rebind_index = (state.rebind_index + 1) % len(state.rebind_targets)
-                if state.rebind_mode:
-                    group, action_name = state.rebind_targets[state.rebind_index]
-                    state.bindings_status = f"Rebind target: {group}.{action_name}"
-                    state.bindings_status_error = False
-            continue
-        if action == MenuAction.REBIND_TARGET_PREV:
-            if state.rebind_targets:
-                state.rebind_index = (state.rebind_index - 1) % len(state.rebind_targets)
-                if state.rebind_mode:
-                    group, action_name = state.rebind_targets[state.rebind_index]
-                    state.bindings_status = f"Rebind target: {group}.{action_name}"
-                    state.bindings_status_error = False
-            continue
-        if action == MenuAction.REBIND_CONFLICT_NEXT:
-            state.rebind_conflict_mode = cycle_rebind_conflict_mode(state.rebind_conflict_mode, 1)
-            state.bindings_status = f"Rebind conflict mode: {state.rebind_conflict_mode}"
-            state.bindings_status_error = False
-            continue
-        if action == MenuAction.RESET_BINDINGS:
-            ok, msg = reset_active_profile_bindings(dimension)
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.START_GAME:
-            state.start_game = True
-            continue
-        if action == MenuAction.SAVE_SETTINGS:
-            ok, msg = save_menu_settings(state, dimension)
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.LOAD_SETTINGS:
-            ok, msg = load_menu_settings(state, dimension)
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.RESET_SETTINGS:
-            ok, msg = reset_menu_settings_to_defaults(state, dimension)
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.PROFILE_NEXT:
-            ok, msg, profile = cycle_key_profile(1)
-            state.active_profile = profile
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.PROFILE_PREV:
-            ok, msg, profile = cycle_key_profile(-1)
-            state.active_profile = profile
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.PROFILE_NEW:
-            ok, msg, profile = create_auto_profile()
-            if ok and profile is not None:
-                set_ok, set_msg = set_active_key_profile(profile)
-                if not set_ok:
-                    ok = False
-                    msg = set_msg
-                else:
-                    load_ok, load_msg = load_active_profile_bindings()
-                    if not load_ok:
-                        ok = False
-                        msg = load_msg
-                    else:
-                        state.active_profile = profile
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.PROFILE_DELETE:
-            profile_name = str(getattr(state, "active_profile", active_key_profile()))
-            ok, msg = delete_key_profile(profile_name)
-            state.active_profile = active_key_profile()
-            state.bindings_status = msg
-            state.bindings_status_error = not ok
-            continue
-        if action == MenuAction.SELECT_UP:
-            state.selected_index = (state.selected_index - 1) % field_count
-            continue
-        if action == MenuAction.SELECT_DOWN:
-            state.selected_index = (state.selected_index + 1) % field_count
-            continue
-        if action in (MenuAction.VALUE_LEFT, MenuAction.VALUE_RIGHT):
-            _, attr_name, min_val, max_val = fields[state.selected_index]
-            delta = -1 if action == MenuAction.VALUE_LEFT else 1
-            current = getattr(state.settings, attr_name)
-            current = max(min_val, min(max_val, current + delta))
-            setattr(state.settings, attr_name, current)
+
+        delta = _VALUE_ACTION_DELTA.get(action)
+        if delta is not None:
+            _handle_value_delta(state, fields, delta)
             continue
 
         apply_menu_binding_action(

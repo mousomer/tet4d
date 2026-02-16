@@ -73,6 +73,11 @@ class KeybindingsMenuState:
         self.active_profile = active_key_profile()
 
 
+def _set_status(state: KeybindingsMenuState, ok: bool, message: str) -> None:
+    state.status = message
+    state.status_error = not ok
+
+
 def _draw_background(surface: pygame.Surface) -> None:
     width, height = surface.get_size()
     top = (14, 18, 42)
@@ -172,106 +177,168 @@ def _draw_menu(
         surface.blit(status, ((width - status.get_width()) // 2, hint_y + 2))
 
 
+def _cycle_row(state: KeybindingsMenuState, rows: list[tuple[str, str]], step: int) -> None:
+    if not rows:
+        return
+    state.selected_row = (state.selected_row + step) % len(rows)
+
+
+def _cycle_dimension(state: KeybindingsMenuState, step: int) -> None:
+    if step < 0:
+        state.dimension = 4 if state.dimension == 2 else state.dimension - 1
+    else:
+        state.dimension = 2 if state.dimension == 4 else state.dimension + 1
+    state.selected_row = 0
+
+
+def _cycle_profile(state: KeybindingsMenuState, step: int) -> None:
+    ok, msg, profile = cycle_key_profile(step)
+    state.active_profile = profile
+    _set_status(state, ok, msg)
+
+
+def _create_profile(state: KeybindingsMenuState) -> None:
+    ok, msg, profile = create_auto_profile()
+    if ok and profile is not None:
+        set_ok, set_msg = set_active_key_profile(profile)
+        if not set_ok:
+            ok = False
+            msg = set_msg
+        else:
+            load_ok, load_msg = load_active_profile_bindings()
+            if not load_ok:
+                ok = False
+                msg = load_msg
+            else:
+                state.active_profile = profile
+    _set_status(state, ok, msg)
+
+
+def _delete_profile(state: KeybindingsMenuState) -> None:
+    ok, msg = delete_key_profile(state.active_profile)
+    state.active_profile = active_key_profile()
+    _set_status(state, ok, msg)
+
+
+def _handle_capture_input(state: KeybindingsMenuState, key: int, rows: list[tuple[str, str]]) -> bool:
+    if key == pygame.K_ESCAPE:
+        state.capture_mode = False
+        _set_status(state, True, "Capture cancelled")
+        return False
+    if rows:
+        group, action_name = rows[state.selected_row]
+        ok, msg = rebind_action_key(
+            state.dimension,
+            group,
+            action_name,
+            key,
+            conflict_mode=state.conflict_mode,
+        )
+        _set_status(state, ok, msg)
+    state.capture_mode = False
+    return False
+
+
+def _action_exit(_state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    return True
+
+
+def _action_row_up(state: KeybindingsMenuState, rows: list[tuple[str, str]]) -> bool:
+    _cycle_row(state, rows, -1)
+    return False
+
+
+def _action_row_down(state: KeybindingsMenuState, rows: list[tuple[str, str]]) -> bool:
+    _cycle_row(state, rows, 1)
+    return False
+
+
+def _action_dim_prev(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _cycle_dimension(state, -1)
+    return False
+
+
+def _action_dim_next(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _cycle_dimension(state, 1)
+    return False
+
+
+def _action_capture_start(state: KeybindingsMenuState, rows: list[tuple[str, str]]) -> bool:
+    if rows:
+        state.capture_mode = True
+    return False
+
+
+def _action_conflict_cycle(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    state.conflict_mode = cycle_rebind_conflict_mode(state.conflict_mode, 1)
+    _set_status(state, True, f"Conflict mode: {state.conflict_mode}")
+    return False
+
+
+def _action_load_file(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    ok, msg = load_keybindings_file(state.dimension)
+    _set_status(state, ok, msg)
+    return False
+
+
+def _action_save_file(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    ok, msg = save_keybindings_file(state.dimension)
+    _set_status(state, ok, msg)
+    return False
+
+
+def _action_reset_bindings(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    ok, msg = reset_active_profile_bindings(state.dimension)
+    _set_status(state, ok, msg)
+    return False
+
+
+def _action_profile_prev(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _cycle_profile(state, -1)
+    return False
+
+
+def _action_profile_next(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _cycle_profile(state, 1)
+    return False
+
+
+def _action_profile_new(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _create_profile(state)
+    return False
+
+
+def _action_profile_delete(state: KeybindingsMenuState, _rows: list[tuple[str, str]]) -> bool:
+    _delete_profile(state)
+    return False
+
+
+_MENU_KEY_HANDLERS = {
+    pygame.K_ESCAPE: _action_exit,
+    pygame.K_UP: _action_row_up,
+    pygame.K_DOWN: _action_row_down,
+    pygame.K_LEFT: _action_dim_prev,
+    pygame.K_RIGHT: _action_dim_next,
+    pygame.K_RETURN: _action_capture_start,
+    pygame.K_KP_ENTER: _action_capture_start,
+    pygame.K_c: _action_conflict_cycle,
+    pygame.K_l: _action_load_file,
+    pygame.K_s: _action_save_file,
+    pygame.K_F6: _action_reset_bindings,
+    pygame.K_LEFTBRACKET: _action_profile_prev,
+    pygame.K_RIGHTBRACKET: _action_profile_next,
+    pygame.K_n: _action_profile_new,
+    pygame.K_BACKSPACE: _action_profile_delete,
+}
+
+
 def _run_menu_action(state: KeybindingsMenuState, key: int, rows: list[tuple[str, str]]) -> bool:
     if state.capture_mode:
-        if key == pygame.K_ESCAPE:
-            state.capture_mode = False
-            state.status = "Capture cancelled"
-            state.status_error = False
-            return False
-        if rows:
-            group, action_name = rows[state.selected_row]
-            ok, msg = rebind_action_key(
-                state.dimension,
-                group,
-                action_name,
-                key,
-                conflict_mode=state.conflict_mode,
-            )
-            state.status = msg
-            state.status_error = not ok
-        state.capture_mode = False
+        return _handle_capture_input(state, key, rows)
+    handler = _MENU_KEY_HANDLERS.get(key)
+    if handler is None:
         return False
-
-    if key == pygame.K_ESCAPE:
-        return True
-    if key == pygame.K_UP:
-        if rows:
-            state.selected_row = (state.selected_row - 1) % len(rows)
-        return False
-    if key == pygame.K_DOWN:
-        if rows:
-            state.selected_row = (state.selected_row + 1) % len(rows)
-        return False
-    if key == pygame.K_LEFT:
-        state.dimension = 4 if state.dimension == 2 else state.dimension - 1
-        state.selected_row = 0
-        return False
-    if key == pygame.K_RIGHT:
-        state.dimension = 2 if state.dimension == 4 else state.dimension + 1
-        state.selected_row = 0
-        return False
-    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        if rows:
-            state.capture_mode = True
-        return False
-    if key == pygame.K_c:
-        state.conflict_mode = cycle_rebind_conflict_mode(state.conflict_mode, 1)
-        state.status = f"Conflict mode: {state.conflict_mode}"
-        state.status_error = False
-        return False
-    if key == pygame.K_l:
-        ok, msg = load_keybindings_file(state.dimension)
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_s:
-        ok, msg = save_keybindings_file(state.dimension)
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_F6:
-        ok, msg = reset_active_profile_bindings(state.dimension)
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_LEFTBRACKET:
-        ok, msg, profile = cycle_key_profile(-1)
-        state.active_profile = profile
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_RIGHTBRACKET:
-        ok, msg, profile = cycle_key_profile(1)
-        state.active_profile = profile
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_n:
-        ok, msg, profile = create_auto_profile()
-        if ok and profile is not None:
-            set_ok, set_msg = set_active_key_profile(profile)
-            if not set_ok:
-                ok = False
-                msg = set_msg
-            else:
-                load_ok, load_msg = load_active_profile_bindings()
-                if not load_ok:
-                    ok = False
-                    msg = load_msg
-                else:
-                    state.active_profile = profile
-        state.status = msg
-        state.status_error = not ok
-        return False
-    if key == pygame.K_BACKSPACE:
-        ok, msg = delete_key_profile(state.active_profile)
-        state.active_profile = active_key_profile()
-        state.status = msg
-        state.status_error = not ok
-        return False
-
-    return False
+    return handler(state, rows)
 
 
 def run_keybindings_menu(screen: pygame.Surface, fonts, dimension: int = 2) -> None:
