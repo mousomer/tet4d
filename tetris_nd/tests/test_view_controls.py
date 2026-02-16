@@ -1,6 +1,10 @@
 import unittest
 
-from tetris_nd.view_controls import viewer_relative_move_axis_delta, wrapped_pitch_target
+from tetris_nd.view_controls import (
+    YawPitchTurnAnimator,
+    viewer_relative_move_axis_delta,
+    wrapped_pitch_target,
+)
 
 
 class TestViewControls(unittest.TestCase):
@@ -26,6 +30,23 @@ class TestViewControls(unittest.TestCase):
         yaw2, pitch2 = wrapped_pitch_target(32.0, -26.0, 90.0)
         self.assertTrue(-74.0 <= pitch2 <= 74.0)
         self.assertEqual(yaw2, 32.0)
+
+    def test_shared_turn_animator_smoke(self):
+        anim = YawPitchTurnAnimator()
+        self.assertFalse(anim.is_animating())
+        anim.start_yaw_turn(90.0)
+        self.assertTrue(anim.is_animating())
+        anim.step_animation(1000.0)
+        self.assertFalse(anim.is_animating())
+        self.assertAlmostEqual(anim.yaw_deg, 122.0, places=2)
+
+    def test_shared_turn_animator_pitch_wrap(self):
+        anim = YawPitchTurnAnimator(yaw_deg=32.0, pitch_deg=-26.0)
+        anim.start_pitch_turn(-90.0)
+        self.assertTrue(anim.is_animating())
+        anim.step_animation(1000.0)
+        self.assertFalse(anim.is_animating())
+        self.assertTrue(-74.0 <= anim.pitch_deg <= 74.0)
 
 
 if __name__ == "__main__":

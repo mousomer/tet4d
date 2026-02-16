@@ -7,13 +7,16 @@ from typing import Optional, Tuple
 
 import pygame
 
-from .audio import AudioSettings, initialize_audio, play_sfx
+from .app_runtime import (
+    capture_windowed_display_settings,
+    initialize_runtime,
+    open_display,
+)
+from .audio import play_sfx
 from .board import BoardND
-from .display import DisplaySettings, apply_display_mode
+from .display import DisplaySettings
 from .frontend_nd import (
-    apply_nd_gameplay_action,
-    gameplay_action_for_key,
-    system_key_action,
+    route_nd_keydown,
 )
 from .game_nd import GameConfigND, GameStateND
 from .game_loop_common import process_game_events
@@ -23,17 +26,13 @@ from .keybindings import (
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
     active_key_profile,
-    initialize_keybinding_files,
     keybinding_file_label,
     load_active_profile_bindings,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
 from .menu_settings_state import (
-    get_audio_settings,
-    get_display_settings,
     load_menu_settings,
-    save_display_settings,
 )
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .projection3d import (
@@ -46,17 +45,14 @@ from .projection3d import (
     draw_gradient_background,
     draw_projected_lattice,
     fit_orthographic_zoom,
-    interpolate_angle_deg,
-    normalize_angle_deg,
     orthographic_point,
     perspective_point,
     projective_point,
     raw_to_world,
-    smoothstep01,
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
-from .view_controls import viewer_relative_move_axis_delta, wrapped_pitch_target
+from .view_controls import YawPitchTurnAnimator
 
 
 MARGIN = 20
@@ -273,23 +269,14 @@ class ClearAnimation3D:
 
 
 @dataclass
-class Camera3D:
+class Camera3D(YawPitchTurnAnimator):
     # Default to the same angled preset used by 4D layer views.
     projection: ProjectionMode3D = ProjectionMode3D.ORTHOGRAPHIC
-    yaw_deg: float = 32.0
-    pitch_deg: float = -26.0
     zoom: float = 52.0
     cam_dist: float = 6.5
     projective_strength: float = 0.22
     projective_bias: float = 3.0
     auto_fit_once: bool = True
-    animating: bool = False
-    anim_start_yaw: float = 0.0
-    anim_target_yaw: float = 0.0
-    anim_start_pitch: float = 0.0
-    anim_target_pitch: float = 0.0
-    anim_elapsed_ms: float = 0.0
-    anim_duration_ms: float = 240.0
 
     def reset(self) -> None:
         self.projection = ProjectionMode3D.ORTHOGRAPHIC
@@ -298,8 +285,7 @@ class Camera3D:
         self.zoom = 52.0
         self.cam_dist = 6.5
         self.auto_fit_once = True
-        self.animating = False
-        self.anim_elapsed_ms = 0.0
+        self.stop_animation()
 
     def cycle_projection(self) -> None:
         if self.projection == ProjectionMode3D.PROJECTIVE:
@@ -311,36 +297,8 @@ class Camera3D:
             self.projection = ProjectionMode3D.PROJECTIVE
 
     def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
-        self.animating = True
-        self.anim_elapsed_ms = 0.0
-        self.anim_start_yaw = normalize_angle_deg(self.yaw_deg)
-        self.anim_target_yaw = normalize_angle_deg(target_yaw)
-        self.anim_start_pitch = self.pitch_deg
-        self.anim_target_pitch = target_pitch
+        super()._start_turn(target_yaw, target_pitch)
         self.auto_fit_once = True
-
-    def start_yaw_turn(self, delta_deg: float) -> None:
-        self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
-
-    def start_pitch_turn(self, delta_deg: float) -> None:
-        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
-        self._start_turn(target_yaw, target_pitch)
-
-    def is_animating(self) -> bool:
-        return self.animating
-
-    def step_animation(self, dt_ms: float) -> None:
-        if not self.animating:
-            return
-        self.anim_elapsed_ms += max(0.0, dt_ms)
-        t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
-        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, t)
-        eased = smoothstep01(t)
-        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
-        if t >= 1.0:
-            self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
-            self.pitch_deg = self.anim_target_pitch
-            self.animating = False
 
 
 def build_config(settings: GameSettings3D) -> GameConfigND:
@@ -646,8 +604,7 @@ def draw_game_frame(screen: pygame.Surface,
     _draw_side_panel(screen, state, camera, panel_rect, fonts, show_grid=show_grid)
 
 
-def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
-    key = event.key
+def handle_camera_key(key: int, camera: Camera3D) -> bool:
     return (
         dispatch_bound_action(
             key,
@@ -667,49 +624,21 @@ def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
     )
 
 
+def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
+    return handle_camera_key(event.key, camera)
+
+
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameStateND,
                         camera: Camera3D | GameConfigND | None = None,
                         _cfg: GameConfigND | None = None) -> str:
-    key = event.key
-
-    system_action = system_key_action(key)
-    if system_action == "quit":
-        return "quit"
-    if system_action == "menu":
-        play_sfx("menu_confirm")
-        return "menu"
-    if system_action == "restart":
-        play_sfx("menu_confirm")
-        return "restart"
-    if system_action == "toggle_grid":
-        play_sfx("menu_move")
-        return "toggle_grid"
-
-    if state.game_over:
-        return "continue"
-
-    action = gameplay_action_for_key(key, state.config)
-    if action is not None:
-        if action in ("move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"):
-            yaw_for_movement = camera.yaw_deg if isinstance(camera, Camera3D) else 32.0
-            intent_by_action = {
-                "move_x_neg": "left",
-                "move_x_pos": "right",
-                "move_z_neg": "away",
-                "move_z_pos": "closer",
-            }
-            axis, delta = viewer_relative_move_axis_delta(yaw_for_movement, intent_by_action[action])
-            state.try_move_axis(axis, delta)
-        else:
-            apply_nd_gameplay_action(state, action)
-        if action.startswith("rotate_"):
-            play_sfx("rotate")
-        elif action in ("hard_drop",):
-            play_sfx("drop")
-        else:
-            play_sfx("move")
-    return "continue"
+    yaw_for_movement = camera.yaw_deg if isinstance(camera, Camera3D) else 32.0
+    return route_nd_keydown(
+        event.key,
+        state,
+        yaw_deg_for_view_movement=yaw_for_movement,
+        sfx_handler=play_sfx,
+    )
 
 
 def _spawn_clear_animation_if_needed(state: GameStateND,
@@ -753,9 +682,13 @@ class LoopContext3D:
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
-        if handle_camera_keydown(event, self.camera):
-            return "continue"
-        return handle_game_keydown(event, self.state, self.camera)
+        return route_nd_keydown(
+            event.key,
+            self.state,
+            yaw_deg_for_view_movement=self.camera.yaw_deg,
+            view_key_handler=lambda key: handle_camera_key(key, self.camera),
+            sfx_handler=play_sfx,
+        )
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
@@ -828,29 +761,18 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 
 
 def run() -> None:
-    pygame.init()
-    initialize_keybinding_files()
-    audio_settings_payload = get_audio_settings()
-    initialize_audio(
-        AudioSettings(
-            master_volume=audio_settings_payload["master_volume"],
-            sfx_volume=audio_settings_payload["sfx_volume"],
-            mute=audio_settings_payload["mute"],
-        )
-    )
-    display_payload = get_display_settings()
+    runtime = initialize_runtime(sync_audio_state=False)
     display_settings = DisplaySettings(
-        fullscreen=display_payload["fullscreen"],
-        windowed_size=tuple(display_payload["windowed_size"]),
+        fullscreen=runtime.display_settings.fullscreen,
+        windowed_size=runtime.display_settings.windowed_size,
     )
     fonts = init_fonts()
 
     running = True
     while running:
-        pygame.display.set_caption("3D Tetris – Setup")
-        menu_screen = apply_display_mode(
+        menu_screen = open_display(
             display_settings,
-            preferred_windowed_size=display_settings.windowed_size,
+            caption="3D Tetris – Setup",
         )
         settings = run_menu(menu_screen, fonts)
         if settings is None:
@@ -858,22 +780,22 @@ def run() -> None:
 
         cfg = build_config(settings)
         win_w, win_h = suggested_window_size(cfg)
-        pygame.display.set_caption("3D Tetris")
         preferred_size = (
             max(display_settings.windowed_size[0], win_w),
             max(display_settings.windowed_size[1], win_h),
         )
-        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
+        game_screen = open_display(
+            display_settings,
+            caption="3D Tetris",
+            preferred_windowed_size=preferred_size,
+        )
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
             continue
 
-        if not display_settings.fullscreen:
-            current_size = pygame.display.get_surface().get_size()
-            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
-            save_display_settings(windowed_size=current_size)
+        display_settings = capture_windowed_display_settings(display_settings)
 
     pygame.quit()
     sys.exit()
