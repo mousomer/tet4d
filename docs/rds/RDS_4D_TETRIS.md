@@ -1,8 +1,8 @@
 # 4D Tetris RDS
 
-Status: Active v0.3  
+Status: Active v0.5  
 Author: Omer + Codex  
-Date: 2026-02-10  
+Date: 2026-02-16  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -28,9 +28,38 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 
 ## 4. Piece Set
 
-1. Uses a dedicated true 4D piece bag.
-2. Current 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
-3. Definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+1. Default set: dedicated true 4D piece bag.
+2. Optional set: dedicated 4D six-cell piece bag.
+3. Optional set: embedded 3D pieces (`3D->4D` lift).
+4. Optional set: embedded 2D pieces (`2D->4D` lift).
+5. Optional set: `random_cells_4d` (connected random cells).
+6. Optional set: `debug_rectangles_4d` (simple hyper-rectangles for progression testing).
+7. Current baseline 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
+8. Definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
+9. Setup menu must expose piece set source selection (`native_4d`, `native_4d_6cell`, `embedded_3d`, `embedded_2d`, `random_cells_4d`, `debug_rectangles_4d`).
+
+## 4.1 Lower-dimensional set embedding requirements (4D)
+
+1. 3D coordinates `(x, y, z)` embed into 4D as `(x, y, z, 0)` by default.
+2. 2D coordinates `(x, y)` embed into 4D as `(x, y, 0, 0)` by default.
+3. Optional embedding hyperplane selection is allowed; defaults are deterministic.
+4. After spawn, embedded pieces must support full 4D movement/rotation rules.
+5. Embedding must preserve deterministic replay behavior under fixed seed.
+
+## 4.2 Random-cell generator requirements (4D)
+
+1. Generated coordinates must form a single connected component (8-neighborhood in 4D axis-adjacent space).
+2. Default cell count is `5`, configurable range `4..8`.
+3. Coordinates are normalized before spawn to maintain stable positioning.
+4. Duplicate generated shapes in the same bag cycle should be avoided when feasible.
+5. Generated piece bounding boxes must fit board `x/z/w` dimensions at spawn.
+6. Spawn-invalid random pieces must be rejected and regenerated.
+
+## 4.3 Debug piece set requirements (4D)
+
+1. Provide simple hyper-rectangles such as `2x1x1x1`, `2x2x1x1`, `3x1x1x1`.
+2. Set is intended for fast hyperlayer-clear and scoring validation.
+3. Debug set must remain deterministic under fixed seed.
 
 ## 5. Controls
 
@@ -55,13 +84,30 @@ View controls:
 1. Yaw turn (animated 90°): J/L
 2. Pitch turn (animated 90°): I/K
 3. Zoom: `+` / `-`
-4. Reset view: `0`
+4. Reset view: `Backspace` (deconflicted from gameplay `rotate_zw -`)
 
 System:
 1. Restart: `R`
 2. Menu: `M`
 3. Quit: `Esc`
 4. Toggle grid: `G`
+
+Slicing definition and purpose:
+1. Slicing is a view filter that helps inspect specific `z`/`w` layers in dense 4D scenes.
+2. Slicing is not a prerequisite for rotation; gameplay rotations must work regardless of active slice.
+3. Slicing exists to improve readability and debugging, not to alter physics.
+
+Viewer-consistent translation requirement:
+1. Movement intents are interpreted in viewer space for `x/z` translation.
+2. `Left/Right` always move screen-left/screen-right.
+3. `Up` means away from the viewer, `Down` means closer to the viewer.
+4. After yaw turns, `x/z` translation remaps to board axes to preserve viewer consistency.
+5. `w` movement remains bound to `,` / `.` and is not viewer-remapped.
+
+Rotation reliability requirements (4D `z-w`):
+1. `rotate_zw` (`9/0`) must be conflict-free with view/system keys.
+2. Rotation attempts must not get stuck due to input routing conflicts or stale state.
+3. Repeated `9/0` input should either rotate or fail cleanly with no control deadlock.
 
 ## 6. Rendering and UX
 
@@ -70,6 +116,7 @@ System:
 3. Grid can be toggled on/off for all layer boards.
 4. When grid is off, each layer board still renders a board shadow.
 5. Hyperlayer clear animation uses transient ghost cells across affected layers.
+6. Pitch turns must remain 90-degree relative view turns while preserving a non-flat 3D board perception.
 
 ## 7. Scoring
 
@@ -78,6 +125,11 @@ Shared scoring table from general RDS:
 2. 2 clears: `100`
 3. 3 clears: `300`
 4. 4+ clears: scaled bonus
+
+## 7.1 Scoring verification requirements (4D)
+
+1. Automated tests must verify score deltas for single and multi-hyperlayer clears.
+2. Replay tests must assert deterministic score progression.
 
 ## 8. Coding Best Practices (4D)
 
@@ -92,7 +144,10 @@ Minimum required coverage after 4D changes:
 1. deterministic replay path,
 2. movement-vs-rotation key routing checks,
 3. slice key behavior,
-4. dedicated 4D piece-set invariants.
+4. dedicated 4D piece-set invariants,
+5. scoring matrix checks,
+6. random/debug piece spawn stability checks,
+7. repeated `9/0` rotation reliability checks.
 
 Relevant tests:
 - `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game_nd.py`
@@ -105,3 +160,18 @@ Relevant tests:
 2. Hyperlayer clear behavior is correct for `x-z-w` at each `y`.
 3. Dedicated 4D piece set is used and validated by tests.
 4. Replay/smoke tests pass.
+5. Embedded 2D/3D and random-cell 4D sets are selectable and playable.
+6. Debug 4D piece set is selectable and supports fast hyperlayer-fill validation.
+7. `9/0` rotations are stable and not consumed by unrelated actions.
+8. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
+
+## 11. Implementation Status (2026-02-16)
+
+Implemented in code:
+1. 4D mode renders all `w` layers as multiple projected 3D boards in `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`.
+2. Grid toggle supports full projected lattice rendering per layer; grid-off draws board shadow silhouettes.
+3. 4D clear animation uses ghost-cell fade overlays across affected layers.
+4. `rotate_zw` (`9/0`) is deconflicted from view reset defaults and protected from camera key override during rebinding.
+5. Random 4D spawn stability improved by spawn-fit filtering and centered spawn placement in `/Users/omer/workspace/test-code/tet4d/tetris_nd/game_nd.py`.
+6. Debug 4D rectangle piece set is selectable and tested.
+7. Scoring matrix and random-piece stability checks are covered in `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game_nd.py`.

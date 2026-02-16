@@ -6,15 +6,20 @@ from typing import Optional, Tuple
 
 import pygame
 
+from .audio import AudioSettings, initialize_audio, play_sfx
+from .display import DisplaySettings, apply_display_mode
 from .frontend_nd import (
+    apply_nd_gameplay_action,
     build_config,
     create_initial_slice_state,
     create_initial_state,
+    dispatch_nd_slice_key,
+    gameplay_action_for_key,
     gravity_interval_ms_from_config,
-    handle_game_keydown as handle_nd_game_keydown,
     init_fonts,
     piece_set_4d_label,
     run_menu,
+    system_key_action,
     GfxFonts,
     SliceState,
 )
@@ -25,8 +30,12 @@ from .keybindings import (
     CAMERA_KEYS_4D,
     CONTROL_LINES_4D_VIEW,
     CONTROL_LINES_ND_4D,
+    KEYS_4D,
+    SLICE_KEYS_4D,
+    SYSTEM_KEYS,
     initialize_keybinding_files,
 )
+from .menu_settings_state import get_audio_settings, get_display_settings, save_display_settings
 from .projection3d import (
     Face,
     Cell3,
@@ -45,6 +54,7 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .view_controls import viewer_relative_move_axis_delta, wrapped_pitch_target
 
 
 MARGIN = 16
@@ -75,44 +85,41 @@ class LayerView3D:
     yaw_deg: float = 32.0
     pitch_deg: float = -26.0
     zoom_scale: float = 1.0
-    anim_axis: str | None = None
-    anim_start: float = 0.0
-    anim_target: float = 0.0
+    animating: bool = False
+    anim_start_yaw: float = 0.0
+    anim_target_yaw: float = 0.0
+    anim_start_pitch: float = 0.0
+    anim_target_pitch: float = 0.0
     anim_elapsed_ms: float = 0.0
     anim_duration_ms: float = 240.0
 
-    def _start_turn(self, axis: str, target: float) -> None:
-        self.anim_axis = axis
+    def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
+        self.animating = True
         self.anim_elapsed_ms = 0.0
-        if axis == "yaw":
-            self.anim_start = normalize_angle_deg(self.yaw_deg)
-            self.anim_target = normalize_angle_deg(target)
-        else:
-            self.anim_start = self.pitch_deg
-            self.anim_target = max(-89.0, min(89.0, target))
+        self.anim_start_yaw = normalize_angle_deg(self.yaw_deg)
+        self.anim_target_yaw = normalize_angle_deg(target_yaw)
+        self.anim_start_pitch = self.pitch_deg
+        self.anim_target_pitch = target_pitch
 
     def start_yaw_turn(self, delta_deg: float) -> None:
-        self._start_turn("yaw", self.yaw_deg + delta_deg)
+        self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
 
     def start_pitch_turn(self, delta_deg: float) -> None:
-        self._start_turn("pitch", self.pitch_deg + delta_deg)
+        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
+        self._start_turn(target_yaw, target_pitch)
 
     def step_animation(self, dt_ms: float) -> None:
-        if self.anim_axis is None:
+        if not self.animating:
             return
         self.anim_elapsed_ms += max(0.0, dt_ms)
         t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
-        if self.anim_axis == "yaw":
-            self.yaw_deg = interpolate_angle_deg(self.anim_start, self.anim_target, t)
-        else:
-            eased = smoothstep01(t)
-            self.pitch_deg = self.anim_start + (self.anim_target - self.anim_start) * eased
+        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, t)
+        eased = smoothstep01(t)
+        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
         if t >= 1.0:
-            if self.anim_axis == "yaw":
-                self.yaw_deg = normalize_angle_deg(self.anim_target)
-            else:
-                self.pitch_deg = self.anim_target
-            self.anim_axis = None
+            self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
+            self.pitch_deg = self.anim_target_pitch
+            self.animating = False
 
 
 @dataclass
@@ -384,7 +391,7 @@ def _draw_side_panel(surface: pygame.Surface,
         "View: multiple 3D w-layers",
         "",
         f"Dims: {state.config.dims}",
-        f"Piece set: {piece_set_4d_label(state.config.piece_set_4d)}",
+        f"Piece set: {piece_set_4d_label(state.config.piece_set_id)}",
         f"Score: {state.score}",
         f"Cleared: {state.lines_cleared}",
         f"Speed: {state.config.speed_level}",
@@ -456,7 +463,7 @@ def _reset_view(view: LayerView3D) -> None:
     view.yaw_deg = 32.0
     view.pitch_deg = -26.0
     view.zoom_scale = 1.0
-    view.anim_axis = None
+    view.animating = False
     view.anim_elapsed_ms = 0.0
 
 
@@ -507,6 +514,7 @@ class LoopContext4D:
     clear_anim: Optional[ClearAnimation4D] = None
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
+    was_game_over: bool = False
 
     @classmethod
     def create(cls, cfg: GameConfigND) -> "LoopContext4D":
@@ -517,12 +525,60 @@ class LoopContext4D:
             slice_state=create_initial_slice_state(cfg),
             view=LayerView3D(),
             last_lines_cleared=state.lines_cleared,
+            was_game_over=state.game_over,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
-        if handle_view_keydown(event, self.view):
+        key = event.key
+        system_action = system_key_action(key)
+        if system_action == "quit":
+            return "quit"
+        if system_action == "menu":
+            play_sfx("menu_confirm")
+            return "menu"
+        if system_action == "restart":
+            play_sfx("menu_confirm")
+            return "restart"
+        if system_action == "toggle_grid":
+            play_sfx("menu_move")
+            return "toggle_grid"
+
+        if dispatch_nd_slice_key(key, self.state.config, self.slice_state) is not None:
+            play_sfx("menu_move")
             return "continue"
-        return handle_nd_game_keydown(event, self.state, self.slice_state)
+
+        if not self.state.game_over:
+            action_type = gameplay_action_for_key(key, self.state.config)
+            if action_type is not None:
+                if action_type in ("move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"):
+                    intent_by_action = {
+                        "move_x_neg": "left",
+                        "move_x_pos": "right",
+                        "move_z_neg": "away",
+                        "move_z_pos": "closer",
+                    }
+                    axis, delta = viewer_relative_move_axis_delta(self.view.yaw_deg, intent_by_action[action_type])
+                    self.state.try_move_axis(axis, delta)
+                else:
+                    apply_nd_gameplay_action(self.state, action_type)
+                if action_type.startswith("rotate_"):
+                    play_sfx("rotate")
+                elif action_type in ("hard_drop",):
+                    play_sfx("drop")
+                else:
+                    play_sfx("move")
+                return "continue"
+
+        gameplay_occupied = any(key in keys for keys in KEYS_4D.values())
+        slice_occupied = any(key in keys for keys in SLICE_KEYS_4D.values())
+        system_occupied = any(key in keys for keys in SYSTEM_KEYS.values())
+        if gameplay_occupied or slice_occupied or system_occupied:
+            return "continue"
+
+        if handle_view_keydown(event, self.view):
+            play_sfx("menu_move")
+            return "continue"
+        return "continue"
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
@@ -530,6 +586,7 @@ class LoopContext4D:
         self.gravity_accumulator = 0
         self.clear_anim = None
         self.last_lines_cleared = self.state.lines_cleared
+        self.was_game_over = self.state.game_over
 
     def on_toggle_grid(self) -> None:
         self.show_grid = not self.show_grid
@@ -566,6 +623,11 @@ def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) ->
         )
         if new_clear_anim is not None:
             loop.clear_anim = new_clear_anim
+            play_sfx("clear")
+
+        if loop.state.game_over and not loop.was_game_over:
+            play_sfx("game_over")
+        loop.was_game_over = loop.state.game_over
 
         loop.view.step_animation(dt)
         loop.clear_anim = tick_animation(loop.clear_anim, dt)
@@ -594,12 +656,28 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 def run() -> None:
     pygame.init()
     initialize_keybinding_files()
+    audio_settings_payload = get_audio_settings()
+    initialize_audio(
+        AudioSettings(
+            master_volume=audio_settings_payload["master_volume"],
+            sfx_volume=audio_settings_payload["sfx_volume"],
+            mute=audio_settings_payload["mute"],
+        )
+    )
+    display_payload = get_display_settings()
+    display_settings = DisplaySettings(
+        fullscreen=display_payload["fullscreen"],
+        windowed_size=tuple(display_payload["windowed_size"]),
+    )
     fonts = init_fonts()
 
     running = True
     while running:
         pygame.display.set_caption("4D Tetris – Setup")
-        menu_screen = pygame.display.set_mode((900, 680), pygame.RESIZABLE)
+        menu_screen = apply_display_mode(
+            display_settings,
+            preferred_windowed_size=display_settings.windowed_size,
+        )
         settings = run_menu(menu_screen, fonts, 4)
         if settings is None:
             break
@@ -607,11 +685,21 @@ def run() -> None:
         cfg = build_config(settings, 4)
         win_w, win_h = suggested_window_size(cfg)
         pygame.display.set_caption("4D Tetris")
-        game_screen = pygame.display.set_mode((win_w, win_h), pygame.RESIZABLE)
+        preferred_size = (
+            max(display_settings.windowed_size[0], win_w),
+            max(display_settings.windowed_size[1], win_h),
+        )
+        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
+            continue
+
+        if not display_settings.fullscreen:
+            current_size = pygame.display.get_surface().get_size()
+            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
+            save_display_settings(windowed_size=current_size)
 
     pygame.quit()
     sys.exit()

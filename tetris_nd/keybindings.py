@@ -28,6 +28,15 @@ PROFILE_FULL = "full"
 KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
 BUILTIN_PROFILES = (PROFILE_SMALL, PROFILE_FULL)
 
+REBIND_CONFLICT_REPLACE = "replace"
+REBIND_CONFLICT_SWAP = "swap"
+REBIND_CONFLICT_CANCEL = "cancel"
+REBIND_CONFLICT_OPTIONS = (
+    REBIND_CONFLICT_REPLACE,
+    REBIND_CONFLICT_SWAP,
+    REBIND_CONFLICT_CANCEL,
+)
+
 KEYBINDINGS_DIR = Path(__file__).resolve().parent.parent / "keybindings"
 KEYBINDINGS_PROFILES_DIR = KEYBINDINGS_DIR / "profiles"
 KEYBINDING_FILES = {
@@ -63,6 +72,21 @@ ACTIVE_KEY_PROFILE = get_active_key_profile()
 
 def active_key_profile() -> str:
     return ACTIVE_KEY_PROFILE
+
+
+def normalize_rebind_conflict_mode(mode: str | None) -> str:
+    if mode is None:
+        return REBIND_CONFLICT_REPLACE
+    value = mode.strip().lower()
+    if value in REBIND_CONFLICT_OPTIONS:
+        return value
+    return REBIND_CONFLICT_REPLACE
+
+
+def cycle_rebind_conflict_mode(mode: str, step: int = 1) -> str:
+    current = normalize_rebind_conflict_mode(mode)
+    idx = REBIND_CONFLICT_OPTIONS.index(current)
+    return REBIND_CONFLICT_OPTIONS[(idx + step) % len(REBIND_CONFLICT_OPTIONS)]
 
 
 def _safe_resolve_path(path: Path) -> Path:
@@ -118,16 +142,16 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
         movement_3d = {
             "move_x_neg": (pygame.K_KP4,),
             "move_x_pos": (pygame.K_KP6,),
-            "move_z_neg": (pygame.K_KP2,),
-            "move_z_pos": (pygame.K_KP8,),
+            "move_z_neg": (pygame.K_KP8,),
+            "move_z_pos": (pygame.K_KP2,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
         movement_4d = {
             "move_x_neg": (pygame.K_KP4,),
             "move_x_pos": (pygame.K_KP6,),
-            "move_z_neg": (pygame.K_KP2,),
-            "move_z_pos": (pygame.K_KP8,),
+            "move_z_neg": (pygame.K_KP8,),
+            "move_z_pos": (pygame.K_KP2,),
             "move_w_neg": (pygame.K_KP7,),
             "move_w_pos": (pygame.K_KP9,),
             "soft_drop": (pygame.K_KP5,),
@@ -144,16 +168,16 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
     movement_3d = {
         "move_x_neg": (pygame.K_LEFT,),
         "move_x_pos": (pygame.K_RIGHT,),
-        "move_z_neg": (pygame.K_DOWN,),
-        "move_z_pos": (pygame.K_UP,),
+        "move_z_neg": (pygame.K_UP,),
+        "move_z_pos": (pygame.K_DOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
     movement_4d = {
         "move_x_neg": (pygame.K_LEFT,),
         "move_x_pos": (pygame.K_RIGHT,),
-        "move_z_neg": (pygame.K_DOWN,),
-        "move_z_pos": (pygame.K_UP,),
+        "move_z_neg": (pygame.K_UP,),
+        "move_z_pos": (pygame.K_DOWN,),
         "move_w_neg": (pygame.K_COMMA,),
         "move_w_pos": (pygame.K_PERIOD,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
@@ -219,7 +243,7 @@ _DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
     "pitch_neg": (pygame.K_k,),
     "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
     "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
-    "reset": (pygame.K_0,),
+    "reset": (pygame.K_BACKSPACE,),
     "cycle_projection": (pygame.K_p,),
 }
 _DEFAULT_SLICE_KEYS_3D: KeyBindingMap = {
@@ -301,7 +325,27 @@ def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     _replace_map(CAMERA_KEYS_4D, _DEFAULT_CAMERA_KEYS_4D)
     _replace_map(SLICE_KEYS_3D, _DEFAULT_SLICE_KEYS_3D)
     _replace_map(SLICE_KEYS_4D, _DEFAULT_SLICE_KEYS_4D)
+    _sanitize_runtime_bindings()
     _rebuild_control_lines()
+
+
+def _sanitize_runtime_bindings() -> None:
+    # 4D gameplay keys must not be shadowed by 4D camera/view keys.
+    occupied = set()
+    for mapping in (KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS):
+        for keys in mapping.values():
+            occupied.update(keys)
+
+    sanitized_camera_4d: KeyBindingMap = {}
+    for action, keys in CAMERA_KEYS_4D.items():
+        filtered = tuple(key for key in keys if key not in occupied)
+        if not filtered:
+            filtered = _DEFAULT_CAMERA_KEYS_4D.get(action, ())
+            filtered = tuple(key for key in filtered if key not in occupied)
+        if action == "reset" and not filtered:
+            filtered = (pygame.K_BACKSPACE,)
+        sanitized_camera_4d[action] = filtered
+    _replace_map(CAMERA_KEYS_4D, sanitized_camera_4d)
 
 
 _KEY_NAME_OVERRIDES = {
@@ -530,20 +574,30 @@ def _apply_group_payload(target: MutableMapping[str, KeyTuple], raw_group: objec
 
 def _binding_groups_for_dimension(dimension: int) -> Dict[str, MutableMapping[str, KeyTuple]]:
     if dimension == 2:
-        return {"game": KEYS_2D}
+        return {
+            "game": KEYS_2D,
+            "system": SYSTEM_KEYS,
+        }
     if dimension == 3:
         return {
             "game": KEYS_3D,
             "camera": CAMERA_KEYS_3D,
             "slice": SLICE_KEYS_3D,
+            "system": SYSTEM_KEYS,
         }
     if dimension == 4:
         return {
             "game": KEYS_4D,
             "slice": SLICE_KEYS_4D,
             "camera": CAMERA_KEYS_4D,
+            "system": SYSTEM_KEYS,
         }
     raise ValueError("dimension must be one of: 2, 3, 4")
+
+
+def runtime_binding_groups_for_dimension(dimension: int) -> Dict[str, Mapping[str, KeyTuple]]:
+    groups = _binding_groups_for_dimension(dimension)
+    return {group: dict(bindings) for group, bindings in groups.items()}
 
 
 def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
@@ -551,7 +605,33 @@ def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
     return {group: sorted(bindings.keys()) for group, bindings in groups.items()}
 
 
-def rebind_action_key(dimension: int, group: str, action: str, key: int) -> tuple[bool, str]:
+def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
+    filtered = tuple(candidate for candidate in keys if candidate != key)
+    return filtered
+
+
+def _find_conflicts(groups: Mapping[str, Mapping[str, KeyTuple]],
+                    key: int,
+                    skip_group: str,
+                    skip_action: str) -> list[tuple[str, str]]:
+    conflicts: list[tuple[str, str]] = []
+    for group_name, binding_map in groups.items():
+        for action_name, keys in binding_map.items():
+            if group_name == skip_group and action_name == skip_action:
+                continue
+            if key in keys:
+                conflicts.append((group_name, action_name))
+    return conflicts
+
+
+def rebind_action_key(
+    dimension: int,
+    group: str,
+    action: str,
+    key: int,
+    *,
+    conflict_mode: str = REBIND_CONFLICT_REPLACE,
+) -> tuple[bool, str]:
     try:
         groups = _binding_groups_for_dimension(dimension)
     except ValueError as exc:
@@ -561,9 +641,42 @@ def rebind_action_key(dimension: int, group: str, action: str, key: int) -> tupl
         return False, f"unknown binding group: {group}"
     if action not in binding_map:
         return False, f"unknown action: {group}.{action}"
+
+    selected_mode = normalize_rebind_conflict_mode(conflict_mode)
+    conflicts = _find_conflicts(groups, key, group, action)
+    if group == "camera":
+        blocked_conflicts = [
+            (conflict_group, conflict_action)
+            for conflict_group, conflict_action in conflicts
+            if conflict_group in {"game", "slice", "system"}
+        ]
+        if blocked_conflicts:
+            conflict_refs = ", ".join(f"{g}.{a}" for g, a in blocked_conflicts)
+            return False, f"Camera key cannot override {conflict_refs}"
+    if conflicts and selected_mode == REBIND_CONFLICT_CANCEL:
+        conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
+        return False, f"Key already used by {conflict_refs}; conflict mode=cancel"
+
+    if conflicts and selected_mode == REBIND_CONFLICT_SWAP:
+        first_group, first_action = conflicts[0]
+        first_map = groups[first_group]
+        old_keys = binding_map[action]
+        first_map[first_action] = old_keys
+        for extra_group, extra_action in conflicts[1:]:
+            extra_map = groups[extra_group]
+            extra_map[extra_action] = _remove_key_from_tuple(extra_map[extra_action], key)
+    else:
+        for conflict_group, conflict_action in conflicts:
+            conflict_map = groups[conflict_group]
+            conflict_map[conflict_action] = _remove_key_from_tuple(conflict_map[conflict_action], key)
     binding_map[action] = (key,)
+
+    _sanitize_runtime_bindings()
     _rebuild_control_lines()
     key_name = _display_key_name(key)
+    if conflicts:
+        conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
+        return True, f"Rebound {group}.{action} -> {key_name} ({selected_mode}: {conflict_refs})"
     return True, f"Rebound {group}.{action} -> {key_name}"
 
 
@@ -691,6 +804,13 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
     return True, msg, next_profile
 
 
+def _atomic_write(path: Path, payload: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_text(payload, encoding="utf-8")
+    temp_path.replace(path)
+
+
 def save_keybindings_file(
     dimension: int,
     file_path: str | None = None,
@@ -715,13 +835,12 @@ def save_keybindings_file(
         },
     }
 
+    encoded_payload = json.dumps(payload, indent=2, sort_keys=True)
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        _atomic_write(path, encoded_payload)
         if external_path is None and selected_profile == PROFILE_SMALL:
             legacy_path = _legacy_keybinding_file_path(dimension)
-            legacy_path.parent.mkdir(parents=True, exist_ok=True)
-            legacy_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+            _atomic_write(legacy_path, encoded_payload)
     except OSError as exc:
         return False, f"Failed saving keybindings: {exc}"
 
@@ -764,8 +883,12 @@ def load_keybindings_file(
         if raw_group is None and len(groups) == 1:
             # Compatibility: allow {"bindings": {"move_x_neg": [...]}} in 2D-only files.
             raw_group = bindings_payload
+        if raw_group is None and dimension == 2 and group_name == "game":
+            # Compatibility for legacy 2D schema now that 2D also includes system bindings.
+            raw_group = bindings_payload
         _apply_group_payload(target, raw_group)
 
+    _sanitize_runtime_bindings()
     _rebuild_control_lines()
     return True, f"Loaded keybindings from {path}"
 
@@ -813,6 +936,22 @@ def initialize_keybinding_files() -> None:
         _ensure_profile_files(builtin)
     load_active_profile_bindings()
     _KEYBINDINGS_INITIALIZED = True
+
+
+def reset_active_profile_bindings(dimension: int | None = None) -> tuple[bool, str]:
+    selected = ACTIVE_KEY_PROFILE
+    reset_keybindings_to_profile_defaults(selected)
+    dimensions = (dimension,) if dimension is not None else (2, 3, 4)
+    messages: list[str] = []
+    for dim in dimensions:
+        ok, msg = save_keybindings_file(dim, profile=selected)
+        if not ok:
+            return False, msg
+        messages.append(msg)
+    ok_load, msg_load = load_active_profile_bindings()
+    if not ok_load:
+        return False, msg_load
+    return True, f"Reset keybindings for profile {selected}; {'; '.join(messages)}"
 
 
 _rebuild_control_lines()

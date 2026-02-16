@@ -113,6 +113,48 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("invalid profile name", msg)
 
+    def test_rebind_conflict_modes_work(self) -> None:
+        original_move_left = keybindings.KEYS_2D["move_x_neg"][0]
+        target_key = keybindings.KEYS_2D["move_x_pos"][0]
+
+        ok, msg = keybindings.rebind_action_key(
+            2,
+            "game",
+            "move_x_neg",
+            target_key,
+            conflict_mode=keybindings.REBIND_CONFLICT_CANCEL,
+        )
+        self.assertFalse(ok, msg)
+        self.assertEqual(keybindings.KEYS_2D["move_x_neg"][0], original_move_left)
+
+        ok, msg = keybindings.rebind_action_key(
+            2,
+            "game",
+            "move_x_neg",
+            target_key,
+            conflict_mode=keybindings.REBIND_CONFLICT_SWAP,
+        )
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.KEYS_2D["move_x_neg"][0], target_key)
+        self.assertEqual(keybindings.KEYS_2D["move_x_pos"][0], original_move_left)
+
+    def test_reset_active_profile_bindings_restores_defaults(self) -> None:
+        custom_key = pygame.K_v
+        ok, msg = keybindings.rebind_action_key(2, "game", "move_x_neg", custom_key)
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.KEYS_2D["move_x_neg"][0], custom_key)
+
+        ok, msg = keybindings.reset_active_profile_bindings(2)
+        self.assertTrue(ok, msg)
+        self.assertNotEqual(keybindings.KEYS_2D["move_x_neg"][0], custom_key)
+
+    def test_camera_rebind_cannot_override_4d_gameplay_key(self) -> None:
+        rotation_key = keybindings.KEYS_4D["rotate_zw_neg"][0]
+        ok, msg = keybindings.rebind_action_key(4, "camera", "reset", rotation_key)
+        self.assertFalse(ok)
+        self.assertIn("cannot override", msg.lower())
+        self.assertIn(rotation_key, keybindings.KEYS_4D["rotate_zw_neg"])
+
 
 class TestMenuSettingsPersistence(unittest.TestCase):
     @classmethod

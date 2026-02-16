@@ -7,8 +7,14 @@ from typing import Optional, Tuple
 
 import pygame
 
+from .audio import AudioSettings, initialize_audio, play_sfx
 from .board import BoardND
-from .frontend_nd import dispatch_nd_gameplay_key, system_key_action
+from .display import DisplaySettings, apply_display_mode
+from .frontend_nd import (
+    apply_nd_gameplay_action,
+    gameplay_action_for_key,
+    system_key_action,
+)
 from .game_nd import GameConfigND, GameStateND
 from .game_loop_common import process_game_events
 from .key_dispatch import dispatch_bound_action
@@ -16,16 +22,20 @@ from .keybindings import (
     CAMERA_KEYS_3D,
     CONTROL_LINES_3D_CAMERA,
     CONTROL_LINES_3D_GAME,
-    PROFILE_SMALL,
     active_key_profile,
     initialize_keybinding_files,
     keybinding_file_label,
     load_active_profile_bindings,
-    set_active_key_profile,
 )
 from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
-from .menu_settings_state import load_menu_settings
+from .menu_settings_state import (
+    get_audio_settings,
+    get_display_settings,
+    load_menu_settings,
+    save_display_settings,
+)
+from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .projection3d import (
     Face,
     Cell3,
@@ -46,6 +56,7 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .view_controls import viewer_relative_move_axis_delta, wrapped_pitch_target
 
 
 MARGIN = 20
@@ -98,6 +109,11 @@ class GameSettings3D:
     height: int = 18
     depth: int = 6
     speed_level: int = 1
+    piece_set_index: int = 0
+
+
+_PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
+_PIECE_SET_3D_LABELS = tuple(piece_set_label(piece_set_id) for piece_set_id in _PIECE_SET_3D_CHOICES)
 
 
 @dataclass
@@ -112,12 +128,14 @@ class MenuState:
     rebind_mode: bool = False
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
+    rebind_conflict_mode: str = "replace"
 
 
 _MENU_FIELDS: list[FieldSpec] = [
     ("Board width", "width", 4, 12),
     ("Board height", "height", 12, 30),
     ("Board depth", "depth", 4, 12),
+    ("3D piece set", "piece_set_index", 0, len(_PIECE_SET_3D_CHOICES) - 1),
     ("Speed level", "speed_level", 1, 10),
 ]
 
@@ -147,7 +165,12 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
     y = panel_y + 28
     for idx, (label, attr_name, _, _) in enumerate(_MENU_FIELDS):
         value = getattr(state.settings, attr_name)
-        text = f"{label}: {value}"
+        if attr_name == "piece_set_index":
+            safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
+            value_text = _PIECE_SET_3D_LABELS[safe_index]
+        else:
+            value_text = str(value)
+        text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         text_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
         surf = fonts.menu_font.render(text, True, text_color)
@@ -169,8 +192,11 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
         "Esc = quit",
         menu_binding_hint_line(3),
         f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-        "F5 save settings   F9 load settings   F8 reset defaults",
-        f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   Tab/` target",
+        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+        (
+            f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
+            f"Tab/` target   C conflict={state.rebind_conflict_mode}"
+        ),
         f"Profile file: {keybinding_file_label(3)}",
         "Projection modes are available during gameplay (P).",
     ]
@@ -188,11 +214,9 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
 
 def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D]:
     clock = pygame.time.Clock()
-    set_ok, _ = set_active_key_profile(PROFILE_SMALL)
-    if set_ok:
-        load_active_profile_bindings()
+    load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, 3, include_profile=False)
+    ok, msg = load_menu_settings(state, 3, include_profile=True)
     if not ok:
         state.bindings_status = msg
         state.bindings_status_error = True
@@ -259,9 +283,11 @@ class Camera3D:
     projective_strength: float = 0.22
     projective_bias: float = 3.0
     auto_fit_once: bool = True
-    anim_axis: str | None = None
-    anim_start: float = 0.0
-    anim_target: float = 0.0
+    animating: bool = False
+    anim_start_yaw: float = 0.0
+    anim_target_yaw: float = 0.0
+    anim_start_pitch: float = 0.0
+    anim_target_pitch: float = 0.0
     anim_elapsed_ms: float = 0.0
     anim_duration_ms: float = 240.0
 
@@ -272,7 +298,7 @@ class Camera3D:
         self.zoom = 52.0
         self.cam_dist = 6.5
         self.auto_fit_once = True
-        self.anim_axis = None
+        self.animating = False
         self.anim_elapsed_ms = 0.0
 
     def cycle_projection(self) -> None:
@@ -284,49 +310,48 @@ class Camera3D:
         else:
             self.projection = ProjectionMode3D.PROJECTIVE
 
-    def _start_turn(self, axis: str, target: float) -> None:
-        self.anim_axis = axis
+    def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
+        self.animating = True
         self.anim_elapsed_ms = 0.0
-        if axis == "yaw":
-            self.anim_start = normalize_angle_deg(self.yaw_deg)
-            self.anim_target = normalize_angle_deg(target)
-        else:
-            self.anim_start = self.pitch_deg
-            self.anim_target = max(-89.0, min(89.0, target))
+        self.anim_start_yaw = normalize_angle_deg(self.yaw_deg)
+        self.anim_target_yaw = normalize_angle_deg(target_yaw)
+        self.anim_start_pitch = self.pitch_deg
+        self.anim_target_pitch = target_pitch
         self.auto_fit_once = True
 
     def start_yaw_turn(self, delta_deg: float) -> None:
-        self._start_turn("yaw", self.yaw_deg + delta_deg)
+        self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
 
     def start_pitch_turn(self, delta_deg: float) -> None:
-        self._start_turn("pitch", self.pitch_deg + delta_deg)
+        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
+        self._start_turn(target_yaw, target_pitch)
 
     def is_animating(self) -> bool:
-        return self.anim_axis is not None
+        return self.animating
 
     def step_animation(self, dt_ms: float) -> None:
-        if self.anim_axis is None:
+        if not self.animating:
             return
         self.anim_elapsed_ms += max(0.0, dt_ms)
         t = 1.0 if self.anim_duration_ms <= 0 else min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
-        if self.anim_axis == "yaw":
-            self.yaw_deg = interpolate_angle_deg(self.anim_start, self.anim_target, t)
-        else:
-            eased = smoothstep01(t)
-            self.pitch_deg = self.anim_start + (self.anim_target - self.anim_start) * eased
+        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, t)
+        eased = smoothstep01(t)
+        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
         if t >= 1.0:
-            if self.anim_axis == "yaw":
-                self.yaw_deg = normalize_angle_deg(self.anim_target)
-            else:
-                self.pitch_deg = self.anim_target
-            self.anim_axis = None
+            self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
+            self.pitch_deg = self.anim_target_pitch
+            self.animating = False
 
 
 def build_config(settings: GameSettings3D) -> GameConfigND:
+    piece_set_id = _PIECE_SET_3D_CHOICES[
+        max(0, min(len(_PIECE_SET_3D_CHOICES) - 1, settings.piece_set_index))
+    ]
     return GameConfigND(
         dims=(settings.width, settings.height, settings.depth),
         gravity_axis=1,
         speed_level=settings.speed_level,
+        piece_set_id=piece_set_id,
     )
 
 
@@ -528,6 +553,7 @@ def _draw_side_panel(surface: pygame.Surface,
         "3D Tetris",
         "",
         f"Dims: {state.config.dims}",
+        f"Piece set: {piece_set_label(state.config.piece_set_id)}",
         f"Projection: {projection_label(camera.projection)}",
         f"Score: {state.score}",
         f"Layers: {state.lines_cleared}",
@@ -643,6 +669,7 @@ def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
 
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameStateND,
+                        camera: Camera3D | GameConfigND | None = None,
                         _cfg: GameConfigND | None = None) -> str:
     key = event.key
 
@@ -650,16 +677,38 @@ def handle_game_keydown(event: pygame.event.Event,
     if system_action == "quit":
         return "quit"
     if system_action == "menu":
+        play_sfx("menu_confirm")
         return "menu"
     if system_action == "restart":
+        play_sfx("menu_confirm")
         return "restart"
     if system_action == "toggle_grid":
+        play_sfx("menu_move")
         return "toggle_grid"
 
     if state.game_over:
         return "continue"
 
-    dispatch_nd_gameplay_key(key, state)
+    action = gameplay_action_for_key(key, state.config)
+    if action is not None:
+        if action in ("move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"):
+            yaw_for_movement = camera.yaw_deg if isinstance(camera, Camera3D) else 32.0
+            intent_by_action = {
+                "move_x_neg": "left",
+                "move_x_pos": "right",
+                "move_z_neg": "away",
+                "move_z_pos": "closer",
+            }
+            axis, delta = viewer_relative_move_axis_delta(yaw_for_movement, intent_by_action[action])
+            state.try_move_axis(axis, delta)
+        else:
+            apply_nd_gameplay_action(state, action)
+        if action.startswith("rotate_"):
+            play_sfx("rotate")
+        elif action in ("hard_drop",):
+            play_sfx("drop")
+        else:
+            play_sfx("move")
     return "continue"
 
 
@@ -691,22 +740,29 @@ class LoopContext3D:
     clear_anim: Optional[ClearAnimation3D] = None
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
+    was_game_over: bool = False
 
     @classmethod
     def create(cls, cfg: GameConfigND) -> "LoopContext3D":
         state = create_initial_state(cfg)
-        return cls(cfg=cfg, state=state, last_lines_cleared=state.lines_cleared)
+        return cls(
+            cfg=cfg,
+            state=state,
+            last_lines_cleared=state.lines_cleared,
+            was_game_over=state.game_over,
+        )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
         if handle_camera_keydown(event, self.camera):
             return "continue"
-        return handle_game_keydown(event, self.state)
+        return handle_game_keydown(event, self.state, self.camera)
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
         self.gravity_accumulator = 0
         self.clear_anim = None
         self.last_lines_cleared = self.state.lines_cleared
+        self.was_game_over = self.state.game_over
 
     def on_toggle_grid(self) -> None:
         self.show_grid = not self.show_grid
@@ -745,6 +801,11 @@ def run_game_loop(screen: pygame.Surface,
         )
         if new_clear_anim is not None:
             loop.clear_anim = new_clear_anim
+            play_sfx("clear")
+
+        if loop.state.game_over and not loop.was_game_over:
+            play_sfx("game_over")
+        loop.was_game_over = loop.state.game_over
 
         loop.camera.step_animation(dt)
         loop.clear_anim = tick_animation(loop.clear_anim, dt)
@@ -769,12 +830,28 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
 def run() -> None:
     pygame.init()
     initialize_keybinding_files()
+    audio_settings_payload = get_audio_settings()
+    initialize_audio(
+        AudioSettings(
+            master_volume=audio_settings_payload["master_volume"],
+            sfx_volume=audio_settings_payload["sfx_volume"],
+            mute=audio_settings_payload["mute"],
+        )
+    )
+    display_payload = get_display_settings()
+    display_settings = DisplaySettings(
+        fullscreen=display_payload["fullscreen"],
+        windowed_size=tuple(display_payload["windowed_size"]),
+    )
     fonts = init_fonts()
 
     running = True
     while running:
         pygame.display.set_caption("3D Tetris – Setup")
-        menu_screen = pygame.display.set_mode((980, 720), pygame.RESIZABLE)
+        menu_screen = apply_display_mode(
+            display_settings,
+            preferred_windowed_size=display_settings.windowed_size,
+        )
         settings = run_menu(menu_screen, fonts)
         if settings is None:
             break
@@ -782,11 +859,21 @@ def run() -> None:
         cfg = build_config(settings)
         win_w, win_h = suggested_window_size(cfg)
         pygame.display.set_caption("3D Tetris")
-        game_screen = pygame.display.set_mode((win_w, win_h), pygame.RESIZABLE)
+        preferred_size = (
+            max(display_settings.windowed_size[0], win_w),
+            max(display_settings.windowed_size[1], win_h),
+        )
+        game_screen = apply_display_mode(display_settings, preferred_windowed_size=preferred_size)
 
         back_to_menu = run_game_loop(game_screen, cfg, fonts)
         if not back_to_menu:
             running = False
+            continue
+
+        if not display_settings.fullscreen:
+            current_size = pygame.display.get_surface().get_size()
+            display_settings = DisplaySettings(fullscreen=False, windowed_size=current_size)
+            save_display_settings(windowed_size=current_size)
 
     pygame.quit()
     sys.exit()

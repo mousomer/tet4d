@@ -1,7 +1,7 @@
 # tetris_nd/gfx_pygame.py
 
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
@@ -196,14 +196,29 @@ def _draw_menu_settings_panel(screen: pygame.Surface,
                               fonts: GfxFonts,
                               settings,
                               selected_index: int,
-                              panel_top: int) -> Tuple[int, int, int, int]:
+                              panel_top: int,
+                              menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
+                              value_formatter: Optional[Callable[[str, object], str]] = None) -> Tuple[int, int, int, int]:
     """
     Draw the glass panel with width/height/speed settings.
     Returns (panel_x, panel_y, panel_w, panel_h).
     """
     width, height = screen.get_size()
     panel_w = int(width * 0.6)
-    panel_h = 220
+    if menu_fields:
+        labels = []
+        for label, attr_name, _min_val, _max_val in menu_fields:
+            value = getattr(settings, attr_name)
+            value_text = value_formatter(attr_name, value) if value_formatter else str(value)
+            labels.append(f"{label}:  {value_text}")
+    else:
+        labels = [
+            f"Board width:   {settings.width}",
+            f"Board height:  {settings.height}",
+            f"Speed level:   {settings.speed_level}   (1 = slow, 10 = fast)",
+        ]
+
+    panel_h = max(220, 86 + len(labels) * 44)
     panel_x = (width - panel_w) // 2
     panel_y = max(160, panel_top)
     max_panel_y = max(160, height - 430)
@@ -214,13 +229,6 @@ def _draw_menu_settings_panel(screen: pygame.Surface,
     pygame.draw.rect(panel_surf, (0, 0, 0, 140),
                      panel_surf.get_rect(), border_radius=16)
     screen.blit(panel_surf, (panel_x, panel_y))
-
-    # Settings list inside panel
-    labels = [
-        f"Board width:   {settings.width}",
-        f"Board height:  {settings.height}",
-        f"Speed level:   {settings.speed_level}   (1 = slow, 10 = fast)",
-    ]
 
     option_y = panel_y + 30
     option_x = panel_x + 40
@@ -345,7 +353,9 @@ def draw_menu(screen: pygame.Surface,
               bindings_file_hint: str = "keybindings/2d.json",
               extra_hint_lines: Tuple[str, ...] = (),
               bindings_status: str = "",
-              bindings_status_error: bool = False) -> None:
+              bindings_status_error: bool = False,
+              menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
+              value_formatter: Optional[Callable[[str, object], str]] = None) -> None:
     """Top-level menu draw call."""
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     header_bottom = _draw_menu_header(
@@ -362,6 +372,8 @@ def draw_menu(screen: pygame.Surface,
         settings,
         selected_index,
         panel_top=header_bottom + 12,
+        menu_fields=menu_fields,
+        value_formatter=value_formatter,
     )
     _draw_menu_dpad_and_commands(screen, fonts, panel_y, panel_h)
 
