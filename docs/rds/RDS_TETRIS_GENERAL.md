@@ -59,6 +59,18 @@ Automatic playbot requirements are defined in:
 7. A unified startup menu must allow choosing 2D/3D/4D and shared settings.
 8. Audio controls (master volume, SFX volume, mute) must be available in settings.
 9. Fullscreen/windowed toggle must be supported without layout corruption.
+10. Piece rotations must use a soft visual animation instead of a single-frame snap.
+
+### 4.1 Soft piece-rotation animation requirements
+
+1. The visual transition for a successful rotation should be eased and short (`120-180 ms` target).
+2. Gameplay state (collision, lock, scoring) remains discrete and deterministic; animation is presentation-only.
+3. If a new rotation arrives during an active rotation animation, either:
+4. start from the current interpolated pose and retarget cleanly, or
+5. queue one pending turn and consume it immediately after the current turn ends.
+6. No visible jitter or one-frame reversion to the previous orientation is allowed.
+7. The same animation path must be used for manual input and bot-triggered rotations.
+8. Headless/dry-run paths must skip visual tween logic entirely.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -111,6 +123,7 @@ Expected test categories:
 4. Scoring matrix tests for 1/2/3/4+ clears across modes.
 5. Random/debug piece stress tests for spawn validity and non-premature game-over.
 6. Menu/settings/display-mode integration tests (windowed <-> fullscreen).
+7. Rotation-animation state machine tests (start, progress, finish, interruption/retrigger).
 
 ## 9. Acceptance Criteria (Family)
 

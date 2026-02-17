@@ -119,6 +119,9 @@ Rotation reliability requirements (4D `z-w`):
 4. When grid is off, each layer board still renders a board shadow.
 5. Hyperlayer clear animation uses transient ghost cells across affected layers.
 6. Pitch turns must remain 90-degree relative view turns while preserving a non-flat 3D board perception.
+7. Piece rotation uses a soft eased visual tween (`120-180 ms` target) instead of instant snap.
+8. Rotation tween is render-only; 4D collision/lock/scoring remain deterministic and discrete in engine state.
+9. Rapid chained rotations (including `9/0`) must retarget/queue without visual jitter or control deadlock.
 
 ## 7. Scoring
 

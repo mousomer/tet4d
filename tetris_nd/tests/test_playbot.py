@@ -8,8 +8,14 @@ from tetris_nd.game2d import GameConfig, GameState
 from tetris_nd.game_nd import GameConfigND, GameStateND
 from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
 from tetris_nd.pieces2d import PIECE_SET_2D_DEBUG
-from tetris_nd.pieces_nd import PIECE_SET_3D_DEBUG, PIECE_SET_4D_DEBUG
+from tetris_nd.pieces_nd import (
+    ActivePieceND,
+    PIECE_SET_3D_DEBUG,
+    PIECE_SET_4D_DEBUG,
+    PieceShapeND,
+)
 from tetris_nd.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
+from tetris_nd.playbot.planner_nd import _greedy_key_4d, _simulate_lock_board, plan_best_nd_move
 from tetris_nd.playbot.types import BotMode
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 
@@ -110,6 +116,138 @@ class TestPlaybot(unittest.TestCase):
 
         bot._step_piece_2d(state)
         self.assertNotEqual(state.current_piece.rotation, rot_before)
+
+    def test_4d_greedy_key_prioritizes_clear_completion_then_holes(self) -> None:
+        dims = (2, 4, 2, 1)
+        gravity_axis = 1
+
+        # Completion beats hole minimization when cleared layers are equal.
+        more_complete_more_holes = {
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+        }
+        less_complete_fewer_holes = {
+            (0, 2, 0, 0),
+            (1, 3, 0, 0),
+        }
+        key_more_complete = _greedy_key_4d(
+            {coord: 1 for coord in more_complete_more_holes},
+            dims=dims,
+            gravity_axis=gravity_axis,
+            cleared=0,
+            game_over=False,
+        )
+        key_less_complete = _greedy_key_4d(
+            {coord: 1 for coord in less_complete_fewer_holes},
+            dims=dims,
+            gravity_axis=gravity_axis,
+            cleared=0,
+            game_over=False,
+        )
+        self.assertGreater(key_more_complete, key_less_complete)
+
+        # Any layer clear beats non-clear outcomes.
+        clear_with_holes = {
+            (0, 1, 0, 0),
+            (0, 3, 0, 0),
+        }
+        clean_no_clear = {
+            (0, 2, 0, 0),
+            (0, 3, 0, 0),
+        }
+        key_clear = _greedy_key_4d(
+            {coord: 1 for coord in clear_with_holes},
+            dims=dims,
+            gravity_axis=gravity_axis,
+            cleared=1,
+            game_over=False,
+        )
+        key_no_clear = _greedy_key_4d(
+            {coord: 1 for coord in clean_no_clear},
+            dims=dims,
+            gravity_axis=gravity_axis,
+            cleared=0,
+            game_over=False,
+        )
+        self.assertGreater(key_clear, key_no_clear)
+
+    def test_4d_planner_prefers_placement_that_clears_a_plane(self) -> None:
+        cfg = GameConfigND(dims=(3, 5, 2, 2), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+        state.board.cells.clear()
+
+        y = cfg.dims[cfg.gravity_axis] - 1
+        # Fill the bottom 3D layer except two adjacent x-cells at (z=0, w=0).
+        for x in range(cfg.dims[0]):
+            for z in range(cfg.dims[2]):
+                for w in range(cfg.dims[3]):
+                    if (x, z, w) in {(1, 0, 0), (2, 0, 0)}:
+                        continue
+                    state.board.cells[(x, y, z, w)] = 9
+
+        shape = PieceShapeND(
+            name="domino_x_4d",
+            blocks=((0, 0, 0, 0), (1, 0, 0, 0)),
+            color_id=3,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, (1, -2, 0, 0))
+
+        plan = plan_best_nd_move(state)
+        if plan is None:
+            self.fail("expected a valid 4D bot plan")
+        _cells_after, cleared, game_over = _simulate_lock_board(state, plan.final_piece)
+        self.assertFalse(game_over)
+        self.assertEqual(cleared, 1)
+
+    def test_bot_hard_drops_after_configured_soft_drops_2d(self) -> None:
+        cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state.board.cells.clear()
+        state.current_piece = ActivePiece2D(
+            PieceShape2D("domino", [(0, 0), (1, 0)], color_id=8),
+            pos=(4, 0),
+            rotation=0,
+        )
+
+        bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2)
+        # Freeze target so only descent behavior is tested.
+        bot._update_assist_2d = lambda _state: None  # type: ignore[method-assign]
+        bot._target_rot_2d = state.current_piece.rotation
+        bot._target_x_2d = state.current_piece.pos[0]
+
+        before_cells = len(state.board.cells)
+        bot._step_piece_2d(state)
+        self.assertEqual(len(state.board.cells), before_cells)
+        bot._step_piece_2d(state)
+        self.assertEqual(len(state.board.cells), before_cells)
+        bot._step_piece_2d(state)
+        self.assertGreater(len(state.board.cells), before_cells)
+
+    def test_bot_hard_drops_after_configured_soft_drops_nd(self) -> None:
+        cfg = GameConfigND(dims=(4, 8, 2, 1), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            name="domino_x_4d",
+            blocks=((0, 0, 0, 0), (1, 0, 0, 0)),
+            color_id=3,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, (1, 0, 0, 0))
+
+        bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2)
+        # Freeze target so only descent behavior is tested.
+        bot._update_assist_nd = lambda _state: None  # type: ignore[method-assign]
+        bot._target_blocks_nd = tuple(sorted(tuple(block) for block in state.current_piece.rel_blocks))
+        bot._target_lateral_nd = (state.current_piece.pos[0], state.current_piece.pos[2], state.current_piece.pos[3])
+        bot._rotation_plan_nd = []
+
+        before_cells = len(state.board.cells)
+        bot._step_piece_nd(state)
+        self.assertEqual(len(state.board.cells), before_cells)
+        bot._step_piece_nd(state)
+        self.assertEqual(len(state.board.cells), before_cells)
+        bot._step_piece_nd(state)
+        self.assertGreater(len(state.board.cells), before_cells)
 
 
 if __name__ == "__main__":

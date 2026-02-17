@@ -55,6 +55,7 @@ from tetris_nd.playbot import (
 )
 from tetris_nd.playbot.types import BotMode, bot_mode_from_index
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tetris_nd.rotation_anim import PieceRotationAnimator2D
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 
 DEFAULT_GAME_SEED = 1337
@@ -194,6 +195,50 @@ def create_initial_state(cfg: GameConfig) -> GameState:
     return state
 
 
+def _system_decision_for_key(key: int) -> str | None:
+    system_action = match_bound_action(
+        key,
+        SYSTEM_KEYS,
+        ("quit", "menu", "restart", "toggle_grid"),
+    )
+    if system_action is None:
+        return None
+    if system_action == "quit":
+        return "quit"
+    if system_action == "menu":
+        play_sfx("menu_confirm")
+        return "menu"
+    if system_action == "restart":
+        play_sfx("menu_confirm")
+        return "restart"
+    play_sfx("menu_move")
+    return "toggle_grid"
+
+
+def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
+    action = dispatch_bound_action(
+        key,
+        KEYS_2D,
+        {
+            "move_x_neg": lambda: state.try_move(-1, 0),
+            "move_x_pos": lambda: state.try_move(1, 0),
+            "rotate_xy_pos": lambda: state.try_rotate(+1),
+            "rotate_xy_neg": lambda: state.try_rotate(-1),
+            "hard_drop": state.hard_drop,
+            "soft_drop": lambda: state.try_move(0, 1),
+        },
+    )
+    if action is None:
+        return None
+    if action.startswith("rotate_"):
+        play_sfx("rotate")
+    elif action == "hard_drop":
+        play_sfx("drop")
+    else:
+        play_sfx("move")
+    return action
+
+
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameState,
                         cfg: GameConfig,
@@ -210,22 +255,9 @@ def handle_game_keydown(event: pygame.event.Event,
     """
     key = event.key
 
-    system_action = match_bound_action(
-        key,
-        SYSTEM_KEYS,
-        ("quit", "menu", "restart", "toggle_grid"),
-    )
-    if system_action == "quit":
-        return "quit"
-    if system_action == "menu":
-        play_sfx("menu_confirm")
-        return "menu"
-    if system_action == "restart":
-        play_sfx("menu_confirm")
-        return "restart"
-    if system_action == "toggle_grid":
-        play_sfx("menu_move")
-        return "toggle_grid"
+    system_decision = _system_decision_for_key(key)
+    if system_decision is not None:
+        return system_decision
 
     if not allow_gameplay:
         return "continue"
@@ -238,27 +270,7 @@ def handle_game_keydown(event: pygame.event.Event,
     if key in DISABLED_KEYS_2D:
         return "continue"
 
-    # Movement / rotation / drops
-    action = dispatch_bound_action(
-        key,
-        KEYS_2D,
-        {
-            "move_x_neg": lambda: state.try_move(-1, 0),
-            "move_x_pos": lambda: state.try_move(1, 0),
-            "rotate_xy_pos": lambda: state.try_rotate(+1),
-            "rotate_xy_neg": lambda: state.try_rotate(-1),
-            "hard_drop": state.hard_drop,
-            "soft_drop": lambda: state.try_move(0, 1),
-        },
-    )
-    if action is not None:
-        if action.startswith("rotate_"):
-            play_sfx("rotate")
-        elif action == "hard_drop":
-            play_sfx("drop")
-        else:
-            play_sfx("move")
-
+    _dispatch_2d_gameplay_action(state, key)
     return "continue"
 
 
@@ -302,6 +314,7 @@ class LoopContext2D:
     cfg: GameConfig
     state: GameState
     bot: PlayBotController = field(default_factory=PlayBotController)
+    rotation_anim: PieceRotationAnimator2D = field(default_factory=PieceRotationAnimator2D)
     gravity_accumulator: int = 0
     grid_mode: GridMode = GridMode.FULL
     clear_anim_levels: tuple[int, ...] = ()
@@ -342,6 +355,7 @@ class LoopContext2D:
         self.clear_anim_elapsed_ms = 0.0
         self.last_lines_cleared = self.state.lines_cleared
         self.bot.reset_runtime()
+        self.rotation_anim.reset()
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -418,6 +432,8 @@ def run_game_loop(screen: pygame.Surface,
             loop.clear_anim_elapsed_ms,
             clear_anim_duration_ms,
         )
+        loop.rotation_anim.observe(loop.state.current_piece, dt)
+        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
         # ----- Drawing -----
         draw_game_frame(
@@ -428,6 +444,7 @@ def run_game_loop(screen: pygame.Surface,
             grid_mode=loop.grid_mode,
             bot_lines=tuple(loop.bot.status_lines()),
             clear_effect=clear_effect,
+            active_piece_overlay=active_overlay,
         )
         pygame.display.flip()
 

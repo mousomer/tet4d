@@ -84,7 +84,7 @@ Speed scaling by dimension:
 
 - `OFF`: normal manual gameplay.
 - `ASSIST`: bot plans best landing and shows guidance stats; player still controls piece movement.
-- `AUTO`: bot plays continuously. It uses planned lateral/rotation moves plus **soft-drop only** (no hard-drop), and its action cadence matches the configured game speed level.
+- `AUTO`: bot plays continuously. It uses planned lateral/rotation moves, starts descent with soft drops, and may hard-drop after a configured soft-drop threshold (default `4`) to keep pace with game speed.
 - `STEP`: debug mode. Bot executes one action each time you press `F3`.
 
 Bot behavior details:

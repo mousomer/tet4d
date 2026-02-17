@@ -630,6 +630,73 @@ def _find_conflicts(groups: Mapping[str, Mapping[str, KeyTuple]],
     return conflicts
 
 
+def _camera_blocked_conflicts(
+    group: str,
+    conflicts: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    if group != "camera":
+        return []
+    return [
+        (conflict_group, conflict_action)
+        for conflict_group, conflict_action in conflicts
+        if conflict_group in {"game", "slice", "system"}
+    ]
+
+
+def _swap_conflicts(
+    groups: Mapping[str, Mapping[str, KeyTuple]],
+    binding_map: Mapping[str, KeyTuple],
+    action: str,
+    key: int,
+    conflicts: list[tuple[str, str]],
+) -> None:
+    first_group, first_action = conflicts[0]
+    first_map = groups[first_group]
+    old_keys = binding_map[action]
+    first_map[first_action] = old_keys
+    for extra_group, extra_action in conflicts[1:]:
+        extra_map = groups[extra_group]
+        extra_map[extra_action] = _remove_key_from_tuple(extra_map[extra_action], key)
+
+
+def _replace_conflicts(
+    groups: Mapping[str, Mapping[str, KeyTuple]],
+    key: int,
+    conflicts: list[tuple[str, str]],
+) -> None:
+    for conflict_group, conflict_action in conflicts:
+        conflict_map = groups[conflict_group]
+        conflict_map[conflict_action] = _remove_key_from_tuple(conflict_map[conflict_action], key)
+
+
+def _apply_rebind_conflicts(
+    groups: Mapping[str, Mapping[str, KeyTuple]],
+    binding_map: Mapping[str, KeyTuple],
+    action: str,
+    key: int,
+    conflicts: list[tuple[str, str]],
+    conflict_mode: str,
+) -> None:
+    if conflicts and conflict_mode == REBIND_CONFLICT_SWAP:
+        _swap_conflicts(groups, binding_map, action, key, conflicts)
+        return
+    _replace_conflicts(groups, key, conflicts)
+
+
+def _rebind_success_message(
+    *,
+    group: str,
+    action: str,
+    key_name: str,
+    conflict_mode: str,
+    conflicts: list[tuple[str, str]],
+) -> str:
+    if not conflicts:
+        return f"Rebound {group}.{action} -> {key_name}"
+    conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
+    return f"Rebound {group}.{action} -> {key_name} ({conflict_mode}: {conflict_refs})"
+
+
 def rebind_action_key(
     dimension: int,
     group: str,
@@ -650,40 +717,34 @@ def rebind_action_key(
 
     selected_mode = normalize_rebind_conflict_mode(conflict_mode)
     conflicts = _find_conflicts(groups, key, group, action)
-    if group == "camera":
-        blocked_conflicts = [
-            (conflict_group, conflict_action)
-            for conflict_group, conflict_action in conflicts
-            if conflict_group in {"game", "slice", "system"}
-        ]
-        if blocked_conflicts:
-            conflict_refs = ", ".join(f"{g}.{a}" for g, a in blocked_conflicts)
-            return False, f"Camera key cannot override {conflict_refs}"
+    blocked_conflicts = _camera_blocked_conflicts(group, conflicts)
+    if blocked_conflicts:
+        conflict_refs = ", ".join(f"{g}.{a}" for g, a in blocked_conflicts)
+        return False, f"Camera key cannot override {conflict_refs}"
     if conflicts and selected_mode == REBIND_CONFLICT_CANCEL:
         conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
         return False, f"Key already used by {conflict_refs}; conflict mode=cancel"
 
-    if conflicts and selected_mode == REBIND_CONFLICT_SWAP:
-        first_group, first_action = conflicts[0]
-        first_map = groups[first_group]
-        old_keys = binding_map[action]
-        first_map[first_action] = old_keys
-        for extra_group, extra_action in conflicts[1:]:
-            extra_map = groups[extra_group]
-            extra_map[extra_action] = _remove_key_from_tuple(extra_map[extra_action], key)
-    else:
-        for conflict_group, conflict_action in conflicts:
-            conflict_map = groups[conflict_group]
-            conflict_map[conflict_action] = _remove_key_from_tuple(conflict_map[conflict_action], key)
+    _apply_rebind_conflicts(
+        groups,
+        binding_map,
+        action,
+        key,
+        conflicts,
+        selected_mode,
+    )
     binding_map[action] = (key,)
 
     _sanitize_runtime_bindings()
     _rebuild_control_lines()
     key_name = _display_key_name(key)
-    if conflicts:
-        conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
-        return True, f"Rebound {group}.{action} -> {key_name} ({selected_mode}: {conflict_refs})"
-    return True, f"Rebound {group}.{action} -> {key_name}"
+    return True, _rebind_success_message(
+        group=group,
+        action=action,
+        key_name=key_name,
+        conflict_mode=selected_mode,
+        conflicts=conflicts,
+    )
 
 
 def keybinding_file_path(dimension: int) -> Path:

@@ -100,6 +100,9 @@ Slice semantics:
 4. Cleared layers should animate with a temporary ghost effect.
 5. Default camera should fit the board view.
 6. Pitch turns must be 90-degree relative view turns that keep an oblique 3D perception (not flat 2D collapse).
+7. Piece rotation uses a soft eased visual tween (`120-180 ms` target) instead of instant snap.
+8. Rotation tween is render-only; rotation legality and gameplay state changes still occur atomically in rules code.
+9. Interruption handling: repeated rotate input while tweening must retarget cleanly (no flicker/back-jump).
 
 ## 7. Scoring
 
