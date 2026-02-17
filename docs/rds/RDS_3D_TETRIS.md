@@ -17,6 +17,7 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 1. Deliver a readable, controllable 3D board with deterministic gameplay.
 2. Keep gameplay actions separate from camera actions.
 3. Keep all three projection modes usable in one session.
+4. Implement 3D automatic playbot logic as a thin adapter over shared ND playbot core (see `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`).
 
 ## 3. Board and Rules
 
@@ -119,6 +120,7 @@ Shared scoring table from general RDS:
 2. Keep camera input handling separate from gameplay key handling.
 3. Keep draw-time effects independent from rule state mutations.
 4. Reuse helper pipelines for collecting faces, sorting, and drawing.
+5. Reuse shared ND playbot candidate/search/eval modules; keep 3D bot-specific code to profile/config only.
 
 ## 9. Testing Instructions (3D)
 

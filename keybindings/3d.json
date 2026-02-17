@@ -5,19 +5,25 @@
         "p"
       ],
       "pitch_neg": [
-        "k"
+        "o"
       ],
       "pitch_pos": [
-        "i"
+        "u"
       ],
       "reset": [
         "0"
+      ],
+      "yaw_fine_neg": [
+        "h"
+      ],
+      "yaw_fine_pos": [
+        "l"
       ],
       "yaw_neg": [
         "j"
       ],
       "yaw_pos": [
-        "l"
+        "k"
       ],
       "zoom_in": [
         "="

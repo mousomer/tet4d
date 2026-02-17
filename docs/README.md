@@ -16,6 +16,7 @@ This repository documentation is unified into exactly three sections.
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_TETRIS_GENERAL.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_KEYBINDINGS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`
+- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_2D_TETRIS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_3D_TETRIS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_4D_TETRIS.md`

@@ -201,20 +201,45 @@ def _draw_lattice_axis_lines(
     dims: Cell3,
     project_raw: ProjectRawFn,
     color: tuple[int, int, int],
+    x_marks: set[int] | None = None,
+    y_marks: set[int] | None = None,
+    z_marks: set[int] | None = None,
 ) -> None:
-    axis_specs = (
-        ((dims[0] + 1, dims[2] + 1), lambda a, b: ((a - 0.5, -0.5, b - 0.5), (a - 0.5, dims[1] - 0.5, b - 0.5))),
-        ((dims[1] + 1, dims[2] + 1), lambda a, b: ((-0.5, a - 0.5, b - 0.5), (dims[0] - 0.5, a - 0.5, b - 0.5))),
-        ((dims[0] + 1, dims[1] + 1), lambda a, b: ((a - 0.5, b - 0.5, -0.5), (a - 0.5, b - 0.5, dims[2] - 0.5))),
-    )
-    for (size_a, size_b), endpoints in axis_specs:
-        for axis_a in range(size_a):
-            for axis_b in range(size_b):
-                raw0, raw1 = endpoints(axis_a, axis_b)
-                p0 = project_raw(raw0)
-                p1 = project_raw(raw1)
-                if p0 is not None and p1 is not None:
-                    pygame.draw.line(surface, color, p0, p1, 1)
+    # Lines parallel to Y axis at (x, z) boundaries.
+    for x in range(dims[0] + 1):
+        if x_marks is not None and x not in x_marks:
+            continue
+        for z in range(dims[2] + 1):
+            if z_marks is not None and z not in z_marks:
+                continue
+            p0 = project_raw((x - 0.5, -0.5, z - 0.5))
+            p1 = project_raw((x - 0.5, dims[1] - 0.5, z - 0.5))
+            if p0 is not None and p1 is not None:
+                pygame.draw.line(surface, color, p0, p1, 1)
+
+    # Lines parallel to X axis at (y, z) boundaries.
+    for y in range(dims[1] + 1):
+        if y_marks is not None and y not in y_marks:
+            continue
+        for z in range(dims[2] + 1):
+            if z_marks is not None and z not in z_marks:
+                continue
+            p0 = project_raw((-0.5, y - 0.5, z - 0.5))
+            p1 = project_raw((dims[0] - 0.5, y - 0.5, z - 0.5))
+            if p0 is not None and p1 is not None:
+                pygame.draw.line(surface, color, p0, p1, 1)
+
+    # Lines parallel to Z axis at (x, y) boundaries.
+    for x in range(dims[0] + 1):
+        if x_marks is not None and x not in x_marks:
+            continue
+        for y in range(dims[1] + 1):
+            if y_marks is not None and y not in y_marks:
+                continue
+            p0 = project_raw((x - 0.5, y - 0.5, -0.5))
+            p1 = project_raw((x - 0.5, y - 0.5, dims[2] - 0.5))
+            if p0 is not None and p1 is not None:
+                pygame.draw.line(surface, color, p0, p1, 1)
 
 
 def _draw_lattice_frame(
@@ -242,6 +267,42 @@ def draw_projected_lattice(
 ) -> None:
     _draw_lattice_axis_lines(surface, dims, project_raw, inner_color)
     _draw_lattice_frame(surface, dims, project_raw, frame_color, frame_width)
+
+
+def draw_projected_helper_lattice(
+    surface: pygame.Surface,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    x_marks: set[int],
+    y_marks: set[int],
+    z_marks: set[int],
+    inner_color: tuple[int, int, int],
+    frame_color: tuple[int, int, int],
+    frame_width: int = 2,
+) -> None:
+    def _clip_marks(marks: set[int], max_value: int) -> set[int]:
+        return {value for value in marks if 0 <= value <= max_value}
+
+    _draw_lattice_axis_lines(
+        surface,
+        dims,
+        project_raw,
+        inner_color,
+        x_marks=_clip_marks(x_marks, dims[0]),
+        y_marks=_clip_marks(y_marks, dims[1]),
+        z_marks=_clip_marks(z_marks, dims[2]),
+    )
+    _draw_lattice_frame(surface, dims, project_raw, frame_color, frame_width)
+
+
+def draw_projected_box_edges(
+    surface: pygame.Surface,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    edge_color: tuple[int, int, int] = (96, 118, 164),
+    edge_width: int = 2,
+) -> None:
+    _draw_lattice_frame(surface, dims, project_raw, edge_color, edge_width)
 
 
 def draw_projected_box_shadow(

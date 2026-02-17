@@ -7,6 +7,8 @@ import pygame
 
 from .game2d import GameState, GameConfig
 from .keybindings import CONTROL_LINES_2D
+from .speed_curve import gravity_interval_ms
+from .view_modes import GridMode, grid_mode_label
 
 
 # ---------- Visual config & colors ----------
@@ -422,6 +424,43 @@ def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 
 
+def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> None:
+    pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
+
+
+def _helper_grid_marks_2d(state: GameState, width: int, height: int) -> tuple[set[int], set[int]]:
+    if state.current_piece is None:
+        return set(), set()
+
+    x_marks: set[int] = set()
+    y_marks: set[int] = set()
+    for x, y in state.current_piece.cells():
+        if 0 <= x < width and 0 <= y < height:
+            x_marks.add(x)
+            x_marks.add(x + 1)
+            y_marks.add(y)
+            y_marks.add(y + 1)
+    return x_marks, y_marks
+
+
+def _draw_helper_grid(surface: pygame.Surface,
+                      board_rect: pygame.Rect,
+                      width_cells: int,
+                      height_cells: int,
+                      x_marks: set[int],
+                      y_marks: set[int]) -> None:
+    for x in sorted(x_marks):
+        if not (0 <= x <= width_cells):
+            continue
+        x_px = board_rect.x + x * CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (x_px, board_rect.y), (x_px, board_rect.bottom))
+    for y in sorted(y_marks):
+        if not (0 <= y <= height_cells):
+            continue
+        y_px = board_rect.y + y * CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (board_rect.x, y_px), (board_rect.right, y_px))
+
+
 def _draw_clear_effect(surface: pygame.Surface,
                        board_rect: pygame.Rect,
                        width_cells: int,
@@ -453,7 +492,7 @@ def _draw_clear_effect(surface: pygame.Surface,
 
 def draw_board(surface: pygame.Surface, state: GameState,
                board_offset: Tuple[int, int],
-               show_grid: bool = True,
+               grid_mode: GridMode = GridMode.FULL,
                clear_effect: Optional[ClearEffect2D] = None) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
@@ -462,22 +501,28 @@ def draw_board(surface: pygame.Surface, state: GameState,
     # Board background
     board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
-    if not show_grid:
+    if grid_mode in (GridMode.OFF, GridMode.SHADOW, GridMode.HELPER):
         _draw_board_shadow(surface, board_rect)
+    elif grid_mode == GridMode.EDGE:
+        _draw_board_edges_only(surface, board_rect)
 
     # Grid
-    if show_grid:
+    if grid_mode == GridMode.FULL:
         for x in range(w + 1):
             x_px = ox + x * CELL_SIZE
             pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
         for y in range(h + 1):
             y_px = oy + y * CELL_SIZE
             pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
+    elif grid_mode == GridMode.HELPER:
+        x_marks, y_marks = _helper_grid_marks_2d(state, w, h)
+        _draw_helper_grid(surface, board_rect, w, h, x_marks, y_marks)
 
     # Locked cells
+    edge_outlines = grid_mode == GridMode.EDGE
     for (x, y), cell_id in state.board.cells.items():
         if 0 <= x < w and 0 <= y < h:
-            _draw_cell(surface, x, y, cell_id, board_offset)
+            _draw_cell(surface, x, y, cell_id, board_offset, outline=edge_outlines)
 
     # Active piece
     if state.current_piece is not None:
@@ -508,7 +553,8 @@ def _draw_side_panel_text(surface: pygame.Surface,
                           state: GameState,
                           panel_offset: Tuple[int, int],
                           fonts: GfxFonts,
-                          show_grid: bool) -> int:
+                          grid_mode: GridMode,
+                          bot_lines: Sequence[str] = ()) -> int:
     """Draw the textual part of the side panel. Returns the current y after text."""
     px, py = panel_offset
     gravity_ms = gravity_interval_ms_from_config(state.config)
@@ -521,8 +567,11 @@ def _draw_side_panel_text(surface: pygame.Surface,
         f"Lines: {state.lines_cleared}",
         f"Speed level: {state.config.speed_level}",
         f"Fall: {rows_per_sec:.2f} rows/s",
-        f"Grid: {'ON' if show_grid else 'OFF'}",
+        f"Score mod: x{state.score_multiplier:.2f}",
+        f"Grid: {grid_mode_label(grid_mode)}",
         "",
+        *bot_lines,
+        *([""] if bot_lines else []),
         *CONTROL_LINES_2D,
     ]
 
@@ -596,9 +645,10 @@ def draw_side_panel(surface: pygame.Surface,
                     state: GameState,
                     panel_offset: Tuple[int, int],
                     fonts: GfxFonts,
-                    show_grid: bool = True) -> None:
+                    grid_mode: GridMode = GridMode.FULL,
+                    bot_lines: Sequence[str] = ()) -> None:
     """Top-level side panel draw."""
-    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, show_grid)
+    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode, bot_lines)
     y_after_dpad = _draw_side_panel_dpad(surface, y_after_text, panel_offset, fonts)
 
     # Game over message below D-pad (if needed)
@@ -613,22 +663,15 @@ def draw_side_panel(surface: pygame.Surface,
 
 
 def gravity_interval_ms_from_config(cfg: GameConfig) -> int:
-    """
-    Map speed_level to a gravity interval in milliseconds.
-    speed_level = 1  -> slow  (1000 ms)
-    speed_level = 10 -> fast  (~100 ms)
-    """
-    base_ms = 1000
-    level = max(1, min(10, cfg.speed_level))
-    interval = base_ms // level
-    return max(80, interval)
+    return gravity_interval_ms(cfg.speed_level, dimension=2)
 
 
 def draw_game_frame(screen: pygame.Surface,
                     cfg: GameConfig,
                     state: GameState,
                     fonts: GfxFonts,
-                    show_grid: bool = True,
+                    grid_mode: GridMode = GridMode.FULL,
+                    bot_lines: Sequence[str] = (),
                     clear_effect: Optional[ClearEffect2D] = None) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
@@ -637,7 +680,7 @@ def draw_game_frame(screen: pygame.Surface,
         screen,
         state,
         board_offset,
-        show_grid=show_grid,
+        grid_mode=grid_mode,
         clear_effect=clear_effect,
     )
-    draw_side_panel(screen, state, panel_offset, fonts, show_grid=show_grid)
+    draw_side_panel(screen, state, panel_offset, fonts, grid_mode=grid_mode, bot_lines=bot_lines)

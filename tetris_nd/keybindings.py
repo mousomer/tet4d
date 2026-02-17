@@ -227,20 +227,24 @@ ROTATIONS_4D: KeyBindingMap = {
 
 
 _DEFAULT_CAMERA_KEYS_3D: KeyBindingMap = {
+    "yaw_fine_neg": (pygame.K_h,),
     "yaw_neg": (pygame.K_j,),
-    "yaw_pos": (pygame.K_l,),
-    "pitch_pos": (pygame.K_i,),
-    "pitch_neg": (pygame.K_k,),
+    "yaw_pos": (pygame.K_k,),
+    "yaw_fine_pos": (pygame.K_l,),
+    "pitch_pos": (pygame.K_u,),
+    "pitch_neg": (pygame.K_o,),
     "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
     "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
     "reset": (pygame.K_0,),
     "cycle_projection": (pygame.K_p,),
 }
 _DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
+    "yaw_fine_neg": (pygame.K_h,),
     "yaw_neg": (pygame.K_j,),
-    "yaw_pos": (pygame.K_l,),
-    "pitch_pos": (pygame.K_i,),
-    "pitch_neg": (pygame.K_k,),
+    "yaw_pos": (pygame.K_k,),
+    "yaw_fine_pos": (pygame.K_l,),
+    "pitch_pos": (pygame.K_u,),
+    "pitch_neg": (pygame.K_o,),
     "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
     "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
     "reset": (pygame.K_BACKSPACE,),
@@ -434,7 +438,7 @@ def _rebuild_control_lines() -> None:
             ("action", KEYS_2D, "soft_drop", "soft drop"),
             ("action", KEYS_2D, "hard_drop", "hard drop"),
             ("sep",),
-            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
             ("action", SYSTEM_KEYS, "menu", "menu"),
             ("action", SYSTEM_KEYS, "quit", "quit"),
             ("action", SYSTEM_KEYS, "restart", "restart"),
@@ -452,14 +456,14 @@ def _rebuild_control_lines() -> None:
     )
     CONTROL_LINES_3D_GAME[:] = _build_control_section(
         "Game:",
-        (*common_3d_specs, ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid")),
+        (*common_3d_specs, ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode")),
     )
     CONTROL_LINES_ND_3D[:] = _build_control_section(
         "Controls:",
         (
             *common_3d_specs,
             ("pair", SLICE_KEYS_3D, "slice_z_neg", "slice_z_pos", "slice z"),
-            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
             ("action", SYSTEM_KEYS, "restart", "restart"),
             ("action", SYSTEM_KEYS, "menu", "menu"),
             ("action", SYSTEM_KEYS, "quit", "quit"),
@@ -482,7 +486,7 @@ def _rebuild_control_lines() -> None:
             ("pair", KEYS_4D, "rotate_zw_pos", "rotate_zw_neg", "rotate z-w"),
             ("pair", SLICE_KEYS_4D, "slice_z_neg", "slice_z_pos", "slice z"),
             ("pair", SLICE_KEYS_4D, "slice_w_neg", "slice_w_pos", "slice w"),
-            ("action", SYSTEM_KEYS, "toggle_grid", "toggle grid"),
+            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
             ("action", SYSTEM_KEYS, "restart", "restart"),
             ("action", SYSTEM_KEYS, "menu", "menu"),
             ("action", SYSTEM_KEYS, "quit", "quit"),
@@ -492,6 +496,7 @@ def _rebuild_control_lines() -> None:
     CONTROL_LINES_3D_CAMERA[:] = _build_control_section(
         "Camera:",
         (
+            ("pair", CAMERA_KEYS_3D, "yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
             ("pair", CAMERA_KEYS_3D, "yaw_neg", "yaw_pos", "yaw +/-90"),
             ("pair", CAMERA_KEYS_3D, "pitch_neg", "pitch_pos", "pitch +/-90"),
             ("pair", CAMERA_KEYS_3D, "zoom_out", "zoom_in", "zoom"),
@@ -503,6 +508,7 @@ def _rebuild_control_lines() -> None:
     CONTROL_LINES_4D_VIEW[:] = _build_control_section(
         "View:",
         (
+            ("pair", CAMERA_KEYS_4D, "yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
             ("pair", CAMERA_KEYS_4D, "yaw_neg", "yaw_pos", "yaw +/-90"),
             ("pair", CAMERA_KEYS_4D, "pitch_neg", "pitch_pos", "pitch +/-90"),
             ("pair", CAMERA_KEYS_4D, "zoom_out", "zoom_in", "zoom"),

@@ -17,6 +17,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 1. Provide a playable 4D ruleset with practical visualization.
 2. Render 4D state as multiple 3D `w`-layer boards.
 3. Keep controls separated into gameplay, slicing, and view/camera groups.
+4. Implement 4D automatic playbot logic as a configuration layer over shared ND playbot core (see `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`).
 
 ## 3. Board and Rules
 
@@ -96,6 +97,7 @@ Slicing definition and purpose:
 1. Slicing is a view filter that helps inspect specific `z`/`w` layers in dense 4D scenes.
 2. Slicing is not a prerequisite for rotation; gameplay rotations must work regardless of active slice.
 3. Slicing exists to improve readability and debugging, not to alter physics.
+4. Plain-language summary: slice = "which layer you currently look at", not "which cells exist for collisions".
 
 Viewer-consistent translation requirement:
 1. Movement intents are interpreted in viewer space for `x/z` translation.
@@ -137,6 +139,7 @@ Shared scoring table from general RDS:
 2. Keep 4D key routing explicit (game vs slice vs view).
 3. Avoid copy/paste drift between 3D and 4D rendering helpers.
 4. Keep per-layer draw code modular (`grid/shadow`, `cells`, `clear effect`).
+5. Keep 4D bot implementation thin; do not duplicate ND planner/search/candidate code.
 
 ## 9. Testing Instructions (4D)
 
