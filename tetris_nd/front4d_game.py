@@ -12,6 +12,8 @@ from .app_runtime import (
     open_display,
 )
 from .audio import play_sfx
+from .assist_scoring import combined_score_multiplier
+from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
 from .display import DisplaySettings
 from .frontend_nd import (
     build_config,
@@ -33,13 +35,17 @@ from .keybindings import (
     CONTROL_LINES_4D_VIEW,
     CONTROL_LINES_ND_4D,
 )
+from .playbot import PlayBotController
+from .playbot.types import BotMode, bot_mode_from_index
 from .projection3d import (
     Face,
     Cell3,
     Point2,
     build_cube_faces,
     color_for_cell,
+    draw_projected_box_edges,
     draw_projected_box_shadow,
+    draw_projected_helper_lattice,
     draw_gradient_background,
     draw_projected_lattice,
     fit_orthographic_zoom,
@@ -49,6 +55,7 @@ from .projection3d import (
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
 from .view_controls import YawPitchTurnAnimator
+from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
 
 
 MARGIN = 16
@@ -183,15 +190,66 @@ def _layer_cells(state: GameStateND, w_layer: int) -> list[tuple[Cell3, int, boo
     return cells
 
 
+def _helper_grid_marks_for_layer(state: GameStateND, w_layer: int) -> tuple[set[int], set[int], set[int]]:
+    if state.current_piece is None:
+        return set(), set(), set()
+
+    dims = state.config.dims
+    x_marks: set[int] = set()
+    y_marks: set[int] = set()
+    z_marks: set[int] = set()
+    for x, y, z, w in state.current_piece.cells():
+        if w != w_layer:
+            continue
+        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
+            x_marks.add(x)
+            x_marks.add(x + 1)
+            y_marks.add(y)
+            y_marks.add(y + 1)
+            z_marks.add(z)
+            z_marks.add(z + 1)
+    return x_marks, y_marks, z_marks
+
+
 def _draw_layer_grid_or_shadow(surface: pygame.Surface,
                                dims3: Cell3,
                                view: LayerView3D,
                                draw_rect: pygame.Rect,
                                zoom: float,
-                               show_grid: bool) -> None:
+                               grid_mode: GridMode,
+                               helper_marks: tuple[set[int], set[int], set[int]] | None = None) -> None:
     center_px = (draw_rect.centerx, draw_rect.centery)
-    if show_grid:
+    if grid_mode == GridMode.FULL:
         _draw_board_grid(surface, dims3, view, draw_rect, zoom)
+        return
+    if grid_mode == GridMode.EDGE:
+        draw_projected_box_edges(
+            surface,
+            dims3,
+            lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+            edge_color=GRID_COLOR,
+            edge_width=2,
+        )
+        return
+    if grid_mode == GridMode.HELPER:
+        draw_projected_box_shadow(
+            surface,
+            dims3,
+            project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        )
+        x_marks, y_marks, z_marks = helper_marks if helper_marks is not None else (set(), set(), set())
+        draw_projected_helper_lattice(
+            surface,
+            dims3,
+            lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+            x_marks=x_marks,
+            y_marks=y_marks,
+            z_marks=z_marks,
+            inner_color=(52, 64, 95),
+            frame_color=GRID_COLOR,
+            frame_width=2,
+        )
         return
     draw_projected_box_shadow(
         surface,
@@ -280,7 +338,7 @@ def _draw_layer_board(surface: pygame.Surface,
                       w_layer: int,
                       active_w: int,
                       fonts: GfxFonts,
-                      show_grid: bool,
+                      grid_mode: GridMode,
                       clear_anim: Optional[ClearAnimation4D] = None) -> None:
     border = LAYER_ACTIVE if w_layer == active_w else LAYER_FRAME
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
@@ -293,7 +351,8 @@ def _draw_layer_board(surface: pygame.Surface,
     draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
     dims3 = (state.config.dims[0], state.config.dims[1], state.config.dims[2])
     zoom = _fit_zoom(dims3, view, draw_rect)
-    _draw_layer_grid_or_shadow(surface, dims3, view, draw_rect, zoom, show_grid)
+    helper_marks = _helper_grid_marks_for_layer(state, w_layer) if grid_mode == GridMode.HELPER else None
+    _draw_layer_grid_or_shadow(surface, dims3, view, draw_rect, zoom, grid_mode, helper_marks)
 
     center_px = (draw_rect.centerx, draw_rect.centery)
     faces = _layer_faces(state, w_layer, view, center_px, dims3, zoom)
@@ -331,7 +390,8 @@ def _draw_side_panel(surface: pygame.Surface,
                      slice_state: SliceState,
                      panel_rect: pygame.Rect,
                      fonts: GfxFonts,
-                     show_grid: bool) -> None:
+                     grid_mode: GridMode,
+                     bot_lines: tuple[str, ...] = ()) -> None:
     panel = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 140), panel.get_rect(), border_radius=12)
     surface.blit(panel, panel_rect.topleft)
@@ -352,15 +412,21 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Score: {state.score}",
         f"Cleared: {state.lines_cleared}",
         f"Speed: {state.config.speed_level}",
+        f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
-        f"Grid: {'ON' if show_grid else 'OFF'}",
+        f"Score mod: x{state.score_multiplier:.2f}",
+        f"Grid: {grid_mode_label(grid_mode)}",
         "",
         f"Active z slice: {z_slice}/{max_z}",
         f"Active w layer: {w_slice}/{max_w}",
         "",
+        *bot_lines,
+        *([""] if bot_lines else []),
         *CONTROL_LINES_ND_4D,
         "",
         *CONTROL_LINES_4D_VIEW,
+        " Mouse: RMB drag orbit",
+        " Wheel: zoom",
     ]
 
     y = panel_rect.y + 14
@@ -379,7 +445,8 @@ def draw_game_frame(screen: pygame.Surface,
                     slice_state: SliceState,
                     view: LayerView3D,
                     fonts: GfxFonts,
-                    show_grid: bool,
+                    grid_mode: GridMode,
+                    bot_lines: tuple[str, ...] = (),
                     clear_anim: Optional[ClearAnimation4D] = None) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
@@ -409,11 +476,11 @@ def draw_game_frame(screen: pygame.Surface,
             w_layer,
             active_w,
             fonts,
-            show_grid=show_grid,
+            grid_mode=grid_mode,
             clear_anim=clear_anim,
         )
 
-    _draw_side_panel(screen, state, slice_state, panel_rect, fonts, show_grid=show_grid)
+    _draw_side_panel(screen, state, slice_state, panel_rect, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
 
 
 def _reset_view(view: LayerView3D) -> None:
@@ -429,8 +496,10 @@ def handle_view_key(key: int, view: LayerView3D) -> bool:
             key,
             CAMERA_KEYS_4D,
             {
+                "yaw_fine_neg": lambda: view.start_yaw_turn(-15.0),
                 "yaw_neg": lambda: view.start_yaw_turn(-90.0),
                 "yaw_pos": lambda: view.start_yaw_turn(90.0),
+                "yaw_fine_pos": lambda: view.start_yaw_turn(15.0),
                 "pitch_pos": lambda: view.start_pitch_turn(90.0),
                 "pitch_neg": lambda: view.start_pitch_turn(-90.0),
                 "zoom_in": lambda: setattr(view, "zoom_scale", min(2.6, view.zoom_scale * 1.08)),
@@ -468,25 +537,38 @@ class LoopContext4D:
     state: GameStateND
     slice_state: SliceState
     view: LayerView3D
-    show_grid: bool = True
+    mouse_orbit: MouseOrbitState
+    bot: PlayBotController
+    grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation4D] = None
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
     was_game_over: bool = False
 
     @classmethod
-    def create(cls, cfg: GameConfigND) -> "LoopContext4D":
+    def create(cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext4D":
         state = create_initial_state(cfg)
         return cls(
             cfg=cfg,
             state=state,
             slice_state=create_initial_slice_state(cfg),
             view=LayerView3D(),
+            mouse_orbit=MouseOrbitState(),
+            bot=PlayBotController(mode=bot_mode),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if event.key == pygame.K_F2:
+            self.bot.cycle_mode()
+            self.refresh_score_multiplier()
+            play_sfx("menu_move")
+            return "continue"
+        if event.key == pygame.K_F3:
+            self.bot.request_step()
+            play_sfx("menu_move")
+            return "continue"
         return route_nd_keydown(
             event.key,
             self.state,
@@ -494,6 +576,7 @@ class LoopContext4D:
             yaw_deg_for_view_movement=self.view.yaw_deg,
             view_key_handler=lambda key: handle_view_key(key, self.view),
             sfx_handler=play_sfx,
+            allow_gameplay=self.bot.user_gameplay_enabled,
         )
 
     def on_restart(self) -> None:
@@ -503,35 +586,83 @@ class LoopContext4D:
         self.clear_anim = None
         self.last_lines_cleared = self.state.lines_cleared
         self.was_game_over = self.state.game_over
+        self.mouse_orbit.reset()
+        self.bot.reset_runtime()
+        self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
-        self.show_grid = not self.show_grid
+        self.grid_mode = cycle_grid_mode(self.grid_mode)
+        self.refresh_score_multiplier()
+
+    def refresh_score_multiplier(self) -> None:
+        self.state.score_multiplier = combined_score_multiplier(
+            bot_mode=self.bot.mode,
+            grid_mode=self.grid_mode,
+            speed_level=self.cfg.speed_level,
+        )
+
+    def pointer_event_handler(self, event: pygame.event.Event) -> None:
+        wheel = mouse_wheel_delta(event)
+        if wheel != 0:
+            self.view.stop_animation()
+            if wheel > 0:
+                self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08 ** wheel))
+            else:
+                self.view.zoom_scale = max(0.45, self.view.zoom_scale / (1.08 ** abs(wheel)))
+            return
+
+        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+            event,
+            self.mouse_orbit,
+            yaw_deg=self.view.yaw_deg,
+            pitch_deg=self.view.pitch_deg,
+        )
+        if not changed:
+            return
+        self.view.stop_animation()
+        self.view.yaw_deg = yaw_deg
+        self.view.pitch_deg = pitch_deg
 
 
-def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) -> bool:
-    loop = LoopContext4D.create(cfg)
+def run_game_loop(
+    screen: pygame.Surface,
+    cfg: GameConfigND,
+    fonts: GfxFonts,
+    *,
+    bot_mode: BotMode = BotMode.OFF,
+    bot_speed_level: int = 7,
+) -> bool:
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
+    loop = LoopContext4D.create(cfg, bot_mode=bot_mode)
+    loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.refresh_score_multiplier()
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60)
         loop.gravity_accumulator += dt
+        loop.refresh_score_multiplier()
 
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
+            event_handler=loop.pointer_event_handler,
         )
         if decision == "quit":
             return False
         if decision == "menu":
             return True
 
-        loop.gravity_accumulator = advance_gravity(
-            loop.state,
-            loop.gravity_accumulator,
-            gravity_interval_ms,
-        )
+        loop.bot.tick_nd(loop.state, dt)
+        if loop.bot.controls_descent:
+            loop.gravity_accumulator = 0
+        else:
+            loop.gravity_accumulator = advance_gravity(
+                loop.state,
+                loop.gravity_accumulator,
+                gravity_interval_ms,
+            )
 
         new_clear_anim, loop.last_lines_cleared = _spawn_clear_animation_if_needed(
             loop.state,
@@ -554,7 +685,8 @@ def run_game_loop(screen: pygame.Surface, cfg: GameConfigND, fonts: GfxFonts) ->
             loop.slice_state,
             loop.view,
             fonts,
-            show_grid=loop.show_grid,
+            grid_mode=loop.grid_mode,
+            bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
         )
         pygame.display.flip()
@@ -599,7 +731,13 @@ def run() -> None:
             preferred_windowed_size=preferred_size,
         )
 
-        back_to_menu = run_game_loop(game_screen, cfg, fonts)
+        back_to_menu = run_game_loop(
+            game_screen,
+            cfg,
+            fonts,
+            bot_mode=bot_mode_from_index(settings.bot_mode_index),
+            bot_speed_level=settings.bot_speed_level,
+        )
         if not back_to_menu:
             running = False
             continue

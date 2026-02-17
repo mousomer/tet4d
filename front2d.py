@@ -13,7 +13,9 @@ from tetris_nd.app_runtime import (
     open_display,
 )
 from tetris_nd.audio import play_sfx
+from tetris_nd.assist_scoring import combined_score_multiplier
 from tetris_nd.board import BoardND
+from tetris_nd.challenge_mode import apply_challenge_prefill_2d
 from tetris_nd.display import DisplaySettings
 from tetris_nd.game2d import GameConfig, GameState, Action
 from tetris_nd.game_loop_common import process_game_events
@@ -45,7 +47,15 @@ from tetris_nd.menu_controls import (
 from tetris_nd.menu_settings_state import (
     load_menu_settings,
 )
+from tetris_nd.playbot import (
+    BOT_MODE_OPTIONS,
+    PlayBotController,
+    bot_mode_label,
+    run_dry_run_2d,
+)
+from tetris_nd.playbot.types import BotMode, bot_mode_from_index
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tetris_nd.view_modes import GridMode, cycle_grid_mode
 
 DEFAULT_GAME_SEED = 1337
 
@@ -57,6 +67,9 @@ class GameSettings:
     width: int = 10
     height: int = 20
     piece_set_index: int = 0
+    bot_mode_index: int = 0
+    bot_speed_level: int = 7
+    challenge_layers: int = 0
     speed_level: int = 1  # 1..10, mapped to gravity interval
 
 
@@ -73,12 +86,16 @@ class MenuState:
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
     rebind_conflict_mode: str = "replace"
+    run_dry_run: bool = False
 
 
 _MENU_FIELDS: list[FieldSpec] = [
     ("Board width", "width", 6, 16),
     ("Board height", "height", 12, 30),
     ("Piece set", "piece_set_index", 0, len(PIECE_SET_2D_OPTIONS) - 1),
+    ("Playbot mode", "bot_mode_index", 0, len(BOT_MODE_OPTIONS) - 1),
+    ("Bot speed", "bot_speed_level", 1, 10),
+    ("Challenge layers", "challenge_layers", 0, 20),
     ("Speed level", "speed_level", 1, 10),
 ]
 
@@ -91,9 +108,26 @@ def _piece_set_index_to_id(index: int) -> str:
 def _menu_value_formatter(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         return piece_set_2d_label(_piece_set_index_to_id(int(value)))
+    if attr_name == "bot_mode_index":
+        return bot_mode_label(bot_mode_from_index(int(value)))
+    if attr_name == "bot_speed_level":
+        return f"{value}   (1 = slow bot, 10 = fast bot)"
+    if attr_name == "challenge_layers":
+        return str(value)
     if attr_name == "speed_level":
         return f"{value}   (1 = slow, 10 = fast)"
     return str(value)
+
+
+def _config_from_settings(settings: GameSettings) -> GameConfig:
+    return GameConfig(
+        width=settings.width,
+        height=settings.height,
+        gravity_axis=1,
+        speed_level=settings.speed_level,
+        piece_set=_piece_set_index_to_id(settings.piece_set_index),
+        challenge_layers=settings.challenge_layers,
+    )
 
 
 # ---------- Menu loop ----------
@@ -115,6 +149,10 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, 2)
         apply_menu_actions(state, actions, _MENU_FIELDS, 2)
+        if state.run_dry_run:
+            report = run_dry_run_2d(_config_from_settings(state.settings))
+            state.bindings_status = report.reason
+            state.bindings_status_error = not report.passed
 
         rebind_target = "-"
         if state.rebind_targets:
@@ -129,6 +167,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             extra_hint_lines=(
                 f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
                 "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+                "F7 dry-run verify (bot, no graphics)",
                 (
                     f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
                     f"Tab/` change target   C conflict={state.rebind_conflict_mode}"
@@ -150,12 +189,16 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
 
 def create_initial_state(cfg: GameConfig) -> GameState:
     board = BoardND((cfg.width, cfg.height))
-    return GameState(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    state = GameState(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
+    return state
 
 
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameState,
-                        cfg: GameConfig) -> Optional[str]:
+                        cfg: GameConfig,
+                        *,
+                        allow_gameplay: bool = True) -> Optional[str]:
     """
     Handle a single KEYDOWN event during the game.
     Returns:
@@ -183,6 +226,9 @@ def handle_game_keydown(event: pygame.event.Event,
     if system_action == "toggle_grid":
         play_sfx("menu_move")
         return "toggle_grid"
+
+    if not allow_gameplay:
+        return "continue"
 
     if state.game_over:
         # Don't react to movement keys when game over
@@ -255,19 +301,39 @@ def _clear_effect(levels: tuple[int, ...],
 class LoopContext2D:
     cfg: GameConfig
     state: GameState
+    bot: PlayBotController = field(default_factory=PlayBotController)
     gravity_accumulator: int = 0
-    show_grid: bool = True
+    grid_mode: GridMode = GridMode.FULL
     clear_anim_levels: tuple[int, ...] = ()
     clear_anim_elapsed_ms: float = 0.0
     last_lines_cleared: int = 0
 
     @classmethod
-    def create(cls, cfg: GameConfig) -> "LoopContext2D":
+    def create(cls, cfg: GameConfig, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext2D":
         state = create_initial_state(cfg)
-        return cls(cfg=cfg, state=state, last_lines_cleared=state.lines_cleared)
+        return cls(
+            cfg=cfg,
+            state=state,
+            bot=PlayBotController(mode=bot_mode),
+            last_lines_cleared=state.lines_cleared,
+        )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
-        return handle_game_keydown(event, self.state, self.cfg)
+        if event.key == pygame.K_F2:
+            self.bot.cycle_mode()
+            self.refresh_score_multiplier()
+            play_sfx("menu_move")
+            return "continue"
+        if event.key == pygame.K_F3:
+            self.bot.request_step()
+            play_sfx("menu_move")
+            return "continue"
+        return handle_game_keydown(
+            event,
+            self.state,
+            self.cfg,
+            allow_gameplay=self.bot.user_gameplay_enabled,
+        )
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
@@ -275,22 +341,37 @@ class LoopContext2D:
         self.clear_anim_levels = ()
         self.clear_anim_elapsed_ms = 0.0
         self.last_lines_cleared = self.state.lines_cleared
+        self.bot.reset_runtime()
+        self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
-        self.show_grid = not self.show_grid
+        self.grid_mode = cycle_grid_mode(self.grid_mode)
+        self.refresh_score_multiplier()
+
+    def refresh_score_multiplier(self) -> None:
+        self.state.score_multiplier = combined_score_multiplier(
+            bot_mode=self.bot.mode,
+            grid_mode=self.grid_mode,
+            speed_level=self.cfg.speed_level,
+        )
 
 
 def run_game_loop(screen: pygame.Surface,
                   cfg: GameConfig,
-                  fonts: GfxFonts) -> bool:
+                  fonts: GfxFonts,
+                  *,
+                  bot_mode: BotMode = BotMode.OFF,
+                  bot_speed_level: int = 7) -> bool:
     """
     Run a single game session.
     Returns:
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
-    loop = LoopContext2D.create(cfg)
+    loop = LoopContext2D.create(cfg, bot_mode=bot_mode)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
+    loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.refresh_score_multiplier()
     clear_anim_duration_ms = 320.0
     was_game_over = loop.state.game_over
 
@@ -298,6 +379,7 @@ def run_game_loop(screen: pygame.Surface,
     while True:
         dt = clock.tick(60)
         loop.gravity_accumulator += dt
+        loop.refresh_score_multiplier()
 
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
@@ -309,11 +391,15 @@ def run_game_loop(screen: pygame.Surface,
         if decision == "menu":
             return True
 
-        loop.gravity_accumulator = _step_gravity_tick(
-            loop.state,
-            loop.gravity_accumulator,
-            gravity_interval_ms,
-        )
+        loop.bot.tick_2d(loop.state, dt)
+        if loop.bot.controls_descent:
+            loop.gravity_accumulator = 0
+        else:
+            loop.gravity_accumulator = _step_gravity_tick(
+                loop.state,
+                loop.gravity_accumulator,
+                gravity_interval_ms,
+            )
         if loop.state.lines_cleared != loop.last_lines_cleared:
             play_sfx("clear")
         if loop.state.game_over and not was_game_over:
@@ -339,7 +425,8 @@ def run_game_loop(screen: pygame.Surface,
             cfg,
             loop.state,
             fonts,
-            show_grid=loop.show_grid,
+            grid_mode=loop.grid_mode,
+            bot_lines=tuple(loop.bot.status_lines()),
             clear_effect=clear_effect,
         )
         pygame.display.flip()
@@ -377,6 +464,7 @@ def run():
             gravity_axis=1,
             speed_level=settings.speed_level,
             piece_set=_piece_set_index_to_id(settings.piece_set_index),
+            challenge_layers=settings.challenge_layers,
         )
 
         # Initial suggested window size; user can resize afterwards
@@ -395,7 +483,13 @@ def run():
             preferred_windowed_size=preferred_size,
         )
 
-        back_to_menu = run_game_loop(game_screen, cfg, fonts)
+        back_to_menu = run_game_loop(
+            game_screen,
+            cfg,
+            fonts,
+            bot_mode=bot_mode_from_index(settings.bot_mode_index),
+            bot_speed_level=settings.bot_speed_level,
+        )
         if not back_to_menu:
             running = False
             continue

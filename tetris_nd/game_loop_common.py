@@ -13,11 +13,14 @@ def process_game_events(
     keydown_handler: Callable[[pygame.event.Event], GameKeyResult],
     on_restart: Callable[[], None],
     on_toggle_grid: Callable[[], None],
+    event_handler: Callable[[pygame.event.Event], None] | None = None,
 ) -> GameLoopDecision:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return "quit"
         if event.type != pygame.KEYDOWN:
+            if event_handler is not None:
+                event_handler(event)
             continue
 
         result = keydown_handler(event)

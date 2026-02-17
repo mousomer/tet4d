@@ -7,6 +7,7 @@ from typing import Dict, Optional, Tuple
 import pygame
 
 from .board import BoardND
+from .challenge_mode import apply_challenge_prefill_nd
 from .game_nd import GameConfigND, GameStateND
 from .key_dispatch import match_bound_action
 from .keybindings import (
@@ -23,6 +24,9 @@ from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
 from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
 from .menu_settings_state import load_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .playbot import BOT_MODE_OPTIONS, bot_mode_label, run_dry_run_nd
+from .playbot.types import bot_mode_from_index
+from .speed_curve import gravity_interval_ms
 from .view_controls import viewer_relative_move_axis_delta
 
 
@@ -76,6 +80,9 @@ class GameSettingsND:
     fourth: int = 4
     speed_level: int = 1
     piece_set_index: int = 0
+    bot_mode_index: int = 0
+    bot_speed_level: int = 7
+    challenge_layers: int = 0
 
 
 _PIECE_SET_4D_CHOICES = (
@@ -106,6 +113,7 @@ class MenuState:
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
     rebind_conflict_mode: str = "replace"
+    run_dry_run: bool = False
 
 
 def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
@@ -118,6 +126,9 @@ def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
     if dimension >= 4:
         fields.append(("Board axis w", "fourth", 3, 10))
         fields.append(("4D piece set", "piece_set_index", 0, len(_PIECE_SET_4D_CHOICES) - 1))
+    fields.append(("Playbot mode", "bot_mode_index", 0, len(BOT_MODE_OPTIONS) - 1))
+    fields.append(("Bot speed", "bot_speed_level", 1, 10))
+    fields.append(("Challenge layers", "challenge_layers", 0, 20))
     fields.append(("Speed level", "speed_level", 1, 10))
     return fields
 
@@ -156,6 +167,10 @@ def draw_menu(screen: pygame.Surface,
         if attr_name == "piece_set_index":
             safe_index = max(0, min(len(_PIECE_SET_4D_LABELS) - 1, int(value)))
             value_text = _PIECE_SET_4D_LABELS[safe_index]
+        elif attr_name == "bot_mode_index":
+            value_text = bot_mode_label(bot_mode_from_index(int(value)))
+        elif attr_name == "bot_speed_level":
+            value_text = f"{value} (1..10)"
         else:
             value_text = str(value)
         text = f"{label}: {value_text}"
@@ -180,7 +195,7 @@ def draw_menu(screen: pygame.Surface,
         "Esc = quit",
         menu_binding_hint_line(dimension),
         f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys   F7 dry-run",
         (
             f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
             f"Tab/` target   C conflict={state.rebind_conflict_mode}"
@@ -218,6 +233,10 @@ def run_menu(screen: pygame.Surface,
         actions = gather_menu_actions(state, dimension)
         fields = menu_fields_for_dimension(dimension)
         apply_menu_actions(state, actions, fields, dimension)
+        if state.run_dry_run:
+            report = run_dry_run_nd(build_config(state.settings, dimension))
+            state.bindings_status = report.reason
+            state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state, dimension)
         pygame.display.flip()
 
@@ -238,17 +257,19 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set_id=piece_set_id,
+        challenge_layers=settings.challenge_layers,
     )
 
 
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
-    interval = 1000 // max(1, min(10, cfg.speed_level))
-    return max(80, interval)
+    return gravity_interval_ms(cfg.speed_level, dimension=max(2, cfg.ndim))
 
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
-    return GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    return state
 
 
 @dataclass
@@ -448,6 +469,7 @@ def route_nd_keydown(
     yaw_deg_for_view_movement: float | None = None,
     view_key_handler: Callable[[int], bool] | None = None,
     sfx_handler: Callable[[str], None] | None = None,
+    allow_gameplay: bool = True,
 ) -> str:
     cfg = state.config
     system_action = system_key_action(key)
@@ -462,7 +484,7 @@ def route_nd_keydown(
             return "continue"
 
     gameplay_action = None
-    if not state.game_over:
+    if allow_gameplay and not state.game_over:
         gameplay_action = dispatch_nd_gameplay_key(
             key,
             state,

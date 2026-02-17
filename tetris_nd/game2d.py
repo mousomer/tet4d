@@ -46,6 +46,8 @@ class GameConfig:
     speed_level: int = 1    # 1..10, used by frontend to pick gravity speed
     piece_set: str = PIECE_SET_2D_CLASSIC
     random_cell_count: int = 4
+    challenge_layers: int = 0
+    lock_piece_points: int = 5
 
     def __post_init__(self):
         if self.width <= 0 or self.height <= 0:
@@ -58,6 +60,10 @@ class GameConfig:
         self.piece_set = normalize_piece_set_2d(self.piece_set)
         if not (3 <= self.random_cell_count <= 8):
             raise ValueError("random_cell_count must be in [3, 8]")
+        if self.challenge_layers < 0:
+            raise ValueError("challenge_layers must be >= 0")
+        if self.lock_piece_points < 0:
+            raise ValueError("lock_piece_points must be >= 0")
 
 
 @dataclass
@@ -70,6 +76,7 @@ class GameState:
     score: int = 0
     lines_cleared: int = 0
     game_over: bool = False
+    score_multiplier: float = 1.0
 
     def __post_init__(self):
         if self.board is None:
@@ -181,7 +188,9 @@ class GameState:
 
         cleared = self.board.clear_planes(self.config.gravity_axis)
         self.lines_cleared += cleared
-        self.score += _score_for_clear(cleared)
+        raw_points = self.config.lock_piece_points + _score_for_clear(cleared)
+        mult = max(0.1, float(self.score_multiplier))
+        self.score += max(0, int(round(raw_points * mult)))
 
         return cleared
 

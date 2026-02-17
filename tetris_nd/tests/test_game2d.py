@@ -71,8 +71,8 @@ class TestGame2D(unittest.TestCase):
 
         self.assertEqual(cleared, 1)
         self.assertEqual(state.lines_cleared, lines_before + 1)
-        # Single-line clear adds +40 score in our rule
-        self.assertEqual(state.score, score_before + 40)
+        # lock_piece_points(5) + single-line clear(40)
+        self.assertEqual(state.score, score_before + 45)
 
         # Bottom row should now be empty
         for x in range(cfg.width):
@@ -95,8 +95,20 @@ class TestGame2D(unittest.TestCase):
 
         self.assertEqual(cleared, 2)
         self.assertEqual(state.lines_cleared, 2)
-        self.assertEqual(state.score, 100)
+        self.assertEqual(state.score, 105)
         self.assertEqual(state.board.cells, {})
+
+    def test_score_multiplier_scales_awarded_points(self):
+        cfg = GameConfig(width=2, height=2)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        state.board.cells[(0, 1)] = 1
+        state.current_piece = ActivePiece2D(PieceShape2D("dot", [(0, 0)], color_id=2), pos=(1, 1), rotation=0)
+        state.score_multiplier = 0.5
+        cleared = state.lock_current_piece()
+        self.assertEqual(cleared, 1)
+        # round((5 + 40) * 0.5) = 22
+        self.assertEqual(state.score, 22)
 
     def test_hard_drop_places_piece_at_bottom(self):
         cfg = GameConfig(width=4, height=4)

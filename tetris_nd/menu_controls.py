@@ -59,6 +59,7 @@ class MenuAction(Enum):
     REBIND_TARGET_PREV = auto()
     REBIND_CONFLICT_NEXT = auto()
     RESET_BINDINGS = auto()
+    RUN_DRY_RUN = auto()
     NO_OP = auto()
 
 
@@ -82,6 +83,7 @@ _MENU_KEY_ACTIONS = {
     pygame.K_BACKQUOTE: MenuAction.REBIND_TARGET_PREV,
     pygame.K_c: MenuAction.REBIND_CONFLICT_NEXT,
     pygame.K_F6: MenuAction.RESET_BINDINGS,
+    pygame.K_F7: MenuAction.RUN_DRY_RUN,
 }
 
 
@@ -349,6 +351,7 @@ def apply_menu_actions(
     if not fields:
         return
     _ensure_rebind_state(state, dimension)
+    state.run_dry_run = False
 
     field_count = len(fields)
     for raw_action in actions:
@@ -368,6 +371,10 @@ def apply_menu_actions(
         step = _SELECTION_ACTION_STEP.get(action)
         if step is not None:
             state.selected_index = (state.selected_index + step) % field_count
+            continue
+
+        if action == MenuAction.RUN_DRY_RUN:
+            state.run_dry_run = True
             continue
 
         delta = _VALUE_ACTION_DELTA.get(action)

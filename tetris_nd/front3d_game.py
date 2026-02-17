@@ -13,7 +13,10 @@ from .app_runtime import (
     open_display,
 )
 from .audio import play_sfx
+from .assist_scoring import combined_score_multiplier
 from .board import BoardND
+from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
+from .challenge_mode import apply_challenge_prefill_nd
 from .display import DisplaySettings
 from .frontend_nd import (
     route_nd_keydown,
@@ -35,13 +38,22 @@ from .menu_settings_state import (
     load_menu_settings,
 )
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .playbot import (
+    BOT_MODE_OPTIONS,
+    PlayBotController,
+    bot_mode_label,
+    run_dry_run_nd,
+)
+from .playbot.types import BotMode, bot_mode_from_index
 from .projection3d import (
     Face,
     Cell3,
     Point2,
     build_cube_faces,
     color_for_cell,
+    draw_projected_box_edges,
     draw_projected_box_shadow,
+    draw_projected_helper_lattice,
     draw_gradient_background,
     draw_projected_lattice,
     fit_orthographic_zoom,
@@ -52,7 +64,9 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .speed_curve import gravity_interval_ms
 from .view_controls import YawPitchTurnAnimator
+from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
 
 
 MARGIN = 20
@@ -106,6 +120,9 @@ class GameSettings3D:
     depth: int = 6
     speed_level: int = 1
     piece_set_index: int = 0
+    bot_mode_index: int = 0
+    bot_speed_level: int = 7
+    challenge_layers: int = 0
 
 
 _PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
@@ -125,6 +142,7 @@ class MenuState:
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
     rebind_conflict_mode: str = "replace"
+    run_dry_run: bool = False
 
 
 _MENU_FIELDS: list[FieldSpec] = [
@@ -132,6 +150,9 @@ _MENU_FIELDS: list[FieldSpec] = [
     ("Board height", "height", 12, 30),
     ("Board depth", "depth", 4, 12),
     ("3D piece set", "piece_set_index", 0, len(_PIECE_SET_3D_CHOICES) - 1),
+    ("Playbot mode", "bot_mode_index", 0, len(BOT_MODE_OPTIONS) - 1),
+    ("Bot speed", "bot_speed_level", 1, 10),
+    ("Challenge layers", "challenge_layers", 0, 20),
     ("Speed level", "speed_level", 1, 10),
 ]
 
@@ -150,7 +171,7 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
 
     panel_w = int(width * 0.62)
-    panel_h = 280
+    panel_h = max(280, 96 + len(_MENU_FIELDS) * 44)
     panel_x = (width - panel_w) // 2
     panel_y = 160
 
@@ -164,6 +185,10 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
         if attr_name == "piece_set_index":
             safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
             value_text = _PIECE_SET_3D_LABELS[safe_index]
+        elif attr_name == "bot_mode_index":
+            value_text = bot_mode_label(bot_mode_from_index(int(value)))
+        elif attr_name == "bot_speed_level":
+            value_text = f"{value} (1..10)"
         else:
             value_text = str(value)
         text = f"{label}: {value_text}"
@@ -188,7 +213,7 @@ def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None
         "Esc = quit",
         menu_binding_hint_line(3),
         f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
+        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys   F7 dry-run",
         (
             f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
             f"Tab/` target   C conflict={state.rebind_conflict_mode}"
@@ -221,6 +246,10 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, 3)
         apply_menu_actions(state, actions, _MENU_FIELDS, 3)
+        if state.run_dry_run:
+            report = run_dry_run_nd(build_config(state.settings))
+            state.bindings_status = report.reason
+            state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state)
         pygame.display.flip()
 
@@ -230,8 +259,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D
 
 
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
-    level = max(1, min(10, cfg.speed_level))
-    return max(80, 1000 // level)
+    return gravity_interval_ms(cfg.speed_level, dimension=3)
 
 
 class ProjectionMode3D(Enum):
@@ -310,12 +338,15 @@ def build_config(settings: GameSettings3D) -> GameConfigND:
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set_id=piece_set_id,
+        challenge_layers=settings.challenge_layers,
     )
 
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
-    return GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    return state
 
 
 def _transform_raw_point(raw: Cell3 | tuple[float, float, float],
@@ -399,6 +430,24 @@ def _collect_visible_cells(state: GameStateND) -> list[tuple[Cell3, int, bool]]:
     return cells
 
 
+def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[int]]:
+    if state.current_piece is None:
+        return set(), set(), set()
+    dims = state.config.dims
+    x_marks: set[int] = set()
+    y_marks: set[int] = set()
+    z_marks: set[int] = set()
+    for x, y, z in state.current_piece.cells():
+        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
+            x_marks.add(x)
+            x_marks.add(x + 1)
+            y_marks.add(y)
+            y_marks.add(y + 1)
+            z_marks.add(z)
+            z_marks.add(z + 1)
+    return x_marks, y_marks, z_marks
+
+
 def _faces_for_cells(cells: list[tuple[Cell3, int, bool]],
                      camera: Camera3D,
                      center_px: Point2,
@@ -472,13 +521,40 @@ def _draw_board_3d(surface: pygame.Surface,
                    state: GameStateND,
                    camera: Camera3D,
                    board_rect: pygame.Rect,
-                   show_grid: bool = True,
+                   grid_mode: GridMode = GridMode.FULL,
                    clear_anim: Optional[ClearAnimation3D] = None) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
 
-    if show_grid:
+    if grid_mode == GridMode.FULL:
         _draw_board_grid(surface, dims, camera, board_rect)
+    elif grid_mode == GridMode.EDGE:
+        draw_projected_box_edges(
+            surface,
+            dims,
+            lambda raw: _project_raw_point(raw, dims, camera, center_px),
+            edge_color=GRID_COLOR,
+            edge_width=2,
+        )
+    elif grid_mode == GridMode.HELPER:
+        draw_projected_box_shadow(
+            surface,
+            dims,
+            project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        )
+        x_marks, y_marks, z_marks = _helper_grid_marks_3d(state)
+        draw_projected_helper_lattice(
+            surface,
+            dims,
+            lambda raw: _project_raw_point(raw, dims, camera, center_px),
+            x_marks=x_marks,
+            y_marks=y_marks,
+            z_marks=z_marks,
+            inner_color=(52, 64, 95),
+            frame_color=GRID_COLOR,
+            frame_width=2,
+        )
     else:
         draw_projected_box_shadow(
             surface,
@@ -499,7 +575,8 @@ def _draw_side_panel(surface: pygame.Surface,
                      camera: Camera3D,
                      panel_rect: pygame.Rect,
                      fonts: GfxFonts,
-                     show_grid: bool) -> None:
+                     grid_mode: GridMode,
+                     bot_lines: tuple[str, ...] = ()) -> None:
     panel = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 140), panel.get_rect(), border_radius=12)
     surface.blit(panel, panel_rect.topleft)
@@ -516,16 +593,22 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Score: {state.score}",
         f"Layers: {state.lines_cleared}",
         f"Speed: {state.config.speed_level}",
+        f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
-        f"Grid: {'ON' if show_grid else 'OFF'}",
+        f"Score mod: x{state.score_multiplier:.2f}",
+        f"Grid: {grid_mode_label(grid_mode)}",
         "",
         f"Yaw: {camera.yaw_deg:.1f}",
         f"Pitch: {camera.pitch_deg:.1f}",
         f"Zoom: {camera.zoom:.1f}",
         "",
+        *bot_lines,
+        *([""] if bot_lines else []),
         *CONTROL_LINES_3D_GAME,
         "",
         *CONTROL_LINES_3D_CAMERA,
+        " Mouse: RMB drag orbit",
+        " Wheel: zoom",
         "",
         "R = restart   M = menu",
         "Esc = quit",
@@ -572,7 +655,8 @@ def draw_game_frame(screen: pygame.Surface,
                     state: GameStateND,
                     camera: Camera3D,
                     fonts: GfxFonts,
-                    show_grid: bool,
+                    grid_mode: GridMode,
+                    bot_lines: tuple[str, ...] = (),
                     clear_anim: Optional[ClearAnimation3D] = None) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
@@ -598,10 +682,10 @@ def draw_game_frame(screen: pygame.Surface,
         state,
         camera,
         board_rect,
-        show_grid=show_grid,
+        grid_mode=grid_mode,
         clear_anim=clear_anim,
     )
-    _draw_side_panel(screen, state, camera, panel_rect, fonts, show_grid=show_grid)
+    _draw_side_panel(screen, state, camera, panel_rect, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
 
 
 def handle_camera_key(key: int, camera: Camera3D) -> bool:
@@ -610,8 +694,10 @@ def handle_camera_key(key: int, camera: Camera3D) -> bool:
             key,
             CAMERA_KEYS_3D,
             {
+                "yaw_fine_neg": lambda: camera.start_yaw_turn(-15.0),
                 "yaw_neg": lambda: camera.start_yaw_turn(-90.0),
                 "yaw_pos": lambda: camera.start_yaw_turn(90.0),
+                "yaw_fine_pos": lambda: camera.start_yaw_turn(15.0),
                 "pitch_pos": lambda: camera.start_pitch_turn(90.0),
                 "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
                 "zoom_in": lambda: setattr(camera, "zoom", min(140.0, camera.zoom + 3.0)),
@@ -631,13 +717,16 @@ def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameStateND,
                         camera: Camera3D | GameConfigND | None = None,
-                        _cfg: GameConfigND | None = None) -> str:
+                        _cfg: GameConfigND | None = None,
+                        *,
+                        allow_gameplay: bool = True) -> str:
     yaw_for_movement = camera.yaw_deg if isinstance(camera, Camera3D) else 32.0
     return route_nd_keydown(
         event.key,
         state,
         yaw_deg_for_view_movement=yaw_for_movement,
         sfx_handler=play_sfx,
+        allow_gameplay=allow_gameplay,
     )
 
 
@@ -665,29 +754,42 @@ class LoopContext3D:
     cfg: GameConfigND
     state: GameStateND
     camera: Camera3D = field(default_factory=Camera3D)
-    show_grid: bool = True
+    mouse_orbit: MouseOrbitState = field(default_factory=MouseOrbitState)
+    bot: PlayBotController = field(default_factory=PlayBotController)
+    grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation3D] = None
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
     was_game_over: bool = False
 
     @classmethod
-    def create(cls, cfg: GameConfigND) -> "LoopContext3D":
+    def create(cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext3D":
         state = create_initial_state(cfg)
         return cls(
             cfg=cfg,
             state=state,
+            bot=PlayBotController(mode=bot_mode),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if event.key == pygame.K_F2:
+            self.bot.cycle_mode()
+            self.refresh_score_multiplier()
+            play_sfx("menu_move")
+            return "continue"
+        if event.key == pygame.K_F3:
+            self.bot.request_step()
+            play_sfx("menu_move")
+            return "continue"
         return route_nd_keydown(
             event.key,
             self.state,
             yaw_deg_for_view_movement=self.camera.yaw_deg,
             view_key_handler=lambda key: handle_camera_key(key, self.camera),
             sfx_handler=play_sfx,
+            allow_gameplay=self.bot.user_gameplay_enabled,
         )
 
     def on_restart(self) -> None:
@@ -696,37 +798,84 @@ class LoopContext3D:
         self.clear_anim = None
         self.last_lines_cleared = self.state.lines_cleared
         self.was_game_over = self.state.game_over
+        self.mouse_orbit.reset()
+        self.bot.reset_runtime()
+        self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
-        self.show_grid = not self.show_grid
+        self.grid_mode = cycle_grid_mode(self.grid_mode)
+        self.refresh_score_multiplier()
+
+    def refresh_score_multiplier(self) -> None:
+        self.state.score_multiplier = combined_score_multiplier(
+            bot_mode=self.bot.mode,
+            grid_mode=self.grid_mode,
+            speed_level=self.cfg.speed_level,
+        )
+
+    def pointer_event_handler(self, event: pygame.event.Event) -> None:
+        wheel = mouse_wheel_delta(event)
+        if wheel != 0:
+            self.camera.stop_animation()
+            self.camera.auto_fit_once = False
+            step = 3.0 * abs(wheel)
+            if wheel > 0:
+                self.camera.zoom = min(140.0, self.camera.zoom + step)
+            else:
+                self.camera.zoom = max(18.0, self.camera.zoom - step)
+            return
+
+        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+            event,
+            self.mouse_orbit,
+            yaw_deg=self.camera.yaw_deg,
+            pitch_deg=self.camera.pitch_deg,
+        )
+        if not changed:
+            return
+        self.camera.stop_animation()
+        self.camera.auto_fit_once = False
+        self.camera.yaw_deg = yaw_deg
+        self.camera.pitch_deg = pitch_deg
 
 
 def run_game_loop(screen: pygame.Surface,
                   cfg: GameConfigND,
-                  fonts: GfxFonts) -> bool:
-    loop = LoopContext3D.create(cfg)
+                  fonts: GfxFonts,
+                  *,
+                  bot_mode: BotMode = BotMode.OFF,
+                  bot_speed_level: int = 7) -> bool:
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
+    loop = LoopContext3D.create(cfg, bot_mode=bot_mode)
+    loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.refresh_score_multiplier()
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60)
         loop.gravity_accumulator += dt
+        loop.refresh_score_multiplier()
 
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
+            event_handler=loop.pointer_event_handler,
         )
         if decision == "quit":
             return False
         if decision == "menu":
             return True
 
-        loop.gravity_accumulator = advance_gravity(
-            loop.state,
-            loop.gravity_accumulator,
-            gravity_interval_ms,
-        )
+        loop.bot.tick_nd(loop.state, dt)
+        if loop.bot.controls_descent:
+            loop.gravity_accumulator = 0
+        else:
+            loop.gravity_accumulator = advance_gravity(
+                loop.state,
+                loop.gravity_accumulator,
+                gravity_interval_ms,
+            )
 
         new_clear_anim, loop.last_lines_cleared = _spawn_clear_animation_if_needed(
             loop.state,
@@ -748,7 +897,8 @@ def run_game_loop(screen: pygame.Surface,
             loop.state,
             loop.camera,
             fonts,
-            show_grid=loop.show_grid,
+            grid_mode=loop.grid_mode,
+            bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
         )
         pygame.display.flip()
@@ -790,7 +940,13 @@ def run() -> None:
             preferred_windowed_size=preferred_size,
         )
 
-        back_to_menu = run_game_loop(game_screen, cfg, fonts)
+        back_to_menu = run_game_loop(
+            game_screen,
+            cfg,
+            fonts,
+            bot_mode=bot_mode_from_index(settings.bot_mode_index),
+            bot_speed_level=settings.bot_speed_level,
+        )
         if not back_to_menu:
             running = False
             continue

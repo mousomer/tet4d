@@ -77,7 +77,7 @@ class TestGameND(unittest.TestCase):
 
         self.assertEqual(cleared, 1)
         self.assertEqual(state.lines_cleared, 1)
-        self.assertEqual(state.score, 40)
+        self.assertEqual(state.score, 45)
         self.assertEqual(state.board.cells.get((1, 2, 1)), 2)
 
     def test_lock_piece_can_clear_two_planes_and_score_100(self):
@@ -100,7 +100,20 @@ class TestGameND(unittest.TestCase):
 
         self.assertEqual(cleared, 2)
         self.assertEqual(state.lines_cleared, 2)
-        self.assertEqual(state.score, 100)
+        self.assertEqual(state.score, 105)
+
+    def test_score_multiplier_scales_awarded_points(self):
+        cfg = GameConfigND(dims=(2, 3, 1), gravity_axis=1, piece_set_id=PIECE_SET_3D_EMBED_2D)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        state.board.cells[(0, 2, 0)] = 1
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=2)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(1, 2, 0))
+        state.score_multiplier = 0.5
+
+        cleared = state.lock_current_piece()
+        self.assertEqual(cleared, 1)
+        self.assertEqual(state.score, 22)
 
     def test_4d_config_can_use_six_cell_piece_set(self):
         cfg = GameConfigND(dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d=PIECE_SET_4D_SIX)

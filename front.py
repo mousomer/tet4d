@@ -33,6 +33,7 @@ from tetris_nd.menu_settings_state import (
     save_audio_settings,
     save_display_settings,
 )
+from tetris_nd.playbot.types import bot_mode_from_index
 
 
 BG_TOP = (14, 18, 44)
@@ -589,6 +590,7 @@ def _launch_2d(
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set=front2d._piece_set_index_to_id(settings.piece_set_index),
+        challenge_layers=getattr(settings, "challenge_layers", 0),
     )
     board_px_w = cfg.width * 30
     board_px_h = cfg.height * 30
@@ -603,7 +605,13 @@ def _launch_2d(
         preferred_windowed_size=preferred_size,
     )
 
-    back_to_menu = front2d.run_game_loop(screen, cfg, fonts2d)
+    back_to_menu = front2d.run_game_loop(
+        screen,
+        cfg,
+        fonts2d,
+        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
+        bot_speed_level=getattr(settings, "bot_speed_level", 7),
+    )
     if not back_to_menu:
         return screen, display_settings, False
     display_settings = capture_windowed_display_settings(display_settings)
@@ -633,7 +641,13 @@ def _launch_3d(
         preferred_windowed_size=preferred_size,
     )
 
-    back_to_menu = run_game_loop_3d(screen, cfg, fonts_nd)
+    back_to_menu = run_game_loop_3d(
+        screen,
+        cfg,
+        fonts_nd,
+        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
+        bot_speed_level=getattr(settings, "bot_speed_level", 7),
+    )
     if not back_to_menu:
         return screen, display_settings, False
     display_settings = capture_windowed_display_settings(display_settings)
@@ -663,7 +677,13 @@ def _launch_4d(
         preferred_windowed_size=preferred_size,
     )
 
-    back_to_menu = run_game_loop_4d(screen, cfg, fonts_nd)
+    back_to_menu = run_game_loop_4d(
+        screen,
+        cfg,
+        fonts_nd,
+        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
+        bot_speed_level=getattr(settings, "bot_speed_level", 7),
+    )
     if not back_to_menu:
         return screen, display_settings, False
     display_settings = capture_windowed_display_settings(display_settings)

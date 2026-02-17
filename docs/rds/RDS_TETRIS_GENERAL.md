@@ -20,6 +20,9 @@ Keybinding-specific requirements are defined in:
 Menu-structure and settings-flow requirements are defined in:
 1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`
 
+Automatic playbot requirements are defined in:
+1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`
+
 ## 2. Current Project Intentions
 
 1. Keep one shared deterministic gameplay core with mode-specific frontends.
@@ -35,6 +38,7 @@ Menu-structure and settings-flow requirements are defined in:
 11. Clarify slicing semantics and decouple slicing from rotation concerns.
 12. Unify frontend entry into one main menu for 2D/3D/4D.
 13. Make settings persistence and display mode transitions reliable (including fullscreen).
+14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
 
 ## 3. Shared Rules and Axis Conventions
 
