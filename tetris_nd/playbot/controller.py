@@ -4,12 +4,26 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Iterable
 
-from ..pieces_nd import ActivePieceND, rotate_point_nd
 from ..game2d import GameState
 from ..game_nd import GameStateND
+from ..pieces_nd import ActivePieceND, rotate_point_nd
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
-from .types import BOT_MODE_OPTIONS, BotMode, PlanStats, bot_mode_label
+from .planner_nd_core import canonical_blocks as _canonical_blocks
+from .planner_nd_core import rotation_planes
+from ..runtime_config import playbot_default_hard_drop_after_soft_drops
+from .types import (
+    BOT_MODE_OPTIONS,
+    BotMode,
+    BotPlannerAlgorithm,
+    BotPlannerProfile,
+    PlanStats,
+    bot_mode_label,
+    bot_planner_algorithm_label,
+    bot_planner_profile_label,
+    clamp_planning_budget_ms,
+    default_planning_budget_ms,
+)
 
 
 def _next_mode(mode: BotMode) -> BotMode:
@@ -24,25 +38,6 @@ RotationStep = tuple[int, int, int]
 RelBlocks = tuple[tuple[int, ...], ...]
 
 
-def _canonical_blocks(blocks: Iterable[tuple[int, ...]]) -> RelBlocks:
-    return tuple(sorted(tuple(block) for block in blocks))
-
-
-def _rotation_planes(ndim: int, gravity_axis: int) -> tuple[tuple[int, int], ...]:
-    if ndim == 3:
-        z_axis = next((axis for axis in range(ndim) if axis not in (0, gravity_axis)), 2)
-        return (
-            (0, gravity_axis),
-            (0, z_axis),
-            (gravity_axis, z_axis),
-        )
-    pairs: list[tuple[int, int]] = []
-    for axis_a in range(ndim):
-        for axis_b in range(axis_a + 1, ndim):
-            pairs.append((axis_a, axis_b))
-    return tuple(pairs)
-
-
 def _rotation_sequence_nd(
     start_blocks: RelBlocks,
     target_blocks: RelBlocks,
@@ -53,7 +48,7 @@ def _rotation_sequence_nd(
     if start_blocks == target_blocks:
         return []
 
-    planes = _rotation_planes(ndim, gravity_axis)
+    planes = rotation_planes(ndim, gravity_axis)
     max_depth = 8 if ndim == 3 else 7
     max_states = 240
 
@@ -111,7 +106,10 @@ class PlayBotController:
     mode: BotMode = BotMode.OFF
     speed_level: int = 7
     action_interval_ms: int = 80
-    hard_drop_after_soft_drops: int = 4
+    planner_profile: BotPlannerProfile = BotPlannerProfile.BALANCED
+    planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO
+    planning_budget_ms: int = 24
+    hard_drop_after_soft_drops: int = field(default_factory=playbot_default_hard_drop_after_soft_drops)
     _accumulator_ms: int = 0
     _step_requested: bool = False
     _piece_token: tuple[object, ...] | None = None
@@ -154,6 +152,22 @@ class PlayBotController:
         self.speed_level = max(1, min(10, int(speed_level)))
         self.action_interval_ms = self.action_interval_from_speed(gravity_interval_ms, self.speed_level)
 
+    def configure_planner(
+        self,
+        *,
+        ndim: int,
+        profile: BotPlannerProfile,
+        budget_ms: int | None,
+        algorithm: BotPlannerAlgorithm | None = None,
+    ) -> None:
+        self.planner_profile = profile
+        if algorithm is not None:
+            self.planner_algorithm = algorithm
+        selected = budget_ms
+        if selected is None:
+            selected = default_planning_budget_ms(ndim, profile)
+        self.planning_budget_ms = clamp_planning_budget_ms(ndim, int(selected))
+
     def reset_runtime(self) -> None:
         self._accumulator_ms = 0
         self._step_requested = False
@@ -173,6 +187,14 @@ class PlayBotController:
     def status_lines(self) -> list[str]:
         lines = [f"Bot: {bot_mode_label(self.mode)}"]
         lines.append(f"Bot speed: {self.speed_level}/10 ({self.action_interval_ms} ms)")
+        lines.append(
+            (
+                "Bot planner: "
+                f"{bot_planner_profile_label(self.planner_profile)} / "
+                f"{bot_planner_algorithm_label(self.planner_algorithm)} "
+                f"({self.planning_budget_ms} ms)"
+            )
+        )
         if self.last_stats is not None:
             lines.append(f"Bot candidates: {self.last_stats.candidate_count}")
             lines.append(f"Bot clears: {self.last_stats.expected_clears}")
@@ -223,7 +245,12 @@ class PlayBotController:
             return
         self._soft_drop_count_2d = 0
         self._piece_token = token
-        plan = plan_best_2d_move(state)
+        plan = plan_best_2d_move(
+            state,
+            profile=self.planner_profile,
+            budget_ms=self.planning_budget_ms,
+            algorithm=self.planner_algorithm,
+        )
         if plan is None:
             self.last_error = "no valid plan"
             self._assist_preview_cells = tuple()
@@ -242,7 +269,12 @@ class PlayBotController:
             return
         self._soft_drop_count_nd = 0
         self._piece_token = token
-        plan = plan_best_nd_move(state)
+        plan = plan_best_nd_move(
+            state,
+            profile=self.planner_profile,
+            budget_ms=self.planning_budget_ms,
+            algorithm=self.planner_algorithm,
+        )
         if plan is None:
             self.last_error = "no valid plan"
             self._assist_preview_cells = tuple()

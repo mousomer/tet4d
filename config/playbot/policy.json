@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "budget_ms": {
+    "2d": {"fast": 6, "balanced": 12, "deep": 20},
+    "3d": {"fast": 12, "balanced": 24, "deep": 40},
+    "4d_plus": {"fast": 18, "balanced": 36, "deep": 60}
+  },
+  "clamp": {
+    "floor_divisor": 2,
+    "floor_min": 2,
+    "ceil_multiplier": 3,
+    "ceil_min": 40
+  },
+  "lookahead": {
+    "depth": {
+      "fast": 1,
+      "balanced_2d_3d": 2,
+      "deep_2d_3d": 2,
+      "all_4d_plus": 1
+    },
+    "top_k": {
+      "depth_lte_one": 1,
+      "balanced_2d": 4,
+      "deep_2d": 8,
+      "balanced_3d_plus": 6,
+      "deep_3d_plus": 10
+    }
+  },
+  "controller": {
+    "hard_drop_after_soft_drops": 4
+  },
+  "dry_run": {
+    "default_pieces": 160,
+    "default_seed": 1337
+  }
+}

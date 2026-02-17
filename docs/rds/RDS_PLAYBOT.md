@@ -42,10 +42,11 @@ Default mode: `OFF`.
 
 1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/types.py`
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_2d.py`
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd.py`
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/controller.py`
-5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/dry_run.py`
-6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/__init__.py`
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd_core.py`
+4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd.py`
+5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/controller.py`
+6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/dry_run.py`
+7. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/__init__.py`
 
 ### 4.2 Core data contracts
 
@@ -84,13 +85,20 @@ Default mode: `OFF`.
 7. bumpiness penalty,
 8. max-height penalty,
 9. game-over penalty.
-10. No lookahead in the current implementation.
+10. Profile-based lookahead is available:
+11. `FAST`: depth-1 (no followup),
+12. `BALANCED/DEEP`: depth-2 with bounded top-candidate followup.
 
 ### 5.3 3D planner (ND path in `planner_nd.py`)
 
 1. Uses ND orientation BFS with 3D planes (`xy`, `xz`, `yz`).
 2. Enumerates legal lateral coordinates (`x`, `z`) then drops along gravity axis.
 3. Uses heuristic scoring from ND height/holes/roughness/max-height features.
+4. Profile-based lookahead is available in 3D:
+5. `FAST`: depth-1,
+6. `BALANCED/DEEP`: depth-2 with bounded followup.
+7. Alternative planner algorithms are supported:
+8. `AUTO` (default), `HEURISTIC`, `GREEDY_LAYER`.
 
 ### 5.4 4D planner (ND path in `planner_nd.py`)
 
@@ -102,13 +110,16 @@ Default mode: `OFF`.
 6. layer-completion concentration,
 7. lower hole count.
 8. This prioritizes finishing layers before secondary shape quality.
+9. Alternative planner algorithms are supported:
+10. `AUTO` (default), `HEURISTIC`, `GREEDY_LAYER`.
 
 ### 5.5 Performance strategy (current)
 
 1. Orientation caching for repeated piece-shape exploration.
 2. Column-level precomputation for fast drop settling.
-3. No explicit per-plan time-budget cutoff is enforced yet.
+3. Explicit per-plan time budget is enforced (`budget_ms`) with best-so-far fallback under timeout.
 4. 4D uses greedy comparison to reduce scoring overhead versus deep heuristic search.
+5. Planner profiles (`FAST/BALANCED/DEEP`) tune lookahead depth and candidate breadth.
 
 ## 6. Action Synthesis and Execution
 
@@ -126,9 +137,9 @@ Default mode: `OFF`.
 
 ## 7. UX Integration
 
-1. Unified menu exposes bot mode and bot speed.
+1. Unified menu exposes bot mode, bot speed, planner algorithm, planner profile, and planning budget.
 2. Runtime controls include mode cycle and one-step trigger.
-3. HUD status lines include mode, speed, candidate count, expected clears, and plan time.
+3. HUD status lines include mode, speed, planner algorithm/profile/budget, candidate count, expected clears, and plan time.
 4. User camera/view controls remain active in bot-controlled gameplay.
 
 ## 8. Determinism and Safety
@@ -167,17 +178,18 @@ Required checks:
 
 ## 11. Shared ND Design Rules (3D + 4D)
 
-1. `planner_nd.py` is the single source of truth for ND candidate generation and evaluation.
-2. Dimension-specific branching should remain configuration-based (`ndim` / plane set), not duplicated planners.
-3. New ND heuristics should be added once and reused by both 3D and 4D paths.
-4. Controller ND execution path should remain shared across 3D and 4D.
+1. `planner_nd_core.py` is the single source of truth for ND candidate generation and scoring primitives.
+2. `planner_nd.py` remains a thin orchestration layer (budgeting, lookahead, algorithm selection).
+3. Dimension-specific branching should remain configuration-based (`ndim` / plane set), not duplicated planners.
+4. New ND heuristics should be added once and reused by both 3D and 4D paths.
+5. Controller ND execution path should remain shared across 3D and 4D.
 
 ## 12. Known Gaps and Roadmap
 
 1. Add explicit planning budget/time cutoffs and adaptive fallback under high load.
-2. Add optional deeper lookahead profiles for 2D/3D.
-3. Add optional split of `planner_nd.py` into smaller modules if complexity grows further.
-4. Add benchmark harness for per-dimension planner latency targets in CI.
+2. Tune alternative algorithm weights/policies (`HEURISTIC` vs `GREEDY_LAYER`) from gameplay metrics.
+3. Add optional deeper lookahead profiles for 2D/3D.
+4. Tune benchmark thresholds and budget defaults per board size once more gameplay data is collected.
 
 ## 13. Anti-duplication Guardrails
 

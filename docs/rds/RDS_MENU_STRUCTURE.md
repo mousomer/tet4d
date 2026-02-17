@@ -23,6 +23,9 @@ Primary files impacted by future implementation:
 3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/frontend_nd.py`
 4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_controls.py`
 5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_keybinding_shortcuts.py`
+6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_config.py`
+7. `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
+8. `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
 
 ## 2. Design Goals
 
@@ -51,25 +54,20 @@ This design is based on:
 
 ```text
 Main Menu
-├── Play
-│   ├── Choose Mode (2D/3D/4D)
-│   └── Mode Setup (selected mode)
+├── Play 2D
+├── Play 3D
+├── Play 4D
 ├── Settings
-│   ├── Gameplay
-│   ├── Visual
 │   ├── Audio
 │   ├── Display
-│   ├── Controls
-│   │   └── Edit Keybindings
-│   └── Accessibility
-├── Profiles
-│   ├── Select Profile
-│   ├── New Profile
-│   ├── Rename Profile
-│   ├── Delete Profile
-│   ├── Save Profile
-│   ├── Load Profile
-│   └── Reset Profile To Defaults
+├── Keybindings Setup
+├── Bot Options
+│   ├── Dimension (2D/3D/4D)
+│   ├── Playbot mode
+│   ├── Bot algorithm
+│   ├── Bot profile
+│   ├── Bot speed
+│   └── Bot budget (ms)
 └── Quit
 ```
 
@@ -173,9 +171,9 @@ Minimum schema:
     "mute": false
   },
   "settings": {
-    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0},
-    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0},
-    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0}
+    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 12},
+    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 24},
+    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 36}
   }
 }
 ```
@@ -259,21 +257,26 @@ Manual tests:
 3. Profile actions are identical in main/setup and pause menus.
 4. Non-default profiles can be redefined, saved, and loaded.
 
-## 14. Implementation Status (2026-02-16)
+## 14. Implementation Status (2026-02-17)
 
 Implemented in code:
 1. Unified launcher added at `/Users/omer/workspace/test-code/tet4d/front.py`.
-2. Main menu includes mode select (`2D/3D/4D`), keybindings setup, audio settings, display settings, and quit.
-3. Display settings include fullscreen toggle and windowed size controls with apply/save/reset.
-4. Audio settings include master volume, SFX volume, and mute with save/reset.
-5. Keybindings setup is a dedicated screen (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
-6. Launcher persists and restores global state (`last_mode`, `active_profile`, display/audio payload).
+2. Main menu includes `Play 2D`, `Play 3D`, `Play 4D`, `Settings`, `Keybindings Setup`, `Bot Options`, and `Quit`.
+3. `Settings` submenu unifies audio and display controls.
+4. `Bot Options` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
+5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
+6. Keybindings setup is a dedicated screen (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
+7. Defaults and menu structures are externalized:
+8. `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
+9. `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
+10. User overrides remain in `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`.
+11. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
 Stabilization details:
 1. Returning from gameplay to menu now reapplies persisted display mode.
 2. Windowed size is captured and persisted after game sessions in windowed mode.
-5. Focus and contrast states remain readable in default window sizes.
-6. No crashes on missing/corrupt settings files.
-7. Tests and lint pass after implementation.
-8. Fullscreen/window transitions no longer produce shrunken menu layouts.
-9. Unified main menu controls 2D/3D/4D startup consistently.
+3. Focus and contrast states remain readable in default window sizes.
+4. No crashes on missing/corrupt settings files.
+5. Tests and lint pass after implementation.
+6. Fullscreen/window transitions no longer produce shrunken menu layouts.
+7. Unified main menu controls 2D/3D/4D startup consistently.

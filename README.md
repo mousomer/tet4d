@@ -44,13 +44,39 @@ python /Users/omer/workspace/test-code/tet4d/front4d.py
 
 Unified launcher includes:
 - Mode selection (`2D/3D/4D`)
+- Unified `Settings` submenu (`Audio` + `Display`)
 - Keybindings setup menu (load/save/rebind/reset, profile cycle/create/delete)
-- Audio settings (`master`, `sfx`, `mute`)
-- Display settings (`fullscreen`, windowed size, apply/save/reset)
-- Playbot mode selection in per-mode setup menus (`OFF`, `ASSIST`, `AUTO`, `STEP`)
-- Playbot speed control in setup menus (`1..10`)
+- Unified `Bot Options` submenu with per-dimension bot settings
+- Bot mode (`OFF`, `ASSIST`, `AUTO`, `STEP`)
+- Bot speed (`1..10`)
+- Bot algorithm (`AUTO`, `HEURISTIC`, `GREEDY_LAYER`)
+- Bot planner profile (`FAST`, `BALANCED`, `DEEP`)
+- Bot planning budget (ms cap per plan)
 - Challenge mode setup (`challenge layers`: random-filled lower layers)
 - Dry-run verification in setup menus (`F7`) to validate playthrough/layer clears without rendering
+
+Mode setup menus (2D/3D/4D) only expose dimension-specific gameplay options.
+
+## Menu config and defaults
+
+Menu structure and default settings are externalized:
+- `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
+- `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
+
+Gameplay/bot/audio runtime tuning is also externalized:
+- `/Users/omer/workspace/test-code/tet4d/config/gameplay/tuning.json`
+- `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`
+- `/Users/omer/workspace/test-code/tet4d/config/audio/sfx.json`
+
+User-specific overrides are persisted in:
+- `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`
+
+If `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json` is removed, the app rebuilds runtime settings from `config/menu/defaults.json` (plus keybinding profile files), so defaults are not taken from hardcoded Python literals.
+
+Reset paths:
+- Settings -> Audio/Display -> `Reset defaults` (`F8`)
+- Bot Options -> per-dimension -> `Reset defaults` (`F8`)
+- Keybindings Setup -> `F6` reset bindings for active profile/dimension
 
 ## Keybindings
 
@@ -86,6 +112,9 @@ Speed scaling by dimension:
 - `ASSIST`: bot plans best landing and shows guidance stats; player still controls piece movement.
 - `AUTO`: bot plays continuously. It uses planned lateral/rotation moves, starts descent with soft drops, and may hard-drop after a configured soft-drop threshold (default `4`) to keep pace with game speed.
 - `STEP`: debug mode. Bot executes one action each time you press `F3`.
+- Planner algorithm can be chosen explicitly: `AUTO` (dimension default), `HEURISTIC`, `GREEDY_LAYER`.
+- Planner profile controls lookahead depth and fallback behavior (`FAST` = depth-1, `BALANCED`/`DEEP` = deeper lookahead in 2D/3D).
+- Planner budget (ms) is an explicit per-plan time cap. Under load the bot falls back to the best candidate found so far.
 
 Bot behavior details:
 - Bot starts planning rotations/moves only after the active piece is fully visible (below spawn/top area), so rotations are visible to the player.
@@ -115,7 +144,13 @@ Bot behavior details:
 ruff check /Users/omer/workspace/test-code/tet4d
 
 # Unit and gameplay replay tests
-SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q
+pytest -q
+
+# Planner latency benchmark (used by CI harness)
+python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert
+
+# Full local CI-equivalent check
+/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh
 
 # Python 3.14 compatibility compile check
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd

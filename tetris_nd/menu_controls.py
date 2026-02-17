@@ -347,19 +347,25 @@ def apply_menu_actions(
     actions: Sequence[MenuInput],
     fields: Sequence[FieldSpec],
     dimension: int,
+    blocked_actions: set[MenuAction] | None = None,
 ) -> None:
     if not fields:
         return
     _ensure_rebind_state(state, dimension)
     state.run_dry_run = False
+    blocked = blocked_actions or set()
 
     field_count = len(fields)
     for raw_action in actions:
         if isinstance(raw_action, RebindCapture):
+            if MenuAction.REBIND_TOGGLE in blocked:
+                continue
             _handle_rebind_capture(state, dimension, raw_action)
             continue
 
         action = raw_action
+        if action in blocked:
+            continue
         if _apply_state_only_action(state, action):
             continue
 
