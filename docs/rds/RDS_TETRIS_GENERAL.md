@@ -39,6 +39,7 @@ Automatic playbot requirements are defined in:
 12. Unify frontend entry into one main menu for 2D/3D/4D.
 13. Make settings persistence and display mode transitions reliable (including fullscreen).
 14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
+15. Keep menu structure and default settings in external config files (not hardcoded in frontend modules).
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -95,6 +96,14 @@ Automatic playbot requirements are defined in:
 8. Embedding helpers must convert lower-dimensional piece offsets into target board dimensions deterministically.
 9. Display mode changes (windowed/fullscreen) must run through a shared display-state manager.
 10. Settings/keybindings/state writes must be atomic and recover from corrupt files with warning.
+11. Menu/default config files are source-controlled:
+12. `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
+13. `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
+14. Runtime tuning config files are source-controlled:
+15. `/Users/omer/workspace/test-code/tet4d/config/gameplay/tuning.json`
+16. `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`
+17. `/Users/omer/workspace/test-code/tet4d/config/audio/sfx.json`
+18. User runtime overrides remain in `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`.
 
 ## 7. Engineering Best Practices
 
@@ -113,7 +122,9 @@ Required checks for behavior changes:
 ruff check /Users/omer/workspace/test-code/tet4d
 ruff check /Users/omer/workspace/test-code/tet4d --select C901
 pytest -q
+python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
+./scripts/ci_check.sh
 ```
 
 Expected test categories:
@@ -138,50 +149,12 @@ Expected test categories:
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
 
-## 10. Implementation Plan (Next Milestone)
+## 10. Open Backlog
 
-### 10.1 Keyboard bindings edit menu (with local save/load)
-
-1. Add a shared keybinding-editor model used by setup and pause menus.
-2. Implement action-group navigation (`game`, `camera`, `slice`, `system`) and per-action capture mode.
-3. Implement conflict flow (`replace`, `swap`, `cancel`) before committing a binding.
-4. Persist bindings locally under profile files in `keybindings/profiles/<profile>/<dimension>.json`.
-5. Add explicit `Load`, `Save`, `Save As`, and `Reset To Defaults` actions with status messages.
-
-### 10.2 Random-cell piece sets (2D/3D/4D)
-
-1. Add random piece generators per dimension with configurable cell count and deterministic seed support.
-2. Enforce validity constraints (connected cells, no duplicate coordinates, normalized offsets).
-3. Register these sets in setup menus as named options per mode.
-4. Add tests for generator invariants and replay determinism under fixed seeds.
-
-### 10.3 Lower-dimensional piece sets on higher-dimensional boards
-
-1. Add piece-set adapters for 2D->3D, 2D->4D, and 3D->4D embedding.
-2. Define default embedding planes/hyperplanes and expose selection where relevant.
-3. Ensure embedded pieces fully support target-dimension movement/rotation after spawn.
-4. Add tests for spawn validity, collision behavior, and clear/scoring parity.
-
-## 11. Stabilization Plan (Issues 1-10)
-
-1. Scoring verification:
-2. Add explicit unit tests for scoring increments and cumulative score after multi-clear sequences.
-3. Add deterministic replay assertions that include score snapshots.
-4. Debug piece sets:
-5. Add `debug_rectangles_2d`, `debug_rectangles_3d`, `debug_rectangles_4d` piece sets for quick layer-fill testing.
-6. Audio:
-7. Add subtle SFX events (move, rotate, lock, clear, game-over, menu confirm), plus `master/sfx volume` and `mute`.
-8. Slicing semantics:
-9. Document slicing as a visualization/filter tool, not a rotation requirement; keep rotation controls independent.
-10. 4D `9/0` rotation stability:
-11. Deconflict overlapping key actions and add robust rotation-failure handling diagnostics.
-12. Random piece premature game-over:
-13. Add spawn-fit constraints and random-shape validation against board dimensions before bag inclusion.
-14. Unified frontend:
-15. Replace per-mode startup menus with one main menu and mode-specific setup subpages.
-16. Settings persistence:
-17. Centralize state save/load, schema versioning, atomic writes, and fallback messaging.
-18. Keybindings setup menu:
-19. Add dedicated keybindings UI screen with grouped actions and conflict-resolution UX.
-20. Fullscreen behavior:
-21. Add shared display mode manager that recalculates scene layout after mode transitions and on return-to-menu.
+1. Playbot tuning:
+2. Calibrate default planner budgets/profile presets for very large boards.
+3. Add CI trend tracking for planner latency over time (not only pass/fail thresholds).
+4. ND planner maintainability:
+5. Split `planner_nd.py` into smaller modules if future heuristic/search additions increase complexity.
+6. Additional verification:
+7. Expand deterministic replay suites to include long-run score progression snapshots across all assist combinations.

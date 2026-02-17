@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "active_profile": "small",
+  "last_mode": "2d",
+  "display": {
+    "fullscreen": false,
+    "windowed_size": [1200, 760]
+  },
+  "audio": {
+    "master_volume": 0.8,
+    "sfx_volume": 0.7,
+    "mute": false
+  },
+  "settings": {
+    "2d": {
+      "width": 10,
+      "height": 20,
+      "piece_set_index": 0,
+      "bot_mode_index": 0,
+      "bot_algorithm_index": 0,
+      "bot_profile_index": 1,
+      "bot_speed_level": 7,
+      "bot_budget_ms": 12,
+      "challenge_layers": 0,
+      "speed_level": 1
+    },
+    "3d": {
+      "width": 6,
+      "height": 18,
+      "depth": 6,
+      "piece_set_index": 0,
+      "bot_mode_index": 0,
+      "bot_algorithm_index": 0,
+      "bot_profile_index": 1,
+      "bot_speed_level": 7,
+      "bot_budget_ms": 24,
+      "challenge_layers": 0,
+      "speed_level": 1
+    },
+    "4d": {
+      "width": 10,
+      "height": 20,
+      "depth": 6,
+      "fourth": 4,
+      "piece_set_index": 0,
+      "bot_mode_index": 0,
+      "bot_algorithm_index": 0,
+      "bot_profile_index": 1,
+      "bot_speed_level": 7,
+      "bot_budget_ms": 36,
+      "challenge_layers": 0,
+      "speed_level": 1
+    }
+  }
+}

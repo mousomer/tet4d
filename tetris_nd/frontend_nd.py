@@ -17,15 +17,18 @@ from .keybindings import (
     SLICE_KEYS_4D,
     SYSTEM_KEYS,
     active_key_profile,
-    keybinding_file_label,
     load_active_profile_bindings,
 )
-from .menu_controls import FieldSpec, apply_menu_actions, gather_menu_actions
-from .menu_keybinding_shortcuts import menu_binding_hint_line, menu_binding_status_color
-from .menu_settings_state import load_menu_settings
+from .menu_controls import FieldSpec, MenuAction, apply_menu_actions, gather_menu_actions
+from .menu_config import default_settings_payload, setup_fields_for_dimension
+from .menu_keybinding_shortcuts import menu_binding_status_color
+from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
-from .playbot import BOT_MODE_OPTIONS, bot_mode_label, run_dry_run_nd
-from .playbot.types import bot_mode_from_index
+from .playbot import run_dry_run_nd
+from .playbot.types import (
+    bot_planner_algorithm_from_index,
+    bot_planner_profile_from_index,
+)
 from .speed_curve import gravity_interval_ms
 from .view_controls import viewer_relative_move_axis_delta
 
@@ -33,6 +36,7 @@ from .view_controls import viewer_relative_move_axis_delta
 TEXT_COLOR = (230, 230, 230)
 HIGHLIGHT_COLOR = (255, 215, 0)
 DEFAULT_GAME_SEED = 1337
+_DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
 
 
 @dataclass
@@ -74,26 +78,34 @@ def draw_gradient_background(surface: pygame.Surface,
 
 @dataclass
 class GameSettingsND:
-    width: int = 10
-    height: int = 20
-    depth: int = 6
-    fourth: int = 4
-    speed_level: int = 1
-    piece_set_index: int = 0
-    bot_mode_index: int = 0
-    bot_speed_level: int = 7
-    challenge_layers: int = 0
+    width: int = _DEFAULT_MODE_4D["width"]
+    height: int = _DEFAULT_MODE_4D["height"]
+    depth: int = _DEFAULT_MODE_4D["depth"]
+    fourth: int = _DEFAULT_MODE_4D["fourth"]
+    speed_level: int = _DEFAULT_MODE_4D["speed_level"]
+    piece_set_index: int = _DEFAULT_MODE_4D["piece_set_index"]
+    bot_mode_index: int = _DEFAULT_MODE_4D["bot_mode_index"]
+    bot_algorithm_index: int = _DEFAULT_MODE_4D["bot_algorithm_index"]
+    bot_profile_index: int = _DEFAULT_MODE_4D["bot_profile_index"]
+    bot_speed_level: int = _DEFAULT_MODE_4D["bot_speed_level"]
+    bot_budget_ms: int = _DEFAULT_MODE_4D["bot_budget_ms"]
+    challenge_layers: int = _DEFAULT_MODE_4D["challenge_layers"]
 
 
-_PIECE_SET_4D_CHOICES = (
-    *piece_set_options_for_dimension(4),
-)
-_PIECE_SET_4D_LABELS = tuple(piece_set_label(piece_set_id) for piece_set_id in _PIECE_SET_4D_CHOICES)
+_PIECE_SET_CHOICES = {
+    3: tuple(piece_set_options_for_dimension(3)),
+    4: tuple(piece_set_options_for_dimension(4)),
+}
+_PIECE_SET_LABELS = {
+    dimension: tuple(piece_set_label(piece_set_id) for piece_set_id in choices)
+    for dimension, choices in _PIECE_SET_CHOICES.items()
+}
 
 
-def _piece_set_index_to_id(index: int) -> str:
-    safe_index = max(0, min(len(_PIECE_SET_4D_CHOICES) - 1, index))
-    return _PIECE_SET_4D_CHOICES[safe_index]
+def _piece_set_index_to_id(dimension: int, index: int) -> str:
+    choices = _PIECE_SET_CHOICES.get(dimension, _PIECE_SET_CHOICES[4])
+    safe_index = max(0, min(len(choices) - 1, int(index)))
+    return choices[safe_index]
 
 
 def piece_set_4d_label(piece_set_4d: str) -> str:
@@ -117,20 +129,35 @@ class MenuState:
 
 
 def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
-    fields: list[FieldSpec] = [
-        ("Board width", "width", 6, 16),
-        ("Board height", "height", 12, 30),
-    ]
-    if dimension >= 3:
-        fields.append(("Board depth (z)", "depth", 4, 12))
-    if dimension >= 4:
-        fields.append(("Board axis w", "fourth", 3, 10))
-        fields.append(("4D piece set", "piece_set_index", 0, len(_PIECE_SET_4D_CHOICES) - 1))
-    fields.append(("Playbot mode", "bot_mode_index", 0, len(BOT_MODE_OPTIONS) - 1))
-    fields.append(("Bot speed", "bot_speed_level", 1, 10))
-    fields.append(("Challenge layers", "challenge_layers", 0, 20))
-    fields.append(("Speed level", "speed_level", 1, 10))
-    return fields
+    choices = _PIECE_SET_CHOICES.get(dimension)
+    piece_set_max = 0 if choices is None else max(0, len(choices) - 1)
+    return setup_fields_for_dimension(dimension, piece_set_max=piece_set_max)
+
+
+_SETUP_BLOCKED_ACTIONS = {
+    MenuAction.LOAD_BINDINGS,
+    MenuAction.SAVE_BINDINGS,
+    MenuAction.LOAD_SETTINGS,
+    MenuAction.SAVE_SETTINGS,
+    MenuAction.RESET_SETTINGS,
+    MenuAction.PROFILE_PREV,
+    MenuAction.PROFILE_NEXT,
+    MenuAction.PROFILE_NEW,
+    MenuAction.PROFILE_DELETE,
+    MenuAction.REBIND_TOGGLE,
+    MenuAction.REBIND_TARGET_NEXT,
+    MenuAction.REBIND_TARGET_PREV,
+    MenuAction.REBIND_CONFLICT_NEXT,
+    MenuAction.RESET_BINDINGS,
+}
+
+
+def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
+    if attr_name == "piece_set_index":
+        labels = _PIECE_SET_LABELS.get(dimension, _PIECE_SET_LABELS[4])
+        safe_index = max(0, min(len(labels) - 1, int(value)))
+        return labels[safe_index]
+    return str(value)
 
 
 def draw_menu(screen: pygame.Surface,
@@ -164,15 +191,7 @@ def draw_menu(screen: pygame.Surface,
     y = panel_y + 28
     for idx, (label, attr_name, _, _) in enumerate(fields):
         value = getattr(state.settings, attr_name)
-        if attr_name == "piece_set_index":
-            safe_index = max(0, min(len(_PIECE_SET_4D_LABELS) - 1, int(value)))
-            value_text = _PIECE_SET_4D_LABELS[safe_index]
-        elif attr_name == "bot_mode_index":
-            value_text = bot_mode_label(bot_mode_from_index(int(value)))
-        elif attr_name == "bot_speed_level":
-            value_text = f"{value} (1..10)"
-        else:
-            value_text = str(value)
+        value_text = _menu_value_text(dimension, attr_name, value)
         text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
@@ -186,21 +205,10 @@ def draw_menu(screen: pygame.Surface,
         screen.blit(text_surf, text_rect.topleft)
         y += 44
 
-    rebind_target = "-"
-    if state.rebind_targets:
-        group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-        rebind_target = f"{group}.{action_name}"
-
     hint_lines = [
         "Esc = quit",
-        menu_binding_hint_line(dimension),
-        f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-        "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys   F7 dry-run",
-        (
-            f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
-            f"Tab/` target   C conflict={state.rebind_conflict_mode}"
-        ),
-        f"Profile file: {keybinding_file_label(dimension)}",
+        "F7 dry-run verify (bot, no graphics)",
+        "Use Main Menu -> Bot Options / Keybindings for shared controls.",
         "Controls are shown in-game on the side panel.",
     ]
     hint_y = panel_y + panel_h + 24
@@ -232,15 +240,30 @@ def run_menu(screen: pygame.Surface,
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, dimension)
         fields = menu_fields_for_dimension(dimension)
-        apply_menu_actions(state, actions, fields, dimension)
+        apply_menu_actions(
+            state,
+            actions,
+            fields,
+            dimension,
+            blocked_actions=_SETUP_BLOCKED_ACTIONS,
+        )
         if state.run_dry_run:
-            report = run_dry_run_nd(build_config(state.settings, dimension))
+            report = run_dry_run_nd(
+                build_config(state.settings, dimension),
+                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                planning_budget_ms=state.settings.bot_budget_ms,
+                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+            )
             state.bindings_status = report.reason
             state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state, dimension)
         pygame.display.flip()
 
     if state.start_game and state.running:
+        ok, msg = save_menu_settings(state, dimension)
+        if not ok:
+            state.bindings_status = msg
+            state.bindings_status_error = True
         return state.settings
     return None
 
@@ -251,7 +274,7 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         dims.append(settings.depth)
     if dimension >= 4:
         dims.append(settings.fourth)
-    piece_set_id = _piece_set_index_to_id(settings.piece_set_index)
+    piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
     return GameConfigND(
         dims=tuple(dims),
         gravity_axis=1,

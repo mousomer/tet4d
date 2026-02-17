@@ -6,13 +6,18 @@ from ..board import BoardND
 from ..challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
 from ..game2d import GameConfig, GameState
 from ..game_nd import GameConfigND, GameStateND
+from ..runtime_config import playbot_dry_run_defaults
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
-from .types import DryRunReport
+from .types import (
+    BotPlannerAlgorithm,
+    BotPlannerProfile,
+    DryRunReport,
+    default_planning_budget_ms,
+)
 
 
-DEFAULT_DRY_RUN_PIECES = 160
-DEFAULT_DRY_RUN_SEED = 1337
+DEFAULT_DRY_RUN_PIECES, DEFAULT_DRY_RUN_SEED = playbot_dry_run_defaults()
 
 
 def run_dry_run_2d(
@@ -20,6 +25,9 @@ def run_dry_run_2d(
     *,
     max_pieces: int = DEFAULT_DRY_RUN_PIECES,
     seed: int = DEFAULT_DRY_RUN_SEED,
+    planner_profile: BotPlannerProfile = BotPlannerProfile.BALANCED,
+    planning_budget_ms: int | None = None,
+    planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
     state = GameState(
         config=cfg,
@@ -29,12 +37,18 @@ def run_dry_run_2d(
     apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
+    budget = planning_budget_ms if planning_budget_ms is not None else default_planning_budget_ms(2, planner_profile)
 
     for _ in range(max(1, max_pieces)):
         if state.game_over:
             break
         before_clears = state.lines_cleared
-        plan = plan_best_2d_move(state)
+        plan = plan_best_2d_move(
+            state,
+            profile=planner_profile,
+            budget_ms=budget,
+            algorithm=planner_algorithm,
+        )
         if plan is None:
             break
         state.current_piece = plan.final_piece
@@ -69,6 +83,9 @@ def run_dry_run_nd(
     *,
     max_pieces: int = DEFAULT_DRY_RUN_PIECES,
     seed: int = DEFAULT_DRY_RUN_SEED,
+    planner_profile: BotPlannerProfile = BotPlannerProfile.BALANCED,
+    planning_budget_ms: int | None = None,
+    planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
     state = GameStateND(
         config=cfg,
@@ -78,12 +95,18 @@ def run_dry_run_nd(
     apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
+    budget = planning_budget_ms if planning_budget_ms is not None else default_planning_budget_ms(cfg.ndim, planner_profile)
 
     for _ in range(max(1, max_pieces)):
         if state.game_over:
             break
         before_clears = state.lines_cleared
-        plan = plan_best_nd_move(state)
+        plan = plan_best_nd_move(
+            state,
+            profile=planner_profile,
+            budget_ms=budget,
+            algorithm=planner_algorithm,
+        )
         if plan is None:
             break
         state.current_piece = plan.final_piece

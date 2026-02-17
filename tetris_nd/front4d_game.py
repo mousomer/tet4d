@@ -36,7 +36,12 @@ from .keybindings import (
     CONTROL_LINES_ND_4D,
 )
 from .playbot import PlayBotController
-from .playbot.types import BotMode, bot_mode_from_index
+from .playbot.types import (
+    BotMode,
+    bot_planner_algorithm_from_index,
+    bot_mode_from_index,
+    bot_planner_profile_from_index,
+)
 from .projection3d import (
     Face,
     Cell3,
@@ -680,10 +685,19 @@ def run_game_loop(
     *,
     bot_mode: BotMode = BotMode.OFF,
     bot_speed_level: int = 7,
+    bot_algorithm_index: int = 0,
+    bot_profile_index: int = 1,
+    bot_budget_ms: int = 36,
 ) -> bool:
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop = LoopContext4D.create(cfg, bot_mode=bot_mode)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.bot.configure_planner(
+        ndim=4,
+        profile=bot_planner_profile_from_index(bot_profile_index),
+        budget_ms=bot_budget_ms,
+        algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
+    )
     loop.refresh_score_multiplier()
     clock = pygame.time.Clock()
 
@@ -789,6 +803,9 @@ def run() -> None:
             fonts,
             bot_mode=bot_mode_from_index(settings.bot_mode_index),
             bot_speed_level=settings.bot_speed_level,
+            bot_algorithm_index=settings.bot_algorithm_index,
+            bot_profile_index=settings.bot_profile_index,
+            bot_budget_ms=settings.bot_budget_ms,
         )
         if not back_to_menu:
             running = False

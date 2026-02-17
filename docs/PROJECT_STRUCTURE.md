@@ -11,10 +11,22 @@ tet4d/
 ├── front3d.py                   # 3D game entrypoint
 ├── front4d.py                   # 4D game entrypoint
 ├── requirements.txt             # runtime dependency list (pygame-ce)
+├── config/
+│   ├── menu/
+│   │   ├── defaults.json        # default menu/app settings (source-controlled)
+│   │   └── structure.json       # menu row/field definitions (source-controlled)
+│   ├── gameplay/
+│   │   └── tuning.json          # speed/challenge/scoring/grid tuning
+│   ├── playbot/
+│   │   └── policy.json          # planner budgets/lookahead/controller defaults
+│   └── audio/
+│       └── sfx.json             # generated SFX event tone specs
 ├── keybindings/
 │   ├── 2d.json                  # 2D key map
 │   ├── 3d.json                  # 3D key map
 │   └── 4d.json                  # 4D key map
+├── state/
+│   └── menu_settings.json       # user runtime overrides (generated)
 ├── tetris_nd/                   # shared engine + frontends + tests
 │   ├── board.py                 # sparse ND board + plane clear logic
 │   ├── game2d.py                # 2D game rules/state
@@ -53,6 +65,9 @@ tet4d/
 6. Shared keybinding editor UI is in `keybindings_menu.py`.
 7. Audio runtime helpers are in `audio.py`; display mode helpers are in `display.py`.
 8. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+9. `config/menu/*` drives launcher/setup menu structure and default values.
+10. `config/gameplay/*`, `config/playbot/*`, and `config/audio/*` drive runtime tuning defaults.
+11. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
 
 ## Unified documentation sections
 

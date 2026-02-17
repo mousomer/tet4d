@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 import pygame
 
+from .runtime_config import audio_event_specs
+
 
 @dataclass
 class AudioSettings:
@@ -14,16 +16,7 @@ class AudioSettings:
     mute: bool = False
 
 
-_EVENT_SPECS: dict[str, tuple[float, int, float]] = {
-    "menu_move": (420.0, 32, 0.10),
-    "menu_confirm": (620.0, 68, 0.13),
-    "move": (460.0, 26, 0.08),
-    "rotate": (540.0, 34, 0.10),
-    "drop": (230.0, 70, 0.11),
-    "lock": (180.0, 88, 0.12),
-    "clear": (760.0, 110, 0.13),
-    "game_over": (130.0, 220, 0.14),
-}
+_EVENT_SPECS: dict[str, tuple[float, int, float]] = audio_event_specs()
 
 
 class AudioEngine:

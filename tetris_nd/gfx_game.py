@@ -163,14 +163,13 @@ def draw_button_with_arrow(
 
 def _draw_menu_header(screen: pygame.Surface,
                       fonts: GfxFonts,
-                      bindings_file_hint: str,
+                      bindings_file_hint: str | None,
                       extra_hint_lines: Tuple[str, ...],
                       bindings_status: str,
                       bindings_status_error: bool) -> int:
     width, _ = screen.get_size()
     title_text = "2D Tetris – Setup"
     subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
-    bindings_hint_text = f"L = load keys, S = save keys ({bindings_file_hint})"
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
@@ -182,7 +181,12 @@ def _draw_menu_header(screen: pygame.Surface,
     screen.blit(subtitle_surf, (subtitle_x, 60 + title_surf.get_height() + 10))
 
     hint_y = 60 + title_surf.get_height() + 34
-    for line in (bindings_hint_text, *extra_hint_lines):
+    hint_lines = (
+        (f"L = load keys, S = save keys ({bindings_file_hint})", *extra_hint_lines)
+        if bindings_file_hint
+        else extra_hint_lines
+    )
+    for line in hint_lines:
         hint_surf = fonts.hint_font.render(line, True, (200, 200, 220))
         hint_x = (width - hint_surf.get_width()) // 2
         screen.blit(hint_surf, (hint_x, hint_y))
@@ -355,7 +359,7 @@ def draw_menu(screen: pygame.Surface,
               fonts: GfxFonts,
               settings,
               selected_index: int,
-              bindings_file_hint: str = "keybindings/2d.json",
+              bindings_file_hint: str | None = "keybindings/2d.json",
               extra_hint_lines: Tuple[str, ...] = (),
               bindings_status: str = "",
               bindings_status_error: bool = False,

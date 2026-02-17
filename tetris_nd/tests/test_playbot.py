@@ -15,8 +15,9 @@ from tetris_nd.pieces_nd import (
     PieceShapeND,
 )
 from tetris_nd.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
+from tetris_nd.playbot.planner_2d import plan_best_2d_move
 from tetris_nd.playbot.planner_nd import _greedy_key_4d, _simulate_lock_board, plan_best_nd_move
-from tetris_nd.playbot.types import BotMode
+from tetris_nd.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 
 
@@ -91,6 +92,51 @@ class TestPlaybot(unittest.TestCase):
         fast = PlayBotController.action_interval_from_speed(gravity_ms, 10)
         self.assertGreater(slow, fast)
         self.assertGreaterEqual(fast, 20)
+
+    def test_2d_planner_budget_fallback_still_returns_plan(self) -> None:
+        cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+
+        tight = plan_best_2d_move(state, profile=BotPlannerProfile.BALANCED, budget_ms=2)
+        relaxed = plan_best_2d_move(state, profile=BotPlannerProfile.BALANCED, budget_ms=80)
+
+        self.assertIsNotNone(tight)
+        self.assertIsNotNone(relaxed)
+        self.assertLessEqual(tight.stats.candidate_count, relaxed.stats.candidate_count)
+
+    def test_3d_planner_profile_runs_with_budget(self) -> None:
+        cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+
+        fast = plan_best_nd_move(
+            state,
+            profile=BotPlannerProfile.FAST,
+            budget_ms=6,
+            algorithm=BotPlannerAlgorithm.HEURISTIC,
+        )
+        deep = plan_best_nd_move(state, profile=BotPlannerProfile.DEEP, budget_ms=80)
+
+        self.assertIsNotNone(fast)
+        self.assertIsNotNone(deep)
+
+    def test_nd_algorithm_override_runs(self) -> None:
+        cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+
+        heuristic = plan_best_nd_move(
+            state,
+            profile=BotPlannerProfile.BALANCED,
+            budget_ms=40,
+            algorithm=BotPlannerAlgorithm.HEURISTIC,
+        )
+        greedy = plan_best_nd_move(
+            state,
+            profile=BotPlannerProfile.BALANCED,
+            budget_ms=40,
+            algorithm=BotPlannerAlgorithm.GREEDY_LAYER,
+        )
+        self.assertIsNotNone(heuristic)
+        self.assertIsNotNone(greedy)
 
     def test_rotations_wait_until_piece_is_visible_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
