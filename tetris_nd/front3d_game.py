@@ -64,6 +64,7 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .rotation_anim import PieceRotationAnimatorND
 from .speed_curve import gravity_interval_ms
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
@@ -88,6 +89,8 @@ COLOR_MAP = {
     6: (0, 0, 255),
     7: (255, 165, 0),
 }
+
+ActiveOverlay3D = tuple[tuple[tuple[float, float, float], ...], int]
 
 @dataclass
 class GfxFonts:
@@ -410,14 +413,24 @@ def _build_cell_faces(cell: Cell3,
     )
 
 
-def _collect_visible_cells(state: GameStateND) -> list[tuple[Cell3, int, bool]]:
+def _collect_visible_cells(
+    state: GameStateND,
+    active_overlay: ActiveOverlay3D | None = None,
+) -> list[tuple[tuple[float, float, float], int, bool]]:
     dims = state.config.dims
-    cells: list[tuple[Cell3, int, bool]] = []
+    cells: list[tuple[tuple[float, float, float], int, bool]] = []
 
     for coord, cell_id in state.board.cells.items():
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((x, y, z), cell_id, False))
+            cells.append(((float(x), float(y), float(z)), cell_id, False))
+
+    if active_overlay is not None:
+        overlay_cells, overlay_color = active_overlay
+        for x, y, z in overlay_cells:
+            if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
+                cells.append(((x, y, z), overlay_color, True))
+        return cells
 
     if state.current_piece is None:
         return cells
@@ -426,7 +439,7 @@ def _collect_visible_cells(state: GameStateND) -> list[tuple[Cell3, int, bool]]:
     for coord in state.current_piece.cells():
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((x, y, z), piece_id, True))
+            cells.append(((float(x), float(y), float(z)), piece_id, True))
     return cells
 
 
@@ -448,7 +461,7 @@ def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[i
     return x_marks, y_marks, z_marks
 
 
-def _faces_for_cells(cells: list[tuple[Cell3, int, bool]],
+def _faces_for_cells(cells: list[tuple[tuple[float, float, float], int, bool]],
                      camera: Camera3D,
                      center_px: Point2,
                      dims: Cell3) -> list[Face]:
@@ -522,7 +535,8 @@ def _draw_board_3d(surface: pygame.Surface,
                    camera: Camera3D,
                    board_rect: pygame.Rect,
                    grid_mode: GridMode = GridMode.FULL,
-                   clear_anim: Optional[ClearAnimation3D] = None) -> None:
+                   clear_anim: Optional[ClearAnimation3D] = None,
+                   active_overlay: ActiveOverlay3D | None = None) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
 
@@ -565,7 +579,7 @@ def _draw_board_3d(surface: pygame.Surface,
 
     _draw_sorted_faces(
         surface,
-        _faces_for_cells(_collect_visible_cells(state), camera, center_px, dims),
+        _faces_for_cells(_collect_visible_cells(state, active_overlay), camera, center_px, dims),
     )
     _draw_clear_animation(surface, clear_anim, camera, center_px, dims)
 
@@ -657,7 +671,8 @@ def draw_game_frame(screen: pygame.Surface,
                     fonts: GfxFonts,
                     grid_mode: GridMode,
                     bot_lines: tuple[str, ...] = (),
-                    clear_anim: Optional[ClearAnimation3D] = None) -> None:
+                    clear_anim: Optional[ClearAnimation3D] = None,
+                    active_overlay: ActiveOverlay3D | None = None) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
 
@@ -684,6 +699,7 @@ def draw_game_frame(screen: pygame.Surface,
         board_rect,
         grid_mode=grid_mode,
         clear_anim=clear_anim,
+        active_overlay=active_overlay,
     )
     _draw_side_panel(screen, state, camera, panel_rect, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
 
@@ -756,6 +772,9 @@ class LoopContext3D:
     camera: Camera3D = field(default_factory=Camera3D)
     mouse_orbit: MouseOrbitState = field(default_factory=MouseOrbitState)
     bot: PlayBotController = field(default_factory=PlayBotController)
+    rotation_anim: PieceRotationAnimatorND = field(
+        default_factory=lambda: PieceRotationAnimatorND(ndim=3, gravity_axis=1)
+    )
     grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation3D] = None
     last_lines_cleared: int = 0
@@ -800,6 +819,7 @@ class LoopContext3D:
         self.was_game_over = self.state.game_over
         self.mouse_orbit.reset()
         self.bot.reset_runtime()
+        self.rotation_anim.reset()
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -891,6 +911,8 @@ def run_game_loop(screen: pygame.Surface,
 
         loop.camera.step_animation(dt)
         loop.clear_anim = tick_animation(loop.clear_anim, dt)
+        loop.rotation_anim.observe(loop.state.current_piece, dt)
+        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
         draw_game_frame(
             screen,
@@ -900,6 +922,7 @@ def run_game_loop(screen: pygame.Surface,
             grid_mode=loop.grid_mode,
             bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
+            active_overlay=active_overlay,
         )
         pygame.display.flip()
 

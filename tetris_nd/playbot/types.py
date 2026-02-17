@@ -28,13 +28,6 @@ def bot_mode_from_index(index: int) -> BotMode:
     return BOT_MODE_OPTIONS[safe_index]
 
 
-def bot_mode_to_index(mode: BotMode) -> int:
-    try:
-        return BOT_MODE_OPTIONS.index(mode)
-    except ValueError:
-        return 0
-
-
 @dataclass(frozen=True)
 class PlanStats:
     candidate_count: int

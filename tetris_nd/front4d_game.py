@@ -54,6 +54,7 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .rotation_anim import PieceRotationAnimatorND
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
 
@@ -78,6 +79,8 @@ COLOR_MAP = {
     6: (0, 0, 255),
     7: (255, 165, 0),
 }
+
+ActiveOverlay4D = tuple[tuple[tuple[float, float, float, float], ...], int]
 
 
 @dataclass
@@ -168,25 +171,64 @@ def _build_cell_faces(cell: Cell3,
     )
 
 
-def _layer_cells(state: GameStateND, w_layer: int) -> list[tuple[Cell3, int, bool]]:
-    dims = state.config.dims
-    cells: list[tuple[Cell3, int, bool]] = []
+def _layer_cells(
+    state: GameStateND,
+    w_layer: int,
+    active_overlay: ActiveOverlay4D | None = None,
+) -> list[tuple[tuple[float, float, float], int, bool]]:
+    return _layer_locked_cells(state, w_layer) + _layer_active_cells(state, w_layer, active_overlay)
 
+
+def _layer_locked_cells(state: GameStateND, w_layer: int) -> list[tuple[tuple[float, float, float], int, bool]]:
+    dims = state.config.dims
+    cells: list[tuple[tuple[float, float, float], int, bool]] = []
     for coord, cell_id in state.board.cells.items():
         x, y, z, w = coord
         if w != w_layer:
             continue
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((x, y, z), cell_id, False))
+            cells.append(((float(x), float(y), float(z)), cell_id, False))
+    return cells
 
-    if state.current_piece is not None:
-        piece_id = state.current_piece.shape.color_id
-        for coord in state.current_piece.cells():
-            x, y, z, w = coord
-            if w != w_layer:
-                continue
-            if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-                cells.append(((x, y, z), piece_id, True))
+
+def _layer_active_cells(
+    state: GameStateND,
+    w_layer: int,
+    active_overlay: ActiveOverlay4D | None,
+) -> list[tuple[tuple[float, float, float], int, bool]]:
+    if active_overlay is not None:
+        return _overlay_active_layer_cells(state, w_layer, active_overlay)
+    return _piece_active_layer_cells(state, w_layer)
+
+
+def _overlay_active_layer_cells(
+    state: GameStateND,
+    w_layer: int,
+    active_overlay: ActiveOverlay4D,
+) -> list[tuple[tuple[float, float, float], int, bool]]:
+    dims = state.config.dims
+    overlay_cells, overlay_color = active_overlay
+    cells: list[tuple[tuple[float, float, float], int, bool]] = []
+    for x, y, z, w in overlay_cells:
+        if abs(w - w_layer) >= 0.5:
+            continue
+        if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
+            cells.append(((x, y, z), overlay_color, True))
+    return cells
+
+
+def _piece_active_layer_cells(state: GameStateND, w_layer: int) -> list[tuple[tuple[float, float, float], int, bool]]:
+    if state.current_piece is None:
+        return []
+    dims = state.config.dims
+    piece_id = state.current_piece.shape.color_id
+    cells: list[tuple[tuple[float, float, float], int, bool]] = []
+    for coord in state.current_piece.cells():
+        x, y, z, w = coord
+        if w != w_layer:
+            continue
+        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
+            cells.append(((float(x), float(y), float(z)), piece_id, True))
     return cells
 
 
@@ -264,9 +306,10 @@ def _layer_faces(state: GameStateND,
                  view: LayerView3D,
                  center_px: Point2,
                  dims3: Cell3,
-                 zoom: float) -> list[Face]:
+                 zoom: float,
+                 active_overlay: ActiveOverlay4D | None = None) -> list[Face]:
     faces: list[Face] = []
-    for coord3, cell_id, is_active in _layer_cells(state, w_layer):
+    for coord3, cell_id, is_active in _layer_cells(state, w_layer, active_overlay):
         faces.extend(
             _build_cell_faces(
                 cell=coord3,
@@ -339,7 +382,8 @@ def _draw_layer_board(surface: pygame.Surface,
                       active_w: int,
                       fonts: GfxFonts,
                       grid_mode: GridMode,
-                      clear_anim: Optional[ClearAnimation4D] = None) -> None:
+                      clear_anim: Optional[ClearAnimation4D] = None,
+                      active_overlay: ActiveOverlay4D | None = None) -> None:
     border = LAYER_ACTIVE if w_layer == active_w else LAYER_FRAME
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, border, rect, 2, border_radius=8)
@@ -355,7 +399,7 @@ def _draw_layer_board(surface: pygame.Surface,
     _draw_layer_grid_or_shadow(surface, dims3, view, draw_rect, zoom, grid_mode, helper_marks)
 
     center_px = (draw_rect.centerx, draw_rect.centery)
-    faces = _layer_faces(state, w_layer, view, center_px, dims3, zoom)
+    faces = _layer_faces(state, w_layer, view, center_px, dims3, zoom, active_overlay=active_overlay)
     faces.sort(key=lambda x: x[0], reverse=True)
     for _depth, poly, color, active in faces:
         pygame.draw.polygon(surface, color, poly)
@@ -447,7 +491,8 @@ def draw_game_frame(screen: pygame.Surface,
                     fonts: GfxFonts,
                     grid_mode: GridMode,
                     bot_lines: tuple[str, ...] = (),
-                    clear_anim: Optional[ClearAnimation4D] = None) -> None:
+                    clear_anim: Optional[ClearAnimation4D] = None,
+                    active_overlay: ActiveOverlay4D | None = None) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
 
@@ -478,6 +523,7 @@ def draw_game_frame(screen: pygame.Surface,
             fonts,
             grid_mode=grid_mode,
             clear_anim=clear_anim,
+            active_overlay=active_overlay,
         )
 
     _draw_side_panel(screen, state, slice_state, panel_rect, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
@@ -539,6 +585,7 @@ class LoopContext4D:
     view: LayerView3D
     mouse_orbit: MouseOrbitState
     bot: PlayBotController
+    rotation_anim: PieceRotationAnimatorND
     grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation4D] = None
     last_lines_cleared: int = 0
@@ -555,6 +602,7 @@ class LoopContext4D:
             view=LayerView3D(),
             mouse_orbit=MouseOrbitState(),
             bot=PlayBotController(mode=bot_mode),
+            rotation_anim=PieceRotationAnimatorND(ndim=4, gravity_axis=cfg.gravity_axis),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
         )
@@ -588,6 +636,7 @@ class LoopContext4D:
         self.was_game_over = self.state.game_over
         self.mouse_orbit.reset()
         self.bot.reset_runtime()
+        self.rotation_anim.reset()
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -678,6 +727,8 @@ def run_game_loop(
 
         loop.view.step_animation(dt)
         loop.clear_anim = tick_animation(loop.clear_anim, dt)
+        loop.rotation_anim.observe(loop.state.current_piece, dt)
+        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
         draw_game_frame(
             screen,
@@ -688,6 +739,7 @@ def run_game_loop(
             grid_mode=loop.grid_mode,
             bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
+            active_overlay=active_overlay,
         )
         pygame.display.flip()
 

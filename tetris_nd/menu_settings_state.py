@@ -137,6 +137,32 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
     audio["mute"] = mute
 
 
+def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
+    profile = payload.get("active_profile")
+    if not isinstance(profile, str):
+        return True, ""
+    ok_profile, msg_profile = set_active_key_profile(profile)
+    if not ok_profile:
+        return False, msg_profile
+    ok_bindings, msg_bindings = load_active_profile_bindings()
+    if not ok_bindings:
+        return False, msg_bindings
+    return True, ""
+
+
+def _apply_mode_settings_to_state(state: Any, mode_settings: dict[str, Any]) -> None:
+    for attr_name, value in mode_settings.items():
+        if not hasattr(state.settings, attr_name):
+            continue
+        current = getattr(state.settings, attr_name)
+        if isinstance(current, int):
+            if isinstance(value, bool) or not isinstance(value, int):
+                continue
+        elif not isinstance(value, type(current)):
+            continue
+        setattr(state.settings, attr_name, value)
+
+
 def apply_saved_menu_settings(
     state: Any,
     dimension: int,
@@ -144,26 +170,13 @@ def apply_saved_menu_settings(
 ) -> tuple[bool, str]:
     payload = _load_payload()
     if include_profile:
-        profile = payload.get("active_profile")
-        if isinstance(profile, str):
-            ok_profile, msg_profile = set_active_key_profile(profile)
-            if not ok_profile:
-                return False, msg_profile
-            ok_bindings, msg_bindings = load_active_profile_bindings()
-            if not ok_bindings:
-                return False, msg_bindings
+        ok_profile, msg_profile = _load_saved_profile(payload)
+        if not ok_profile:
+            return False, msg_profile
     mode_key = _mode_key_for_dimension(dimension)
     mode_settings = payload.get("settings", {}).get(mode_key, {})
     if isinstance(mode_settings, dict):
-        for attr_name, value in mode_settings.items():
-            if hasattr(state.settings, attr_name):
-                current = getattr(state.settings, attr_name)
-                if isinstance(current, int):
-                    if isinstance(value, bool) or not isinstance(value, int):
-                        continue
-                elif not isinstance(value, type(current)):
-                    continue
-                setattr(state.settings, attr_name, value)
+        _apply_mode_settings_to_state(state, mode_settings)
     state.active_profile = active_key_profile()
     return True, "Loaded saved menu settings"
 
