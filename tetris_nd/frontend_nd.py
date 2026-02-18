@@ -164,50 +164,81 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
     return str(value)
 
 
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    if font.size(ellipsis)[0] >= max_width:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
+        trimmed = trimmed[:-1]
+    return trimmed + ellipsis if trimmed else ""
+
+
 def draw_menu(screen: pygame.Surface,
               fonts: GfxFonts,
               state: MenuState,
               dimension: int) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
-    width, _ = screen.get_size()
+    width, height = screen.get_size()
     fields = menu_fields_for_dimension(dimension)
 
-    title_text = f"{dimension}D Tetris – Setup"
-    subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start."
+    title_text = f"{dimension}D Tetris - Setup"
+    subtitle_text = _fit_text(
+        fonts.hint_font,
+        "Use Up/Down to select, Left/Right to change, Enter to start.",
+        width - 28,
+    )
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
 
+    title_y = 48
     title_x = (width - title_surf.get_width()) // 2
-    screen.blit(title_surf, (title_x, 60))
+    screen.blit(title_surf, (title_x, title_y))
+    subtitle_y = title_y + title_surf.get_height() + 8
     subtitle_x = (width - subtitle_surf.get_width()) // 2
-    screen.blit(subtitle_surf, (subtitle_x, 108))
+    screen.blit(subtitle_surf, (subtitle_x, subtitle_y))
 
-    panel_w = int(width * 0.65)
-    panel_h = 90 + len(fields) * 44
+    panel_w = min(max(360, int(width * 0.65)), width - 24)
+    hint_line_h = fonts.hint_font.get_height() + 4
+    bottom_lines = 4 + (1 if state.bindings_status else 0)
+    panel_top = subtitle_y + subtitle_surf.get_height() + 12
+    panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
+    row_h = min(44, max(fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(fields))))
+    panel_h = min(panel_max_h, 40 + len(fields) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = 160
+    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8))
 
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16)
     screen.blit(panel_surf, (panel_x, panel_y))
 
-    y = panel_y + 28
+    y = panel_y + 20
+    option_x = panel_x + 24
+    option_w = panel_w - 48
+    option_bottom = panel_y + panel_h - 10
     for idx, (label, attr_name, _, _) in enumerate(fields):
+        if y + fonts.menu_font.get_height() > option_bottom:
+            break
         value = getattr(state.settings, attr_name)
         value_text = _menu_value_text(dimension, attr_name, value)
         text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        text_surf = fonts.menu_font.render(text, True, txt_color)
-        text_rect = text_surf.get_rect(topleft=(panel_x + 36, y))
+        text_fit = _fit_text(fonts.menu_font, text, option_w - 6)
+        text_surf = fonts.menu_font.render(text_fit, True, txt_color)
+        text_rect = text_surf.get_rect(topleft=(option_x, y))
         if selected:
-            highlight_rect = text_rect.inflate(20, 10)
+            highlight_rect = pygame.Rect(option_x - 8, y - 4, option_w + 16, text_rect.height + 10)
             highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
             pygame.draw.rect(highlight_surf, (255, 255, 255, 40), highlight_surf.get_rect(), border_radius=10)
             screen.blit(highlight_surf, highlight_rect.topleft)
         screen.blit(text_surf, text_rect.topleft)
-        y += 44
+        y += row_h
 
     hint_lines = [
         "Esc = quit",
@@ -215,16 +246,20 @@ def draw_menu(screen: pygame.Surface,
         "Use Main Menu -> Bot Options / Keybindings for shared controls.",
         "Controls are shown in-game on the side panel.",
     ]
-    hint_y = panel_y + panel_h + 24
-    for line in hint_lines:
-        surf = fonts.hint_font.render(line, True, (210, 210, 230))
+    hint_y = panel_y + panel_h + 8
+    max_hint_lines = max(1, (height - hint_y - 6) // max(1, hint_line_h))
+    hint_budget = max(1, max_hint_lines - (1 if state.bindings_status else 0))
+    for line in hint_lines[:hint_budget]:
+        line_fit = _fit_text(fonts.hint_font, line, width - 28)
+        surf = fonts.hint_font.render(line_fit, True, (210, 210, 230))
         hint_x = (width - surf.get_width()) // 2
         screen.blit(surf, (hint_x, hint_y))
         hint_y += surf.get_height() + 4
 
-    if state.bindings_status:
+    if state.bindings_status and hint_y + hint_line_h <= height - 6:
         status_color = menu_binding_status_color(state.bindings_status_error)
-        status_surf = fonts.hint_font.render(state.bindings_status, True, status_color)
+        status_text = _fit_text(fonts.hint_font, state.bindings_status, width - 28)
+        status_surf = fonts.hint_font.render(status_text, True, status_color)
         status_x = (width - status_surf.get_width()) // 2
         screen.blit(status_surf, (status_x, hint_y))
 
@@ -339,6 +374,8 @@ _SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid", "help")
 _GAMEPLAY_ACTIONS_3D = (
     "move_x_neg",
     "move_x_pos",
+    "move_y_neg",
+    "move_y_pos",
     "soft_drop",
     "hard_drop",
     "rotate_xy_pos",
@@ -382,6 +419,12 @@ def system_key_action(key: int) -> str | None:
 def gameplay_action_for_key(key: int, cfg: GameConfigND) -> str | None:
     gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
     action_order = _GAMEPLAY_ACTIONS_4D if cfg.ndim >= 4 else _GAMEPLAY_ACTIONS_3D
+    if not cfg.exploration_mode:
+        action_order = tuple(
+            action
+            for action in action_order
+            if action not in {"move_y_neg", "move_y_pos"}
+        )
     return match_bound_action(key, gameplay_keys, action_order)
 
 
@@ -391,6 +434,8 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     gameplay_handlers = {
         "move_x_neg": lambda: state.try_move_axis(0, -1),
         "move_x_pos": lambda: state.try_move_axis(0, 1),
+        "move_y_neg": lambda: state.try_move_axis(cfg.gravity_axis, -1),
+        "move_y_pos": lambda: state.try_move_axis(cfg.gravity_axis, 1),
         "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
         "hard_drop": state.hard_drop,
         "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
@@ -415,6 +460,8 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
         })
     handler = gameplay_handlers.get(action)
     if handler is None:
+        return False
+    if action in {"move_y_neg", "move_y_pos"} and not cfg.exploration_mode:
         return False
     handler()
     return True

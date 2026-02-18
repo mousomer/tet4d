@@ -56,55 +56,85 @@ def _draw_gradient(surface: pygame.Surface) -> None:
         pygame.draw.line(surface, color, (0, y), (width, y))
 
 
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    if font.size(ellipsis)[0] >= max_width:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
+        trimmed = trimmed[:-1]
+    return trimmed + ellipsis if trimmed else ""
+
+
 def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None:
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("ND Tetris Launcher", True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
+    subtitle_text = _fit_text(
+        fonts.hint_font,
         "Play modes plus Help, unified Settings, Keybindings, and Bot Options.",
-        True,
-        MUTED_COLOR,
+        width - 32,
     )
-    screen.blit(title, ((width - title.get_width()) // 2, 44))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 90))
+    subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
+    title_y = 40
+    subtitle_y = title_y + title.get_height() + 8
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
 
-    panel_w = min(620, width - 40)
-    panel_h = 72 + len(MENU_ITEMS) * 52
+    hint_line_h = fonts.hint_font.get_height() + 3
+    bottom_lines = 3 + (1 if state.status else 0)
+    bottom_reserved = bottom_lines * hint_line_h + 14
+    top_reserved = subtitle_y + subtitle.get_height() + 14
+    panel_w = min(620, max(320, width - 40))
+    max_panel_h = max(120, height - top_reserved - bottom_reserved - 10)
+    row_step = min(52, max(fonts.menu_font.get_height() + 8, (max_panel_h - 48) // max(1, len(MENU_ITEMS))))
+    panel_h = min(max_panel_h, 48 + len(MENU_ITEMS) * row_step)
     panel_x = (width - panel_w) // 2
-    panel_y = max(146, (height - panel_h) // 2)
+    panel_y = max(top_reserved, min((height - panel_h) // 2, height - bottom_reserved - panel_h - 8))
 
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=14)
     screen.blit(panel, (panel_x, panel_y))
 
-    y = panel_y + 24
+    y = panel_y + 20
+    row_margin = 28
+    row_right = panel_x + panel_w - row_margin
     for idx, (_, label) in enumerate(MENU_ITEMS):
         selected = idx == state.selected
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        text = fonts.menu_font.render(label, True, color)
-        row_rect = text.get_rect(topleft=(panel_x + 28, y))
+        label_text = _fit_text(fonts.menu_font, label, row_right - (panel_x + row_margin))
+        text = fonts.menu_font.render(label_text, True, color)
+        row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
         if selected:
             hi = pygame.Surface((panel_w - 32, row_rect.height + 10), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=9)
             screen.blit(hi, (panel_x + 16, y - 4))
         screen.blit(text, row_rect.topleft)
-        y += 52
+        y += row_step
 
     info_lines = [
         f"Active key profile: {active_key_profile()}",
         f"Last mode: {state.last_mode.upper()}",
         "Up/Down select   Enter open   Esc quit",
     ]
-    info_y = panel_y + panel_h + 14
-    for line in info_lines:
-        text = fonts.hint_font.render(line, True, MUTED_COLOR)
+    info_y = panel_y + panel_h + 10
+    max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
+    info_budget = max(1, max_bottom_lines - (1 if state.status else 0))
+    for line in info_lines[:info_budget]:
+        line_draw = _fit_text(fonts.hint_font, line, width - 24)
+        text = fonts.hint_font.render(line_draw, True, MUTED_COLOR)
         screen.blit(text, ((width - text.get_width()) // 2, info_y))
         info_y += text.get_height() + 3
 
-    if state.status:
+    if state.status and info_y + hint_line_h <= height - 6:
         status_color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status = fonts.hint_font.render(state.status, True, status_color)
-        screen.blit(status, ((width - status.get_width()) // 2, min(height - 34, info_y + 8)))
+        status_text = _fit_text(fonts.hint_font, state.status, width - 24)
+        status = fonts.hint_font.render(status_text, True, status_color)
+        screen.blit(status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2)))
 
 
 def _persist_global_state(

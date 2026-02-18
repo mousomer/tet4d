@@ -5,10 +5,10 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 ## Topics
 
 1. Gameplay basics (`2D/3D/4D`, gravity axis, clear rules)
-2. Keybindings (`General`, `2D`, `3D`, `4D`)
+2. Keybindings (`General`,`2D`,`3D`,`4D`)
 3. Movement vs rotation controls
 4. Camera controls and slicing
-5. Grid modes (`OFF`, `EDGE`, `FULL`, `HELPER`)
+5. Grid modes (`OFF`,`EDGE`,`FULL`,`HELPER`)
 6. Bot modes and planner profiles
 7. Scoring and score-analyzer summary lines
 8. Settings (audio/display/keybindings/profiles)
@@ -25,9 +25,9 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 ## Control diagrams
 
 1. Translation and rotation guidance is iconized per action row.
-2. Primary icon renderer: `/Users/omer/workspace/test-code/tet4d/tetris_nd/control_icons.py`.
+2. Primary icon renderer: `tetris_nd/control_icons.py`.
 3. Legacy combined guide renderer remains available in:
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_control_guides.py`
+4. `tetris_nd/menu_control_guides.py`
 5. Entry point: `draw_translation_rotation_guides(...)`
 6. Surfaces that must expose control visuals:
 7. keybindings menus (row icons),
@@ -38,6 +38,6 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 
 When adding/removing a menu option or keybinding action, update:
 1. this index,
-2. `/Users/omer/workspace/test-code/tet4d/assets/help/manifest.json`,
-3. `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`,
-4. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+2. `assets/help/manifest.json`,
+3. `docs/FEATURE_MAP.md`,
+4. `docs/BACKLOG.md`.

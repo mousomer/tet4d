@@ -264,18 +264,20 @@ def _system_decision_for_key(key: int) -> str | None:
 
 
 def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
-    action = dispatch_bound_action(
-        key,
-        KEYS_2D,
-        {
-            "move_x_neg": lambda: state.try_move(-1, 0),
-            "move_x_pos": lambda: state.try_move(1, 0),
-            "rotate_xy_pos": lambda: state.try_rotate(+1),
-            "rotate_xy_neg": lambda: state.try_rotate(-1),
-            "hard_drop": state.hard_drop,
-            "soft_drop": lambda: state.try_move(0, 1),
-        },
-    )
+    handlers = {
+        "move_x_neg": lambda: state.try_move(-1, 0),
+        "move_x_pos": lambda: state.try_move(1, 0),
+        "rotate_xy_pos": lambda: state.try_rotate(+1),
+        "rotate_xy_neg": lambda: state.try_rotate(-1),
+        "hard_drop": state.hard_drop,
+        "soft_drop": lambda: state.try_move(0, 1),
+    }
+    if state.config.exploration_mode:
+        handlers.update({
+            "move_y_neg": lambda: state.try_move(0, -1),
+            "move_y_pos": lambda: state.try_move(0, 1),
+        })
+    action = dispatch_bound_action(key, KEYS_2D, handlers)
     if action is None:
         return None
     if action.startswith("rotate_"):
@@ -369,6 +371,7 @@ class LoopContext2D:
     clear_anim_levels: tuple[int, ...] = ()
     clear_anim_elapsed_ms: float = 0.0
     last_lines_cleared: int = 0
+    was_game_over: bool = False
 
     @classmethod
     def create(cls, cfg: GameConfig, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext2D":
@@ -378,6 +381,7 @@ class LoopContext2D:
             state=state,
             bot=PlayBotController(mode=bot_mode),
             last_lines_cleared=state.lines_cleared,
+            was_game_over=state.game_over,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
@@ -403,6 +407,7 @@ class LoopContext2D:
         self.clear_anim_levels = ()
         self.clear_anim_elapsed_ms = 0.0
         self.last_lines_cleared = self.state.lines_cleared
+        self.was_game_over = self.state.game_over
         self.bot.reset_runtime()
         self.rotation_anim.reset()
         self.refresh_score_multiplier()
@@ -423,6 +428,103 @@ class LoopContext2D:
         self.state.analysis_grid_mode = self.grid_mode.value
 
 
+def _configure_game_loop(
+    *,
+    loop: LoopContext2D,
+    bot_speed_level: int,
+    bot_algorithm_index: int,
+    bot_profile_index: int,
+    bot_budget_ms: int,
+) -> int:
+    gravity_interval_ms = gravity_interval_ms_from_config(loop.cfg)
+    loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.bot.configure_planner(
+        ndim=2,
+        dims=(loop.cfg.width, loop.cfg.height),
+        profile=bot_planner_profile_from_index(bot_profile_index),
+        budget_ms=bot_budget_ms,
+        algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
+    )
+    loop.refresh_score_multiplier()
+    return gravity_interval_ms
+
+
+def _open_help_screen(screen: pygame.Surface, fonts: GfxFonts) -> pygame.Surface:
+    return run_help_menu(
+        screen,
+        fonts,
+        dimension=2,
+        context_label="2D Gameplay",
+    )
+
+
+def _resolve_loop_decision(
+    *,
+    decision: str,
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    loop: LoopContext2D,
+) -> tuple[str, pygame.Surface]:
+    if decision == "quit":
+        return "quit", screen
+    if decision != "menu":
+        return "continue", screen
+    pause_decision, next_screen = run_pause_menu(screen, fonts, dimension=2)
+    if pause_decision == "quit":
+        return "quit", next_screen
+    if pause_decision == "menu":
+        return "menu", next_screen
+    if pause_decision == "restart":
+        loop.on_restart()
+        return "restart", next_screen
+    return "continue", next_screen
+
+
+def _advance_simulation(
+    *,
+    loop: LoopContext2D,
+    dt: int,
+    gravity_interval_ms: int,
+) -> None:
+    if loop.cfg.exploration_mode:
+        loop.gravity_accumulator = 0
+        return
+    loop.bot.tick_2d(loop.state, dt)
+    if loop.bot.controls_descent:
+        loop.gravity_accumulator = 0
+        return
+    loop.gravity_accumulator = _step_gravity_tick(
+        loop.state,
+        loop.gravity_accumulator,
+        gravity_interval_ms,
+    )
+
+
+def _update_feedback_and_animation(
+    *,
+    loop: LoopContext2D,
+    dt: int,
+    clear_anim_duration_ms: float,
+) -> None:
+    if loop.state.lines_cleared != loop.last_lines_cleared:
+        play_sfx("clear")
+    if loop.state.game_over and not loop.was_game_over:
+        play_sfx("game_over")
+    loop.was_game_over = loop.state.game_over
+    (
+        loop.clear_anim_levels,
+        loop.clear_anim_elapsed_ms,
+        loop.last_lines_cleared,
+    ) = _update_clear_animation(
+        state=loop.state,
+        last_lines_cleared=loop.last_lines_cleared,
+        clear_anim_levels=loop.clear_anim_levels,
+        clear_anim_elapsed_ms=loop.clear_anim_elapsed_ms,
+        clear_anim_duration_ms=clear_anim_duration_ms,
+        dt_ms=dt,
+    )
+
+
 def run_game_loop(screen: pygame.Surface,
                   cfg: GameConfig,
                   fonts: GfxFonts,
@@ -441,18 +543,14 @@ def run_game_loop(screen: pygame.Surface,
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     loop = LoopContext2D.create(cfg, bot_mode=bot_mode)
-    gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
-    loop.bot.configure_planner(
-        ndim=2,
-        dims=(cfg.width, cfg.height),
-        profile=bot_planner_profile_from_index(bot_profile_index),
-        budget_ms=bot_budget_ms,
-        algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
+    gravity_interval_ms = _configure_game_loop(
+        loop=loop,
+        bot_speed_level=bot_speed_level,
+        bot_algorithm_index=bot_algorithm_index,
+        bot_profile_index=bot_profile_index,
+        bot_budget_ms=bot_budget_ms,
     )
-    loop.refresh_score_multiplier()
     clear_anim_duration_ms = 320.0
-    was_game_over = loop.state.game_over
 
     clock = pygame.time.Clock()
     while True:
@@ -462,12 +560,7 @@ def run_game_loop(screen: pygame.Surface,
 
         def _open_help() -> None:
             nonlocal screen
-            screen = run_help_menu(
-                screen,
-                fonts,
-                dimension=2,
-                context_label="2D Gameplay",
-            )
+            screen = _open_help_screen(screen, fonts)
 
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
@@ -475,42 +568,28 @@ def run_game_loop(screen: pygame.Surface,
             on_toggle_grid=loop.on_toggle_grid,
             on_help=_open_help,
         )
-        if decision == "quit":
+        status, screen = _resolve_loop_decision(
+            decision=decision,
+            screen=screen,
+            fonts=fonts,
+            loop=loop,
+        )
+        if status == "quit":
             return False
-        if decision == "menu":
-            pause_decision, screen = run_pause_menu(screen, fonts, dimension=2)
-            if pause_decision == "quit":
-                return False
-            if pause_decision == "menu":
-                return True
-            if pause_decision == "restart":
-                loop.on_restart()
-                continue
+        if status == "menu":
+            return True
+        if status == "restart":
+            continue
 
-        if cfg.exploration_mode:
-            loop.gravity_accumulator = 0
-        else:
-            loop.bot.tick_2d(loop.state, dt)
-            if loop.bot.controls_descent:
-                loop.gravity_accumulator = 0
-            else:
-                loop.gravity_accumulator = _step_gravity_tick(
-                    loop.state,
-                    loop.gravity_accumulator,
-                    gravity_interval_ms,
-                )
-        if loop.state.lines_cleared != loop.last_lines_cleared:
-            play_sfx("clear")
-        if loop.state.game_over and not was_game_over:
-            play_sfx("game_over")
-        was_game_over = loop.state.game_over
-        loop.clear_anim_levels, loop.clear_anim_elapsed_ms, loop.last_lines_cleared = _update_clear_animation(
-            state=loop.state,
-            last_lines_cleared=loop.last_lines_cleared,
-            clear_anim_levels=loop.clear_anim_levels,
-            clear_anim_elapsed_ms=loop.clear_anim_elapsed_ms,
+        _advance_simulation(
+            loop=loop,
+            dt=dt,
+            gravity_interval_ms=gravity_interval_ms,
+        )
+        _update_feedback_and_animation(
+            loop=loop,
+            dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
-            dt_ms=dt,
         )
         clear_effect = _clear_effect(
             loop.clear_anim_levels,

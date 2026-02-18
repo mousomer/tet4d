@@ -1,13 +1,12 @@
 # Save State Migration Ledger
 
-Canonical schema: `/Users/omer/workspace/test-code/tet4d/config/schema/save_state.schema.json`
-Planned runtime file: `/Users/omer/workspace/test-code/tet4d/state/save_state.json`
+Canonical schema: `config/schema/save_state.schema.json`Planned runtime file:`state/save_state.json`
 
 ## Version 1 (planned)
 
 - Defines canonical save payload sections:
-  - `version`, `mode`, `timestamp_utc`, `seed`
-  - `config`, `board`, `active_piece`, `metrics`, `status`
+  - `version`,`mode`,`timestamp_utc`,`seed`
+- `config`,`board`,`active_piece`,`metrics`,`status`
 
 ## Migration policy
 

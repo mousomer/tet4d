@@ -39,7 +39,7 @@ Feature vectors are computed on every lock event:
 1. `board_pre`: board-health features before lock.
 2. `placement`: placement-quality features for the locked piece.
 3. `board_post`: board-health features after lock.
-4. `delta`: `board_post - board_pre` for selected dimensions.
+4. `delta`:`board_post - board_pre` for selected dimensions.
 
 All non-count metrics must be normalized to board size so values are comparable across 2D/3D/4D.
 
@@ -48,7 +48,7 @@ All non-count metrics must be normalized to board size so values are comparable 
 Board-health features describe global board state after lock.
 
 Required fields:
-1. `occupied_ratio`: `locked_cells / total_cells`.
+1. `occupied_ratio`:`locked_cells / total_cells`.
 2. `max_height_norm`: max column height along gravity, normalized to gravity-axis size.
 3. `mean_height_norm`: mean column height, normalized.
 4. `surface_roughness_norm`: neighbor height variation on non-gravity axes.
@@ -59,7 +59,7 @@ Required fields:
 9. `clearable_planes_norm`: fully clear planes ratio.
 10. `top_zone_risk_norm`: occupancy ratio in top spawn-risk layers.
 11. `fragmentation_norm`: disconnected locked-mass component count normalized to board scale.
-12. `slice_balance_norm` (4D): occupancy distribution balance across `w` layers.
+12. `slice_balance_norm`(4D): occupancy distribution balance across`w` layers.
 
 ## 6. Placement feature group
 
@@ -83,8 +83,8 @@ Required fields:
 ## 7. Derived analyzer scores
 
 Two explicit analyzer scores are produced:
-1. `board_health_score`: weighted aggregate from `board_post` features.
-2. `placement_quality_score`: weighted aggregate from `placement` and selected `delta` features.
+1. `board_health_score`: weighted aggregate from`board_post` features.
+2. `placement_quality_score`: weighted aggregate from`placement`and selected`delta` features.
 
 Design rules:
 1. Score ranges should be stable (recommended `0.0..1.0` after clamping).
@@ -105,7 +105,7 @@ Each analyzer event must include `actor_mode` and current assist/grid/speed modi
 
 Current persisted event stream:
 1. `piece_lock_analyzed` (repeats on every lock event).
-2. Session boundary events (`session_start` / `session_end`) are reserved for future expansion and are not required for current telemetry files.
+2. Session boundary events (`session_start`/`session_end`) are reserved for future expansion and are not required for current telemetry files.
 
 Required fields for `piece_lock_analyzed`:
 1. `schema_version`
@@ -132,11 +132,9 @@ Required fields for `piece_lock_analyzed`:
 ## 10. Storage and config locations
 
 Canonical files:
-1. `/Users/omer/workspace/test-code/tet4d/config/gameplay/score_analyzer.json`
-2. `/Users/omer/workspace/test-code/tet4d/state/analytics/score_events.jsonl`
-3. `/Users/omer/workspace/test-code/tet4d/state/analytics/score_summary.json`
-
-Rules:
+1. `config/gameplay/score_analyzer.json`
+2. `state/analytics/score_events.jsonl`
+3. `state/analytics/score_summary.json` Rules:
 1. `config/*` files are source-controlled defaults.
 2. `state/*` files are runtime/user/generated outputs.
 3. Schema versioning is mandatory for event compatibility.
@@ -156,9 +154,9 @@ After major gameplay/planner/piece-set changes:
 ## 12. UI update protocol
 
 Recommended runtime UI fields:
-1. `Quality` = placement-quality score.
-2. `Board health` = board-health score.
-3. `Trend` = short arrow/mini state (`up`, `flat`, `down`) from recent moving average.
+1. `Quality`= placement-quality score.
+2. `Board health`= board-health score.
+3. `Trend`= short arrow/mini state (`up`,`flat`,`down`) from recent moving average.
 
 Visibility rules:
 1. Compact summary in side panel by default.

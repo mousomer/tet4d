@@ -1,14 +1,13 @@
 # Menu Settings Migration Ledger
 
-Canonical schema: `/Users/omer/workspace/test-code/tet4d/config/schema/menu_settings.schema.json`
-Runtime file: `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`
+Canonical schema: `config/schema/menu_settings.schema.json`Runtime file:`state/menu_settings.json`
 
 ## Version 1
 
 - Introduced unified payload envelope:
-  - `version`, `active_profile`, `last_mode`
-  - `audio`, `display`, `settings`
-- `settings` split by mode (`2d`, `3d`, `4d`) with bot fields per mode.
+  - `version`,`active_profile`,`last_mode`
+- `audio`,`display`,`settings`
+- `settings` split by mode (`2d`,`3d`,`4d`) with bot fields per mode.
 
 ## Migration policy
 

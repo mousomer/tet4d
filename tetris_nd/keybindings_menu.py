@@ -415,16 +415,16 @@ def _draw_menu_header(surface: pygame.Surface, fonts, state: KeybindingsMenuStat
         f"Profile: {state.active_profile}   "
         f"Conflict: {state.conflict_mode}"
     )
-    header_surf = fonts.hint_font.render(header, True, (210, 220, 245))
+    header_surf = fonts.hint_font.render(_fit_text(fonts.hint_font, header, width - 28), True, (210, 220, 245))
     surface.blit(header_surf, ((width - header_surf.get_width()) // 2, 106))
 
 
 def _panel_geometry(surface: pygame.Surface) -> tuple[int, int, int, int]:
     width, height = surface.get_size()
-    panel_w = min(width - 40, 1120)
-    panel_h = min(height - 260, 580)
+    panel_w = min(1120, max(320, width - 40))
+    panel_h = min(580, max(220, height - 260))
     panel_x = (width - panel_w) // 2
-    panel_y = 138
+    panel_y = max(122, min(138, height - panel_h - 110))
     return panel_x, panel_y, panel_w, panel_h
 
 
@@ -667,29 +667,46 @@ def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuSta
     panel_x, panel_y, panel_w, panel_h = _panel_geometry(surface)
     _draw_panel(surface, panel_x=panel_x, panel_y=panel_y, panel_w=panel_w, panel_h=panel_h)
 
-    y = panel_y + 20
+    row_h_default = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 14
+    row_h = min(
+        row_h_default,
+        max(fonts.panel_font.get_height() + fonts.hint_font.get_height() + 6, (panel_h - 24) // max(1, len(SECTION_MENU))),
+    )
+    y = panel_y + 12
+    row_left = panel_x + 18
+    row_width = panel_w - 36
+    row_bottom = panel_y + panel_h - 8
     for idx, (_scope, title, description) in enumerate(SECTION_MENU):
+        if y + fonts.panel_font.get_height() > row_bottom:
+            break
         selected = idx == state.selected_section
         color = (255, 224, 130) if selected else (228, 230, 242)
         if selected:
-            hi = pygame.Surface((panel_w - 24, fonts.panel_font.get_height() + fonts.hint_font.get_height() + 10), pygame.SRCALPHA)
+            hi = pygame.Surface((panel_w - 24, row_h - 2), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             surface.blit(hi, (panel_x + 12, y - 3))
 
-        title_surf = fonts.panel_font.render(title, True, color)
-        desc_surf = fonts.hint_font.render(description, True, (168, 182, 215))
-        surface.blit(title_surf, (panel_x + 18, y))
-        surface.blit(desc_surf, (panel_x + 18, y + fonts.panel_font.get_height() + 1))
-        y += fonts.panel_font.get_height() + fonts.hint_font.get_height() + 14
+        title_surf = fonts.panel_font.render(_fit_text(fonts.panel_font, title, row_width), True, color)
+        desc_surf = fonts.hint_font.render(
+            _fit_text(fonts.hint_font, description, row_width),
+            True,
+            (168, 182, 215),
+        )
+        surface.blit(title_surf, (row_left, y))
+        surface.blit(desc_surf, (row_left, y + fonts.panel_font.get_height() + 1))
+        y += row_h
 
-    width, _ = surface.get_size()
+    width, height = surface.get_size()
     hints = (
         "Enter open section   Up/Down select section   Esc back",
         "[ / ] profile prev/next   N new profile   F2 rename   F3 save as",
     )
-    hy = panel_y + panel_h + 12
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, (188, 197, 228))
+    hy = panel_y + panel_h + 10
+    line_h = fonts.hint_font.get_height() + 3
+    max_lines = max(0, (height - hy - 6) // max(1, line_h))
+    hint_budget = max(0, max_lines - (1 if state.text_mode else 0) - (1 if state.status else 0))
+    for line in hints[:hint_budget]:
+        surf = fonts.hint_font.render(_fit_text(fonts.hint_font, line, width - 36), True, (188, 197, 228))
         surface.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
     hy = _draw_text_mode_hint(surface, fonts, state, hy)

@@ -145,28 +145,61 @@ def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue
         return [ValidationIssue("schema", "'content_rules' must be a list")]
 
     for index, rule in enumerate(content_rules, start=1):
-        if not isinstance(rule, dict):
-            issues.append(ValidationIssue("schema", f"content_rules[{index}] must be an object"))
+        parsed = _parse_content_rule(index, rule)
+        if isinstance(parsed, ValidationIssue):
+            issues.append(parsed)
             continue
-        rel = rule.get("file")
-        tokens = rule.get("must_contain", [])
-        if not isinstance(rel, str):
-            issues.append(ValidationIssue("schema", f"content_rules[{index}].file must be a string"))
-            continue
-        if not isinstance(tokens, list) or any(not isinstance(token, str) for token in tokens):
-            issues.append(ValidationIssue("schema", f"content_rules[{index}].must_contain must be a list[str]"))
-            continue
-
+        rel, tokens, forbidden_tokens = parsed
         path = PROJECT_ROOT / rel
         if not path.exists():
             issues.append(ValidationIssue("missing", f"content rule file does not exist: {rel}"))
             continue
-
-        text = path.read_text(encoding="utf-8")
-        for token in tokens:
-            if token not in text:
-                issues.append(ValidationIssue("content", f"{rel} missing token: {token!r}"))
+        _validate_text_rules(path, rel, tokens, forbidden_tokens, issues)
     return issues
+
+
+def _as_string_list(value: object) -> list[str] | None:
+    if not isinstance(value, list) or any(not isinstance(token, str) for token in value):
+        return None
+    return value
+
+
+def _parse_content_rule(
+    index: int,
+    rule: object,
+) -> tuple[str, list[str], list[str]] | ValidationIssue:
+    if not isinstance(rule, dict):
+        return ValidationIssue("schema", f"content_rules[{index}] must be an object")
+
+    rel = rule.get("file")
+    if not isinstance(rel, str):
+        return ValidationIssue("schema", f"content_rules[{index}].file must be a string")
+
+    tokens = _as_string_list(rule.get("must_contain", []))
+    if tokens is None:
+        return ValidationIssue("schema", f"content_rules[{index}].must_contain must be a list[str]")
+
+    forbidden_tokens = _as_string_list(rule.get("must_not_contain", []))
+    if forbidden_tokens is None:
+        return ValidationIssue("schema", f"content_rules[{index}].must_not_contain must be a list[str]")
+
+    return rel, tokens, forbidden_tokens
+
+
+def _validate_text_rules(
+    path: Path,
+    rel: str,
+    tokens: list[str],
+    forbidden_tokens: list[str],
+    issues: list[ValidationIssue],
+) -> None:
+    text = path.read_text(encoding="utf-8")
+    for token in tokens:
+        if token not in text:
+            issues.append(ValidationIssue("content", f"{rel} missing token: {token!r}"))
+    for token in forbidden_tokens:
+        if token in text:
+            issues.append(ValidationIssue("content", f"{rel} contains forbidden token: {token!r}"))
 
 
 def validate_manifest() -> list[ValidationIssue]:
