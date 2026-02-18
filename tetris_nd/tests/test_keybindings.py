@@ -218,3 +218,16 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(state.settings.speed_level, 1)
         self.assertEqual(state.active_profile, keybindings.PROFILE_SMALL)
         self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
+
+    def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
+        payload = menu_settings_state._default_settings_payload()
+        payload["active_profile"] = "../bad profile"
+        payload["last_mode"] = "invalid"
+        menu_settings_state.STATE_DIR.mkdir(parents=True, exist_ok=True)
+        menu_settings_state.STATE_FILE.write_text(json.dumps(payload), encoding="utf-8")
+
+        state = _MenuState2D()
+        ok, msg = menu_settings_state.load_menu_settings(state, 2)
+        self.assertTrue(ok, msg)
+        self.assertEqual(state.active_profile, keybindings.PROFILE_SMALL)
+        self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
