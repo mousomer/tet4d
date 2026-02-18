@@ -156,6 +156,7 @@ class PlayBotController:
         self,
         *,
         ndim: int,
+        dims: tuple[int, ...] | None = None,
         profile: BotPlannerProfile,
         budget_ms: int | None,
         algorithm: BotPlannerAlgorithm | None = None,
@@ -165,8 +166,8 @@ class PlayBotController:
             self.planner_algorithm = algorithm
         selected = budget_ms
         if selected is None:
-            selected = default_planning_budget_ms(ndim, profile)
-        self.planning_budget_ms = clamp_planning_budget_ms(ndim, int(selected))
+            selected = default_planning_budget_ms(ndim, profile, dims=dims)
+        self.planning_budget_ms = clamp_planning_budget_ms(ndim, int(selected), dims=dims)
 
     def reset_runtime(self) -> None:
         self._accumulator_ms = 0

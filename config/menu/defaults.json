@@ -20,7 +20,6 @@
       "bot_algorithm_index": 0,
       "bot_profile_index": 1,
       "bot_speed_level": 7,
-      "bot_budget_ms": 12,
       "challenge_layers": 0,
       "speed_level": 1
     },
@@ -33,7 +32,6 @@
       "bot_algorithm_index": 0,
       "bot_profile_index": 1,
       "bot_speed_level": 7,
-      "bot_budget_ms": 24,
       "challenge_layers": 0,
       "speed_level": 1
     },
@@ -47,7 +45,6 @@
       "bot_algorithm_index": 0,
       "bot_profile_index": 1,
       "bot_speed_level": 7,
-      "bot_budget_ms": 36,
       "challenge_layers": 0,
       "speed_level": 1
     }

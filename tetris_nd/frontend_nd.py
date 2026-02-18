@@ -265,6 +265,8 @@ def run_menu(screen: pygame.Surface,
             state.bindings_status = msg
             state.bindings_status_error = True
         return state.settings
+    # Autosave setup/session state on exit as well (without explicit Save action).
+    save_menu_settings(state, dimension)
     return None
 
 

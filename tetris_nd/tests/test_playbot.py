@@ -115,9 +115,11 @@ class TestPlaybot(unittest.TestCase):
             algorithm=BotPlannerAlgorithm.HEURISTIC,
         )
         deep = plan_best_nd_move(state, profile=BotPlannerProfile.DEEP, budget_ms=80)
+        ultra = plan_best_nd_move(state, profile=BotPlannerProfile.ULTRA, budget_ms=120)
 
         self.assertIsNotNone(fast)
         self.assertIsNotNone(deep)
+        self.assertIsNotNone(ultra)
 
     def test_nd_algorithm_override_runs(self) -> None:
         cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)

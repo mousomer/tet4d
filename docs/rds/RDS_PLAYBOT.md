@@ -1,8 +1,8 @@
 # Automatic Playbot RDS (2D / 3D / 4D)
 
-Status: Implemented baseline v1.0 + roadmap
+Status: Active v1.1 (Verified 2026-02-18)
 Author: Omer + Codex
-Date: 2026-02-17
+Date: 2026-02-18
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -44,6 +44,7 @@ Default mode: `OFF`.
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_2d.py`
 3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd_core.py`
 4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd.py`
+5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/planner_nd_search.py`
 5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/controller.py`
 6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/dry_run.py`
 7. `/Users/omer/workspace/test-code/tet4d/tetris_nd/playbot/__init__.py`
@@ -88,6 +89,7 @@ Default mode: `OFF`.
 10. Profile-based lookahead is available:
 11. `FAST`: depth-1 (no followup),
 12. `BALANCED/DEEP`: depth-2 with bounded top-candidate followup.
+13. `ULTRA`: optional deeper lookahead profile for larger 2D boards.
 
 ### 5.3 3D planner (ND path in `planner_nd.py`)
 
@@ -97,6 +99,7 @@ Default mode: `OFF`.
 4. Profile-based lookahead is available in 3D:
 5. `FAST`: depth-1,
 6. `BALANCED/DEEP`: depth-2 with bounded followup.
+7. `ULTRA`: deeper candidate breadth/depth profile for slower/high-quality planning.
 7. Alternative planner algorithms are supported:
 8. `AUTO` (default), `HEURISTIC`, `GREEDY_LAYER`.
 
@@ -119,7 +122,13 @@ Default mode: `OFF`.
 2. Column-level precomputation for fast drop settling.
 3. Explicit per-plan time budget is enforced (`budget_ms`) with best-so-far fallback under timeout.
 4. 4D uses greedy comparison to reduce scoring overhead versus deep heuristic search.
-5. Planner profiles (`FAST/BALANCED/DEEP`) tune lookahead depth and candidate breadth.
+5. Planner profiles (`FAST/BALANCED/DEEP/ULTRA`) tune lookahead depth and candidate breadth.
+6. Board-size-aware default planning budgets are loaded from `config/playbot/policy.json`.
+7. Adaptive fallback is explicit and config-driven:
+8. candidate caps by dimension and budget,
+9. lookahead throttling when budget is tight,
+10. deadline safety window before timeout.
+11. Benchmark thresholds and trend-history output path are config-driven.
 
 ## 6. Action Synthesis and Execution
 
@@ -156,8 +165,9 @@ Default mode: `OFF`.
 Unit and integration coverage is currently concentrated in:
 1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_playbot.py`
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_gameplay_replay.py`
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game2d.py`
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game_nd.py`
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_score_snapshots.py`
+4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game2d.py`
+5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game_nd.py`
 
 Required checks:
 1. bot places pieces without invalid transitions (2D/ND),
@@ -186,10 +196,8 @@ Required checks:
 
 ## 12. Known Gaps and Roadmap
 
-1. Add explicit planning budget/time cutoffs and adaptive fallback under high load.
-2. Tune alternative algorithm weights/policies (`HEURISTIC` vs `GREEDY_LAYER`) from gameplay metrics.
-3. Add optional deeper lookahead profiles for 2D/3D.
-4. Tune benchmark thresholds and budget defaults per board size once more gameplay data is collected.
+1. Continue periodic policy tuning from accumulated trend history data after major planner/gameplay changes.
+2. Offline analysis tooling is now available at `/Users/omer/workspace/test-code/tet4d/tools/analyze_playbot_policies.py` for cross-policy comparison across seeds and board sizes.
 
 ## 13. Anti-duplication Guardrails
 

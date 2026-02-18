@@ -5,54 +5,18 @@ from dataclasses import dataclass
 import pygame
 
 import front2d
-from tetris_nd.app_runtime import (
-    capture_windowed_display_settings,
-    initialize_runtime,
-    open_display,
-)
-from tetris_nd.audio import AudioSettings, play_sfx, set_audio_settings
-from tetris_nd.display import DisplaySettings, apply_display_mode, normalize_display_settings
-from tetris_nd.front3d_game import (
-    build_config as build_config_3d,
-    run_game_loop as run_game_loop_3d,
-    run_menu as run_menu_3d,
-    suggested_window_size as suggested_window_size_3d,
-)
-from tetris_nd.front4d_game import run_game_loop as run_game_loop_4d, suggested_window_size as suggested_window_size_4d
-from tetris_nd.frontend_nd import build_config as build_config_nd, init_fonts, run_menu as run_menu_nd
-from tetris_nd.keybindings import (
-    active_key_profile,
-    load_active_profile_bindings,
-    set_active_key_profile,
-)
+from tetris_nd.app_runtime import initialize_runtime, open_display
+from tetris_nd.audio import AudioSettings, play_sfx
+from tetris_nd.bot_options_menu import run_bot_options_menu
+from tetris_nd.display import DisplaySettings
+from tetris_nd.frontend_nd import init_fonts
+from tetris_nd.help_menu import run_help_menu
+from tetris_nd.keybindings import active_key_profile, load_active_profile_bindings, set_active_key_profile
 from tetris_nd.keybindings_menu import run_keybindings_menu
-from tetris_nd.menu_config import (
-    bot_defaults_by_mode,
-    bot_options_rows,
-    default_settings_payload,
-    launcher_menu_items,
-    settings_hub_rows,
-)
-from tetris_nd.menu_settings_state import (
-    DEFAULT_WINDOWED_SIZE,
-    load_app_settings_payload,
-    save_app_settings_payload,
-    save_audio_settings,
-    save_display_settings,
-)
-from tetris_nd.playbot import (
-    BOT_MODE_OPTIONS,
-    BOT_PLANNER_ALGORITHM_OPTIONS,
-    BOT_PLANNER_PROFILE_OPTIONS,
-    bot_mode_label,
-    bot_planner_algorithm_label,
-    bot_planner_profile_label,
-)
-from tetris_nd.playbot.types import (
-    bot_mode_from_index,
-    bot_planner_algorithm_from_index,
-    bot_planner_profile_from_index,
-)
+from tetris_nd.launcher_play import launch_2d, launch_3d, launch_4d
+from tetris_nd.launcher_settings import run_settings_hub_menu
+from tetris_nd.menu_config import launcher_menu_items
+from tetris_nd.menu_persistence import load_menu_payload, save_menu_payload
 
 
 BG_TOP = (14, 18, 44)
@@ -61,10 +25,7 @@ TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
 
-
-MENU_ITEMS = (
-    *launcher_menu_items(),
-)
+MENU_ITEMS = (*launcher_menu_items(),)
 
 
 @dataclass
@@ -73,6 +34,14 @@ class MainMenuState:
     status: str = ""
     status_error: bool = False
     last_mode: str = "2d"
+
+
+@dataclass
+class _LauncherSession:
+    screen: pygame.Surface
+    display_settings: DisplaySettings
+    audio_settings: AudioSettings
+    running: bool = True
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
@@ -92,7 +61,7 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
     width, height = screen.get_size()
     title = fonts.title_font.render("ND Tetris Launcher", True, TEXT_COLOR)
     subtitle = fonts.hint_font.render(
-        "Play modes plus unified Settings, Keybindings, and Bot Options.",
+        "Play modes plus Help, unified Settings, Keybindings, and Bot Options.",
         True,
         MUTED_COLOR,
     )
@@ -144,7 +113,7 @@ def _persist_global_state(
     audio_settings: AudioSettings,
     last_mode: str,
 ) -> tuple[bool, str]:
-    payload = load_app_settings_payload()
+    payload = load_menu_payload()
     payload["last_mode"] = last_mode
     payload["active_profile"] = active_key_profile()
     payload["display"] = {
@@ -156,909 +125,7 @@ def _persist_global_state(
         "sfx_volume": float(audio_settings.sfx_volume),
         "mute": bool(audio_settings.mute),
     }
-    return save_app_settings_payload(payload)
-
-
-def _audio_defaults() -> AudioSettings:
-    defaults = default_settings_payload().get("audio", {})
-    master = 0.8
-    sfx = 0.7
-    mute = False
-    if isinstance(defaults, dict):
-        raw_master = defaults.get("master_volume")
-        raw_sfx = defaults.get("sfx_volume")
-        if isinstance(raw_master, (int, float)) and not isinstance(raw_master, bool):
-            master = float(raw_master)
-        if isinstance(raw_sfx, (int, float)) and not isinstance(raw_sfx, bool):
-            sfx = float(raw_sfx)
-        mute = bool(defaults.get("mute", False))
-    return AudioSettings(master_volume=master, sfx_volume=sfx, mute=mute)
-
-
-def _display_defaults() -> DisplaySettings:
-    defaults = default_settings_payload().get("display", {})
-    fullscreen = False
-    windowed_size = DEFAULT_WINDOWED_SIZE
-    if isinstance(defaults, dict):
-        fullscreen = bool(defaults.get("fullscreen", False))
-        raw_size = defaults.get("windowed_size")
-        if (
-            isinstance(raw_size, list)
-            and len(raw_size) == 2
-            and all(isinstance(v, int) and not isinstance(v, bool) for v in raw_size)
-        ):
-            windowed_size = (raw_size[0], raw_size[1])
-    return DisplaySettings(fullscreen=fullscreen, windowed_size=windowed_size)
-
-
-_AUDIO_MENU_ROWS = ("Master volume", "SFX volume", "Mute", "Save", "Reset defaults", "Back")
-_AUDIO_MENU_HINTS = (
-    "Left/Right adjust values   Enter activate row",
-    "F5 save   F8 reset defaults   Esc back",
-)
-
-
-@dataclass
-class _AudioMenuState:
-    settings: AudioSettings
-    original: AudioSettings
-    selected: int = 0
-    status: str = ""
-    status_error: bool = False
-    saved: bool = False
-    running: bool = True
-
-
-def _clone_audio_settings(settings: AudioSettings) -> AudioSettings:
-    return AudioSettings(
-        master_volume=settings.master_volume,
-        sfx_volume=settings.sfx_volume,
-        mute=settings.mute,
-    )
-
-
-def _sync_audio_preview(settings: AudioSettings) -> None:
-    set_audio_settings(
-        master_volume=settings.master_volume,
-        sfx_volume=settings.sfx_volume,
-        mute=settings.mute,
-    )
-
-
-def _audio_values(settings: AudioSettings) -> tuple[str, ...]:
-    return (
-        f"{int(settings.master_volume * 100)}%",
-        f"{int(settings.sfx_volume * 100)}%",
-        "ON" if settings.mute else "OFF",
-        "",
-        "",
-        "",
-    )
-
-
-def _draw_audio_settings_menu(screen: pygame.Surface, fonts, loop: _AudioMenuState) -> None:
-    _draw_gradient(screen)
-    width, height = screen.get_size()
-    title = fonts.title_font.render("Audio Settings", True, TEXT_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-
-    values = _audio_values(loop.settings)
-    panel_w = min(560, width - 40)
-    panel_h = 360
-    panel_x = (width - panel_w) // 2
-    panel_y = max(120, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 20
-    for idx, row in enumerate(_AUDIO_MENU_ROWS):
-        selected_row = idx == loop.selected
-        color = HIGHLIGHT_COLOR if selected_row else TEXT_COLOR
-        if selected_row:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 50
-
-    hy = panel_y + panel_h + 12
-    for line in _AUDIO_MENU_HINTS:
-        surf = fonts.hint_font.render(line, True, MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if loop.status:
-        color = (255, 150, 150) if loop.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(loop.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
-
-
-def _set_audio_status(loop: _AudioMenuState, message: str, *, is_error: bool = False) -> None:
-    loop.status = message
-    loop.status_error = is_error
-
-
-def _adjust_audio_slider(loop: _AudioMenuState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
-        return False
-    delta = -0.05 if key == pygame.K_LEFT else 0.05
-    if loop.selected == 0:
-        loop.settings.master_volume = max(0.0, min(1.0, loop.settings.master_volume + delta))
-    elif loop.selected == 1:
-        loop.settings.sfx_volume = max(0.0, min(1.0, loop.settings.sfx_volume + delta))
-    else:
-        return False
-    _sync_audio_preview(loop.settings)
-    play_sfx("menu_move")
-    return True
-
-
-def _toggle_audio_mute(loop: _AudioMenuState) -> None:
-    loop.settings.mute = not loop.settings.mute
-    _sync_audio_preview(loop.settings)
-    play_sfx("menu_move")
-
-
-def _save_audio_settings_from_menu(loop: _AudioMenuState) -> None:
-    ok, msg = save_audio_settings(
-        master_volume=loop.settings.master_volume,
-        sfx_volume=loop.settings.sfx_volume,
-        mute=loop.settings.mute,
-    )
-    _set_audio_status(loop, msg, is_error=not ok)
-    loop.saved = ok
-    if ok:
-        play_sfx("menu_confirm")
-
-
-def _reset_audio_settings_from_menu(loop: _AudioMenuState) -> None:
-    loop.settings = _audio_defaults()
-    _sync_audio_preview(loop.settings)
-    _set_audio_status(loop, "Audio reset to defaults (not saved yet)")
-    play_sfx("menu_move")
-
-
-def _handle_audio_navigation_key(loop: _AudioMenuState, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
-        loop.running = False
-        return True
-    if key == pygame.K_UP:
-        loop.selected = (loop.selected - 1) % len(_AUDIO_MENU_ROWS)
-        play_sfx("menu_move")
-        return True
-    if key == pygame.K_DOWN:
-        loop.selected = (loop.selected + 1) % len(_AUDIO_MENU_ROWS)
-        play_sfx("menu_move")
-        return True
-    return False
-
-
-def _handle_audio_commit_key(loop: _AudioMenuState, key: int) -> bool:
-    if key == pygame.K_F8:
-        _reset_audio_settings_from_menu(loop)
-        return True
-    if key == pygame.K_F5:
-        _save_audio_settings_from_menu(loop)
-        return True
-    if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        return False
-    if loop.selected == 3:
-        _save_audio_settings_from_menu(loop)
-        return True
-    if loop.selected == 4:
-        _reset_audio_settings_from_menu(loop)
-        return True
-    if loop.selected == 5:
-        loop.running = False
-        return True
-    return False
-
-
-def _handle_audio_menu_key(loop: _AudioMenuState, key: int) -> None:
-    if _handle_audio_navigation_key(loop, key):
-        return
-    if _adjust_audio_slider(loop, key):
-        return
-    if loop.selected == 2 and key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_RETURN, pygame.K_KP_ENTER):
-        _toggle_audio_mute(loop)
-        return
-    _handle_audio_commit_key(loop, key)
-
-
-def _run_audio_settings_menu(screen: pygame.Surface, fonts, current: AudioSettings) -> AudioSettings:
-    loop = _AudioMenuState(
-        settings=_clone_audio_settings(current),
-        original=_clone_audio_settings(current),
-    )
-    clock = pygame.time.Clock()
-
-    while loop.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return current
-            if event.type != pygame.KEYDOWN:
-                continue
-            _handle_audio_menu_key(loop, event.key)
-            if not loop.running:
-                break
-
-        _draw_audio_settings_menu(screen, fonts, loop)
-        pygame.display.flip()
-
-    if not loop.saved:
-        _sync_audio_preview(loop.original)
-        return loop.original
-    return loop.settings
-
-
-_DISPLAY_MENU_ROWS = ("Fullscreen", "Window width", "Window height", "Apply", "Save", "Reset defaults", "Back")
-_DISPLAY_MENU_HINTS = (
-    "Apply to preview mode change; Save to persist",
-    "F5 save   F8 reset defaults   Esc back",
-)
-
-
-@dataclass
-class _DisplayMenuState:
-    settings: DisplaySettings
-    original: DisplaySettings
-    selected: int = 0
-    status: str = ""
-    status_error: bool = False
-    saved: bool = False
-    running: bool = True
-
-
-def _clone_display_settings(settings: DisplaySettings) -> DisplaySettings:
-    return DisplaySettings(fullscreen=settings.fullscreen, windowed_size=settings.windowed_size)
-
-
-def _display_values(settings: DisplaySettings) -> tuple[str, ...]:
-    return (
-        "ON" if settings.fullscreen else "OFF",
-        str(settings.windowed_size[0]),
-        str(settings.windowed_size[1]),
-        "",
-        "",
-        "",
-        "",
-    )
-
-
-def _draw_display_settings_menu(screen: pygame.Surface, fonts, loop: _DisplayMenuState) -> None:
-    _draw_gradient(screen)
-    width, height = screen.get_size()
-    title = fonts.title_font.render("Display Settings", True, TEXT_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-
-    values = _display_values(loop.settings)
-    panel_w = min(560, width - 40)
-    panel_h = 400
-    panel_x = (width - panel_w) // 2
-    panel_y = max(120, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 20
-    for idx, row in enumerate(_DISPLAY_MENU_ROWS):
-        selected_row = idx == loop.selected
-        color = HIGHLIGHT_COLOR if selected_row else TEXT_COLOR
-        if selected_row:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 50
-
-    hy = panel_y + panel_h + 12
-    for line in _DISPLAY_MENU_HINTS:
-        surf = fonts.hint_font.render(line, True, MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if loop.status:
-        color = (255, 150, 150) if loop.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(loop.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
-
-
-def _set_display_status(loop: _DisplayMenuState, message: str, *, is_error: bool = False) -> None:
-    loop.status = message
-    loop.status_error = is_error
-
-
-def _adjust_display_window_size(loop: _DisplayMenuState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
-        return False
-    if loop.selected not in (1, 2):
-        return False
-    delta = -40 if key == pygame.K_LEFT else 40
-    width, height = loop.settings.windowed_size
-    if loop.selected == 1:
-        width = max(640, width + delta)
-    else:
-        height = max(480, height + delta)
-    loop.settings = DisplaySettings(loop.settings.fullscreen, (width, height))
-    play_sfx("menu_move")
-    return True
-
-
-def _apply_display_settings_preview(screen: pygame.Surface, loop: _DisplayMenuState) -> pygame.Surface:
-    return apply_display_mode(loop.settings, preferred_windowed_size=loop.settings.windowed_size)
-
-
-def _save_display_settings_from_menu(screen: pygame.Surface, loop: _DisplayMenuState) -> pygame.Surface:
-    loop.settings = normalize_display_settings(loop.settings)
-    screen = _apply_display_settings_preview(screen, loop)
-    ok, msg = save_display_settings(
-        fullscreen=loop.settings.fullscreen,
-        windowed_size=loop.settings.windowed_size,
-    )
-    _set_display_status(loop, msg, is_error=not ok)
-    loop.saved = ok
-    if ok:
-        play_sfx("menu_confirm")
-    return screen
-
-
-def _reset_display_settings_from_menu(loop: _DisplayMenuState) -> None:
-    loop.settings = _display_defaults()
-    _set_display_status(loop, "Display reset to defaults (not saved yet)")
-    play_sfx("menu_move")
-
-
-def _handle_display_navigation_key(loop: _DisplayMenuState, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
-        loop.running = False
-        return True
-    if key == pygame.K_UP:
-        loop.selected = (loop.selected - 1) % len(_DISPLAY_MENU_ROWS)
-        play_sfx("menu_move")
-        return True
-    if key == pygame.K_DOWN:
-        loop.selected = (loop.selected + 1) % len(_DISPLAY_MENU_ROWS)
-        play_sfx("menu_move")
-        return True
-    return False
-
-
-def _handle_display_commit_key(
-    screen: pygame.Surface,
-    loop: _DisplayMenuState,
-    key: int,
-) -> tuple[pygame.Surface, bool]:
-    if key == pygame.K_F8:
-        _reset_display_settings_from_menu(loop)
-        return screen, True
-    if key == pygame.K_F5:
-        return _save_display_settings_from_menu(screen, loop), True
-    if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        return screen, False
-    if loop.selected == 3:
-        screen = _apply_display_settings_preview(screen, loop)
-        _set_display_status(loop, "Applied display mode")
-        play_sfx("menu_confirm")
-        return screen, True
-    if loop.selected == 4:
-        return _save_display_settings_from_menu(screen, loop), True
-    if loop.selected == 5:
-        _reset_display_settings_from_menu(loop)
-        return screen, True
-    if loop.selected == 6:
-        loop.running = False
-        return screen, True
-    return screen, False
-
-
-def _handle_display_menu_key(
-    screen: pygame.Surface,
-    loop: _DisplayMenuState,
-    key: int,
-) -> pygame.Surface:
-    if _handle_display_navigation_key(loop, key):
-        return screen
-    if loop.selected == 0 and key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_RETURN, pygame.K_KP_ENTER):
-        loop.settings = DisplaySettings(not loop.settings.fullscreen, loop.settings.windowed_size)
-        play_sfx("menu_move")
-        return screen
-    if _adjust_display_window_size(loop, key):
-        return screen
-    screen, _handled = _handle_display_commit_key(screen, loop, key)
-    return screen
-
-
-def _run_display_settings_menu(
-    screen: pygame.Surface,
-    fonts,
-    current: DisplaySettings,
-) -> tuple[pygame.Surface, DisplaySettings]:
-    loop = _DisplayMenuState(
-        settings=_clone_display_settings(current),
-        original=_clone_display_settings(current),
-    )
-    clock = pygame.time.Clock()
-
-    while loop.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return screen, current
-            if event.type != pygame.KEYDOWN:
-                continue
-            screen = _handle_display_menu_key(screen, loop, event.key)
-            if not loop.running:
-                break
-
-        _draw_display_settings_menu(screen, fonts, loop)
-        pygame.display.flip()
-
-    if not loop.saved:
-        restored = normalize_display_settings(loop.original)
-        screen = apply_display_mode(restored, preferred_windowed_size=restored.windowed_size)
-        return screen, restored
-    state = capture_windowed_display_settings(normalize_display_settings(loop.settings))
-    return screen, state
-
-
-_SETTINGS_HUB_ROWS = settings_hub_rows()
-
-
-@dataclass
-class _SettingsHubState:
-    selected: int = 0
-    running: bool = True
-
-
-def _draw_settings_hub_menu(screen: pygame.Surface, fonts, loop: _SettingsHubState) -> None:
-    _draw_gradient(screen)
-    width, height = screen.get_size()
-    title = fonts.title_font.render("Settings", True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render("Unified audio and display configuration", True, MUTED_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 48))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 92))
-
-    panel_w = min(520, width - 40)
-    panel_h = 96 + len(_SETTINGS_HUB_ROWS) * 54
-    panel_x = (width - panel_w) // 2
-    panel_y = max(156, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 28
-    for idx, label in enumerate(_SETTINGS_HUB_ROWS):
-        selected = idx == loop.selected
-        color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        if selected:
-            hi = pygame.Surface((panel_w - 30, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 15, y - 4))
-        surf = fonts.menu_font.render(label, True, color)
-        screen.blit(surf, (panel_x + 24, y))
-        y += 54
-
-    hints = (
-        "Up/Down select   Enter open",
-        "Esc back",
-    )
-    hy = panel_y + panel_h + 14
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-
-def _run_settings_hub_menu(session: "_LauncherSession", fonts) -> None:
-    loop = _SettingsHubState()
-    clock = pygame.time.Clock()
-
-    while loop.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                session.running = False
-                loop.running = False
-                break
-            if event.type != pygame.KEYDOWN:
-                continue
-            key = event.key
-            if key == pygame.K_ESCAPE:
-                loop.running = False
-                break
-            if key == pygame.K_UP:
-                loop.selected = (loop.selected - 1) % len(_SETTINGS_HUB_ROWS)
-                play_sfx("menu_move")
-                continue
-            if key == pygame.K_DOWN:
-                loop.selected = (loop.selected + 1) % len(_SETTINGS_HUB_ROWS)
-                play_sfx("menu_move")
-                continue
-            if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                continue
-            if loop.selected == 0:
-                session.audio_settings = _run_audio_settings_menu(session.screen, fonts, session.audio_settings)
-                set_audio_settings(
-                    master_volume=session.audio_settings.master_volume,
-                    sfx_volume=session.audio_settings.sfx_volume,
-                    mute=session.audio_settings.mute,
-                )
-                play_sfx("menu_confirm")
-                continue
-            if loop.selected == 1:
-                session.screen, session.display_settings = _run_display_settings_menu(
-                    session.screen,
-                    fonts,
-                    session.display_settings,
-                )
-                play_sfx("menu_confirm")
-                continue
-            loop.running = False
-            break
-
-        if not loop.running:
-            break
-        _draw_settings_hub_menu(session.screen, fonts, loop)
-        pygame.display.flip()
-
-
-_BOT_DIMENSIONS = (2, 3, 4)
-_BOT_MENU_ROWS = bot_options_rows()
-_BOT_DEFAULTS = bot_defaults_by_mode()
-
-
-@dataclass
-class _BotMenuState:
-    payload: dict[str, object]
-    dimension: int = 2
-    selected: int = 0
-    status: str = ""
-    status_error: bool = False
-    dirty: bool = False
-    running: bool = True
-
-
-def _mode_key_from_dimension(dimension: int) -> str:
-    safe_dimension = max(2, min(4, int(dimension)))
-    return f"{safe_dimension}d"
-
-
-def _bot_mode_settings(loop: _BotMenuState) -> dict[str, int]:
-    settings = loop.payload.setdefault("settings", {})
-    if not isinstance(settings, dict):
-        settings = {}
-        loop.payload["settings"] = settings
-    mode_key = _mode_key_from_dimension(loop.dimension)
-    defaults = _BOT_DEFAULTS[mode_key]
-    mode_settings = settings.get(mode_key)
-    if not isinstance(mode_settings, dict):
-        mode_settings = dict(defaults)
-        settings[mode_key] = mode_settings
-    for attr_name, default_value in defaults.items():
-        value = mode_settings.get(attr_name)
-        if isinstance(value, bool) or not isinstance(value, int):
-            mode_settings[attr_name] = default_value
-    return mode_settings
-
-
-def _bot_values(loop: _BotMenuState) -> tuple[str, ...]:
-    mode_settings = _bot_mode_settings(loop)
-    bot_mode = bot_mode_from_index(mode_settings["bot_mode_index"])
-    algorithm = bot_planner_algorithm_from_index(mode_settings["bot_algorithm_index"])
-    profile = bot_planner_profile_from_index(mode_settings["bot_profile_index"])
-    return (
-        f"{loop.dimension}D",
-        bot_mode_label(bot_mode),
-        bot_planner_algorithm_label(algorithm),
-        bot_planner_profile_label(profile),
-        str(mode_settings["bot_speed_level"]),
-        str(mode_settings["bot_budget_ms"]),
-        "",
-        "",
-        "",
-    )
-
-
-def _set_bot_status(loop: _BotMenuState, message: str, *, is_error: bool = False) -> None:
-    loop.status = message
-    loop.status_error = is_error
-
-
-def _save_bot_menu(loop: _BotMenuState) -> tuple[bool, str]:
-    ok, msg = save_app_settings_payload(loop.payload)
-    _set_bot_status(loop, msg, is_error=not ok)
-    if ok:
-        loop.dirty = False
-        play_sfx("menu_confirm")
-    return ok, msg
-
-
-def _reset_bot_defaults(loop: _BotMenuState) -> None:
-    mode_key = _mode_key_from_dimension(loop.dimension)
-    mode_settings = _bot_mode_settings(loop)
-    mode_settings.update(_BOT_DEFAULTS[mode_key])
-    loop.dirty = True
-    _set_bot_status(loop, f"Reset {mode_key.upper()} bot settings (not saved yet)")
-    play_sfx("menu_move")
-
-
-def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -> None:
-    _draw_gradient(screen)
-    width, height = screen.get_size()
-    title = fonts.title_font.render("Bot Options", True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render("Dimension-specific bot controls in one place", True, MUTED_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 88))
-
-    values = _bot_values(loop)
-    panel_w = min(640, width - 40)
-    panel_h = 92 + len(_BOT_MENU_ROWS) * 46
-    panel_x = (width - panel_w) // 2
-    panel_y = max(132, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 24
-    for idx, row in enumerate(_BOT_MENU_ROWS):
-        selected = idx == loop.selected
-        color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 46
-
-    hint_lines = (
-        "Left/Right adjust values   Up/Down select",
-        "F5 save   F8 reset defaults   Esc back",
-    )
-    hy = panel_y + panel_h + 12
-    for line in hint_lines:
-        surf = fonts.hint_font.render(line, True, MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if loop.status:
-        color = (255, 150, 150) if loop.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(loop.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
-
-
-def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
-        return False
-    delta = -1 if key == pygame.K_LEFT else 1
-    if loop.selected == 0:
-        idx = _BOT_DIMENSIONS.index(loop.dimension)
-        loop.dimension = _BOT_DIMENSIONS[(idx + delta) % len(_BOT_DIMENSIONS)]
-        play_sfx("menu_move")
-        return True
-
-    mode_settings = _bot_mode_settings(loop)
-    if loop.selected == 1:
-        value = mode_settings["bot_mode_index"] + delta
-        mode_settings["bot_mode_index"] = max(0, min(len(BOT_MODE_OPTIONS) - 1, value))
-    elif loop.selected == 2:
-        value = mode_settings["bot_algorithm_index"] + delta
-        mode_settings["bot_algorithm_index"] = max(0, min(len(BOT_PLANNER_ALGORITHM_OPTIONS) - 1, value))
-    elif loop.selected == 3:
-        value = mode_settings["bot_profile_index"] + delta
-        mode_settings["bot_profile_index"] = max(0, min(len(BOT_PLANNER_PROFILE_OPTIONS) - 1, value))
-    elif loop.selected == 4:
-        value = mode_settings["bot_speed_level"] + delta
-        mode_settings["bot_speed_level"] = max(1, min(10, value))
-    elif loop.selected == 5:
-        value = mode_settings["bot_budget_ms"] + (delta * 2)
-        mode_settings["bot_budget_ms"] = max(2, min(220, value))
-    else:
-        return False
-    loop.dirty = True
-    play_sfx("menu_move")
-    return True
-
-
-def _run_bot_options_menu(
-    screen: pygame.Surface,
-    fonts,
-    *,
-    start_dimension: int,
-) -> tuple[bool, str]:
-    loop = _BotMenuState(
-        payload=load_app_settings_payload(),
-        dimension=start_dimension if start_dimension in _BOT_DIMENSIONS else 2,
-    )
-    clock = pygame.time.Clock()
-
-    while loop.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                loop.running = False
-                break
-            if event.type != pygame.KEYDOWN:
-                continue
-            key = event.key
-            if key == pygame.K_ESCAPE:
-                loop.running = False
-                break
-            if key == pygame.K_UP:
-                loop.selected = (loop.selected - 1) % len(_BOT_MENU_ROWS)
-                play_sfx("menu_move")
-                continue
-            if key == pygame.K_DOWN:
-                loop.selected = (loop.selected + 1) % len(_BOT_MENU_ROWS)
-                play_sfx("menu_move")
-                continue
-            if _adjust_bot_value(loop, key):
-                continue
-            if key == pygame.K_F8:
-                _reset_bot_defaults(loop)
-                continue
-            if key == pygame.K_F5:
-                _save_bot_menu(loop)
-                continue
-            if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                continue
-            if loop.selected == 6:
-                _save_bot_menu(loop)
-                continue
-            if loop.selected == 7:
-                _reset_bot_defaults(loop)
-                continue
-            if loop.selected == 8:
-                loop.running = False
-                break
-
-        _draw_bot_options_menu(screen, fonts, loop)
-        pygame.display.flip()
-
-    if loop.dirty:
-        return _save_bot_menu(loop)
-    if loop.status:
-        return (not loop.status_error), loop.status
-    return True, "Bot options unchanged"
-
-
-def _launch_2d(
-    screen: pygame.Surface,
-    fonts2d,
-    display_settings: DisplaySettings,
-) -> tuple[pygame.Surface, DisplaySettings, bool]:
-    screen = open_display(display_settings, caption="2D Tetris – Setup")
-    settings = front2d.run_menu(screen, fonts2d)
-    if settings is None:
-        return screen, display_settings, True
-
-    cfg = front2d.GameConfig(
-        width=settings.width,
-        height=settings.height,
-        gravity_axis=1,
-        speed_level=settings.speed_level,
-        piece_set=front2d._piece_set_index_to_id(settings.piece_set_index),
-        challenge_layers=getattr(settings, "challenge_layers", 0),
-    )
-    board_px_w = cfg.width * 30
-    board_px_h = cfg.height * 30
-    suggested = (board_px_w + 200 + 60, board_px_h + 40)
-    preferred_size = (
-        max(display_settings.windowed_size[0], suggested[0]),
-        max(display_settings.windowed_size[1], suggested[1]),
-    )
-    screen = open_display(
-        display_settings,
-        caption="2D Tetris",
-        preferred_windowed_size=preferred_size,
-    )
-
-    back_to_menu = front2d.run_game_loop(
-        screen,
-        cfg,
-        fonts2d,
-        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
-        bot_speed_level=getattr(settings, "bot_speed_level", 7),
-        bot_algorithm_index=getattr(settings, "bot_algorithm_index", 0),
-        bot_profile_index=getattr(settings, "bot_profile_index", 1),
-        bot_budget_ms=getattr(settings, "bot_budget_ms", 12),
-    )
-    if not back_to_menu:
-        return screen, display_settings, False
-    display_settings = capture_windowed_display_settings(display_settings)
-    screen = open_display(display_settings)
-    return screen, display_settings, True
-
-
-def _launch_3d(
-    screen: pygame.Surface,
-    fonts_nd,
-    display_settings: DisplaySettings,
-) -> tuple[pygame.Surface, DisplaySettings, bool]:
-    screen = open_display(display_settings, caption="3D Tetris – Setup")
-    settings = run_menu_3d(screen, fonts_nd)
-    if settings is None:
-        return screen, display_settings, True
-
-    cfg = build_config_3d(settings)
-    suggested = suggested_window_size_3d(cfg)
-    preferred_size = (
-        max(display_settings.windowed_size[0], suggested[0]),
-        max(display_settings.windowed_size[1], suggested[1]),
-    )
-    screen = open_display(
-        display_settings,
-        caption="3D Tetris",
-        preferred_windowed_size=preferred_size,
-    )
-
-    back_to_menu = run_game_loop_3d(
-        screen,
-        cfg,
-        fonts_nd,
-        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
-        bot_speed_level=getattr(settings, "bot_speed_level", 7),
-        bot_algorithm_index=getattr(settings, "bot_algorithm_index", 0),
-        bot_profile_index=getattr(settings, "bot_profile_index", 1),
-        bot_budget_ms=getattr(settings, "bot_budget_ms", 24),
-    )
-    if not back_to_menu:
-        return screen, display_settings, False
-    display_settings = capture_windowed_display_settings(display_settings)
-    screen = open_display(display_settings)
-    return screen, display_settings, True
-
-
-def _launch_4d(
-    screen: pygame.Surface,
-    fonts_nd,
-    display_settings: DisplaySettings,
-) -> tuple[pygame.Surface, DisplaySettings, bool]:
-    screen = open_display(display_settings, caption="4D Tetris – Setup")
-    settings = run_menu_nd(screen, fonts_nd, 4)
-    if settings is None:
-        return screen, display_settings, True
-
-    cfg = build_config_nd(settings, 4)
-    suggested = suggested_window_size_4d(cfg)
-    preferred_size = (
-        max(display_settings.windowed_size[0], suggested[0]),
-        max(display_settings.windowed_size[1], suggested[1]),
-    )
-    screen = open_display(
-        display_settings,
-        caption="4D Tetris",
-        preferred_windowed_size=preferred_size,
-    )
-
-    back_to_menu = run_game_loop_4d(
-        screen,
-        cfg,
-        fonts_nd,
-        bot_mode=bot_mode_from_index(getattr(settings, "bot_mode_index", 0)),
-        bot_speed_level=getattr(settings, "bot_speed_level", 7),
-        bot_algorithm_index=getattr(settings, "bot_algorithm_index", 0),
-        bot_profile_index=getattr(settings, "bot_profile_index", 1),
-        bot_budget_ms=getattr(settings, "bot_budget_ms", 36),
-    )
-    if not back_to_menu:
-        return screen, display_settings, False
-    display_settings = capture_windowed_display_settings(display_settings)
-    screen = open_display(display_settings)
-    return screen, display_settings, True
+    return save_menu_payload(payload)
 
 
 def _mode_from_last_mode(raw_last_mode: object) -> str:
@@ -1073,14 +140,6 @@ def _mode_from_last_mode(raw_last_mode: object) -> str:
 def _menu_index_for_mode(mode: str) -> int:
     mapping = {"2d": 0, "3d": 1, "4d": 2}
     return mapping.get(mode, 0)
-
-
-@dataclass
-class _LauncherSession:
-    screen: pygame.Surface
-    display_settings: DisplaySettings
-    audio_settings: AudioSettings
-    running: bool = True
 
 
 def _restore_active_profile(payload: dict[str, object]) -> None:
@@ -1099,8 +158,12 @@ def _persist_session_status(state: MainMenuState, session: _LauncherSession) -> 
         audio_settings=session.audio_settings,
         last_mode=state.last_mode,
     )
-    state.status = msg
-    state.status_error = not ok
+    if ok:
+        state.status = "Autosaved"
+        state.status_error = False
+    else:
+        state.status = f"Autosave failed: {msg}"
+        state.status_error = True
 
 
 def _menu_action_play_2d(
@@ -1110,12 +173,10 @@ def _menu_action_play_2d(
     fonts_2d,
 ) -> None:
     state.last_mode = "2d"
-    session.screen, session.display_settings, keep_running = _launch_2d(
-        session.screen,
-        fonts_2d,
-        session.display_settings,
-    )
-    if not keep_running:
+    result = launch_2d(session.screen, fonts_2d, session.display_settings)
+    session.screen = result.screen
+    session.display_settings = result.display_settings
+    if not result.keep_running:
         session.running = False
     _persist_session_status(state, session)
 
@@ -1127,12 +188,10 @@ def _menu_action_play_3d(
     _fonts_2d,
 ) -> None:
     state.last_mode = "3d"
-    session.screen, session.display_settings, keep_running = _launch_3d(
-        session.screen,
-        fonts_nd,
-        session.display_settings,
-    )
-    if not keep_running:
+    result = launch_3d(session.screen, fonts_nd, session.display_settings)
+    session.screen = result.screen
+    session.display_settings = result.display_settings
+    if not result.keep_running:
         session.running = False
     _persist_session_status(state, session)
 
@@ -1144,12 +203,10 @@ def _menu_action_play_4d(
     _fonts_2d,
 ) -> None:
     state.last_mode = "4d"
-    session.screen, session.display_settings, keep_running = _launch_4d(
-        session.screen,
-        fonts_nd,
-        session.display_settings,
-    )
-    if not keep_running:
+    result = launch_4d(session.screen, fonts_nd, session.display_settings)
+    session.screen = result.screen
+    session.display_settings = result.display_settings
+    if not result.keep_running:
         session.running = False
     _persist_session_status(state, session)
 
@@ -1161,7 +218,7 @@ def _menu_action_keybindings(
     _fonts_2d,
 ) -> None:
     dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
-    run_keybindings_menu(session.screen, fonts_nd, dimension=dimension)
+    run_keybindings_menu(session.screen, fonts_nd, dimension=dimension, scope="all")
     load_active_profile_bindings()
     _persist_session_status(state, session)
 
@@ -1172,10 +229,35 @@ def _menu_action_settings(
     fonts_nd,
     _fonts_2d,
 ) -> None:
-    _run_settings_hub_menu(session, fonts_nd)
-    if not session.running:
+    result = run_settings_hub_menu(
+        session.screen,
+        fonts_nd,
+        audio_settings=session.audio_settings,
+        display_settings=session.display_settings,
+    )
+    session.screen = result.screen
+    session.audio_settings = result.audio_settings
+    session.display_settings = result.display_settings
+    if not result.keep_running:
+        session.running = False
         return
     _persist_session_status(state, session)
+
+
+def _menu_action_help(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+    _fonts_2d,
+) -> None:
+    dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
+    session.screen = run_help_menu(
+        session.screen,
+        fonts_nd,
+        dimension=dimension,
+        context_label="Launcher",
+    )
+    play_sfx("menu_confirm")
 
 
 def _menu_action_quit(
@@ -1194,7 +276,7 @@ def _menu_action_bot_options(
     _fonts_2d,
 ) -> None:
     start_dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
-    ok, msg = _run_bot_options_menu(session.screen, fonts_nd, start_dimension=start_dimension)
+    ok, msg = run_bot_options_menu(session.screen, fonts_nd, start_dimension=start_dimension)
     _persist_session_status(state, session)
     state.status = msg
     state.status_error = not ok
@@ -1204,6 +286,7 @@ _MENU_ACTION_HANDLERS: dict[str, Callable[[MainMenuState, _LauncherSession, obje
     "play_2d": _menu_action_play_2d,
     "play_3d": _menu_action_play_3d,
     "play_4d": _menu_action_play_4d,
+    "help": _menu_action_help,
     "settings": _menu_action_settings,
     "keybindings": _menu_action_keybindings,
     "bot_options": _menu_action_bot_options,
@@ -1253,7 +336,7 @@ def _handle_main_menu_keydown(
 def run() -> None:
     runtime = initialize_runtime(sync_audio_state=True)
 
-    payload = load_app_settings_payload()
+    payload = load_menu_payload()
     _restore_active_profile(payload)
 
     session = _LauncherSession(

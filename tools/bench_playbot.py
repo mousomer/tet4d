@@ -9,6 +9,7 @@ import statistics
 import sys
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,8 +26,14 @@ from tetris_nd.playbot.planner_nd import plan_best_nd_move
 from tetris_nd.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
+    benchmark_history_file,
+    benchmark_p95_thresholds,
     default_planning_budget_ms,
 )
+
+DIMS_2D = (10, 20)
+DIMS_3D = (6, 18, 6)
+DIMS_4D = (6, 18, 6, 4)
 
 
 @dataclass(frozen=True)
@@ -45,8 +52,8 @@ def _bench_2d(
     samples: list[BenchSample] = []
     for i in range(runs):
         cfg = GameConfig(
-            width=10,
-            height=20,
+            width=DIMS_2D[0],
+            height=DIMS_2D[1],
             piece_set=PIECE_SET_2D_CLASSIC,
             speed_level=3,
         )
@@ -70,14 +77,14 @@ def _bench_nd(
 ) -> list[BenchSample]:
     if ndim == 3:
         cfg = GameConfigND(
-            dims=(6, 18, 6),
+            dims=DIMS_3D,
             gravity_axis=1,
             piece_set_id=PIECE_SET_3D_STANDARD,
             speed_level=3,
         )
     else:
         cfg = GameConfigND(
-            dims=(6, 18, 6, 4),
+            dims=DIMS_4D,
             gravity_axis=1,
             piece_set_id=PIECE_SET_4D_STANDARD,
             speed_level=3,
@@ -111,17 +118,34 @@ def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
 
 
 def _assert_thresholds(results: dict[str, dict[str, float | int]]) -> tuple[bool, str]:
-    # Budget-based fallback means p95 should stay close to budget on normal hardware.
-    thresholds = {
-        "2d": 20.0,
-        "3d": 45.0,
-        "4d": 70.0,
-    }
+    thresholds = benchmark_p95_thresholds()
     for key, max_p95 in thresholds.items():
         p95 = float(results[key]["p95_ms"])
         if p95 > max_p95:
             return False, f"{key} planner p95 {p95:.2f} ms exceeds {max_p95:.2f} ms"
     return True, "benchmark thresholds passed"
+
+
+def _append_trend_sample(
+    *,
+    output_path: Path,
+    algorithm: BotPlannerAlgorithm,
+    profile: BotPlannerProfile,
+    runs: int,
+    budgets: dict[str, int],
+    results: dict[str, dict[str, float | int]],
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "algorithm": algorithm.value,
+        "profile": profile.value,
+        "runs": int(runs),
+        "budgets_ms": budgets,
+        "results": results,
+    }
+    with output_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
 
 
 def main() -> int:
@@ -143,26 +167,54 @@ def main() -> int:
     parser.add_argument("--budget-3d", type=int, default=0, help="override 3D planning budget in ms")
     parser.add_argument("--budget-4d", type=int, default=0, help="override 4D planning budget in ms")
     parser.add_argument("--assert", action="store_true", dest="assert_mode", help="fail on threshold regressions")
+    parser.add_argument(
+        "--record-trend",
+        action="store_true",
+        help="append benchmark results to trend history JSONL",
+    )
+    parser.add_argument(
+        "--trend-file",
+        default="",
+        help="override trend history file path (default from config/playbot/policy.json)",
+    )
     args = parser.parse_args()
 
     profile = BotPlannerProfile(args.profile)
     algorithm = BotPlannerAlgorithm(args.algorithm)
-    budget_2d = args.budget_2d or default_planning_budget_ms(2, profile)
-    budget_3d = args.budget_3d or default_planning_budget_ms(3, profile)
-    budget_4d = args.budget_4d or default_planning_budget_ms(4, profile)
+
+    budget_2d = args.budget_2d or default_planning_budget_ms(2, profile, dims=DIMS_2D)
+    budget_3d = args.budget_3d or default_planning_budget_ms(3, profile, dims=DIMS_3D)
+    budget_4d = args.budget_4d or default_planning_budget_ms(4, profile, dims=DIMS_4D)
 
     results = {
         "2d": _summary(_bench_2d(profile, budget_2d, args.runs, algorithm=algorithm)),
         "3d": _summary(_bench_nd(profile, budget_3d, args.runs, ndim=3, algorithm=algorithm)),
         "4d": _summary(_bench_nd(profile, budget_4d, args.runs, ndim=4, algorithm=algorithm)),
     }
-    print(
-        json.dumps(
-            {"algorithm": algorithm.value, "profile": profile.value, "results": results},
-            indent=2,
-            sort_keys=True,
+    payload = {
+        "algorithm": algorithm.value,
+        "profile": profile.value,
+        "budgets_ms": {
+            "2d": budget_2d,
+            "3d": budget_3d,
+            "4d": budget_4d,
+        },
+        "results": results,
+        "thresholds_ms": benchmark_p95_thresholds(),
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+
+    if args.record_trend:
+        trend_path = Path(args.trend_file) if args.trend_file else Path(benchmark_history_file())
+        _append_trend_sample(
+            output_path=trend_path,
+            algorithm=algorithm,
+            profile=profile,
+            runs=args.runs,
+            budgets=payload["budgets_ms"],
+            results=results,
         )
-    )
+        print(f"trend sample appended: {trend_path}")
 
     if args.assert_mode:
         ok, msg = _assert_thresholds(results)

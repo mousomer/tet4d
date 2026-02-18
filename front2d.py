@@ -62,6 +62,7 @@ from tetris_nd.playbot.types import (
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tetris_nd.rotation_anim import PieceRotationAnimator2D
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
+from tetris_nd.pause_menu import run_pause_menu
 
 DEFAULT_GAME_SEED = 1337
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
@@ -205,6 +206,8 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             state.bindings_status = msg
             state.bindings_status_error = True
         return state.settings
+    # Autosave setup/session state on exit as well (without explicit Save action).
+    save_menu_settings(state, 2)
     return None
 
 
@@ -263,7 +266,7 @@ def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
 
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameState,
-                        cfg: GameConfig,
+                        _cfg: GameConfig,
                         *,
                         allow_gameplay: bool = True) -> Optional[str]:
     """
@@ -412,6 +415,7 @@ def run_game_loop(screen: pygame.Surface,
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
         ndim=2,
+        dims=(cfg.width, cfg.height),
         profile=bot_planner_profile_from_index(bot_profile_index),
         budget_ms=bot_budget_ms,
         algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
@@ -434,7 +438,14 @@ def run_game_loop(screen: pygame.Surface,
         if decision == "quit":
             return False
         if decision == "menu":
-            return True
+            pause_decision, screen = run_pause_menu(screen, fonts, dimension=2)
+            if pause_decision == "quit":
+                return False
+            if pause_decision == "menu":
+                return True
+            if pause_decision == "restart":
+                loop.on_restart()
+                continue
 
         loop.bot.tick_2d(loop.state, dt)
         if loop.bot.controls_descent:

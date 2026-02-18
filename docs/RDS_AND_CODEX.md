@@ -61,56 +61,31 @@ Minimum required coverage for gameplay-affecting changes:
 3. No new C901 failures.
 4. Usage docs remain valid (`README.md`, docs links, run commands).
 
-## Simplification Opportunities (2026-02-16)
+## Simplification and Technical Debt Tracking (2026-02-18)
 
-This section tracks high-value code simplification targets discovered from structure review and `ruff --select C901`.
+Authoritative open/deferred items are tracked in:
+1. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
 
-### Current complexity hotspots
+### Current complexity hotspots (`ruff --select C901`)
 
-1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings.py`
-2. `rebind_action_key` combines validation, conflict resolution, and state mutation.
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_settings_state.py`
-4. `apply_saved_menu_settings` is still branch-heavy for mixed menu payload application.
-5. Note: prior hotspots in `front.py`, `menu_controls.py`, `keybindings_menu.py`, `front4d_game.py`, and `pieces_nd.py` were reduced on 2026-02-16.
+1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:480` (`_run_menu_action`)
+2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:854` (`run_keybindings_menu`)
+3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/launcher_settings.py:854` (`run_settings_hub_menu`)
 
-### Duplication hotspots
+### Current duplication hotspots
 
 1. 3D and 4D projected rendering stacks remain intentionally parallel in:
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
 3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
 4. Further unification is possible but should be weighed against readability/regression risk.
 
-### Recommended simplification backlog
+### Recent simplification baseline (already completed)
 
-1. Completed: extract shared menu-state action dispatcher (2026-02-16).
-2. Completed in:
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_controls.py`
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`
-5. Follow-up completed: same dispatcher/handler pattern applied to `/Users/omer/workspace/test-code/tet4d/front.py`.
-
-6. Completed: extract shared camera pose animator (2026-02-16).
-7. Completed in:
-8. `/Users/omer/workspace/test-code/tet4d/tetris_nd/view_controls.py`
-9. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-10. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
-
-11. Completed: extract shared ND movement dispatch pipeline (2026-02-16).
-12. Completed in:
-13. `/Users/omer/workspace/test-code/tet4d/tetris_nd/frontend_nd.py`
-14. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-15. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
-
-16. Completed: replace branching piece-set selector with registry maps (2026-02-16).
-17. Completed in:
-18. `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`
-
-19. Completed: consolidate app boot and display/audio persistence glue (2026-02-16).
-20. Completed in:
-21. `/Users/omer/workspace/test-code/tet4d/tetris_nd/app_runtime.py`
-22. `/Users/omer/workspace/test-code/tet4d/front.py`
-23. `/Users/omer/workspace/test-code/tet4d/front2d.py`
-24. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-25. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
+1. Shared menu-state dispatcher pattern extracted and reused.
+2. Shared camera pose animator extracted.
+3. Shared ND movement dispatch pipeline extracted.
+4. Branching piece-set selector replaced with registry maps.
+5. App boot/display/audio persistence glue consolidated.
 
 ### Verification requirements for simplification PRs
 

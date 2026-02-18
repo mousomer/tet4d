@@ -1,8 +1,8 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.5  
+Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -122,7 +122,7 @@ Required checks for behavior changes:
 ruff check /Users/omer/workspace/test-code/tet4d
 ruff check /Users/omer/workspace/test-code/tet4d --select C901
 pytest -q
-python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert
+python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert --record-trend
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
 ./scripts/ci_check.sh
 ```
@@ -149,12 +149,26 @@ Expected test categories:
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
 
-## 10. Open Backlog
+## 10. Backlog Status
 
-1. Playbot tuning:
-2. Calibrate default planner budgets/profile presets for very large boards.
-3. Add CI trend tracking for planner latency over time (not only pass/fail thresholds).
-4. ND planner maintainability:
-5. Split `planner_nd.py` into smaller modules if future heuristic/search additions increase complexity.
-6. Additional verification:
-7. Expand deterministic replay suites to include long-run score progression snapshots across all assist combinations.
+Completed in current implementation:
+1. Board-size-aware playbot budget scaling for large boards.
+2. CI benchmark trend tracking via JSONL history output.
+3. ND planner split (`planner_nd.py` + `planner_nd_search.py`) to reduce orchestration complexity.
+4. Deterministic long-run score snapshot tests across assist combinations.
+5. User-facing shipped-feature map documentation (`docs/FEATURE_MAP.md`).
+6. Explicit adaptive fallback policy (candidate caps + lookahead throttle + deadline safety).
+7. Configured `AUTO` algorithm policy tuning (`HEURISTIC` vs `GREEDY_LAYER`) via runtime policy weights.
+8. Optional deeper lookahead profile (`ULTRA`) for 2D/3D.
+9. Benchmark thresholds and policy defaults externalized in `config/playbot/policy.json`.
+10. Keybindings UX parity delivered across launcher/pause, with category docs sourced from `config/menu/structure.json`.
+11. 4D helper-grid guidance propagated across all rendered `w` layer boards.
+12. Shared ND runtime loop orchestration extracted for 3D/4D (`tetris_nd/loop_runner_nd.py`).
+13. Frontend split executed: launcher orchestration/settings and 3D/4D setup/render modules extracted for maintainability.
+14. Offline playbot policy analysis tool added (`tools/analyze_playbot_policies.py`).
+15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
+
+Remaining follow-up:
+1. Continue empirical policy tuning from accumulated trend-history data as an ongoing operational cadence.
+2. Extend translation/rotation GIF guidance from Help-only into menu contexts (launcher/pause/keybinding descriptions) for higher discoverability.
+3. Reduce menu complexity hotspots flagged by `ruff --select C901` in keybindings/settings entry flows.

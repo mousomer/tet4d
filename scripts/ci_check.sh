@@ -5,4 +5,4 @@ cd "$(dirname "$0")/.."
 
 ruff check .
 pytest -q
-python3 tools/bench_playbot.py --assert
+python3 tools/bench_playbot.py --assert --record-trend

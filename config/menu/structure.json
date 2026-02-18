@@ -3,6 +3,7 @@
     {"action": "play_2d", "label": "Play 2D"},
     {"action": "play_3d", "label": "Play 3D"},
     {"action": "play_4d", "label": "Play 4D"},
+    {"action": "help", "label": "Help"},
     {"action": "settings", "label": "Settings"},
     {"action": "keybindings", "label": "Keybindings Setup"},
     {"action": "bot_options", "label": "Bot Options"},
@@ -49,5 +50,53 @@
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
     ]
-  }
+  },
+  "keybinding_category_docs": {
+    "scope_order": ["general", "2d", "3d", "4d", "all"],
+    "groups": {
+      "system": {
+        "label": "General / System",
+        "description": "Global actions available in all modes."
+      },
+      "game": {
+        "label": "Gameplay",
+        "description": "Piece translation, drop, and rotation actions."
+      },
+      "camera": {
+        "label": "Camera / View",
+        "description": "Board orbit, zoom, and projection controls."
+      },
+      "slice": {
+        "label": "Slice",
+        "description": "Layer filtering controls for 3D/4D inspection."
+      }
+    }
+  },
+  "settings_category_docs": [
+    {
+      "id": "audio",
+      "label": "Audio",
+      "description": "Master volume, SFX volume, mute toggle, and persistence behavior."
+    },
+    {
+      "id": "display",
+      "label": "Display",
+      "description": "Fullscreen/windowed mode, window size, and display apply/reset actions."
+    },
+    {
+      "id": "profiles",
+      "label": "Profiles",
+      "description": "Keybinding profile selection, creation, rename, delete, save, and load."
+    },
+    {
+      "id": "bot",
+      "label": "Bot Options",
+      "description": "Bot mode, algorithm, profile, speed, budget, and reset/save behavior."
+    },
+    {
+      "id": "gameplay_setup",
+      "label": "Gameplay Setup",
+      "description": "Dimension-specific board size, piece set, challenge layers, and speed level."
+    }
+  ]
 }
