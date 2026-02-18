@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,8 @@ from .keybindings import (
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
 STATE_FILE = STATE_DIR / "menu_settings.json"
 DEFAULT_WINDOWED_SIZE = (1200, 760)
+_PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+_MODE_KEYS = {"2d", "3d", "4d"}
 
 
 def _default_settings_payload() -> dict[str, Any]:
@@ -84,6 +87,26 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
 
 
 def _sanitize_payload(payload: dict[str, Any]) -> None:
+    defaults = _default_settings_payload()
+    version = payload.get("version")
+    if isinstance(version, int) and version > 0:
+        payload["version"] = version
+    else:
+        payload["version"] = defaults["version"]
+
+    raw_profile = payload.get("active_profile")
+    if isinstance(raw_profile, str):
+        normalized_profile = raw_profile.strip().lower()
+        if _PROFILE_NAME_RE.match(normalized_profile):
+            payload["active_profile"] = normalized_profile
+        else:
+            payload["active_profile"] = defaults["active_profile"]
+    else:
+        payload["active_profile"] = defaults["active_profile"]
+
+    raw_mode = payload.get("last_mode")
+    payload["last_mode"] = raw_mode if raw_mode in _MODE_KEYS else defaults["last_mode"]
+
     display = payload.setdefault("display", {})
     if not isinstance(display, dict):
         payload["display"] = {}
