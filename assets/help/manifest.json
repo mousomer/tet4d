@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "translation_keys",
+      "path": "assets/help/translation_keys.gif",
+      "type": "image/gif",
+      "surfaces": ["help", "launcher_menu", "pause_menu", "keybindings_menu", "in_game_helper"]
+    },
+    {
+      "id": "rotation_keys",
+      "path": "assets/help/rotation_keys.gif",
+      "type": "image/gif",
+      "surfaces": ["help", "launcher_menu", "pause_menu", "keybindings_menu", "in_game_helper"]
+    }
+  ]
+}

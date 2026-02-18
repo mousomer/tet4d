@@ -12,6 +12,11 @@ from .pieces2d import (
     get_piece_bag_2d,
     normalize_piece_set_2d,
 )
+from .score_analyzer import (
+    analyze_lock_event,
+    new_analysis_session_id,
+    record_score_analysis_event,
+)
 
 
 def _score_for_clear(cleared_lines: int) -> int:
@@ -77,6 +82,12 @@ class GameState:
     lines_cleared: int = 0
     game_over: bool = False
     score_multiplier: float = 1.0
+    analysis_actor_mode: str = "human"
+    analysis_bot_mode: str = "off"
+    analysis_grid_mode: str = "full"
+    analysis_session_id: str = field(default_factory=new_analysis_session_id)
+    analysis_seq: int = 0
+    last_score_analysis: dict[str, object] | None = None
 
     def __post_init__(self):
         if self.board is None:
@@ -175,6 +186,12 @@ class GameState:
 
         piece = self.current_piece
         width, height = self.config.width, self.config.height
+        pre_cells = dict(self.board.cells)
+        visible_piece_cells = tuple(
+            coord
+            for coord in piece.cells()
+            if 0 <= coord[0] < width and 0 <= coord[1] < height
+        )
 
         # If any block is above the top row, the game is over.
         for (x, y) in piece.cells():
@@ -190,7 +207,28 @@ class GameState:
         self.lines_cleared += cleared
         raw_points = self.config.lock_piece_points + _score_for_clear(cleared)
         mult = max(0.1, float(self.score_multiplier))
-        self.score += max(0, int(round(raw_points * mult)))
+        awarded_points = max(0, int(round(raw_points * mult)))
+        self.score += awarded_points
+
+        self.analysis_seq += 1
+        self.last_score_analysis = analyze_lock_event(
+            board_pre=pre_cells,
+            board_post=dict(self.board.cells),
+            dims=(width, height),
+            gravity_axis=self.config.gravity_axis,
+            locked_cells=visible_piece_cells,
+            cleared=cleared,
+            piece_id=piece.shape.name,
+            actor_mode=self.analysis_actor_mode,
+            bot_mode=self.analysis_bot_mode,
+            grid_mode=self.analysis_grid_mode,
+            speed_level=self.config.speed_level,
+            raw_points=raw_points,
+            final_points=awarded_points,
+            session_id=self.analysis_session_id,
+            seq=self.analysis_seq,
+        )
+        record_score_analysis_event(self.last_score_analysis)
 
         return cleared
 

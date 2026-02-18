@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tet4d/save_state.schema.json",
+  "title": "tet4d saved game state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "timestamp_utc",
+    "seed",
+    "config",
+    "board",
+    "metrics",
+    "status"
+  ],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["2d", "3d", "4d"] },
+    "timestamp_utc": { "type": "string", "format": "date-time" },
+    "seed": { "type": "integer" },
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["dims", "gravity_axis", "piece_set_id", "speed_level"],
+      "properties": {
+        "dims": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "gravity_axis": { "type": "integer", "minimum": 0 },
+        "piece_set_id": { "type": "string", "minLength": 1 },
+        "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    },
+    "board": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dims", "cells"],
+      "properties": {
+        "dims": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["coord", "color_id"],
+            "properties": {
+              "coord": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "integer" }
+              },
+              "color_id": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "active_piece": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["name", "pos", "rel_blocks", "color_id"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "pos": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "integer" }
+        },
+        "rel_blocks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "integer" }
+          }
+        },
+        "color_id": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "lines_cleared", "pieces_locked"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0 },
+        "lines_cleared": { "type": "integer", "minimum": 0 },
+        "pieces_locked": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["game_over"],
+      "properties": {
+        "game_over": { "type": "boolean" }
+      }
+    }
+  }
+}

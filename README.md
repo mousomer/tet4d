@@ -16,6 +16,7 @@ All modes share core logic under `tetris_nd/`, with mode-specific frontends and 
 
 - Python `3.11+` (target compatibility includes Python `3.14`)
 - `pygame-ce` (installed via `requirements.txt`)
+- CI validation matrix: Python `3.11`, `3.12`, `3.13`, `3.14`
 
 ## Setup
 
@@ -45,7 +46,7 @@ python /Users/omer/workspace/test-code/tet4d/front4d.py
 Unified launcher includes:
 - Mode selection (`2D/3D/4D`)
 - `Help` menu with explanation pages and animated key guides
-- Unified `Settings` submenu (`Audio` + `Display`)
+- Unified `Settings` submenu (`Audio` + `Display` + `Analytics`)
 - Keybindings setup menu (load/save/save-as/rebind/reset, profile cycle/create/rename/delete)
   - Main keybinding sections: `General`, `2D`, `3D`, `4D`
 - Unified `Bot Options` submenu with per-dimension bot settings
@@ -155,6 +156,10 @@ Bot behavior details:
   - stronger bot assistance (`ASSIST/AUTO/STEP`)
   - more informative grid modes (`EDGE/FULL/HELPER`)
   - slower speed levels
+- Runtime score analyzer tracks per-lock placement quality and board health:
+  - side-panel summary lines: `Quality`, `Board health`, `Trend`
+  - config: `/Users/omer/workspace/test-code/tet4d/config/gameplay/score_analyzer.json`
+  - settings toggle: `Settings -> Analytics -> Score logging`
 - Score-analyzer design (board-health and placement-quality feature vectors) is specified in:
   - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_SCORE_ANALYZER.md`
 
@@ -164,8 +169,14 @@ Bot behavior details:
 # Lint
 ruff check /Users/omer/workspace/test-code/tet4d
 
+# Validate canonical documentation/test/help contract
+python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py
+
 # Unit and gameplay replay tests
 pytest -q
+
+# Repeated dry-run stability checks (2D/3D/4D debug sets)
+PYTHONPATH=. python3 /Users/omer/workspace/test-code/tet4d/tools/check_playbot_stability.py --repeats 20 --seed-base 0
 
 # Planner latency benchmark (used by CI harness)
 python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert --record-trend
@@ -188,3 +199,19 @@ Documentation is unified into three sections:
 3. RDS files and Codex instructions:
    - `/Users/omer/workspace/test-code/tet4d/docs/RDS_AND_CODEX.md`
    - `/Users/omer/workspace/test-code/tet4d/docs/rds/`
+
+## Canonical maintenance rules
+
+- Source of truth for automatic maintenance checks:
+  - `/Users/omer/workspace/test-code/tet4d/config/project/canonical_maintenance.json`
+- Contract validator (run locally and in CI):
+  - `/Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+- The contract currently enforces presence/content checks for:
+  - README/docs/RDS/backlog/feature map,
+  - help animation assets,
+  - core tests,
+  - canonical runtime config files,
+  - schema and migration ledgers,
+  - replay manifest and golden fixture directory,
+  - help index and help asset manifest,
+  - release checklist.

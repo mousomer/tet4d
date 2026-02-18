@@ -104,7 +104,7 @@ def draw_translation_rotation_guides(
     title: str = "Control Guides",
     elapsed_ms: int | None = None,
 ) -> None:
-    if rect.width < 220 or rect.height < 90:
+    if rect.width < 140 or rect.height < 82:
         return
     if elapsed_ms is None:
         elapsed_ms = pygame.time.get_ticks()
@@ -122,9 +122,17 @@ def draw_translation_rotation_guides(
         return
 
     gap = 10
-    box_w = (rect.width - 30 - gap) // 2
-    left = pygame.Rect(rect.x + 10, inner_y, box_w, inner_h)
-    right = pygame.Rect(left.right + gap, inner_y, box_w, inner_h)
+    if rect.width < 300:
+        box_w = rect.width - 20
+        box_h = (inner_h - gap) // 2
+        if box_h < 26:
+            return
+        left = pygame.Rect(rect.x + 10, inner_y, box_w, box_h)
+        right = pygame.Rect(rect.x + 10, left.bottom + gap, box_w, box_h)
+    else:
+        box_w = (rect.width - 30 - gap) // 2
+        left = pygame.Rect(rect.x + 10, inner_y, box_w, inner_h)
+        right = pygame.Rect(left.right + gap, inner_y, box_w, inner_h)
     _draw_clip_panel(
         surface,
         fonts,

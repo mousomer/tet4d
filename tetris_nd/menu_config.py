@@ -50,7 +50,15 @@ def _validate_mode_settings(mode_key: str, settings: object) -> dict[str, int]:
 
 
 def _validate_defaults_meta(payload: dict[str, Any]) -> tuple[int, str, str]:
-    required_top_level = ("version", "active_profile", "last_mode", "display", "audio", "settings")
+    required_top_level = (
+        "version",
+        "active_profile",
+        "last_mode",
+        "display",
+        "audio",
+        "analytics",
+        "settings",
+    )
     missing = [key for key in required_top_level if key not in payload]
     if missing:
         raise RuntimeError(f"defaults config missing keys: {', '.join(missing)}")
@@ -98,6 +106,15 @@ def _validate_defaults_audio(payload: dict[str, Any]) -> dict[str, Any]:
     return audio
 
 
+def _validate_defaults_analytics(payload: dict[str, Any]) -> dict[str, Any]:
+    analytics = payload["analytics"]
+    if not isinstance(analytics, dict):
+        raise RuntimeError("defaults.analytics must be an object")
+    if not isinstance(analytics.get("score_logging_enabled"), bool):
+        raise RuntimeError("defaults.analytics.score_logging_enabled must be a boolean")
+    return analytics
+
+
 def _validate_defaults_settings(payload: dict[str, Any]) -> dict[str, dict[str, int]]:
     settings = payload["settings"]
     if not isinstance(settings, dict):
@@ -132,6 +149,7 @@ def _validate_defaults_payload(payload: dict[str, Any]) -> dict[str, Any]:
     version, active_profile, last_mode = _validate_defaults_meta(payload)
     display = _validate_defaults_display(payload)
     audio = _validate_defaults_audio(payload)
+    analytics = _validate_defaults_analytics(payload)
     validated_settings = _validate_defaults_settings(payload)
     _sync_runtime_bot_budget(validated_settings)
     return {
@@ -140,6 +158,7 @@ def _validate_defaults_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "last_mode": last_mode,
         "display": display,
         "audio": audio,
+        "analytics": analytics,
         "settings": validated_settings,
     }
 

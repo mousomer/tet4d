@@ -34,6 +34,7 @@ from .projection3d import (
     transform_point,
 )
 from .runtime_helpers import collect_cleared_ghost_cells
+from .score_analyzer import hud_analysis_lines
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label
 
@@ -438,6 +439,7 @@ def _draw_side_panel(
     w_slice = slice_state.axis_values.get(3, 0)
     max_z = state.config.dims[2] - 1
     max_w = state.config.dims[3] - 1
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
 
     lines = [
         "4D Tetris",
@@ -456,6 +458,8 @@ def _draw_side_panel(
         f"Active z slice: {z_slice}/{max_z}",
         f"Active w layer: {w_slice}/{max_w}",
         "",
+        *analysis_lines,
+        *([""] if analysis_lines else []),
         *bot_lines,
         *([""] if bot_lines else []),
     ]
@@ -481,6 +485,7 @@ def _draw_side_panel(
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
+        show_guides=True,
     )
 
     if state.game_over:

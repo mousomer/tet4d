@@ -8,6 +8,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
+  - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - Pause menu is unified across modes: resume/restart/settings/keybindings/profiles/help/back to main/quit.
 - Reset defaults requires confirmation.
@@ -51,6 +52,10 @@ User-facing feature map for the shipped `tet4d` experience.
   - profile cycle/create/rename/delete,
   - reset to defaults.
 - Grouped in-game helper panels: `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
+- Small translation/rotation GIF guides are available in:
+  - Help pages,
+  - launcher/pause/settings/keybindings menus,
+  - in-game side-panel control helper areas (space permitting).
 
 ## 5. Piece Sets
 
@@ -70,6 +75,11 @@ User-facing feature map for the shipped `tet4d` experience.
   - speed level.
 - Easier assistance yields lower score multiplier.
 - Multiplier and bot status are visible in side panels.
+- Score analyzer is integrated on lock events:
+  - board-health and placement-quality feature extraction,
+  - HUD summary lines (`Quality`, `Board health`, `Trend`),
+  - config at `/Users/omer/workspace/test-code/tet4d/config/gameplay/score_analyzer.json`,
+  - persisted telemetry outputs (`state/analytics/score_events.jsonl`, `state/analytics/score_summary.json`) when logging is enabled.
 
 ## 7. Playbot
 
@@ -91,6 +101,7 @@ User-facing feature map for the shipped `tet4d` experience.
   - `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
   - `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
   - `/Users/omer/workspace/test-code/tet4d/config/gameplay/tuning.json`
+  - `/Users/omer/workspace/test-code/tet4d/config/gameplay/score_analyzer.json`
   - `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`
   - `/Users/omer/workspace/test-code/tet4d/config/audio/sfx.json`
 - User state persisted in:
@@ -103,4 +114,23 @@ User-facing feature map for the shipped `tet4d` experience.
 - Deterministic replay tests (2D/3D/4D controls).
 - Long-run deterministic score snapshots across assist combinations.
 - Playbot tests (planning fallback, dry run, greedy priorities, hard-drop thresholds).
+- Repeated playbot dry-run stability checks via `tools/check_playbot_stability.py`.
 - Benchmark checks integrated in CI script.
+- CI matrix validates Python `3.11`, `3.12`, `3.13`, and `3.14`.
+
+## 10. Canonical maintenance automation
+
+- Canonical maintenance contract file:
+  - `/Users/omer/workspace/test-code/tet4d/config/project/canonical_maintenance.json`
+- Contract validator:
+  - `/Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+- CI runs this validator through:
+  - `/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh`
+- Contract currently enforces synchronized maintenance of:
+  - documentation set (`README`, `docs`, `RDS`, `BACKLOG`, `FEATURE_MAP`),
+  - help assets (`translation_keys.gif`, `rotation_keys.gif`),
+  - core tests and canonical runtime config files,
+  - schema + migration files (`config/schema`, `docs/migrations`),
+  - replay manifest contract (`tests/replay/manifest.json` + `tests/replay/golden/.gitkeep`),
+  - help content contract (`docs/help/HELP_INDEX.md`, `assets/help/manifest.json`),
+  - release checklist (`docs/RELEASE_CHECKLIST.md`).

@@ -3,7 +3,7 @@
 Status: Active v0.5 (Verified 2026-02-18)  
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
 
@@ -15,7 +15,7 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 5. Persistent save/load of menu and settings state
 6. Keybinding editor flow with local profile save/load
 7. Unified main menu for choosing 2D/3D/4D with shared options
-8. Audio and display settings (including fullscreen/windowed mode)
+8. Audio, display, and analytics settings (including fullscreen/windowed mode)
 
 Primary implementation and maintenance files:
 1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
@@ -66,6 +66,7 @@ Main Menu
 ├── Settings
 │   ├── Audio
 │   ├── Display
+│   └── Analytics
 ├── Keybindings Setup
 │   ├── General
 │   ├── 2D
@@ -159,6 +160,7 @@ Pause Menu
 10. `Save Keybindings As New Profile`
 11. `Toggle Fullscreen`
 12. `Adjust Audio`
+13. `Toggle Score Logging`
 
 ### 7.2 Persistence model
 
@@ -198,6 +200,7 @@ Minimum schema:
 6. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
 7. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
 8. Display and audio settings are persisted in the same settings state.
+9. Analytics settings are persisted in the same settings state.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -256,8 +259,8 @@ Manual tests:
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
 2. Dedicated `Keybindings Setup` screen is implemented.
-3. Audio settings page (`master`, `sfx`, `mute`) is implemented.
-4. Display settings page (`fullscreen`, `windowed size`, `reset`) is implemented.
+3. Unified settings hub (`audio/display/analytics`) is implemented.
+4. Display settings (`fullscreen`, `windowed size`, `reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
 6. Fullscreen return-to-menu shrinkage issue is resolved.
 ## 13. Acceptance Criteria
@@ -272,7 +275,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `/Users/omer/workspace/test-code/tet4d/front.py`.
 2. Main menu includes `Play 2D`, `Play 3D`, `Play 4D`, `Settings`, `Keybindings Setup`, `Bot Options`, and `Quit`.
-3. `Settings` submenu unifies audio and display controls.
+3. `Settings` submenu unifies audio, display, and analytics controls.
 4. `Bot Options` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Keybindings setup is a dedicated screen (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -287,7 +290,7 @@ Stabilization details:
 2. Windowed size is captured and persisted after game sessions in windowed mode.
 3. Focus and contrast states remain readable in default window sizes.
 4. No crashes on missing/corrupt settings files.
-5. Tests pass and base lint passes; current menu C901 follow-up is tracked in `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+5. Tests pass and base lint passes; remaining follow-up is tracked in `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
 6. Fullscreen/window transitions no longer produce shrunken menu layouts.
 7. Unified main menu controls 2D/3D/4D startup consistently.
 8. In-game pause menu is implemented in all modes with:
@@ -305,8 +308,6 @@ Stabilization details:
 
 ## 15. Open Follow-up
 
-1. Extend translation/rotation GIF guidance from Help-only into menu contexts:
-2. launcher menus,
-3. pause/settings/keybindings menus,
-4. inline key description/help rows where controls are explained.
-5. Keep this follow-up synchronized with `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+1. GIF guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
+2. Very-small-window readability tuning for controls/help layouts is implemented.
+3. Remaining follow-up is maintainability decomposition of other large modules; keep it synchronized with `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.

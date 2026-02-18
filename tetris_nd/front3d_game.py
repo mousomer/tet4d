@@ -58,6 +58,7 @@ from .projection3d import (
     raw_to_world,
     transform_point,
 )
+from .score_analyzer import hud_analysis_lines
 from .loop_runner_nd import run_nd_loop
 from .runtime_helpers import collect_cleared_ghost_cells
 from .panel_utils import draw_text_lines, draw_translucent_panel
@@ -420,6 +421,7 @@ def _draw_side_panel(surface: pygame.Surface,
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
     lines = [
         "3D Tetris",
         "",
@@ -438,6 +440,8 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Pitch: {camera.pitch_deg:.1f}",
         f"Zoom: {camera.zoom:.1f}",
         "",
+        *analysis_lines,
+        *([""] if analysis_lines else []),
         *bot_lines,
         *([""] if bot_lines else []),
     ]
@@ -463,6 +467,7 @@ def _draw_side_panel(surface: pygame.Surface,
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
+        show_guides=True,
     )
 
     if state.game_over:
@@ -663,6 +668,10 @@ class LoopContext3D:
             grid_mode=self.grid_mode,
             speed_level=self.cfg.speed_level,
         )
+        mode_name = self.bot.mode.value
+        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_bot_mode = mode_name
+        self.state.analysis_grid_mode = self.grid_mode.value
 
     def pointer_event_handler(self, event: pygame.event.Event) -> None:
         wheel = mouse_wheel_delta(event)
