@@ -155,6 +155,8 @@ Bot behavior details:
   - stronger bot assistance (`ASSIST/AUTO/STEP`)
   - more informative grid modes (`EDGE/FULL/HELPER`)
   - slower speed levels
+- Score-analyzer design (board-health and placement-quality feature vectors) is specified in:
+  - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_SCORE_ANALYZER.md`
 
 ## Quality checks
 

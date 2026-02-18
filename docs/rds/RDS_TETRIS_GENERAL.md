@@ -23,6 +23,9 @@ Menu-structure and settings-flow requirements are defined in:
 Automatic playbot requirements are defined in:
 1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`
 
+Score-analyzer (board health + placement quality) requirements are defined in:
+1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_SCORE_ANALYZER.md`
+
 ## 2. Current Project Intentions
 
 1. Keep one shared deterministic gameplay core with mode-specific frontends.

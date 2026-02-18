@@ -34,25 +34,28 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 20. `DONE` P3 tuning/tooling executed:
 21. `DONE` playbot policy budgets/thresholds retuned in `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`.
 22. `DONE` offline policy comparison tool added: `/Users/omer/workspace/test-code/tet4d/tools/analyze_playbot_policies.py`.
+23. `DONE` Translation/rotation GIF guide panel integrated into launcher menu, pause menu, unified settings, and keybindings menus.
+24. `DONE` Complexity hotspots reduced in:
+25. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py` (`_run_menu_action`, `run_keybindings_menu`),
+26. `/Users/omer/workspace/test-code/tet4d/tetris_nd/launcher_settings.py` (`run_settings_hub_menu`).
+27. `DONE` New shared menu helper module added for animated guide rendering:
+28. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_gif_guides.py`.
+29. `DONE` Validation after this batch:
+30. `ruff check` passed,
+31. `ruff check --select C901` passed,
+32. `pytest -q` passed (`121 passed`).
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `OPEN [P1]` Add small translation/rotation GIF guides to menu surfaces beyond Help:
-2. launcher menus,
-3. pause/settings/keybindings flows,
-4. inline description panels/tooltips where controls are explained.
-5. `OPEN [P2]` Reduce complexity hotspot: `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:480` (`_run_menu_action`, C901).
-6. `OPEN [P2]` Reduce complexity hotspot: `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:854` (`run_keybindings_menu`, C901).
-7. `OPEN [P2]` Reduce complexity hotspot: `/Users/omer/workspace/test-code/tet4d/tetris_nd/launcher_settings.py:854` (`run_settings_hub_menu`, C901).
-8. `OPEN [P3]` Keep one source of truth for simplification debt: sync `/Users/omer/workspace/test-code/tet4d/docs/RDS_AND_CODEX.md` hotspot text with this backlog as code evolves.
-9. `OPEN [P3]` Periodic retuning cadence: rerun planner analysis against trend history after major algorithm/piece-set changes.
+1. `OPEN [P3]` Keep one source of truth for simplification debt: sync `/Users/omer/workspace/test-code/tet4d/docs/RDS_AND_CODEX.md` hotspot text with this backlog as code evolves.
+2. `OPEN [P3]` Periodic retuning cadence: rerun planner analysis against trend history after major algorithm/piece-set changes.
 
 ## 4. Gap Mapping to RDS
 
 1. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_TETRIS_GENERAL.md` (`## 10. Backlog Status`, Remaining follow-up) maps to:
 2. frontend split for maintainability (completed in current batch),
 3. continued empirical tuning from trend history (operational follow-up remains).
-4. newly tracked menu/help visual guidance expansion and complexity follow-up.
+4. remaining operational follow-up: trend-driven retuning cadence and doc/source-of-truth synchronization.
 5. `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md` (`## 12. Known Gaps and Roadmap`) maps to:
 6. continued policy tuning (completed initial retune in current batch, periodic follow-up remains),
 7. richer offline analysis tooling (completed in current batch).

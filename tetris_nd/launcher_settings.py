@@ -8,6 +8,7 @@ from .app_runtime import capture_windowed_display_settings
 from .audio import AudioSettings, play_sfx, set_audio_settings
 from .display import DisplaySettings, apply_display_mode, normalize_display_settings
 from .menu_config import default_settings_payload, settings_hub_rows
+from .menu_gif_guides import draw_translation_rotation_guides
 from .menu_persistence import persist_audio_payload, persist_display_payload
 from .menu_settings_state import DEFAULT_WINDOWED_SIZE
 
@@ -844,11 +845,73 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
         surf = fonts.hint_font.render(line, True, MUTED_COLOR)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
+    hy = _draw_unified_guides(screen, fonts, hy)
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
         surf = fonts.hint_font.render(state.status, True, color)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
+
+
+def _draw_unified_guides(screen: pygame.Surface, fonts, start_y: int) -> int:
+    width, height = screen.get_size()
+    guide_h = 112
+    if start_y + guide_h + 22 >= height:
+        return start_y
+    guide_w = min(460, width - 40)
+    rect = pygame.Rect((width - guide_w) // 2, start_y + 4, guide_w, guide_h)
+    draw_translation_rotation_guides(screen, fonts, rect=rect, title="Translation / Rotation")
+    return rect.bottom + 4
+
+
+def _dispatch_unified_key(
+    screen: pygame.Surface,
+    state: _UnifiedSettingsState,
+    key: int,
+) -> pygame.Surface:
+    if key == pygame.K_ESCAPE:
+        state.running = False
+        return screen
+    if key == pygame.K_UP:
+        state.pending_reset_confirm = False
+        state.selected = (state.selected - 1) % len(_UNIFIED_SELECTABLE)
+        play_sfx("menu_move")
+        return screen
+    if key == pygame.K_DOWN:
+        state.pending_reset_confirm = False
+        state.selected = (state.selected + 1) % len(_UNIFIED_SELECTABLE)
+        play_sfx("menu_move")
+        return screen
+    if key == pygame.K_F5:
+        state.pending_reset_confirm = False
+        return _save_unified_settings(screen, state)
+    if key == pygame.K_F8:
+        if not state.pending_reset_confirm:
+            state.pending_reset_confirm = True
+            _set_unified_status(state, "Press F8 again to confirm reset defaults")
+            return screen
+        return _reset_unified_settings(screen, state)
+    if _adjust_unified_with_arrows(state, key):
+        return screen
+    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        return _handle_unified_enter(screen, state)
+    return screen
+
+
+def _process_unified_events(
+    screen: pygame.Surface,
+    state: _UnifiedSettingsState,
+) -> tuple[pygame.Surface, bool]:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            state.running = False
+            return screen, False
+        if event.type != pygame.KEYDOWN:
+            continue
+        screen = _dispatch_unified_key(screen, state, event.key)
+        if not state.running:
+            break
+    return screen, True
 
 
 def run_settings_hub_menu(
@@ -866,49 +929,11 @@ def run_settings_hub_menu(
     )
     _sync_audio_preview(state.audio_settings)
 
-    keep_running = True
     clock = pygame.time.Clock()
+    keep_running = True
     while state.running:
         _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                keep_running = False
-                state.running = False
-                break
-            if event.type != pygame.KEYDOWN:
-                continue
-
-            if event.key == pygame.K_ESCAPE:
-                state.running = False
-                break
-            if event.key == pygame.K_UP:
-                state.pending_reset_confirm = False
-                state.selected = (state.selected - 1) % len(_UNIFIED_SELECTABLE)
-                play_sfx("menu_move")
-                continue
-            if event.key == pygame.K_DOWN:
-                state.pending_reset_confirm = False
-                state.selected = (state.selected + 1) % len(_UNIFIED_SELECTABLE)
-                play_sfx("menu_move")
-                continue
-            if event.key == pygame.K_F5:
-                state.pending_reset_confirm = False
-                screen = _save_unified_settings(screen, state)
-                continue
-            if event.key == pygame.K_F8:
-                if not state.pending_reset_confirm:
-                    state.pending_reset_confirm = True
-                    _set_unified_status(state, "Press F8 again to confirm reset defaults")
-                else:
-                    screen = _reset_unified_settings(screen, state)
-                continue
-            if _adjust_unified_with_arrows(state, event.key):
-                continue
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                screen = _handle_unified_enter(screen, state)
-                if not state.running:
-                    break
-
+        screen, keep_running = _process_unified_events(screen, state)
         if not keep_running or not state.running:
             break
         _draw_unified_settings_menu(screen, fonts, state)
