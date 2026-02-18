@@ -17,6 +17,7 @@ from .keybindings import (
 )
 from .keybindings_menu import run_keybindings_menu
 from .menu_config import default_settings_payload
+from .menu_gif_guides import draw_translation_rotation_guides
 from .menu_model import cycle_index, is_confirm_key
 from .menu_persistence import (
     load_audio_payload,
@@ -98,6 +99,17 @@ def _draw_gradient(surface: pygame.Surface) -> None:
         pygame.draw.line(surface, color, (0, y), (width, y))
 
 
+def _draw_guide_panel(surface: pygame.Surface, fonts, *, start_y: int) -> int:
+    width, height = surface.get_size()
+    guide_h = 112
+    if start_y + guide_h + 20 >= height:
+        return start_y
+    guide_w = min(450, width - 40)
+    guide_rect = pygame.Rect((width - guide_w) // 2, start_y + 4, guide_w, guide_h)
+    draw_translation_rotation_guides(surface, fonts, rect=guide_rect, title="Translation / Rotation")
+    return guide_rect.bottom + 4
+
+
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     profile = active_key_profile()
     return (
@@ -161,6 +173,7 @@ def _draw_pause_menu(screen: pygame.Surface, fonts, state: _PauseState, *, dimen
         surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
+    hy = _draw_guide_panel(screen, fonts, start_y=hy)
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
@@ -253,6 +266,7 @@ def _draw_settings_menu(screen: pygame.Surface, fonts, state: _SettingsState) ->
         surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
+    hy = _draw_guide_panel(screen, fonts, start_y=hy)
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)

@@ -6,6 +6,7 @@ from typing import Callable, Sequence
 import pygame
 
 from .menu_config import keybinding_category_docs
+from .menu_gif_guides import draw_translation_rotation_guides
 from .keybindings import (
     REBIND_CONFLICT_REPLACE,
     active_key_profile,
@@ -501,27 +502,33 @@ _MENU_KEY_HANDLERS = {
 
 def _run_menu_action(state: KeybindingsMenuState, key: int, rows: list[_BindingRow]) -> bool:
     if state.section_mode:
-        if state.text_mode:
-            if key == pygame.K_ESCAPE:
-                _cancel_text_mode(state)
-            elif key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                _commit_text_mode(state)
-            elif key == pygame.K_BACKSPACE:
-                state.text_buffer = state.text_buffer[:-1]
-            return False
-        return _handle_section_key(state, key)
+        return _run_section_mode_action(state, key)
+    return _run_binding_mode_action(state, key, rows)
 
+
+def _handle_text_mode_key(state: KeybindingsMenuState, key: int) -> None:
+    if key == pygame.K_ESCAPE:
+        _cancel_text_mode(state)
+    elif key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        _commit_text_mode(state)
+    elif key == pygame.K_BACKSPACE:
+        state.text_buffer = state.text_buffer[:-1]
+
+
+def _run_section_mode_action(state: KeybindingsMenuState, key: int) -> bool:
+    if state.text_mode:
+        _handle_text_mode_key(state, key)
+        return False
+    return _handle_section_key(state, key)
+
+
+def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[_BindingRow]) -> bool:
     if state.capture_mode:
         _clear_reset_confirmation(state)
         return _handle_capture_input(state, key, rows)
 
     if state.text_mode:
-        if key == pygame.K_ESCAPE:
-            _cancel_text_mode(state)
-        elif key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-            _commit_text_mode(state)
-        elif key == pygame.K_BACKSPACE:
-            state.text_buffer = state.text_buffer[:-1]
+        _handle_text_mode_key(state, key)
         return False
 
     if key == pygame.K_ESCAPE and state.allow_scope_sections:
@@ -776,6 +783,17 @@ def _draw_status(surface: pygame.Surface, fonts, state: KeybindingsMenuState, hi
     surface.blit(status, ((width - status.get_width()) // 2, hint_y + 2))
 
 
+def _draw_guides(surface: pygame.Surface, fonts, hint_y: int) -> int:
+    width, height = surface.get_size()
+    guide_h = 112
+    if hint_y + guide_h + 22 >= height:
+        return hint_y
+    guide_w = min(460, width - 40)
+    rect = pygame.Rect((width - guide_w) // 2, hint_y + 4, guide_w, guide_h)
+    draw_translation_rotation_guides(surface, fonts, rect=rect, title="Translation / Rotation")
+    return rect.bottom + 4
+
+
 def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuState) -> None:
     _draw_background(surface)
     _draw_menu_header(surface, fonts, state)
@@ -808,6 +826,7 @@ def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuSta
         surface.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
     hy = _draw_text_mode_hint(surface, fonts, state, hy)
+    hy = _draw_guides(surface, fonts, hy)
     if state.status:
         _draw_status(surface, fonts, state, hy)
 
@@ -870,7 +889,52 @@ def _draw_menu(
     hint_y = _draw_hints(surface, fonts, state, panel_y, panel_h)
     hint_y = _draw_capture_hint(surface, fonts, state, binding_rows, hint_y)
     hint_y = _draw_text_mode_hint(surface, fonts, state, hint_y)
+    hint_y = _draw_guides(surface, fonts, hint_y)
     _draw_status(surface, fonts, state, hint_y)
+
+
+def _resolve_initial_scope(dimension: int, scope: str | None) -> str:
+    initial_scope = scope.strip().lower() if isinstance(scope, str) else ""
+    if initial_scope not in _VALID_SCOPES:
+        initial_scope = _scope_from_dimension(dimension)
+    return initial_scope
+
+
+def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
+    allow_scope_sections = initial_scope in {"all", "general"}
+    selected_section = 0
+    for idx, (section_scope, _title, _description) in enumerate(_SECTION_MENU):
+        if section_scope == initial_scope:
+            selected_section = idx
+            break
+    return KeybindingsMenuState(
+        scope=initial_scope,
+        section_mode=allow_scope_sections,
+        allow_scope_sections=allow_scope_sections,
+        selected_section=selected_section,
+    )
+
+
+def _sync_selection(state: KeybindingsMenuState, binding_rows: list[_BindingRow]) -> None:
+    if binding_rows:
+        state.selected_binding = max(0, min(len(binding_rows) - 1, state.selected_binding))
+    else:
+        state.selected_binding = 0
+
+
+def _process_menu_events(state: KeybindingsMenuState, binding_rows: list[_BindingRow]) -> bool:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.key.stop_text_input()
+            return True
+        if event.type == pygame.TEXTINPUT and state.text_mode:
+            _handle_text_input_event(state, event.text)
+            continue
+        if event.type != pygame.KEYDOWN:
+            continue
+        if _run_menu_action(state, event.key, binding_rows):
+            return True
+    return False
 
 
 def run_keybindings_menu(
@@ -880,45 +944,16 @@ def run_keybindings_menu(
     *,
     scope: str | None = None,
 ) -> None:
-    initial_scope = scope.strip().lower() if isinstance(scope, str) else ""
-    if initial_scope not in _VALID_SCOPES:
-        initial_scope = _scope_from_dimension(dimension)
-    allow_scope_sections = initial_scope in {"all", "general"}
-    selected_section = 0
-    for idx, (section_scope, _title, _description) in enumerate(_SECTION_MENU):
-        if section_scope == initial_scope:
-            selected_section = idx
-            break
-    state = KeybindingsMenuState(
-        scope=initial_scope,
-        section_mode=allow_scope_sections,
-        allow_scope_sections=allow_scope_sections,
-        selected_section=selected_section,
-    )
-
+    initial_scope = _resolve_initial_scope(dimension, scope)
+    state = _build_menu_state(initial_scope)
     clock = pygame.time.Clock()
     running = True
     while running:
         _dt = clock.tick(60)
         rendered_rows, binding_rows = _rows_for_scope(state.scope)
-        if binding_rows:
-            state.selected_binding = max(0, min(len(binding_rows) - 1, state.selected_binding))
-        else:
-            state.selected_binding = 0
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.key.stop_text_input()
-                return
-            if event.type == pygame.TEXTINPUT and state.text_mode:
-                _handle_text_input_event(state, event.text)
-                continue
-            if event.type != pygame.KEYDOWN:
-                continue
-            should_exit = _run_menu_action(state, event.key, binding_rows)
-            if should_exit:
-                running = False
-                break
+        _sync_selection(state, binding_rows)
+        if _process_menu_events(state, binding_rows):
+            break
 
         if state.section_mode:
             _draw_section_menu(screen, fonts, state)

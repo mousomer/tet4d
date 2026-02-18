@@ -9,6 +9,7 @@ All requirement/design specs are in:
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_KEYBINDINGS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`
+- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_SCORE_ANALYZER.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_2D_TETRIS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_3D_TETRIS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_4D_TETRIS.md`
@@ -17,8 +18,9 @@ Read order:
 1. General RDS
 2. Keybindings RDS
 3. Menu structure RDS
-4. Mode-specific RDS
-5. This Codex instructions page
+4. Playbot + score-analyzer RDS
+5. Mode-specific RDS
+6. This Codex instructions page
 
 ## Codex contributor workflow
 
@@ -66,18 +68,14 @@ Minimum required coverage for gameplay-affecting changes:
 Authoritative open/deferred items are tracked in:
 1. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
 
+### Active open items (synced from `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`)
+
+1. `[P3]` Keep one source of truth for simplification debt: keep this file and `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md` aligned as code evolves.
+2. `[P3]` Periodic retuning cadence: rerun planner analysis against trend history after major algorithm/piece-set changes.
+
 ### Current complexity hotspots (`ruff --select C901`)
 
-1. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:480` (`_run_menu_action`)
-2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py:854` (`run_keybindings_menu`)
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/launcher_settings.py:854` (`run_settings_hub_menu`)
-
-### Current duplication hotspots
-
-1. 3D and 4D projected rendering stacks remain intentionally parallel in:
-2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front4d_game.py`
-4. Further unification is possible but should be weighed against readability/regression risk.
+1. None currently open in backlog (latest local `ruff check --select C901` is green).
 
 ### Recent simplification baseline (already completed)
 
