@@ -195,10 +195,12 @@ Required checks:
 4. New ND heuristics should be added once and reused by both 3D and 4D paths.
 5. Controller ND execution path should remain shared across 3D and 4D.
 
-## 12. Known Gaps and Roadmap
+## 12. Operational Cadence
 
-1. Continue periodic policy tuning from accumulated trend history data after major planner/gameplay changes.
-2. Offline analysis tooling is now available at `/Users/omer/workspace/test-code/tet4d/tools/analyze_playbot_policies.py` for cross-policy comparison across seeds and board sizes.
+1. Periodic policy tuning is automated by scheduled workflow:
+2. `/Users/omer/workspace/test-code/tet4d/.github/workflows/stability-watch.yml`
+3. Offline analysis tooling remains available at `/Users/omer/workspace/test-code/tet4d/tools/analyze_playbot_policies.py` for cross-policy comparison across seeds and board sizes.
+4. Stability watch script (`tools/check_playbot_stability.py`) uses an extended 4D dry-run horizon (`max_pieces=40`) to reduce false negatives in broad seed sweeps.
 
 ## 13. Anti-duplication Guardrails
 

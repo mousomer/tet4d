@@ -23,8 +23,7 @@
       "docs/rds/RDS_SCORE_ANALYZER.md"
     ],
     "help_assets": [
-      "assets/help/translation_keys.gif",
-      "assets/help/rotation_keys.gif"
+      "tetris_nd/menu_control_guides.py"
     ],
     "canonical_schemas": [
       "config/schema/menu_settings.schema.json",
@@ -48,7 +47,8 @@
     "core_tests": [
       "tetris_nd/tests/test_playbot.py",
       "tetris_nd/tests/test_score_analyzer.py",
-      "tetris_nd/tests/test_runtime_config.py"
+      "tetris_nd/tests/test_runtime_config.py",
+      "tetris_nd/tests/test_menu_policy.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",
@@ -61,7 +61,8 @@
     ],
     "ci_scripts": [
       "scripts/ci_check.sh",
-      "tools/validate_project_contracts.py"
+      "tools/validate_project_contracts.py",
+      ".github/workflows/stability-watch.yml"
     ]
   },
   "content_rules": [
@@ -70,8 +71,8 @@
       "must_contain": [
         "Documentation map",
         "config/gameplay/score_analyzer.json",
-        "assets/help/translation_keys.gif",
-        "assets/help/rotation_keys.gif",
+        "menu_control_guides.py",
+        "draw_translation_rotation_guides",
         "scripts/ci_check.sh"
       ]
     },
@@ -88,7 +89,7 @@
       "must_contain": [
         "## 3. Active Open Backlog / TODO",
         "## 5. Change Footprint",
-        "OPEN [P1]"
+        "No currently open gaps"
       ]
     },
     {
@@ -147,7 +148,7 @@
     {
       "file": "docs/help/HELP_INDEX.md",
       "must_contain": [
-        "## Animated guides",
+        "## Control diagrams",
         "## Maintenance rule"
       ]
     },

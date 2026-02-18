@@ -52,7 +52,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - profile cycle/create/rename/delete,
   - reset to defaults.
 - Grouped in-game helper panels: `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
-- Small translation/rotation GIF guides are available in:
+- Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
+- Translation/rotation arrow-diagram guides are available in:
   - Help pages,
   - launcher/pause/settings/keybindings menus,
   - in-game side-panel control helper areas (space permitting).
@@ -117,6 +118,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Repeated playbot dry-run stability checks via `tools/check_playbot_stability.py`.
 - Benchmark checks integrated in CI script.
 - CI matrix validates Python `3.11`, `3.12`, `3.13`, and `3.14`.
+- Scheduled stability watch runs repeated dry-run checks and policy-analysis snapshots.
 
 ## 10. Canonical maintenance automation
 
@@ -126,9 +128,10 @@ User-facing feature map for the shipped `tet4d` experience.
   - `/Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
 - CI runs this validator through:
   - `/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh`
+  - `/Users/omer/workspace/test-code/tet4d/.github/workflows/stability-watch.yml`
 - Contract currently enforces synchronized maintenance of:
   - documentation set (`README`, `docs`, `RDS`, `BACKLOG`, `FEATURE_MAP`),
-  - help assets (`translation_keys.gif`, `rotation_keys.gif`),
+  - help guide renderer (`tetris_nd/menu_control_guides.py`) and help manifest,
   - core tests and canonical runtime config files,
   - schema + migration files (`config/schema`, `docs/migrations`),
   - replay manifest contract (`tests/replay/manifest.json` + `tests/replay/golden/.gitkeep`),

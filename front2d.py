@@ -60,9 +60,11 @@ from tetris_nd.playbot.types import (
     bot_planner_profile_from_index,
 )
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tetris_nd.exploration_mode import minimal_exploration_dims_2d
 from tetris_nd.rotation_anim import PieceRotationAnimator2D
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 from tetris_nd.pause_menu import run_pause_menu
+from tetris_nd.help_menu import run_help_menu
 
 DEFAULT_GAME_SEED = 1337
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
@@ -81,6 +83,7 @@ class GameSettings:
     bot_speed_level: int = _DEFAULT_MODE_2D["bot_speed_level"]
     bot_budget_ms: int = _DEFAULT_MODE_2D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_2D["challenge_layers"]
+    exploration_mode: int = _DEFAULT_MODE_2D["exploration_mode"]
     speed_level: int = _DEFAULT_MODE_2D["speed_level"]  # 1..10, mapped to gravity interval
 
 
@@ -132,19 +135,31 @@ def _menu_value_formatter(attr_name: str, value: object) -> str:
         return piece_set_2d_label(_piece_set_index_to_id(int(value)))
     if attr_name == "challenge_layers":
         return str(value)
+    if attr_name == "exploration_mode":
+        return "ON" if int(value) else "OFF"
     if attr_name == "speed_level":
         return f"{value}   (1 = slow, 10 = fast)"
     return str(value)
 
 
 def _config_from_settings(settings: GameSettings) -> GameConfig:
+    piece_set_id = _piece_set_index_to_id(settings.piece_set_index)
+    exploration_enabled = bool(settings.exploration_mode)
+    width = settings.width
+    height = settings.height
+    if exploration_enabled:
+        width, height = minimal_exploration_dims_2d(
+            piece_set_id,
+            random_cell_count=4,
+        )
     return GameConfig(
-        width=settings.width,
-        height=settings.height,
+        width=width,
+        height=height,
         gravity_axis=1,
         speed_level=settings.speed_level,
-        piece_set=_piece_set_index_to_id(settings.piece_set_index),
-        challenge_layers=settings.challenge_layers,
+        piece_set=piece_set_id,
+        challenge_layers=0 if exploration_enabled else settings.challenge_layers,
+        exploration_mode=exploration_enabled,
     )
 
 
@@ -174,14 +189,18 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
         if state.run_dry_run:
-            report = run_dry_run_2d(
-                _config_from_settings(state.settings),
-                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
-                planning_budget_ms=state.settings.bot_budget_ms,
-                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
-            )
-            state.bindings_status = report.reason
-            state.bindings_status_error = not report.passed
+            if bool(state.settings.exploration_mode):
+                state.bindings_status = "Dry-run is disabled in exploration mode"
+                state.bindings_status_error = False
+            else:
+                report = run_dry_run_2d(
+                    _config_from_settings(state.settings),
+                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planning_budget_ms=state.settings.bot_budget_ms,
+                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                )
+                state.bindings_status = report.reason
+                state.bindings_status_error = not report.passed
 
         draw_menu(
             screen,
@@ -216,7 +235,8 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
 def create_initial_state(cfg: GameConfig) -> GameState:
     board = BoardND((cfg.width, cfg.height))
     state = GameState(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
-    apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
+    if not cfg.exploration_mode:
+        apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     return state
 
 
@@ -224,7 +244,7 @@ def _system_decision_for_key(key: int) -> str | None:
     system_action = match_bound_action(
         key,
         SYSTEM_KEYS,
-        ("quit", "menu", "restart", "toggle_grid"),
+        ("quit", "menu", "restart", "toggle_grid", "help"),
     )
     if system_action is None:
         return None
@@ -236,6 +256,9 @@ def _system_decision_for_key(key: int) -> str | None:
     if system_action == "restart":
         play_sfx("menu_confirm")
         return "restart"
+    if system_action == "help":
+        play_sfx("menu_move")
+        return "help"
     play_sfx("menu_move")
     return "toggle_grid"
 
@@ -276,6 +299,7 @@ def handle_game_keydown(event: pygame.event.Event,
         "menu"        -> user wants to go back to the menu
         "restart"     -> restart game with current config
         "toggle_grid" -> toggle board grid visibility
+        "help"        -> open in-game help menu
         "continue"    -> keep running
     """
     key = event.key
@@ -414,6 +438,8 @@ def run_game_loop(screen: pygame.Surface,
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
+    if cfg.exploration_mode:
+        bot_mode = BotMode.OFF
     loop = LoopContext2D.create(cfg, bot_mode=bot_mode)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
@@ -434,10 +460,20 @@ def run_game_loop(screen: pygame.Surface,
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
+        def _open_help() -> None:
+            nonlocal screen
+            screen = run_help_menu(
+                screen,
+                fonts,
+                dimension=2,
+                context_label="2D Gameplay",
+            )
+
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
+            on_help=_open_help,
         )
         if decision == "quit":
             return False
@@ -451,15 +487,18 @@ def run_game_loop(screen: pygame.Surface,
                 loop.on_restart()
                 continue
 
-        loop.bot.tick_2d(loop.state, dt)
-        if loop.bot.controls_descent:
+        if cfg.exploration_mode:
             loop.gravity_accumulator = 0
         else:
-            loop.gravity_accumulator = _step_gravity_tick(
-                loop.state,
-                loop.gravity_accumulator,
-                gravity_interval_ms,
-            )
+            loop.bot.tick_2d(loop.state, dt)
+            if loop.bot.controls_descent:
+                loop.gravity_accumulator = 0
+            else:
+                loop.gravity_accumulator = _step_gravity_tick(
+                    loop.state,
+                    loop.gravity_accumulator,
+                    gravity_interval_ms,
+                )
         if loop.state.lines_cleared != loop.last_lines_cleared:
             play_sfx("clear")
         if loop.state.game_over and not was_game_over:

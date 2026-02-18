@@ -349,4 +349,4 @@ Implemented in code:
 8. reset actions now require confirmation.
 9. In-game key helper layout is grouped into clear sections:
 10. `Translation`, `Rotation`, `Camera/View`, `Slicing`, `System`.
-11. animated key guide assets (GIFs) are available in Help UI for translation and rotation.
+11. arrow-diagram key guides are available in Help UI for translation and rotation.

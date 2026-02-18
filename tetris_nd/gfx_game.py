@@ -7,6 +7,7 @@ import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
+from .panel_utils import truncate_lines_to_height
 from .score_analyzer import hud_analysis_lines
 from .speed_curve import gravity_interval_ms
 from .view_modes import GridMode, grid_mode_label
@@ -640,28 +641,22 @@ def _draw_side_panel_text(surface: pygame.Surface,
                           state: GameState,
                           panel_offset: Tuple[int, int],
                           fonts: GfxFonts,
-                          grid_mode: GridMode,
-                          bot_lines: Sequence[str] = ()) -> int:
+                          grid_mode: GridMode) -> int:
     """Draw the textual part of the side panel. Returns the current y after text."""
     px, py = panel_offset
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
-    analysis_lines = hud_analysis_lines(state.last_score_analysis)
     lines = [
         "2D Tetris",
         "",
         f"Score: {state.score}",
         f"Lines: {state.lines_cleared}",
         f"Speed level: {state.config.speed_level}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Fall: {rows_per_sec:.2f} rows/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
-        "",
-        *analysis_lines,
-        *([""] if analysis_lines else []),
-        *bot_lines,
-        *([""] if bot_lines else []),
     ]
 
     y = py
@@ -737,17 +732,63 @@ def draw_side_panel(surface: pygame.Surface,
                     grid_mode: GridMode = GridMode.FULL,
                     bot_lines: Sequence[str] = ()) -> None:
     """Top-level side panel draw."""
-    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode, bot_lines)
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
+    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode)
     px, _ = panel_offset
-    controls_rect = pygame.Rect(px, y_after_text + 6, SIDE_PANEL, surface.get_height() - (y_after_text + 14))
+    panel_bottom = surface.get_height() - 8
+    controls_top = y_after_text + 6
+    reserve_bottom = 58 if state.game_over else 0
+    available_h = max(0, panel_bottom - reserve_bottom - controls_top)
+    min_controls_h = 116
+    gap = 6
+
+    low_lines: tuple[str, ...] = tuple()
+    low_h = 0
+    if low_priority_lines:
+        max_low_h = max(0, available_h - min_controls_h - gap)
+        low_lines = truncate_lines_to_height(
+            low_priority_lines,
+            font=fonts.hint_font,
+            available_height=max(0, max_low_h - 8),
+            line_gap=3,
+        )
+        if low_lines:
+            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
+
+    controls_bottom = panel_bottom - reserve_bottom - (low_h + gap if low_h else 0)
+    if controls_bottom - controls_top < 42 and low_h:
+        low_lines = tuple()
+        low_h = 0
+        controls_bottom = panel_bottom - reserve_bottom
+
+    controls_rect = pygame.Rect(px, controls_top, SIDE_PANEL, max(42, controls_bottom - controls_top))
     draw_grouped_control_helper(
         surface,
         groups=control_groups_for_dimension(2),
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
-        show_guides=True,
     )
+    if low_lines:
+        low_height = panel_bottom - (controls_rect.bottom + 8)
+        if low_height <= 10:
+            low_lines = tuple()
+        else:
+            low_rect = pygame.Rect(
+                px + 2,
+                controls_rect.bottom + 6,
+                SIDE_PANEL - 4,
+                low_height,
+            )
+            panel = pygame.Surface((low_rect.width, low_rect.height), pygame.SRCALPHA)
+            pygame.draw.rect(panel, (8, 12, 26, 100), panel.get_rect(), border_radius=8)
+            surface.blit(panel, low_rect.topleft)
+            low_y = low_rect.y + 5
+            for line in low_lines:
+                surf = fonts.hint_font.render(line, True, (176, 188, 222))
+                surface.blit(surf, (low_rect.x + 6, low_y))
+                low_y += surf.get_height() + 3
 
     # Game over message below D-pad (if needed)
     if state.game_over:

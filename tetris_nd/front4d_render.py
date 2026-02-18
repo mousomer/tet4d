@@ -16,7 +16,7 @@ from .frontend_nd import (
 from .game_nd import GameStateND
 from .key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_4D
-from .panel_utils import draw_text_lines, draw_translucent_panel
+from .panel_utils import draw_text_lines, draw_translucent_panel, truncate_lines_to_height
 from .projection3d import (
     Cell3,
     Face,
@@ -220,23 +220,23 @@ def _piece_active_layer_cells(state: GameStateND, w_layer: int) -> list[tuple[tu
     return cells
 
 
-def _helper_grid_marks_global(state: GameStateND) -> tuple[set[int], set[int], set[int]]:
+def _helper_grid_marks_by_layer(state: GameStateND) -> dict[int, tuple[set[int], set[int], set[int]]]:
     if state.current_piece is None:
-        return set(), set(), set()
+        return {}
 
     dims = state.config.dims
-    x_marks: set[int] = set()
-    y_marks: set[int] = set()
-    z_marks: set[int] = set()
-    for x, y, z, _w in state.current_piece.cells():
-        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            x_marks.add(x)
-            x_marks.add(x + 1)
-            y_marks.add(y)
-            y_marks.add(y + 1)
-            z_marks.add(z)
-            z_marks.add(z + 1)
-    return x_marks, y_marks, z_marks
+    marks_by_layer: dict[int, list[set[int]]] = {}
+    for x, y, z, w in state.current_piece.cells():
+        if not (0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2] and 0 <= w < dims[3]):
+            continue
+        entry = marks_by_layer.setdefault(w, [set(), set(), set()])
+        entry[0].add(x)
+        entry[0].add(x + 1)
+        entry[1].add(y)
+        entry[1].add(y + 1)
+        entry[2].add(z)
+        entry[2].add(z + 1)
+    return {layer: (entry[0], entry[1], entry[2]) for layer, entry in marks_by_layer.items()}
 
 
 def _draw_layer_grid_or_shadow(
@@ -440,6 +440,7 @@ def _draw_side_panel(
     max_z = state.config.dims[2] - 1
     max_w = state.config.dims[3] - 1
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
 
     lines = [
         "4D Tetris",
@@ -450,6 +451,7 @@ def _draw_side_panel(
         f"Score: {state.score}",
         f"Cleared: {state.lines_cleared}",
         f"Speed: {state.config.speed_level}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
@@ -457,11 +459,6 @@ def _draw_side_panel(
         "",
         f"Active z slice: {z_slice}/{max_z}",
         f"Active w layer: {w_slice}/{max_w}",
-        "",
-        *analysis_lines,
-        *([""] if analysis_lines else []),
-        *bot_lines,
-        *([""] if bot_lines else []),
     ]
 
     y = draw_text_lines(
@@ -472,12 +469,36 @@ def _draw_side_panel(
         color=TEXT_COLOR,
         line_gap=3,
     )
+    controls_top = y + 4
+    reserve_bottom = 26 if state.game_over else 0
+    available_h = max(0, panel_rect.bottom - reserve_bottom - controls_top)
+    min_controls_h = 150
+    gap = 6
+
+    low_lines: tuple[str, ...] = tuple()
+    low_h = 0
+    if low_priority_lines:
+        max_low_h = max(0, available_h - min_controls_h - gap)
+        low_lines = truncate_lines_to_height(
+            low_priority_lines,
+            font=fonts.hint_font,
+            available_height=max(0, max_low_h - 8),
+            line_gap=3,
+        )
+        if low_lines:
+            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
+
+    controls_bottom = panel_rect.bottom - reserve_bottom - (low_h + gap if low_h else 8)
+    if controls_bottom - controls_top < 44 and low_h:
+        low_lines = tuple()
+        low_h = 0
+        controls_bottom = panel_rect.bottom - reserve_bottom - 8
 
     controls_rect = pygame.Rect(
         panel_rect.x + 6,
-        y + 4,
+        controls_top,
         panel_rect.width - 12,
-        panel_rect.bottom - (y + 12),
+        max(44, controls_bottom - controls_top),
     )
     draw_grouped_control_helper(
         surface,
@@ -485,8 +506,25 @@ def _draw_side_panel(
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
-        show_guides=True,
     )
+    if low_lines:
+        low_height = panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 8)
+        if low_height > 10:
+            low_rect = pygame.Rect(
+                panel_rect.x + 8,
+                controls_rect.bottom + 6,
+                panel_rect.width - 16,
+                low_height,
+            )
+            draw_translucent_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
+            draw_text_lines(
+                surface,
+                lines=low_lines,
+                font=fonts.hint_font,
+                start_pos=(low_rect.x + 6, low_rect.y + 5),
+                color=(176, 188, 222),
+                line_gap=3,
+            )
 
     if state.game_over:
         over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
@@ -522,7 +560,7 @@ def draw_game_frame(
     pygame.draw.rect(screen, (14, 18, 36), layers_rect, border_radius=10)
 
     active_w = slice_state.axis_values.get(3, state.config.dims[3] // 2)
-    helper_marks = _helper_grid_marks_global(state) if grid_mode == GridMode.HELPER else None
+    helper_marks_by_layer = _helper_grid_marks_by_layer(state) if grid_mode == GridMode.HELPER else {}
     layer_rects = _layer_grid_rects(layers_rect, state.config.dims[3])
     for w_layer, layer_rect in enumerate(layer_rects):
         _draw_layer_board(
@@ -534,7 +572,7 @@ def draw_game_frame(
             active_w,
             fonts,
             grid_mode=grid_mode,
-            helper_marks=helper_marks,
+            helper_marks=helper_marks_by_layer.get(w_layer),
             clear_anim=clear_anim,
             active_overlay=active_overlay,
         )

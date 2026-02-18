@@ -142,6 +142,48 @@ class TestGameplayReplay(unittest.TestCase):
 
         self.assertEqual(run_once(), run_once())
 
+    def test_exploration_mode_disables_gravity_and_locking_2d(self) -> None:
+        cfg = GameConfig(width=8, height=8, gravity_axis=1, speed_level=1, exploration_mode=True)
+        state = front2d.create_initial_state(cfg)
+        self.assertFalse(state.game_over)
+        piece_before = state.current_piece
+
+        # Gravity ticks do nothing in exploration mode.
+        state.step(Action.NONE)
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.lines_cleared, 0)
+        self.assertEqual(state.score, 0)
+
+        # Hard drop cycles to next piece without locking into board.
+        hard_drop = self._key_for(KEYS_2D, "hard_drop")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.lines_cleared, 0)
+        self.assertEqual(state.score, 0)
+        self.assertIsNot(state.current_piece, piece_before)
+
+    def test_exploration_mode_disables_gravity_and_locking_nd(self) -> None:
+        cfg = GameConfigND(dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True)
+        state = frontend_nd.create_initial_state(cfg)
+        slice_state = frontend_nd.create_initial_slice_state(cfg)
+        self.assertFalse(state.game_over)
+        piece_before = state.current_piece
+        pos_before = state.current_piece.pos if state.current_piece is not None else None
+
+        state.step_gravity()
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.lines_cleared, 0)
+        self.assertEqual(state.score, 0)
+        if state.current_piece is not None:
+            self.assertEqual(state.current_piece.pos, pos_before)
+
+        hard_drop = self._key_for(KEYS_4D, "hard_drop")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state, slice_state), "continue")
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.lines_cleared, 0)
+        self.assertEqual(state.score, 0)
+        self.assertIsNot(state.current_piece, piece_before)
+
     def test_replay_determinism_4d(self):
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         script = [
@@ -199,6 +241,7 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "quit")), state, cfg), "quit")
         self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "menu")), state, cfg), "menu")
         self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "restart")), state, cfg), "restart")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg), "help")
         self.assertEqual(
             front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
             "toggle_grid",
@@ -230,6 +273,10 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(
             front3d_game.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
             "toggle_grid",
+        )
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg),
+            "help",
         )
 
         camera = front3d_game.Camera3D()
@@ -280,6 +327,10 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(
             frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, slice_state),
             "toggle_grid",
+        )
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, slice_state),
+            "help",
         )
 
         view = front4d_game.LayerView3D()

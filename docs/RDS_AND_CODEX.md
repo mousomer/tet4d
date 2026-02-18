@@ -93,10 +93,12 @@ Authoritative open/deferred items are tracked in:
 
 ### Active open items (synced from `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`)
 
-1. `[P1]` Keep CI dry-run stability green across repeated runs and Python `3.11..3.14` (ongoing regression watch).
-2. `[P2]` Continue decomposition of remaining large modules for maintainability.
-3. `[P3]` Keep this file and `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md` synchronized.
-4. `[P3]` Continue periodic trend-history policy retuning.
+1. No active open gaps (verified 2026-02-18).
+2. Ongoing checks are automated in:
+3. `/Users/omer/workspace/test-code/tet4d/.github/workflows/ci.yml`
+4. `/Users/omer/workspace/test-code/tet4d/.github/workflows/stability-watch.yml`
+5. Operational source-of-truth remains:
+6. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
 
 ### Current complexity hotspots (`ruff --select C901`)
 

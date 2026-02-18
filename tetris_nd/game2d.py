@@ -53,6 +53,7 @@ class GameConfig:
     random_cell_count: int = 4
     challenge_layers: int = 0
     lock_piece_points: int = 5
+    exploration_mode: bool = False
 
     def __post_init__(self):
         if self.width <= 0 or self.height <= 0:
@@ -69,6 +70,7 @@ class GameConfig:
             raise ValueError("challenge_layers must be >= 0")
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
+        self.exploration_mode = bool(self.exploration_mode)
 
 
 @dataclass
@@ -138,7 +140,13 @@ class GameState:
         max_x = max(block[0] for block in shape.blocks)
         span_x = max_x - min_x + 1
         spawn_x = ((self.config.width - span_x) // 2) - min_x
-        spawn_y = -2  # above the visible area
+        if self.config.exploration_mode:
+            min_y = min(block[1] for block in shape.blocks)
+            max_y = max(block[1] for block in shape.blocks)
+            span_y = max_y - min_y + 1
+            spawn_y = ((self.config.height - span_y) // 2) - min_y
+        else:
+            spawn_y = -2  # above the visible area
         self.current_piece = ActivePiece2D(shape, (spawn_x, spawn_y), rotation=0)
         if not self._can_exist(self.current_piece):
             self.game_over = True
@@ -182,6 +190,8 @@ class GameState:
         Returns number of cleared lines.
         """
         if self.current_piece is None:
+            return 0
+        if self.config.exploration_mode:
             return 0
 
         piece = self.current_piece
@@ -251,6 +261,9 @@ class GameState:
     def hard_drop(self):
         if self.current_piece is None:
             return
+        if self.config.exploration_mode:
+            self.spawn_new_piece()
+            return
         # Move down until just before collision
         while True:
             moved = self.current_piece.moved(0, 1)
@@ -292,6 +305,9 @@ class GameState:
 
         # Hard drop locks immediately and already handles spawning.
         if self._apply_action(action):
+            return
+
+        if self.config.exploration_mode:
             return
 
         # Gravity tick

@@ -16,6 +16,7 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 6. Keybinding editor flow with local profile save/load
 7. Unified main menu for choosing 2D/3D/4D with shared options
 8. Audio, display, and analytics settings (including fullscreen/windowed mode)
+9. Helper panel information hierarchy and control-guide visuals
 
 Primary implementation and maintenance files:
 1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
@@ -47,6 +48,10 @@ This design is based on:
    References: [Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [Focus Appearance](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance)
 4. Nielsen usability heuristics (consistency, user control/freedom, recognition over recall, error prevention).  
    Reference: [NNG Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
+5. WCAG 2.2 consistent help placement guidance (help available in predictable location).  
+   Reference: [Consistent Help](https://www.w3.org/WAI/WCAG22/Understanding/consistent-help.html)
+6. Heuristic emphasis on visibility-of-status and minimalist information density for high-scan interfaces.  
+   Reference: [Nielsen Heuristics PDF](https://media.nngroup.com/media/articles/attachments/Heuristic_Evaluation_-_How-To_-_Nielsen_Norman_Group.pdf)
 
 ## 4. Target Information Architecture
 
@@ -202,6 +207,20 @@ Minimum schema:
 8. Display and audio settings are persisted in the same settings state.
 9. Analytics settings are persisted in the same settings state.
 
+### 7.5 Category depth/split rule
+
+1. Keep a settings category top-level when it remains small and quick:
+2. `<= 5` adjustable fields,
+3. `<= 2` action rows (`Apply/Save/Reset` style),
+4. no nested mode-specific branching required.
+5. Split category into a dedicated submenu when any threshold is exceeded:
+6. `>= 6` adjustable fields, or
+7. category requires separate basic/advanced groups, or
+8. category introduces mode-specific variants that reduce scanability.
+9. Current policy:
+10. `Audio` and `Display` remain top-level in `Settings` while they stay below threshold.
+11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
+
 ### 7.4 Reset-to-defaults policy
 
 1. Reset action must always open confirmation:
@@ -253,7 +272,7 @@ Manual tests:
 3. Profile file actions (`Load`, `Save`, `Save As`, `Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
 5. In-game key helper is grouped into `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
-6. Help/Controls includes GIF previews for translation and rotation.
+6. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 
 ## 12. Stabilization Additions (Completed)
 
@@ -308,6 +327,9 @@ Stabilization details:
 
 ## 15. Open Follow-up
 
-1. GIF guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
+1. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
 2. Very-small-window readability tuning for controls/help layouts is implemented.
-3. Remaining follow-up is maintainability decomposition of other large modules; keep it synchronized with `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+3. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`, `keybindings_menu_model.py`, dead-control-line cleanup).
+4. Help coverage expansion and menu parity pages are implemented.
+5. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py` + `settings_category_metrics`).
+6. Source-of-truth status is synchronized via `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.

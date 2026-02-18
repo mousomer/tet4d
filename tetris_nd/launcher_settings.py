@@ -7,8 +7,7 @@ import pygame
 from .app_runtime import capture_windowed_display_settings
 from .audio import AudioSettings, play_sfx, set_audio_settings
 from .display import DisplaySettings, apply_display_mode, normalize_display_settings
-from .menu_config import default_settings_payload
-from .menu_gif_guides import draw_translation_rotation_guides
+from .menu_config import default_settings_payload, settings_top_level_categories
 from .menu_persistence import (
     load_analytics_payload,
     persist_analytics_payload,
@@ -67,6 +66,26 @@ _UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = (
     ("item", "Back", "back"),
 )
 _UNIFIED_SELECTABLE = tuple(idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item")
+
+
+def _configured_top_level_labels() -> tuple[str, ...]:
+    entries = settings_top_level_categories()
+    return tuple(entry["label"] for entry in entries)
+
+
+def _layout_top_level_labels() -> tuple[str, ...]:
+    return tuple(label for row_kind, label, _row_key in _UNIFIED_SETTINGS_ROWS if row_kind == "header")
+
+
+def _validate_unified_layout_against_policy() -> tuple[bool, str]:
+    expected = _configured_top_level_labels()
+    actual = _layout_top_level_labels()
+    if expected == actual:
+        return True, "Settings layout policy verified"
+    return False, (
+        "Settings layout mismatch: expected top-level categories "
+        f"{', '.join(expected)} but UI renders {', '.join(actual)}"
+    )
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
@@ -301,8 +320,9 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("Settings", True, TEXT_COLOR)
+    categories = ", ".join(_configured_top_level_labels())
     subtitle = fonts.hint_font.render(
-        "Unified Audio + Display + Analytics (grouped categories)",
+        f"Top-level categories: {categories}",
         True,
         MUTED_COLOR,
     )
@@ -349,23 +369,11 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
         surf = fonts.hint_font.render(line, True, MUTED_COLOR)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
-    hy = _draw_unified_guides(screen, fonts, hy)
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
         surf = fonts.hint_font.render(state.status, True, color)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
-
-
-def _draw_unified_guides(screen: pygame.Surface, fonts, start_y: int) -> int:
-    width, height = screen.get_size()
-    guide_h = 112
-    if start_y + guide_h + 22 >= height:
-        return start_y
-    guide_w = min(460, width - 40)
-    rect = pygame.Rect((width - guide_w) // 2, start_y + 4, guide_w, guide_h)
-    draw_translation_rotation_guides(screen, fonts, rect=rect, title="Translation / Rotation")
-    return rect.bottom + 4
 
 
 def _dispatch_unified_key(
@@ -434,6 +442,9 @@ def run_settings_hub_menu(
         original_display=_clone_display_settings(display_settings),
         original_score_logging_enabled=score_logging_enabled,
     )
+    ok_layout, msg_layout = _validate_unified_layout_against_policy()
+    if not ok_layout:
+        _set_unified_status(state, msg_layout, is_error=True)
     _sync_audio_preview(state.audio_settings)
     _sync_analytics_preview(state.score_logging_enabled)
 

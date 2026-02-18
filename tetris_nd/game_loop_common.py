@@ -5,14 +5,15 @@ from typing import Literal
 
 import pygame
 
-GameLoopDecision = Literal["continue", "quit", "menu"]
-GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid"]
+GameLoopDecision = Literal["continue", "quit", "menu", "help"]
+GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
 
 
 def process_game_events(
     keydown_handler: Callable[[pygame.event.Event], GameKeyResult],
     on_restart: Callable[[], None],
     on_toggle_grid: Callable[[], None],
+    on_help: Callable[[], None],
     event_handler: Callable[[pygame.event.Event], None] | None = None,
 ) -> GameLoopDecision:
     for event in pygame.event.get():
@@ -33,5 +34,8 @@ def process_game_events(
             continue
         if result == "toggle_grid":
             on_toggle_grid()
+            continue
+        if result == "help":
+            on_help()
 
     return "continue"

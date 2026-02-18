@@ -17,6 +17,7 @@ def run_nd_loop(
     gravity_interval_ms: int,
     pause_dimension: int,
     run_pause_menu: Callable[[pygame.Surface, Any, int], tuple[str, pygame.Surface]],
+    run_help_menu: Callable[[pygame.Surface, Any, int, str], pygame.Surface],
     spawn_clear_animation: Callable[[Any, int], tuple[Any, int]],
     step_view: Callable[[float], None],
     draw_frame: Callable[[pygame.Surface, Any], None],
@@ -36,10 +37,20 @@ def run_nd_loop(
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
+        def _open_help() -> None:
+            nonlocal screen
+            screen = run_help_menu(
+                screen,
+                fonts,
+                pause_dimension,
+                f"{pause_dimension}D Gameplay",
+            )
+
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
+            on_help=_open_help,
             event_handler=loop.pointer_event_handler,
         )
         if decision == "quit":
@@ -54,15 +65,18 @@ def run_nd_loop(
                 loop.on_restart()
                 continue
 
-        loop.bot.tick_nd(loop.state, dt)
-        if loop.bot.controls_descent:
+        if loop.state.config.exploration_mode:
             loop.gravity_accumulator = 0
         else:
-            loop.gravity_accumulator = advance_gravity(
-                loop.state,
-                loop.gravity_accumulator,
-                gravity_interval_ms,
-            )
+            loop.bot.tick_nd(loop.state, dt)
+            if loop.bot.controls_descent:
+                loop.gravity_accumulator = 0
+            else:
+                loop.gravity_accumulator = advance_gravity(
+                    loop.state,
+                    loop.gravity_accumulator,
+                    gravity_interval_ms,
+                )
 
         new_clear_anim, loop.last_lines_cleared = spawn_clear_animation(
             loop.state,

@@ -341,6 +341,123 @@ def _validate_settings_category_docs(payload: dict[str, Any]) -> tuple[dict[str,
     return tuple(docs)
 
 
+def _validate_settings_split_rules(payload: dict[str, Any]) -> dict[str, Any]:
+    raw = payload.get("settings_split_rules")
+    if raw is None:
+        return {
+            "max_top_level_fields": 5,
+            "max_top_level_actions": 2,
+            "split_when_mode_specific": True,
+        }
+    if not isinstance(raw, dict):
+        raise RuntimeError("structure.settings_split_rules must be an object")
+    max_fields = raw.get("max_top_level_fields")
+    max_actions = raw.get("max_top_level_actions")
+    split_mode_specific = raw.get("split_when_mode_specific")
+    if isinstance(max_fields, bool) or not isinstance(max_fields, int) or max_fields < 1:
+        raise RuntimeError("structure.settings_split_rules.max_top_level_fields must be int >= 1")
+    if isinstance(max_actions, bool) or not isinstance(max_actions, int) or max_actions < 1:
+        raise RuntimeError("structure.settings_split_rules.max_top_level_actions must be int >= 1")
+    if not isinstance(split_mode_specific, bool):
+        raise RuntimeError("structure.settings_split_rules.split_when_mode_specific must be boolean")
+    return {
+        "max_top_level_fields": max_fields,
+        "max_top_level_actions": max_actions,
+        "split_when_mode_specific": split_mode_specific,
+    }
+
+
+def _validate_settings_category_metrics(
+    payload: dict[str, Any],
+    settings_docs: tuple[dict[str, str], ...],
+) -> dict[str, dict[str, Any]]:
+    raw = payload.get("settings_category_metrics")
+    docs_by_id = {entry["id"]: entry for entry in settings_docs}
+    if not isinstance(raw, dict):
+        return {}
+
+    metrics: dict[str, dict[str, Any]] = {}
+    for category_id, raw_entry in raw.items():
+        if not isinstance(category_id, str) or not category_id.strip():
+            raise RuntimeError("structure.settings_category_metrics keys must be non-empty strings")
+        clean_id = category_id.strip().lower()
+        if clean_id not in docs_by_id:
+            raise RuntimeError(
+                f"structure.settings_category_metrics.{clean_id} has no matching settings_category_docs id"
+            )
+        if not isinstance(raw_entry, dict):
+            raise RuntimeError(f"structure.settings_category_metrics.{clean_id} must be an object")
+
+        field_count = raw_entry.get("field_count")
+        action_count = raw_entry.get("action_count")
+        mode_specific = raw_entry.get("mode_specific")
+        top_level = raw_entry.get("top_level")
+        if isinstance(field_count, bool) or not isinstance(field_count, int) or field_count < 0:
+            raise RuntimeError(
+                f"structure.settings_category_metrics.{clean_id}.field_count must be int >= 0"
+            )
+        if isinstance(action_count, bool) or not isinstance(action_count, int) or action_count < 0:
+            raise RuntimeError(
+                f"structure.settings_category_metrics.{clean_id}.action_count must be int >= 0"
+            )
+        if not isinstance(mode_specific, bool):
+            raise RuntimeError(
+                f"structure.settings_category_metrics.{clean_id}.mode_specific must be boolean"
+            )
+        if not isinstance(top_level, bool):
+            raise RuntimeError(
+                f"structure.settings_category_metrics.{clean_id}.top_level must be boolean"
+            )
+        metrics[clean_id] = {
+            "field_count": field_count,
+            "action_count": action_count,
+            "mode_specific": mode_specific,
+            "top_level": top_level,
+        }
+    return metrics
+
+
+def _enforce_settings_split_policy(validated: dict[str, Any]) -> None:
+    metrics = validated.get("settings_category_metrics", {})
+    if not isinstance(metrics, dict) or not metrics:
+        return
+    rules = validated["settings_split_rules"]
+    max_fields = int(rules["max_top_level_fields"])
+    max_actions = int(rules["max_top_level_actions"])
+    split_mode_specific = bool(rules["split_when_mode_specific"])
+
+    docs = validated["settings_category_docs"]
+    docs_by_id = {entry["id"]: entry for entry in docs}
+    required_top_labels: list[str] = []
+    for category_id, entry in metrics.items():
+        if not bool(entry["top_level"]):
+            continue
+        field_count = int(entry["field_count"])
+        action_count = int(entry["action_count"])
+        mode_specific = bool(entry["mode_specific"])
+        if field_count > max_fields:
+            raise RuntimeError(
+                f"settings split policy violation: {category_id} field_count={field_count} exceeds max_top_level_fields={max_fields}"
+            )
+        if action_count > max_actions:
+            raise RuntimeError(
+                f"settings split policy violation: {category_id} action_count={action_count} exceeds max_top_level_actions={max_actions}"
+            )
+        if split_mode_specific and mode_specific:
+            raise RuntimeError(
+                f"settings split policy violation: {category_id} is mode-specific and must not remain top-level"
+            )
+        required_top_labels.append(docs_by_id[category_id]["label"])
+
+    rows = tuple(validated["settings_hub_rows"])
+    row_set = set(rows)
+    missing_labels = [label for label in required_top_labels if label not in row_set]
+    if missing_labels:
+        raise RuntimeError(
+            f"settings_hub_rows missing top-level categories required by split policy: {', '.join(missing_labels)}"
+        )
+
+
 def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     launcher_menu = payload.get("launcher_menu")
     if not isinstance(launcher_menu, list):
@@ -348,14 +465,18 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     menu_items = tuple(_validate_menu_item(item) for item in launcher_menu)
     if not menu_items:
         raise RuntimeError("structure.launcher_menu must not be empty")
+    settings_docs = _validate_settings_category_docs(payload)
     validated = {
         "launcher_menu": menu_items,
         "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
         "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
-        "settings_category_docs": _validate_settings_category_docs(payload),
+        "settings_category_docs": settings_docs,
+        "settings_split_rules": _validate_settings_split_rules(payload),
+        "settings_category_metrics": _validate_settings_category_metrics(payload, settings_docs),
     }
+    _enforce_settings_split_policy(validated)
     return validated
 
 
@@ -412,6 +533,31 @@ def keybinding_category_docs() -> dict[str, Any]:
 def settings_category_docs() -> tuple[dict[str, str], ...]:
     docs = _structure_payload()["settings_category_docs"]
     return deepcopy(docs)
+
+
+def settings_split_rules() -> dict[str, Any]:
+    rules = _structure_payload()["settings_split_rules"]
+    return deepcopy(rules)
+
+
+def settings_category_metrics() -> dict[str, dict[str, Any]]:
+    metrics = _structure_payload()["settings_category_metrics"]
+    return deepcopy(metrics)
+
+
+def settings_top_level_categories() -> tuple[dict[str, str], ...]:
+    payload = _structure_payload()
+    docs: tuple[dict[str, str], ...] = payload["settings_category_docs"]
+    metrics: dict[str, dict[str, Any]] = payload.get("settings_category_metrics", {})
+    if not metrics:
+        fallback_rows = set(payload["settings_hub_rows"])
+        return tuple(entry for entry in docs if entry["label"] in fallback_rows)
+    top_level_ids = {
+        category_id
+        for category_id, entry in metrics.items()
+        if bool(entry.get("top_level"))
+    }
+    return tuple(entry for entry in docs if entry["id"] in top_level_ids)
 
 
 @lru_cache(maxsize=1)
