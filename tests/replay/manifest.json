@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "description": "Canonical replay fixture manifest for deterministic gameplay verification.",
+  "suites": [
+    {
+      "id": "gameplay_replay_core",
+      "test_file": "tetris_nd/tests/test_gameplay_replay.py",
+      "modes": ["2d", "3d", "4d"],
+      "seed_policy": "deterministic_fixed",
+      "required": true
+    }
+  ],
+  "golden_dir": "tests/replay/golden",
+  "notes": [
+    "Add fixture metadata entries when introducing new deterministic replay scenarios.",
+    "Update docs and backlog when replay protocol changes."
+  ]
+}

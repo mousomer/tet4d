@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tet4d/menu_settings.schema.json",
+  "title": "tet4d menu settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "active_profile",
+    "last_mode",
+    "audio",
+    "display",
+    "analytics",
+    "settings"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "active_profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_mode": {
+      "type": "string",
+      "enum": ["2d", "3d", "4d"]
+    },
+    "audio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["master_volume", "sfx_volume", "mute"],
+      "properties": {
+        "master_volume": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "sfx_volume": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "mute": {
+          "type": "boolean"
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fullscreen", "windowed_size"],
+      "properties": {
+        "fullscreen": {
+          "type": "boolean"
+        },
+        "windowed_size": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            { "type": "integer", "minimum": 320 },
+            { "type": "integer", "minimum": 240 }
+          ]
+        }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score_logging_enabled"],
+      "properties": {
+        "score_logging_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["2d", "3d", "4d"],
+      "properties": {
+        "2d": { "$ref": "#/$defs/settings2d" },
+        "3d": { "$ref": "#/$defs/settings3d" },
+        "4d": { "$ref": "#/$defs/settings4d" }
+      }
+    }
+  },
+  "$defs": {
+    "sharedBot": {
+      "type": "object",
+      "required": [
+        "bot_mode_index",
+        "bot_speed_level",
+        "bot_algorithm_index",
+        "bot_profile_index",
+        "bot_budget_ms"
+      ],
+      "properties": {
+        "bot_mode_index": { "type": "integer", "minimum": 0 },
+        "bot_speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "bot_algorithm_index": { "type": "integer", "minimum": 0 },
+        "bot_profile_index": { "type": "integer", "minimum": 0 },
+        "bot_budget_ms": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "settings2d": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/sharedBot" },
+        {
+          "required": [
+            "width",
+            "height",
+            "speed_level",
+            "piece_set_index",
+            "challenge_layers"
+          ],
+          "properties": {
+            "width": { "type": "integer", "minimum": 4 },
+            "height": { "type": "integer", "minimum": 8 },
+            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "piece_set_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "settings3d": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/sharedBot" },
+        {
+          "required": [
+            "width",
+            "height",
+            "depth",
+            "speed_level",
+            "piece_set_index",
+            "challenge_layers"
+          ],
+          "properties": {
+            "width": { "type": "integer", "minimum": 4 },
+            "height": { "type": "integer", "minimum": 8 },
+            "depth": { "type": "integer", "minimum": 2 },
+            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "piece_set_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "settings4d": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/sharedBot" },
+        {
+          "required": [
+            "width",
+            "height",
+            "depth",
+            "fourth",
+            "speed_level",
+            "piece_set_index",
+            "challenge_layers"
+          ],
+          "properties": {
+            "width": { "type": "integer", "minimum": 4 },
+            "height": { "type": "integer", "minimum": 8 },
+            "depth": { "type": "integer", "minimum": 2 },
+            "fourth": { "type": "integer", "minimum": 1 },
+            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "piece_set_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

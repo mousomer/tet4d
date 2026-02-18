@@ -183,10 +183,16 @@ def _draw_controls_page(surface: pygame.Surface, fonts, state: _HelpState) -> No
     header = fonts.hint_font.render(f"Controls for {state.dimension}D", True, _HIGHLIGHT)
     surface.blit(header, ((width - header.get_width()) // 2, 120))
 
-    gif_w = min(300, max(180, (width - 80) // 2))
-    gif_h = min(170, max(120, (height // 4)))
-    left_rect = pygame.Rect(24, 154, gif_w, gif_h)
-    right_rect = pygame.Rect(width - gif_w - 24, 154, gif_w, gif_h)
+    if width < 920:
+        gif_w = min(width - 48, 460)
+        gif_h = min(150, max(108, (height - 340) // 3))
+        left_rect = pygame.Rect((width - gif_w) // 2, 154, gif_w, gif_h)
+        right_rect = pygame.Rect((width - gif_w) // 2, left_rect.bottom + 10, gif_w, gif_h)
+    else:
+        gif_w = min(300, max(180, (width - 80) // 2))
+        gif_h = min(170, max(120, (height // 4)))
+        left_rect = pygame.Rect(24, 154, gif_w, gif_h)
+        right_rect = pygame.Rect(width - gif_w - 24, 154, gif_w, gif_h)
 
     for rect in (left_rect, right_rect):
         panel = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -215,7 +221,8 @@ def _draw_controls_page(surface: pygame.Surface, fonts, state: _HelpState) -> No
         missing = fonts.hint_font.render("rotation_keys.gif missing", True, (255, 160, 160))
         surface.blit(missing, (right_rect.x + 10, right_rect.y + 36))
 
-    groups_rect = pygame.Rect(24, left_rect.bottom + 12, width - 48, height - (left_rect.bottom + 26))
+    groups_top = max(left_rect.bottom, right_rect.bottom) + 12
+    groups_rect = pygame.Rect(24, groups_top, width - 48, max(80, height - (groups_top + 14)))
     draw_grouped_control_helper(
         surface,
         groups=control_groups_for_dimension(state.dimension),
@@ -237,12 +244,14 @@ def _draw_settings_page(surface: pygame.Surface, fonts) -> None:
         "Core categories:",
         "Audio: master volume, SFX volume, mute.",
         "Display: fullscreen/window size and apply/save flow.",
+        "Analytics: score analyzer logging toggle and event/summary output.",
         "Bot: mode, run speed, hard-drop policy, planning budget.",
         "Profiles: active profile, save-as, rename, delete custom.",
         "Setup: board size, piece-set choices, challenge layers.",
         "",
         "Config files:",
         "Audio/display defaults and menu categories are loaded from config/menu/*.json.",
+        "Score analyzer logging/output is configured in config/gameplay/score_analyzer.json.",
         "",
         "Extended category docs:",
     ]
@@ -298,6 +307,7 @@ def _draw_concepts_page(surface: pygame.Surface, fonts) -> None:
         "Scoring:",
         "Base points are awarded for piece placement and cleared lines/layers.",
         "Assist settings (bot, grid helpers, speed boosts) adjust the score multiplier.",
+        "Optional score-analyzer logging records lock events and rolling summaries.",
         "",
         "Settings and resets:",
         "Resets require confirmation to avoid accidental data loss.",

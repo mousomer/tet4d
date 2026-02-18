@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from collections.abc import Sequence
 from typing import Mapping
 
@@ -18,6 +19,11 @@ from .keybindings import (
 
 
 ControlGroup = tuple[str, tuple[str, ...]]
+
+
+@dataclass(frozen=True)
+class _GuideFonts:
+    hint_font: pygame.font.Font
 
 _KEY_NAME_OVERRIDES = {
     "escape": "Esc",
@@ -71,7 +77,20 @@ def _format_pair(bindings: Mapping[str, tuple[int, ...]], neg_action: str, pos_a
 
 
 def _line(keys: str, text: str) -> str:
-    return f"{keys:<14} {text}"
+    return f"{keys}\t{text}"
+
+
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    if max_width <= font.size("...")[0]:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + "...")[0] > max_width:
+        trimmed = trimmed[:-1]
+    return f"{trimmed}..." if trimmed else ""
 
 
 def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
@@ -203,6 +222,99 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
     return []
 
 
+def _draw_overflow_hint(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    y: int,
+    margin_x: int,
+    hint_font: pygame.font.Font,
+) -> int:
+    remaining = hint_font.render("... open Help for full key guide", True, (188, 197, 228))
+    surface.blit(remaining, (rect.x + margin_x, y))
+    return y + remaining.get_height() + 4
+
+
+def _draw_group_box(
+    surface: pygame.Surface,
+    *,
+    box_rect: pygame.Rect,
+) -> None:
+    box = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(box, (10, 14, 34, 170), box.get_rect(), border_radius=10)
+    pygame.draw.rect(box, (74, 92, 138, 170), box.get_rect(), width=1, border_radius=10)
+    surface.blit(box, box_rect.topleft)
+
+
+def _row_columns(
+    *,
+    box_rect: pygame.Rect,
+    margin_x: int,
+) -> tuple[int, int, int]:
+    content_w = max(120, box_rect.width - (margin_x * 2))
+    key_col_w = min(220, max(110, int(content_w * 0.42)))
+    value_x = box_rect.x + margin_x + key_col_w + 8
+    value_w = max(48, content_w - key_col_w - 8)
+    return key_col_w, value_x, value_w
+
+
+def _draw_group_rows(
+    surface: pygame.Surface,
+    *,
+    rows: tuple[str, ...],
+    box_rect: pygame.Rect,
+    row_y: int,
+    margin_x: int,
+    panel_font: pygame.font.Font,
+) -> None:
+    key_col_w, value_x, value_w = _row_columns(box_rect=box_rect, margin_x=margin_x)
+    for row in rows:
+        key_text, _sep, desc_text = row.partition("\t")
+        if not _sep:
+            key_text = row
+            desc_text = ""
+        key_draw = _fit_text(panel_font, key_text, key_col_w)
+        desc_draw = _fit_text(panel_font, desc_text, value_w)
+        if key_draw:
+            key_surf = panel_font.render(key_draw, True, (228, 230, 242))
+            surface.blit(key_surf, (box_rect.x + margin_x, row_y))
+        if desc_draw:
+            desc_surf = panel_font.render(desc_draw, True, (188, 197, 228))
+            surface.blit(desc_surf, (value_x, row_y))
+        row_y += panel_font.get_height() + 2
+
+
+def _draw_optional_guides(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    y: int,
+    hint_font: pygame.font.Font,
+) -> int:
+    remaining_h = rect.bottom - y
+    if remaining_h < 88:
+        return y
+    guide_rect = pygame.Rect(
+        rect.x + 2,
+        y,
+        rect.width - 4,
+        min(118, remaining_h - 2),
+    )
+    if guide_rect.height < 88 or guide_rect.width < 140:
+        return y
+    try:
+        from .menu_gif_guides import draw_translation_rotation_guides
+    except Exception:  # pragma: no cover - import/runtime optional path
+        return y
+    draw_translation_rotation_guides(
+        surface,
+        _GuideFonts(hint_font=hint_font),
+        rect=guide_rect,
+        title="Move / Rotate",
+    )
+    return guide_rect.bottom + 4
+
+
 def draw_grouped_control_helper(
     surface: pygame.Surface,
     *,
@@ -210,28 +322,31 @@ def draw_grouped_control_helper(
     rect: pygame.Rect,
     panel_font: pygame.font.Font,
     hint_font: pygame.font.Font,
+    show_guides: bool = False,
 ) -> int:
     y = rect.y
     margin_x = 10
     for group_name, rows in groups:
         box_h = 10 + hint_font.get_height() + 6 + (len(rows) * (panel_font.get_height() + 2)) + 8
         if y + box_h > rect.bottom:
-            remaining = hint_font.render("... open Help for full key guide", True, (188, 197, 228))
-            surface.blit(remaining, (rect.x + margin_x, y))
-            return y + remaining.get_height() + 4
+            return _draw_overflow_hint(surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font)
 
         box_rect = pygame.Rect(rect.x + 2, y, rect.width - 4, box_h)
-        box = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
-        pygame.draw.rect(box, (10, 14, 34, 170), box.get_rect(), border_radius=10)
-        pygame.draw.rect(box, (74, 92, 138, 170), box.get_rect(), width=1, border_radius=10)
-        surface.blit(box, box_rect.topleft)
+        _draw_group_box(surface, box_rect=box_rect)
 
         title = hint_font.render(group_name, True, (210, 220, 245))
         surface.blit(title, (box_rect.x + margin_x, box_rect.y + 8))
         row_y = box_rect.y + 8 + title.get_height() + 6
-        for row in rows:
-            line = panel_font.render(row, True, (228, 230, 242))
-            surface.blit(line, (box_rect.x + margin_x, row_y))
-            row_y += line.get_height() + 2
+        _draw_group_rows(
+            surface,
+            rows=rows,
+            box_rect=box_rect,
+            row_y=row_y,
+            margin_x=margin_x,
+            panel_font=panel_font,
+        )
         y += box_h + 6
+
+    if show_guides:
+        y = _draw_optional_guides(surface, rect=rect, y=y, hint_font=hint_font)
     return y

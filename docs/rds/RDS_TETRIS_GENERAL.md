@@ -3,7 +3,7 @@
 Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Purpose
 
@@ -107,6 +107,17 @@ Score-analyzer (board health + placement quality) requirements are defined in:
 16. `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`
 17. `/Users/omer/workspace/test-code/tet4d/config/audio/sfx.json`
 18. User runtime overrides remain in `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`.
+19. Canonical maintenance contract rules are defined in:
+20. `/Users/omer/workspace/test-code/tet4d/config/project/canonical_maintenance.json`
+21. Contract validation script is:
+22. `/Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+23. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+24. `config/schema/*.schema.json`
+25. `docs/migrations/*.md`
+26. `tests/replay/manifest.json`
+27. `docs/help/HELP_INDEX.md`
+28. `assets/help/manifest.json`
+29. `docs/RELEASE_CHECKLIST.md`
 
 ## 7. Engineering Best Practices
 
@@ -124,7 +135,9 @@ Required checks for behavior changes:
 ```bash
 ruff check /Users/omer/workspace/test-code/tet4d
 ruff check /Users/omer/workspace/test-code/tet4d --select C901
+python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py
 pytest -q
+PYTHONPATH=. python3 /Users/omer/workspace/test-code/tet4d/tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert --record-trend
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
 ./scripts/ci_check.sh
@@ -173,5 +186,4 @@ Completed in current implementation:
 
 Remaining follow-up:
 1. Continue empirical policy tuning from accumulated trend-history data as an ongoing operational cadence.
-2. Extend translation/rotation GIF guidance from Help-only into menu contexts (launcher/pause/keybinding descriptions) for higher discoverability.
-3. Reduce menu complexity hotspots flagged by `ruff --select C901` in keybindings/settings entry flows.
+2. Continue maintainability decomposition for remaining large modules.

@@ -3,7 +3,7 @@
 Status: Active v1.1 (Verified 2026-02-18)
 Author: Omer + Codex
 Date: 2026-02-18
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Purpose
 
@@ -176,6 +176,7 @@ Required checks:
 4. 4D greedy key prioritizes layer completion,
 5. hard-drop-after-soft-drop threshold behavior works,
 6. manual controls and keybinding-dependent gameplay remain unaffected.
+7. repeated dry-run stability check passes across seed sweep (`tools/check_playbot_stability.py`).
 
 ## 10. Dry-run Requirements
 

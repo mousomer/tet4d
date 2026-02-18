@@ -46,7 +46,9 @@ Run after every gameplay or input change:
 ```bash
 ruff check /Users/omer/workspace/test-code/tet4d
 ruff check /Users/omer/workspace/test-code/tet4d --select C901
+python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py
 pytest -q
+PYTHONPATH=. python3 /Users/omer/workspace/test-code/tet4d/tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
 ```
 
@@ -63,6 +65,27 @@ Minimum required coverage for gameplay-affecting changes:
 3. No new C901 failures.
 4. Usage docs remain valid (`README.md`, docs links, run commands).
 
+## Canonical maintenance contract
+
+1. Canonical maintenance rules are machine-checked and source-controlled in:
+2. `/Users/omer/workspace/test-code/tet4d/config/project/canonical_maintenance.json`
+3. Validation command:
+4. `python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+5. Validation is part of CI via:
+6. `/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh`
+7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:
+8. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
+9. `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`
+10. `/Users/omer/workspace/test-code/tet4d/docs/rds/`
+11. `/Users/omer/workspace/test-code/tet4d/README.md`
+12. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/` (or relevant test suites)
+13. Canonical connected artifacts now include:
+14. `config/schema/*.schema.json`,
+15. `docs/migrations/*.md`,
+16. `tests/replay/manifest.json` + `tests/replay/golden/.gitkeep`,
+17. `docs/help/HELP_INDEX.md` + `assets/help/manifest.json`,
+18. `docs/RELEASE_CHECKLIST.md`.
+
 ## Simplification and Technical Debt Tracking (2026-02-18)
 
 Authoritative open/deferred items are tracked in:
@@ -70,8 +93,10 @@ Authoritative open/deferred items are tracked in:
 
 ### Active open items (synced from `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`)
 
-1. `[P3]` Keep one source of truth for simplification debt: keep this file and `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md` aligned as code evolves.
-2. `[P3]` Periodic retuning cadence: rerun planner analysis against trend history after major algorithm/piece-set changes.
+1. `[P1]` Keep CI dry-run stability green across repeated runs and Python `3.11..3.14` (ongoing regression watch).
+2. `[P2]` Continue decomposition of remaining large modules for maintainability.
+3. `[P3]` Keep this file and `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md` synchronized.
+4. `[P3]` Continue periodic trend-history policy retuning.
 
 ### Current complexity hotspots (`ruff --select C901`)
 

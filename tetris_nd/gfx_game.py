@@ -7,6 +7,7 @@ import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
+from .score_analyzer import hud_analysis_lines
 from .speed_curve import gravity_interval_ms
 from .view_modes import GridMode, grid_mode_label
 
@@ -646,6 +647,7 @@ def _draw_side_panel_text(surface: pygame.Surface,
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
     lines = [
         "2D Tetris",
         "",
@@ -656,6 +658,8 @@ def _draw_side_panel_text(surface: pygame.Surface,
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
         "",
+        *analysis_lines,
+        *([""] if analysis_lines else []),
         *bot_lines,
         *([""] if bot_lines else []),
     ]
@@ -742,6 +746,7 @@ def draw_side_panel(surface: pygame.Surface,
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
+        show_guides=True,
     )
 
     # Game over message below D-pad (if needed)

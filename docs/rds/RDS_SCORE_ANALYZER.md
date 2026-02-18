@@ -1,9 +1,9 @@
 # Score Analyzer RDS (All Gameplay)
 
-Status: Draft v0.1 (Design Approved, Implementation Pending)
+Status: Active v0.3 (Phase-2 implemented, Verified 2026-02-18)
 Author: Omer + Codex
 Date: 2026-02-18
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Purpose
 
@@ -103,10 +103,9 @@ Each analyzer event must include `actor_mode` and current assist/grid/speed modi
 
 ## 9. Event/update protocol
 
-Required event stream:
-1. `session_start`
-2. `piece_lock_analyzed` (repeats)
-3. `session_end`
+Current persisted event stream:
+1. `piece_lock_analyzed` (repeats on every lock event).
+2. Session boundary events (`session_start` / `session_end`) are reserved for future expansion and are not required for current telemetry files.
 
 Required fields for `piece_lock_analyzed`:
 1. `schema_version`
@@ -122,16 +121,17 @@ Required fields for `piece_lock_analyzed`:
 11. `speed_level`
 12. `raw_points`
 13. `final_points`
-14. `board_pre`
-15. `placement`
-16. `board_post`
-17. `delta`
-18. `board_health_score`
-19. `placement_quality_score`
+14. `cleared`
+15. `board_pre`
+16. `placement`
+17. `board_post`
+18. `delta`
+19. `board_health_score`
+20. `placement_quality_score`
 
 ## 10. Storage and config locations
 
-Planned canonical files:
+Canonical files:
 1. `/Users/omer/workspace/test-code/tet4d/config/gameplay/score_analyzer.json`
 2. `/Users/omer/workspace/test-code/tet4d/state/analytics/score_events.jsonl`
 3. `/Users/omer/workspace/test-code/tet4d/state/analytics/score_summary.json`
@@ -140,6 +140,9 @@ Rules:
 1. `config/*` files are source-controlled defaults.
 2. `state/*` files are runtime/user/generated outputs.
 3. Schema versioning is mandatory for event compatibility.
+4. Runtime logging is controlled by both config and user settings:
+5. config default: `config/gameplay/score_analyzer.json -> logging.enabled`,
+6. user override: `state/menu_settings.json -> analytics.score_logging_enabled`.
 
 ## 11. Retuning workflow
 
@@ -160,6 +163,7 @@ Recommended runtime UI fields:
 Visibility rules:
 1. Compact summary in side panel by default.
 2. Detailed analyzer breakdown only in optional help/debug overlay.
+3. Launcher `Settings -> Analytics` exposes score-logging toggle and persistence.
 
 ## 13. Testing requirements
 
@@ -169,4 +173,5 @@ Minimum tests:
 3. no missing required event fields in emitted JSONL entries,
 4. mode coverage tests for human/assist/auto/step,
 5. cross-dimension smoke tests (2D/3D/4D).
-
+6. summary protocol validation for persisted `score_summary.json`.
+7. logging-on path writes both event JSONL and summary JSON files.

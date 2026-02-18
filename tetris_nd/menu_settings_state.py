@@ -42,6 +42,12 @@ def _default_settings_payload() -> dict[str, Any]:
             or any(isinstance(v, bool) or not isinstance(v, int) for v in windowed_size)
         ):
             display["windowed_size"] = [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
+    payload.setdefault("analytics", {"score_logging_enabled": False})
+    analytics = payload.get("analytics")
+    if not isinstance(analytics, dict):
+        payload["analytics"] = {"score_logging_enabled": False}
+    elif not isinstance(analytics.get("score_logging_enabled"), bool):
+        analytics["score_logging_enabled"] = False
     return payload
 
 
@@ -90,6 +96,7 @@ def _load_payload() -> dict[str, Any]:
     _merge_loaded_scalars(payload, loaded)
     _merge_loaded_section(payload, loaded, "display")
     _merge_loaded_section(payload, loaded, "audio")
+    _merge_loaded_section(payload, loaded, "analytics")
     _merge_loaded_mode_settings(payload, loaded)
     _sanitize_payload(payload)
     return payload
@@ -185,6 +192,22 @@ def _sanitize_audio_section(payload: dict[str, Any], default_payload: dict[str, 
     audio["mute"] = mute
 
 
+def _sanitize_analytics_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+    analytics = payload.setdefault("analytics", {})
+    if not isinstance(analytics, dict):
+        payload["analytics"] = {}
+        analytics = payload["analytics"]
+    default_analytics = default_payload.get("analytics", {})
+    default_logging = (
+        bool(default_analytics.get("score_logging_enabled", False))
+        if isinstance(default_analytics, dict)
+        else False
+    )
+    analytics["score_logging_enabled"] = bool(
+        analytics.get("score_logging_enabled", default_logging)
+    )
+
+
 def _sanitize_mode_settings(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
     settings = payload.get("settings")
     if not isinstance(settings, dict):
@@ -213,6 +236,7 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
     _sanitize_version_profile_mode(payload, default_payload)
     _sanitize_display_section(payload, default_payload)
     _sanitize_audio_section(payload, default_payload)
+    _sanitize_analytics_section(payload, default_payload)
     _sanitize_mode_settings(payload, default_payload)
 
 
@@ -316,6 +340,10 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     if isinstance(audio, dict):
         merged["audio"].update(audio)
 
+    analytics = payload.get("analytics")
+    if isinstance(analytics, dict):
+        merged["analytics"].update(analytics)
+
     settings = payload.get("settings")
     if isinstance(settings, dict):
         for mode_key, mode_settings in settings.items():
@@ -350,6 +378,30 @@ def get_display_settings() -> dict[str, Any]:
     return {
         "fullscreen": bool(display.get("fullscreen", default_fullscreen)),
         "windowed_size": list(display.get("windowed_size", default_windowed_size)),
+    }
+
+
+def get_analytics_settings() -> dict[str, Any]:
+    payload = _load_payload()
+    analytics = payload.get("analytics", {})
+    if not isinstance(analytics, dict):
+        defaults = _default_settings_payload().get("analytics", {})
+        default_logging = (
+            bool(defaults.get("score_logging_enabled", False))
+            if isinstance(defaults, dict)
+            else False
+        )
+        return {"score_logging_enabled": default_logging}
+    defaults = _default_settings_payload().get("analytics", {})
+    default_logging = (
+        bool(defaults.get("score_logging_enabled", False))
+        if isinstance(defaults, dict)
+        else False
+    )
+    return {
+        "score_logging_enabled": bool(
+            analytics.get("score_logging_enabled", default_logging)
+        )
     }
 
 
@@ -400,5 +452,17 @@ def save_audio_settings(
         audio["sfx_volume"] = float(sfx_volume)
     if mute is not None:
         audio["mute"] = bool(mute)
+    _sanitize_payload(payload)
+    return _save_payload(payload)
+
+
+def save_analytics_settings(
+    *,
+    score_logging_enabled: bool | None = None,
+) -> tuple[bool, str]:
+    payload = _load_payload()
+    analytics = payload.setdefault("analytics", {})
+    if score_logging_enabled is not None:
+        analytics["score_logging_enabled"] = bool(score_logging_enabled)
     _sanitize_payload(payload)
     return _save_payload(payload)

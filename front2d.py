@@ -393,6 +393,10 @@ class LoopContext2D:
             grid_mode=self.grid_mode,
             speed_level=self.cfg.speed_level,
         )
+        mode_name = self.bot.mode.value
+        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_bot_mode = mode_name
+        self.state.analysis_grid_mode = self.grid_mode.value
 
 
 def run_game_loop(screen: pygame.Surface,

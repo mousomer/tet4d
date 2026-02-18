@@ -7,7 +7,13 @@ import pygame
 from .audio import AudioSettings, initialize_audio, set_audio_settings
 from .display import DisplaySettings, apply_display_mode, normalize_display_settings
 from .keybindings import initialize_keybinding_files
-from .menu_settings_state import get_audio_settings, get_display_settings, save_display_settings
+from .menu_settings_state import (
+    get_analytics_settings,
+    get_audio_settings,
+    get_display_settings,
+    save_display_settings,
+)
+from .score_analyzer import set_score_analyzer_logging_enabled
 
 
 @dataclass(frozen=True)
@@ -47,6 +53,8 @@ def initialize_runtime(*, sync_audio_state: bool = True) -> RuntimeSettings:
             mute=audio_settings.mute,
         )
     display_settings = load_display_settings_from_store()
+    analytics = get_analytics_settings()
+    set_score_analyzer_logging_enabled(bool(analytics.get("score_logging_enabled", False)))
     return RuntimeSettings(audio_settings=audio_settings, display_settings=display_settings)
 
 

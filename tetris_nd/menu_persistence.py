@@ -4,9 +4,11 @@ from typing import Any
 
 from .menu_settings_state import (
     get_audio_settings,
+    get_analytics_settings,
     get_display_settings,
     load_app_settings_payload,
     save_app_settings_payload,
+    save_analytics_settings,
     save_audio_settings,
     save_display_settings,
 )
@@ -26,6 +28,10 @@ def load_audio_payload() -> dict[str, Any]:
 
 def load_display_payload() -> dict[str, Any]:
     return get_display_settings()
+
+
+def load_analytics_payload() -> dict[str, Any]:
+    return get_analytics_settings()
 
 
 def persist_audio_payload(
@@ -50,3 +56,10 @@ def persist_display_payload(
         fullscreen=fullscreen,
         windowed_size=windowed_size,
     )
+
+
+def persist_analytics_payload(
+    *,
+    score_logging_enabled: bool | None = None,
+) -> tuple[bool, str]:
+    return save_analytics_settings(score_logging_enabled=score_logging_enabled)
