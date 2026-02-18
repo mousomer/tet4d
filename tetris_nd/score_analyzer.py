@@ -76,11 +76,39 @@ def reset_score_analyzer_runtime_state() -> None:
     reload_score_analyzer_config()
 
 
-def _resolve_output_path(raw_path: str) -> Path:
-    path = Path(raw_path)
-    if path.is_absolute():
-        return path
-    return (_ROOT_DIR / path).resolve()
+def _state_root() -> Path:
+    return (_ROOT_DIR / "state").resolve()
+
+
+def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> str:
+    if not isinstance(raw_path, str):
+        return default_relative
+    text = raw_path.strip().replace("\\", "/")
+    if not text:
+        return default_relative
+    candidate = Path(text)
+    if candidate.is_absolute():
+        return default_relative
+    parts = [part for part in candidate.parts if part not in ("", ".")]
+    if not parts:
+        return default_relative
+    if any(part == ".." for part in parts):
+        return default_relative
+    if any(":" in part for part in parts):
+        return default_relative
+    normalized = "/".join(parts)
+    if not normalized.startswith("state/"):
+        return default_relative
+    return normalized
+
+
+def _resolve_output_path(raw_path: object, default_relative: str) -> Path:
+    relative = _sanitize_state_relative_path(raw_path, default_relative)
+    resolved = (_ROOT_DIR / relative).resolve()
+    state_root = _state_root()
+    if resolved != state_root and state_root not in resolved.parents:
+        return (_ROOT_DIR / default_relative).resolve()
+    return resolved
 
 
 def _logging_config() -> dict[str, object]:
@@ -94,8 +122,14 @@ def _logging_config() -> dict[str, object]:
         }
     return {
         "enabled": bool(logging_obj.get("enabled", False)),
-        "events_file": str(logging_obj.get("events_file", _DEFAULT_EVENTS_PATH)),
-        "summary_file": str(logging_obj.get("summary_file", _DEFAULT_SUMMARY_PATH)),
+        "events_file": _sanitize_state_relative_path(
+            logging_obj.get("events_file"),
+            _DEFAULT_EVENTS_PATH,
+        ),
+        "summary_file": _sanitize_state_relative_path(
+            logging_obj.get("summary_file"),
+            _DEFAULT_SUMMARY_PATH,
+        ),
     }
 
 
@@ -849,7 +883,7 @@ def validate_score_analysis_summary(summary: dict[str, object]) -> tuple[bool, s
 def score_analysis_summary_snapshot() -> dict[str, object]:
     logging_cfg = _logging_config()
     raw_summary = str(logging_cfg.get("summary_file", _DEFAULT_SUMMARY_PATH))
-    summary_path = _resolve_output_path(raw_summary)
+    summary_path = _resolve_output_path(raw_summary, _DEFAULT_SUMMARY_PATH)
     cache_key = str(summary_path)
     summary = _SUMMARY_CACHE.get(cache_key)
     if summary is not None:
@@ -869,8 +903,8 @@ def record_score_analysis_event(event: dict[str, object]) -> None:
     logging_cfg = _logging_config()
     raw_events = str(logging_cfg.get("events_file", _DEFAULT_EVENTS_PATH))
     raw_summary = str(logging_cfg.get("summary_file", _DEFAULT_SUMMARY_PATH))
-    events_path = _resolve_output_path(raw_events)
-    summary_path = _resolve_output_path(raw_summary)
+    events_path = _resolve_output_path(raw_events, _DEFAULT_EVENTS_PATH)
+    summary_path = _resolve_output_path(raw_summary, _DEFAULT_SUMMARY_PATH)
     summary_cache_key = str(summary_path)
 
     try:
