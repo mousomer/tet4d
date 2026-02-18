@@ -14,9 +14,11 @@ from .runtime_config_validation import (
 
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
+STATE_DIR = CONFIG_DIR.parent / "state"
 GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
 PLAYBOT_POLICY_FILE = CONFIG_DIR / "playbot" / "policy.json"
 AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"
+DEFAULT_PLAYBOT_HISTORY_FILE = "state/bench/playbot_latency_history.jsonl"
 
 
 def _dimension_bucket_key(ndim: int) -> str:
@@ -208,11 +210,19 @@ def playbot_benchmark_p95_thresholds() -> dict[str, float]:
 
 
 def playbot_benchmark_history_file() -> Path:
-    raw = str(_playbot_policy()["benchmark"]["history_file"])
-    path = Path(raw)
-    if path.is_absolute():
-        return path
-    return CONFIG_DIR.parent / path
+    raw = _playbot_policy()["benchmark"]["history_file"]
+    text = str(raw).strip().replace("\\", "/")
+    default_path = (CONFIG_DIR.parent / DEFAULT_PLAYBOT_HISTORY_FILE).resolve()
+    if not text:
+        return default_path
+    candidate = Path(text)
+    if candidate.is_absolute():
+        return default_path
+    resolved = (CONFIG_DIR.parent / candidate).resolve()
+    state_root = STATE_DIR.resolve()
+    if resolved != state_root and state_root not in resolved.parents:
+        return default_path
+    return resolved
 
 
 def playbot_default_hard_drop_after_soft_drops() -> int:

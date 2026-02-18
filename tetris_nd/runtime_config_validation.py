@@ -10,6 +10,26 @@ _BOT_MODE_NAMES = ("off", "assist", "auto", "step")
 _BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
 
 
+def _require_state_relative_path(value: object, *, path: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError(f"{path} must be a non-empty string")
+    normalized = value.strip().replace("\\", "/")
+    candidate = Path(normalized)
+    if candidate.is_absolute():
+        raise RuntimeError(f"{path} must be a relative path under state/")
+    parts = [part for part in candidate.parts if part not in ("", ".")]
+    if not parts:
+        raise RuntimeError(f"{path} must be a relative path under state/")
+    if any(part == ".." for part in parts):
+        raise RuntimeError(f"{path} must not contain '..'")
+    if any(":" in part for part in parts):
+        raise RuntimeError(f"{path} must not contain ':' path segments")
+    clean = "/".join(parts)
+    if not clean.startswith("state/"):
+        raise RuntimeError(f"{path} must be under state/")
+    return clean
+
+
 def read_json_payload(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")
@@ -461,9 +481,10 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             min_value=1.0,
         ),
     }
-    history_file = benchmark_obj.get("history_file")
-    if not isinstance(history_file, str) or not history_file.strip():
-        raise RuntimeError("playbot.benchmark.history_file must be a non-empty string")
+    history_file = _require_state_relative_path(
+        benchmark_obj.get("history_file"),
+        path="playbot.benchmark.history_file",
+    )
 
     controller_obj = _require_object(payload.get("controller"), path="playbot.controller")
     controller = {
@@ -515,7 +536,7 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         },
         "benchmark": {
             "p95_threshold_ms": benchmark_thresholds,
-            "history_file": history_file.strip(),
+            "history_file": history_file,
         },
         "controller": controller,
         "dry_run": dry_run,
