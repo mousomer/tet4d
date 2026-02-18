@@ -1,0 +1,102 @@
+{
+  "launcher_menu": [
+    {"action": "play_2d", "label": "Play 2D"},
+    {"action": "play_3d", "label": "Play 3D"},
+    {"action": "play_4d", "label": "Play 4D"},
+    {"action": "help", "label": "Help"},
+    {"action": "settings", "label": "Settings"},
+    {"action": "keybindings", "label": "Keybindings Setup"},
+    {"action": "bot_options", "label": "Bot Options"},
+    {"action": "quit", "label": "Quit"}
+  ],
+  "settings_hub_rows": [
+    "Audio",
+    "Display",
+    "Back"
+  ],
+  "bot_options_rows": [
+    "Dimension",
+    "Playbot mode",
+    "Bot algorithm",
+    "Bot profile",
+    "Bot speed",
+    "Bot budget (ms)",
+    "Save",
+    "Reset defaults",
+    "Back"
+  ],
+  "setup_fields": {
+    "2d": [
+      {"label": "Board width", "attr": "width", "min": 6, "max": 16},
+      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
+      {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+    ],
+    "3d": [
+      {"label": "Board width", "attr": "width", "min": 4, "max": 12},
+      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
+      {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
+      {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+    ],
+    "4d": [
+      {"label": "Board width", "attr": "width", "min": 6, "max": 16},
+      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
+      {"label": "Board depth (z)", "attr": "depth", "min": 4, "max": 12},
+      {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
+      {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+    ]
+  },
+  "keybinding_category_docs": {
+    "scope_order": ["general", "2d", "3d", "4d", "all"],
+    "groups": {
+      "system": {
+        "label": "General / System",
+        "description": "Global actions available in all modes."
+      },
+      "game": {
+        "label": "Gameplay",
+        "description": "Piece translation, drop, and rotation actions."
+      },
+      "camera": {
+        "label": "Camera / View",
+        "description": "Board orbit, zoom, and projection controls."
+      },
+      "slice": {
+        "label": "Slice",
+        "description": "Layer filtering controls for 3D/4D inspection."
+      }
+    }
+  },
+  "settings_category_docs": [
+    {
+      "id": "audio",
+      "label": "Audio",
+      "description": "Master volume, SFX volume, mute toggle, and persistence behavior."
+    },
+    {
+      "id": "display",
+      "label": "Display",
+      "description": "Fullscreen/windowed mode, window size, and display apply/reset actions."
+    },
+    {
+      "id": "profiles",
+      "label": "Profiles",
+      "description": "Keybinding profile selection, creation, rename, delete, save, and load."
+    },
+    {
+      "id": "bot",
+      "label": "Bot Options",
+      "description": "Bot mode, algorithm, profile, speed, budget, and reset/save behavior."
+    },
+    {
+      "id": "gameplay_setup",
+      "label": "Gameplay Setup",
+      "description": "Dimension-specific board size, piece set, challenge layers, and speed level."
+    }
+  ]
+}

@@ -5,8 +5,8 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
+from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
-from .keybindings import CONTROL_LINES_2D
 from .speed_curve import gravity_interval_ms
 from .view_modes import GridMode, grid_mode_label
 
@@ -54,6 +54,9 @@ class GfxFonts:
 class ClearEffect2D:
     levels: Tuple[int, ...]
     progress: float  # 0.0 .. 1.0
+
+
+ActiveOverlay2D = tuple[tuple[tuple[float, float], ...], int]
 
 
 def init_fonts() -> GfxFonts:
@@ -160,14 +163,13 @@ def draw_button_with_arrow(
 
 def _draw_menu_header(screen: pygame.Surface,
                       fonts: GfxFonts,
-                      bindings_file_hint: str,
+                      bindings_file_hint: str | None,
                       extra_hint_lines: Tuple[str, ...],
                       bindings_status: str,
                       bindings_status_error: bool) -> int:
     width, _ = screen.get_size()
     title_text = "2D Tetris – Setup"
     subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
-    bindings_hint_text = f"L = load keys, S = save keys ({bindings_file_hint})"
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
@@ -179,7 +181,12 @@ def _draw_menu_header(screen: pygame.Surface,
     screen.blit(subtitle_surf, (subtitle_x, 60 + title_surf.get_height() + 10))
 
     hint_y = 60 + title_surf.get_height() + 34
-    for line in (bindings_hint_text, *extra_hint_lines):
+    hint_lines = (
+        (f"L = load keys, S = save keys ({bindings_file_hint})", *extra_hint_lines)
+        if bindings_file_hint
+        else extra_hint_lines
+    )
+    for line in hint_lines:
         hint_surf = fonts.hint_font.render(line, True, (200, 200, 220))
         hint_x = (width - hint_surf.get_width()) // 2
         screen.blit(hint_surf, (hint_x, hint_y))
@@ -352,7 +359,7 @@ def draw_menu(screen: pygame.Surface,
               fonts: GfxFonts,
               settings,
               selected_index: int,
-              bindings_file_hint: str = "keybindings/2d.json",
+              bindings_file_hint: str | None = "keybindings/2d.json",
               extra_hint_lines: Tuple[str, ...] = (),
               bindings_status: str = "",
               bindings_status_error: bool = False,
@@ -490,10 +497,101 @@ def _draw_clear_effect(surface: pygame.Surface,
         surface.blit(overlay, row_rect.topleft)
 
 
+def _draw_full_grid(surface: pygame.Surface, ox: int, oy: int, width_cells: int, height_cells: int) -> None:
+    for x in range(width_cells + 1):
+        x_px = ox + x * CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + height_cells * CELL_SIZE))
+    for y in range(height_cells + 1):
+        y_px = oy + y * CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + width_cells * CELL_SIZE, y_px))
+
+
+def _draw_grid_variant(surface: pygame.Surface,
+                       board_rect: pygame.Rect,
+                       state: GameState,
+                       ox: int,
+                       oy: int,
+                       width_cells: int,
+                       height_cells: int,
+                       grid_mode: GridMode) -> None:
+    if grid_mode in (GridMode.OFF, GridMode.SHADOW, GridMode.HELPER):
+        _draw_board_shadow(surface, board_rect)
+    elif grid_mode == GridMode.EDGE:
+        _draw_board_edges_only(surface, board_rect)
+
+    if grid_mode == GridMode.FULL:
+        _draw_full_grid(surface, ox, oy, width_cells, height_cells)
+    elif grid_mode == GridMode.HELPER:
+        x_marks, y_marks = _helper_grid_marks_2d(state, width_cells, height_cells)
+        _draw_helper_grid(surface, board_rect, width_cells, height_cells, x_marks, y_marks)
+
+
+def _draw_locked_cells(surface: pygame.Surface,
+                       state: GameState,
+                       board_offset: tuple[int, int],
+                       width_cells: int,
+                       height_cells: int,
+                       *,
+                       outline: bool) -> None:
+    for (x, y), cell_id in state.board.cells.items():
+        if 0 <= x < width_cells and 0 <= y < height_cells:
+            _draw_cell(surface, x, y, cell_id, board_offset, outline=outline)
+
+
+def _draw_cell_float(surface: pygame.Surface,
+                     x: float,
+                     y: float,
+                     cell_id: int,
+                     board_offset: tuple[int, int],
+                     *,
+                     outline: bool) -> None:
+    ox, oy = board_offset
+    rect = pygame.Rect(
+        round(ox + x * CELL_SIZE + 1),
+        round(oy + y * CELL_SIZE + 1),
+        CELL_SIZE - 2,
+        CELL_SIZE - 2,
+    )
+    color = color_for_cell(cell_id)
+    pygame.draw.rect(surface, color, rect)
+    if outline:
+        pygame.draw.rect(surface, (255, 255, 255), rect, 2)
+
+
+def _draw_active_piece_cells(surface: pygame.Surface,
+                             state: GameState,
+                             board_offset: tuple[int, int],
+                             width_cells: int,
+                             height_cells: int,
+                             *,
+                             overlay: ActiveOverlay2D | None) -> None:
+    if overlay is not None:
+        cells, color_id = overlay
+        for x, y in cells:
+            if 0.0 <= x < width_cells and 0.0 <= y < height_cells:
+                _draw_cell_float(
+                    surface,
+                    x,
+                    y,
+                    color_id,
+                    board_offset,
+                    outline=True,
+                )
+        return
+
+    if state.current_piece is None:
+        return
+    shape_color = state.current_piece.shape.color_id
+    for x, y in state.current_piece.cells():
+        if 0 <= x < width_cells and 0 <= y < height_cells:
+            _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
+
+
 def draw_board(surface: pygame.Surface, state: GameState,
                board_offset: Tuple[int, int],
                grid_mode: GridMode = GridMode.FULL,
-               clear_effect: Optional[ClearEffect2D] = None) -> None:
+               clear_effect: Optional[ClearEffect2D] = None,
+               active_piece_overlay: ActiveOverlay2D | None = None) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
     w, h = state.config.width, state.config.height
@@ -501,35 +599,23 @@ def draw_board(surface: pygame.Surface, state: GameState,
     # Board background
     board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
-    if grid_mode in (GridMode.OFF, GridMode.SHADOW, GridMode.HELPER):
-        _draw_board_shadow(surface, board_rect)
-    elif grid_mode == GridMode.EDGE:
-        _draw_board_edges_only(surface, board_rect)
-
-    # Grid
-    if grid_mode == GridMode.FULL:
-        for x in range(w + 1):
-            x_px = ox + x * CELL_SIZE
-            pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + h * CELL_SIZE))
-        for y in range(h + 1):
-            y_px = oy + y * CELL_SIZE
-            pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + w * CELL_SIZE, y_px))
-    elif grid_mode == GridMode.HELPER:
-        x_marks, y_marks = _helper_grid_marks_2d(state, w, h)
-        _draw_helper_grid(surface, board_rect, w, h, x_marks, y_marks)
-
-    # Locked cells
-    edge_outlines = grid_mode == GridMode.EDGE
-    for (x, y), cell_id in state.board.cells.items():
-        if 0 <= x < w and 0 <= y < h:
-            _draw_cell(surface, x, y, cell_id, board_offset, outline=edge_outlines)
-
-    # Active piece
-    if state.current_piece is not None:
-        shape_color = state.current_piece.shape.color_id
-        for (x, y) in state.current_piece.cells():
-            if 0 <= x < w and 0 <= y < h:
-                _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
+    _draw_grid_variant(surface, board_rect, state, ox, oy, w, h, grid_mode)
+    _draw_locked_cells(
+        surface,
+        state,
+        board_offset,
+        w,
+        h,
+        outline=(grid_mode == GridMode.EDGE),
+    )
+    _draw_active_piece_cells(
+        surface,
+        state,
+        board_offset,
+        w,
+        h,
+        overlay=active_piece_overlay,
+    )
 
     _draw_clear_effect(surface, board_rect, w, clear_effect)
 
@@ -572,7 +658,6 @@ def _draw_side_panel_text(surface: pygame.Surface,
         "",
         *bot_lines,
         *([""] if bot_lines else []),
-        *CONTROL_LINES_2D,
     ]
 
     y = py
@@ -649,12 +734,19 @@ def draw_side_panel(surface: pygame.Surface,
                     bot_lines: Sequence[str] = ()) -> None:
     """Top-level side panel draw."""
     y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode, bot_lines)
-    y_after_dpad = _draw_side_panel_dpad(surface, y_after_text, panel_offset, fonts)
+    px, _ = panel_offset
+    controls_rect = pygame.Rect(px, y_after_text + 6, SIDE_PANEL, surface.get_height() - (y_after_text + 14))
+    draw_grouped_control_helper(
+        surface,
+        groups=control_groups_for_dimension(2),
+        rect=controls_rect,
+        panel_font=fonts.panel_font,
+        hint_font=fonts.hint_font,
+    )
 
     # Game over message below D-pad (if needed)
     if state.game_over:
-        px, _ = panel_offset
-        y = y_after_dpad + 10
+        y = surface.get_height() - 58
         surf = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
         surface.blit(surf, (px, y))
         y += surf.get_height() + 4
@@ -672,7 +764,8 @@ def draw_game_frame(screen: pygame.Surface,
                     fonts: GfxFonts,
                     grid_mode: GridMode = GridMode.FULL,
                     bot_lines: Sequence[str] = (),
-                    clear_effect: Optional[ClearEffect2D] = None) -> None:
+                    clear_effect: Optional[ClearEffect2D] = None,
+                    active_piece_overlay: ActiveOverlay2D | None = None) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, cfg)
@@ -682,5 +775,6 @@ def draw_game_frame(screen: pygame.Surface,
         board_offset,
         grid_mode=grid_mode,
         clear_effect=clear_effect,
+        active_piece_overlay=active_piece_overlay,
     )
     draw_side_panel(screen, state, panel_offset, fonts, grid_mode=grid_mode, bot_lines=bot_lines)

@@ -2,11 +2,22 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import Iterable
 
 from ..board import BoardND
 from ..game2d import GameState
-from ..pieces2d import ActivePiece2D, rotate_point_2d
-from .types import PlanStats
+from ..pieces2d import ActivePiece2D, PieceShape2D, rotate_point_2d
+from .types import (
+    BotPlannerAlgorithm,
+    BotPlannerProfile,
+    PlanStats,
+    adaptive_candidate_cap,
+    adaptive_deadline_safety_ms,
+    clamp_planning_budget_ms,
+    default_planning_budget_ms,
+    planning_lookahead_depth,
+    planning_lookahead_top_k,
+)
 
 
 @dataclass(frozen=True)
@@ -15,15 +26,49 @@ class BotPlan2D:
     stats: PlanStats
 
 
+@dataclass(frozen=True)
+class _Candidate2D:
+    piece: ActivePiece2D
+    score: float
+    cleared: int
+    cells_after: dict[tuple[int, int], int]
+    game_over: bool
+
+
 def _orientation_blocks(piece: ActivePiece2D, rotation: int) -> tuple[tuple[int, int], ...]:
     return tuple(sorted(rotate_point_2d(x, y, rotation) for x, y in piece.shape.blocks))
 
 
-def _drop_piece(state: GameState, piece: ActivePiece2D) -> ActivePiece2D:
+def _can_exist_on_cells(
+    piece: ActivePiece2D,
+    *,
+    cells: dict[tuple[int, int], int],
+    width: int,
+    height: int,
+) -> bool:
+    for x, y in piece.cells():
+        if x < 0 or x >= width:
+            return False
+        if y >= height:
+            return False
+        if y < 0:
+            continue
+        if (x, y) in cells:
+            return False
+    return True
+
+
+def _drop_piece_on_cells(
+    piece: ActivePiece2D,
+    *,
+    cells: dict[tuple[int, int], int],
+    width: int,
+    height: int,
+) -> ActivePiece2D:
     settled = piece
     while True:
         moved = settled.moved(0, 1)
-        if not state._can_exist(moved):
+        if not _can_exist_on_cells(moved, cells=cells, width=width, height=height):
             break
         settled = moved
     return settled
@@ -78,33 +123,57 @@ def _evaluate_2d_board(
     return score
 
 
-def _simulate_lock_result(state: GameState, piece: ActivePiece2D) -> tuple[float, int]:
-    width, height = state.config.width, state.config.height
+def _simulate_lock_board(
+    *,
+    board_cells: dict[tuple[int, int], int],
+    width: int,
+    height: int,
+    gravity_axis: int,
+    piece: ActivePiece2D,
+) -> tuple[dict[tuple[int, int], int], int, bool]:
     game_over = any(y < 0 for _x, y in piece.cells())
-    board = BoardND((width, height), cells=dict(state.board.cells))
+    board = BoardND((width, height), cells=dict(board_cells))
     for x, y in piece.cells():
         if 0 <= x < width and 0 <= y < height:
             board.cells[(x, y)] = piece.shape.color_id
-    cleared = board.clear_planes(state.config.gravity_axis)
-    score = _evaluate_2d_board(board.cells, width, height, cleared, game_over)
-    return score, cleared
+    cleared = board.clear_planes(gravity_axis)
+    return dict(board.cells), cleared, game_over
 
 
-def plan_best_2d_move(state: GameState) -> BotPlan2D | None:
-    piece = state.current_piece
-    if piece is None:
-        return None
+def _simulate_lock_result(
+    *,
+    board_cells: dict[tuple[int, int], int],
+    width: int,
+    height: int,
+    gravity_axis: int,
+    piece: ActivePiece2D,
+) -> tuple[float, int, dict[tuple[int, int], int], bool]:
+    cells_after, cleared, game_over = _simulate_lock_board(
+        board_cells=board_cells,
+        width=width,
+        height=height,
+        gravity_axis=gravity_axis,
+        piece=piece,
+    )
+    score = _evaluate_2d_board(cells_after, width, height, cleared, game_over)
+    return score, cleared, cells_after, game_over
 
-    t0 = time.perf_counter()
-    width = state.config.width
-    candidate_count = 0
-    best_score = float("-inf")
-    best_clears = 0
-    best_piece: ActivePiece2D | None = None
 
+def _enumerate_candidates_2d(
+    *,
+    shape: PieceShape2D,
+    board_cells: dict[tuple[int, int], int],
+    width: int,
+    height: int,
+    gravity_axis: int,
+    deadline_s: float,
+    candidate_cap: int,
+) -> tuple[list[_Candidate2D], bool]:
+    candidates: list[_Candidate2D] = []
     orientation_seen: set[tuple[tuple[int, int], ...]] = set()
+
     for rotation in range(4):
-        orient = _orientation_blocks(piece, rotation)
+        orient = tuple(sorted(rotate_point_2d(x, y, rotation) for x, y in shape.blocks))
         if orient in orientation_seen:
             continue
         orientation_seen.add(orient)
@@ -112,35 +181,204 @@ def plan_best_2d_move(state: GameState) -> BotPlan2D | None:
         max_x = max(x for x, _y in orient)
         min_y = min(y for _x, y in orient)
         spawn_y = -2 - min_y
-        for target_x in range(-min_x, width - max_x):
-            candidate = ActivePiece2D(
-                shape=piece.shape,
-                pos=(target_x, spawn_y),
-                rotation=rotation,
-            )
-            if not state._can_exist(candidate):
-                continue
-            settled = _drop_piece(state, candidate)
-            candidate_count += 1
-            score, cleared = _simulate_lock_result(state, settled)
-            if (
-                score > best_score
-                or (score == best_score and cleared > best_clears)
-            ):
-                best_score = score
-                best_clears = cleared
-                best_piece = settled
 
-    if best_piece is None:
+        for target_x in range(-min_x, width - max_x):
+            if candidates and time.perf_counter() >= deadline_s:
+                return candidates, True
+            if len(candidates) >= candidate_cap:
+                return candidates, True
+
+            candidate = ActivePiece2D(shape=shape, pos=(target_x, spawn_y), rotation=rotation)
+            if not _can_exist_on_cells(candidate, cells=board_cells, width=width, height=height):
+                continue
+
+            settled = _drop_piece_on_cells(candidate, cells=board_cells, width=width, height=height)
+            score, cleared, cells_after, game_over = _simulate_lock_result(
+                board_cells=board_cells,
+                width=width,
+                height=height,
+                gravity_axis=gravity_axis,
+                piece=settled,
+            )
+            candidates.append(
+                _Candidate2D(
+                    piece=settled,
+                    score=score,
+                    cleared=cleared,
+                    cells_after=cells_after,
+                    game_over=game_over,
+                )
+            )
+
+    return candidates, False
+
+
+def _pick_best_immediate(candidates: Iterable[_Candidate2D]) -> _Candidate2D | None:
+    best: _Candidate2D | None = None
+    best_score = float("-inf")
+    best_clears = 0
+
+    for candidate in candidates:
+        if best is None:
+            best = candidate
+            best_score = candidate.score
+            best_clears = candidate.cleared
+            continue
+        if candidate.score > best_score or (candidate.score == best_score and candidate.cleared > best_clears):
+            best = candidate
+            best_score = candidate.score
+            best_clears = candidate.cleared
+    return best
+
+
+def _peek_next_shape(state: GameState) -> PieceShape2D | None:
+    if not state.next_bag:
+        return None
+    return state.next_bag[-1]
+
+
+def _followup_score_for_candidate(
+    *,
+    candidate: _Candidate2D,
+    next_shape: PieceShape2D,
+    width: int,
+    height: int,
+    gravity_axis: int,
+    deadline_s: float,
+    candidate_cap: int,
+) -> float:
+    if candidate.game_over:
+        return float("-inf")
+
+    followup_candidates, _budget_hit = _enumerate_candidates_2d(
+        shape=next_shape,
+        board_cells=candidate.cells_after,
+        width=width,
+        height=height,
+        gravity_axis=gravity_axis,
+        deadline_s=deadline_s,
+        candidate_cap=candidate_cap,
+    )
+    best = _pick_best_immediate(followup_candidates)
+    if best is None:
+        return float("-inf")
+    return best.score
+
+
+def _pick_with_optional_lookahead(
+    *,
+    candidates: list[_Candidate2D],
+    next_shape: PieceShape2D | None,
+    width: int,
+    height: int,
+    gravity_axis: int,
+    profile: BotPlannerProfile,
+    depth: int,
+    deadline_s: float,
+    budget_ms: int,
+    candidate_cap: int,
+) -> tuple[_Candidate2D | None, float]:
+    best_immediate = _pick_best_immediate(candidates)
+    if best_immediate is None:
+        return None, float("-inf")
+
+    if depth <= 1 or next_shape is None:
+        return best_immediate, best_immediate.score
+
+    safety_window = adaptive_deadline_safety_ms() / 1000.0
+    if time.perf_counter() >= deadline_s - safety_window:
+        return best_immediate, best_immediate.score
+
+    top_k = planning_lookahead_top_k(2, profile, budget_ms=budget_ms)
+    ranked = sorted(candidates, key=lambda c: (c.score, c.cleared), reverse=True)[:top_k]
+
+    best_candidate = best_immediate
+    best_combined = best_immediate.score
+    followup_weight = 0.35
+
+    for candidate in ranked:
+        if time.perf_counter() >= deadline_s:
+            break
+        followup_score = _followup_score_for_candidate(
+            candidate=candidate,
+            next_shape=next_shape,
+            width=width,
+            height=height,
+            gravity_axis=gravity_axis,
+            deadline_s=deadline_s,
+            candidate_cap=candidate_cap,
+        )
+        combined = candidate.score + followup_weight * followup_score
+        if combined > best_combined or (
+            combined == best_combined and candidate.cleared > best_candidate.cleared
+        ):
+            best_candidate = candidate
+            best_combined = combined
+
+    return best_candidate, best_combined
+
+
+def plan_best_2d_move(
+    state: GameState,
+    *,
+    profile: BotPlannerProfile = BotPlannerProfile.BALANCED,
+    budget_ms: int | None = None,
+    algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
+) -> BotPlan2D | None:
+    del algorithm  # reserved for parity with ND planner API
+    piece = state.current_piece
+    if piece is None:
+        return None
+
+    width = state.config.width
+    height = state.config.height
+    gravity_axis = state.config.gravity_axis
+
+    planning_budget_ms = budget_ms
+    if planning_budget_ms is None:
+        planning_budget_ms = default_planning_budget_ms(2, profile, dims=(width, height))
+    planning_budget_ms = clamp_planning_budget_ms(2, planning_budget_ms, dims=(width, height))
+
+    t0 = time.perf_counter()
+    deadline_s = t0 + planning_budget_ms / 1000.0
+    candidate_cap = adaptive_candidate_cap(2, planning_budget_ms, dims=(width, height))
+
+    candidates, _budget_hit = _enumerate_candidates_2d(
+        shape=piece.shape,
+        board_cells=state.board.cells,
+        width=width,
+        height=height,
+        gravity_axis=gravity_axis,
+        deadline_s=deadline_s,
+        candidate_cap=candidate_cap,
+    )
+    if not candidates:
+        return None
+
+    depth = planning_lookahead_depth(2, profile, budget_ms=planning_budget_ms)
+    next_shape = _peek_next_shape(state)
+    final_candidate, final_score = _pick_with_optional_lookahead(
+        candidates=candidates,
+        next_shape=next_shape,
+        width=width,
+        height=height,
+        gravity_axis=gravity_axis,
+        profile=profile,
+        depth=depth,
+        deadline_s=deadline_s,
+        budget_ms=planning_budget_ms,
+        candidate_cap=candidate_cap,
+    )
+    if final_candidate is None:
         return None
 
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     return BotPlan2D(
-        final_piece=best_piece,
+        final_piece=final_candidate.piece,
         stats=PlanStats(
-            candidate_count=candidate_count,
-            expected_clears=best_clears,
-            heuristic_score=best_score,
+            candidate_count=len(candidates),
+            expected_clears=final_candidate.cleared,
+            heuristic_score=final_score,
             planning_ms=elapsed_ms,
         ),
     )

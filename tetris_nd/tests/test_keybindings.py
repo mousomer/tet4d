@@ -15,7 +15,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in environments with
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
-from tetris_nd import keybindings, menu_settings_state
+from tetris_nd import keybindings, menu_config, menu_settings_state
 
 
 @dataclass
@@ -109,6 +109,25 @@ class TestKeybindingProfiles(unittest.TestCase):
         active_path = keybindings.keybinding_file_path(4)
         self.assertEqual(active_path, keybindings.profile_keybinding_file_path(4, profile_name))
         self.assertTrue(active_path.exists())
+
+    def test_rename_custom_profile(self) -> None:
+        ok, msg, profile = keybindings.create_auto_profile()
+        self.assertTrue(ok, msg)
+        self.assertIsNotNone(profile)
+        created_profile = str(profile)
+
+        ok, msg = keybindings.set_active_key_profile(created_profile)
+        self.assertTrue(ok, msg)
+        ok, msg = keybindings.load_active_profile_bindings()
+        self.assertTrue(ok, msg)
+
+        renamed = "custom_renamed"
+        ok, msg = keybindings.rename_key_profile(created_profile, renamed)
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.active_key_profile(), renamed)
+        self.assertIn(renamed, keybindings.list_key_profiles())
+        self.assertNotIn(created_profile, keybindings.list_key_profiles())
+        self.assertTrue(keybindings.profile_keybinding_file_path(2, renamed).exists())
 
     def test_save_rejects_path_outside_keybindings_dir(self) -> None:
         outside = self.tmp_root.root.parent / "outside-bindings.json"
@@ -226,3 +245,53 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(state.settings.speed_level, 1)
         self.assertEqual(state.active_profile, keybindings.PROFILE_SMALL)
         self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
+
+    def test_load_payload_backfills_missing_mode_fields(self) -> None:
+        menu_settings_state.STATE_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "version": 1,
+            "active_profile": keybindings.PROFILE_FULL,
+            "last_mode": "4d",
+            "settings": {
+                "2d": {
+                    "width": 12,
+                    "height": 21,
+                }
+            },
+        }
+        menu_settings_state.STATE_FILE.write_text(json.dumps(payload), encoding="utf-8")
+
+        loaded = menu_settings_state.load_app_settings_payload()
+        settings_2d = loaded["settings"]["2d"]
+        self.assertEqual(settings_2d["width"], 12)
+        self.assertEqual(settings_2d["height"], 21)
+        self.assertEqual(settings_2d["bot_mode_index"], 0)
+        self.assertEqual(settings_2d["bot_profile_index"], 1)
+        self.assertEqual(loaded["settings"]["3d"]["bot_budget_ms"], 20)
+        self.assertEqual(loaded["settings"]["4d"]["bot_budget_ms"], 32)
+        self.assertEqual(loaded["active_profile"], keybindings.PROFILE_FULL)
+
+    def test_save_app_settings_payload_preserves_default_nested_fields(self) -> None:
+        ok, msg = menu_settings_state.save_app_settings_payload(
+            {
+                "active_profile": keybindings.PROFILE_FULL,
+                "settings": {"2d": {"width": 11}},
+            }
+        )
+        self.assertTrue(ok, msg)
+
+        loaded = menu_settings_state.load_app_settings_payload()
+        self.assertEqual(loaded["active_profile"], keybindings.PROFILE_FULL)
+        self.assertEqual(loaded["settings"]["2d"]["width"], 11)
+        self.assertEqual(loaded["settings"]["2d"]["bot_algorithm_index"], 0)
+        self.assertEqual(loaded["settings"]["2d"]["bot_profile_index"], 1)
+
+    def test_missing_state_file_loads_external_defaults(self) -> None:
+        defaults = menu_config.default_settings_payload()
+        loaded = menu_settings_state.load_app_settings_payload()
+
+        self.assertEqual(loaded["version"], defaults["version"])
+        self.assertEqual(loaded["active_profile"], defaults["active_profile"])
+        self.assertEqual(loaded["settings"]["2d"]["width"], defaults["settings"]["2d"]["width"])
+        self.assertEqual(loaded["settings"]["3d"]["depth"], defaults["settings"]["3d"]["depth"])
+        self.assertEqual(loaded["settings"]["4d"]["fourth"], defaults["settings"]["4d"]["fourth"])

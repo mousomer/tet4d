@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "budget_ms": {
+    "2d": {"fast": 5, "balanced": 10, "deep": 18, "ultra": 24},
+    "3d": {"fast": 10, "balanced": 20, "deep": 34, "ultra": 48},
+    "4d_plus": {"fast": 16, "balanced": 32, "deep": 50, "ultra": 72}
+  },
+  "board_size_scaling": {
+    "reference_cells": {"2d": 200, "3d": 648, "4d_plus": 2592},
+    "min_scale": 0.75,
+    "max_scale": 2.4,
+    "exponent": 0.55
+  },
+  "clamp": {
+    "floor_divisor": 2,
+    "floor_min": 2,
+    "ceil_multiplier": 3,
+    "ceil_min": 40
+  },
+  "lookahead": {
+    "depth": {
+      "fast": 1,
+      "balanced_2d_3d": 2,
+      "deep_2d_3d": 2,
+      "ultra_2d_3d": 3,
+      "all_4d_plus": 1
+    },
+    "top_k": {
+      "depth_lte_one": 1,
+      "balanced_2d": 4,
+      "deep_2d": 8,
+      "ultra_2d": 12,
+      "balanced_3d_plus": 6,
+      "deep_3d_plus": 10,
+      "ultra_3d_plus": 14
+    }
+  },
+  "adaptive_fallback": {
+    "enabled": true,
+    "lookahead_min_budget_ms": {"2d": 8, "3d": 15, "4d_plus": 24},
+    "candidate_cap": {
+      "2d": {"per_ms": 26, "min": 64, "max": 960},
+      "3d": {"per_ms": 18, "min": 96, "max": 1200},
+      "4d_plus": {"per_ms": 12, "min": 120, "max": 1400}
+    },
+    "deadline_safety_ms": 1.25
+  },
+  "auto_algorithm": {
+    "greedy_bias": {"2d": -1.4, "3d": -0.25, "4d_plus": 0.8},
+    "density_weight": 2.2,
+    "lines_cleared_weight": 0.018,
+    "threshold": 0.0
+  },
+  "benchmark": {
+    "p95_threshold_ms": {"2d": 18.0, "3d": 40.0, "4d": 68.0},
+    "history_file": "state/bench/playbot_latency_history.jsonl"
+  },
+  "controller": {
+    "hard_drop_after_soft_drops": 4
+  },
+  "dry_run": {
+    "default_pieces": 160,
+    "default_seed": 1337
+  }
+}

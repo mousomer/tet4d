@@ -5,6 +5,8 @@ This repository documentation is unified into exactly three sections.
 ## 1. Project structure and documentation
 
 - `/Users/omer/workspace/test-code/tet4d/docs/PROJECT_STRUCTURE.md`
+- `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`
+- `/Users/omer/workspace/test-code/tet4d/docs/CHANGELOG.md`
 
 ## 2. README.md for usage
 
@@ -13,6 +15,7 @@ This repository documentation is unified into exactly three sections.
 ## 3. RDS files and other instructions for CODEX
 
 - `/Users/omer/workspace/test-code/tet4d/docs/RDS_AND_CODEX.md`
+- `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md` (canonical open TODO/backlog tracking)
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_TETRIS_GENERAL.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_KEYBINDINGS.md`
 - `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`

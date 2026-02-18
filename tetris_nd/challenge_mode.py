@@ -5,11 +5,19 @@ from itertools import product
 
 from .game2d import GameState
 from .game_nd import GameStateND
+from .runtime_config import challenge_prefill_ratio
 
 
-def apply_challenge_prefill_2d(state: GameState, *, layers: int, fill_ratio: float = 0.42) -> int:
+def apply_challenge_prefill_2d(
+    state: GameState,
+    *,
+    layers: int,
+    fill_ratio: float | None = None,
+) -> int:
     if layers <= 0:
         return 0
+    ratio = challenge_prefill_ratio(2) if fill_ratio is None else float(fill_ratio)
+    ratio = max(0.0, min(1.0, ratio))
     width = state.config.width
     height = state.config.height
     max_layers = max(0, height - 2)
@@ -25,7 +33,7 @@ def apply_challenge_prefill_2d(state: GameState, *, layers: int, fill_ratio: flo
         for x in range(width):
             if x == hole_x:
                 continue
-            if rng.random() > fill_ratio:
+            if rng.random() > ratio:
                 continue
             coord = (x, y)
             if coord in state.board.cells:
@@ -35,9 +43,16 @@ def apply_challenge_prefill_2d(state: GameState, *, layers: int, fill_ratio: flo
     return added
 
 
-def apply_challenge_prefill_nd(state: GameStateND, *, layers: int, fill_ratio: float = 0.28) -> int:
+def apply_challenge_prefill_nd(
+    state: GameStateND,
+    *,
+    layers: int,
+    fill_ratio: float | None = None,
+) -> int:
     if layers <= 0:
         return 0
+    ratio = challenge_prefill_ratio(state.config.ndim) if fill_ratio is None else float(fill_ratio)
+    ratio = max(0.0, min(1.0, ratio))
     cfg = state.config
     gravity_axis = cfg.gravity_axis
     g_size = cfg.dims[gravity_axis]
@@ -61,7 +76,7 @@ def apply_challenge_prefill_nd(state: GameStateND, *, layers: int, fill_ratio: f
         for lateral in lateral_positions:
             if lateral == hole:
                 continue
-            if rng.random() > fill_ratio:
+            if rng.random() > ratio:
                 continue
             coord = [0] * ndim
             coord[gravity_axis] = g_val
