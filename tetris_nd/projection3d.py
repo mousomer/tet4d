@@ -205,7 +205,19 @@ def _draw_lattice_axis_lines(
     y_marks: set[int] | None = None,
     z_marks: set[int] | None = None,
 ) -> None:
-    # Lines parallel to Y axis at (x, z) boundaries.
+    _draw_lattice_y_axis_lines(surface, dims, project_raw, color, x_marks, z_marks)
+    _draw_lattice_x_axis_lines(surface, dims, project_raw, color, y_marks, z_marks)
+    _draw_lattice_z_axis_lines(surface, dims, project_raw, color, x_marks, y_marks)
+
+
+def _draw_lattice_y_axis_lines(
+    surface: pygame.Surface,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    color: tuple[int, int, int],
+    x_marks: set[int] | None,
+    z_marks: set[int] | None,
+) -> None:
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
@@ -217,7 +229,15 @@ def _draw_lattice_axis_lines(
             if p0 is not None and p1 is not None:
                 pygame.draw.line(surface, color, p0, p1, 1)
 
-    # Lines parallel to X axis at (y, z) boundaries.
+
+def _draw_lattice_x_axis_lines(
+    surface: pygame.Surface,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    color: tuple[int, int, int],
+    y_marks: set[int] | None,
+    z_marks: set[int] | None,
+) -> None:
     for y in range(dims[1] + 1):
         if y_marks is not None and y not in y_marks:
             continue
@@ -229,7 +249,15 @@ def _draw_lattice_axis_lines(
             if p0 is not None and p1 is not None:
                 pygame.draw.line(surface, color, p0, p1, 1)
 
-    # Lines parallel to Z axis at (x, y) boundaries.
+
+def _draw_lattice_z_axis_lines(
+    surface: pygame.Surface,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    color: tuple[int, int, int],
+    x_marks: set[int] | None,
+    y_marks: set[int] | None,
+) -> None:
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
@@ -280,9 +308,6 @@ def draw_projected_helper_lattice(
     frame_color: tuple[int, int, int],
     frame_width: int = 2,
 ) -> None:
-    def _clip_marks(marks: set[int], max_value: int) -> set[int]:
-        return {value for value in marks if 0 <= value <= max_value}
-
     _draw_lattice_axis_lines(
         surface,
         dims,
@@ -293,6 +318,10 @@ def draw_projected_helper_lattice(
         z_marks=_clip_marks(z_marks, dims[2]),
     )
     _draw_lattice_frame(surface, dims, project_raw, frame_color, frame_width)
+
+
+def _clip_marks(marks: set[int], max_value: int) -> set[int]:
+    return {value for value in marks if 0 <= value <= max_value}
 
 
 def draw_projected_box_edges(

@@ -133,7 +133,7 @@ def _action_for_menu_key(key: int) -> MenuAction | None:
     )
 
 
-def gather_menu_actions(state: Any | None = None, dimension: int | None = None) -> list[MenuInput]:
+def gather_menu_actions(state: Any | None = None, _dimension: int | None = None) -> list[MenuInput]:
     actions: list[MenuInput] = []
     rebind_mode = bool(getattr(state, "rebind_mode", False))
     for event in pygame.event.get():
@@ -342,50 +342,73 @@ _VALUE_ACTION_DELTA = {
 }
 
 
+def _apply_single_menu_action(
+    state: Any,
+    action: MenuInput,
+    *,
+    fields: Sequence[FieldSpec],
+    field_count: int,
+    dimension: int,
+    blocked: set[MenuAction],
+) -> None:
+    if isinstance(action, RebindCapture):
+        if MenuAction.REBIND_TOGGLE in blocked:
+            return
+        _handle_rebind_capture(state, dimension, action)
+        return
+
+    if action in blocked:
+        return
+    if _apply_state_only_action(state, action):
+        return
+
+    simple_handler = _SIMPLE_ACTION_HANDLERS.get(action)
+    if simple_handler is not None:
+        simple_handler(state, dimension)
+        return
+
+    step = _SELECTION_ACTION_STEP.get(action)
+    if step is not None:
+        state.selected_index = (state.selected_index + step) % field_count
+        return
+
+    if action == MenuAction.RUN_DRY_RUN:
+        state.run_dry_run = True
+        return
+
+    delta = _VALUE_ACTION_DELTA.get(action)
+    if delta is not None:
+        _handle_value_delta(state, fields, delta)
+        return
+
+    apply_menu_binding_action(
+        action,
+        MenuAction.LOAD_BINDINGS,
+        MenuAction.SAVE_BINDINGS,
+        dimension,
+        state,
+    )
+
+
 def apply_menu_actions(
     state: Any,
     actions: Sequence[MenuInput],
     fields: Sequence[FieldSpec],
     dimension: int,
+    blocked_actions: set[MenuAction] | None = None,
 ) -> None:
     if not fields:
         return
     _ensure_rebind_state(state, dimension)
     state.run_dry_run = False
-
+    blocked = blocked_actions or set()
     field_count = len(fields)
-    for raw_action in actions:
-        if isinstance(raw_action, RebindCapture):
-            _handle_rebind_capture(state, dimension, raw_action)
-            continue
-
-        action = raw_action
-        if _apply_state_only_action(state, action):
-            continue
-
-        simple_handler = _SIMPLE_ACTION_HANDLERS.get(action)
-        if simple_handler is not None:
-            simple_handler(state, dimension)
-            continue
-
-        step = _SELECTION_ACTION_STEP.get(action)
-        if step is not None:
-            state.selected_index = (state.selected_index + step) % field_count
-            continue
-
-        if action == MenuAction.RUN_DRY_RUN:
-            state.run_dry_run = True
-            continue
-
-        delta = _VALUE_ACTION_DELTA.get(action)
-        if delta is not None:
-            _handle_value_delta(state, fields, delta)
-            continue
-
-        apply_menu_binding_action(
-            action,
-            MenuAction.LOAD_BINDINGS,
-            MenuAction.SAVE_BINDINGS,
-            dimension,
+    for action in actions:
+        _apply_single_menu_action(
             state,
+            action,
+            fields=fields,
+            field_count=field_count,
+            dimension=dimension,
+            blocked=blocked,
         )

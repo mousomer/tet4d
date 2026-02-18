@@ -32,7 +32,6 @@ from tetris_nd.keybindings import (
     KEYS_2D,
     SYSTEM_KEYS,
     active_key_profile,
-    keybinding_file_label,
     load_active_profile_bindings,
 )
 from tetris_nd.key_dispatch import (
@@ -41,36 +40,48 @@ from tetris_nd.key_dispatch import (
 )
 from tetris_nd.menu_controls import (
     FieldSpec,
+    MenuAction,
     apply_menu_actions,
     gather_menu_actions,
 )
+from tetris_nd.menu_config import default_settings_payload, setup_fields_for_dimension
 from tetris_nd.menu_settings_state import (
     load_menu_settings,
+    save_menu_settings,
 )
 from tetris_nd.playbot import (
-    BOT_MODE_OPTIONS,
     PlayBotController,
-    bot_mode_label,
     run_dry_run_2d,
 )
-from tetris_nd.playbot.types import BotMode, bot_mode_from_index
+from tetris_nd.playbot.types import (
+    BotMode,
+    bot_planner_algorithm_from_index,
+    bot_mode_from_index,
+    bot_planner_profile_from_index,
+)
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tetris_nd.rotation_anim import PieceRotationAnimator2D
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
+from tetris_nd.pause_menu import run_pause_menu
 
 DEFAULT_GAME_SEED = 1337
+_DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 
 
 # ---------- Menu state & actions (logic, not drawing) ----------
 
 @dataclass
 class GameSettings:
-    width: int = 10
-    height: int = 20
-    piece_set_index: int = 0
-    bot_mode_index: int = 0
-    bot_speed_level: int = 7
-    challenge_layers: int = 0
-    speed_level: int = 1  # 1..10, mapped to gravity interval
+    width: int = _DEFAULT_MODE_2D["width"]
+    height: int = _DEFAULT_MODE_2D["height"]
+    piece_set_index: int = _DEFAULT_MODE_2D["piece_set_index"]
+    bot_mode_index: int = _DEFAULT_MODE_2D["bot_mode_index"]
+    bot_algorithm_index: int = _DEFAULT_MODE_2D["bot_algorithm_index"]
+    bot_profile_index: int = _DEFAULT_MODE_2D["bot_profile_index"]
+    bot_speed_level: int = _DEFAULT_MODE_2D["bot_speed_level"]
+    bot_budget_ms: int = _DEFAULT_MODE_2D["bot_budget_ms"]
+    challenge_layers: int = _DEFAULT_MODE_2D["challenge_layers"]
+    speed_level: int = _DEFAULT_MODE_2D["speed_level"]  # 1..10, mapped to gravity interval
 
 
 @dataclass
@@ -90,14 +101,25 @@ class MenuState:
 
 
 _MENU_FIELDS: list[FieldSpec] = [
-    ("Board width", "width", 6, 16),
-    ("Board height", "height", 12, 30),
-    ("Piece set", "piece_set_index", 0, len(PIECE_SET_2D_OPTIONS) - 1),
-    ("Playbot mode", "bot_mode_index", 0, len(BOT_MODE_OPTIONS) - 1),
-    ("Bot speed", "bot_speed_level", 1, 10),
-    ("Challenge layers", "challenge_layers", 0, 20),
-    ("Speed level", "speed_level", 1, 10),
+    *setup_fields_for_dimension(2, piece_set_max=len(PIECE_SET_2D_OPTIONS) - 1),
 ]
+
+_SETUP_BLOCKED_ACTIONS = {
+    MenuAction.LOAD_BINDINGS,
+    MenuAction.SAVE_BINDINGS,
+    MenuAction.LOAD_SETTINGS,
+    MenuAction.SAVE_SETTINGS,
+    MenuAction.RESET_SETTINGS,
+    MenuAction.PROFILE_PREV,
+    MenuAction.PROFILE_NEXT,
+    MenuAction.PROFILE_NEW,
+    MenuAction.PROFILE_DELETE,
+    MenuAction.REBIND_TOGGLE,
+    MenuAction.REBIND_TARGET_NEXT,
+    MenuAction.REBIND_TARGET_PREV,
+    MenuAction.REBIND_CONFLICT_NEXT,
+    MenuAction.RESET_BINDINGS,
+}
 
 
 def _piece_set_index_to_id(index: int) -> str:
@@ -108,10 +130,6 @@ def _piece_set_index_to_id(index: int) -> str:
 def _menu_value_formatter(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         return piece_set_2d_label(_piece_set_index_to_id(int(value)))
-    if attr_name == "bot_mode_index":
-        return bot_mode_label(bot_mode_from_index(int(value)))
-    if attr_name == "bot_speed_level":
-        return f"{value}   (1 = slow bot, 10 = fast bot)"
     if attr_name == "challenge_layers":
         return str(value)
     if attr_name == "speed_level":
@@ -148,30 +166,32 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, 2)
-        apply_menu_actions(state, actions, _MENU_FIELDS, 2)
+        apply_menu_actions(
+            state,
+            actions,
+            _MENU_FIELDS,
+            2,
+            blocked_actions=_SETUP_BLOCKED_ACTIONS,
+        )
         if state.run_dry_run:
-            report = run_dry_run_2d(_config_from_settings(state.settings))
+            report = run_dry_run_2d(
+                _config_from_settings(state.settings),
+                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                planning_budget_ms=state.settings.bot_budget_ms,
+                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+            )
             state.bindings_status = report.reason
             state.bindings_status_error = not report.passed
 
-        rebind_target = "-"
-        if state.rebind_targets:
-            group, action_name = state.rebind_targets[state.rebind_index % len(state.rebind_targets)]
-            rebind_target = f"{group}.{action_name}"
         draw_menu(
             screen,
             fonts,
             state.settings,
             state.selected_index,
-            bindings_file_hint=keybinding_file_label(2),
+            bindings_file_hint=None,
             extra_hint_lines=(
-                f"Profile: {state.active_profile}   [ / ] cycle   N new   Backspace delete custom",
-                "F5 save settings   F9 load settings   F8 reset defaults   F6 reset keys",
                 "F7 dry-run verify (bot, no graphics)",
-                (
-                    f"B rebind {'ON' if state.rebind_mode else 'OFF'}   target: {rebind_target}   "
-                    f"Tab/` change target   C conflict={state.rebind_conflict_mode}"
-                ),
+                "Use Main Menu -> Bot Options / Keybindings for shared controls.",
             ),
             bindings_status=state.bindings_status,
             bindings_status_error=state.bindings_status_error,
@@ -181,7 +201,13 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
         pygame.display.flip()
 
     if state.start_game and state.running:
+        ok, msg = save_menu_settings(state, 2)
+        if not ok:
+            state.bindings_status = msg
+            state.bindings_status_error = True
         return state.settings
+    # Autosave setup/session state on exit as well (without explicit Save action).
+    save_menu_settings(state, 2)
     return None
 
 
@@ -194,9 +220,53 @@ def create_initial_state(cfg: GameConfig) -> GameState:
     return state
 
 
+def _system_decision_for_key(key: int) -> str | None:
+    system_action = match_bound_action(
+        key,
+        SYSTEM_KEYS,
+        ("quit", "menu", "restart", "toggle_grid"),
+    )
+    if system_action is None:
+        return None
+    if system_action == "quit":
+        return "quit"
+    if system_action == "menu":
+        play_sfx("menu_confirm")
+        return "menu"
+    if system_action == "restart":
+        play_sfx("menu_confirm")
+        return "restart"
+    play_sfx("menu_move")
+    return "toggle_grid"
+
+
+def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
+    action = dispatch_bound_action(
+        key,
+        KEYS_2D,
+        {
+            "move_x_neg": lambda: state.try_move(-1, 0),
+            "move_x_pos": lambda: state.try_move(1, 0),
+            "rotate_xy_pos": lambda: state.try_rotate(+1),
+            "rotate_xy_neg": lambda: state.try_rotate(-1),
+            "hard_drop": state.hard_drop,
+            "soft_drop": lambda: state.try_move(0, 1),
+        },
+    )
+    if action is None:
+        return None
+    if action.startswith("rotate_"):
+        play_sfx("rotate")
+    elif action == "hard_drop":
+        play_sfx("drop")
+    else:
+        play_sfx("move")
+    return action
+
+
 def handle_game_keydown(event: pygame.event.Event,
                         state: GameState,
-                        cfg: GameConfig,
+                        _cfg: GameConfig,
                         *,
                         allow_gameplay: bool = True) -> Optional[str]:
     """
@@ -210,22 +280,9 @@ def handle_game_keydown(event: pygame.event.Event,
     """
     key = event.key
 
-    system_action = match_bound_action(
-        key,
-        SYSTEM_KEYS,
-        ("quit", "menu", "restart", "toggle_grid"),
-    )
-    if system_action == "quit":
-        return "quit"
-    if system_action == "menu":
-        play_sfx("menu_confirm")
-        return "menu"
-    if system_action == "restart":
-        play_sfx("menu_confirm")
-        return "restart"
-    if system_action == "toggle_grid":
-        play_sfx("menu_move")
-        return "toggle_grid"
+    system_decision = _system_decision_for_key(key)
+    if system_decision is not None:
+        return system_decision
 
     if not allow_gameplay:
         return "continue"
@@ -238,27 +295,7 @@ def handle_game_keydown(event: pygame.event.Event,
     if key in DISABLED_KEYS_2D:
         return "continue"
 
-    # Movement / rotation / drops
-    action = dispatch_bound_action(
-        key,
-        KEYS_2D,
-        {
-            "move_x_neg": lambda: state.try_move(-1, 0),
-            "move_x_pos": lambda: state.try_move(1, 0),
-            "rotate_xy_pos": lambda: state.try_rotate(+1),
-            "rotate_xy_neg": lambda: state.try_rotate(-1),
-            "hard_drop": state.hard_drop,
-            "soft_drop": lambda: state.try_move(0, 1),
-        },
-    )
-    if action is not None:
-        if action.startswith("rotate_"):
-            play_sfx("rotate")
-        elif action == "hard_drop":
-            play_sfx("drop")
-        else:
-            play_sfx("move")
-
+    _dispatch_2d_gameplay_action(state, key)
     return "continue"
 
 
@@ -302,6 +339,7 @@ class LoopContext2D:
     cfg: GameConfig
     state: GameState
     bot: PlayBotController = field(default_factory=PlayBotController)
+    rotation_anim: PieceRotationAnimator2D = field(default_factory=PieceRotationAnimator2D)
     gravity_accumulator: int = 0
     grid_mode: GridMode = GridMode.FULL
     clear_anim_levels: tuple[int, ...] = ()
@@ -342,6 +380,7 @@ class LoopContext2D:
         self.clear_anim_elapsed_ms = 0.0
         self.last_lines_cleared = self.state.lines_cleared
         self.bot.reset_runtime()
+        self.rotation_anim.reset()
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -361,7 +400,10 @@ def run_game_loop(screen: pygame.Surface,
                   fonts: GfxFonts,
                   *,
                   bot_mode: BotMode = BotMode.OFF,
-                  bot_speed_level: int = 7) -> bool:
+                  bot_speed_level: int = 7,
+                  bot_algorithm_index: int = 0,
+                  bot_profile_index: int = 1,
+                  bot_budget_ms: int = 12) -> bool:
     """
     Run a single game session.
     Returns:
@@ -371,6 +413,13 @@ def run_game_loop(screen: pygame.Surface,
     loop = LoopContext2D.create(cfg, bot_mode=bot_mode)
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
+    loop.bot.configure_planner(
+        ndim=2,
+        dims=(cfg.width, cfg.height),
+        profile=bot_planner_profile_from_index(bot_profile_index),
+        budget_ms=bot_budget_ms,
+        algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
+    )
     loop.refresh_score_multiplier()
     clear_anim_duration_ms = 320.0
     was_game_over = loop.state.game_over
@@ -389,7 +438,14 @@ def run_game_loop(screen: pygame.Surface,
         if decision == "quit":
             return False
         if decision == "menu":
-            return True
+            pause_decision, screen = run_pause_menu(screen, fonts, dimension=2)
+            if pause_decision == "quit":
+                return False
+            if pause_decision == "menu":
+                return True
+            if pause_decision == "restart":
+                loop.on_restart()
+                continue
 
         loop.bot.tick_2d(loop.state, dt)
         if loop.bot.controls_descent:
@@ -418,6 +474,8 @@ def run_game_loop(screen: pygame.Surface,
             loop.clear_anim_elapsed_ms,
             clear_anim_duration_ms,
         )
+        loop.rotation_anim.observe(loop.state.current_piece, dt)
+        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
         # ----- Drawing -----
         draw_game_frame(
@@ -428,6 +486,7 @@ def run_game_loop(screen: pygame.Surface,
             grid_mode=loop.grid_mode,
             bot_lines=tuple(loop.bot.status_lines()),
             clear_effect=clear_effect,
+            active_piece_overlay=active_overlay,
         )
         pygame.display.flip()
 
@@ -489,6 +548,9 @@ def run():
             fonts,
             bot_mode=bot_mode_from_index(settings.bot_mode_index),
             bot_speed_level=settings.bot_speed_level,
+            bot_algorithm_index=settings.bot_algorithm_index,
+            bot_profile_index=settings.bot_profile_index,
+            bot_budget_ms=settings.bot_budget_ms,
         )
         if not back_to_menu:
             running = False

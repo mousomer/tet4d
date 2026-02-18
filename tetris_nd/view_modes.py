@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+from .runtime_config import grid_mode_cycle_names, grid_mode_fallback_name
+
 
 class GridMode(str, Enum):
     OFF = "off"
@@ -11,19 +13,29 @@ class GridMode(str, Enum):
     HELPER = "helper"
 
 
-_GRID_MODE_CYCLE: tuple[GridMode, ...] = (
-    GridMode.OFF,
-    GridMode.EDGE,
-    GridMode.FULL,
-    GridMode.HELPER,
+def _grid_mode_from_name(mode_name: str) -> GridMode:
+    normalized = mode_name.strip().lower()
+    if normalized == GridMode.EDGE.value:
+        return GridMode.EDGE
+    if normalized == GridMode.FULL.value:
+        return GridMode.FULL
+    if normalized == GridMode.HELPER.value:
+        return GridMode.HELPER
+    return GridMode.OFF
+
+
+_GRID_MODE_CYCLE: tuple[GridMode, ...] = tuple(
+    _grid_mode_from_name(mode_name)
+    for mode_name in grid_mode_cycle_names()
 )
+_GRID_MODE_FALLBACK = _grid_mode_from_name(grid_mode_fallback_name())
 
 
 def cycle_grid_mode(mode: GridMode) -> GridMode:
     try:
         idx = _GRID_MODE_CYCLE.index(mode)
     except ValueError:
-        return GridMode.FULL
+        return _GRID_MODE_FALLBACK
     return _GRID_MODE_CYCLE[(idx + 1) % len(_GRID_MODE_CYCLE)]
 
 

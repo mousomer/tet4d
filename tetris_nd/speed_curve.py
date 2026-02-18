@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .runtime_config import speed_curve_for_dimension
+
 
 def gravity_interval_ms(speed_level: int, *, dimension: int) -> int:
     """
@@ -12,14 +14,6 @@ def gravity_interval_ms(speed_level: int, *, dimension: int) -> int:
     """
     level = max(1, min(10, int(speed_level)))
 
-    if dimension <= 2:
-        base_ms = 1000
-        min_ms = 80
-    elif dimension == 3:
-        base_ms = 1350
-        min_ms = 110
-    else:
-        base_ms = 1700
-        min_ms = 140
+    base_ms, min_ms = speed_curve_for_dimension(dimension)
 
     return max(min_ms, base_ms // level)
