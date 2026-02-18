@@ -5,8 +5,8 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
+from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
-from .keybindings import CONTROL_LINES_2D
 from .speed_curve import gravity_interval_ms
 from .view_modes import GridMode, grid_mode_label
 
@@ -658,7 +658,6 @@ def _draw_side_panel_text(surface: pygame.Surface,
         "",
         *bot_lines,
         *([""] if bot_lines else []),
-        *CONTROL_LINES_2D,
     ]
 
     y = py
@@ -735,12 +734,19 @@ def draw_side_panel(surface: pygame.Surface,
                     bot_lines: Sequence[str] = ()) -> None:
     """Top-level side panel draw."""
     y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode, bot_lines)
-    y_after_dpad = _draw_side_panel_dpad(surface, y_after_text, panel_offset, fonts)
+    px, _ = panel_offset
+    controls_rect = pygame.Rect(px, y_after_text + 6, SIDE_PANEL, surface.get_height() - (y_after_text + 14))
+    draw_grouped_control_helper(
+        surface,
+        groups=control_groups_for_dimension(2),
+        rect=controls_rect,
+        panel_font=fonts.panel_font,
+        hint_font=fonts.hint_font,
+    )
 
     # Game over message below D-pad (if needed)
     if state.game_over:
-        px, _ = panel_offset
-        y = y_after_dpad + 10
+        y = surface.get_height() - 58
         surf = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
         surface.blit(surf, (px, y))
         y += surf.get_height() + 4

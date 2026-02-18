@@ -1,8 +1,8 @@
 # 3D Tetris RDS
 
-Status: Active v0.5  
+Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -34,7 +34,7 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 4. Optional set: `debug_rectangles_3d` (simple cuboids for rapid layer-fill checks).
 5. Piece definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
 6. Setup menu must expose piece set source selection (`native_3d`, `embedded_2d`, `random_cells_3d`, `debug_rectangles_3d`).
-7. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP`), and planner budget (ms).
+7. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
 ## 4.1 Lower-dimensional set embedding requirements (3D)
 

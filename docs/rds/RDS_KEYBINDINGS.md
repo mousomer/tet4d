@@ -1,8 +1,8 @@
 # Keybindings RDS
 
-Status: Active v0.5  
+Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -149,7 +149,6 @@ Translation semantics:
 1. Yaw `-` / `+`: `J` / `L`
 2. Pitch `-` / `+`: `K` / `I`
 3. Zoom out / in: `-` / `+`
-4. Reset view: `Backspace` (planned deconflict from gameplay `rotate_zw -`)
 4. Reset view: `Backspace` (implemented deconflict from gameplay `rotate_zw -`)
 
 #### 4D slice group (profile-independent default)
@@ -230,6 +229,8 @@ Both menu contexts must expose the same keybinding profile actions:
 2. Pause menu must include the same `Keybindings Setup` entry.
 3. Both entries open the same editor component and behavior.
 4. User can test bindings in a lightweight input-preview subpanel before leaving menu.
+5. Main-menu keybinding scope list must present `General` separately from dimension-specific scopes (`2D`, `3D`, `4D`).
+6. `General` scope is for shared/system actions and should not be merged into a combined "all bindings" default view.
 
 ## 6. JSON/Profile Storage Requirements
 
@@ -323,7 +324,7 @@ Manual checks:
 7. Keybinding editor supports local save/load and conflict-safe rebinding.
 8. 4D `9/0` rotation path is conflict-free and reliable under key repeat.
 
-## 11. Implementation Status (2026-02-16)
+## 11. Implementation Status (2026-02-18)
 
 Implemented in code:
 1. Dedicated keybinding setup screen added (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`).
@@ -332,6 +333,9 @@ Implemented in code:
 4. 4D camera reset default is `Backspace`.
 5. Rebind safety guard prevents camera actions from overriding gameplay/slice/system keys (protects 4D `9/0` rotations).
 6. Keybinding conflict and 4D camera override behavior are covered by tests in `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_keybindings.py`.
+7. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
+8. `Keybindings Setup`, `Profile Previous`, `Profile Next`, `Save Keybindings`, `Load Keybindings`.
+9. Main keybindings section menu separates `General` from `2D/3D/4D` scopes for clearer navigation.
 
 ## 10. Implementation Plan (Keybindings)
 
@@ -340,3 +344,9 @@ Implemented in code:
 3. Add rebind capture state with conflict resolution (`replace`, `swap`, `cancel`).
 4. Add local profile IO helpers (`load`, `save`, `save_as`, `reset`) with atomic writes.
 5. Add test coverage for editor-state transitions and profile file round-trips.
+6. Completed:
+7. profile actions now include `load/save/save as/reset/create/rename/delete` via keybindings setup + pause entrypoints.
+8. reset actions now require confirmation.
+9. In-game key helper layout is grouped into clear sections:
+10. `Translation`, `Rotation`, `Camera/View`, `Slicing`, `System`.
+11. animated key guide assets (GIFs) are available in Help UI for translation and rotation.

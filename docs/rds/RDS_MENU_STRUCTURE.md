@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Active v0.4  
+Status: Active v0.5 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -17,7 +17,7 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 7. Unified main menu for choosing 2D/3D/4D with shared options
 8. Audio and display settings (including fullscreen/windowed mode)
 
-Primary files impacted by future implementation:
+Primary implementation and maintenance files:
 1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
 3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/frontend_nd.py`
@@ -57,10 +57,20 @@ Main Menu
 ├── Play 2D
 ├── Play 3D
 ├── Play 4D
+├── Help
+│   ├── Controls (2D/3D/4D)
+│   ├── Scoring
+│   ├── Piece Sets
+│   ├── Bots
+│   └── Slicing / Views
 ├── Settings
 │   ├── Audio
 │   ├── Display
 ├── Keybindings Setup
+│   ├── General
+│   ├── 2D
+│   ├── 3D
+│   └── 4D
 ├── Bot Options
 │   ├── Dimension (2D/3D/4D)
 │   ├── Playbot mode
@@ -182,14 +192,16 @@ Minimum schema:
 
 1. Save must be explicit from menu action (no silent overwrite on every keypress).
 2. Save/load must be profile-scoped.
-3. Optional auto-save on successful game start is allowed only after explicit opt-in.
-4. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
-5. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
-6. Display and audio settings are persisted in the same settings state.
+3. Optional auto-save on successful game start is allowed and should run without confirmation.
+4. If auto-save is enabled, it complements explicit `Save`; it must not remove explicit save actions.
+5. Auto-save status feedback should be concise and non-intrusive (for example: `Autosaved` line in launcher).
+6. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
+7. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
+8. Display and audio settings are persisted in the same settings state.
 
 ### 7.4 Reset-to-defaults policy
 
-1. Reset action must open confirmation:
+1. Reset action must always open confirmation:
 2. `Confirm Reset`
 3. `Cancel`
 4. Reset should affect selected profile by default, with optional “Reset all profiles”.
@@ -202,7 +214,7 @@ Minimum schema:
 4. If keybinding profile files are missing, recreate from selected profile defaults.
 5. If fullscreen toggle fails, continue in windowed mode and show warning.
 
-## 9. Implementation Plan (Recommended)
+## 9. Implementation Notes (Current)
 
 1. Extract reusable menu view model:
 2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_model.py`
@@ -231,25 +243,23 @@ Manual tests:
 8. Toggle fullscreen in setup, start game, return to menu, and verify layout size remains correct.
 9. Change audio settings, restart app, and verify persistence.
 
-## 11. Implementation Plan Additions
+## 11. Implementation Additions (Completed)
 
-1. Add a shared `Edit Keybindings` submenu component reused by setup and pause flows.
-2. Keep menu depth shallow: no more than 3 levels from top-level to rebind action.
-3. Integrate local profile file actions directly in footer shortcuts (`Load`, `Save`, `Save As`, `Reset`).
-4. Add setup control for piece set source per mode:
-5. native set
-6. lower-dimensional embedded set
-7. random-cell generated set
-8. Ensure switching piece set source is immediate in preview and persisted in settings state.
+1. Shared `Edit Keybindings` submenu is reused by setup and pause flows.
+2. Menu depth remains shallow (top-level -> setup/options -> edit actions).
+3. Profile file actions (`Load`, `Save`, `Save As`, `Reset`) are integrated and consistent.
+4. Keybindings menu parity is enforced between setup and pause routes.
+5. In-game key helper is grouped into `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
+6. Help/Controls includes GIF previews for translation and rotation.
 
-## 12. Stabilization Additions (Current Issues)
+## 12. Stabilization Additions (Completed)
 
-1. Implement one shared startup flow: `Main Menu -> Mode Select -> Mode Setup -> Start`.
-2. Add a dedicated `Keybindings Setup` screen with grouped action lists and conflict strategy selector.
-3. Add `Audio` settings page with `master`, `sfx`, and `mute`.
-4. Add `Display` settings page with `fullscreen toggle`, `windowed size`, and `reset display`.
-5. Add a shared display-state manager that recalculates menu/game layouts after display mode changes.
-6. Ensure returning from fullscreen gameplay to menu rebuilds the menu surface and metrics.
+1. Shared startup flow is implemented via unified launcher and mode setup paths.
+2. Dedicated `Keybindings Setup` screen is implemented.
+3. Audio settings page (`master`, `sfx`, `mute`) is implemented.
+4. Display settings page (`fullscreen`, `windowed size`, `reset`) is implemented.
+5. Shared display-state manager handles layout refresh after display-mode changes.
+6. Fullscreen return-to-menu shrinkage issue is resolved.
 ## 13. Acceptance Criteria
 
 1. Menu hierarchy is consistent in 2D/3D/4D entrypoints and pause menu.
@@ -257,7 +267,7 @@ Manual tests:
 3. Profile actions are identical in main/setup and pause menus.
 4. Non-default profiles can be redefined, saved, and loaded.
 
-## 14. Implementation Status (2026-02-17)
+## 14. Implementation Status (2026-02-18)
 
 Implemented in code:
 1. Unified launcher added at `/Users/omer/workspace/test-code/tet4d/front.py`.
@@ -277,6 +287,26 @@ Stabilization details:
 2. Windowed size is captured and persisted after game sessions in windowed mode.
 3. Focus and contrast states remain readable in default window sizes.
 4. No crashes on missing/corrupt settings files.
-5. Tests and lint pass after implementation.
+5. Tests pass and base lint passes; current menu C901 follow-up is tracked in `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
 6. Fullscreen/window transitions no longer produce shrunken menu layouts.
 7. Unified main menu controls 2D/3D/4D startup consistently.
+8. In-game pause menu is implemented in all modes with:
+9. resume/restart/back-to-main/quit actions
+10. settings submenu (audio/display edits + save/reset)
+11. keybindings editor entry
+12. profile cycle and per-dimension keybinding load/save actions
+13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/slicing guidance.
+14. Shared menu helpers were added in:
+15. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_model.py`
+16. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_persistence.py`
+17. Keybindings menu supports `General/2D/3D/4D` scopes with explicit category descriptions loaded from menu structure config.
+18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
+19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
+
+## 15. Open Follow-up
+
+1. Extend translation/rotation GIF guidance from Help-only into menu contexts:
+2. launcher menus,
+3. pause/settings/keybindings menus,
+4. inline key description/help rows where controls are explained.
+5. Keep this follow-up synchronized with `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.

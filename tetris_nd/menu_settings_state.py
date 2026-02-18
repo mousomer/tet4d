@@ -51,6 +51,31 @@ def _mode_key_for_dimension(dimension: int) -> str:
     return f"{dimension}d"
 
 
+def _merge_loaded_scalars(payload: dict[str, Any], loaded: dict[str, Any]) -> None:
+    for key in ("version", "active_profile", "last_mode"):
+        if key in loaded:
+            payload[key] = loaded[key]
+
+
+def _merge_loaded_section(payload: dict[str, Any], loaded: dict[str, Any], key: str) -> None:
+    target = payload.get(key)
+    incoming = loaded.get(key)
+    if isinstance(target, dict) and isinstance(incoming, dict):
+        target.update(incoming)
+
+
+def _merge_loaded_mode_settings(payload: dict[str, Any], loaded: dict[str, Any]) -> None:
+    loaded_settings = loaded.get("settings")
+    if not isinstance(loaded_settings, dict):
+        return
+    merged = payload.get("settings")
+    if not isinstance(merged, dict):
+        return
+    for mode_key, mode_settings in loaded_settings.items():
+        if mode_key in merged and isinstance(mode_settings, dict):
+            merged[mode_key].update(mode_settings)
+
+
 def _load_payload() -> dict[str, Any]:
     payload = _default_settings_payload()
     if not STATE_FILE.exists():
@@ -62,24 +87,10 @@ def _load_payload() -> dict[str, Any]:
         return payload
     if not isinstance(loaded, dict):
         return payload
-    for key in ("version", "active_profile", "last_mode"):
-        if key in loaded:
-            payload[key] = loaded[key]
-
-    loaded_display = loaded.get("display")
-    if isinstance(loaded_display, dict):
-        payload["display"].update(loaded_display)
-
-    loaded_audio = loaded.get("audio")
-    if isinstance(loaded_audio, dict):
-        payload["audio"].update(loaded_audio)
-
-    loaded_settings = loaded.get("settings")
-    if isinstance(loaded_settings, dict):
-        merged = payload["settings"]
-        for mode_key, mode_settings in loaded_settings.items():
-            if mode_key in merged and isinstance(mode_settings, dict):
-                merged[mode_key].update(mode_settings)
+    _merge_loaded_scalars(payload, loaded)
+    _merge_loaded_section(payload, loaded, "display")
+    _merge_loaded_section(payload, loaded, "audio")
+    _merge_loaded_mode_settings(payload, loaded)
     _sanitize_payload(payload)
     return payload
 
@@ -95,8 +106,7 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     return True, f"Saved menu state to {STATE_FILE}"
 
 
-def _sanitize_payload(payload: dict[str, Any]) -> None:
-    default_payload = _default_settings_payload()
+def _sanitize_version_profile_mode(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
     version = payload.get("version")
     if isinstance(version, int) and version > 0:
         payload["version"] = version
@@ -112,6 +122,8 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
     last_mode = payload.get("last_mode")
     payload["last_mode"] = last_mode if last_mode in {"2d", "3d", "4d"} else default_payload["last_mode"]
 
+
+def _sanitize_display_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
     display = payload.setdefault("display", {})
     if not isinstance(display, dict):
         payload["display"] = {}
@@ -142,6 +154,8 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
     display["fullscreen"] = fullscreen
     display["windowed_size"] = [width, height]
 
+
+def _sanitize_audio_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
     audio = payload.setdefault("audio", {})
     if not isinstance(audio, dict):
         payload["audio"] = {}
@@ -170,6 +184,8 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
     audio["sfx_volume"] = max(0.0, min(1.0, float(sfx)))
     audio["mute"] = mute
 
+
+def _sanitize_mode_settings(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
     settings = payload.get("settings")
     if not isinstance(settings, dict):
         settings = {}
@@ -190,6 +206,14 @@ def _sanitize_payload(payload: dict[str, Any]) -> None:
             merged_mode[attr_name] = value
         sanitized_settings[mode_key] = merged_mode
     payload["settings"] = sanitized_settings
+
+
+def _sanitize_payload(payload: dict[str, Any]) -> None:
+    default_payload = _default_settings_payload()
+    _sanitize_version_profile_mode(payload, default_payload)
+    _sanitize_display_section(payload, default_payload)
+    _sanitize_audio_section(payload, default_payload)
+    _sanitize_mode_settings(payload, default_payload)
 
 
 def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:

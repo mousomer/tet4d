@@ -14,7 +14,15 @@ AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"
 
 _GRID_MODE_NAMES = ("off", "edge", "full", "helper")
 _BOT_MODE_NAMES = ("off", "assist", "auto", "step")
-_BOT_PROFILE_NAMES = ("fast", "balanced", "deep")
+_BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
+
+
+def _dimension_bucket_key(ndim: int) -> str:
+    if ndim <= 2:
+        return "2d"
+    if ndim == 3:
+        return "3d"
+    return "4d_plus"
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
@@ -222,6 +230,45 @@ def _validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             )
         budgets[dim_key] = dim_budget
 
+    scaling_obj = _require_object(payload.get("board_size_scaling"), path="playbot.board_size_scaling")
+    reference_cells_obj = _require_object(
+        scaling_obj.get("reference_cells"),
+        path="playbot.board_size_scaling.reference_cells",
+    )
+    reference_cells = {
+        "2d": _require_int(
+            reference_cells_obj.get("2d"),
+            path="playbot.board_size_scaling.reference_cells.2d",
+            min_value=1,
+        ),
+        "3d": _require_int(
+            reference_cells_obj.get("3d"),
+            path="playbot.board_size_scaling.reference_cells.3d",
+            min_value=1,
+        ),
+        "4d_plus": _require_int(
+            reference_cells_obj.get("4d_plus"),
+            path="playbot.board_size_scaling.reference_cells.4d_plus",
+            min_value=1,
+        ),
+    }
+    min_scale = _require_number(
+        scaling_obj.get("min_scale"),
+        path="playbot.board_size_scaling.min_scale",
+        min_value=0.1,
+    )
+    max_scale = _require_number(
+        scaling_obj.get("max_scale"),
+        path="playbot.board_size_scaling.max_scale",
+        min_value=min_scale,
+    )
+    exponent = _require_number(
+        scaling_obj.get("exponent"),
+        path="playbot.board_size_scaling.exponent",
+        min_value=0.1,
+        max_value=2.0,
+    )
+
     clamp_obj = _require_object(payload.get("clamp"), path="playbot.clamp")
     clamp = {
         "floor_divisor": _require_int(
@@ -261,6 +308,11 @@ def _validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             path="playbot.lookahead.depth.deep_2d_3d",
             min_value=1,
         ),
+        "ultra_2d_3d": _require_int(
+            depth_obj.get("ultra_2d_3d"),
+            path="playbot.lookahead.depth.ultra_2d_3d",
+            min_value=1,
+        ),
         "all_4d_plus": _require_int(
             depth_obj.get("all_4d_plus"),
             path="playbot.lookahead.depth.all_4d_plus",
@@ -283,6 +335,11 @@ def _validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             path="playbot.lookahead.top_k.deep_2d",
             min_value=1,
         ),
+        "ultra_2d": _require_int(
+            top_k_obj.get("ultra_2d"),
+            path="playbot.lookahead.top_k.ultra_2d",
+            min_value=1,
+        ),
         "balanced_3d_plus": _require_int(
             top_k_obj.get("balanced_3d_plus"),
             path="playbot.lookahead.top_k.balanced_3d_plus",
@@ -293,7 +350,135 @@ def _validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             path="playbot.lookahead.top_k.deep_3d_plus",
             min_value=1,
         ),
+        "ultra_3d_plus": _require_int(
+            top_k_obj.get("ultra_3d_plus"),
+            path="playbot.lookahead.top_k.ultra_3d_plus",
+            min_value=1,
+        ),
     }
+
+    adaptive_obj = _require_object(payload.get("adaptive_fallback"), path="playbot.adaptive_fallback")
+    adaptive_enabled = adaptive_obj.get("enabled")
+    if not isinstance(adaptive_enabled, bool):
+        raise RuntimeError("playbot.adaptive_fallback.enabled must be a boolean")
+
+    lookahead_min_obj = _require_object(
+        adaptive_obj.get("lookahead_min_budget_ms"),
+        path="playbot.adaptive_fallback.lookahead_min_budget_ms",
+    )
+    lookahead_min_budget_ms = {
+        "2d": _require_int(
+            lookahead_min_obj.get("2d"),
+            path="playbot.adaptive_fallback.lookahead_min_budget_ms.2d",
+            min_value=1,
+        ),
+        "3d": _require_int(
+            lookahead_min_obj.get("3d"),
+            path="playbot.adaptive_fallback.lookahead_min_budget_ms.3d",
+            min_value=1,
+        ),
+        "4d_plus": _require_int(
+            lookahead_min_obj.get("4d_plus"),
+            path="playbot.adaptive_fallback.lookahead_min_budget_ms.4d_plus",
+            min_value=1,
+        ),
+    }
+
+    candidate_cap_obj = _require_object(
+        adaptive_obj.get("candidate_cap"),
+        path="playbot.adaptive_fallback.candidate_cap",
+    )
+    candidate_cap: dict[str, dict[str, float | int]] = {}
+    for dim_key in ("2d", "3d", "4d_plus"):
+        dim_cap_obj = _require_object(
+            candidate_cap_obj.get(dim_key),
+            path=f"playbot.adaptive_fallback.candidate_cap.{dim_key}",
+        )
+        candidate_cap[dim_key] = {
+            "per_ms": _require_number(
+                dim_cap_obj.get("per_ms"),
+                path=f"playbot.adaptive_fallback.candidate_cap.{dim_key}.per_ms",
+                min_value=0.1,
+            ),
+            "min": _require_int(
+                dim_cap_obj.get("min"),
+                path=f"playbot.adaptive_fallback.candidate_cap.{dim_key}.min",
+                min_value=1,
+            ),
+            "max": _require_int(
+                dim_cap_obj.get("max"),
+                path=f"playbot.adaptive_fallback.candidate_cap.{dim_key}.max",
+                min_value=1,
+            ),
+        }
+        if candidate_cap[dim_key]["max"] < candidate_cap[dim_key]["min"]:
+            raise RuntimeError(
+                f"playbot.adaptive_fallback.candidate_cap.{dim_key}.max must be >= min"
+            )
+
+    deadline_safety_ms = _require_number(
+        adaptive_obj.get("deadline_safety_ms"),
+        path="playbot.adaptive_fallback.deadline_safety_ms",
+        min_value=0.0,
+    )
+
+    auto_obj = _require_object(payload.get("auto_algorithm"), path="playbot.auto_algorithm")
+    greedy_bias_obj = _require_object(
+        auto_obj.get("greedy_bias"),
+        path="playbot.auto_algorithm.greedy_bias",
+    )
+    greedy_bias = {
+        "2d": _require_number(
+            greedy_bias_obj.get("2d"),
+            path="playbot.auto_algorithm.greedy_bias.2d",
+        ),
+        "3d": _require_number(
+            greedy_bias_obj.get("3d"),
+            path="playbot.auto_algorithm.greedy_bias.3d",
+        ),
+        "4d_plus": _require_number(
+            greedy_bias_obj.get("4d_plus"),
+            path="playbot.auto_algorithm.greedy_bias.4d_plus",
+        ),
+    }
+    density_weight = _require_number(
+        auto_obj.get("density_weight"),
+        path="playbot.auto_algorithm.density_weight",
+    )
+    lines_cleared_weight = _require_number(
+        auto_obj.get("lines_cleared_weight"),
+        path="playbot.auto_algorithm.lines_cleared_weight",
+    )
+    threshold = _require_number(
+        auto_obj.get("threshold"),
+        path="playbot.auto_algorithm.threshold",
+    )
+
+    benchmark_obj = _require_object(payload.get("benchmark"), path="playbot.benchmark")
+    thresholds_obj = _require_object(
+        benchmark_obj.get("p95_threshold_ms"),
+        path="playbot.benchmark.p95_threshold_ms",
+    )
+    benchmark_thresholds = {
+        "2d": _require_number(
+            thresholds_obj.get("2d"),
+            path="playbot.benchmark.p95_threshold_ms.2d",
+            min_value=1.0,
+        ),
+        "3d": _require_number(
+            thresholds_obj.get("3d"),
+            path="playbot.benchmark.p95_threshold_ms.3d",
+            min_value=1.0,
+        ),
+        "4d": _require_number(
+            thresholds_obj.get("4d"),
+            path="playbot.benchmark.p95_threshold_ms.4d",
+            min_value=1.0,
+        ),
+    }
+    history_file = benchmark_obj.get("history_file")
+    if not isinstance(history_file, str) or not history_file.strip():
+        raise RuntimeError("playbot.benchmark.history_file must be a non-empty string")
 
     controller_obj = _require_object(payload.get("controller"), path="playbot.controller")
     controller = {
@@ -320,10 +505,32 @@ def _validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "version": payload["version"],
         "budget_ms": budgets,
+        "board_size_scaling": {
+            "reference_cells": reference_cells,
+            "min_scale": min_scale,
+            "max_scale": max_scale,
+            "exponent": exponent,
+        },
         "clamp": clamp,
         "lookahead": {
             "depth": depth,
             "top_k": top_k,
+        },
+        "adaptive_fallback": {
+            "enabled": adaptive_enabled,
+            "lookahead_min_budget_ms": lookahead_min_budget_ms,
+            "candidate_cap": candidate_cap,
+            "deadline_safety_ms": deadline_safety_ms,
+        },
+        "auto_algorithm": {
+            "greedy_bias": greedy_bias,
+            "density_weight": density_weight,
+            "lines_cleared_weight": lines_cleared_weight,
+            "threshold": threshold,
+        },
+        "benchmark": {
+            "p95_threshold_ms": benchmark_thresholds,
+            "history_file": history_file.strip(),
         },
         "controller": controller,
         "dry_run": dry_run,
@@ -449,16 +656,21 @@ def grid_mode_fallback_name() -> str:
     return str(_gameplay_tuning()["grid_modes"]["fallback"])
 
 
-def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int]:
+def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int, int]:
     config = _playbot_policy()["budget_ms"]
-    if ndim <= 2:
-        key = "2d"
-    elif ndim == 3:
-        key = "3d"
-    else:
-        key = "4d_plus"
-    bucket = config[key]
-    return bucket["fast"], bucket["balanced"], bucket["deep"]
+    bucket = config[_dimension_bucket_key(ndim)]
+    return bucket["fast"], bucket["balanced"], bucket["deep"], bucket["ultra"]
+
+
+def playbot_board_size_scaling_policy_for_ndim(ndim: int) -> tuple[int, float, float, float]:
+    scaling = _playbot_policy()["board_size_scaling"]
+    key = _dimension_bucket_key(ndim)
+    return (
+        int(scaling["reference_cells"][key]),
+        float(scaling["min_scale"]),
+        float(scaling["max_scale"]),
+        float(scaling["exponent"]),
+    )
 
 
 def playbot_clamp_policy() -> tuple[int, int, int, int]:
@@ -478,6 +690,8 @@ def playbot_lookahead_depth(ndim: int, profile_name: str) -> int:
         return depth["fast"]
     if ndim >= 4:
         return depth["all_4d_plus"]
+    if normalized == "ultra":
+        return depth["ultra_2d_3d"]
     if normalized == "deep":
         return depth["deep_2d_3d"]
     return depth["balanced_2d_3d"]
@@ -489,12 +703,62 @@ def playbot_lookahead_top_k(ndim: int, profile_name: str, depth_value: int) -> i
         return top_k["depth_lte_one"]
     normalized = profile_name.strip().lower()
     if ndim <= 2:
+        if normalized == "ultra":
+            return top_k["ultra_2d"]
         if normalized == "deep":
             return top_k["deep_2d"]
         return top_k["balanced_2d"]
+    if normalized == "ultra":
+        return top_k["ultra_3d_plus"]
     if normalized == "deep":
         return top_k["deep_3d_plus"]
     return top_k["balanced_3d_plus"]
+
+
+def playbot_adaptive_fallback_enabled() -> bool:
+    return bool(_playbot_policy()["adaptive_fallback"]["enabled"])
+
+
+def playbot_adaptive_lookahead_min_budget_ms(ndim: int) -> int:
+    lookup = _playbot_policy()["adaptive_fallback"]["lookahead_min_budget_ms"]
+    return int(lookup[_dimension_bucket_key(ndim)])
+
+
+def playbot_adaptive_candidate_cap_for_ndim(ndim: int) -> tuple[float, int, int]:
+    cap_obj = _playbot_policy()["adaptive_fallback"]["candidate_cap"][_dimension_bucket_key(ndim)]
+    return float(cap_obj["per_ms"]), int(cap_obj["min"]), int(cap_obj["max"])
+
+
+def playbot_deadline_safety_ms() -> float:
+    return float(_playbot_policy()["adaptive_fallback"]["deadline_safety_ms"])
+
+
+def playbot_auto_algorithm_policy_for_ndim(ndim: int) -> tuple[float, float, float, float]:
+    auto_obj = _playbot_policy()["auto_algorithm"]
+    key = _dimension_bucket_key(ndim)
+    return (
+        float(auto_obj["greedy_bias"][key]),
+        float(auto_obj["density_weight"]),
+        float(auto_obj["lines_cleared_weight"]),
+        float(auto_obj["threshold"]),
+    )
+
+
+def playbot_benchmark_p95_thresholds() -> dict[str, float]:
+    thresholds = _playbot_policy()["benchmark"]["p95_threshold_ms"]
+    return {
+        "2d": float(thresholds["2d"]),
+        "3d": float(thresholds["3d"]),
+        "4d": float(thresholds["4d"]),
+    }
+
+
+def playbot_benchmark_history_file() -> Path:
+    raw = str(_playbot_policy()["benchmark"]["history_file"])
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    return CONFIG_DIR.parent / path
 
 
 def playbot_default_hard_drop_after_soft_drops() -> int:

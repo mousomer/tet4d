@@ -11,6 +11,8 @@ from .types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     PlanStats,
+    adaptive_candidate_cap,
+    adaptive_deadline_safety_ms,
     clamp_planning_budget_ms,
     default_planning_budget_ms,
     planning_lookahead_depth,
@@ -165,6 +167,7 @@ def _enumerate_candidates_2d(
     height: int,
     gravity_axis: int,
     deadline_s: float,
+    candidate_cap: int,
 ) -> tuple[list[_Candidate2D], bool]:
     candidates: list[_Candidate2D] = []
     orientation_seen: set[tuple[tuple[int, int], ...]] = set()
@@ -181,6 +184,8 @@ def _enumerate_candidates_2d(
 
         for target_x in range(-min_x, width - max_x):
             if candidates and time.perf_counter() >= deadline_s:
+                return candidates, True
+            if len(candidates) >= candidate_cap:
                 return candidates, True
 
             candidate = ActivePiece2D(shape=shape, pos=(target_x, spawn_y), rotation=rotation)
@@ -240,6 +245,7 @@ def _followup_score_for_candidate(
     height: int,
     gravity_axis: int,
     deadline_s: float,
+    candidate_cap: int,
 ) -> float:
     if candidate.game_over:
         return float("-inf")
@@ -251,6 +257,7 @@ def _followup_score_for_candidate(
         height=height,
         gravity_axis=gravity_axis,
         deadline_s=deadline_s,
+        candidate_cap=candidate_cap,
     )
     best = _pick_best_immediate(followup_candidates)
     if best is None:
@@ -268,6 +275,8 @@ def _pick_with_optional_lookahead(
     profile: BotPlannerProfile,
     depth: int,
     deadline_s: float,
+    budget_ms: int,
+    candidate_cap: int,
 ) -> tuple[_Candidate2D | None, float]:
     best_immediate = _pick_best_immediate(candidates)
     if best_immediate is None:
@@ -276,11 +285,11 @@ def _pick_with_optional_lookahead(
     if depth <= 1 or next_shape is None:
         return best_immediate, best_immediate.score
 
-    # Keep budget safety margin: if we're almost out of time, keep immediate best.
-    if time.perf_counter() >= deadline_s - 0.001:
+    safety_window = adaptive_deadline_safety_ms() / 1000.0
+    if time.perf_counter() >= deadline_s - safety_window:
         return best_immediate, best_immediate.score
 
-    top_k = planning_lookahead_top_k(2, profile)
+    top_k = planning_lookahead_top_k(2, profile, budget_ms=budget_ms)
     ranked = sorted(candidates, key=lambda c: (c.score, c.cleared), reverse=True)[:top_k]
 
     best_candidate = best_immediate
@@ -297,6 +306,7 @@ def _pick_with_optional_lookahead(
             height=height,
             gravity_axis=gravity_axis,
             deadline_s=deadline_s,
+            candidate_cap=candidate_cap,
         )
         combined = candidate.score + followup_weight * followup_score
         if combined > best_combined or (
@@ -326,11 +336,12 @@ def plan_best_2d_move(
 
     planning_budget_ms = budget_ms
     if planning_budget_ms is None:
-        planning_budget_ms = default_planning_budget_ms(2, profile)
-    planning_budget_ms = clamp_planning_budget_ms(2, planning_budget_ms)
+        planning_budget_ms = default_planning_budget_ms(2, profile, dims=(width, height))
+    planning_budget_ms = clamp_planning_budget_ms(2, planning_budget_ms, dims=(width, height))
 
     t0 = time.perf_counter()
     deadline_s = t0 + planning_budget_ms / 1000.0
+    candidate_cap = adaptive_candidate_cap(2, planning_budget_ms, dims=(width, height))
 
     candidates, _budget_hit = _enumerate_candidates_2d(
         shape=piece.shape,
@@ -339,11 +350,12 @@ def plan_best_2d_move(
         height=height,
         gravity_axis=gravity_axis,
         deadline_s=deadline_s,
+        candidate_cap=candidate_cap,
     )
     if not candidates:
         return None
 
-    depth = planning_lookahead_depth(2, profile)
+    depth = planning_lookahead_depth(2, profile, budget_ms=planning_budget_ms)
     next_shape = _peek_next_shape(state)
     final_candidate, final_score = _pick_with_optional_lookahead(
         candidates=candidates,
@@ -354,6 +366,8 @@ def plan_best_2d_move(
         profile=profile,
         depth=depth,
         deadline_s=deadline_s,
+        budget_ms=planning_budget_ms,
+        candidate_cap=candidate_cap,
     )
     if final_candidate is None:
         return None

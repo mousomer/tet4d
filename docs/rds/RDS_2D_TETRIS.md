@@ -1,8 +1,8 @@
 # 2D Tetris RDS
 
-Status: Active v0.5  
+Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope

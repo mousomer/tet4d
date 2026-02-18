@@ -6,6 +6,9 @@ from tetris_nd.runtime_config import (
     audio_event_specs,
     gameplay_tuning_payload,
     grid_mode_cycle_names,
+    playbot_adaptive_fallback_enabled,
+    playbot_benchmark_p95_thresholds,
+    playbot_board_size_scaling_policy_for_ndim,
     playbot_budget_table_for_ndim,
     playbot_default_hard_drop_after_soft_drops,
     playbot_dry_run_defaults,
@@ -23,11 +26,29 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertEqual(grid_mode_cycle_names(), ("off", "edge", "full", "helper"))
 
     def test_playbot_defaults_are_loaded_from_policy(self) -> None:
-        self.assertEqual(playbot_budget_table_for_ndim(2), (6, 12, 20))
-        self.assertEqual(playbot_budget_table_for_ndim(3), (12, 24, 40))
-        self.assertEqual(playbot_budget_table_for_ndim(4), (18, 36, 60))
+        self.assertEqual(playbot_budget_table_for_ndim(2), (5, 10, 18, 24))
+        self.assertEqual(playbot_budget_table_for_ndim(3), (10, 20, 34, 48))
+        self.assertEqual(playbot_budget_table_for_ndim(4), (16, 32, 50, 72))
         self.assertEqual(playbot_default_hard_drop_after_soft_drops(), 4)
         self.assertEqual(playbot_dry_run_defaults(), (160, 1337))
+        self.assertTrue(playbot_adaptive_fallback_enabled())
+
+    def test_playbot_board_size_scaling_policy_is_exposed(self) -> None:
+        ref_2d, min_scale_2d, max_scale_2d, exponent_2d = playbot_board_size_scaling_policy_for_ndim(2)
+        ref_4d, min_scale_4d, max_scale_4d, exponent_4d = playbot_board_size_scaling_policy_for_ndim(4)
+        self.assertEqual(ref_2d, 200)
+        self.assertEqual(ref_4d, 2592)
+        self.assertLessEqual(min_scale_2d, max_scale_2d)
+        self.assertLessEqual(min_scale_4d, max_scale_4d)
+        self.assertGreater(exponent_2d, 0.0)
+        self.assertGreater(exponent_4d, 0.0)
+
+    def test_playbot_benchmark_thresholds_are_loaded(self) -> None:
+        thresholds = playbot_benchmark_p95_thresholds()
+        self.assertEqual(set(thresholds.keys()), {"2d", "3d", "4d"})
+        self.assertGreater(thresholds["2d"], 0.0)
+        self.assertGreater(thresholds["3d"], thresholds["2d"])
+        self.assertGreater(thresholds["4d"], thresholds["3d"])
 
     def test_audio_event_specs_are_non_empty(self) -> None:
         specs = audio_event_specs()

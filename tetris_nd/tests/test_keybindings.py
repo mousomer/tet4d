@@ -110,6 +110,25 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(active_path, keybindings.profile_keybinding_file_path(4, profile_name))
         self.assertTrue(active_path.exists())
 
+    def test_rename_custom_profile(self) -> None:
+        ok, msg, profile = keybindings.create_auto_profile()
+        self.assertTrue(ok, msg)
+        self.assertIsNotNone(profile)
+        created_profile = str(profile)
+
+        ok, msg = keybindings.set_active_key_profile(created_profile)
+        self.assertTrue(ok, msg)
+        ok, msg = keybindings.load_active_profile_bindings()
+        self.assertTrue(ok, msg)
+
+        renamed = "custom_renamed"
+        ok, msg = keybindings.rename_key_profile(created_profile, renamed)
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.active_key_profile(), renamed)
+        self.assertIn(renamed, keybindings.list_key_profiles())
+        self.assertNotIn(created_profile, keybindings.list_key_profiles())
+        self.assertTrue(keybindings.profile_keybinding_file_path(2, renamed).exists())
+
     def test_save_rejects_path_outside_keybindings_dir(self) -> None:
         outside = self.tmp_root.root.parent / "outside-bindings.json"
         ok, msg = keybindings.save_keybindings_file(2, file_path=str(outside))
@@ -248,8 +267,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(settings_2d["height"], 21)
         self.assertEqual(settings_2d["bot_mode_index"], 0)
         self.assertEqual(settings_2d["bot_profile_index"], 1)
-        self.assertEqual(loaded["settings"]["3d"]["bot_budget_ms"], 24)
-        self.assertEqual(loaded["settings"]["4d"]["bot_budget_ms"], 36)
+        self.assertEqual(loaded["settings"]["3d"]["bot_budget_ms"], 20)
+        self.assertEqual(loaded["settings"]["4d"]["bot_budget_ms"], 32)
         self.assertEqual(loaded["active_profile"], keybindings.PROFILE_FULL)
 
     def test_save_app_settings_payload_preserves_default_nested_fields(self) -> None:

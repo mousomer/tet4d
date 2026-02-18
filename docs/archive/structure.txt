@@ -1,8 +1,0 @@
-your_project/
-    tetris_nd/
-        __init__.py
-        types.py
-        board.py
-        pieces2d.py
-        game2d.py
-    sandbox_main.py

@@ -1,5 +1,4 @@
 # tetris_nd/front3d_game.py
-import random
 import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -14,34 +13,26 @@ from .app_runtime import (
 )
 from .audio import play_sfx
 from .assist_scoring import combined_score_multiplier
-from .board import BoardND
 from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
-from .challenge_mode import apply_challenge_prefill_nd
+from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .display import DisplaySettings
+from .front3d_setup import (
+    build_config,
+    create_initial_state,
+    gravity_interval_ms_from_config,
+    run_menu,
+)
 from .frontend_nd import (
     route_nd_keydown,
 )
 from .game_nd import GameConfigND, GameStateND
-from .game_loop_common import process_game_events
 from .key_dispatch import dispatch_bound_action
 from .keybindings import (
     CAMERA_KEYS_3D,
-    CONTROL_LINES_3D_CAMERA,
-    CONTROL_LINES_3D_GAME,
-    active_key_profile,
-    load_active_profile_bindings,
 )
-from .menu_controls import FieldSpec, MenuAction, apply_menu_actions, gather_menu_actions
-from .menu_config import default_settings_payload, setup_fields_for_dimension
-from .menu_keybinding_shortcuts import menu_binding_status_color
-from .menu_settings_state import (
-    load_menu_settings,
-    save_menu_settings,
-)
-from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .pieces_nd import piece_set_label
 from .playbot import (
     PlayBotController,
-    run_dry_run_nd,
 )
 from .playbot.types import (
     BotMode,
@@ -67,11 +58,13 @@ from .projection3d import (
     raw_to_world,
     transform_point,
 )
-from .runtime_helpers import advance_gravity, collect_cleared_ghost_cells, tick_animation
+from .loop_runner_nd import run_nd_loop
+from .runtime_helpers import collect_cleared_ghost_cells
+from .panel_utils import draw_text_lines, draw_translucent_panel
 from .rotation_anim import PieceRotationAnimatorND
-from .speed_curve import gravity_interval_ms
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
+from .pause_menu import run_pause_menu
 
 
 MARGIN = 20
@@ -79,11 +72,7 @@ SIDE_PANEL = 360
 BG_TOP = (18, 24, 50)
 BG_BOTTOM = (6, 8, 20)
 TEXT_COLOR = (230, 230, 230)
-HIGHLIGHT_COLOR = (255, 215, 0)
 GRID_COLOR = (75, 90, 125)
-
-DEFAULT_GAME_SEED = 1337
-_DEFAULT_MODE_3D = default_settings_payload()["settings"]["3d"]
 
 COLOR_MAP = {
     1: (0, 255, 255),
@@ -120,171 +109,6 @@ def init_fonts() -> GfxFonts:
             hint_font=pygame.font.Font(None, 18),
             panel_font=pygame.font.Font(None, 17),
         )
-
-@dataclass
-class GameSettings3D:
-    width: int = _DEFAULT_MODE_3D["width"]
-    height: int = _DEFAULT_MODE_3D["height"]
-    depth: int = _DEFAULT_MODE_3D["depth"]
-    speed_level: int = _DEFAULT_MODE_3D["speed_level"]
-    piece_set_index: int = _DEFAULT_MODE_3D["piece_set_index"]
-    bot_mode_index: int = _DEFAULT_MODE_3D["bot_mode_index"]
-    bot_algorithm_index: int = _DEFAULT_MODE_3D["bot_algorithm_index"]
-    bot_profile_index: int = _DEFAULT_MODE_3D["bot_profile_index"]
-    bot_speed_level: int = _DEFAULT_MODE_3D["bot_speed_level"]
-    bot_budget_ms: int = _DEFAULT_MODE_3D["bot_budget_ms"]
-    challenge_layers: int = _DEFAULT_MODE_3D["challenge_layers"]
-
-
-_PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
-_PIECE_SET_3D_LABELS = tuple(piece_set_label(piece_set_id) for piece_set_id in _PIECE_SET_3D_CHOICES)
-
-
-@dataclass
-class MenuState:
-    settings: GameSettings3D = field(default_factory=GameSettings3D)
-    selected_index: int = 0
-    running: bool = True
-    start_game: bool = False
-    bindings_status: str = ""
-    bindings_status_error: bool = False
-    active_profile: str = field(default_factory=active_key_profile)
-    rebind_mode: bool = False
-    rebind_index: int = 0
-    rebind_targets: list[tuple[str, str]] = field(default_factory=list)
-    rebind_conflict_mode: str = "replace"
-    run_dry_run: bool = False
-
-
-_MENU_FIELDS: list[FieldSpec] = [
-    *setup_fields_for_dimension(3, piece_set_max=len(_PIECE_SET_3D_CHOICES) - 1),
-]
-
-_SETUP_BLOCKED_ACTIONS = {
-    MenuAction.LOAD_BINDINGS,
-    MenuAction.SAVE_BINDINGS,
-    MenuAction.LOAD_SETTINGS,
-    MenuAction.SAVE_SETTINGS,
-    MenuAction.RESET_SETTINGS,
-    MenuAction.PROFILE_PREV,
-    MenuAction.PROFILE_NEXT,
-    MenuAction.PROFILE_NEW,
-    MenuAction.PROFILE_DELETE,
-    MenuAction.REBIND_TOGGLE,
-    MenuAction.REBIND_TARGET_NEXT,
-    MenuAction.REBIND_TARGET_PREV,
-    MenuAction.REBIND_CONFLICT_NEXT,
-    MenuAction.RESET_BINDINGS,
-}
-
-
-def _menu_value_text(attr_name: str, value: object) -> str:
-    if attr_name == "piece_set_index":
-        safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
-        return _PIECE_SET_3D_LABELS[safe_index]
-    return str(value)
-
-
-def draw_menu(screen: pygame.Surface, fonts: GfxFonts, state: MenuState) -> None:
-    draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
-    width, _ = screen.get_size()
-
-    title = fonts.title_font.render("3D Tetris – Setup", True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
-        "Use Up/Down to select, Left/Right to change, Enter to start.",
-        True,
-        (210, 210, 230),
-    )
-    screen.blit(title, ((width - title.get_width()) // 2, 60))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
-
-    panel_w = int(width * 0.62)
-    panel_h = max(280, 96 + len(_MENU_FIELDS) * 44)
-    panel_x = (width - panel_w) // 2
-    panel_y = 160
-
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 145), panel.get_rect(), border_radius=16)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 28
-    for idx, (label, attr_name, _, _) in enumerate(_MENU_FIELDS):
-        value = getattr(state.settings, attr_name)
-        value_text = _menu_value_text(attr_name, value)
-        text = f"{label}: {value_text}"
-        selected = idx == state.selected_index
-        text_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        surf = fonts.menu_font.render(text, True, text_color)
-        rect = surf.get_rect(topleft=(panel_x + 36, y))
-        if selected:
-            hi_rect = rect.inflate(20, 10)
-            hi = pygame.Surface(hi_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 40), hi.get_rect(), border_radius=10)
-            screen.blit(hi, hi_rect.topleft)
-        screen.blit(surf, rect.topleft)
-        y += 50
-
-    hints = [
-        "Esc = quit",
-        "F7 dry-run verify (bot, no graphics)",
-        "Use Main Menu -> Bot Options / Keybindings for shared controls.",
-        "Projection modes are available during gameplay (P).",
-    ]
-    hy = panel_y + panel_h + 20
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, (210, 210, 230))
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 4
-
-    if state.bindings_status:
-        status_color = menu_binding_status_color(state.bindings_status_error)
-        status = fonts.hint_font.render(state.bindings_status, True, status_color)
-        screen.blit(status, ((width - status.get_width()) // 2, hy))
-
-
-def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings3D]:
-    clock = pygame.time.Clock()
-    load_active_profile_bindings()
-    state = MenuState()
-    ok, msg = load_menu_settings(state, 3, include_profile=True)
-    if not ok:
-        state.bindings_status = msg
-        state.bindings_status_error = True
-
-    while state.running and not state.start_game:
-        _dt = clock.tick(60)
-        actions = gather_menu_actions(state, 3)
-        apply_menu_actions(
-            state,
-            actions,
-            _MENU_FIELDS,
-            3,
-            blocked_actions=_SETUP_BLOCKED_ACTIONS,
-        )
-        if state.run_dry_run:
-            report = run_dry_run_nd(
-                build_config(state.settings),
-                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
-                planning_budget_ms=state.settings.bot_budget_ms,
-                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
-            )
-            state.bindings_status = report.reason
-            state.bindings_status_error = not report.passed
-        draw_menu(screen, fonts, state)
-        pygame.display.flip()
-
-    if state.running and state.start_game:
-        ok, msg = save_menu_settings(state, 3)
-        if not ok:
-            state.bindings_status = msg
-            state.bindings_status_error = True
-        return state.settings
-    return None
-
-
-def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
-    return gravity_interval_ms(cfg.speed_level, dimension=3)
-
 
 class ProjectionMode3D(Enum):
     PROJECTIVE = auto()
@@ -351,27 +175,6 @@ class Camera3D(YawPitchTurnAnimator):
     def _start_turn(self, target_yaw: float, target_pitch: float) -> None:
         super()._start_turn(target_yaw, target_pitch)
         self.auto_fit_once = True
-
-
-def build_config(settings: GameSettings3D) -> GameConfigND:
-    piece_set_id = _PIECE_SET_3D_CHOICES[
-        max(0, min(len(_PIECE_SET_3D_CHOICES) - 1, settings.piece_set_index))
-    ]
-    return GameConfigND(
-        dims=(settings.width, settings.height, settings.depth),
-        gravity_axis=1,
-        speed_level=settings.speed_level,
-        piece_set_id=piece_set_id,
-        challenge_layers=settings.challenge_layers,
-    )
-
-
-def create_initial_state(cfg: GameConfigND) -> GameStateND:
-    board = BoardND(cfg.dims)
-    state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
-    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
-    return state
-
 
 def _transform_raw_point(raw: Cell3 | tuple[float, float, float],
                          dims: Cell3,
@@ -612,9 +415,7 @@ def _draw_side_panel(surface: pygame.Surface,
                      fonts: GfxFonts,
                      grid_mode: GridMode,
                      bot_lines: tuple[str, ...] = ()) -> None:
-    panel = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 140), panel.get_rect(), border_radius=12)
-    surface.blit(panel, panel_rect.topleft)
+    draw_translucent_panel(surface, panel_rect, alpha=140, radius=12)
 
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
@@ -639,25 +440,34 @@ def _draw_side_panel(surface: pygame.Surface,
         "",
         *bot_lines,
         *([""] if bot_lines else []),
-        *CONTROL_LINES_3D_GAME,
-        "",
-        *CONTROL_LINES_3D_CAMERA,
-        " Mouse: RMB drag orbit",
-        " Wheel: zoom",
-        "",
-        "R = restart   M = menu",
-        "Esc = quit",
     ]
 
-    y = panel_rect.y + 16
-    for line in lines:
-        surf = fonts.panel_font.render(line, True, TEXT_COLOR)
-        surface.blit(surf, (panel_rect.x + 14, y))
-        y += surf.get_height() + 3
+    y = draw_text_lines(
+        surface,
+        lines=lines,
+        font=fonts.panel_font,
+        start_pos=(panel_rect.x + 14, panel_rect.y + 16),
+        color=TEXT_COLOR,
+        line_gap=3,
+    )
+
+    controls_rect = pygame.Rect(
+        panel_rect.x + 6,
+        y + 4,
+        panel_rect.width - 12,
+        panel_rect.bottom - (y + 12),
+    )
+    draw_grouped_control_helper(
+        surface,
+        groups=control_groups_for_dimension(3),
+        rect=controls_rect,
+        panel_font=fonts.panel_font,
+        hint_font=fonts.hint_font,
+    )
 
     if state.game_over:
         over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
-        surface.blit(over, (panel_rect.x + 14, y + 6))
+        surface.blit(over, (panel_rect.x + 14, panel_rect.bottom - 26))
 
 
 def _auto_fit_orthographic_zoom(camera: Camera3D,
@@ -894,58 +704,23 @@ def run_game_loop(screen: pygame.Surface,
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
         ndim=3,
+        dims=cfg.dims,
         profile=bot_planner_profile_from_index(bot_profile_index),
         budget_ms=bot_budget_ms,
         algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
     )
     loop.refresh_score_multiplier()
-    clock = pygame.time.Clock()
-
-    while True:
-        dt = clock.tick(60)
-        loop.gravity_accumulator += dt
-        loop.refresh_score_multiplier()
-
-        decision = process_game_events(
-            keydown_handler=loop.keydown_handler,
-            on_restart=loop.on_restart,
-            on_toggle_grid=loop.on_toggle_grid,
-            event_handler=loop.pointer_event_handler,
-        )
-        if decision == "quit":
-            return False
-        if decision == "menu":
-            return True
-
-        loop.bot.tick_nd(loop.state, dt)
-        if loop.bot.controls_descent:
-            loop.gravity_accumulator = 0
-        else:
-            loop.gravity_accumulator = advance_gravity(
-                loop.state,
-                loop.gravity_accumulator,
-                gravity_interval_ms,
-            )
-
-        new_clear_anim, loop.last_lines_cleared = _spawn_clear_animation_if_needed(
-            loop.state,
-            loop.last_lines_cleared,
-        )
-        if new_clear_anim is not None:
-            loop.clear_anim = new_clear_anim
-            play_sfx("clear")
-
-        if loop.state.game_over and not loop.was_game_over:
-            play_sfx("game_over")
-        loop.was_game_over = loop.state.game_over
-
-        loop.camera.step_animation(dt)
-        loop.clear_anim = tick_animation(loop.clear_anim, dt)
-        loop.rotation_anim.observe(loop.state.current_piece, dt)
-        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
-
-        draw_game_frame(
-            screen,
+    return run_nd_loop(
+        screen=screen,
+        fonts=fonts,
+        loop=loop,
+        gravity_interval_ms=gravity_interval_ms,
+        pause_dimension=3,
+        run_pause_menu=run_pause_menu,
+        spawn_clear_animation=_spawn_clear_animation_if_needed,
+        step_view=loop.camera.step_animation,
+        draw_frame=lambda target, active_overlay: draw_game_frame(
+            target,
             loop.state,
             loop.camera,
             fonts,
@@ -953,8 +728,10 @@ def run_game_loop(screen: pygame.Surface,
             bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
             active_overlay=active_overlay,
-        )
-        pygame.display.flip()
+        ),
+        play_clear_sfx=lambda: play_sfx("clear"),
+        play_game_over_sfx=lambda: play_sfx("game_over"),
+    )
 
 
 def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:

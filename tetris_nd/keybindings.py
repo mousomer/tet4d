@@ -611,6 +611,74 @@ def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
     return {group: sorted(bindings.keys()) for group, bindings in groups.items()}
 
 
+_BINDING_GROUP_LABELS = {
+    "system": "General / System",
+    "game": "Gameplay",
+    "camera": "Camera / View",
+    "slice": "Slice",
+}
+
+_BINDING_GROUP_DESCRIPTIONS = {
+    "system": "Global actions available in all modes.",
+    "game": "Piece translation, drop, and rotation actions.",
+    "camera": "Board/view camera orbit, projection, and zoom controls.",
+    "slice": "Layer selection controls for dense 3D/4D inspection.",
+}
+
+_COMMON_ACTION_DESCRIPTIONS = {
+    "toggle_grid": "Cycle grid display mode.",
+    "menu": "Open the in-game pause menu.",
+    "restart": "Restart the current run.",
+    "quit": "Quit the current game or application flow.",
+    "move_x_neg": "Move active piece left on the x axis.",
+    "move_x_pos": "Move active piece right on the x axis.",
+    "move_z_neg": "Move active piece away from viewer (default view).",
+    "move_z_pos": "Move active piece closer to viewer (default view).",
+    "move_w_neg": "Move active piece toward lower w layer.",
+    "move_w_pos": "Move active piece toward higher w layer.",
+    "soft_drop": "Move piece one gravity step down.",
+    "hard_drop": "Drop piece immediately to lock position.",
+    "rotate_xy_pos": "Rotate piece in x-y plane (+90).",
+    "rotate_xy_neg": "Rotate piece in x-y plane (-90).",
+    "rotate_xz_pos": "Rotate piece in x-z plane (+90).",
+    "rotate_xz_neg": "Rotate piece in x-z plane (-90).",
+    "rotate_yz_pos": "Rotate piece in y-z plane (+90).",
+    "rotate_yz_neg": "Rotate piece in y-z plane (-90).",
+    "rotate_xw_pos": "Rotate piece in x-w plane (+90).",
+    "rotate_xw_neg": "Rotate piece in x-w plane (-90).",
+    "rotate_yw_pos": "Rotate piece in y-w plane (+90).",
+    "rotate_yw_neg": "Rotate piece in y-w plane (-90).",
+    "rotate_zw_pos": "Rotate piece in z-w plane (+90).",
+    "rotate_zw_neg": "Rotate piece in z-w plane (-90).",
+    "yaw_fine_neg": "Yaw camera by -15 degrees.",
+    "yaw_fine_pos": "Yaw camera by +15 degrees.",
+    "yaw_neg": "Yaw camera by -90 degrees.",
+    "yaw_pos": "Yaw camera by +90 degrees.",
+    "pitch_neg": "Pitch camera by -90 degrees.",
+    "pitch_pos": "Pitch camera by +90 degrees.",
+    "zoom_in": "Zoom camera in.",
+    "zoom_out": "Zoom camera out.",
+    "cycle_projection": "Cycle projection mode.",
+    "reset": "Reset camera/view transform.",
+    "slice_z_neg": "Move active z slice toward lower z.",
+    "slice_z_pos": "Move active z slice toward higher z.",
+    "slice_w_neg": "Move active w slice toward lower w.",
+    "slice_w_pos": "Move active w slice toward higher w.",
+}
+
+
+def binding_group_label(group: str) -> str:
+    return _BINDING_GROUP_LABELS.get(group, group.replace("_", " ").title())
+
+
+def binding_group_description(group: str) -> str:
+    return _BINDING_GROUP_DESCRIPTIONS.get(group, "Control category.")
+
+
+def binding_action_description(action: str) -> str:
+    return _COMMON_ACTION_DESCRIPTIONS.get(action, action.replace("_", " "))
+
+
 def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
     filtered = tuple(candidate for candidate in keys if candidate != key)
     return filtered
@@ -782,6 +850,17 @@ def list_key_profiles() -> list[str]:
     return sorted(profiles)
 
 
+def next_auto_profile_name(prefix: str = "custom") -> str:
+    safe_prefix = _normalize_profile_name(prefix)
+    existing = set(list_key_profiles())
+    idx = 1
+    while True:
+        candidate = f"{safe_prefix}_{idx}"
+        if candidate not in existing:
+            return candidate
+        idx += 1
+
+
 def set_active_key_profile(profile: str) -> tuple[bool, str]:
     try:
         normalized = _normalize_profile_name(profile)
@@ -794,13 +873,7 @@ def set_active_key_profile(profile: str) -> tuple[bool, str]:
 
 def create_auto_profile(base_profile: str | None = None) -> tuple[bool, str, str | None]:
     source = _normalize_profile_name(base_profile) if base_profile else ACTIVE_KEY_PROFILE
-    existing = set(list_key_profiles())
-    idx = 1
-    while True:
-        candidate = f"custom_{idx}"
-        if candidate not in existing:
-            break
-        idx += 1
+    candidate = next_auto_profile_name("custom")
     ok, msg = clone_key_profile(candidate, source)
     if not ok:
         return False, msg, None
@@ -852,6 +925,37 @@ def delete_key_profile(profile: str) -> tuple[bool, str]:
         ACTIVE_KEY_PROFILE = PROFILE_SMALL
         load_active_profile_bindings()
     return True, f"Deleted profile: {normalized}"
+
+
+def rename_key_profile(profile: str, new_profile: str) -> tuple[bool, str]:
+    source = _normalize_profile_name(profile)
+    target = _normalize_profile_name(new_profile)
+    if source in BUILTIN_PROFILES:
+        return False, "cannot rename built-in profile"
+    if target in BUILTIN_PROFILES:
+        return False, "cannot rename to built-in profile name"
+    if source == target:
+        return True, f"Profile already named: {source}"
+    profiles = set(list_key_profiles())
+    if source not in profiles:
+        return False, f"profile not found: {source}"
+    if target in profiles:
+        return False, f"profile already exists: {target}"
+
+    src_dir = _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / source)
+    dst_dir = _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / target)
+    try:
+        src_dir.rename(dst_dir)
+    except OSError as exc:
+        return False, f"failed renaming profile: {exc}"
+
+    global ACTIVE_KEY_PROFILE
+    if ACTIVE_KEY_PROFILE == source:
+        ACTIVE_KEY_PROFILE = target
+        ok, msg = load_active_profile_bindings()
+        if not ok:
+            return False, msg
+    return True, f"Renamed profile {source} -> {target}"
 
 
 def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:

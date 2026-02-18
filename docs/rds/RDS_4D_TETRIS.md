@@ -1,8 +1,8 @@
 # 4D Tetris RDS
 
-Status: Active v0.5  
+Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
-Date: 2026-02-16  
+Date: 2026-02-18  
 Target Runtime: Python 3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -38,7 +38,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 7. Current baseline 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
 8. Definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
 9. Setup menu must expose piece set source selection (`native_4d`, `native_4d_6cell`, `embedded_3d`, `embedded_2d`, `random_cells_4d`, `debug_rectangles_4d`).
-10. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP`), and planner budget (ms).
+10. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
 ## 4.1 Lower-dimensional set embedding requirements (4D)
 

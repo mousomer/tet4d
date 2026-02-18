@@ -37,7 +37,11 @@ def run_dry_run_2d(
     apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
-    budget = planning_budget_ms if planning_budget_ms is not None else default_planning_budget_ms(2, planner_profile)
+    budget = (
+        planning_budget_ms
+        if planning_budget_ms is not None
+        else default_planning_budget_ms(2, planner_profile, dims=(cfg.width, cfg.height))
+    )
 
     for _ in range(max(1, max_pieces)):
         if state.game_over:
@@ -95,7 +99,11 @@ def run_dry_run_nd(
     apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
-    budget = planning_budget_ms if planning_budget_ms is not None else default_planning_budget_ms(cfg.ndim, planner_profile)
+    budget = (
+        planning_budget_ms
+        if planning_budget_ms is not None
+        else default_planning_budget_ms(cfg.ndim, planner_profile, dims=cfg.dims)
+    )
 
     for _ in range(max(1, max_pieces)):
         if state.game_over:
