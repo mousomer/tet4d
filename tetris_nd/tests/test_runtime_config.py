@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from unittest import mock
 
+from tetris_nd import runtime_config
 from tetris_nd.runtime_config import (
     audio_event_specs,
     gameplay_tuning_payload,
     grid_mode_cycle_names,
     playbot_adaptive_fallback_enabled,
     playbot_benchmark_p95_thresholds,
+    playbot_benchmark_history_file,
     playbot_board_size_scaling_policy_for_ndim,
     playbot_budget_table_for_ndim,
     playbot_default_hard_drop_after_soft_drops,
@@ -49,6 +53,24 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertGreater(thresholds["2d"], 0.0)
         self.assertGreater(thresholds["3d"], thresholds["2d"])
         self.assertGreater(thresholds["4d"], thresholds["3d"])
+
+    def test_playbot_benchmark_history_file_sanitized_to_state_root(self) -> None:
+        valid_policy = {"benchmark": {"history_file": "state/bench/custom_history.jsonl"}}
+        with mock.patch.object(runtime_config, "_playbot_policy", return_value=valid_policy):
+            resolved = playbot_benchmark_history_file()
+        expected = (runtime_config.CONFIG_DIR.parent / "state/bench/custom_history.jsonl").resolve()
+        self.assertEqual(resolved, expected)
+
+        invalid_policy = {"benchmark": {"history_file": "../../outside/history.jsonl"}}
+        with mock.patch.object(runtime_config, "_playbot_policy", return_value=invalid_policy):
+            fallback = playbot_benchmark_history_file()
+        fallback_expected = (runtime_config.CONFIG_DIR.parent / runtime_config.DEFAULT_PLAYBOT_HISTORY_FILE).resolve()
+        self.assertEqual(fallback, fallback_expected)
+
+        absolute_policy = {"benchmark": {"history_file": str(Path("/tmp/unsafe.jsonl"))}}
+        with mock.patch.object(runtime_config, "_playbot_policy", return_value=absolute_policy):
+            absolute_fallback = playbot_benchmark_history_file()
+        self.assertEqual(absolute_fallback, fallback_expected)
 
     def test_audio_event_specs_are_non_empty(self) -> None:
         specs = audio_event_specs()

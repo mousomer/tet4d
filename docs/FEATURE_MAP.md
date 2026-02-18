@@ -4,18 +4,19 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 1. Launcher and Menus
 
-- Unified launcher: `Play 2D`, `Play 3D`, `Play 4D`, `Help`, `Settings`, `Keybindings Setup`, `Bot Options`, `Quit`.
+- Unified launcher: `Play 2D`,`Play 3D`,`Play 4D`,`Help`,`Settings`,`Keybindings Setup`,`Bot Options`,`Quit`.
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
+  - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - Pause menu is unified across modes: resume/restart/settings/keybindings/profiles/help/back to main/quit.
 - Reset defaults requires confirmation.
-- Autosave persists session continuity silently (`Autosaved` status), while explicit `Save` remains manual durable save.
+- Autosave persists session continuity silently (`Autosaved`status), while explicit`Save` remains manual durable save.
 
 ## 2. Gameplay (2D/3D/4D)
 
-- Deterministic sparse-board gameplay core (`x`, `y`, `z`, `w`; gravity on `y`).
+- Deterministic sparse-board gameplay core (`x`,`y`,`z`,`w`; gravity on`y`).
 - 2D line clear rule: one full `x` line clears.
 - 3D and 4D clear full gravity-orthogonal planes.
 - Animated piece rotation and animated clear feedback.
@@ -39,18 +40,23 @@ User-facing feature map for the shipped `tet4d` experience.
 ## 4. Keybindings
 
 - External JSON keybinding files per dimension:
-  - `/Users/omer/workspace/test-code/tet4d/keybindings/2d.json`
-  - `/Users/omer/workspace/test-code/tet4d/keybindings/3d.json`
-  - `/Users/omer/workspace/test-code/tet4d/keybindings/4d.json`
-- Built-in keyboard sets: `small` and `full`.
+  - `keybindings/2d.json`
+- `keybindings/3d.json`
+- `keybindings/4d.json`
+- Built-in keyboard sets: `small`and`full`.
 - In-app keybinding editor supports:
-  - top-level scope sections (`General`, `2D`, `3D`, `4D`),
+  - top-level scope sections (`General`,`2D`,`3D`,`4D`),
   - rebind,
   - conflict strategy,
   - save/load/save-as,
   - profile cycle/create/rename/delete,
   - reset to defaults.
-- Grouped in-game helper panels: `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
+- Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+- Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
+- Translation/rotation arrow-diagram guides are available in:
+  - Help pages,
+  - launcher/pause/settings/keybindings menus,
+  - in-game side-panel control helper areas (space permitting).
 
 ## 5. Piece Sets
 
@@ -70,12 +76,17 @@ User-facing feature map for the shipped `tet4d` experience.
   - speed level.
 - Easier assistance yields lower score multiplier.
 - Multiplier and bot status are visible in side panels.
+- Score analyzer is integrated on lock events:
+  - board-health and placement-quality feature extraction,
+  - HUD summary lines (`Quality`,`Board health`,`Trend`),
+  - config at `config/gameplay/score_analyzer.json`,
+  - persisted telemetry outputs (`state/analytics/score_events.jsonl`,`state/analytics/score_summary.json`) when logging is enabled.
 
 ## 7. Playbot
 
-- Modes: `OFF`, `ASSIST`, `AUTO`, `STEP`.
-- Planner algorithms: `AUTO`, `HEURISTIC`, `GREEDY_LAYER`.
-- Planner profiles: `FAST`, `BALANCED`, `DEEP`, `ULTRA`.
+- Modes: `OFF`,`ASSIST`,`AUTO`,`STEP`.
+- Planner algorithms: `AUTO`,`HEURISTIC`,`GREEDY_LAYER`.
+- Planner profiles: `FAST`,`BALANCED`,`DEEP`,`ULTRA`.
 - Adaptive planning under load:
   - budget clamp,
   - candidate caps,
@@ -88,13 +99,14 @@ User-facing feature map for the shipped `tet4d` experience.
 ## 8. Persistence and Config
 
 - Source-controlled config:
-  - `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
-  - `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
-  - `/Users/omer/workspace/test-code/tet4d/config/gameplay/tuning.json`
-  - `/Users/omer/workspace/test-code/tet4d/config/playbot/policy.json`
-  - `/Users/omer/workspace/test-code/tet4d/config/audio/sfx.json`
+  - `config/menu/defaults.json`
+- `config/menu/structure.json`
+- `config/gameplay/tuning.json`
+- `config/gameplay/score_analyzer.json`
+- `config/playbot/policy.json`
+- `config/audio/sfx.json`
 - User state persisted in:
-  - `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`
+  - `state/menu_settings.json`
 - Missing/corrupt user state falls back to external defaults.
 
 ## 9. Verification Coverage
@@ -103,4 +115,25 @@ User-facing feature map for the shipped `tet4d` experience.
 - Deterministic replay tests (2D/3D/4D controls).
 - Long-run deterministic score snapshots across assist combinations.
 - Playbot tests (planning fallback, dry run, greedy priorities, hard-drop thresholds).
+- Repeated playbot dry-run stability checks via `tools/check_playbot_stability.py`.
 - Benchmark checks integrated in CI script.
+- CI matrix validates Python `3.11`,`3.12`,`3.13`, and`3.14`.
+- Scheduled stability watch runs repeated dry-run checks and policy-analysis snapshots.
+
+## 10. Canonical maintenance automation
+
+- Canonical maintenance contract file:
+  - `config/project/canonical_maintenance.json`
+- Contract validator:
+  - `tools/validate_project_contracts.py`
+- CI runs this validator through:
+  - `scripts/ci_check.sh`
+- `.github/workflows/stability-watch.yml`
+- Contract currently enforces synchronized maintenance of:
+  - documentation set (`README`,`docs`,`RDS`,`BACKLOG`,`FEATURE_MAP`),
+  - help guide renderer (`tetris_nd/menu_control_guides.py`) and help manifest,
+  - core tests and canonical runtime config files,
+  - schema + migration files (`config/schema`,`docs/migrations`),
+  - replay manifest contract (`tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`),
+  - help content contract (`docs/help/HELP_INDEX.md`,`assets/help/manifest.json`),
+  - release checklist (`docs/RELEASE_CHECKLIST.md`).

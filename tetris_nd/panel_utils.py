@@ -31,3 +31,28 @@ def draw_text_lines(
         surface.blit(surf, (x, y))
         y += surf.get_height() + line_gap
     return y
+
+
+def truncate_lines_to_height(
+    lines: tuple[str, ...] | list[str],
+    *,
+    font: pygame.font.Font,
+    available_height: int,
+    line_gap: int = 3,
+    min_lines_for_ellipsis: int = 2,
+) -> tuple[str, ...]:
+    if available_height <= 0:
+        return tuple()
+    line_h = font.get_height() + line_gap
+    if line_h <= 0:
+        return tuple(lines)
+    max_lines = available_height // line_h
+    if max_lines <= 0:
+        return tuple()
+    if len(lines) <= max_lines:
+        return tuple(lines)
+    if max_lines < min_lines_for_ellipsis:
+        return tuple()
+    clipped = list(lines[: max_lines - 1])
+    clipped.append("...")
+    return tuple(clipped)

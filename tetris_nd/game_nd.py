@@ -13,6 +13,11 @@ from .pieces_nd import (
     normalize_piece_set_for_dimension,
     normalize_piece_set_4d,  # backward-compatible parameter support
 )
+from .score_analyzer import (
+    analyze_lock_event,
+    new_analysis_session_id,
+    record_score_analysis_event,
+)
 from .types import Coord
 
 
@@ -40,6 +45,7 @@ class GameConfigND:
     random_cell_count: int = 5
     challenge_layers: int = 0
     lock_piece_points: int = 5
+    exploration_mode: bool = False
 
     def __post_init__(self) -> None:
         if len(self.dims) < 2:
@@ -56,6 +62,7 @@ class GameConfigND:
             raise ValueError("challenge_layers must be >= 0")
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
+        self.exploration_mode = bool(self.exploration_mode)
 
         ndim = len(self.dims)
         selected_piece_set = self.piece_set_id
@@ -83,6 +90,12 @@ class GameStateND:
     lines_cleared: int = 0
     game_over: bool = False
     score_multiplier: float = 1.0
+    analysis_actor_mode: str = "human"
+    analysis_bot_mode: str = "off"
+    analysis_grid_mode: str = "full"
+    analysis_session_id: str = field(default_factory=new_analysis_session_id)
+    analysis_seq: int = 0
+    last_score_analysis: dict[str, object] | None = None
 
     def __post_init__(self) -> None:
         if self.board is None:
@@ -137,7 +150,11 @@ class GameStateND:
             axis_values = [block[axis] for block in shape.blocks]
             min_axis = min(axis_values)
             max_axis = max(axis_values)
-            if axis == g:
+            if self.config.exploration_mode:
+                span = max_axis - min_axis + 1
+                start = (self.config.dims[axis] - span) // 2
+                coords[axis] = start - min_axis
+            elif axis == g:
                 coords[axis] = -2 - min_axis
             else:
                 span = max_axis - min_axis + 1
@@ -186,9 +203,13 @@ class GameStateND:
     def lock_current_piece(self) -> int:
         if self.current_piece is None:
             return 0
+        if self.config.exploration_mode:
+            return 0
 
         g = self.config.gravity_axis
         piece = self.current_piece
+        pre_cells = dict(self.board.cells)
+        visible_piece_cells = tuple(coord for coord in piece.cells() if self.board.inside_bounds(coord))
 
         # If any block is still above the board along gravity axis, game over.
         for coord in piece.cells():
@@ -203,7 +224,28 @@ class GameStateND:
         self.lines_cleared += cleared
         raw_points = self.config.lock_piece_points + _score_for_clear(cleared)
         mult = max(0.1, float(self.score_multiplier))
-        self.score += max(0, int(round(raw_points * mult)))
+        awarded_points = max(0, int(round(raw_points * mult)))
+        self.score += awarded_points
+
+        self.analysis_seq += 1
+        self.last_score_analysis = analyze_lock_event(
+            board_pre=pre_cells,
+            board_post=dict(self.board.cells),
+            dims=self.config.dims,
+            gravity_axis=g,
+            locked_cells=visible_piece_cells,
+            cleared=cleared,
+            piece_id=piece.shape.name,
+            actor_mode=self.analysis_actor_mode,
+            bot_mode=self.analysis_bot_mode,
+            grid_mode=self.analysis_grid_mode,
+            speed_level=self.config.speed_level,
+            raw_points=raw_points,
+            final_points=awarded_points,
+            session_id=self.analysis_session_id,
+            seq=self.analysis_seq,
+        )
+        record_score_analysis_event(self.last_score_analysis)
         return cleared
 
     # --- Movement and rotation ---
@@ -236,6 +278,9 @@ class GameStateND:
     def hard_drop(self) -> None:
         if self.current_piece is None:
             return
+        if self.config.exploration_mode:
+            self.spawn_new_piece()
+            return
 
         g = self.config.gravity_axis
         while self.try_move_axis(g, 1):
@@ -248,7 +293,7 @@ class GameStateND:
     # --- Time step ---
 
     def step_gravity(self) -> None:
-        if self.game_over or self.current_piece is None:
+        if self.config.exploration_mode or self.game_over or self.current_piece is None:
             return
 
         g = self.config.gravity_axis

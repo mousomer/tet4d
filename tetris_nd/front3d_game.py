@@ -58,13 +58,15 @@ from .projection3d import (
     raw_to_world,
     transform_point,
 )
+from .score_analyzer import hud_analysis_lines
 from .loop_runner_nd import run_nd_loop
 from .runtime_helpers import collect_cleared_ghost_cells
-from .panel_utils import draw_text_lines, draw_translucent_panel
+from .panel_utils import draw_text_lines, draw_translucent_panel, truncate_lines_to_height
 from .rotation_anim import PieceRotationAnimatorND
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
 from .pause_menu import run_pause_menu
+from .help_menu import run_help_menu
 
 
 MARGIN = 20
@@ -420,6 +422,8 @@ def _draw_side_panel(surface: pygame.Surface,
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
     lines = [
         "3D Tetris",
         "",
@@ -429,6 +433,7 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Score: {state.score}",
         f"Layers: {state.lines_cleared}",
         f"Speed: {state.config.speed_level}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
@@ -437,9 +442,6 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Yaw: {camera.yaw_deg:.1f}",
         f"Pitch: {camera.pitch_deg:.1f}",
         f"Zoom: {camera.zoom:.1f}",
-        "",
-        *bot_lines,
-        *([""] if bot_lines else []),
     ]
 
     y = draw_text_lines(
@@ -450,12 +452,36 @@ def _draw_side_panel(surface: pygame.Surface,
         color=TEXT_COLOR,
         line_gap=3,
     )
+    controls_top = y + 4
+    reserve_bottom = 26 if state.game_over else 0
+    available_h = max(0, panel_rect.bottom - reserve_bottom - controls_top)
+    min_controls_h = 138
+    gap = 6
+
+    low_lines: tuple[str, ...] = tuple()
+    low_h = 0
+    if low_priority_lines:
+        max_low_h = max(0, available_h - min_controls_h - gap)
+        low_lines = truncate_lines_to_height(
+            low_priority_lines,
+            font=fonts.hint_font,
+            available_height=max(0, max_low_h - 8),
+            line_gap=3,
+        )
+        if low_lines:
+            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
+
+    controls_bottom = panel_rect.bottom - reserve_bottom - (low_h + gap if low_h else 8)
+    if controls_bottom - controls_top < 44 and low_h:
+        low_lines = tuple()
+        low_h = 0
+        controls_bottom = panel_rect.bottom - reserve_bottom - 8
 
     controls_rect = pygame.Rect(
         panel_rect.x + 6,
-        y + 4,
+        controls_top,
         panel_rect.width - 12,
-        panel_rect.bottom - (y + 12),
+        max(44, controls_bottom - controls_top),
     )
     draw_grouped_control_helper(
         surface,
@@ -464,6 +490,24 @@ def _draw_side_panel(surface: pygame.Surface,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
     )
+    if low_lines:
+        low_height = panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 8)
+        if low_height > 10:
+            low_rect = pygame.Rect(
+                panel_rect.x + 8,
+                controls_rect.bottom + 6,
+                panel_rect.width - 16,
+                low_height,
+            )
+            draw_translucent_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
+            draw_text_lines(
+                surface,
+                lines=low_lines,
+                font=fonts.hint_font,
+                start_pos=(low_rect.x + 6, low_rect.y + 5),
+                color=(176, 188, 222),
+                line_gap=3,
+            )
 
     if state.game_over:
         over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
@@ -663,6 +707,10 @@ class LoopContext3D:
             grid_mode=self.grid_mode,
             speed_level=self.cfg.speed_level,
         )
+        mode_name = self.bot.mode.value
+        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_bot_mode = mode_name
+        self.state.analysis_grid_mode = self.grid_mode.value
 
     def pointer_event_handler(self, event: pygame.event.Event) -> None:
         wheel = mouse_wheel_delta(event)
@@ -699,6 +747,8 @@ def run_game_loop(screen: pygame.Surface,
                   bot_algorithm_index: int = 0,
                   bot_profile_index: int = 1,
                   bot_budget_ms: int = 24) -> bool:
+    if cfg.exploration_mode:
+        bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop = LoopContext3D.create(cfg, bot_mode=bot_mode)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
@@ -717,6 +767,12 @@ def run_game_loop(screen: pygame.Surface,
         gravity_interval_ms=gravity_interval_ms,
         pause_dimension=3,
         run_pause_menu=run_pause_menu,
+        run_help_menu=lambda target, active_fonts, dim, ctx: run_help_menu(
+            target,
+            active_fonts,
+            dimension=dim,
+            context_label=ctx,
+        ),
         spawn_clear_animation=_spawn_clear_animation_if_needed,
         step_view=loop.camera.step_animation,
         draw_frame=lambda target, active_overlay: draw_game_frame(

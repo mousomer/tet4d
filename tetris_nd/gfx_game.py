@@ -7,6 +7,8 @@ import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
+from .panel_utils import truncate_lines_to_height
+from .score_analyzer import hud_analysis_lines
 from .speed_curve import gravity_interval_ms
 from .view_modes import GridMode, grid_mode_label
 
@@ -161,59 +163,78 @@ def draw_button_with_arrow(
 
 # ---------- Menu drawing ----------
 
-def _draw_menu_header(screen: pygame.Surface,
-                      fonts: GfxFonts,
-                      bindings_file_hint: str | None,
-                      extra_hint_lines: Tuple[str, ...],
-                      bindings_status: str,
-                      bindings_status_error: bool) -> int:
-    width, _ = screen.get_size()
-    title_text = "2D Tetris – Setup"
-    subtitle_text = "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit."
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    if font.size(ellipsis)[0] >= max_width:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
+        trimmed = trimmed[:-1]
+    return trimmed + ellipsis if trimmed else ""
 
-    title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
+
+def _draw_menu_header(
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    bindings_file_hint: str | None,
+    extra_hint_lines: Tuple[str, ...],
+    bindings_status: str,
+    bindings_status_error: bool,
+) -> int:
+    width, height = screen.get_size()
+    title_surf = fonts.title_font.render("2D Tetris - Setup", True, TEXT_COLOR)
+    subtitle_text = _fit_text(
+        fonts.hint_font,
+        "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
+        width - 28,
+    )
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
 
-    title_x = (width - title_surf.get_width()) // 2
-    screen.blit(title_surf, (title_x, 60))
+    title_y = 46
+    screen.blit(title_surf, ((width - title_surf.get_width()) // 2, title_y))
+    subtitle_y = title_y + title_surf.get_height() + 8
+    screen.blit(subtitle_surf, ((width - subtitle_surf.get_width()) // 2, subtitle_y))
 
-    subtitle_x = (width - subtitle_surf.get_width()) // 2
-    screen.blit(subtitle_surf, (subtitle_x, 60 + title_surf.get_height() + 10))
-
-    hint_y = 60 + title_surf.get_height() + 34
     hint_lines = (
         (f"L = load keys, S = save keys ({bindings_file_hint})", *extra_hint_lines)
         if bindings_file_hint
         else extra_hint_lines
     )
+    hint_y = subtitle_y + subtitle_surf.get_height() + 10
+    line_h = fonts.hint_font.get_height() + 2
+    max_hint_bottom = min(height // 2, hint_y + line_h * max(2, len(hint_lines) + 1))
     for line in hint_lines:
-        hint_surf = fonts.hint_font.render(line, True, (200, 200, 220))
-        hint_x = (width - hint_surf.get_width()) // 2
-        screen.blit(hint_surf, (hint_x, hint_y))
+        if hint_y + line_h > max_hint_bottom:
+            break
+        hint_text = _fit_text(fonts.hint_font, line, width - 28)
+        hint_surf = fonts.hint_font.render(hint_text, True, (200, 200, 220))
+        screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
         hint_y += hint_surf.get_height() + 2
 
-    if bindings_status:
+    if bindings_status and hint_y + line_h <= max_hint_bottom:
         status_color = (255, 150, 150) if bindings_status_error else (170, 240, 170)
-        status_surf = fonts.hint_font.render(bindings_status, True, status_color)
-        status_x = (width - status_surf.get_width()) // 2
-        screen.blit(status_surf, (status_x, hint_y + 2))
+        status_text = _fit_text(fonts.hint_font, bindings_status, width - 28)
+        status_surf = fonts.hint_font.render(status_text, True, status_color)
+        screen.blit(status_surf, ((width - status_surf.get_width()) // 2, hint_y + 2))
         hint_y += status_surf.get_height() + 4
     return hint_y
 
 
-def _draw_menu_settings_panel(screen: pygame.Surface,
-                              fonts: GfxFonts,
-                              settings,
-                              selected_index: int,
-                              panel_top: int,
-                              menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
-                              value_formatter: Optional[Callable[[str, object], str]] = None) -> Tuple[int, int, int, int]:
-    """
-    Draw the glass panel with width/height/speed settings.
-    Returns (panel_x, panel_y, panel_w, panel_h).
-    """
+def _draw_menu_settings_panel(
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    settings,
+    selected_index: int,
+    panel_top: int,
+    menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
+    value_formatter: Optional[Callable[[str, object], str]] = None,
+) -> Tuple[int, int, int, int]:
     width, height = screen.get_size()
-    panel_w = int(width * 0.6)
+    panel_w = min(max(340, int(width * 0.6)), width - 24)
     if menu_fields:
         labels = []
         for label, attr_name, _min_val, _max_val in menu_fields:
@@ -227,154 +248,104 @@ def _draw_menu_settings_panel(screen: pygame.Surface,
             f"Speed level:   {settings.speed_level}   (1 = slow, 10 = fast)",
         ]
 
-    panel_h = max(220, 86 + len(labels) * 44)
+    panel_h_default = max(220, 86 + len(labels) * 44)
+    panel_max_h = max(140, height - panel_top - 126)
+    panel_h = min(panel_h_default, panel_max_h)
     panel_x = (width - panel_w) // 2
-    panel_y = max(160, panel_top)
-    max_panel_y = max(160, height - 430)
-    panel_y = min(panel_y, max_panel_y)
+    panel_y = max(134, panel_top)
+    panel_y = min(panel_y, max(60, height - panel_h - 126))
 
-    # Semi-transparent dark panel
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel_surf, (0, 0, 0, 140),
-                     panel_surf.get_rect(), border_radius=16)
+    pygame.draw.rect(panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16)
     screen.blit(panel_surf, (panel_x, panel_y))
 
-    option_y = panel_y + 30
-    option_x = panel_x + 40
+    option_y = panel_y + 24
+    option_x = panel_x + 28
+    option_w = panel_w - 56
+    option_bottom = panel_y + panel_h - 16
+    row_h_default = fonts.menu_font.get_height() + 18
+    row_h = min(
+        row_h_default,
+        max(fonts.menu_font.get_height() + 8, (option_bottom - option_y) // max(1, len(labels))),
+    )
 
     for i, text in enumerate(labels):
-        is_selected = (i == selected_index)
+        if option_y + fonts.menu_font.get_height() > option_bottom:
+            break
+        is_selected = i == selected_index
         txt_color = TEXT_COLOR if not is_selected else HIGHLIGHT_COLOR
-
-        text_surf = fonts.menu_font.render(text, True, txt_color)
+        text_fit = _fit_text(fonts.menu_font, text, option_w - 8)
+        text_surf = fonts.menu_font.render(text_fit, True, txt_color)
         text_rect = text_surf.get_rect(topleft=(option_x, option_y))
 
         if is_selected:
-            # Soft highlight bar behind selected option
-            highlight_rect = text_rect.inflate(20, 10)
+            highlight_rect = pygame.Rect(option_x - 8, option_y - 4, option_w + 16, text_rect.height + 10)
             highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(
-                highlight_surf,
-                (255, 255, 255, 40),
-                highlight_surf.get_rect(),
-                border_radius=10,
-            )
+            pygame.draw.rect(highlight_surf, (255, 255, 255, 40), highlight_surf.get_rect(), border_radius=10)
             screen.blit(highlight_surf, highlight_rect.topleft)
 
         screen.blit(text_surf, text_rect.topleft)
-        option_y += text_surf.get_height() + 18
+        option_y += row_h
 
     return panel_x, panel_y, panel_w, panel_h
 
 
-def _draw_menu_dpad_and_commands(screen: pygame.Surface,
-                                 fonts: GfxFonts,
-                                 panel_y: int,
-                                 panel_h: int) -> None:
-    """Draw small D-pad and Enter/Esc buttons under the settings panel."""
-    width, _ = screen.get_size()
-
-    # D-pad
-    dpad_center_y = panel_y + panel_h + 60
+def _draw_menu_dpad_and_commands(
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    panel_y: int,
+    panel_h: int,
+) -> None:
+    width, height = screen.get_size()
+    dpad_center_y = panel_y + panel_h + 56
     dpad_center_x = width // 2
     dpad_offset = 50
     button_size = (36, 36)
+
+    full_block_bottom = dpad_center_y + dpad_offset + 50 + 32 + fonts.hint_font.get_height() + 8
+    if full_block_bottom > height - 6:
+        compact_text = _fit_text(
+            fonts.hint_font,
+            "Arrows navigate   Enter start   Esc quit",
+            width - 24,
+        )
+        compact_surf = fonts.hint_font.render(compact_text, True, (200, 200, 220))
+        y = max(panel_y + panel_h + 8, height - compact_surf.get_height() - 8)
+        screen.blit(compact_surf, ((width - compact_surf.get_width()) // 2, y))
+        return
 
     up_color = (80, 140, 255)
     down_color = (80, 200, 140)
     side_color = (255, 190, 80)
     border = (240, 240, 255)
+    draw_button_with_arrow(screen, (dpad_center_x, dpad_center_y - dpad_offset), button_size, "up", "Up", fonts.hint_font, up_color, border)
+    draw_button_with_arrow(screen, (dpad_center_x, dpad_center_y + dpad_offset), button_size, "down", "Down", fonts.hint_font, down_color, border)
+    draw_button_with_arrow(screen, (dpad_center_x - dpad_offset, dpad_center_y), button_size, "left", "Left", fonts.hint_font, side_color, border)
+    draw_button_with_arrow(screen, (dpad_center_x + dpad_offset, dpad_center_y), button_size, "right", "Right", fonts.hint_font, side_color, border)
 
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x, dpad_center_y - dpad_offset),
-        button_size,
-        "up",
-        "Up",
-        fonts.hint_font,
-        up_color,
-        border,
-    )
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x, dpad_center_y + dpad_offset),
-        button_size,
-        "down",
-        "Down",
-        fonts.hint_font,
-        down_color,
-        border,
-    )
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x - dpad_offset, dpad_center_y),
-        button_size,
-        "left",
-        "Left",
-        fonts.hint_font,
-        side_color,
-        border,
-    )
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x + dpad_offset, dpad_center_y),
-        button_size,
-        "right",
-        "Right",
-        fonts.hint_font,
-        side_color,
-        border,
-    )
-
-    # Enter / Esc buttons
     cmd_y = dpad_center_y + dpad_offset + 50
     cmd_spacing = 140
     cmd_size = (100, 32)
     cmd_color = (100, 100, 160)
     cmd_border = (230, 230, 255)
-
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x - cmd_spacing // 2, cmd_y),
-        cmd_size,
-        None,
-        "Enter = Start",
-        fonts.hint_font,
-        cmd_color,
-        cmd_border,
-    )
-    draw_button_with_arrow(
-        screen,
-        (dpad_center_x + cmd_spacing // 2, cmd_y),
-        cmd_size,
-        None,
-        "Esc = Quit",
-        fonts.hint_font,
-        cmd_color,
-        cmd_border,
-    )
+    draw_button_with_arrow(screen, (dpad_center_x - cmd_spacing // 2, cmd_y), cmd_size, None, "Enter = Start", fonts.hint_font, cmd_color, cmd_border)
+    draw_button_with_arrow(screen, (dpad_center_x + cmd_spacing // 2, cmd_y), cmd_size, None, "Esc = Quit", fonts.hint_font, cmd_color, cmd_border)
 
 
-def draw_menu(screen: pygame.Surface,
-              fonts: GfxFonts,
-              settings,
-              selected_index: int,
-              bindings_file_hint: str | None = "keybindings/2d.json",
-              extra_hint_lines: Tuple[str, ...] = (),
-              bindings_status: str = "",
-              bindings_status_error: bool = False,
-              menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
-              value_formatter: Optional[Callable[[str, object], str]] = None) -> None:
-    """Top-level menu draw call."""
+def draw_menu(
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    settings,
+    selected_index: int,
+    bindings_file_hint: str | None = "keybindings/2d.json",
+    extra_hint_lines: Tuple[str, ...] = (),
+    bindings_status: str = "",
+    bindings_status_error: bool = False,
+    menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
+    value_formatter: Optional[Callable[[str, object], str]] = None,
+) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
-    header_bottom = _draw_menu_header(
-        screen,
-        fonts,
-        bindings_file_hint,
-        extra_hint_lines,
-        bindings_status,
-        bindings_status_error,
-    )
+    header_bottom = _draw_menu_header(screen, fonts, bindings_file_hint, extra_hint_lines, bindings_status, bindings_status_error)
     _panel_x, panel_y, _panel_w, panel_h = _draw_menu_settings_panel(
         screen,
         fonts,
@@ -639,8 +610,7 @@ def _draw_side_panel_text(surface: pygame.Surface,
                           state: GameState,
                           panel_offset: Tuple[int, int],
                           fonts: GfxFonts,
-                          grid_mode: GridMode,
-                          bot_lines: Sequence[str] = ()) -> int:
+                          grid_mode: GridMode) -> int:
     """Draw the textual part of the side panel. Returns the current y after text."""
     px, py = panel_offset
     gravity_ms = gravity_interval_ms_from_config(state.config)
@@ -652,12 +622,10 @@ def _draw_side_panel_text(surface: pygame.Surface,
         f"Score: {state.score}",
         f"Lines: {state.lines_cleared}",
         f"Speed level: {state.config.speed_level}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Fall: {rows_per_sec:.2f} rows/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
-        "",
-        *bot_lines,
-        *([""] if bot_lines else []),
     ]
 
     y = py
@@ -733,9 +701,37 @@ def draw_side_panel(surface: pygame.Surface,
                     grid_mode: GridMode = GridMode.FULL,
                     bot_lines: Sequence[str] = ()) -> None:
     """Top-level side panel draw."""
-    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode, bot_lines)
+    analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
+    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode)
     px, _ = panel_offset
-    controls_rect = pygame.Rect(px, y_after_text + 6, SIDE_PANEL, surface.get_height() - (y_after_text + 14))
+    panel_bottom = surface.get_height() - 8
+    controls_top = y_after_text + 6
+    reserve_bottom = 58 if state.game_over else 0
+    available_h = max(0, panel_bottom - reserve_bottom - controls_top)
+    min_controls_h = 116
+    gap = 6
+
+    low_lines: tuple[str, ...] = tuple()
+    low_h = 0
+    if low_priority_lines:
+        max_low_h = max(0, available_h - min_controls_h - gap)
+        low_lines = truncate_lines_to_height(
+            low_priority_lines,
+            font=fonts.hint_font,
+            available_height=max(0, max_low_h - 8),
+            line_gap=3,
+        )
+        if low_lines:
+            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
+
+    controls_bottom = panel_bottom - reserve_bottom - (low_h + gap if low_h else 0)
+    if controls_bottom - controls_top < 42 and low_h:
+        low_lines = tuple()
+        low_h = 0
+        controls_bottom = panel_bottom - reserve_bottom
+
+    controls_rect = pygame.Rect(px, controls_top, SIDE_PANEL, max(42, controls_bottom - controls_top))
     draw_grouped_control_helper(
         surface,
         groups=control_groups_for_dimension(2),
@@ -743,6 +739,25 @@ def draw_side_panel(surface: pygame.Surface,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
     )
+    if low_lines:
+        low_height = panel_bottom - (controls_rect.bottom + 8)
+        if low_height <= 10:
+            low_lines = tuple()
+        else:
+            low_rect = pygame.Rect(
+                px + 2,
+                controls_rect.bottom + 6,
+                SIDE_PANEL - 4,
+                low_height,
+            )
+            panel = pygame.Surface((low_rect.width, low_rect.height), pygame.SRCALPHA)
+            pygame.draw.rect(panel, (8, 12, 26, 100), panel.get_rect(), border_radius=8)
+            surface.blit(panel, low_rect.topleft)
+            low_y = low_rect.y + 5
+            for line in low_lines:
+                surf = fonts.hint_font.render(line, True, (176, 188, 222))
+                surface.blit(surf, (low_rect.x + 6, low_y))
+                low_y += surf.get_height() + 3
 
     # Game over message below D-pad (if needed)
     if state.game_over:

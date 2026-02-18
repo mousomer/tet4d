@@ -48,6 +48,7 @@ from .loop_runner_nd import run_nd_loop
 from .rotation_anim import PieceRotationAnimatorND
 from .view_modes import GridMode, cycle_grid_mode
 from .pause_menu import run_pause_menu
+from .help_menu import run_help_menu
 
 
 @dataclass
@@ -122,6 +123,10 @@ class LoopContext4D:
             grid_mode=self.grid_mode,
             speed_level=self.cfg.speed_level,
         )
+        mode_name = self.bot.mode.value
+        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_bot_mode = mode_name
+        self.state.analysis_grid_mode = self.grid_mode.value
 
     def pointer_event_handler(self, event: pygame.event.Event) -> None:
         wheel = mouse_wheel_delta(event)
@@ -161,6 +166,8 @@ def run_game_loop(
     bot_profile_index: int = 1,
     bot_budget_ms: int = 36,
 ) -> bool:
+    if cfg.exploration_mode:
+        bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop = LoopContext4D.create(cfg, bot_mode=bot_mode)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
@@ -179,6 +186,12 @@ def run_game_loop(
         gravity_interval_ms=gravity_interval_ms,
         pause_dimension=4,
         run_pause_menu=run_pause_menu,
+        run_help_menu=lambda target, active_fonts, dim, ctx: run_help_menu(
+            target,
+            active_fonts,
+            dimension=dim,
+            context_label=ctx,
+        ),
         spawn_clear_animation=spawn_clear_animation_if_needed,
         step_view=loop.view.step_animation,
         draw_frame=lambda target, active_overlay: draw_game_frame(

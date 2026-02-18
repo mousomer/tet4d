@@ -15,9 +15,10 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Mapping, MutableMapping, Sequence, Tuple
+from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
+from .key_display import display_key_name
 
 
 KeyTuple = Tuple[int, ...]
@@ -136,6 +137,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
         movement_2d = {
             "move_x_neg": (pygame.K_KP4,),
             "move_x_pos": (pygame.K_KP6,),
+            "move_y_neg": (pygame.K_KP1,),
+            "move_y_pos": (pygame.K_KP3,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -144,6 +147,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
             "move_x_pos": (pygame.K_KP6,),
             "move_z_neg": (pygame.K_KP8,),
             "move_z_pos": (pygame.K_KP2,),
+            "move_y_neg": (pygame.K_KP1,),
+            "move_y_pos": (pygame.K_KP3,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -154,6 +159,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
             "move_z_pos": (pygame.K_KP2,),
             "move_w_neg": (pygame.K_KP7,),
             "move_w_pos": (pygame.K_KP9,),
+            "move_y_neg": (pygame.K_KP1,),
+            "move_y_pos": (pygame.K_KP3,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -162,6 +169,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
     movement_2d = {
         "move_x_neg": (pygame.K_LEFT,),
         "move_x_pos": (pygame.K_RIGHT,),
+        "move_y_neg": (pygame.K_PAGEUP,),
+        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_DOWN,),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -170,6 +179,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
         "move_x_pos": (pygame.K_RIGHT,),
         "move_z_neg": (pygame.K_UP,),
         "move_z_pos": (pygame.K_DOWN,),
+        "move_y_neg": (pygame.K_PAGEUP,),
+        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -180,6 +191,8 @@ def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, 
         "move_z_pos": (pygame.K_DOWN,),
         "move_w_neg": (pygame.K_COMMA,),
         "move_w_pos": (pygame.K_PERIOD,),
+        "move_y_neg": (pygame.K_PAGEUP,),
+        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -191,6 +204,7 @@ SYSTEM_KEYS: KeyBindingMap = {
     "menu": (pygame.K_m,),
     "restart": (pygame.K_r,),
     "toggle_grid": (pygame.K_g,),
+    "help": (pygame.K_F1,),
 }
 
 
@@ -311,14 +325,6 @@ DISABLED_KEYS_2D: KeyTuple = (
 )
 
 
-CONTROL_LINES_2D: List[str] = []
-CONTROL_LINES_3D_GAME: List[str] = []
-CONTROL_LINES_ND_3D: List[str] = []
-CONTROL_LINES_ND_4D: List[str] = []
-CONTROL_LINES_3D_CAMERA: List[str] = []
-CONTROL_LINES_4D_VIEW: List[str] = []
-
-
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
     keys_2d, keys_3d, keys_4d = _default_game_bindings_for_profile(selected)
@@ -330,7 +336,6 @@ def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     _replace_map(SLICE_KEYS_3D, _DEFAULT_SLICE_KEYS_3D)
     _replace_map(SLICE_KEYS_4D, _DEFAULT_SLICE_KEYS_4D)
     _sanitize_runtime_bindings()
-    _rebuild_control_lines()
 
 
 def _sanitize_runtime_bindings() -> None:
@@ -352,169 +357,8 @@ def _sanitize_runtime_bindings() -> None:
     _replace_map(CAMERA_KEYS_4D, sanitized_camera_4d)
 
 
-_KEY_NAME_OVERRIDES = {
-    "escape": "Esc",
-    "return": "Enter",
-    "space": "Space",
-    "left shift": "LShift",
-    "right shift": "RShift",
-    "left": "Left",
-    "right": "Right",
-    "up": "Up",
-    "down": "Down",
-    "left bracket": "[",
-    "right bracket": "]",
-    "semicolon": ";",
-    "quote": "'",
-    "comma": ",",
-    "period": ".",
-}
-
-
 def _display_key_name(key: int) -> str:
-    raw = pygame.key.name(key)
-    if not raw:
-        return str(key)
-    lowered = raw.lower()
-    if lowered in _KEY_NAME_OVERRIDES:
-        return _KEY_NAME_OVERRIDES[lowered]
-    if len(raw) == 1:
-        return raw.upper()
-    words = []
-    for word in raw.split():
-        if word == "kp":
-            words.append("Numpad")
-        else:
-            words.append(word.capitalize())
-    return " ".join(words)
-
-
-def _format_keys(keys: Sequence[int]) -> str:
-    if not keys:
-        return "-"
-    return "/".join(_display_key_name(key) for key in keys)
-
-
-def _format_action(bindings: Mapping[str, KeyTuple], action: str) -> str:
-    return _format_keys(bindings.get(action, ()))
-
-
-def _format_pair(bindings: Mapping[str, KeyTuple], neg_action: str, pos_action: str) -> str:
-    return f"{_format_action(bindings, neg_action)}/{_format_action(bindings, pos_action)}"
-
-
-def _line(label: str, description: str) -> str:
-    return f" {label:<11}: {description}"
-
-
-def _build_control_section(
-    title: str,
-    specs: Sequence[tuple[object, ...]],
-) -> list[str]:
-    lines = [title]
-    for spec in specs:
-        kind = spec[0]
-        if kind == "sep":
-            lines.append("")
-            continue
-
-        bindings = spec[1]
-        if kind == "action":
-            lines.append(_line(_format_action(bindings, spec[2]), spec[3]))
-            continue
-
-        # pair
-        lines.append(_line(_format_pair(bindings, spec[2], spec[3]), spec[4]))
-    return lines
-
-
-def _rebuild_control_lines() -> None:
-    CONTROL_LINES_2D[:] = _build_control_section(
-        "Controls:",
-        (
-            ("pair", KEYS_2D, "move_x_neg", "move_x_pos", "move x"),
-            ("action", KEYS_2D, "rotate_xy_pos", "rotate x-y +"),
-            ("action", KEYS_2D, "rotate_xy_neg", "rotate x-y -"),
-            ("action", KEYS_2D, "soft_drop", "soft drop"),
-            ("action", KEYS_2D, "hard_drop", "hard drop"),
-            ("sep",),
-            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
-            ("action", SYSTEM_KEYS, "menu", "menu"),
-            ("action", SYSTEM_KEYS, "quit", "quit"),
-            ("action", SYSTEM_KEYS, "restart", "restart"),
-        ),
-    )
-
-    common_3d_specs = (
-        ("pair", KEYS_3D, "move_x_neg", "move_x_pos", "move x"),
-        ("pair", KEYS_3D, "move_z_neg", "move_z_pos", "move z"),
-        ("action", KEYS_3D, "soft_drop", "soft drop"),
-        ("action", KEYS_3D, "hard_drop", "hard drop"),
-        ("pair", KEYS_3D, "rotate_xy_pos", "rotate_xy_neg", "rotate x-y"),
-        ("pair", KEYS_3D, "rotate_xz_pos", "rotate_xz_neg", "rotate x-z"),
-        ("pair", KEYS_3D, "rotate_yz_pos", "rotate_yz_neg", "rotate y-z"),
-    )
-    CONTROL_LINES_3D_GAME[:] = _build_control_section(
-        "Game:",
-        (*common_3d_specs, ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode")),
-    )
-    CONTROL_LINES_ND_3D[:] = _build_control_section(
-        "Controls:",
-        (
-            *common_3d_specs,
-            ("pair", SLICE_KEYS_3D, "slice_z_neg", "slice_z_pos", "slice z"),
-            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
-            ("action", SYSTEM_KEYS, "restart", "restart"),
-            ("action", SYSTEM_KEYS, "menu", "menu"),
-            ("action", SYSTEM_KEYS, "quit", "quit"),
-        ),
-    )
-
-    CONTROL_LINES_ND_4D[:] = _build_control_section(
-        "Controls:",
-        (
-            ("pair", KEYS_4D, "move_x_neg", "move_x_pos", "move x"),
-            ("pair", KEYS_4D, "move_z_neg", "move_z_pos", "move z"),
-            ("pair", KEYS_4D, "move_w_neg", "move_w_pos", "move w"),
-            ("action", KEYS_4D, "soft_drop", "soft drop"),
-            ("action", KEYS_4D, "hard_drop", "hard drop"),
-            ("pair", KEYS_4D, "rotate_xy_pos", "rotate_xy_neg", "rotate x-y"),
-            ("pair", KEYS_4D, "rotate_xz_pos", "rotate_xz_neg", "rotate x-z"),
-            ("pair", KEYS_4D, "rotate_yz_pos", "rotate_yz_neg", "rotate y-z"),
-            ("pair", KEYS_4D, "rotate_xw_pos", "rotate_xw_neg", "rotate x-w"),
-            ("pair", KEYS_4D, "rotate_yw_pos", "rotate_yw_neg", "rotate y-w"),
-            ("pair", KEYS_4D, "rotate_zw_pos", "rotate_zw_neg", "rotate z-w"),
-            ("pair", SLICE_KEYS_4D, "slice_z_neg", "slice_z_pos", "slice z"),
-            ("pair", SLICE_KEYS_4D, "slice_w_neg", "slice_w_pos", "slice w"),
-            ("action", SYSTEM_KEYS, "toggle_grid", "cycle grid mode"),
-            ("action", SYSTEM_KEYS, "restart", "restart"),
-            ("action", SYSTEM_KEYS, "menu", "menu"),
-            ("action", SYSTEM_KEYS, "quit", "quit"),
-        ),
-    )
-
-    CONTROL_LINES_3D_CAMERA[:] = _build_control_section(
-        "Camera:",
-        (
-            ("pair", CAMERA_KEYS_3D, "yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
-            ("pair", CAMERA_KEYS_3D, "yaw_neg", "yaw_pos", "yaw +/-90"),
-            ("pair", CAMERA_KEYS_3D, "pitch_neg", "pitch_pos", "pitch +/-90"),
-            ("pair", CAMERA_KEYS_3D, "zoom_out", "zoom_in", "zoom"),
-            ("action", CAMERA_KEYS_3D, "cycle_projection", "projection"),
-            ("action", CAMERA_KEYS_3D, "reset", "reset camera"),
-        ),
-    )
-
-    CONTROL_LINES_4D_VIEW[:] = _build_control_section(
-        "View:",
-        (
-            ("pair", CAMERA_KEYS_4D, "yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
-            ("pair", CAMERA_KEYS_4D, "yaw_neg", "yaw_pos", "yaw +/-90"),
-            ("pair", CAMERA_KEYS_4D, "pitch_neg", "pitch_pos", "pitch +/-90"),
-            ("pair", CAMERA_KEYS_4D, "zoom_out", "zoom_in", "zoom"),
-            ("action", CAMERA_KEYS_4D, "reset", "reset view"),
-        ),
-    )
+    return display_key_name(key)
 
 
 def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> Dict[str, List[str]]:
@@ -630,12 +474,15 @@ _COMMON_ACTION_DESCRIPTIONS = {
     "menu": "Open the in-game pause menu.",
     "restart": "Restart the current run.",
     "quit": "Quit the current game or application flow.",
+    "help": "Open in-game help and explanations.",
     "move_x_neg": "Move active piece left on the x axis.",
     "move_x_pos": "Move active piece right on the x axis.",
     "move_z_neg": "Move active piece away from viewer (default view).",
     "move_z_pos": "Move active piece closer to viewer (default view).",
     "move_w_neg": "Move active piece toward lower w layer.",
     "move_w_pos": "Move active piece toward higher w layer.",
+    "move_y_neg": "Exploration mode: move active piece up along gravity axis.",
+    "move_y_pos": "Exploration mode: move active piece down along gravity axis.",
     "soft_drop": "Move piece one gravity step down.",
     "hard_drop": "Drop piece immediately to lock position.",
     "rotate_xy_pos": "Rotate piece in x-y plane (+90).",
@@ -804,7 +651,6 @@ def rebind_action_key(
     binding_map[action] = (key,)
 
     _sanitize_runtime_bindings()
-    _rebuild_control_lines()
     key_name = _display_key_name(key)
     return True, _rebind_success_message(
         group=group,
@@ -1060,7 +906,6 @@ def load_keybindings_file(
         _apply_group_payload(target, raw_group)
 
     _sanitize_runtime_bindings()
-    _rebuild_control_lines()
     return True, f"Loaded keybindings from {path}"
 
 
@@ -1123,6 +968,3 @@ def reset_active_profile_bindings(dimension: int | None = None) -> tuple[bool, s
     if not ok_load:
         return False, msg_load
     return True, f"Reset keybindings for profile {selected}; {'; '.join(messages)}"
-
-
-_rebuild_control_lines()
