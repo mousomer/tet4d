@@ -45,6 +45,7 @@ class GameConfigND:
     random_cell_count: int = 5
     challenge_layers: int = 0
     lock_piece_points: int = 5
+    exploration_mode: bool = False
 
     def __post_init__(self) -> None:
         if len(self.dims) < 2:
@@ -61,6 +62,7 @@ class GameConfigND:
             raise ValueError("challenge_layers must be >= 0")
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
+        self.exploration_mode = bool(self.exploration_mode)
 
         ndim = len(self.dims)
         selected_piece_set = self.piece_set_id
@@ -148,7 +150,11 @@ class GameStateND:
             axis_values = [block[axis] for block in shape.blocks]
             min_axis = min(axis_values)
             max_axis = max(axis_values)
-            if axis == g:
+            if self.config.exploration_mode:
+                span = max_axis - min_axis + 1
+                start = (self.config.dims[axis] - span) // 2
+                coords[axis] = start - min_axis
+            elif axis == g:
                 coords[axis] = -2 - min_axis
             else:
                 span = max_axis - min_axis + 1
@@ -196,6 +202,8 @@ class GameStateND:
 
     def lock_current_piece(self) -> int:
         if self.current_piece is None:
+            return 0
+        if self.config.exploration_mode:
             return 0
 
         g = self.config.gravity_axis
@@ -270,6 +278,9 @@ class GameStateND:
     def hard_drop(self) -> None:
         if self.current_piece is None:
             return
+        if self.config.exploration_mode:
+            self.spawn_new_piece()
+            return
 
         g = self.config.gravity_axis
         while self.try_move_axis(g, 1):
@@ -282,7 +293,7 @@ class GameStateND:
     # --- Time step ---
 
     def step_gravity(self) -> None:
-        if self.game_over or self.current_piece is None:
+        if self.config.exploration_mode or self.game_over or self.current_piece is None:
             return
 
         g = self.config.gravity_axis

@@ -24,6 +24,7 @@
       "bot_profile_index": 1,
       "bot_speed_level": 7,
       "challenge_layers": 0,
+      "exploration_mode": 0,
       "speed_level": 1
     },
     "3d": {
@@ -36,6 +37,7 @@
       "bot_profile_index": 1,
       "bot_speed_level": 7,
       "challenge_layers": 0,
+      "exploration_mode": 0,
       "speed_level": 1
     },
     "4d": {
@@ -49,6 +51,7 @@
       "bot_profile_index": 1,
       "bot_speed_level": 7,
       "challenge_layers": 0,
+      "exploration_mode": 0,
       "speed_level": 1
     }
   }

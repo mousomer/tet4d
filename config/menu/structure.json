@@ -32,6 +32,7 @@
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
     ],
     "3d": [
@@ -40,6 +41,7 @@
       {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
       {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
     ],
     "4d": [
@@ -49,6 +51,7 @@
       {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
       {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
+      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
     ]
   },
@@ -104,5 +107,48 @@
       "label": "Gameplay Setup",
       "description": "Dimension-specific board size, piece set, challenge layers, and speed level."
     }
-  ]
+  ],
+  "settings_split_rules": {
+    "max_top_level_fields": 5,
+    "max_top_level_actions": 2,
+    "split_when_mode_specific": true
+  },
+  "settings_category_metrics": {
+    "audio": {
+      "field_count": 3,
+      "action_count": 2,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "display": {
+      "field_count": 4,
+      "action_count": 2,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "analytics": {
+      "field_count": 1,
+      "action_count": 1,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "profiles": {
+      "field_count": 3,
+      "action_count": 6,
+      "mode_specific": true,
+      "top_level": false
+    },
+    "bot": {
+      "field_count": 6,
+      "action_count": 3,
+      "mode_specific": true,
+      "top_level": false
+    },
+    "gameplay_setup": {
+      "field_count": 8,
+      "action_count": 2,
+      "mode_specific": true,
+      "top_level": false
+    }
+  }
 }

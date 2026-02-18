@@ -24,6 +24,7 @@ from .menu_config import default_settings_payload, setup_fields_for_dimension
 from .menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .exploration_mode import minimal_exploration_dims_nd
 from .playbot import run_dry_run_nd
 from .playbot.types import (
     bot_planner_algorithm_from_index,
@@ -90,6 +91,7 @@ class GameSettingsND:
     bot_speed_level: int = _DEFAULT_MODE_4D["bot_speed_level"]
     bot_budget_ms: int = _DEFAULT_MODE_4D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_4D["challenge_layers"]
+    exploration_mode: int = _DEFAULT_MODE_4D["exploration_mode"]
 
 
 _PIECE_SET_CHOICES = {
@@ -157,6 +159,8 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
         labels = _PIECE_SET_LABELS.get(dimension, _PIECE_SET_LABELS[4])
         safe_index = max(0, min(len(labels) - 1, int(value)))
         return labels[safe_index]
+    if attr_name == "exploration_mode":
+        return "ON" if int(value) else "OFF"
     return str(value)
 
 
@@ -248,14 +252,18 @@ def run_menu(screen: pygame.Surface,
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
         if state.run_dry_run:
-            report = run_dry_run_nd(
-                build_config(state.settings, dimension),
-                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
-                planning_budget_ms=state.settings.bot_budget_ms,
-                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
-            )
-            state.bindings_status = report.reason
-            state.bindings_status_error = not report.passed
+            if bool(state.settings.exploration_mode):
+                state.bindings_status = "Dry-run is disabled in exploration mode"
+                state.bindings_status_error = False
+            else:
+                report = run_dry_run_nd(
+                    build_config(state.settings, dimension),
+                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planning_budget_ms=state.settings.bot_budget_ms,
+                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                )
+                state.bindings_status = report.reason
+                state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state, dimension)
         pygame.display.flip()
 
@@ -271,18 +279,22 @@ def run_menu(screen: pygame.Surface,
 
 
 def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
+    piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
+    exploration_enabled = bool(settings.exploration_mode)
     dims = [settings.width, settings.height]
     if dimension >= 3:
         dims.append(settings.depth)
     if dimension >= 4:
         dims.append(settings.fourth)
-    piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
+    if exploration_enabled:
+        dims = list(minimal_exploration_dims_nd(dimension, piece_set_id))
     return GameConfigND(
         dims=tuple(dims),
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set_id=piece_set_id,
-        challenge_layers=settings.challenge_layers,
+        challenge_layers=0 if exploration_enabled else settings.challenge_layers,
+        exploration_mode=exploration_enabled,
     )
 
 
@@ -293,7 +305,8 @@ def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
     state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
-    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    if not cfg.exploration_mode:
+        apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     return state
 
 
@@ -322,7 +335,7 @@ def adjust_slice_axis(slice_state: SliceState,
     slice_state.axis_values[axis] = max(0, min(size - 1, curr + delta))
 
 
-_SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid")
+_SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid", "help")
 _GAMEPLAY_ACTIONS_3D = (
     "move_x_neg",
     "move_x_pos",
@@ -352,6 +365,7 @@ _SYSTEM_SFX = {
     "menu": "menu_confirm",
     "restart": "menu_confirm",
     "toggle_grid": "menu_move",
+    "help": "menu_move",
 }
 _VIEWER_RELATIVE_INTENT_BY_ACTION = {
     "move_x_neg": "left",

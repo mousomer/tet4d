@@ -45,7 +45,7 @@ python /Users/omer/workspace/test-code/tet4d/front4d.py
 
 Unified launcher includes:
 - Mode selection (`2D/3D/4D`)
-- `Help` menu with explanation pages and animated key guides
+- `Help` menu with explanation pages and arrow-diagram key guides
 - Unified `Settings` submenu (`Audio` + `Display` + `Analytics`)
 - Keybindings setup menu (load/save/save-as/rebind/reset, profile cycle/create/rename/delete)
   - Main keybinding sections: `General`, `2D`, `3D`, `4D`
@@ -56,6 +56,7 @@ Unified launcher includes:
 - Bot planner profile (`FAST`, `BALANCED`, `DEEP`, `ULTRA`)
 - Bot planning budget (ms cap per plan)
 - Challenge mode setup (`challenge layers`: random-filled lower layers)
+- Exploration mode setup (no gravity/locking; practice movement/rotation on minimal fitting boards)
 - Dry-run verification in setup menus (`F7`) to validate playthrough/layer clears without rendering
 - Session autosave (`Autosaved` status line in launcher): saves last mode, current setup values, and selected profile without confirmation
 
@@ -109,13 +110,14 @@ In-game utility keys:
 - `G`: cycle grid mode (`OFF -> EDGE -> FULL -> HELPER`)
 - `F2`: cycle playbot mode
 - `F3`: trigger one bot step (useful in `STEP` mode)
+- `F1`: open Help directly from gameplay
 - `M`: open in-game pause menu (`Resume`, `Restart`, `Settings`, `Keybindings Setup`, profile actions, `Help`, `Back To Main Menu`, `Quit`)
 
 In-game key helper:
 - Keys are grouped into clear sections: `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
-- The `Help` menu includes animated guides:
-  - `/Users/omer/workspace/test-code/tet4d/assets/help/translation_keys.gif`
-  - `/Users/omer/workspace/test-code/tet4d/assets/help/rotation_keys.gif`
+- Keybinding rows and helper rows render compact per-action icons for translation/rotation.
+- Legacy combined arrow-diagram renderer remains available and is still referenced by docs/contracts:
+  - `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_control_guides.py` (`draw_translation_rotation_guides`)
 
 3D/4D camera defaults:
 - `H/J/K/L`: yaw `-15 / -90 / +90 / +15` (strict `hjkl` yaw layout)
@@ -184,6 +186,9 @@ python3 /Users/omer/workspace/test-code/tet4d/tools/bench_playbot.py --assert --
 # Full local CI-equivalent check
 /Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh
 
+# Optional offline policy snapshot for retuning reviews
+python3 /Users/omer/workspace/test-code/tet4d/tools/analyze_playbot_policies.py --board-set all --runs 20 --output-json state/bench/policy_analysis.json --output-csv state/bench/policy_analysis.csv
+
 # Python 3.14 compatibility compile check
 python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
 ```
@@ -194,6 +199,7 @@ Documentation is unified into three sections:
 1. Project structure and documentation:
    - `/Users/omer/workspace/test-code/tet4d/docs/PROJECT_STRUCTURE.md`
    - `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`
+   - `/Users/omer/workspace/test-code/tet4d/docs/GUIDELINES_RESEARCH.md`
 2. README usage (this file):
    - `/Users/omer/workspace/test-code/tet4d/README.md`
 3. RDS files and Codex instructions:
@@ -208,10 +214,11 @@ Documentation is unified into three sections:
   - `/Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
 - The contract currently enforces presence/content checks for:
   - README/docs/RDS/backlog/feature map,
-  - help animation assets,
+  - help guide renderer + manifest,
   - core tests,
   - canonical runtime config files,
   - schema and migration ledgers,
   - replay manifest and golden fixture directory,
   - help index and help asset manifest,
-  - release checklist.
+  - release checklist,
+  - scheduled stability-watch workflow (`.github/workflows/stability-watch.yml`).

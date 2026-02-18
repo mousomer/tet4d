@@ -37,8 +37,8 @@ tet4d/
 ├── assets/
 │   └── help/
 │       ├── manifest.json        # canonical help-asset index
-│       ├── translation_keys.gif # animated translation guide for Help UI
-│       └── rotation_keys.gif    # animated rotation guide for Help UI
+│       ├── translation_keys.gif # legacy compatibility asset (not primary renderer)
+│       └── rotation_keys.gif    # legacy compatibility asset (not primary renderer)
 ├── tests/
 │   └── replay/
 │       ├── manifest.json        # canonical replay fixture manifest
@@ -52,11 +52,15 @@ tet4d/
 │   ├── pieces_nd.py             # 3D + 4D native piece sets
 │   ├── keybindings.py           # binding definitions + load/save
 │   ├── keybindings_menu.py      # dedicated keybinding setup screen
+│   ├── keybindings_menu_model.py # scope/row model helpers for keybinding UI
+│   ├── key_display.py           # shared key-name formatting and display helpers
 │   ├── control_helper.py        # grouped in-game key-helper rendering
 │   ├── help_menu.py             # launcher/pause help and explanation UI
+│   ├── menu_control_guides.py   # rendered translation/rotation arrow diagrams
 │   ├── score_analyzer.py        # board-health and placement-quality analyzer
 │   ├── audio.py                 # generated SFX + volume/mute runtime
 │   ├── display.py               # shared fullscreen/windowed mode helpers
+│   ├── runtime_config_validation.py # runtime-config schema validation helpers
 │   ├── front3d_game.py          # 3D gameplay frontend
 │   ├── front4d_game.py          # 4D gameplay frontend
 │   ├── pause_menu.py            # shared in-game pause/settings/keybinding menu
@@ -68,6 +72,9 @@ tet4d/
 │   ├── bench_playbot.py         # planner benchmark + trend recording
 │   ├── check_playbot_stability.py  # repeated dry-run stability checks
 │   └── validate_project_contracts.py  # validates canonical maintenance contract
+├── .github/workflows/
+│   ├── ci.yml                   # push/PR CI matrix
+│   └── stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
 └── docs/
     ├── BACKLOG.md               # canonical open TODO / technical debt tracker
     ├── CHANGELOG.md             # consolidated change history notes
@@ -97,29 +104,33 @@ tet4d/
 3. Core rule logic lives in `game2d.py` and `game_nd.py`.
 4. Board occupancy and line/layer clearing logic lives in `board.py`.
 5. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
-6. Shared keybinding editor UI is in `keybindings_menu.py`.
-7. Audio runtime helpers are in `audio.py`; display mode helpers are in `display.py`.
-8. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
-9. Shared in-game key helper grouping is in `control_helper.py`.
-10. Help/explanation pages (including GIF guides) are in `help_menu.py` and `assets/help/`.
-11. Shared menu utilities and persistence facades are in `menu_model.py` and `menu_persistence.py`.
-12. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
-13. `config/menu/*` drives launcher/setup menu structure and default values.
-14. `config/gameplay/*`, `config/playbot/*`, and `config/audio/*` drive runtime tuning defaults.
-15. `config/schema/*` and `docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-16. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-17. `docs/help/HELP_INDEX.md` and `assets/help/manifest.json` are canonical help-content contracts.
-18. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-19. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-20. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-21. `tools/validate_project_contracts.py` validates that contract and is run in CI.
-22. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+6. Shared key-name formatting is centralized in `key_display.py`.
+7. Shared keybinding editor model/scope helpers are in `keybindings_menu_model.py`.
+8. Shared keybinding editor UI is in `keybindings_menu.py`.
+9. Audio runtime helpers are in `audio.py`; display mode helpers are in `display.py`.
+10. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
+11. Shared in-game key helper grouping is in `control_helper.py`.
+12. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py` and `menu_control_guides.py`.
+13. Shared menu utilities and persistence facades are in `menu_model.py` and `menu_persistence.py`.
+14. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+15. `config/menu/*` drives launcher/setup menu structure and default values.
+16. `config/gameplay/*`, `config/playbot/*`, and `config/audio/*` drive runtime tuning defaults.
+17. `config/schema/*` and `docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+18. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+19. `docs/help/HELP_INDEX.md` and `assets/help/manifest.json` are canonical help-content contracts.
+20. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+21. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+22. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+23. `tools/validate_project_contracts.py` validates that contract and is run in CI.
+24. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+25. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
 
 ## Unified documentation sections
 
 1. Project structure and documentation:
    - `/Users/omer/workspace/test-code/tet4d/docs/PROJECT_STRUCTURE.md`
    - `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`
+   - `/Users/omer/workspace/test-code/tet4d/docs/GUIDELINES_RESEARCH.md`
 2. Usage README:
    - `/Users/omer/workspace/test-code/tet4d/README.md`
 3. RDS and Codex instructions:

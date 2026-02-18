@@ -16,7 +16,6 @@ from tetris_nd.keybindings_menu import run_keybindings_menu
 from tetris_nd.launcher_play import launch_2d, launch_3d, launch_4d
 from tetris_nd.launcher_settings import run_settings_hub_menu
 from tetris_nd.menu_config import launcher_menu_items
-from tetris_nd.menu_gif_guides import draw_translation_rotation_guides
 from tetris_nd.menu_persistence import load_menu_payload, save_menu_payload
 
 
@@ -101,14 +100,6 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
         text = fonts.hint_font.render(line, True, MUTED_COLOR)
         screen.blit(text, ((width - text.get_width()) // 2, info_y))
         info_y += text.get_height() + 3
-
-    guide_h = 118
-    guide_w = min(460, width - 40)
-    guide_y = min(height - guide_h - 44, info_y + 6)
-    if guide_y + guide_h < height - 20:
-        guide_rect = pygame.Rect((width - guide_w) // 2, guide_y, guide_w, guide_h)
-        draw_translation_rotation_guides(screen, fonts, rect=guide_rect, title="Translation / Rotation")
-        info_y = guide_rect.bottom + 4
 
     if state.status:
         status_color = (255, 150, 150) if state.status_error else (170, 240, 170)

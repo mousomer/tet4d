@@ -1,132 +1,53 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable
 
 import pygame
 
-from .menu_config import keybinding_category_docs
-from .menu_gif_guides import draw_translation_rotation_guides
+from .control_icons import draw_action_icon
+from .key_display import format_key_tuple
 from .keybindings import (
     REBIND_CONFLICT_REPLACE,
     active_key_profile,
     binding_action_description,
-    binding_group_description,
-    binding_group_label,
     clone_key_profile,
     cycle_key_profile,
     cycle_rebind_conflict_mode,
     delete_key_profile,
-    keybinding_file_label,
     load_active_profile_bindings,
     load_keybindings_file,
     next_auto_profile_name,
     rebind_action_key,
     rename_key_profile,
     reset_active_profile_bindings,
-    runtime_binding_groups_for_dimension,
     save_keybindings_file,
     set_active_key_profile,
 )
+from .keybindings_menu_model import (
+    BindingRow,
+    RenderedRow,
+    SECTION_MENU,
+    binding_keys,
+    binding_title,
+    resolve_initial_scope,
+    rows_for_scope,
+    scope_dimensions,
+    scope_file_hint,
+    scope_label,
+)
 
 
-_CATEGORY_DOCS = keybinding_category_docs()
-_SCOPE_ORDER = tuple(_CATEGORY_DOCS.get("scope_order", ("all", "2d", "3d", "4d")))
-_VALID_SCOPES = tuple(dict.fromkeys((*_SCOPE_ORDER, "general", "all")))
-_GROUP_ORDER = ("game", "camera", "slice", "system")
 _TEXT_MODE_CREATE = "create"
 _TEXT_MODE_RENAME = "rename"
 _TEXT_MODE_SAVE_AS = "save_as"
 _PROFILE_NAME_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
-_SECTION_MENU: tuple[tuple[str, str, str], ...] = (
-    ("general", "General Keybindings", "System actions shared across 2D/3D/4D."),
-    ("2d", "2D Keybindings", "2D gameplay and shared system controls."),
-    ("3d", "3D Keybindings", "3D gameplay, camera/view, slice, and system controls."),
-    ("4d", "4D Keybindings", "4D gameplay, camera/view, slice, and system controls."),
-)
-
-
-def _scope_label(scope: str) -> str:
-    if scope == "general":
-        return "GENERAL"
-    return "ALL" if scope == "all" else scope.upper()
-
-
-def _scope_dimensions(scope: str) -> tuple[int, ...]:
-    if scope in {"all", "general"}:
-        return (2, 3, 4)
-    return (int(scope[0]),)
-
-
-def _scope_from_dimension(dimension: int) -> str:
-    if dimension <= 2:
-        return "2d"
-    if dimension == 3:
-        return "3d"
-    return "4d"
-
-
-def _doc_label(group: str) -> str:
-    groups = _CATEGORY_DOCS.get("groups", {})
-    if isinstance(groups, dict):
-        raw = groups.get(group)
-        if isinstance(raw, dict):
-            label = raw.get("label")
-            if isinstance(label, str) and label.strip():
-                return label.strip()
-    return binding_group_label(group)
-
-
-def _doc_description(group: str) -> str:
-    groups = _CATEGORY_DOCS.get("groups", {})
-    if isinstance(groups, dict):
-        raw = groups.get(group)
-        if isinstance(raw, dict):
-            desc = raw.get("description")
-            if isinstance(desc, str) and desc.strip():
-                return desc.strip()
-    return binding_group_description(group)
-
-
-def _key_name(key: int) -> str:
-    name = pygame.key.name(key)
-    if not name:
-        return str(key)
-    if len(name) == 1:
-        return name.upper()
-    words = []
-    for token in name.split():
-        if token == "kp":
-            words.append("Numpad")
-            continue
-        words.append(token.capitalize())
-    return " ".join(words)
-
-
-def _format_key_tuple(keys: Sequence[int]) -> str:
-    if not keys:
-        return "-"
-    return "/".join(_key_name(key) for key in keys)
 
 
 def _sanitize_profile_name(raw: str) -> str:
     lowered = raw.strip().lower()
     filtered = "".join(ch for ch in lowered if ch in _PROFILE_NAME_CHARS)
     return filtered[:64]
-
-
-@dataclass(frozen=True)
-class _BindingRow:
-    dimension: int
-    group: str
-    action: str
-
-
-@dataclass(frozen=True)
-class _RenderedRow:
-    kind: str  # header|binding
-    text: str
-    binding: _BindingRow | None = None
 
 
 @dataclass
@@ -181,74 +102,10 @@ def _text_mode_label(mode: str) -> str:
     return "Save profile as"
 
 
-def _sections_for_scope(scope: str) -> list[tuple[str, int, tuple[str, ...]]]:
-    if scope == "general":
-        return [
-            (_doc_label("system"), 2, ("system",)),
-        ]
-    if scope == "all":
-        return [
-            (_doc_label("system"), 2, ("system",)),
-            ("2D Gameplay", 2, ("game",)),
-            ("3D Gameplay", 3, ("game",)),
-            ("3D Camera / View", 3, ("camera",)),
-            ("3D Slice", 3, ("slice",)),
-            ("4D Gameplay", 4, ("game",)),
-            ("4D Camera / View", 4, ("camera",)),
-            ("4D Slice", 4, ("slice",)),
-        ]
-
-    dimension = int(scope[0])
-    groups = runtime_binding_groups_for_dimension(dimension)
-    section_list: list[tuple[str, int, tuple[str, ...]]] = []
-    for group_name in _GROUP_ORDER:
-        if group_name not in groups:
-            continue
-        section_title = f"{dimension}D {_doc_label(group_name)}"
-        section_list.append((section_title, dimension, (group_name,)))
-    return section_list
-
-
-def _rows_for_scope(scope: str) -> tuple[list[_RenderedRow], list[_BindingRow]]:
-    rendered: list[_RenderedRow] = []
-    binding_rows: list[_BindingRow] = []
-
-    for section_title, dimension, groups in _sections_for_scope(scope):
-        rendered.append(_RenderedRow(kind="header", text=section_title))
-        for group_name in groups:
-            group_bindings = runtime_binding_groups_for_dimension(dimension).get(group_name, {})
-            if not group_bindings:
-                continue
-            rendered.append(
-                _RenderedRow(
-                    kind="header",
-                    text=f"  {_doc_description(group_name)}",
-                )
-            )
-            for action_name in sorted(group_bindings.keys()):
-                row = _BindingRow(dimension=dimension, group=group_name, action=action_name)
-                binding_rows.append(row)
-                rendered.append(_RenderedRow(kind="binding", text=action_name, binding=row))
-        rendered.append(_RenderedRow(kind="header", text=""))
-
-    if rendered and rendered[-1].text == "":
-        rendered.pop()
-
-    return rendered, binding_rows
-
-
-def _cycle_binding(state: KeybindingsMenuState, binding_rows: list[_BindingRow], step: int) -> None:
+def _cycle_binding(state: KeybindingsMenuState, binding_rows: list[BindingRow], step: int) -> None:
     if not binding_rows:
         return
     state.selected_binding = (state.selected_binding + step) % len(binding_rows)
-
-
-def _cycle_scope(state: KeybindingsMenuState, step: int) -> None:
-    idx = _SCOPE_ORDER.index(state.scope)
-    state.scope = _SCOPE_ORDER[(idx + step) % len(_SCOPE_ORDER)]
-    state.selected_binding = 0
-    state.scroll_top = 0
-    state.capture_mode = False
 
 
 def _cycle_profile(state: KeybindingsMenuState, step: int) -> None:
@@ -336,14 +193,14 @@ def _run_scope_operation(
 ) -> tuple[bool, str]:
     results: list[str] = []
     ok_all = True
-    for dimension in _scope_dimensions(state.scope):
+    for dimension in scope_dimensions(state.scope):
         ok, msg = operation(dimension)
         ok_all = ok_all and ok
         results.append(f"{dimension}D: {msg}")
     return ok_all, " | ".join(results)
 
 
-def _active_binding(binding_rows: list[_BindingRow], state: KeybindingsMenuState) -> _BindingRow | None:
+def _active_binding(binding_rows: list[BindingRow], state: KeybindingsMenuState) -> BindingRow | None:
     if not binding_rows:
         return None
     safe_index = max(0, min(len(binding_rows) - 1, state.selected_binding))
@@ -353,7 +210,7 @@ def _active_binding(binding_rows: list[_BindingRow], state: KeybindingsMenuState
 def _handle_capture_input(
     state: KeybindingsMenuState,
     key: int,
-    binding_rows: list[_BindingRow],
+    binding_rows: list[BindingRow],
 ) -> bool:
     if key == pygame.K_ESCAPE:
         state.capture_mode = False
@@ -368,7 +225,7 @@ def _handle_capture_input(
     if state.scope == "general" and selected.group == "system":
         results: list[str] = []
         ok = True
-        for dimension in _scope_dimensions(state.scope):
+        for dimension in scope_dimensions(state.scope):
             dim_ok, dim_msg = rebind_action_key(
                 dimension,
                 selected.group,
@@ -392,55 +249,45 @@ def _handle_capture_input(
     return False
 
 
-def _action_exit(_state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_exit(_state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     return True
 
 
-def _action_row_up(state: KeybindingsMenuState, rows: list[_BindingRow]) -> bool:
+def _action_row_up(state: KeybindingsMenuState, rows: list[BindingRow]) -> bool:
     _cycle_binding(state, rows, -1)
     return False
 
 
-def _action_row_down(state: KeybindingsMenuState, rows: list[_BindingRow]) -> bool:
+def _action_row_down(state: KeybindingsMenuState, rows: list[BindingRow]) -> bool:
     _cycle_binding(state, rows, 1)
     return False
 
 
-def _action_scope_prev(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
-    _cycle_scope(state, -1)
-    return False
-
-
-def _action_scope_next(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
-    _cycle_scope(state, 1)
-    return False
-
-
-def _action_capture_start(state: KeybindingsMenuState, rows: list[_BindingRow]) -> bool:
+def _action_capture_start(state: KeybindingsMenuState, rows: list[BindingRow]) -> bool:
     if rows:
         state.capture_mode = True
     return False
 
 
-def _action_conflict_cycle(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_conflict_cycle(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     state.conflict_mode = cycle_rebind_conflict_mode(state.conflict_mode, 1)
     _set_status(state, True, f"Conflict mode: {state.conflict_mode}")
     return False
 
 
-def _action_load_file(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_load_file(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     ok, msg = _run_scope_operation(state, load_keybindings_file)
     _set_status(state, ok, msg)
     return False
 
 
-def _action_save_file(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_save_file(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     ok, msg = _run_scope_operation(state, save_keybindings_file)
     _set_status(state, ok, msg)
     return False
 
 
-def _action_reset_bindings(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_reset_bindings(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     if not state.pending_reset_confirm:
         state.pending_reset_confirm = True
         _set_status(state, True, "Press F6 again to confirm profile reset")
@@ -451,32 +298,32 @@ def _action_reset_bindings(state: KeybindingsMenuState, _rows: list[_BindingRow]
     return False
 
 
-def _action_profile_prev(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_prev(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _cycle_profile(state, -1)
     return False
 
 
-def _action_profile_next(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_next(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _cycle_profile(state, 1)
     return False
 
 
-def _action_profile_new(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_new(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _start_text_mode(state, _TEXT_MODE_CREATE)
     return False
 
 
-def _action_profile_rename(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_rename(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _start_text_mode(state, _TEXT_MODE_RENAME)
     return False
 
 
-def _action_profile_save_as(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_save_as(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _start_text_mode(state, _TEXT_MODE_SAVE_AS)
     return False
 
 
-def _action_profile_delete(state: KeybindingsMenuState, _rows: list[_BindingRow]) -> bool:
+def _action_profile_delete(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
     _delete_profile(state)
     return False
 
@@ -500,7 +347,7 @@ _MENU_KEY_HANDLERS = {
 }
 
 
-def _run_menu_action(state: KeybindingsMenuState, key: int, rows: list[_BindingRow]) -> bool:
+def _run_menu_action(state: KeybindingsMenuState, key: int, rows: list[BindingRow]) -> bool:
     if state.section_mode:
         return _run_section_mode_action(state, key)
     return _run_binding_mode_action(state, key, rows)
@@ -522,7 +369,7 @@ def _run_section_mode_action(state: KeybindingsMenuState, key: int) -> bool:
     return _handle_section_key(state, key)
 
 
-def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[_BindingRow]) -> bool:
+def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[BindingRow]) -> bool:
     if state.capture_mode:
         _clear_reset_confirmation(state)
         return _handle_capture_input(state, key, rows)
@@ -536,6 +383,11 @@ def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[_
         state.capture_mode = False
         _set_status(state, True, "Returned to keybinding sections")
         return False
+    if key == pygame.K_TAB and state.allow_scope_sections:
+        state.section_mode = True
+        state.capture_mode = False
+        _set_status(state, True, "Opened keybinding sections")
+        return False
 
     if key != pygame.K_F6:
         _clear_reset_confirmation(state)
@@ -546,40 +398,20 @@ def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[_
     return handler(state, rows)
 
 
-def _binding_title(row: _BindingRow, scope: str) -> str:
-    action_text = row.action.replace("_", " ")
-    group_text = binding_group_label(row.group)
-    if scope == "all":
-        return f"{row.dimension}D {group_text}: {action_text}"
-    return f"{group_text}: {action_text}"
-
-
-def _binding_keys(row: _BindingRow) -> tuple[int, ...]:
-    groups = runtime_binding_groups_for_dimension(row.dimension)
-    return tuple(groups.get(row.group, {}).get(row.action, ()))
-
-
-def _scope_file_hint(state: KeybindingsMenuState) -> str:
-    if state.scope in {"all", "general"}:
-        return "Files: 2d.json + 3d.json + 4d.json"
-    dimension = int(state.scope[0])
-    return f"File: {keybinding_file_label(dimension)}"
-
-
 def _draw_menu_header(surface: pygame.Surface, fonts, state: KeybindingsMenuState) -> None:
     width, _ = surface.get_size()
     title = fonts.title_font.render("Keybindings Setup", True, (232, 232, 240))
     subtitle_text = (
         "Up/Down select section, Enter open, Esc back"
         if state.section_mode
-        else "Up/Down select, Enter rebind, Esc back"
+        else "Up/Down select, Enter rebind, Tab sections, Esc back"
     )
     subtitle = fonts.hint_font.render(subtitle_text, True, (192, 200, 228))
     surface.blit(title, ((width - title.get_width()) // 2, 28))
     surface.blit(subtitle, ((width - subtitle.get_width()) // 2, 74))
 
     header = (
-        f"Scope: {_scope_label(state.scope)}   "
+        f"Scope: {scope_label(state.scope)}   "
         f"Profile: {state.active_profile}   "
         f"Conflict: {state.conflict_mode}"
     )
@@ -604,8 +436,8 @@ def _draw_panel(surface: pygame.Surface, *, panel_x: int, panel_y: int, panel_w:
 
 def _selected_render_index(
     state: KeybindingsMenuState,
-    rendered_rows: list[_RenderedRow],
-    binding_rows: list[_BindingRow],
+    rendered_rows: list[RenderedRow],
+    binding_rows: list[BindingRow],
 ) -> int:
     if not binding_rows:
         return 0
@@ -645,10 +477,23 @@ def _draw_row_selection(
     surface.blit(hi, (panel_x + 12, y - 2))
 
 
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    if max_width <= font.size("...")[0]:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + "...")[0] > max_width:
+        trimmed = trimmed[:-1]
+    return f"{trimmed}..." if trimmed else ""
+
+
 def _draw_binding_row(
     surface: pygame.Surface,
     fonts,
-    row: _BindingRow,
+    row: BindingRow,
     *,
     selected: bool,
     scope: str,
@@ -661,17 +506,31 @@ def _draw_binding_row(
     if selected:
         _draw_row_selection(surface, panel_x=panel_x, panel_w=panel_w, y=y, line_h=row_h - 4)
 
-    label = _binding_title(row, scope)
+    label = binding_title(row, scope)
     desc = binding_action_description(row.action)
-    key_text = _format_key_tuple(_binding_keys(row))
+    key_text = format_key_tuple(binding_keys(row))
 
-    label_surf = fonts.panel_font.render(label, True, color)
-    key_surf = fonts.panel_font.render(key_text, True, color)
-    desc_surf = fonts.hint_font.render(desc, True, (168, 182, 215))
+    left_x = panel_x + 18
+    right_x = panel_x + panel_w - 18
+    max_key_w = max(56, int(panel_w * 0.34))
+    key_draw = _fit_text(fonts.panel_font, key_text, max_key_w)
+    key_surf = fonts.panel_font.render(key_draw, True, color)
+    key_x = right_x - key_surf.get_width()
+    label_width = max(0, key_x - left_x - 10)
+    label_draw = _fit_text(fonts.panel_font, label, label_width)
+    label_surf = fonts.panel_font.render(label_draw, True, color)
 
-    surface.blit(label_surf, (panel_x + 18, y))
-    surface.blit(key_surf, (panel_x + panel_w - key_surf.get_width() - 18, y))
-    surface.blit(desc_surf, (panel_x + 18, y + fonts.panel_font.get_height() + 1))
+    surface.blit(label_surf, (left_x, y))
+    surface.blit(key_surf, (key_x, y))
+
+    desc_y = y + fonts.panel_font.get_height() + 1
+    icon_rect = pygame.Rect(left_x, desc_y - 1, 20, fonts.hint_font.get_height() + 2)
+    draw_action_icon(surface, rect=icon_rect, action=row.action)
+    desc_x = icon_rect.right + 6
+    desc_width = max(0, right_x - desc_x)
+    desc_draw = _fit_text(fonts.hint_font, desc, desc_width)
+    desc_surf = fonts.hint_font.render(desc_draw, True, (168, 182, 215))
+    surface.blit(desc_surf, (desc_x, desc_y))
 
 
 def _draw_rows(
@@ -679,8 +538,8 @@ def _draw_rows(
     fonts,
     *,
     state: KeybindingsMenuState,
-    rendered_rows: list[_RenderedRow],
-    binding_rows: list[_BindingRow],
+    rendered_rows: list[RenderedRow],
+    binding_rows: list[BindingRow],
     panel_x: int,
     panel_y: int,
     panel_w: int,
@@ -726,16 +585,21 @@ def _draw_rows(
 
 
 def _draw_hints(surface: pygame.Surface, fonts, state: KeybindingsMenuState, panel_y: int, panel_h: int) -> int:
-    width, _ = surface.get_size()
+    width, height = surface.get_size()
     hints = [
         "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
         "[ / ] profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Esc cancel/back",
-        _scope_file_hint(state),
+        "C conflict mode cycle   Enter capture   Tab section menu   Esc cancel/back",
+        scope_file_hint(state.scope),
     ]
     hint_y = panel_y + panel_h + 12
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, (188, 197, 228))
+    max_w = max(80, width - 36)
+    line_h = fonts.hint_font.get_height() + 3
+    max_lines = max(0, (height - hint_y - 6) // max(1, line_h))
+    draw_lines = hints[:max_lines]
+    for line in draw_lines:
+        line_draw = _fit_text(fonts.hint_font, line, max_w)
+        surf = fonts.hint_font.render(line_draw, True, (188, 197, 228))
         surface.blit(surf, ((width - surf.get_width()) // 2, hint_y))
         hint_y += surf.get_height() + 3
     return hint_y
@@ -745,15 +609,23 @@ def _draw_capture_hint(
     surface: pygame.Surface,
     fonts,
     state: KeybindingsMenuState,
-    binding_rows: list[_BindingRow],
+    binding_rows: list[BindingRow],
     hint_y: int,
 ) -> int:
     if not state.capture_mode or not binding_rows:
         return hint_y
-    width, _ = surface.get_size()
+    width, height = surface.get_size()
+    if hint_y + fonts.hint_font.get_height() + 4 > height - 4:
+        return hint_y
     selected = binding_rows[state.selected_binding]
+    max_w = max(80, width - 36)
+    cap_text = _fit_text(
+        fonts.hint_font,
+        f"Press a key for {binding_title(selected, state.scope)} (Esc cancels)",
+        max_w,
+    )
     cap = fonts.hint_font.render(
-        f"Press a key for {_binding_title(selected, state.scope)} (Esc cancels)",
+        cap_text,
         True,
         (255, 226, 144),
     )
@@ -764,12 +636,15 @@ def _draw_capture_hint(
 def _draw_text_mode_hint(surface: pygame.Surface, fonts, state: KeybindingsMenuState, hint_y: int) -> int:
     if not state.text_mode:
         return hint_y
-    width, _ = surface.get_size()
-    prompt = f"{_text_mode_label(state.text_mode)}: {state.text_buffer}_"
+    width, height = surface.get_size()
+    if hint_y + (fonts.hint_font.get_height() * 2) + 10 > height - 4:
+        return hint_y
+    max_w = max(80, width - 36)
+    prompt = _fit_text(fonts.hint_font, f"{_text_mode_label(state.text_mode)}: {state.text_buffer}_", max_w)
     cap = fonts.hint_font.render(prompt, True, (255, 226, 144))
     surface.blit(cap, ((width - cap.get_width()) // 2, hint_y + 2))
     hint_y += cap.get_height() + 4
-    tip = fonts.hint_font.render("Enter confirm   Esc cancel", True, (188, 197, 228))
+    tip = fonts.hint_font.render(_fit_text(fonts.hint_font, "Enter confirm   Esc cancel", max_w), True, (188, 197, 228))
     surface.blit(tip, ((width - tip.get_width()) // 2, hint_y + 2))
     return hint_y + tip.get_height() + 4
 
@@ -777,21 +652,13 @@ def _draw_text_mode_hint(surface: pygame.Surface, fonts, state: KeybindingsMenuS
 def _draw_status(surface: pygame.Surface, fonts, state: KeybindingsMenuState, hint_y: int) -> None:
     if not state.status:
         return
-    width, _ = surface.get_size()
-    color = (255, 150, 150) if state.status_error else (170, 240, 170)
-    status = fonts.hint_font.render(state.status, True, color)
-    surface.blit(status, ((width - status.get_width()) // 2, hint_y + 2))
-
-
-def _draw_guides(surface: pygame.Surface, fonts, hint_y: int) -> int:
     width, height = surface.get_size()
-    guide_h = 112
-    if hint_y + guide_h + 22 >= height:
-        return hint_y
-    guide_w = min(460, width - 40)
-    rect = pygame.Rect((width - guide_w) // 2, hint_y + 4, guide_w, guide_h)
-    draw_translation_rotation_guides(surface, fonts, rect=rect, title="Translation / Rotation")
-    return rect.bottom + 4
+    if hint_y + fonts.hint_font.get_height() + 4 > height - 4:
+        return
+    color = (255, 150, 150) if state.status_error else (170, 240, 170)
+    status_text = _fit_text(fonts.hint_font, state.status, max(80, width - 36))
+    status = fonts.hint_font.render(status_text, True, color)
+    surface.blit(status, ((width - status.get_width()) // 2, hint_y + 2))
 
 
 def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuState) -> None:
@@ -801,7 +668,7 @@ def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuSta
     _draw_panel(surface, panel_x=panel_x, panel_y=panel_y, panel_w=panel_w, panel_h=panel_h)
 
     y = panel_y + 20
-    for idx, (_scope, title, description) in enumerate(_SECTION_MENU):
+    for idx, (_scope, title, description) in enumerate(SECTION_MENU):
         selected = idx == state.selected_section
         color = (255, 224, 130) if selected else (228, 230, 242)
         if selected:
@@ -826,7 +693,6 @@ def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuSta
         surface.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
     hy = _draw_text_mode_hint(surface, fonts, state, hy)
-    hy = _draw_guides(surface, fonts, hy)
     if state.status:
         _draw_status(surface, fonts, state, hy)
 
@@ -835,10 +701,10 @@ def _handle_section_key(state: KeybindingsMenuState, key: int) -> bool:
     if key == pygame.K_ESCAPE:
         return True
     if key == pygame.K_UP:
-        state.selected_section = (state.selected_section - 1) % len(_SECTION_MENU)
+        state.selected_section = (state.selected_section - 1) % len(SECTION_MENU)
         return False
     if key == pygame.K_DOWN:
-        state.selected_section = (state.selected_section + 1) % len(_SECTION_MENU)
+        state.selected_section = (state.selected_section + 1) % len(SECTION_MENU)
         return False
     if key in (pygame.K_LEFTBRACKET, pygame.K_RIGHTBRACKET):
         step = -1 if key == pygame.K_LEFTBRACKET else 1
@@ -854,13 +720,13 @@ def _handle_section_key(state: KeybindingsMenuState, key: int) -> bool:
         _start_text_mode(state, _TEXT_MODE_SAVE_AS)
         return False
     if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        scope = _SECTION_MENU[state.selected_section][0]
+        scope = SECTION_MENU[state.selected_section][0]
         state.scope = scope
         state.section_mode = False
         state.selected_binding = 0
         state.scroll_top = 0
         state.capture_mode = False
-        _set_status(state, True, f"Opened {_scope_label(scope)} bindings")
+        _set_status(state, True, f"Opened {scope_label(scope)} bindings")
     return False
 
 
@@ -868,8 +734,8 @@ def _draw_menu(
     surface: pygame.Surface,
     fonts,
     state: KeybindingsMenuState,
-    rendered_rows: list[_RenderedRow],
-    binding_rows: list[_BindingRow],
+    rendered_rows: list[RenderedRow],
+    binding_rows: list[BindingRow],
 ) -> None:
     _draw_background(surface)
     _draw_menu_header(surface, fonts, state)
@@ -889,21 +755,13 @@ def _draw_menu(
     hint_y = _draw_hints(surface, fonts, state, panel_y, panel_h)
     hint_y = _draw_capture_hint(surface, fonts, state, binding_rows, hint_y)
     hint_y = _draw_text_mode_hint(surface, fonts, state, hint_y)
-    hint_y = _draw_guides(surface, fonts, hint_y)
     _draw_status(surface, fonts, state, hint_y)
-
-
-def _resolve_initial_scope(dimension: int, scope: str | None) -> str:
-    initial_scope = scope.strip().lower() if isinstance(scope, str) else ""
-    if initial_scope not in _VALID_SCOPES:
-        initial_scope = _scope_from_dimension(dimension)
-    return initial_scope
 
 
 def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
     allow_scope_sections = initial_scope in {"all", "general"}
     selected_section = 0
-    for idx, (section_scope, _title, _description) in enumerate(_SECTION_MENU):
+    for idx, (section_scope, _title, _description) in enumerate(SECTION_MENU):
         if section_scope == initial_scope:
             selected_section = idx
             break
@@ -915,14 +773,14 @@ def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
     )
 
 
-def _sync_selection(state: KeybindingsMenuState, binding_rows: list[_BindingRow]) -> None:
+def _sync_selection(state: KeybindingsMenuState, binding_rows: list[BindingRow]) -> None:
     if binding_rows:
         state.selected_binding = max(0, min(len(binding_rows) - 1, state.selected_binding))
     else:
         state.selected_binding = 0
 
 
-def _process_menu_events(state: KeybindingsMenuState, binding_rows: list[_BindingRow]) -> bool:
+def _process_menu_events(state: KeybindingsMenuState, binding_rows: list[BindingRow]) -> bool:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.key.stop_text_input()
@@ -944,13 +802,13 @@ def run_keybindings_menu(
     *,
     scope: str | None = None,
 ) -> None:
-    initial_scope = _resolve_initial_scope(dimension, scope)
+    initial_scope = resolve_initial_scope(dimension, scope)
     state = _build_menu_state(initial_scope)
     clock = pygame.time.Clock()
     running = True
     while running:
         _dt = clock.tick(60)
-        rendered_rows, binding_rows = _rows_for_scope(state.scope)
+        rendered_rows, binding_rows = rows_for_scope(state.scope)
         _sync_selection(state, binding_rows)
         if _process_menu_events(state, binding_rows):
             break

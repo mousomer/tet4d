@@ -1,0 +1,66 @@
+name: Stability Watch
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  dry-run-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pytest
+      - name: Dry-run stability sweep
+        run: |
+          PYTHONPATH=. python tools/check_playbot_stability.py --repeats 24 --seed-base 0
+      - name: Planner benchmark trend sample
+        run: |
+          python tools/bench_playbot.py --assert --record-trend
+      - name: Upload trend sample
+        uses: actions/upload-artifact@v4
+        with:
+          name: playbot-trend-${{ matrix.python-version }}
+          path: state/bench/playbot_latency_history.jsonl
+          if-no-files-found: warn
+
+  policy-analysis:
+    runs-on: ubuntu-latest
+    needs: dry-run-matrix
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Analyze policy snapshots
+        run: |
+          python tools/analyze_playbot_policies.py \
+            --board-set all \
+            --runs 20 \
+            --seed-start 120 \
+            --output-json state/bench/policy_analysis.json \
+            --output-csv state/bench/policy_analysis.csv \
+            --show-top 24
+      - name: Upload policy analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: playbot-policy-analysis
+          path: |
+            state/bench/policy_analysis.json
+            state/bench/policy_analysis.csv
+          if-no-files-found: error

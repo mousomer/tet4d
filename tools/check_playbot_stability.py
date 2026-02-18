@@ -31,7 +31,7 @@ def _check_once(seed: int) -> None:
     )
 
     cfg_4d = GameConfigND(dims=(6, 14, 4, 3), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
-    report_4d = run_dry_run_nd(cfg_4d, max_pieces=24, seed=seed)
+    report_4d = run_dry_run_nd(cfg_4d, max_pieces=40, seed=seed)
     _assert_report(
         report_4d.passed and report_4d.clears_observed > 0,
         f"4D dry-run failed (seed={seed}): {report_4d}",

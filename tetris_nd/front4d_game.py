@@ -48,6 +48,7 @@ from .loop_runner_nd import run_nd_loop
 from .rotation_anim import PieceRotationAnimatorND
 from .view_modes import GridMode, cycle_grid_mode
 from .pause_menu import run_pause_menu
+from .help_menu import run_help_menu
 
 
 @dataclass
@@ -165,6 +166,8 @@ def run_game_loop(
     bot_profile_index: int = 1,
     bot_budget_ms: int = 36,
 ) -> bool:
+    if cfg.exploration_mode:
+        bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     loop = LoopContext4D.create(cfg, bot_mode=bot_mode)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
@@ -183,6 +186,12 @@ def run_game_loop(
         gravity_interval_ms=gravity_interval_ms,
         pause_dimension=4,
         run_pause_menu=run_pause_menu,
+        run_help_menu=lambda target, active_fonts, dim, ctx: run_help_menu(
+            target,
+            active_fonts,
+            dimension=dim,
+            context_label=ctx,
+        ),
         spawn_clear_animation=spawn_clear_animation_if_needed,
         step_view=loop.view.step_animation,
         draw_frame=lambda target, active_overlay: draw_game_frame(

@@ -14,6 +14,7 @@ from .menu_controls import FieldSpec, MenuAction, apply_menu_actions, gather_men
 from .menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .exploration_mode import minimal_exploration_dims_nd
 from .playbot import run_dry_run_nd
 from .playbot.types import bot_planner_algorithm_from_index, bot_planner_profile_from_index
 from .projection3d import draw_gradient_background
@@ -41,6 +42,7 @@ class GameSettings3D:
     bot_speed_level: int = _DEFAULT_MODE_3D["bot_speed_level"]
     bot_budget_ms: int = _DEFAULT_MODE_3D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_3D["challenge_layers"]
+    exploration_mode: int = _DEFAULT_MODE_3D["exploration_mode"]
 
 
 _PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
@@ -89,6 +91,8 @@ def _menu_value_text(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
         return _PIECE_SET_3D_LABELS[safe_index]
+    if attr_name == "exploration_mode":
+        return "ON" if int(value) else "OFF"
     return str(value)
 
 
@@ -169,14 +173,18 @@ def run_menu(screen: pygame.Surface, fonts) -> Optional[GameSettings3D]:
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
         if state.run_dry_run:
-            report = run_dry_run_nd(
-                build_config(state.settings),
-                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
-                planning_budget_ms=state.settings.bot_budget_ms,
-                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
-            )
-            state.bindings_status = report.reason
-            state.bindings_status_error = not report.passed
+            if bool(state.settings.exploration_mode):
+                state.bindings_status = "Dry-run is disabled in exploration mode"
+                state.bindings_status_error = False
+            else:
+                report = run_dry_run_nd(
+                    build_config(state.settings),
+                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planning_budget_ms=state.settings.bot_budget_ms,
+                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                )
+                state.bindings_status = report.reason
+                state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state)
         pygame.display.flip()
 
@@ -198,17 +206,23 @@ def build_config(settings: GameSettings3D) -> GameConfigND:
     piece_set_id = _PIECE_SET_3D_CHOICES[
         max(0, min(len(_PIECE_SET_3D_CHOICES) - 1, settings.piece_set_index))
     ]
+    exploration_enabled = bool(settings.exploration_mode)
+    dims = (settings.width, settings.height, settings.depth)
+    if exploration_enabled:
+        dims = minimal_exploration_dims_nd(3, piece_set_id)
     return GameConfigND(
-        dims=(settings.width, settings.height, settings.depth),
+        dims=dims,
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set_id=piece_set_id,
-        challenge_layers=settings.challenge_layers,
+        challenge_layers=0 if exploration_enabled else settings.challenge_layers,
+        exploration_mode=exploration_enabled,
     )
 
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
     state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
-    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    if not cfg.exploration_mode:
+        apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     return state

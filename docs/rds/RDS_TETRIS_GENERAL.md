@@ -185,5 +185,7 @@ Completed in current implementation:
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
 
 Remaining follow-up:
-1. Continue empirical policy tuning from accumulated trend-history data as an ongoing operational cadence.
-2. Continue maintainability decomposition for remaining large modules.
+1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.
+2. Closed: help/documentation coverage now includes menu parity, settings IA rules, and control-guide surfaces.
+3. Closed: top-level/submenu split policy is enforced by config validation (`settings_category_metrics` + split rules).
+4. Closed: maintainability follow-up executed for keybinding modules (shared display utils + menu model extraction + dead code removal).

@@ -1,24 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import lru_cache
-from pathlib import Path
 
 import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
+from .key_display import format_key_tuple
 from .keybindings import (
     binding_action_description,
     binding_group_label,
     runtime_binding_groups_for_dimension,
 )
 from .menu_config import settings_category_docs
-
-try:
-    from PIL import Image, ImageSequence
-except ModuleNotFoundError:  # pragma: no cover - exercised when Pillow is missing
-    Image = None
-    ImageSequence = None
+from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
+from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 
 
 _BG_TOP = (14, 18, 44)
@@ -26,16 +21,8 @@ _BG_BOTTOM = (4, 7, 20)
 _TEXT_COLOR = (232, 232, 240)
 _MUTED_COLOR = (192, 200, 228)
 _HIGHLIGHT = (255, 224, 128)
-_ASSET_DIR = Path(__file__).resolve().parent.parent / "assets" / "help"
-_PAGE_COUNT = 6
+_PAGE_COUNT = 9
 _SETTINGS_DOCS = settings_category_docs()
-
-
-@dataclass(frozen=True)
-class _GifClip:
-    frames: tuple[pygame.Surface, ...]
-    durations_ms: tuple[int, ...]
-    total_ms: int
 
 
 @dataclass
@@ -43,7 +30,12 @@ class _HelpState:
     page: int = 0
     dimension: int = 2
     running: bool = True
-    elapsed_ms: int = 0
+
+
+def _current_binding_text(dimension: int, action: str, *, group: str = "system") -> str:
+    groups = runtime_binding_groups_for_dimension(max(2, min(4, int(dimension))))
+    keys = tuple(groups.get(group, {}).get(action, ()))
+    return format_key_tuple(keys)
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
@@ -58,281 +50,262 @@ def _draw_gradient(surface: pygame.Surface) -> None:
         pygame.draw.line(surface, color, (0, y), (width, y))
 
 
-def _load_clip(path: Path, size: tuple[int, int]) -> _GifClip | None:
-    if Image is None or ImageSequence is None:
-        return None
-    if not path.exists():
-        return None
+def _draw_lines(
+    surface: pygame.Surface,
+    font: pygame.font.Font,
+    lines: list[str],
+    *,
+    x: int,
+    y: int,
+    line_gap: int = 4,
+) -> None:
+    height = surface.get_height()
+    for line in lines:
+        if y > height - 32:
+            overflow = font.render("...", True, _MUTED_COLOR)
+            surface.blit(overflow, (x, y))
+            break
 
-    image = Image.open(path)
-    frames: list[pygame.Surface] = []
-    durations: list[int] = []
-    for frame in ImageSequence.Iterator(image):
-        rgba = frame.convert("RGBA")
-        surf = pygame.image.fromstring(rgba.tobytes(), rgba.size, "RGBA").convert_alpha()
-        if surf.get_size() != size:
-            surf = pygame.transform.smoothscale(surf, size)
-        frames.append(surf)
-        duration = frame.info.get("duration", 90)
-        duration_ms = int(duration) if isinstance(duration, int) and duration > 0 else 90
-        durations.append(duration_ms)
-    if not frames:
-        return None
-    total_ms = sum(durations)
-    return _GifClip(tuple(frames), tuple(durations), total_ms)
+        color = _TEXT_COLOR
+        text = line
+        if line.startswith("## "):
+            color = _HIGHLIGHT
+            text = line[3:]
+        elif line.startswith("-- "):
+            color = _MUTED_COLOR
+            text = line[3:]
+        elif not line:
+            y += max(4, font.get_height() // 3)
+            continue
 
-
-@lru_cache(maxsize=8)
-def _cached_clip(name: str, width: int, height: int) -> _GifClip | None:
-    return _load_clip(_ASSET_DIR / name, (width, height))
-
-
-def _frame_for_elapsed(clip: _GifClip, elapsed_ms: int) -> pygame.Surface:
-    if clip.total_ms <= 0:
-        return clip.frames[0]
-    t = elapsed_ms % clip.total_ms
-    accum = 0
-    for frame, duration in zip(clip.frames, clip.durations_ms):
-        accum += duration
-        if t < accum:
-            return frame
-    return clip.frames[-1]
+        surf = font.render(text, True, color)
+        surface.blit(surf, (x, y))
+        y += surf.get_height() + line_gap
 
 
 def _draw_overview_page(surface: pygame.Surface, fonts, state: _HelpState, context_label: str) -> None:
     width, _ = surface.get_size()
+    headline = fonts.hint_font.render("Help Overview", True, _HIGHLIGHT)
+    surface.blit(headline, ((width - headline.get_width()) // 2, 118))
     lines = [
-        f"Context: {context_label}",
+        f"## Context: {context_label}",
         "",
-        "This menu explains controls, scoring, piece sets, bots, and slicing.",
-        "Use Left/Right to switch pages.",
-        "Use Up/Down to switch dimension on the Controls page.",
+        "-- This help covers every game type, key category, and feature.",
+        "-- All key names shown here are read live from the active keybinding profile.",
+        "-- Use Left/Right to switch pages.",
+        "-- Use Up/Down to switch dimension on controls/key pages.",
         "",
-        "Quick summary:",
-        "1. Key Reference page lists every active key and what it does.",
-        "2. Controls page shows grouped controls with animated translation/rotation guides.",
-        "3. Settings page explains audio/display/profile/bot/setup settings.",
-        "4. Workflows page explains menu structure and profile flow.",
-        "5. Concepts page explains slicing, scoring, and reset/autosave rules.",
-        "6. Up/Down switches dimension to inspect 2D/3D/4D key maps.",
+        "## Quick navigation",
+        "- Page 2: controls helper with per-action icons",
+        "- Page 3: full key map for selected dimension",
+        "- Page 4: gameplay features (bot, challenge, exploration)",
+        "- Page 5: settings, profiles, autosave/reset rules",
+        "- Page 6: slicing and grid modes",
+        "- Page 7: menu structure and workflow",
+        "- Page 8: troubleshooting and gameplay shortcuts",
+        "",
+        "## Gameplay shortcut",
+        f"- Help action ({_current_binding_text(state.dimension, 'help')}) opens this menu during gameplay.",
     ]
-    y = 132
-    for line in lines:
-        color = (
-            _TEXT_COLOR
-            if line and not line.startswith(("1.", "2.", "3.", "4.", "5.", "6."))
-            else _MUTED_COLOR
-        )
-        surf = fonts.hint_font.render(line, True, color)
-        surface.blit(surf, ((width - surf.get_width()) // 2, y))
-        y += surf.get_height() + 6
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=154)
 
 
-def _display_key_name(key: int) -> str:
-    raw = pygame.key.name(key)
-    if not raw:
-        return str(key)
-    if len(raw) == 1:
-        return raw.upper()
-    return raw.replace("left shift", "LShift").replace("right shift", "RShift").title()
-
-
-def _format_keys(keys: tuple[int, ...]) -> str:
-    if not keys:
-        return "-"
-    return "/".join(_display_key_name(key) for key in keys)
-
-
-def _draw_key_reference_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
-    width, height = surface.get_size()
-    title = fonts.hint_font.render(
-        f"Key Reference ({state.dimension}D + General)",
-        True,
-        _HIGHLIGHT,
-    )
-    surface.blit(title, ((width - title.get_width()) // 2, 120))
-
-    groups = runtime_binding_groups_for_dimension(state.dimension)
-    group_order = ("system", "game", "camera", "slice")
-    y = 154
-    line_h = fonts.hint_font.get_height() + 4
-    for group_name in group_order:
-        if group_name not in groups:
-            continue
-        header = fonts.hint_font.render(binding_group_label(group_name), True, _HIGHLIGHT)
-        surface.blit(header, (36, y))
-        y += header.get_height() + 3
-
-        actions = groups[group_name]
-        for action_name in sorted(actions.keys()):
-            key_text = _format_keys(tuple(actions[action_name]))
-            desc = binding_action_description(action_name)
-            row = f"{key_text:<18} {desc}"
-            row_surf = fonts.hint_font.render(row, True, _TEXT_COLOR)
-            surface.blit(row_surf, (52, y))
-            y += line_h
-            if y > height - 56:
-                overflow = fonts.hint_font.render("... (switch dimension for other key maps)", True, _MUTED_COLOR)
-                surface.blit(overflow, (52, y))
-                return
-        y += 6
+def _draw_modes_page(surface: pygame.Surface, fonts) -> None:
+    piece_sets_2d = ", ".join(piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS)
+    piece_sets_3d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(3))
+    piece_sets_4d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(4))
+    lines = [
+        "## Game Types",
+        "",
+        "## 2D",
+        "- Classic board with row clears on the X-line width.",
+        f"- Piece sets: {piece_sets_2d}",
+        "",
+        "## 3D",
+        "- Full 3D board with camera yaw/pitch/projection controls.",
+        f"- Piece sets: {piece_sets_3d}",
+        "",
+        "## 4D",
+        "- Displayed as multiple 3D boards (one board per W-layer).",
+        f"- Piece sets: {piece_sets_4d}",
+        "",
+        "## Shared mechanics",
+        "- Toggle grid modes, use pause menu, switch profiles, use bots.",
+        "- Scoring includes placement points + clear points with assist multipliers.",
+    ]
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
 
 
 def _draw_controls_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
     width, height = surface.get_size()
-    header = fonts.hint_font.render(f"Controls for {state.dimension}D", True, _HIGHLIGHT)
-    surface.blit(header, ((width - header.get_width()) // 2, 120))
+    header = fonts.hint_font.render(f"Controls Helper ({state.dimension}D)", True, _HIGHLIGHT)
+    surface.blit(header, ((width - header.get_width()) // 2, 118))
 
-    if width < 920:
-        gif_w = min(width - 48, 460)
-        gif_h = min(150, max(108, (height - 340) // 3))
-        left_rect = pygame.Rect((width - gif_w) // 2, 154, gif_w, gif_h)
-        right_rect = pygame.Rect((width - gif_w) // 2, left_rect.bottom + 10, gif_w, gif_h)
-    else:
-        gif_w = min(300, max(180, (width - 80) // 2))
-        gif_h = min(170, max(120, (height // 4)))
-        left_rect = pygame.Rect(24, 154, gif_w, gif_h)
-        right_rect = pygame.Rect(width - gif_w - 24, 154, gif_w, gif_h)
-
-    for rect in (left_rect, right_rect):
-        panel = pygame.Surface(rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(panel, (0, 0, 0, 145), panel.get_rect(), border_radius=12)
-        surface.blit(panel, rect.topleft)
-
-    trans_clip = _cached_clip("translation_keys.gif", left_rect.width - 20, left_rect.height - 42)
-    rot_clip = _cached_clip("rotation_keys.gif", right_rect.width - 20, right_rect.height - 42)
-
-    trans_title = fonts.hint_font.render("Translation Guide", True, _MUTED_COLOR)
-    rot_title = fonts.hint_font.render("Rotation Guide", True, _MUTED_COLOR)
-    surface.blit(trans_title, (left_rect.x + 10, left_rect.y + 8))
-    surface.blit(rot_title, (right_rect.x + 10, right_rect.y + 8))
-
-    if trans_clip is not None:
-        frame = _frame_for_elapsed(trans_clip, state.elapsed_ms)
-        surface.blit(frame, (left_rect.x + 10, left_rect.y + 30))
-    else:
-        missing = fonts.hint_font.render("translation_keys.gif missing", True, (255, 160, 160))
-        surface.blit(missing, (left_rect.x + 10, left_rect.y + 36))
-
-    if rot_clip is not None:
-        frame = _frame_for_elapsed(rot_clip, state.elapsed_ms)
-        surface.blit(frame, (right_rect.x + 10, right_rect.y + 30))
-    else:
-        missing = fonts.hint_font.render("rotation_keys.gif missing", True, (255, 160, 160))
-        surface.blit(missing, (right_rect.x + 10, right_rect.y + 36))
-
-    groups_top = max(left_rect.bottom, right_rect.bottom) + 12
-    groups_rect = pygame.Rect(24, groups_top, width - 48, max(80, height - (groups_top + 14)))
+    helper_rect = pygame.Rect(24, 150, width - 48, max(120, height - 176))
     draw_grouped_control_helper(
         surface,
         groups=control_groups_for_dimension(state.dimension),
-        rect=groups_rect,
+        rect=helper_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
     )
 
 
-def _draw_settings_page(surface: pygame.Surface, fonts) -> None:
-    width, _ = surface.get_size()
-    title = fonts.hint_font.render("Settings Reference", True, _HIGHLIGHT)
-    surface.blit(title, ((width - title.get_width()) // 2, 120))
+def _draw_key_reference_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
+    width, height = surface.get_size()
+    title = fonts.hint_font.render(f"Full Key Map ({state.dimension}D)", True, _HIGHLIGHT)
+    surface.blit(title, ((width - title.get_width()) // 2, 118))
+    sub = fonts.hint_font.render(
+        f"Live from active profile: {_current_binding_text(state.dimension, 'menu')}={binding_action_description('menu')}",
+        True,
+        _MUTED_COLOR,
+    )
+    surface.blit(sub, ((width - sub.get_width()) // 2, 140))
 
+    groups = runtime_binding_groups_for_dimension(state.dimension)
+    group_order = ("system", "game", "camera", "slice")
+    y = 172
+    line_h = fonts.hint_font.get_height() + 4
+    left = 36
+
+    for group_name in group_order:
+        if group_name not in groups:
+            continue
+
+        header = fonts.hint_font.render(binding_group_label(group_name), True, _HIGHLIGHT)
+        surface.blit(header, (left, y))
+        y += header.get_height() + 3
+
+        for action_name in sorted(groups[group_name].keys()):
+            keys = format_key_tuple(tuple(groups[group_name][action_name]))
+            desc = binding_action_description(action_name)
+            row = f"{keys:<18} {desc}"
+            row_surf = fonts.hint_font.render(row, True, _TEXT_COLOR)
+            surface.blit(row_surf, (left + 12, y))
+            y += line_h
+            if y > height - 40:
+                overflow = fonts.hint_font.render("...", True, _MUTED_COLOR)
+                surface.blit(overflow, (left + 12, y))
+                return
+        y += 6
+
+
+def _draw_features_page(surface: pygame.Surface, fonts) -> None:
+    lines = [
+        "## Gameplay Features",
+        "",
+        "## Bot modes",
+        "- Off: human-only control.",
+        "- Assist/Step/Auto: bot can suggest or play based on selected mode.",
+        "",
+        "## Dry-run",
+        "- Setup menu includes dry-run validation (profile-independent command).",
+        "- Useful for testing layer clears and piece-set viability.",
+        "",
+        "## Challenge mode",
+        "- Starts with lower layers prefilled randomly.",
+        "- Increases difficulty and changes opening planning.",
+        "",
+        "## Exploration mode",
+        "- No gravity, no locking, no clears.",
+        "- Hard-drop becomes piece-cycling for movement practice.",
+        "- Board auto-sizes to minimal dimensions that fit and rotate selected pieces.",
+    ]
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
+
+
+def _draw_settings_page(surface: pygame.Surface, fonts) -> None:
     lines: list[str] = [
-        "Settings are grouped into categories and shared across launcher and pause menus.",
-        "Reset actions require confirmation. Autosave is silent and complements explicit Save.",
+        "## Settings, Profiles, and Persistence",
         "",
-        "Core categories:",
-        "Audio: master volume, SFX volume, mute.",
-        "Display: fullscreen/window size and apply/save flow.",
-        "Analytics: score analyzer logging toggle and event/summary output.",
-        "Bot: mode, run speed, hard-drop policy, planning budget.",
-        "Profiles: active profile, save-as, rename, delete custom.",
-        "Setup: board size, piece-set choices, challenge layers.",
+        "## Save policy",
+        "- Autosave: silent session continuity.",
+        "- Explicit Save: deliberate durable checkpoint.",
+        "- Reset defaults: always requires confirmation.",
         "",
-        "Config files:",
-        "Audio/display defaults and menu categories are loaded from config/menu/*.json.",
-        "Score analyzer logging/output is configured in config/gameplay/score_analyzer.json.",
+        "## Keybinding profiles",
+        "- Create/Rename/Save-As/Delete custom profiles.",
+        "- Load/Save keybinding files per dimension.",
+        "- General/System keys are separated from 2D/3D/4D-specific groups.",
         "",
-        "Extended category docs:",
+        "## Settings categories",
     ]
     for entry in _SETTINGS_DOCS:
-        lines.append(f"{entry['label']}: {entry['description']}")
+        lines.append(f"- {entry['label']}: {entry['description']}")
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
 
-    y = 154
-    for line in lines:
-        color = _TEXT_COLOR if line else _MUTED_COLOR
-        surf = fonts.hint_font.render(line, True, color)
-        surface.blit(surf, ((width - surf.get_width()) // 2, y))
-        y += surf.get_height() + 6
+
+def _draw_slice_grid_page(surface: pygame.Surface, fonts) -> None:
+    lines = [
+        "## Slicing and Grid",
+        "",
+        "## Slice",
+        "- Slicing fixes one axis coordinate for focused inspection.",
+        "- In 4D, each W-layer is rendered as a separate 3D board.",
+        "",
+        "## Grid modes",
+        "- OFF: board shadow only.",
+        "- EDGE: only outer board edges.",
+        "- FULL: full lattice grid.",
+        "- HELPER: only lines that intersect current piece cells.",
+        "",
+        "## 4D helper behavior",
+        "- Helper lines are now layer-local.",
+        "- Lines appear only on W-boards containing current piece cells.",
+    ]
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
 
 
 def _draw_workflows_page(surface: pygame.Surface, fonts) -> None:
-    width, _ = surface.get_size()
     lines = [
-        "Menu & Profile Workflow",
+        "## Menus and Workflow",
         "",
-        "Launcher main menu:",
-        "Play 2D / 3D / 4D, Settings, Keybindings Setup, Bot Options, Help, Quit.",
+        "## Main launcher",
+        "- Play 2D / 3D / 4D",
+        "- Settings",
+        "- Keybindings Setup",
+        "- Bot Options",
+        "- Help",
         "",
-        "Keybindings Setup:",
-        "1. Section menu: General, 2D, 3D, 4D.",
-        "2. Inside a section: bindings grouped by System/Game/Camera/Slice.",
-        "3. Enter starts rebinding selected action.",
-        "4. L loads and S saves keybinding files for current scope.",
-        "5. N create profile, F2 rename, F3 save as, [/] cycle profile.",
+        "## Keybindings Setup",
+        "- Top sections: General, 2D, 3D, 4D.",
+        "- Enter opens section, Tab/Esc returns to sections.",
+        "- Row view: action, bound key(s), description, and icon.",
         "",
-        "Pause menu sync:",
-        "Pause menus expose the same settings/keybindings/help/bot options flows.",
+        "## Pause parity",
+        "- Pause menus expose Help, Settings, Bot Options, Keybindings, Restart, and Quit.",
     ]
-    y = 132
-    for line in lines:
-        color = _HIGHLIGHT if line.endswith(":") or line == "Menu & Profile Workflow" else _TEXT_COLOR
-        if line == "":
-            y += fonts.hint_font.get_height() // 2
-            continue
-        surf = fonts.hint_font.render(line, True, color)
-        surface.blit(surf, ((width - surf.get_width()) // 2, y))
-        y += surf.get_height() + 6
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
 
 
-def _draw_concepts_page(surface: pygame.Surface, fonts) -> None:
-    width, _ = surface.get_size()
+def _draw_troubleshooting_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
+    dimension = state.dimension
     lines = [
-        "Concepts",
+        "## Troubleshooting",
         "",
-        "Slicing:",
-        "A slice fixes one non-gravity axis to a selected coordinate.",
-        "In 4D, each w layer is rendered as its own 3D board view.",
+        "- If controls feel wrong, open Keybindings Setup and verify active profile.",
+        "- If settings look stale, save explicitly and re-open menu.",
+        "- If visuals are crowded, reduce helper overlays and keep Edge/Off grid.",
+        "- If gameplay debugging is needed, use debug piece sets + dry-run.",
         "",
-        "Scoring:",
-        "Base points are awarded for piece placement and cleared lines/layers.",
-        "Assist settings (bot, grid helpers, speed boosts) adjust the score multiplier.",
-        "Optional score-analyzer logging records lock events and rolling summaries.",
+        "## Gameplay help",
+        f"- {_current_binding_text(dimension, 'help')}: open help directly during gameplay.",
+        f"- {_current_binding_text(dimension, 'toggle_grid')}: cycle grid mode.",
+        f"- {_current_binding_text(dimension, 'menu')}: open pause menu.",
         "",
-        "Settings and resets:",
-        "Resets require confirmation to avoid accidental data loss.",
-        "Autosave paths do not ask confirmation and complement explicit Save actions.",
-        "",
-        "Menu sync:",
-        "Main and pause menus both expose settings, keybindings, help, bot options, and quit.",
+        "## Exploration mode tip",
+        "- Turn it on in setup to practice movement/rotation without gravity pressure.",
     ]
-    y = 132
-    for line in lines:
-        color = _HIGHLIGHT if line in {"Concepts", "Slicing:", "Scoring:", "Settings and resets:"} else _TEXT_COLOR
-        if line == "":
-            y += fonts.hint_font.get_height() // 2
-            continue
-        surf = fonts.hint_font.render(line, True, color)
-        surface.blit(surf, ((width - surf.get_width()) // 2, y))
-        y += surf.get_height() + 6
+    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
 
 
 def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label: str) -> None:
     _draw_gradient(surface)
     width, _ = surface.get_size()
+    help_binding = _current_binding_text(state.dimension, "help")
     title = fonts.title_font.render("Help & Explanations", True, _TEXT_COLOR)
     subtitle = fonts.hint_font.render(
-        "Left/Right page   Up/Down dimension   Esc back",
+        f"Left/Right page   Up/Down dimension   Esc back   Help key: {help_binding} (live profile)",
         True,
         _MUTED_COLOR,
     )
@@ -344,15 +317,21 @@ def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label:
     if state.page == 0:
         _draw_overview_page(surface, fonts, state, context_label)
     elif state.page == 1:
-        _draw_key_reference_page(surface, fonts, state)
+        _draw_modes_page(surface, fonts)
     elif state.page == 2:
         _draw_controls_page(surface, fonts, state)
     elif state.page == 3:
-        _draw_settings_page(surface, fonts)
+        _draw_key_reference_page(surface, fonts, state)
     elif state.page == 4:
+        _draw_features_page(surface, fonts)
+    elif state.page == 5:
+        _draw_settings_page(surface, fonts)
+    elif state.page == 6:
+        _draw_slice_grid_page(surface, fonts)
+    elif state.page == 7:
         _draw_workflows_page(surface, fonts)
     else:
-        _draw_concepts_page(surface, fonts)
+        _draw_troubleshooting_page(surface, fonts, state)
 
 
 def run_help_menu(
@@ -366,8 +345,7 @@ def run_help_menu(
     clock = pygame.time.Clock()
 
     while state.running:
-        dt = clock.tick(60)
-        state.elapsed_ms += dt
+        _dt = clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return screen
