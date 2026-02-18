@@ -61,6 +61,7 @@
     ],
     "ci_scripts": [
       "scripts/ci_check.sh",
+      "tools/check_pygame_ce.py",
       "tools/validate_project_contracts.py",
       ".github/workflows/stability-watch.yml"
     ]
@@ -73,7 +74,8 @@
         "config/gameplay/score_analyzer.json",
         "menu_control_guides.py",
         "draw_translation_rotation_guides",
-        "scripts/ci_check.sh"
+        "scripts/ci_check.sh",
+        "tools/check_pygame_ce.py"
       ]
     },
     {
@@ -88,8 +90,22 @@
       "file": "docs/BACKLOG.md",
       "must_contain": [
         "## 3. Active Open Backlog / TODO",
-        "## 5. Change Footprint",
-        "No currently open gaps"
+        "## 5. Change Footprint"
+      ],
+      "must_not_contain": [
+        "No currently open gaps",
+        "126 passed"
+      ]
+    },
+    {
+      "file": "docs/GUIDELINES_RESEARCH.md",
+      "must_contain": [
+        "## 3. Current issues (open backlog)",
+        "docs/BACKLOG.md"
+      ],
+      "must_not_contain": [
+        "No active open gaps",
+        "126 passed"
       ]
     },
     {

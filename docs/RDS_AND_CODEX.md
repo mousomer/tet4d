@@ -5,16 +5,14 @@ This document is section `3` of the unified documentation layout.
 ## RDS index
 
 All requirement/design specs are in:
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_TETRIS_GENERAL.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_KEYBINDINGS.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_MENU_STRUCTURE.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_SCORE_ANALYZER.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_2D_TETRIS.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_3D_TETRIS.md`
-- `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_4D_TETRIS.md`
-
-Read order:
+- `docs/rds/RDS_TETRIS_GENERAL.md`
+- `docs/rds/RDS_KEYBINDINGS.md`
+- `docs/rds/RDS_MENU_STRUCTURE.md`
+- `docs/rds/RDS_PLAYBOT.md`
+- `docs/rds/RDS_SCORE_ANALYZER.md`
+- `docs/rds/RDS_2D_TETRIS.md`
+- `docs/rds/RDS_3D_TETRIS.md`
+- `docs/rds/RDS_4D_TETRIS.md` Read order:
 1. General RDS
 2. Keybindings RDS
 3. Menu structure RDS
@@ -32,11 +30,11 @@ Read order:
 
 ## Coding best practices
 
-1. Keep game rules in engine modules (`game2d.py`, `game_nd.py`) and keep rendering thin.
+1. Keep game rules in engine modules (`game2d.py`,`game_nd.py`) and keep rendering thin.
 2. Reuse shared projection/menu/input helpers to avoid 3D/4D drift.
 3. Avoid side effects during import (especially in keybinding/config modules).
 4. Keep files ASCII unless there is a strong reason otherwise.
-5. Name helper functions by intent (`_advance_gravity`, `_tick_clear_animation`, etc.).
+5. Name helper functions by intent (`_advance_gravity`,`_tick_clear_animation`, etc.).
 6. Keep complexity in check; run `ruff --select C901` on changes.
 
 ## Testing instructions
@@ -44,15 +42,14 @@ Read order:
 Run after every gameplay or input change:
 
 ```bash
-ruff check /Users/omer/workspace/test-code/tet4d
-ruff check /Users/omer/workspace/test-code/tet4d --select C901
-python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py
+ruff check .
+ruff check . --select C901
+python3 tools/validate_project_contracts.py
+python3 tools/check_pygame_ce.py
 pytest -q
-PYTHONPATH=. python3 /Users/omer/workspace/test-code/tet4d/tools/check_playbot_stability.py --repeats 20 --seed-base 0
-python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front2d.py /Users/omer/workspace/test-code/tet4d/tetris_nd
-```
-
-Minimum required coverage for gameplay-affecting changes:
+PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
+python3.14 -m compileall -q  front2d.py  tetris_nd
+```Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).
 2. Replay determinism tests.
 3. Per-mode smoke tests for key routing and system controls.
@@ -68,41 +65,43 @@ Minimum required coverage for gameplay-affecting changes:
 ## Canonical maintenance contract
 
 1. Canonical maintenance rules are machine-checked and source-controlled in:
-2. `/Users/omer/workspace/test-code/tet4d/config/project/canonical_maintenance.json`
+2. `config/project/canonical_maintenance.json`
 3. Validation command:
-4. `python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+4. `python3 tools/validate_project_contracts.py`
 5. Validation is part of CI via:
-6. `/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh`
+6. `scripts/ci_check.sh`
 7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:
-8. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
-9. `/Users/omer/workspace/test-code/tet4d/docs/FEATURE_MAP.md`
-10. `/Users/omer/workspace/test-code/tet4d/docs/rds/`
-11. `/Users/omer/workspace/test-code/tet4d/README.md`
-12. `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/` (or relevant test suites)
+8. `docs/BACKLOG.md`
+9. `docs/FEATURE_MAP.md`
+10. `docs/rds/`
+11. `README.md`
+12. `tetris_nd/tests/` (or relevant test suites)
 13. Canonical connected artifacts now include:
 14. `config/schema/*.schema.json`,
 15. `docs/migrations/*.md`,
-16. `tests/replay/manifest.json` + `tests/replay/golden/.gitkeep`,
-17. `docs/help/HELP_INDEX.md` + `assets/help/manifest.json`,
+16. `tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`,
+17. `docs/help/HELP_INDEX.md`+`assets/help/manifest.json`,
 18. `docs/RELEASE_CHECKLIST.md`.
 
 ## Simplification and Technical Debt Tracking (2026-02-18)
 
 Authoritative open/deferred items are tracked in:
-1. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
+1. `docs/BACKLOG.md`
 
-### Active open items (synced from `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`)
+### Active open items (synced from `docs/BACKLOG.md`)
 
-1. No active open gaps (verified 2026-02-18).
-2. Ongoing checks are automated in:
-3. `/Users/omer/workspace/test-code/tet4d/.github/workflows/ci.yml`
-4. `/Users/omer/workspace/test-code/tet4d/.github/workflows/stability-watch.yml`
-5. Operational source-of-truth remains:
-6. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
+1. Keep complexity budget clean (`C901`) after loop/icon refactors.
+2. Keep docs/backlog status synchronized; avoid stale hardcoded pass-count snapshots.
+3. Keep `.venv`toolchain complete (` ruff`,`pytest`) for consistent local`scripts/ci_check.sh` runs.
+4. Ongoing checks are automated in:
+5. `.github/workflows/ci.yml`
+6. `.github/workflows/stability-watch.yml`
+7. Operational source-of-truth remains:
+8. `docs/BACKLOG.md`
 
 ### Current complexity hotspots (`ruff --select C901`)
 
-1. None currently open in backlog (latest local `ruff check --select C901` is green).
+1. None currently open; keep this verified per change set.
 
 ### Recent simplification baseline (already completed)
 
@@ -118,7 +117,7 @@ Authoritative open/deferred items are tracked in:
 2. Add or update targeted tests before extraction/refactor.
 3. Keep deterministic replay tests green.
 4. Run:
-5. `ruff check /Users/omer/workspace/test-code/tet4d`
-6. `ruff check /Users/omer/workspace/test-code/tet4d --select C901`
+5. `ruff check .`
+6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
-8. `python3.14 -m compileall -q /Users/omer/workspace/test-code/tet4d/front.py /Users/omer/workspace/test-code/tet4d/tetris_nd`
+8. `python3.14 -m compileall -q  front.py  tetris_nd`

@@ -12,8 +12,8 @@ Last verified: 2026-02-18
 
 ## 2. How they are applied in this project
 
-1. Unified menu IA with stable top-level categories (`Play`, `Settings`, `Keybindings`, `Bot Options`, `Help`).
-2. Keyboard-first flows with consistent action semantics (`Enter` confirm, `Esc` back/cancel, arrow navigation).
+1. Unified menu IA with stable top-level categories (`Play`,`Settings`,`Keybindings`,`Bot Options`,`Help`).
+2. Keyboard-first flows with consistent action semantics (`Enter`confirm,`Esc` back/cancel, arrow navigation).
 3. Settings and keybindings are externalized to JSON and profile-scoped (no hardcoded-only paths).
 4. Reset actions require confirmation; autosave is silent and status-visible.
 5. Help and control guides are intended to be available from launcher, pause menu, and in-game helper surfaces.
@@ -21,15 +21,17 @@ Last verified: 2026-02-18
 
 ## 3. Current issues (open backlog)
 
-1. No active open gaps (verified 2026-02-18).
-2. Continuous checks are automated in:
-3. `/Users/omer/workspace/test-code/tet4d/.github/workflows/ci.yml`
-4. `/Users/omer/workspace/test-code/tet4d/.github/workflows/stability-watch.yml`
-5. Canonical synchronization source:
-6. `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`
+1. Keep complexity guardrails active (`C901`) in local and CI checks.
+2. Keep documentation and backlog status synchronized with current check outputs.
+3. Keep local `.venv`toolchain complete (` ruff`,`pytest`) because`scripts/ci_check.sh`prefers`.venv`.
+4. Continuous checks are automated in:
+5. `.github/workflows/ci.yml`
+6. `.github/workflows/stability-watch.yml`
+7. Canonical synchronization source:
+8. `docs/BACKLOG.md`
 
 ## 4. Current quality snapshot
 
 1. `ruff check . --select C901`: pass.
 2. `python3 tools/validate_project_contracts.py`: pass.
-3. `pytest -q`: pass (`126 passed`).
+3. `pytest -q`: pass.

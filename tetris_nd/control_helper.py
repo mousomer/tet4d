@@ -63,6 +63,7 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
                 "Translation",
                 (
                     _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "move x", "move_x_pos"),
+                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
                     _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
                     _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
                 ),
@@ -92,6 +93,7 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
                 (
                     _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "left/right", "move_x_pos"),
                     _line_with_icon(_format_pair(game_keys, "move_z_neg", "move_z_pos"), "away/closer", "move_z_neg"),
+                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
                     _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
                     _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
                 ),
@@ -141,6 +143,7 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
                     _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "left/right", "move_x_pos"),
                     _line_with_icon(_format_pair(game_keys, "move_z_neg", "move_z_pos"), "away/closer", "move_z_neg"),
                     _line_with_icon(_format_pair(game_keys, "move_w_neg", "move_w_pos"), "w axis", "move_w_pos"),
+                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
                     _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
                     _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
                 ),

@@ -3,28 +3,28 @@
 Status: Active v0.6 (Verified 2026-02-18)  
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
 
 Define requirements for `(x, y, z)` gameplay mode implemented by:
-- `/Users/omer/workspace/test-code/tet4d/front3d.py`
-- `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-- `/Users/omer/workspace/test-code/tet4d/tetris_nd/game_nd.py`
+- `front3d.py`
+- `tetris_nd/front3d_game.py`
+- `tetris_nd/game_nd.py`
 
 ## 2. Current Intentions
 
 1. Deliver a readable, controllable 3D board with deterministic gameplay.
 2. Keep gameplay actions separate from camera actions.
 3. Keep all three projection modes usable in one session.
-4. Implement 3D automatic playbot logic as a thin adapter over shared ND playbot core (see `/Users/omer/workspace/test-code/tet4d/docs/rds/RDS_PLAYBOT.md`).
+4. Implement 3D automatic playbot logic as a thin adapter over shared ND playbot core (see `docs/rds/RDS_PLAYBOT.md`).
 
 ## 3. Board and Rules
 
 1. Coordinate system: `(x, y, z)`.
 2. Gravity axis: `y`.
 3. Typical setup defaults: `6 x 18 x 6`.
-4. Clear rule: full `x-z` layer at fixed `y`.
+4. Clear rule: full `x-z`layer at fixed`y`.
 
 ## 4. Piece Set
 
@@ -32,21 +32,21 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 2. Optional set: embedded 2D pieces (`2D->3D` lift).
 3. Optional set: `random_cells_3d` (connected random cells).
 4. Optional set: `debug_rectangles_3d` (simple cuboids for rapid layer-fill checks).
-5. Piece definitions are in `/Users/omer/workspace/test-code/tet4d/tetris_nd/pieces_nd.py`.
-6. Setup menu must expose piece set source selection (`native_3d`, `embedded_2d`, `random_cells_3d`, `debug_rectangles_3d`).
+5. Piece definitions are in `tetris_nd/pieces_nd.py`.
+6. Setup menu must expose piece set source selection (`native_3d`,`embedded_2d`,`random_cells_3d`,`debug_rectangles_3d`).
 7. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
 ## 4.1 Lower-dimensional set embedding requirements (3D)
 
-1. 2D coordinates `(x, y)` embed into 3D as `(x, y, 0)` by default.
-2. Optional embedding plane selection is allowed (`xy`, `xz`, `yz`); default is `xy`.
+1. 2D coordinates `(x, y)`embed into 3D as`(x, y, 0)` by default.
+2. Optional embedding plane selection is allowed (`xy`,`xz`,`yz`); default is`xy`.
 3. After spawn, embedded pieces must support full 3D movement/rotation rules.
 4. Embedding must preserve deterministic replay behavior under fixed seed.
 
 ## 4.2 Random-cell generator requirements (3D)
 
 1. Generated coordinates must form a single connected component (6-neighborhood).
-2. Default cell count is `5`, configurable range `4..8`.
+2. Default cell count is `5`, configurable range`4..8`.
 3. Coordinates are normalized before spawn to maintain stable positioning.
 4. Duplicate generated shapes in the same bag cycle should be avoided when feasible.
 5. Generated piece bounding boxes must fit board `x/z` dimensions at spawn.
@@ -54,7 +54,7 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 
 ## 4.3 Debug piece set requirements (3D)
 
-1. Provide simple cuboids such as `2x1x1`, `2x2x1`, `3x1x1`.
+1. Provide simple cuboids such as `2x1x1`,`2x2x1`,`3x1x1`.
 2. Set is intended for fast plane-clear validation and scoring checks.
 3. Debug set must remain deterministic under fixed seed.
 
@@ -72,17 +72,13 @@ Gameplay (default small profile):
 Camera/view:
 1. Yaw turn (animated 90°): J/L
 2. Pitch turn (animated 90°): I/K
-3. Zoom: `+` / `-`
+3. Zoom: `+`/`-`
 4. Reset camera: `0`
-5. Cycle projection: `P`
-
-System:
+5. Cycle projection: `P` System:
 1. Restart: `R`
 2. Menu: `M`
 3. Quit: `Esc`
-4. Toggle grid: `G`
-
-Viewer-consistent translation requirement:
+4. Toggle grid: `G` Viewer-consistent translation requirement:
 1. Arrow and movement intents are interpreted in viewer space, not fixed board axes.
 2. `Left/Right` always move the active piece screen-left/screen-right.
 3. `Up` always means away from the viewer.
@@ -137,9 +133,9 @@ Minimum required coverage after 3D changes:
 6. random/debug piece spawn stability checks.
 
 Relevant tests:
-- `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_game_nd.py`
-- `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_pieces_nd.py`
-- `/Users/omer/workspace/test-code/tet4d/tetris_nd/tests/test_gameplay_replay.py`
+- `tetris_nd/tests/test_game_nd.py`
+- `tetris_nd/tests/test_pieces_nd.py`
+- `tetris_nd/tests/test_gameplay_replay.py`
 
 ## 10. Acceptance Criteria
 

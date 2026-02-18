@@ -2,11 +2,11 @@
 
 ## Code and tests
 
-1. `ruff check /Users/omer/workspace/test-code/tet4d`
-2. `ruff check /Users/omer/workspace/test-code/tet4d --select C901`
-3. `python3 /Users/omer/workspace/test-code/tet4d/tools/validate_project_contracts.py`
+1. `ruff check .`
+2. `ruff check . --select C901`
+3. `python3 tools/validate_project_contracts.py`
 4. `pytest -q`
-5. `/Users/omer/workspace/test-code/tet4d/scripts/ci_check.sh`
+5. `scripts/ci_check.sh`
 
 ## Documentation and RDS sync
 
@@ -23,4 +23,4 @@
 3. `assets/help/manifest.json` updated for help asset changes.
 4. Migration docs updated if payload structure changes:
    - `docs/migrations/menu_settings.md`
-   - `docs/migrations/save_state.md`
+- `docs/migrations/save_state.md`

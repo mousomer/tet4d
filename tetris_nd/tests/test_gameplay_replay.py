@@ -147,12 +147,23 @@ class TestGameplayReplay(unittest.TestCase):
         state = front2d.create_initial_state(cfg)
         self.assertFalse(state.game_over)
         piece_before = state.current_piece
+        y_before = state.current_piece.pos[1] if state.current_piece is not None else None
 
         # Gravity ticks do nothing in exploration mode.
         state.step(Action.NONE)
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
+
+        move_up = self._key_for(KEYS_2D, "move_y_neg")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(move_up), state, cfg), "continue")
+        if state.current_piece is not None and y_before is not None:
+            self.assertEqual(state.current_piece.pos[1], y_before - 1)
+
+        move_down = self._key_for(KEYS_2D, "move_y_pos")
+        self.assertEqual(front2d.handle_game_keydown(_keydown(move_down), state, cfg), "continue")
+        if state.current_piece is not None and y_before is not None:
+            self.assertEqual(state.current_piece.pos[1], y_before)
 
         # Hard drop cycles to next piece without locking into board.
         hard_drop = self._key_for(KEYS_2D, "hard_drop")
@@ -176,6 +187,16 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(state.score, 0)
         if state.current_piece is not None:
             self.assertEqual(state.current_piece.pos, pos_before)
+
+        move_up = self._key_for(KEYS_4D, "move_y_neg")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_up), state, slice_state), "continue")
+        if state.current_piece is not None and pos_before is not None:
+            self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
+
+        move_down = self._key_for(KEYS_4D, "move_y_pos")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_down), state, slice_state), "continue")
+        if state.current_piece is not None and pos_before is not None:
+            self.assertEqual(state.current_piece.pos[1], pos_before[1])
 
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
         self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state, slice_state), "continue")
