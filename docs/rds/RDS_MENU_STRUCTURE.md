@@ -3,7 +3,7 @@
 Status: Active v0.5 (Verified 2026-02-18)  
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
 
@@ -15,17 +15,18 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 5. Persistent save/load of menu and settings state
 6. Keybinding editor flow with local profile save/load
 7. Unified main menu for choosing 2D/3D/4D with shared options
-8. Audio and display settings (including fullscreen/windowed mode)
+8. Audio, display, and analytics settings (including fullscreen/windowed mode)
+9. Helper panel information hierarchy and control-guide visuals
 
 Primary implementation and maintenance files:
-1. `/Users/omer/workspace/test-code/tet4d/front2d.py`
-2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/front3d_game.py`
-3. `/Users/omer/workspace/test-code/tet4d/tetris_nd/frontend_nd.py`
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_controls.py`
-5. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_keybinding_shortcuts.py`
-6. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_config.py`
-7. `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
-8. `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
+1. `front2d.py`
+2. `tetris_nd/front3d_game.py`
+3. `tetris_nd/frontend_nd.py`
+4. `tetris_nd/menu_controls.py`
+5. `tetris_nd/menu_keybinding_shortcuts.py`
+6. `tetris_nd/menu_config.py`
+7. `config/menu/defaults.json`
+8. `config/menu/structure.json`
 
 ## 2. Design Goals
 
@@ -47,6 +48,10 @@ This design is based on:
    References: [Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [Focus Appearance](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance)
 4. Nielsen usability heuristics (consistency, user control/freedom, recognition over recall, error prevention).  
    Reference: [NNG Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
+5. WCAG 2.2 consistent help placement guidance (help available in predictable location).  
+   Reference: [Consistent Help](https://www.w3.org/WAI/WCAG22/Understanding/consistent-help.html)
+6. Heuristic emphasis on visibility-of-status and minimalist information density for high-scan interfaces.  
+   Reference: [Nielsen Heuristics PDF](https://media.nngroup.com/media/articles/attachments/Heuristic_Evaluation_-_How-To_-_Nielsen_Norman_Group.pdf)
 
 ## 4. Target Information Architecture
 
@@ -66,6 +71,7 @@ Main Menu
 ├── Settings
 │   ├── Audio
 │   ├── Display
+│   └── Analytics
 ├── Keybindings Setup
 │   ├── General
 │   ├── 2D
@@ -159,13 +165,12 @@ Pause Menu
 10. `Save Keybindings As New Profile`
 11. `Toggle Fullscreen`
 12. `Adjust Audio`
+13. `Toggle Score Logging`
 
 ### 7.2 Persistence model
 
 Add persistent settings file:
-1. `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`
-
-Minimum schema:
+1. `state/menu_settings.json` Minimum schema:
 ```json
 {
   "version": 1,
@@ -198,6 +203,21 @@ Minimum schema:
 6. On invalid/corrupt save data, fall back to defaults and show non-blocking warning.
 7. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
 8. Display and audio settings are persisted in the same settings state.
+9. Analytics settings are persisted in the same settings state.
+
+### 7.5 Category depth/split rule
+
+1. Keep a settings category top-level when it remains small and quick:
+2. `<= 5` adjustable fields,
+3. `<= 2`action rows (` Apply/Save/Reset` style),
+4. no nested mode-specific branching required.
+5. Split category into a dedicated submenu when any threshold is exceeded:
+6. `>= 6` adjustable fields, or
+7. category requires separate basic/advanced groups, or
+8. category introduces mode-specific variants that reduce scanability.
+9. Current policy:
+10. `Audio`and`Display`remain top-level in`Settings` while they stay below threshold.
+11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -217,9 +237,9 @@ Minimum schema:
 ## 9. Implementation Notes (Current)
 
 1. Extract reusable menu view model:
-2. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_model.py`
+2. `tetris_nd/menu_model.py`
 3. Extract persistence helpers:
-4. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_persistence.py`
+4. `tetris_nd/menu_persistence.py`
 5. Keep mode-specific field lists in existing frontend files.
 6. Reuse `menu_controls.py` for action dispatch; extend with reset/apply/cancel actions.
 7. Keep profile actions identical in main/setup and pause menus.
@@ -228,11 +248,9 @@ Minimum schema:
 
 Required checks after implementation:
 ```bash
-ruff check /Users/omer/workspace/test-code/tet4d
+ruff check .
 pytest -q
-```
-
-Manual tests:
+```Manual tests:
 1. Keyboard-only navigation across all menu screens.
 2. Controller digital input parity (where available).
 3. Save, quit, relaunch, load: values persist correctly.
@@ -247,17 +265,17 @@ Manual tests:
 
 1. Shared `Edit Keybindings` submenu is reused by setup and pause flows.
 2. Menu depth remains shallow (top-level -> setup/options -> edit actions).
-3. Profile file actions (`Load`, `Save`, `Save As`, `Reset`) are integrated and consistent.
+3. Profile file actions (`Load`,`Save`,`Save As`,`Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
-5. In-game key helper is grouped into `Translation`, `Rotation`, `Camera/View`, `Slice`, `System`.
-6. Help/Controls includes GIF previews for translation and rotation.
+5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+6. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 
 ## 12. Stabilization Additions (Completed)
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
 2. Dedicated `Keybindings Setup` screen is implemented.
-3. Audio settings page (`master`, `sfx`, `mute`) is implemented.
-4. Display settings page (`fullscreen`, `windowed size`, `reset`) is implemented.
+3. Unified settings hub (`audio/display/analytics`) is implemented.
+4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
 6. Fullscreen return-to-menu shrinkage issue is resolved.
 ## 13. Acceptance Criteria
@@ -270,16 +288,16 @@ Manual tests:
 ## 14. Implementation Status (2026-02-18)
 
 Implemented in code:
-1. Unified launcher added at `/Users/omer/workspace/test-code/tet4d/front.py`.
-2. Main menu includes `Play 2D`, `Play 3D`, `Play 4D`, `Settings`, `Keybindings Setup`, `Bot Options`, and `Quit`.
-3. `Settings` submenu unifies audio and display controls.
+1. Unified launcher added at `front.py`.
+2. Main menu includes `Play 2D`,`Play 3D`,`Play 4D`,`Settings`,`Keybindings Setup`,`Bot Options`, and`Quit`.
+3. `Settings` submenu unifies audio, display, and analytics controls.
 4. `Bot Options` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
-6. Keybindings setup is a dedicated screen (`/Users/omer/workspace/test-code/tet4d/tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
+6. Keybindings setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
 7. Defaults and menu structures are externalized:
-8. `/Users/omer/workspace/test-code/tet4d/config/menu/defaults.json`
-9. `/Users/omer/workspace/test-code/tet4d/config/menu/structure.json`
-10. User overrides remain in `/Users/omer/workspace/test-code/tet4d/state/menu_settings.json`.
+8. `config/menu/defaults.json`
+9. `config/menu/structure.json`
+10. User overrides remain in `state/menu_settings.json`.
 11. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
 Stabilization details:
@@ -287,7 +305,7 @@ Stabilization details:
 2. Windowed size is captured and persisted after game sessions in windowed mode.
 3. Focus and contrast states remain readable in default window sizes.
 4. No crashes on missing/corrupt settings files.
-5. Tests pass and base lint passes; current menu C901 follow-up is tracked in `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+5. Tests pass and base lint passes; remaining follow-up is tracked in `docs/BACKLOG.md`.
 6. Fullscreen/window transitions no longer produce shrunken menu layouts.
 7. Unified main menu controls 2D/3D/4D startup consistently.
 8. In-game pause menu is implemented in all modes with:
@@ -297,16 +315,17 @@ Stabilization details:
 12. profile cycle and per-dimension keybinding load/save actions
 13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/slicing guidance.
 14. Shared menu helpers were added in:
-15. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_model.py`
-16. `/Users/omer/workspace/test-code/tet4d/tetris_nd/menu_persistence.py`
+15. `tetris_nd/menu_model.py`
+16. `tetris_nd/menu_persistence.py`
 17. Keybindings menu supports `General/2D/3D/4D` scopes with explicit category descriptions loaded from menu structure config.
 18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
 
 ## 15. Open Follow-up
 
-1. Extend translation/rotation GIF guidance from Help-only into menu contexts:
-2. launcher menus,
-3. pause/settings/keybindings menus,
-4. inline key description/help rows where controls are explained.
-5. Keep this follow-up synchronized with `/Users/omer/workspace/test-code/tet4d/docs/BACKLOG.md`.
+1. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
+2. Very-small-window readability tuning for controls/help layouts is implemented.
+3. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
+4. Help coverage expansion and menu parity pages are implemented.
+5. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
+6. Source-of-truth status is synchronized via `docs/BACKLOG.md`.

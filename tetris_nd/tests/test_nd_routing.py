@@ -55,6 +55,15 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result, "menu")
         self.assertEqual(sfx, ["menu_confirm"])
 
+        sfx.clear()
+        result_help = frontend_nd.route_nd_keydown(
+            _key_for(SYSTEM_KEYS, "help"),
+            state,
+            sfx_handler=sfx.append,
+        )
+        self.assertEqual(result_help, "help")
+        self.assertEqual(sfx, ["menu_move"])
+
     def test_slice_action_takes_priority_over_view(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)

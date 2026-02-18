@@ -98,6 +98,49 @@ def _draw_gradient(surface: pygame.Surface) -> None:
         pygame.draw.line(surface, color, (0, y), (width, y))
 
 
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    if font.size(ellipsis)[0] >= max_width:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
+        trimmed = trimmed[:-1]
+    return trimmed + ellipsis if trimmed else ""
+
+
+def _draw_clamped_hint_block(
+    screen: pygame.Surface,
+    font: pygame.font.Font,
+    *,
+    start_y: int,
+    lines: tuple[str, ...],
+    color: tuple[int, int, int],
+    status: str,
+    status_error: bool,
+) -> None:
+    width, height = screen.get_size()
+    line_h = font.get_height() + 3
+    max_lines = max(0, (height - start_y - 6) // max(1, line_h))
+    status_slots = 1 if status else 0
+    hint_budget = max(0, max_lines - status_slots)
+    y = start_y
+    for line in lines[:hint_budget]:
+        text = _fit_text(font, line, width - 24)
+        surf = font.render(text, True, color)
+        screen.blit(surf, ((width - surf.get_width()) // 2, y))
+        y += surf.get_height() + 3
+
+    if status and y + line_h <= height - 6:
+        status_color = (255, 150, 150) if status_error else (170, 240, 170)
+        status_text = _fit_text(font, status, width - 24)
+        surf = font.render(status_text, True, status_color)
+        screen.blit(surf, ((width - surf.get_width()) // 2, y + 2))
+
+
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     profile = active_key_profile()
     return (
@@ -120,52 +163,74 @@ def _draw_pause_menu(screen: pygame.Surface, fonts, state: _PauseState, *, dimen
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("Pause Menu", True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
+    subtitle_text = _fit_text(
+        fonts.hint_font,
         f"{dimension}D in-game controls and settings",
+        width - 24,
+    )
+    subtitle = fonts.hint_font.render(
+        subtitle_text,
         True,
         _MUTED_COLOR,
     )
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 86))
+    title_y = 40
+    subtitle_y = title_y + title.get_height() + 8
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
 
-    panel_w = min(660, width - 40)
-    panel_h = 88 + len(_PAUSE_ROWS) * 42
+    panel_w = min(660, max(320, width - 40))
+    line_h = fonts.hint_font.get_height() + 3
+    panel_top = subtitle_y + subtitle.get_height() + 10
+    bottom_lines = 2 + (1 if state.status else 0)
+    panel_max_h = max(150, height - panel_top - (bottom_lines * line_h) - 10)
+    row_h = min(42, max(fonts.menu_font.get_height() + 8, (panel_max_h - 36) // max(1, len(_PAUSE_ROWS))))
+    panel_h = min(panel_max_h, 36 + len(_PAUSE_ROWS) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = max(130, (height - panel_h) // 2)
+    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8))
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
     values = _pause_menu_values(dimension)
-    y = panel_y + 20
+    y = panel_y + 14
+    option_bottom = panel_y + panel_h - 8
+    label_left = panel_x + 20
+    label_right = panel_x + panel_w - 20
     for idx, row in enumerate(_PAUSE_ROWS):
+        if y + fonts.menu_font.get_height() > option_bottom:
+            break
         selected = idx == state.selected
         color = _HIGHLIGHT_COLOR if selected else _TEXT_COLOR
         if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
+            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 42
+        value_text = values[idx]
+        value_width = int(panel_w * 0.34) if value_text else 0
+        value_draw = _fit_text(fonts.menu_font, value_text, value_width)
+        value_surf = fonts.menu_font.render(value_draw, True, color) if value_draw else None
+        value_x = label_right - (value_surf.get_width() if value_surf is not None else 0)
+        label_width = max(64, value_x - label_left - 10 if value_surf is not None else panel_w - 52)
+        label_draw = _fit_text(fonts.menu_font, row, label_width)
+        label = fonts.menu_font.render(label_draw, True, color)
+        screen.blit(label, (label_left, y))
+        if value_surf is not None:
+            screen.blit(value_surf, (value_x, y))
+        y += row_h
 
     hints = (
         "Up/Down select   Enter apply",
         "Esc resume",
     )
-    hy = panel_y + panel_h + 10
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if state.status:
-        color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(state.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
+    _draw_clamped_hint_block(
+        screen,
+        fonts.hint_font,
+        start_y=panel_y + panel_h + 8,
+        lines=hints,
+        color=_MUTED_COLOR,
+        status=state.status,
+        status_error=state.status_error,
+    )
 
 
 def _load_settings_state() -> _SettingsState:
@@ -216,48 +281,65 @@ def _draw_settings_menu(screen: pygame.Surface, fonts, state: _SettingsState) ->
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("Pause Settings", True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render("Audio + Display", True, _MUTED_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 86))
+    subtitle = fonts.hint_font.render(_fit_text(fonts.hint_font, "Audio + Display", width - 24), True, _MUTED_COLOR)
+    title_y = 40
+    subtitle_y = title_y + title.get_height() + 8
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
 
-    panel_w = min(660, width - 40)
-    panel_h = 88 + len(_SETTINGS_ROWS) * 42
+    panel_w = min(660, max(320, width - 40))
+    line_h = fonts.hint_font.get_height() + 3
+    panel_top = subtitle_y + subtitle.get_height() + 10
+    bottom_lines = 2 + (1 if state.status else 0)
+    panel_max_h = max(150, height - panel_top - (bottom_lines * line_h) - 10)
+    row_h = min(42, max(fonts.menu_font.get_height() + 8, (panel_max_h - 36) // max(1, len(_SETTINGS_ROWS))))
+    panel_h = min(panel_max_h, 36 + len(_SETTINGS_ROWS) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = max(130, (height - panel_h) // 2)
+    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8))
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
     values = _settings_values(state)
-    y = panel_y + 20
+    y = panel_y + 14
+    option_bottom = panel_y + panel_h - 8
+    label_left = panel_x + 20
+    label_right = panel_x + panel_w - 20
     for idx, row in enumerate(_SETTINGS_ROWS):
+        if y + fonts.menu_font.get_height() > option_bottom:
+            break
         selected = idx == state.selected
         color = _HIGHLIGHT_COLOR if selected else _TEXT_COLOR
         if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
+            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 42
+        value_text = values[idx]
+        value_width = int(panel_w * 0.34) if value_text else 0
+        value_draw = _fit_text(fonts.menu_font, value_text, value_width)
+        value_surf = fonts.menu_font.render(value_draw, True, color) if value_draw else None
+        value_x = label_right - (value_surf.get_width() if value_surf is not None else 0)
+        label_width = max(64, value_x - label_left - 10 if value_surf is not None else panel_w - 52)
+        label_draw = _fit_text(fonts.menu_font, row, label_width)
+        label = fonts.menu_font.render(label_draw, True, color)
+        screen.blit(label, (label_left, y))
+        if value_surf is not None:
+            screen.blit(value_surf, (value_x, y))
+        y += row_h
 
     hints = (
         "Left/Right adjust values   Enter apply",
         "Esc back",
     )
-    hy = panel_y + panel_h + 10
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if state.status:
-        color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(state.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
+    _draw_clamped_hint_block(
+        screen,
+        fonts.hint_font,
+        start_y=panel_y + panel_h + 8,
+        lines=hints,
+        color=_MUTED_COLOR,
+        status=state.status,
+        status_error=state.status_error,
+    )
 
 
 def _apply_audio_preview(state: _SettingsState) -> None:

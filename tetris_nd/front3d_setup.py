@@ -14,6 +14,7 @@ from .menu_controls import FieldSpec, MenuAction, apply_menu_actions, gather_men
 from .menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .exploration_mode import minimal_exploration_dims_nd
 from .playbot import run_dry_run_nd
 from .playbot.types import bot_planner_algorithm_from_index, bot_planner_profile_from_index
 from .projection3d import draw_gradient_background
@@ -41,6 +42,7 @@ class GameSettings3D:
     bot_speed_level: int = _DEFAULT_MODE_3D["bot_speed_level"]
     bot_budget_ms: int = _DEFAULT_MODE_3D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_3D["challenge_layers"]
+    exploration_mode: int = _DEFAULT_MODE_3D["exploration_mode"]
 
 
 _PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
@@ -89,47 +91,81 @@ def _menu_value_text(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
         return _PIECE_SET_3D_LABELS[safe_index]
+    if attr_name == "exploration_mode":
+        return "ON" if int(value) else "OFF"
     return str(value)
+
+
+def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
+    if max_width <= 8:
+        return ""
+    if font.size(text)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    if font.size(ellipsis)[0] >= max_width:
+        return ""
+    trimmed = text
+    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
+        trimmed = trimmed[:-1]
+    return trimmed + ellipsis if trimmed else ""
 
 
 def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
-    width, _ = screen.get_size()
+    width, height = screen.get_size()
 
-    title = fonts.title_font.render("3D Tetris – Setup", True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
+    title = fonts.title_font.render("3D Tetris - Setup", True, TEXT_COLOR)
+    subtitle_text = _fit_text(
+        fonts.hint_font,
         "Use Up/Down to select, Left/Right to change, Enter to start.",
+        width - 28,
+    )
+    subtitle = fonts.hint_font.render(
+        subtitle_text,
         True,
         (210, 210, 230),
     )
-    screen.blit(title, ((width - title.get_width()) // 2, 60))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
+    title_y = 48
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    subtitle_y = title_y + title.get_height() + 8
+    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
 
-    panel_w = int(width * 0.62)
-    panel_h = max(280, 96 + len(_MENU_FIELDS) * 44)
+    panel_w = min(max(360, int(width * 0.62)), width - 24)
+    hint_line_h = fonts.hint_font.get_height() + 4
+    bottom_lines = 4 + (1 if state.bindings_status else 0)
+    panel_top = subtitle_y + subtitle.get_height() + 12
+    panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
+    row_h = min(50, max(fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(_MENU_FIELDS))))
+    panel_h = min(panel_max_h, 40 + len(_MENU_FIELDS) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = 160
+    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8))
 
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 145), panel.get_rect(), border_radius=16)
     screen.blit(panel, (panel_x, panel_y))
 
-    y = panel_y + 28
+    y = panel_y + 20
+    option_x = panel_x + 24
+    option_w = panel_w - 48
+    option_bottom = panel_y + panel_h - 10
     for idx, (label, attr_name, _, _) in enumerate(_MENU_FIELDS):
+        if y + fonts.menu_font.get_height() > option_bottom:
+            break
         value = getattr(state.settings, attr_name)
         value_text = _menu_value_text(attr_name, value)
         text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         text_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        surf = fonts.menu_font.render(text, True, text_color)
-        rect = surf.get_rect(topleft=(panel_x + 36, y))
+        text_fit = _fit_text(fonts.menu_font, text, option_w - 6)
+        surf = fonts.menu_font.render(text_fit, True, text_color)
+        rect = surf.get_rect(topleft=(option_x, y))
         if selected:
-            hi_rect = rect.inflate(20, 10)
+            hi_rect = pygame.Rect(option_x - 8, y - 4, option_w + 16, rect.height + 10)
             hi = pygame.Surface(hi_rect.size, pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 40), hi.get_rect(), border_radius=10)
             screen.blit(hi, hi_rect.topleft)
         screen.blit(surf, rect.topleft)
-        y += 50
+        y += row_h
 
     hints = [
         "Esc = quit",
@@ -137,15 +173,19 @@ def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
         "Use Main Menu -> Bot Options / Keybindings for shared controls.",
         "Projection modes are available during gameplay (P).",
     ]
-    hy = panel_y + panel_h + 20
-    for line in hints:
-        surf = fonts.hint_font.render(line, True, (210, 210, 230))
+    hy = panel_y + panel_h + 8
+    max_hint_lines = max(1, (height - hy - 6) // max(1, hint_line_h))
+    hint_budget = max(1, max_hint_lines - (1 if state.bindings_status else 0))
+    for line in hints[:hint_budget]:
+        line_fit = _fit_text(fonts.hint_font, line, width - 28)
+        surf = fonts.hint_font.render(line_fit, True, (210, 210, 230))
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 4
 
-    if state.bindings_status:
+    if state.bindings_status and hy + hint_line_h <= height - 6:
         status_color = menu_binding_status_color(state.bindings_status_error)
-        status = fonts.hint_font.render(state.bindings_status, True, status_color)
+        status_text = _fit_text(fonts.hint_font, state.bindings_status, width - 28)
+        status = fonts.hint_font.render(status_text, True, status_color)
         screen.blit(status, ((width - status.get_width()) // 2, hy))
 
 
@@ -169,14 +209,18 @@ def run_menu(screen: pygame.Surface, fonts) -> Optional[GameSettings3D]:
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
         if state.run_dry_run:
-            report = run_dry_run_nd(
-                build_config(state.settings),
-                planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
-                planning_budget_ms=state.settings.bot_budget_ms,
-                planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
-            )
-            state.bindings_status = report.reason
-            state.bindings_status_error = not report.passed
+            if bool(state.settings.exploration_mode):
+                state.bindings_status = "Dry-run is disabled in exploration mode"
+                state.bindings_status_error = False
+            else:
+                report = run_dry_run_nd(
+                    build_config(state.settings),
+                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planning_budget_ms=state.settings.bot_budget_ms,
+                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                )
+                state.bindings_status = report.reason
+                state.bindings_status_error = not report.passed
         draw_menu(screen, fonts, state)
         pygame.display.flip()
 
@@ -198,17 +242,23 @@ def build_config(settings: GameSettings3D) -> GameConfigND:
     piece_set_id = _PIECE_SET_3D_CHOICES[
         max(0, min(len(_PIECE_SET_3D_CHOICES) - 1, settings.piece_set_index))
     ]
+    exploration_enabled = bool(settings.exploration_mode)
+    dims = (settings.width, settings.height, settings.depth)
+    if exploration_enabled:
+        dims = minimal_exploration_dims_nd(3, piece_set_id)
     return GameConfigND(
-        dims=(settings.width, settings.height, settings.depth),
+        dims=dims,
         gravity_axis=1,
         speed_level=settings.speed_level,
         piece_set_id=piece_set_id,
-        challenge_layers=settings.challenge_layers,
+        challenge_layers=0 if exploration_enabled else settings.challenge_layers,
+        exploration_mode=exploration_enabled,
     )
 
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
     state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
-    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    if not cfg.exploration_mode:
+        apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     return state

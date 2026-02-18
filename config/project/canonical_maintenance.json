@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "title": "tet4d canonical maintenance contract",
+  "description": "Machine-checked source-of-truth rules for docs/tests/help/backlog/RDS/feature-map consistency.",
+  "required_paths": {
+    "root_docs": [
+      "README.md",
+      "docs/README.md",
+      "docs/PROJECT_STRUCTURE.md",
+      "docs/FEATURE_MAP.md",
+      "docs/BACKLOG.md",
+      "docs/CHANGELOG.md",
+      "docs/RDS_AND_CODEX.md"
+    ],
+    "rds_docs": [
+      "docs/rds/RDS_TETRIS_GENERAL.md",
+      "docs/rds/RDS_2D_TETRIS.md",
+      "docs/rds/RDS_3D_TETRIS.md",
+      "docs/rds/RDS_4D_TETRIS.md",
+      "docs/rds/RDS_KEYBINDINGS.md",
+      "docs/rds/RDS_MENU_STRUCTURE.md",
+      "docs/rds/RDS_PLAYBOT.md",
+      "docs/rds/RDS_SCORE_ANALYZER.md"
+    ],
+    "help_assets": [
+      "tetris_nd/menu_control_guides.py"
+    ],
+    "canonical_schemas": [
+      "config/schema/menu_settings.schema.json",
+      "config/schema/save_state.schema.json"
+    ],
+    "migration_ledgers": [
+      "docs/migrations/menu_settings.md",
+      "docs/migrations/save_state.md"
+    ],
+    "replay_contract": [
+      "tests/replay/manifest.json",
+      "tests/replay/golden/.gitkeep"
+    ],
+    "help_contract": [
+      "docs/help/HELP_INDEX.md",
+      "assets/help/manifest.json"
+    ],
+    "release_contract": [
+      "docs/RELEASE_CHECKLIST.md"
+    ],
+    "core_tests": [
+      "tetris_nd/tests/test_playbot.py",
+      "tetris_nd/tests/test_score_analyzer.py",
+      "tetris_nd/tests/test_runtime_config.py",
+      "tetris_nd/tests/test_menu_policy.py"
+    ],
+    "canonical_configs": [
+      "config/menu/defaults.json",
+      "config/menu/structure.json",
+      "config/gameplay/tuning.json",
+      "config/gameplay/score_analyzer.json",
+      "config/playbot/policy.json",
+      "config/audio/sfx.json",
+      "config/project/canonical_maintenance.json"
+    ],
+    "ci_scripts": [
+      "scripts/ci_check.sh",
+      "tools/check_pygame_ce.py",
+      "tools/validate_project_contracts.py",
+      ".github/workflows/stability-watch.yml"
+    ]
+  },
+  "content_rules": [
+    {
+      "file": "README.md",
+      "must_contain": [
+        "Documentation map",
+        "config/gameplay/score_analyzer.json",
+        "menu_control_guides.py",
+        "draw_translation_rotation_guides",
+        "scripts/ci_check.sh",
+        "tools/check_pygame_ce.py"
+      ]
+    },
+    {
+      "file": "docs/FEATURE_MAP.md",
+      "must_contain": [
+        "## 4. Keybindings",
+        "## 6. Scoring and Assistance",
+        "## 9. Verification Coverage"
+      ]
+    },
+    {
+      "file": "docs/BACKLOG.md",
+      "must_contain": [
+        "## 3. Active Open Backlog / TODO",
+        "## 5. Change Footprint"
+      ],
+      "must_not_contain": [
+        "No currently open gaps",
+        "126 passed"
+      ]
+    },
+    {
+      "file": "docs/GUIDELINES_RESEARCH.md",
+      "must_contain": [
+        "## 3. Current issues (open backlog)",
+        "docs/BACKLOG.md"
+      ],
+      "must_not_contain": [
+        "No active open gaps",
+        "126 passed"
+      ]
+    },
+    {
+      "file": "docs/RDS_AND_CODEX.md",
+      "must_contain": [
+        "RDS index",
+        "Testing instructions",
+        "docs/BACKLOG.md"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_TETRIS_GENERAL.md",
+      "must_contain": [
+        "Target Runtime: Python 3.11-3.14 + `pygame-ce`",
+        "## 8. Testing Instructions",
+        "## 10. Backlog Status"
+      ]
+    },
+    {
+      "file": "config/schema/menu_settings.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d menu settings\"",
+        "\"settings\""
+      ]
+    },
+    {
+      "file": "config/schema/save_state.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d saved game state\"",
+        "\"active_piece\""
+      ]
+    },
+    {
+      "file": "docs/migrations/menu_settings.md",
+      "must_contain": [
+        "## Version 1",
+        "## Migration policy"
+      ]
+    },
+    {
+      "file": "docs/migrations/save_state.md",
+      "must_contain": [
+        "## Version 1 (planned)",
+        "## Migration policy"
+      ]
+    },
+    {
+      "file": "tests/replay/manifest.json",
+      "must_contain": [
+        "\"version\": 1",
+        "\"gameplay_replay_core\""
+      ]
+    },
+    {
+      "file": "docs/help/HELP_INDEX.md",
+      "must_contain": [
+        "## Control diagrams",
+        "## Maintenance rule"
+      ]
+    },
+    {
+      "file": "assets/help/manifest.json",
+      "must_contain": [
+        "\"translation_keys\"",
+        "\"rotation_keys\""
+      ]
+    },
+    {
+      "file": "docs/RELEASE_CHECKLIST.md",
+      "must_contain": [
+        "## Code and tests",
+        "## Documentation and RDS sync",
+        "## Artifacts and config"
+      ]
+    }
+  ],
+  "canonical_candidates": [
+    {
+      "name": "Settings schema and migration ledger",
+      "paths": [
+        "config/schema/menu_settings.schema.json",
+        "docs/migrations/menu_settings.md"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Saved-game/state schema",
+      "paths": [
+        "config/schema/save_state.schema.json",
+        "docs/migrations/save_state.md"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Replay golden fixtures manifest",
+      "paths": [
+        "tests/replay/manifest.json",
+        "tests/replay/golden/.gitkeep"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Help content index",
+      "paths": [
+        "docs/help/HELP_INDEX.md",
+        "assets/help/manifest.json"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Release checklist",
+      "paths": [
+        "docs/RELEASE_CHECKLIST.md"
+      ],
+      "status": "connected"
+    }
+  ]
+}
