@@ -1,6 +1,6 @@
 # 2D Tetris RDS
 
-Status: Active v0.6 (Verified 2026-02-18)  
+Status: Active v0.7 (Verified 2026-02-19)  
 Author: Omer + Codex  
 Date: 2026-02-18  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
@@ -24,6 +24,13 @@ Define requirements for the classic `(x, y)` mode implemented by:
 3. Setup range: width `6..16`, height`12..30`.
 4. Clear rule: a line is removed only when all `x`cells at that`y` are filled.
 5. `z`/`w` movement and rotation are disabled/ignored in 2D mode.
+6. Setup exposes topology preset:
+7. `bounded` (default),
+8. `wrap_all` (x wraps; gravity y remains bounded),
+9. `invert_all` (same as wrap in 2D when gravity wrap is off).
+10. Setup includes hidden-by-default advanced topology controls:
+11. `topology_advanced` toggle and `topology_profile_index` selector.
+12. Advanced profile definitions are loaded from `config/topology/designer_presets.json`.
 
 ## 4. Piece Set
 

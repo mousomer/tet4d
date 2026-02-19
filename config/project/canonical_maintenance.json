@@ -10,7 +10,8 @@
       "docs/FEATURE_MAP.md",
       "docs/BACKLOG.md",
       "docs/CHANGELOG.md",
-      "docs/RDS_AND_CODEX.md"
+      "docs/RDS_AND_CODEX.md",
+      "docs/SECURITY_AND_CONFIG_PLAN.md"
     ],
     "rds_docs": [
       "docs/rds/RDS_TETRIS_GENERAL.md",
@@ -48,21 +49,27 @@
       "tetris_nd/tests/test_playbot.py",
       "tetris_nd/tests/test_score_analyzer.py",
       "tetris_nd/tests/test_runtime_config.py",
-      "tetris_nd/tests/test_menu_policy.py"
+      "tetris_nd/tests/test_menu_policy.py",
+      "tetris_nd/tests/test_project_config.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",
       "config/menu/structure.json",
+      "config/topology/designer_presets.json",
       "config/gameplay/tuning.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
       "config/audio/sfx.json",
+      "config/project/io_paths.json",
+      "config/project/constants.json",
+      "config/project/secret_scan.json",
       "config/project/canonical_maintenance.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
       "scripts/ci_check.sh",
       "tools/check_pygame_ce.py",
+      "tools/scan_secrets.py",
       "tools/validate_project_contracts.py",
       ".github/workflows/stability-watch.yml"
     ]
@@ -77,7 +84,11 @@
         "menu_control_guides.py",
         "draw_translation_rotation_guides",
         "scripts/ci_check.sh",
-        "tools/check_pygame_ce.py"
+        "tools/check_pygame_ce.py",
+        "tools/scan_secrets.py",
+        "config/project/io_paths.json",
+        "config/project/constants.json",
+        "config/project/secret_scan.json"
       ]
     },
     {
@@ -137,10 +148,22 @@
         "require_module pytest pytest",
         "run_module ruff check .",
         "run_module ruff check --select C901 .",
+        "tools/scan_secrets.py",
         "run_module pytest -q"
       ],
       "must_not_contain": [
         "run_module_or_command"
+      ]
+    },
+    {
+      "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+      "must_contain": [
+        "## 2. Secret scanning policy",
+        "config/project/secret_scan.json",
+        "tools/scan_secrets.py",
+        "## 3. Path/config externalization policy",
+        "config/project/io_paths.json",
+        "config/project/constants.json"
       ]
     },
     {
@@ -149,6 +172,29 @@
         "Target Runtime: Python 3.11-3.14 + `pygame-ce`",
         "## 8. Testing Instructions",
         "## 10. Backlog Status"
+      ]
+    },
+    {
+      "file": "config/project/io_paths.json",
+      "must_contain": [
+        "\"paths\"",
+        "\"menu_settings_file\"",
+        "\"keybindings_dir\""
+      ]
+    },
+    {
+      "file": "config/project/constants.json",
+      "must_contain": [
+        "\"cache_limits\"",
+        "\"animation\"",
+        "\"rendering\""
+      ]
+    },
+    {
+      "file": "config/project/secret_scan.json",
+      "must_contain": [
+        "\"patterns\"",
+        "\"exclude_dirs\""
       ]
     },
     {
@@ -248,6 +294,17 @@
       "name": "Release checklist",
       "paths": [
         "docs/RELEASE_CHECKLIST.md"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Security and config policy",
+      "paths": [
+        "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "config/project/io_paths.json",
+        "config/project/constants.json",
+        "config/project/secret_scan.json",
+        "tools/scan_secrets.py"
       ],
       "status": "connected"
     }

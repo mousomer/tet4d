@@ -21,6 +21,8 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 15. Grid helper semantics and slice semantics in 3D/4D
 16. Exploration mode (no gravity/lock/clear, minimal fitting board)
 17. Gameplay help shortcut (`F1`)
+18. Boundary topology presets (`bounded`,`wrap_all`,`invert_all`)
+19. Gravity-axis wrap policy (default off)
 
 ## Control diagrams
 

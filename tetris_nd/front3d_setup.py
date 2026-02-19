@@ -19,6 +19,13 @@ from .playbot import run_dry_run_nd
 from .playbot.types import bot_planner_algorithm_from_index, bot_planner_profile_from_index
 from .projection3d import draw_gradient_background
 from .speed_curve import gravity_interval_ms
+from .topology import topology_mode_from_index, topology_mode_label
+from .topology_designer import (
+    designer_profile_label_for_index,
+    designer_profiles_for_dimension,
+    export_resolved_topology_profile,
+    resolve_topology_designer_selection,
+)
 from .ui_utils import fit_text
 
 
@@ -37,6 +44,9 @@ class GameSettings3D:
     depth: int = _DEFAULT_MODE_3D["depth"]
     speed_level: int = _DEFAULT_MODE_3D["speed_level"]
     piece_set_index: int = _DEFAULT_MODE_3D["piece_set_index"]
+    topology_mode: int = _DEFAULT_MODE_3D["topology_mode"]
+    topology_advanced: int = _DEFAULT_MODE_3D["topology_advanced"]
+    topology_profile_index: int = _DEFAULT_MODE_3D["topology_profile_index"]
     bot_mode_index: int = _DEFAULT_MODE_3D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_3D["bot_algorithm_index"]
     bot_profile_index: int = _DEFAULT_MODE_3D["bot_profile_index"]
@@ -48,6 +58,9 @@ class GameSettings3D:
 
 _PIECE_SET_3D_CHOICES = tuple(piece_set_options_for_dimension(3))
 _PIECE_SET_3D_LABELS = tuple(piece_set_label(piece_set_id) for piece_set_id in _PIECE_SET_3D_CHOICES)
+_TOPOLOGY_PROFILE_LABELS_3D = tuple(
+    profile.label for profile in designer_profiles_for_dimension(3)
+)
 
 
 @dataclass
@@ -66,9 +79,15 @@ class MenuState:
     run_dry_run: bool = False
 
 
-_MENU_FIELDS: list[FieldSpec] = [
-    *setup_fields_for_dimension(3, piece_set_max=len(_PIECE_SET_3D_CHOICES) - 1),
-]
+def _menu_fields(settings: GameSettings3D) -> list[FieldSpec]:
+    fields = setup_fields_for_dimension(
+        3,
+        piece_set_max=len(_PIECE_SET_3D_CHOICES) - 1,
+        topology_profile_max=max(0, len(_TOPOLOGY_PROFILE_LABELS_3D) - 1),
+    )
+    if int(settings.topology_advanced):
+        return fields
+    return [field for field in fields if field[1] != "topology_profile_index"]
 
 _SETUP_BLOCKED_ACTIONS = {
     MenuAction.LOAD_BINDINGS,
@@ -92,12 +111,18 @@ def _menu_value_text(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         safe_index = max(0, min(len(_PIECE_SET_3D_LABELS) - 1, int(value)))
         return _PIECE_SET_3D_LABELS[safe_index]
+    if attr_name == "topology_mode":
+        return topology_mode_label(topology_mode_from_index(int(value)))
+    if attr_name == "topology_advanced":
+        return "ON" if int(value) else "OFF"
+    if attr_name == "topology_profile_index":
+        return designer_profile_label_for_index(3, int(value))
     if attr_name == "exploration_mode":
         return "ON" if int(value) else "OFF"
     return str(value)
 
 
-def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
+def draw_menu(screen: pygame.Surface, fonts, state: MenuState, fields: list[FieldSpec]) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     width, height = screen.get_size()
 
@@ -122,8 +147,8 @@ def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
     bottom_lines = 4 + (1 if state.bindings_status else 0)
     panel_top = subtitle_y + subtitle.get_height() + 12
     panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
-    row_h = min(50, max(fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(_MENU_FIELDS))))
-    panel_h = min(panel_max_h, 40 + len(_MENU_FIELDS) * row_h)
+    row_h = min(50, max(fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(fields))))
+    panel_h = min(panel_max_h, 40 + len(fields) * row_h)
     panel_x = (width - panel_w) // 2
     panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8))
 
@@ -135,7 +160,7 @@ def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
     option_x = panel_x + 24
     option_w = panel_w - 48
     option_bottom = panel_y + panel_h - 10
-    for idx, (label, attr_name, _, _) in enumerate(_MENU_FIELDS):
+    for idx, (label, attr_name, _, _) in enumerate(fields):
         if y + fonts.menu_font.get_height() > option_bottom:
             break
         value = getattr(state.settings, attr_name)
@@ -188,10 +213,13 @@ def run_menu(screen: pygame.Surface, fonts) -> Optional[GameSettings3D]:
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, 3)
+        fields = _menu_fields(state.settings)
+        if state.selected_index >= len(fields):
+            state.selected_index = max(0, len(fields) - 1)
         apply_menu_actions(
             state,
             actions,
-            _MENU_FIELDS,
+            fields,
             3,
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
@@ -208,7 +236,7 @@ def run_menu(screen: pygame.Surface, fonts) -> Optional[GameSettings3D]:
                 )
                 state.bindings_status = report.reason
                 state.bindings_status_error = not report.passed
-        draw_menu(screen, fonts, state)
+        draw_menu(screen, fonts, state, fields)
         pygame.display.flip()
 
     if state.running and state.start_game:
@@ -216,6 +244,15 @@ def run_menu(screen: pygame.Surface, fonts) -> Optional[GameSettings3D]:
         if not ok:
             state.bindings_status = msg
             state.bindings_status_error = True
+        else:
+            topology_mode = topology_mode_from_index(state.settings.topology_mode)
+            export_resolved_topology_profile(
+                dimension=3,
+                gravity_axis=1,
+                topology_mode=topology_mode,
+                topology_advanced=bool(state.settings.topology_advanced),
+                profile_index=state.settings.topology_profile_index,
+            )
         return state.settings
     save_menu_settings(state, 3)
     return None
@@ -229,6 +266,14 @@ def build_config(settings: GameSettings3D) -> GameConfigND:
     piece_set_id = _PIECE_SET_3D_CHOICES[
         max(0, min(len(_PIECE_SET_3D_CHOICES) - 1, settings.piece_set_index))
     ]
+    topology_mode = topology_mode_from_index(settings.topology_mode)
+    resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
+        dimension=3,
+        gravity_axis=1,
+        topology_mode=topology_mode,
+        topology_advanced=bool(settings.topology_advanced),
+        profile_index=settings.topology_profile_index,
+    )
     exploration_enabled = bool(settings.exploration_mode)
     dims = (settings.width, settings.height, settings.depth)
     if exploration_enabled:
@@ -237,6 +282,8 @@ def build_config(settings: GameSettings3D) -> GameConfigND:
         dims=dims,
         gravity_axis=1,
         speed_level=settings.speed_level,
+        topology_mode=resolved_mode,
+        topology_edge_rules=topology_edge_rules,
         piece_set_id=piece_set_id,
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,

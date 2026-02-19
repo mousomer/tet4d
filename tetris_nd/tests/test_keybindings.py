@@ -182,6 +182,29 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertIn("cannot override", msg.lower())
         self.assertIn(rotation_key, keybindings.KEYS_4D["rotate_zw_neg"])
 
+    def test_small_profile_rotation_ladder_defaults(self) -> None:
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_w,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xy_pos"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xy_neg"], (pygame.K_w,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xz_pos"], (pygame.K_a,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xz_neg"], (pygame.K_s,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yz_pos"], (pygame.K_z,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yz_neg"], (pygame.K_x,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xw_pos"], (pygame.K_r,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xw_neg"], (pygame.K_t,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yw_pos"], (pygame.K_f,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yw_neg"], (pygame.K_g,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_zw_pos"], (pygame.K_v,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_zw_neg"], (pygame.K_b,))
+
+    def test_system_defaults_are_deconflicted_from_rotation_ladder(self) -> None:
+        self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_y,))
+        self.assertEqual(keybindings.SYSTEM_KEYS["toggle_grid"], (pygame.K_c,))
+        gameplay_keys_4d = {key for keys in keybindings.KEYS_4D.values() for key in keys}
+        self.assertNotIn(keybindings.SYSTEM_KEYS["restart"][0], gameplay_keys_4d)
+        self.assertNotIn(keybindings.SYSTEM_KEYS["toggle_grid"][0], gameplay_keys_4d)
+
 
 class TestMenuSettingsPersistence(unittest.TestCase):
     @classmethod

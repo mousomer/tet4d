@@ -5,6 +5,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .project_config import (
+    playbot_history_file_default_path,
+    playbot_history_file_default_relative,
+    resolve_state_relative_path,
+    state_dir_path,
+)
 from .runtime_config_validation import (
     read_json_payload,
     validate_audio_sfx_payload,
@@ -14,11 +20,11 @@ from .runtime_config_validation import (
 
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
-STATE_DIR = CONFIG_DIR.parent / "state"
+STATE_DIR = state_dir_path()
 GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
 PLAYBOT_POLICY_FILE = CONFIG_DIR / "playbot" / "policy.json"
 AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"
-DEFAULT_PLAYBOT_HISTORY_FILE = "state/bench/playbot_latency_history.jsonl"
+DEFAULT_PLAYBOT_HISTORY_FILE = playbot_history_file_default_relative()
 
 
 def _dimension_bucket_key(ndim: int) -> str:
@@ -211,18 +217,14 @@ def playbot_benchmark_p95_thresholds() -> dict[str, float]:
 
 def playbot_benchmark_history_file() -> Path:
     raw = _playbot_policy()["benchmark"]["history_file"]
-    text = str(raw).strip().replace("\\", "/")
-    default_path = (CONFIG_DIR.parent / DEFAULT_PLAYBOT_HISTORY_FILE).resolve()
+    default_path = playbot_history_file_default_path()
+    text = str(raw).strip()
     if not text:
         return default_path
-    candidate = Path(text)
-    if candidate.is_absolute():
-        return default_path
-    resolved = (CONFIG_DIR.parent / candidate).resolve()
-    state_root = STATE_DIR.resolve()
-    if resolved != state_root and state_root not in resolved.parents:
-        return default_path
-    return resolved
+    return resolve_state_relative_path(
+        text,
+        default_relative=DEFAULT_PLAYBOT_HISTORY_FILE,
+    )
 
 
 def playbot_default_hard_drop_after_soft_drops() -> int:

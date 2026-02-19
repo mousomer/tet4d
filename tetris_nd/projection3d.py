@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import math
+from collections import OrderedDict
 from collections.abc import Callable
 
 import pygame
+from .project_config import project_constant_int
+from .ui_utils import draw_vertical_gradient
 
 Point2 = tuple[float, float]
 Point3 = tuple[float, float, float]
@@ -11,6 +14,7 @@ Cell3 = tuple[int, int, int]
 Face = tuple[float, list[Point2], tuple[int, int, int], bool]
 ProjectRawFn = Callable[[Point3], Point2 | None]
 TransformRawFn = Callable[[Point3], Point3]
+Segment2 = tuple[Point2, Point2]
 
 _CUBE_VERTS: list[Point3] = [
     (-0.5, -0.5, -0.5),
@@ -47,6 +51,17 @@ _BOX_FACES: list[list[int]] = [
     [1, 2, 6, 5],
 ]
 
+_PROJECTION_LATTICE_CACHE_MAX = project_constant_int(
+    ("cache_limits", "projection_lattice_max"),
+    96,
+    min_value=8,
+    max_value=4096,
+)
+_PROJECTION_LATTICE_CACHE: OrderedDict[
+    object,
+    tuple[tuple[Segment2, ...], tuple[Segment2, ...]],
+] = OrderedDict()
+
 
 def shade_color(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
     return (
@@ -71,13 +86,7 @@ def draw_gradient_background(
     top_color: tuple[int, int, int],
     bottom_color: tuple[int, int, int],
 ) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
+    draw_vertical_gradient(surface, top_color, bottom_color)
 
 
 def raw_to_world(raw: Point3, dims: Cell3) -> Point3:
@@ -196,28 +205,62 @@ def fit_orthographic_zoom(
     return max(min_zoom, min(max_zoom, min(fit_x, fit_y)))
 
 
-def _draw_lattice_axis_lines(
-    surface: pygame.Surface,
+def projection_cache_key(
+    *,
+    prefix: str,
     dims: Cell3,
-    project_raw: ProjectRawFn,
-    color: tuple[int, int, int],
-    x_marks: set[int] | None = None,
-    y_marks: set[int] | None = None,
-    z_marks: set[int] | None = None,
-) -> None:
-    _draw_lattice_y_axis_lines(surface, dims, project_raw, color, x_marks, z_marks)
-    _draw_lattice_x_axis_lines(surface, dims, project_raw, color, y_marks, z_marks)
-    _draw_lattice_z_axis_lines(surface, dims, project_raw, color, x_marks, y_marks)
+    center_px: Point2,
+    yaw_deg: float,
+    pitch_deg: float,
+    zoom: float,
+    extras: tuple[object, ...] = (),
+) -> tuple[object, ...]:
+    return (
+        prefix,
+        dims,
+        round(yaw_deg, 3),
+        round(pitch_deg, 3),
+        round(zoom, 3),
+        int(center_px[0]),
+        int(center_px[1]),
+        *extras,
+    )
 
 
-def _draw_lattice_y_axis_lines(
-    surface: pygame.Surface,
+def projection_helper_cache_key(
+    *,
+    prefix: str,
+    dims: Cell3,
+    center_px: Point2,
+    yaw_deg: float,
+    pitch_deg: float,
+    zoom: float,
+    marks: tuple[set[int], set[int], set[int]],
+    extras: tuple[object, ...] = (),
+) -> tuple[object, ...]:
+    return projection_cache_key(
+        prefix=prefix,
+        dims=dims,
+        center_px=center_px,
+        yaw_deg=yaw_deg,
+        pitch_deg=pitch_deg,
+        zoom=zoom,
+        extras=(
+            *extras,
+            tuple(sorted(marks[0])),
+            tuple(sorted(marks[1])),
+            tuple(sorted(marks[2])),
+        ),
+    )
+
+
+def _axis_segments_y(
     dims: Cell3,
     project_raw: ProjectRawFn,
-    color: tuple[int, int, int],
     x_marks: set[int] | None,
     z_marks: set[int] | None,
-) -> None:
+) -> list[Segment2]:
+    segments: list[Segment2] = []
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
@@ -227,17 +270,17 @@ def _draw_lattice_y_axis_lines(
             p0 = project_raw((x - 0.5, -0.5, z - 0.5))
             p1 = project_raw((x - 0.5, dims[1] - 0.5, z - 0.5))
             if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, color, p0, p1, 1)
+                segments.append((p0, p1))
+    return segments
 
 
-def _draw_lattice_x_axis_lines(
-    surface: pygame.Surface,
+def _axis_segments_x(
     dims: Cell3,
     project_raw: ProjectRawFn,
-    color: tuple[int, int, int],
     y_marks: set[int] | None,
     z_marks: set[int] | None,
-) -> None:
+) -> list[Segment2]:
+    segments: list[Segment2] = []
     for y in range(dims[1] + 1):
         if y_marks is not None and y not in y_marks:
             continue
@@ -247,17 +290,17 @@ def _draw_lattice_x_axis_lines(
             p0 = project_raw((-0.5, y - 0.5, z - 0.5))
             p1 = project_raw((dims[0] - 0.5, y - 0.5, z - 0.5))
             if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, color, p0, p1, 1)
+                segments.append((p0, p1))
+    return segments
 
 
-def _draw_lattice_z_axis_lines(
-    surface: pygame.Surface,
+def _axis_segments_z(
     dims: Cell3,
     project_raw: ProjectRawFn,
-    color: tuple[int, int, int],
     x_marks: set[int] | None,
     y_marks: set[int] | None,
-) -> None:
+) -> list[Segment2]:
+    segments: list[Segment2] = []
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
@@ -267,22 +310,61 @@ def _draw_lattice_z_axis_lines(
             p0 = project_raw((x - 0.5, y - 0.5, -0.5))
             p1 = project_raw((x - 0.5, y - 0.5, dims[2] - 0.5))
             if p0 is not None and p1 is not None:
-                pygame.draw.line(surface, color, p0, p1, 1)
+                segments.append((p0, p1))
+    return segments
 
 
-def _draw_lattice_frame(
-    surface: pygame.Surface,
+def _frame_segments(
     dims: Cell3,
     project_raw: ProjectRawFn,
-    color: tuple[int, int, int],
-    width: int,
-) -> None:
+) -> list[Segment2]:
+    frame_segments: list[Segment2] = []
     projected: list[Point2 | None] = [project_raw(raw) for raw in box_raw_corners(dims)]
     for a, b in _BOX_EDGES:
         pa = projected[a]
         pb = projected[b]
         if pa is not None and pb is not None:
-            pygame.draw.line(surface, color, pa, pb, width)
+            frame_segments.append((pa, pb))
+    return frame_segments
+
+
+def _lattice_segments(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    x_marks: set[int] | None = None,
+    y_marks: set[int] | None = None,
+    z_marks: set[int] | None = None,
+) -> tuple[tuple[Segment2, ...], tuple[Segment2, ...]]:
+    inner_segments: list[Segment2] = []
+    inner_segments.extend(_axis_segments_y(dims, project_raw, x_marks, z_marks))
+    inner_segments.extend(_axis_segments_x(dims, project_raw, y_marks, z_marks))
+    inner_segments.extend(_axis_segments_z(dims, project_raw, x_marks, y_marks))
+    return tuple(inner_segments), tuple(_frame_segments(dims, project_raw))
+
+
+def _projection_lattice_segments_cached(
+    *,
+    cache_key: object | None,
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    x_marks: set[int] | None = None,
+    y_marks: set[int] | None = None,
+    z_marks: set[int] | None = None,
+) -> tuple[tuple[Segment2, ...], tuple[Segment2, ...]]:
+    if cache_key is None:
+        return _lattice_segments(dims, project_raw, x_marks, y_marks, z_marks)
+
+    cached = _PROJECTION_LATTICE_CACHE.get(cache_key)
+    if cached is not None:
+        _PROJECTION_LATTICE_CACHE.move_to_end(cache_key)
+        return cached
+
+    segments = _lattice_segments(dims, project_raw, x_marks, y_marks, z_marks)
+    _PROJECTION_LATTICE_CACHE[cache_key] = segments
+    _PROJECTION_LATTICE_CACHE.move_to_end(cache_key)
+    while len(_PROJECTION_LATTICE_CACHE) > _PROJECTION_LATTICE_CACHE_MAX:
+        _PROJECTION_LATTICE_CACHE.popitem(last=False)
+    return segments
 
 
 def draw_projected_lattice(
@@ -292,9 +374,17 @@ def draw_projected_lattice(
     inner_color: tuple[int, int, int],
     frame_color: tuple[int, int, int],
     frame_width: int = 2,
+    cache_key: object | None = None,
 ) -> None:
-    _draw_lattice_axis_lines(surface, dims, project_raw, inner_color)
-    _draw_lattice_frame(surface, dims, project_raw, frame_color, frame_width)
+    inner_segments, frame_segments = _projection_lattice_segments_cached(
+        cache_key=cache_key,
+        dims=dims,
+        project_raw=project_raw,
+    )
+    for p0, p1 in inner_segments:
+        pygame.draw.line(surface, inner_color, p0, p1, 1)
+    for p0, p1 in frame_segments:
+        pygame.draw.line(surface, frame_color, p0, p1, frame_width)
 
 
 def draw_projected_helper_lattice(
@@ -307,17 +397,20 @@ def draw_projected_helper_lattice(
     inner_color: tuple[int, int, int],
     frame_color: tuple[int, int, int],
     frame_width: int = 2,
+    cache_key: object | None = None,
 ) -> None:
-    _draw_lattice_axis_lines(
-        surface,
-        dims,
-        project_raw,
-        inner_color,
+    inner_segments, frame_segments = _projection_lattice_segments_cached(
+        cache_key=cache_key,
+        dims=dims,
+        project_raw=project_raw,
         x_marks=_clip_marks(x_marks, dims[0]),
         y_marks=_clip_marks(y_marks, dims[1]),
         z_marks=_clip_marks(z_marks, dims[2]),
     )
-    _draw_lattice_frame(surface, dims, project_raw, frame_color, frame_width)
+    for p0, p1 in inner_segments:
+        pygame.draw.line(surface, inner_color, p0, p1, 1)
+    for p0, p1 in frame_segments:
+        pygame.draw.line(surface, frame_color, p0, p1, frame_width)
 
 
 def _clip_marks(marks: set[int], max_value: int) -> set[int]:
@@ -331,7 +424,8 @@ def draw_projected_box_edges(
     edge_color: tuple[int, int, int] = (96, 118, 164),
     edge_width: int = 2,
 ) -> None:
-    _draw_lattice_frame(surface, dims, project_raw, edge_color, edge_width)
+    for p0, p1 in _frame_segments(dims, project_raw):
+        pygame.draw.line(surface, edge_color, p0, p1, edge_width)
 
 
 def draw_projected_box_shadow(

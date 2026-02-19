@@ -17,6 +17,12 @@ from .score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from .topology import (
+    TOPOLOGY_BOUNDED,
+    TopologyPolicy,
+    map_piece_cells,
+    normalize_topology_mode,
+)
 
 
 def _score_for_clear(cleared_lines: int) -> int:
@@ -49,6 +55,9 @@ class GameConfig:
     height: int = 20
     gravity_axis: int = 1   # for 2D, dims=(width, height), so y-axis
     speed_level: int = 1    # 1..10, used by frontend to pick gravity speed
+    topology_mode: str = TOPOLOGY_BOUNDED
+    wrap_gravity_axis: bool = False
+    topology_edge_rules: tuple[tuple[str, str], ...] | None = None
     piece_set: str = PIECE_SET_2D_CLASSIC
     random_cell_count: int = 4
     challenge_layers: int = 0
@@ -71,12 +80,24 @@ class GameConfig:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
+        self.topology_mode = normalize_topology_mode(self.topology_mode)
+        self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
+
+    def topology_policy(self) -> TopologyPolicy:
+        return TopologyPolicy(
+            dims=(self.width, self.height),
+            gravity_axis=self.gravity_axis,
+            mode=self.topology_mode,
+            wrap_gravity_axis=self.wrap_gravity_axis,
+            edge_rules=self.topology_edge_rules,
+        )
 
 
 @dataclass
 class GameState:
     config: GameConfig
     board: BoardND
+    topology_policy: TopologyPolicy = field(init=False, repr=False)
     current_piece: Optional[ActivePiece2D] = None
     next_bag: List[PieceShape2D] = field(default_factory=list)
     rng: random.Random = field(default_factory=random.Random)
@@ -92,6 +113,7 @@ class GameState:
     last_score_analysis: dict[str, object] | None = None
 
     def __post_init__(self):
+        self.topology_policy = self.config.topology_policy()
         if self.board is None:
             self.board = BoardND((self.config.width, self.config.height))
         if not self.next_bag:
@@ -162,24 +184,37 @@ class GameState:
         span_y = max_y - min_y + 1
         return span_x <= self.config.width and span_y <= self.config.height
 
+    def _mapped_piece_cells(self, piece: ActivePiece2D) -> tuple[tuple[int, int], ...] | None:
+        mapped = map_piece_cells(
+            self.topology_policy,
+            piece.cells(),
+            allow_above_gravity=True,
+        )
+        if mapped is None:
+            return None
+        return tuple((coord[0], coord[1]) for coord in mapped)
+
+    def current_piece_cells_mapped(self, *, include_above: bool = False) -> tuple[tuple[int, int], ...]:
+        if self.current_piece is None:
+            return ()
+        mapped = self._mapped_piece_cells(self.current_piece)
+        if mapped is None:
+            return ()
+        if include_above:
+            return mapped
+        return tuple(coord for coord in mapped if coord[1] >= 0)
+
     def _can_exist(self, piece: ActivePiece2D) -> bool:
         """
-        Check if a piece configuration is valid (inside horizontal bounds,
-        not below the bottom, no collision with locked cells).
-        y < 0 is allowed (piece entering from above).
+        Check if a piece configuration is valid under configured topology mode.
+        Cells above top (y < 0) are allowed before lock.
         """
-        width, height = self.config.width, self.config.height
-        for (x, y) in piece.cells():
-            # Left/right bounds
-            if x < 0 or x >= width:
-                return False
-            # Bottom bound
-            if y >= height:
-                return False
-            # Above top is allowed
+        mapped_cells = self._mapped_piece_cells(piece)
+        if mapped_cells is None:
+            return False
+        for x, y in mapped_cells:
             if y < 0:
                 continue
-            # Collision with locked cells
             if (x, y) in self.board.cells:
                 return False
         return True
@@ -195,23 +230,21 @@ class GameState:
             return 0
 
         piece = self.current_piece
-        width, height = self.config.width, self.config.height
+        mapped_cells = self._mapped_piece_cells(piece)
+        if mapped_cells is None:
+            self.game_over = True
+            return 0
         pre_cells = dict(self.board.cells)
-        visible_piece_cells = tuple(
-            coord
-            for coord in piece.cells()
-            if 0 <= coord[0] < width and 0 <= coord[1] < height
-        )
+        visible_piece_cells = tuple(coord for coord in mapped_cells if coord[1] >= 0)
 
         # If any block is above the top row, the game is over.
-        for (x, y) in piece.cells():
+        for (x, y) in mapped_cells:
             if y < 0:
                 self.game_over = True
 
         # Lock only visible cells (inside the board)
-        for (x, y) in piece.cells():
-            if 0 <= x < width and 0 <= y < height:
-                self.board.cells[(x, y)] = piece.shape.color_id
+        for (x, y) in visible_piece_cells:
+            self.board.cells[(x, y)] = piece.shape.color_id
 
         cleared = self.board.clear_planes(self.config.gravity_axis)
         self.lines_cleared += cleared
@@ -224,7 +257,7 @@ class GameState:
         self.last_score_analysis = analyze_lock_event(
             board_pre=pre_cells,
             board_post=dict(self.board.cells),
-            dims=(width, height),
+            dims=(self.config.width, self.config.height),
             gravity_axis=self.config.gravity_axis,
             locked_cells=visible_piece_cells,
             cleared=cleared,

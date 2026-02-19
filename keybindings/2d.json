@@ -11,11 +11,10 @@
         "right"
       ],
       "rotate_xy_neg": [
-        "z"
+        "w"
       ],
       "rotate_xy_pos": [
-        "up",
-        "x"
+        "q"
       ],
       "soft_drop": [
         "down"

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
 from typing import Any
 
 from .keybindings import (
@@ -11,9 +10,10 @@ from .keybindings import (
     set_active_key_profile,
 )
 from .menu_config import default_settings_payload
+from .project_config import menu_settings_file_path, state_dir_path
 
-STATE_DIR = Path(__file__).resolve().parent.parent / "state"
-STATE_FILE = STATE_DIR / "menu_settings.json"
+STATE_DIR = state_dir_path()
+STATE_FILE = menu_settings_file_path()
 _BASE_DEFAULTS = default_settings_payload()
 _DEFAULT_DISPLAY = _BASE_DEFAULTS.get("display", {})
 _DEFAULT_WINDOWED_SIZE_RAW = (

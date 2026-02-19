@@ -114,14 +114,22 @@
             "height",
             "speed_level",
             "piece_set_index",
-            "challenge_layers"
+            "topology_mode",
+            "topology_advanced",
+            "topology_profile_index",
+            "challenge_layers",
+            "exploration_mode"
           ],
           "properties": {
             "width": { "type": "integer", "minimum": 4 },
             "height": { "type": "integer", "minimum": 8 },
             "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
             "piece_set_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 }
+            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
+            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "topology_profile_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 },
+            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
           }
         }
       ],
@@ -138,7 +146,11 @@
             "depth",
             "speed_level",
             "piece_set_index",
-            "challenge_layers"
+            "topology_mode",
+            "topology_advanced",
+            "topology_profile_index",
+            "challenge_layers",
+            "exploration_mode"
           ],
           "properties": {
             "width": { "type": "integer", "minimum": 4 },
@@ -146,7 +158,11 @@
             "depth": { "type": "integer", "minimum": 2 },
             "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
             "piece_set_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 }
+            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
+            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "topology_profile_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 },
+            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
           }
         }
       ],
@@ -164,7 +180,11 @@
             "fourth",
             "speed_level",
             "piece_set_index",
-            "challenge_layers"
+            "topology_mode",
+            "topology_advanced",
+            "topology_profile_index",
+            "challenge_layers",
+            "exploration_mode"
           ],
           "properties": {
             "width": { "type": "integer", "minimum": 4 },
@@ -173,7 +193,11 @@
             "fourth": { "type": "integer", "minimum": 1 },
             "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
             "piece_set_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 }
+            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
+            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "topology_profile_index": { "type": "integer", "minimum": 0 },
+            "challenge_layers": { "type": "integer", "minimum": 0 },
+            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
           }
         }
       ],

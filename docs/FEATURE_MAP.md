@@ -22,6 +22,15 @@ User-facing feature map for the shipped `tet4d` experience.
 - Animated piece rotation and animated clear feedback.
 - Challenge mode: configurable randomly prefilled lower layers.
 - Fullscreen and windowed play with stable menu/game return path.
+- Boundary topology presets in setup:
+  - `bounded` (classic edges),
+  - `wrap_all` (wrap non-gravity axes),
+  - `invert_all` (wrap + mirror non-gravity axes),
+  - gravity-axis wrapping is disabled by default.
+- Advanced topology designer mode (hidden by default):
+  - `Topology advanced` toggle reveals per-axis/per-edge profile selection.
+  - Profile source file: `config/topology/designer_presets.json`.
+  - Deterministic export path: `state/topology/selected_profile.json`.
 
 ## 3. View and Camera
 
@@ -44,6 +53,12 @@ User-facing feature map for the shipped `tet4d` experience.
 - `keybindings/3d.json`
 - `keybindings/4d.json`
 - Built-in keyboard sets: `small`and`full`.
+- Small-profile rotation ladder:
+  - 2D: `Q/W`
+  - 3D: `Q/W`, `A/S`, `Z/X`
+  - 4D: `Q/W`, `A/S`, `Z/X`, `R/T`, `F/G`, `V/B`
+- Shared system defaults are deconflicted from the 4D small ladder:
+  - restart=`Y`, toggle-grid=`C`, menu=`M`, quit=`Esc`.
 - In-app keybinding editor supports:
   - top-level scope sections (`General`,`2D`,`3D`,`4D`),
   - rebind,
@@ -102,13 +117,18 @@ User-facing feature map for the shipped `tet4d` experience.
 - Source-controlled config:
   - `config/menu/defaults.json`
 - `config/menu/structure.json`
+- `config/topology/designer_presets.json`
 - `config/gameplay/tuning.json`
 - `config/gameplay/score_analyzer.json`
 - `config/playbot/policy.json`
 - `config/audio/sfx.json`
+- `config/project/io_paths.json`
+- `config/project/constants.json`
+- `config/project/secret_scan.json`
 - User state persisted in:
   - `state/menu_settings.json`
 - Missing/corrupt user state falls back to external defaults.
+- Path handling uses safe repo-relative `Path` resolution and rejects unsafe absolute/traversal values for state outputs.
 
 ## 9. Verification Coverage
 
@@ -127,6 +147,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - `config/project/canonical_maintenance.json`
 - Contract validator:
   - `tools/validate_project_contracts.py`
+- Secret scanner:
+  - `tools/scan_secrets.py`
 - CI runs this validator through:
   - `scripts/ci_check.sh`
 - `.github/workflows/stability-watch.yml`

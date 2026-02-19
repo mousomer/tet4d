@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "cache_limits": {
+    "gradient_surface_max": 16,
+    "text_surface_max": 3072,
+    "projection_lattice_max": 96
+  },
+  "animation": {
+    "piece_rotation_duration_ms": 150.0,
+    "clear_effect_duration_ms_2d": 320.0,
+    "clear_effect_duration_ms_3d": 360.0,
+    "clear_effect_duration_ms_4d": 380.0
+  },
+  "rendering": {
+    "2d": {
+      "cell_size": 30,
+      "margin": 20,
+      "side_panel": 200
+    },
+    "3d": {
+      "margin": 20,
+      "side_panel": 360
+    },
+    "4d": {
+      "margin": 16,
+      "side_panel": 360,
+      "layer_gap": 12
+    }
+  }
+}

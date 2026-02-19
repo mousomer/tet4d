@@ -18,6 +18,12 @@ from .score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from .topology import (
+    TOPOLOGY_BOUNDED,
+    TopologyPolicy,
+    map_piece_cells,
+    normalize_topology_mode,
+)
 from .types import Coord
 
 
@@ -40,6 +46,9 @@ class GameConfigND:
     dims: Coord = (10, 20, 6)
     gravity_axis: int = 1
     speed_level: int = 1  # 1..10, used by frontend timing
+    topology_mode: str = TOPOLOGY_BOUNDED
+    wrap_gravity_axis: bool = False
+    topology_edge_rules: tuple[tuple[str, str], ...] | None = None
     piece_set_id: str | None = None
     piece_set_4d: str = PIECE_SET_4D_STANDARD
     random_cell_count: int = 5
@@ -63,6 +72,8 @@ class GameConfigND:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
+        self.topology_mode = normalize_topology_mode(self.topology_mode)
+        self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
 
         ndim = len(self.dims)
         selected_piece_set = self.piece_set_id
@@ -78,11 +89,21 @@ class GameConfigND:
     def ndim(self) -> int:
         return len(self.dims)
 
+    def topology_policy(self) -> TopologyPolicy:
+        return TopologyPolicy(
+            dims=self.dims,
+            gravity_axis=self.gravity_axis,
+            mode=self.topology_mode,
+            wrap_gravity_axis=self.wrap_gravity_axis,
+            edge_rules=self.topology_edge_rules,
+        )
+
 
 @dataclass
 class GameStateND:
     config: GameConfigND
     board: BoardND
+    topology_policy: TopologyPolicy = field(init=False, repr=False)
     current_piece: Optional[ActivePieceND] = None
     next_bag: List[PieceShapeND] = field(default_factory=list)
     rng: random.Random = field(default_factory=random.Random)
@@ -98,6 +119,7 @@ class GameStateND:
     last_score_analysis: dict[str, object] | None = None
 
     def __post_init__(self) -> None:
+        self.topology_policy = self.config.topology_policy()
         if self.board is None:
             self.board = BoardND(self.config.dims)
         if self.board.dims != self.config.dims:
@@ -176,26 +198,34 @@ class GameStateND:
                 return False
         return True
 
+    def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
+        return map_piece_cells(
+            self.topology_policy,
+            piece.cells(),
+            allow_above_gravity=True,
+        )
+
+    def current_piece_cells_mapped(self, *, include_above: bool = False) -> tuple[Coord, ...]:
+        if self.current_piece is None:
+            return ()
+        mapped = self._mapped_piece_cells(self.current_piece)
+        if mapped is None:
+            return ()
+        if include_above:
+            return mapped
+        gravity_axis = self.config.gravity_axis
+        return tuple(coord for coord in mapped if coord[gravity_axis] >= 0)
+
     # --- Validation and locking ---
 
     def _can_exist(self, piece: ActivePieceND) -> bool:
+        mapped_cells = self._mapped_piece_cells(piece)
+        if mapped_cells is None:
+            return False
         g = self.config.gravity_axis
-        dims = self.config.dims
-
-        for coord in piece.cells():
-            # Non-gravity axes must remain fully inside bounds.
-            for axis, value in enumerate(coord):
-                if axis == g:
-                    if value >= dims[axis]:
-                        return False
-                else:
-                    if value < 0 or value >= dims[axis]:
-                        return False
-
-            # Above the top along gravity axis is allowed.
+        for coord in mapped_cells:
             if coord[g] < 0:
                 continue
-
             if coord in self.board.cells:
                 return False
         return True
@@ -208,17 +238,20 @@ class GameStateND:
 
         g = self.config.gravity_axis
         piece = self.current_piece
+        mapped_cells = self._mapped_piece_cells(piece)
+        if mapped_cells is None:
+            self.game_over = True
+            return 0
         pre_cells = dict(self.board.cells)
-        visible_piece_cells = tuple(coord for coord in piece.cells() if self.board.inside_bounds(coord))
+        visible_piece_cells = tuple(coord for coord in mapped_cells if coord[g] >= 0)
 
         # If any block is still above the board along gravity axis, game over.
-        for coord in piece.cells():
+        for coord in mapped_cells:
             if coord[g] < 0:
                 self.game_over = True
 
-        for coord in piece.cells():
-            if self.board.inside_bounds(coord):
-                self.board.cells[coord] = piece.shape.color_id
+        for coord in visible_piece_cells:
+            self.board.cells[coord] = piece.shape.color_id
 
         cleared = self.board.clear_planes(g)
         self.lines_cleared += cleared

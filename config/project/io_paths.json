@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "paths": {
+    "state_dir": "state",
+    "menu_settings_file": "state/menu_settings.json",
+    "keybindings_dir": "keybindings",
+    "keybindings_profiles_dir": "keybindings/profiles",
+    "playbot_history_file_default": "state/bench/playbot_latency_history.jsonl",
+    "score_events_file_default": "state/analytics/score_events.jsonl",
+    "score_summary_file_default": "state/analytics/score_summary.json",
+    "topology_profile_export_file_default": "state/topology/selected_profile.json"
+  }
+}
