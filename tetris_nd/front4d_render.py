@@ -6,7 +6,7 @@ from typing import Optional
 
 import pygame
 
-from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
+from .control_helper import control_groups_for_dimension
 from .frontend_nd import (
     GfxFonts,
     SliceState,
@@ -16,7 +16,7 @@ from .frontend_nd import (
 from .game_nd import GameStateND
 from .key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_4D
-from .panel_utils import draw_text_lines, draw_translucent_panel, truncate_lines_to_height
+from .panel_utils import draw_game_side_panel
 from .projection3d import (
     Cell3,
     Face,
@@ -431,8 +431,6 @@ def _draw_side_panel(
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
 ) -> None:
-    draw_translucent_panel(surface, panel_rect, alpha=140, radius=12)
-
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     z_slice = slice_state.axis_values.get(2, 0)
@@ -442,7 +440,7 @@ def _draw_side_panel(
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
     low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
 
-    lines = [
+    lines = (
         "4D Tetris",
         "View: multiple 3D w-layers",
         "",
@@ -459,76 +457,18 @@ def _draw_side_panel(
         "",
         f"Active z slice: {z_slice}/{max_z}",
         f"Active w layer: {w_slice}/{max_w}",
-    ]
+    )
 
-    y = draw_text_lines(
+    draw_game_side_panel(
         surface,
-        lines=lines,
-        font=fonts.panel_font,
-        start_pos=(panel_rect.x + 12, panel_rect.y + 14),
-        color=TEXT_COLOR,
-        line_gap=3,
+        panel_rect=panel_rect,
+        fonts=fonts,
+        header_lines=lines,
+        control_groups=control_groups_for_dimension(4),
+        low_priority_lines=tuple(low_priority_lines),
+        game_over=state.game_over,
+        min_controls_h=150,
     )
-    controls_top = y + 4
-    reserve_bottom = 26 if state.game_over else 0
-    available_h = max(0, panel_rect.bottom - reserve_bottom - controls_top)
-    min_controls_h = 150
-    gap = 6
-
-    low_lines: tuple[str, ...] = tuple()
-    low_h = 0
-    if low_priority_lines:
-        max_low_h = max(0, available_h - min_controls_h - gap)
-        low_lines = truncate_lines_to_height(
-            low_priority_lines,
-            font=fonts.hint_font,
-            available_height=max(0, max_low_h - 8),
-            line_gap=3,
-        )
-        if low_lines:
-            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
-
-    controls_bottom = panel_rect.bottom - reserve_bottom - (low_h + gap if low_h else 8)
-    if controls_bottom - controls_top < 44 and low_h:
-        low_lines = tuple()
-        low_h = 0
-        controls_bottom = panel_rect.bottom - reserve_bottom - 8
-
-    controls_rect = pygame.Rect(
-        panel_rect.x + 6,
-        controls_top,
-        panel_rect.width - 12,
-        max(44, controls_bottom - controls_top),
-    )
-    draw_grouped_control_helper(
-        surface,
-        groups=control_groups_for_dimension(4),
-        rect=controls_rect,
-        panel_font=fonts.panel_font,
-        hint_font=fonts.hint_font,
-    )
-    if low_lines:
-        low_height = panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 8)
-        if low_height > 10:
-            low_rect = pygame.Rect(
-                panel_rect.x + 8,
-                controls_rect.bottom + 6,
-                panel_rect.width - 16,
-                low_height,
-            )
-            draw_translucent_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
-            draw_text_lines(
-                surface,
-                lines=low_lines,
-                font=fonts.hint_font,
-                start_pos=(low_rect.x + 6, low_rect.y + 5),
-                color=(176, 188, 222),
-                line_gap=3,
-            )
-
-    if state.game_over:
-        over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
-        surface.blit(over, (panel_rect.x + 12, panel_rect.bottom - 26))
 
 
 def draw_game_frame(

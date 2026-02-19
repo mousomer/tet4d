@@ -80,16 +80,35 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 66. `DONE` Canonical docs freshness checks were strengthened:
 67. `tools/validate_project_contracts.py` now supports regex content rules,
 68. stale fixed pass-count snapshots are blocked by `must_not_match_regex` rules in `config/project/canonical_maintenance.json`.
+69. `DONE` Control-helper optimization batch completed:
+70. action icons are now cached by `(action,width,height)` in `tetris_nd/control_icons.py` to avoid repeated per-frame redraw.
+71. dimensional helper rows are assembled from shared row-spec builders in `tetris_nd/control_helper.py` to reduce duplication.
+72. parity tests added for control UI helpers:
+73. `tetris_nd/tests/test_control_ui_helpers.py`.
+74. `DONE` Simplification batch completed:
+75. shared UI helpers extracted to `tetris_nd/ui_utils.py` and consumed by launcher/help/keybindings/control views.
+76. pause/settings menu row definitions externalized into `config/menu/structure.json` and loaded via `tetris_nd/menu_config.py`.
+77. shared pause/settings list-panel renderer applied in `tetris_nd/pause_menu.py`.
+78. keybindings menu split into dedicated input/view helpers:
+79. `tetris_nd/keybindings_menu_input.py`, `tetris_nd/keybindings_menu_view.py`.
+80. shared ND launcher orchestration extracted to `tetris_nd/launcher_nd_runner.py`.
+81. shared 2D/ND lookahead selection helper extracted to `tetris_nd/playbot/lookahead_common.py`.
+82. playbot policy validation monolith reduced by section validators in `tetris_nd/runtime_config_validation.py`.
+83. `DONE` Post-split verification:
+84. `ruff check .` passed,
+85. `ruff check . --select C901` passed,
+86. `pytest -q` passed.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `P3` Continuous watch only (no blocking open implementation gaps in this batch):
-2. keep running `scripts/ci_check.sh` prior to pushes and releases,
-3. keep scheduled stability + policy workflows active:
-4. `.github/workflows/ci.yml`,
-5. `.github/workflows/stability-watch.yml`,
-6. `tools/check_playbot_stability.py`,
-7. `tools/analyze_playbot_policies.py`.
+1. `P2` No open simplification items remain from this batch.
+2. `P3` Continuous watch:
+3. keep running `scripts/ci_check.sh` prior to pushes and releases,
+4. keep scheduled stability + policy workflows active:
+5. `.github/workflows/ci.yml`,
+6. `.github/workflows/stability-watch.yml`,
+7. `tools/check_playbot_stability.py`,
+8. `tools/analyze_playbot_policies.py`.
 
 ## 4. Gap Mapping to RDS
 
@@ -137,7 +156,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tetris_nd/front3d_setup.py`,
 `tetris_nd/front4d_render.py`,
 `tetris_nd/launcher_play.py`,
-`tetris_nd/launcher_settings.py`.
+`tetris_nd/launcher_settings.py`,
+`tetris_nd/ui_utils.py`,
+`tetris_nd/keybindings_menu_view.py`,
+`tetris_nd/keybindings_menu_input.py`,
+`tetris_nd/launcher_nd_runner.py`,
+`tetris_nd/playbot/lookahead_common.py`.
 3. Offline/stability analysis tooling added:
 `tools/analyze_playbot_policies.py`.
 `tools/check_playbot_stability.py`.
@@ -161,6 +185,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `docs/GUIDELINES_RESEARCH.md`,
 `docs/RDS_AND_CODEX.md`,
 `docs/rds/RDS_TETRIS_GENERAL.md`.
+8. Control-helper optimization additions:
+`tetris_nd/control_icons.py`,
+`tetris_nd/control_helper.py`,
+`tetris_nd/tests/test_control_ui_helpers.py`.
 
 ## 6. Source Inputs
 

@@ -7,6 +7,7 @@ from typing import Iterable
 from ..board import BoardND
 from ..game2d import GameState
 from ..pieces2d import ActivePiece2D, PieceShape2D, rotate_point_2d
+from .lookahead_common import choose_best_with_followup
 from .types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
@@ -291,15 +292,12 @@ def _pick_with_optional_lookahead(
 
     top_k = planning_lookahead_top_k(2, profile, budget_ms=budget_ms)
     ranked = sorted(candidates, key=lambda c: (c.score, c.cleared), reverse=True)[:top_k]
-
-    best_candidate = best_immediate
-    best_combined = best_immediate.score
-    followup_weight = 0.35
-
-    for candidate in ranked:
-        if time.perf_counter() >= deadline_s:
-            break
-        followup_score = _followup_score_for_candidate(
+    return choose_best_with_followup(
+        candidates=ranked,
+        base_candidate=best_immediate,
+        score_of=lambda candidate: candidate.score,
+        cleared_of=lambda candidate: candidate.cleared,
+        followup_score_of=lambda candidate: _followup_score_for_candidate(
             candidate=candidate,
             next_shape=next_shape,
             width=width,
@@ -307,15 +305,10 @@ def _pick_with_optional_lookahead(
             gravity_axis=gravity_axis,
             deadline_s=deadline_s,
             candidate_cap=candidate_cap,
-        )
-        combined = candidate.score + followup_weight * followup_score
-        if combined > best_combined or (
-            combined == best_combined and candidate.cleared > best_candidate.cleared
-        ):
-            best_candidate = candidate
-            best_combined = combined
-
-    return best_candidate, best_combined
+        ),
+        deadline_s=deadline_s,
+        followup_weight=0.35,
+    )
 
 
 def plan_best_2d_move(

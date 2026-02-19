@@ -186,6 +186,8 @@ Remaining follow-up:
 4. Closed: maintainability follow-up executed for keybinding modules (shared display utils + menu model extraction + dead code removal).
 5. Closed: local CI runner is hermetic and module-based in `scripts/ci_check.sh` (no global fallback drift).
 6. Closed: docs freshness rules now include regex checks for stale pass-count snapshots.
+7. Closed: control-helper optimization completed (cached action-icon surfaces + shared dimensional row-builders with parity tests).
+8. Closed: simplification batch completed (shared UI utilities, pause/settings row externalization, keybindings view/input split, shared ND launcher helper, shared 2D/ND lookahead helper, and sectioned runtime-config validator).
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
 

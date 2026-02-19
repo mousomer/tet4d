@@ -19,6 +19,7 @@ from .playbot import run_dry_run_nd
 from .playbot.types import bot_planner_algorithm_from_index, bot_planner_profile_from_index
 from .projection3d import draw_gradient_background
 from .speed_curve import gravity_interval_ms
+from .ui_utils import fit_text
 
 
 BG_TOP = (18, 24, 50)
@@ -96,26 +97,12 @@ def _menu_value_text(attr_name: str, value: object) -> str:
     return str(value)
 
 
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    ellipsis = "..."
-    if font.size(ellipsis)[0] >= max_width:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
-        trimmed = trimmed[:-1]
-    return trimmed + ellipsis if trimmed else ""
-
-
 def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     width, height = screen.get_size()
 
     title = fonts.title_font.render("3D Tetris - Setup", True, TEXT_COLOR)
-    subtitle_text = _fit_text(
+    subtitle_text = fit_text(
         fonts.hint_font,
         "Use Up/Down to select, Left/Right to change, Enter to start.",
         width - 28,
@@ -156,7 +143,7 @@ def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
         text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         text_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        text_fit = _fit_text(fonts.menu_font, text, option_w - 6)
+        text_fit = fit_text(fonts.menu_font, text, option_w - 6)
         surf = fonts.menu_font.render(text_fit, True, text_color)
         rect = surf.get_rect(topleft=(option_x, y))
         if selected:
@@ -177,14 +164,14 @@ def draw_menu(screen: pygame.Surface, fonts, state: MenuState) -> None:
     max_hint_lines = max(1, (height - hy - 6) // max(1, hint_line_h))
     hint_budget = max(1, max_hint_lines - (1 if state.bindings_status else 0))
     for line in hints[:hint_budget]:
-        line_fit = _fit_text(fonts.hint_font, line, width - 28)
+        line_fit = fit_text(fonts.hint_font, line, width - 28)
         surf = fonts.hint_font.render(line_fit, True, (210, 210, 230))
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 4
 
     if state.bindings_status and hy + hint_line_h <= height - 6:
         status_color = menu_binding_status_color(state.bindings_status_error)
-        status_text = _fit_text(fonts.hint_font, state.bindings_status, width - 28)
+        status_text = fit_text(fonts.hint_font, state.bindings_status, width - 28)
         status = fonts.hint_font.render(status_text, True, status_color)
         screen.blit(status, ((width - status.get_width()) // 2, hy))
 

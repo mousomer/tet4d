@@ -7,9 +7,7 @@ from typing import Optional, Tuple
 import pygame
 
 from .app_runtime import (
-    capture_windowed_display_settings,
     initialize_runtime,
-    open_display,
 )
 from .audio import play_sfx
 from .assist_scoring import combined_score_multiplier
@@ -49,6 +47,7 @@ from .rotation_anim import PieceRotationAnimatorND
 from .view_modes import GridMode, cycle_grid_mode
 from .pause_menu import run_pause_menu
 from .help_menu import run_help_menu
+from .launcher_nd_runner import run_nd_mode_launcher
 
 
 @dataclass
@@ -227,43 +226,25 @@ def run() -> None:
     )
     fonts = init_fonts()
 
-    running = True
-    while running:
-        menu_screen = open_display(
-            display_settings,
-            caption="4D Tetris – Setup",
-        )
-        settings = run_menu(menu_screen, fonts, 4)
-        if settings is None:
-            break
-
-        cfg = build_config(settings, 4)
-        win_w, win_h = suggested_window_size(cfg)
-        preferred_size = (
-            max(display_settings.windowed_size[0], win_w),
-            max(display_settings.windowed_size[1], win_h),
-        )
-        game_screen = open_display(
-            display_settings,
-            caption="4D Tetris",
-            preferred_windowed_size=preferred_size,
-        )
-
-        back_to_menu = run_game_loop(
+    run_nd_mode_launcher(
+        display_settings=display_settings,
+        fonts=fonts,
+        setup_caption="4D Tetris – Setup",
+        game_caption="4D Tetris",
+        run_menu=lambda menu_screen, active_fonts: run_menu(menu_screen, active_fonts, 4),
+        build_config=lambda settings: build_config(settings, 4),
+        suggested_window_size=suggested_window_size,
+        run_game=lambda game_screen, cfg, active_fonts, settings: run_game_loop(
             game_screen,
             cfg,
-            fonts,
+            active_fonts,
             bot_mode=bot_mode_from_index(settings.bot_mode_index),
             bot_speed_level=settings.bot_speed_level,
             bot_algorithm_index=settings.bot_algorithm_index,
             bot_profile_index=settings.bot_profile_index,
             bot_budget_ms=settings.bot_budget_ms,
-        )
-        if not back_to_menu:
-            running = False
-            continue
-
-        display_settings = capture_windowed_display_settings(display_settings)
+        ),
+    )
 
     pygame.quit()
     sys.exit()

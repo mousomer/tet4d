@@ -16,6 +16,7 @@ from .menu_persistence import (
 )
 from .menu_settings_state import DEFAULT_WINDOWED_SIZE
 from .score_analyzer import set_score_analyzer_logging_enabled
+from .ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)
@@ -89,15 +90,7 @@ def _validate_unified_layout_against_policy() -> tuple[bool, str]:
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        color = (
-            int(BG_TOP[0] * (1 - t) + BG_BOTTOM[0] * t),
-            int(BG_TOP[1] * (1 - t) + BG_BOTTOM[1] * t),
-            int(BG_TOP[2] * (1 - t) + BG_BOTTOM[2] * t),
-        )
-        pygame.draw.line(surface, color, (0, y), (width, y))
+    draw_vertical_gradient(surface, BG_TOP, BG_BOTTOM)
 
 
 def _audio_defaults() -> AudioSettings:
@@ -316,26 +309,12 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
     return ""
 
 
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    ellipsis = "..."
-    if font.size(ellipsis)[0] >= max_width:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
-        trimmed = trimmed[:-1]
-    return trimmed + ellipsis if trimmed else ""
-
-
 def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSettingsState) -> None:
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("Settings", True, TEXT_COLOR)
     categories = ", ".join(_configured_top_level_labels())
-    subtitle_text = _fit_text(
+    subtitle_text = fit_text(
         fonts.hint_font,
         f"Top-level categories: {categories}",
         width - 28,
@@ -379,7 +358,7 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
         if y > panel_bottom:
             break
         if row_kind == "header":
-            header_text = _fit_text(fonts.hint_font, label, panel_w - 44)
+            header_text = fit_text(fonts.hint_font, label, panel_w - 44)
             header = fonts.hint_font.render(header_text, True, (182, 206, 255))
             screen.blit(header, (panel_x + 22, y + 3))
             y += header_step
@@ -395,11 +374,11 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
             screen.blit(hi, (panel_x + 14, y - 4))
         value = _unified_value_text(state, row_key)
         value_width = int(panel_w * 0.34) if value else 0
-        value_draw = _fit_text(fonts.menu_font, value, value_width)
+        value_draw = fit_text(fonts.menu_font, value, value_width)
         value_surf = fonts.menu_font.render(value_draw, True, color) if value_draw else None
         value_x = label_right - (value_surf.get_width() if value_surf is not None else 0)
         label_width = max(80, value_x - label_left - 10 if value_surf is not None else panel_w - 44)
-        label_draw = _fit_text(fonts.menu_font, label, label_width)
+        label_draw = fit_text(fonts.menu_font, label, label_width)
         label_surf = fonts.menu_font.render(label_draw, True, color)
         screen.blit(label_surf, (label_left, y))
         if value_surf is not None:
@@ -414,14 +393,14 @@ def _draw_unified_settings_menu(screen: pygame.Surface, fonts, state: _UnifiedSe
     max_hint_lines = max(0, (height - hy - 6) // max(1, line_h))
     hint_budget = max(0, max_hint_lines - (1 if state.status else 0))
     for line in hints[:hint_budget]:
-        line_text = _fit_text(fonts.hint_font, line, width - 28)
+        line_text = fit_text(fonts.hint_font, line, width - 28)
         surf = fonts.hint_font.render(line_text, True, MUTED_COLOR)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy))
         hy += surf.get_height() + 3
 
     if state.status and hy + line_h <= height - 6:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = _fit_text(fonts.hint_font, state.status, width - 28)
+        status_text = fit_text(fonts.hint_font, state.status, width - 28)
         surf = fonts.hint_font.render(status_text, True, color)
         screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
 

@@ -17,6 +17,7 @@ from tetris_nd.launcher_play import launch_2d, launch_3d, launch_4d
 from tetris_nd.launcher_settings import run_settings_hub_menu
 from tetris_nd.menu_config import launcher_menu_items
 from tetris_nd.menu_persistence import load_menu_payload, save_menu_payload
+from tetris_nd.ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)
@@ -44,37 +45,11 @@ class _LauncherSession:
     running: bool = True
 
 
-def _draw_gradient(surface: pygame.Surface) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        color = (
-            int(BG_TOP[0] * (1 - t) + BG_BOTTOM[0] * t),
-            int(BG_TOP[1] * (1 - t) + BG_BOTTOM[1] * t),
-            int(BG_TOP[2] * (1 - t) + BG_BOTTOM[2] * t),
-        )
-        pygame.draw.line(surface, color, (0, y), (width, y))
-
-
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    ellipsis = "..."
-    if font.size(ellipsis)[0] >= max_width:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
-        trimmed = trimmed[:-1]
-    return trimmed + ellipsis if trimmed else ""
-
-
 def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None:
-    _draw_gradient(screen)
+    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
     width, height = screen.get_size()
     title = fonts.title_font.render("ND Tetris Launcher", True, TEXT_COLOR)
-    subtitle_text = _fit_text(
+    subtitle_text = fit_text(
         fonts.hint_font,
         "Play modes plus Help, unified Settings, Keybindings, and Bot Options.",
         width - 32,
@@ -106,7 +81,7 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
     for idx, (_, label) in enumerate(MENU_ITEMS):
         selected = idx == state.selected
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        label_text = _fit_text(fonts.menu_font, label, row_right - (panel_x + row_margin))
+        label_text = fit_text(fonts.menu_font, label, row_right - (panel_x + row_margin))
         text = fonts.menu_font.render(label_text, True, color)
         row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
         if selected:
@@ -125,14 +100,14 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
     max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
     info_budget = max(1, max_bottom_lines - (1 if state.status else 0))
     for line in info_lines[:info_budget]:
-        line_draw = _fit_text(fonts.hint_font, line, width - 24)
+        line_draw = fit_text(fonts.hint_font, line, width - 24)
         text = fonts.hint_font.render(line_draw, True, MUTED_COLOR)
         screen.blit(text, ((width - text.get_width()) // 2, info_y))
         info_y += text.get_height() + 3
 
     if state.status and info_y + hint_line_h <= height - 6:
         status_color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = _fit_text(fonts.hint_font, state.status, width - 24)
+        status_text = fit_text(fonts.hint_font, state.status, width - 24)
         status = fonts.hint_font.render(status_text, True, status_color)
         screen.blit(status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2)))
 

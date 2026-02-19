@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from ..board import BoardND
 from ..game_nd import GameConfigND, GameStateND
 from ..pieces_nd import ActivePieceND, PieceShapeND
+from .lookahead_common import choose_best_with_followup
 from .planner_nd_core import (
     build_column_levels,
     canonical_blocks,
@@ -183,15 +184,13 @@ def _apply_optional_lookahead(
     if not can_lookahead or next_shape is None or not top_candidates:
         return best_candidate, best_candidate.score
 
-    followup_weight = 0.30
     ranked = sorted(top_candidates, key=lambda item: (item.score, item.cleared), reverse=True)
-    final_candidate = best_candidate
-    best_combined = best_candidate.score
-
-    for candidate in ranked:
-        if time.perf_counter() >= deadline_s:
-            break
-        follow_score = _followup_score_nd(
+    return choose_best_with_followup(
+        candidates=ranked,
+        base_candidate=best_candidate,
+        score_of=lambda candidate: candidate.score,
+        cleared_of=lambda candidate: candidate.cleared,
+        followup_score_of=lambda candidate: _followup_score_nd(
             candidate=candidate,
             cfg=state.config,
             next_shape=next_shape,
@@ -200,14 +199,10 @@ def _apply_optional_lookahead(
             deadline_s=deadline_s,
             algorithm=algorithm,
             planning_budget_ms=planning_budget_ms,
-        )
-        combined = candidate.score + followup_weight * follow_score
-        if combined > best_combined or (
-            combined == best_combined and candidate.cleared > final_candidate.cleared
-        ):
-            final_candidate = candidate
-            best_combined = combined
-    return final_candidate, best_combined
+        ),
+        deadline_s=deadline_s,
+        followup_weight=0.30,
+    )
 
 
 def _plan_best_nd_with_deadline(

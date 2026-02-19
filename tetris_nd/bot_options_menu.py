@@ -20,6 +20,7 @@ from .playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )
+from .ui_utils import draw_vertical_gradient
 
 
 _BG_TOP = (14, 18, 44)
@@ -46,15 +47,7 @@ class _BotMenuState:
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        color = (
-            int(_BG_TOP[0] * (1 - t) + _BG_BOTTOM[0] * t),
-            int(_BG_TOP[1] * (1 - t) + _BG_BOTTOM[1] * t),
-            int(_BG_TOP[2] * (1 - t) + _BG_BOTTOM[2] * t),
-        )
-        pygame.draw.line(surface, color, (0, y), (width, y))
+    draw_vertical_gradient(surface, _BG_TOP, _BG_BOTTOM)
 
 
 def _mode_key_from_dimension(dimension: int) -> str:

@@ -6,6 +6,8 @@ import pygame
 
 
 _ICON_FG = (224, 236, 252)
+_ICON_CACHE_LIMIT = 192
+_ICON_SURFACE_CACHE: dict[tuple[str, int, int], pygame.Surface] = {}
 _MOVE_ICON_MAP: dict[str, tuple[str, int]] = {
     "move_x_neg": ("x", -1),
     "move_x_pos": ("x", 1),
@@ -16,6 +18,14 @@ _MOVE_ICON_MAP: dict[str, tuple[str, int]] = {
     "move_w_neg": ("w", -1),
     "move_w_pos": ("w", 1),
 }
+
+
+def clear_action_icon_cache() -> None:
+    _ICON_SURFACE_CACHE.clear()
+
+
+def action_icon_cache_size() -> int:
+    return len(_ICON_SURFACE_CACHE)
 
 
 def _draw_arrow(
@@ -119,17 +129,35 @@ def draw_action_icon(
     mapped = action_icon_action(action)
     if mapped is None or rect.width < 14 or rect.height < 14:
         return
+    icon = _cached_icon_surface(mapped, rect.width, rect.height)
+    surface.blit(icon, rect.topleft)
 
-    move_spec = _MOVE_ICON_MAP.get(mapped)
+
+def _cached_icon_surface(action: str, width: int, height: int) -> pygame.Surface:
+    key = (action, width, height)
+    cached = _ICON_SURFACE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    icon = _build_icon_surface(action, width=width, height=height)
+    if len(_ICON_SURFACE_CACHE) >= _ICON_CACHE_LIMIT:
+        _ICON_SURFACE_CACHE.clear()
+    _ICON_SURFACE_CACHE[key] = icon
+    return icon
+
+
+def _build_icon_surface(action: str, *, width: int, height: int) -> pygame.Surface:
+    icon = pygame.Surface((width, height), pygame.SRCALPHA)
+    icon_rect = icon.get_rect()
+    move_spec = _MOVE_ICON_MAP.get(action)
     if move_spec is not None:
         axis, direction = move_spec
-        _draw_move_icon(surface, rect, axis=axis, direction=direction)
-        return
-    if mapped == "soft_drop":
-        _draw_drop_icon(surface, rect, hard=False)
-        return
-    if mapped == "hard_drop":
-        _draw_drop_icon(surface, rect, hard=True)
-        return
-
-    _draw_rotate_icon(surface, rect, mapped)
+        _draw_move_icon(icon, icon_rect, axis=axis, direction=direction)
+        return icon
+    if action == "soft_drop":
+        _draw_drop_icon(icon, icon_rect, hard=False)
+        return icon
+    if action == "hard_drop":
+        _draw_drop_icon(icon, icon_rect, hard=True)
+        return icon
+    _draw_rotate_icon(icon, icon_rect, action)
+    return icon

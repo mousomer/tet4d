@@ -7,14 +7,12 @@ from typing import Optional, Tuple
 import pygame
 
 from .app_runtime import (
-    capture_windowed_display_settings,
     initialize_runtime,
-    open_display,
 )
 from .audio import play_sfx
 from .assist_scoring import combined_score_multiplier
 from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
-from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
+from .control_helper import control_groups_for_dimension
 from .display import DisplaySettings
 from .front3d_setup import (
     build_config,
@@ -61,12 +59,13 @@ from .projection3d import (
 from .score_analyzer import hud_analysis_lines
 from .loop_runner_nd import run_nd_loop
 from .runtime_helpers import collect_cleared_ghost_cells
-from .panel_utils import draw_text_lines, draw_translucent_panel, truncate_lines_to_height
+from .panel_utils import draw_game_side_panel
 from .rotation_anim import PieceRotationAnimatorND
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, cycle_grid_mode, grid_mode_label
 from .pause_menu import run_pause_menu
 from .help_menu import run_help_menu
+from .launcher_nd_runner import run_nd_mode_launcher
 
 
 MARGIN = 20
@@ -417,14 +416,12 @@ def _draw_side_panel(surface: pygame.Surface,
                      fonts: GfxFonts,
                      grid_mode: GridMode,
                      bot_lines: tuple[str, ...] = ()) -> None:
-    draw_translucent_panel(surface, panel_rect, alpha=140, radius=12)
-
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
     low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
-    lines = [
+    lines = (
         "3D Tetris",
         "",
         f"Dims: {state.config.dims}",
@@ -442,76 +439,18 @@ def _draw_side_panel(surface: pygame.Surface,
         f"Yaw: {camera.yaw_deg:.1f}",
         f"Pitch: {camera.pitch_deg:.1f}",
         f"Zoom: {camera.zoom:.1f}",
-    ]
+    )
 
-    y = draw_text_lines(
+    draw_game_side_panel(
         surface,
-        lines=lines,
-        font=fonts.panel_font,
-        start_pos=(panel_rect.x + 14, panel_rect.y + 16),
-        color=TEXT_COLOR,
-        line_gap=3,
+        panel_rect=panel_rect,
+        fonts=fonts,
+        header_lines=lines,
+        control_groups=control_groups_for_dimension(3),
+        low_priority_lines=tuple(low_priority_lines),
+        game_over=state.game_over,
+        min_controls_h=138,
     )
-    controls_top = y + 4
-    reserve_bottom = 26 if state.game_over else 0
-    available_h = max(0, panel_rect.bottom - reserve_bottom - controls_top)
-    min_controls_h = 138
-    gap = 6
-
-    low_lines: tuple[str, ...] = tuple()
-    low_h = 0
-    if low_priority_lines:
-        max_low_h = max(0, available_h - min_controls_h - gap)
-        low_lines = truncate_lines_to_height(
-            low_priority_lines,
-            font=fonts.hint_font,
-            available_height=max(0, max_low_h - 8),
-            line_gap=3,
-        )
-        if low_lines:
-            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
-
-    controls_bottom = panel_rect.bottom - reserve_bottom - (low_h + gap if low_h else 8)
-    if controls_bottom - controls_top < 44 and low_h:
-        low_lines = tuple()
-        low_h = 0
-        controls_bottom = panel_rect.bottom - reserve_bottom - 8
-
-    controls_rect = pygame.Rect(
-        panel_rect.x + 6,
-        controls_top,
-        panel_rect.width - 12,
-        max(44, controls_bottom - controls_top),
-    )
-    draw_grouped_control_helper(
-        surface,
-        groups=control_groups_for_dimension(3),
-        rect=controls_rect,
-        panel_font=fonts.panel_font,
-        hint_font=fonts.hint_font,
-    )
-    if low_lines:
-        low_height = panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 8)
-        if low_height > 10:
-            low_rect = pygame.Rect(
-                panel_rect.x + 8,
-                controls_rect.bottom + 6,
-                panel_rect.width - 16,
-                low_height,
-            )
-            draw_translucent_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
-            draw_text_lines(
-                surface,
-                lines=low_lines,
-                font=fonts.hint_font,
-                start_pos=(low_rect.x + 6, low_rect.y + 5),
-                color=(176, 188, 222),
-                line_gap=3,
-            )
-
-    if state.game_over:
-        over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
-        surface.blit(over, (panel_rect.x + 14, panel_rect.bottom - 26))
 
 
 def _auto_fit_orthographic_zoom(camera: Camera3D,
@@ -804,43 +743,25 @@ def run() -> None:
     )
     fonts = init_fonts()
 
-    running = True
-    while running:
-        menu_screen = open_display(
-            display_settings,
-            caption="3D Tetris – Setup",
-        )
-        settings = run_menu(menu_screen, fonts)
-        if settings is None:
-            break
-
-        cfg = build_config(settings)
-        win_w, win_h = suggested_window_size(cfg)
-        preferred_size = (
-            max(display_settings.windowed_size[0], win_w),
-            max(display_settings.windowed_size[1], win_h),
-        )
-        game_screen = open_display(
-            display_settings,
-            caption="3D Tetris",
-            preferred_windowed_size=preferred_size,
-        )
-
-        back_to_menu = run_game_loop(
+    run_nd_mode_launcher(
+        display_settings=display_settings,
+        fonts=fonts,
+        setup_caption="3D Tetris – Setup",
+        game_caption="3D Tetris",
+        run_menu=lambda menu_screen, active_fonts: run_menu(menu_screen, active_fonts),
+        build_config=build_config,
+        suggested_window_size=suggested_window_size,
+        run_game=lambda game_screen, cfg, active_fonts, settings: run_game_loop(
             game_screen,
             cfg,
-            fonts,
+            active_fonts,
             bot_mode=bot_mode_from_index(settings.bot_mode_index),
             bot_speed_level=settings.bot_speed_level,
             bot_algorithm_index=settings.bot_algorithm_index,
             bot_profile_index=settings.bot_profile_index,
             bot_budget_ms=settings.bot_budget_ms,
-        )
-        if not back_to_menu:
-            running = False
-            continue
-
-        display_settings = capture_windowed_display_settings(display_settings)
+        ),
+    )
 
     pygame.quit()
     sys.exit()

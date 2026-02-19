@@ -9,17 +9,40 @@
 2. Canonical contract regex rules support in:
    - `tools/validate_project_contracts.py`
    - manifest fields: `must_match_regex` and `must_not_match_regex`.
+3. Control UI helper parity/caching regression tests:
+   - `tetris_nd/tests/test_control_ui_helpers.py`
 
 ### Changed
 1. `scripts/ci_check.sh` is now hermetic for lint/test tools:
    - removed global command fallback for `ruff`/`pytest`,
    - requires those modules in the selected `PYTHON_BIN`.
 2. Project contract rules now assert the ci runner behavior and block stale pass-count snapshots in docs.
+3. Control icon rendering now uses cached pre-rendered surfaces keyed by `(action,width,height)`:
+   - `tetris_nd/control_icons.py`
+4. Dimensional helper control rows were refactored to shared row-spec builders with unchanged output contracts:
+   - `tetris_nd/control_helper.py`
+5. Shared cross-screen text/gradient helpers extracted to:
+   - `tetris_nd/ui_utils.py`
+6. Keybindings UI flow split into dedicated input/view helpers:
+   - `tetris_nd/keybindings_menu_input.py`
+   - `tetris_nd/keybindings_menu_view.py`
+7. Shared ND setup->runtime launcher orchestration extracted to:
+   - `tetris_nd/launcher_nd_runner.py`
+8. Playbot lookahead scaffolding now uses shared helper logic:
+   - `tetris_nd/playbot/lookahead_common.py`
+9. Runtime playbot-policy validation refactored from monolith paths into section validators:
+   - `tetris_nd/runtime_config_validation.py`
+10. Pause/settings menu rows are now externally configured and validated:
+   - `config/menu/structure.json`
+   - `tetris_nd/menu_config.py`
+   - `tetris_nd/pause_menu.py`
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
 2. `docs/BACKLOG.md`, `docs/GUIDELINES_RESEARCH.md`, and `docs/RDS_AND_CODEX.md` updated to mark the P2/P3 guardrail items closed.
-3. `docs/rds/RDS_TETRIS_GENERAL.md` updated with bootstrap script and new closure notes.
+3. `docs/rds/RDS_TETRIS_GENERAL.md` updated with bootstrap script and closure notes.
+4. `docs/FEATURE_MAP.md` updated to document helper icon caching behavior.
+5. Backlog and RDS status entries now mark the simplification batch as completed and verified (`ruff`, `C901`, `pytest`).
 
 ## 2026-02-18
 

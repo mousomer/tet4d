@@ -470,6 +470,8 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "launcher_menu": menu_items,
         "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
         "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
+        "pause_menu_rows": _validate_row_list(payload.get("pause_menu_rows"), "pause_menu_rows"),
+        "pause_settings_rows": _validate_row_list(payload.get("pause_settings_rows"), "pause_settings_rows"),
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
@@ -506,6 +508,14 @@ def settings_hub_rows() -> tuple[str, ...]:
 
 def bot_options_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["bot_options_rows"])
+
+
+def pause_menu_rows() -> tuple[str, ...]:
+    return tuple(_structure_payload()["pause_menu_rows"])
+
+
+def pause_settings_rows() -> tuple[str, ...]:
+    return tuple(_structure_payload()["pause_settings_rows"])
 
 
 def setup_fields_for_dimension(dimension: int, *, piece_set_max: int = 0) -> list[FieldSpec]:
