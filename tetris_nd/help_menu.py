@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
+from .help_topics import help_action_topic_registry, help_topics_for_context
 from .key_display import format_key_tuple
 from .keybindings import (
+    active_key_profile,
     binding_action_description,
     binding_group_label,
     runtime_binding_groups_for_dimension,
 )
 from .menu_config import settings_category_docs
+from .menu_layout import LayoutRect, compute_menu_layout_zones
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
-from .ui_utils import draw_vertical_gradient
+from .project_config import project_constant_int
+from .ui_utils import draw_vertical_gradient, fit_text
 
 
 _BG_TOP = (14, 18, 44)
@@ -22,15 +28,54 @@ _BG_BOTTOM = (4, 7, 20)
 _TEXT_COLOR = (232, 232, 240)
 _MUTED_COLOR = (192, 200, 228)
 _HIGHLIGHT = (255, 224, 128)
-_PAGE_COUNT = 9
+_GROUP_ORDER = ("system", "game", "camera", "slice")
+_CONTROL_TOPIC_ID = "movement_rotation"
+_KEY_REFERENCE_TOPIC_ID = "key_reference"
 _SETTINGS_DOCS = settings_category_docs()
+
+_HELP_OUTER_PAD = project_constant_int(("layout", "help", "outer_pad"), 20, min_value=4, max_value=96)
+_HELP_HEADER_EXTRA = project_constant_int(("layout", "help", "header_extra"), 16, min_value=4, max_value=120)
+_HELP_GAP = project_constant_int(("layout", "help", "gap"), 8, min_value=1, max_value=40)
+_HELP_FOOTER_HEIGHT = project_constant_int(("layout", "help", "footer_height"), 24, min_value=12, max_value=80)
+_HELP_MIN_CONTENT_HEIGHT = project_constant_int(
+    ("layout", "help", "min_content_height"),
+    160,
+    min_value=60,
+    max_value=1000,
+)
+_HELP_CONTENT_PAD_X = project_constant_int(("layout", "help", "content_pad_x"), 12, min_value=0, max_value=80)
+_HELP_CONTENT_PAD_Y = project_constant_int(("layout", "help", "content_pad_y"), 8, min_value=0, max_value=80)
+_HELP_COMPACT_WIDTH = project_constant_int(
+    ("layout", "help", "compact_width_threshold"),
+    760,
+    min_value=300,
+    max_value=2000,
+)
+_HELP_COMPACT_HEIGHT = project_constant_int(
+    ("layout", "help", "compact_height_threshold"),
+    460,
+    min_value=220,
+    max_value=1600,
+)
 
 
 @dataclass
 class _HelpState:
     page: int = 0
+    subpage: int = 0
     dimension: int = 2
     running: bool = True
+
+
+def paginate_help_lines(lines: Sequence[str], rows_per_page: int) -> tuple[tuple[str, ...], ...]:
+    if rows_per_page <= 0:
+        rows_per_page = 1
+    if not lines:
+        return (tuple(),)
+    pages: list[tuple[str, ...]] = []
+    for start in range(0, len(lines), rows_per_page):
+        pages.append(tuple(lines[start : start + rows_per_page]))
+    return tuple(pages)
 
 
 def _current_binding_text(dimension: int, action: str, *, group: str = "system") -> str:
@@ -43,288 +88,624 @@ def _draw_gradient(surface: pygame.Surface) -> None:
     draw_vertical_gradient(surface, _BG_TOP, _BG_BOTTOM)
 
 
+def _as_rect(spec: LayoutRect) -> pygame.Rect:
+    return pygame.Rect(spec.x, spec.y, spec.width, spec.height)
+
+
+def is_compact_help_view(*, width: int, height: int) -> bool:
+    return int(width) <= _HELP_COMPACT_WIDTH or int(height) <= _HELP_COMPACT_HEIGHT
+
+
+def _help_layout_zones(surface: pygame.Surface, fonts) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+    width, height = surface.get_size()
+    compact = is_compact_help_view(width=width, height=height)
+    header_extra = max(8, _HELP_HEADER_EXTRA // 2) if compact else _HELP_HEADER_EXTRA
+    footer_height = max(16, _HELP_FOOTER_HEIGHT - 6) if compact else _HELP_FOOTER_HEIGHT
+    gap = max(4, _HELP_GAP - 3) if compact else _HELP_GAP
+    min_content_height = max(90, _HELP_MIN_CONTENT_HEIGHT // 2) if compact else _HELP_MIN_CONTENT_HEIGHT
+    header_height = fonts.title_font.get_height() + fonts.hint_font.get_height() + header_extra
+    zones = compute_menu_layout_zones(
+        width=width,
+        height=height,
+        outer_pad=_HELP_OUTER_PAD,
+        header_height=header_height,
+        footer_height=footer_height,
+        gap=gap,
+        min_content_height=min_content_height,
+    )
+    return _as_rect(zones.frame), _as_rect(zones.header), _as_rect(zones.content), _as_rect(zones.footer)
+
+
+def _draw_content_title(
+    surface: pygame.Surface,
+    *,
+    font: pygame.font.Font,
+    text: str,
+    rect: pygame.Rect,
+) -> int:
+    draw_text = fit_text(font, text, max(40, rect.width - (_HELP_CONTENT_PAD_X * 2)))
+    title = font.render(draw_text, True, _HIGHLIGHT)
+    x = rect.x + max(0, (rect.width - title.get_width()) // 2)
+    y = rect.y + _HELP_CONTENT_PAD_Y
+    surface.blit(title, (x, y))
+    return y + title.get_height() + 8
+
+
+def _line_capacity(font: pygame.font.Font, *, content_rect: pygame.Rect, y_start: int) -> int:
+    available_h = max(1, content_rect.bottom - _HELP_CONTENT_PAD_Y - y_start)
+    row_h = max(1, font.get_height() + 4)
+    return max(1, available_h // row_h)
+
+
 def _draw_lines(
     surface: pygame.Surface,
     font: pygame.font.Font,
-    lines: list[str],
+    lines: Sequence[str],
     *,
-    x: int,
-    y: int,
+    rect: pygame.Rect,
+    y_start: int,
     line_gap: int = 4,
 ) -> None:
-    height = surface.get_height()
+    x = rect.x + _HELP_CONTENT_PAD_X
+    y = max(rect.y, y_start)
+    max_width = max(40, rect.width - (_HELP_CONTENT_PAD_X * 2))
     for line in lines:
-        if y > height - 32:
-            overflow = font.render("...", True, _MUTED_COLOR)
-            surface.blit(overflow, (x, y))
-            break
-
         color = _TEXT_COLOR
         text = line
+        if not line:
+            y += max(4, font.get_height() // 3)
+            continue
         if line.startswith("## "):
             color = _HIGHLIGHT
             text = line[3:]
         elif line.startswith("-- "):
             color = _MUTED_COLOR
             text = line[3:]
-        elif not line:
-            y += max(4, font.get_height() // 3)
-            continue
-
-        surf = font.render(text, True, color)
+        draw_text = fit_text(font, text, max_width)
+        surf = font.render(draw_text, True, color)
         surface.blit(surf, (x, y))
         y += surf.get_height() + line_gap
 
 
-def _draw_overview_page(surface: pygame.Surface, fonts, state: _HelpState, context_label: str) -> None:
-    width, _ = surface.get_size()
-    headline = fonts.hint_font.render("Help Overview", True, _HIGHLIGHT)
-    surface.blit(headline, ((width - headline.get_width()) // 2, 118))
-    lines = [
-        f"## Context: {context_label}",
-        "",
-        "-- This help covers every game type, key category, and feature.",
-        "-- All key names shown here are read live from the active keybinding profile.",
-        "-- Use Left/Right to switch pages.",
-        "-- Use Up/Down to switch dimension on controls/key pages.",
-        "",
-        "## Quick navigation",
-        "- Page 2: controls helper with per-action icons",
-        "- Page 3: full key map for selected dimension",
-        "- Page 4: gameplay features (bot, challenge, exploration)",
-        "- Page 5: settings, profiles, autosave/reset rules",
-        "- Page 6: slicing and grid modes",
-        "- Page 7: menu structure and workflow",
-        "- Page 8: troubleshooting and gameplay shortcuts",
-        "",
-        "## Gameplay shortcut",
-        f"- Help action ({_current_binding_text(state.dimension, 'help')}) opens this menu during gameplay.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=154)
+def _fallback_topic() -> dict[str, Any]:
+    return {
+        "id": "overview",
+        "title": "Help Overview",
+        "summary": "No context-specific help topics were found.",
+        "sections": (
+            {
+                "id": "fallback",
+                "title": "What",
+                "lines": (
+                    "Use Left/Right to switch topics.",
+                    "Use Up/Down to switch dimensions.",
+                ),
+            },
+        ),
+    }
 
 
-def _draw_modes_page(surface: pygame.Surface, fonts) -> None:
+def _topics_for_state(state: _HelpState, context_label: str) -> tuple[dict[str, Any], ...]:
+    topics = help_topics_for_context(dimension=state.dimension, context_label=context_label)
+    if topics:
+        return topics
+    return (_fallback_topic(),)
+
+
+def _current_topic(state: _HelpState, context_label: str) -> tuple[dict[str, Any], tuple[dict[str, Any], ...]]:
+    topics = _topics_for_state(state, context_label)
+    state.page = max(0, min(len(topics) - 1, state.page))
+    return topics[state.page], topics
+
+
+def _cycle_page(state: _HelpState, context_label: str, step: int) -> None:
+    topics = _topics_for_state(state, context_label)
+    state.page = (state.page + step) % len(topics)
+    state.subpage = 0
+
+
+def _cycle_dimension(state: _HelpState, context_label: str, step: int) -> None:
+    current_topic, _ = _current_topic(state, context_label)
+    current_topic_id = str(current_topic.get("id", ""))
+    if step < 0:
+        state.dimension = 4 if state.dimension == 2 else state.dimension - 1
+    else:
+        state.dimension = 2 if state.dimension == 4 else state.dimension + 1
+
+    next_topics = _topics_for_state(state, context_label)
+    next_ids = [str(topic.get("id", "")) for topic in next_topics]
+    state.page = next_ids.index(current_topic_id) if current_topic_id in next_ids else 0
+    state.subpage = 0
+
+
+def _topic_section_lines(topic: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    summary = str(topic.get("summary", "")).strip()
+    if summary:
+        lines.append(f"-- {summary}")
+
+    for section in topic.get("sections", ()):  # type: ignore[assignment]
+        if not isinstance(section, dict):
+            continue
+        section_title = str(section.get("title", "")).strip()
+        if section_title:
+            lines.append("")
+            lines.append(f"## {section_title}")
+        for raw_line in section.get("lines", ()):  # type: ignore[assignment]
+            line = str(raw_line).strip()
+            if not line:
+                continue
+            lines.append(f"- {line}")
+    return lines
+
+
+def help_topic_action_rows(
+    *,
+    topic_id: str,
+    dimension: int,
+    include_all: bool,
+) -> tuple[tuple[str, str, str], ...]:
+    groups = runtime_binding_groups_for_dimension(dimension)
+    action_registry = help_action_topic_registry()
+    default_topic = str(action_registry["default_topic"])
+    action_topics = action_registry["action_topics"]
+    rows: list[tuple[str, str, str]] = []
+
+    for group in _GROUP_ORDER:
+        actions = groups.get(group, {})
+        if not actions:
+            continue
+        for action_name in sorted(actions.keys()):
+            mapped_topic = action_topics.get(action_name, default_topic)
+            if include_all or mapped_topic == topic_id:
+                keys = format_key_tuple(tuple(actions[action_name]))
+                key_text = keys if keys else "(unbound)"
+                rows.append((group, action_name, key_text))
+    return tuple(rows)
+
+
+def _topic_action_lines(
+    *,
+    topic_id: str,
+    dimension: int,
+    include_all: bool,
+) -> list[str]:
+    rows = help_topic_action_rows(
+        topic_id=topic_id,
+        dimension=dimension,
+        include_all=include_all,
+    )
+    lines: list[str] = []
+    grouped: dict[str, list[tuple[str, str]]] = {group: [] for group in _GROUP_ORDER}
+    for group, action_name, key_text in rows:
+        grouped.setdefault(group, []).append((action_name, key_text))
+
+    for group in _GROUP_ORDER:
+        action_rows = grouped.get(group, [])
+        if not action_rows:
+            continue
+        lines.append(f"-- {binding_group_label(group)}")
+        for action_name, key_text in action_rows:
+            desc = binding_action_description(action_name)
+            lines.append(f"{key_text}: {desc}")
+    return lines
+
+
+def help_topic_action_lines(
+    *,
+    topic_id: str,
+    dimension: int,
+    include_all: bool = False,
+) -> tuple[str, ...]:
+    return tuple(
+        _topic_action_lines(
+            topic_id=topic_id,
+            dimension=max(2, min(4, int(dimension))),
+            include_all=include_all,
+        )
+    )
+
+
+def _extend_overview_lines(
+    lines: list[str],
+    *,
+    state: _HelpState,
+    context_label: str,
+    topics: Sequence[dict[str, Any]],
+    compact: bool,
+) -> None:
+    lines.extend(
+        [
+            "",
+            f"## Context: {context_label}",
+            f"- Active profile: {active_key_profile()}",
+            f"- Help key: {_current_binding_text(state.dimension, 'help')}",
+            "- Left/Right switches topic. Up/Down switches dimension.",
+            "- [ or ] (also PgUp/PgDn) switches subpage when needed.",
+            "",
+            "## Topics in this context",
+        ]
+    )
+    max_topics = 5 if compact else len(topics)
+    for idx, topic in enumerate(topics[:max_topics], start=1):
+        title = str(topic.get("title", "Topic"))
+        lines.append(f"- {idx}. {title}")
+    if compact and len(topics) > max_topics:
+        lines.append(f"- ... and {len(topics) - max_topics} more topics")
+
+
+def _extend_game_types_lines(lines: list[str], *, compact: bool) -> None:
+    if compact:
+        lines.extend(
+            [
+                "",
+                "## Piece sets",
+                "- Use Full Key Map topic for complete live key coverage.",
+            ]
+        )
+        return
     piece_sets_2d = ", ".join(piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS)
     piece_sets_3d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(3))
     piece_sets_4d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(4))
-    lines = [
-        "## Game Types",
-        "",
-        "## 2D",
-        "- Classic board with row clears on the X-line width.",
-        f"- Piece sets: {piece_sets_2d}",
-        "",
-        "## 3D",
-        "- Full 3D board with camera yaw/pitch/projection controls.",
-        f"- Piece sets: {piece_sets_3d}",
-        "",
-        "## 4D",
-        "- Displayed as multiple 3D boards (one board per W-layer).",
-        f"- Piece sets: {piece_sets_4d}",
-        "",
-        "## Shared mechanics",
-        "- Toggle grid modes, use pause menu, switch profiles, use bots.",
-        "- Scoring includes placement points + clear points with assist multipliers.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
+    lines.extend(
+        [
+            "",
+            "## Piece sets",
+            f"- 2D: {piece_sets_2d}",
+            f"- 3D: {piece_sets_3d}",
+            f"- 4D: {piece_sets_4d}",
+        ]
+    )
 
 
-def _draw_controls_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
-    width, height = surface.get_size()
-    header = fonts.hint_font.render(f"Controls Helper ({state.dimension}D)", True, _HIGHLIGHT)
-    surface.blit(header, ((width - header.get_width()) // 2, 118))
+def _extend_features_lines(lines: list[str], *, compact: bool) -> None:
+    if compact:
+        lines.extend(
+            [
+                "",
+                "## Practical notes",
+                "- Challenge mode pre-fills lower layers.",
+                "- Exploration mode disables gravity/lock/clear.",
+            ]
+        )
+        return
+    lines.extend(
+        [
+            "",
+            "## Practical notes",
+            "- Challenge mode prefills lower layers to raise early-game pressure.",
+            "- Exploration mode disables gravity/locking/clears for practice.",
+            "- Dry-run checks whether a selected setup can clear layers.",
+        ]
+    )
 
-    helper_rect = pygame.Rect(24, 150, width - 48, max(120, height - 176))
+
+def _extend_settings_lines(lines: list[str], *, compact: bool) -> None:
+    lines.extend(
+        [
+            "",
+            "## Settings categories",
+        ]
+    )
+    docs = _SETTINGS_DOCS[:3] if compact else _SETTINGS_DOCS
+    for entry in docs:
+        lines.append(f"- {entry['label']}: {entry['description']}")
+    if compact and len(_SETTINGS_DOCS) > len(docs):
+        lines.append("- Open full-size window to view all category descriptions.")
+
+
+def _extend_camera_slice_lines(lines: list[str], *, compact: bool) -> None:
+    lines.extend(
+        [
+            "",
+            "## Grid modes",
+            "- OFF: board shadow only.",
+            "- EDGE: only outer board edges.",
+            "- FULL: full lattice grid.",
+            "- HELPER: only lines intersecting active piece cells.",
+        ]
+    )
+    if compact:
+        return
+    lines.extend(
+        [
+            "",
+            "## Slice note",
+            "- Slicing fixes one axis coordinate for focused inspection.",
+            "- 4D is shown as multiple 3D boards (one per W layer).",
+        ]
+    )
+
+
+def _extend_workflow_lines(lines: list[str], *, compact: bool) -> None:
+    lines.extend(
+        [
+            "",
+            "## Launcher sections",
+            "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
+        ]
+    )
+    if compact:
+        lines.append("- Pause menu keeps Help/Settings/Keybindings/Bot options parity.")
+        return
+    lines.extend(
+        [
+            "",
+            "## Keybindings menu",
+            "- Sections: General, 2D, 3D, 4D.",
+            "- Rows show action, key(s), and action description.",
+            "",
+            "## Pause parity",
+            "- Pause includes Help, Settings, Keybindings, Bot Options, Restart, and Quit.",
+        ]
+    )
+
+
+def _extend_troubleshooting_lines(lines: list[str], state: _HelpState, *, compact: bool) -> None:
+    lines.extend(
+        [
+            "",
+            "## Quick recovery",
+            "- Re-open Keybindings Setup if controls feel inconsistent.",
+            "- Use explicit Save when you want a durable checkpoint.",
+            "- Use Edge/OFF grid if visuals feel crowded.",
+        ]
+    )
+    if compact:
+        return
+    lines.extend(
+        [
+            "",
+            "## Gameplay shortcuts",
+            f"- Help: {_current_binding_text(state.dimension, 'help')}",
+            f"- Grid mode: {_current_binding_text(state.dimension, 'toggle_grid')}",
+            f"- Pause menu: {_current_binding_text(state.dimension, 'menu')}",
+        ]
+    )
+
+
+def _topic_text_lines(
+    *,
+    topic: dict[str, Any],
+    state: _HelpState,
+    context_label: str,
+    topics: Sequence[dict[str, Any]],
+    compact: bool,
+) -> list[str]:
+    topic_id = str(topic.get("id", ""))
+    lines = _topic_section_lines(topic)
+
+    if topic_id == "overview":
+        _extend_overview_lines(lines, state=state, context_label=context_label, topics=topics, compact=compact)
+    elif topic_id == "game_types":
+        _extend_game_types_lines(lines, compact=compact)
+    elif topic_id == "gameplay_features":
+        _extend_features_lines(lines, compact=compact)
+    elif topic_id == "settings_profiles":
+        _extend_settings_lines(lines, compact=compact)
+    elif topic_id == "camera_and_slicing":
+        _extend_camera_slice_lines(lines, compact=compact)
+    elif topic_id == "menu_workflows":
+        _extend_workflow_lines(lines, compact=compact)
+    elif topic_id == "troubleshooting":
+        _extend_troubleshooting_lines(lines, state, compact=compact)
+
+    include_all = topic_id == _KEY_REFERENCE_TOPIC_ID
+    action_lines = help_topic_action_lines(
+        topic_id=topic_id,
+        dimension=state.dimension,
+        include_all=include_all,
+    )
+    if action_lines:
+        lines.extend(["", "## Live keys (active profile)", *action_lines])
+    return lines
+
+
+def _group_box_height(*, rows: int, panel_font: pygame.font.Font, hint_font: pygame.font.Font) -> int:
+    base = 10 + hint_font.get_height() + 6 + (rows * (panel_font.get_height() + 2)) + 8
+    return base + 6
+
+
+def _paginate_control_groups(
+    groups: Sequence[tuple[str, tuple[str, ...]]],
+    *,
+    panel_font: pygame.font.Font,
+    hint_font: pygame.font.Font,
+    available_height: int,
+) -> tuple[tuple[tuple[str, tuple[str, ...]], ...], ...]:
+    pages: list[tuple[tuple[str, tuple[str, ...]], ...]] = []
+    current: list[tuple[str, tuple[str, ...]]] = []
+    used_height = 0
+
+    for group_name, rows in groups:
+        block_h = _group_box_height(rows=len(rows), panel_font=panel_font, hint_font=hint_font)
+        if current and used_height + block_h > available_height:
+            pages.append(tuple(current))
+            current = [(group_name, rows)]
+            used_height = block_h
+            continue
+        current.append((group_name, rows))
+        used_height += block_h
+
+    if current:
+        pages.append(tuple(current))
+    if not pages:
+        pages.append(tuple())
+    return tuple(pages)
+
+
+def _draw_controls_topic(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    topic: dict[str, Any],
+    state: _HelpState,
+    content_rect: pygame.Rect,
+) -> int:
+    title = str(topic.get("title", "Controls"))
+    y = _draw_content_title(surface, font=fonts.hint_font, text=f"{title} ({state.dimension}D)", rect=content_rect)
+    groups = tuple(control_groups_for_dimension(state.dimension))
+    helper_rect = pygame.Rect(
+        content_rect.x + _HELP_CONTENT_PAD_X,
+        y,
+        max(1, content_rect.width - (_HELP_CONTENT_PAD_X * 2)),
+        max(1, content_rect.bottom - y - _HELP_CONTENT_PAD_Y),
+    )
+    pages = _paginate_control_groups(
+        groups,
+        panel_font=fonts.panel_font,
+        hint_font=fonts.hint_font,
+        available_height=helper_rect.height,
+    )
+    state.subpage = max(0, min(len(pages) - 1, state.subpage))
+    page_groups = pages[state.subpage]
     draw_grouped_control_helper(
         surface,
-        groups=control_groups_for_dimension(state.dimension),
+        groups=page_groups,
         rect=helper_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
     )
+    return len(pages)
 
 
-def _draw_key_reference_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
-    width, height = surface.get_size()
-    title = fonts.hint_font.render(f"Full Key Map ({state.dimension}D)", True, _HIGHLIGHT)
-    surface.blit(title, ((width - title.get_width()) // 2, 118))
-    sub = fonts.hint_font.render(
-        f"Live from active profile: {_current_binding_text(state.dimension, 'menu')}={binding_action_description('menu')}",
-        True,
-        _MUTED_COLOR,
+def _draw_topic_text(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    topic: dict[str, Any],
+    state: _HelpState,
+    context_label: str,
+    topics: Sequence[dict[str, Any]],
+    content_rect: pygame.Rect,
+    compact: bool,
+) -> int:
+    title = str(topic.get("title", "Help"))
+    y = _draw_content_title(surface, font=fonts.hint_font, text=f"{title} ({state.dimension}D)", rect=content_rect)
+    lines = _topic_text_lines(
+        topic=topic,
+        state=state,
+        context_label=context_label,
+        topics=topics,
+        compact=compact,
     )
-    surface.blit(sub, ((width - sub.get_width()) // 2, 140))
-
-    groups = runtime_binding_groups_for_dimension(state.dimension)
-    group_order = ("system", "game", "camera", "slice")
-    y = 172
-    line_h = fonts.hint_font.get_height() + 4
-    left = 36
-
-    for group_name in group_order:
-        if group_name not in groups:
-            continue
-
-        header = fonts.hint_font.render(binding_group_label(group_name), True, _HIGHLIGHT)
-        surface.blit(header, (left, y))
-        y += header.get_height() + 3
-
-        for action_name in sorted(groups[group_name].keys()):
-            keys = format_key_tuple(tuple(groups[group_name][action_name]))
-            desc = binding_action_description(action_name)
-            row = f"{keys:<18} {desc}"
-            row_surf = fonts.hint_font.render(row, True, _TEXT_COLOR)
-            surface.blit(row_surf, (left + 12, y))
-            y += line_h
-            if y > height - 40:
-                overflow = fonts.hint_font.render("...", True, _MUTED_COLOR)
-                surface.blit(overflow, (left + 12, y))
-                return
-        y += 6
-
-
-def _draw_features_page(surface: pygame.Surface, fonts) -> None:
-    lines = [
-        "## Gameplay Features",
-        "",
-        "## Bot modes",
-        "- Off: human-only control.",
-        "- Assist/Step/Auto: bot can suggest or play based on selected mode.",
-        "",
-        "## Dry-run",
-        "- Setup menu includes dry-run validation (profile-independent command).",
-        "- Useful for testing layer clears and piece-set viability.",
-        "",
-        "## Challenge mode",
-        "- Starts with lower layers prefilled randomly.",
-        "- Increases difficulty and changes opening planning.",
-        "",
-        "## Exploration mode",
-        "- No gravity, no locking, no clears.",
-        "- Hard-drop becomes piece-cycling for movement practice.",
-        "- Board auto-sizes to minimal dimensions that fit and rotate selected pieces.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
-
-
-def _draw_settings_page(surface: pygame.Surface, fonts) -> None:
-    lines: list[str] = [
-        "## Settings, Profiles, and Persistence",
-        "",
-        "## Save policy",
-        "- Autosave: silent session continuity.",
-        "- Explicit Save: deliberate durable checkpoint.",
-        "- Reset defaults: always requires confirmation.",
-        "",
-        "## Keybinding profiles",
-        "- Create/Rename/Save-As/Delete custom profiles.",
-        "- Load/Save keybinding files per dimension.",
-        "- General/System keys are separated from 2D/3D/4D-specific groups.",
-        "",
-        "## Settings categories",
-    ]
-    for entry in _SETTINGS_DOCS:
-        lines.append(f"- {entry['label']}: {entry['description']}")
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
-
-
-def _draw_slice_grid_page(surface: pygame.Surface, fonts) -> None:
-    lines = [
-        "## Slicing and Grid",
-        "",
-        "## Slice",
-        "- Slicing fixes one axis coordinate for focused inspection.",
-        "- In 4D, each W-layer is rendered as a separate 3D board.",
-        "",
-        "## Grid modes",
-        "- OFF: board shadow only.",
-        "- EDGE: only outer board edges.",
-        "- FULL: full lattice grid.",
-        "- HELPER: only lines that intersect current piece cells.",
-        "",
-        "## 4D helper behavior",
-        "- Helper lines are now layer-local.",
-        "- Lines appear only on W-boards containing current piece cells.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
-
-
-def _draw_workflows_page(surface: pygame.Surface, fonts) -> None:
-    lines = [
-        "## Menus and Workflow",
-        "",
-        "## Main launcher",
-        "- Play 2D / 3D / 4D",
-        "- Settings",
-        "- Keybindings Setup",
-        "- Bot Options",
-        "- Help",
-        "",
-        "## Keybindings Setup",
-        "- Top sections: General, 2D, 3D, 4D.",
-        "- Enter opens section, Tab/Esc returns to sections.",
-        "- Row view: action, bound key(s), description, and icon.",
-        "",
-        "## Pause parity",
-        "- Pause menus expose Help, Settings, Bot Options, Keybindings, Restart, and Quit.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
-
-
-def _draw_troubleshooting_page(surface: pygame.Surface, fonts, state: _HelpState) -> None:
-    dimension = state.dimension
-    lines = [
-        "## Troubleshooting",
-        "",
-        "- If controls feel wrong, open Keybindings Setup and verify active profile.",
-        "- If settings look stale, save explicitly and re-open menu.",
-        "- If visuals are crowded, reduce helper overlays and keep Edge/Off grid.",
-        "- If gameplay debugging is needed, use debug piece sets + dry-run.",
-        "",
-        "## Gameplay help",
-        f"- {_current_binding_text(dimension, 'help')}: open help directly during gameplay.",
-        f"- {_current_binding_text(dimension, 'toggle_grid')}: cycle grid mode.",
-        f"- {_current_binding_text(dimension, 'menu')}: open pause menu.",
-        "",
-        "## Exploration mode tip",
-        "- Turn it on in setup to practice movement/rotation without gravity pressure.",
-    ]
-    _draw_lines(surface, fonts.hint_font, lines, x=34, y=132)
+    rows_per_page = _line_capacity(fonts.hint_font, content_rect=content_rect, y_start=y)
+    line_pages = paginate_help_lines(lines, rows_per_page)
+    state.subpage = max(0, min(len(line_pages) - 1, state.subpage))
+    _draw_lines(
+        surface,
+        fonts.hint_font,
+        line_pages[state.subpage],
+        rect=content_rect,
+        y_start=y,
+    )
+    return len(line_pages)
 
 
 def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label: str) -> None:
     _draw_gradient(surface)
-    width, _ = surface.get_size()
+    width, height = surface.get_size()
+    compact = is_compact_help_view(width=width, height=height)
+    frame_rect, header_rect, content_rect, footer_rect = _help_layout_zones(surface, fonts)
+
+    topic, topics = _current_topic(state, context_label)
+    total_pages = len(topics)
+
     help_binding = _current_binding_text(state.dimension, "help")
-    title = fonts.title_font.render("Help & Explanations", True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
-        f"Left/Right page   Up/Down dimension   Esc back   Help key: {help_binding} (live profile)",
+    title_text = fit_text(
+        fonts.title_font,
+        "Help & Explanations",
+        max(40, header_rect.width - (_HELP_CONTENT_PAD_X * 2)),
+    )
+    subtitle_text = (
+        f"{context_label} | {state.dimension}D | Help: {help_binding}"
+        if compact
+        else f"Context: {context_label}   Dim: {state.dimension}D   Help: {help_binding} (live profile)"
+    )
+    subtitle_draw = fit_text(
+        fonts.hint_font,
+        subtitle_text,
+        max(40, header_rect.width - (_HELP_CONTENT_PAD_X * 2)),
+    )
+    title = fonts.title_font.render(title_text, True, _TEXT_COLOR)
+    subtitle = fonts.hint_font.render(subtitle_draw, True, _MUTED_COLOR)
+    title_y = header_rect.y + _HELP_CONTENT_PAD_Y
+    subtitle_y = title_y + title.get_height() + 6
+    surface.blit(title, (header_rect.x + max(0, (header_rect.width - title.get_width()) // 2), title_y))
+    surface.blit(subtitle, (header_rect.x + max(0, (header_rect.width - subtitle.get_width()) // 2), subtitle_y))
+
+    topic_id = str(topic.get("id", ""))
+    if topic_id == _CONTROL_TOPIC_ID:
+        subpage_count = _draw_controls_topic(
+            surface,
+            fonts,
+            topic=topic,
+            state=state,
+            content_rect=content_rect,
+        )
+    else:
+        subpage_count = _draw_topic_text(
+            surface,
+            fonts,
+            topic=topic,
+            state=state,
+            context_label=context_label,
+            topics=topics,
+            content_rect=content_rect,
+            compact=compact,
+        )
+
+    state.subpage = max(0, min(subpage_count - 1, state.subpage))
+    page_label = fonts.hint_font.render(f"Topic {state.page + 1}/{total_pages}", True, _MUTED_COLOR)
+    part_label = fonts.hint_font.render(f"Part {state.subpage + 1}/{subpage_count}", True, _MUTED_COLOR)
+    page_x = frame_rect.right - page_label.get_width() - _HELP_CONTENT_PAD_X
+    part_x = page_x
+    page_y = header_rect.y + _HELP_CONTENT_PAD_Y
+    part_y = page_y + page_label.get_height() + 3
+    surface.blit(page_label, (page_x, page_y))
+    surface.blit(part_label, (part_x, part_y))
+
+    footer_msg = fonts.hint_font.render(
+        fit_text(
+            fonts.hint_font,
+            (
+                "Esc | <- -> topic | [ ] part"
+                if compact
+                else "Esc back | Left/Right topic | Up/Down dimension | [ ] subpage"
+            ),
+            max(40, footer_rect.width - (_HELP_CONTENT_PAD_X * 2)),
+        ),
         True,
         _MUTED_COLOR,
     )
-    page_label = fonts.hint_font.render(f"Page {state.page + 1}/{_PAGE_COUNT}", True, _MUTED_COLOR)
-    surface.blit(title, ((width - title.get_width()) // 2, 34))
-    surface.blit(subtitle, ((width - subtitle.get_width()) // 2, 82))
-    surface.blit(page_label, (width - page_label.get_width() - 20, 16))
+    footer_x = footer_rect.x + max(0, (footer_rect.width - footer_msg.get_width()) // 2)
+    footer_y = footer_rect.y + max(0, (footer_rect.height - footer_msg.get_height()) // 2)
+    surface.blit(footer_msg, (footer_x, footer_y))
 
-    if state.page == 0:
-        _draw_overview_page(surface, fonts, state, context_label)
-    elif state.page == 1:
-        _draw_modes_page(surface, fonts)
-    elif state.page == 2:
-        _draw_controls_page(surface, fonts, state)
-    elif state.page == 3:
-        _draw_key_reference_page(surface, fonts, state)
-    elif state.page == 4:
-        _draw_features_page(surface, fonts)
-    elif state.page == 5:
-        _draw_settings_page(surface, fonts)
-    elif state.page == 6:
-        _draw_slice_grid_page(surface, fonts)
-    elif state.page == 7:
-        _draw_workflows_page(surface, fonts)
-    else:
-        _draw_troubleshooting_page(surface, fonts, state)
+
+def _handle_help_keydown(state: _HelpState, *, context_label: str, key: int) -> bool:
+    if key == pygame.K_ESCAPE:
+        state.running = False
+        return True
+    if key == pygame.K_LEFT:
+        _cycle_page(state, context_label, -1)
+        return True
+    if key == pygame.K_RIGHT:
+        _cycle_page(state, context_label, 1)
+        return True
+    if key == pygame.K_UP:
+        _cycle_dimension(state, context_label, -1)
+        return True
+    if key == pygame.K_DOWN:
+        _cycle_dimension(state, context_label, 1)
+        return True
+    if key in (pygame.K_LEFTBRACKET, pygame.K_PAGEUP, pygame.K_COMMA):
+        state.subpage = max(0, state.subpage - 1)
+        return True
+    if key in (pygame.K_RIGHTBRACKET, pygame.K_PAGEDOWN, pygame.K_PERIOD):
+        state.subpage += 1
+        return True
+    return False
 
 
 def run_help_menu(
@@ -344,22 +725,7 @@ def run_help_menu(
                 return screen
             if event.type != pygame.KEYDOWN:
                 continue
-
-            if event.key == pygame.K_ESCAPE:
-                state.running = False
-                break
-            if event.key == pygame.K_LEFT:
-                state.page = (state.page - 1) % _PAGE_COUNT
-                continue
-            if event.key == pygame.K_RIGHT:
-                state.page = (state.page + 1) % _PAGE_COUNT
-                continue
-            if event.key == pygame.K_UP:
-                state.dimension = 4 if state.dimension == 2 else state.dimension - 1
-                continue
-            if event.key == pygame.K_DOWN:
-                state.dimension = 2 if state.dimension == 4 else state.dimension + 1
-                continue
+            _handle_help_keydown(state, context_label=context_label, key=event.key)
 
         _draw_help(screen, fonts, state, context_label)
         pygame.display.flip()

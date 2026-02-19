@@ -10,6 +10,7 @@ KeyBindingMap = Dict[str, KeyTuple]
 
 PROFILE_SMALL = "small"
 PROFILE_FULL = "full"
+PROFILE_MACBOOK = "macbook"
 
 
 def _merge_bindings(*maps: dict[str, KeyTuple]) -> KeyBindingMap:
@@ -76,8 +77,8 @@ def profile_movement_maps(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, K
         "move_x_pos": (pygame.K_RIGHT,),
         "move_z_neg": (pygame.K_UP,),
         "move_z_pos": (pygame.K_DOWN,),
-        "move_w_neg": (pygame.K_COMMA,),
-        "move_w_pos": (pygame.K_PERIOD,),
+        "move_w_neg": (pygame.K_n,),
+        "move_w_pos": (pygame.K_SLASH,),
         "move_y_neg": (pygame.K_PAGEUP,),
         "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
@@ -182,6 +183,24 @@ DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
 }
 
 
+DEFAULT_CAMERA_KEYS_4D_MACBOOK: KeyBindingMap = {
+    "yaw_fine_neg": (pygame.K_h,),
+    "yaw_neg": (pygame.K_j,),
+    "yaw_pos": (pygame.K_k,),
+    "yaw_fine_pos": (pygame.K_l,),
+    "pitch_pos": (pygame.K_u,),
+    "pitch_neg": (pygame.K_o,),
+    "view_xw_neg": (pygame.K_1,),
+    "view_xw_pos": (pygame.K_2,),
+    "view_zw_neg": (pygame.K_3,),
+    "view_zw_pos": (pygame.K_4,),
+    "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
+    "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
+    "reset": (pygame.K_BACKSPACE,),
+    "cycle_projection": (pygame.K_p,),
+}
+
+
 DEFAULT_SLICE_KEYS_3D: KeyBindingMap = {
     "slice_z_neg": (pygame.K_LEFTBRACKET,),
     "slice_z_pos": (pygame.K_RIGHTBRACKET,),
@@ -193,6 +212,24 @@ DEFAULT_SLICE_KEYS_4D: KeyBindingMap = {
     "slice_z_pos": (pygame.K_RIGHTBRACKET,),
     "slice_w_neg": (pygame.K_SEMICOLON,),
     "slice_w_pos": (pygame.K_QUOTE,),
+}
+
+
+DEFAULT_SYSTEM_KEYS: KeyBindingMap = {
+    "quit": (pygame.K_ESCAPE,),
+    "menu": (pygame.K_m,),
+    "restart": (pygame.K_y,),
+    "toggle_grid": (pygame.K_c,),
+    "help": (pygame.K_F1,),
+}
+
+
+DEFAULT_SYSTEM_KEYS_MACBOOK: KeyBindingMap = {
+    "quit": (pygame.K_ESCAPE,),
+    "menu": (pygame.K_m,),
+    "restart": (pygame.K_y,),
+    "toggle_grid": (pygame.K_c,),
+    "help": (pygame.K_TAB,),
 }
 
 
@@ -211,6 +248,18 @@ def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyB
         _merge_bindings(movement_3d, rotations_3d),
         _merge_bindings(movement_4d, rotations_4d),
     )
+
+
+def default_camera_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap]:
+    if profile == PROFILE_MACBOOK:
+        return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D_MACBOOK)
+    return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D)
+
+
+def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
+    if profile == PROFILE_MACBOOK:
+        return dict(DEFAULT_SYSTEM_KEYS_MACBOOK)
+    return dict(DEFAULT_SYSTEM_KEYS)
 
 
 DISABLED_KEYS_2D: KeyTuple = (
@@ -234,6 +283,8 @@ DISABLED_KEYS_2D: KeyTuple = (
     pygame.K_8,
     pygame.K_9,
     pygame.K_0,
+    pygame.K_n,
+    pygame.K_SLASH,
     pygame.K_COMMA,
     pygame.K_PERIOD,
     pygame.K_LEFTBRACKET,

@@ -28,7 +28,9 @@
     ],
     "canonical_schemas": [
       "config/schema/menu_settings.schema.json",
-      "config/schema/save_state.schema.json"
+      "config/schema/save_state.schema.json",
+      "config/schema/help_topics.schema.json",
+      "config/schema/help_action_map.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -50,12 +52,16 @@
       "tetris_nd/tests/test_score_analyzer.py",
       "tetris_nd/tests/test_runtime_config.py",
       "tetris_nd/tests/test_menu_policy.py",
-      "tetris_nd/tests/test_project_config.py"
+      "tetris_nd/tests/test_project_config.py",
+      "tetris_nd/tests/test_help_topics.py",
+      "tetris_nd/tests/test_help_menu.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",
       "config/menu/structure.json",
       "config/topology/designer_presets.json",
+      "config/help/topics.json",
+      "config/help/action_map.json",
       "config/gameplay/tuning.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
@@ -221,6 +227,41 @@
       ]
     },
     {
+      "file": "config/schema/help_topics.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d help topics registry\"",
+        "\"topics\""
+      ]
+    },
+    {
+      "file": "config/schema/help_action_map.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d help action topic map\"",
+        "\"action_topics\""
+      ]
+    },
+    {
+      "file": "config/help/topics.json",
+      "must_contain": [
+        "\"version\"",
+        "\"topics\"",
+        "\"id\"",
+        "\"lane\"",
+        "\"sections\""
+      ]
+    },
+    {
+      "file": "config/help/action_map.json",
+      "must_contain": [
+        "\"version\"",
+        "\"default_topic\"",
+        "\"action_topics\"",
+        "\"move_x_neg\""
+      ]
+    },
+    {
       "file": "docs/migrations/menu_settings.md",
       "must_contain": [
         "## Version 1",
@@ -294,6 +335,16 @@
       "paths": [
         "docs/help/HELP_INDEX.md",
         "assets/help/manifest.json"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Help topic contract and schemas",
+      "paths": [
+        "config/help/topics.json",
+        "config/help/action_map.json",
+        "config/schema/help_topics.schema.json",
+        "config/schema/help_action_map.schema.json"
       ],
       "status": "connected"
     },

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = PROJECT_ROOT / "config/project/canonical_maintenance.json"
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 @dataclass(frozen=True)
@@ -104,6 +107,186 @@ def _validate_required_json_files(manifest: dict[str, object]) -> list[Validatio
 
         _validate_schema_payload(rel, payload, issues)
         _validate_replay_manifest_payload(rel, payload, issues)
+    return issues
+
+
+def _help_contract_paths(manifest: dict[str, object]) -> tuple[str, str] | None:
+    required = set(_iter_required_paths(manifest))
+    topics_rel = "config/help/topics.json"
+    map_rel = "config/help/action_map.json"
+    if topics_rel not in required or map_rel not in required:
+        return None
+    return topics_rel, map_rel
+
+
+def _load_help_payloads(
+    *,
+    topics_rel: str,
+    map_rel: str,
+    issues: list[ValidationIssue],
+) -> tuple[dict[str, object], dict[str, object]] | None:
+    topics_path = PROJECT_ROOT / topics_rel
+    map_path = PROJECT_ROOT / map_rel
+    if not topics_path.exists() or not map_path.exists():
+        return None
+    topics_payload = _load_json_payload(topics_path, topics_rel, issues)
+    map_payload = _load_json_payload(map_path, map_rel, issues)
+    if not isinstance(topics_payload, dict) or not isinstance(map_payload, dict):
+        return None
+    return topics_payload, map_payload
+
+
+def _collect_topic_lanes(
+    topics_payload: dict[str, object],
+    *,
+    topics_rel: str,
+    issues: list[ValidationIssue],
+) -> dict[str, str]:
+    raw_topics = topics_payload.get("topics")
+    if not isinstance(raw_topics, list) or not raw_topics:
+        issues.append(ValidationIssue("json", f"{topics_rel} must define non-empty list 'topics'"))
+        return {}
+
+    topic_lanes: dict[str, str] = {}
+    for idx, raw_topic in enumerate(raw_topics):
+        if not isinstance(raw_topic, dict):
+            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}] must be an object"))
+            continue
+        topic_id = raw_topic.get("id")
+        if not isinstance(topic_id, str) or not topic_id.strip():
+            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}].id must be a non-empty string"))
+            continue
+        lane = raw_topic.get("lane")
+        if not isinstance(lane, str) or not lane.strip():
+            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}].lane must be a non-empty string"))
+            continue
+        if topic_id in topic_lanes:
+            issues.append(ValidationIssue("json", f"{topics_rel} duplicate topic id: {topic_id}"))
+            continue
+        topic_lanes[topic_id] = lane.strip().lower()
+    return topic_lanes
+
+
+def _collect_action_topics(
+    map_payload: dict[str, object],
+    *,
+    map_rel: str,
+    topic_ids: set[str],
+    issues: list[ValidationIssue],
+) -> dict[str, str]:
+    default_topic = map_payload.get("default_topic")
+    if not isinstance(default_topic, str) or not default_topic.strip():
+        issues.append(ValidationIssue("json", f"{map_rel}.default_topic must be a non-empty string"))
+    elif default_topic not in topic_ids:
+        issues.append(ValidationIssue("json", f"{map_rel}.default_topic references unknown topic id: {default_topic}"))
+
+    raw_action_topics = map_payload.get("action_topics")
+    if not isinstance(raw_action_topics, dict) or not raw_action_topics:
+        issues.append(ValidationIssue("json", f"{map_rel}.action_topics must be a non-empty object"))
+        return {}
+
+    action_topics: dict[str, str] = {}
+    for action, topic_id in raw_action_topics.items():
+        if not isinstance(action, str) or not action.strip():
+            issues.append(ValidationIssue("json", f"{map_rel}.action_topics includes non-string action key"))
+            continue
+        if not isinstance(topic_id, str) or not topic_id.strip():
+            issues.append(ValidationIssue("json", f"{map_rel}.action_topics.{action} must be a non-empty string"))
+            continue
+        if topic_id not in topic_ids:
+            issues.append(ValidationIssue("json", f"{map_rel}.action_topics.{action} references unknown topic id: {topic_id}"))
+        action_topics[action] = topic_id
+    return action_topics
+
+
+def _validate_action_topics_coverage(
+    *,
+    map_rel: str,
+    action_topics: dict[str, str],
+    issues: list[ValidationIssue],
+) -> None:
+    from tetris_nd.keybindings_catalog import binding_action_ids
+
+    known_actions = set(binding_action_ids())
+    mapped_actions = set(action_topics.keys())
+
+    unknown_actions = sorted(mapped_actions - known_actions)
+    if unknown_actions:
+        issues.append(
+            ValidationIssue(
+                "json",
+                f"{map_rel}.action_topics includes unknown action ids: {', '.join(unknown_actions)}",
+            )
+        )
+
+    missing_actions = sorted(known_actions - mapped_actions)
+    if missing_actions:
+        issues.append(
+            ValidationIssue(
+                "json",
+                f"{map_rel}.action_topics missing action ids: {', '.join(missing_actions)}",
+            )
+        )
+
+
+def _validate_action_topic_lanes(
+    *,
+    map_rel: str,
+    action_topics: dict[str, str],
+    topic_lanes: dict[str, str],
+    issues: list[ValidationIssue],
+) -> None:
+    allowed_lanes = {"quick", "full"}
+    invalid_actions = [
+        f"{action}->{topic_id}({topic_lanes.get(topic_id, 'unknown')})"
+        for action, topic_id in sorted(action_topics.items())
+        if topic_lanes.get(topic_id) not in allowed_lanes
+    ]
+    if invalid_actions:
+        issues.append(
+            ValidationIssue(
+                "json",
+                f"{map_rel}.action_topics should map to quick/full help lanes only: {', '.join(invalid_actions)}",
+            )
+        )
+
+
+def _validate_help_topic_contract(manifest: dict[str, object]) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    paths = _help_contract_paths(manifest)
+    if paths is None:
+        return issues
+    topics_rel, map_rel = paths
+
+    payloads = _load_help_payloads(topics_rel=topics_rel, map_rel=map_rel, issues=issues)
+    if payloads is None:
+        return issues
+    topics_payload, map_payload = payloads
+
+    topic_lanes = _collect_topic_lanes(topics_payload, topics_rel=topics_rel, issues=issues)
+    if not topic_lanes:
+        return issues
+
+    action_topics = _collect_action_topics(
+        map_payload,
+        map_rel=map_rel,
+        topic_ids=set(topic_lanes.keys()),
+        issues=issues,
+    )
+    if not action_topics:
+        return issues
+
+    _validate_action_topics_coverage(
+        map_rel=map_rel,
+        action_topics=action_topics,
+        issues=issues,
+    )
+    _validate_action_topic_lanes(
+        map_rel=map_rel,
+        action_topics=action_topics,
+        topic_lanes=topic_lanes,
+        issues=issues,
+    )
     return issues
 
 
@@ -257,6 +440,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_required_paths(manifest))
     issues.extend(_validate_required_json_files(manifest))
+    issues.extend(_validate_help_topic_contract(manifest))
     issues.extend(_validate_canonical_candidates(manifest))
     issues.extend(_validate_content_rules(manifest))
     return issues

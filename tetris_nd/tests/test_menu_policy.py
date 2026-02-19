@@ -30,3 +30,16 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertIn("topology_mode", attrs)
             self.assertIn("topology_advanced", attrs)
             self.assertIn("topology_profile_index", attrs)
+
+    def test_launcher_pause_entrypoint_parity(self) -> None:
+        launcher_actions = {action for action, _label in menu_config.launcher_menu_items()}
+        pause_actions = set(menu_config.pause_menu_actions())
+        required = {"settings", "keybindings", "help", "bot_options", "quit"}
+        self.assertTrue(required.issubset(launcher_actions))
+        self.assertTrue(required.issubset(pause_actions))
+
+    def test_pause_rows_and_actions_stay_in_sync(self) -> None:
+        self.assertEqual(
+            len(menu_config.pause_menu_rows()),
+            len(menu_config.pause_menu_actions()),
+        )

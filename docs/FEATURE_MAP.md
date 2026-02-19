@@ -10,7 +10,14 @@ User-facing feature map for the shipped `tet4d` experience.
   - Display: fullscreen toggle, windowed size capture, save/reset.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
+- 3D/4D setup flows now share the same ND setup/menu engine (`tetris_nd/frontend_nd.py`) to reduce drift.
 - Pause menu is unified across modes: resume/restart/settings/keybindings/profiles/help/back to main/quit.
+- Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
+- Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.
+- Help action rows are live-mapped from `config/help/action_map.json` + active runtime bindings.
+- Long help content uses explicit subpage paging (`[`/`]`, `PgUp`/`PgDn`) instead of silent truncation.
+- Launcher/pause action parity for `Settings`,`Keybindings`,`Help`,`Bot Options`,`Quit` is contract-enforced in config validation.
+- Compact help policy is explicit (`layout.help.compact_*` thresholds): non-critical details collapse first while controls and key hints remain available.
 - Reset defaults requires confirmation.
 - Autosave persists session continuity silently (`Autosaved`status), while explicit`Save` remains manual durable save.
 
@@ -43,7 +50,11 @@ User-facing feature map for the shipped `tet4d` experience.
   - `H/J/K/L` strict yaw mode (`-15 / -90 / +90 / +15`).
   - Additional pitch controls and mouse orbit/zoom.
 - 4D rendering:
-  - 4D board is displayed as multiple 3D `w`-layer boards.
+  - 4D board is displayed as multiple 3D layer boards derived from current 4D view basis.
+  - Quarter-turn hyperplane view turns update board decomposition:
+    - identity: `W` boards of `(X,Y,Z)`,
+    - `xw`: `X` boards of `(W,Y,Z)`,
+    - `zw`: `Z` boards of `(X,Y,W)`.
   - Slicing selects focused `z`/`w` visual layers and does not alter physics.
   - Camera-only hyperplane view turns are supported:
     - `view_xw_neg/view_xw_pos` (default `F5/F6`)
@@ -56,7 +67,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - `keybindings/2d.json`
 - `keybindings/3d.json`
 - `keybindings/4d.json`
-- Built-in keyboard sets: `small`and`full`.
+- Built-in keyboard sets: `small`, `full`, and `macbook`.
+- Compact (`small`) 4D `w` movement defaults: `N` / `/` (no `,/.` dependency).
 - Small-profile rotation ladder:
   - 2D: `Q/W`
   - 3D: `Q/W`, `A/S`, `Z/X`
@@ -121,6 +133,8 @@ User-facing feature map for the shipped `tet4d` experience.
 - Source-controlled config:
   - `config/menu/defaults.json`
 - `config/menu/structure.json`
+- `config/help/topics.json`
+- `config/help/action_map.json`
 - `config/topology/designer_presets.json`
 - `config/gameplay/tuning.json`
 - `config/gameplay/score_analyzer.json`

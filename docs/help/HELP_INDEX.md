@@ -23,6 +23,10 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 17. Gameplay help shortcut (`F1`)
 18. Boundary topology presets (`bounded`,`wrap_all`,`invert_all`)
 19. Gravity-axis wrap policy (default off)
+20. Topic subpage paging (`[`/`]`, `PgUp`/`PgDn`) for long help content
+21. Live key rows pulled from active keybinding profile per topic
+22. Compact help-window policy (reduced non-critical detail first; controls stay available)
+23. Launcher/pause parity entry points (`Settings`,`Keybindings`,`Help`,`Bot Options`,`Quit`)
 
 ## Control diagrams
 
@@ -35,11 +39,19 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 7. keybindings menus (row icons),
 8. help controls page,
 9. in-game helper panel.
+10. Help topic render path uses:
+11. `tetris_nd/help_topics.py` (context/dimension topic filtering)
+12. `tetris_nd/help_menu.py` (live key rows + subpage rendering)
+13. `config/help/topics.json` + `config/help/action_map.json`
 
 ## Maintenance rule
 
 When adding/removing a menu option or keybinding action, update:
 1. this index,
 2. `assets/help/manifest.json`,
-3. `docs/FEATURE_MAP.md`,
-4. `docs/BACKLOG.md`.
+3. `config/help/topics.json`,
+4. `config/help/action_map.json`,
+5. `docs/FEATURE_MAP.md`,
+6. `docs/BACKLOG.md`,
+7. `tetris_nd/tests/test_help_topics.py`,
+8. `tetris_nd/tests/test_help_menu.py`.

@@ -33,8 +33,8 @@ Last verified: 2026-02-19
 
 ## 3. Current issues (open backlog)
 
-1. `BKL-P2-006`: help/menu IA rework for overlap/readability/synchronization.
-2. `BKL-P2-007`: setup-menu render/value dedup extraction.
+1. `BKL-P2-006` is closed (help/menu IA rework milestones `M1`-`M4` complete).
+2. `BKL-P2-007` is closed (3D setup now reuses shared ND setup/menu logic).
 3. Continuous watch items remain in `P3` (`BKL-P3-001`..`BKL-P3-005`).
 4. Canonical source of active status is `docs/BACKLOG.md`.
 

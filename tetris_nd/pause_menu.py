@@ -16,7 +16,12 @@ from .keybindings import (
     save_keybindings_file,
 )
 from .keybindings_menu import run_keybindings_menu
-from .menu_config import default_settings_payload, pause_menu_rows, pause_settings_rows
+from .menu_config import (
+    default_settings_payload,
+    pause_menu_actions,
+    pause_menu_rows,
+    pause_settings_rows,
+)
 from .menu_model import cycle_index, is_confirm_key
 from .menu_persistence import (
     load_audio_payload,
@@ -431,7 +436,8 @@ def run_pause_settings_menu(screen: pygame.Surface, fonts) -> tuple[pygame.Surfa
     return screen, True
 
 
-_PAUSE_ACTION_CODES: tuple[str, ...] = (
+_PAUSE_ACTION_CODES: tuple[str, ...] = pause_menu_actions()
+_SUPPORTED_PAUSE_ACTIONS = {
     "resume",
     "restart",
     "settings",
@@ -444,11 +450,16 @@ _PAUSE_ACTION_CODES: tuple[str, ...] = (
     "help",
     "menu",
     "quit",
-)
+}
 
 if len(_PAUSE_ROWS) != len(_PAUSE_ACTION_CODES):
     raise RuntimeError(
         f"pause_menu_rows length ({len(_PAUSE_ROWS)}) must match pause action count ({len(_PAUSE_ACTION_CODES)})"
+    )
+unknown_pause_actions = sorted(set(_PAUSE_ACTION_CODES) - _SUPPORTED_PAUSE_ACTIONS)
+if unknown_pause_actions:
+    raise RuntimeError(
+        "pause_menu_actions contains unsupported actions: " + ", ".join(unknown_pause_actions)
     )
 
 

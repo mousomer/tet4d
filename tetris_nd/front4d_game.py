@@ -21,6 +21,7 @@ from .front4d_render import (
     LayerView3D,
     draw_game_frame,
     handle_view_key,
+    movement_axis_overrides_for_view,
     spawn_clear_animation_if_needed,
 )
 from .frontend_nd import (
@@ -95,6 +96,7 @@ class LoopContext4D:
             self.state,
             slice_state=self.slice_state,
             yaw_deg_for_view_movement=self.view.yaw_deg,
+            axis_overrides_by_action=movement_axis_overrides_for_view(self.view, self.cfg.dims),
             view_key_handler=lambda key: handle_view_key(key, self.view),
             sfx_handler=play_sfx,
             allow_gameplay=self.bot.user_gameplay_enabled,

@@ -207,6 +207,32 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 193. `DONE` Unreferenced helper cleanup pass executed:
 194. removed definition-only helpers in `tetris_nd/frontend_nd.py`, `tetris_nd/menu_keybinding_shortcuts.py`, `tetris_nd/menu_model.py`, `tetris_nd/project_config.py`, and `tetris_nd/score_analyzer.py`.
 195. profiler/policy tool output paths remain constrained to project root (`tools/profile_4d_render.py`,`tools/bench_playbot.py`,`tools/analyze_playbot_policies.py`).
+196. `DONE` Setup-menu dedup follow-up (`BKL-P2-007`) completed:
+197. `tetris_nd/front3d_setup.py` was collapsed to a thin adapter over shared ND setup logic in `tetris_nd/frontend_nd.py`,
+198. removing duplicated 3D setup render/value/config paths while preserving runtime behavior.
+199. Added regression coverage:
+200. `tetris_nd/tests/test_front3d_setup.py`.
+201. `DONE (superseded)` 4D `xw`/`zw` board-slot permutation fix:
+202. this improved panel ordering but did not satisfy basis-decomposition behavior (`xw` should swap board decomposition axes).
+203. superseded by active `BKL-P1-001` for full basis-driven 4D board decomposition.
+204. `DONE` `[BKL-P1-001]` 4D `xw`/`zw` basis-driven board decomposition fix:
+205. renderer now derives layer axis/count and board dims from signed-axis view basis,
+206. and routes grid/cells/helper/clear-animation through one shared 4D->(layer,cell3) map in `tetris_nd/front4d_render.py`.
+207. Added regression coverage in `tetris_nd/tests/test_front4d_render.py` for:
+208. `(5,4,3,2)` + `xw` => `5` boards of `(2,4,3)`,
+209. `(5,4,3,2)` + `zw` => `3` boards of `(5,4,2)`,
+210. and 4D coord-map bijection.
+211. `DONE` `[BKL-P1-002]` 4D post-basis regression cleanup:
+212. exploration-mode rotation tween rendering restored (fractional overlay coordinates preserved),
+213. `move_w` intent now maps to current basis layer axis (`w`/`x`/`z` by view),
+214. compact profile 4D `w` movement defaults changed from `,/.` to `N`/`/`,
+215. `macbook` built-in profile added with no-function 4D view defaults (`1/2/3/4`) and help=`Tab`,
+216. 4D layer-region clear hardening added for layer-count reductions.
+217. validation coverage added in:
+218. `tetris_nd/tests/test_front4d_render.py`,
+219. `tetris_nd/tests/test_nd_routing.py`,
+220. `tetris_nd/tests/test_keybindings.py`,
+221. and full local gates passed.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -230,26 +256,11 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 18. `Cadence:` after projection/camera/cache changes and before release.
 19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
 20. `Done criteria:` `tools/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
-21. `[P2][BKL-P2-006] Help + menu structure rework`
-22. `Cadence:` next UX-focused development batch.
-23. `Trigger:` visibility/overlap/readability complaints or help-content drift from actual controls/settings.
-24. `Done criteria:` help IA and menu IA are unified, readable, non-overlapping, and fully synchronized with live keybindings/settings across launcher and pause menus.
-25. `Plan reference:` `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
-26. `Required milestones:`
-27. `M1` help-topic registry + action-to-topic mapping contract,
-28. `M2` shared layout-zone renderer (no fixed-coordinate overlap),
-29. `M3` full key/help synchronization and overflow paging,
-30. `M4` launcher/pause parity verification + compact-window validation.
-31. `[P2][BKL-P2-007] Setup-menu deduplication follow-up`
-32. `Cadence:` next refactor-focused maintenance batch.
-33. `Trigger:` duplicated setup render flow drift or review findings about dead/duplicate setup paths.
-34. `Done criteria:` duplicated setup menu render/value-format logic is extracted into shared helpers; parity tests and lint pass.
-
 ## 4. Gap Mapping to RDS
 
-1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows are closed; active setup-menu dedup follow-up remains (`BKL-P2-007`).
+1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
 2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is now operationalized through scheduled benchmark + policy-analysis workflow.
-3. `docs/rds/RDS_MENU_STRUCTURE.md`: follow-up restructuring work remains open for menu/help IA hardening (`BKL-P2-006`).
+3. `docs/rds/RDS_MENU_STRUCTURE.md`: `BKL-P2-006` is closed; launcher/pause/help IA parity and compact hardening are complete.
 4. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
 
 ## 5. Change Footprint (Current Batch)

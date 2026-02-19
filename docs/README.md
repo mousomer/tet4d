@@ -21,6 +21,8 @@ This repository documentation is unified into exactly three sections.
 - `config/project/io_paths.json` (externalized repo I/O path defaults)
 - `config/project/constants.json` (externalized shared constants)
 - `config/project/secret_scan.json` (secret scan policy patterns/excludes)
+- `config/help/topics.json` (help-topic registry)
+- `config/help/action_map.json` (action-to-help-topic mapping contract)
 - `tools/validate_project_contracts.py` (contract validator used by CI)
 - `tools/scan_secrets.py` (secret pattern scanner used by local CI/CI)
 - `config/schema/` (canonical persisted-data schemas)

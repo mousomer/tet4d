@@ -30,6 +30,13 @@
     - `docs/plans/PLAN_4D_RENDER_GAPS_2026-02-19.md`
 12. Dead-code/dedup cleanup planning artifact:
     - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+13. Help/menu restructure `M1` artifacts:
+    - `config/help/topics.json`
+    - `config/help/action_map.json`
+    - `config/schema/help_topics.schema.json`
+    - `config/schema/help_action_map.schema.json`
+    - `tetris_nd/help_topics.py`
+    - `tetris_nd/tests/test_help_topics.py`
 
 ### Changed
 1. `scripts/ci_check.sh` is now hermetic for lint/test tools:
@@ -153,6 +160,64 @@
     - `tetris_nd/menu_model.py`
     - `tetris_nd/project_config.py`
     - `tetris_nd/score_analyzer.py`
+44. Project contract validator now enforces help-topic/action-map consistency against known bindable actions:
+    - `tools/validate_project_contracts.py`
+    - coverage is checked for `config/help/topics.json` + `config/help/action_map.json`
+45. Added shared menu/help layout-zone engine and migrated help rendering from fixed coordinates to zone-based layout:
+    - `tetris_nd/menu_layout.py`
+    - `tetris_nd/help_menu.py`
+46. Added regression coverage for compact/non-overlapping layout-zone contracts:
+    - `tetris_nd/tests/test_menu_layout.py`
+47. Added configurable help layout tokens under project constants:
+    - `config/project/constants.json` (`layout.help.*`)
+48. Help topic selection now uses context/dimension-filtered data from help registry config:
+    - `tetris_nd/help_topics.py` (`help_topics_for_context`, `normalize_help_context`)
+49. Help pages now render live action-key rows from runtime bindings + action-topic contract:
+    - `tetris_nd/help_menu.py`
+    - `config/help/action_map.json`
+50. Help overflow handling now uses explicit subpage paging (`[`/`]`, `PgUp`/`PgDn`) instead of silent truncation:
+    - `tetris_nd/help_menu.py`
+51. Added M3 help coverage tests and quick/full lane validation:
+    - `tetris_nd/tests/test_help_menu.py`
+    - `tetris_nd/tests/test_help_topics.py`
+    - `tools/validate_project_contracts.py`
+52. Pause menu actions are now sourced from config and validated against supported runtime actions:
+    - `config/menu/structure.json` (`pause_menu_actions`)
+    - `tetris_nd/menu_config.py`
+    - `tetris_nd/pause_menu.py`
+53. Launcher/pause parity entrypoints are now contract-enforced in menu config validation:
+    - `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`)
+54. Help compact-window policy is now explicit and threshold-driven:
+    - `tetris_nd/help_menu.py` (`is_compact_help_view`)
+    - `config/project/constants.json` (`layout.help.compact_*_threshold`)
+55. Added M4 regression coverage for parity and compact rendering:
+    - `tetris_nd/tests/test_menu_policy.py`
+    - `tetris_nd/tests/test_help_menu.py`
+56. Added setup-menu dedup regression coverage for the 3D adapter path:
+    - `tetris_nd/tests/test_front3d_setup.py`
+57. Setup-menu dedup follow-up completed by replacing duplicated 3D setup render/value/config paths with shared ND setup logic:
+    - `tetris_nd/front3d_setup.py` (thin adapter)
+    - `tetris_nd/frontend_nd.py` (shared implementation)
+58. Fixed 4D hyper-view board-slot mapping so quarter-turn `xw`/`zw` view rotations swap displayed `w`-layer board boxes deterministically:
+    - added hyper-view-aware layer order + layer-rect mapping in `tetris_nd/front4d_render.py`,
+    - ensured frame/grid/helper/piece rendering use the same layer-to-rect mapping.
+59. Reworked 4D `xw`/`zw` view behavior to basis-driven board decomposition:
+    - renderer now derives layer axis/count and per-layer board dims from signed-axis basis,
+    - all per-layer paths (grid/shadow, cells, helper marks, clear animation) share one 4D->(layer,cell3) mapping in `tetris_nd/front4d_render.py`.
+60. Fixed 4D input mapping so `move_w_neg/move_w_pos` follow current basis layer axis (identity=`w`, `xw`=`x`, `zw`=`z`) while keeping arrow movement viewer-relative:
+    - `tetris_nd/frontend_nd.py`
+    - `tetris_nd/front4d_game.py`
+    - `tetris_nd/front4d_render.py`
+61. Fixed exploration rotation render regression by preserving fractional tween coordinates in 4D cube-face rendering:
+    - `tetris_nd/front4d_render.py`
+62. Hardened 4D frame clear path to avoid stale panel artifacts when displayed layer count decreases:
+    - `tetris_nd/front4d_render.py`
+63. Added `macbook` built-in key profile (no function-key dependency for 4D view defaults), and compact-profile 4D `w` movement now defaults to `N`/`/`:
+    - `tetris_nd/keybindings_defaults.py`
+    - `tetris_nd/keybindings.py`
+    - `keybindings/4d.json`
+    - `keybindings/profiles/small/4d.json`
+    - `keybindings/profiles/macbook/*.json`
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
@@ -185,6 +250,53 @@
 18. Updated `docs/rds/RDS_MENU_STRUCTURE.md` research basis with ARIA APG, Microsoft menu/flyout guidance, Material menu guidance, and content-structure references.
 19. Expanded `BKL-P2-006` with concrete execution milestones and linked plan artifact in `docs/BACKLOG.md`.
 20. Refreshed `docs/GUIDELINES_RESEARCH.md` to reflect current open gaps and current web-guideline source set.
+21. Added implementation-status update for help/menu restructure plan (`M1` done; `M2`-`M4` pending):
+    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+22. Updated menu/help RDS and backlog to record `M1` completion and keep remaining phases explicit:
+    - `docs/rds/RDS_MENU_STRUCTURE.md`
+    - `docs/BACKLOG.md`
+23. Updated help/menu planning/backlog status to mark `M2` complete and keep `M3`-`M4` open:
+    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/BACKLOG.md`
+    - `docs/rds/RDS_MENU_STRUCTURE.md`
+    - `docs/RDS_AND_CODEX.md`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
+24. Updated help/menu planning + RDS/backlog status to mark `M3` complete and keep `M4` open:
+    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/BACKLOG.md`
+    - `docs/rds/RDS_MENU_STRUCTURE.md`
+    - `docs/RDS_AND_CODEX.md`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
+    - `docs/help/HELP_INDEX.md`
+    - `docs/FEATURE_MAP.md`
+25. Updated help/menu planning + RDS/backlog status to mark `M4` complete:
+    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/BACKLOG.md`
+    - `docs/rds/RDS_MENU_STRUCTURE.md`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
+    - `docs/RDS_AND_CODEX.md`
+    - `docs/help/HELP_INDEX.md`
+    - `docs/FEATURE_MAP.md`
+26. Updated backlog/RDS/plan status to close setup-menu dedup follow-up (`BKL-P2-007`):
+    - `docs/BACKLOG.md`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
+    - `docs/RDS_AND_CODEX.md`
+    - `docs/GUIDELINES_RESEARCH.md`
+    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+27. Updated 4D RDS/backlog to capture the `xw`/`zw` board-slot permutation requirement and closure:
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/BACKLOG.md`
+28. Added and completed basis-decomposition implementation plan for 4D `xw`/`zw` rotations:
+    - `docs/plans/PLAN_4D_VIEW_BASIS_DECOMPOSITION_2026-02-19.md`
+29. Updated 4D RDS and backlog to replace superseded panel-permutation semantics with basis-driven decomposition semantics:
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/BACKLOG.md`
+30. Updated keybinding/4D RDS and feature map for `macbook` profile, compact `w` movement keys, and basis-aware `move_w` semantics:
+    - `docs/rds/RDS_KEYBINDINGS.md`
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/FEATURE_MAP.md`
+31. Added regression-fix execution plan artifact:
+    - `docs/plans/PLAN_4D_REGRESSION_FIXES_2026-02-19.md`
 
 ## 2026-02-18
 
