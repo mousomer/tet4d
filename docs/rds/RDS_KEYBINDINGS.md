@@ -9,8 +9,8 @@ Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 Define keybinding requirements for all game dimensions and keyboard profiles:
 1. 2D gameplay
-2. 3D gameplay + camera + slicing
-3. 4D gameplay + view + slicing
+2. 3D gameplay + camera/view
+3. 4D gameplay + view
 4. Shared in-app keybinding editor with local save/load
 5. Dedicated keybindings setup menu and conflict-safe action routing
 
@@ -46,6 +46,7 @@ Implementation references:
 2. `M`-> menu
 3. `Y`-> restart
 4. `C`-> toggle grid
+5. `F1`(or `Tab` on macbook profile)-> help
 
 ## 4. Key Sets By Dimension And Keyboard Type
 
@@ -70,7 +71,7 @@ Implementation references:
 
 #### 2D ND-key blocking requirement
 
-1. 2D mode must ignore ND-only keys (`A/S/Z/X/R/T/F/G/V/B`, number-row rotation plane keys, 4D `w` movement keys, slice keys).
+1. 2D mode must ignore ND-only keys (`A/S/Z/X/R/T/F/G/V/B`, number-row rotation plane keys, 4D `w` movement keys).
 
 ### 4.2 3D gameplay
 
@@ -102,14 +103,10 @@ Implementation references:
 #### 3D camera group (profile-independent default)
 
 1. Yaw `-`/`+`:`J`/`L`
-2. Pitch `-`/`+`:`K`/`I`
+2. Pitch `-`/`+`:`O`/`U`
 3. Zoom out / in: `-`/`+`
 4. Reset camera: `0`
 5. Cycle projection: `P`
-
-#### 3D slice group (profile-independent default)
-
-1. Slice `z-`/`z+`:`[`/`]`
 
 ### 4.3 4D gameplay
 
@@ -163,11 +160,6 @@ Implementation references:
 3. 4D view `zw -/+`: `3`/`4`.
 4. Help key default: `Tab`.
 
-#### 4D slice group (profile-independent default)
-
-1. Slice `z-`/`z+`:`[`/`]`
-2. Slice `w-`/`w+`:`;`/`'`
-
 ## 5. Load, Change, Save Workflow
 
 ### 5.1 Startup load behavior
@@ -206,14 +198,14 @@ Both menu contexts must expose the same keybinding profile actions:
 2. Setup menu (`Controls`->`Edit Keybindings`)
 3. Pause menu (`Settings`->`Controls`->`Edit Keybindings`)
 4. The editor must list bindable actions grouped as:
-5. `game`
-6. `camera` (3D/4D only)
-7. `slice` (3D/4D only)
-8. `system`
-9. Each row must show action name plus currently assigned keys.
-10. Footer hints must expose: `Rebind`,`Clear`,`Load`,`Save`,`Save As`,`Reset`.
-11. Failed operations (invalid file, duplicate profile, write error) must show non-blocking error text.
-12. Editor must show conflict strategy (`replace`,`swap`,`cancel`) and let user cycle it.
+5. `General / System`
+6. `Gameplay / Translation`
+7. `Gameplay / Rotation`
+8. `Camera / View` (3D/4D only)
+8. Each row must show action name plus currently assigned keys.
+9. Footer hints must expose: `Rebind`,`Clear`,`Load`,`Save`,`Save As`,`Reset`.
+10. Failed operations (invalid file, duplicate profile, write error) must show non-blocking error text.
+11. Editor must show conflict strategy (`replace`,`swap`,`cancel`) and let user cycle it.
 
 ### 5.6 Non-default profile support
 
@@ -274,10 +266,6 @@ Both menu contexts must expose the same keybinding profile actions:
       "move_x_neg": ["left"],
       "move_x_pos": ["right"]
     },
-    "slice": {
-      "slice_z_neg": ["["],
-      "slice_z_pos": ["]"]
-    },
     "camera": {
       "yaw_neg": ["j"],
       "yaw_pos": ["l"]
@@ -288,14 +276,16 @@ Both menu contexts must expose the same keybinding profile actions:
 
 ### 6.3 Group requirements by dimension
 
-1. 2D: `game`
-2. 3D: `game`,`camera`,`slice`
-3. 4D: `game`,`camera`,`slice`
+1. 2D runtime groups: `game`,`system`
+2. 3D runtime groups: `game`,`camera`,`system`
+3. 4D runtime groups: `game`,`camera`,`system`
+4. UI presentation requirement: `game` must be split into `Gameplay / Translation` and `Gameplay / Rotation`.
 
 ### 6.4 Compatibility requirement
 
 1. 2D loader must accept both canonical grouped format and legacy flat game-action format under `bindings`.
 2. Legacy default files must keep loading even when profile storage is introduced.
+3. Legacy `slice` groups/actions in old 3D/4D profile JSON files are ignored on load and removed on next save.
 
 ### 6.5 Storage validation requirements
 
@@ -346,18 +336,19 @@ pytest -q
 
 Implemented in code:
 1. Dedicated keybinding setup screen added (`tetris_nd/keybindings_menu.py`).
-2. Runtime action groups now include `system`for rebinding visibility alongside`game/camera/slice`.
-3. 3D/4D `z`movement defaults use`Up`for`z-`and`Down`for`z+`in small profile; full profile uses`Numpad8`/`Numpad2`.
-4. 4D camera reset default is `Backspace`.
-5. Small-profile rotation ladder uses keyboard pairs:
-6. `2D`: `Q/W`,
-7. `3D`: `Q/W`,`A/S`,`Z/X`,
-8. `4D`: `Q/W`,`A/S`,`Z/X`,`R/T`,`F/G`,`V/B`.
-9. Rebind safety guard prevents camera actions from overriding gameplay/slice/system keys.
-10. Keybinding conflict and camera override behavior are covered by tests in `tetris_nd/tests/test_keybindings.py`.
-11. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
-12. `Keybindings Setup`,`Profile Previous`,`Profile Next`,`Save Keybindings`,`Load Keybindings`.
-13. Main keybindings section menu separates `General`from`2D/3D/4D` scopes for clearer navigation.
+2. Runtime action groups now include `system`for rebinding visibility alongside`game/camera`.
+3. Keybinding editor/help presentation now splits gameplay actions into `Translation` + `Rotation` sections (no slice group).
+4. 3D/4D `z`movement defaults use`Up`for`z-`and`Down`for`z+`in small profile; full profile uses`Numpad8`/`Numpad2`.
+5. 4D camera reset default is `Backspace`.
+6. Small-profile rotation ladder uses keyboard pairs:
+7. `2D`: `Q/W`,
+8. `3D`: `Q/W`,`A/S`,`Z/X`,
+9. `4D`: `Q/W`,`A/S`,`Z/X`,`R/T`,`F/G`,`V/B`.
+10. Rebind safety guard prevents camera actions from overriding gameplay/system keys.
+11. Keybinding conflict and camera override behavior are covered by tests in `tetris_nd/tests/test_keybindings.py`.
+12. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
+13. `Keybindings Setup`,`Profile Previous`,`Profile Next`,`Save Keybindings`,`Load Keybindings`.
+14. Main keybindings section menu separates `General`from`2D/3D/4D` scopes for clearer navigation.
 
 ## 10. Implementation Plan (Keybindings)
 
@@ -370,5 +361,5 @@ Implemented in code:
 7. profile actions now include `load/save/save as/reset/create/rename/delete` via keybindings setup + pause entrypoints.
 8. reset actions now require confirmation.
 9. In-game key helper layout is grouped into clear sections:
-10. `Translation`,`Rotation`,`Camera/View`,`Slicing`,`System`.
+10. `Translation`,`Rotation`,`Camera/View`,`System`.
 11. arrow-diagram key guides are available in Help UI for translation and rotation.

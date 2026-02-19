@@ -15,6 +15,7 @@ from .keybindings import (
     binding_group_label,
     runtime_binding_groups_for_dimension,
 )
+from .keybindings_catalog import gameplay_action_category
 from .menu_config import settings_category_docs
 from .menu_layout import LayoutRect, compute_menu_layout_zones
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
@@ -28,7 +29,8 @@ _BG_BOTTOM = (4, 7, 20)
 _TEXT_COLOR = (232, 232, 240)
 _MUTED_COLOR = (192, 200, 228)
 _HIGHLIGHT = (255, 224, 128)
-_GROUP_ORDER = ("system", "game", "camera", "slice")
+_RUNTIME_GROUP_ORDER = ("system", "game", "camera")
+_LIVE_KEY_GROUP_ORDER = ("system", "game_translation", "game_rotation", "game_other", "camera")
 _CONTROL_TOPIC_ID = "movement_rotation"
 _KEY_REFERENCE_TOPIC_ID = "key_reference"
 _SETTINGS_DOCS = settings_category_docs()
@@ -251,7 +253,7 @@ def help_topic_action_rows(
     action_topics = action_registry["action_topics"]
     rows: list[tuple[str, str, str]] = []
 
-    for group in _GROUP_ORDER:
+    for group in _RUNTIME_GROUP_ORDER:
         actions = groups.get(group, {})
         if not actions:
             continue
@@ -276,15 +278,26 @@ def _topic_action_lines(
         include_all=include_all,
     )
     lines: list[str] = []
-    grouped: dict[str, list[tuple[str, str]]] = {group: [] for group in _GROUP_ORDER}
+    grouped: dict[str, list[tuple[str, str]]] = {group: [] for group in _LIVE_KEY_GROUP_ORDER}
     for group, action_name, key_text in rows:
-        grouped.setdefault(group, []).append((action_name, key_text))
+        target_group = group
+        if group == "game":
+            target_group = f"game_{gameplay_action_category(action_name)}"
+        grouped.setdefault(target_group, []).append((action_name, key_text))
 
-    for group in _GROUP_ORDER:
+    for group in _LIVE_KEY_GROUP_ORDER:
         action_rows = grouped.get(group, [])
         if not action_rows:
             continue
-        lines.append(f"-- {binding_group_label(group)}")
+        if group == "game_translation":
+            heading = "Gameplay / Translation"
+        elif group == "game_rotation":
+            heading = "Gameplay / Rotation"
+        elif group == "game_other":
+            heading = "Gameplay / Other"
+        else:
+            heading = binding_group_label(group)
+        lines.append(f"-- {heading}")
         for action_name, key_text in action_rows:
             desc = binding_action_description(action_name)
             lines.append(f"{key_text}: {desc}")
@@ -394,7 +407,7 @@ def _extend_settings_lines(lines: list[str], *, compact: bool) -> None:
         lines.append("- Open full-size window to view all category descriptions.")
 
 
-def _extend_camera_slice_lines(lines: list[str], *, compact: bool) -> None:
+def _extend_camera_view_lines(lines: list[str], *, compact: bool) -> None:
     lines.extend(
         [
             "",
@@ -410,8 +423,7 @@ def _extend_camera_slice_lines(lines: list[str], *, compact: bool) -> None:
     lines.extend(
         [
             "",
-            "## Slice note",
-            "- Slicing fixes one axis coordinate for focused inspection.",
+            "## 4D view note",
             "- 4D is shown as multiple 3D boards (one per W layer).",
         ]
     )
@@ -483,8 +495,8 @@ def _topic_text_lines(
         _extend_features_lines(lines, compact=compact)
     elif topic_id == "settings_profiles":
         _extend_settings_lines(lines, compact=compact)
-    elif topic_id == "camera_and_slicing":
-        _extend_camera_slice_lines(lines, compact=compact)
+    elif topic_id == "camera_and_view":
+        _extend_camera_view_lines(lines, compact=compact)
     elif topic_id == "menu_workflows":
         _extend_workflow_lines(lines, compact=compact)
     elif topic_id == "troubleshooting":

@@ -209,20 +209,6 @@ DEFAULT_CAMERA_KEYS_4D_MACBOOK: KeyBindingMap = {
 }
 
 
-DEFAULT_SLICE_KEYS_3D: KeyBindingMap = {
-    "slice_z_neg": (pygame.K_LEFTBRACKET,),
-    "slice_z_pos": (pygame.K_RIGHTBRACKET,),
-}
-
-
-DEFAULT_SLICE_KEYS_4D: KeyBindingMap = {
-    "slice_z_neg": (pygame.K_LEFTBRACKET,),
-    "slice_z_pos": (pygame.K_RIGHTBRACKET,),
-    "slice_w_neg": (pygame.K_SEMICOLON,),
-    "slice_w_pos": (pygame.K_QUOTE,),
-}
-
-
 DEFAULT_SYSTEM_KEYS: KeyBindingMap = {
     "quit": (pygame.K_ESCAPE,),
     "menu": (pygame.K_m,),

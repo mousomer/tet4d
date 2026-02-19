@@ -16,7 +16,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 
 1. Provide a playable 4D ruleset with practical visualization.
 2. Render 4D state as multiple 3D `w`-layer boards.
-3. Keep controls separated into gameplay, slicing, and view/camera groups.
+3. Keep controls separated into gameplay and view/camera groups.
 4. Implement 4D automatic playbot logic as a configuration layer over shared ND playbot core (see `docs/rds/RDS_PLAYBOT.md`).
 
 ## 3. Board and Rules
@@ -75,7 +75,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 Gameplay (default small profile):
 1. Move `x`: Left/Right
 2. Move `z`: Up/Down
-3. Move `w`:`,`/`.`
+3. Move `w`:`N`/`/` (compact default profile)
 4. Soft drop: LShift/RShift
 5. Hard drop: Space
 6. Rotate `x-y`: Q/W
@@ -84,10 +84,6 @@ Gameplay (default small profile):
 9. Rotate `x-w`: R/T
 10. Rotate `y-w`: F/G
 11. Rotate `z-w`: V/B
-
-Slice controls:
-1. Slice `z`:`[`/`]`
-2. Slice `w`:`;`/`'`
 
 View controls:
 1. Yaw turn (animated 90°): J/L
@@ -114,11 +110,9 @@ System:
 3. Quit: `Esc`
 4. Toggle grid: `C`
 
-Slicing definition and purpose:
-1. Slicing is a view filter that helps inspect specific `z`/`w` layers in dense 4D scenes.
-2. Slicing is not a prerequisite for rotation; gameplay rotations must work regardless of active slice.
-3. Slicing exists to improve readability and debugging, not to alter physics.
-4. Plain-language summary: slice = "which layer you currently look at", not "which cells exist for collisions".
+Layer-view policy:
+1. 4D mode renders all basis-derived layer boards; there is no manual slice selection control.
+2. Gameplay rotations and movement are independent from view-layer panel ordering.
 
 Viewer-consistent translation requirement:
 1. Movement intents are interpreted in viewer space for `x/z` translation.
@@ -141,7 +135,7 @@ Rotation reliability requirements (4D `z-w`):
 ## 6. Rendering and UX
 
 1. 4D state is shown as a grid of projected 3D boards (one per `w` layer).
-2. Active slice indices are shown in the HUD.
+2. HUD shows active basis metadata (axis/count), not manual slice indices.
 3. Grid can be toggled on/off for all layer boards.
 4. When grid is off, each layer board still renders a board shadow.
 5. Hyperlayer clear animation uses transient ghost cells across affected layers.
@@ -191,7 +185,7 @@ Shared scoring table from general RDS:
 ## 8. Coding Best Practices (4D)
 
 1. Keep 4D rule transitions in ND engine modules, not renderer modules.
-2. Keep 4D key routing explicit (game vs slice vs view).
+2. Keep 4D key routing explicit (game vs view).
 3. Avoid copy/paste drift between 3D and 4D rendering helpers.
 4. Keep per-layer draw code modular (`grid/shadow`,`cells`,`clear effect`).
 5. Keep 4D bot implementation thin; do not duplicate ND planner/search/candidate code.
@@ -201,23 +195,22 @@ Shared scoring table from general RDS:
 Minimum required coverage after 4D changes:
 1. deterministic replay path,
 2. movement-vs-rotation key routing checks,
-3. slice key behavior,
-4. dedicated 4D piece-set invariants,
-5. scoring matrix checks,
-6. random/debug piece spawn stability checks,
-7. repeated `V/B` rotation reliability checks,
-8. invert-topology seam traversal regression for `w` moves on seam-straddling pieces,
-9. rotation-overlay topology parity checks in exploration mode and normal mode,
-10. view `xw` / `zw` key-routing and animation behavior,
-11. replay determinism invariance under view-only `xw` / `zw` turns.
-12. projection cache-key separation when only total `W` size changes (same xyz/layer/view angles).
-13. zoom-fit regression checks for basis-derived layer boards under `xw`/`zw` turns.
-14. full local gate via `scripts/ci_check.sh` for renderer-affecting batches.
-15. profile report via `tools/profile_4d_render.py` after projection/cache/zoom changes, with mitigation required if sparse overhead exceeds `15%` or `2.0 ms/frame`.
-16. basis decomposition regression under quarter-turn `xw` and `zw` view angles.
-17. dims `(5,4,3,2)` + `xw` regression asserting `layer_count=5` and board dims `(2,4,3)`.
-18. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
-19. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
+3. dedicated 4D piece-set invariants,
+4. scoring matrix checks,
+5. random/debug piece spawn stability checks,
+6. repeated `V/B` rotation reliability checks,
+7. invert-topology seam traversal regression for `w` moves on seam-straddling pieces,
+8. rotation-overlay topology parity checks in exploration mode and normal mode,
+9. view `xw` / `zw` key-routing and animation behavior,
+10. replay determinism invariance under view-only `xw` / `zw` turns.
+11. projection cache-key separation when only total `W` size changes (same xyz/layer/view angles).
+12. zoom-fit regression checks for basis-derived layer boards under `xw`/`zw` turns.
+13. full local gate via `scripts/ci_check.sh` for renderer-affecting batches.
+14. profile report via `tools/profile_4d_render.py` after projection/cache/zoom changes, with mitigation required if sparse overhead exceeds `15%` or `2.0 ms/frame`.
+15. basis decomposition regression under quarter-turn `xw` and `zw` view angles.
+16. dims `(5,4,3,2)` + `xw` regression asserting `layer_count=5` and board dims `(2,4,3)`.
+17. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
+18. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
 
 Relevant tests:
 - `tetris_nd/tests/test_game_nd.py`

@@ -47,25 +47,23 @@ class TestFront4DRender(unittest.TestCase):
         self.assertFalse(view.hyper_animating)
         self.assertAlmostEqual(view.zw_deg, 270.0, places=3)
 
-    def test_draw_helper_grid_with_hyper_turns_does_not_mutate_slice(self) -> None:
+    def test_draw_helper_grid_with_hyper_turns_does_not_mutate_state(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
         fonts = frontend_nd.init_fonts()
         screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
 
-        before_slice = dict(slice_state.axis_values)
+        before_board = dict(state.board.cells)
         front4d_render.draw_game_frame(
             screen,
             state,
-            slice_state,
             view,
             fonts,
             grid_mode=GridMode.HELPER,
         )
 
-        self.assertEqual(slice_state.axis_values, before_slice)
+        self.assertEqual(state.board.cells, before_board)
 
     def test_projection_cache_key_changes_when_w_size_changes(self) -> None:
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
@@ -203,8 +201,7 @@ class TestFront4DRender(unittest.TestCase):
 
             cfg_w3 = GameConfigND(dims=(6, 12, 6, 3), gravity_axis=1, speed_level=1)
             state_w3 = frontend_nd.create_initial_state(cfg_w3)
-            slice_w3 = frontend_nd.create_initial_slice_state(cfg_w3)
-            front4d_render.draw_game_frame(screen, state_w3, slice_w3, view, fonts, grid_mode=GridMode.FULL)
+            front4d_render.draw_game_frame(screen, state_w3, view, fonts, grid_mode=GridMode.FULL)
             keys_after_w3 = projection3d.projection_lattice_cache_keys()
             self.assertTrue(
                 any(
@@ -219,8 +216,7 @@ class TestFront4DRender(unittest.TestCase):
 
             cfg_w4 = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
             state_w4 = frontend_nd.create_initial_state(cfg_w4)
-            slice_w4 = frontend_nd.create_initial_slice_state(cfg_w4)
-            front4d_render.draw_game_frame(screen, state_w4, slice_w4, view, fonts, grid_mode=GridMode.FULL)
+            front4d_render.draw_game_frame(screen, state_w4, view, fonts, grid_mode=GridMode.FULL)
             keys_after_w4 = projection3d.projection_lattice_cache_keys()
             self.assertTrue(
                 any(
@@ -249,12 +245,11 @@ class TestFront4DRender(unittest.TestCase):
     def test_layer_region_is_cleared_when_layer_count_shrinks(self) -> None:
         cfg = GameConfigND(dims=(5, 4, 3, 2), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         fonts = frontend_nd.init_fonts()
         screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
 
         view_many = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=0.0)
-        front4d_render.draw_game_frame(screen, state, slice_state, view_many, fonts, grid_mode=GridMode.FULL)
+        front4d_render.draw_game_frame(screen, state, view_many, fonts, grid_mode=GridMode.FULL)
         layers_rect = pygame.Rect(
             front4d_render.MARGIN,
             front4d_render.MARGIN,
@@ -265,7 +260,7 @@ class TestFront4DRender(unittest.TestCase):
         stale_rect = rects_many[4]
 
         view_few = front4d_game.LayerView3D(xw_deg=0.0, zw_deg=0.0)
-        front4d_render.draw_game_frame(screen, state, slice_state, view_few, fonts, grid_mode=GridMode.FULL)
+        front4d_render.draw_game_frame(screen, state, view_few, fonts, grid_mode=GridMode.FULL)
         rects_few = front4d_render._layer_rects_by_layer(area=layers_rect, layer_count=2)
 
         sample = stale_rect.center

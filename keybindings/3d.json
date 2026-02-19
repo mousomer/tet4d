@@ -70,14 +70,6 @@
         "left shift",
         "right shift"
       ]
-    },
-    "slice": {
-      "slice_z_neg": [
-        "["
-      ],
-      "slice_z_pos": [
-        "]"
-      ]
     }
   },
   "dimension": 3,

@@ -74,7 +74,7 @@ Produce a concrete restructuring plan for launcher/pause/help flows that:
 7. Add small-window fallback profile (`compact`): hide non-critical blocks first, never hide focus row or key hints.
 
 ### 5.3 Key/help synchronization
-1. Help keys must be generated from runtime binding catalogs for all groups (`system`,`game`,`camera`,`slice`) and all scopes (`general`,`2d`,`3d`,`4d`).
+1. Help keys must be generated from runtime binding catalogs for all groups (`system`,`game`,`camera`) and all scopes (`general`,`2d`,`3d`,`4d`), with gameplay presented as `Translation` + `Rotation`.
 2. Add a completeness check: every bindable action must appear in either quick or full help.
 3. Add source-of-truth mapping file (config-level) between action id and help topic.
 

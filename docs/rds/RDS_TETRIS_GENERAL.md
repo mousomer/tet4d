@@ -30,7 +30,7 @@ Mode-specific requirements are defined in:
 8. Verify and harden scoring behavior with explicit automated scoring tests.
 9. Add debug piece sets (simple large rectangular blocks) for 2D/3D/4D validation workflows.
 10. Add non-intrusive sound effects with volume controls and mute toggles.
-11. Clarify slicing semantics and decouple slicing from rotation concerns.
+11. Remove manual slicing controls; keep gameplay independent from view-layer selection concepts.
 12. Unify frontend entry into one main menu for 2D/3D/4D.
 13. Make settings persistence and display mode transitions reliable (including fullscreen).
 14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.

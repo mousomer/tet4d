@@ -118,10 +118,6 @@
       "camera": {
         "label": "Camera / View",
         "description": "Board orbit, zoom, and projection controls."
-      },
-      "slice": {
-        "label": "Slice",
-        "description": "Layer filtering controls for 3D/4D inspection."
       }
     }
   },

@@ -61,24 +61,28 @@ class TestControlGroups(unittest.TestCase):
     def test_dim3_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(3)
         names = [name for name, _ in groups]
-        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View", "Slice"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 5, 6, 1])
+        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
+        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 5, 6])
         camera_rows = groups[3][1]
         self.assertTrue(any("\tprojection\t" in row for row in camera_rows))
 
     def test_dim4_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
-        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View", "Slice"])
-        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 7, 2])
+        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
+        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 7])
         translation_rows = groups[0][1]
-        slice_rows = groups[-1][1]
-        camera_rows = groups[-2][1]
-        self.assertTrue(any("\tw axis\t" in row for row in translation_rows))
-        self.assertTrue(any("\tslice w\t" in row for row in slice_rows))
+        camera_rows = groups[-1][1]
+        self.assertTrue(any("\tw layer prev/next\t" in row for row in translation_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
         self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
         self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))
+
+    def test_dim4_hides_exploration_rows_when_disabled(self) -> None:
+        groups = control_groups_for_dimension(4, include_exploration=False)
+        translation_rows = groups[0][1]
+        self.assertEqual(len(translation_rows), 5)
+        self.assertFalse(any("up/down (explore)" in row for row in translation_rows))
 
 
 if __name__ == "__main__":

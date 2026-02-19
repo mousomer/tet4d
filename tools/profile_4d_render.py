@@ -64,14 +64,12 @@ def _run_scenario(
     state = frontend_nd.create_initial_state(cfg)
     if scenario.dense:
         _fill_dense_board(state)
-    slice_state = frontend_nd.create_initial_slice_state(cfg)
     view = front4d_game.LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
 
     for _ in range(warmup):
         front4d_render.draw_game_frame(
             surface,
             state,
-            slice_state,
             view,
             fonts,
             grid_mode=GridMode.FULL,
@@ -82,7 +80,6 @@ def _run_scenario(
         front4d_render.draw_game_frame(
             surface,
             state,
-            slice_state,
             view,
             fonts,
             grid_mode=GridMode.FULL,

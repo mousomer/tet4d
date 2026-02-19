@@ -2,7 +2,7 @@
 import random
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 import pygame
 
@@ -13,8 +13,6 @@ from .key_dispatch import match_bound_action
 from .keybindings import (
     KEYS_3D,
     KEYS_4D,
-    SLICE_KEYS_3D,
-    SLICE_KEYS_4D,
     SYSTEM_KEYS,
     active_key_profile,
     load_active_profile_bindings,
@@ -375,31 +373,6 @@ def create_initial_state(cfg: GameConfigND) -> GameStateND:
     return state
 
 
-@dataclass
-class SliceState:
-    axis_values: Dict[int, int] = field(default_factory=dict)
-
-
-def create_initial_slice_state(cfg: GameConfigND) -> SliceState:
-    values: Dict[int, int] = {}
-    for axis, size in enumerate(cfg.dims):
-        if axis in (0, cfg.gravity_axis):
-            continue
-        values[axis] = size // 2
-    return SliceState(axis_values=values)
-
-
-def adjust_slice_axis(slice_state: SliceState,
-                      cfg: GameConfigND,
-                      axis: int,
-                      delta: int) -> None:
-    if axis not in slice_state.axis_values:
-        return
-    size = cfg.dims[axis]
-    curr = slice_state.axis_values[axis]
-    slice_state.axis_values[axis] = max(0, min(size - 1, curr + delta))
-
-
 _SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid", "help")
 _GAMEPLAY_ACTIONS_3D = (
     "move_x_neg",
@@ -509,14 +482,10 @@ def _binding_contains_key(bindings: Mapping[str, tuple[int, ...]], key: int) -> 
     return any(key in keys for keys in bindings.values())
 
 
-def _is_reserved_nd_key(key: int, cfg: GameConfigND, *, include_slice: bool) -> bool:
+def _is_reserved_nd_key(key: int, cfg: GameConfigND) -> bool:
     gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
     if _binding_contains_key(gameplay_keys, key):
         return True
-    if include_slice:
-        slice_keys = SLICE_KEYS_4D if cfg.ndim >= 4 else SLICE_KEYS_3D
-        if _binding_contains_key(slice_keys, key):
-            return True
     return _binding_contains_key(SYSTEM_KEYS, key)
 
 
@@ -567,30 +536,10 @@ def dispatch_nd_gameplay_key(
     return action
 
 
-def dispatch_nd_slice_key(key: int, cfg: GameConfigND, slice_state: SliceState) -> str | None:
-    ndim = cfg.ndim
-    slice_bindings = SLICE_KEYS_4D if ndim >= 4 else SLICE_KEYS_3D
-    slice_handlers = {
-        "slice_z_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=-1),
-        "slice_z_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=2, delta=1),
-    }
-    if ndim >= 4:
-        slice_handlers.update({
-            "slice_w_neg": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=-1),
-            "slice_w_pos": lambda: adjust_slice_axis(slice_state, cfg, axis=3, delta=1),
-        })
-    action = match_bound_action(key, slice_bindings, tuple(slice_handlers.keys()))
-    if action is None:
-        return None
-    slice_handlers[action]()
-    return action
-
-
 def route_nd_keydown(
     key: int,
     state: GameStateND,
     *,
-    slice_state: SliceState | None = None,
     yaw_deg_for_view_movement: float | None = None,
     axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
     view_key_handler: Callable[[int], bool] | None = None,
@@ -602,12 +551,6 @@ def route_nd_keydown(
     if system_action is not None:
         _emit_sfx(sfx_handler, _SYSTEM_SFX.get(system_action))
         return system_action
-
-    if slice_state is not None:
-        slice_action = dispatch_nd_slice_key(key, cfg, slice_state)
-        if slice_action is not None:
-            _emit_sfx(sfx_handler, "menu_move")
-            return "continue"
 
     gameplay_action = None
     if allow_gameplay and not state.game_over:
@@ -624,7 +567,7 @@ def route_nd_keydown(
     if view_key_handler is None:
         return "continue"
 
-    if _is_reserved_nd_key(key, cfg, include_slice=slice_state is not None):
+    if _is_reserved_nd_key(key, cfg):
         return "continue"
     if view_key_handler(key):
         _emit_sfx(sfx_handler, "menu_move")
@@ -632,10 +575,8 @@ def route_nd_keydown(
 
 
 def handle_game_keydown(event: pygame.event.Event,
-                        state: GameStateND,
-                        slice_state: SliceState) -> str:
+                        state: GameStateND) -> str:
     return route_nd_keydown(
         event.key,
         state,
-        slice_state=slice_state,
     )
