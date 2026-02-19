@@ -42,7 +42,8 @@ Mode-specific requirements are defined in:
 20. `invert_all`.
 21. Keep gravity-axis wrapping disabled by default in all presets.
 22. Add advanced topology-designer mode (hidden by default) with per-axis/per-edge behavior profiles and deterministic export.
-23. Plan 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
+23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
+24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -148,6 +149,7 @@ Mode-specific requirements are defined in:
 37. `docs/help/HELP_INDEX.md`
 38. `assets/help/manifest.json`
 39. `docs/RELEASE_CHECKLIST.md`
+40. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 
 ## 7. Engineering Best Practices
 
@@ -157,6 +159,7 @@ Mode-specific requirements are defined in:
 4. Share projection/math helpers to avoid 3D/4D behavior drift.
 5. Avoid hidden side effects at import-time.
 6. Keep deterministic paths stable (seeded RNG, reproducible replay scripts).
+7. Remove unreferenced helpers unless they are intentionally exported with explicit justification.
 
 ## 8. Testing Instructions
 
@@ -217,6 +220,7 @@ Completed in current implementation:
 13. Frontend split executed: launcher orchestration/settings and 3D/4D setup/render modules extracted for maintainability.
 14. Offline playbot policy analysis tool added (`tools/analyze_playbot_policies.py`).
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
+16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.
@@ -242,7 +246,8 @@ Remaining follow-up:
 21. per-axis/per-edge profile overrides via `config/topology/designer_presets.json`,
 22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
-24. Planned: 4D view `xw` / `zw` camera turns with keybinding and test coverage, while preserving deterministic gameplay and replay behavior.
+24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
+25. Planned: setup-menu render/value dedup extraction remains tracked by `BKL-P2-007`.
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
 

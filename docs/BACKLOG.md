@@ -184,35 +184,72 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 170. `DONE` Invert-boundary seam traversal for seam-straddling ND pieces is stabilized by deterministic piece-level fallback mapping:
 171. `tetris_nd/topology.py`,
 172. with regressions in `tetris_nd/tests/test_topology.py` and `tetris_nd/tests/test_game_nd.py`.
+173. `DONE` 4D view-plane camera turns (`xw`/`zw`) implemented as render-only animated controls:
+174. `tetris_nd/front4d_render.py`,
+175. with dedicated keybind actions (`view_xw_pos/neg`,`view_zw_pos/neg`) in:
+176. `tetris_nd/keybindings_defaults.py`, `keybindings/4d.json`.
+177. `DONE` 4D view-turn coverage added for routing separation, replay invariance, and render stability:
+178. `tetris_nd/tests/test_nd_routing.py`,
+179. `tetris_nd/tests/test_gameplay_replay.py`,
+180. `tetris_nd/tests/test_front4d_render.py`.
+181. `DONE` 4D renderer cache-key correctness hardening:
+182. projection cache extras now include total `W` size to prevent stale lattice/helper cache reuse across differing 4D board depths.
+183. `DONE` 4D hyper-view zoom-fit hardening:
+184. per-layer zoom fit now accounts for `xw`/`zw` transforms and centered `w` offset; regression coverage added for outer-layer bounds.
+185. `DONE` Full local gate revalidation executed through `scripts/ci_check.sh` after this batch.
+186. `DONE` Black-box cross-config 4D frame-cache regression added and passing:
+187. `tetris_nd/tests/test_front4d_render.py` now asserts distinct `4d-full` cache entries for differing total `W` sizes under full-frame draws.
+188. `DONE` Projection-lattice cache observability helpers added for regression/profiling validation:
+189. `tetris_nd/projection3d.py` (`clear_projection_lattice_cache`, `projection_lattice_cache_keys`, `projection_lattice_cache_size`).
+190. `DONE` 4D render profiling tool added and exercised:
+191. `tools/profile_4d_render.py` with latest report at `state/bench/4d_render_profile_latest.json`.
+192. `DONE` Sparse hyper-view overhead threshold assertion passed (no immediate optimization needed).
+193. `DONE` Unreferenced helper cleanup pass executed:
+194. removed definition-only helpers in `tetris_nd/frontend_nd.py`, `tetris_nd/menu_keybinding_shortcuts.py`, `tetris_nd/menu_model.py`, `tetris_nd/project_config.py`, and `tetris_nd/score_analyzer.py`.
+195. profiler/policy tool output paths remain constrained to project root (`tools/profile_4d_render.py`,`tools/bench_playbot.py`,`tools/analyze_playbot_policies.py`).
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `P2` 4D view-plane rotation plan (`xw` / `zw`) is not implemented yet.
-2. Implement camera-only hyperplane rotations in 4D renderer path (no simulation-coordinate mutation).
-3. Add animated view turns for `xw` and `zw` planes with deterministic interpolation and reset behavior.
-4. Extend 4D camera action set with dedicated keybindable actions (`view_xw_pos/neg`,`view_zw_pos/neg`) and conflict-safe defaults.
-5. Keep gameplay replay/scoring/collision deterministic and unchanged under pure view-plane turns.
-6. Add tests for:
-7. key-routing separation (gameplay vs camera),
-8. replay determinism invariance under view-only transforms,
-9. stable layer slicing + helper-grid rendering while view `xw/zw` turns are active.
-10. `P3` Continuous watch:
-11. keep running `scripts/ci_check.sh` prior to pushes and releases,
-12. keep scheduled stability + policy workflows active:
-13. `.github/workflows/ci.yml`,
-14. `.github/workflows/stability-watch.yml`,
-15. `tools/check_playbot_stability.py`,
-16. `tools/analyze_playbot_policies.py`.
-17. `P3` Optional future cleanup (non-blocking):
-18. split `tetris_nd/runtime_config_validation_playbot.py` further if new policy sections expand.
-19. split `tetris_nd/front3d_render.py` if render responsibilities grow beyond current scope.
-20. continue profiling projection/cache paths and only add deeper caching layers when profiling data shows measurable wins.
+1. `[P3][BKL-P3-001] Pre-push local CI gate`
+2. `Cadence:` before every push/release.
+3. `Trigger:` any code/docs/config change on active branch.
+4. `Done criteria:` latest `scripts/ci_check.sh` run exits `0` with no unresolved failures.
+5. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
+6. `Cadence:` at least weekly and after workflow/config changes.
+7. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/check_playbot_stability.py`, or `tools/analyze_playbot_policies.py` changes.
+8. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
+9. `[P3][BKL-P3-003] Runtime-config validation module split watch`
+10. `Cadence:` when adding new policy sections.
+11. `Trigger:` growth in `tetris_nd/runtime_config_validation_playbot.py` beyond current maintainable scope.
+12. `Done criteria:` split completed with unchanged behavior and passing lint/tests.
+13. `[P3][BKL-P3-004] 3D renderer decomposition watch`
+14. `Cadence:` when adding new rendering responsibilities.
+15. `Trigger:` major feature growth in `tetris_nd/front3d_render.py`.
+16. `Done criteria:` render responsibilities are split into focused modules with behavior parity and passing regression tests.
+17. `[P3][BKL-P3-005] Projection/cache profiling watch`
+18. `Cadence:` after projection/camera/cache changes and before release.
+19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
+20. `Done criteria:` `tools/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
+21. `[P2][BKL-P2-006] Help + menu structure rework`
+22. `Cadence:` next UX-focused development batch.
+23. `Trigger:` visibility/overlap/readability complaints or help-content drift from actual controls/settings.
+24. `Done criteria:` help IA and menu IA are unified, readable, non-overlapping, and fully synchronized with live keybindings/settings across launcher and pause menus.
+25. `Plan reference:` `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+26. `Required milestones:`
+27. `M1` help-topic registry + action-to-topic mapping contract,
+28. `M2` shared layout-zone renderer (no fixed-coordinate overlap),
+29. `M3` full key/help synchronization and overflow paging,
+30. `M4` launcher/pause parity verification + compact-window validation.
+31. `[P2][BKL-P2-007] Setup-menu deduplication follow-up`
+32. `Cadence:` next refactor-focused maintenance batch.
+33. `Trigger:` duplicated setup render flow drift or review findings about dead/duplicate setup paths.
+34. `Done criteria:` duplicated setup menu render/value-format logic is extracted into shared helpers; parity tests and lint pass.
 
 ## 4. Gap Mapping to RDS
 
-1. `docs/rds/RDS_TETRIS_GENERAL.md`: backlog follow-up items are now closed with automated CI + stability-watch workflows.
+1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows are closed; active setup-menu dedup follow-up remains (`BKL-P2-007`).
 2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is now operationalized through scheduled benchmark + policy-analysis workflow.
-3. `docs/rds/RDS_MENU_STRUCTURE.md`: guide rollout, menu IA split rules, and helper hierarchy items are now implemented and synced.
+3. `docs/rds/RDS_MENU_STRUCTURE.md`: follow-up restructuring work remains open for menu/help IA hardening (`BKL-P2-006`).
 4. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
 
 ## 5. Change Footprint (Current Batch)

@@ -93,6 +93,10 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_pos"), (pygame.K_l,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("pitch_pos"), (pygame.K_u,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("pitch_neg"), (pygame.K_o,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_neg"), (pygame.K_F5,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_pos"), (pygame.K_F6,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_neg"), (pygame.K_F7,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_pos"), (pygame.K_F8,))
 
     def test_create_and_activate_custom_profile(self) -> None:
         ok, msg, profile = keybindings.create_auto_profile()

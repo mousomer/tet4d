@@ -22,15 +22,18 @@ from .projection3d import (
     Cell3,
     Face,
     Point2,
+    box_raw_corners,
     build_cube_faces,
     color_for_cell,
     draw_gradient_background,
     draw_projected_lattice,
-    fit_orthographic_zoom,
+    interpolate_angle_deg,
+    normalize_angle_deg,
     orthographic_point,
     projection_cache_key,
     projection_helper_cache_key,
     raw_to_world,
+    smoothstep01,
     transform_point,
 )
 from .project_config import project_constant_float, project_constant_int
@@ -78,6 +81,53 @@ LockedLayerCells = dict[int, tuple[tuple[tuple[float, float, float], int, bool],
 class LayerView3D(YawPitchTurnAnimator):
     # Fixed camera for every w-layer board.
     zoom_scale: float = 1.0
+    xw_deg: float = 0.0
+    zw_deg: float = 0.0
+    hyper_animating: bool = False
+    hyper_start_xw: float = 0.0
+    hyper_target_xw: float = 0.0
+    hyper_start_zw: float = 0.0
+    hyper_target_zw: float = 0.0
+    hyper_elapsed_ms: float = 0.0
+
+    def _start_hyper_turn(self, *, xw_delta_deg: float = 0.0, zw_delta_deg: float = 0.0) -> None:
+        self.hyper_animating = True
+        self.hyper_elapsed_ms = 0.0
+        self.hyper_start_xw = normalize_angle_deg(self.xw_deg)
+        self.hyper_start_zw = normalize_angle_deg(self.zw_deg)
+        self.hyper_target_xw = normalize_angle_deg(self.hyper_start_xw + xw_delta_deg)
+        self.hyper_target_zw = normalize_angle_deg(self.hyper_start_zw + zw_delta_deg)
+
+    def start_xw_turn(self, delta_deg: float) -> None:
+        self._start_hyper_turn(xw_delta_deg=delta_deg)
+
+    def start_zw_turn(self, delta_deg: float) -> None:
+        self._start_hyper_turn(zw_delta_deg=delta_deg)
+
+    def is_animating(self) -> bool:
+        return super().is_animating() or self.hyper_animating
+
+    def stop_animation(self) -> None:
+        super().stop_animation()
+        self.hyper_animating = False
+        self.hyper_elapsed_ms = 0.0
+
+    def step_animation(self, dt_ms: float) -> None:
+        super().step_animation(dt_ms)
+        if not self.hyper_animating:
+            return
+        self.hyper_elapsed_ms += max(0.0, dt_ms)
+        if self.anim_duration_ms <= 0:
+            progress = 1.0
+        else:
+            progress = min(1.0, self.hyper_elapsed_ms / self.anim_duration_ms)
+        eased = smoothstep01(progress)
+        self.xw_deg = interpolate_angle_deg(self.hyper_start_xw, self.hyper_target_xw, eased)
+        self.zw_deg = interpolate_angle_deg(self.hyper_start_zw, self.hyper_target_zw, eased)
+        if progress >= 1.0:
+            self.xw_deg = normalize_angle_deg(self.hyper_target_xw)
+            self.zw_deg = normalize_angle_deg(self.hyper_target_zw)
+            self.hyper_animating = False
 
 
 @dataclass
@@ -100,43 +150,97 @@ class ClearAnimation4D:
         self.elapsed_ms += max(0.0, dt_ms)
 
 
-def _transform_raw_point(
-    raw: tuple[float, float, float],
-    dims: Cell3,
+def _world_w_for_layer(w_layer: int, dims4: tuple[int, int, int, int]) -> float:
+    return float(w_layer) - (float(dims4[3]) - 1.0) * 0.5
+
+
+def _apply_hyper_view_turns(
+    *,
+    world_xyz: tuple[float, float, float],
+    world_w: float,
     view: LayerView3D,
 ) -> tuple[float, float, float]:
-    world = raw_to_world(raw, dims)
-    return transform_point(world, view.yaw_deg, view.pitch_deg)
+    x, y, z = world_xyz
+    w = world_w
+
+    if abs(view.xw_deg) > 1e-6:
+        theta_xw = math.radians(view.xw_deg)
+        cos_t = math.cos(theta_xw)
+        sin_t = math.sin(theta_xw)
+        x, w = (x * cos_t - w * sin_t), (x * sin_t + w * cos_t)
+
+    if abs(view.zw_deg) > 1e-6:
+        theta_zw = math.radians(view.zw_deg)
+        cos_t = math.cos(theta_zw)
+        sin_t = math.sin(theta_zw)
+        z, w = (z * cos_t - w * sin_t), (z * sin_t + w * cos_t)
+
+    return x, y, z
 
 
-def _fit_zoom(dims: Cell3, view: LayerView3D, rect: pygame.Rect) -> float:
-    base_zoom = fit_orthographic_zoom(
-        dims=dims,
-        yaw_deg=view.yaw_deg,
-        pitch_deg=view.pitch_deg,
-        rect=rect,
-        pad_x=14,
-        pad_y=24,
-        min_zoom=8.0,
-        max_zoom=120.0,
+def _transform_raw_point(
+    raw: tuple[float, float, float],
+    dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
+    view: LayerView3D,
+) -> tuple[float, float, float]:
+    world_xyz = raw_to_world(raw, dims3)
+    world_w = _world_w_for_layer(w_layer, dims4)
+    hyper_xyz = _apply_hyper_view_turns(world_xyz=world_xyz, world_w=world_w, view=view)
+    return transform_point(hyper_xyz, view.yaw_deg, view.pitch_deg)
+
+
+def _fit_zoom(
+    dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
+    view: LayerView3D,
+    rect: pygame.Rect,
+) -> float:
+    transformed = [
+        _transform_raw_point(raw, dims3, dims4, w_layer, view)
+        for raw in box_raw_corners(dims3)
+    ]
+    max_abs_x = max(max(abs(point[0]) for point in transformed), 0.01)
+    max_abs_y = max(max(abs(point[1]) for point in transformed), 0.01)
+    fit_x = max(1.0, rect.width - 14.0) / (2.0 * max_abs_x)
+    fit_y = max(1.0, rect.height - 24.0) / (2.0 * max_abs_y)
+    base_zoom = min(fit_x, fit_y)
+    return max(8.0, min(120.0, base_zoom))
+
+
+def _projection_extras(
+    view: LayerView3D,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
+) -> tuple[object, ...]:
+    return (
+        round(view.xw_deg, 3),
+        round(view.zw_deg, 3),
+        int(w_layer),
+        int(dims4[3]),
     )
-    return max(8.0, min(170.0, base_zoom * view.zoom_scale))
 
 
 def _project_raw_point(
     raw: tuple[float, float, float],
-    dims: Cell3,
+    dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
     view: LayerView3D,
     center_px: Point2,
     zoom: float,
 ) -> Point2:
-    trans = _transform_raw_point(raw, dims, view)
+    trans = _transform_raw_point(raw, dims3, dims4, w_layer, view)
     return orthographic_point(trans, center_px, zoom)
 
 
 def _draw_board_grid(
     surface: pygame.Surface,
-    dims: Cell3,
+    dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
     view: LayerView3D,
     rect: pygame.Rect,
     zoom: float,
@@ -144,16 +248,17 @@ def _draw_board_grid(
     center_px = (rect.centerx, rect.centery)
     cache_key = projection_cache_key(
         prefix="4d-full",
-        dims=dims,
+        dims=dims3,
         center_px=center_px,
         yaw_deg=view.yaw_deg,
         pitch_deg=view.pitch_deg,
         zoom=zoom,
+        extras=_projection_extras(view, dims4, w_layer),
     )
     draw_projected_lattice(
         surface,
-        dims,
-        lambda raw: _project_raw_point(raw, dims, view, center_px, zoom),
+        dims3,
+        lambda raw: _project_raw_point(raw, dims3, dims4, w_layer, view, center_px, zoom),
         inner_color=(52, 64, 95),
         frame_color=GRID_COLOR,
         frame_width=2,
@@ -166,15 +271,17 @@ def _build_cell_faces(
     color: tuple[int, int, int],
     view: LayerView3D,
     center_px: Point2,
-    dims: Cell3,
+    dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
     zoom: float,
     active: bool,
 ) -> list[Face]:
     return build_cube_faces(
         cell=cell,
         color=color,
-        project_raw=lambda raw: _project_raw_point(raw, dims, view, center_px, zoom),
-        transform_raw=lambda raw: _transform_raw_point(raw, dims, view),
+        project_raw=lambda raw: _project_raw_point(raw, dims3, dims4, w_layer, view, center_px, zoom),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims3, dims4, w_layer, view),
         active=active,
     )
 
@@ -263,6 +370,8 @@ def _helper_grid_marks_by_layer(state: GameStateND) -> dict[int, tuple[set[int],
 def _draw_layer_grid_or_shadow(
     surface: pygame.Surface,
     dims3: Cell3,
+    dims4: tuple[int, int, int, int],
+    w_layer: int,
     view: LayerView3D,
     draw_rect: pygame.Rect,
     zoom: float,
@@ -279,14 +388,15 @@ def _draw_layer_grid_or_shadow(
         pitch_deg=view.pitch_deg,
         zoom=zoom,
         marks=marks,
+        extras=_projection_extras(view, dims4, w_layer),
     )
     draw_projected_grid_mode(
         surface=surface,
         dims=dims3,
         grid_mode=grid_mode,
-        draw_full_grid=lambda: _draw_board_grid(surface, dims3, view, draw_rect, zoom),
-        project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
-        transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        draw_full_grid=lambda: _draw_board_grid(surface, dims3, dims4, w_layer, view, draw_rect, zoom),
+        project_raw=lambda raw: _project_raw_point(raw, dims3, dims4, w_layer, view, center_px, zoom),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims3, dims4, w_layer, view),
         helper_marks=helper_marks,
         helper_cache_key=helper_cache_key,
         frame_color=GRID_COLOR,
@@ -302,6 +412,7 @@ def _layer_faces(
     view: LayerView3D,
     center_px: Point2,
     dims3: Cell3,
+    dims4: tuple[int, int, int, int],
     zoom: float,
     locked_by_layer: LockedLayerCells,
     active_overlay: ActiveOverlay4D | None = None,
@@ -319,7 +430,9 @@ def _layer_faces(
                 color=color_for_cell(cell_id, COLOR_MAP),
                 view=view,
                 center_px=center_px,
-                dims=dims3,
+                dims3=dims3,
+                dims4=dims4,
+                w_layer=w_layer,
                 zoom=zoom,
                 active=is_active,
             )
@@ -334,6 +447,7 @@ def _draw_layer_clear_animation(
     view: LayerView3D,
     center_px: Point2,
     dims3: Cell3,
+    dims4: tuple[int, int, int, int],
     zoom: float,
 ) -> None:
     if clear_anim is None or not clear_anim.ghost_cells:
@@ -360,7 +474,9 @@ def _draw_layer_clear_animation(
                 color=glow_color,
                 view=view,
                 center_px=center_px,
-                dims=dims3,
+                dims3=dims3,
+                dims4=dims4,
+                w_layer=w_layer,
                 zoom=zoom,
                 active=True,
             )
@@ -405,9 +521,11 @@ def _draw_layer_board(
     surface.blit(label, (rect.x + 8, rect.y + 6))
 
     draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
-    dims3 = (state.config.dims[0], state.config.dims[1], state.config.dims[2])
-    zoom = _fit_zoom(dims3, view, draw_rect)
-    _draw_layer_grid_or_shadow(surface, dims3, view, draw_rect, zoom, grid_mode, helper_marks)
+    dims4 = state.config.dims
+    dims3 = (dims4[0], dims4[1], dims4[2])
+    zoom = _fit_zoom(dims3, dims4, w_layer, view, draw_rect) * view.zoom_scale
+    zoom = max(8.0, min(170.0, zoom))
+    _draw_layer_grid_or_shadow(surface, dims3, dims4, w_layer, view, draw_rect, zoom, grid_mode, helper_marks)
 
     center_px = (draw_rect.centerx, draw_rect.centery)
     faces = _layer_faces(
@@ -416,6 +534,7 @@ def _draw_layer_board(
         view,
         center_px,
         dims3,
+        dims4,
         zoom,
         locked_by_layer,
         active_overlay=active_overlay,
@@ -425,7 +544,7 @@ def _draw_layer_board(
         pygame.draw.polygon(surface, color, poly)
         border_col = (255, 255, 255) if active else (24, 24, 34)
         pygame.draw.polygon(surface, border_col, poly, 2 if active else 1)
-    _draw_layer_clear_animation(surface, clear_anim, w_layer, view, center_px, dims3, zoom)
+    _draw_layer_clear_animation(surface, clear_anim, w_layer, view, center_px, dims3, dims4, zoom)
 
 
 @lru_cache(maxsize=32)
@@ -564,6 +683,8 @@ def draw_game_frame(
 def _reset_view(view: LayerView3D) -> None:
     view.yaw_deg = 32.0
     view.pitch_deg = -26.0
+    view.xw_deg = 0.0
+    view.zw_deg = 0.0
     view.zoom_scale = 1.0
     view.stop_animation()
 
@@ -580,6 +701,10 @@ def handle_view_key(key: int, view: LayerView3D) -> bool:
                 "yaw_fine_pos": lambda: view.start_yaw_turn(15.0),
                 "pitch_pos": lambda: view.start_pitch_turn(90.0),
                 "pitch_neg": lambda: view.start_pitch_turn(-90.0),
+                "view_xw_neg": lambda: view.start_xw_turn(-90.0),
+                "view_xw_pos": lambda: view.start_xw_turn(90.0),
+                "view_zw_neg": lambda: view.start_zw_turn(-90.0),
+                "view_zw_pos": lambda: view.start_zw_turn(90.0),
                 "zoom_in": lambda: setattr(view, "zoom_scale", min(2.6, view.zoom_scale * 1.08)),
                 "zoom_out": lambda: setattr(view, "zoom_scale", max(0.45, view.zoom_scale / 1.08)),
                 "reset": lambda: _reset_view(view),

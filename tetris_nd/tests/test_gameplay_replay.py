@@ -361,6 +361,70 @@ class TestGameplayReplay(unittest.TestCase):
         view.step_animation(1000)
         self.assertFalse(view.animating)
 
+        view_xw_pos = self._key_for(CAMERA_KEYS_4D, "view_xw_pos")
+        self.assertTrue(front4d_game.handle_view_keydown(_keydown(view_xw_pos), view))
+        self.assertTrue(view.hyper_animating)
+        view.step_animation(1000)
+        self.assertFalse(view.hyper_animating)
+        self.assertAlmostEqual(view.xw_deg, 90.0, places=3)
+
+        view_zw_neg = self._key_for(CAMERA_KEYS_4D, "view_zw_neg")
+        self.assertTrue(front4d_game.handle_view_keydown(_keydown(view_zw_neg), view))
+        self.assertTrue(view.hyper_animating)
+        view.step_animation(1000)
+        self.assertFalse(view.hyper_animating)
+        self.assertAlmostEqual(view.zw_deg, 270.0, places=3)
+
+        reset = self._key_for(CAMERA_KEYS_4D, "reset")
+        self.assertTrue(front4d_game.handle_view_keydown(_keydown(reset), view))
+        self.assertAlmostEqual(view.xw_deg, 0.0, places=3)
+        self.assertAlmostEqual(view.zw_deg, 0.0, places=3)
+
+    def test_4d_replay_invariance_with_view_only_turns(self):
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        game_script = [
+            self._key_for(KEYS_4D, action)
+            for action in (
+                "move_x_neg",
+                "move_z_neg",
+                "move_w_pos",
+                "rotate_xy_pos",
+                "rotate_xz_neg",
+                "rotate_xw_pos",
+                "soft_drop",
+                "hard_drop",
+                "move_w_neg",
+                "hard_drop",
+            )
+        ] * 3
+        view_script = [
+            self._key_for(CAMERA_KEYS_4D, "view_xw_pos"),
+            self._key_for(CAMERA_KEYS_4D, "view_zw_neg"),
+            self._key_for(CAMERA_KEYS_4D, "view_xw_neg"),
+            self._key_for(CAMERA_KEYS_4D, "view_zw_pos"),
+        ]
+
+        def run_once(*, with_view_turns: bool) -> tuple:
+            state = frontend_nd.create_initial_state(cfg)
+            slice_state = frontend_nd.create_initial_slice_state(cfg)
+            view = front4d_game.LayerView3D()
+            for idx, key in enumerate(game_script):
+                result = frontend_nd.handle_game_keydown(_keydown(key), state, slice_state)
+                self.assertEqual(result, "continue")
+                if with_view_turns:
+                    view_key = view_script[idx % len(view_script)]
+                    frontend_nd.route_nd_keydown(
+                        view_key,
+                        state,
+                        slice_state=slice_state,
+                        view_key_handler=lambda raw_key: front4d_game.handle_view_key(raw_key, view),
+                    )
+                    view.step_animation(120.0)
+                state.step_gravity()
+            return _state_signature_nd(state, slice_state)
+
+        self.assertEqual(run_once(with_view_turns=False), run_once(with_view_turns=True))
+
 
 if __name__ == "__main__":
     unittest.main()

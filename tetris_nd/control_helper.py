@@ -103,6 +103,8 @@ _CAMERA_PAIR_ROWS: dict[int, tuple[_PairLineSpec, ...]] = {
         ("yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
         ("yaw_neg", "yaw_pos", "yaw +/-90"),
         ("pitch_neg", "pitch_pos", "pitch +/-90"),
+        ("view_xw_neg", "view_xw_pos", "view x-w +/-90"),
+        ("view_zw_neg", "view_zw_pos", "view z-w +/-90"),
         ("zoom_out", "zoom_in", "zoom"),
     ),
 }

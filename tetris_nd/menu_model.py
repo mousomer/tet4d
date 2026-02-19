@@ -24,9 +24,3 @@ def cycle_index(current: int, size: int, step: int) -> int:
     if size <= 0:
         return 0
     return (current + step) % size
-
-
-def clamp_int(value: int, minimum: int, maximum: int) -> int:
-    if minimum > maximum:
-        minimum, maximum = maximum, minimum
-    return max(minimum, min(maximum, int(value)))

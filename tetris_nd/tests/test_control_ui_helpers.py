@@ -70,13 +70,15 @@ class TestControlGroups(unittest.TestCase):
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View", "Slice"])
-        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 5, 2])
+        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 7, 2])
         translation_rows = groups[0][1]
         slice_rows = groups[-1][1]
         camera_rows = groups[-2][1]
         self.assertTrue(any("\tw axis\t" in row for row in translation_rows))
         self.assertTrue(any("\tslice w\t" in row for row in slice_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
+        self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
+        self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))
 
 
 if __name__ == "__main__":

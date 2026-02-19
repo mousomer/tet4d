@@ -139,10 +139,6 @@ class MenuState:
     run_dry_run: bool = False
 
 
-def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
-    return menu_fields_for_settings(GameSettingsND(), dimension)
-
-
 def menu_fields_for_settings(settings: GameSettingsND, dimension: int) -> list[FieldSpec]:
     choices = _PIECE_SET_CHOICES.get(dimension)
     piece_set_max = 0 if choices is None else max(0, len(choices) - 1)
