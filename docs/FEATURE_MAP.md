@@ -57,8 +57,8 @@ User-facing feature map for the shipped `tet4d` experience.
     - `zw`: `Z` boards of `(X,Y,W)`.
   - Slicing selects focused `z`/`w` visual layers and does not alter physics.
   - Camera-only hyperplane view turns are supported:
-    - `view_xw_neg/view_xw_pos` (default `F5/F6`)
-    - `view_zw_neg/view_zw_pos` (default `F7/F8`)
+    - `view_xw_neg/view_xw_pos` (default `1/2`)
+    - `view_zw_neg/view_zw_pos` (default `3/4`)
   - View-plane turns are render-only and do not mutate gameplay state, scoring, or replay determinism.
 
 ## 4. Keybindings
@@ -69,6 +69,8 @@ User-facing feature map for the shipped `tet4d` experience.
 - `keybindings/4d.json`
 - Built-in keyboard sets: `small`, `full`, and `macbook`.
 - Compact (`small`) 4D `w` movement defaults: `N` / `/` (no `,/.` dependency).
+- Full (`full`) 4D `w` movement defaults: `Numpad7` / `Numpad9`.
+- Macbook (`macbook`) 4D `w` movement defaults: `,` / `.`.
 - Small-profile rotation ladder:
   - 2D: `Q/W`
   - 3D: `Q/W`, `A/S`, `Z/X`

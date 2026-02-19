@@ -11,16 +11,16 @@
         "u"
       ],
       "view_xw_neg": [
-        "f5"
+        "1"
       ],
       "view_xw_pos": [
-        "f6"
+        "2"
       ],
       "view_zw_neg": [
-        "f7"
+        "3"
       ],
       "view_zw_pos": [
-        "f8"
+        "4"
       ],
       "reset": [
         "backspace"

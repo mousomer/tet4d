@@ -233,6 +233,11 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 219. `tetris_nd/tests/test_nd_routing.py`,
 220. `tetris_nd/tests/test_keybindings.py`,
 221. and full local gates passed.
+222. `DONE` `[BKL-P1-003]` Keybinding consistency update:
+223. 4D camera `view_xw/view_zw` defaults now use number pairs (`1/2`,`3/4`) across shipped profiles,
+224. `macbook` 4D `move_w` defaults now use `,/.`,
+225. `full` profile keeps `move_w` on keypad (`Numpad7/Numpad9`) and now uses the same 4D letter-pair rotation ladder as compact profile to avoid camera/view collisions,
+226. 2D positive rotation keeps `Up` arrow as default alongside `Q`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 

@@ -84,11 +84,19 @@ def profile_movement_maps(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, K
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
+    if profile == PROFILE_MACBOOK:
+        movement_4d = dict(movement_4d)
+        movement_4d.update(
+            {
+                "move_w_neg": (pygame.K_COMMA,),
+                "move_w_pos": (pygame.K_PERIOD,),
+            }
+        )
     return movement_2d, movement_3d, movement_4d
 
 
 ROTATIONS_2D_SMALL: KeyBindingMap = {
-    "rotate_xy_pos": (pygame.K_q,),
+    "rotate_xy_pos": (pygame.K_UP, pygame.K_q),
     "rotate_xy_neg": (pygame.K_w,),
 }
 
@@ -136,18 +144,18 @@ ROTATIONS_4D_SMALL: KeyBindingMap = {
 
 
 ROTATIONS_4D_FULL: KeyBindingMap = {
-    "rotate_xy_pos": (pygame.K_x,),
-    "rotate_xy_neg": (pygame.K_z,),
-    "rotate_xz_pos": (pygame.K_1,),
-    "rotate_xz_neg": (pygame.K_2,),
-    "rotate_yz_pos": (pygame.K_3,),
-    "rotate_yz_neg": (pygame.K_4,),
-    "rotate_xw_pos": (pygame.K_5,),
-    "rotate_xw_neg": (pygame.K_6,),
-    "rotate_yw_pos": (pygame.K_7,),
-    "rotate_yw_neg": (pygame.K_8,),
-    "rotate_zw_pos": (pygame.K_9,),
-    "rotate_zw_neg": (pygame.K_0,),
+    "rotate_xy_pos": (pygame.K_q,),
+    "rotate_xy_neg": (pygame.K_w,),
+    "rotate_xz_pos": (pygame.K_a,),
+    "rotate_xz_neg": (pygame.K_s,),
+    "rotate_yz_pos": (pygame.K_z,),
+    "rotate_yz_neg": (pygame.K_x,),
+    "rotate_xw_pos": (pygame.K_r,),
+    "rotate_xw_neg": (pygame.K_t,),
+    "rotate_yw_pos": (pygame.K_f,),
+    "rotate_yw_neg": (pygame.K_g,),
+    "rotate_zw_pos": (pygame.K_v,),
+    "rotate_zw_neg": (pygame.K_b,),
 }
 
 
@@ -172,10 +180,10 @@ DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
     "yaw_fine_pos": (pygame.K_l,),
     "pitch_pos": (pygame.K_u,),
     "pitch_neg": (pygame.K_o,),
-    "view_xw_neg": (pygame.K_F5,),
-    "view_xw_pos": (pygame.K_F6,),
-    "view_zw_neg": (pygame.K_F7,),
-    "view_zw_pos": (pygame.K_F8,),
+    "view_xw_neg": (pygame.K_1,),
+    "view_xw_pos": (pygame.K_2,),
+    "view_zw_neg": (pygame.K_3,),
+    "view_zw_pos": (pygame.K_4,),
     "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
     "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
     "reset": (pygame.K_BACKSPACE,),
