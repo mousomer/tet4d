@@ -125,7 +125,12 @@ Viewer-consistent translation requirement:
 2. `Left/Right` always move screen-left/screen-right.
 3. `Up`means away from the viewer,`Down` means closer to the viewer.
 4. After yaw turns, `x/z` translation remaps to board axes to preserve viewer consistency.
-5. `w`movement remains bound to`,`/`.` and is not viewer-remapped.
+5. `w`-movement keys remain a dedicated "between-layer-boards" intent.
+6. Under basis-driven 4D decomposition, `w`-movement intent remaps to the active layer axis:
+7. identity view -> world axis `w`,
+8. `xw` view -> world axis `x`,
+9. `zw` view -> world axis `z`.
+10. Compact profile uses `N`/`/` for `w` movement.
 
 Rotation reliability requirements (4D `z-w`):
 1. `rotate_zw` (`V/B`) must be conflict-free with view/system keys.
@@ -146,20 +151,29 @@ Rotation reliability requirements (4D `z-w`):
 9. Rapid chained rotations (including `V/B`) must retarget/queue without visual jitter or control deadlock.
 10. Exploration mode must render the same rotation tween behavior as normal mode.
 11. Overlay tween cells and active-piece cells must use the same topology mapping policy (bounded/wrap/invert parity).
-12. Projection cache keys must include full layer-view context (`xw`,`zw`,`w_layer`, and total `W` size) to prevent stale cross-config cache reuse.
-13. Per-layer zoom fit must be calculated after hyper-view transforms and `w`-layer centering so outer layers remain visible under `xw`/`zw` turns.
+12. Projection cache keys must include full layer-view context (basis orientation, layer index, and full dims) to prevent stale cross-config cache reuse.
+13. Per-layer zoom fit must be calculated from basis-derived board dims so all decomposed layer boards remain in-bounds under `xw`/`zw` turns.
+14. Quarter-turn `xw` / `zw` view turns must update the rendered 4D basis for board decomposition, not only per-cell projection.
+15. Board decomposition is axis-driven:
+16. identity view: layer axis=`w`, board dims=`(x,y,z)`, layer count=`W`,
+17. `xw` quarter-turn view: layer axis=`x`, board dims=`(w,y,z)`, layer count=`X`,
+18. `zw` quarter-turn view: layer axis=`z`, board dims=`(x,y,w)`, layer count=`Z`.
+19. All per-layer render paths (frame, label, grid/shadow, helper marks, cells, clear animation) must use one shared basis-derived coord map.
+20. Example invariant: dims `(5,4,3,2)` under `xw` quarter-turn must render `5` boards of size `(2,4,3)`.
+21. Exploration-mode rotation overlays must preserve fractional tween coordinates (no integer quantization in render path).
+22. When layer count decreases after view changes, previously drawn extra layer panels must be fully cleared before redraw.
 
 Implementation structure for view `xw` / `zw`:
 1. Introduce a 4D camera orientation state in renderer/view layer (separate from gameplay state).
-2. Apply 4D view-plane transforms before 3D layer projection; keep slicing semantics intact.
-3. Preserve existing per-layer 3D yaw/pitch controls after 4D view-plane transform.
-4. Keep view transforms independent from piece movement/rotation simulation logic.
-5. Keep dry-run/headless paths unchanged (view-only code excluded).
-6. Base transform sequence:
-7. map `(x,y,z,w_layer)` to centered 4D world coords,
-8. apply `xw` camera turn,
-9. apply `zw` camera turn,
-10. then apply existing 3D yaw/pitch projection path.
+2. Maintain a discrete signed-axis basis for quarter-turn `xw`/`zw` view controls.
+3. Derive layer axis/index and board-local 3D coords from that basis for every 4D coord.
+4. Preserve per-board 3D yaw/pitch controls after basis mapping.
+5. Keep view transforms independent from piece movement/rotation simulation logic.
+6. Keep dry-run/headless paths unchanged (view-only code excluded).
+7. Base render sequence:
+8. map board coord `(x,y,z,w)` -> `(layer_index, cell3)` via basis,
+9. map `cell3` to centered 3D world coords for that layer board dims,
+10. apply existing 3D yaw/pitch projection path.
 
 ## 7. Scoring
 
@@ -197,9 +211,13 @@ Minimum required coverage after 4D changes:
 10. view `xw` / `zw` key-routing and animation behavior,
 11. replay determinism invariance under view-only `xw` / `zw` turns.
 12. projection cache-key separation when only total `W` size changes (same xyz/layer/view angles).
-13. hyper-view zoom-fit regression checks for outer `w` layers.
+13. zoom-fit regression checks for basis-derived layer boards under `xw`/`zw` turns.
 14. full local gate via `scripts/ci_check.sh` for renderer-affecting batches.
 15. profile report via `tools/profile_4d_render.py` after projection/cache/zoom changes, with mitigation required if sparse overhead exceeds `15%` or `2.0 ms/frame`.
+16. basis decomposition regression under quarter-turn `xw` and `zw` view angles.
+17. dims `(5,4,3,2)` + `xw` regression asserting `layer_count=5` and board dims `(2,4,3)`.
+18. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
+19. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
 
 Relevant tests:
 - `tetris_nd/tests/test_game_nd.py`
@@ -219,6 +237,7 @@ Relevant tests:
 9. View `xw` / `zw` turns are camera-only and never alter gameplay outcomes.
 10. Changing total `W` size does not reuse stale projected grid/helper caches.
 11. Outer `w` layers remain in-bounds under hyper-view turns (`xw`/`zw`).
+12. Quarter-turn `xw` / `zw` view turns change board decomposition by axis basis with deterministic layer count/dims mapping.
 
 ## 11. Implementation Status (2026-02-19)
 
@@ -234,6 +253,9 @@ Implemented in code:
 9. Dedicated keybinding camera actions for these turns are implemented and conflict-safe by default:
 10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`.
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
-12. 4D per-layer zoom fitting is hyper-view aware (accounts for `xw`/`zw` + centered `w` layer transform).
+12. 4D per-layer zoom fitting is basis-aware and computed from current per-layer board dims.
 13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tetris_nd/tests/test_front4d_render.py`).
 14. 4D render profiling tooling exists and is part of projection/cache change validation (`tools/profile_4d_render.py`).
+15. `xw` / `zw` view turns now use basis-driven board decomposition in renderer:
+16. layer axis/count and per-layer board dims are derived from the active signed-axis basis, and all layer render paths share that mapping.
+17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tetris_nd/tests/test_front4d_render.py`).

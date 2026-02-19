@@ -198,6 +198,26 @@
 57. Setup-menu dedup follow-up completed by replacing duplicated 3D setup render/value/config paths with shared ND setup logic:
     - `tetris_nd/front3d_setup.py` (thin adapter)
     - `tetris_nd/frontend_nd.py` (shared implementation)
+58. Fixed 4D hyper-view board-slot mapping so quarter-turn `xw`/`zw` view rotations swap displayed `w`-layer board boxes deterministically:
+    - added hyper-view-aware layer order + layer-rect mapping in `tetris_nd/front4d_render.py`,
+    - ensured frame/grid/helper/piece rendering use the same layer-to-rect mapping.
+59. Reworked 4D `xw`/`zw` view behavior to basis-driven board decomposition:
+    - renderer now derives layer axis/count and per-layer board dims from signed-axis basis,
+    - all per-layer paths (grid/shadow, cells, helper marks, clear animation) share one 4D->(layer,cell3) mapping in `tetris_nd/front4d_render.py`.
+60. Fixed 4D input mapping so `move_w_neg/move_w_pos` follow current basis layer axis (identity=`w`, `xw`=`x`, `zw`=`z`) while keeping arrow movement viewer-relative:
+    - `tetris_nd/frontend_nd.py`
+    - `tetris_nd/front4d_game.py`
+    - `tetris_nd/front4d_render.py`
+61. Fixed exploration rotation render regression by preserving fractional tween coordinates in 4D cube-face rendering:
+    - `tetris_nd/front4d_render.py`
+62. Hardened 4D frame clear path to avoid stale panel artifacts when displayed layer count decreases:
+    - `tetris_nd/front4d_render.py`
+63. Added `macbook` built-in key profile (no function-key dependency for 4D view defaults), and compact-profile 4D `w` movement now defaults to `N`/`/`:
+    - `tetris_nd/keybindings_defaults.py`
+    - `tetris_nd/keybindings.py`
+    - `keybindings/4d.json`
+    - `keybindings/profiles/small/4d.json`
+    - `keybindings/profiles/macbook/*.json`
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
@@ -263,6 +283,20 @@
     - `docs/RDS_AND_CODEX.md`
     - `docs/GUIDELINES_RESEARCH.md`
     - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+27. Updated 4D RDS/backlog to capture the `xw`/`zw` board-slot permutation requirement and closure:
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/BACKLOG.md`
+28. Added and completed basis-decomposition implementation plan for 4D `xw`/`zw` rotations:
+    - `docs/plans/PLAN_4D_VIEW_BASIS_DECOMPOSITION_2026-02-19.md`
+29. Updated 4D RDS and backlog to replace superseded panel-permutation semantics with basis-driven decomposition semantics:
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/BACKLOG.md`
+30. Updated keybinding/4D RDS and feature map for `macbook` profile, compact `w` movement keys, and basis-aware `move_w` semantics:
+    - `docs/rds/RDS_KEYBINDINGS.md`
+    - `docs/rds/RDS_4D_TETRIS.md`
+    - `docs/FEATURE_MAP.md`
+31. Added regression-fix execution plan artifact:
+    - `docs/plans/PLAN_4D_REGRESSION_FIXES_2026-02-19.md`
 
 ## 2026-02-18
 
