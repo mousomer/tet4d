@@ -11,6 +11,7 @@ from .key_display import format_key_tuple
 from .keybindings import (
     runtime_binding_groups_for_dimension,
 )
+from .ui_utils import fit_text
 
 
 ControlGroup = tuple[str, tuple[str, ...]]
@@ -36,17 +37,121 @@ def _line_with_icon(keys: str, text: str, action: str) -> str:
     return f"{keys}\t{text}\t{action}"
 
 
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    if max_width <= font.size("...")[0]:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + "...")[0] > max_width:
-        trimmed = trimmed[:-1]
-    return f"{trimmed}..." if trimmed else ""
+_PairIconSpec = tuple[str, str, str, str]
+_SingleIconSpec = tuple[str, str, str]
+_PairLineSpec = tuple[str, str, str]
+_SingleLineSpec = tuple[str, str]
+
+_TRANSLATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
+    2: (
+        ("move_x_neg", "move_x_pos", "move x", "move_x_pos"),
+        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+    ),
+    3: (
+        ("move_x_neg", "move_x_pos", "left/right", "move_x_pos"),
+        ("move_z_neg", "move_z_pos", "away/closer", "move_z_neg"),
+        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+    ),
+    4: (
+        ("move_x_neg", "move_x_pos", "left/right", "move_x_pos"),
+        ("move_z_neg", "move_z_pos", "away/closer", "move_z_neg"),
+        ("move_w_neg", "move_w_pos", "w axis", "move_w_pos"),
+        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+    ),
+}
+
+_TRANSLATION_SINGLE_ROWS: dict[int, tuple[_SingleIconSpec, ...]] = {
+    2: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
+    3: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
+    4: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
+}
+
+_ROTATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
+    2: (("rotate_xy_neg", "rotate_xy_pos", "rotate x-y", "rotate_xy_pos"),),
+    3: (
+        ("rotate_xy_neg", "rotate_xy_pos", "plane x-y", "rotate_xy_pos"),
+        ("rotate_xz_neg", "rotate_xz_pos", "plane x-z", "rotate_xz_pos"),
+        ("rotate_yz_neg", "rotate_yz_pos", "plane y-z", "rotate_yz_pos"),
+    ),
+    4: (
+        ("rotate_xy_neg", "rotate_xy_pos", "plane x-y", "rotate_xy_pos"),
+        ("rotate_xz_neg", "rotate_xz_pos", "plane x-z", "rotate_xz_pos"),
+        ("rotate_yz_neg", "rotate_yz_pos", "plane y-z", "rotate_yz_pos"),
+        ("rotate_xw_neg", "rotate_xw_pos", "plane x-w", "rotate_xw_pos"),
+        ("rotate_yw_neg", "rotate_yw_pos", "plane y-w", "rotate_yw_pos"),
+        ("rotate_zw_neg", "rotate_zw_pos", "plane z-w", "rotate_zw_pos"),
+    ),
+}
+
+_SYSTEM_ROWS: tuple[_SingleLineSpec, ...] = (
+    ("toggle_grid", "grid mode"),
+    ("help", "help"),
+    ("menu", "pause menu"),
+    ("restart", "restart"),
+    ("quit", "quit"),
+)
+
+_CAMERA_PAIR_ROWS: dict[int, tuple[_PairLineSpec, ...]] = {
+    3: (
+        ("yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
+        ("yaw_neg", "yaw_pos", "yaw +/-90"),
+        ("pitch_neg", "pitch_pos", "pitch +/-90"),
+        ("zoom_out", "zoom_in", "zoom"),
+    ),
+    4: (
+        ("yaw_fine_neg", "yaw_fine_pos", "yaw +/-15"),
+        ("yaw_neg", "yaw_pos", "yaw +/-90"),
+        ("pitch_neg", "pitch_pos", "pitch +/-90"),
+        ("zoom_out", "zoom_in", "zoom"),
+    ),
+}
+
+_CAMERA_SINGLE_ROWS: dict[int, tuple[_SingleLineSpec, ...]] = {
+    3: (("cycle_projection", "projection"), ("reset", "reset camera")),
+    4: (("reset", "reset view"),),
+}
+
+_SLICE_PAIR_ROWS: dict[int, tuple[_PairLineSpec, ...]] = {
+    3: (("slice_z_neg", "slice_z_pos", "slice z"),),
+    4: (("slice_z_neg", "slice_z_pos", "slice z"), ("slice_w_neg", "slice_w_pos", "slice w")),
+}
+
+
+def _rows_with_icon_pairs(
+    bindings: Mapping[str, tuple[int, ...]],
+    specs: tuple[_PairIconSpec, ...],
+) -> tuple[str, ...]:
+    return tuple(
+        _line_with_icon(_format_pair(bindings, neg_action, pos_action), label, icon_action)
+        for neg_action, pos_action, label, icon_action in specs
+    )
+
+
+def _rows_with_icon_actions(
+    bindings: Mapping[str, tuple[int, ...]],
+    specs: tuple[_SingleIconSpec, ...],
+) -> tuple[str, ...]:
+    return tuple(
+        _line_with_icon(_format_action(bindings, action), label, icon_action)
+        for action, label, icon_action in specs
+    )
+
+
+def _rows_with_pairs(
+    bindings: Mapping[str, tuple[int, ...]],
+    specs: tuple[_PairLineSpec, ...],
+) -> tuple[str, ...]:
+    return tuple(
+        _line(_format_pair(bindings, neg_action, pos_action), label)
+        for neg_action, pos_action, label in specs
+    )
+
+
+def _rows_with_actions(
+    bindings: Mapping[str, tuple[int, ...]],
+    specs: tuple[_SingleLineSpec, ...],
+) -> tuple[str, ...]:
+    return tuple(_line(_format_action(bindings, action), label) for action, label in specs)
 
 
 def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
@@ -57,138 +162,25 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
     slice_keys = groups.get("slice", {})
     system_keys = groups.get("system", {})
 
-    if dim == 2:
-        return [
-            (
-                "Translation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "move x", "move_x_pos"),
-                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
-                    _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
-                    _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
-                ),
-            ),
-            (
-                "Rotation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "rotate_xy_neg", "rotate_xy_pos"), "rotate x-y", "rotate_xy_pos"),
-                ),
-            ),
-            (
-                "System",
-                (
-                    _line(_format_action(system_keys, "toggle_grid"), "grid mode"),
-                    _line(_format_action(system_keys, "help"), "help"),
-                    _line(_format_action(system_keys, "menu"), "pause menu"),
-                    _line(_format_action(system_keys, "restart"), "restart"),
-                    _line(_format_action(system_keys, "quit"), "quit"),
-                ),
-            ),
-        ]
+    translation_rows = _rows_with_icon_pairs(game_keys, _TRANSLATION_PAIR_ROWS[dim]) + _rows_with_icon_actions(
+        game_keys, _TRANSLATION_SINGLE_ROWS[dim]
+    )
+    rotation_rows = _rows_with_icon_pairs(game_keys, _ROTATION_PAIR_ROWS[dim])
+    control_groups: list[ControlGroup] = [
+        ("Translation", translation_rows),
+        ("Rotation", rotation_rows),
+        ("System", _rows_with_actions(system_keys, _SYSTEM_ROWS)),
+    ]
 
-    if dim == 3:
-        return [
-            (
-                "Translation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "left/right", "move_x_pos"),
-                    _line_with_icon(_format_pair(game_keys, "move_z_neg", "move_z_pos"), "away/closer", "move_z_neg"),
-                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
-                    _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
-                    _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
-                ),
-            ),
-            (
-                "Rotation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "rotate_xy_neg", "rotate_xy_pos"), "plane x-y", "rotate_xy_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_xz_neg", "rotate_xz_pos"), "plane x-z", "rotate_xz_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_yz_neg", "rotate_yz_pos"), "plane y-z", "rotate_yz_pos"),
-                ),
-            ),
-            (
-                "System",
-                (
-                    _line(_format_action(system_keys, "toggle_grid"), "grid mode"),
-                    _line(_format_action(system_keys, "help"), "help"),
-                    _line(_format_action(system_keys, "menu"), "pause menu"),
-                    _line(_format_action(system_keys, "restart"), "restart"),
-                    _line(_format_action(system_keys, "quit"), "quit"),
-                ),
-            ),
-            (
-                "Camera/View",
-                (
-                    _line(_format_pair(camera_keys, "yaw_fine_neg", "yaw_fine_pos"), "yaw +/-15"),
-                    _line(_format_pair(camera_keys, "yaw_neg", "yaw_pos"), "yaw +/-90"),
-                    _line(_format_pair(camera_keys, "pitch_neg", "pitch_pos"), "pitch +/-90"),
-                    _line(_format_pair(camera_keys, "zoom_out", "zoom_in"), "zoom"),
-                    _line(_format_action(camera_keys, "cycle_projection"), "projection"),
-                    _line(_format_action(camera_keys, "reset"), "reset camera"),
-                ),
-            ),
-            (
-                "Slice",
-                (
-                    _line(_format_pair(slice_keys, "slice_z_neg", "slice_z_pos"), "slice z"),
-                ),
-            ),
-        ]
+    if dim >= 3:
+        camera_rows = _rows_with_pairs(camera_keys, _CAMERA_PAIR_ROWS[dim]) + _rows_with_actions(
+            camera_keys, _CAMERA_SINGLE_ROWS[dim]
+        )
+        slice_rows = _rows_with_pairs(slice_keys, _SLICE_PAIR_ROWS[dim])
+        control_groups.append(("Camera/View", camera_rows))
+        control_groups.append(("Slice", slice_rows))
 
-    if dim == 4:
-        return [
-            (
-                "Translation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "move_x_neg", "move_x_pos"), "left/right", "move_x_pos"),
-                    _line_with_icon(_format_pair(game_keys, "move_z_neg", "move_z_pos"), "away/closer", "move_z_neg"),
-                    _line_with_icon(_format_pair(game_keys, "move_w_neg", "move_w_pos"), "w axis", "move_w_pos"),
-                    _line_with_icon(_format_pair(game_keys, "move_y_neg", "move_y_pos"), "up/down (explore)", "move_y_neg"),
-                    _line_with_icon(_format_action(game_keys, "soft_drop"), "soft drop", "soft_drop"),
-                    _line_with_icon(_format_action(game_keys, "hard_drop"), "hard drop", "hard_drop"),
-                ),
-            ),
-            (
-                "Rotation",
-                (
-                    _line_with_icon(_format_pair(game_keys, "rotate_xy_neg", "rotate_xy_pos"), "plane x-y", "rotate_xy_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_xz_neg", "rotate_xz_pos"), "plane x-z", "rotate_xz_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_yz_neg", "rotate_yz_pos"), "plane y-z", "rotate_yz_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_xw_neg", "rotate_xw_pos"), "plane x-w", "rotate_xw_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_yw_neg", "rotate_yw_pos"), "plane y-w", "rotate_yw_pos"),
-                    _line_with_icon(_format_pair(game_keys, "rotate_zw_neg", "rotate_zw_pos"), "plane z-w", "rotate_zw_pos"),
-                ),
-            ),
-            (
-                "System",
-                (
-                    _line(_format_action(system_keys, "toggle_grid"), "grid mode"),
-                    _line(_format_action(system_keys, "help"), "help"),
-                    _line(_format_action(system_keys, "menu"), "pause menu"),
-                    _line(_format_action(system_keys, "restart"), "restart"),
-                    _line(_format_action(system_keys, "quit"), "quit"),
-                ),
-            ),
-            (
-                "Camera/View",
-                (
-                    _line(_format_pair(camera_keys, "yaw_fine_neg", "yaw_fine_pos"), "yaw +/-15"),
-                    _line(_format_pair(camera_keys, "yaw_neg", "yaw_pos"), "yaw +/-90"),
-                    _line(_format_pair(camera_keys, "pitch_neg", "pitch_pos"), "pitch +/-90"),
-                    _line(_format_pair(camera_keys, "zoom_out", "zoom_in"), "zoom"),
-                    _line(_format_action(camera_keys, "reset"), "reset view"),
-                ),
-            ),
-            (
-                "Slice",
-                (
-                    _line(_format_pair(slice_keys, "slice_z_neg", "slice_z_pos"), "slice z"),
-                    _line(_format_pair(slice_keys, "slice_w_neg", "slice_w_pos"), "slice w"),
-                ),
-            ),
-        ]
-
-    return []
+    return control_groups
 
 
 def _draw_overflow_hint(
@@ -249,8 +241,8 @@ def _draw_group_rows(
         if len(parts) == 1:
             key_text = row
             desc_text = ""
-        key_draw = _fit_text(panel_font, key_text, key_col_w)
-        desc_draw = _fit_text(panel_font, desc_text, value_w)
+        key_draw = fit_text(panel_font, key_text, key_col_w)
+        desc_draw = fit_text(panel_font, desc_text, value_w)
         if key_draw:
             key_surf = panel_font.render(key_draw, True, (228, 230, 242))
             surface.blit(key_surf, (box_rect.x + margin_x, row_y))

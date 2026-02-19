@@ -219,10 +219,8 @@ def validate_gameplay_tuning_payload(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    _require_int(payload.get("version"), path="playbot.version", min_value=1)
-
-    budget_obj = _require_object(payload.get("budget_ms"), path="playbot.budget_ms")
+def _validate_playbot_budget(raw_budget: object) -> dict[str, dict[str, int]]:
+    budget_obj = _require_object(raw_budget, path="playbot.budget_ms")
     budgets: dict[str, dict[str, int]] = {}
     for dim_key in ("2d", "3d", "4d_plus"):
         raw_dim = _require_object(budget_obj.get(dim_key), path=f"playbot.budget_ms.{dim_key}")
@@ -234,8 +232,11 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
                 min_value=1,
             )
         budgets[dim_key] = dim_budget
+    return budgets
 
-    scaling_obj = _require_object(payload.get("board_size_scaling"), path="playbot.board_size_scaling")
+
+def _validate_playbot_board_size_scaling(raw_scaling: object) -> dict[str, Any]:
+    scaling_obj = _require_object(raw_scaling, path="playbot.board_size_scaling")
     reference_cells_obj = _require_object(
         scaling_obj.get("reference_cells"),
         path="playbot.board_size_scaling.reference_cells",
@@ -273,9 +274,17 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         min_value=0.1,
         max_value=2.0,
     )
+    return {
+        "reference_cells": reference_cells,
+        "min_scale": min_scale,
+        "max_scale": max_scale,
+        "exponent": exponent,
+    }
 
-    clamp_obj = _require_object(payload.get("clamp"), path="playbot.clamp")
-    clamp = {
+
+def _validate_playbot_clamp(raw_clamp: object) -> dict[str, int]:
+    clamp_obj = _require_object(raw_clamp, path="playbot.clamp")
+    return {
         "floor_divisor": _require_int(
             clamp_obj.get("floor_divisor"),
             path="playbot.clamp.floor_divisor",
@@ -298,7 +307,9 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ),
     }
 
-    lookahead_obj = _require_object(payload.get("lookahead"), path="playbot.lookahead")
+
+def _validate_playbot_lookahead(raw_lookahead: object) -> dict[str, dict[str, int]]:
+    lookahead_obj = _require_object(raw_lookahead, path="playbot.lookahead")
     depth_obj = _require_object(lookahead_obj.get("depth"), path="playbot.lookahead.depth")
     top_k_obj = _require_object(lookahead_obj.get("top_k"), path="playbot.lookahead.top_k")
     depth = {
@@ -361,8 +372,11 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             min_value=1,
         ),
     }
+    return {"depth": depth, "top_k": top_k}
 
-    adaptive_obj = _require_object(payload.get("adaptive_fallback"), path="playbot.adaptive_fallback")
+
+def _validate_playbot_adaptive_fallback(raw_adaptive: object) -> dict[str, Any]:
+    adaptive_obj = _require_object(raw_adaptive, path="playbot.adaptive_fallback")
     adaptive_enabled = adaptive_obj.get("enabled")
     if not isinstance(adaptive_enabled, bool):
         raise RuntimeError("playbot.adaptive_fallback.enabled must be a boolean")
@@ -426,8 +440,16 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         path="playbot.adaptive_fallback.deadline_safety_ms",
         min_value=0.0,
     )
+    return {
+        "enabled": adaptive_enabled,
+        "lookahead_min_budget_ms": lookahead_min_budget_ms,
+        "candidate_cap": candidate_cap,
+        "deadline_safety_ms": deadline_safety_ms,
+    }
 
-    auto_obj = _require_object(payload.get("auto_algorithm"), path="playbot.auto_algorithm")
+
+def _validate_playbot_auto_algorithm(raw_auto: object) -> dict[str, Any]:
+    auto_obj = _require_object(raw_auto, path="playbot.auto_algorithm")
     greedy_bias_obj = _require_object(
         auto_obj.get("greedy_bias"),
         path="playbot.auto_algorithm.greedy_bias",
@@ -446,20 +468,25 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
             path="playbot.auto_algorithm.greedy_bias.4d_plus",
         ),
     }
-    density_weight = _require_number(
-        auto_obj.get("density_weight"),
-        path="playbot.auto_algorithm.density_weight",
-    )
-    lines_cleared_weight = _require_number(
-        auto_obj.get("lines_cleared_weight"),
-        path="playbot.auto_algorithm.lines_cleared_weight",
-    )
-    threshold = _require_number(
-        auto_obj.get("threshold"),
-        path="playbot.auto_algorithm.threshold",
-    )
+    return {
+        "greedy_bias": greedy_bias,
+        "density_weight": _require_number(
+            auto_obj.get("density_weight"),
+            path="playbot.auto_algorithm.density_weight",
+        ),
+        "lines_cleared_weight": _require_number(
+            auto_obj.get("lines_cleared_weight"),
+            path="playbot.auto_algorithm.lines_cleared_weight",
+        ),
+        "threshold": _require_number(
+            auto_obj.get("threshold"),
+            path="playbot.auto_algorithm.threshold",
+        ),
+    }
 
-    benchmark_obj = _require_object(payload.get("benchmark"), path="playbot.benchmark")
+
+def _validate_playbot_benchmark(raw_benchmark: object) -> dict[str, Any]:
+    benchmark_obj = _require_object(raw_benchmark, path="playbot.benchmark")
     thresholds_obj = _require_object(
         benchmark_obj.get("p95_threshold_ms"),
         path="playbot.benchmark.p95_threshold_ms",
@@ -485,9 +512,15 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         benchmark_obj.get("history_file"),
         path="playbot.benchmark.history_file",
     )
+    return {
+        "p95_threshold_ms": benchmark_thresholds,
+        "history_file": history_file,
+    }
 
-    controller_obj = _require_object(payload.get("controller"), path="playbot.controller")
-    controller = {
+
+def _validate_playbot_controller(raw_controller: object) -> dict[str, int]:
+    controller_obj = _require_object(raw_controller, path="playbot.controller")
+    return {
         "hard_drop_after_soft_drops": _require_int(
             controller_obj.get("hard_drop_after_soft_drops"),
             path="playbot.controller.hard_drop_after_soft_drops",
@@ -495,8 +528,10 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ),
     }
 
-    dry_run_obj = _require_object(payload.get("dry_run"), path="playbot.dry_run")
-    dry_run = {
+
+def _validate_playbot_dry_run(raw_dry_run: object) -> dict[str, int]:
+    dry_run_obj = _require_object(raw_dry_run, path="playbot.dry_run")
+    return {
         "default_pieces": _require_int(
             dry_run_obj.get("default_pieces"),
             path="playbot.dry_run.default_pieces",
@@ -508,36 +543,28 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ),
     }
 
+
+def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    _require_int(payload.get("version"), path="playbot.version", min_value=1)
+    budgets = _validate_playbot_budget(payload.get("budget_ms"))
+    board_size_scaling = _validate_playbot_board_size_scaling(payload.get("board_size_scaling"))
+    clamp = _validate_playbot_clamp(payload.get("clamp"))
+    lookahead = _validate_playbot_lookahead(payload.get("lookahead"))
+    adaptive_fallback = _validate_playbot_adaptive_fallback(payload.get("adaptive_fallback"))
+    auto_algorithm = _validate_playbot_auto_algorithm(payload.get("auto_algorithm"))
+    benchmark = _validate_playbot_benchmark(payload.get("benchmark"))
+    controller = _validate_playbot_controller(payload.get("controller"))
+    dry_run = _validate_playbot_dry_run(payload.get("dry_run"))
+
     return {
         "version": payload["version"],
         "budget_ms": budgets,
-        "board_size_scaling": {
-            "reference_cells": reference_cells,
-            "min_scale": min_scale,
-            "max_scale": max_scale,
-            "exponent": exponent,
-        },
+        "board_size_scaling": board_size_scaling,
         "clamp": clamp,
-        "lookahead": {
-            "depth": depth,
-            "top_k": top_k,
-        },
-        "adaptive_fallback": {
-            "enabled": adaptive_enabled,
-            "lookahead_min_budget_ms": lookahead_min_budget_ms,
-            "candidate_cap": candidate_cap,
-            "deadline_safety_ms": deadline_safety_ms,
-        },
-        "auto_algorithm": {
-            "greedy_bias": greedy_bias,
-            "density_weight": density_weight,
-            "lines_cleared_weight": lines_cleared_weight,
-            "threshold": threshold,
-        },
-        "benchmark": {
-            "p95_threshold_ms": benchmark_thresholds,
-            "history_file": history_file,
-        },
+        "lookahead": lookahead,
+        "adaptive_fallback": adaptive_fallback,
+        "auto_algorithm": auto_algorithm,
+        "benchmark": benchmark,
         "controller": controller,
         "dry_run": dry_run,
     }

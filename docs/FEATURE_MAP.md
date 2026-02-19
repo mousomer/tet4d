@@ -53,6 +53,7 @@ User-facing feature map for the shipped `tet4d` experience.
   - reset to defaults.
 - Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
 - Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
+- Action icons in helper/menu rows are cached by action + size for smoother repeated rendering.
 - Translation/rotation arrow-diagram guides are available in:
   - Help pages,
   - launcher/pause/settings/keybindings menus,

@@ -91,15 +91,10 @@ Authoritative open/deferred items are tracked in:
 
 ### Active open items (synced from `docs/BACKLOG.md`)
 
-1. No blocking implementation gaps are open in this batch; only continuous watch tasks remain.
-2. Complexity budget (`C901`) is enforced by `scripts/ci_check.sh` and CI workflows.
-3. Docs freshness is enforced through canonical contract regex rules.
-4. `.venv`toolchain bootstrap is standardized in `scripts/bootstrap_env.sh`.
-5. Ongoing checks are automated in:
-6. `.github/workflows/ci.yml`
-7. `.github/workflows/stability-watch.yml`
-8. Operational source-of-truth remains:
-9. `docs/BACKLOG.md`
+1. No open simplification items remain from the current batch.
+2. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
+3. Operational source-of-truth remains:
+4. `docs/BACKLOG.md`
 
 ### Current complexity hotspots (`ruff --select C901`)
 
@@ -112,6 +107,12 @@ Authoritative open/deferred items are tracked in:
 3. Shared ND movement dispatch pipeline extracted.
 4. Branching piece-set selector replaced with registry maps.
 5. App boot/display/audio persistence glue consolidated.
+6. Shared UI helpers extracted to `tetris_nd/ui_utils.py`.
+7. Pause/settings row definitions externalized to config and rendered by shared panel helpers.
+8. Keybindings menu split into dedicated view/input modules.
+9. Shared ND launcher runner extracted for 3D/4D setup-to-game flow.
+10. Shared playbot lookahead helper extracted and used by 2D + ND planners.
+11. Runtime playbot policy validation decomposed into section validators.
 
 ### Verification requirements for simplification PRs
 

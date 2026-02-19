@@ -26,6 +26,32 @@
     "Reset defaults",
     "Back"
   ],
+  "pause_menu_rows": [
+    "Resume",
+    "Restart Run",
+    "Settings",
+    "Bot Options",
+    "Keybindings Setup",
+    "Profile Previous",
+    "Profile Next",
+    "Save Keybindings",
+    "Load Keybindings",
+    "Help",
+    "Back To Main Menu",
+    "Quit"
+  ],
+  "pause_settings_rows": [
+    "Master volume",
+    "SFX volume",
+    "Mute",
+    "Fullscreen",
+    "Window width",
+    "Window height",
+    "Apply display",
+    "Save settings",
+    "Reset defaults",
+    "Back"
+  ],
   "setup_fields": {
     "2d": [
       {"label": "Board width", "attr": "width", "min": 6, "max": 16},

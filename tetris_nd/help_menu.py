@@ -14,6 +14,7 @@ from .keybindings import (
 from .menu_config import settings_category_docs
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .ui_utils import draw_vertical_gradient
 
 
 _BG_TOP = (14, 18, 44)
@@ -39,15 +40,7 @@ def _current_binding_text(dimension: int, action: str, *, group: str = "system")
 
 
 def _draw_gradient(surface: pygame.Surface) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        color = (
-            int(_BG_TOP[0] * (1 - t) + _BG_BOTTOM[0] * t),
-            int(_BG_TOP[1] * (1 - t) + _BG_BOTTOM[1] * t),
-            int(_BG_TOP[2] * (1 - t) + _BG_BOTTOM[2] * t),
-        )
-        pygame.draw.line(surface, color, (0, y), (width, y))
+    draw_vertical_gradient(surface, _BG_TOP, _BG_BOTTOM)
 
 
 def _draw_lines(

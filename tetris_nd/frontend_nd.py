@@ -31,6 +31,7 @@ from .playbot.types import (
     bot_planner_profile_from_index,
 )
 from .speed_curve import gravity_interval_ms
+from .ui_utils import draw_vertical_gradient, fit_text
 from .view_controls import viewer_relative_move_axis_delta
 
 
@@ -68,13 +69,7 @@ def init_fonts() -> GfxFonts:
 def draw_gradient_background(surface: pygame.Surface,
                              top_color: Tuple[int, int, int],
                              bottom_color: Tuple[int, int, int]) -> None:
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
+    draw_vertical_gradient(surface, top_color, bottom_color)
 
 
 @dataclass
@@ -164,20 +159,6 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
     return str(value)
 
 
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    ellipsis = "..."
-    if font.size(ellipsis)[0] >= max_width:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
-        trimmed = trimmed[:-1]
-    return trimmed + ellipsis if trimmed else ""
-
-
 def draw_menu(screen: pygame.Surface,
               fonts: GfxFonts,
               state: MenuState,
@@ -187,7 +168,7 @@ def draw_menu(screen: pygame.Surface,
     fields = menu_fields_for_dimension(dimension)
 
     title_text = f"{dimension}D Tetris - Setup"
-    subtitle_text = _fit_text(
+    subtitle_text = fit_text(
         fonts.hint_font,
         "Use Up/Down to select, Left/Right to change, Enter to start.",
         width - 28,
@@ -229,7 +210,7 @@ def draw_menu(screen: pygame.Surface,
         text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        text_fit = _fit_text(fonts.menu_font, text, option_w - 6)
+        text_fit = fit_text(fonts.menu_font, text, option_w - 6)
         text_surf = fonts.menu_font.render(text_fit, True, txt_color)
         text_rect = text_surf.get_rect(topleft=(option_x, y))
         if selected:
@@ -250,7 +231,7 @@ def draw_menu(screen: pygame.Surface,
     max_hint_lines = max(1, (height - hint_y - 6) // max(1, hint_line_h))
     hint_budget = max(1, max_hint_lines - (1 if state.bindings_status else 0))
     for line in hint_lines[:hint_budget]:
-        line_fit = _fit_text(fonts.hint_font, line, width - 28)
+        line_fit = fit_text(fonts.hint_font, line, width - 28)
         surf = fonts.hint_font.render(line_fit, True, (210, 210, 230))
         hint_x = (width - surf.get_width()) // 2
         screen.blit(surf, (hint_x, hint_y))
@@ -258,7 +239,7 @@ def draw_menu(screen: pygame.Surface,
 
     if state.bindings_status and hint_y + hint_line_h <= height - 6:
         status_color = menu_binding_status_color(state.bindings_status_error)
-        status_text = _fit_text(fonts.hint_font, state.bindings_status, width - 28)
+        status_text = fit_text(fonts.hint_font, state.bindings_status, width - 28)
         status_surf = fonts.hint_font.render(status_text, True, status_color)
         status_x = (width - status_surf.get_width()) // 2
         screen.blit(status_surf, (status_x, hint_y))

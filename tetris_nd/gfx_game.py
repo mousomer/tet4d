@@ -10,6 +10,7 @@ from .game2d import GameState, GameConfig
 from .panel_utils import truncate_lines_to_height
 from .score_analyzer import hud_analysis_lines
 from .speed_curve import gravity_interval_ms
+from .ui_utils import draw_vertical_gradient, fit_text
 from .view_modes import GridMode, grid_mode_label
 
 
@@ -82,13 +83,7 @@ def draw_gradient_background(surface: pygame.Surface,
                              top_color: Tuple[int, int, int],
                              bottom_color: Tuple[int, int, int]) -> None:
     """Simple vertical gradient fill."""
-    width, height = surface.get_size()
-    for y in range(height):
-        t = y / max(1, height - 1)
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
+    draw_vertical_gradient(surface, top_color, bottom_color)
 
 
 def draw_button_with_arrow(
@@ -163,20 +158,6 @@ def draw_button_with_arrow(
 
 # ---------- Menu drawing ----------
 
-def _fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
-    if max_width <= 8:
-        return ""
-    if font.size(text)[0] <= max_width:
-        return text
-    ellipsis = "..."
-    if font.size(ellipsis)[0] >= max_width:
-        return ""
-    trimmed = text
-    while trimmed and font.size(trimmed + ellipsis)[0] > max_width:
-        trimmed = trimmed[:-1]
-    return trimmed + ellipsis if trimmed else ""
-
-
 def _draw_menu_header(
     screen: pygame.Surface,
     fonts: GfxFonts,
@@ -187,7 +168,7 @@ def _draw_menu_header(
 ) -> int:
     width, height = screen.get_size()
     title_surf = fonts.title_font.render("2D Tetris - Setup", True, TEXT_COLOR)
-    subtitle_text = _fit_text(
+    subtitle_text = fit_text(
         fonts.hint_font,
         "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
         width - 28,
@@ -210,14 +191,14 @@ def _draw_menu_header(
     for line in hint_lines:
         if hint_y + line_h > max_hint_bottom:
             break
-        hint_text = _fit_text(fonts.hint_font, line, width - 28)
+        hint_text = fit_text(fonts.hint_font, line, width - 28)
         hint_surf = fonts.hint_font.render(hint_text, True, (200, 200, 220))
         screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
         hint_y += hint_surf.get_height() + 2
 
     if bindings_status and hint_y + line_h <= max_hint_bottom:
         status_color = (255, 150, 150) if bindings_status_error else (170, 240, 170)
-        status_text = _fit_text(fonts.hint_font, bindings_status, width - 28)
+        status_text = fit_text(fonts.hint_font, bindings_status, width - 28)
         status_surf = fonts.hint_font.render(status_text, True, status_color)
         screen.blit(status_surf, ((width - status_surf.get_width()) // 2, hint_y + 2))
         hint_y += status_surf.get_height() + 4
@@ -274,7 +255,7 @@ def _draw_menu_settings_panel(
             break
         is_selected = i == selected_index
         txt_color = TEXT_COLOR if not is_selected else HIGHLIGHT_COLOR
-        text_fit = _fit_text(fonts.menu_font, text, option_w - 8)
+        text_fit = fit_text(fonts.menu_font, text, option_w - 8)
         text_surf = fonts.menu_font.render(text_fit, True, txt_color)
         text_rect = text_surf.get_rect(topleft=(option_x, option_y))
 
@@ -304,7 +285,7 @@ def _draw_menu_dpad_and_commands(
 
     full_block_bottom = dpad_center_y + dpad_offset + 50 + 32 + fonts.hint_font.get_height() + 8
     if full_block_bottom > height - 6:
-        compact_text = _fit_text(
+        compact_text = fit_text(
             fonts.hint_font,
             "Arrows navigate   Enter start   Esc quit",
             width - 24,
