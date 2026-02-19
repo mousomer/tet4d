@@ -123,33 +123,38 @@ Mode-specific requirements are defined in:
 11. Menu/default config files are source-controlled:
 12. `config/menu/structure.json`
 13. `config/menu/defaults.json`
-14. Runtime tuning config files are source-controlled:
-15. `config/gameplay/tuning.json`
-16. `config/playbot/policy.json`
-17. `config/audio/sfx.json`
-18. User runtime overrides remain in `state/menu_settings.json`.
-19. Canonical maintenance contract rules are defined in:
-20. `config/project/canonical_maintenance.json`
-21. Contract validation script is:
-22. `tools/validate_project_contracts.py`
-23. Repository path/constant/secret policy configs are source-controlled:
-24. `config/project/io_paths.json`
-25. `config/project/constants.json`
-26. `config/project/secret_scan.json`
-27. Secret scan command is:
-28. `python3 tools/scan_secrets.py`
-29. Shared safe path/constants loader is:
-30. `tetris_nd/project_config.py`
-31. Local environment bootstrap script is:
-32. `scripts/bootstrap_env.sh`
-33. Canonical schema/migration/help/replay/release artifacts are source-controlled:
-34. `config/schema/*.schema.json`
-35. `docs/migrations/*.md`
-36. `tests/replay/manifest.json`
-37. `docs/help/HELP_INDEX.md`
-38. `assets/help/manifest.json`
-39. `docs/RELEASE_CHECKLIST.md`
-40. Profiler/benchmark tool outputs must be constrained to paths under the project root.
+14. Help topic contracts are source-controlled:
+15. `config/help/topics.json`
+16. `config/help/action_map.json`
+17. Runtime tuning config files are source-controlled:
+18. `config/gameplay/tuning.json`
+19. `config/playbot/policy.json`
+20. `config/audio/sfx.json`
+21. User runtime overrides remain in `state/menu_settings.json`.
+22. Canonical maintenance contract rules are defined in:
+23. `config/project/canonical_maintenance.json`
+24. Contract validation script is:
+25. `tools/validate_project_contracts.py`
+26. Repository path/constant/secret policy configs are source-controlled:
+27. `config/project/io_paths.json`
+28. `config/project/constants.json`
+29. `config/project/secret_scan.json`
+30. Secret scan command is:
+31. `python3 tools/scan_secrets.py`
+32. Shared safe path/constants loader is:
+33. `tetris_nd/project_config.py`
+34. Local environment bootstrap script is:
+35. `scripts/bootstrap_env.sh`
+36. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+37. `config/schema/*.schema.json`
+38. `config/schema/help_topics.schema.json`
+39. `config/schema/help_action_map.schema.json`
+40. `docs/migrations/*.md`
+41. `tests/replay/manifest.json`
+42. `docs/help/HELP_INDEX.md`
+43. `assets/help/manifest.json`
+44. `docs/RELEASE_CHECKLIST.md`
+45. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 
 ## 7. Engineering Best Practices
 
@@ -221,6 +226,7 @@ Completed in current implementation:
 14. Offline playbot policy analysis tool added (`tools/analyze_playbot_policies.py`).
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
 16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
+17. Help/menu restructure `M1` contract completed with config-backed topic registry + action mapping and validator/test coverage.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.
@@ -247,7 +253,11 @@ Remaining follow-up:
 22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
 24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
-25. Planned: setup-menu render/value dedup extraction remains tracked by `BKL-P2-007`.
+25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`tetris_nd/frontend_nd.py`) via thin adapter in `tetris_nd/front3d_setup.py`.
+26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `tetris_nd/menu_layout.py` and wired in `tetris_nd/help_menu.py`.
+27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `tetris_nd/help_menu.py` and `tetris_nd/help_topics.py`.
+28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/validate_project_contracts.py`.
+29. Closed: help/menu restructure phase `M4` (launcher/pause parity + compact-window hardening) is implemented with config-enforced parity and compact help layout policy.
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
 

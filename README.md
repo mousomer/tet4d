@@ -64,6 +64,8 @@ python front4d.py
 Menu config:
 - `config/menu/structure.json`
 - `config/menu/defaults.json`
+- `config/help/topics.json`
+- `config/help/action_map.json`
 - `config/topology/designer_presets.json`
 
 Runtime tuning:

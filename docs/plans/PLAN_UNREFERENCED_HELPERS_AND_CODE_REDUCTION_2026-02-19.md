@@ -1,6 +1,6 @@
 # Plan: Unreferenced Helpers, Deduplication, and Code Reduction (2026-02-19)
 
-Status: Partially completed (unreferenced-helper cleanup + profiler path scope done; setup-menu dedup pending)  
+Status: Completed (unreferenced-helper cleanup + profiler path scope + setup-menu dedup completed)  
 Related backlog item: `BKL-P2-007`
 
 ## 1. Definitions
@@ -94,4 +94,8 @@ Classification result (2026-02-19):
 10. `tools/profile_4d_render.py`
 11. `tools/bench_playbot.py`
 12. `tools/analyze_playbot_policies.py`
-13. Remaining open scope in `BKL-P2-007`: setup-menu render/value dedup extraction.
+13. Completed remaining scope in `BKL-P2-007`: setup-menu render/value dedup extraction.
+14. 3D setup module now delegates to shared ND setup implementation:
+15. `tetris_nd/front3d_setup.py` -> `tetris_nd/frontend_nd.py`.
+16. Added regression tests for adapter parity:
+17. `tetris_nd/tests/test_front3d_setup.py`.

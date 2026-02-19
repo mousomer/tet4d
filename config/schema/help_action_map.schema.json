@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tet4d/help_action_map.schema.json",
+  "title": "tet4d help action topic map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "default_topic",
+    "action_topics"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "default_topic": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "action_topics": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      },
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+$"
+      }
+    }
+  }
+}

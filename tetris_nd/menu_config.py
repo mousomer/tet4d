@@ -14,6 +14,7 @@ CONFIG_DIR = Path(__file__).resolve().parent.parent / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
 STRUCTURE_FILE = CONFIG_DIR / "structure.json"
 _MODE_KEYS = ("2d", "3d", "4d")
+_PARITY_ENTRY_ACTIONS = ("settings", "keybindings", "help", "bot_options", "quit")
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
@@ -186,6 +187,24 @@ def _validate_row_list(raw_rows: object, key: str) -> tuple[str, ...]:
     if not rows:
         raise RuntimeError(f"structure.{key} must not be empty")
     return tuple(rows)
+
+
+def _validate_action_list(raw_actions: object, key: str) -> tuple[str, ...]:
+    if not isinstance(raw_actions, list):
+        raise RuntimeError(f"structure.{key} must be a list")
+    actions: list[str] = []
+    seen: set[str] = set()
+    for idx, raw_action in enumerate(raw_actions):
+        if not isinstance(raw_action, str) or not raw_action.strip():
+            raise RuntimeError(f"structure.{key}[{idx}] must be a non-empty string")
+        action = raw_action.strip().lower()
+        if action in seen:
+            raise RuntimeError(f"structure.{key} contains duplicate action: {action}")
+        seen.add(action)
+        actions.append(action)
+    if not actions:
+        raise RuntimeError(f"structure.{key} must not be empty")
+    return tuple(actions)
 
 
 def _resolve_field_max(
@@ -468,6 +487,23 @@ def _enforce_settings_split_policy(validated: dict[str, Any]) -> None:
         )
 
 
+def _enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
+    launcher_actions = {action for action, _label in validated["launcher_menu"]}
+    pause_actions = set(validated["pause_menu_actions"])
+    required_actions = set(_PARITY_ENTRY_ACTIONS)
+
+    launcher_missing = sorted(required_actions - launcher_actions)
+    pause_missing = sorted(required_actions - pause_actions)
+    if launcher_missing:
+        raise RuntimeError(
+            "launcher_menu missing required parity actions: " + ", ".join(launcher_missing)
+        )
+    if pause_missing:
+        raise RuntimeError(
+            "pause_menu_actions missing required parity actions: " + ", ".join(pause_missing)
+        )
+
+
 def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     launcher_menu = payload.get("launcher_menu")
     if not isinstance(launcher_menu, list):
@@ -481,6 +517,7 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
         "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
         "pause_menu_rows": _validate_row_list(payload.get("pause_menu_rows"), "pause_menu_rows"),
+        "pause_menu_actions": _validate_action_list(payload.get("pause_menu_actions"), "pause_menu_actions"),
         "pause_settings_rows": _validate_row_list(payload.get("pause_settings_rows"), "pause_settings_rows"),
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
@@ -488,7 +525,10 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "settings_split_rules": _validate_settings_split_rules(payload),
         "settings_category_metrics": _validate_settings_category_metrics(payload, settings_docs),
     }
+    if len(validated["pause_menu_rows"]) != len(validated["pause_menu_actions"]):
+        raise RuntimeError("pause_menu_rows and pause_menu_actions must have equal length")
     _enforce_settings_split_policy(validated)
+    _enforce_menu_entrypoint_parity(validated)
     return validated
 
 
@@ -522,6 +562,10 @@ def bot_options_rows() -> tuple[str, ...]:
 
 def pause_menu_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_rows"])
+
+
+def pause_menu_actions() -> tuple[str, ...]:
+    return tuple(_structure_payload()["pause_menu_actions"])
 
 
 def pause_settings_rows() -> tuple[str, ...]:

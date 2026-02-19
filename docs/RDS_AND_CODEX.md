@@ -97,11 +97,11 @@ Authoritative open/deferred items are tracked in:
 
 1. Active open items are maintained in `docs/BACKLOG.md` (single source of truth).
 2. Current remaining items include:
-3. `P2`: help/menu IA restructuring and setup-menu dedup cleanup (`BKL-P2-006`,`BKL-P2-007`).
-4. `P3`: continuous CI/stability watch and optional future module splits.
+3. `P3`: continuous CI/stability watch and optional future module splits.
 4. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
 5. Current `BKL-P2-006` execution report:
 6. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+7. Current status: closed (`M1` + `M2` + `M3` + `M4` completed: help topic contract + schemas + shared layout-zone renderer + live key sync/paging + parity/compact hardening).
 
 ### Current complexity hotspots (`ruff --select C901`)
 

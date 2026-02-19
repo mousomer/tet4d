@@ -25,8 +25,11 @@ Primary implementation and maintenance files:
 4. `tetris_nd/menu_controls.py`
 5. `tetris_nd/menu_keybinding_shortcuts.py`
 6. `tetris_nd/menu_config.py`
-7. `config/menu/defaults.json`
-8. `config/menu/structure.json`
+7. `tetris_nd/help_topics.py`
+8. `config/menu/defaults.json`
+9. `config/menu/structure.json`
+10. `config/help/topics.json`
+11. `config/help/action_map.json`
 
 ## 2. Design Goals
 
@@ -333,21 +336,38 @@ Stabilization details:
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 
-## 15. Open Follow-up
+## 15. Follow-up Status
 
-1. Active (`BKL-P2-006`): restructure help and menu information architecture for better readability, non-overlap, and clearer hierarchy.
-2. Active (`BKL-P2-006`): ensure help content stays complete and synchronized with live keybindings/settings in launcher and pause flows.
+1. Closed (`BKL-P2-006`): help/menu information architecture restructure is complete.
+2. Closed (`BKL-P2-006`): help content synchronization with live keybindings/settings across launcher and pause is complete.
 3. Execution plan for `BKL-P2-006` is documented in:
 4. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 5. Required execution milestones for `BKL-P2-006`:
-6. `M1` help-topic registry + action-topic mapping contract,
-7. `M2` shared layout-zone renderer to eliminate overlap from fixed coordinates,
-8. `M3` full key/help synchronization + overflow paging behavior,
-9. `M4` launcher/pause parity + compact-window validation.
-10. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
-11. Very-small-window readability tuning for controls/help layouts is implemented.
-12. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
-13. Help coverage expansion and menu parity pages are implemented.
-14. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
-15. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
-16. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
+6. Closed (`M1`): help-topic registry + action-topic mapping contract implemented via:
+7. `config/help/topics.json`, `config/help/action_map.json`,
+8. `config/schema/help_topics.schema.json`, `config/schema/help_action_map.schema.json`,
+9. runtime validator/loader in `tetris_nd/help_topics.py`,
+10. contract checks in `tools/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
+11. Closed (`M2`): shared layout-zone renderer implemented to eliminate fixed-coordinate overlap risk:
+12. shared zone engine in `tetris_nd/menu_layout.py`,
+13. help renderer migrated to zone-based layout in `tetris_nd/help_menu.py`,
+14. layout regression coverage in `tetris_nd/tests/test_menu_layout.py`.
+15. Closed (`M3`): full key/help synchronization + overflow paging behavior implemented via:
+16. context/dimension-filtered topic rendering in `tetris_nd/help_topics.py` + `tetris_nd/help_menu.py`,
+17. live action->key rows sourced from runtime bindings + `config/help/action_map.json`,
+18. explicit subpage controls (`[`/`]`, `PgUp`/`PgDn`) replacing silent truncation,
+19. contract lane checks in `tools/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
+20. Closed (`M4`): launcher/pause parity + compact-window validation implemented via:
+21. config-driven pause action mapping in `config/menu/structure.json` (`pause_menu_actions`),
+22. parity enforcement in `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`),
+23. pause runtime actions sourced from config in `tetris_nd/pause_menu.py`,
+24. compact-window help behavior in `tetris_nd/help_menu.py` (`is_compact_help_view` + compact layout/content policy),
+25. compact thresholds in `config/project/constants.json` (`layout.help.compact_*_threshold`),
+26. M4 regression coverage in `tetris_nd/tests/test_menu_policy.py` and `tetris_nd/tests/test_help_menu.py`.
+27. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
+28. Very-small-window readability tuning for controls/help layouts is implemented.
+29. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
+30. Help coverage expansion and menu parity pages are implemented.
+31. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
+32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
+33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.

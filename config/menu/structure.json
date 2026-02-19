@@ -40,6 +40,20 @@
     "Back To Main Menu",
     "Quit"
   ],
+  "pause_menu_actions": [
+    "resume",
+    "restart",
+    "settings",
+    "bot_options",
+    "keybindings",
+    "profile_prev",
+    "profile_next",
+    "save_bindings",
+    "load_bindings",
+    "help",
+    "menu",
+    "quit"
+  ],
   "pause_settings_rows": [
     "Master volume",
     "SFX volume",
