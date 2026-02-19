@@ -35,7 +35,15 @@ class TestHelpMenu(unittest.TestCase):
     def test_topic_action_rows_include_all_groups_for_key_reference(self) -> None:
         rows = help_topic_action_rows(topic_id="key_reference", dimension=4, include_all=True)
         groups = {group for group, _action, _keys in rows}
-        self.assertTrue({"system", "game", "camera", "slice"}.issubset(groups))
+        self.assertTrue({"system", "game", "camera"}.issubset(groups))
+        self.assertNotIn("slice", groups)
+
+    def test_key_reference_lines_split_gameplay_into_translation_and_rotation(self) -> None:
+        lines = help_menu.help_topic_action_lines(topic_id="key_reference", dimension=4, include_all=True)
+        text = "\n".join(lines)
+        self.assertIn("-- Gameplay / Translation", text)
+        self.assertIn("-- Gameplay / Rotation", text)
+        self.assertNotIn("slice_", text)
 
     def test_compact_mode_detection_thresholds(self) -> None:
         self.assertTrue(help_menu.is_compact_help_view(width=640, height=600))

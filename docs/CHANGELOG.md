@@ -218,6 +218,10 @@
     - `keybindings/4d.json`
     - `keybindings/profiles/small/4d.json`
     - `keybindings/profiles/macbook/*.json`
+64. Removed slicing controls/state across ND runtime and UI:
+    - removed `SliceState` and slice dispatch from `tetris_nd/frontend_nd.py`,
+    - removed slice HUD/highlight dependency in `tetris_nd/front4d_render.py`,
+    - removed slice groups from keybinding/runtime/help models (`tetris_nd/keybindings.py`, `tetris_nd/control_helper.py`, `tetris_nd/keybindings_menu_model.py`, `config/help/*`).
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
@@ -234,6 +238,7 @@
     - `docs/rds/RDS_4D_TETRIS.md`
 12. Normalized open `P3` backlog entries to structured ID/cadence/trigger/done format in:
     - `docs/BACKLOG.md`
+13. Updated keybinding/4D/general/menu RDS and feature/help docs for no-slice architecture (`game/camera/system` grouping and no manual layer slicing controls).
 13. Canonical maintenance contract now validates backlog structure markers/regex for active `P3` entries in:
     - `config/project/canonical_maintenance.json`
 14. Added active backlog/RDS follow-up for help and menu IA restructuring (`BKL-P2-006`) in:
@@ -297,6 +302,19 @@
     - `docs/FEATURE_MAP.md`
 31. Added regression-fix execution plan artifact:
     - `docs/plans/PLAN_4D_REGRESSION_FIXES_2026-02-19.md`
+32. Keybinding editor section model now splits gameplay actions into `Gameplay / Translation` and `Gameplay / Rotation` (no slice section).
+33. Help live-key rendering now mirrors the same split (`System`, `Gameplay / Translation`, `Gameplay / Rotation`, `Camera / View`).
+34. Side-panel control helpers now hide exploration-only translation rows unless exploration mode is active.
+35. Shipped profile keybinding files were sanitized to remove legacy `slice` groups:
+    - `keybindings/profiles/*/3d.json`
+    - `keybindings/profiles/*/4d.json`
+36. Dead no-op keybinding compatibility code removed:
+    - unused `_merge_bindings` in `tetris_nd/keybindings.py`
+    - unreachable grouped-loader branch in `tetris_nd/keybindings.py`
+37. Added regression coverage for keybinding section split:
+    - `tetris_nd/tests/test_keybindings_menu_model.py`
+    - `tetris_nd/tests/test_help_menu.py`
+    - `tetris_nd/tests/test_control_ui_helpers.py`
 
 ## 2026-02-18
 

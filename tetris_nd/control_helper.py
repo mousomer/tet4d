@@ -46,19 +46,22 @@ _SingleLineSpec = tuple[str, str]
 _TRANSLATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
     2: (
         ("move_x_neg", "move_x_pos", "move x", "move_x_pos"),
-        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
     ),
     3: (
         ("move_x_neg", "move_x_pos", "left/right", "move_x_pos"),
         ("move_z_neg", "move_z_pos", "away/closer", "move_z_neg"),
-        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
     ),
     4: (
         ("move_x_neg", "move_x_pos", "left/right", "move_x_pos"),
         ("move_z_neg", "move_z_pos", "away/closer", "move_z_neg"),
-        ("move_w_neg", "move_w_pos", "w axis", "move_w_pos"),
-        ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+        ("move_w_neg", "move_w_pos", "w layer prev/next", "move_w_pos"),
     ),
+}
+
+_TRANSLATION_EXPLORATION_ROWS: dict[int, _PairIconSpec] = {
+    2: ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+    3: ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
+    4: ("move_y_neg", "move_y_pos", "up/down (explore)", "move_y_neg"),
 }
 
 _TRANSLATION_SINGLE_ROWS: dict[int, tuple[_SingleIconSpec, ...]] = {
@@ -114,12 +117,6 @@ _CAMERA_SINGLE_ROWS: dict[int, tuple[_SingleLineSpec, ...]] = {
     4: (("reset", "reset view"),),
 }
 
-_SLICE_PAIR_ROWS: dict[int, tuple[_PairLineSpec, ...]] = {
-    3: (("slice_z_neg", "slice_z_pos", "slice z"),),
-    4: (("slice_z_neg", "slice_z_pos", "slice z"), ("slice_w_neg", "slice_w_pos", "slice w")),
-}
-
-
 def _rows_with_icon_pairs(
     bindings: Mapping[str, tuple[int, ...]],
     specs: tuple[_PairIconSpec, ...],
@@ -157,16 +154,19 @@ def _rows_with_actions(
     return tuple(_line(_format_action(bindings, action), label) for action, label in specs)
 
 
-def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
+def control_groups_for_dimension(dimension: int, *, include_exploration: bool = True) -> list[ControlGroup]:
     dim = max(2, min(4, int(dimension)))
     groups = runtime_binding_groups_for_dimension(dim)
     game_keys = groups.get("game", {})
     camera_keys = groups.get("camera", {})
-    slice_keys = groups.get("slice", {})
     system_keys = groups.get("system", {})
 
-    translation_rows = _rows_with_icon_pairs(game_keys, _TRANSLATION_PAIR_ROWS[dim]) + _rows_with_icon_actions(
-        game_keys, _TRANSLATION_SINGLE_ROWS[dim]
+    translation_specs = list(_TRANSLATION_PAIR_ROWS[dim])
+    if include_exploration:
+        translation_specs.append(_TRANSLATION_EXPLORATION_ROWS[dim])
+    translation_rows = _rows_with_icon_pairs(game_keys, tuple(translation_specs)) + _rows_with_icon_actions(
+        game_keys,
+        _TRANSLATION_SINGLE_ROWS[dim],
     )
     rotation_rows = _rows_with_icon_pairs(game_keys, _ROTATION_PAIR_ROWS[dim])
     control_groups: list[ControlGroup] = [
@@ -179,9 +179,7 @@ def control_groups_for_dimension(dimension: int) -> list[ControlGroup]:
         camera_rows = _rows_with_pairs(camera_keys, _CAMERA_PAIR_ROWS[dim]) + _rows_with_actions(
             camera_keys, _CAMERA_SINGLE_ROWS[dim]
         )
-        slice_rows = _rows_with_pairs(slice_keys, _SLICE_PAIR_ROWS[dim])
         control_groups.append(("Camera/View", camera_rows))
-        control_groups.append(("Slice", slice_rows))
 
     return control_groups
 

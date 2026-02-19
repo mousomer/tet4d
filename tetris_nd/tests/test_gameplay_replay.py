@@ -20,7 +20,6 @@ from tetris_nd.keybindings import (
     KEYS_2D,
     KEYS_3D,
     KEYS_4D,
-    SLICE_KEYS_4D,
     SYSTEM_KEYS,
 )
 from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
@@ -55,7 +54,7 @@ def _state_signature_2d(state) -> tuple:
     )
 
 
-def _state_signature_nd(state, slice_state=None) -> tuple:
+def _state_signature_nd(state) -> tuple:
     board = tuple(sorted(state.board.cells.items()))
     if state.current_piece is None:
         piece = None
@@ -67,9 +66,6 @@ def _state_signature_nd(state, slice_state=None) -> tuple:
             tuple(sorted(state.current_piece.cells())),
         )
     next_bag = tuple(shape.name for shape in state.next_bag)
-    slice_sig = ()
-    if slice_state is not None:
-        slice_sig = tuple(sorted(slice_state.axis_values.items()))
     return (
         state.score,
         state.lines_cleared,
@@ -77,7 +73,6 @@ def _state_signature_nd(state, slice_state=None) -> tuple:
         board,
         piece,
         next_bag,
-        slice_sig,
     )
 
 
@@ -176,7 +171,6 @@ class TestGameplayReplay(unittest.TestCase):
     def test_exploration_mode_disables_gravity_and_locking_nd(self) -> None:
         cfg = GameConfigND(dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         self.assertFalse(state.game_over)
         piece_before = state.current_piece
         pos_before = state.current_piece.pos if state.current_piece is not None else None
@@ -189,17 +183,17 @@ class TestGameplayReplay(unittest.TestCase):
             self.assertEqual(state.current_piece.pos, pos_before)
 
         move_up = self._key_for(KEYS_4D, "move_y_neg")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_up), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_up), state), "continue")
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
 
         move_down = self._key_for(KEYS_4D, "move_y_pos")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_down), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_down), state), "continue")
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1])
 
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue")
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
@@ -226,12 +220,11 @@ class TestGameplayReplay(unittest.TestCase):
 
         def run_once() -> tuple:
             state = frontend_nd.create_initial_state(cfg)
-            slice_state = frontend_nd.create_initial_slice_state(cfg)
             for key in script:
-                result = frontend_nd.handle_game_keydown(_keydown(key), state, slice_state)
+                result = frontend_nd.handle_game_keydown(_keydown(key), state)
                 self.assertEqual(result, "continue")
                 state.step_gravity()
-            return _state_signature_nd(state, slice_state)
+            return _state_signature_nd(state)
 
         self.assertEqual(run_once(), run_once())
 
@@ -307,10 +300,9 @@ class TestGameplayReplay(unittest.TestCase):
         camera.step_animation(1000)
         self.assertFalse(camera.animating)
 
-    def test_4d_controls_slice_and_view_smoke(self):
+    def test_4d_controls_and_view_smoke(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         state.board.cells.clear()
         state.current_piece = ActivePieceND.from_shape(
             PieceShapeND(
@@ -327,30 +319,25 @@ class TestGameplayReplay(unittest.TestCase):
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_z_neg), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_z_neg), state), "continue")
         self.assertEqual(state.current_piece.pos, (3, 2, 2, 2))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_w_pos), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_w_pos), state), "continue")
         self.assertEqual(state.current_piece.pos, (3, 2, 2, 3))
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(rotate_xw), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(rotate_xw), state), "continue")
         self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state, slice_state), "continue")
+        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue")
         self.assertGreater(len(state.board.cells), 0)
 
-        start_z = slice_state.axis_values[2]
-        slice_z_neg = self._key_for(SLICE_KEYS_4D, "slice_z_neg")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(slice_z_neg), state, slice_state), "continue")
-        self.assertEqual(slice_state.axis_values[2], max(0, start_z - 1))
-
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, slice_state),
+            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state),
             "toggle_grid",
         )
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, slice_state),
+            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state),
             "help",
         )
 
@@ -406,22 +393,20 @@ class TestGameplayReplay(unittest.TestCase):
 
         def run_once(*, with_view_turns: bool) -> tuple:
             state = frontend_nd.create_initial_state(cfg)
-            slice_state = frontend_nd.create_initial_slice_state(cfg)
             view = front4d_game.LayerView3D()
             for idx, key in enumerate(game_script):
-                result = frontend_nd.handle_game_keydown(_keydown(key), state, slice_state)
+                result = frontend_nd.handle_game_keydown(_keydown(key), state)
                 self.assertEqual(result, "continue")
                 if with_view_turns:
                     view_key = view_script[idx % len(view_script)]
                     frontend_nd.route_nd_keydown(
                         view_key,
                         state,
-                        slice_state=slice_state,
                         view_key_handler=lambda raw_key: front4d_game.handle_view_key(raw_key, view),
                     )
                     view.step_animation(120.0)
                 state.step_gravity()
-            return _state_signature_nd(state, slice_state)
+            return _state_signature_nd(state)
 
         self.assertEqual(run_once(with_view_turns=False), run_once(with_view_turns=True))
 

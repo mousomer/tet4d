@@ -456,7 +456,10 @@ def _draw_side_panel(
         panel_rect=panel_rect,
         fonts=fonts,
         header_lines=lines,
-        control_groups=control_groups_for_dimension(3),
+        control_groups=control_groups_for_dimension(
+            3,
+            include_exploration=bool(state.config.exploration_mode),
+        ),
         low_priority_lines=tuple(low_priority_lines),
         game_over=state.game_over,
         min_controls_h=138,

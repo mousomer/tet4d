@@ -103,7 +103,10 @@ def draw_side_panel_2d(
     controls_rect = pygame.Rect(px, controls_top, side_panel_width, max(42, controls_bottom - controls_top))
     draw_grouped_control_helper(
         surface,
-        groups=control_groups_for_dimension(2),
+        groups=control_groups_for_dimension(
+            2,
+            include_exploration=bool(state.config.exploration_mode),
+        ),
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,

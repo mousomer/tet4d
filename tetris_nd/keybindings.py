@@ -20,8 +20,6 @@ from typing import Dict, List, Mapping, MutableMapping, Tuple
 import pygame
 from .key_display import display_key_name
 from .keybindings_defaults import (
-    DEFAULT_SLICE_KEYS_3D,
-    DEFAULT_SLICE_KEYS_4D,
     DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
     PROFILE_MACBOOK,
     PROFILE_SMALL,
@@ -138,13 +136,6 @@ def key_matches(bindings: Mapping[str, KeyTuple], action: str, key: int) -> bool
     return key in bindings.get(action, ())
 
 
-def _merge_bindings(*maps: Mapping[str, KeyTuple]) -> KeyBindingMap:
-    merged: KeyBindingMap = {}
-    for m in maps:
-        merged.update(m)
-    return merged
-
-
 def _replace_map(target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]) -> None:
     target.clear()
     target.update(source)
@@ -165,8 +156,6 @@ KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
 CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
 CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
-SLICE_KEYS_3D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_3D)
-SLICE_KEYS_4D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_4D)
 
 
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
@@ -180,8 +169,6 @@ def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     _replace_map(KEYS_4D, keys_4d)
     _replace_map(CAMERA_KEYS_3D, camera_3d)
     _replace_map(CAMERA_KEYS_4D, camera_4d)
-    _replace_map(SLICE_KEYS_3D, DEFAULT_SLICE_KEYS_3D)
-    _replace_map(SLICE_KEYS_4D, DEFAULT_SLICE_KEYS_4D)
     _sanitize_runtime_bindings(camera_defaults_4d=camera_4d)
 
 
@@ -196,7 +183,7 @@ def _sanitize_runtime_bindings(
     )
     # 4D gameplay keys must not be shadowed by 4D camera/view keys.
     occupied = set()
-    for mapping in (KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS):
+    for mapping in (KEYS_4D, SYSTEM_KEYS):
         for keys in mapping.values():
             occupied.update(keys)
 
@@ -287,13 +274,11 @@ def _binding_groups_for_dimension(dimension: int) -> Dict[str, MutableMapping[st
         return {
             "game": KEYS_3D,
             "camera": CAMERA_KEYS_3D,
-            "slice": SLICE_KEYS_3D,
             "system": SYSTEM_KEYS,
         }
     if dimension == 4:
         return {
             "game": KEYS_4D,
-            "slice": SLICE_KEYS_4D,
             "camera": CAMERA_KEYS_4D,
             "system": SYSTEM_KEYS,
         }
@@ -350,7 +335,7 @@ def _camera_blocked_conflicts(
     return [
         (conflict_group, conflict_action)
         for conflict_group, conflict_action in conflicts
-        if conflict_group in {"game", "slice", "system"}
+        if conflict_group in {"game", "system"}
     ]
 
 
@@ -693,9 +678,6 @@ def load_keybindings_file(
 
     for group_name, target in groups.items():
         raw_group = bindings_payload.get(group_name)
-        if raw_group is None and len(groups) == 1:
-            # Compatibility: allow {"bindings": {"move_x_neg": [...]}} in 2D-only files.
-            raw_group = bindings_payload
         if raw_group is None and dimension == 2 and group_name == "game":
             # Compatibility for legacy 2D schema now that 2D also includes system bindings.
             raw_group = bindings_payload

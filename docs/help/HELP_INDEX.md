@@ -7,7 +7,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 1. Gameplay basics (`2D/3D/4D`, gravity axis, clear rules)
 2. Keybindings (`General`,`2D`,`3D`,`4D`)
 3. Movement vs rotation controls
-4. Camera controls and slicing
+4. Camera and view controls
 5. Grid modes (`OFF`,`EDGE`,`FULL`,`HELPER`)
 6. Bot modes and planner profiles
 7. Scoring and score-analyzer summary lines
@@ -18,7 +18,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 12. Fullscreen/window behavior and display troubleshooting
 13. Menu parity and settings IA split policy rules
 14. Profile workflow (`cycle/create/rename/save-as/delete/reset`)
-15. Grid helper semantics and slice semantics in 3D/4D
+15. Grid helper semantics across 3D/4D rendered layer boards
 16. Exploration mode (no gravity/lock/clear, minimal fitting board)
 17. Gameplay help shortcut (`F1`)
 18. Boundary topology presets (`bounded`,`wrap_all`,`invert_all`)

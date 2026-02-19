@@ -55,7 +55,7 @@ User-facing feature map for the shipped `tet4d` experience.
     - identity: `W` boards of `(X,Y,Z)`,
     - `xw`: `X` boards of `(W,Y,Z)`,
     - `zw`: `Z` boards of `(X,Y,W)`.
-  - Slicing selects focused `z`/`w` visual layers and does not alter physics.
+  - All basis-derived layer boards are rendered simultaneously (no manual slice control path).
   - Camera-only hyperplane view turns are supported:
     - `view_xw_neg/view_xw_pos` (default `1/2`)
     - `view_zw_neg/view_zw_pos` (default `3/4`)
@@ -79,12 +79,14 @@ User-facing feature map for the shipped `tet4d` experience.
   - restart=`Y`, toggle-grid=`C`, menu=`M`, quit=`Esc`.
 - In-app keybinding editor supports:
   - top-level scope sections (`General`,`2D`,`3D`,`4D`),
+  - gameplay split into `Translation` and `Rotation` sections (3D/4D and in `ALL` scope),
   - rebind,
   - conflict strategy,
   - save/load/save-as,
   - profile cycle/create/rename/delete,
   - reset to defaults.
-- Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+- Legacy profile `slice` groups are ignored on load and removed on save.
+- Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`System`.
 - Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
 - Action icons in helper/menu rows are cached by action + size for smoother repeated rendering.
 - Translation/rotation arrow-diagram guides are available in:

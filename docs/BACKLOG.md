@@ -13,7 +13,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 ## 2. Unified Change Set (Implemented Baseline)
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
-2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/slice/system`).
+2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
 3. `DONE` General keybindings are now separated in the main keybindings menu (not merged into default dimension views).
 4. `DONE` Help expanded to include full key reference, settings reference, concepts, and control animation guidance.
 5. `DONE`Keybinding/settings category docs externalized in`config/menu/structure.json`and validated in`tetris_nd/menu_config.py`.
@@ -238,6 +238,15 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 224. `macbook` 4D `move_w` defaults now use `,/.`,
 225. `full` profile keeps `move_w` on keypad (`Numpad7/Numpad9`) and now uses the same 4D letter-pair rotation ladder as compact profile to avoid camera/view collisions,
 226. 2D positive rotation keeps `Up` arrow as default alongside `Q`.
+227. `DONE` `[BKL-P1-004]` Remove slicing across runtime/UI/docs:
+228. ND routing no longer carries slice state or slice actions; 3D/4D input routing is now system -> gameplay -> view.
+229. 3D/4D keybinding groups and helper panels are now `game/camera/system` only.
+230. 4D HUD/panel no longer shows active-slice indicators or active-layer slice highlighting.
+231. `DONE` `[BKL-P2-008]` No-slice keybinding UX regroup + cleanup:
+232. keybinding editor/help now present gameplay as `Translation` + `Rotation` sections, with `System` and `Camera/View` separate.
+233. side-panel helpers now hide exploration-only translation rows unless exploration mode is enabled.
+234. legacy profile `slice` groups were removed from shipped profile JSON files (`keybindings/profiles/*/{3d,4d}.json`).
+235. dead no-op compatibility code was removed from `tetris_nd/keybindings.py` (unused `_merge_bindings` and unreachable `len(groups)==1` load branch).
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 

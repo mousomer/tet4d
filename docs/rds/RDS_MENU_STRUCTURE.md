@@ -76,7 +76,7 @@ Main Menu
 │   ├── Scoring
 │   ├── Piece Sets
 │   ├── Bots
-│   └── Slicing / Views
+│   └── Views / Camera
 ├── Settings
 │   ├── Audio
 │   ├── Display
@@ -281,7 +281,7 @@ pytest -q
 2. Menu depth remains shallow (top-level -> setup/options -> edit actions).
 3. Profile file actions (`Load`,`Save`,`Save As`,`Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
-5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`System`.
 6. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 
 ## 12. Stabilization Additions (Completed)
@@ -327,7 +327,7 @@ Stabilization details:
 10. settings submenu (audio/display edits + save/reset)
 11. keybindings editor entry
 12. profile cycle and per-dimension keybinding load/save actions
-13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/slicing guidance.
+13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/view guidance.
 14. Shared menu helpers were added in:
 15. `tetris_nd/menu_model.py`
 16. `tetris_nd/menu_persistence.py`

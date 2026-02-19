@@ -10,7 +10,6 @@ import pygame
 from .control_helper import control_groups_for_dimension
 from .frontend_nd import (
     GfxFonts,
-    SliceState,
     gravity_interval_ms_from_config,
     piece_set_4d_label,
 )
@@ -54,7 +53,6 @@ BG_BOTTOM = (6, 8, 20)
 TEXT_COLOR = (230, 230, 230)
 GRID_COLOR = (75, 90, 125)
 LAYER_FRAME = (90, 105, 145)
-LAYER_ACTIVE = (255, 220, 110)
 LAYER_LABEL = (210, 220, 245)
 _CLEAR_DURATION_MS_4D = project_constant_float(
     ("animation", "clear_effect_duration_ms_4d"),
@@ -270,18 +268,6 @@ def _in_bounds_layer_cell(
         and 0.0 <= cell3[1] < basis.dims3[1]
         and 0.0 <= cell3[2] < basis.dims3[2]
     )
-
-
-def _active_layer_index(
-    slice_state: SliceState,
-    dims4: tuple[int, int, int, int],
-    basis: RenderBasis4D,
-) -> int:
-    if basis.layer_count <= 0:
-        return 0
-    default_idx = dims4[basis.layer_axis] // 2
-    active = slice_state.axis_values.get(basis.layer_axis, default_idx)
-    return max(0, min(basis.layer_count - 1, active))
 
 
 def movement_axis_overrides_for_view(
@@ -639,7 +625,6 @@ def _draw_layer_board(
     view: LayerView3D,
     rect: pygame.Rect,
     layer_index: int,
-    active_layer: int,
     basis: RenderBasis4D,
     fonts: GfxFonts,
     grid_mode: GridMode,
@@ -648,9 +633,8 @@ def _draw_layer_board(
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
 ) -> None:
-    border = LAYER_ACTIVE if layer_index == active_layer else LAYER_FRAME
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
-    pygame.draw.rect(surface, border, rect, 2, border_radius=8)
+    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
 
     label = render_text_cached(
         font=fonts.hint_font,
@@ -752,9 +736,7 @@ def _layer_rects_by_layer(
 def _draw_side_panel(
     surface: pygame.Surface,
     state: GameStateND,
-    slice_state: SliceState,
     basis: RenderBasis4D,
-    active_layer: int,
     panel_rect: pygame.Rect,
     fonts: GfxFonts,
     grid_mode: GridMode,
@@ -762,11 +744,6 @@ def _draw_side_panel(
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
-    z_slice = slice_state.axis_values.get(2, 0)
-    w_slice = slice_state.axis_values.get(3, 0)
-    max_z = state.config.dims[2] - 1
-    max_w = state.config.dims[3] - 1
-    layer_max = max(0, basis.layer_count - 1)
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
     low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
 
@@ -787,10 +764,6 @@ def _draw_side_panel(
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
-        "",
-        f"Active layer ({basis.layer_axis_label}): {active_layer}/{layer_max}",
-        f"Active z slice: {z_slice}/{max_z}",
-        f"Active w layer: {w_slice}/{max_w}",
     )
 
     draw_game_side_panel(
@@ -798,7 +771,10 @@ def _draw_side_panel(
         panel_rect=panel_rect,
         fonts=fonts,
         header_lines=lines,
-        control_groups=control_groups_for_dimension(4),
+        control_groups=control_groups_for_dimension(
+            4,
+            include_exploration=bool(state.config.exploration_mode),
+        ),
         low_priority_lines=tuple(low_priority_lines),
         game_over=state.game_over,
         min_controls_h=150,
@@ -808,7 +784,6 @@ def _draw_side_panel(
 def draw_game_frame(
     screen: pygame.Surface,
     state: GameStateND,
-    slice_state: SliceState,
     view: LayerView3D,
     fonts: GfxFonts,
     grid_mode: GridMode,
@@ -835,7 +810,6 @@ def draw_game_frame(
     pygame.draw.rect(screen, (14, 18, 36), layers_rect, border_radius=10)
 
     basis = _basis_for_view(view, state.config.dims)
-    active_layer = _active_layer_index(slice_state, state.config.dims, basis)
     helper_marks_by_layer = _helper_grid_marks_by_layer(state, basis) if grid_mode == GridMode.HELPER else {}
     locked_by_layer = _locked_cells_by_layer(state, basis)
     layer_rect_by_layer = _layer_rects_by_layer(
@@ -852,7 +826,6 @@ def draw_game_frame(
             view,
             layer_rect,
             layer_index,
-            active_layer,
             basis,
             fonts,
             grid_mode=grid_mode,
@@ -865,9 +838,7 @@ def draw_game_frame(
     _draw_side_panel(
         screen,
         state,
-        slice_state,
         basis,
-        active_layer,
         panel_rect,
         fonts,
         grid_mode=grid_mode,

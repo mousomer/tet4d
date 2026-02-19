@@ -110,20 +110,6 @@
         "right shift"
       ]
     },
-    "slice": {
-      "slice_w_neg": [
-        ";"
-      ],
-      "slice_w_pos": [
-        "'"
-      ],
-      "slice_z_neg": [
-        "["
-      ],
-      "slice_z_pos": [
-        "]"
-      ]
-    },
     "system": {
       "menu": [
         "m"
