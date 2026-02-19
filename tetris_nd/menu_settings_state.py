@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,8 @@ if (
     DEFAULT_WINDOWED_SIZE = (_DEFAULT_WINDOWED_SIZE_RAW[0], _DEFAULT_WINDOWED_SIZE_RAW[1])
 else:  # pragma: no cover - guarded by config validation
     DEFAULT_WINDOWED_SIZE = (1200, 760)
+_PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+_MODE_KEYS = {"2d", "3d", "4d"}
 
 
 def _default_settings_payload() -> dict[str, Any]:
@@ -120,14 +123,18 @@ def _sanitize_version_profile_mode(payload: dict[str, Any], default_payload: dic
     else:
         payload["version"] = default_payload["version"]
 
-    profile = payload.get("active_profile")
-    if not isinstance(profile, str) or not profile.strip():
+    raw_profile = payload.get("active_profile")
+    if not isinstance(raw_profile, str) or not raw_profile.strip():
         payload["active_profile"] = default_payload["active_profile"]
     else:
-        payload["active_profile"] = profile.strip().lower()
+        normalized_profile = raw_profile.strip().lower()
+        if _PROFILE_NAME_RE.match(normalized_profile):
+            payload["active_profile"] = normalized_profile
+        else:
+            payload["active_profile"] = default_payload["active_profile"]
 
-    last_mode = payload.get("last_mode")
-    payload["last_mode"] = last_mode if last_mode in {"2d", "3d", "4d"} else default_payload["last_mode"]
+    raw_mode = payload.get("last_mode")
+    payload["last_mode"] = raw_mode if raw_mode in _MODE_KEYS else default_payload["last_mode"]
 
 
 def _sanitize_display_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
