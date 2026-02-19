@@ -31,6 +31,13 @@ from .playbot.types import (
     bot_planner_profile_from_index,
 )
 from .speed_curve import gravity_interval_ms
+from .topology import topology_mode_from_index, topology_mode_label
+from .topology_designer import (
+    designer_profile_label_for_index,
+    designer_profiles_for_dimension,
+    export_resolved_topology_profile,
+    resolve_topology_designer_selection,
+)
 from .ui_utils import draw_vertical_gradient, fit_text
 from .view_controls import viewer_relative_move_axis_delta
 
@@ -80,6 +87,9 @@ class GameSettingsND:
     fourth: int = _DEFAULT_MODE_4D["fourth"]
     speed_level: int = _DEFAULT_MODE_4D["speed_level"]
     piece_set_index: int = _DEFAULT_MODE_4D["piece_set_index"]
+    topology_mode: int = _DEFAULT_MODE_4D["topology_mode"]
+    topology_advanced: int = _DEFAULT_MODE_4D["topology_advanced"]
+    topology_profile_index: int = _DEFAULT_MODE_4D["topology_profile_index"]
     bot_mode_index: int = _DEFAULT_MODE_4D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_4D["bot_algorithm_index"]
     bot_profile_index: int = _DEFAULT_MODE_4D["bot_profile_index"]
@@ -96,6 +106,10 @@ _PIECE_SET_CHOICES = {
 _PIECE_SET_LABELS = {
     dimension: tuple(piece_set_label(piece_set_id) for piece_set_id in choices)
     for dimension, choices in _PIECE_SET_CHOICES.items()
+}
+_TOPOLOGY_PROFILE_LABELS = {
+    dimension: tuple(profile.label for profile in designer_profiles_for_dimension(dimension))
+    for dimension in (2, 3, 4)
 }
 
 
@@ -126,9 +140,21 @@ class MenuState:
 
 
 def menu_fields_for_dimension(dimension: int) -> list[FieldSpec]:
+    return menu_fields_for_settings(GameSettingsND(), dimension)
+
+
+def menu_fields_for_settings(settings: GameSettingsND, dimension: int) -> list[FieldSpec]:
     choices = _PIECE_SET_CHOICES.get(dimension)
     piece_set_max = 0 if choices is None else max(0, len(choices) - 1)
-    return setup_fields_for_dimension(dimension, piece_set_max=piece_set_max)
+    topology_profile_max = max(0, len(_TOPOLOGY_PROFILE_LABELS.get(dimension, ())) - 1)
+    fields = setup_fields_for_dimension(
+        dimension,
+        piece_set_max=piece_set_max,
+        topology_profile_max=topology_profile_max,
+    )
+    if int(settings.topology_advanced):
+        return fields
+    return [field for field in fields if field[1] != "topology_profile_index"]
 
 
 _SETUP_BLOCKED_ACTIONS = {
@@ -154,6 +180,12 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
         labels = _PIECE_SET_LABELS.get(dimension, _PIECE_SET_LABELS[4])
         safe_index = max(0, min(len(labels) - 1, int(value)))
         return labels[safe_index]
+    if attr_name == "topology_mode":
+        return topology_mode_label(topology_mode_from_index(int(value)))
+    if attr_name == "topology_advanced":
+        return "ON" if int(value) else "OFF"
+    if attr_name == "topology_profile_index":
+        return designer_profile_label_for_index(dimension, int(value))
     if attr_name == "exploration_mode":
         return "ON" if int(value) else "OFF"
     return str(value)
@@ -165,7 +197,7 @@ def draw_menu(screen: pygame.Surface,
               dimension: int) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     width, height = screen.get_size()
-    fields = menu_fields_for_dimension(dimension)
+    fields = menu_fields_for_settings(state.settings, dimension)
 
     title_text = f"{dimension}D Tetris - Setup"
     subtitle_text = fit_text(
@@ -259,7 +291,9 @@ def run_menu(screen: pygame.Surface,
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, dimension)
-        fields = menu_fields_for_dimension(dimension)
+        fields = menu_fields_for_settings(state.settings, dimension)
+        if state.selected_index >= len(fields):
+            state.selected_index = max(0, len(fields) - 1)
         apply_menu_actions(
             state,
             actions,
@@ -288,6 +322,15 @@ def run_menu(screen: pygame.Surface,
         if not ok:
             state.bindings_status = msg
             state.bindings_status_error = True
+        else:
+            topology_mode = topology_mode_from_index(state.settings.topology_mode)
+            export_resolved_topology_profile(
+                dimension=dimension,
+                gravity_axis=1,
+                topology_mode=topology_mode,
+                topology_advanced=bool(state.settings.topology_advanced),
+                profile_index=state.settings.topology_profile_index,
+            )
         return state.settings
     # Autosave setup/session state on exit as well (without explicit Save action).
     save_menu_settings(state, dimension)
@@ -296,6 +339,14 @@ def run_menu(screen: pygame.Surface,
 
 def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
     piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
+    topology_mode = topology_mode_from_index(settings.topology_mode)
+    resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
+        dimension=dimension,
+        gravity_axis=1,
+        topology_mode=topology_mode,
+        topology_advanced=bool(settings.topology_advanced),
+        profile_index=settings.topology_profile_index,
+    )
     exploration_enabled = bool(settings.exploration_mode)
     dims = [settings.width, settings.height]
     if dimension >= 3:
@@ -308,6 +359,8 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         dims=tuple(dims),
         gravity_axis=1,
         speed_level=settings.speed_level,
+        topology_mode=resolved_mode,
+        topology_edge_rules=topology_edge_rules,
         piece_set_id=piece_set_id,
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,

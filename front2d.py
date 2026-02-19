@@ -49,6 +49,7 @@ from tetris_nd.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
 )
+from tetris_nd.project_config import project_constant_float
 from tetris_nd.playbot import (
     PlayBotController,
     run_dry_run_2d,
@@ -62,6 +63,13 @@ from tetris_nd.playbot.types import (
 from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tetris_nd.exploration_mode import minimal_exploration_dims_2d
 from tetris_nd.rotation_anim import PieceRotationAnimator2D
+from tetris_nd.topology import topology_mode_from_index, topology_mode_label
+from tetris_nd.topology_designer import (
+    designer_profile_label_for_index,
+    designer_profiles_for_dimension,
+    export_resolved_topology_profile,
+    resolve_topology_designer_selection,
+)
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 from tetris_nd.pause_menu import run_pause_menu
 from tetris_nd.help_menu import run_help_menu
@@ -77,6 +85,9 @@ class GameSettings:
     width: int = _DEFAULT_MODE_2D["width"]
     height: int = _DEFAULT_MODE_2D["height"]
     piece_set_index: int = _DEFAULT_MODE_2D["piece_set_index"]
+    topology_mode: int = _DEFAULT_MODE_2D["topology_mode"]
+    topology_advanced: int = _DEFAULT_MODE_2D["topology_advanced"]
+    topology_profile_index: int = _DEFAULT_MODE_2D["topology_profile_index"]
     bot_mode_index: int = _DEFAULT_MODE_2D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_2D["bot_algorithm_index"]
     bot_profile_index: int = _DEFAULT_MODE_2D["bot_profile_index"]
@@ -103,9 +114,20 @@ class MenuState:
     run_dry_run: bool = False
 
 
-_MENU_FIELDS: list[FieldSpec] = [
-    *setup_fields_for_dimension(2, piece_set_max=len(PIECE_SET_2D_OPTIONS) - 1),
-]
+_TOPOLOGY_PROFILE_LABELS_2D = tuple(
+    profile.label for profile in designer_profiles_for_dimension(2)
+)
+
+
+def _menu_fields(settings: GameSettings) -> list[FieldSpec]:
+    fields = setup_fields_for_dimension(
+        2,
+        piece_set_max=len(PIECE_SET_2D_OPTIONS) - 1,
+        topology_profile_max=max(0, len(_TOPOLOGY_PROFILE_LABELS_2D) - 1),
+    )
+    if int(settings.topology_advanced):
+        return fields
+    return [field for field in fields if field[1] != "topology_profile_index"]
 
 _SETUP_BLOCKED_ACTIONS = {
     MenuAction.LOAD_BINDINGS,
@@ -133,6 +155,12 @@ def _piece_set_index_to_id(index: int) -> str:
 def _menu_value_formatter(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         return piece_set_2d_label(_piece_set_index_to_id(int(value)))
+    if attr_name == "topology_mode":
+        return topology_mode_label(topology_mode_from_index(int(value)))
+    if attr_name == "topology_advanced":
+        return "ON" if int(value) else "OFF"
+    if attr_name == "topology_profile_index":
+        return designer_profile_label_for_index(2, int(value))
     if attr_name == "challenge_layers":
         return str(value)
     if attr_name == "exploration_mode":
@@ -144,6 +172,14 @@ def _menu_value_formatter(attr_name: str, value: object) -> str:
 
 def _config_from_settings(settings: GameSettings) -> GameConfig:
     piece_set_id = _piece_set_index_to_id(settings.piece_set_index)
+    topology_mode = topology_mode_from_index(settings.topology_mode)
+    resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
+        dimension=2,
+        gravity_axis=1,
+        topology_mode=topology_mode,
+        topology_advanced=bool(settings.topology_advanced),
+        profile_index=settings.topology_profile_index,
+    )
     exploration_enabled = bool(settings.exploration_mode)
     width = settings.width
     height = settings.height
@@ -157,6 +193,8 @@ def _config_from_settings(settings: GameSettings) -> GameConfig:
         height=height,
         gravity_axis=1,
         speed_level=settings.speed_level,
+        topology_mode=resolved_mode,
+        topology_edge_rules=topology_edge_rules,
         piece_set=piece_set_id,
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,
@@ -181,10 +219,13 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     while state.running and not state.start_game:
         _dt = clock.tick(60)
         actions = gather_menu_actions(state, 2)
+        fields = _menu_fields(state.settings)
+        if state.selected_index >= len(fields):
+            state.selected_index = max(0, len(fields) - 1)
         apply_menu_actions(
             state,
             actions,
-            _MENU_FIELDS,
+            fields,
             2,
             blocked_actions=_SETUP_BLOCKED_ACTIONS,
         )
@@ -214,7 +255,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             ),
             bindings_status=state.bindings_status,
             bindings_status_error=state.bindings_status_error,
-            menu_fields=_MENU_FIELDS,
+            menu_fields=fields,
             value_formatter=_menu_value_formatter,
         )
         pygame.display.flip()
@@ -224,6 +265,15 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
         if not ok:
             state.bindings_status = msg
             state.bindings_status_error = True
+        else:
+            topology_mode = topology_mode_from_index(state.settings.topology_mode)
+            export_resolved_topology_profile(
+                dimension=2,
+                gravity_axis=1,
+                topology_mode=topology_mode,
+                topology_advanced=bool(state.settings.topology_advanced),
+                profile_index=state.settings.topology_profile_index,
+            )
         return state.settings
     # Autosave setup/session state on exit as well (without explicit Save action).
     save_menu_settings(state, 2)
@@ -550,7 +600,12 @@ def run_game_loop(screen: pygame.Surface,
         bot_profile_index=bot_profile_index,
         bot_budget_ms=bot_budget_ms,
     )
-    clear_anim_duration_ms = 320.0
+    clear_anim_duration_ms = project_constant_float(
+        ("animation", "clear_effect_duration_ms_2d"),
+        320.0,
+        min_value=120.0,
+        max_value=1200.0,
+    )
 
     clock = pygame.time.Clock()
     while True:
@@ -558,16 +613,14 @@ def run_game_loop(screen: pygame.Surface,
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
-        def _open_help() -> None:
-            nonlocal screen
-            screen = _open_help_screen(screen, fonts)
-
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
-            on_help=_open_help,
         )
+        if decision == "help":
+            screen = _open_help_screen(screen, fonts)
+            continue
         status, screen = _resolve_loop_decision(
             decision=decision,
             screen=screen,

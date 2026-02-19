@@ -11,6 +11,7 @@ from .key_display import format_key_tuple
 from .keybindings import (
     runtime_binding_groups_for_dimension,
 )
+from .text_render_cache import render_text_cached
 from .ui_utils import fit_text
 
 
@@ -191,7 +192,11 @@ def _draw_overflow_hint(
     margin_x: int,
     hint_font: pygame.font.Font,
 ) -> int:
-    remaining = hint_font.render("... open Help for full key guide", True, (188, 197, 228))
+    remaining = render_text_cached(
+        font=hint_font,
+        text="... open Help for full key guide",
+        color=(188, 197, 228),
+    )
     surface.blit(remaining, (rect.x + margin_x, y))
     return y + remaining.get_height() + 4
 
@@ -244,13 +249,21 @@ def _draw_group_rows(
         key_draw = fit_text(panel_font, key_text, key_col_w)
         desc_draw = fit_text(panel_font, desc_text, value_w)
         if key_draw:
-            key_surf = panel_font.render(key_draw, True, (228, 230, 242))
+            key_surf = render_text_cached(
+                font=panel_font,
+                text=key_draw,
+                color=(228, 230, 242),
+            )
             surface.blit(key_surf, (box_rect.x + margin_x, row_y))
         if icon_action is not None:
             icon_rect = pygame.Rect(icon_x, row_y - 1, 20, panel_font.get_height() + 2)
             draw_action_icon(surface, rect=icon_rect, action=icon_action)
         if desc_draw:
-            desc_surf = panel_font.render(desc_draw, True, (188, 197, 228))
+            desc_surf = render_text_cached(
+                font=panel_font,
+                text=desc_draw,
+                color=(188, 197, 228),
+            )
             surface.blit(desc_surf, (value_x, row_y))
         row_y += panel_font.get_height() + 2
 
@@ -305,7 +318,11 @@ def draw_grouped_control_helper(
         box_rect = pygame.Rect(rect.x + 2, y, rect.width - 4, box_h)
         _draw_group_box(surface, box_rect=box_rect)
 
-        title = hint_font.render(group_name, True, (210, 220, 245))
+        title = render_text_cached(
+            font=hint_font,
+            text=group_name,
+            color=(210, 220, 245),
+        )
         surface.blit(title, (box_rect.x + margin_x, box_rect.y + 8))
         row_y = box_rect.y + 8 + title.get_height() + 6
         _draw_group_rows(

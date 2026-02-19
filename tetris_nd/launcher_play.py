@@ -35,14 +35,7 @@ def launch_2d(
     if settings is None:
         return LaunchResult(screen=screen, display_settings=display_settings, keep_running=True)
 
-    cfg = front2d.GameConfig(
-        width=settings.width,
-        height=settings.height,
-        gravity_axis=1,
-        speed_level=settings.speed_level,
-        piece_set=front2d._piece_set_index_to_id(settings.piece_set_index),
-        challenge_layers=getattr(settings, "challenge_layers", 0),
-    )
+    cfg = front2d._config_from_settings(settings)
     board_px_w = cfg.width * 30
     board_px_h = cfg.height * 30
     suggested = (board_px_w + 200 + 60, board_px_h + 40)

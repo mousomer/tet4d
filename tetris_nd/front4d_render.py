@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Optional
 
 import pygame
@@ -24,24 +25,27 @@ from .projection3d import (
     build_cube_faces,
     color_for_cell,
     draw_gradient_background,
-    draw_projected_box_edges,
-    draw_projected_box_shadow,
-    draw_projected_helper_lattice,
     draw_projected_lattice,
     fit_orthographic_zoom,
     orthographic_point,
+    projection_cache_key,
+    projection_helper_cache_key,
     raw_to_world,
     transform_point,
 )
+from .project_config import project_constant_float, project_constant_int
 from .runtime_helpers import collect_cleared_ghost_cells
 from .score_analyzer import hud_analysis_lines
+from .grid_mode_render import draw_projected_grid_mode
+from .text_render_cache import render_text_cached
+from .topology import map_overlay_cells
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label
 
 
-MARGIN = 16
-LAYER_GAP = 12
-SIDE_PANEL = 360
+MARGIN = project_constant_int(("rendering", "4d", "margin"), 16, min_value=0, max_value=400)
+LAYER_GAP = project_constant_int(("rendering", "4d", "layer_gap"), 12, min_value=0, max_value=200)
+SIDE_PANEL = project_constant_int(("rendering", "4d", "side_panel"), 360, min_value=180, max_value=960)
 BG_TOP = (18, 24, 50)
 BG_BOTTOM = (6, 8, 20)
 TEXT_COLOR = (230, 230, 230)
@@ -49,6 +53,12 @@ GRID_COLOR = (75, 90, 125)
 LAYER_FRAME = (90, 105, 145)
 LAYER_ACTIVE = (255, 220, 110)
 LAYER_LABEL = (210, 220, 245)
+_CLEAR_DURATION_MS_4D = project_constant_float(
+    ("animation", "clear_effect_duration_ms_4d"),
+    380.0,
+    min_value=120.0,
+    max_value=1400.0,
+)
 
 COLOR_MAP = {
     1: (0, 255, 255),
@@ -61,6 +71,7 @@ COLOR_MAP = {
 }
 
 ActiveOverlay4D = tuple[tuple[tuple[float, float, float, float], ...], int]
+LockedLayerCells = dict[int, tuple[tuple[tuple[float, float, float], int, bool], ...]]
 
 
 @dataclass
@@ -73,7 +84,7 @@ class LayerView3D(YawPitchTurnAnimator):
 class ClearAnimation4D:
     ghost_cells: tuple[tuple[tuple[int, int, int, int], tuple[int, int, int]], ...]
     elapsed_ms: float = 0.0
-    duration_ms: float = 380.0
+    duration_ms: float = _CLEAR_DURATION_MS_4D
 
     @property
     def progress(self) -> float:
@@ -131,6 +142,14 @@ def _draw_board_grid(
     zoom: float,
 ) -> None:
     center_px = (rect.centerx, rect.centery)
+    cache_key = projection_cache_key(
+        prefix="4d-full",
+        dims=dims,
+        center_px=center_px,
+        yaw_deg=view.yaw_deg,
+        pitch_deg=view.pitch_deg,
+        zoom=zoom,
+    )
     draw_projected_lattice(
         surface,
         dims,
@@ -138,6 +157,7 @@ def _draw_board_grid(
         inner_color=(52, 64, 95),
         frame_color=GRID_COLOR,
         frame_width=2,
+        cache_key=cache_key,
     )
 
 
@@ -162,21 +182,20 @@ def _build_cell_faces(
 def _layer_cells(
     state: GameStateND,
     w_layer: int,
+    locked_by_layer: LockedLayerCells,
     active_overlay: ActiveOverlay4D | None = None,
 ) -> list[tuple[tuple[float, float, float], int, bool]]:
-    return _layer_locked_cells(state, w_layer) + _layer_active_cells(state, w_layer, active_overlay)
+    return [*locked_by_layer.get(w_layer, ()), *_layer_active_cells(state, w_layer, active_overlay)]
 
 
-def _layer_locked_cells(state: GameStateND, w_layer: int) -> list[tuple[tuple[float, float, float], int, bool]]:
+def _locked_cells_by_layer(state: GameStateND) -> LockedLayerCells:
     dims = state.config.dims
-    cells: list[tuple[tuple[float, float, float], int, bool]] = []
+    cells_by_layer: dict[int, list[tuple[tuple[float, float, float], int, bool]]] = {}
     for coord, cell_id in state.board.cells.items():
         x, y, z, w = coord
-        if w != w_layer:
-            continue
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((float(x), float(y), float(z)), cell_id, False))
-    return cells
+            cells_by_layer.setdefault(w, []).append(((float(x), float(y), float(z)), cell_id, False))
+    return {layer: tuple(cells) for layer, cells in cells_by_layer.items()}
 
 
 def _layer_active_cells(
@@ -196,8 +215,13 @@ def _overlay_active_layer_cells(
 ) -> list[tuple[tuple[float, float, float], int, bool]]:
     dims = state.config.dims
     overlay_cells, overlay_color = active_overlay
+    mapped_overlay = map_overlay_cells(
+        state.topology_policy,
+        overlay_cells,
+        allow_above_gravity=False,
+    )
     cells: list[tuple[tuple[float, float, float], int, bool]] = []
-    for x, y, z, w in overlay_cells:
+    for x, y, z, w in mapped_overlay:
         if abs(w - w_layer) >= 0.5:
             continue
         if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
@@ -211,7 +235,7 @@ def _piece_active_layer_cells(state: GameStateND, w_layer: int) -> list[tuple[tu
     dims = state.config.dims
     piece_id = state.current_piece.shape.color_id
     cells: list[tuple[tuple[float, float, float], int, bool]] = []
-    for coord in state.current_piece.cells():
+    for coord in state.current_piece_cells_mapped(include_above=False):
         x, y, z, w = coord
         if w != w_layer:
             continue
@@ -221,12 +245,9 @@ def _piece_active_layer_cells(state: GameStateND, w_layer: int) -> list[tuple[tu
 
 
 def _helper_grid_marks_by_layer(state: GameStateND) -> dict[int, tuple[set[int], set[int], set[int]]]:
-    if state.current_piece is None:
-        return {}
-
     dims = state.config.dims
     marks_by_layer: dict[int, list[set[int]]] = {}
-    for x, y, z, w in state.current_piece.cells():
+    for x, y, z, w in state.current_piece_cells_mapped(include_above=False):
         if not (0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2] and 0 <= w < dims[3]):
             continue
         entry = marks_by_layer.setdefault(w, [set(), set(), set()])
@@ -249,43 +270,29 @@ def _draw_layer_grid_or_shadow(
     helper_marks: tuple[set[int], set[int], set[int]] | None = None,
 ) -> None:
     center_px = (draw_rect.centerx, draw_rect.centery)
-    if grid_mode == GridMode.FULL:
-        _draw_board_grid(surface, dims3, view, draw_rect, zoom)
-        return
-    if grid_mode == GridMode.EDGE:
-        draw_projected_box_edges(
-            surface,
-            dims3,
-            lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
-            edge_color=GRID_COLOR,
-            edge_width=2,
-        )
-        return
-    if grid_mode == GridMode.HELPER:
-        draw_projected_box_shadow(
-            surface,
-            dims3,
-            project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
-            transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
-        )
-        x_marks, y_marks, z_marks = helper_marks if helper_marks is not None else (set(), set(), set())
-        draw_projected_helper_lattice(
-            surface,
-            dims3,
-            lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
-            x_marks=x_marks,
-            y_marks=y_marks,
-            z_marks=z_marks,
-            inner_color=(52, 64, 95),
-            frame_color=GRID_COLOR,
-            frame_width=2,
-        )
-        return
-    draw_projected_box_shadow(
-        surface,
-        dims3,
+    marks = helper_marks if helper_marks is not None else (set(), set(), set())
+    helper_cache_key = projection_helper_cache_key(
+        prefix="4d-helper",
+        dims=dims3,
+        center_px=center_px,
+        yaw_deg=view.yaw_deg,
+        pitch_deg=view.pitch_deg,
+        zoom=zoom,
+        marks=marks,
+    )
+    draw_projected_grid_mode(
+        surface=surface,
+        dims=dims3,
+        grid_mode=grid_mode,
+        draw_full_grid=lambda: _draw_board_grid(surface, dims3, view, draw_rect, zoom),
         project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        helper_marks=helper_marks,
+        helper_cache_key=helper_cache_key,
+        frame_color=GRID_COLOR,
+        inner_color=(52, 64, 95),
+        frame_width=2,
+        edge_width=2,
     )
 
 
@@ -296,10 +303,16 @@ def _layer_faces(
     center_px: Point2,
     dims3: Cell3,
     zoom: float,
+    locked_by_layer: LockedLayerCells,
     active_overlay: ActiveOverlay4D | None = None,
 ) -> list[Face]:
     faces: list[Face] = []
-    for coord3, cell_id, is_active in _layer_cells(state, w_layer, active_overlay):
+    for coord3, cell_id, is_active in _layer_cells(
+        state,
+        w_layer,
+        locked_by_layer,
+        active_overlay,
+    ):
         faces.extend(
             _build_cell_faces(
                 cell=coord3,
@@ -375,6 +388,7 @@ def _draw_layer_board(
     active_w: int,
     fonts: GfxFonts,
     grid_mode: GridMode,
+    locked_by_layer: LockedLayerCells,
     helper_marks: tuple[set[int], set[int], set[int]] | None = None,
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
@@ -383,7 +397,11 @@ def _draw_layer_board(
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, border, rect, 2, border_radius=8)
 
-    label = fonts.hint_font.render(f"w = {w_layer}", True, LAYER_LABEL)
+    label = render_text_cached(
+        font=fonts.hint_font,
+        text=f"w = {w_layer}",
+        color=LAYER_LABEL,
+    )
     surface.blit(label, (rect.x + 8, rect.y + 6))
 
     draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
@@ -392,7 +410,16 @@ def _draw_layer_board(
     _draw_layer_grid_or_shadow(surface, dims3, view, draw_rect, zoom, grid_mode, helper_marks)
 
     center_px = (draw_rect.centerx, draw_rect.centery)
-    faces = _layer_faces(state, w_layer, view, center_px, dims3, zoom, active_overlay=active_overlay)
+    faces = _layer_faces(
+        state,
+        w_layer,
+        view,
+        center_px,
+        dims3,
+        zoom,
+        locked_by_layer,
+        active_overlay=active_overlay,
+    )
     faces.sort(key=lambda x: x[0], reverse=True)
     for _depth, poly, color, active in faces:
         pygame.draw.polygon(surface, color, poly)
@@ -401,25 +428,37 @@ def _draw_layer_board(
     _draw_layer_clear_animation(surface, clear_anim, w_layer, view, center_px, dims3, zoom)
 
 
-def _layer_grid_rects(area: pygame.Rect, layer_count: int) -> list[pygame.Rect]:
+@lru_cache(maxsize=32)
+def _layer_grid_rect_specs(
+    area_x: int,
+    area_y: int,
+    area_w: int,
+    area_h: int,
+    layer_count: int,
+) -> tuple[tuple[int, int, int, int], ...]:
     if layer_count <= 0:
-        return []
+        return tuple()
     cols = max(1, math.ceil(math.sqrt(layer_count)))
     rows = max(1, math.ceil(layer_count / cols))
 
-    cell_w = (area.width - (cols + 1) * LAYER_GAP) // cols
-    cell_h = (area.height - (rows + 1) * LAYER_GAP) // rows
-    rects: list[pygame.Rect] = []
+    cell_w = (area_w - (cols + 1) * LAYER_GAP) // cols
+    cell_h = (area_h - (rows + 1) * LAYER_GAP) // rows
+    specs: list[tuple[int, int, int, int]] = []
     idx = 0
     for row in range(rows):
         for col in range(cols):
             if idx >= layer_count:
                 break
-            x = area.x + LAYER_GAP + col * (cell_w + LAYER_GAP)
-            y = area.y + LAYER_GAP + row * (cell_h + LAYER_GAP)
-            rects.append(pygame.Rect(x, y, max(80, cell_w), max(80, cell_h)))
+            x = area_x + LAYER_GAP + col * (cell_w + LAYER_GAP)
+            y = area_y + LAYER_GAP + row * (cell_h + LAYER_GAP)
+            specs.append((x, y, max(80, cell_w), max(80, cell_h)))
             idx += 1
-    return rects
+    return tuple(specs)
+
+
+def _layer_grid_rects(area: pygame.Rect, layer_count: int) -> list[pygame.Rect]:
+    specs = _layer_grid_rect_specs(area.x, area.y, area.width, area.height, layer_count)
+    return [pygame.Rect(x, y, w, h) for x, y, w, h in specs]
 
 
 def _draw_side_panel(
@@ -501,6 +540,7 @@ def draw_game_frame(
 
     active_w = slice_state.axis_values.get(3, state.config.dims[3] // 2)
     helper_marks_by_layer = _helper_grid_marks_by_layer(state) if grid_mode == GridMode.HELPER else {}
+    locked_by_layer = _locked_cells_by_layer(state)
     layer_rects = _layer_grid_rects(layers_rect, state.config.dims[3])
     for w_layer, layer_rect in enumerate(layer_rects):
         _draw_layer_board(
@@ -512,6 +552,7 @@ def draw_game_frame(
             active_w,
             fonts,
             grid_mode=grid_mode,
+            locked_by_layer=locked_by_layer,
             helper_marks=helper_marks_by_layer.get(w_layer),
             clear_anim=clear_anim,
             active_overlay=active_overlay,

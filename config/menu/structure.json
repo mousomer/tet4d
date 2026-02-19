@@ -57,6 +57,9 @@
       {"label": "Board width", "attr": "width", "min": 6, "max": 16},
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
+      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
+      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
@@ -66,6 +69,9 @@
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
       {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
+      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
+      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
@@ -76,6 +82,9 @@
       {"label": "Board depth (z)", "attr": "depth", "min": 4, "max": 12},
       {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
       {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
+      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
+      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
+      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
       {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
@@ -171,7 +180,7 @@
       "top_level": false
     },
     "gameplay_setup": {
-      "field_count": 8,
+      "field_count": 9,
       "action_count": 2,
       "mode_specific": true,
       "top_level": false

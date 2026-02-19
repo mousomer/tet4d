@@ -1,6 +1,7 @@
 # Menu Settings Migration Ledger
 
-Canonical schema: `config/schema/menu_settings.schema.json`Runtime file:`state/menu_settings.json`
+Canonical schema: `config/schema/menu_settings.schema.json`  
+Runtime file: `state/menu_settings.json`
 
 ## Version 1
 
@@ -8,6 +9,13 @@ Canonical schema: `config/schema/menu_settings.schema.json`Runtime file:`state/m
   - `version`,`active_profile`,`last_mode`
 - `audio`,`display`,`settings`
 - `settings` split by mode (`2d`,`3d`,`4d`) with bot fields per mode.
+- Mode payload includes gameplay setup fields such as:
+  - board sizes,
+  - piece-set index,
+  - `exploration_mode`,
+  - `topology_mode` (`0=bounded`,`1=wrap_all`,`2=invert_all`),
+  - `topology_advanced` (`0=off`,`1=on`),
+  - `topology_profile_index` (profile row index in `config/topology/designer_presets.json`).
 
 ## Migration policy
 

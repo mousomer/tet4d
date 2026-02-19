@@ -21,10 +21,15 @@ tet4d/
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
+│   ├── topology/
+│   │   └── designer_presets.json # advanced boundary topology profile definitions
 │   ├── playbot/
 │   │   └── policy.json          # planner budgets/lookahead/controller defaults
 │   ├── project/
-│   │   └── canonical_maintenance.json  # machine-checked maintenance contract
+│   │   ├── canonical_maintenance.json  # machine-checked maintenance contract
+│   │   ├── io_paths.json               # externalized repo-relative I/O path defaults
+│   │   ├── constants.json              # externalized shared runtime constants
+│   │   └── secret_scan.json            # secret scanning policy and pattern set
 │   └── audio/
 │       └── sfx.json             # generated SFX event tone specs
 ├── keybindings/
@@ -48,6 +53,8 @@ tet4d/
 │   ├── board.py                 # sparse ND board + plane clear logic
 │   ├── game2d.py                # 2D game rules/state
 │   ├── game_nd.py               # ND game rules/state (3D/4D)
+│   ├── topology.py              # bounded/wrap/invert topology rules and mapping helpers
+│   ├── topology_designer.py     # advanced topology profile loader/resolver/export helpers
 │   ├── pieces2d.py              # classic tetromino set
 │   ├── pieces_nd.py             # 3D + 4D native piece sets
 │   ├── keybindings.py           # binding definitions + load/save
@@ -71,7 +78,8 @@ tet4d/
 ├── tools/
 │   ├── bench_playbot.py         # planner benchmark + trend recording
 │   ├── check_playbot_stability.py  # repeated dry-run stability checks
-│   └── validate_project_contracts.py  # validates canonical maintenance contract
+│   ├── validate_project_contracts.py  # validates canonical maintenance contract
+│   └── scan_secrets.py          # secret scanner (policy from config/project/secret_scan.json)
 ├── .github/workflows/
 │   ├── ci.yml                   # push/PR CI matrix
 │   └── stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
@@ -82,6 +90,7 @@ tet4d/
     ├── PROJECT_STRUCTURE.md     # this file
     ├── RELEASE_CHECKLIST.md     # pre-release required verification list
     ├── RDS_AND_CODEX.md         # RDS index + Codex contributor instructions
+    ├── SECURITY_AND_CONFIG_PLAN.md  # repo-level security/config externalization policy
     ├── help/
     │   └── HELP_INDEX.md        # canonical help-topic index
     ├── migrations/
@@ -103,27 +112,32 @@ tet4d/
 2. `front2d.py`,`front3d.py`, and`front4d.py` remain direct mode entrypoints.
 3. Core rule logic lives in `game2d.py`and`game_nd.py`.
 4. Board occupancy and line/layer clearing logic lives in `board.py`.
-5. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
-6. Shared key-name formatting is centralized in `key_display.py`.
-7. Shared keybinding editor model/scope helpers are in `keybindings_menu_model.py`.
-8. Shared keybinding editor UI is in `keybindings_menu.py`.
-9. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
-10. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
-11. Shared in-game key helper grouping is in `control_helper.py`.
-12. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py`and`menu_control_guides.py`.
-13. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
-14. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
-15. `config/menu/*` drives launcher/setup menu structure and default values.
-16. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-17. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-18. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-19. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
-20. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-21. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-22. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-23. `tools/validate_project_contracts.py` validates that contract and is run in CI.
-24. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-25. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+5. Boundary topology mapping (`bounded`,`wrap_all`,`invert_all`) lives in `topology.py` and is consumed by `game2d.py`/`game_nd.py`.
+6. Advanced topology profile loading/resolution/export is handled in `topology_designer.py` using `config/topology/designer_presets.json`.
+7. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
+8. Shared key-name formatting is centralized in `key_display.py`.
+9. Shared keybinding editor model/scope helpers are in `keybindings_menu_model.py`.
+10. Shared keybinding editor UI is in `keybindings_menu.py`.
+11. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
+12. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
+13. Shared in-game key helper grouping is in `control_helper.py`.
+14. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py`and`menu_control_guides.py`.
+15. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
+16. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+17. `config/menu/*` drives launcher/setup menu structure and default values.
+18. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+19. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
+20. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
+21. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+22. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+23. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+24. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+25. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+26. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+27. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+28. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+29. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+30. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
 
 ## Unified documentation sections
 

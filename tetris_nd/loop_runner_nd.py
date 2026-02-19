@@ -123,22 +123,20 @@ def run_nd_loop(
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
-        def _open_help_callback() -> None:
-            nonlocal screen
+        decision = process_game_events(
+            keydown_handler=loop.keydown_handler,
+            on_restart=loop.on_restart,
+            on_toggle_grid=loop.on_toggle_grid,
+            event_handler=loop.pointer_event_handler,
+        )
+        if decision == "help":
             screen = _open_help(
                 screen=screen,
                 fonts=fonts,
                 pause_dimension=pause_dimension,
                 run_help_menu=run_help_menu,
             )
-
-        decision = process_game_events(
-            keydown_handler=loop.keydown_handler,
-            on_restart=loop.on_restart,
-            on_toggle_grid=loop.on_toggle_grid,
-            on_help=_open_help_callback,
-            event_handler=loop.pointer_event_handler,
-        )
+            continue
         status, screen = _resolve_menu_decision(
             decision=decision,
             screen=screen,

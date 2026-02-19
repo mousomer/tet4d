@@ -1,8 +1,8 @@
 # Keybindings RDS
 
-Status: Active v0.6 (Verified 2026-02-18)  
+Status: Active v0.7 (Verified 2026-02-19)  
 Author: Omer + Codex  
-Date: 2026-02-18  
+Date: 2026-02-19  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -43,8 +43,8 @@ Implementation references:
 
 1. `Esc`-> quit
 2. `M`-> menu
-3. `R`-> restart
-4. `G`-> toggle grid
+3. `Y`-> restart
+4. `C`-> toggle grid
 
 ## 4. Key Sets By Dimension And Keyboard Type
 
@@ -56,8 +56,7 @@ Implementation references:
 2. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 3. Soft drop: `Down`
 4. Hard drop: `Space`
-5. Rotate `x-y +`:`Up`or`X`
-6. Rotate `x-y -`:`Z`
+5. Rotate `x-y +`/`x-y -`:`Q`/`W`
 
 #### `full` profile
 
@@ -121,12 +120,12 @@ Implementation references:
 4. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 5. Soft drop: `LShift`or`RShift`
 6. Hard drop: `Space`
-7. Rotate `x-y +`/`x-y -`:`X`/`Z`
-8. Rotate `x-z +`/`x-z -`:`1`/`2`
-9. Rotate `y-z +`/`y-z -`:`3`/`4`
-10. Rotate `x-w +`/`x-w -`:`5`/`6`
-11. Rotate `y-w +`/`y-w -`:`7`/`8`
-12. Rotate `z-w +`/`z-w -`:`9`/`0` Translation semantics:
+7. Rotate `x-y +`/`x-y -`:`Q`/`W`
+8. Rotate `x-z +`/`x-z -`:`A`/`S`
+9. Rotate `y-z +`/`y-z -`:`Z`/`X`
+10. Rotate `x-w +`/`x-w -`:`R`/`T`
+11. Rotate `y-w +`/`y-w -`:`F`/`G`
+12. Rotate `z-w +`/`z-w -`:`V`/`B` Translation semantics:
 1. `move_x_neg/move_x_pos`are viewer`left/right` intents.
 2. `move_z_neg/move_z_pos`are viewer`away/closer` intents.
 3. Runtime remaps `x/z`intents by current yaw;`move_w_neg/move_w_pos` remain fixed.
@@ -152,6 +151,14 @@ Implementation references:
 2. Pitch `-`/`+`:`K`/`I`
 3. Zoom out / in: `-`/`+`
 4. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
+
+Planned 4D view-hyperplane actions (not implemented yet):
+1. `view_xw_pos`
+2. `view_xw_neg`
+3. `view_zw_pos`
+4. `view_zw_neg`
+5. Phase-1 plan: add these actions as camera-group bindable actions with no default collisions.
+6. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
 
 #### 4D slice group (profile-independent default)
 
@@ -234,6 +241,12 @@ Both menu contexts must expose the same keybinding profile actions:
 5. Main-menu keybinding scope list must present `General` separately from dimension-specific scopes (`2D`,`3D`,`4D`).
 6. `General` scope is for shared/system actions and should not be merged into a combined "all bindings" default view.
 
+### 5.9 Default conflict policy for shipped layouts
+
+1. Shipped defaults must avoid startup collisions between gameplay and system actions.
+2. If a new default gameplay layout introduces overlap with system keys, system defaults must be reassigned in the same change.
+3. User-defined rebind conflicts are still resolved by the runtime conflict strategy (`replace/swap/cancel`).
+
 ## 6. JSON/Profile Storage Requirements
 
 ### 6.1 File locations
@@ -311,7 +324,8 @@ pytest -q
 5. Rebind one action from setup menu and one from pause menu; verify parity.
 6. Trigger a key conflict and verify conflict-resolution flow.
 7. Save profile locally, restart app, load profile, and verify key behavior persists.
-8. In 4D, verify `9/0` rotations repeatedly work and are not consumed by view reset.
+8. In 4D, verify `V/B` (`rotate_zw`) repeatedly work and are not consumed by camera/system keys.
+9. Planned: when `view_xw/*` and `view_zw/*` are added, verify they rotate camera only and do not affect gameplay state.
 
 ## 9. Acceptance Criteria
 
@@ -322,7 +336,8 @@ pytest -q
 5. JSON schema and group handling are explicit and consistent with code.
 6. Tests pass and menu feedback is visible for load/save/rebind/reset actions.
 7. Keybinding editor supports local save/load and conflict-safe rebinding.
-8. 4D `9/0` rotation path is conflict-free and reliable under key repeat.
+8. 4D `V/B` rotation path is conflict-free and reliable under key repeat.
+9. Planned: 4D camera hyperplane actions (`view_xw/*`,`view_zw/*`) are bindable and conflict-safe.
 
 ## 11. Implementation Status (2026-02-18)
 
@@ -331,11 +346,15 @@ Implemented in code:
 2. Runtime action groups now include `system`for rebinding visibility alongside`game/camera/slice`.
 3. 3D/4D `z`movement defaults use`Up`for`z-`and`Down`for`z+`in small profile; full profile uses`Numpad8`/`Numpad2`.
 4. 4D camera reset default is `Backspace`.
-5. Rebind safety guard prevents camera actions from overriding gameplay/slice/system keys (protects 4D `9/0` rotations).
-6. Keybinding conflict and 4D camera override behavior are covered by tests in `tetris_nd/tests/test_keybindings.py`.
-7. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
-8. `Keybindings Setup`,`Profile Previous`,`Profile Next`,`Save Keybindings`,`Load Keybindings`.
-9. Main keybindings section menu separates `General`from`2D/3D/4D` scopes for clearer navigation.
+5. Small-profile rotation ladder uses keyboard pairs:
+6. `2D`: `Q/W`,
+7. `3D`: `Q/W`,`A/S`,`Z/X`,
+8. `4D`: `Q/W`,`A/S`,`Z/X`,`R/T`,`F/G`,`V/B`.
+9. Rebind safety guard prevents camera actions from overriding gameplay/slice/system keys.
+10. Keybinding conflict and camera override behavior are covered by tests in `tetris_nd/tests/test_keybindings.py`.
+11. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
+12. `Keybindings Setup`,`Profile Previous`,`Profile Next`,`Save Keybindings`,`Load Keybindings`.
+13. Main keybindings section menu separates `General`from`2D/3D/4D` scopes for clearer navigation.
 
 ## 10. Implementation Plan (Keybindings)
 

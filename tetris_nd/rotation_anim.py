@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .pieces2d import rotate_point_2d
+from .project_config import project_constant_float
 from .projection3d import smoothstep01
 
 if TYPE_CHECKING:
@@ -13,6 +14,12 @@ if TYPE_CHECKING:
 
 CoordF = tuple[float, ...]
 Coord2F = tuple[float, float]
+_DEFAULT_ROTATION_DURATION_MS = project_constant_float(
+    ("animation", "piece_rotation_duration_ms"),
+    150.0,
+    min_value=60.0,
+    max_value=400.0,
+)
 
 
 def _distance_sq(a: CoordF, b: CoordF) -> float:
@@ -41,7 +48,7 @@ def _lerp_coord(start: CoordF, end: CoordF, t: float) -> CoordF:
 class _RotationTween:
     start_rel: tuple[CoordF, ...]
     end_rel: tuple[CoordF, ...]
-    duration_ms: float = 150.0
+    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
     elapsed_ms: float = 0.0
 
     @property
@@ -86,7 +93,7 @@ def _build_tween(
 
 @dataclass
 class PieceRotationAnimator2D:
-    duration_ms: float = 150.0
+    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
     gravity_axis: int = 1
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, int], ...] | None = None
@@ -173,7 +180,7 @@ class PieceRotationAnimator2D:
 class PieceRotationAnimatorND:
     ndim: int
     gravity_axis: int
-    duration_ms: float = 150.0
+    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, ...], ...] | None = None
     _prev_rel: tuple[CoordF, ...] = tuple()

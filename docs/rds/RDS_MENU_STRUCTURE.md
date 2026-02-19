@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Active v0.5 (Verified 2026-02-18)  
+Status: Active v0.6 (Verified 2026-02-19)  
 Author: Omer + Codex  
-Date: 2026-02-18  
+Date: 2026-02-19  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -106,6 +106,11 @@ Pause Menu
 3. 4D setup must expose at least: width, height, depth, w, speed, 4D piece set.
 4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell, debug).
 5. Setup screens must use the same layout skeleton and footer shortcuts.
+6. Setup screens must expose topology preset selector:
+7. `bounded`,`wrap_all`,`invert_all`.
+8. Topology remains a dimension-specific gameplay setting (not a global settings-hub toggle).
+9. Advanced topology designer controls stay hidden unless `Topology advanced` is enabled.
+10. Advanced controls include `Topology profile` selector sourced from `config/topology/designer_presets.json`.
 
 ## 5. Layout and Readability Requirements
 
@@ -186,9 +191,9 @@ Add persistent settings file:
     "mute": false
   },
   "settings": {
-    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 12},
-    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 24},
-    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 36}
+    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 12},
+    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 24},
+    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 36}
   }
 }
 ```
@@ -320,6 +325,7 @@ Stabilization details:
 17. Keybindings menu supports `General/2D/3D/4D` scopes with explicit category descriptions loaded from menu structure config.
 18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
+20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 
 ## 15. Open Follow-up
 
@@ -329,3 +335,4 @@ Stabilization details:
 4. Help coverage expansion and menu parity pages are implemented.
 5. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
 6. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
+7. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.

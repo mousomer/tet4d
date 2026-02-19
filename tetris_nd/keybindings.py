@@ -19,6 +19,20 @@ from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
 from .key_display import display_key_name
+from .keybindings_defaults import (
+    DEFAULT_CAMERA_KEYS_3D,
+    DEFAULT_CAMERA_KEYS_4D,
+    DEFAULT_SLICE_KEYS_3D,
+    DEFAULT_SLICE_KEYS_4D,
+    DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
+    default_game_bindings_for_profile,
+)
+from .project_config import keybindings_dir_path, keybindings_profiles_dir_path
+from .keybindings_catalog import (
+    binding_action_description as _binding_action_description,
+    binding_group_description as _binding_group_description,
+    binding_group_label as _binding_group_label,
+)
 
 
 KeyTuple = Tuple[int, ...]
@@ -38,8 +52,11 @@ REBIND_CONFLICT_OPTIONS = (
     REBIND_CONFLICT_CANCEL,
 )
 
-KEYBINDINGS_DIR = Path(__file__).resolve().parent.parent / "keybindings"
-KEYBINDINGS_PROFILES_DIR = KEYBINDINGS_DIR / "profiles"
+# Backward-compatible export for existing callers.
+DISABLED_KEYS_2D = _DISABLED_KEYS_2D
+
+KEYBINDINGS_DIR = keybindings_dir_path()
+KEYBINDINGS_PROFILES_DIR = keybindings_profiles_dir_path()
 KEYBINDING_FILES = {
     2: KEYBINDINGS_DIR / "2d.json",
     3: KEYBINDINGS_DIR / "3d.json",
@@ -132,160 +149,16 @@ def _replace_map(target: MutableMapping[str, KeyTuple], source: Mapping[str, Key
     target.update(source)
 
 
-def _profile_movement_maps(profile: str) -> Tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
-    if profile == PROFILE_FULL:
-        movement_2d = {
-            "move_x_neg": (pygame.K_KP4,),
-            "move_x_pos": (pygame.K_KP6,),
-            "move_y_neg": (pygame.K_KP1,),
-            "move_y_pos": (pygame.K_KP3,),
-            "soft_drop": (pygame.K_KP5,),
-            "hard_drop": (pygame.K_KP0,),
-        }
-        movement_3d = {
-            "move_x_neg": (pygame.K_KP4,),
-            "move_x_pos": (pygame.K_KP6,),
-            "move_z_neg": (pygame.K_KP8,),
-            "move_z_pos": (pygame.K_KP2,),
-            "move_y_neg": (pygame.K_KP1,),
-            "move_y_pos": (pygame.K_KP3,),
-            "soft_drop": (pygame.K_KP5,),
-            "hard_drop": (pygame.K_KP0,),
-        }
-        movement_4d = {
-            "move_x_neg": (pygame.K_KP4,),
-            "move_x_pos": (pygame.K_KP6,),
-            "move_z_neg": (pygame.K_KP8,),
-            "move_z_pos": (pygame.K_KP2,),
-            "move_w_neg": (pygame.K_KP7,),
-            "move_w_pos": (pygame.K_KP9,),
-            "move_y_neg": (pygame.K_KP1,),
-            "move_y_pos": (pygame.K_KP3,),
-            "soft_drop": (pygame.K_KP5,),
-            "hard_drop": (pygame.K_KP0,),
-        }
-        return movement_2d, movement_3d, movement_4d
-
-    movement_2d = {
-        "move_x_neg": (pygame.K_LEFT,),
-        "move_x_pos": (pygame.K_RIGHT,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
-        "soft_drop": (pygame.K_DOWN,),
-        "hard_drop": (pygame.K_SPACE,),
-    }
-    movement_3d = {
-        "move_x_neg": (pygame.K_LEFT,),
-        "move_x_pos": (pygame.K_RIGHT,),
-        "move_z_neg": (pygame.K_UP,),
-        "move_z_pos": (pygame.K_DOWN,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
-        "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
-        "hard_drop": (pygame.K_SPACE,),
-    }
-    movement_4d = {
-        "move_x_neg": (pygame.K_LEFT,),
-        "move_x_pos": (pygame.K_RIGHT,),
-        "move_z_neg": (pygame.K_UP,),
-        "move_z_pos": (pygame.K_DOWN,),
-        "move_w_neg": (pygame.K_COMMA,),
-        "move_w_pos": (pygame.K_PERIOD,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
-        "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
-        "hard_drop": (pygame.K_SPACE,),
-    }
-    return movement_2d, movement_3d, movement_4d
-
-
 SYSTEM_KEYS: KeyBindingMap = {
     "quit": (pygame.K_ESCAPE,),
     "menu": (pygame.K_m,),
-    "restart": (pygame.K_r,),
-    "toggle_grid": (pygame.K_g,),
+    "restart": (pygame.K_y,),
+    "toggle_grid": (pygame.K_c,),
     "help": (pygame.K_F1,),
 }
 
 
-ROTATIONS_2D: KeyBindingMap = {
-    "rotate_xy_pos": (pygame.K_UP, pygame.K_x),
-    "rotate_xy_neg": (pygame.K_z,),
-}
-
-
-ROTATIONS_3D: KeyBindingMap = {
-    "rotate_xy_pos": (pygame.K_q,),
-    "rotate_xy_neg": (pygame.K_w,),
-    "rotate_xz_pos": (pygame.K_a,),
-    "rotate_xz_neg": (pygame.K_s,),
-    "rotate_yz_pos": (pygame.K_z,),
-    "rotate_yz_neg": (pygame.K_x,),
-}
-
-
-ROTATIONS_4D: KeyBindingMap = {
-    "rotate_xy_pos": (pygame.K_x,),
-    "rotate_xy_neg": (pygame.K_z,),
-    "rotate_xz_pos": (pygame.K_1,),
-    "rotate_xz_neg": (pygame.K_2,),
-    "rotate_yz_pos": (pygame.K_3,),
-    "rotate_yz_neg": (pygame.K_4,),
-    "rotate_xw_pos": (pygame.K_5,),
-    "rotate_xw_neg": (pygame.K_6,),
-    "rotate_yw_pos": (pygame.K_7,),
-    "rotate_yw_neg": (pygame.K_8,),
-    "rotate_zw_pos": (pygame.K_9,),
-    "rotate_zw_neg": (pygame.K_0,),
-}
-
-
-_DEFAULT_CAMERA_KEYS_3D: KeyBindingMap = {
-    "yaw_fine_neg": (pygame.K_h,),
-    "yaw_neg": (pygame.K_j,),
-    "yaw_pos": (pygame.K_k,),
-    "yaw_fine_pos": (pygame.K_l,),
-    "pitch_pos": (pygame.K_u,),
-    "pitch_neg": (pygame.K_o,),
-    "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
-    "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
-    "reset": (pygame.K_0,),
-    "cycle_projection": (pygame.K_p,),
-}
-_DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
-    "yaw_fine_neg": (pygame.K_h,),
-    "yaw_neg": (pygame.K_j,),
-    "yaw_pos": (pygame.K_k,),
-    "yaw_fine_pos": (pygame.K_l,),
-    "pitch_pos": (pygame.K_u,),
-    "pitch_neg": (pygame.K_o,),
-    "zoom_in": (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS),
-    "zoom_out": (pygame.K_MINUS, pygame.K_KP_MINUS),
-    "reset": (pygame.K_BACKSPACE,),
-    "cycle_projection": (pygame.K_p,),
-}
-_DEFAULT_SLICE_KEYS_3D: KeyBindingMap = {
-    "slice_z_neg": (pygame.K_LEFTBRACKET,),
-    "slice_z_pos": (pygame.K_RIGHTBRACKET,),
-}
-_DEFAULT_SLICE_KEYS_4D: KeyBindingMap = {
-    "slice_z_neg": (pygame.K_LEFTBRACKET,),
-    "slice_z_pos": (pygame.K_RIGHTBRACKET,),
-    "slice_w_neg": (pygame.K_SEMICOLON,),
-    "slice_w_pos": (pygame.K_QUOTE,),
-}
-
-
-def _default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
-    movement_2d, movement_3d, movement_4d = _profile_movement_maps(profile)
-    return (
-        _merge_bindings(movement_2d, ROTATIONS_2D),
-        _merge_bindings(movement_3d, ROTATIONS_3D),
-        _merge_bindings(movement_4d, ROTATIONS_4D),
-    )
-
-
-_DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = _default_game_bindings_for_profile(
+_DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = default_game_bindings_for_profile(
     ACTIVE_KEY_PROFILE
 )
 
@@ -293,48 +166,22 @@ _DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = _default_game_bindings_fo
 KEYS_2D: KeyBindingMap = dict(_DEFAULT_KEYS_2D)
 KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
-CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
-CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
-SLICE_KEYS_3D: KeyBindingMap = dict(_DEFAULT_SLICE_KEYS_3D)
-SLICE_KEYS_4D: KeyBindingMap = dict(_DEFAULT_SLICE_KEYS_4D)
-
-
-DISABLED_KEYS_2D: KeyTuple = (
-    pygame.K_q,
-    pygame.K_w,
-    pygame.K_e,
-    pygame.K_a,
-    pygame.K_s,
-    pygame.K_d,
-    pygame.K_1,
-    pygame.K_2,
-    pygame.K_3,
-    pygame.K_4,
-    pygame.K_5,
-    pygame.K_6,
-    pygame.K_7,
-    pygame.K_8,
-    pygame.K_9,
-    pygame.K_0,
-    pygame.K_COMMA,
-    pygame.K_PERIOD,
-    pygame.K_LEFTBRACKET,
-    pygame.K_RIGHTBRACKET,
-    pygame.K_SEMICOLON,
-    pygame.K_QUOTE,
-)
+CAMERA_KEYS_3D: KeyBindingMap = dict(DEFAULT_CAMERA_KEYS_3D)
+CAMERA_KEYS_4D: KeyBindingMap = dict(DEFAULT_CAMERA_KEYS_4D)
+SLICE_KEYS_3D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_3D)
+SLICE_KEYS_4D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_4D)
 
 
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
-    keys_2d, keys_3d, keys_4d = _default_game_bindings_for_profile(selected)
+    keys_2d, keys_3d, keys_4d = default_game_bindings_for_profile(selected)
     _replace_map(KEYS_2D, keys_2d)
     _replace_map(KEYS_3D, keys_3d)
     _replace_map(KEYS_4D, keys_4d)
-    _replace_map(CAMERA_KEYS_3D, _DEFAULT_CAMERA_KEYS_3D)
-    _replace_map(CAMERA_KEYS_4D, _DEFAULT_CAMERA_KEYS_4D)
-    _replace_map(SLICE_KEYS_3D, _DEFAULT_SLICE_KEYS_3D)
-    _replace_map(SLICE_KEYS_4D, _DEFAULT_SLICE_KEYS_4D)
+    _replace_map(CAMERA_KEYS_3D, DEFAULT_CAMERA_KEYS_3D)
+    _replace_map(CAMERA_KEYS_4D, DEFAULT_CAMERA_KEYS_4D)
+    _replace_map(SLICE_KEYS_3D, DEFAULT_SLICE_KEYS_3D)
+    _replace_map(SLICE_KEYS_4D, DEFAULT_SLICE_KEYS_4D)
     _sanitize_runtime_bindings()
 
 
@@ -349,7 +196,7 @@ def _sanitize_runtime_bindings() -> None:
     for action, keys in CAMERA_KEYS_4D.items():
         filtered = tuple(key for key in keys if key not in occupied)
         if not filtered:
-            filtered = _DEFAULT_CAMERA_KEYS_4D.get(action, ())
+            filtered = DEFAULT_CAMERA_KEYS_4D.get(action, ())
             filtered = tuple(key for key in filtered if key not in occupied)
         if action == "reset" and not filtered:
             filtered = (pygame.K_BACKSPACE,)
@@ -450,80 +297,21 @@ def runtime_binding_groups_for_dimension(dimension: int) -> Dict[str, Mapping[st
     return {group: dict(bindings) for group, bindings in groups.items()}
 
 
-def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
-    groups = _binding_groups_for_dimension(dimension)
-    return {group: sorted(bindings.keys()) for group, bindings in groups.items()}
-
-
-_BINDING_GROUP_LABELS = {
-    "system": "General / System",
-    "game": "Gameplay",
-    "camera": "Camera / View",
-    "slice": "Slice",
-}
-
-_BINDING_GROUP_DESCRIPTIONS = {
-    "system": "Global actions available in all modes.",
-    "game": "Piece translation, drop, and rotation actions.",
-    "camera": "Board/view camera orbit, projection, and zoom controls.",
-    "slice": "Layer selection controls for dense 3D/4D inspection.",
-}
-
-_COMMON_ACTION_DESCRIPTIONS = {
-    "toggle_grid": "Cycle grid display mode.",
-    "menu": "Open the in-game pause menu.",
-    "restart": "Restart the current run.",
-    "quit": "Quit the current game or application flow.",
-    "help": "Open in-game help and explanations.",
-    "move_x_neg": "Move active piece left on the x axis.",
-    "move_x_pos": "Move active piece right on the x axis.",
-    "move_z_neg": "Move active piece away from viewer (default view).",
-    "move_z_pos": "Move active piece closer to viewer (default view).",
-    "move_w_neg": "Move active piece toward lower w layer.",
-    "move_w_pos": "Move active piece toward higher w layer.",
-    "move_y_neg": "Exploration mode: move active piece up along gravity axis.",
-    "move_y_pos": "Exploration mode: move active piece down along gravity axis.",
-    "soft_drop": "Move piece one gravity step down.",
-    "hard_drop": "Drop piece immediately to lock position.",
-    "rotate_xy_pos": "Rotate piece in x-y plane (+90).",
-    "rotate_xy_neg": "Rotate piece in x-y plane (-90).",
-    "rotate_xz_pos": "Rotate piece in x-z plane (+90).",
-    "rotate_xz_neg": "Rotate piece in x-z plane (-90).",
-    "rotate_yz_pos": "Rotate piece in y-z plane (+90).",
-    "rotate_yz_neg": "Rotate piece in y-z plane (-90).",
-    "rotate_xw_pos": "Rotate piece in x-w plane (+90).",
-    "rotate_xw_neg": "Rotate piece in x-w plane (-90).",
-    "rotate_yw_pos": "Rotate piece in y-w plane (+90).",
-    "rotate_yw_neg": "Rotate piece in y-w plane (-90).",
-    "rotate_zw_pos": "Rotate piece in z-w plane (+90).",
-    "rotate_zw_neg": "Rotate piece in z-w plane (-90).",
-    "yaw_fine_neg": "Yaw camera by -15 degrees.",
-    "yaw_fine_pos": "Yaw camera by +15 degrees.",
-    "yaw_neg": "Yaw camera by -90 degrees.",
-    "yaw_pos": "Yaw camera by +90 degrees.",
-    "pitch_neg": "Pitch camera by -90 degrees.",
-    "pitch_pos": "Pitch camera by +90 degrees.",
-    "zoom_in": "Zoom camera in.",
-    "zoom_out": "Zoom camera out.",
-    "cycle_projection": "Cycle projection mode.",
-    "reset": "Reset camera/view transform.",
-    "slice_z_neg": "Move active z slice toward lower z.",
-    "slice_z_pos": "Move active z slice toward higher z.",
-    "slice_w_neg": "Move active w slice toward lower w.",
-    "slice_w_pos": "Move active w slice toward higher w.",
-}
-
-
 def binding_group_label(group: str) -> str:
-    return _BINDING_GROUP_LABELS.get(group, group.replace("_", " ").title())
+    return _binding_group_label(group)
 
 
 def binding_group_description(group: str) -> str:
-    return _BINDING_GROUP_DESCRIPTIONS.get(group, "Control category.")
+    return _binding_group_description(group)
 
 
 def binding_action_description(action: str) -> str:
-    return _COMMON_ACTION_DESCRIPTIONS.get(action, action.replace("_", " "))
+    return _binding_action_description(action)
+
+
+def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
+    groups = _binding_groups_for_dimension(dimension)
+    return {group: sorted(bindings.keys()) for group, bindings in groups.items()}
 
 
 def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
