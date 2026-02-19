@@ -94,8 +94,8 @@ View controls:
 2. Pitch turn (animated 90°): O/U
 3. Zoom: `+`/`-`
 4. Reset view: `Backspace`
-5. View `xw -/+`: `F5`/`F6`
-6. View `zw -/+`: `F7`/`F8`
+5. View `xw -/+`: `1`/`2`
+6. View `zw -/+`: `3`/`4`
 
 View-hyperplane extension (`xw` / `zw`) requirements:
 1. Camera/view-only turns in the `xw` and `zw` planes are render-space only and must not mutate gameplay coordinates/state.

@@ -57,7 +57,7 @@ Implementation references:
 2. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 3. Soft drop: `Down`
 4. Hard drop: `Space`
-5. Rotate `x-y +`/`x-y -`:`Q`/`W`
+5. Rotate `x-y +`/`x-y -`:`Up`or`Q`/`W`
 
 #### `full` profile
 
@@ -70,7 +70,7 @@ Implementation references:
 
 #### 2D ND-key blocking requirement
 
-1. 2D mode must ignore ND-only keys (`Q/W/A/S/Z/X`, number-row rotation plane keys, 4D `w` movement keys, slice keys).
+1. 2D mode must ignore ND-only keys (`A/S/Z/X/R/T/F/G/V/B`, number-row rotation plane keys, 4D `w` movement keys, slice keys).
 
 ### 4.2 3D gameplay
 
@@ -140,25 +140,25 @@ Implementation references:
 4. Exploration vertical `y-`/`y+`:`Numpad1`/`Numpad3`
 5. Soft drop: `Numpad5`
 6. Hard drop: `Numpad0`
-7. Rotate `x-y +`/`x-y -`:`X`/`Z`
-8. Rotate `x-z +`/`x-z -`:`1`/`2`
-9. Rotate `y-z +`/`y-z -`:`3`/`4`
-10. Rotate `x-w +`/`x-w -`:`5`/`6`
-11. Rotate `y-w +`/`y-w -`:`7`/`8`
-12. Rotate `z-w +`/`z-w -`:`9`/`0`
+7. Rotate `x-y +`/`x-y -`:`Q`/`W`
+8. Rotate `x-z +`/`x-z -`:`A`/`S`
+9. Rotate `y-z +`/`y-z -`:`Z`/`X`
+10. Rotate `x-w +`/`x-w -`:`R`/`T`
+11. Rotate `y-w +`/`y-w -`:`F`/`G`
+12. Rotate `z-w +`/`z-w -`:`V`/`B`
 
 #### 4D view group (profile-independent default)
 
 1. Yaw `-`/`+`:`J`/`L`
 2. Pitch `-`/`+`:`O`/`U`
 3. Zoom out / in: `-`/`+`
-4. View `xw -/+`: `F5`/`F6`
-5. View `zw -/+`: `F7`/`F8`
+4. View `xw -/+`: `1`/`2`
+5. View `zw -/+`: `3`/`4`
 6. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
 7. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
 
 #### 4.3.1 `macbook` profile (no function keys)
-1. 4D gameplay uses compact defaults except `w` translation (`N`/`/`).
+1. 4D gameplay uses compact defaults except `w` translation (`,`/`.`).
 2. 4D view `xw -/+`: `1`/`2`.
 3. 4D view `zw -/+`: `3`/`4`.
 4. Help key default: `Tab`.
