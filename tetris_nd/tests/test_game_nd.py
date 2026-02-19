@@ -14,6 +14,7 @@ from tetris_nd.pieces_nd import (
     PIECE_SET_4D_SIX,
     PieceShapeND,
 )
+from tetris_nd.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 
 
 class TestGameND(unittest.TestCase):
@@ -194,6 +195,66 @@ class TestGameND(unittest.TestCase):
     def test_invalid_4d_piece_set_rejected_by_config(self):
         with self.assertRaises(ValueError):
             GameConfigND(dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d="invalid")
+
+    def test_wrap_all_wraps_non_gravity_axes_3d(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_WRAP_ALL,
+            piece_set_id=PIECE_SET_3D_EMBED_2D,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(-1, 3, cfg.dims[2]))
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 3, 0),))
+
+    def test_wrap_all_keeps_gravity_axis_bounded_3d(self):
+        cfg = GameConfigND(
+            dims=(4, 6, 4),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_WRAP_ALL,
+            piece_set_id=PIECE_SET_3D_EMBED_2D,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(1, cfg.dims[1], 1))
+
+        self.assertFalse(state._can_exist(state.current_piece))
+
+    def test_invert_all_mirrors_other_wrapped_axis_3d(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_INVERT_ALL,
+            piece_set_id=PIECE_SET_3D_EMBED_2D,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(-1, 3, 1))
+
+        # Crossing x edge mirrors z for invert_all.
+        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 3, 2),))
+
+    def test_invert_all_straddling_w_seam_can_move(self):
+        cfg = GameConfigND(
+            dims=(6, 14, 4, 3),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_INVERT_ALL,
+            piece_set_id=PIECE_SET_4D_EMBED_3D,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        fork4 = PieceShapeND(
+            "fork4_regression",
+            ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 1), (0, 0, 1, 1)),
+            color_id=7,
+        )
+        state.current_piece = ActivePieceND.from_shape(fork4, pos=(0, 1, 3, 1))
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertTrue(state.try_move_axis(3, 1))
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(len(mapped), len(set(mapped)))
 
 
 if __name__ == "__main__":

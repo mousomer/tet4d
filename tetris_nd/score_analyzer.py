@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 import json
-import math
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
-from itertools import product
 from pathlib import Path
-from statistics import pstdev
 from typing import Any
 
+from .project_config import (
+    PROJECT_ROOT,
+    sanitize_state_relative_path,
+    score_events_file_default_relative,
+    score_summary_file_default_relative,
+    state_dir_relative,
+)
+from .score_analyzer_features import board_health_features, placement_features, weighted_score
 
-_ROOT_DIR = Path(__file__).resolve().parent.parent
+_ROOT_DIR = PROJECT_ROOT
 _CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
-_DEFAULT_EVENTS_PATH = "state/analytics/score_events.jsonl"
-_DEFAULT_SUMMARY_PATH = "state/analytics/score_summary.json"
+_DEFAULT_EVENTS_PATH = score_events_file_default_relative()
+_DEFAULT_SUMMARY_PATH = score_summary_file_default_relative()
 _LOGGING_ENABLED_OVERRIDE: bool | None = None
 _SUMMARY_CACHE: dict[str, dict[str, object]] = {}
 
@@ -77,29 +82,11 @@ def reset_score_analyzer_runtime_state() -> None:
 
 
 def _state_root() -> Path:
-    return (_ROOT_DIR / "state").resolve()
+    return (_ROOT_DIR / state_dir_relative()).resolve()
 
 
 def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> str:
-    if not isinstance(raw_path, str):
-        return default_relative
-    text = raw_path.strip().replace("\\", "/")
-    if not text:
-        return default_relative
-    candidate = Path(text)
-    if candidate.is_absolute():
-        return default_relative
-    parts = [part for part in candidate.parts if part not in ("", ".")]
-    if not parts:
-        return default_relative
-    if any(part == ".." for part in parts):
-        return default_relative
-    if any(":" in part for part in parts):
-        return default_relative
-    normalized = "/".join(parts)
-    if not normalized.startswith("state/"):
-        return default_relative
-    return normalized
+    return sanitize_state_relative_path(raw_path, default_relative=default_relative)
 
 
 def _resolve_output_path(raw_path: object, default_relative: str) -> Path:
@@ -149,416 +136,6 @@ def score_analyzer_logging_enabled() -> bool:
     return bool(_LOGGING_ENABLED_OVERRIDE)
 
 
-def score_analyzer_settings_snapshot() -> dict[str, object]:
-    logging_cfg = _logging_config()
-    return {
-        "enabled": bool(_score_analyzer_config().get("enabled", True)),
-        "logging_enabled": score_analyzer_logging_enabled(),
-        "configured_logging_enabled": bool(logging_cfg.get("enabled", False)),
-        "events_file": str(logging_cfg.get("events_file", _DEFAULT_EVENTS_PATH)),
-        "summary_file": str(logging_cfg.get("summary_file", _DEFAULT_SUMMARY_PATH)),
-    }
-
-
-def _clamp01(value: float) -> float:
-    return max(0.0, min(1.0, value))
-
-
-def _plane_size(dims: tuple[int, ...], gravity_axis: int) -> int:
-    size = 1
-    for axis, axis_size in enumerate(dims):
-        if axis == gravity_axis:
-            continue
-        size *= max(1, axis_size)
-    return max(1, size)
-
-
-def _lateral_axes(dims: tuple[int, ...], gravity_axis: int) -> tuple[int, ...]:
-    return tuple(axis for axis in range(len(dims)) if axis != gravity_axis)
-
-
-def _iter_columns(dims: tuple[int, ...], gravity_axis: int):
-    axes = _lateral_axes(dims, gravity_axis)
-    ranges = [range(max(1, dims[axis])) for axis in axes]
-    if not ranges:
-        yield tuple()
-        return
-    for values in product(*ranges):
-        yield tuple(values)
-
-
-def _coord_from_column(
-    column: tuple[int, ...],
-    *,
-    lateral_axes: tuple[int, ...],
-    gravity_axis: int,
-    gravity_value: int,
-    ndim: int,
-) -> tuple[int, ...]:
-    coord = [0] * ndim
-    coord[gravity_axis] = gravity_value
-    for idx, axis in enumerate(lateral_axes):
-        coord[axis] = column[idx]
-    return tuple(coord)
-
-
-def _neighbor_coords(coord: tuple[int, ...]) -> tuple[tuple[int, ...], ...]:
-    neighbors: list[tuple[int, ...]] = []
-    for axis in range(len(coord)):
-        for delta in (-1, 1):
-            updated = list(coord)
-            updated[axis] += delta
-            neighbors.append(tuple(updated))
-    return tuple(neighbors)
-
-
-def _connected_components(cells: set[tuple[int, ...]]) -> int:
-    if not cells:
-        return 0
-    remaining = set(cells)
-    components = 0
-    while remaining:
-        components += 1
-        stack = [remaining.pop()]
-        while stack:
-            curr = stack.pop()
-            for nxt in _neighbor_coords(curr):
-                if nxt in remaining:
-                    remaining.remove(nxt)
-                    stack.append(nxt)
-    return components
-
-
-def _top_columns_and_plane_counts(
-    cells: set[tuple[int, ...]],
-    *,
-    lateral_axes: tuple[int, ...],
-    gravity_axis: int,
-    gravity_size: int,
-) -> tuple[dict[tuple[int, ...], int], list[int]]:
-    top_per_column: dict[tuple[int, ...], int] = {}
-    plane_counts = [0] * gravity_size
-    for coord in cells:
-        g_val = coord[gravity_axis]
-        if 0 <= g_val < gravity_size:
-            plane_counts[g_val] += 1
-        column = tuple(coord[axis] for axis in lateral_axes)
-        prev = top_per_column.get(column)
-        if prev is None or g_val < prev:
-            top_per_column[column] = g_val
-    return top_per_column, plane_counts
-
-
-def _height_hole_features(
-    cells: set[tuple[int, ...]],
-    *,
-    dims: tuple[int, ...],
-    gravity_axis: int,
-    gravity_size: int,
-    lateral_axes: tuple[int, ...],
-    top_per_column: dict[tuple[int, ...], int],
-) -> tuple[dict[tuple[int, ...], int], int, float]:
-    heights: dict[tuple[int, ...], int] = {}
-    holes_count = 0
-    holes_depth_weighted = 0.0
-    for column in _iter_columns(dims, gravity_axis):
-        top = top_per_column.get(column)
-        if top is None:
-            heights[column] = 0
-            continue
-        height = gravity_size - top
-        heights[column] = height
-        seen_block = False
-        for g_val in range(top, gravity_size):
-            coord = _coord_from_column(
-                column,
-                lateral_axes=lateral_axes,
-                gravity_axis=gravity_axis,
-                gravity_value=g_val,
-                ndim=len(dims),
-            )
-            if coord in cells:
-                seen_block = True
-                continue
-            if seen_block:
-                holes_count += 1
-                holes_depth_weighted += float(g_val - top + 1)
-    return heights, holes_count, holes_depth_weighted
-
-
-def _surface_roughness_norm(
-    heights: dict[tuple[int, ...], int],
-    *,
-    dims: tuple[int, ...],
-    lateral_axes: tuple[int, ...],
-    gravity_size: int,
-) -> float:
-    roughness = 0.0
-    roughness_edges = 0
-    for column, value in heights.items():
-        column_list = list(column)
-        for axis_idx, axis in enumerate(lateral_axes):
-            if column[axis_idx] + 1 >= dims[axis]:
-                continue
-            column_list[axis_idx] += 1
-            neighbor = tuple(column_list)
-            column_list[axis_idx] -= 1
-            roughness += abs(value - heights.get(neighbor, 0))
-            roughness_edges += 1
-    if roughness_edges == 0:
-        return 0.0
-    return _clamp01(roughness / (roughness_edges * gravity_size))
-
-
-def _completion_ratios(
-    plane_counts: list[int],
-    *,
-    gravity_size: int,
-    plane_size: int,
-    near_threshold: float,
-) -> tuple[float, float]:
-    near_complete_planes = 0
-    clearable_planes = 0
-    for count in plane_counts:
-        ratio = count / plane_size
-        if ratio >= 1.0:
-            clearable_planes += 1
-        elif ratio >= near_threshold:
-            near_complete_planes += 1
-    near_complete_planes_norm = near_complete_planes / gravity_size
-    clearable_planes_norm = clearable_planes / gravity_size
-    return _clamp01(near_complete_planes_norm), _clamp01(clearable_planes_norm)
-
-
-def _top_zone_risk_norm(
-    cells: set[tuple[int, ...]],
-    *,
-    gravity_axis: int,
-    gravity_size: int,
-    plane_size: int,
-    top_layers: int,
-) -> float:
-    safe_top_layers = max(1, min(gravity_size, top_layers))
-    top_count = sum(1 for coord in cells if coord[gravity_axis] < safe_top_layers)
-    return _clamp01(top_count / max(1, safe_top_layers * plane_size))
-
-
-def _slice_balance_norm(cells: set[tuple[int, ...]], dims: tuple[int, ...]) -> float:
-    if len(dims) < 4 or dims[3] <= 1:
-        return 1.0
-    per_w = [0] * dims[3]
-    for coord in cells:
-        per_w[coord[3]] += 1
-    mean_w = sum(per_w) / len(per_w)
-    if mean_w <= 0:
-        return 1.0
-    coeff_var = pstdev(per_w) / mean_w
-    return _clamp01(1.0 - coeff_var)
-
-
-def _board_health_features(
-    cells_map: dict[tuple[int, ...], int],
-    *,
-    dims: tuple[int, ...],
-    gravity_axis: int,
-) -> dict[str, float]:
-    total_cells = max(1, math.prod(max(1, axis) for axis in dims))
-    gravity_size = max(1, dims[gravity_axis])
-    plane_size = _plane_size(dims, gravity_axis)
-    lateral_axes = _lateral_axes(dims, gravity_axis)
-
-    cells = set(cells_map.keys())
-    occupied_count = len(cells)
-    occupied_ratio = occupied_count / total_cells
-
-    top_per_column, plane_counts = _top_columns_and_plane_counts(
-        cells,
-        lateral_axes=lateral_axes,
-        gravity_axis=gravity_axis,
-        gravity_size=gravity_size,
-    )
-    heights, holes_count, holes_depth_weighted = _height_hole_features(
-        cells,
-        dims=dims,
-        gravity_axis=gravity_axis,
-        gravity_size=gravity_size,
-        lateral_axes=lateral_axes,
-        top_per_column=top_per_column,
-    )
-
-    max_height_norm = max(heights.values(), default=0) / gravity_size
-    mean_height_norm = (sum(heights.values()) / max(1, len(heights))) / gravity_size
-
-    surface_roughness_norm = _surface_roughness_norm(
-        heights,
-        dims=dims,
-        lateral_axes=lateral_axes,
-        gravity_size=gravity_size,
-    )
-
-    holes_count_norm = holes_count / total_cells
-    holes_depth_norm = _clamp01(holes_depth_weighted / (total_cells * gravity_size))
-    cavity_volume_norm = holes_count_norm
-
-    config = _score_analyzer_config()
-    near_threshold = float(config.get("board", {}).get("near_complete_threshold", 0.8))
-    near_complete_planes_norm, clearable_planes_norm = _completion_ratios(
-        plane_counts,
-        gravity_size=gravity_size,
-        plane_size=plane_size,
-        near_threshold=near_threshold,
-    )
-
-    top_layers = int(config.get("board", {}).get("top_zone_layers", 3))
-    top_zone_risk_norm = _top_zone_risk_norm(
-        cells,
-        gravity_axis=gravity_axis,
-        gravity_size=gravity_size,
-        plane_size=plane_size,
-        top_layers=top_layers,
-    )
-
-    components = _connected_components(cells)
-    fragmentation_norm = components / max(1, occupied_count)
-
-    slice_balance_norm = _slice_balance_norm(cells, dims)
-
-    return {
-        "occupied_ratio": _clamp01(occupied_ratio),
-        "max_height_norm": _clamp01(max_height_norm),
-        "mean_height_norm": _clamp01(mean_height_norm),
-        "surface_roughness_norm": surface_roughness_norm,
-        "holes_count_norm": _clamp01(holes_count_norm),
-        "holes_depth_norm": holes_depth_norm,
-        "cavity_volume_norm": _clamp01(cavity_volume_norm),
-        "near_complete_planes_norm": _clamp01(near_complete_planes_norm),
-        "clearable_planes_norm": _clamp01(clearable_planes_norm),
-        "top_zone_risk_norm": _clamp01(top_zone_risk_norm),
-        "fragmentation_norm": _clamp01(fragmentation_norm),
-        "slice_balance_norm": _clamp01(slice_balance_norm),
-    }
-
-
-def _placement_features(
-    *,
-    board_pre: dict[tuple[int, ...], int],
-    board_post: dict[tuple[int, ...], int],
-    board_pre_features: dict[str, float],
-    board_post_features: dict[str, float],
-    dims: tuple[int, ...],
-    gravity_axis: int,
-    locked_cells: tuple[tuple[int, ...], ...],
-    cleared: int,
-) -> dict[str, float]:
-    gravity_size = max(1, dims[gravity_axis])
-    post_cells = set(board_post.keys())
-    locked = [coord for coord in locked_cells if 0 <= coord[gravity_axis] < gravity_size]
-
-    if not locked:
-        return {
-            "drop_distance_norm": 0.0,
-            "landing_coords_norm": 0.0,
-            "support_contacts_norm": 0.0,
-            "side_contacts_norm": 0.0,
-            "overhang_cells_norm": 0.0,
-            "immediate_clears_norm": 0.0,
-            "clear_contribution_norm": 0.0,
-            "near_complete_progress_norm": 0.0,
-            "holes_created_norm": 0.0,
-            "holes_filled_norm": 0.0,
-            "cavity_delta_norm": 0.0,
-            "roughness_delta_norm": 0.0,
-            "top_risk_delta_norm": 0.0,
-        }
-
-    locked_count = len(locked)
-    drop_distance_norm = sum(coord[gravity_axis] for coord in locked) / (locked_count * max(1, gravity_size - 1))
-
-    lateral_axes = _lateral_axes(dims, gravity_axis)
-    if lateral_axes:
-        landing_values: list[float] = []
-        for axis in lateral_axes:
-            denom = max(1, dims[axis] - 1)
-            landing_values.append(sum(coord[axis] for coord in locked) / (locked_count * denom))
-        landing_coords_norm = _clamp01(sum(landing_values) / len(landing_values))
-    else:
-        landing_coords_norm = 0.0
-
-    support_contacts = 0
-    overhang_cells = 0
-    side_contacts = 0
-    max_side_contacts = max(1, locked_count * len(lateral_axes) * 2)
-    for coord in locked:
-        below = list(coord)
-        below[gravity_axis] += 1
-        below_coord = tuple(below)
-        if coord[gravity_axis] == gravity_size - 1 or below_coord in post_cells:
-            support_contacts += 1
-        else:
-            overhang_cells += 1
-
-        for axis in lateral_axes:
-            for delta in (-1, 1):
-                side = list(coord)
-                side[axis] += delta
-                side_coord = tuple(side)
-                if side_coord in post_cells:
-                    side_contacts += 1
-
-    support_contacts_norm = support_contacts / locked_count
-    side_contacts_norm = _clamp01(side_contacts / max_side_contacts)
-    overhang_cells_norm = overhang_cells / locked_count
-
-    immediate_clears_norm = _clamp01(cleared / max(1, min(4, gravity_size)))
-    clear_contribution_norm = 1.0 if cleared > 0 else 0.0
-
-    pre_holes = board_pre_features["holes_count_norm"]
-    post_holes = board_post_features["holes_count_norm"]
-    pre_cavity = board_pre_features["cavity_volume_norm"]
-    post_cavity = board_post_features["cavity_volume_norm"]
-    pre_rough = board_pre_features["surface_roughness_norm"]
-    post_rough = board_post_features["surface_roughness_norm"]
-    pre_top = board_pre_features["top_zone_risk_norm"]
-    post_top = board_post_features["top_zone_risk_norm"]
-    pre_near = board_pre_features["near_complete_planes_norm"]
-    post_near = board_post_features["near_complete_planes_norm"]
-
-    near_complete_progress_norm = _clamp01(max(0.0, post_near - pre_near))
-    holes_created_norm = _clamp01(max(0.0, post_holes - pre_holes))
-    holes_filled_norm = _clamp01(max(0.0, pre_holes - post_holes))
-    cavity_delta_norm = _clamp01(max(0.0, post_cavity - pre_cavity))
-    roughness_delta_norm = _clamp01(max(0.0, pre_rough - post_rough))
-    top_risk_delta_norm = _clamp01(max(0.0, pre_top - post_top))
-
-    return {
-        "drop_distance_norm": _clamp01(drop_distance_norm),
-        "landing_coords_norm": landing_coords_norm,
-        "support_contacts_norm": _clamp01(support_contacts_norm),
-        "side_contacts_norm": side_contacts_norm,
-        "overhang_cells_norm": _clamp01(overhang_cells_norm),
-        "immediate_clears_norm": immediate_clears_norm,
-        "clear_contribution_norm": clear_contribution_norm,
-        "near_complete_progress_norm": near_complete_progress_norm,
-        "holes_created_norm": holes_created_norm,
-        "holes_filled_norm": holes_filled_norm,
-        "cavity_delta_norm": cavity_delta_norm,
-        "roughness_delta_norm": roughness_delta_norm,
-        "top_risk_delta_norm": top_risk_delta_norm,
-    }
-
-
-def _weighted_score(features: dict[str, float], score_obj: dict[str, Any]) -> float:
-    weights = score_obj.get("weights", {})
-    if not isinstance(weights, dict):
-        weights = {}
-    bias = float(score_obj.get("bias", 0.5))
-    value = bias
-    for key, feature_value in features.items():
-        weight = float(weights.get(key, 0.0))
-        value += weight * float(feature_value)
-    return round(_clamp01(value), 6)
-
-
 def analyze_lock_event(
     *,
     board_pre: dict[tuple[int, ...], int],
@@ -578,9 +155,25 @@ def analyze_lock_event(
     seq: int,
 ) -> dict[str, object]:
     cfg = _score_analyzer_config()
-    board_pre_features = _board_health_features(board_pre, dims=dims, gravity_axis=gravity_axis)
-    board_post_features = _board_health_features(board_post, dims=dims, gravity_axis=gravity_axis)
-    placement = _placement_features(
+    board_obj = cfg.get("board", {})
+    near_threshold = float(board_obj.get("near_complete_threshold", 0.8)) if isinstance(board_obj, dict) else 0.8
+    top_layers = int(board_obj.get("top_zone_layers", 3)) if isinstance(board_obj, dict) else 3
+
+    board_pre_features = board_health_features(
+        board_pre,
+        dims=dims,
+        gravity_axis=gravity_axis,
+        near_threshold=near_threshold,
+        top_layers=top_layers,
+    )
+    board_post_features = board_health_features(
+        board_post,
+        dims=dims,
+        gravity_axis=gravity_axis,
+        near_threshold=near_threshold,
+        top_layers=top_layers,
+    )
+    placement = placement_features(
         board_pre=board_pre,
         board_post=board_post,
         board_pre_features=board_pre_features,
@@ -596,11 +189,11 @@ def analyze_lock_event(
     }
 
     scores_obj = cfg.get("scores", {})
-    board_health_score = _weighted_score(
+    board_health_score = weighted_score(
         board_post_features,
         dict(scores_obj.get("board_health", {})) if isinstance(scores_obj, dict) else {},
     )
-    placement_quality_score = _weighted_score(
+    placement_quality_score = weighted_score(
         placement,
         dict(scores_obj.get("placement_quality", {})) if isinstance(scores_obj, dict) else {},
     )
@@ -669,62 +262,103 @@ def _is_number(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _validate_event_required_fields(event: dict[str, object]) -> tuple[bool, str]:
-    for key in _EVENT_REQUIRED_FIELDS:
-        if key not in event:
-            return False, f"missing event field: {key}"
+def _require_fields(payload: dict[str, object], fields: tuple[str, ...], *, label: str) -> tuple[bool, str]:
+    for key in fields:
+        if key not in payload:
+            return False, f"missing {label} field: {key}"
     return True, ""
 
 
-def _validate_event_identity(event: dict[str, object]) -> tuple[bool, str]:
-    if not isinstance(event.get("session_id"), str) or not str(event["session_id"]).strip():
-        return False, "event.session_id must be a non-empty string"
-    if not isinstance(event.get("piece_id"), str) or not str(event["piece_id"]).strip():
-        return False, "event.piece_id must be a non-empty string"
+def _require_non_empty_string_fields(
+    payload: dict[str, object],
+    fields: tuple[str, ...],
+    *,
+    label: str,
+) -> tuple[bool, str]:
+    for field in fields:
+        value = payload.get(field)
+        if not isinstance(value, str) or not value.strip():
+            return False, f"{label}.{field} must be a non-empty string"
     return True, ""
 
 
-def _validate_event_scalars(event: dict[str, object]) -> tuple[bool, str]:
-    for scalar_key in ("seq", "dimension", "speed_level", "cleared", "raw_points", "final_points"):
-        value = event.get(scalar_key)
+def _require_integer_fields(
+    payload: dict[str, object],
+    fields: tuple[str, ...],
+    *,
+    label: str,
+) -> tuple[bool, str]:
+    for field in fields:
+        value = payload.get(field)
         if isinstance(value, bool) or not isinstance(value, int):
-            return False, f"event.{scalar_key} must be an integer"
+            return False, f"{label}.{field} must be an integer"
     return True, ""
 
 
-def _validate_event_structures(event: dict[str, object]) -> tuple[bool, str]:
-    if not isinstance(event.get("board_dims"), list) or not event["board_dims"]:
-        return False, "event.board_dims must be a non-empty list"
-    for dict_key in ("board_pre", "placement", "board_post", "delta"):
-        if not isinstance(event.get(dict_key), dict):
-            return False, f"event.{dict_key} must be an object"
+def _require_object_fields(
+    payload: dict[str, object],
+    fields: tuple[str, ...],
+    *,
+    label: str,
+) -> tuple[bool, str]:
+    for field in fields:
+        value = payload.get(field)
+        if not isinstance(value, dict):
+            return False, f"{label}.{field} must be an object"
     return True, ""
 
 
-def _validate_event_scores(event: dict[str, object]) -> tuple[bool, str]:
-    for score_key in ("board_health_score", "placement_quality_score"):
-        value = event.get(score_key)
+def _require_numeric_fields(
+    payload: dict[str, object],
+    fields: tuple[str, ...],
+    *,
+    label: str,
+    min_value: float | None = None,
+    max_value: float | None = None,
+) -> tuple[bool, str]:
+    for field in fields:
+        value = payload.get(field)
         if not _is_number(value):
-            return False, f"event.{score_key} must be numeric"
-        if not 0.0 <= float(value) <= 1.0:
-            return False, f"event.{score_key} must be in [0, 1]"
+            return False, f"{label}.{field} must be numeric"
+        number = float(value)
+        if min_value is not None and number < min_value:
+            return False, f"{label}.{field} must be >= {min_value}"
+        if max_value is not None and number > max_value:
+            return False, f"{label}.{field} must be <= {max_value}"
     return True, ""
 
 
 def validate_score_analysis_event(event: dict[str, object]) -> tuple[bool, str]:
     if not isinstance(event, dict):
         return False, "event must be an object"
-    checks = (
-        _validate_event_required_fields,
-        _validate_event_identity,
-        _validate_event_scalars,
-        _validate_event_structures,
-        _validate_event_scores,
+    ok, msg = _require_fields(event, _EVENT_REQUIRED_FIELDS, label="event")
+    if not ok:
+        return ok, msg
+    ok, msg = _require_non_empty_string_fields(event, ("session_id", "piece_id"), label="event")
+    if not ok:
+        return ok, msg
+    ok, msg = _require_integer_fields(
+        event,
+        ("seq", "dimension", "speed_level", "cleared", "raw_points", "final_points"),
+        label="event",
     )
-    for check in checks:
-        ok, msg = check(event)
-        if not ok:
-            return ok, msg
+    if not ok:
+        return ok, msg
+    board_dims = event.get("board_dims")
+    if not isinstance(board_dims, list) or not board_dims:
+        return False, "event.board_dims must be a non-empty list"
+    ok, msg = _require_object_fields(event, ("board_pre", "placement", "board_post", "delta"), label="event")
+    if not ok:
+        return ok, msg
+    ok, msg = _require_numeric_fields(
+        event,
+        ("board_health_score", "placement_quality_score"),
+        label="event",
+        min_value=0.0,
+        max_value=1.0,
+    )
+    if not ok:
+        return ok, msg
     return True, ""
 
 
@@ -804,14 +438,14 @@ def _update_summary(summary: dict[str, object], event: dict[str, object]) -> dic
     score_means["board_health"] = round(prev_health + ((health - prev_health) / events), 6)
     score_means["placement_quality"] = round(prev_quality + ((quality - prev_quality) / events), 6)
 
-    dimensions = summary["dimensions"]
-    _increment_counter(dimensions, str(event["dimension"]))
-    actor_modes = summary["actor_modes"]
-    _increment_counter(actor_modes, str(event["actor_mode"]))
-    bot_modes = summary["bot_modes"]
-    _increment_counter(bot_modes, str(event["bot_mode"]))
-    grid_modes = summary["grid_modes"]
-    _increment_counter(grid_modes, str(event["grid_mode"]))
+    for summary_key, event_key in (
+        ("dimensions", "dimension"),
+        ("actor_modes", "actor_mode"),
+        ("bot_modes", "bot_mode"),
+        ("grid_modes", "grid_mode"),
+    ):
+        bucket = summary[summary_key]
+        _increment_counter(bucket, str(event[event_key]))
 
     sessions = summary["sessions"]
     session_id = str(event["session_id"])
@@ -828,55 +462,39 @@ def _update_summary(summary: dict[str, object], event: dict[str, object]) -> dic
     return summary
 
 
-def _validate_summary_required_fields(summary: dict[str, object]) -> tuple[bool, str]:
-    for key in _SUMMARY_REQUIRED_FIELDS:
-        if key not in summary:
-            return False, f"missing summary field: {key}"
-    return True, ""
-
-
-def _validate_summary_totals(summary: dict[str, object]) -> tuple[bool, str]:
-    totals = summary.get("totals")
-    if not isinstance(totals, dict):
-        return False, "summary.totals must be an object"
-    for field in ("events", "cleared_total", "raw_points_total", "final_points_total"):
-        value = totals.get(field)
-        if isinstance(value, bool) or not isinstance(value, int):
-            return False, f"summary.totals.{field} must be an integer"
-    return True, ""
-
-
-def _validate_summary_score_means(summary: dict[str, object]) -> tuple[bool, str]:
-    score_means = summary.get("score_means")
-    if not isinstance(score_means, dict):
-        return False, "summary.score_means must be an object"
-    for field in ("board_health", "placement_quality"):
-        value = score_means.get(field)
-        if not _is_number(value):
-            return False, f"summary.score_means.{field} must be numeric"
-    return True, ""
-
-
-def _validate_summary_group_maps(summary: dict[str, object]) -> tuple[bool, str]:
-    for key in ("dimensions", "actor_modes", "bot_modes", "grid_modes", "sessions"):
-        if not isinstance(summary.get(key), dict):
-            return False, f"summary.{key} must be an object"
-    return True, ""
-
-
 def validate_score_analysis_summary(summary: dict[str, object]) -> tuple[bool, str]:
     if not isinstance(summary, dict):
         return False, "summary must be an object"
-    checks = (
-        _validate_summary_required_fields,
-        _validate_summary_totals,
-        _validate_summary_score_means,
-        _validate_summary_group_maps,
+    ok, msg = _require_fields(summary, _SUMMARY_REQUIRED_FIELDS, label="summary")
+    if not ok:
+        return ok, msg
+    totals = summary.get("totals")
+    if not isinstance(totals, dict):
+        return False, "summary.totals must be an object"
+    ok, msg = _require_integer_fields(
+        totals,
+        ("events", "cleared_total", "raw_points_total", "final_points_total"),
+        label="summary.totals",
     )
-    for check in checks:
-        ok, msg = check(summary)
-        if not ok:
-            return ok, msg
+    if not ok:
+        return ok, msg
+    score_means = summary.get("score_means")
+    if not isinstance(score_means, dict):
+        return False, "summary.score_means must be an object"
+    ok, msg = _require_numeric_fields(
+        score_means,
+        ("board_health", "placement_quality"),
+        label="summary.score_means",
+    )
+    if not ok:
+        return ok, msg
+    ok, msg = _require_object_fields(
+        summary,
+        ("dimensions", "actor_modes", "bot_modes", "grid_modes", "sessions"),
+        label="summary",
+    )
+    if not ok:
+        return ok, msg
     return True, ""
 
 

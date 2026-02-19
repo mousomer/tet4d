@@ -1,8 +1,8 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.6 (Verified 2026-02-18)  
+Status: Active v0.7 (Verified 2026-02-19)  
 Author: Omer + Codex  
-Date: 2026-02-18  
+Date: 2026-02-19  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -36,6 +36,14 @@ Mode-specific requirements are defined in:
 14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
 15. Keep menu structure and default settings in external config files (not hardcoded in frontend modules).
 16. Define a long-term path for non-euclidean geometry gameplay extensions without breaking deterministic core behavior.
+17. Add setup-selectable boundary topology presets:
+18. `bounded`,
+19. `wrap_all`,
+20. `invert_all`.
+21. Keep gravity-axis wrapping disabled by default in all presets.
+22. Add advanced topology-designer mode (hidden by default) with per-axis/per-edge behavior profiles and deterministic export.
+23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
+24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -44,6 +52,25 @@ Mode-specific requirements are defined in:
 3. Gravity acts on axis `y` in all modes.
 4. `y < 0` is allowed before lock; locking above top triggers game over.
 5. Board storage is sparse (`coord -> cell_id`).
+
+### 3.1 Shared topology preset rules
+
+1. Topology mode must be one of: `bounded`, `wrap_all`, `invert_all`.
+2. Topology behavior is engine-level (movement/collision/lock), not render-only.
+3. Gravity axis (`y`) does not wrap by default.
+4. `wrap_all`: non-gravity axes use modular wrapping at board edges.
+5. `invert_all`: crossing a wrapped edge mirrors other wrapped non-gravity axes deterministically.
+6. Fixed `(seed, topology mode, input stream)` must produce deterministic replay.
+7. In invert topologies, piece mapping must preserve seam traversal continuity for seam-straddling pieces; moves must not fail solely due to per-cell inversion desynchronization.
+
+### 3.2 Advanced topology-designer rules
+
+1. `topology_advanced=0` keeps preset-only behavior (`bounded`/`wrap_all`/`invert_all`).
+2. `topology_advanced=1` enables profile-based per-axis/per-edge overrides.
+3. Profile source file is `config/topology/designer_presets.json`.
+4. Profile output export path defaults to `state/topology/selected_profile.json`.
+5. Gravity-axis wrapping remains disabled unless explicitly enabled in engine config.
+6. Deterministic replay rule still applies to `(seed, topology mode/profile, input stream)`.
 
 ## 4. Shared UX Requirements
 
@@ -68,6 +95,7 @@ Mode-specific requirements are defined in:
 6. No visible jitter or one-frame reversion to the previous orientation is allowed.
 7. The same animation path must be used for manual input and bot-triggered rotations.
 8. Headless/dry-run paths must skip visual tween logic entirely.
+9. Rotation overlay rendering must use the same topology-aware mapping path as active-piece rendering in all modes (2D/3D/4D), including exploration mode.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -104,15 +132,24 @@ Mode-specific requirements are defined in:
 20. `config/project/canonical_maintenance.json`
 21. Contract validation script is:
 22. `tools/validate_project_contracts.py`
-23. Local environment bootstrap script is:
-24. `scripts/bootstrap_env.sh`
-25. Canonical schema/migration/help/replay/release artifacts are source-controlled:
-26. `config/schema/*.schema.json`
-27. `docs/migrations/*.md`
-28. `tests/replay/manifest.json`
-29. `docs/help/HELP_INDEX.md`
-30. `assets/help/manifest.json`
-31. `docs/RELEASE_CHECKLIST.md`
+23. Repository path/constant/secret policy configs are source-controlled:
+24. `config/project/io_paths.json`
+25. `config/project/constants.json`
+26. `config/project/secret_scan.json`
+27. Secret scan command is:
+28. `python3 tools/scan_secrets.py`
+29. Shared safe path/constants loader is:
+30. `tetris_nd/project_config.py`
+31. Local environment bootstrap script is:
+32. `scripts/bootstrap_env.sh`
+33. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+34. `config/schema/*.schema.json`
+35. `docs/migrations/*.md`
+36. `tests/replay/manifest.json`
+37. `docs/help/HELP_INDEX.md`
+38. `assets/help/manifest.json`
+39. `docs/RELEASE_CHECKLIST.md`
+40. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 
 ## 7. Engineering Best Practices
 
@@ -122,6 +159,7 @@ Mode-specific requirements are defined in:
 4. Share projection/math helpers to avoid 3D/4D behavior drift.
 5. Avoid hidden side effects at import-time.
 6. Keep deterministic paths stable (seeded RNG, reproducible replay scripts).
+7. Remove unreferenced helpers unless they are intentionally exported with explicit justification.
 
 ## 8. Testing Instructions
 
@@ -132,6 +170,7 @@ scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
 python3 tools/validate_project_contracts.py
+python3 tools/scan_secrets.py
 python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
@@ -146,6 +185,8 @@ python3.14 -m compileall -q  front2d.py  tetris_nd
 5. Random/debug piece stress tests for spawn validity and non-premature game-over.
 6. Menu/settings/display-mode integration tests (windowed <-> fullscreen).
 7. Rotation-animation state machine tests (start, progress, finish, interruption/retrigger).
+8. Topology seam regression tests: seam-straddling invert moves (including 4D `w` seam) must remain movable when target cells are otherwise valid.
+9. Visual topology parity tests: rotation overlays and active-piece cells must agree under wrap/invert topologies.
 
 ## 9. Acceptance Criteria (Family)
 
@@ -159,6 +200,7 @@ python3.14 -m compileall -q  front2d.py  tetris_nd
 8. Scoring behavior is verified by automated tests and matches defined tables.
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
+11. Topology presets are selectable in setup menus and persisted in menu settings.
 
 ## 10. Backlog Status
 
@@ -178,6 +220,7 @@ Completed in current implementation:
 13. Frontend split executed: launcher orchestration/settings and 3D/4D setup/render modules extracted for maintainability.
 14. Offline playbot policy analysis tool added (`tools/analyze_playbot_policies.py`).
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
+16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.
@@ -188,6 +231,23 @@ Remaining follow-up:
 6. Closed: docs freshness rules now include regex checks for stale pass-count snapshots.
 7. Closed: control-helper optimization completed (cached action-icon surfaces + shared dimensional row-builders with parity tests).
 8. Closed: simplification batch completed (shared UI utilities, pause/settings row externalization, keybindings view/input split, shared ND launcher helper, shared 2D/ND lookahead helper, and sectioned runtime-config validator).
+9. Closed: follow-up simplification pass completed for nested runtime callbacks, gameplay tuning validator split, duplicated 3D/4D grid branch rendering, keybinding defaults/catalog split, score-analyzer feature split, and 2D panel extraction.
+10. Closed: optimization-focused pass completed for menu gradient caching and bounded HUD/panel text-surface caching.
+11. Closed: remaining decomposition pass completed for 3D frontend runtime/render split and runtime-config validator section split.
+12. Closed: further runtime optimization pass completed (shared text-render cache, cached control-helper text, and 4D layer rendering pre-indexing by `w` layer).
+13. Closed: security/config hardening batch:
+14. CI-enforced repository secret scan policy added (`config/project/secret_scan.json`,`tools/scan_secrets.py`,`scripts/ci_check.sh`),
+15. I/O path definitions centralized in `config/project/io_paths.json` with safe `Path` resolution helpers in `tetris_nd/project_config.py`,
+16. selected runtime constants (cache/render limits and layout values) externalized to `config/project/constants.json`.
+17. Closed: projection-lattice caching pass implemented for static camera/view signatures in 3D/4D projection grid paths.
+18. Closed: low-risk LOC-reduction pass executed (pause-menu action dedupe, projected-grid dead-code removal, shared projection cache-key helpers, and score-analyzer validation consolidation).
+19. Planned: keep continuous CI/stability watch and revisit optional sub-splits only if module scope grows.
+20. Closed: advanced boundary-warping designer baseline implemented:
+21. per-axis/per-edge profile overrides via `config/topology/designer_presets.json`,
+22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
+23. deterministic profile export provided at `state/topology/selected_profile.json`.
+24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
+25. Planned: setup-menu render/value dedup extraction remains tracked by `BKL-P2-007`.
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
 
@@ -232,6 +292,7 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 2. Phase 2: add one bounded non-euclidean profile (example: wrapped edges / torus) behind config flag.
 3. Phase 3: add geometry-aware score-analyzer features and bot heuristics.
 4. Phase 4: expose geometry selection in setup menus and help documentation.
+5. Phase 5: boundary-warping designer for custom topology authoring.
 
 ### 11.7 Test requirements (for future implementation)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 
 from .control_helper import ControlGroup, draw_grouped_control_helper
+from .text_render_cache import render_text_cached
 
 
 def draw_translucent_panel(
@@ -29,7 +30,7 @@ def draw_text_lines(
 ) -> int:
     x, y = start_pos
     for line in lines:
-        surf = font.render(line, True, color)
+        surf = render_text_cached(font=font, text=line, color=color)
         surface.blit(surf, (x, y))
         y += surf.get_height() + line_gap
     return y
@@ -139,5 +140,5 @@ def draw_game_side_panel(
             )
 
     if game_over:
-        over = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
+        over = render_text_cached(font=fonts.panel_font, text="GAME OVER", color=(255, 80, 80))
         surface.blit(over, (panel_rect.x + 12, panel_rect.bottom - 26))

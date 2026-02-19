@@ -52,6 +52,14 @@ _STRESS_CASES = (
 )
 
 
+def _resolve_repo_local_path(raw: Path) -> Path:
+    candidate = (raw if raw.is_absolute() else (ROOT / raw)).resolve()
+    root = ROOT.resolve()
+    if candidate == root or root in candidate.parents:
+        return candidate
+    raise SystemExit(f"output path must stay within project root: {root}")
+
+
 def _parse_csv_values(raw: str, *, allowed: set[str], label: str) -> list[str]:
     parts = [item.strip().lower() for item in raw.split(",") if item.strip()]
     if not parts:
@@ -211,8 +219,8 @@ def main() -> int:
         default="auto,heuristic,greedy_layer",
         help="comma-separated planner algorithms",
     )
-    parser.add_argument("--output-json", default="", help="optional JSON output file")
-    parser.add_argument("--output-csv", default="", help="optional CSV output file")
+    parser.add_argument("--output-json", default="", help="optional JSON output file (inside project root)")
+    parser.add_argument("--output-csv", default="", help="optional CSV output file (inside project root)")
     parser.add_argument("--show-top", type=int, default=18, help="rows to show in terminal summary")
     args = parser.parse_args()
 
@@ -261,12 +269,12 @@ def main() -> int:
     print(json.dumps({"summary_top": rows[:top_n], "count": len(rows)}, indent=2))
 
     if args.output_json:
-        json_path = Path(args.output_json)
+        json_path = _resolve_repo_local_path(Path(args.output_json))
         json_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(f"wrote JSON: {json_path}")
     if args.output_csv:
-        csv_path = Path(args.output_csv)
+        csv_path = _resolve_repo_local_path(Path(args.output_csv))
         _write_csv(csv_path, rows)
         print(f"wrote CSV: {csv_path}")
     return 0

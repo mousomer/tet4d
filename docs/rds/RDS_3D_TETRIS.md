@@ -1,6 +1,6 @@
 # 3D Tetris RDS
 
-Status: Active v0.6 (Verified 2026-02-18)  
+Status: Active v0.7 (Verified 2026-02-19)  
 Author: Omer + Codex  
 Date: 2026-02-18  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
@@ -25,6 +25,13 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 2. Gravity axis: `y`.
 3. Typical setup defaults: `6 x 18 x 6`.
 4. Clear rule: full `x-z`layer at fixed`y`.
+5. Setup exposes topology preset:
+6. `bounded` (default),
+7. `wrap_all` (`x`/`z` wrap; gravity `y` remains bounded),
+8. `invert_all` (`x`/`z` wrap with mirrored non-gravity axis mapping).
+9. Setup includes hidden-by-default advanced topology controls:
+10. `topology_advanced` toggle and `topology_profile_index` selector.
+11. Advanced profiles may apply per-edge inversion/wrap behavior by axis.
 
 ## 4. Piece Set
 
@@ -74,11 +81,15 @@ Camera/view:
 2. Pitch turn (animated 90°): I/K
 3. Zoom: `+`/`-`
 4. Reset camera: `0`
-5. Cycle projection: `P` System:
-1. Restart: `R`
+5. Cycle projection: `P`
+
+System:
+1. Restart: `Y`
 2. Menu: `M`
 3. Quit: `Esc`
-4. Toggle grid: `G` Viewer-consistent translation requirement:
+4. Toggle grid: `C`
+
+Viewer-consistent translation requirement:
 1. Arrow and movement intents are interpreted in viewer space, not fixed board axes.
 2. `Left/Right` always move the active piece screen-left/screen-right.
 3. `Up` always means away from the viewer.

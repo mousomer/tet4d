@@ -10,6 +10,18 @@
       "pitch_pos": [
         "u"
       ],
+      "view_xw_neg": [
+        "f5"
+      ],
+      "view_xw_pos": [
+        "f6"
+      ],
+      "view_zw_neg": [
+        "f7"
+      ],
+      "view_zw_pos": [
+        "f8"
+      ],
       "reset": [
         "backspace"
       ],
@@ -58,40 +70,40 @@
         "down"
       ],
       "rotate_xw_neg": [
-        "6"
+        "t"
       ],
       "rotate_xw_pos": [
-        "5"
+        "r"
       ],
       "rotate_xy_neg": [
-        "z"
+        "w"
       ],
       "rotate_xy_pos": [
-        "x"
+        "q"
       ],
       "rotate_xz_neg": [
-        "2"
+        "s"
       ],
       "rotate_xz_pos": [
-        "1"
+        "a"
       ],
       "rotate_yw_neg": [
-        "8"
+        "g"
       ],
       "rotate_yw_pos": [
-        "7"
+        "f"
       ],
       "rotate_yz_neg": [
-        "4"
+        "x"
       ],
       "rotate_yz_pos": [
-        "3"
+        "z"
       ],
       "rotate_zw_neg": [
-        "0"
+        "b"
       ],
       "rotate_zw_pos": [
-        "9"
+        "v"
       ],
       "soft_drop": [
         "left shift",
@@ -120,10 +132,10 @@
         "escape"
       ],
       "restart": [
-        "r"
+        "y"
       ],
       "toggle_grid": [
-        "g"
+        "c"
       ]
     }
   },

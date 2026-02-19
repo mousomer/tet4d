@@ -431,181 +431,48 @@ def run_pause_settings_menu(screen: pygame.Surface, fonts) -> tuple[pygame.Surfa
     return screen, True
 
 
-def _pause_action_resume(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    state.decision = "resume"
-    state.running = False
-    return screen, True
-
-
-def _pause_action_restart(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    state.decision = "restart"
-    state.running = False
-    return screen, True
-
-
-def _pause_action_settings(
-    screen: pygame.Surface,
-    fonts,
-    _state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    return run_pause_settings_menu(screen, fonts)
-
-
-def _pause_action_bot_options(
-    screen: pygame.Surface,
-    fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    ok, msg = run_bot_options_menu(screen, fonts, start_dimension=dimension)
-    state.status = msg
-    state.status_error = not ok
-    return screen, True
-
-
-def _pause_action_keybindings(
-    screen: pygame.Surface,
-    fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    run_keybindings_menu(screen, fonts, dimension=dimension, scope=f"{dimension}d")
-    state.status = "Returned from keybindings setup"
-    state.status_error = False
-    return screen, True
-
-
-def _pause_action_profile_prev(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    ok, msg, _profile = cycle_key_profile(-1)
-    state.status = msg
-    state.status_error = not ok
-    return screen, True
-
-
-def _pause_action_profile_next(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    ok, msg, _profile = cycle_key_profile(1)
-    state.status = msg
-    state.status_error = not ok
-    return screen, True
-
-
-def _pause_action_save_bindings(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    ok, msg = save_keybindings_file(dimension)
-    state.status = msg
-    state.status_error = not ok
-    return screen, True
-
-
-def _pause_action_load_bindings(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    ok, msg = load_keybindings_file(dimension)
-    state.status = msg
-    state.status_error = not ok
-    return screen, True
-
-
-def _pause_action_help(
-    screen: pygame.Surface,
-    fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    screen = run_help_menu(screen, fonts, dimension=dimension, context_label="Pause Menu")
-    state.status = "Returned from help"
-    state.status_error = False
-    return screen, True
-
-
-def _pause_action_menu(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    state.decision = "menu"
-    state.running = False
-    return screen, True
-
-
-def _pause_action_quit(
-    screen: pygame.Surface,
-    _fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    del dimension
-    state.decision = "quit"
-    state.running = False
-    return screen, True
-
-
-_PAUSE_ACTIONS = (
-    _pause_action_resume,
-    _pause_action_restart,
-    _pause_action_settings,
-    _pause_action_bot_options,
-    _pause_action_keybindings,
-    _pause_action_profile_prev,
-    _pause_action_profile_next,
-    _pause_action_save_bindings,
-    _pause_action_load_bindings,
-    _pause_action_help,
-    _pause_action_menu,
-    _pause_action_quit,
+_PAUSE_ACTION_CODES: tuple[str, ...] = (
+    "resume",
+    "restart",
+    "settings",
+    "bot_options",
+    "keybindings",
+    "profile_prev",
+    "profile_next",
+    "save_bindings",
+    "load_bindings",
+    "help",
+    "menu",
+    "quit",
 )
 
-if len(_PAUSE_ROWS) != len(_PAUSE_ACTIONS):
+if len(_PAUSE_ROWS) != len(_PAUSE_ACTION_CODES):
     raise RuntimeError(
-        f"pause_menu_rows length ({len(_PAUSE_ROWS)}) must match pause action count ({len(_PAUSE_ACTIONS)})"
+        f"pause_menu_rows length ({len(_PAUSE_ROWS)}) must match pause action count ({len(_PAUSE_ACTION_CODES)})"
     )
+
+
+def _set_pause_decision(state: _PauseState, decision: PauseDecision) -> None:
+    state.decision = decision
+    state.running = False
+
+
+def _set_pause_status(state: _PauseState, ok: bool, message: str) -> None:
+    state.status = message
+    state.status_error = not ok
+
+
+def _handle_pause_profile_cycle(state: _PauseState, step: int) -> None:
+    ok, msg, _profile = cycle_key_profile(step)
+    _set_pause_status(state, ok, msg)
+
+
+def _handle_pause_bindings_io(state: _PauseState, dimension: int, *, save: bool) -> None:
+    if save:
+        ok, msg = save_keybindings_file(dimension)
+    else:
+        ok, msg = load_keybindings_file(dimension)
+    _set_pause_status(state, ok, msg)
 
 
 def _handle_pause_row(
@@ -615,9 +482,39 @@ def _handle_pause_row(
     *,
     dimension: int,
 ) -> tuple[pygame.Surface, bool]:
-    safe_index = max(0, min(len(_PAUSE_ACTIONS) - 1, state.selected))
-    handler = _PAUSE_ACTIONS[safe_index]
-    return handler(screen, fonts, state, dimension=dimension)
+    safe_index = max(0, min(len(_PAUSE_ACTION_CODES) - 1, state.selected))
+    action = _PAUSE_ACTION_CODES[safe_index]
+
+    if action in {"resume", "restart", "menu", "quit"}:
+        _set_pause_decision(state, action)
+        return screen, True
+    if action == "settings":
+        return run_pause_settings_menu(screen, fonts)
+    if action == "bot_options":
+        ok, msg = run_bot_options_menu(screen, fonts, start_dimension=dimension)
+        _set_pause_status(state, ok, msg)
+        return screen, True
+    if action == "keybindings":
+        run_keybindings_menu(screen, fonts, dimension=dimension, scope=f"{dimension}d")
+        _set_pause_status(state, True, "Returned from keybindings setup")
+        return screen, True
+    if action == "profile_prev":
+        _handle_pause_profile_cycle(state, -1)
+        return screen, True
+    if action == "profile_next":
+        _handle_pause_profile_cycle(state, 1)
+        return screen, True
+    if action == "save_bindings":
+        _handle_pause_bindings_io(state, dimension, save=True)
+        return screen, True
+    if action == "load_bindings":
+        _handle_pause_bindings_io(state, dimension, save=False)
+        return screen, True
+    if action == "help":
+        screen = run_help_menu(screen, fonts, dimension=dimension, context_label="Pause Menu")
+        _set_pause_status(state, True, "Returned from help")
+        return screen, True
+    return screen, True
 
 
 def _handle_pause_key(

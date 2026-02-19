@@ -6,6 +6,7 @@ from tetris_nd.board import BoardND
 from tetris_nd.game2d import GameConfig, GameState, _score_for_clear
 from tetris_nd.pieces2d import PieceShape2D, ActivePiece2D
 from tetris_nd.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
+from tetris_nd.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 
 
 class TestGame2D(unittest.TestCase):
@@ -176,6 +177,35 @@ class TestGame2D(unittest.TestCase):
             self.assertFalse(state.game_over)
             state.hard_drop()
         self.assertFalse(state.game_over)
+
+    def test_wrap_all_wraps_horizontal_edges(self):
+        cfg = GameConfig(width=4, height=6, topology_mode=TOPOLOGY_WRAP_ALL)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(-1, 2), rotation=0)
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 2),))
+
+        state.lock_current_piece()
+        self.assertIn((3, 2), state.board.cells)
+
+    def test_wrap_all_keeps_gravity_axis_bounded(self):
+        cfg = GameConfig(width=4, height=6, topology_mode=TOPOLOGY_WRAP_ALL)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(1, cfg.height), rotation=0)
+
+        self.assertFalse(state._can_exist(state.current_piece))
+
+    def test_invert_all_matches_wrap_behavior_in_2d(self):
+        cfg = GameConfig(width=5, height=7, topology_mode=TOPOLOGY_INVERT_ALL)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=4)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(cfg.width, 3), rotation=0)
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((0, 3),))
 
 
 if __name__ == "__main__":

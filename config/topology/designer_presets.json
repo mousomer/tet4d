@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "inherit_mode",
+      "label": "Inherit mode",
+      "description": "Use the selected topology preset exactly as configured.",
+      "mode": null,
+      "axis_edges": {}
+    },
+    {
+      "id": "force_wrap_all",
+      "label": "Force wrap all",
+      "description": "Wrap all non-gravity axes regardless of selected preset mode.",
+      "mode": "wrap_all",
+      "axis_edges": {}
+    },
+    {
+      "id": "force_invert_all",
+      "label": "Force invert all",
+      "description": "Invert all non-gravity axes regardless of selected preset mode.",
+      "mode": "invert_all",
+      "axis_edges": {}
+    },
+    {
+      "id": "twist_x_both",
+      "label": "Twist X both edges",
+      "description": "Crossing either X edge adds inversion coupling for wrapped companion axes.",
+      "mode": "wrap_all",
+      "axis_edges": {
+        "x": {"neg": "invert", "pos": "invert"}
+      }
+    },
+    {
+      "id": "twist_x_pos_only",
+      "label": "Twist +X only",
+      "description": "Only crossing the positive X edge adds inversion coupling.",
+      "mode": "wrap_all",
+      "axis_edges": {
+        "x": {"neg": "wrap", "pos": "invert"}
+      }
+    },
+    {
+      "id": "twist_z_pos_only",
+      "label": "Twist +Z only",
+      "description": "Only crossing the positive Z edge adds inversion coupling (3D/4D).",
+      "mode": "wrap_all",
+      "axis_edges": {
+        "z": {"neg": "wrap", "pos": "invert"}
+      }
+    },
+    {
+      "id": "twist_w_pos_only",
+      "label": "Twist +W only",
+      "description": "Only crossing the positive W edge adds inversion coupling (4D).",
+      "mode": "wrap_all",
+      "axis_edges": {
+        "w": {"neg": "wrap", "pos": "invert"}
+      }
+    }
+  ]
+}

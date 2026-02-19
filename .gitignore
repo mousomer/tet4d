@@ -12,3 +12,6 @@ keybindings/profiles/
 
 # Local virtual env
 .venv/
+
+# Local/offline wheel artifacts
+wheelhouse/

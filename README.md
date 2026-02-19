@@ -12,6 +12,16 @@ This repository contains:
 
 All modes share core logic under `tetris_nd/`.
 
+Boundary topology presets are available in setup menus:
+- `bounded` (default)
+- `wrap_all`
+- `invert_all`
+
+Gravity-axis wrapping is disabled by default.
+Advanced topology designer controls are available per mode:
+- `Topology advanced` (toggle)
+- `Topology profile` (loaded from `config/topology/designer_presets.json`)
+
 ## Requirements
 
 - Python `3.11+` (target compatibility includes `3.14`)
@@ -54,6 +64,7 @@ python front4d.py
 Menu config:
 - `config/menu/structure.json`
 - `config/menu/defaults.json`
+- `config/topology/designer_presets.json`
 
 Runtime tuning:
 - `config/gameplay/tuning.json`
@@ -61,8 +72,14 @@ Runtime tuning:
 - `config/playbot/policy.json`
 - `config/audio/sfx.json`
 
+Project-wide path/constants/security policy:
+- `config/project/io_paths.json`
+- `config/project/constants.json`
+- `config/project/secret_scan.json`
+
 User state:
 - `state/menu_settings.json`
+- `state/topology/selected_profile.json` (advanced topology export)
 
 Keybindings:
 - `keybindings/2d.json`
@@ -79,6 +96,7 @@ Control guide renderer (legacy contract reference):
 ruff check .
 ruff check --select C901 .
 python3 tools/validate_project_contracts.py
+python3 tools/scan_secrets.py
 python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
@@ -104,3 +122,18 @@ scripts/ci_check.sh
 
 - Contract source: `config/project/canonical_maintenance.json`
 - Validator: `tools/validate_project_contracts.py`
+- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/scan_secrets.py`
+
+## Local pytest warning
+
+- If you install `pytest` from local/offline wheels only, import can fail with `ModuleNotFoundError: No module named 'py'`.
+- Workaround (offline/local wheel path): copy Homebrew shim file into the venv:
+  - `cp /opt/homebrew/lib/python3.11/site-packages/py.py .venv/lib/python3.14/site-packages/py.py`
+- Preferred path (when network is available): install `pytest` from PyPI into the active `.venv`.
+
+## Test run TODO (short checklist)
+
+1. Activate `.venv` and verify `pygame-ce` (not legacy `pygame`).
+2. Ensure `ruff` and `pytest` import in `.venv`.
+3. Run `scripts/ci_check.sh`.
+4. If it fails, run the individual checks listed in `Quality checks` to isolate the failing stage.

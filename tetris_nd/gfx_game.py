@@ -5,20 +5,20 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
-from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .game2d import GameState, GameConfig
-from .panel_utils import truncate_lines_to_height
-from .score_analyzer import hud_analysis_lines
+from .gfx_panel_2d import draw_side_panel_2d
+from .project_config import project_constant_int
 from .speed_curve import gravity_interval_ms
+from .topology import map_overlay_cells
 from .ui_utils import draw_vertical_gradient, fit_text
-from .view_modes import GridMode, grid_mode_label
+from .view_modes import GridMode
 
 
 # ---------- Visual config & colors ----------
 
-CELL_SIZE = 30          # pixels per board cell
-MARGIN = 20             # outer margin for board
-SIDE_PANEL = 200        # width for score / text / d-pad
+CELL_SIZE = project_constant_int(("rendering", "2d", "cell_size"), 30, min_value=12, max_value=120)
+MARGIN = project_constant_int(("rendering", "2d", "margin"), 20, min_value=0, max_value=240)
+SIDE_PANEL = project_constant_int(("rendering", "2d", "side_panel"), 200, min_value=120, max_value=720)
 
 BG_COLOR = (10, 10, 30)
 GRID_COLOR = (40, 40, 80)
@@ -388,12 +388,9 @@ def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> 
 
 
 def _helper_grid_marks_2d(state: GameState, width: int, height: int) -> tuple[set[int], set[int]]:
-    if state.current_piece is None:
-        return set(), set()
-
     x_marks: set[int] = set()
     y_marks: set[int] = set()
-    for x, y in state.current_piece.cells():
+    for x, y in state.current_piece_cells_mapped(include_above=False):
         if 0 <= x < width and 0 <= y < height:
             x_marks.add(x)
             x_marks.add(x + 1)
@@ -518,8 +515,13 @@ def _draw_active_piece_cells(surface: pygame.Surface,
                              *,
                              overlay: ActiveOverlay2D | None) -> None:
     if overlay is not None:
-        cells, color_id = overlay
-        for x, y in cells:
+        raw_cells, color_id = overlay
+        mapped_overlay = map_overlay_cells(
+            state.topology_policy,
+            raw_cells,
+            allow_above_gravity=False,
+        )
+        for x, y in mapped_overlay:
             if 0.0 <= x < width_cells and 0.0 <= y < height_cells:
                 _draw_cell_float(
                     surface,
@@ -534,7 +536,7 @@ def _draw_active_piece_cells(surface: pygame.Surface,
     if state.current_piece is None:
         return
     shape_color = state.current_piece.shape.color_id
-    for x, y in state.current_piece.cells():
+    for x, y in state.current_piece_cells_mapped(include_above=False):
         if 0 <= x < width_cells and 0 <= y < height_cells:
             _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
 
@@ -587,167 +589,23 @@ def _draw_cell(surface: pygame.Surface, x: int, y: int, cell_id: int,
         pygame.draw.rect(surface, (255, 255, 255), rect, 2)
 
 
-def _draw_side_panel_text(surface: pygame.Surface,
-                          state: GameState,
-                          panel_offset: Tuple[int, int],
-                          fonts: GfxFonts,
-                          grid_mode: GridMode) -> int:
-    """Draw the textual part of the side panel. Returns the current y after text."""
-    px, py = panel_offset
-    gravity_ms = gravity_interval_ms_from_config(state.config)
-    rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
-
-    lines = [
-        "2D Tetris",
-        "",
-        f"Score: {state.score}",
-        f"Lines: {state.lines_cleared}",
-        f"Speed level: {state.config.speed_level}",
-        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
-        f"Fall: {rows_per_sec:.2f} rows/s",
-        f"Score mod: x{state.score_multiplier:.2f}",
-        f"Grid: {grid_mode_label(grid_mode)}",
-    ]
-
-    y = py
-    for line in lines:
-        surf = fonts.panel_font.render(line, True, TEXT_COLOR)
-        surface.blit(surf, (px, y))
-        y += surf.get_height() + 4
-    return y
-
-
-def _draw_side_panel_dpad(surface: pygame.Surface,
-                          start_y: int,
-                          panel_offset: Tuple[int, int],
-                          fonts: GfxFonts) -> int:
-    """Draw a mini D-pad inside the side panel. Returns new y."""
-    px, _ = panel_offset
-    dpad_center_x = px + SIDE_PANEL // 2
-    dpad_center_y = start_y + 35
-    g_button_size = (24, 24)
-    g_offset = 26
-
-    pad_bg = (60, 90, 150)
-    pad_border = (230, 230, 255)
-
-    draw_button_with_arrow(
-        surface,
-        (dpad_center_x, dpad_center_y - g_offset),
-        g_button_size,
-        "up",
-        "",
-        fonts.hint_font,
-        pad_bg,
-        pad_border,
-    )
-    draw_button_with_arrow(
-        surface,
-        (dpad_center_x, dpad_center_y + g_offset),
-        g_button_size,
-        "down",
-        "",
-        fonts.hint_font,
-        pad_bg,
-        pad_border,
-    )
-    draw_button_with_arrow(
-        surface,
-        (dpad_center_x - g_offset, dpad_center_y),
-        g_button_size,
-        "left",
-        "",
-        fonts.hint_font,
-        pad_bg,
-        pad_border,
-    )
-    draw_button_with_arrow(
-        surface,
-        (dpad_center_x + g_offset, dpad_center_y),
-        g_button_size,
-        "right",
-        "",
-        fonts.hint_font,
-        pad_bg,
-        pad_border,
-    )
-
-    return dpad_center_y + g_offset + 20
-
-
 def draw_side_panel(surface: pygame.Surface,
                     state: GameState,
                     panel_offset: Tuple[int, int],
                     fonts: GfxFonts,
                     grid_mode: GridMode = GridMode.FULL,
                     bot_lines: Sequence[str] = ()) -> None:
-    """Top-level side panel draw."""
-    analysis_lines = hud_analysis_lines(state.last_score_analysis)
-    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
-    y_after_text = _draw_side_panel_text(surface, state, panel_offset, fonts, grid_mode)
-    px, _ = panel_offset
-    panel_bottom = surface.get_height() - 8
-    controls_top = y_after_text + 6
-    reserve_bottom = 58 if state.game_over else 0
-    available_h = max(0, panel_bottom - reserve_bottom - controls_top)
-    min_controls_h = 116
-    gap = 6
-
-    low_lines: tuple[str, ...] = tuple()
-    low_h = 0
-    if low_priority_lines:
-        max_low_h = max(0, available_h - min_controls_h - gap)
-        low_lines = truncate_lines_to_height(
-            low_priority_lines,
-            font=fonts.hint_font,
-            available_height=max(0, max_low_h - 8),
-            line_gap=3,
-        )
-        if low_lines:
-            low_h = len(low_lines) * (fonts.hint_font.get_height() + 3) + 10
-
-    controls_bottom = panel_bottom - reserve_bottom - (low_h + gap if low_h else 0)
-    if controls_bottom - controls_top < 42 and low_h:
-        low_lines = tuple()
-        low_h = 0
-        controls_bottom = panel_bottom - reserve_bottom
-
-    controls_rect = pygame.Rect(px, controls_top, SIDE_PANEL, max(42, controls_bottom - controls_top))
-    draw_grouped_control_helper(
+    draw_side_panel_2d(
         surface,
-        groups=control_groups_for_dimension(2),
-        rect=controls_rect,
-        panel_font=fonts.panel_font,
-        hint_font=fonts.hint_font,
+        state,
+        panel_offset,
+        fonts,
+        grid_mode=grid_mode,
+        bot_lines=bot_lines,
+        side_panel_width=SIDE_PANEL,
+        text_color=TEXT_COLOR,
+        gravity_interval_from_config=gravity_interval_ms_from_config,
     )
-    if low_lines:
-        low_height = panel_bottom - (controls_rect.bottom + 8)
-        if low_height <= 10:
-            low_lines = tuple()
-        else:
-            low_rect = pygame.Rect(
-                px + 2,
-                controls_rect.bottom + 6,
-                SIDE_PANEL - 4,
-                low_height,
-            )
-            panel = pygame.Surface((low_rect.width, low_rect.height), pygame.SRCALPHA)
-            pygame.draw.rect(panel, (8, 12, 26, 100), panel.get_rect(), border_radius=8)
-            surface.blit(panel, low_rect.topleft)
-            low_y = low_rect.y + 5
-            for line in low_lines:
-                surf = fonts.hint_font.render(line, True, (176, 188, 222))
-                surface.blit(surf, (low_rect.x + 6, low_y))
-                low_y += surf.get_height() + 3
-
-    # Game over message below D-pad (if needed)
-    if state.game_over:
-        y = surface.get_height() - 58
-        surf = fonts.panel_font.render("GAME OVER", True, (255, 80, 80))
-        surface.blit(surf, (px, y))
-        y += surf.get_height() + 4
-        surf2 = fonts.panel_font.render("Press R to restart", True, (255, 200, 200))
-        surface.blit(surf2, (px, y))
 
 
 def gravity_interval_ms_from_config(cfg: GameConfig) -> int:

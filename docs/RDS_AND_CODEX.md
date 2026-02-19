@@ -46,6 +46,7 @@ scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
 python3 tools/validate_project_contracts.py
+python3 tools/scan_secrets.py
 python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
@@ -69,6 +70,9 @@ python3.14 -m compileall -q  front2d.py  tetris_nd
 2. `config/project/canonical_maintenance.json`
 3. Validation command:
 4. `python3 tools/validate_project_contracts.py`
+5. Secret scan policy + command:
+6. `config/project/secret_scan.json`
+7. `python3 tools/scan_secrets.py`
 5. Validation is part of CI via:
 6. `scripts/ci_check.sh`
 7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:
@@ -91,10 +95,13 @@ Authoritative open/deferred items are tracked in:
 
 ### Active open items (synced from `docs/BACKLOG.md`)
 
-1. No open simplification items remain from the current batch.
-2. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
-3. Operational source-of-truth remains:
-4. `docs/BACKLOG.md`
+1. Active open items are maintained in `docs/BACKLOG.md` (single source of truth).
+2. Current remaining items include:
+3. `P2`: help/menu IA restructuring and setup-menu dedup cleanup (`BKL-P2-006`,`BKL-P2-007`).
+4. `P3`: continuous CI/stability watch and optional future module splits.
+4. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
+5. Current `BKL-P2-006` execution report:
+6. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 
 ### Current complexity hotspots (`ruff --select C901`)
 
@@ -113,6 +120,19 @@ Authoritative open/deferred items are tracked in:
 9. Shared ND launcher runner extracted for 3D/4D setup-to-game flow.
 10. Shared playbot lookahead helper extracted and used by 2D + ND planners.
 11. Runtime playbot policy validation decomposed into section validators.
+12. Runtime help flow now uses decision-based shared event handling (no nested callbacks in loops).
+13. Shared 3D/4D projected grid-mode renderer extracted to `tetris_nd/grid_mode_render.py`.
+14. Keybinding defaults/catalog split extracted to `tetris_nd/keybindings_defaults.py` + `tetris_nd/keybindings_catalog.py`.
+15. Score-analyzer feature extraction split to `tetris_nd/score_analyzer_features.py`.
+16. 2D side-panel renderer extracted to `tetris_nd/gfx_panel_2d.py`.
+17. Runtime config validation now split by concern (`shared`/`gameplay`/`playbot`/`audio`) with stable import surface.
+18. 3D frontend responsibilities now split between runtime/input orchestration (`front3d_game.py`) and render/view layer (`front3d_render.py`).
+19. Rendering caches added:
+20. gradient-surface cache in `tetris_nd/ui_utils.py`,
+21. bounded text-surface cache in `tetris_nd/panel_utils.py` (used by shared side-panel render paths).
+22. Shared text rendering cache extracted to `tetris_nd/text_render_cache.py` and reused by control-helper/panel paths.
+23. 4D render path now pre-indexes locked cells by `w` layer per frame to avoid repeated full-board scans.
+24. 4D layer-grid rectangle layout is memoized for stable window/layer-count combinations.
 
 ### Verification requirements for simplification PRs
 

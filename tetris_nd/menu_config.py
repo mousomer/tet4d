@@ -188,11 +188,21 @@ def _validate_row_list(raw_rows: object, key: str) -> tuple[str, ...]:
     return tuple(rows)
 
 
-def _resolve_field_max(raw_max: object, piece_set_max: int, mode_key: str, attr_name: str) -> int:
+def _resolve_field_max(
+    raw_max: object,
+    piece_set_max: int,
+    topology_profile_max: int,
+    mode_key: str,
+    attr_name: str,
+) -> int:
     if raw_max == "piece_set_max":
         return max(0, int(piece_set_max))
+    if raw_max == "topology_profile_max":
+        return max(0, int(topology_profile_max))
     if isinstance(raw_max, bool) or not isinstance(raw_max, int):
-        raise RuntimeError(f"structure.setup_fields.{mode_key}.{attr_name}.max must be int or 'piece_set_max'")
+        raise RuntimeError(
+            f"structure.setup_fields.{mode_key}.{attr_name}.max must be int or dynamic max token"
+        )
     return raw_max
 
 
@@ -518,7 +528,12 @@ def pause_settings_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_settings_rows"])
 
 
-def setup_fields_for_dimension(dimension: int, *, piece_set_max: int = 0) -> list[FieldSpec]:
+def setup_fields_for_dimension(
+    dimension: int,
+    *,
+    piece_set_max: int = 0,
+    topology_profile_max: int = 0,
+) -> list[FieldSpec]:
     mode_key = _mode_key_for_dimension(dimension)
     raw_fields = _structure_payload()["setup_fields"][mode_key]
     fields: list[FieldSpec] = []
@@ -526,7 +541,13 @@ def setup_fields_for_dimension(dimension: int, *, piece_set_max: int = 0) -> lis
         label = raw_field["label"]
         attr_name = raw_field["attr"]
         min_val = raw_field["min"]
-        max_val = _resolve_field_max(raw_field["max"], piece_set_max, mode_key, attr_name)
+        max_val = _resolve_field_max(
+            raw_field["max"],
+            piece_set_max,
+            topology_profile_max,
+            mode_key,
+            attr_name,
+        )
         if min_val > max_val:
             raise RuntimeError(
                 f"Invalid field bounds for {mode_key}.{attr_name}: min {min_val} > max {max_val}"

@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Active v0.5 (Verified 2026-02-18)  
+Status: Active v0.6 (Verified 2026-02-19)  
 Author: Omer + Codex  
-Date: 2026-02-18  
+Date: 2026-02-19  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -50,8 +50,14 @@ This design is based on:
    Reference: [NNG Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
 5. WCAG 2.2 consistent help placement guidance (help available in predictable location).  
    Reference: [Consistent Help](https://www.w3.org/WAI/WCAG22/Understanding/consistent-help.html)
-6. Heuristic emphasis on visibility-of-status and minimalist information density for high-scan interfaces.  
-   Reference: [Nielsen Heuristics PDF](https://media.nngroup.com/media/articles/attachments/Heuristic_Evaluation_-_How-To_-_Nielsen_Norman_Group.pdf)
+6. WAI-ARIA APG menu interaction model (predictable keyboard semantics for menu button and menubar patterns).  
+   References: [Menu Button](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/), [Menu And Menubar](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)
+7. Microsoft menu/flyout guidance (context relevance, concise labels, and flyout role boundaries).  
+   Reference: [Menu And Context Flyouts](https://learn.microsoft.com/en-us/windows/apps/design/controls/menu-and-context-flyouts)
+8. Material menu guidance (flat/scanable options, limited nesting depth, non-navigation misuse avoidance).  
+   Reference: [Material Menus](https://m1.material.io/components/menus.html)
+9. Content-structure guidance for scannable support docs and front-loaded headings.  
+   Reference: [ONS Structuring Content](https://service-manual.ons.gov.uk/content/writing-for-users/structuring-content)
 
 ## 4. Target Information Architecture
 
@@ -106,6 +112,11 @@ Pause Menu
 3. 4D setup must expose at least: width, height, depth, w, speed, 4D piece set.
 4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell, debug).
 5. Setup screens must use the same layout skeleton and footer shortcuts.
+6. Setup screens must expose topology preset selector:
+7. `bounded`,`wrap_all`,`invert_all`.
+8. Topology remains a dimension-specific gameplay setting (not a global settings-hub toggle).
+9. Advanced topology designer controls stay hidden unless `Topology advanced` is enabled.
+10. Advanced controls include `Topology profile` selector sourced from `config/topology/designer_presets.json`.
 
 ## 5. Layout and Readability Requirements
 
@@ -186,9 +197,9 @@ Add persistent settings file:
     "mute": false
   },
   "settings": {
-    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 12},
-    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 24},
-    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 36}
+    "2d": {"width": 10, "height": 20, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 12},
+    "3d": {"width": 6, "height": 18, "depth": 6, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 24},
+    "4d": {"width": 10, "height": 20, "depth": 6, "fourth": 4, "speed_level": 1, "piece_set_index": 0, "topology_mode": 0, "topology_advanced": 0, "topology_profile_index": 0, "bot_mode_index": 0, "bot_algorithm_index": 0, "bot_profile_index": 1, "bot_speed_level": 7, "bot_budget_ms": 36}
   }
 }
 ```
@@ -320,12 +331,23 @@ Stabilization details:
 17. Keybindings menu supports `General/2D/3D/4D` scopes with explicit category descriptions loaded from menu structure config.
 18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
+20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 
 ## 15. Open Follow-up
 
-1. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
-2. Very-small-window readability tuning for controls/help layouts is implemented.
-3. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
-4. Help coverage expansion and menu parity pages are implemented.
-5. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
-6. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
+1. Active (`BKL-P2-006`): restructure help and menu information architecture for better readability, non-overlap, and clearer hierarchy.
+2. Active (`BKL-P2-006`): ensure help content stays complete and synchronized with live keybindings/settings in launcher and pause flows.
+3. Execution plan for `BKL-P2-006` is documented in:
+4. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+5. Required execution milestones for `BKL-P2-006`:
+6. `M1` help-topic registry + action-topic mapping contract,
+7. `M2` shared layout-zone renderer to eliminate overlap from fixed coordinates,
+8. `M3` full key/help synchronization + overflow paging behavior,
+9. `M4` launcher/pause parity + compact-window validation.
+10. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
+11. Very-small-window readability tuning for controls/help layouts is implemented.
+12. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
+13. Help coverage expansion and menu parity pages are implemented.
+14. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
+15. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
+16. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.

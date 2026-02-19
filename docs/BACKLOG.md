@@ -98,23 +98,159 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 84. `ruff check .` passed,
 85. `ruff check . --select C901` passed,
 86. `pytest -q` passed.
+87. `DONE` Follow-up simplification batch completed:
+88. nested runtime help callbacks removed in `front2d.py` and `tetris_nd/loop_runner_nd.py`,
+89. gameplay tuning validator decomposition completed in `tetris_nd/runtime_config_validation.py`,
+90. shared 3D/4D projected grid-mode rendering extracted to `tetris_nd/grid_mode_render.py`,
+91. keybinding split finalized with `tetris_nd/keybindings_defaults.py` and `tetris_nd/keybindings_catalog.py`,
+92. score-analyzer feature extraction completed in `tetris_nd/score_analyzer_features.py`,
+93. 2D side-panel extraction completed in `tetris_nd/gfx_panel_2d.py` and wired through `tetris_nd/gfx_game.py`.
+94. `DONE` Validation after follow-up batch:
+95. `ruff check .` passed,
+96. `ruff check . --select C901` passed,
+97. `pytest -q` passed,
+98. `./scripts/ci_check.sh` passed.
+99. `DONE` Next-stage decomposition + optimization batch completed:
+100. runtime config validation split into dedicated section modules:
+101. `tetris_nd/runtime_config_validation_shared.py`,
+102. `tetris_nd/runtime_config_validation_gameplay.py`,
+103. `tetris_nd/runtime_config_validation_playbot.py`,
+104. `tetris_nd/runtime_config_validation_audio.py`,
+105. with API compatibility maintained via `tetris_nd/runtime_config_validation.py`.
+106. 3D frontend render/runtime split completed:
+107. render/view path extracted to `tetris_nd/front3d_render.py`,
+108. runtime loop/input orchestration retained in streamlined `tetris_nd/front3d_game.py`.
+109. rendering optimization pass completed:
+110. cached menu gradients in `tetris_nd/ui_utils.py`,
+111. bounded text-surface cache in `tetris_nd/panel_utils.py`,
+112. 2D panel text rendering now uses cached surfaces via `tetris_nd/gfx_panel_2d.py`.
+113. `DONE` Validation after next-stage batch:
+114. `ruff check .` passed,
+115. `ruff check . --select C901` passed,
+116. `pytest -q` passed,
+117. `./scripts/ci_check.sh` passed.
+118. `DONE` Further runtime optimization batch completed:
+119. shared text-render cache extracted to `tetris_nd/text_render_cache.py`,
+120. control-helper text rendering now uses cached surfaces (`tetris_nd/control_helper.py`),
+121. panel/text cache now shared through `tetris_nd/panel_utils.py` and used by 2D panel rendering,
+122. 4D layer rendering optimized to avoid per-layer full-board rescans:
+123. locked cells are pre-indexed by `w` layer once per frame in `tetris_nd/front4d_render.py`,
+124. layer-grid layout rectangles are memoized in `tetris_nd/front4d_render.py`.
+125. `DONE` Validation after further optimization batch:
+126. `ruff check .` passed,
+127. `ruff check . --select C901` passed,
+128. `pytest -q` passed,
+129. `./scripts/ci_check.sh` passed.
+130. `DONE` Repository secret scanning policy + scanner added and CI/local CI enforced:
+131. `config/project/secret_scan.json`,
+132. `tools/scan_secrets.py`,
+133. `scripts/ci_check.sh`.
+134. `DONE` Path/constants externalization batch executed via:
+135. `config/project/io_paths.json`,
+136. `config/project/constants.json`,
+137. `tetris_nd/project_config.py`,
+138. and migrated consumers (`keybindings`, `menu_settings_state`, `runtime_config`, `score_analyzer`).
+139. `DONE` Projection lattice caching + shared cached-gradient routing implemented in projection/render stack.
+140. `DONE` Low-risk LOC-reduction batch executed:
+141. pause-menu action dispatcher simplified and deduplicated in `tetris_nd/pause_menu.py`,
+142. dead projected-grid draw helpers removed and shared cache-key helpers added in `tetris_nd/projection3d.py`,
+143. shared projection cache-key builders wired into `tetris_nd/front3d_render.py` and `tetris_nd/front4d_render.py`,
+144. score-analyzer validation/update flow consolidated in `tetris_nd/score_analyzer.py`.
+145. `DONE` LOC snapshot after this batch:
+146. Python LOC `22,934 -> 22,817` (`-117`),
+147. non-test Python LOC `20,166 -> 20,049` (`-117`).
+148. `DONE` Boundary topology preset baseline implemented/planned:
+149. setup-level topology selector targets `bounded`,`wrap_all`,`invert_all` for 2D/3D/4D,
+150. gravity-axis wrapping stays disabled by default,
+151. deterministic replay/test coverage is required for topology-enabled runs.
+152. `DONE` Small-profile rotation layout replanned to keyboard-pair ladder:
+153. `2D`: `Q/W`,
+154. `3D`: `Q/W`, `A/S`, `Z/X`,
+155. `4D`: `Q/W`, `A/S`, `Z/X`, `R/T`, `F/G`, `V/B`.
+156. `DONE` Default system-key conflicts were deconflicted for the new small 4D ladder by moving system defaults to:
+157. restart=`Y`, toggle-grid=`C`.
+158. `DONE` Advanced boundary-warping designer baseline implemented:
+159. setup menus expose `topology_advanced` + hidden `topology_profile_index` controls,
+160. per-axis/per-edge topology profile overrides are loaded from `config/topology/designer_presets.json`,
+161. deterministic export path is available at `state/topology/selected_profile.json`.
+162. `DONE` Config externalization follow-up implemented:
+163. additional animation timings moved to `config/project/constants.json`,
+164. runtime fallbacks are enforced via `tetris_nd/project_config.py`.
+165. `DONE` Rotation-animation overlay rendering now uses topology-aware mapping across 2D/3D/4D frontends:
+166. `tetris_nd/gfx_game.py`,
+167. `tetris_nd/front3d_render.py`,
+168. `tetris_nd/front4d_render.py`,
+169. via shared overlay mapping in `tetris_nd/topology.py`.
+170. `DONE` Invert-boundary seam traversal for seam-straddling ND pieces is stabilized by deterministic piece-level fallback mapping:
+171. `tetris_nd/topology.py`,
+172. with regressions in `tetris_nd/tests/test_topology.py` and `tetris_nd/tests/test_game_nd.py`.
+173. `DONE` 4D view-plane camera turns (`xw`/`zw`) implemented as render-only animated controls:
+174. `tetris_nd/front4d_render.py`,
+175. with dedicated keybind actions (`view_xw_pos/neg`,`view_zw_pos/neg`) in:
+176. `tetris_nd/keybindings_defaults.py`, `keybindings/4d.json`.
+177. `DONE` 4D view-turn coverage added for routing separation, replay invariance, and render stability:
+178. `tetris_nd/tests/test_nd_routing.py`,
+179. `tetris_nd/tests/test_gameplay_replay.py`,
+180. `tetris_nd/tests/test_front4d_render.py`.
+181. `DONE` 4D renderer cache-key correctness hardening:
+182. projection cache extras now include total `W` size to prevent stale lattice/helper cache reuse across differing 4D board depths.
+183. `DONE` 4D hyper-view zoom-fit hardening:
+184. per-layer zoom fit now accounts for `xw`/`zw` transforms and centered `w` offset; regression coverage added for outer-layer bounds.
+185. `DONE` Full local gate revalidation executed through `scripts/ci_check.sh` after this batch.
+186. `DONE` Black-box cross-config 4D frame-cache regression added and passing:
+187. `tetris_nd/tests/test_front4d_render.py` now asserts distinct `4d-full` cache entries for differing total `W` sizes under full-frame draws.
+188. `DONE` Projection-lattice cache observability helpers added for regression/profiling validation:
+189. `tetris_nd/projection3d.py` (`clear_projection_lattice_cache`, `projection_lattice_cache_keys`, `projection_lattice_cache_size`).
+190. `DONE` 4D render profiling tool added and exercised:
+191. `tools/profile_4d_render.py` with latest report at `state/bench/4d_render_profile_latest.json`.
+192. `DONE` Sparse hyper-view overhead threshold assertion passed (no immediate optimization needed).
+193. `DONE` Unreferenced helper cleanup pass executed:
+194. removed definition-only helpers in `tetris_nd/frontend_nd.py`, `tetris_nd/menu_keybinding_shortcuts.py`, `tetris_nd/menu_model.py`, `tetris_nd/project_config.py`, and `tetris_nd/score_analyzer.py`.
+195. profiler/policy tool output paths remain constrained to project root (`tools/profile_4d_render.py`,`tools/bench_playbot.py`,`tools/analyze_playbot_policies.py`).
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `P2` No open simplification items remain from this batch.
-2. `P3` Continuous watch:
-3. keep running `scripts/ci_check.sh` prior to pushes and releases,
-4. keep scheduled stability + policy workflows active:
-5. `.github/workflows/ci.yml`,
-6. `.github/workflows/stability-watch.yml`,
-7. `tools/check_playbot_stability.py`,
-8. `tools/analyze_playbot_policies.py`.
+1. `[P3][BKL-P3-001] Pre-push local CI gate`
+2. `Cadence:` before every push/release.
+3. `Trigger:` any code/docs/config change on active branch.
+4. `Done criteria:` latest `scripts/ci_check.sh` run exits `0` with no unresolved failures.
+5. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
+6. `Cadence:` at least weekly and after workflow/config changes.
+7. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/check_playbot_stability.py`, or `tools/analyze_playbot_policies.py` changes.
+8. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
+9. `[P3][BKL-P3-003] Runtime-config validation module split watch`
+10. `Cadence:` when adding new policy sections.
+11. `Trigger:` growth in `tetris_nd/runtime_config_validation_playbot.py` beyond current maintainable scope.
+12. `Done criteria:` split completed with unchanged behavior and passing lint/tests.
+13. `[P3][BKL-P3-004] 3D renderer decomposition watch`
+14. `Cadence:` when adding new rendering responsibilities.
+15. `Trigger:` major feature growth in `tetris_nd/front3d_render.py`.
+16. `Done criteria:` render responsibilities are split into focused modules with behavior parity and passing regression tests.
+17. `[P3][BKL-P3-005] Projection/cache profiling watch`
+18. `Cadence:` after projection/camera/cache changes and before release.
+19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
+20. `Done criteria:` `tools/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
+21. `[P2][BKL-P2-006] Help + menu structure rework`
+22. `Cadence:` next UX-focused development batch.
+23. `Trigger:` visibility/overlap/readability complaints or help-content drift from actual controls/settings.
+24. `Done criteria:` help IA and menu IA are unified, readable, non-overlapping, and fully synchronized with live keybindings/settings across launcher and pause menus.
+25. `Plan reference:` `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+26. `Required milestones:`
+27. `M1` help-topic registry + action-to-topic mapping contract,
+28. `M2` shared layout-zone renderer (no fixed-coordinate overlap),
+29. `M3` full key/help synchronization and overflow paging,
+30. `M4` launcher/pause parity verification + compact-window validation.
+31. `[P2][BKL-P2-007] Setup-menu deduplication follow-up`
+32. `Cadence:` next refactor-focused maintenance batch.
+33. `Trigger:` duplicated setup render flow drift or review findings about dead/duplicate setup paths.
+34. `Done criteria:` duplicated setup menu render/value-format logic is extracted into shared helpers; parity tests and lint pass.
 
 ## 4. Gap Mapping to RDS
 
-1. `docs/rds/RDS_TETRIS_GENERAL.md`: backlog follow-up items are now closed with automated CI + stability-watch workflows.
+1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows are closed; active setup-menu dedup follow-up remains (`BKL-P2-007`).
 2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is now operationalized through scheduled benchmark + policy-analysis workflow.
-3. `docs/rds/RDS_MENU_STRUCTURE.md`: guide rollout, menu IA split rules, and helper hierarchy items are now implemented and synced.
+3. `docs/rds/RDS_MENU_STRUCTURE.md`: follow-up restructuring work remains open for menu/help IA hardening (`BKL-P2-006`).
+4. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
 
 ## 5. Change Footprint (Current Batch)
 
@@ -189,6 +325,67 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tetris_nd/control_icons.py`,
 `tetris_nd/control_helper.py`,
 `tetris_nd/tests/test_control_ui_helpers.py`.
+9. Follow-up simplification additions (current batch):
+`tetris_nd/game_loop_common.py`,
+`front2d.py`,
+`tetris_nd/loop_runner_nd.py`,
+`tetris_nd/runtime_config_validation.py`,
+`tetris_nd/front3d_game.py`,
+`tetris_nd/front4d_render.py`,
+`tetris_nd/gfx_game.py`,
+`tetris_nd/gfx_panel_2d.py`,
+`tetris_nd/grid_mode_render.py`,
+`tetris_nd/keybindings_defaults.py`,
+`tetris_nd/keybindings_catalog.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/score_analyzer_features.py`,
+`tetris_nd/score_analyzer.py`.
+10. Next-stage decomposition + optimization additions:
+`tetris_nd/front3d_render.py`,
+`tetris_nd/front3d_game.py`,
+`tetris_nd/runtime_config_validation.py`,
+`tetris_nd/runtime_config_validation_shared.py`,
+`tetris_nd/runtime_config_validation_gameplay.py`,
+`tetris_nd/runtime_config_validation_playbot.py`,
+`tetris_nd/runtime_config_validation_audio.py`,
+`tetris_nd/ui_utils.py`,
+`tetris_nd/panel_utils.py`,
+`tetris_nd/gfx_panel_2d.py`.
+11. Further runtime optimization additions:
+`tetris_nd/text_render_cache.py`,
+`tetris_nd/control_helper.py`,
+`tetris_nd/panel_utils.py`,
+`tetris_nd/gfx_panel_2d.py`,
+`tetris_nd/front4d_render.py`.
+12. Security/config hardening + path/constants externalization additions:
+`tetris_nd/project_config.py`,
+`config/project/io_paths.json`,
+`config/project/constants.json`,
+`config/project/secret_scan.json`,
+`tools/scan_secrets.py`,
+`scripts/ci_check.sh`,
+`tetris_nd/runtime_config.py`,
+`tetris_nd/menu_settings_state.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/score_analyzer.py`,
+`tetris_nd/projection3d.py`,
+`tetris_nd/front3d_render.py`,
+`tetris_nd/front4d_render.py`,
+`README.md`,
+`docs/SECURITY_AND_CONFIG_PLAN.md`.
+13. Advanced topology-designer additions:
+`config/topology/designer_presets.json`,
+`tetris_nd/topology.py`,
+`tetris_nd/topology_designer.py`,
+`front2d.py`,
+`tetris_nd/front3d_setup.py`,
+`tetris_nd/frontend_nd.py`,
+`tetris_nd/game2d.py`,
+`tetris_nd/game_nd.py`,
+`config/menu/defaults.json`,
+`config/menu/structure.json`,
+`config/schema/menu_settings.schema.json`,
+`tetris_nd/tests/test_topology_designer.py`.
 
 ## 6. Source Inputs
 

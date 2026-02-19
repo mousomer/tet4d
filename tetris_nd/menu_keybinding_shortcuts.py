@@ -4,7 +4,7 @@ from typing import Any
 
 import pygame
 
-from .keybindings import keybinding_file_label, load_keybindings_file, save_keybindings_file
+from .keybindings import load_keybindings_file, save_keybindings_file
 
 
 def menu_binding_action_for_key(key: int, load_action: Any, save_action: Any) -> Any | None:
@@ -30,10 +30,6 @@ def apply_menu_binding_action(action: Any,
     state.bindings_status = msg
     state.bindings_status_error = not ok
     return True
-
-
-def menu_binding_hint_line(dimension: int) -> str:
-    return f"L = load keys, S = save keys ({keybinding_file_label(dimension)})"
 
 
 def menu_binding_status_color(is_error: bool) -> tuple[int, int, int]:
