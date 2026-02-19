@@ -60,6 +60,7 @@
       "config/project/canonical_maintenance.json"
     ],
     "ci_scripts": [
+      "scripts/bootstrap_env.sh",
       "scripts/ci_check.sh",
       "tools/check_pygame_ce.py",
       "tools/validate_project_contracts.py",
@@ -71,6 +72,7 @@
       "file": "README.md",
       "must_contain": [
         "Documentation map",
+        "scripts/bootstrap_env.sh",
         "config/gameplay/score_analyzer.json",
         "menu_control_guides.py",
         "draw_translation_rotation_guides",
@@ -95,6 +97,10 @@
       "must_not_contain": [
         "No currently open gaps",
         "126 passed"
+      ],
+      "must_not_match_regex": [
+        "\\b\\d+\\s+passed\\b",
+        "\\[[\\s\\d%]+\\]"
       ]
     },
     {
@@ -106,6 +112,10 @@
       "must_not_contain": [
         "No active open gaps",
         "126 passed"
+      ],
+      "must_not_match_regex": [
+        "\\b\\d+\\s+passed\\b",
+        "\\[[\\s\\d%]+\\]"
       ]
     },
     {
@@ -114,6 +124,23 @@
         "RDS index",
         "Testing instructions",
         "docs/BACKLOG.md"
+      ],
+      "must_not_match_regex": [
+        "\\b\\d+\\s+passed\\b",
+        "\\[[\\s\\d%]+\\]"
+      ]
+    },
+    {
+      "file": "scripts/ci_check.sh",
+      "must_contain": [
+        "require_module ruff ruff",
+        "require_module pytest pytest",
+        "run_module ruff check .",
+        "run_module ruff check --select C901 .",
+        "run_module pytest -q"
+      ],
+      "must_not_contain": [
+        "run_module_or_command"
       ]
     },
     {

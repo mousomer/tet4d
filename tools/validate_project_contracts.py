@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -149,12 +150,20 @@ def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue
         if isinstance(parsed, ValidationIssue):
             issues.append(parsed)
             continue
-        rel, tokens, forbidden_tokens = parsed
+        rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes = parsed
         path = PROJECT_ROOT / rel
         if not path.exists():
             issues.append(ValidationIssue("missing", f"content rule file does not exist: {rel}"))
             continue
-        _validate_text_rules(path, rel, tokens, forbidden_tokens, issues)
+        _validate_text_rules(
+            path,
+            rel,
+            tokens,
+            forbidden_tokens,
+            required_regexes,
+            forbidden_regexes,
+            issues,
+        )
     return issues
 
 
@@ -167,7 +176,7 @@ def _as_string_list(value: object) -> list[str] | None:
 def _parse_content_rule(
     index: int,
     rule: object,
-) -> tuple[str, list[str], list[str]] | ValidationIssue:
+) -> tuple[str, list[str], list[str], list[str], list[str]] | ValidationIssue:
     if not isinstance(rule, dict):
         return ValidationIssue("schema", f"content_rules[{index}] must be an object")
 
@@ -183,7 +192,15 @@ def _parse_content_rule(
     if forbidden_tokens is None:
         return ValidationIssue("schema", f"content_rules[{index}].must_not_contain must be a list[str]")
 
-    return rel, tokens, forbidden_tokens
+    required_regexes = _as_string_list(rule.get("must_match_regex", []))
+    if required_regexes is None:
+        return ValidationIssue("schema", f"content_rules[{index}].must_match_regex must be a list[str]")
+
+    forbidden_regexes = _as_string_list(rule.get("must_not_match_regex", []))
+    if forbidden_regexes is None:
+        return ValidationIssue("schema", f"content_rules[{index}].must_not_match_regex must be a list[str]")
+
+    return rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes
 
 
 def _validate_text_rules(
@@ -191,6 +208,8 @@ def _validate_text_rules(
     rel: str,
     tokens: list[str],
     forbidden_tokens: list[str],
+    required_regexes: list[str],
+    forbidden_regexes: list[str],
     issues: list[ValidationIssue],
 ) -> None:
     text = path.read_text(encoding="utf-8")
@@ -200,6 +219,37 @@ def _validate_text_rules(
     for token in forbidden_tokens:
         if token in text:
             issues.append(ValidationIssue("content", f"{rel} contains forbidden token: {token!r}"))
+    _validate_regex_rules(rel, text, required_regexes, forbidden_regexes, issues)
+
+
+def _validate_regex_rules(
+    rel: str,
+    text: str,
+    required_regexes: list[str],
+    forbidden_regexes: list[str],
+    issues: list[ValidationIssue],
+) -> None:
+    for pattern in required_regexes:
+        compiled = _compile_pattern(rel, pattern, issues)
+        if compiled is None:
+            continue
+        if compiled.search(text) is None:
+            issues.append(ValidationIssue("content", f"{rel} missing regex match: {pattern!r}"))
+
+    for pattern in forbidden_regexes:
+        compiled = _compile_pattern(rel, pattern, issues)
+        if compiled is None:
+            continue
+        if compiled.search(text) is not None:
+            issues.append(ValidationIssue("content", f"{rel} matched forbidden regex: {pattern!r}"))
+
+
+def _compile_pattern(rel: str, pattern: str, issues: list[ValidationIssue]) -> re.Pattern[str] | None:
+    try:
+        return re.compile(pattern, flags=re.MULTILINE)
+    except re.error as exc:
+        issues.append(ValidationIssue("schema", f"invalid regex in content rule for {rel}: {pattern!r} ({exc})"))
+        return None
 
 
 def validate_manifest() -> list[ValidationIssue]:
