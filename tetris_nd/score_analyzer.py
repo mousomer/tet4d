@@ -136,17 +136,6 @@ def score_analyzer_logging_enabled() -> bool:
     return bool(_LOGGING_ENABLED_OVERRIDE)
 
 
-def score_analyzer_settings_snapshot() -> dict[str, object]:
-    logging_cfg = _logging_config()
-    return {
-        "enabled": bool(_score_analyzer_config().get("enabled", True)),
-        "logging_enabled": score_analyzer_logging_enabled(),
-        "configured_logging_enabled": bool(logging_cfg.get("enabled", False)),
-        "events_file": str(logging_cfg.get("events_file", _DEFAULT_EVENTS_PATH)),
-        "summary_file": str(logging_cfg.get("summary_file", _DEFAULT_SUMMARY_PATH)),
-    }
-
-
 def analyze_lock_event(
     *,
     board_pre: dict[tuple[int, ...], int],

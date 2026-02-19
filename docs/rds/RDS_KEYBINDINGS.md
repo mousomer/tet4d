@@ -148,17 +148,12 @@ Implementation references:
 #### 4D view group (profile-independent default)
 
 1. Yaw `-`/`+`:`J`/`L`
-2. Pitch `-`/`+`:`K`/`I`
+2. Pitch `-`/`+`:`O`/`U`
 3. Zoom out / in: `-`/`+`
-4. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
-
-Planned 4D view-hyperplane actions (not implemented yet):
-1. `view_xw_pos`
-2. `view_xw_neg`
-3. `view_zw_pos`
-4. `view_zw_neg`
-5. Phase-1 plan: add these actions as camera-group bindable actions with no default collisions.
-6. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
+4. View `xw -/+`: `F5`/`F6`
+5. View `zw -/+`: `F7`/`F8`
+6. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
+7. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
 
 #### 4D slice group (profile-independent default)
 
@@ -325,7 +320,7 @@ pytest -q
 6. Trigger a key conflict and verify conflict-resolution flow.
 7. Save profile locally, restart app, load profile, and verify key behavior persists.
 8. In 4D, verify `V/B` (`rotate_zw`) repeatedly work and are not consumed by camera/system keys.
-9. Planned: when `view_xw/*` and `view_zw/*` are added, verify they rotate camera only and do not affect gameplay state.
+9. Verify `view_xw/*` and `view_zw/*` rotate camera only and do not affect gameplay state.
 
 ## 9. Acceptance Criteria
 
@@ -337,7 +332,7 @@ pytest -q
 6. Tests pass and menu feedback is visible for load/save/rebind/reset actions.
 7. Keybinding editor supports local save/load and conflict-safe rebinding.
 8. 4D `V/B` rotation path is conflict-free and reliable under key repeat.
-9. Planned: 4D camera hyperplane actions (`view_xw/*`,`view_zw/*`) are bindable and conflict-safe.
+9. 4D camera hyperplane actions (`view_xw/*`,`view_zw/*`) are bindable and conflict-safe.
 
 ## 11. Implementation Status (2026-02-18)
 

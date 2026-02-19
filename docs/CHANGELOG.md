@@ -24,6 +24,12 @@
    - `tetris_nd/topology_designer.py`
 9. Topology designer test coverage:
    - `tetris_nd/tests/test_topology_designer.py`
+10. 4D render profiling tool:
+    - `tools/profile_4d_render.py`
+11. Gap-closure execution plan artifact:
+    - `docs/plans/PLAN_4D_RENDER_GAPS_2026-02-19.md`
+12. Dead-code/dedup cleanup planning artifact:
+    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
 
 ### Changed
 1. `scripts/ci_check.sh` is now hermetic for lint/test tools:
@@ -111,6 +117,42 @@
     with regression tests:
     - `tetris_nd/tests/test_topology.py`
     - `tetris_nd/tests/test_game_nd.py`
+33. 4D camera/view hyperplane turns (`xw`/`zw`) implemented as render-only animated view controls in:
+    - `tetris_nd/front4d_render.py`
+    - `tetris_nd/front4d_game.py`
+34. 4D keybinding camera actions extended and wired:
+    - `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`
+    - defaults in `tetris_nd/keybindings_defaults.py`
+    - shipped bindings in `keybindings/4d.json` and profile files.
+35. 4D camera/view helper grouping updated to expose new view-plane controls:
+    - `tetris_nd/control_helper.py`
+    - `tetris_nd/keybindings_catalog.py`
+36. Added test coverage for the new 4D view-plane features:
+    - `tetris_nd/tests/test_front4d_render.py`
+    - `tetris_nd/tests/test_nd_routing.py`
+    - `tetris_nd/tests/test_gameplay_replay.py`
+    - `tetris_nd/tests/test_control_ui_helpers.py`
+    - `tetris_nd/tests/test_keybindings.py`
+37. 4D projection cache keys now include total `W` size in render extras to prevent stale cross-config lattice/helper cache reuse:
+    - `tetris_nd/front4d_render.py`
+38. 4D per-layer zoom fit now runs through hyper-view transforms (`xw`/`zw` + centered `w` layer) to keep outer layers visible:
+    - `tetris_nd/front4d_render.py`
+39. Added 4D render regressions for cache-key separation and hyper-view zoom bounds:
+    - `tetris_nd/tests/test_front4d_render.py`
+40. Added projection-lattice cache observability helpers for test/profiling validation:
+    - `tetris_nd/projection3d.py`
+41. Added black-box 4D frame-cache regression for cross-config `W`-size separation:
+    - `tetris_nd/tests/test_front4d_render.py`
+42. Profiler/benchmark output paths are now restricted to project-root-local destinations:
+    - `tools/profile_4d_render.py`
+    - `tools/bench_playbot.py`
+    - `tools/analyze_playbot_policies.py`
+43. Removed definition-only unreferenced helpers from:
+    - `tetris_nd/frontend_nd.py`
+    - `tetris_nd/menu_keybinding_shortcuts.py`
+    - `tetris_nd/menu_model.py`
+    - `tetris_nd/project_config.py`
+    - `tetris_nd/score_analyzer.py`
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
@@ -122,6 +164,27 @@
 7. RDS + feature docs updated for advanced topology-designer behavior, hidden-menu gating, and deterministic profile export path.
 8. Backlog updated to close boundary-warping designer and animation-constant externalization follow-ups.
 9. Added planning documentation for future 4D view/camera hyperplane rotations (`xw`/`zw`) in backlog and RDS/keybinding specs.
+10. Updated RDS/backlog/feature-map docs to mark 4D `xw/zw` view-plane turns as implemented and tested.
+11. Added explicit 4D testing requirements for full local CI and render profiling in:
+    - `docs/rds/RDS_4D_TETRIS.md`
+12. Normalized open `P3` backlog entries to structured ID/cadence/trigger/done format in:
+    - `docs/BACKLOG.md`
+13. Canonical maintenance contract now validates backlog structure markers/regex for active `P3` entries in:
+    - `config/project/canonical_maintenance.json`
+14. Added active backlog/RDS follow-up for help and menu IA restructuring (`BKL-P2-006`) in:
+    - `docs/BACKLOG.md`
+    - `docs/rds/RDS_MENU_STRUCTURE.md`
+15. Added active backlog follow-up for unreferenced-helper cleanup and setup-menu deduplication (`BKL-P2-007`) in:
+    - `docs/BACKLOG.md`
+    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+16. Updated `BKL-P2-007` scope after cleanup completion:
+    - unreferenced-helper removal marked complete,
+    - remaining scope narrowed to setup-menu render/value deduplication.
+17. Added sourced help/menu restructuring report and phased execution plan:
+    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+18. Updated `docs/rds/RDS_MENU_STRUCTURE.md` research basis with ARIA APG, Microsoft menu/flyout guidance, Material menu guidance, and content-structure references.
+19. Expanded `BKL-P2-006` with concrete execution milestones and linked plan artifact in `docs/BACKLOG.md`.
+20. Refreshed `docs/GUIDELINES_RESEARCH.md` to reflect current open gaps and current web-guideline source set.
 
 ## 2026-02-18
 

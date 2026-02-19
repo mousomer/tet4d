@@ -12,7 +12,7 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tetris_nd import frontend_nd
 from tetris_nd.game_nd import GameConfigND
-from tetris_nd.keybindings import KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS
+from tetris_nd.keybindings import CAMERA_KEYS_4D, KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
@@ -121,6 +121,29 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result, "continue")
         self.assertEqual(view_calls, [unbound_key])
         self.assertEqual(sfx, ["menu_move"])
+
+    def test_bound_camera_key_routes_to_view_handler(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        slice_state = frontend_nd.create_initial_slice_state(cfg)
+        view_calls: list[int] = []
+        sfx: list[str] = []
+        camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
+        pos_before = state.current_piece.pos if state.current_piece is not None else None
+
+        result = frontend_nd.route_nd_keydown(
+            camera_key,
+            state,
+            slice_state=slice_state,
+            view_key_handler=lambda key: view_calls.append(key) or True,
+            sfx_handler=sfx.append,
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(view_calls, [camera_key])
+        self.assertEqual(sfx, ["menu_move"])
+        if state.current_piece is not None and pos_before is not None:
+            self.assertEqual(state.current_piece.pos, pos_before)
 
 
 if __name__ == "__main__":

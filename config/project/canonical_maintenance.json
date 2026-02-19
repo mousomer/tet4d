@@ -103,11 +103,18 @@
       "file": "docs/BACKLOG.md",
       "must_contain": [
         "## 3. Active Open Backlog / TODO",
-        "## 5. Change Footprint"
+        "## 5. Change Footprint",
+        "[BKL-P3-001]",
+        "Cadence:",
+        "Trigger:",
+        "Done criteria:"
       ],
       "must_not_contain": [
         "No currently open gaps",
         "126 passed"
+      ],
+      "must_match_regex": [
+        "\\[BKL-P3-\\d{3}\\]"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",

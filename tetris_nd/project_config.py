@@ -93,11 +93,6 @@ def constants_payload() -> dict[str, Any]:
     return _merge_objects(_DEFAULT_CONSTANTS, loaded)
 
 
-def reset_project_config_cache() -> None:
-    io_paths_payload.cache_clear()
-    constants_payload.cache_clear()
-
-
 def _normalize_relative_path(
     raw: object,
     *,
@@ -241,22 +236,12 @@ def score_events_file_default_relative() -> str:
     )
 
 
-def score_events_file_default_path() -> Path:
-    rel = score_events_file_default_relative()
-    return _resolve_repo_relative(rel, "state/analytics/score_events.jsonl")
-
-
 def score_summary_file_default_relative() -> str:
     return _path_value(
         "score_summary_file_default",
         default_relative="state/analytics/score_summary.json",
         required_prefix=state_dir_relative(),
     )
-
-
-def score_summary_file_default_path() -> Path:
-    rel = score_summary_file_default_relative()
-    return _resolve_repo_relative(rel, "state/analytics/score_summary.json")
 
 
 def topology_profile_export_file_default_relative() -> str:

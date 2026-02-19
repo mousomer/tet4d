@@ -36,6 +36,14 @@ DIMS_3D = (6, 18, 6)
 DIMS_4D = (6, 18, 6, 4)
 
 
+def _resolve_repo_local_path(raw: Path) -> Path:
+    candidate = (raw if raw.is_absolute() else (ROOT / raw)).resolve()
+    root = ROOT.resolve()
+    if candidate == root or root in candidate.parents:
+        return candidate
+    raise SystemExit(f"output path must stay within project root: {root}")
+
+
 @dataclass(frozen=True)
 class BenchSample:
     ms: float
@@ -175,7 +183,7 @@ def main() -> int:
     parser.add_argument(
         "--trend-file",
         default="",
-        help="override trend history file path (default from config/playbot/policy.json)",
+        help="override trend history file path (must be inside project root)",
     )
     args = parser.parse_args()
 
@@ -205,7 +213,8 @@ def main() -> int:
     print(json.dumps(payload, indent=2, sort_keys=True))
 
     if args.record_trend:
-        trend_path = Path(args.trend_file) if args.trend_file else Path(benchmark_history_file())
+        trend_raw = Path(args.trend_file) if args.trend_file else Path(benchmark_history_file())
+        trend_path = _resolve_repo_local_path(trend_raw)
         _append_trend_sample(
             output_path=trend_path,
             algorithm=algorithm,

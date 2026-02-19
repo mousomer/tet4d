@@ -45,6 +45,10 @@ User-facing feature map for the shipped `tet4d` experience.
 - 4D rendering:
   - 4D board is displayed as multiple 3D `w`-layer boards.
   - Slicing selects focused `z`/`w` visual layers and does not alter physics.
+  - Camera-only hyperplane view turns are supported:
+    - `view_xw_neg/view_xw_pos` (default `F5/F6`)
+    - `view_zw_neg/view_zw_pos` (default `F7/F8`)
+  - View-plane turns are render-only and do not mutate gameplay state, scoring, or replay determinism.
 
 ## 4. Keybindings
 
@@ -138,6 +142,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Playbot tests (planning fallback, dry run, greedy priorities, hard-drop thresholds).
 - Repeated playbot dry-run stability checks via `tools/check_playbot_stability.py`.
 - Benchmark checks integrated in CI script.
+- 4D renderer profiling tool for projection/cache/zoom change validation: `tools/profile_4d_render.py`.
 - CI matrix validates Python `3.11`,`3.12`,`3.13`, and`3.14`.
 - Scheduled stability watch runs repeated dry-run checks and policy-analysis snapshots.
 

@@ -10,6 +10,18 @@
       "pitch_pos": [
         "u"
       ],
+      "view_xw_neg": [
+        "f5"
+      ],
+      "view_xw_pos": [
+        "f6"
+      ],
+      "view_zw_neg": [
+        "f7"
+      ],
+      "view_zw_pos": [
+        "f8"
+      ],
       "reset": [
         "backspace"
       ],
