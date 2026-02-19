@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "topics": [
+    {
+      "id": "overview",
+      "title": "Help Overview",
+      "lane": "quick",
+      "priority": 10,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "summary": "Entry point and navigation for help content.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Summary of controls, settings, and gameplay systems.",
+            "Help reflects active keybinding profile values."
+          ]
+        },
+        {
+          "id": "use",
+          "title": "When to use",
+          "lines": [
+            "Open from launcher, pause, or gameplay for quick reference."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game_types",
+      "title": "Game Types",
+      "lane": "full",
+      "priority": 20,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay"],
+      "summary": "Differences between 2D, 3D, and 4D modes.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "2D clears rows, 3D clears planes, 4D clears hyperplanes.",
+            "Each mode exposes its own movement and rotation set."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "movement_rotation",
+      "title": "Movement and Rotation",
+      "lane": "quick",
+      "priority": 30,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "summary": "Translation, drop, and rotation controls.",
+      "sections": [
+        {
+          "id": "keys",
+          "title": "Keys",
+          "lines": [
+            "Use this topic for translation and rotation action mappings.",
+            "Includes soft drop and hard drop actions."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "key_reference",
+      "title": "Key Reference",
+      "lane": "reference",
+      "priority": 40,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "summary": "Complete key list grouped by system/game/camera/slice.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "All bindable actions and current key assignments."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gameplay_features",
+      "title": "Gameplay Features",
+      "lane": "full",
+      "priority": 50,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay"],
+      "summary": "Bots, challenge mode, exploration mode, and dry-run.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Explains bot modes, challenge layers, and exploration practice mode."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "settings_profiles",
+      "title": "Settings and Profiles",
+      "lane": "full",
+      "priority": 60,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "keybindings"],
+      "summary": "Audio/display/analytics settings and keybinding profiles.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Save, load, autosave, and reset behavior.",
+            "Profile creation and editing rules."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "camera_and_slicing",
+      "title": "Camera, Grid, and Slicing",
+      "lane": "quick",
+      "priority": 70,
+      "dimensions": [3, 4],
+      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "summary": "View rotation, zoom, projection, grid modes, and slice controls.",
+      "sections": [
+        {
+          "id": "keys",
+          "title": "Keys",
+          "lines": [
+            "Includes camera yaw/pitch/view turns and slice axis controls."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menu_workflows",
+      "title": "Menu Workflows",
+      "lane": "full",
+      "priority": 80,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause"],
+      "summary": "Launcher and pause flow parity and action structure.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Menu structure and navigation behavior.",
+            "Resume/restart/back/quit semantics."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "troubleshooting",
+      "title": "Troubleshooting",
+      "lane": "reference",
+      "priority": 90,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay"],
+      "summary": "Common issues and recovery paths.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Common fixes for controls, persistence, and display behavior."
+          ]
+        }
+      ]
+    }
+  ]
+}

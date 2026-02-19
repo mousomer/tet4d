@@ -74,3 +74,7 @@ def binding_group_description(group: str) -> str:
 
 def binding_action_description(action: str) -> str:
     return _COMMON_ACTION_DESCRIPTIONS.get(action, action.replace("_", " "))
+
+
+def binding_action_ids() -> tuple[str, ...]:
+    return tuple(sorted(_COMMON_ACTION_DESCRIPTIONS.keys()))

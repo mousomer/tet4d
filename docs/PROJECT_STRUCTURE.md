@@ -122,22 +122,24 @@ tet4d/
 12. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
 13. Shared in-game key helper grouping is in `control_helper.py`.
 14. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py`and`menu_control_guides.py`.
-15. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
-16. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
-17. `config/menu/*` drives launcher/setup menu structure and default values.
-18. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-19. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
-20. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
-21. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-22. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-23. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
-24. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-25. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-26. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-27. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-28. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-29. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-30. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+15. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
+16. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
+17. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+18. `config/menu/*` drives launcher/setup menu structure and default values.
+19. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
+20. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+21. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
+22. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
+23. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+24. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+25. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+26. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+27. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+28. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+29. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+30. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+31. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+32. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
 
 ## Unified documentation sections
 

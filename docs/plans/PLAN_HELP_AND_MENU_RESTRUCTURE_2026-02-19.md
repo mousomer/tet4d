@@ -1,6 +1,6 @@
 # Plan Report: Help And Menu Restructuring (2026-02-19)
 
-Status: Proposed (not implemented in this document)  
+Status: Completed (`M1`+`M2`+`M3`+`M4` completed)  
 Related backlog items: `BKL-P2-006`, `BKL-P2-007`
 
 ## 1. Objective
@@ -52,7 +52,7 @@ Produce a concrete restructuring plan for launcher/pause/help flows that:
 2. Help content is partly static text and partly live-binding driven; synchronization exists but is incomplete for all settings/action surfaces.
 3. Key-reference help page truncates overflow with `...` instead of offering paging/filtering, so discoverability drops on dense profiles.
 4. Menu/help information architecture exists in RDS but execution remains partially distributed across multiple render paths.
-5. Setup menus still carry duplicated render/value-format logic (`BKL-P2-007`), increasing drift risk.
+5. Setup-menu render/value-format duplication noted in earlier audit (`BKL-P2-007`) has since been closed via shared ND setup routing.
 6. Help index exists (`docs/help/HELP_INDEX.md`) but does not yet enforce full per-action completeness from runtime key catalogs.
 
 ## 5. Recommendations
@@ -143,3 +143,52 @@ Out of scope for this batch:
 1. gameplay mechanics changes,
 2. bot/planner algorithm redesign,
 3. new graphics engine.
+
+## 10. Execution Update (2026-02-19)
+
+1. `M1` completed:
+2. Added help topic registry config:
+3. `config/help/topics.json`
+4. Added action-to-topic mapping config:
+5. `config/help/action_map.json`
+6. Added schemas:
+7. `config/schema/help_topics.schema.json`
+8. `config/schema/help_action_map.schema.json`
+9. Added runtime loader/validator:
+10. `tetris_nd/help_topics.py`
+11. Added contract checks:
+12. `tools/validate_project_contracts.py`
+13. Added regression tests:
+14. `tetris_nd/tests/test_help_topics.py`
+15. `M2` completed:
+16. Added shared menu/help layout-zone engine:
+17. `tetris_nd/menu_layout.py`
+18. Refactored help rendering to use computed header/content/footer zones (removed fixed `x/y` coordinates):
+19. `tetris_nd/help_menu.py`
+20. Added layout regression tests:
+21. `tetris_nd/tests/test_menu_layout.py`
+22. Added configurable layout tokens in project constants:
+23. `config/project/constants.json` (`layout.help.*`)
+24. `M3` completed:
+25. Help topic selection now uses context/dimension-filtered topic registry ordering from `config/help/topics.json`:
+26. `tetris_nd/help_topics.py` (`help_topics_for_context`, `normalize_help_context`)
+27. Help rendering now shows live action->key rows derived from runtime bindings + action-topic mapping:
+28. `tetris_nd/help_menu.py` (`help_topic_action_rows`, topic-driven pages)
+29. Help now supports explicit per-topic subpage paging (`[`/`]`, `PgUp`/`PgDn`) and removed silent overflow truncation:
+30. `tetris_nd/help_menu.py`
+31. Contract enforcement now checks that action-topic mappings target quick/full lanes (not reference-only drift):
+32. `tools/validate_project_contracts.py`
+33. Added M3 regression tests:
+34. `tetris_nd/tests/test_help_menu.py`
+35. `tetris_nd/tests/test_help_topics.py`
+36. `M4` completed:
+37. Launcher/pause parity contract is now config-driven and validated:
+38. `config/menu/structure.json` (`pause_menu_actions`),
+39. `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`, `pause_menu_actions`),
+40. `tetris_nd/pause_menu.py` (runtime actions sourced from config + unknown-action guard).
+41. Compact help-window behavior is now explicit and policy-driven:
+42. `tetris_nd/help_menu.py` (`is_compact_help_view`, compact layout tuning, compact content reduction),
+43. `config/project/constants.json` (`layout.help.compact_*_threshold`).
+44. Added M4 regression tests:
+45. `tetris_nd/tests/test_menu_policy.py` (launcher/pause parity + row/action sync),
+46. `tetris_nd/tests/test_help_menu.py` (compact detection + compact draw coverage).

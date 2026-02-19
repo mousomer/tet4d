@@ -26,5 +26,18 @@
       "side_panel": 360,
       "layer_gap": 12
     }
+  },
+  "layout": {
+    "help": {
+      "outer_pad": 20,
+      "header_extra": 16,
+      "gap": 8,
+      "footer_height": 24,
+      "min_content_height": 160,
+      "content_pad_x": 12,
+      "content_pad_y": 8,
+      "compact_width_threshold": 760,
+      "compact_height_threshold": 460
+    }
   }
 }
