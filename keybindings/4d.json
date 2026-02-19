@@ -52,10 +52,10 @@
         "space"
       ],
       "move_w_neg": [
-        ","
+        "n"
       ],
       "move_w_pos": [
-        "."
+        "/"
       ],
       "move_x_neg": [
         "left"

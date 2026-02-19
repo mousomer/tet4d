@@ -531,7 +531,14 @@ def apply_nd_gameplay_action_with_view(
     action: str,
     *,
     yaw_deg_for_view_movement: float | None = None,
+    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
 ) -> bool:
+    if axis_overrides_by_action is not None:
+        override = axis_overrides_by_action.get(action)
+        if override is not None:
+            axis, delta = override
+            state.try_move_axis(axis, delta)
+            return True
     if yaw_deg_for_view_movement is not None:
         intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
         if intent is not None:
@@ -546,6 +553,7 @@ def dispatch_nd_gameplay_key(
     state: GameStateND,
     *,
     yaw_deg_for_view_movement: float | None = None,
+    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
 ) -> str | None:
     action = gameplay_action_for_key(key, state.config)
     if action is None:
@@ -554,6 +562,7 @@ def dispatch_nd_gameplay_key(
         state,
         action,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        axis_overrides_by_action=axis_overrides_by_action,
     )
     return action
 
@@ -583,6 +592,7 @@ def route_nd_keydown(
     *,
     slice_state: SliceState | None = None,
     yaw_deg_for_view_movement: float | None = None,
+    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
     view_key_handler: Callable[[int], bool] | None = None,
     sfx_handler: Callable[[str], None] | None = None,
     allow_gameplay: bool = True,
@@ -605,6 +615,7 @@ def route_nd_keydown(
             key,
             state,
             yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+            axis_overrides_by_action=axis_overrides_by_action,
         )
         if gameplay_action is not None:
             _emit_sfx(sfx_handler, _playback_sfx_for_gameplay_action(gameplay_action))

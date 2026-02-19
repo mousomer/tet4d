@@ -145,6 +145,25 @@ class TestNdRouting(unittest.TestCase):
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos, pos_before)
 
+    def test_axis_override_routes_w_move_to_target_axis(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=True)
+        state = frontend_nd.create_initial_state(cfg)
+        piece = state.current_piece
+        if piece is None:
+            self.fail("expected active piece")
+        start_pos = tuple(piece.pos)
+        key = _key_for(KEYS_4D, "move_w_pos")
+
+        result = frontend_nd.route_nd_keydown(
+            key,
+            state,
+            axis_overrides_by_action={"move_w_pos": (0, 1), "move_w_neg": (0, -1)},
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.current_piece.pos[0], start_pos[0] + 1)
+        self.assertEqual(state.current_piece.pos[3], start_pos[3])
+
 
 if __name__ == "__main__":
     unittest.main()

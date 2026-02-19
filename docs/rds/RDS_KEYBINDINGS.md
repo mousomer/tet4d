@@ -28,7 +28,8 @@ Implementation references:
 1. Supported profiles:
 2. `small` (default, compact keyboards)
 3. `full` (numpad-first mappings)
-4. Selection mechanism: env var `TETRIS_KEY_PROFILE=small|full`
+4. `macbook` (no function-key dependency in default camera/view bindings)
+5. Selection mechanism: env var `TETRIS_KEY_PROFILE=small|full|macbook`
 5. No automatic keyboard hardware detection is currently implemented.
 
 ### 2.2 Precedence and defaults
@@ -69,7 +70,7 @@ Implementation references:
 
 #### 2D ND-key blocking requirement
 
-1. 2D mode must ignore ND-only keys (`Q/W/A/S/Z/X`, number-row rotation plane keys,`,/.`, slice keys).
+1. 2D mode must ignore ND-only keys (`Q/W/A/S/Z/X`, number-row rotation plane keys, 4D `w` movement keys, slice keys).
 
 ### 4.2 3D gameplay
 
@@ -116,7 +117,7 @@ Implementation references:
 
 1. Move `x-`/`x+`:`Left`/`Right`
 2. Move `z-`/`z+`:`Up`/`Down`
-3. Move `w-`/`w+`:`,`/`.`
+3. Move `w-`/`w+`:`N`/`/`
 4. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 5. Soft drop: `LShift`or`RShift`
 6. Hard drop: `Space`
@@ -128,7 +129,8 @@ Implementation references:
 12. Rotate `z-w +`/`z-w -`:`V`/`B` Translation semantics:
 1. `move_x_neg/move_x_pos`are viewer`left/right` intents.
 2. `move_z_neg/move_z_pos`are viewer`away/closer` intents.
-3. Runtime remaps `x/z`intents by current yaw;`move_w_neg/move_w_pos` remain fixed.
+3. Runtime remaps `x/z` intents by current yaw.
+4. Runtime remaps `move_w_neg/move_w_pos` to the currently displayed layer axis in 4D view decomposition (identity=`w`, `xw` view=`x`, `zw` view=`z`).
 
 #### `full` profile
 
@@ -154,6 +156,12 @@ Implementation references:
 5. View `zw -/+`: `F7`/`F8`
 6. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
 7. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
+
+#### 4.3.1 `macbook` profile (no function keys)
+1. 4D gameplay uses compact defaults except `w` translation (`N`/`/`).
+2. 4D view `xw -/+`: `1`/`2`.
+3. 4D view `zw -/+`: `3`/`4`.
+4. Help key default: `Tab`.
 
 #### 4D slice group (profile-independent default)
 

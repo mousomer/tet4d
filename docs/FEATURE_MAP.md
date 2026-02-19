@@ -50,7 +50,11 @@ User-facing feature map for the shipped `tet4d` experience.
   - `H/J/K/L` strict yaw mode (`-15 / -90 / +90 / +15`).
   - Additional pitch controls and mouse orbit/zoom.
 - 4D rendering:
-  - 4D board is displayed as multiple 3D `w`-layer boards.
+  - 4D board is displayed as multiple 3D layer boards derived from current 4D view basis.
+  - Quarter-turn hyperplane view turns update board decomposition:
+    - identity: `W` boards of `(X,Y,Z)`,
+    - `xw`: `X` boards of `(W,Y,Z)`,
+    - `zw`: `Z` boards of `(X,Y,W)`.
   - Slicing selects focused `z`/`w` visual layers and does not alter physics.
   - Camera-only hyperplane view turns are supported:
     - `view_xw_neg/view_xw_pos` (default `F5/F6`)
@@ -63,7 +67,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - `keybindings/2d.json`
 - `keybindings/3d.json`
 - `keybindings/4d.json`
-- Built-in keyboard sets: `small`and`full`.
+- Built-in keyboard sets: `small`, `full`, and `macbook`.
+- Compact (`small`) 4D `w` movement defaults: `N` / `/` (no `,/.` dependency).
 - Small-profile rotation ladder:
   - 2D: `Q/W`
   - 3D: `Q/W`, `A/S`, `Z/X`

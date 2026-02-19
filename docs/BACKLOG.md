@@ -212,6 +212,27 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 198. removing duplicated 3D setup render/value/config paths while preserving runtime behavior.
 199. Added regression coverage:
 200. `tetris_nd/tests/test_front3d_setup.py`.
+201. `DONE (superseded)` 4D `xw`/`zw` board-slot permutation fix:
+202. this improved panel ordering but did not satisfy basis-decomposition behavior (`xw` should swap board decomposition axes).
+203. superseded by active `BKL-P1-001` for full basis-driven 4D board decomposition.
+204. `DONE` `[BKL-P1-001]` 4D `xw`/`zw` basis-driven board decomposition fix:
+205. renderer now derives layer axis/count and board dims from signed-axis view basis,
+206. and routes grid/cells/helper/clear-animation through one shared 4D->(layer,cell3) map in `tetris_nd/front4d_render.py`.
+207. Added regression coverage in `tetris_nd/tests/test_front4d_render.py` for:
+208. `(5,4,3,2)` + `xw` => `5` boards of `(2,4,3)`,
+209. `(5,4,3,2)` + `zw` => `3` boards of `(5,4,2)`,
+210. and 4D coord-map bijection.
+211. `DONE` `[BKL-P1-002]` 4D post-basis regression cleanup:
+212. exploration-mode rotation tween rendering restored (fractional overlay coordinates preserved),
+213. `move_w` intent now maps to current basis layer axis (`w`/`x`/`z` by view),
+214. compact profile 4D `w` movement defaults changed from `,/.` to `N`/`/`,
+215. `macbook` built-in profile added with no-function 4D view defaults (`1/2/3/4`) and help=`Tab`,
+216. 4D layer-region clear hardening added for layer-count reductions.
+217. validation coverage added in:
+218. `tetris_nd/tests/test_front4d_render.py`,
+219. `tetris_nd/tests/test_nd_routing.py`,
+220. `tetris_nd/tests/test_keybindings.py`,
+221. and full local gates passed.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 

@@ -6,7 +6,7 @@ Bindings are persisted in external JSON files:
     keybindings/4d.json
 
 Default bindings still derive from the active profile:
-    TETRIS_KEY_PROFILE=small|full
+    TETRIS_KEY_PROFILE=small|full|macbook
 """
 
 from __future__ import annotations
@@ -20,12 +20,15 @@ from typing import Dict, List, Mapping, MutableMapping, Tuple
 import pygame
 from .key_display import display_key_name
 from .keybindings_defaults import (
-    DEFAULT_CAMERA_KEYS_3D,
-    DEFAULT_CAMERA_KEYS_4D,
     DEFAULT_SLICE_KEYS_3D,
     DEFAULT_SLICE_KEYS_4D,
     DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
+    PROFILE_MACBOOK,
+    PROFILE_SMALL,
+    PROFILE_FULL,
+    default_camera_bindings_for_profile,
     default_game_bindings_for_profile,
+    default_system_bindings_for_profile,
 )
 from .project_config import keybindings_dir_path, keybindings_profiles_dir_path
 from .keybindings_catalog import (
@@ -38,10 +41,8 @@ from .keybindings_catalog import (
 KeyTuple = Tuple[int, ...]
 KeyBindingMap = Dict[str, KeyTuple]
 
-PROFILE_SMALL = "small"
-PROFILE_FULL = "full"
 KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
-BUILTIN_PROFILES = (PROFILE_SMALL, PROFILE_FULL)
+BUILTIN_PROFILES = (PROFILE_SMALL, PROFILE_FULL, PROFILE_MACBOOK)
 
 REBIND_CONFLICT_REPLACE = "replace"
 REBIND_CONFLICT_SWAP = "swap"
@@ -69,8 +70,8 @@ def _normalize_profile(raw: str | None) -> str:
     if raw is None:
         return PROFILE_SMALL
     value = raw.strip().lower()
-    if value == PROFILE_FULL:
-        return PROFILE_FULL
+    if value in BUILTIN_PROFILES:
+        return value
     return PROFILE_SMALL
 
 
@@ -149,25 +150,21 @@ def _replace_map(target: MutableMapping[str, KeyTuple], source: Mapping[str, Key
     target.update(source)
 
 
-SYSTEM_KEYS: KeyBindingMap = {
-    "quit": (pygame.K_ESCAPE,),
-    "menu": (pygame.K_m,),
-    "restart": (pygame.K_y,),
-    "toggle_grid": (pygame.K_c,),
-    "help": (pygame.K_F1,),
-}
-
-
 _DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = default_game_bindings_for_profile(
     ACTIVE_KEY_PROFILE
 )
+_DEFAULT_CAMERA_KEYS_3D, _DEFAULT_CAMERA_KEYS_4D = default_camera_bindings_for_profile(
+    ACTIVE_KEY_PROFILE
+)
+_DEFAULT_SYSTEM_KEYS = default_system_bindings_for_profile(ACTIVE_KEY_PROFILE)
 
 
+SYSTEM_KEYS: KeyBindingMap = dict(_DEFAULT_SYSTEM_KEYS)
 KEYS_2D: KeyBindingMap = dict(_DEFAULT_KEYS_2D)
 KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
-CAMERA_KEYS_3D: KeyBindingMap = dict(DEFAULT_CAMERA_KEYS_3D)
-CAMERA_KEYS_4D: KeyBindingMap = dict(DEFAULT_CAMERA_KEYS_4D)
+CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
+CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
 SLICE_KEYS_3D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_3D)
 SLICE_KEYS_4D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_4D)
 
@@ -175,17 +172,28 @@ SLICE_KEYS_4D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_4D)
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
     keys_2d, keys_3d, keys_4d = default_game_bindings_for_profile(selected)
+    camera_3d, camera_4d = default_camera_bindings_for_profile(selected)
+    system_keys = default_system_bindings_for_profile(selected)
+    _replace_map(SYSTEM_KEYS, system_keys)
     _replace_map(KEYS_2D, keys_2d)
     _replace_map(KEYS_3D, keys_3d)
     _replace_map(KEYS_4D, keys_4d)
-    _replace_map(CAMERA_KEYS_3D, DEFAULT_CAMERA_KEYS_3D)
-    _replace_map(CAMERA_KEYS_4D, DEFAULT_CAMERA_KEYS_4D)
+    _replace_map(CAMERA_KEYS_3D, camera_3d)
+    _replace_map(CAMERA_KEYS_4D, camera_4d)
     _replace_map(SLICE_KEYS_3D, DEFAULT_SLICE_KEYS_3D)
     _replace_map(SLICE_KEYS_4D, DEFAULT_SLICE_KEYS_4D)
-    _sanitize_runtime_bindings()
+    _sanitize_runtime_bindings(camera_defaults_4d=camera_4d)
 
 
-def _sanitize_runtime_bindings() -> None:
+def _sanitize_runtime_bindings(
+    *,
+    camera_defaults_4d: Mapping[str, KeyTuple] | None = None,
+) -> None:
+    fallback_camera_4d = (
+        dict(camera_defaults_4d)
+        if camera_defaults_4d is not None
+        else default_camera_bindings_for_profile(ACTIVE_KEY_PROFILE)[1]
+    )
     # 4D gameplay keys must not be shadowed by 4D camera/view keys.
     occupied = set()
     for mapping in (KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS):
@@ -196,7 +204,7 @@ def _sanitize_runtime_bindings() -> None:
     for action, keys in CAMERA_KEYS_4D.items():
         filtered = tuple(key for key in keys if key not in occupied)
         if not filtered:
-            filtered = DEFAULT_CAMERA_KEYS_4D.get(action, ())
+            filtered = fallback_camera_4d.get(action, ())
             filtered = tuple(key for key in filtered if key not in occupied)
         if action == "reset" and not filtered:
             filtered = (pygame.K_BACKSPACE,)

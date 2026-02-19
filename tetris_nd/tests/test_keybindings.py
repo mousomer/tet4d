@@ -202,6 +202,21 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.KEYS_4D["rotate_zw_pos"], (pygame.K_v,))
         self.assertEqual(keybindings.KEYS_4D["rotate_zw_neg"], (pygame.K_b,))
 
+    def test_small_profile_4d_w_movement_defaults(self) -> None:
+        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_n,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_SLASH,))
+
+    def test_macbook_profile_uses_no_function_keys_for_4d_view(self) -> None:
+        ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_MACBOOK)
+        self.assertTrue(ok, msg)
+        ok, msg = keybindings.load_active_profile_bindings()
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_neg"], (pygame.K_1,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_pos"], (pygame.K_2,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_neg"], (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_4,))
+        self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
+
     def test_system_defaults_are_deconflicted_from_rotation_ladder(self) -> None:
         self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_y,))
         self.assertEqual(keybindings.SYSTEM_KEYS["toggle_grid"], (pygame.K_c,))
