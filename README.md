@@ -23,13 +23,19 @@ All modes share core logic under `tetris_nd/`.
 
 ```bash
 cd .
+scripts/bootstrap_env.sh
+source .venv/bin/activate
+```
+
+Alternative manual setup:
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install ruff pytest
 ```
 
-`scripts/ci_check.sh` prefers `.venv/bin/python` when present.
+`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects `ruff` + `pytest` to be installed in that same environment.
 
 ## Run
 

@@ -1,7 +1,7 @@
 # Researched Guidelines And Current Issues
 
 Status: Active  
-Last verified: 2026-02-18
+Last verified: 2026-02-19
 
 ## 1. Guidelines used
 
@@ -21,14 +21,15 @@ Last verified: 2026-02-18
 
 ## 3. Current issues (open backlog)
 
-1. Keep complexity guardrails active (`C901`) in local and CI checks.
-2. Keep documentation and backlog status synchronized with current check outputs.
-3. Keep local `.venv`toolchain complete (` ruff`,`pytest`) because`scripts/ci_check.sh`prefers`.venv`.
-4. Continuous checks are automated in:
-5. `.github/workflows/ci.yml`
-6. `.github/workflows/stability-watch.yml`
-7. Canonical synchronization source:
-8. `docs/BACKLOG.md`
+1. No blocking implementation gaps are currently open; active items are continuous watch tasks.
+2. Complexity guardrails are enforced in local + CI checks (`ruff --select C901` in `scripts/ci_check.sh`).
+3. Docs freshness is enforced via canonical contract regex rules in `config/project/canonical_maintenance.json`.
+4. Local toolchain bootstrap is standardized in `scripts/bootstrap_env.sh`.
+5. Continuous checks are automated in:
+6. `.github/workflows/ci.yml`
+7. `.github/workflows/stability-watch.yml`
+8. Canonical synchronization source:
+9. `docs/BACKLOG.md`
 
 ## 4. Current quality snapshot
 

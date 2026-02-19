@@ -42,6 +42,7 @@ All requirement/design specs are in:
 Run after every gameplay or input change:
 
 ```bash
+scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
 python3 tools/validate_project_contracts.py
@@ -90,14 +91,15 @@ Authoritative open/deferred items are tracked in:
 
 ### Active open items (synced from `docs/BACKLOG.md`)
 
-1. Keep complexity budget clean (`C901`) after loop/icon refactors.
-2. Keep docs/backlog status synchronized; avoid stale hardcoded pass-count snapshots.
-3. Keep `.venv`toolchain complete (` ruff`,`pytest`) for consistent local`scripts/ci_check.sh` runs.
-4. Ongoing checks are automated in:
-5. `.github/workflows/ci.yml`
-6. `.github/workflows/stability-watch.yml`
-7. Operational source-of-truth remains:
-8. `docs/BACKLOG.md`
+1. No blocking implementation gaps are open in this batch; only continuous watch tasks remain.
+2. Complexity budget (`C901`) is enforced by `scripts/ci_check.sh` and CI workflows.
+3. Docs freshness is enforced through canonical contract regex rules.
+4. `.venv`toolchain bootstrap is standardized in `scripts/bootstrap_env.sh`.
+5. Ongoing checks are automated in:
+6. `.github/workflows/ci.yml`
+7. `.github/workflows/stability-watch.yml`
+8. Operational source-of-truth remains:
+9. `docs/BACKLOG.md`
 
 ### Current complexity hotspots (`ruff --select C901`)
 

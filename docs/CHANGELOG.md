@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-02-19
+
+### Added
+1. Local environment bootstrap script:
+   - `scripts/bootstrap_env.sh`
+   - creates/updates `.venv` and installs runtime + local quality tools (`pygame-ce`, `ruff`, `pytest`).
+2. Canonical contract regex rules support in:
+   - `tools/validate_project_contracts.py`
+   - manifest fields: `must_match_regex` and `must_not_match_regex`.
+
+### Changed
+1. `scripts/ci_check.sh` is now hermetic for lint/test tools:
+   - removed global command fallback for `ruff`/`pytest`,
+   - requires those modules in the selected `PYTHON_BIN`.
+2. Project contract rules now assert the ci runner behavior and block stale pass-count snapshots in docs.
+
+### Documentation
+1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
+2. `docs/BACKLOG.md`, `docs/GUIDELINES_RESEARCH.md`, and `docs/RDS_AND_CODEX.md` updated to mark the P2/P3 guardrail items closed.
+3. `docs/rds/RDS_TETRIS_GENERAL.md` updated with bootstrap script and new closure notes.
+
 ## 2026-02-18
 
 ### Added

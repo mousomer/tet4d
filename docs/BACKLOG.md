@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-02-18  
+Updated: 2026-02-19  
 Scope: unified view of implemented change set + unresolved RDS/documentation/code gaps.
 
 ## 1. Priority Verification Rules
@@ -72,29 +72,24 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 58. control helper rows now use constrained key/action columns to avoid overlap,
 59. help controls page switches to stacked diagram layout on narrow windows.
 60. `DONE` `launcher_settings.py` simplified by removing legacy dead paths and retaining one unified settings flow.
+61. `DONE` Local CI runner was hardened to a hermetic Python-module flow:
+62. `scripts/ci_check.sh` now requires `ruff` and `pytest` in the selected `PYTHON_BIN`,
+63. global command fallback for lint/test runners was removed.
+64. `DONE` Local toolchain bootstrap was standardized:
+65. `scripts/bootstrap_env.sh` now creates/updates `.venv` and installs `pygame-ce`, `ruff`, and `pytest`.
+66. `DONE` Canonical docs freshness checks were strengthened:
+67. `tools/validate_project_contracts.py` now supports regex content rules,
+68. stale fixed pass-count snapshots are blocked by `must_not_match_regex` rules in `config/project/canonical_maintenance.json`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `P2` Keep complexity budget clean after recent refactors:
-2. enforce `ruff --select C901` on every local run and CI run.
-3. hotspot files now guarded:
-4. `front2d.py`,
-5. `tetris_nd/control_icons.py`,
-6. `tetris_nd/loop_runner_nd.py`.
-7. `P3` Keep documentation snapshots non-stale:
-8. avoid hardcoded historical pass counts in docs.
-9. keep active issues aligned between:
-10. `docs/BACKLOG.md`,
-11. `docs/GUIDELINES_RESEARCH.md`,
-12. `docs/rds/*.md`.
-13. `P3` Local toolchain bootstrap consistency:
-14. `scripts/ci_check.sh`prefers`.venv`,
-15. ensure `.venv`includes`ruff`and`pytest` for consistent local checks.
-16. Ongoing stability and retuning remain automated via:
-17. `.github/workflows/ci.yml`,
-18. `.github/workflows/stability-watch.yml`,
-19. `tools/check_playbot_stability.py`,
-20. `tools/analyze_playbot_policies.py`.
+1. `P3` Continuous watch only (no blocking open implementation gaps in this batch):
+2. keep running `scripts/ci_check.sh` prior to pushes and releases,
+3. keep scheduled stability + policy workflows active:
+4. `.github/workflows/ci.yml`,
+5. `.github/workflows/stability-watch.yml`,
+6. `tools/check_playbot_stability.py`,
+7. `tools/analyze_playbot_policies.py`.
 
 ## 4. Gap Mapping to RDS
 
@@ -157,6 +152,15 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tetris_nd/menu_control_guides.py`,
 `tetris_nd/tests/test_menu_policy.py`,
 `.github/workflows/stability-watch.yml`.
+7. Toolchain/contract hardening additions:
+`scripts/bootstrap_env.sh`,
+`scripts/ci_check.sh`,
+`tools/validate_project_contracts.py`,
+`config/project/canonical_maintenance.json`,
+`README.md`,
+`docs/GUIDELINES_RESEARCH.md`,
+`docs/RDS_AND_CODEX.md`,
+`docs/rds/RDS_TETRIS_GENERAL.md`.
 
 ## 6. Source Inputs
 

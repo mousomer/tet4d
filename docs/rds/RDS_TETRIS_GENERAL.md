@@ -104,13 +104,15 @@ Mode-specific requirements are defined in:
 20. `config/project/canonical_maintenance.json`
 21. Contract validation script is:
 22. `tools/validate_project_contracts.py`
-23. Canonical schema/migration/help/replay/release artifacts are source-controlled:
-24. `config/schema/*.schema.json`
-25. `docs/migrations/*.md`
-26. `tests/replay/manifest.json`
-27. `docs/help/HELP_INDEX.md`
-28. `assets/help/manifest.json`
-29. `docs/RELEASE_CHECKLIST.md`
+23. Local environment bootstrap script is:
+24. `scripts/bootstrap_env.sh`
+25. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+26. `config/schema/*.schema.json`
+27. `docs/migrations/*.md`
+28. `tests/replay/manifest.json`
+29. `docs/help/HELP_INDEX.md`
+30. `assets/help/manifest.json`
+31. `docs/RELEASE_CHECKLIST.md`
 
 ## 7. Engineering Best Practices
 
@@ -126,6 +128,7 @@ Mode-specific requirements are defined in:
 Required checks for behavior changes:
 
 ```bash
+scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
 python3 tools/validate_project_contracts.py
@@ -181,6 +184,8 @@ Remaining follow-up:
 2. Closed: help/documentation coverage now includes menu parity, settings IA rules, and control-guide surfaces.
 3. Closed: top-level/submenu split policy is enforced by config validation (`settings_category_metrics`+ split rules).
 4. Closed: maintainability follow-up executed for keybinding modules (shared display utils + menu model extraction + dead code removal).
+5. Closed: local CI runner is hermetic and module-based in `scripts/ci_check.sh` (no global fallback drift).
+6. Closed: docs freshness rules now include regex checks for stale pass-count snapshots.
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
 
