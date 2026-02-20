@@ -51,7 +51,7 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
     title = fonts.title_font.render("ND Tetris Launcher", True, TEXT_COLOR)
     subtitle_text = fit_text(
         fonts.hint_font,
-        "Play modes plus Help, unified Settings, Keybindings, and Bot Options.",
+        "Play or continue, then adjust Settings, Controls, Help, and Bot options.",
         width - 32,
     )
     subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
@@ -93,7 +93,7 @@ def _draw_main_menu(screen: pygame.Surface, fonts, state: MainMenuState) -> None
 
     info_lines = [
         f"Active key profile: {active_key_profile()}",
-        f"Last mode: {state.last_mode.upper()}",
+        f"Continue mode: {state.last_mode.upper()}",
         "Up/Down select   Enter open   Esc quit",
     ]
     info_y = panel_y + panel_h + 10
@@ -142,9 +142,22 @@ def _mode_from_last_mode(raw_last_mode: object) -> str:
     return "2d"
 
 
+def _menu_index_for_action(action: str, fallback: int = 0) -> int:
+    for idx, (candidate, _label) in enumerate(MENU_ITEMS):
+        if candidate == action:
+            return idx
+    return fallback
+
+
 def _menu_index_for_mode(mode: str) -> int:
-    mapping = {"2d": 0, "3d": 1, "4d": 2}
-    return mapping.get(mode, 0)
+    continue_index = _menu_index_for_action("continue", -1)
+    if continue_index >= 0:
+        return continue_index
+    play_index = _menu_index_for_action("play", -1)
+    if play_index >= 0:
+        return play_index
+    legacy_mapping = {"2d": "play_2d", "3d": "play_3d", "4d": "play_4d"}
+    return _menu_index_for_action(legacy_mapping.get(mode, "play_2d"), 0)
 
 
 def _restore_active_profile(payload: dict[str, object]) -> None:
@@ -171,49 +184,137 @@ def _persist_session_status(state: MainMenuState, session: _LauncherSession) -> 
         state.status_error = True
 
 
-def _menu_action_play_2d(
+def _launch_mode(
+    mode: str,
     state: MainMenuState,
     session: _LauncherSession,
-    _fonts_nd,
+    fonts_nd,
     fonts_2d,
 ) -> None:
-    state.last_mode = "2d"
-    result = launch_2d(session.screen, fonts_2d, session.display_settings)
+    launchers = {
+        "2d": lambda: launch_2d(session.screen, fonts_2d, session.display_settings),
+        "3d": lambda: launch_3d(session.screen, fonts_nd, session.display_settings),
+        "4d": lambda: launch_4d(session.screen, fonts_nd, session.display_settings),
+    }
+    launcher = launchers.get(mode)
+    if launcher is None:
+        state.status = f"Unsupported mode: {mode}"
+        state.status_error = True
+        return
+    state.last_mode = mode
+    result = launcher()
     session.screen = result.screen
     session.display_settings = result.display_settings
     if not result.keep_running:
         session.running = False
+        return
     _persist_session_status(state, session)
 
 
-def _menu_action_play_3d(
+def _draw_play_mode_menu(screen: pygame.Surface, fonts, *, selected: int) -> None:
+    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
+    width, height = screen.get_size()
+    title = fonts.title_font.render("Choose Mode", True, TEXT_COLOR)
+    subtitle = fonts.hint_font.render(
+        fit_text(fonts.hint_font, "Select a dimension and press Enter to open setup.", width - 24),
+        True,
+        MUTED_COLOR,
+    )
+    title_y = 44
+    subtitle_y = title_y + title.get_height() + 8
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
+
+    items = (
+        ("2d", "Play 2D"),
+        ("3d", "Play 3D"),
+        ("4d", "Play 4D"),
+    )
+    panel_w = min(520, max(320, width - 40))
+    row_h = min(54, max(fonts.menu_font.get_height() + 10, (height - 220) // len(items)))
+    panel_h = 34 + row_h * len(items)
+    panel_x = (width - panel_w) // 2
+    panel_y = max(subtitle_y + subtitle.get_height() + 16, (height - panel_h) // 2)
+    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=14)
+    screen.blit(panel, (panel_x, panel_y))
+
+    y = panel_y + 16
+    for idx, (_mode, label) in enumerate(items):
+        selected_row = idx == selected
+        color = HIGHLIGHT_COLOR if selected_row else TEXT_COLOR
+        if selected_row:
+            hi = pygame.Surface((panel_w - 30, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
+            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=9)
+            screen.blit(hi, (panel_x + 15, y - 4))
+        text = fonts.menu_font.render(label, True, color)
+        screen.blit(text, (panel_x + 28, y))
+        y += row_h
+
+    hints = (
+        "Up/Down select   Enter launch",
+        "Esc back",
+    )
+    hint_y = panel_y + panel_h + 14
+    for line in hints:
+        hint = fonts.hint_font.render(fit_text(fonts.hint_font, line, width - 24), True, MUTED_COLOR)
+        screen.blit(hint, ((width - hint.get_width()) // 2, hint_y))
+        hint_y += hint.get_height() + 3
+
+
+def _run_play_mode_menu(screen: pygame.Surface, fonts, *, default_mode: str) -> tuple[str | None, bool]:
+    items = ("2d", "3d", "4d")
+    try:
+        selected = items.index(default_mode)
+    except ValueError:
+        selected = 0
+    clock = pygame.time.Clock()
+    while True:
+        _dt = clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None, False
+            if event.type != pygame.KEYDOWN:
+                continue
+            if event.key == pygame.K_ESCAPE:
+                return None, True
+            if event.key == pygame.K_UP:
+                selected = (selected - 1) % len(items)
+                play_sfx("menu_move")
+                continue
+            if event.key == pygame.K_DOWN:
+                selected = (selected + 1) % len(items)
+                play_sfx("menu_move")
+                continue
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                play_sfx("menu_confirm")
+                return items[selected], True
+        _draw_play_mode_menu(screen, fonts, selected=selected)
+        pygame.display.flip()
+
+
+def _menu_action_play(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
-    _fonts_2d,
+    fonts_2d,
 ) -> None:
-    state.last_mode = "3d"
-    result = launch_3d(session.screen, fonts_nd, session.display_settings)
-    session.screen = result.screen
-    session.display_settings = result.display_settings
-    if not result.keep_running:
+    mode, keep_running = _run_play_mode_menu(session.screen, fonts_nd, default_mode=state.last_mode)
+    if not keep_running:
         session.running = False
-    _persist_session_status(state, session)
+        return
+    if mode is None:
+        return
+    _launch_mode(mode, state, session, fonts_nd, fonts_2d)
 
 
-def _menu_action_play_4d(
+def _menu_action_continue(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
-    _fonts_2d,
+    fonts_2d,
 ) -> None:
-    state.last_mode = "4d"
-    result = launch_4d(session.screen, fonts_nd, session.display_settings)
-    session.screen = result.screen
-    session.display_settings = result.display_settings
-    if not result.keep_running:
-        session.running = False
-    _persist_session_status(state, session)
+    _launch_mode(state.last_mode, state, session, fonts_nd, fonts_2d)
 
 
 def _menu_action_keybindings(
@@ -223,7 +324,7 @@ def _menu_action_keybindings(
     _fonts_2d,
 ) -> None:
     dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
-    run_keybindings_menu(session.screen, fonts_nd, dimension=dimension, scope="all")
+    run_keybindings_menu(session.screen, fonts_nd, dimension=dimension, scope="general")
     load_active_profile_bindings()
     _persist_session_status(state, session)
 
@@ -288,9 +389,12 @@ def _menu_action_bot_options(
 
 
 _MENU_ACTION_HANDLERS: dict[str, Callable[[MainMenuState, _LauncherSession, object, object], None]] = {
-    "play_2d": _menu_action_play_2d,
-    "play_3d": _menu_action_play_3d,
-    "play_4d": _menu_action_play_4d,
+    "play": _menu_action_play,
+    "continue": _menu_action_continue,
+    # Legacy compatibility for older launcher config/action ids.
+    "play_2d": lambda s, ses, fnd, f2d: _launch_mode("2d", s, ses, fnd, f2d),
+    "play_3d": lambda s, ses, fnd, f2d: _launch_mode("3d", s, ses, fnd, f2d),
+    "play_4d": lambda s, ses, fnd, f2d: _launch_mode("4d", s, ses, fnd, f2d),
     "help": _menu_action_help,
     "settings": _menu_action_settings,
     "keybindings": _menu_action_keybindings,

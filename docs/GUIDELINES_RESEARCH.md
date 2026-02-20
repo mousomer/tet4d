@@ -1,7 +1,7 @@
 # Researched Guidelines And Current Issues
 
 Status: Active  
-Last verified: 2026-02-19
+Last verified: 2026-02-20
 
 ## 1. Guidelines used (manuals and standards)
 
@@ -18,8 +18,15 @@ Last verified: 2026-02-19
 11. [Material menus](https://m1.material.io/components/menus.html)
 12. Nielsen heuristics:
 13. [Ten usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
-14. Content structuring reference:
-15. [ONS structuring content](https://service-manual.ons.gov.uk/content/writing-for-users/structuring-content)
+14. Apple HIG menus:
+15. [Menus](https://developer.apple.com/design/human-interface-guidelines/menus)
+16. Xbox accessibility guidelines:
+17. [XAG 112](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/112)
+18. [XAG 114](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/114)
+19. Game accessibility baseline:
+20. [Basic Guidelines](https://gameaccessibilityguidelines.com/basic/)
+21. Content structuring reference:
+22. [ONS structuring content](https://service-manual.ons.gov.uk/content/writing-for-users/structuring-content)
 
 ## 2. Core rules derived from those sources
 
@@ -33,8 +40,8 @@ Last verified: 2026-02-19
 
 ## 3. Current issues (open backlog)
 
-1. `BKL-P2-006` is closed (help/menu IA rework milestones `M1`-`M4` complete).
-2. `BKL-P2-007` is closed (3D setup now reuses shared ND setup/menu logic).
+1. `BKL-P1-005` is closed: default macbook 4D camera bindings now have no keypad dependency.
+2. `BKL-P1-006` is closed for core IA pass: launcher/pause menu flows were simplified and relabeled for user-friendly navigation.
 3. Continuous watch items remain in `P3` (`BKL-P3-001`..`BKL-P3-005`).
 4. Canonical source of active status is `docs/BACKLOG.md`.
 
@@ -42,5 +49,7 @@ Last verified: 2026-02-19
 
 1. Help/menu restructuring report and execution plan:
 2. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
-3. Unreferenced-helper and dedup follow-up plan:
-4. `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+3. Menu rehaul v2 and macbook no-keypad controls plan:
+4. `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
+5. Unreferenced-helper and dedup follow-up plan:
+6. `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`

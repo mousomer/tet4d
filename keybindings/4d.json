@@ -2,13 +2,16 @@
   "bindings": {
     "camera": {
       "cycle_projection": [
-        "p"
+        "[1]"
       ],
       "pitch_neg": [
-        "o"
+        "7"
       ],
       "pitch_pos": [
-        "u"
+        "8"
+      ],
+      "reset": [
+        "[3]"
       ],
       "view_xw_neg": [
         "1"
@@ -22,29 +25,23 @@
       "view_zw_pos": [
         "4"
       ],
-      "reset": [
-        "backspace"
-      ],
       "yaw_fine_neg": [
-        "h"
+        "[7]"
       ],
       "yaw_fine_pos": [
-        "l"
+        "[9]"
       ],
       "yaw_neg": [
-        "j"
+        "5"
       ],
       "yaw_pos": [
-        "k"
+        "6"
       ],
       "zoom_in": [
-        "+",
-        "=",
-        "[+]"
+        "0"
       ],
       "zoom_out": [
-        "-",
-        "[-]"
+        "9"
       ]
     },
     "game": {
@@ -62,6 +59,12 @@
       ],
       "move_x_pos": [
         "right"
+      ],
+      "move_y_neg": [
+        "page up"
+      ],
+      "move_y_pos": [
+        "page down"
       ],
       "move_z_neg": [
         "up"
@@ -111,6 +114,9 @@
       ]
     },
     "system": {
+      "help": [
+        "f1"
+      ],
       "menu": [
         "m"
       ],

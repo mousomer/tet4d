@@ -23,6 +23,21 @@ class TestMenuPolicy(unittest.TestCase):
         ok, message = launcher_settings._validate_unified_layout_against_policy()
         self.assertTrue(ok, message)
 
+    def test_settings_hub_layout_rows_include_item_and_headers(self) -> None:
+        rows = menu_config.settings_hub_layout_rows()
+        self.assertTrue(rows)
+        kinds = {kind for kind, _label, _row_key in rows}
+        self.assertIn("header", kinds)
+        self.assertIn("item", kinds)
+        self.assertTrue(any(row_key == "save" for kind, _label, row_key in rows if kind == "item"))
+        self.assertTrue(any(row_key == "reset" for kind, _label, row_key in rows if kind == "item"))
+
+    def test_settings_hub_headers_align_with_top_level_categories(self) -> None:
+        top_level = menu_config.settings_top_level_categories()
+        expected = {entry["label"] for entry in top_level}
+        headers = {label for kind, label, _row_key in menu_config.settings_hub_layout_rows() if kind == "header"}
+        self.assertTrue(expected.issubset(headers))
+
     def test_setup_fields_include_topology_mode_per_dimension(self) -> None:
         for dimension in (2, 3, 4):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
@@ -43,3 +58,13 @@ class TestMenuPolicy(unittest.TestCase):
             len(menu_config.pause_menu_rows()),
             len(menu_config.pause_menu_actions()),
         )
+
+    def test_launcher_rehaul_actions_include_play_and_continue(self) -> None:
+        launcher_actions = {action for action, _label in menu_config.launcher_menu_items()}
+        self.assertIn("play", launcher_actions)
+        self.assertIn("continue", launcher_actions)
+
+    def test_pause_menu_rehaul_core_actions(self) -> None:
+        pause_actions = set(menu_config.pause_menu_actions())
+        expected = {"resume", "restart", "settings", "keybindings", "help", "bot_options", "menu", "quit"}
+        self.assertTrue(expected.issubset(pause_actions))

@@ -5,9 +5,9 @@ from typing import Literal
 
 import pygame
 
-from .audio import set_audio_settings
+from .audio import AudioSettings
 from .bot_options_menu import run_bot_options_menu
-from .display import DisplaySettings, apply_display_mode, normalize_display_settings
+from .display import DisplaySettings
 from .help_menu import run_help_menu
 from .keybindings import (
     active_key_profile,
@@ -16,19 +16,10 @@ from .keybindings import (
     save_keybindings_file,
 )
 from .keybindings_menu import run_keybindings_menu
-from .menu_config import (
-    default_settings_payload,
-    pause_menu_actions,
-    pause_menu_rows,
-    pause_settings_rows,
-)
+from .launcher_settings import run_settings_hub_menu
+from .menu_config import pause_menu_actions, pause_menu_rows
 from .menu_model import cycle_index, is_confirm_key
-from .menu_persistence import (
-    load_audio_payload,
-    load_display_payload,
-    persist_audio_payload,
-    persist_display_payload,
-)
+from .menu_persistence import load_audio_payload, load_display_payload
 from .ui_utils import draw_vertical_gradient, fit_text
 
 
@@ -41,7 +32,6 @@ _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
 
 _PAUSE_ROWS: tuple[str, ...] = pause_menu_rows()
-_SETTINGS_ROWS: tuple[str, ...] = pause_settings_rows()
 
 
 @dataclass
@@ -51,20 +41,6 @@ class _PauseState:
     decision: PauseDecision = "resume"
     status: str = ""
     status_error: bool = False
-
-
-@dataclass
-class _SettingsState:
-    master_volume: float
-    sfx_volume: float
-    mute: bool
-    fullscreen: bool
-    windowed_size: tuple[int, int]
-    selected: int = 0
-    running: bool = True
-    status: str = ""
-    status_error: bool = False
-    pending_reset_confirm: bool = False
 
 
 def _draw_clamped_hint_block(
@@ -171,20 +147,17 @@ def _draw_list_menu_panel(
 
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     profile = active_key_profile()
-    return (
-        "",
-        "",
-        "Audio + Display",
-        f"{dimension}D planner/options",
-        f"{dimension}D profile editor",
-        profile,
-        profile,
-        profile,
-        profile,
-        f"{dimension}D controls",
-        "",
-        "",
-    )
+    action_values = {
+        "settings": "Audio + Display + Analytics",
+        "bot_options": f"{dimension}D planner/options",
+        "keybindings": "General + 2D/3D/4D scopes",
+        "profile_prev": profile,
+        "profile_next": profile,
+        "save_bindings": profile,
+        "load_bindings": profile,
+        "help": f"{dimension}D guidance",
+    }
+    return tuple(action_values.get(action, "") for action in _PAUSE_ACTION_CODES)
 
 
 def _draw_pause_menu(screen: pygame.Surface, fonts, state: _PauseState, *, dimension: int) -> None:
@@ -202,238 +175,21 @@ def _draw_pause_menu(screen: pygame.Surface, fonts, state: _PauseState, *, dimen
     )
 
 
-def _load_settings_state() -> _SettingsState:
+def _audio_settings_from_payload() -> AudioSettings:
     audio = load_audio_payload()
-    display = load_display_payload()
-    return _SettingsState(
+    return AudioSettings(
         master_volume=max(0.0, min(1.0, float(audio["master_volume"]))),
         sfx_volume=max(0.0, min(1.0, float(audio["sfx_volume"]))),
         mute=bool(audio["mute"]),
+    )
+
+
+def _display_settings_from_payload() -> DisplaySettings:
+    display = load_display_payload()
+    return DisplaySettings(
         fullscreen=bool(display["fullscreen"]),
         windowed_size=(int(display["windowed_size"][0]), int(display["windowed_size"][1])),
     )
-
-
-def _settings_defaults() -> _SettingsState:
-    defaults = default_settings_payload()
-    audio = defaults.get("audio", {})
-    display = defaults.get("display", {})
-    return _SettingsState(
-        master_volume=max(0.0, min(1.0, float(audio.get("master_volume", 0.8)))),
-        sfx_volume=max(0.0, min(1.0, float(audio.get("sfx_volume", 0.7)))),
-        mute=bool(audio.get("mute", False)),
-        fullscreen=bool(display.get("fullscreen", False)),
-        windowed_size=(
-            int(display.get("windowed_size", [1200, 760])[0]),
-            int(display.get("windowed_size", [1200, 760])[1]),
-        ),
-    )
-
-
-def _settings_values(state: _SettingsState) -> tuple[str, ...]:
-    width, height = state.windowed_size
-    return (
-        f"{int(state.master_volume * 100)}%",
-        f"{int(state.sfx_volume * 100)}%",
-        "ON" if state.mute else "OFF",
-        "ON" if state.fullscreen else "OFF",
-        str(width),
-        str(height),
-        "",
-        "",
-        "",
-        "",
-    )
-
-
-def _draw_settings_menu(screen: pygame.Surface, fonts, state: _SettingsState) -> None:
-    _draw_list_menu_panel(
-        screen,
-        fonts,
-        title="Pause Settings",
-        subtitle="Audio + Display",
-        rows=_SETTINGS_ROWS,
-        selected_index=state.selected,
-        values=_settings_values(state),
-        hints=("Left/Right adjust values   Enter apply", "Esc back"),
-        status=state.status,
-        status_error=state.status_error,
-    )
-
-
-def _apply_audio_preview(state: _SettingsState) -> None:
-    set_audio_settings(
-        master_volume=state.master_volume,
-        sfx_volume=state.sfx_volume,
-        mute=state.mute,
-    )
-
-
-def _apply_display_preview(_screen: pygame.Surface, state: _SettingsState) -> pygame.Surface:
-    settings = normalize_display_settings(
-        DisplaySettings(
-            fullscreen=state.fullscreen,
-            windowed_size=state.windowed_size,
-        )
-    )
-    state.windowed_size = settings.windowed_size
-    return apply_display_mode(settings, preferred_windowed_size=settings.windowed_size)
-
-
-def _adjust_settings_value(state: _SettingsState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
-        return False
-    delta = -1 if key == pygame.K_LEFT else 1
-    if state.selected == 0:
-        state.master_volume = max(0.0, min(1.0, state.master_volume + delta * 0.02))
-        return True
-    if state.selected == 1:
-        state.sfx_volume = max(0.0, min(1.0, state.sfx_volume + delta * 0.02))
-        return True
-    if state.selected == 3:
-        state.fullscreen = not state.fullscreen
-        return True
-    if state.selected == 4:
-        width, height = state.windowed_size
-        state.windowed_size = (max(640, width + delta * 40), height)
-        return True
-    if state.selected == 5:
-        width, height = state.windowed_size
-        state.windowed_size = (width, max(480, height + delta * 40))
-        return True
-    return False
-
-
-def _save_settings_state(state: _SettingsState) -> tuple[bool, str]:
-    ok_audio, msg_audio = persist_audio_payload(
-        master_volume=state.master_volume,
-        sfx_volume=state.sfx_volume,
-        mute=state.mute,
-    )
-    ok_display, msg_display = persist_display_payload(
-        fullscreen=state.fullscreen,
-        windowed_size=state.windowed_size,
-    )
-    if not ok_audio:
-        return False, msg_audio
-    if not ok_display:
-        return False, msg_display
-    return True, "Saved audio/display settings"
-
-
-def _set_settings_status(state: _SettingsState, message: str, *, is_error: bool = False) -> None:
-    state.status = message
-    state.status_error = is_error
-
-
-def _handle_settings_navigation(state: _SettingsState, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
-        state.pending_reset_confirm = False
-        state.running = False
-        return True
-    if key == pygame.K_UP:
-        state.pending_reset_confirm = False
-        state.selected = cycle_index(state.selected, len(_SETTINGS_ROWS), -1)
-        return True
-    if key == pygame.K_DOWN:
-        state.pending_reset_confirm = False
-        state.selected = cycle_index(state.selected, len(_SETTINGS_ROWS), 1)
-        return True
-    return False
-
-
-def _handle_settings_adjustment(
-    screen: pygame.Surface,
-    state: _SettingsState,
-    key: int,
-) -> tuple[pygame.Surface, bool]:
-    if not _adjust_settings_value(state, key):
-        return screen, False
-    state.pending_reset_confirm = False
-    _apply_audio_preview(state)
-    if state.selected in (3, 4, 5):
-        screen = _apply_display_preview(screen, state)
-    return screen, True
-
-
-def _reset_settings_to_defaults(
-    screen: pygame.Surface,
-    state: _SettingsState,
-) -> pygame.Surface:
-    defaults = _settings_defaults()
-    state.master_volume = defaults.master_volume
-    state.sfx_volume = defaults.sfx_volume
-    state.mute = defaults.mute
-    state.fullscreen = defaults.fullscreen
-    state.windowed_size = defaults.windowed_size
-    state.pending_reset_confirm = False
-    _apply_audio_preview(state)
-    screen = _apply_display_preview(screen, state)
-    _set_settings_status(state, "Reset settings to defaults (not saved yet)")
-    return screen
-
-
-def _handle_settings_confirm(
-    screen: pygame.Surface,
-    state: _SettingsState,
-    key: int,
-) -> tuple[pygame.Surface, bool]:
-    if not is_confirm_key(key):
-        return screen, False
-    if state.selected == 2:
-        state.pending_reset_confirm = False
-        state.mute = not state.mute
-        _apply_audio_preview(state)
-        return screen, True
-    if state.selected == 6:
-        state.pending_reset_confirm = False
-        return _apply_display_preview(screen, state), True
-    if state.selected == 7:
-        state.pending_reset_confirm = False
-        ok, msg = _save_settings_state(state)
-        _set_settings_status(state, msg, is_error=not ok)
-        return screen, True
-    if state.selected == 8:
-        if not state.pending_reset_confirm:
-            state.pending_reset_confirm = True
-            _set_settings_status(state, "Press Enter on Reset defaults again to confirm")
-            return screen, True
-        return _reset_settings_to_defaults(screen, state), True
-    if state.selected == 9:
-        state.pending_reset_confirm = False
-        state.running = False
-        return screen, True
-    return screen, False
-
-
-def run_pause_settings_menu(screen: pygame.Surface, fonts) -> tuple[pygame.Surface, bool]:
-    state = _load_settings_state()
-    _apply_audio_preview(state)
-    clock = pygame.time.Clock()
-
-    while state.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return screen, False
-            if event.type != pygame.KEYDOWN:
-                continue
-            key = event.key
-            if _handle_settings_navigation(state, key):
-                break
-            screen, handled = _handle_settings_adjustment(screen, state, key)
-            if handled:
-                break
-            screen, handled = _handle_settings_confirm(screen, state, key)
-            if handled:
-                break
-
-        if not state.running:
-            break
-        _draw_settings_menu(screen, fonts, state)
-        pygame.display.flip()
-
-    return screen, True
 
 
 _PAUSE_ACTION_CODES: tuple[str, ...] = pause_menu_actions()
@@ -473,6 +229,24 @@ def _set_pause_status(state: _PauseState, ok: bool, message: str) -> None:
     state.status_error = not ok
 
 
+def _run_pause_settings_hub(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+) -> tuple[pygame.Surface, bool]:
+    result = run_settings_hub_menu(
+        screen,
+        fonts,
+        audio_settings=_audio_settings_from_payload(),
+        display_settings=_display_settings_from_payload(),
+    )
+    if not result.keep_running:
+        _set_pause_status(state, False, "Settings exited application loop")
+        return result.screen, False
+    _set_pause_status(state, True, "Returned from settings")
+    return result.screen, True
+
+
 def _handle_pause_profile_cycle(state: _PauseState, step: int) -> None:
     ok, msg, _profile = cycle_key_profile(step)
     _set_pause_status(state, ok, msg)
@@ -500,13 +274,13 @@ def _handle_pause_row(
         _set_pause_decision(state, action)
         return screen, True
     if action == "settings":
-        return run_pause_settings_menu(screen, fonts)
+        return _run_pause_settings_hub(screen, fonts, state)
     if action == "bot_options":
         ok, msg = run_bot_options_menu(screen, fonts, start_dimension=dimension)
         _set_pause_status(state, ok, msg)
         return screen, True
     if action == "keybindings":
-        run_keybindings_menu(screen, fonts, dimension=dimension, scope=f"{dimension}d")
+        run_keybindings_menu(screen, fonts, dimension=dimension, scope="general")
         _set_pause_status(state, True, "Returned from keybindings setup")
         return screen, True
     if action == "profile_prev":

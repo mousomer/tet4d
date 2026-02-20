@@ -1,8 +1,8 @@
 # Keybindings RDS
 
-Status: Active v0.7 (Verified 2026-02-19)  
+Status: Active v0.8 (Verified 2026-02-20)  
 Author: Omer + Codex  
-Date: 2026-02-19  
+Date: 2026-02-20  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -28,7 +28,7 @@ Implementation references:
 1. Supported profiles:
 2. `small` (default, compact keyboards)
 3. `full` (numpad-first mappings)
-4. `macbook` (no function-key dependency in default camera/view bindings)
+4. `macbook` (no function-key dependency; no keypad dependency in planned defaults)
 5. Selection mechanism: env var `TETRIS_KEY_PROFILE=small|full|macbook`
 5. No automatic keyboard hardware detection is currently implemented.
 
@@ -93,7 +93,7 @@ Implementation references:
 
 1. Move `x-`/`x+`:`Numpad4`/`Numpad6`
 2. Move `z-`/`z+`:`Numpad8`/`Numpad2`
-3. Exploration vertical `y-`/`y+`:`Numpad1`/`Numpad3`
+3. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 4. Soft drop: `Numpad5`
 5. Hard drop: `Numpad0`
 6. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -102,11 +102,12 @@ Implementation references:
 
 #### 3D camera group (profile-independent default)
 
-1. Yaw `-`/`+`:`J`/`L`
-2. Pitch `-`/`+`:`O`/`U`
-3. Zoom out / in: `-`/`+`
-4. Reset camera: `0`
-5. Cycle projection: `P`
+1. Yaw fine `-`/`+`:`1`/`4`
+2. Yaw `-`/`+`:`2`/`3`
+3. Pitch `-`/`+`:`5`/`6`
+4. Zoom out / in: `7`/`8`
+5. Cycle projection: `9`
+6. Reset camera: `0`
 
 ### 4.3 4D gameplay
 
@@ -133,8 +134,8 @@ Implementation references:
 
 1. Move `x-`/`x+`:`Numpad4`/`Numpad6`
 2. Move `z-`/`z+`:`Numpad8`/`Numpad2`
-3. Move `w-`/`w+`:`Numpad7`/`Numpad9`
-4. Exploration vertical `y-`/`y+`:`Numpad1`/`Numpad3`
+3. Move `w-`/`w+`:`Numpad /`/`Numpad *`
+4. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
 5. Soft drop: `Numpad5`
 6. Hard drop: `Numpad0`
 7. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -146,19 +147,29 @@ Implementation references:
 
 #### 4D view group (profile-independent default)
 
-1. Yaw `-`/`+`:`J`/`L`
-2. Pitch `-`/`+`:`O`/`U`
-3. Zoom out / in: `-`/`+`
-4. View `xw -/+`: `1`/`2`
-5. View `zw -/+`: `3`/`4`
-6. Reset view: `Backspace`(implemented deconflict from gameplay`rotate_zw -`)
+1. View `xw -/+`: `1`/`2`
+2. View `zw -/+`: `3`/`4`
+3. Yaw `-`/`+`: `5`/`6`
+4. Pitch `-`/`+`: `7`/`8`
+5. Zoom out / in: `9`/`0`
+6. Advanced camera (numeric keypad): yaw fine `-`/`+`:`Numpad7`/`Numpad9`, cycle projection:`Numpad1`, reset view:`Numpad3`
 7. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
 
 #### 4.3.1 `macbook` profile (no function keys)
 1. 4D gameplay uses compact defaults except `w` translation (`,`/`.`).
 2. 4D view `xw -/+`: `1`/`2`.
 3. 4D view `zw -/+`: `3`/`4`.
-4. Help key default: `Tab`.
+4. Yaw/Pitch/Zoom use top-row digits `5-0`.
+5. Help key default: `Tab`.
+
+#### 4.3.2 `macbook` no-keypad fallback (implemented, `BKL-P1-005`)
+1. Keep primary 4D camera/view mapping on top-row digits (`1-0`).
+2. Replace advanced keypad-only actions with standard keys:
+3. `yaw_fine_neg`: `-`
+4. `yaw_fine_pos`: `=`
+5. `cycle_projection`: `P`
+6. `reset`: `Backspace`
+7. Conflict rule remains unchanged: gameplay keys keep priority over camera bindings.
 
 ## 5. Load, Change, Save Workflow
 
@@ -229,8 +240,8 @@ Both menu contexts must expose the same keybinding profile actions:
 
 ### 5.8 Dedicated keybindings setup menu
 
-1. Main menu must include `Settings -> Controls -> Keybindings Setup`.
-2. Pause menu must include the same `Keybindings Setup` entry.
+1. Main menu must include a top-level `Controls` entry that opens keybindings setup.
+2. Pause menu must include the same `Controls` entry.
 3. Both entries open the same editor component and behavior.
 4. User can test bindings in a lightweight input-preview subpanel before leaving menu.
 5. Main-menu keybinding scope list must present `General` separately from dimension-specific scopes (`2D`,`3D`,`4D`).
@@ -267,8 +278,10 @@ Both menu contexts must expose the same keybinding profile actions:
       "move_x_pos": ["right"]
     },
     "camera": {
-      "yaw_neg": ["j"],
-      "yaw_pos": ["l"]
+      "view_xw_neg": ["1"],
+      "view_xw_pos": ["2"],
+      "yaw_neg": ["5"],
+      "yaw_pos": ["6"]
     }
   }
 }
@@ -286,6 +299,7 @@ Both menu contexts must expose the same keybinding profile actions:
 1. 2D loader must accept both canonical grouped format and legacy flat game-action format under `bindings`.
 2. Legacy default files must keep loading even when profile storage is introduced.
 3. Legacy `slice` groups/actions in old 3D/4D profile JSON files are ignored on load and removed on next save.
+4. Camera defaults are numeric-key based; macbook profile must provide a no-keypad fallback for all camera actions.
 
 ### 6.5 Storage validation requirements
 
@@ -339,7 +353,7 @@ Implemented in code:
 2. Runtime action groups now include `system`for rebinding visibility alongside`game/camera`.
 3. Keybinding editor/help presentation now splits gameplay actions into `Translation` + `Rotation` sections (no slice group).
 4. 3D/4D `z`movement defaults use`Up`for`z-`and`Down`for`z+`in small profile; full profile uses`Numpad8`/`Numpad2`.
-5. 4D camera reset default is `Backspace`.
+5. 4D camera defaults are numeric-key based (`1-0` plus keypad numeric fallbacks for advanced actions).
 6. Small-profile rotation ladder uses keyboard pairs:
 7. `2D`: `Q/W`,
 8. `3D`: `Q/W`,`A/S`,`Z/X`,

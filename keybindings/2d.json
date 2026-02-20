@@ -10,6 +10,12 @@
       "move_x_pos": [
         "right"
       ],
+      "move_y_neg": [
+        "page up"
+      ],
+      "move_y_pos": [
+        "page down"
+      ],
       "rotate_xy_neg": [
         "w"
       ],
@@ -19,6 +25,23 @@
       ],
       "soft_drop": [
         "down"
+      ]
+    },
+    "system": {
+      "help": [
+        "f1"
+      ],
+      "menu": [
+        "m"
+      ],
+      "quit": [
+        "escape"
+      ],
+      "restart": [
+        "y"
+      ],
+      "toggle_grid": [
+        "c"
       ]
     }
   },
