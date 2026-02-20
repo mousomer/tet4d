@@ -7,6 +7,7 @@ This repository documentation is unified into exactly three sections.
 - `docs/PROJECT_STRUCTURE.md`
 - `docs/FEATURE_MAP.md`
 - `docs/CHANGELOG.md`
+- `docs/RELEASE_INSTALLERS.md`
 
 ## 2. README.md for usage
 
@@ -35,6 +36,7 @@ This repository documentation is unified into exactly three sections.
 - `docs/rds/RDS_MENU_STRUCTURE.md`
 - `docs/rds/RDS_PLAYBOT.md`
 - `docs/rds/RDS_SCORE_ANALYZER.md`
+- `docs/rds/RDS_PACKAGING.md`
 - `docs/rds/RDS_2D_TETRIS.md`
 - `docs/rds/RDS_3D_TETRIS.md`
 - `docs/rds/RDS_4D_TETRIS.md`

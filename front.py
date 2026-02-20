@@ -4,12 +4,11 @@ from dataclasses import dataclass
 
 import pygame
 
-import front2d
 from tetris_nd.app_runtime import initialize_runtime, open_display
 from tetris_nd.audio import AudioSettings, play_sfx
 from tetris_nd.bot_options_menu import run_bot_options_menu
 from tetris_nd.display import DisplaySettings
-from tetris_nd.frontend_nd import init_fonts
+from tetris_nd.font_profiles import init_fonts as init_fonts_for_profile
 from tetris_nd.help_menu import run_help_menu
 from tetris_nd.keybindings import active_key_profile, load_active_profile_bindings, set_active_key_profile
 from tetris_nd.keybindings_menu import run_keybindings_menu
@@ -467,8 +466,8 @@ def run() -> None:
         ),
     )
 
-    fonts_nd = init_fonts()
-    fonts_2d = front2d.init_fonts()
+    fonts_nd = init_fonts_for_profile("nd")
+    fonts_2d = init_fonts_for_profile("2d")
 
     state = MainMenuState(
         selected=_menu_index_for_mode(_mode_from_last_mode(payload.get("last_mode"))),

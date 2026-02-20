@@ -23,4 +23,14 @@
 3. `assets/help/manifest.json` updated for help asset changes.
 4. Migration docs updated if payload structure changes:
    - `docs/migrations/menu_settings.md`
-- `docs/migrations/save_state.md`
+   - `docs/migrations/save_state.md`
+
+## Desktop packaging
+
+1. Packaging spec is up to date: `packaging/pyinstaller/tet4d.spec`.
+2. Packaging docs reflect current flow: `docs/RELEASE_INSTALLERS.md`.
+3. Local package build is verified for the target release OS:
+   - macOS: `bash packaging/scripts/build_macos.sh`
+   - Linux: `bash packaging/scripts/build_linux.sh`
+   - Windows: `./packaging/scripts/build_windows.ps1`
+4. CI workflow exists and is green for package matrix: `.github/workflows/release-packaging.yml`.

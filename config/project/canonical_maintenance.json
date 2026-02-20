@@ -21,7 +21,8 @@
       "docs/rds/RDS_KEYBINDINGS.md",
       "docs/rds/RDS_MENU_STRUCTURE.md",
       "docs/rds/RDS_PLAYBOT.md",
-      "docs/rds/RDS_SCORE_ANALYZER.md"
+      "docs/rds/RDS_SCORE_ANALYZER.md",
+      "docs/rds/RDS_PACKAGING.md"
     ],
     "help_assets": [
       "tetris_nd/menu_control_guides.py",
@@ -47,7 +48,8 @@
       "assets/help/manifest.json"
     ],
     "release_contract": [
-      "docs/RELEASE_CHECKLIST.md"
+      "docs/RELEASE_CHECKLIST.md",
+      "docs/RELEASE_INSTALLERS.md"
     ],
     "core_tests": [
       "tetris_nd/tests/test_playbot.py",
@@ -80,7 +82,14 @@
       "tools/check_pygame_ce.py",
       "tools/scan_secrets.py",
       "tools/validate_project_contracts.py",
-      ".github/workflows/stability-watch.yml"
+      ".github/workflows/stability-watch.yml",
+      ".github/workflows/release-packaging.yml"
+    ],
+    "packaging_scripts": [
+      "packaging/pyinstaller/tet4d.spec",
+      "packaging/scripts/build_macos.sh",
+      "packaging/scripts/build_linux.sh",
+      "packaging/scripts/build_windows.ps1"
     ]
   },
   "content_rules": [
@@ -97,7 +106,9 @@
         "tools/scan_secrets.py",
         "config/project/io_paths.json",
         "config/project/constants.json",
-        "config/project/secret_scan.json"
+        "config/project/secret_scan.json",
+        "docs/RELEASE_INSTALLERS.md",
+        "packaging/scripts/build_macos.sh"
       ]
     },
     {
@@ -150,7 +161,8 @@
       "must_contain": [
         "RDS index",
         "Testing instructions",
-        "docs/BACKLOG.md"
+        "docs/BACKLOG.md",
+        "docs/rds/RDS_PACKAGING.md"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",
@@ -188,6 +200,24 @@
         "Target Runtime: Python 3.11-3.14 + `pygame-ce`",
         "## 8. Testing Instructions",
         "## 10. Backlog Status"
+      ]
+    },
+    {
+      "file": "docs/RELEASE_INSTALLERS.md",
+      "must_contain": [
+        "PyInstaller",
+        "packaging/scripts/build_macos.sh",
+        "packaging/scripts/build_linux.sh",
+        "packaging/scripts/build_windows.ps1",
+        ".github/workflows/release-packaging.yml"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_PACKAGING.md",
+      "must_contain": [
+        "Desktop Packaging RDS",
+        "packaging/pyinstaller/tet4d.spec",
+        ".github/workflows/release-packaging.yml"
       ]
     },
     {

@@ -15,3 +15,8 @@ keybindings/profiles/
 
 # Local/offline wheel artifacts
 wheelhouse/
+
+# Packaging build outputs
+build/
+dist/
+artifacts/installers/

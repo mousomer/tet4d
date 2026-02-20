@@ -8,6 +8,7 @@ import pygame
 
 from .board import BoardND
 from .challenge_mode import apply_challenge_prefill_nd
+from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .game_nd import GameConfigND, GameStateND
 from .key_dispatch import match_bound_action
 from .keybindings import (
@@ -46,29 +47,8 @@ DEFAULT_GAME_SEED = 1337
 _DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
 
 
-@dataclass
-class GfxFonts:
-    title_font: pygame.font.Font
-    menu_font: pygame.font.Font
-    hint_font: pygame.font.Font
-    panel_font: pygame.font.Font
-
-
 def init_fonts() -> GfxFonts:
-    try:
-        return GfxFonts(
-            title_font=pygame.font.SysFont("consolas", 36, bold=True),
-            menu_font=pygame.font.SysFont("consolas", 24),
-            hint_font=pygame.font.SysFont("consolas", 18),
-            panel_font=pygame.font.SysFont("consolas", 17),
-        )
-    except (pygame.error, OSError):
-        return GfxFonts(
-            title_font=pygame.font.Font(None, 36),
-            menu_font=pygame.font.Font(None, 24),
-            hint_font=pygame.font.Font(None, 18),
-            panel_font=pygame.font.Font(None, 17),
-        )
+    return init_fonts_for_profile("nd")
 
 
 def draw_gradient_background(surface: pygame.Surface,

@@ -28,6 +28,7 @@ Advanced topology designer controls are available per mode:
 - `pygame-ce` (installed via `requirements.txt`)
 - Do not install legacy `pygame` in the same environment
 - CI validation matrix: Python `3.11`, `3.12`, `3.13`, `3.14`
+- Desktop packaged bundles include embedded Python runtime (end users do not need system Python)
 
 ## Setup
 
@@ -58,6 +59,24 @@ python front2d.py
 python front3d.py
 python front4d.py
 ```
+
+## Local desktop packaging (bundled runtime)
+
+```bash
+# macOS
+bash packaging/scripts/build_macos.sh
+
+# Linux
+bash packaging/scripts/build_linux.sh
+```
+
+Windows (PowerShell):
+
+```powershell
+./packaging/scripts/build_windows.ps1
+```
+
+Build artifacts are written to `artifacts/installers/`.
 
 ## Key files
 
@@ -112,6 +131,7 @@ scripts/ci_check.sh
 - `docs/PROJECT_STRUCTURE.md`
 - `docs/FEATURE_MAP.md`
 - `docs/GUIDELINES_RESEARCH.md`
+- `docs/RELEASE_INSTALLERS.md`
 
 2. Usage:
 - `README.md`

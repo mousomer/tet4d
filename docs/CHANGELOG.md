@@ -41,6 +41,21 @@
     - normalized SVG icon pack under `assets/help/icons/transform/svg`,
     - updated `tetris_nd/control_icons.py` to load SVG action icons first and keep procedural fallback for missing/unmapped actions,
     - updated help asset contract/docs: `assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules.
+15. Desktop packaging baseline added for no-system-Python local installs:
+    - canonical PyInstaller spec: `packaging/pyinstaller/tet4d.spec`,
+    - local OS build scripts: `packaging/scripts/build_macos.sh`, `packaging/scripts/build_linux.sh`, `packaging/scripts/build_windows.ps1`,
+    - CI packaging matrix workflow: `.github/workflows/release-packaging.yml`.
+16. Desktop packaging documentation and release contracts updated:
+    - added `docs/RELEASE_INSTALLERS.md`,
+    - added `docs/rds/RDS_PACKAGING.md`,
+    - updated `README.md`, `docs/RELEASE_CHECKLIST.md`, `docs/PROJECT_STRUCTURE.md`, `docs/README.md`, and `docs/RDS_AND_CODEX.md`.
+17. Canonical maintenance contract expanded to include packaging artifacts and workflow:
+    - `config/project/canonical_maintenance.json`.
+18. Font initialization stack was unified with profile-driven values:
+    - added shared font module `tetris_nd/font_profiles.py`,
+    - removed duplicated `GfxFonts` + `init_fonts()` implementations from `tetris_nd/gfx_game.py`, `tetris_nd/frontend_nd.py`, and `tetris_nd/front3d_render.py`,
+    - launcher now initializes fonts through one shared profile factory in `front.py`,
+    - per-mode visual values preserved (`2d` panel font `18`, `nd` panel font `17`).
 
 ## 2026-02-19
 
