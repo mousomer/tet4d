@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<path d="M 32.000 24.000 L 54.000 24.000 L 54.000 46.000 L 32.000 46.000 L 32.000 24.000" stroke="#111111" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.22" />
+<path d="M 20.000 34.000 L 42.000 34.000 L 42.000 56.000 L 20.000 56.000 L 20.000 34.000" stroke="#111111" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.22" />
+<line x1="20.000" y1="34.000" x2="32.000" y2="24.000" stroke="#111111" stroke-width="3.0" stroke-linecap="round" opacity="0.22" />
+<line x1="42.000" y1="34.000" x2="54.000" y2="24.000" stroke="#111111" stroke-width="3.0" stroke-linecap="round" opacity="0.22" />
+<line x1="42.000" y1="56.000" x2="54.000" y2="46.000" stroke="#111111" stroke-width="3.0" stroke-linecap="round" opacity="0.22" />
+<line x1="20.000" y1="56.000" x2="32.000" y2="46.000" stroke="#111111" stroke-width="3.0" stroke-linecap="round" opacity="0.22" />
+<path d="M 32.000 16.000 L 48.000 32.000 L 32.000 48.000 L 16.000 32.000 L 32.000 16.000" stroke="#111111" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<line x1="27.500" y1="27.500" x2="36.500" y2="36.500" stroke="#111111" stroke-width="5.5" stroke-linecap="round" />
+<line x1="27.500" y1="36.500" x2="36.500" y2="27.500" stroke="#111111" stroke-width="5.5" stroke-linecap="round" />
+<rect x="38.000" y="38.000" width="22.000" height="22.000" rx="7.000" ry="7.000" fill="#7C3AED" />
+<polygon points="43.077,43.502 46.038,42.750 48.999,54.412 46.039,55.164" fill="#FFFFFF" />
+<polygon points="48.975,55.250 46.064,54.326 47.544,49.661 50.456,50.585" fill="#FFFFFF" />
+<polygon points="47.544,50.585 50.456,49.661 51.936,54.326 49.025,55.250" fill="#FFFFFF" />
+<polygon points="51.961,55.164 49.001,54.412 51.962,42.750 54.923,43.502" fill="#FFFFFF" />
+</svg>

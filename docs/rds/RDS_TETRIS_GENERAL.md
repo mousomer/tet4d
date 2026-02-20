@@ -245,6 +245,9 @@ Completed in current implementation:
 33. playbot benchmark wrapper helpers were removed from `tetris_nd/playbot/types.py`; tools now consume benchmark thresholds/history paths directly from runtime config.
 34. Stage-5 runtime-config simplification completed:
 35. removed unused runtime-config constants/imports and consolidated repeated dimension-bucket/name-normalization access paths in `tetris_nd/runtime_config.py`.
+36. Stage-6 icon-pack integration completed:
+37. helper/menu/help action icons now source from external SVG transform assets under `assets/help/icons/transform/svg`, via mapping config `config/help/icon_map.json`.
+38. procedural icon rendering remains as deterministic fallback for unmapped/missing assets (for example `soft_drop` / `hard_drop`).
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.

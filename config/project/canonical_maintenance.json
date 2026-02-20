@@ -24,7 +24,9 @@
       "docs/rds/RDS_SCORE_ANALYZER.md"
     ],
     "help_assets": [
-      "tetris_nd/menu_control_guides.py"
+      "tetris_nd/menu_control_guides.py",
+      "tetris_nd/control_icons.py",
+      "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
     "canonical_schemas": [
       "config/schema/menu_settings.schema.json",
@@ -62,6 +64,7 @@
       "config/topology/designer_presets.json",
       "config/help/topics.json",
       "config/help/action_map.json",
+      "config/help/icon_map.json",
       "config/gameplay/tuning.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
@@ -259,6 +262,16 @@
         "\"default_topic\"",
         "\"action_topics\"",
         "\"move_x_neg\""
+      ]
+    },
+    {
+      "file": "config/help/icon_map.json",
+      "must_contain": [
+        "\"version\"",
+        "\"pack_root\"",
+        "\"action_map\"",
+        "\"rotate_xy_pos\"",
+        "\"rot_xy_pos\""
       ]
     },
     {

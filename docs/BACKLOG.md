@@ -293,6 +293,11 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 279. removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
 280. shared bucket/key helpers now reduce repeated dimension-bucket lookup boilerplate in runtime-config accessors,
 281. speed-curve and assist-factor lookups now reuse shared normalization helpers in `tetris_nd/runtime_config.py`.
+282. `DONE` `[BKL-P2-017]` External transform icon-pack integration:
+283. external SVG icon pack was normalized under `assets/help/icons/transform/svg`.
+284. runtime action-to-icon mapping config was added in `config/help/icon_map.json`.
+285. `tetris_nd/control_icons.py` now resolves icons from SVG assets first, with procedural fallback retained for missing actions (including drop actions).
+286. help asset contracts/docs were updated (`assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules).
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -481,6 +486,14 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tools/analyze_playbot_policies.py`.
 18. Stage-5 simplification follow-up touched:
 `tetris_nd/runtime_config.py`.
+19. Stage-6 icon-pack integration touched:
+`assets/help/icons/transform/svg/*`,
+`config/help/icon_map.json`,
+`assets/help/manifest.json`,
+`tetris_nd/control_icons.py`,
+`config/project/canonical_maintenance.json`,
+`docs/help/HELP_INDEX.md`,
+`docs/PROJECT_STRUCTURE.md`.
 
 ## 6. Source Inputs
 

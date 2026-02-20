@@ -21,6 +21,10 @@ tet4d/
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
+│   ├── help/
+│   │   ├── topics.json          # help topic registry
+│   │   ├── action_map.json      # action-to-topic mapping
+│   │   └── icon_map.json        # action-to-icon mapping for external SVG icon pack
 │   ├── topology/
 │   │   └── designer_presets.json # advanced boundary topology profile definitions
 │   ├── playbot/
@@ -42,6 +46,9 @@ tet4d/
 ├── assets/
 │   └── help/
 │       ├── manifest.json        # canonical help-asset index
+│       └── icons/
+│           └── transform/
+│               └── svg/         # external transform icon pack (16/64, dark/light)
 │       ├── translation_keys.gif # legacy compatibility asset (not primary renderer)
 │       └── rotation_keys.gif    # legacy compatibility asset (not primary renderer)
 ├── tests/
@@ -127,19 +134,20 @@ tet4d/
 17. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
 18. `config/menu/*` drives launcher/setup menu structure and default values.
 19. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
-20. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-21. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
-22. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
-23. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-24. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-25. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
-26. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-27. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-28. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-29. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-30. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-31. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-32. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+20. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
+21. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+22. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
+23. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
+24. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+25. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+26. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+27. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+28. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+29. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+30. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+31. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+32. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+33. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
 
 ## Unified documentation sections
 

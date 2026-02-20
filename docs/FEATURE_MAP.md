@@ -95,7 +95,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Legacy profile `slice` groups are ignored on load and removed on save.
 - Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`System`.
 - Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
-- Action icons in helper/menu rows are cached by action + size for smoother repeated rendering.
+- Action icons in helper/menu rows are sourced from external SVG pack (`assets/help/icons/transform/svg`) via `config/help/icon_map.json`, then cached by action + size for smoother repeated rendering.
 - Translation/rotation arrow-diagram guides are available in:
   - Help pages,
   - launcher/pause/settings/keybindings menus,

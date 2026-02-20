@@ -36,6 +36,11 @@
 13. Stage-5 runtime config cleanup:
     - removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
     - consolidated repeated dimension-bucket and name-normalization lookup paths in runtime-config accessors.
+14. Stage-6 external icon-pack integration:
+    - added external action-icon mapping config: `config/help/icon_map.json`,
+    - normalized SVG icon pack under `assets/help/icons/transform/svg`,
+    - updated `tetris_nd/control_icons.py` to load SVG action icons first and keep procedural fallback for missing/unmapped actions,
+    - updated help asset contract/docs: `assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules.
 
 ## 2026-02-19
 
