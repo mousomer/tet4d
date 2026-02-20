@@ -10,15 +10,19 @@ All requirement/design specs are in:
 - `docs/rds/RDS_MENU_STRUCTURE.md`
 - `docs/rds/RDS_PLAYBOT.md`
 - `docs/rds/RDS_SCORE_ANALYZER.md`
+- `docs/rds/RDS_PACKAGING.md`
 - `docs/rds/RDS_2D_TETRIS.md`
 - `docs/rds/RDS_3D_TETRIS.md`
-- `docs/rds/RDS_4D_TETRIS.md` Read order:
+- `docs/rds/RDS_4D_TETRIS.md`
+
+Read order:
 1. General RDS
 2. Keybindings RDS
 3. Menu structure RDS
 4. Playbot + score-analyzer RDS
-5. Mode-specific RDS
-6. This Codex instructions page
+5. Packaging RDS
+6. Mode-specific RDS
+7. This Codex instructions page
 
 ## Codex contributor workflow
 
@@ -51,7 +55,9 @@ python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3.14 -m compileall -q  front2d.py  tetris_nd
-```Minimum required coverage for gameplay-affecting changes:
+```
+
+Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).
 2. Replay determinism tests.
 3. Per-mode smoke tests for key routing and system controls.
@@ -63,6 +69,10 @@ python3.14 -m compileall -q  front2d.py  tetris_nd
 2. Existing tests pass and new behavior has targeted tests.
 3. No new C901 failures.
 4. Usage docs remain valid (`README.md`, docs links, run commands).
+5. Packaging docs/workflow remain valid when packaging files change:
+6. `docs/RELEASE_INSTALLERS.md`,
+7. `.github/workflows/release-packaging.yml`,
+8. `packaging/`.
 
 ## Canonical maintenance contract
 
@@ -87,6 +97,7 @@ python3.14 -m compileall -q  front2d.py  tetris_nd
 16. `tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`,
 17. `docs/help/HELP_INDEX.md`+`assets/help/manifest.json`,
 18. `docs/RELEASE_CHECKLIST.md`.
+19. `docs/RELEASE_INSTALLERS.md`+`packaging/`+`.github/workflows/release-packaging.yml`.
 
 ## Simplification and Technical Debt Tracking (2026-02-18)
 

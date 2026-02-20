@@ -11,6 +11,13 @@ tet4d/
 ├── front3d.py                   # 3D game entrypoint
 ├── front4d.py                   # 4D game entrypoint
 ├── requirements.txt             # runtime dependency list (pygame-ce)
+├── packaging/
+│   ├── pyinstaller/
+│   │   └── tet4d.spec          # canonical desktop bundle spec (embedded Python runtime)
+│   └── scripts/
+│       ├── build_macos.sh      # local macOS desktop package build
+│       ├── build_linux.sh      # local Linux desktop package build
+│       └── build_windows.ps1   # local Windows desktop package build
 ├── config/
 │   ├── menu/
 │   │   ├── defaults.json        # default menu/app settings (source-controlled)
@@ -21,6 +28,10 @@ tet4d/
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
+│   ├── help/
+│   │   ├── topics.json          # help topic registry
+│   │   ├── action_map.json      # action-to-topic mapping
+│   │   └── icon_map.json        # action-to-icon mapping for external SVG icon pack
 │   ├── topology/
 │   │   └── designer_presets.json # advanced boundary topology profile definitions
 │   ├── playbot/
@@ -42,6 +53,9 @@ tet4d/
 ├── assets/
 │   └── help/
 │       ├── manifest.json        # canonical help-asset index
+│       └── icons/
+│           └── transform/
+│               └── svg/         # external transform icon pack (16/64, dark/light)
 │       ├── translation_keys.gif # legacy compatibility asset (not primary renderer)
 │       └── rotation_keys.gif    # legacy compatibility asset (not primary renderer)
 ├── tests/
@@ -61,6 +75,7 @@ tet4d/
 │   ├── keybindings_menu.py      # dedicated keybinding setup screen
 │   ├── keybindings_menu_model.py # scope/row model helpers for keybinding UI
 │   ├── key_display.py           # shared key-name formatting and display helpers
+│   ├── font_profiles.py         # shared per-mode font profiles and font factory
 │   ├── control_helper.py        # grouped in-game key-helper rendering
 │   ├── help_menu.py             # launcher/pause help and explanation UI
 │   ├── menu_control_guides.py   # rendered translation/rotation arrow diagrams
@@ -82,13 +97,15 @@ tet4d/
 │   └── scan_secrets.py          # secret scanner (policy from config/project/secret_scan.json)
 ├── .github/workflows/
 │   ├── ci.yml                   # push/PR CI matrix
-│   └── stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
+│   ├── stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
+│   └── release-packaging.yml    # desktop package build matrix + artifact upload
 └── docs/
     ├── BACKLOG.md               # canonical open TODO / technical debt tracker
     ├── CHANGELOG.md             # consolidated change history notes
     ├── FEATURE_MAP.md          # user-facing shipped feature map
     ├── PROJECT_STRUCTURE.md     # this file
     ├── RELEASE_CHECKLIST.md     # pre-release required verification list
+    ├── RELEASE_INSTALLERS.md    # local/CI desktop packaging guide
     ├── RDS_AND_CODEX.md         # RDS index + Codex contributor instructions
     ├── SECURITY_AND_CONFIG_PLAN.md  # repo-level security/config externalization policy
     ├── help/
@@ -101,6 +118,7 @@ tet4d/
         ├── RDS_KEYBINDINGS.md
         ├── RDS_MENU_STRUCTURE.md
         ├── RDS_SCORE_ANALYZER.md
+        ├── RDS_PACKAGING.md
         ├── RDS_2D_TETRIS.md
         ├── RDS_3D_TETRIS.md
         └── RDS_4D_TETRIS.md
@@ -127,19 +145,23 @@ tet4d/
 17. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
 18. `config/menu/*` drives launcher/setup menu structure and default values.
 19. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
-20. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-21. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
-22. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
-23. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-24. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-25. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
-26. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-27. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-28. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-29. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-30. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-31. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-32. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+20. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
+21. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+22. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
+23. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
+24. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+25. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+26. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+27. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+28. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+29. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+30. `tools/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+31. `tools/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+32. `tools/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+33. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+34. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+35. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+36. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
 
 ## Unified documentation sections
 
@@ -147,6 +169,7 @@ tet4d/
    - `docs/PROJECT_STRUCTURE.md`
 - `docs/FEATURE_MAP.md`
 - `docs/GUIDELINES_RESEARCH.md`
+- `docs/RELEASE_INSTALLERS.md`
 2. Usage README:
    - `README.md`
 3. RDS and Codex instructions:

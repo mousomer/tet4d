@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 import pygame
 
 from .control_helper import control_groups_for_dimension
+from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .front3d_setup import gravity_interval_ms_from_config
 from .game_nd import GameConfigND, GameStateND
 from .grid_mode_render import draw_projected_grid_mode
@@ -62,29 +63,8 @@ COLOR_MAP_3D = {
 ActiveOverlay3D = tuple[tuple[tuple[float, float, float], ...], int]
 
 
-@dataclass
-class GfxFonts:
-    title_font: pygame.font.Font
-    menu_font: pygame.font.Font
-    hint_font: pygame.font.Font
-    panel_font: pygame.font.Font
-
-
 def init_fonts() -> GfxFonts:
-    try:
-        return GfxFonts(
-            title_font=pygame.font.SysFont("consolas", 36, bold=True),
-            menu_font=pygame.font.SysFont("consolas", 24),
-            hint_font=pygame.font.SysFont("consolas", 18),
-            panel_font=pygame.font.SysFont("consolas", 17),
-        )
-    except (pygame.error, OSError):
-        return GfxFonts(
-            title_font=pygame.font.Font(None, 36),
-            menu_font=pygame.font.Font(None, 24),
-            hint_font=pygame.font.Font(None, 18),
-            panel_font=pygame.font.Font(None, 17),
-        )
+    return init_fonts_for_profile("nd")
 
 
 class ProjectionMode3D(Enum):

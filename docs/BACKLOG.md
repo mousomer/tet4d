@@ -293,6 +293,24 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 279. removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
 280. shared bucket/key helpers now reduce repeated dimension-bucket lookup boilerplate in runtime-config accessors,
 281. speed-curve and assist-factor lookups now reuse shared normalization helpers in `tetris_nd/runtime_config.py`.
+282. `DONE` `[BKL-P2-017]` External transform icon-pack integration:
+283. external SVG icon pack was normalized under `assets/help/icons/transform/svg`.
+284. runtime action-to-icon mapping config was added in `config/help/icon_map.json`.
+285. `tetris_nd/control_icons.py` now resolves icons from SVG assets first, with procedural fallback retained for missing actions (including drop actions).
+286. help asset contracts/docs were updated (`assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules).
+287. `DONE` `[BKL-P2-018]` Desktop packaging baseline (embedded runtime):
+288. added canonical packaging spec `packaging/pyinstaller/tet4d.spec`,
+289. added OS build scripts `packaging/scripts/build_{macos,linux}.sh` and `packaging/scripts/build_windows.ps1`,
+290. added packaging CI matrix workflow `.github/workflows/release-packaging.yml`,
+291. added release packaging docs `docs/RELEASE_INSTALLERS.md` and packaging RDS `docs/rds/RDS_PACKAGING.md`,
+292. synced `README.md`, `docs/RELEASE_CHECKLIST.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance contract for packaging artifacts.
+293. `DONE` `[BKL-P2-019]` Font profile unification with per-mode values:
+294. added shared font model/factory module `tetris_nd/font_profiles.py`,
+295. removed duplicated `GfxFonts` + `init_fonts()` implementations in:
+296. `tetris_nd/gfx_game.py`,
+297. `tetris_nd/frontend_nd.py`,
+298. `tetris_nd/front3d_render.py`,
+299. preserved profile-specific sizing (`2d` panel font `18`, `nd` panel font `17`) through wrapper-based profile routing.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -316,6 +334,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 18. `Cadence:` after projection/camera/cache changes and before release.
 19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
 20. `Done criteria:` `tools/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
+21. `[P3][BKL-P3-006] Desktop release hardening watch`
+22. `Cadence:` before each public release.
+23. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
+24. `Done criteria:` package matrix artifacts are green and signing/notarization follow-up status is explicitly tracked in release notes.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -481,6 +503,33 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tools/analyze_playbot_policies.py`.
 18. Stage-5 simplification follow-up touched:
 `tetris_nd/runtime_config.py`.
+19. Stage-6 icon-pack integration touched:
+`assets/help/icons/transform/svg/*`,
+`config/help/icon_map.json`,
+`assets/help/manifest.json`,
+`tetris_nd/control_icons.py`,
+`config/project/canonical_maintenance.json`,
+`docs/help/HELP_INDEX.md`,
+`docs/PROJECT_STRUCTURE.md`.
+20. Desktop packaging baseline touched:
+`.github/workflows/release-packaging.yml`,
+`packaging/pyinstaller/tet4d.spec`,
+`packaging/scripts/build_macos.sh`,
+`packaging/scripts/build_linux.sh`,
+`packaging/scripts/build_windows.ps1`,
+`docs/RELEASE_INSTALLERS.md`,
+`docs/rds/RDS_PACKAGING.md`,
+`README.md`,
+`docs/RELEASE_CHECKLIST.md`,
+`config/project/canonical_maintenance.json`.
+21. Font profile unification touched:
+`tetris_nd/font_profiles.py`,
+`tetris_nd/gfx_game.py`,
+`tetris_nd/frontend_nd.py`,
+`tetris_nd/front3d_render.py`,
+`front.py`,
+`docs/rds/RDS_TETRIS_GENERAL.md`,
+`docs/plans/PLAN_FONT_PROFILE_UNIFICATION_2026-02-20.md`.
 
 ## 6. Source Inputs
 

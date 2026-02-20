@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "pack_root": "assets/help/icons/transform/svg",
+  "default_theme": "dark",
+  "themes": ["dark", "light"],
+  "available_sizes": [16, 64],
+  "action_map": {
+    "move_x_neg": "move_x_neg",
+    "move_x_pos": "move_x_pos",
+    "move_y_neg": "move_y_neg",
+    "move_y_pos": "move_y_pos",
+    "move_z_neg": "move_z_neg",
+    "move_z_pos": "move_z_pos",
+    "move_w_neg": "move_w_neg",
+    "move_w_pos": "move_w_pos",
+    "rotate_xy_neg": "rot_xy_neg",
+    "rotate_xy_pos": "rot_xy_pos",
+    "rotate_xz_neg": "rot_xz_neg",
+    "rotate_xz_pos": "rot_xz_pos",
+    "rotate_yz_neg": "rot_yz_neg",
+    "rotate_yz_pos": "rot_yz_pos",
+    "rotate_xw_neg": "rot_xw_neg",
+    "rotate_xw_pos": "rot_xw_pos",
+    "rotate_yw_neg": "rot_yw_neg",
+    "rotate_yw_pos": "rot_yw_pos",
+    "rotate_zw_neg": "rot_zw_neg",
+    "rotate_zw_pos": "rot_zw_pos"
+  }
+}

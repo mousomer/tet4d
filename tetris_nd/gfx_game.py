@@ -5,6 +5,7 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
+from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .game2d import GameState, GameConfig
 from .gfx_panel_2d import draw_side_panel_2d
 from .project_config import project_constant_int
@@ -43,16 +44,6 @@ def color_for_cell(cell_id: int) -> Tuple[int, int, int]:
     return COLOR_MAP.get(cell_id, (200, 200, 200))
 
 
-# ---------- Fonts container ----------
-
-@dataclass
-class GfxFonts:
-    title_font: pygame.font.Font
-    menu_font: pygame.font.Font
-    hint_font: pygame.font.Font
-    panel_font: pygame.font.Font
-
-
 @dataclass(frozen=True)
 class ClearEffect2D:
     levels: Tuple[int, ...]
@@ -63,18 +54,8 @@ ActiveOverlay2D = tuple[tuple[tuple[float, float], ...], int]
 
 
 def init_fonts() -> GfxFonts:
-    """Initialize a set of fonts, with fallbacks."""
-    try:
-        title_font = pygame.font.SysFont("consolas", 36, bold=True)
-        menu_font = pygame.font.SysFont("consolas", 24)
-        hint_font = pygame.font.SysFont("consolas", 18)
-        panel_font = pygame.font.SysFont("consolas", 18)
-    except (pygame.error, OSError):
-        title_font = pygame.font.Font(None, 36)
-        menu_font = pygame.font.Font(None, 24)
-        hint_font = pygame.font.Font(None, 18)
-        panel_font = pygame.font.Font(None, 18)
-    return GfxFonts(title_font, menu_font, hint_font, panel_font)
+    """Initialize fonts using the 2D profile."""
+    return init_fonts_for_profile("2d")
 
 
 # ---------- Misc helpers ----------

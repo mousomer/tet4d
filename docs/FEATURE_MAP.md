@@ -95,7 +95,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Legacy profile `slice` groups are ignored on load and removed on save.
 - Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`System`.
 - Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
-- Action icons in helper/menu rows are cached by action + size for smoother repeated rendering.
+- Action icons in helper/menu rows are sourced from external SVG pack (`assets/help/icons/transform/svg`) via `config/help/icon_map.json`, then cached by action + size for smoother repeated rendering.
 - Translation/rotation arrow-diagram guides are available in:
   - Help pages,
   - launcher/pause/settings/keybindings menus,
@@ -190,3 +190,13 @@ User-facing feature map for the shipped `tet4d` experience.
   - replay manifest contract (`tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`),
   - help content contract (`docs/help/HELP_INDEX.md`,`assets/help/manifest.json`),
   - release checklist (`docs/RELEASE_CHECKLIST.md`).
+
+## 11. Desktop packaging
+
+- Frozen desktop bundles are supported via PyInstaller (`packaging/pyinstaller/tet4d.spec`).
+- OS build scripts are provided for local packaging:
+  - `packaging/scripts/build_macos.sh`
+  - `packaging/scripts/build_linux.sh`
+  - `packaging/scripts/build_windows.ps1`
+- CI packaging matrix is available in `.github/workflows/release-packaging.yml`.
+- Packaging guidance and output artifact conventions are documented in `docs/RELEASE_INSTALLERS.md`.

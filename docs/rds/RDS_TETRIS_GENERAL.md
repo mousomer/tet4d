@@ -1,6 +1,6 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.7 (Verified 2026-02-20)  
+Status: Active v0.8 (Verified 2026-02-20)  
 Author: Omer + Codex  
 Date: 2026-02-20  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
@@ -12,11 +12,14 @@ Define shared requirements for the 2D, 3D, and 4D game modes in this repository.
 Mode-specific requirements are defined in:
 1. `docs/rds/RDS_2D_TETRIS.md`
 2. `docs/rds/RDS_3D_TETRIS.md`
-3. `docs/rds/RDS_4D_TETRIS.md` Keybinding-specific requirements are defined in:
-1. `docs/rds/RDS_KEYBINDINGS.md` Menu-structure and settings-flow requirements are defined in:
-1. `docs/rds/RDS_MENU_STRUCTURE.md` Automatic playbot requirements are defined in:
-1. `docs/rds/RDS_PLAYBOT.md` Score-analyzer (board health + placement quality) requirements are defined in:
-1. `docs/rds/RDS_SCORE_ANALYZER.md`
+3. `docs/rds/RDS_4D_TETRIS.md`
+
+Cross-cutting requirements are defined in:
+1. `docs/rds/RDS_KEYBINDINGS.md`
+2. `docs/rds/RDS_MENU_STRUCTURE.md`
+3. `docs/rds/RDS_PLAYBOT.md`
+4. `docs/rds/RDS_SCORE_ANALYZER.md`
+5. `docs/rds/RDS_PACKAGING.md`
 
 ## 2. Current Project Intentions
 
@@ -44,6 +47,7 @@ Mode-specific requirements are defined in:
 22. Add advanced topology-designer mode (hidden by default) with per-axis/per-edge behavior profiles and deterministic export.
 23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
 24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
+25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -155,6 +159,17 @@ Mode-specific requirements are defined in:
 43. `assets/help/manifest.json`
 44. `docs/RELEASE_CHECKLIST.md`
 45. Profiler/benchmark tool outputs must be constrained to paths under the project root.
+46. Desktop packaging assets are source-controlled:
+47. `packaging/pyinstaller/tet4d.spec`
+48. `packaging/scripts/build_macos.sh`
+49. `packaging/scripts/build_linux.sh`
+50. `packaging/scripts/build_windows.ps1`
+51. `.github/workflows/release-packaging.yml`
+52. Desktop packaging usage docs are source-controlled:
+53. `docs/RELEASE_INSTALLERS.md`
+54. Shared font model/factory is source-controlled:
+55. `tetris_nd/font_profiles.py`
+56. Per-mode font profile values (2D vs ND) must remain explicit and stable.
 
 ## 7. Engineering Best Practices
 
@@ -182,7 +197,9 @@ PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3 tools/bench_playbot.py --assert --record-trend
 python3.14 -m compileall -q  front2d.py  tetris_nd
 ./scripts/ci_check.sh
-```Expected test categories:
+```
+
+Expected test categories:
 1. Unit tests for board, pieces, and game state transitions.
 2. Replay determinism tests for 2D/3D/4D.
 3. Smoke tests for key routing and system controls per mode.
@@ -245,6 +262,11 @@ Completed in current implementation:
 33. playbot benchmark wrapper helpers were removed from `tetris_nd/playbot/types.py`; tools now consume benchmark thresholds/history paths directly from runtime config.
 34. Stage-5 runtime-config simplification completed:
 35. removed unused runtime-config constants/imports and consolidated repeated dimension-bucket/name-normalization access paths in `tetris_nd/runtime_config.py`.
+36. Stage-6 icon-pack integration completed:
+37. helper/menu/help action icons now source from external SVG transform assets under `assets/help/icons/transform/svg`, via mapping config `config/help/icon_map.json`.
+38. procedural icon rendering remains as deterministic fallback for unmapped/missing assets (for example `soft_drop` / `hard_drop`).
+39. Desktop packaging baseline completed with embedded-runtime bundle spec, local OS build scripts, and CI packaging matrix workflow.
+40. Font profile unification completed: duplicated frontend `GfxFonts`/`init_fonts` implementations are now routed through shared profile-driven factory in `tetris_nd/font_profiles.py` with preserved 2D/ND profile values.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.

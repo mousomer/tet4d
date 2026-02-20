@@ -1,16 +1,24 @@
 {
-  "version": 1,
+  "version": 2,
   "renderer": "tetris_nd.control_icons.draw_action_icon",
+  "source_pack": "assets/help/icons/transform/svg",
+  "icon_map": "config/help/icon_map.json",
   "assets": [
     {
       "id": "translation_keys",
-      "path": "generated://control_icons#translation",
-      "type": "rendered/action-icon",
+      "path": "assets/help/icons/transform/svg",
+      "type": "svg/action-icon-pack",
       "surfaces": ["help", "keybindings_menu", "in_game_helper"]
     },
     {
       "id": "rotation_keys",
-      "path": "generated://control_icons#rotation",
+      "path": "assets/help/icons/transform/svg",
+      "type": "svg/action-icon-pack",
+      "surfaces": ["help", "keybindings_menu", "in_game_helper"]
+    },
+    {
+      "id": "drop_keys_fallback",
+      "path": "generated://control_icons#drop",
       "type": "rendered/action-icon",
       "surfaces": ["help", "keybindings_menu", "in_game_helper"]
     }
