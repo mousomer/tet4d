@@ -1,4 +1,8 @@
 # Help Assets
 
-- `translation_keys.gif`: animated translation guide used by the in-app Help menu.
-- `rotation_keys.gif`: animated rotation guide used by the in-app Help menu.
+Canonical help/control visuals are sourced from:
+
+- `assets/help/icons/transform/svg` (external SVG icon pack used by menus and helper panels)
+- `assets/help/manifest.json` (asset contract for help surfaces)
+
+Legacy GIF guides were removed from repository history and runtime contracts.

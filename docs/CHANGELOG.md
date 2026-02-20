@@ -56,6 +56,11 @@
     - removed duplicated `GfxFonts` + `init_fonts()` implementations from `tetris_nd/gfx_game.py`, `tetris_nd/frontend_nd.py`, and `tetris_nd/front3d_render.py`,
     - launcher now initializes fonts through one shared profile factory in `front.py`,
     - per-mode visual values preserved (`2d` panel font `18`, `nd` panel font `17`).
+19. Repository hygiene cleanup completed:
+    - removed tracked non-source artifacts (`.idea/`, `app.log`, legacy GIF help assets, duplicate icon-source pack directory),
+    - updated `.gitignore`, help assets docs, project-structure docs, backlog, and general RDS cleanup policy wording.
+20. Full git-history purge executed for removed artifacts across refs, followed by force-push synchronization.
+21. Post-purge secret scan sweep re-run through `python3 tools/scan_secrets.py`.
 
 ## 2026-02-19
 

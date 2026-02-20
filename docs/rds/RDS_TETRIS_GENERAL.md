@@ -147,29 +147,32 @@ Cross-cutting requirements are defined in:
 31. `python3 tools/scan_secrets.py`
 32. Shared safe path/constants loader is:
 33. `tetris_nd/project_config.py`
-34. Local environment bootstrap script is:
-35. `scripts/bootstrap_env.sh`
-36. Canonical schema/migration/help/replay/release artifacts are source-controlled:
-37. `config/schema/*.schema.json`
-38. `config/schema/help_topics.schema.json`
-39. `config/schema/help_action_map.schema.json`
-40. `docs/migrations/*.md`
-41. `tests/replay/manifest.json`
-42. `docs/help/HELP_INDEX.md`
-43. `assets/help/manifest.json`
-44. `docs/RELEASE_CHECKLIST.md`
-45. Profiler/benchmark tool outputs must be constrained to paths under the project root.
-46. Desktop packaging assets are source-controlled:
-47. `packaging/pyinstaller/tet4d.spec`
-48. `packaging/scripts/build_macos.sh`
-49. `packaging/scripts/build_linux.sh`
-50. `packaging/scripts/build_windows.ps1`
-51. `.github/workflows/release-packaging.yml`
-52. Desktop packaging usage docs are source-controlled:
-53. `docs/RELEASE_INSTALLERS.md`
-54. Shared font model/factory is source-controlled:
-55. `tetris_nd/font_profiles.py`
-56. Per-mode font profile values (2D vs ND) must remain explicit and stable.
+34. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
+35. keep them ignored in `.gitignore` and never ship them as runtime contracts.
+36. If such files are accidentally committed (or if sensitive data is introduced), cleanup must include history purge across refs before release.
+37. Local environment bootstrap script is:
+38. `scripts/bootstrap_env.sh`
+39. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+40. `config/schema/*.schema.json`
+41. `config/schema/help_topics.schema.json`
+42. `config/schema/help_action_map.schema.json`
+43. `docs/migrations/*.md`
+44. `tests/replay/manifest.json`
+45. `docs/help/HELP_INDEX.md`
+46. `assets/help/manifest.json`
+47. `docs/RELEASE_CHECKLIST.md`
+48. Profiler/benchmark tool outputs must be constrained to paths under the project root.
+49. Desktop packaging assets are source-controlled:
+50. `packaging/pyinstaller/tet4d.spec`
+51. `packaging/scripts/build_macos.sh`
+52. `packaging/scripts/build_linux.sh`
+53. `packaging/scripts/build_windows.ps1`
+54. `.github/workflows/release-packaging.yml`
+55. Desktop packaging usage docs are source-controlled:
+56. `docs/RELEASE_INSTALLERS.md`
+57. Shared font model/factory is source-controlled:
+58. `tetris_nd/font_profiles.py`
+59. Per-mode font profile values (2D vs ND) must remain explicit and stable.
 
 ## 7. Engineering Best Practices
 

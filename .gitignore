@@ -2,6 +2,11 @@
 __pycache__/
 *.py[cod]
 
+# IDE/editor local state
+.idea/
+*.iml
+.DS_Store
+
 # Tool caches
 .pytest_cache/
 .ruff_cache/
@@ -9,6 +14,7 @@ __pycache__/
 # Runtime state
 state/
 keybindings/profiles/
+app.log
 
 # Local virtual env
 .venv/
@@ -20,3 +26,8 @@ wheelhouse/
 build/
 dist/
 artifacts/installers/
+
+# Removed local asset source packs / legacy compatibility files
+assets/transform_icons_full_pack/
+assets/help/translation_keys.gif
+assets/help/rotation_keys.gif

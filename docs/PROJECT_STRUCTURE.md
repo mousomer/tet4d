@@ -56,8 +56,6 @@ tet4d/
 │       └── icons/
 │           └── transform/
 │               └── svg/         # external transform icon pack (16/64, dark/light)
-│       ├── translation_keys.gif # legacy compatibility asset (not primary renderer)
-│       └── rotation_keys.gif    # legacy compatibility asset (not primary renderer)
 ├── tests/
 │   └── replay/
 │       ├── manifest.json        # canonical replay fixture manifest

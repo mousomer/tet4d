@@ -311,6 +311,11 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 297. `tetris_nd/frontend_nd.py`,
 298. `tetris_nd/front3d_render.py`,
 299. preserved profile-specific sizing (`2d` panel font `18`, `nd` panel font `17`) through wrapper-based profile routing.
+300. `DONE` `[BKL-P2-020]` Repository hygiene cleanup + history purge:
+301. removed tracked IDE/log/legacy-asset artifacts (`.idea`, `app.log`, legacy GIF guides, duplicate source icon pack),
+302. expanded ignore policy to prevent reintroduction of local/non-source files,
+303. synced help/structure docs and RDS cleanup policy wording,
+304. executed full-history purge of removed artifacts across refs and followed with force-push + secret scan sweep.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -338,6 +343,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 22. `Cadence:` before each public release.
 23. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
 24. `Done criteria:` package matrix artifacts are green and signing/notarization follow-up status is explicitly tracked in release notes.
+25. `[P3][BKL-P3-007] Repository hygiene watch (history + secret scan)`
+26. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
+27. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
+28. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
