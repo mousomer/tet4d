@@ -12,7 +12,7 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tetris_nd import frontend_nd
 from tetris_nd.game_nd import GameConfigND
-from tetris_nd.keybindings import CAMERA_KEYS_4D, KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS
+from tetris_nd.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
@@ -24,7 +24,7 @@ def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
 
 def _find_unbound_4d_key() -> int:
     reserved = set()
-    for keyset in (*KEYS_4D.values(), *SLICE_KEYS_4D.values(), *SYSTEM_KEYS.values()):
+    for keyset in (*KEYS_4D.values(), *SYSTEM_KEYS.values()):
         reserved.update(keyset)
     for candidate in (
         pygame.K_F1,
@@ -64,38 +64,32 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result_help, "help")
         self.assertEqual(sfx, ["menu_move"])
 
-    def test_slice_action_takes_priority_over_view(self) -> None:
+    def test_bound_gameplay_key_takes_priority_over_view(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         sfx: list[str] = []
-        view_calls: list[int] = []
-        start_z = slice_state.axis_values[2]
-
-        result = frontend_nd.route_nd_keydown(
-            _key_for(SLICE_KEYS_4D, "slice_z_neg"),
-            state,
-            slice_state=slice_state,
-            view_key_handler=lambda key: view_calls.append(key) or True,
-            sfx_handler=sfx.append,
-        )
-
-        self.assertEqual(result, "continue")
-        self.assertEqual(slice_state.axis_values[2], max(0, start_z - 1))
-        self.assertEqual(view_calls, [])
-        self.assertEqual(sfx, ["menu_move"])
-
-    def test_reserved_key_does_not_reach_view_when_game_over(self) -> None:
-        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
-        state.game_over = True
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         view_calls: list[int] = []
 
         result = frontend_nd.route_nd_keydown(
             _key_for(KEYS_4D, "move_x_neg"),
             state,
-            slice_state=slice_state,
+            view_key_handler=lambda key: view_calls.append(key) or True,
+            sfx_handler=sfx.append,
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(view_calls, [])
+        self.assertEqual(sfx, ["move"])
+
+    def test_reserved_key_does_not_reach_view_when_game_over(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        state.game_over = True
+        view_calls: list[int] = []
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_4D, "move_x_neg"),
+            state,
             view_key_handler=lambda key: view_calls.append(key) or True,
         )
 
@@ -105,7 +99,6 @@ class TestNdRouting(unittest.TestCase):
     def test_unbound_key_can_drive_view_handler(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         sfx: list[str] = []
         view_calls: list[int] = []
         unbound_key = _find_unbound_4d_key()
@@ -113,7 +106,6 @@ class TestNdRouting(unittest.TestCase):
         result = frontend_nd.route_nd_keydown(
             unbound_key,
             state,
-            slice_state=slice_state,
             view_key_handler=lambda key: view_calls.append(key) or True,
             sfx_handler=sfx.append,
         )
@@ -125,7 +117,6 @@ class TestNdRouting(unittest.TestCase):
     def test_bound_camera_key_routes_to_view_handler(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
-        slice_state = frontend_nd.create_initial_slice_state(cfg)
         view_calls: list[int] = []
         sfx: list[str] = []
         camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
@@ -134,7 +125,6 @@ class TestNdRouting(unittest.TestCase):
         result = frontend_nd.route_nd_keydown(
             camera_key,
             state,
-            slice_state=slice_state,
             view_key_handler=lambda key: view_calls.append(key) or True,
             sfx_handler=sfx.append,
         )

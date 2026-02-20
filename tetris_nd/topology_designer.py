@@ -155,10 +155,6 @@ def _profiles_all() -> tuple[TopologyDesignerProfile, ...]:
     return tuple(profiles)
 
 
-def reset_topology_designer_cache() -> None:
-    _profiles_all.cache_clear()
-
-
 def designer_profiles_for_dimension(dimension: int) -> tuple[TopologyDesignerProfile, ...]:
     if dimension not in (2, 3, 4):
         raise ValueError("dimension must be one of: 2, 3, 4")

@@ -2,49 +2,46 @@
   "bindings": {
     "camera": {
       "cycle_projection": [
-        "p"
+        "[1]"
       ],
       "pitch_neg": [
-        "o"
+        "7"
       ],
       "pitch_pos": [
-        "u"
-      ],
-      "view_xw_neg": [
-        "f5"
-      ],
-      "view_xw_pos": [
-        "f6"
-      ],
-      "view_zw_neg": [
-        "f7"
-      ],
-      "view_zw_pos": [
-        "f8"
+        "8"
       ],
       "reset": [
-        "backspace"
+        "[3]"
+      ],
+      "view_xw_neg": [
+        "1"
+      ],
+      "view_xw_pos": [
+        "2"
+      ],
+      "view_zw_neg": [
+        "3"
+      ],
+      "view_zw_pos": [
+        "4"
       ],
       "yaw_fine_neg": [
-        "h"
+        "[7]"
       ],
       "yaw_fine_pos": [
-        "l"
+        "[9]"
       ],
       "yaw_neg": [
-        "j"
+        "5"
       ],
       "yaw_pos": [
-        "k"
+        "6"
       ],
       "zoom_in": [
-        "+",
-        "=",
-        "[+]"
+        "0"
       ],
       "zoom_out": [
-        "-",
-        "[-]"
+        "9"
       ]
     },
     "game": {
@@ -62,6 +59,12 @@
       ],
       "move_x_pos": [
         "right"
+      ],
+      "move_y_neg": [
+        "page up"
+      ],
+      "move_y_pos": [
+        "page down"
       ],
       "move_z_neg": [
         "up"
@@ -110,21 +113,10 @@
         "right shift"
       ]
     },
-    "slice": {
-      "slice_w_neg": [
-        ";"
-      ],
-      "slice_w_pos": [
-        "'"
-      ],
-      "slice_z_neg": [
-        "["
-      ],
-      "slice_z_pos": [
-        "]"
-      ]
-    },
     "system": {
+      "help": [
+        "f1"
+      ],
       "menu": [
         "m"
       ],

@@ -26,9 +26,7 @@ from .front4d_render import (
 )
 from .frontend_nd import (
     GfxFonts,
-    SliceState,
     build_config,
-    create_initial_slice_state,
     create_initial_state,
     gravity_interval_ms_from_config,
     init_fonts,
@@ -55,7 +53,6 @@ from .launcher_nd_runner import run_nd_mode_launcher
 class LoopContext4D:
     cfg: GameConfigND
     state: GameStateND
-    slice_state: SliceState
     view: LayerView3D
     mouse_orbit: MouseOrbitState
     bot: PlayBotController
@@ -72,7 +69,6 @@ class LoopContext4D:
         return cls(
             cfg=cfg,
             state=state,
-            slice_state=create_initial_slice_state(cfg),
             view=LayerView3D(),
             mouse_orbit=MouseOrbitState(),
             bot=PlayBotController(mode=bot_mode),
@@ -94,7 +90,6 @@ class LoopContext4D:
         return route_nd_keydown(
             event.key,
             self.state,
-            slice_state=self.slice_state,
             yaw_deg_for_view_movement=self.view.yaw_deg,
             axis_overrides_by_action=movement_axis_overrides_for_view(self.view, self.cfg.dims),
             view_key_handler=lambda key: handle_view_key(key, self.view),
@@ -104,7 +99,6 @@ class LoopContext4D:
 
     def on_restart(self) -> None:
         self.state = create_initial_state(self.cfg)
-        self.slice_state = create_initial_slice_state(self.cfg)
         self.gravity_accumulator = 0
         self.clear_anim = None
         self.last_lines_cleared = self.state.lines_cleared
@@ -198,7 +192,6 @@ def run_game_loop(
         draw_frame=lambda target, active_overlay: draw_game_frame(
             target,
             loop.state,
-            loop.slice_state,
             loop.view,
             fonts,
             grid_mode=loop.grid_mode,

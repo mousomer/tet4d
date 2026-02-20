@@ -4,14 +4,16 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 1. Launcher and Menus
 
-- Unified launcher: `Play 2D`,`Play 3D`,`Play 4D`,`Help`,`Settings`,`Keybindings Setup`,`Bot Options`,`Quit`.
+- Unified launcher: `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`.
+- Pause `Settings` reuses the same shared settings hub as launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+- Settings hub rows are fully config-driven from `config/menu/structure.json` (`settings_hub_layout_rows`).
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - 3D/4D setup flows now share the same ND setup/menu engine (`tetris_nd/frontend_nd.py`) to reduce drift.
-- Pause menu is unified across modes: resume/restart/settings/keybindings/profiles/help/back to main/quit.
+- Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.
 - Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
 - Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.
 - Help action rows are live-mapped from `config/help/action_map.json` + active runtime bindings.
@@ -47,18 +49,18 @@ User-facing feature map for the shipped `tet4d` experience.
   3. `FULL` (full lattice)
   4. `HELPER` (grid lines intersecting active piece)
 - 3D camera controls:
-  - `H/J/K/L` strict yaw mode (`-15 / -90 / +90 / +15`).
-  - Additional pitch controls and mouse orbit/zoom.
+  - Numeric row mapping: `1/4` yaw fine, `2/3` yaw 90°, `5/6` pitch 90°, `7/8` zoom, `9` projection, `0` reset.
+  - Additional mouse orbit/zoom controls.
 - 4D rendering:
   - 4D board is displayed as multiple 3D layer boards derived from current 4D view basis.
   - Quarter-turn hyperplane view turns update board decomposition:
     - identity: `W` boards of `(X,Y,Z)`,
     - `xw`: `X` boards of `(W,Y,Z)`,
     - `zw`: `Z` boards of `(X,Y,W)`.
-  - Slicing selects focused `z`/`w` visual layers and does not alter physics.
+  - All basis-derived layer boards are rendered simultaneously (no manual slice control path).
   - Camera-only hyperplane view turns are supported:
-    - `view_xw_neg/view_xw_pos` (default `F5/F6`)
-    - `view_zw_neg/view_zw_pos` (default `F7/F8`)
+    - `view_xw_neg/view_xw_pos` (default `1/2`)
+    - `view_zw_neg/view_zw_pos` (default `3/4`)
   - View-plane turns are render-only and do not mutate gameplay state, scoring, or replay determinism.
 
 ## 4. Keybindings
@@ -69,6 +71,13 @@ User-facing feature map for the shipped `tet4d` experience.
 - `keybindings/4d.json`
 - Built-in keyboard sets: `small`, `full`, and `macbook`.
 - Compact (`small`) 4D `w` movement defaults: `N` / `/` (no `,/.` dependency).
+- Full (`full`) 4D `w` movement defaults: `Numpad /` / `Numpad *`.
+- Macbook (`macbook`) 4D `w` movement defaults: `,` / `.`.
+- 4D camera defaults use numeric keys:
+  - top row `1-0` for view/yaw/pitch/zoom,
+  - advanced controls are profile-specific:
+  - `full/small`: keypad advanced camera bindings,
+  - `macbook`: no-keypad fallback (`-`,`=`,`P`,`Backspace`).
 - Small-profile rotation ladder:
   - 2D: `Q/W`
   - 3D: `Q/W`, `A/S`, `Z/X`
@@ -77,12 +86,14 @@ User-facing feature map for the shipped `tet4d` experience.
   - restart=`Y`, toggle-grid=`C`, menu=`M`, quit=`Esc`.
 - In-app keybinding editor supports:
   - top-level scope sections (`General`,`2D`,`3D`,`4D`),
+  - gameplay split into `Translation` and `Rotation` sections (3D/4D and in `ALL` scope),
   - rebind,
   - conflict strategy,
   - save/load/save-as,
   - profile cycle/create/rename/delete,
   - reset to defaults.
-- Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+- Legacy profile `slice` groups are ignored on load and removed on save.
+- Grouped in-game helper panels: `Translation`,`Rotation`,`Camera/View`,`System`.
 - Helper panel hierarchy prioritizes critical controls/state higher; bot/analyzer diagnostics render in the lowest section.
 - Action icons in helper/menu rows are cached by action + size for smoother repeated rendering.
 - Translation/rotation arrow-diagram guides are available in:

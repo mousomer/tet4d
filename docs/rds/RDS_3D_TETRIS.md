@@ -77,11 +77,12 @@ Gameplay (default small profile):
 7. Rotate `y-z`: Z/X
 
 Camera/view:
-1. Yaw turn (animated 90°): J/L
-2. Pitch turn (animated 90°): I/K
-3. Zoom: `+`/`-`
-4. Reset camera: `0`
-5. Cycle projection: `P`
+1. Yaw fine turn (animated 15°): `1`/`4`
+2. Yaw turn (animated 90°): `2`/`3`
+3. Pitch turn (animated 90°): `5`/`6`
+4. Zoom: `7`/`8`
+5. Cycle projection: `9`
+6. Reset camera: `0`
 
 System:
 1. Restart: `Y`
@@ -95,10 +96,6 @@ Viewer-consistent translation requirement:
 3. `Up` always means away from the viewer.
 4. `Down` always means closer to the viewer.
 5. After yaw turns, movement remaps to board axes so these viewer semantics stay consistent.
-
-Slice semantics:
-1. Slicing (when enabled in view tooling) is for inspecting depth layers only.
-2. Rotations must work independently of slice selection.
 
 ## 6. Rendering and UX
 

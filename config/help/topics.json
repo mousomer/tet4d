@@ -72,7 +72,7 @@
       "priority": 40,
       "dimensions": [2, 3, 4],
       "contexts": ["launcher", "pause", "gameplay", "keybindings"],
-      "summary": "Complete key list grouped by system/game/camera/slice.",
+      "summary": "Complete key list grouped by system/game/camera.",
       "sections": [
         {
           "id": "what",
@@ -121,19 +121,19 @@
       ]
     },
     {
-      "id": "camera_and_slicing",
-      "title": "Camera, Grid, and Slicing",
+      "id": "camera_and_view",
+      "title": "Camera and Grid",
       "lane": "quick",
       "priority": 70,
       "dimensions": [3, 4],
       "contexts": ["launcher", "pause", "gameplay", "keybindings"],
-      "summary": "View rotation, zoom, projection, grid modes, and slice controls.",
+      "summary": "View rotation, zoom, projection, and grid modes.",
       "sections": [
         {
           "id": "keys",
           "title": "Keys",
           "lines": [
-            "Includes camera yaw/pitch/view turns and slice axis controls."
+            "Includes camera yaw/pitch/view turns and grid behavior."
           ]
         }
       ]

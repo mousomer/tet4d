@@ -16,7 +16,8 @@ from tetris_nd.pieces_nd import (
 )
 from tetris_nd.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
 from tetris_nd.playbot.planner_2d import plan_best_2d_move
-from tetris_nd.playbot.planner_nd import _greedy_key_4d, _simulate_lock_board, plan_best_nd_move
+from tetris_nd.playbot.planner_nd import plan_best_nd_move
+from tetris_nd.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
 from tetris_nd.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
 from tetris_nd.view_modes import GridMode, cycle_grid_mode
 
@@ -178,14 +179,14 @@ class TestPlaybot(unittest.TestCase):
             (0, 2, 0, 0),
             (1, 3, 0, 0),
         }
-        key_more_complete = _greedy_key_4d(
+        key_more_complete = greedy_key_4d(
             {coord: 1 for coord in more_complete_more_holes},
             dims=dims,
             gravity_axis=gravity_axis,
             cleared=0,
             game_over=False,
         )
-        key_less_complete = _greedy_key_4d(
+        key_less_complete = greedy_key_4d(
             {coord: 1 for coord in less_complete_fewer_holes},
             dims=dims,
             gravity_axis=gravity_axis,
@@ -203,14 +204,14 @@ class TestPlaybot(unittest.TestCase):
             (0, 2, 0, 0),
             (0, 3, 0, 0),
         }
-        key_clear = _greedy_key_4d(
+        key_clear = greedy_key_4d(
             {coord: 1 for coord in clear_with_holes},
             dims=dims,
             gravity_axis=gravity_axis,
             cleared=1,
             game_over=False,
         )
-        key_no_clear = _greedy_key_4d(
+        key_no_clear = greedy_key_4d(
             {coord: 1 for coord in clean_no_clear},
             dims=dims,
             gravity_axis=gravity_axis,
@@ -243,7 +244,7 @@ class TestPlaybot(unittest.TestCase):
         plan = plan_best_nd_move(state)
         if plan is None:
             self.fail("expected a valid 4D bot plan")
-        _cells_after, cleared, game_over = _simulate_lock_board(state, plan.final_piece)
+        _cells_after, cleared, game_over = simulate_lock_board(state, plan.final_piece)
         self.assertFalse(game_over)
         self.assertEqual(cleared, 1)
 

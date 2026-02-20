@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 
 _BINDING_GROUP_LABELS = {
     "system": "General / System",
     "game": "Gameplay",
     "camera": "Camera / View",
-    "slice": "Slice",
 }
 
 _BINDING_GROUP_DESCRIPTIONS = {
     "system": "Global actions available in all modes.",
     "game": "Piece translation, drop, and rotation actions.",
     "camera": "Board/view camera orbit, projection, and zoom controls.",
-    "slice": "Layer selection controls for dense 3D/4D inspection.",
 }
 
 _COMMON_ACTION_DESCRIPTIONS = {
@@ -25,8 +25,8 @@ _COMMON_ACTION_DESCRIPTIONS = {
     "move_x_pos": "Move active piece right on the x axis.",
     "move_z_neg": "Move active piece away from viewer (default view).",
     "move_z_pos": "Move active piece closer to viewer (default view).",
-    "move_w_neg": "Move active piece toward lower w layer.",
-    "move_w_pos": "Move active piece toward higher w layer.",
+    "move_w_neg": "Move active piece to previous W-layer board.",
+    "move_w_pos": "Move active piece to next W-layer board.",
     "move_y_neg": "Exploration mode: move active piece up along gravity axis.",
     "move_y_pos": "Exploration mode: move active piece down along gravity axis.",
     "soft_drop": "Move piece one gravity step down.",
@@ -57,10 +57,6 @@ _COMMON_ACTION_DESCRIPTIONS = {
     "zoom_out": "Zoom camera out.",
     "cycle_projection": "Cycle projection mode.",
     "reset": "Reset camera/view transform.",
-    "slice_z_neg": "Move active z slice toward lower z.",
-    "slice_z_pos": "Move active z slice toward higher z.",
-    "slice_w_neg": "Move active w slice toward lower w.",
-    "slice_w_pos": "Move active w slice toward higher w.",
 }
 
 
@@ -78,3 +74,22 @@ def binding_action_description(action: str) -> str:
 
 def binding_action_ids() -> tuple[str, ...]:
     return tuple(sorted(_COMMON_ACTION_DESCRIPTIONS.keys()))
+
+
+_GAMEPLAY_TRANSLATION_ACTIONS = {"soft_drop", "hard_drop"}
+
+
+def gameplay_action_category(action: str) -> str:
+    if action.startswith("rotate_"):
+        return "rotation"
+    if action.startswith("move_") or action in _GAMEPLAY_TRANSLATION_ACTIONS:
+        return "translation"
+    return "other"
+
+
+def partition_gameplay_actions(actions: Sequence[str]) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    ordered = sorted(actions)
+    translation = tuple(action for action in ordered if gameplay_action_category(action) == "translation")
+    rotation = tuple(action for action in ordered if gameplay_action_category(action) == "rotation")
+    other = tuple(action for action in ordered if gameplay_action_category(action) == "other")
+    return translation, rotation, other

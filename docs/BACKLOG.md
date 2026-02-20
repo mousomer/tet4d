@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-02-19  
+Updated: 2026-02-20  
 Scope: unified view of implemented change set + unresolved RDS/documentation/code gaps.
 
 ## 1. Priority Verification Rules
@@ -13,7 +13,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 ## 2. Unified Change Set (Implemented Baseline)
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
-2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/slice/system`).
+2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
 3. `DONE` General keybindings are now separated in the main keybindings menu (not merged into default dimension views).
 4. `DONE` Help expanded to include full key reference, settings reference, concepts, and control animation guidance.
 5. `DONE`Keybinding/settings category docs externalized in`config/menu/structure.json`and validated in`tetris_nd/menu_config.py`.
@@ -233,6 +233,66 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 219. `tetris_nd/tests/test_nd_routing.py`,
 220. `tetris_nd/tests/test_keybindings.py`,
 221. and full local gates passed.
+222. `DONE` `[BKL-P1-003]` Keybinding consistency update:
+223. 4D camera `view_xw/view_zw` defaults now use number pairs (`1/2`,`3/4`) across shipped profiles,
+224. `macbook` 4D `move_w` defaults now use `,/.`,
+225. `full` profile keeps `move_w` on keypad (`Numpad7/Numpad9`) and now uses the same 4D letter-pair rotation ladder as compact profile to avoid camera/view collisions,
+226. 2D positive rotation keeps `Up` arrow as default alongside `Q`.
+227. `DONE` `[BKL-P1-004]` Remove slicing across runtime/UI/docs:
+228. ND routing no longer carries slice state or slice actions; 3D/4D input routing is now system -> gameplay -> view.
+229. 3D/4D keybinding groups and helper panels are now `game/camera/system` only.
+230. 4D HUD/panel no longer shows active-slice indicators or active-layer slice highlighting.
+231. `DONE` `[BKL-P2-008]` No-slice keybinding UX regroup + cleanup:
+232. keybinding editor/help now present gameplay as `Translation` + `Rotation` sections, with `System` and `Camera/View` separate.
+233. side-panel helpers now hide exploration-only translation rows unless exploration mode is enabled.
+234. legacy profile `slice` groups were removed from shipped profile JSON files (`keybindings/profiles/*/{3d,4d}.json`).
+235. dead no-op compatibility code was removed from `tetris_nd/keybindings.py` (unused `_merge_bindings` and unreachable `len(groups)==1` load branch).
+236. `DONE` `[BKL-P2-009]` Menu-structure redesign follow-up:
+237. pause `Settings` now routes to the shared launcher settings hub (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`) instead of a separate pause-only implementation.
+238. obsolete `pause_settings_rows` config/runtime paths were removed from `config/menu/structure.json` and `tetris_nd/menu_config.py`.
+239. pause settings summary text now matches shared scope: `Audio + Display + Analytics`.
+240. `DONE` `[BKL-P2-010]` Launcher settings rows are now config-driven:
+241. unified settings row layout moved to `config/menu/structure.json` (`settings_hub_layout_rows`).
+242. `tetris_nd/menu_config.py` now validates and serves typed settings-hub layout rows.
+243. `tetris_nd/launcher_settings.py` now renders/selects settings rows from config instead of hardcoded `_UNIFIED_SETTINGS_ROWS`.
+244. `DONE` `[BKL-P2-011]` Camera controls moved to numeric mappings:
+245. 3D camera defaults now use top-row digits (`1-0`) for yaw/pitch/zoom/projection/reset.
+246. 4D camera defaults now use top-row digits for view/yaw/pitch/zoom and profile-specific advanced actions.
+247. full-profile 4D exploration movement keys were remapped off conflicting keypad digits to keep numeric camera bindings conflict-free.
+248. `DONE` `[BKL-P1-005]` macbook no-keypad camera fallback:
+249. macbook advanced 4D camera defaults now avoid keypad dependency (`-`, `=`, `P`, `Backspace`).
+250. updated runtime defaults, shipped macbook profile JSON, and keybinding tests for parity.
+251. `DONE` `[BKL-P1-006]` menu rehaul v2 (core IA pass):
+252. launcher top-level IA updated to `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`.
+253. launcher `Play` now opens a mode picker (`2D`,`3D`,`4D`) and `Continue` launches the last-used mode setup directly.
+254. pause menu was simplified to core actions (`Resume`,`Restart`,`Settings`,`Controls`,`Help`,`Bot`,`Back To Main Menu`,`Quit`).
+255. controls entry now opens keybindings with `General` scope first in both launcher and pause.
+256. `DONE` `[BKL-P2-012]` Validation/IO simplification follow-up:
+257. keybinding save/load context resolution is now shared through `_resolve_keybindings_io_context` in `tetris_nd/keybindings.py`.
+258. duplicated menu-config type guards were reduced through shared validators in `tetris_nd/menu_config.py`.
+259. playbot test-only wrappers were removed from `tetris_nd/playbot/planner_nd.py`; tests now use `tetris_nd/playbot/planner_nd_core.py` directly.
+260. obsolete compatibility shim `tetris_nd/menu_gif_guides.py` was removed; control-guide usage is unified on `tetris_nd/menu_control_guides.py`.
+261. `DONE` `[BKL-P2-013]` Stage-2 dedup and boilerplate reduction:
+262. shared string-list validation path added in `tetris_nd/menu_config.py` and wired into row/action/scope validators.
+263. settings-category docs validation in `tetris_nd/menu_config.py` now reuses shared object/string validators.
+264. keybinding profile-clone and dimension-loop handling in `tetris_nd/keybindings.py` now use shared helpers/constants.
+265. repeated enum index/label boilerplate in `tetris_nd/playbot/types.py` now uses shared typed helpers.
+266. keybinding legacy dual-path handling was removed by making `small` profile resolve directly to root `keybindings/{2d,3d,4d}.json` paths in `tetris_nd/keybindings.py`.
+267. `DONE` `[BKL-P2-014]` Stage-3 dead-code and validator reduction:
+268. removed unreferenced helpers from `tetris_nd/runtime_config.py` (`playbot_policy_payload`, `audio_sfx_payload`),
+269. removed unreferenced `topology_mode_index` from `tetris_nd/topology.py`,
+270. removed unreferenced `reset_topology_designer_cache` from `tetris_nd/topology_designer.py`,
+271. further reduced validator duplication in `tetris_nd/menu_config.py` by reusing shared object/int/bool/string guards in launcher/menu/setup/split-rules paths.
+272. `DONE` `[BKL-P2-015]` Stage-4 launcher/tooling simplification:
+273. duplicated 2D/3D/4D launch flow in `tetris_nd/launcher_play.py` is now routed through one shared `_launch_mode_flow` pipeline with shared bot-kwargs and window-size helpers.
+274. playbot benchmark wrapper indirection was removed from `tetris_nd/playbot/types.py`.
+275. benchmark/policy tools now read thresholds/history paths directly from runtime config in:
+276. `tools/bench_playbot.py`,
+277. `tools/analyze_playbot_policies.py`.
+278. `DONE` `[BKL-P2-016]` Stage-5 runtime-config dedup cleanup:
+279. removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
+280. shared bucket/key helpers now reduce repeated dimension-bucket lookup boilerplate in runtime-config accessors,
+281. speed-curve and assist-factor lookups now reuse shared normalization helpers in `tetris_nd/runtime_config.py`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -397,6 +457,30 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `config/menu/structure.json`,
 `config/schema/menu_settings.schema.json`,
 `tetris_nd/tests/test_topology_designer.py`.
+14. Latest simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/playbot/planner_2d.py`,
+`tetris_nd/playbot/planner_nd.py`,
+`tetris_nd/tests/test_playbot.py`,
+`tetris_nd/menu_control_guides.py` (canonical guide module retained),
+`tetris_nd/menu_gif_guides.py` (removed).
+15. Stage-2 simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/playbot/types.py`.
+16. Stage-3 simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/runtime_config.py`,
+`tetris_nd/topology.py`,
+`tetris_nd/topology_designer.py`.
+17. Stage-4 simplification follow-up touched:
+`tetris_nd/launcher_play.py`,
+`tetris_nd/playbot/types.py`,
+`tools/bench_playbot.py`,
+`tools/analyze_playbot_policies.py`.
+18. Stage-5 simplification follow-up touched:
+`tetris_nd/runtime_config.py`.
 
 ## 6. Source Inputs
 

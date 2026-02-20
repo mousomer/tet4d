@@ -1,8 +1,8 @@
 # Tetris Family RDS (General)
 
-Status: Active v0.7 (Verified 2026-02-19)  
+Status: Active v0.7 (Verified 2026-02-20)  
 Author: Omer + Codex  
-Date: 2026-02-19  
+Date: 2026-02-20  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Purpose
@@ -30,7 +30,7 @@ Mode-specific requirements are defined in:
 8. Verify and harden scoring behavior with explicit automated scoring tests.
 9. Add debug piece sets (simple large rectangular blocks) for 2D/3D/4D validation workflows.
 10. Add non-intrusive sound effects with volume controls and mute toggles.
-11. Clarify slicing semantics and decouple slicing from rotation concerns.
+11. Remove manual slicing controls; keep gameplay independent from view-layer selection concepts.
 12. Unify frontend entry into one main menu for 2D/3D/4D.
 13. Make settings persistence and display mode transitions reliable (including fullscreen).
 14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
@@ -227,6 +227,24 @@ Completed in current implementation:
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
 16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
 17. Help/menu restructure `M1` contract completed with config-backed topic registry + action mapping and validator/test coverage.
+18. Low-risk simplification follow-up completed:
+19. menu-config validator helpers were consolidated in `tetris_nd/menu_config.py`,
+20. keybinding save/load path/profile resolution was deduplicated in `tetris_nd/keybindings.py`,
+21. test-only playbot wrappers were removed from `tetris_nd/playbot/planner_nd.py` (tests now import `planner_nd_core` directly),
+22. obsolete `menu_gif_guides.py` shim was removed; menu guide rendering now uses `tetris_nd/menu_control_guides.py` only.
+23. Stage-2 simplification follow-up completed:
+24. shared list/string validators are now reused across row/action/scope checks in `tetris_nd/menu_config.py`,
+25. keybinding profile clone/dimension handling now uses shared helpers/constants in `tetris_nd/keybindings.py`,
+26. playbot enum option/index boilerplate was reduced through shared typed helpers in `tetris_nd/playbot/types.py`.
+27. keybinding `small` profile now resolves directly to root keybinding files (`keybindings/2d.json`,`3d.json`,`4d.json`), removing legacy dual-write/fallback paths.
+28. Stage-3 dead-code cleanup completed:
+29. removed unreferenced helper APIs in `tetris_nd/runtime_config.py`, `tetris_nd/topology.py`, and `tetris_nd/topology_designer.py`.
+30. menu-config validation now consistently uses shared primitive guards for launcher/settings/setup validation branches.
+31. Stage-4 flow/tool simplification completed:
+32. duplicated launch orchestration across `2D/3D/4D` now uses one shared launch pipeline in `tetris_nd/launcher_play.py`.
+33. playbot benchmark wrapper helpers were removed from `tetris_nd/playbot/types.py`; tools now consume benchmark thresholds/history paths directly from runtime config.
+34. Stage-5 runtime-config simplification completed:
+35. removed unused runtime-config constants/imports and consolidated repeated dimension-bucket/name-normalization access paths in `tetris_nd/runtime_config.py`.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.

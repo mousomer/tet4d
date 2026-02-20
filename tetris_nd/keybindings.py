@@ -20,8 +20,6 @@ from typing import Dict, List, Mapping, MutableMapping, Tuple
 import pygame
 from .key_display import display_key_name
 from .keybindings_defaults import (
-    DEFAULT_SLICE_KEYS_3D,
-    DEFAULT_SLICE_KEYS_4D,
     DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
     PROFILE_MACBOOK,
     PROFILE_SMALL,
@@ -43,6 +41,7 @@ KeyBindingMap = Dict[str, KeyTuple]
 
 KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
 BUILTIN_PROFILES = (PROFILE_SMALL, PROFILE_FULL, PROFILE_MACBOOK)
+SUPPORTED_DIMENSIONS = (2, 3, 4)
 
 REBIND_CONFLICT_REPLACE = "replace"
 REBIND_CONFLICT_SWAP = "swap"
@@ -125,6 +124,8 @@ def _default_profile_file_path(dimension: int) -> Path:
 
 def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
     normalized = _normalize_profile_name(profile)
+    if normalized == PROFILE_SMALL:
+        return _safe_resolve_path(_default_profile_file_path(dimension))
     filename = _default_profile_file_path(dimension).name
     return _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / normalized / filename)
 
@@ -136,13 +137,6 @@ def keybinding_file_path_for_profile(dimension: int, profile: str | None = None)
 
 def key_matches(bindings: Mapping[str, KeyTuple], action: str, key: int) -> bool:
     return key in bindings.get(action, ())
-
-
-def _merge_bindings(*maps: Mapping[str, KeyTuple]) -> KeyBindingMap:
-    merged: KeyBindingMap = {}
-    for m in maps:
-        merged.update(m)
-    return merged
 
 
 def _replace_map(target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]) -> None:
@@ -165,8 +159,6 @@ KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
 CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
 CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
-SLICE_KEYS_3D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_3D)
-SLICE_KEYS_4D: KeyBindingMap = dict(DEFAULT_SLICE_KEYS_4D)
 
 
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
@@ -180,8 +172,6 @@ def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     _replace_map(KEYS_4D, keys_4d)
     _replace_map(CAMERA_KEYS_3D, camera_3d)
     _replace_map(CAMERA_KEYS_4D, camera_4d)
-    _replace_map(SLICE_KEYS_3D, DEFAULT_SLICE_KEYS_3D)
-    _replace_map(SLICE_KEYS_4D, DEFAULT_SLICE_KEYS_4D)
     _sanitize_runtime_bindings(camera_defaults_4d=camera_4d)
 
 
@@ -196,7 +186,7 @@ def _sanitize_runtime_bindings(
     )
     # 4D gameplay keys must not be shadowed by 4D camera/view keys.
     occupied = set()
-    for mapping in (KEYS_4D, SLICE_KEYS_4D, SYSTEM_KEYS):
+    for mapping in (KEYS_4D, SYSTEM_KEYS):
         for keys in mapping.values():
             occupied.update(keys)
 
@@ -210,10 +200,6 @@ def _sanitize_runtime_bindings(
             filtered = (pygame.K_BACKSPACE,)
         sanitized_camera_4d[action] = filtered
     _replace_map(CAMERA_KEYS_4D, sanitized_camera_4d)
-
-
-def _display_key_name(key: int) -> str:
-    return display_key_name(key)
 
 
 def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> Dict[str, List[str]]:
@@ -287,17 +273,29 @@ def _binding_groups_for_dimension(dimension: int) -> Dict[str, MutableMapping[st
         return {
             "game": KEYS_3D,
             "camera": CAMERA_KEYS_3D,
-            "slice": SLICE_KEYS_3D,
             "system": SYSTEM_KEYS,
         }
     if dimension == 4:
         return {
             "game": KEYS_4D,
-            "slice": SLICE_KEYS_4D,
             "camera": CAMERA_KEYS_4D,
             "system": SYSTEM_KEYS,
         }
     raise ValueError("dimension must be one of: 2, 3, 4")
+
+
+def _resolve_keybindings_io_context(
+    dimension: int,
+    *,
+    file_path: str | None,
+    profile: str | None,
+) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str, bool]:
+    groups = _binding_groups_for_dimension(dimension)
+    selected_profile = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
+    if file_path is not None:
+        return groups, _safe_resolve_path(Path(file_path)), selected_profile, True
+    path = keybinding_file_path_for_profile(dimension, selected_profile)
+    return groups, path, selected_profile, False
 
 
 def runtime_binding_groups_for_dimension(dimension: int) -> Dict[str, Mapping[str, KeyTuple]]:
@@ -350,7 +348,7 @@ def _camera_blocked_conflicts(
     return [
         (conflict_group, conflict_action)
         for conflict_group, conflict_action in conflicts
-        if conflict_group in {"game", "slice", "system"}
+        if conflict_group in {"game", "system"}
     ]
 
 
@@ -447,7 +445,7 @@ def rebind_action_key(
     binding_map[action] = (key,)
 
     _sanitize_runtime_bindings()
-    key_name = _display_key_name(key)
+    key_name = display_key_name(key)
     return True, _rebind_success_message(
         group=group,
         action=action,
@@ -460,23 +458,12 @@ def rebind_action_key(
 def keybinding_file_path(dimension: int) -> Path:
     return keybinding_file_path_for_profile(dimension, ACTIVE_KEY_PROFILE)
 
-
-def _legacy_keybinding_file_path(dimension: int) -> Path:
-    return _safe_resolve_path(_default_profile_file_path(dimension))
-
-
 def keybinding_file_label(dimension: int) -> str:
     path = keybinding_file_path(dimension)
     try:
         return str(path.relative_to(Path.cwd()))
     except ValueError:
         return str(path)
-
-
-def _validate_optional_external_path(file_path: str | None) -> Path | None:
-    if file_path is None:
-        return None
-    return _safe_resolve_path(Path(file_path))
 
 
 def list_key_profiles() -> list[str]:
@@ -530,20 +517,8 @@ def clone_key_profile(target_profile: str, source_profile: str | None = None) ->
     if target in list_key_profiles():
         return False, f"profile already exists: {target}"
     try:
-        for dimension in (2, 3, 4):
-            src_path = keybinding_file_path_for_profile(dimension, source)
-            if not src_path.exists() and source == PROFILE_SMALL:
-                src_path = _legacy_keybinding_file_path(dimension)
-            dst_path = keybinding_file_path_for_profile(dimension, target)
-            dst_path.parent.mkdir(parents=True, exist_ok=True)
-            if src_path.exists():
-                dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
-                continue
-            # Fallback: generate defaults for source profile.
-            reset_keybindings_to_profile_defaults(source)
-            save_keybindings_file(dimension, profile=source)
-            src_path = keybinding_file_path_for_profile(dimension, source)
-            dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
+        for dimension in SUPPORTED_DIMENSIONS:
+            _clone_keybinding_dimension(source, target, dimension)
     except (OSError, ValueError) as exc:
         return False, f"failed creating profile {target}: {exc}"
     return True, f"Created profile: {target}"
@@ -624,17 +599,28 @@ def _atomic_write(path: Path, payload: str) -> None:
     temp_path.replace(path)
 
 
+def _clone_keybinding_dimension(source_profile: str, target_profile: str, dimension: int) -> None:
+    src_path = keybinding_file_path_for_profile(dimension, source_profile)
+    if not src_path.exists():
+        # Fallback: materialize defaults for source profile first.
+        reset_keybindings_to_profile_defaults(source_profile)
+        save_keybindings_file(dimension, profile=source_profile)
+        src_path = keybinding_file_path_for_profile(dimension, source_profile)
+    dst_path = keybinding_file_path_for_profile(dimension, target_profile)
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 def save_keybindings_file(
     dimension: int,
     file_path: str | None = None,
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups = _binding_groups_for_dimension(dimension)
-        external_path = _validate_optional_external_path(file_path)
-        selected_profile = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
-        path = external_path if external_path is not None else keybinding_file_path_for_profile(
-            dimension, selected_profile
+        groups, path, selected_profile, is_external = _resolve_keybindings_io_context(
+            dimension,
+            file_path=file_path,
+            profile=profile,
         )
     except ValueError as exc:
         return False, str(exc)
@@ -651,9 +637,6 @@ def save_keybindings_file(
     encoded_payload = json.dumps(payload, indent=2, sort_keys=True)
     try:
         _atomic_write(path, encoded_payload)
-        if external_path is None and selected_profile == PROFILE_SMALL:
-            legacy_path = _legacy_keybinding_file_path(dimension)
-            _atomic_write(legacy_path, encoded_payload)
     except OSError as exc:
         return False, f"Failed saving keybindings: {exc}"
 
@@ -666,14 +649,11 @@ def load_keybindings_file(
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups = _binding_groups_for_dimension(dimension)
-        external_path = _validate_optional_external_path(file_path)
-        selected_profile = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
-        path = external_path if external_path is not None else keybinding_file_path_for_profile(
-            dimension, selected_profile
+        groups, path, _selected_profile, _is_external = _resolve_keybindings_io_context(
+            dimension,
+            file_path=file_path,
+            profile=profile,
         )
-        if external_path is None and not path.exists() and selected_profile == PROFILE_SMALL:
-            path = _legacy_keybinding_file_path(dimension)
     except ValueError as exc:
         return False, str(exc)
 
@@ -693,9 +673,6 @@ def load_keybindings_file(
 
     for group_name, target in groups.items():
         raw_group = bindings_payload.get(group_name)
-        if raw_group is None and len(groups) == 1:
-            # Compatibility: allow {"bindings": {"move_x_neg": [...]}} in 2D-only files.
-            raw_group = bindings_payload
         if raw_group is None and dimension == 2 and group_name == "game":
             # Compatibility for legacy 2D schema now that 2D also includes system bindings.
             raw_group = bindings_payload
@@ -711,16 +688,10 @@ _KEYBINDINGS_INITIALIZED = False
 def _ensure_profile_files(profile: str) -> None:
     selected = _normalize_profile_name(profile)
     reset_keybindings_to_profile_defaults(selected)
-    for dimension in (2, 3, 4):
+    for dimension in SUPPORTED_DIMENSIONS:
         preferred = keybinding_file_path_for_profile(dimension, selected)
         if preferred.exists():
             continue
-        if selected == PROFILE_SMALL:
-            legacy = _legacy_keybinding_file_path(dimension)
-            if legacy.exists():
-                preferred.parent.mkdir(parents=True, exist_ok=True)
-                preferred.write_text(legacy.read_text(encoding="utf-8"), encoding="utf-8")
-                continue
         save_keybindings_file(dimension, profile=selected)
 
 
@@ -728,7 +699,7 @@ def load_active_profile_bindings() -> tuple[bool, str]:
     selected = ACTIVE_KEY_PROFILE
     reset_keybindings_to_profile_defaults(selected)
     messages: list[str] = []
-    for dimension in (2, 3, 4):
+    for dimension in SUPPORTED_DIMENSIONS:
         ok, msg = load_keybindings_file(dimension, profile=selected)
         if not ok:
             ok_save, save_msg = save_keybindings_file(dimension, profile=selected)
@@ -753,7 +724,7 @@ def initialize_keybinding_files() -> None:
 def reset_active_profile_bindings(dimension: int | None = None) -> tuple[bool, str]:
     selected = ACTIVE_KEY_PROFILE
     reset_keybindings_to_profile_defaults(selected)
-    dimensions = (dimension,) if dimension is not None else (2, 3, 4)
+    dimensions = (dimension,) if dimension is not None else SUPPORTED_DIMENSIONS
     messages: list[str] = []
     for dim in dimensions:
         ok, msg = save_keybindings_file(dim, profile=selected)

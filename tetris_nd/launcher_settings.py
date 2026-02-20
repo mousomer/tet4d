@@ -7,7 +7,11 @@ import pygame
 from .app_runtime import capture_windowed_display_settings
 from .audio import AudioSettings, play_sfx, set_audio_settings
 from .display import DisplaySettings, apply_display_mode, normalize_display_settings
-from .menu_config import default_settings_payload, settings_top_level_categories
+from .menu_config import (
+    default_settings_payload,
+    settings_hub_layout_rows,
+    settings_top_level_categories,
+)
 from .menu_persistence import (
     load_analytics_payload,
     persist_analytics_payload,
@@ -50,22 +54,7 @@ class _UnifiedSettingsState:
     running: bool = True
 
 
-_UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = (
-    ("header", "Audio", ""),
-    ("item", "Master volume", "audio_master"),
-    ("item", "SFX volume", "audio_sfx"),
-    ("item", "Mute", "audio_mute"),
-    ("header", "Display", ""),
-    ("item", "Fullscreen", "display_fullscreen"),
-    ("item", "Window width", "display_width"),
-    ("item", "Window height", "display_height"),
-    ("item", "Apply display", "display_apply"),
-    ("header", "Analytics", ""),
-    ("item", "Score logging", "analytics_score_logging"),
-    ("item", "Save", "save"),
-    ("item", "Reset defaults", "reset"),
-    ("item", "Back", "back"),
-)
+_UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = settings_hub_layout_rows()
 _UNIFIED_SELECTABLE = tuple(idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item")
 
 

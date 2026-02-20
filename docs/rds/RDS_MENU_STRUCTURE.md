@@ -1,8 +1,8 @@
 # Menu Structure RDS
 
-Status: Active v0.6 (Verified 2026-02-19)  
+Status: Active v0.7 (Verified 2026-02-20)  
 Author: Omer + Codex  
-Date: 2026-02-19  
+Date: 2026-02-20  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 ## 1. Scope
@@ -68,25 +68,28 @@ This design is based on:
 
 ```text
 Main Menu
-├── Play 2D
-├── Play 3D
-├── Play 4D
+├── Play
+│   ├── 2D
+│   ├── 3D
+│   └── 4D
+├── Continue
+│   └── Launch last used mode setup
+├── Settings
+│   ├── Audio
+│   ├── Display
+│   └── Analytics
+├── Controls
+│   ├── General
+│   ├── 2D
+│   ├── 3D
+│   └── 4D
 ├── Help
 │   ├── Controls (2D/3D/4D)
 │   ├── Scoring
 │   ├── Piece Sets
 │   ├── Bots
-│   └── Slicing / Views
-├── Settings
-│   ├── Audio
-│   ├── Display
-│   └── Analytics
-├── Keybindings Setup
-│   ├── General
-│   ├── 2D
-│   ├── 3D
-│   └── 4D
-├── Bot Options
+│   └── Views / Camera
+├── Bot
 │   ├── Dimension (2D/3D/4D)
 │   ├── Playbot mode
 │   ├── Bot algorithm
@@ -102,8 +105,10 @@ Main Menu
 Pause Menu
 ├── Resume
 ├── Restart Run
-├── Settings (same shared sections, including Edit Keybindings)
-├── Profiles (same actions as Main Menu)
+├── Settings (same shared sections as launcher)
+├── Controls
+├── Help
+├── Bot
 ├── Back To Main Menu
 └── Quit
 ```
@@ -281,13 +286,13 @@ pytest -q
 2. Menu depth remains shallow (top-level -> setup/options -> edit actions).
 3. Profile file actions (`Load`,`Save`,`Save As`,`Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
-5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`Slice`,`System`.
+5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`System`.
 6. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 
 ## 12. Stabilization Additions (Completed)
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
-2. Dedicated `Keybindings Setup` screen is implemented.
+2. Dedicated `Controls` screen is implemented (backed by `tetris_nd/keybindings_menu.py`).
 3. Unified settings hub (`audio/display/analytics`) is implemented.
 4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
@@ -303,16 +308,17 @@ pytest -q
 
 Implemented in code:
 1. Unified launcher added at `front.py`.
-2. Main menu includes `Play 2D`,`Play 3D`,`Play 4D`,`Settings`,`Keybindings Setup`,`Bot Options`, and`Quit`.
+2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
 3. `Settings` submenu unifies audio, display, and analytics controls.
-4. `Bot Options` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
+4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
-6. Keybindings setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
+6. Controls setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
 7. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
-10. User overrides remain in `state/menu_settings.json`.
-11. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
+10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `tetris_nd/launcher_settings.py`.
+11. User overrides remain in `state/menu_settings.json`.
+12. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
 Stabilization details:
 1. Returning from gameplay to menu now reapplies persisted display mode.
@@ -324,10 +330,10 @@ Stabilization details:
 7. Unified main menu controls 2D/3D/4D startup consistently.
 8. In-game pause menu is implemented in all modes with:
 9. resume/restart/back-to-main/quit actions
-10. settings submenu (audio/display edits + save/reset)
+10. settings routed to shared settings hub (audio/display/analytics + save/reset/back)
 11. keybindings editor entry
 12. profile cycle and per-dimension keybinding load/save actions
-13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/slicing guidance.
+13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/view guidance.
 14. Shared menu helpers were added in:
 15. `tetris_nd/menu_model.py`
 16. `tetris_nd/menu_persistence.py`
@@ -371,3 +377,46 @@ Stabilization details:
 31. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
 32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
+34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `tetris_nd/launcher_settings.py`.
+
+## 16. Menu Rehaul v2 (Core IA Implemented, `BKL-P1-006`)
+
+Research-driven goals for the next rehaul pass:
+1. reduce first-time navigation friction and menu depth,
+2. keep high-frequency actions and state visibility in one place,
+3. preserve keyboard-only predictability and pause/launcher parity,
+4. eliminate remaining panel-density clutter in compact windows.
+
+Guideline basis (re-validated 2026-02-20):
+1. Xbox XAG 112/114 for consistent, complete navigation and clear context hierarchy.
+2. WCAG 2.2 (`Focus Appearance`, `Contrast Minimum`, `Consistent Help`) for readability and predictable help entry points.
+3. WAI-ARIA menu interaction patterns for keyboard semantics.
+4. Apple HIG menu guidance (`short list of top-level choices`, `grouping and separators`) for scanability.
+5. Game Accessibility Guidelines (`clear language`, `remember settings`, `easy start`) for player-facing friction reduction.
+
+Target IA delta:
+1. Replace broad top-level labels with intent labels:
+2. `Play`, `Continue`, `Settings`, `Controls`, `Help`, `Bot`, `Quit`.
+3. Move dimension selection under `Play` with a mode card list (`2D`,`3D`,`4D`) and a one-line mode summary.
+4. Keep `Audio` and `Display` as top-level settings categories while they remain small.
+5. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`) inside per-mode setup screens only.
+6. Keep `Controls` separate from `Settings`, with first-level scopes:
+7. `General`,`2D`,`3D`,`4D`.
+
+Interaction and layout constraints:
+1. Max top-level rows: `7` (excluding contextual `Continue` when unavailable).
+2. Max submenu depth: `2` (top-level -> section -> editor/action).
+3. One primary action per view (`Play` or `Apply`), destructive actions isolated at bottom (`Reset`, `Quit`).
+4. Always-visible status line for save/load/autosave feedback.
+5. In compact windows, hide non-critical helper blocks before truncating actionable rows.
+
+Execution status:
+1. Completed (`R1`): IA and labels rewritten in `config/menu/structure.json`:
+2. launcher top-level actions now `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`.
+3. Completed (`R2` core): launcher and pause action lists were simplified to core, high-frequency flows.
+4. Completed (`R2` core): `Controls` now enters keybindings in `General` scope from both launcher and pause.
+5. Completed (`R3/R4`): help/controls discoverability and compact-window regression protections remain enforced by existing layout/help policy and tests.
+
+Execution artifact:
+1. Detailed execution plan lives in `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.

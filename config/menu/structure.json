@@ -1,12 +1,11 @@
 {
   "launcher_menu": [
-    {"action": "play_2d", "label": "Play 2D"},
-    {"action": "play_3d", "label": "Play 3D"},
-    {"action": "play_4d", "label": "Play 4D"},
-    {"action": "help", "label": "Help"},
+    {"action": "play", "label": "Play"},
+    {"action": "continue", "label": "Continue"},
     {"action": "settings", "label": "Settings"},
-    {"action": "keybindings", "label": "Keybindings Setup"},
-    {"action": "bot_options", "label": "Bot Options"},
+    {"action": "keybindings", "label": "Controls"},
+    {"action": "help", "label": "Help"},
+    {"action": "bot_options", "label": "Bot"},
     {"action": "quit", "label": "Quit"}
   ],
   "settings_hub_rows": [
@@ -14,6 +13,22 @@
     "Display",
     "Analytics",
     "Back"
+  ],
+  "settings_hub_layout_rows": [
+    {"kind": "header", "label": "Audio"},
+    {"kind": "item", "label": "Master volume", "row_key": "audio_master"},
+    {"kind": "item", "label": "SFX volume", "row_key": "audio_sfx"},
+    {"kind": "item", "label": "Mute", "row_key": "audio_mute"},
+    {"kind": "header", "label": "Display"},
+    {"kind": "item", "label": "Fullscreen", "row_key": "display_fullscreen"},
+    {"kind": "item", "label": "Window width", "row_key": "display_width"},
+    {"kind": "item", "label": "Window height", "row_key": "display_height"},
+    {"kind": "item", "label": "Apply display", "row_key": "display_apply"},
+    {"kind": "header", "label": "Analytics"},
+    {"kind": "item", "label": "Score logging", "row_key": "analytics_score_logging"},
+    {"kind": "item", "label": "Save", "row_key": "save"},
+    {"kind": "item", "label": "Reset defaults", "row_key": "reset"},
+    {"kind": "item", "label": "Back", "row_key": "back"}
   ],
   "bot_options_rows": [
     "Dimension",
@@ -30,13 +45,9 @@
     "Resume",
     "Restart Run",
     "Settings",
-    "Bot Options",
-    "Keybindings Setup",
-    "Profile Previous",
-    "Profile Next",
-    "Save Keybindings",
-    "Load Keybindings",
+    "Controls",
     "Help",
+    "Bot",
     "Back To Main Menu",
     "Quit"
   ],
@@ -44,27 +55,11 @@
     "resume",
     "restart",
     "settings",
-    "bot_options",
     "keybindings",
-    "profile_prev",
-    "profile_next",
-    "save_bindings",
-    "load_bindings",
     "help",
+    "bot_options",
     "menu",
     "quit"
-  ],
-  "pause_settings_rows": [
-    "Master volume",
-    "SFX volume",
-    "Mute",
-    "Fullscreen",
-    "Window width",
-    "Window height",
-    "Apply display",
-    "Save settings",
-    "Reset defaults",
-    "Back"
   ],
   "setup_fields": {
     "2d": [
@@ -118,10 +113,6 @@
       "camera": {
         "label": "Camera / View",
         "description": "Board orbit, zoom, and projection controls."
-      },
-      "slice": {
-        "label": "Slice",
-        "description": "Layer filtering controls for 3D/4D inspection."
       }
     }
   },
