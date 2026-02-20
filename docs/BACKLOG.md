@@ -267,6 +267,32 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 253. launcher `Play` now opens a mode picker (`2D`,`3D`,`4D`) and `Continue` launches the last-used mode setup directly.
 254. pause menu was simplified to core actions (`Resume`,`Restart`,`Settings`,`Controls`,`Help`,`Bot`,`Back To Main Menu`,`Quit`).
 255. controls entry now opens keybindings with `General` scope first in both launcher and pause.
+256. `DONE` `[BKL-P2-012]` Validation/IO simplification follow-up:
+257. keybinding save/load context resolution is now shared through `_resolve_keybindings_io_context` in `tetris_nd/keybindings.py`.
+258. duplicated menu-config type guards were reduced through shared validators in `tetris_nd/menu_config.py`.
+259. playbot test-only wrappers were removed from `tetris_nd/playbot/planner_nd.py`; tests now use `tetris_nd/playbot/planner_nd_core.py` directly.
+260. obsolete compatibility shim `tetris_nd/menu_gif_guides.py` was removed; control-guide usage is unified on `tetris_nd/menu_control_guides.py`.
+261. `DONE` `[BKL-P2-013]` Stage-2 dedup and boilerplate reduction:
+262. shared string-list validation path added in `tetris_nd/menu_config.py` and wired into row/action/scope validators.
+263. settings-category docs validation in `tetris_nd/menu_config.py` now reuses shared object/string validators.
+264. keybinding profile-clone and dimension-loop handling in `tetris_nd/keybindings.py` now use shared helpers/constants.
+265. repeated enum index/label boilerplate in `tetris_nd/playbot/types.py` now uses shared typed helpers.
+266. keybinding legacy dual-path handling was removed by making `small` profile resolve directly to root `keybindings/{2d,3d,4d}.json` paths in `tetris_nd/keybindings.py`.
+267. `DONE` `[BKL-P2-014]` Stage-3 dead-code and validator reduction:
+268. removed unreferenced helpers from `tetris_nd/runtime_config.py` (`playbot_policy_payload`, `audio_sfx_payload`),
+269. removed unreferenced `topology_mode_index` from `tetris_nd/topology.py`,
+270. removed unreferenced `reset_topology_designer_cache` from `tetris_nd/topology_designer.py`,
+271. further reduced validator duplication in `tetris_nd/menu_config.py` by reusing shared object/int/bool/string guards in launcher/menu/setup/split-rules paths.
+272. `DONE` `[BKL-P2-015]` Stage-4 launcher/tooling simplification:
+273. duplicated 2D/3D/4D launch flow in `tetris_nd/launcher_play.py` is now routed through one shared `_launch_mode_flow` pipeline with shared bot-kwargs and window-size helpers.
+274. playbot benchmark wrapper indirection was removed from `tetris_nd/playbot/types.py`.
+275. benchmark/policy tools now read thresholds/history paths directly from runtime config in:
+276. `tools/bench_playbot.py`,
+277. `tools/analyze_playbot_policies.py`.
+278. `DONE` `[BKL-P2-016]` Stage-5 runtime-config dedup cleanup:
+279. removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
+280. shared bucket/key helpers now reduce repeated dimension-bucket lookup boilerplate in runtime-config accessors,
+281. speed-curve and assist-factor lookups now reuse shared normalization helpers in `tetris_nd/runtime_config.py`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -431,6 +457,30 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `config/menu/structure.json`,
 `config/schema/menu_settings.schema.json`,
 `tetris_nd/tests/test_topology_designer.py`.
+14. Latest simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/playbot/planner_2d.py`,
+`tetris_nd/playbot/planner_nd.py`,
+`tetris_nd/tests/test_playbot.py`,
+`tetris_nd/menu_control_guides.py` (canonical guide module retained),
+`tetris_nd/menu_gif_guides.py` (removed).
+15. Stage-2 simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/keybindings.py`,
+`tetris_nd/playbot/types.py`.
+16. Stage-3 simplification follow-up touched:
+`tetris_nd/menu_config.py`,
+`tetris_nd/runtime_config.py`,
+`tetris_nd/topology.py`,
+`tetris_nd/topology_designer.py`.
+17. Stage-4 simplification follow-up touched:
+`tetris_nd/launcher_play.py`,
+`tetris_nd/playbot/types.py`,
+`tools/bench_playbot.py`,
+`tools/analyze_playbot_policies.py`.
+18. Stage-5 simplification follow-up touched:
+`tetris_nd/runtime_config.py`.
 
 ## 6. Source Inputs
 

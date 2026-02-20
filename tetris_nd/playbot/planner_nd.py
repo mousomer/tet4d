@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 from ..game_nd import GameStateND
 from ..pieces_nd import ActivePieceND
-from .planner_nd_core import greedy_key_4d as _greedy_key_4d_core
-from .planner_nd_core import simulate_lock_board as _simulate_lock_board_core
 from .planner_nd_search import plan_best_nd_with_budget
 from .types import (
     BotPlannerAlgorithm,
@@ -56,27 +54,3 @@ def plan_best_nd_move(
         stats=search_plan.stats,
     )
 
-
-# Backward-compatible exports for tests and external callers.
-def _simulate_lock_board(
-    state: GameStateND,
-    piece: ActivePieceND,
-) -> tuple[dict[tuple[int, ...], int], int, bool]:
-    return _simulate_lock_board_core(state, piece)
-
-
-def _greedy_key_4d(
-    cells: dict[tuple[int, ...], int],
-    *,
-    dims: tuple[int, ...],
-    gravity_axis: int,
-    cleared: int,
-    game_over: bool,
-) -> tuple[int, int, int, int]:
-    return _greedy_key_4d_core(
-        cells,
-        dims=dims,
-        gravity_axis=gravity_axis,
-        cleared=cleared,
-        game_over=game_over,
-    )

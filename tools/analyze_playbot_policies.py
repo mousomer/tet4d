@@ -24,10 +24,10 @@ from tetris_nd.pieces2d import PIECE_SET_2D_CLASSIC
 from tetris_nd.pieces_nd import PIECE_SET_3D_STANDARD, PIECE_SET_4D_STANDARD
 from tetris_nd.playbot.planner_2d import plan_best_2d_move
 from tetris_nd.playbot.planner_nd import plan_best_nd_move
+from tetris_nd.runtime_config import playbot_benchmark_p95_thresholds
 from tetris_nd.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
-    benchmark_p95_thresholds,
     default_planning_budget_ms,
 )
 
@@ -127,7 +127,7 @@ def _planner_sample_ms(
 
 
 def _dimension_threshold_ms(ndim: int) -> float:
-    thresholds = benchmark_p95_thresholds()
+    thresholds = playbot_benchmark_p95_thresholds()
     if ndim <= 2:
         return float(thresholds["2d"])
     if ndim == 3:

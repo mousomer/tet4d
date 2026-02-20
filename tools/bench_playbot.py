@@ -23,11 +23,13 @@ from tetris_nd.pieces2d import PIECE_SET_2D_CLASSIC
 from tetris_nd.pieces_nd import PIECE_SET_3D_STANDARD, PIECE_SET_4D_STANDARD
 from tetris_nd.playbot.planner_2d import plan_best_2d_move
 from tetris_nd.playbot.planner_nd import plan_best_nd_move
+from tetris_nd.runtime_config import (
+    playbot_benchmark_history_file,
+    playbot_benchmark_p95_thresholds,
+)
 from tetris_nd.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
-    benchmark_history_file,
-    benchmark_p95_thresholds,
     default_planning_budget_ms,
 )
 
@@ -126,7 +128,7 @@ def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
 
 
 def _assert_thresholds(results: dict[str, dict[str, float | int]]) -> tuple[bool, str]:
-    thresholds = benchmark_p95_thresholds()
+    thresholds = playbot_benchmark_p95_thresholds()
     for key, max_p95 in thresholds.items():
         p95 = float(results[key]["p95_ms"])
         if p95 > max_p95:
@@ -208,12 +210,12 @@ def main() -> int:
             "4d": budget_4d,
         },
         "results": results,
-        "thresholds_ms": benchmark_p95_thresholds(),
+        "thresholds_ms": playbot_benchmark_p95_thresholds(),
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
 
     if args.record_trend:
-        trend_raw = Path(args.trend_file) if args.trend_file else Path(benchmark_history_file())
+        trend_raw = Path(args.trend_file) if args.trend_file else playbot_benchmark_history_file()
         trend_path = _resolve_repo_local_path(trend_raw)
         _append_trend_sample(
             output_path=trend_path,

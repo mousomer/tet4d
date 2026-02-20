@@ -36,10 +36,6 @@ class _Candidate2D:
     game_over: bool
 
 
-def _orientation_blocks(piece: ActivePiece2D, rotation: int) -> tuple[tuple[int, int], ...]:
-    return tuple(sorted(rotate_point_2d(x, y, rotation) for x, y in piece.shape.blocks))
-
-
 def _can_exist_on_cells(
     piece: ActivePiece2D,
     *,
