@@ -32,6 +32,62 @@ def _read_json_payload(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _as_non_empty_string(value: object, *, path: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError(f"{path} must be a non-empty string")
+    return value.strip()
+
+
+def _require_object(value: object, *, path: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise RuntimeError(f"{path} must be an object")
+    return value
+
+
+def _require_bool(value: object, *, path: str) -> bool:
+    if not isinstance(value, bool):
+        raise RuntimeError(f"{path} must be a boolean")
+    return value
+
+
+def _require_int(value: object, *, path: str, min_value: int | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise RuntimeError(f"{path} must be an integer")
+    if min_value is not None and value < min_value:
+        raise RuntimeError(f"{path} must be >= {min_value}")
+    return value
+
+
+def _require_number(value: object, *, path: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RuntimeError(f"{path} must be a number")
+    return float(value)
+
+
+def _validate_string_list(
+    raw_values: object,
+    *,
+    path: str,
+    normalize_lower: bool = False,
+    unique: bool = False,
+) -> tuple[str, ...]:
+    if not isinstance(raw_values, list):
+        raise RuntimeError(f"{path} must be a list")
+    values: list[str] = []
+    seen: set[str] = set()
+    for idx, raw_value in enumerate(raw_values):
+        value = _as_non_empty_string(raw_value, path=f"{path}[{idx}]")
+        if normalize_lower:
+            value = value.lower()
+        if unique and value in seen:
+            raise RuntimeError(f"{path} contains duplicate value: {value}")
+        seen.add(value)
+        values.append(value)
+    if not values:
+        raise RuntimeError(f"{path} must not be empty")
+    return tuple(values)
+
+
 def _mode_key_for_dimension(dimension: int) -> str:
     if dimension not in (2, 3, 4):
         raise ValueError("dimension must be one of: 2, 3, 4")
@@ -39,15 +95,13 @@ def _mode_key_for_dimension(dimension: int) -> str:
 
 
 def _validate_mode_settings(mode_key: str, settings: object) -> dict[str, int]:
-    if not isinstance(settings, dict):
-        raise RuntimeError(f"defaults.settings.{mode_key} must be an object")
+    settings_obj = _require_object(settings, path=f"defaults.settings.{mode_key}")
     validated: dict[str, int] = {}
-    for attr_name, value in settings.items():
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise RuntimeError(
-                f"defaults.settings.{mode_key}.{attr_name} must be an integer"
-            )
-        validated[attr_name] = value
+    for attr_name, value in settings_obj.items():
+        validated[attr_name] = _require_int(
+            value,
+            path=f"defaults.settings.{mode_key}.{attr_name}",
+        )
     return validated
 
 
@@ -65,9 +119,7 @@ def _validate_defaults_meta(payload: dict[str, Any]) -> tuple[int, str, str]:
     if missing:
         raise RuntimeError(f"defaults config missing keys: {', '.join(missing)}")
 
-    version = payload["version"]
-    if isinstance(version, bool) or not isinstance(version, int) or version <= 0:
-        raise RuntimeError("defaults.version must be a positive integer")
+    version = _require_int(payload["version"], path="defaults.version", min_value=1)
 
     active_profile = payload["active_profile"]
     if not isinstance(active_profile, str) or not active_profile.strip():
@@ -80,11 +132,8 @@ def _validate_defaults_meta(payload: dict[str, Any]) -> tuple[int, str, str]:
 
 
 def _validate_defaults_display(payload: dict[str, Any]) -> dict[str, Any]:
-    display = payload["display"]
-    if not isinstance(display, dict):
-        raise RuntimeError("defaults.display must be an object")
-    if not isinstance(display.get("fullscreen"), bool):
-        raise RuntimeError("defaults.display.fullscreen must be a boolean")
+    display = _require_object(payload["display"], path="defaults.display")
+    _require_bool(display.get("fullscreen"), path="defaults.display.fullscreen")
     windowed_size = display.get("windowed_size")
     if (
         not isinstance(windowed_size, list)
@@ -96,31 +145,24 @@ def _validate_defaults_display(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _validate_defaults_audio(payload: dict[str, Any]) -> dict[str, Any]:
-    audio = payload["audio"]
-    if not isinstance(audio, dict):
-        raise RuntimeError("defaults.audio must be an object")
+    audio = _require_object(payload["audio"], path="defaults.audio")
     for key in ("master_volume", "sfx_volume"):
-        value = audio.get(key)
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise RuntimeError(f"defaults.audio.{key} must be a number")
-    if not isinstance(audio.get("mute"), bool):
-        raise RuntimeError("defaults.audio.mute must be a boolean")
+        _require_number(audio.get(key), path=f"defaults.audio.{key}")
+    _require_bool(audio.get("mute"), path="defaults.audio.mute")
     return audio
 
 
 def _validate_defaults_analytics(payload: dict[str, Any]) -> dict[str, Any]:
-    analytics = payload["analytics"]
-    if not isinstance(analytics, dict):
-        raise RuntimeError("defaults.analytics must be an object")
-    if not isinstance(analytics.get("score_logging_enabled"), bool):
-        raise RuntimeError("defaults.analytics.score_logging_enabled must be a boolean")
+    analytics = _require_object(payload["analytics"], path="defaults.analytics")
+    _require_bool(
+        analytics.get("score_logging_enabled"),
+        path="defaults.analytics.score_logging_enabled",
+    )
     return analytics
 
 
 def _validate_defaults_settings(payload: dict[str, Any]) -> dict[str, dict[str, int]]:
-    settings = payload["settings"]
-    if not isinstance(settings, dict):
-        raise RuntimeError("defaults.settings must be an object")
+    settings = _require_object(payload["settings"], path="defaults.settings")
     validated_settings: dict[str, dict[str, int]] = {}
     for mode_key in _MODE_KEYS:
         if mode_key not in settings:
@@ -130,13 +172,8 @@ def _validate_defaults_settings(payload: dict[str, Any]) -> dict[str, dict[str, 
 
 
 def _runtime_budget_for_mode(mode_key: str) -> int:
-    if mode_key == "2d":
-        budget = playbot_budget_table_for_ndim(2)[1]
-    elif mode_key == "3d":
-        budget = playbot_budget_table_for_ndim(3)[1]
-    else:
-        budget = playbot_budget_table_for_ndim(4)[1]
-    return int(budget)
+    ndims = {"2d": 2, "3d": 3, "4d": 4}[mode_key]
+    return int(playbot_budget_table_for_ndim(ndims)[1])
 
 
 def _sync_runtime_bot_budget(settings: dict[str, dict[str, int]]) -> None:
@@ -166,72 +203,53 @@ def _validate_defaults_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _validate_menu_item(raw_item: object) -> tuple[str, str]:
-    if not isinstance(raw_item, dict):
-        raise RuntimeError("structure.launcher_menu entries must be objects")
-    action = raw_item.get("action")
-    label = raw_item.get("label")
-    if not isinstance(action, str) or not action:
-        raise RuntimeError("structure.launcher_menu.action must be a non-empty string")
-    if not isinstance(label, str) or not label:
-        raise RuntimeError("structure.launcher_menu.label must be a non-empty string")
+    entry = _require_object(raw_item, path="structure.launcher_menu entries")
+    action = _as_non_empty_string(
+        entry.get("action"),
+        path="structure.launcher_menu.action",
+    )
+    label = _as_non_empty_string(
+        entry.get("label"),
+        path="structure.launcher_menu.label",
+    )
     return action, label
 
 
 def _validate_row_list(raw_rows: object, key: str) -> tuple[str, ...]:
-    if not isinstance(raw_rows, list):
-        raise RuntimeError(f"structure.{key} must be a list")
-    rows: list[str] = []
-    for idx, row in enumerate(raw_rows):
-        if not isinstance(row, str) or not row:
-            raise RuntimeError(f"structure.{key}[{idx}] must be a non-empty string")
-        rows.append(row)
-    if not rows:
-        raise RuntimeError(f"structure.{key} must not be empty")
-    return tuple(rows)
+    return _validate_string_list(raw_rows, path=f"structure.{key}")
 
 
 def _validate_action_list(raw_actions: object, key: str) -> tuple[str, ...]:
-    if not isinstance(raw_actions, list):
-        raise RuntimeError(f"structure.{key} must be a list")
-    actions: list[str] = []
-    seen: set[str] = set()
-    for idx, raw_action in enumerate(raw_actions):
-        if not isinstance(raw_action, str) or not raw_action.strip():
-            raise RuntimeError(f"structure.{key}[{idx}] must be a non-empty string")
-        action = raw_action.strip().lower()
-        if action in seen:
-            raise RuntimeError(f"structure.{key} contains duplicate action: {action}")
-        seen.add(action)
-        actions.append(action)
-    if not actions:
-        raise RuntimeError(f"structure.{key} must not be empty")
-    return tuple(actions)
+    return _validate_string_list(
+        raw_actions,
+        path=f"structure.{key}",
+        normalize_lower=True,
+        unique=True,
+    )
 
 
 def _validate_settings_hub_layout_row(raw_row: object, *, idx: int) -> tuple[dict[str, str], bool]:
-    if not isinstance(raw_row, dict):
-        raise RuntimeError(f"structure.settings_hub_layout_rows[{idx}] must be an object")
-    kind = raw_row.get("kind")
-    label = raw_row.get("label")
-    row_key = raw_row.get("row_key", "")
+    path = f"structure.settings_hub_layout_rows[{idx}]"
+    row = _require_object(raw_row, path=path)
+    kind = row.get("kind")
+    row_key = row.get("row_key", "")
     if not isinstance(kind, str) or kind not in _SETTINGS_HUB_LAYOUT_KINDS:
         raise RuntimeError(
-            f"structure.settings_hub_layout_rows[{idx}].kind must be one of: "
+            f"{path}.kind must be one of: "
             + ", ".join(sorted(_SETTINGS_HUB_LAYOUT_KINDS))
         )
-    if not isinstance(label, str) or not label.strip():
-        raise RuntimeError(f"structure.settings_hub_layout_rows[{idx}].label must be a non-empty string")
+    label = _as_non_empty_string(row.get("label"), path=f"{path}.label")
     if kind == "header":
         if row_key not in ("", None):
             raise RuntimeError(
-                f"structure.settings_hub_layout_rows[{idx}].row_key must be empty for header rows"
+                f"{path}.row_key must be empty for header rows"
             )
-        return {"kind": "header", "label": label.strip(), "row_key": ""}, False
+        return {"kind": "header", "label": label, "row_key": ""}, False
     if not isinstance(row_key, str) or not row_key.strip():
         raise RuntimeError(
-            f"structure.settings_hub_layout_rows[{idx}].row_key must be a non-empty string for item rows"
+            f"{path}.row_key must be a non-empty string for item rows"
         )
-    return {"kind": "item", "label": label.strip(), "row_key": row_key.strip().lower()}, True
+    return {"kind": "item", "label": label, "row_key": row_key.strip().lower()}, True
 
 
 def _validate_settings_hub_layout_rows(payload: dict[str, Any]) -> tuple[dict[str, str], ...]:
@@ -270,25 +288,15 @@ def _resolve_field_max(
 
 
 def _validate_setup_field(raw_field: object, *, mode_key: str, idx: int) -> dict[str, Any]:
-    if not isinstance(raw_field, dict):
-        raise RuntimeError(f"structure.setup_fields.{mode_key}[{idx}] must be an object")
-    label = raw_field.get("label")
-    attr_name = raw_field.get("attr")
-    min_val = raw_field.get("min")
-    max_val = raw_field.get("max")
-    if not isinstance(label, str) or not label:
-        raise RuntimeError(
-            f"structure.setup_fields.{mode_key}[{idx}].label must be a non-empty string"
-        )
-    if not isinstance(attr_name, str) or not attr_name:
-        raise RuntimeError(
-            f"structure.setup_fields.{mode_key}[{idx}].attr must be a non-empty string"
-        )
-    if isinstance(min_val, bool) or not isinstance(min_val, int):
-        raise RuntimeError(f"structure.setup_fields.{mode_key}[{idx}].min must be int")
+    path = f"structure.setup_fields.{mode_key}[{idx}]"
+    field = _require_object(raw_field, path=path)
+    label = _as_non_empty_string(field.get("label"), path=f"{path}.label")
+    attr_name = _as_non_empty_string(field.get("attr"), path=f"{path}.attr")
+    min_val = _require_int(field.get("min"), path=f"{path}.min")
+    max_val = field.get("max")
     if isinstance(max_val, bool) or not isinstance(max_val, (int, str)):
         raise RuntimeError(
-            f"structure.setup_fields.{mode_key}[{idx}].max must be int or 'piece_set_max'"
+            f"{path}.max must be int or 'piece_set_max'"
         )
     return {
         "label": label,
@@ -318,21 +326,12 @@ def _validate_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, 
     return validated
 
 
-def _as_non_empty_string(value: object, *, path: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise RuntimeError(f"{path} must be a non-empty string")
-    return value.strip()
-
-
 def _validate_scope_order(raw_docs: dict[str, Any]) -> tuple[str, ...]:
-    raw_scope_order = raw_docs.get("scope_order")
-    if not isinstance(raw_scope_order, list) or not raw_scope_order:
-        raise RuntimeError("structure.keybinding_category_docs.scope_order must be a non-empty list")
-    scope_order = [
-        _as_non_empty_string(scope, path=f"structure.keybinding_category_docs.scope_order[{idx}]").lower()
-        for idx, scope in enumerate(raw_scope_order)
-    ]
-    return tuple(scope_order)
+    return _validate_string_list(
+        raw_docs.get("scope_order"),
+        path="structure.keybinding_category_docs.scope_order",
+        normalize_lower=True,
+    )
 
 
 def _validate_group_doc(group_name: str, raw_group: object) -> tuple[str, dict[str, str]]:
@@ -391,24 +390,24 @@ def _validate_settings_category_docs(payload: dict[str, Any]) -> tuple[dict[str,
 
     docs: list[dict[str, str]] = []
     for idx, raw_item in enumerate(raw_docs):
-        if not isinstance(raw_item, dict):
-            raise RuntimeError(f"structure.settings_category_docs[{idx}] must be an object")
-        item_id = raw_item.get("id")
-        label = raw_item.get("label")
-        description = raw_item.get("description")
-        if not isinstance(item_id, str) or not item_id.strip():
-            raise RuntimeError(f"structure.settings_category_docs[{idx}].id must be a non-empty string")
-        if not isinstance(label, str) or not label.strip():
-            raise RuntimeError(f"structure.settings_category_docs[{idx}].label must be a non-empty string")
-        if not isinstance(description, str) or not description.strip():
-            raise RuntimeError(
-                f"structure.settings_category_docs[{idx}].description must be a non-empty string"
-            )
+        entry = _require_object(raw_item, path=f"structure.settings_category_docs[{idx}]")
+        item_id = _as_non_empty_string(
+            entry.get("id"),
+            path=f"structure.settings_category_docs[{idx}].id",
+        ).lower()
+        label = _as_non_empty_string(
+            entry.get("label"),
+            path=f"structure.settings_category_docs[{idx}].label",
+        )
+        description = _as_non_empty_string(
+            entry.get("description"),
+            path=f"structure.settings_category_docs[{idx}].description",
+        )
         docs.append(
             {
-                "id": item_id.strip().lower(),
-                "label": label.strip(),
-                "description": description.strip(),
+                "id": item_id,
+                "label": label,
+                "description": description,
             }
         )
     return tuple(docs)
@@ -422,17 +421,21 @@ def _validate_settings_split_rules(payload: dict[str, Any]) -> dict[str, Any]:
             "max_top_level_actions": 2,
             "split_when_mode_specific": True,
         }
-    if not isinstance(raw, dict):
-        raise RuntimeError("structure.settings_split_rules must be an object")
-    max_fields = raw.get("max_top_level_fields")
-    max_actions = raw.get("max_top_level_actions")
-    split_mode_specific = raw.get("split_when_mode_specific")
-    if isinstance(max_fields, bool) or not isinstance(max_fields, int) or max_fields < 1:
-        raise RuntimeError("structure.settings_split_rules.max_top_level_fields must be int >= 1")
-    if isinstance(max_actions, bool) or not isinstance(max_actions, int) or max_actions < 1:
-        raise RuntimeError("structure.settings_split_rules.max_top_level_actions must be int >= 1")
-    if not isinstance(split_mode_specific, bool):
-        raise RuntimeError("structure.settings_split_rules.split_when_mode_specific must be boolean")
+    rules = _require_object(raw, path="structure.settings_split_rules")
+    max_fields = _require_int(
+        rules.get("max_top_level_fields"),
+        path="structure.settings_split_rules.max_top_level_fields",
+        min_value=1,
+    )
+    max_actions = _require_int(
+        rules.get("max_top_level_actions"),
+        path="structure.settings_split_rules.max_top_level_actions",
+        min_value=1,
+    )
+    split_mode_specific = _require_bool(
+        rules.get("split_when_mode_specific"),
+        path="structure.settings_split_rules.split_when_mode_specific",
+    )
     return {
         "max_top_level_fields": max_fields,
         "max_top_level_actions": max_actions,
@@ -458,29 +461,28 @@ def _validate_settings_category_metrics(
             raise RuntimeError(
                 f"structure.settings_category_metrics.{clean_id} has no matching settings_category_docs id"
             )
-        if not isinstance(raw_entry, dict):
-            raise RuntimeError(f"structure.settings_category_metrics.{clean_id} must be an object")
-
-        field_count = raw_entry.get("field_count")
-        action_count = raw_entry.get("action_count")
-        mode_specific = raw_entry.get("mode_specific")
-        top_level = raw_entry.get("top_level")
-        if isinstance(field_count, bool) or not isinstance(field_count, int) or field_count < 0:
-            raise RuntimeError(
-                f"structure.settings_category_metrics.{clean_id}.field_count must be int >= 0"
-            )
-        if isinstance(action_count, bool) or not isinstance(action_count, int) or action_count < 0:
-            raise RuntimeError(
-                f"structure.settings_category_metrics.{clean_id}.action_count must be int >= 0"
-            )
-        if not isinstance(mode_specific, bool):
-            raise RuntimeError(
-                f"structure.settings_category_metrics.{clean_id}.mode_specific must be boolean"
-            )
-        if not isinstance(top_level, bool):
-            raise RuntimeError(
-                f"structure.settings_category_metrics.{clean_id}.top_level must be boolean"
-            )
+        entry = _require_object(
+            raw_entry,
+            path=f"structure.settings_category_metrics.{clean_id}",
+        )
+        field_count = _require_int(
+            entry.get("field_count"),
+            path=f"structure.settings_category_metrics.{clean_id}.field_count",
+            min_value=0,
+        )
+        action_count = _require_int(
+            entry.get("action_count"),
+            path=f"structure.settings_category_metrics.{clean_id}.action_count",
+            min_value=0,
+        )
+        mode_specific = _require_bool(
+            entry.get("mode_specific"),
+            path=f"structure.settings_category_metrics.{clean_id}.mode_specific",
+        )
+        top_level = _require_bool(
+            entry.get("top_level"),
+            path=f"structure.settings_category_metrics.{clean_id}.top_level",
+        )
         metrics[clean_id] = {
             "field_count": field_count,
             "action_count": action_count,

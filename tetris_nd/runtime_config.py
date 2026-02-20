@@ -9,7 +9,6 @@ from .project_config import (
     playbot_history_file_default_path,
     playbot_history_file_default_relative,
     resolve_state_relative_path,
-    state_dir_path,
 )
 from .runtime_config_validation import (
     read_json_payload,
@@ -20,7 +19,6 @@ from .runtime_config_validation import (
 
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
-STATE_DIR = state_dir_path()
 GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
 PLAYBOT_POLICY_FILE = CONFIG_DIR / "playbot" / "policy.json"
 AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"
@@ -33,6 +31,14 @@ def _dimension_bucket_key(ndim: int) -> str:
     if ndim == 3:
         return "3d"
     return "4d_plus"
+
+
+def _normalized_name(value: str) -> str:
+    return value.strip().lower()
+
+
+def _bucket_lookup(mapping: dict[str, Any], ndim: int) -> Any:
+    return mapping[_dimension_bucket_key(ndim)]
 
 
 @lru_cache(maxsize=1)
@@ -57,22 +63,9 @@ def gameplay_tuning_payload() -> dict[str, Any]:
     return deepcopy(_gameplay_tuning())
 
 
-def playbot_policy_payload() -> dict[str, Any]:
-    return deepcopy(_playbot_policy())
-
-
-def audio_sfx_payload() -> dict[str, Any]:
-    return deepcopy(_audio_sfx())
-
-
 def speed_curve_for_dimension(dimension: int) -> tuple[int, int]:
     config = _gameplay_tuning()["speed_curve"]
-    if dimension <= 2:
-        key = "2d"
-    elif dimension == 3:
-        key = "3d"
-    else:
-        key = "4d_plus"
+    key = _dimension_bucket_key(dimension)
     return config[key]["base_ms"], config[key]["min_ms"]
 
 
@@ -85,13 +78,13 @@ def challenge_prefill_ratio(dimension: int) -> float:
 
 def assist_bot_factor(mode_name: str) -> float:
     factors = _gameplay_tuning()["assist_scoring"]["bot_factors"]
-    normalized = mode_name.strip().lower()
+    normalized = _normalized_name(mode_name)
     return float(factors.get(normalized, factors["off"]))
 
 
 def assist_grid_factor(mode_name: str) -> float:
     factors = _gameplay_tuning()["assist_scoring"]["grid_factors"]
-    normalized = mode_name.strip().lower()
+    normalized = _normalized_name(mode_name)
     return float(factors.get(normalized, factors["off"]))
 
 
@@ -119,16 +112,14 @@ def grid_mode_fallback_name() -> str:
 
 
 def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int, int]:
-    config = _playbot_policy()["budget_ms"]
-    bucket = config[_dimension_bucket_key(ndim)]
+    bucket = _bucket_lookup(_playbot_policy()["budget_ms"], ndim)
     return bucket["fast"], bucket["balanced"], bucket["deep"], bucket["ultra"]
 
 
 def playbot_board_size_scaling_policy_for_ndim(ndim: int) -> tuple[int, float, float, float]:
     scaling = _playbot_policy()["board_size_scaling"]
-    key = _dimension_bucket_key(ndim)
     return (
-        int(scaling["reference_cells"][key]),
+        int(_bucket_lookup(scaling["reference_cells"], ndim)),
         float(scaling["min_scale"]),
         float(scaling["max_scale"]),
         float(scaling["exponent"]),
@@ -147,7 +138,7 @@ def playbot_clamp_policy() -> tuple[int, int, int, int]:
 
 def playbot_lookahead_depth(ndim: int, profile_name: str) -> int:
     depth = _playbot_policy()["lookahead"]["depth"]
-    normalized = profile_name.strip().lower()
+    normalized = _normalized_name(profile_name)
     if normalized == "fast":
         return depth["fast"]
     if ndim >= 4:
@@ -163,7 +154,7 @@ def playbot_lookahead_top_k(ndim: int, profile_name: str, depth_value: int) -> i
     top_k = _playbot_policy()["lookahead"]["top_k"]
     if depth_value <= 1:
         return top_k["depth_lte_one"]
-    normalized = profile_name.strip().lower()
+    normalized = _normalized_name(profile_name)
     if ndim <= 2:
         if normalized == "ultra":
             return top_k["ultra_2d"]
@@ -183,11 +174,11 @@ def playbot_adaptive_fallback_enabled() -> bool:
 
 def playbot_adaptive_lookahead_min_budget_ms(ndim: int) -> int:
     lookup = _playbot_policy()["adaptive_fallback"]["lookahead_min_budget_ms"]
-    return int(lookup[_dimension_bucket_key(ndim)])
+    return int(_bucket_lookup(lookup, ndim))
 
 
 def playbot_adaptive_candidate_cap_for_ndim(ndim: int) -> tuple[float, int, int]:
-    cap_obj = _playbot_policy()["adaptive_fallback"]["candidate_cap"][_dimension_bucket_key(ndim)]
+    cap_obj = _bucket_lookup(_playbot_policy()["adaptive_fallback"]["candidate_cap"], ndim)
     return float(cap_obj["per_ms"]), int(cap_obj["min"]), int(cap_obj["max"])
 
 

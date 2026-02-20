@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-02-20
+
+### Changed
+1. Keybinding file load/save flow now uses one shared IO/context resolver:
+   - `tetris_nd/keybindings.py` (`_resolve_keybindings_io_context`)
+2. Menu config validation logic now uses shared primitive validators to reduce duplication:
+   - `tetris_nd/menu_config.py` (`_require_object`, `_require_bool`, `_require_int`, `_require_number`)
+3. Removed test-only wrapper exports from ND planner module:
+   - `tetris_nd/playbot/planner_nd.py`
+   - tests now import scoring/simulation helpers directly from `tetris_nd/playbot/planner_nd_core.py`
+4. Removed obsolete menu-guide compatibility shim:
+   - deleted `tetris_nd/menu_gif_guides.py`
+   - canonical guide module remains `tetris_nd/menu_control_guides.py`
+5. Stage-2 config-validation dedup:
+   - `tetris_nd/menu_config.py` now uses shared string-list and object/string validators for row/action/scope/category paths.
+6. Stage-2 keybinding profile handling dedup:
+   - `tetris_nd/keybindings.py` now uses shared dimension constants and clone helper flow for profile cloning/materialization.
+7. Stage-2 playbot enum boilerplate reduction:
+   - `tetris_nd/playbot/types.py` now uses shared typed helpers for enum label and index resolution.
+8. Keybinding persistence path simplification:
+   - `tetris_nd/keybindings.py` now treats `small` as the canonical root-file profile (`keybindings/{2d,3d,4d}.json`) and drops legacy fallback/dual-write branches.
+9. Stage-3 dead-code cleanup:
+   - removed unreferenced helpers from:
+     - `tetris_nd/runtime_config.py` (`playbot_policy_payload`, `audio_sfx_payload`)
+     - `tetris_nd/topology.py` (`topology_mode_index`)
+     - `tetris_nd/topology_designer.py` (`reset_topology_designer_cache`)
+10. Stage-3 validator dedup:
+   - `tetris_nd/menu_config.py` now reuses shared primitive validators in launcher item, setup field, and split-rule validation paths.
+11. Stage-4 launcher flow dedup:
+    - `tetris_nd/launcher_play.py` now uses a shared `_launch_mode_flow` path for 2D/3D/4D startup/run/return orchestration.
+12. Stage-4 playbot tooling simplification:
+    - removed benchmark wrapper exports from `tetris_nd/playbot/types.py`,
+    - `tools/bench_playbot.py` and `tools/analyze_playbot_policies.py` now read benchmark thresholds/history path directly from `tetris_nd/runtime_config.py`.
+13. Stage-5 runtime config cleanup:
+    - removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
+    - consolidated repeated dimension-bucket and name-normalization lookup paths in runtime-config accessors.
+
 ## 2026-02-19
 
 ### Added

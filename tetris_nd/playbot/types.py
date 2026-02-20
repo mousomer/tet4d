@@ -3,14 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from math import prod
+from typing import TypeVar
 
 from ..runtime_config import (
     playbot_adaptive_candidate_cap_for_ndim,
     playbot_adaptive_fallback_enabled,
     playbot_adaptive_lookahead_min_budget_ms,
     playbot_auto_algorithm_policy_for_ndim,
-    playbot_benchmark_history_file,
-    playbot_benchmark_p95_thresholds,
     playbot_board_size_scaling_policy_for_ndim,
     playbot_budget_table_for_ndim,
     playbot_clamp_policy,
@@ -63,31 +62,40 @@ BOT_PLANNER_ALGORITHM_OPTIONS: tuple[BotPlannerAlgorithm, ...] = (
 )
 
 
+_OptionT = TypeVar("_OptionT")
+
+
+def _option_from_index(options: tuple[_OptionT, ...], index: int) -> _OptionT:
+    safe_index = max(0, min(len(options) - 1, int(index)))
+    return options[safe_index]
+
+
+def _enum_label(value: Enum) -> str:
+    return value.value.upper()
+
+
 def bot_mode_label(mode: BotMode) -> str:
-    return mode.value.upper()
+    return _enum_label(mode)
 
 
 def bot_mode_from_index(index: int) -> BotMode:
-    safe_index = max(0, min(len(BOT_MODE_OPTIONS) - 1, int(index)))
-    return BOT_MODE_OPTIONS[safe_index]
+    return _option_from_index(BOT_MODE_OPTIONS, index)
 
 
 def bot_planner_profile_label(profile: BotPlannerProfile) -> str:
-    return profile.value.upper()
+    return _enum_label(profile)
 
 
 def bot_planner_profile_from_index(index: int) -> BotPlannerProfile:
-    safe_index = max(0, min(len(BOT_PLANNER_PROFILE_OPTIONS) - 1, int(index)))
-    return BOT_PLANNER_PROFILE_OPTIONS[safe_index]
+    return _option_from_index(BOT_PLANNER_PROFILE_OPTIONS, index)
 
 
 def bot_planner_algorithm_label(algorithm: BotPlannerAlgorithm) -> str:
-    return algorithm.value.upper()
+    return _enum_label(algorithm)
 
 
 def bot_planner_algorithm_from_index(index: int) -> BotPlannerAlgorithm:
-    safe_index = max(0, min(len(BOT_PLANNER_ALGORITHM_OPTIONS) - 1, int(index)))
-    return BOT_PLANNER_ALGORITHM_OPTIONS[safe_index]
+    return _option_from_index(BOT_PLANNER_ALGORITHM_OPTIONS, index)
 
 
 def _board_size_scale(ndim: int, dims: tuple[int, ...] | None) -> float:
@@ -195,14 +203,6 @@ def resolve_auto_planner_algorithm(
     if greedy_score >= threshold:
         return BotPlannerAlgorithm.GREEDY_LAYER
     return BotPlannerAlgorithm.HEURISTIC
-
-
-def benchmark_p95_thresholds() -> dict[str, float]:
-    return playbot_benchmark_p95_thresholds()
-
-
-def benchmark_history_file() -> str:
-    return str(playbot_benchmark_history_file())
 
 
 @dataclass(frozen=True)
