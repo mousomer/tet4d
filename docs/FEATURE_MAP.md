@@ -4,14 +4,16 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 1. Launcher and Menus
 
-- Unified launcher: `Play 2D`,`Play 3D`,`Play 4D`,`Help`,`Settings`,`Keybindings Setup`,`Bot Options`,`Quit`.
+- Unified launcher: `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`.
+- Pause `Settings` reuses the same shared settings hub as launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+- Settings hub rows are fully config-driven from `config/menu/structure.json` (`settings_hub_layout_rows`).
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - 3D/4D setup flows now share the same ND setup/menu engine (`tetris_nd/frontend_nd.py`) to reduce drift.
-- Pause menu is unified across modes: resume/restart/settings/keybindings/profiles/help/back to main/quit.
+- Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.
 - Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
 - Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.
 - Help action rows are live-mapped from `config/help/action_map.json` + active runtime bindings.
@@ -47,8 +49,8 @@ User-facing feature map for the shipped `tet4d` experience.
   3. `FULL` (full lattice)
   4. `HELPER` (grid lines intersecting active piece)
 - 3D camera controls:
-  - `H/J/K/L` strict yaw mode (`-15 / -90 / +90 / +15`).
-  - Additional pitch controls and mouse orbit/zoom.
+  - Numeric row mapping: `1/4` yaw fine, `2/3` yaw 90°, `5/6` pitch 90°, `7/8` zoom, `9` projection, `0` reset.
+  - Additional mouse orbit/zoom controls.
 - 4D rendering:
   - 4D board is displayed as multiple 3D layer boards derived from current 4D view basis.
   - Quarter-turn hyperplane view turns update board decomposition:
@@ -69,8 +71,13 @@ User-facing feature map for the shipped `tet4d` experience.
 - `keybindings/4d.json`
 - Built-in keyboard sets: `small`, `full`, and `macbook`.
 - Compact (`small`) 4D `w` movement defaults: `N` / `/` (no `,/.` dependency).
-- Full (`full`) 4D `w` movement defaults: `Numpad7` / `Numpad9`.
+- Full (`full`) 4D `w` movement defaults: `Numpad /` / `Numpad *`.
 - Macbook (`macbook`) 4D `w` movement defaults: `,` / `.`.
+- 4D camera defaults use numeric keys:
+  - top row `1-0` for view/yaw/pitch/zoom,
+  - advanced controls are profile-specific:
+  - `full/small`: keypad advanced camera bindings,
+  - `macbook`: no-keypad fallback (`-`,`=`,`P`,`Backspace`).
 - Small-profile rotation ladder:
   - 2D: `Q/W`
   - 3D: `Q/W`, `A/S`, `Z/X`

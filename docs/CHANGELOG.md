@@ -222,6 +222,18 @@
     - removed `SliceState` and slice dispatch from `tetris_nd/frontend_nd.py`,
     - removed slice HUD/highlight dependency in `tetris_nd/front4d_render.py`,
     - removed slice groups from keybinding/runtime/help models (`tetris_nd/keybindings.py`, `tetris_nd/control_helper.py`, `tetris_nd/keybindings_menu_model.py`, `config/help/*`).
+65. Pause `Settings` now reuses the shared launcher settings hub instead of a duplicate pause-only settings implementation:
+    - `tetris_nd/pause_menu.py` now routes `settings` action through `run_settings_hub_menu`,
+    - pause summary label updated to `Audio + Display + Analytics`,
+    - obsolete `pause_settings_rows` config/runtime path removed from `config/menu/structure.json` and `tetris_nd/menu_config.py`.
+66. Launcher settings row layout is now fully config-driven:
+    - row schema added to `config/menu/structure.json` (`settings_hub_layout_rows`),
+    - strict validation/accessor added in `tetris_nd/menu_config.py`,
+    - hardcoded settings row definitions removed from `tetris_nd/launcher_settings.py`.
+67. Camera defaults moved to numeric mappings:
+    - 3D camera defaults now use top-row digits `1-0` for yaw/pitch/zoom/projection/reset.
+    - 4D camera defaults now use top-row digits `1-0` for view/yaw/pitch/zoom plus numeric keypad for advanced actions (`yaw fine`,`projection`,`reset`).
+    - full-profile 4D movement defaults were adjusted to avoid collisions with numeric camera keys.
 
 ### Documentation
 1. Setup flow in `README.md` now uses `scripts/bootstrap_env.sh` as canonical quick start.
@@ -395,6 +407,16 @@
    - `.venv`-preferred Python selection with optional module/command fallback for lint/test runners.
 25. RDS runtime headers were normalized to Python `3.11-3.14`+`pygame-ce` in 2D/3D/4D and Keybindings RDS files.
 26. Backlog/guideline docs were synchronized to remove stale fixed pass-count snapshots and to track active maintenance items.
+27. Macbook default 4D camera advanced controls no longer require keypad keys:
+   - `yaw_fine_neg/yaw_fine_pos` -> `-`/`=`,
+   - `cycle_projection` -> `P`,
+   - `reset` -> `Backspace`.
+28. Launcher IA was reworked to user-friendly top-level actions:
+   - `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`,
+   - `Play` now opens an explicit 2D/3D/4D mode picker,
+   - `Continue` launches last-used mode setup directly.
+29. Pause menu was simplified to core actions and aligned with launcher naming:
+   - `Resume`,`Restart`,`Settings`,`Controls`,`Help`,`Bot`,`Back To Main Menu`,`Quit`.
 
 ### Documentation
 1. Updated backlog and RDS references for the keybindings scope split.
@@ -405,3 +427,7 @@
 6. Backlog and RDS gap sections updated to reflect closure of all previously open gap items.
 7. Help index and asset manifest updated to document arrow-diagram renderer as the primary guide source.
 8. README/help docs updated for exploration mode, `F1` gameplay help access, and icon-based control guidance.
+9. Added rehaul planning artifacts for next menu/keybinding pass:
+   - `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
+   - RDS/backlog updates for `BKL-P1-005` (macbook no-keypad camera defaults) and `BKL-P1-006` (menu rehaul v2).
+10. Updated RDS/feature docs to reflect implemented menu IA and no-keypad macbook camera defaults.

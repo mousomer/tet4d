@@ -15,6 +15,7 @@ DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
 STRUCTURE_FILE = CONFIG_DIR / "structure.json"
 _MODE_KEYS = ("2d", "3d", "4d")
 _PARITY_ENTRY_ACTIONS = ("settings", "keybindings", "help", "bot_options", "quit")
+_SETTINGS_HUB_LAYOUT_KINDS = {"header", "item"}
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
@@ -205,6 +206,49 @@ def _validate_action_list(raw_actions: object, key: str) -> tuple[str, ...]:
     if not actions:
         raise RuntimeError(f"structure.{key} must not be empty")
     return tuple(actions)
+
+
+def _validate_settings_hub_layout_row(raw_row: object, *, idx: int) -> tuple[dict[str, str], bool]:
+    if not isinstance(raw_row, dict):
+        raise RuntimeError(f"structure.settings_hub_layout_rows[{idx}] must be an object")
+    kind = raw_row.get("kind")
+    label = raw_row.get("label")
+    row_key = raw_row.get("row_key", "")
+    if not isinstance(kind, str) or kind not in _SETTINGS_HUB_LAYOUT_KINDS:
+        raise RuntimeError(
+            f"structure.settings_hub_layout_rows[{idx}].kind must be one of: "
+            + ", ".join(sorted(_SETTINGS_HUB_LAYOUT_KINDS))
+        )
+    if not isinstance(label, str) or not label.strip():
+        raise RuntimeError(f"structure.settings_hub_layout_rows[{idx}].label must be a non-empty string")
+    if kind == "header":
+        if row_key not in ("", None):
+            raise RuntimeError(
+                f"structure.settings_hub_layout_rows[{idx}].row_key must be empty for header rows"
+            )
+        return {"kind": "header", "label": label.strip(), "row_key": ""}, False
+    if not isinstance(row_key, str) or not row_key.strip():
+        raise RuntimeError(
+            f"structure.settings_hub_layout_rows[{idx}].row_key must be a non-empty string for item rows"
+        )
+    return {"kind": "item", "label": label.strip(), "row_key": row_key.strip().lower()}, True
+
+
+def _validate_settings_hub_layout_rows(payload: dict[str, Any]) -> tuple[dict[str, str], ...]:
+    raw_rows = payload.get("settings_hub_layout_rows")
+    if not isinstance(raw_rows, list):
+        raise RuntimeError("structure.settings_hub_layout_rows must be a list")
+    rows: list[dict[str, str]] = []
+    item_count = 0
+    for idx, raw_row in enumerate(raw_rows):
+        row, is_item = _validate_settings_hub_layout_row(raw_row, idx=idx)
+        rows.append(row)
+        item_count += int(is_item)
+    if not rows:
+        raise RuntimeError("structure.settings_hub_layout_rows must not be empty")
+    if item_count == 0:
+        raise RuntimeError("structure.settings_hub_layout_rows must include at least one item row")
+    return tuple(rows)
 
 
 def _resolve_field_max(
@@ -485,6 +529,15 @@ def _enforce_settings_split_policy(validated: dict[str, Any]) -> None:
         raise RuntimeError(
             f"settings_hub_rows missing top-level categories required by split policy: {', '.join(missing_labels)}"
         )
+    layout_rows = tuple(validated["settings_hub_layout_rows"])
+    layout_headers = tuple(row["label"] for row in layout_rows if row["kind"] == "header")
+    layout_header_set = set(layout_headers)
+    missing_layout_headers = [label for label in required_top_labels if label not in layout_header_set]
+    if missing_layout_headers:
+        raise RuntimeError(
+            "settings_hub_layout_rows missing required top-level headers: "
+            + ", ".join(missing_layout_headers)
+        )
 
 
 def _enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
@@ -515,10 +568,10 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     validated = {
         "launcher_menu": menu_items,
         "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
+        "settings_hub_layout_rows": _validate_settings_hub_layout_rows(payload),
         "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
         "pause_menu_rows": _validate_row_list(payload.get("pause_menu_rows"), "pause_menu_rows"),
         "pause_menu_actions": _validate_action_list(payload.get("pause_menu_actions"), "pause_menu_actions"),
-        "pause_settings_rows": _validate_row_list(payload.get("pause_settings_rows"), "pause_settings_rows"),
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
@@ -560,16 +613,17 @@ def bot_options_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["bot_options_rows"])
 
 
+def settings_hub_layout_rows() -> tuple[tuple[str, str, str], ...]:
+    rows = _structure_payload()["settings_hub_layout_rows"]
+    return tuple((row["kind"], row["label"], row["row_key"]) for row in rows)
+
+
 def pause_menu_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_rows"])
 
 
 def pause_menu_actions() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_actions"])
-
-
-def pause_settings_rows() -> tuple[str, ...]:
-    return tuple(_structure_payload()["pause_settings_rows"])
 
 
 def setup_fields_for_dimension(

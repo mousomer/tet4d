@@ -86,12 +86,12 @@ Gameplay (default small profile):
 11. Rotate `z-w`: V/B
 
 View controls:
-1. Yaw turn (animated 90°): J/L
-2. Pitch turn (animated 90°): O/U
-3. Zoom: `+`/`-`
-4. Reset view: `Backspace`
-5. View `xw -/+`: `1`/`2`
-6. View `zw -/+`: `3`/`4`
+1. View `xw -/+`: `1`/`2`
+2. View `zw -/+`: `3`/`4`
+3. Yaw turn (animated 90°): `5`/`6`
+4. Pitch turn (animated 90°): `7`/`8`
+5. Zoom: `9`/`0`
+6. Advanced camera (numeric keypad): yaw fine `-`/`+`=`Numpad7`/`Numpad9`, cycle projection=`Numpad1`, reset view=`Numpad3`
 
 View-hyperplane extension (`xw` / `zw`) requirements:
 1. Camera/view-only turns in the `xw` and `zw` planes are render-space only and must not mutate gameplay coordinates/state.
