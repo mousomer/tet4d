@@ -40,9 +40,9 @@ require_module pytest pytest
 "$PYTHON_BIN" tools/lint_menu_graph.py
 "$PYTHON_BIN" tools/scan_secrets.py
 "$PYTHON_BIN" tools/check_pygame_ce.py
-run_module ruff check .
-run_module ruff check --select C901 .
-run_module pytest -q
+run_module ruff check . --quiet
+run_module ruff check --quiet --select C901 .
+run_module pytest -q --disable-warnings --maxfail=1
 PYTHONPATH=. "$PYTHON_BIN" tools/check_playbot_stability.py --repeats 20 --seed-base 0
 "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tetris_nd
 "$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
