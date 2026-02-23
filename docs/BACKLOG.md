@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-02-20  
+Updated: 2026-02-23  
 Scope: unified view of implemented change set + unresolved RDS/documentation/code gaps.
 
 ## 1. Priority Verification Rules
@@ -316,6 +316,21 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 302. expanded ignore policy to prevent reintroduction of local/non-source files,
 303. synced help/structure docs and RDS cleanup policy wording,
 304. executed full-history purge of removed artifacts across refs and followed with force-push + secret scan sweep.
+305. `DONE` `[BKL-P2-021]` File-fetch lifecycle library RDS + design baseline:
+306. added plan doc `docs/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md` with explicit existing-RDS comparison and scope.
+307. added canonical design spec `docs/rds/RDS_FILE_FETCH_LIBRARY.md` covering file action taxonomy (`load`/residency/`save`/cleanup), optimization toolbox, and API contract.
+308. documented runtime optimization strategy recommendation (`adaptive heuristics + optional contextual bandit`) and deferred full RL to future scale-driven milestones.
+309. synced RDS discoverability in documentation indexes (`docs/RDS_AND_CODEX.md`, `docs/README.md`, `docs/PROJECT_STRUCTURE.md`).
+310. `DONE` `[BKL-P2-022]` Menu graph modularization + runner migration:
+311. launcher/pause trees now come from `config/menu/structure.json` (`menus`, `menu_entrypoints`) via `tetris_nd/menu_config.py`.
+312. generic menu runtime added in `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
+313. hardcoded launcher play picker removed from `front.py`; play menu is config-defined and now includes future routes (`tutorials`, `topology_lab`) under `Play`.
+314. pause runtime migrated to menu graph runner while preserving pause decision semantics in `tetris_nd/pause_menu.py`.
+315. menu graph lint contract added and CI/contract-wired:
+316. `tetris_nd/menu_graph_linter.py`,
+317. `tools/lint_menu_graph.py`,
+318. `tools/validate_project_contracts.py`,
+319. `scripts/ci_check.sh`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
@@ -353,8 +368,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is now operationalized through scheduled benchmark + policy-analysis workflow.
 3. `docs/rds/RDS_MENU_STRUCTURE.md`: `BKL-P2-006` is closed; launcher/pause/help IA parity and compact hardening are complete.
 4. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
+5. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: initial lifecycle and adaptive-fetch design baseline is defined for future standalone implementation.
+6. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization (`BKL-P2-022`) is closed with runner + lint contract in place.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-02-23): repo governance alignment and CI hardening only (no gameplay logic changes).
 
 1. Key implementation/doc files updated include:
 `front2d.py`,
@@ -512,6 +531,22 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `tools/analyze_playbot_policies.py`.
 18. Stage-5 simplification follow-up touched:
 `tetris_nd/runtime_config.py`.
+19. Current menu-graph modularization batch touched:
+`config/menu/structure.json`,
+`tetris_nd/menu_config.py`,
+`tetris_nd/menu_runner.py`,
+`tetris_nd/menu_graph_linter.py`,
+`tools/lint_menu_graph.py`,
+`front.py`,
+`tetris_nd/pause_menu.py`,
+`tools/validate_project_contracts.py`,
+`scripts/ci_check.sh`,
+`config/project/canonical_maintenance.json`,
+`tetris_nd/tests/test_menu_policy.py`,
+`tetris_nd/tests/test_menu_graph_linter.py`,
+`docs/rds/RDS_MENU_STRUCTURE.md`,
+`docs/CHANGELOG.md`,
+`docs/plans/PLAN_MENU_GRAPH_MODULARIZATION_2026-02-21.md`.
 19. Stage-6 icon-pack integration touched:
 `assets/help/icons/transform/svg/*`,
 `config/help/icon_map.json`,
@@ -539,6 +574,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 `front.py`,
 `docs/rds/RDS_TETRIS_GENERAL.md`,
 `docs/plans/PLAN_FONT_PROFILE_UNIFICATION_2026-02-20.md`.
+22. File-fetch library RDS + planning touched:
+`docs/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md`,
+`docs/rds/RDS_FILE_FETCH_LIBRARY.md`,
+`docs/RDS_AND_CODEX.md`,
+`docs/README.md`,
+`docs/PROJECT_STRUCTURE.md`.
 
 ## 6. Source Inputs
 

@@ -21,7 +21,7 @@ class TestProjectContracts(unittest.TestCase):
         )
         if result.returncode != 0:
             details = (result.stdout + "\n" + result.stderr).strip()
-            self.fail(f"project contract validator failed:\n{details}")
+            self.fail(f"project contract validator failed.\n{details}")
 
 
 if __name__ == "__main__":

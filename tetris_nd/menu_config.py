@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .menu_action_contracts import PARITY_ACTION_IDS
 from .runtime_config import playbot_budget_table_for_ndim
 
 FieldSpec = tuple[str, str, int, int]
@@ -14,8 +15,14 @@ CONFIG_DIR = Path(__file__).resolve().parent.parent / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
 STRUCTURE_FILE = CONFIG_DIR / "structure.json"
 _MODE_KEYS = ("2d", "3d", "4d")
-_PARITY_ENTRY_ACTIONS = ("settings", "keybindings", "help", "bot_options", "quit")
 _SETTINGS_HUB_LAYOUT_KINDS = {"header", "item"}
+_MENU_ITEM_TYPES = {"action", "submenu", "route"}
+_MENU_ENTRYPOINT_KEYS = ("launcher", "pause")
+_DEFAULT_MENU_ENTRYPOINTS = {
+    "launcher": "launcher_root",
+    "pause": "pause_root",
+}
+_LEGACY_PLAY_MENU_ID = "launcher_play"
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
@@ -226,6 +233,184 @@ def _validate_action_list(raw_actions: object, key: str) -> tuple[str, ...]:
         normalize_lower=True,
         unique=True,
     )
+
+
+def _validate_menu_graph_item(
+    raw_item: object,
+    *,
+    menu_id: str,
+    idx: int,
+) -> dict[str, str]:
+    path = f"structure.menus.{menu_id}.items[{idx}]"
+    item = _require_object(raw_item, path=path)
+    item_type = _as_non_empty_string(item.get("type"), path=f"{path}.type").lower()
+    label = _as_non_empty_string(item.get("label"), path=f"{path}.label")
+    if item_type not in _MENU_ITEM_TYPES:
+        raise RuntimeError(
+            f"{path}.type must be one of: " + ", ".join(sorted(_MENU_ITEM_TYPES))
+        )
+    if item_type == "action":
+        action_id = _as_non_empty_string(item.get("action_id"), path=f"{path}.action_id").lower()
+        return {
+            "type": "action",
+            "label": label,
+            "action_id": action_id,
+        }
+    if item_type == "submenu":
+        target_menu_id = _as_non_empty_string(item.get("menu_id"), path=f"{path}.menu_id").lower()
+        return {
+            "type": "submenu",
+            "label": label,
+            "menu_id": target_menu_id,
+        }
+    route_id = _as_non_empty_string(item.get("route_id"), path=f"{path}.route_id").lower()
+    return {
+        "type": "route",
+        "label": label,
+        "route_id": route_id,
+    }
+
+
+def _validate_menus_graph(raw_menus: object) -> dict[str, dict[str, Any]]:
+    menus = _require_object(raw_menus, path="structure.menus")
+    if not menus:
+        raise RuntimeError("structure.menus must not be empty")
+
+    validated: dict[str, dict[str, Any]] = {}
+    for raw_menu_id, raw_menu in menus.items():
+        menu_id = _as_non_empty_string(raw_menu_id, path="structure.menus keys").lower()
+        menu_obj = _require_object(raw_menu, path=f"structure.menus.{menu_id}")
+        title = _as_non_empty_string(menu_obj.get("title"), path=f"structure.menus.{menu_id}.title")
+        raw_items = menu_obj.get("items")
+        if not isinstance(raw_items, list) or not raw_items:
+            raise RuntimeError(f"structure.menus.{menu_id}.items must be a non-empty list")
+        items = tuple(
+            _validate_menu_graph_item(raw_item, menu_id=menu_id, idx=idx)
+            for idx, raw_item in enumerate(raw_items)
+        )
+        validated[menu_id] = {
+            "title": title,
+            "items": items,
+        }
+
+    for menu_id, menu in validated.items():
+        items: tuple[dict[str, str], ...] = menu["items"]
+        for idx, item in enumerate(items):
+            if item["type"] != "submenu":
+                continue
+            target_menu_id = item["menu_id"]
+            if target_menu_id not in validated:
+                raise RuntimeError(
+                    f"structure.menus.{menu_id}.items[{idx}] references unknown submenu target: {target_menu_id}"
+                )
+    return validated
+
+
+def _validate_menu_entrypoints(
+    payload: dict[str, Any],
+    *,
+    menus: dict[str, dict[str, Any]],
+) -> dict[str, str]:
+    raw_entrypoints = payload.get("menu_entrypoints")
+    if raw_entrypoints is None:
+        entrypoints = dict(_DEFAULT_MENU_ENTRYPOINTS)
+    else:
+        entrypoints_obj = _require_object(raw_entrypoints, path="structure.menu_entrypoints")
+        entrypoints = {}
+        for key in _MENU_ENTRYPOINT_KEYS:
+            default_id = _DEFAULT_MENU_ENTRYPOINTS[key]
+            raw_value = entrypoints_obj.get(key, default_id)
+            menu_id = _as_non_empty_string(
+                raw_value,
+                path=f"structure.menu_entrypoints.{key}",
+            ).lower()
+            entrypoints[key] = menu_id
+    for key in _MENU_ENTRYPOINT_KEYS:
+        menu_id = entrypoints[key]
+        if menu_id not in menus:
+            raise RuntimeError(
+                f"structure.menu_entrypoints.{key} references unknown menu id: {menu_id}"
+            )
+    return entrypoints
+
+
+def _legacy_menus_graph(
+    launcher_menu: tuple[tuple[str, str], ...],
+    pause_rows: tuple[str, ...],
+    pause_actions: tuple[str, ...],
+) -> dict[str, dict[str, Any]]:
+    launcher_items: list[dict[str, str]] = []
+    has_play_hub = False
+    for action, label in launcher_menu:
+        if action == "play":
+            has_play_hub = True
+            launcher_items.append(
+                {
+                    "type": "submenu",
+                    "label": label,
+                    "menu_id": _LEGACY_PLAY_MENU_ID,
+                }
+            )
+            continue
+        launcher_items.append(
+            {
+                "type": "action",
+                "label": label,
+                "action_id": action,
+            }
+        )
+
+    menus: dict[str, dict[str, Any]] = {
+        _DEFAULT_MENU_ENTRYPOINTS["launcher"]: {
+            "title": "Main Menu",
+            "items": tuple(launcher_items),
+        },
+        _DEFAULT_MENU_ENTRYPOINTS["pause"]: {
+            "title": "Pause Menu",
+            "items": tuple(
+                {
+                    "type": "action",
+                    "label": label,
+                    "action_id": action,
+                }
+                for label, action in zip(pause_rows, pause_actions)
+            ),
+        },
+    }
+    if has_play_hub:
+        menus[_LEGACY_PLAY_MENU_ID] = {
+            "title": "Choose Mode",
+            "items": (
+                {"type": "action", "label": "Play 2D", "action_id": "play_2d"},
+                {"type": "action", "label": "Play 3D", "action_id": "play_3d"},
+                {"type": "action", "label": "Play 4D", "action_id": "play_4d"},
+            ),
+        }
+    return menus
+
+
+def _validate_or_build_menus(
+    payload: dict[str, Any],
+    *,
+    launcher_menu: tuple[tuple[str, str], ...],
+    pause_rows: tuple[str, ...],
+    pause_actions: tuple[str, ...],
+) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+    raw_menus = payload.get("menus")
+    if raw_menus is None:
+        if not launcher_menu:
+            raise RuntimeError(
+                "structure.launcher_menu must be provided when structure.menus is absent"
+            )
+        if not pause_rows or not pause_actions:
+            raise RuntimeError(
+                "structure.pause_menu_rows and structure.pause_menu_actions must be provided when structure.menus is absent"
+            )
+        return _legacy_menus_graph(launcher_menu, pause_rows, pause_actions), dict(_DEFAULT_MENU_ENTRYPOINTS)
+
+    menus = _validate_menus_graph(raw_menus)
+    entrypoints = _validate_menu_entrypoints(payload, menus=menus)
+    return menus, entrypoints
 
 
 def _validate_settings_hub_layout_row(raw_row: object, *, idx: int) -> tuple[dict[str, str], bool]:
@@ -542,46 +727,165 @@ def _enforce_settings_split_policy(validated: dict[str, Any]) -> None:
         )
 
 
+def _collect_reachable_menu_ids(
+    menus: dict[str, dict[str, Any]],
+    *,
+    start_menu_id: str,
+) -> set[str]:
+    reachable: set[str] = set()
+    queue = [start_menu_id]
+    while queue:
+        menu_id = queue.pop()
+        if menu_id in reachable:
+            continue
+        menu = menus.get(menu_id)
+        if menu is None:
+            continue
+        reachable.add(menu_id)
+        for item in menu["items"]:
+            if item["type"] == "submenu":
+                queue.append(item["menu_id"])
+    return reachable
+
+
+def _collect_actions_for_menu_ids(
+    menus: dict[str, dict[str, Any]],
+    *,
+    menu_ids: set[str],
+) -> set[str]:
+    actions: set[str] = set()
+    for menu_id in menu_ids:
+        menu = menus.get(menu_id)
+        if menu is None:
+            continue
+        for item in menu["items"]:
+            if item["type"] == "action":
+                actions.add(item["action_id"])
+    return actions
+
+
+def _legacy_launcher_menu_from_graph(
+    menus: dict[str, dict[str, Any]],
+    *,
+    launcher_menu_id: str,
+) -> tuple[tuple[str, str], ...]:
+    menu = menus.get(launcher_menu_id)
+    if menu is None:
+        return tuple()
+    legacy: list[tuple[str, str]] = []
+    for item in menu["items"]:
+        item_type = item["type"]
+        if item_type == "action":
+            legacy.append((item["action_id"], item["label"]))
+            continue
+        if item_type == "submenu":
+            legacy.append((item["menu_id"], item["label"]))
+            continue
+        legacy.append((item["route_id"], item["label"]))
+    return tuple(legacy)
+
+
+def _legacy_pause_views_from_graph(
+    menus: dict[str, dict[str, Any]],
+    *,
+    pause_menu_id: str,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    menu = menus.get(pause_menu_id)
+    if menu is None:
+        return tuple(), tuple()
+    rows: list[str] = []
+    actions: list[str] = []
+    for item in menu["items"]:
+        rows.append(item["label"])
+        actions.append(item["action_id"] if item["type"] == "action" else "")
+    return tuple(rows), tuple(actions)
+
+
 def _enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
-    launcher_actions = {action for action, _label in validated["launcher_menu"]}
-    pause_actions = set(validated["pause_menu_actions"])
-    required_actions = set(_PARITY_ENTRY_ACTIONS)
+    menus = validated["menus"]
+    entrypoints = validated["menu_entrypoints"]
+    launcher_reachable = _collect_reachable_menu_ids(
+        menus,
+        start_menu_id=entrypoints["launcher"],
+    )
+    pause_reachable = _collect_reachable_menu_ids(
+        menus,
+        start_menu_id=entrypoints["pause"],
+    )
+    launcher_actions = _collect_actions_for_menu_ids(menus, menu_ids=launcher_reachable)
+    pause_actions = _collect_actions_for_menu_ids(menus, menu_ids=pause_reachable)
+    required_actions = set(PARITY_ACTION_IDS)
 
     launcher_missing = sorted(required_actions - launcher_actions)
     pause_missing = sorted(required_actions - pause_actions)
     if launcher_missing:
         raise RuntimeError(
-            "launcher_menu missing required parity actions: " + ", ".join(launcher_missing)
+            "launcher entrypoint missing required parity actions: " + ", ".join(launcher_missing)
         )
     if pause_missing:
         raise RuntimeError(
-            "pause_menu_actions missing required parity actions: " + ", ".join(pause_missing)
+            "pause entrypoint missing required parity actions: " + ", ".join(pause_missing)
         )
 
 
 def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    launcher_menu = payload.get("launcher_menu")
-    if not isinstance(launcher_menu, list):
-        raise RuntimeError("structure.launcher_menu must be a list")
-    menu_items = tuple(_validate_menu_item(item) for item in launcher_menu)
-    if not menu_items:
-        raise RuntimeError("structure.launcher_menu must not be empty")
+    raw_launcher_menu = payload.get("launcher_menu")
+    if raw_launcher_menu is None:
+        launcher_menu_items: tuple[tuple[str, str], ...] = tuple()
+    else:
+        if not isinstance(raw_launcher_menu, list):
+            raise RuntimeError("structure.launcher_menu must be a list")
+        launcher_menu_items = tuple(_validate_menu_item(item) for item in raw_launcher_menu)
+        if not launcher_menu_items:
+            raise RuntimeError("structure.launcher_menu must not be empty")
+
+    raw_pause_rows = payload.get("pause_menu_rows")
+    if raw_pause_rows is None:
+        pause_rows = tuple()
+    else:
+        pause_rows = _validate_row_list(raw_pause_rows, "pause_menu_rows")
+
+    raw_pause_actions = payload.get("pause_menu_actions")
+    if raw_pause_actions is None:
+        pause_actions = tuple()
+    else:
+        pause_actions = _validate_action_list(raw_pause_actions, "pause_menu_actions")
+
+    if pause_rows and pause_actions and len(pause_rows) != len(pause_actions):
+        raise RuntimeError("pause_menu_rows and pause_menu_actions must have equal length")
+
+    menus, entrypoints = _validate_or_build_menus(
+        payload,
+        launcher_menu=launcher_menu_items,
+        pause_rows=pause_rows,
+        pause_actions=pause_actions,
+    )
+    if not launcher_menu_items:
+        launcher_menu_items = _legacy_launcher_menu_from_graph(
+            menus,
+            launcher_menu_id=entrypoints["launcher"],
+        )
+    if not pause_rows and not pause_actions:
+        pause_rows, pause_actions = _legacy_pause_views_from_graph(
+            menus,
+            pause_menu_id=entrypoints["pause"],
+        )
     settings_docs = _validate_settings_category_docs(payload)
     validated = {
-        "launcher_menu": menu_items,
+        "launcher_menu": launcher_menu_items,
+        "menus": menus,
+        "menu_entrypoints": entrypoints,
         "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
         "settings_hub_layout_rows": _validate_settings_hub_layout_rows(payload),
         "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
-        "pause_menu_rows": _validate_row_list(payload.get("pause_menu_rows"), "pause_menu_rows"),
-        "pause_menu_actions": _validate_action_list(payload.get("pause_menu_actions"), "pause_menu_actions"),
+        "pause_menu_rows": pause_rows,
+        "pause_menu_actions": pause_actions,
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
         "settings_split_rules": _validate_settings_split_rules(payload),
         "settings_category_metrics": _validate_settings_category_metrics(payload, settings_docs),
     }
-    if len(validated["pause_menu_rows"]) != len(validated["pause_menu_actions"]):
-        raise RuntimeError("pause_menu_rows and pause_menu_actions must have equal length")
     _enforce_settings_split_policy(validated)
     _enforce_menu_entrypoint_parity(validated)
     return validated
@@ -601,6 +905,47 @@ def _structure_payload() -> dict[str, Any]:
 
 def default_settings_payload() -> dict[str, Any]:
     return deepcopy(_defaults_payload())
+
+
+def menu_graph() -> dict[str, dict[str, Any]]:
+    menus = _structure_payload()["menus"]
+    return deepcopy(menus)
+
+
+def menu_entrypoints() -> dict[str, str]:
+    entrypoints = _structure_payload()["menu_entrypoints"]
+    return deepcopy(entrypoints)
+
+
+def launcher_menu_id() -> str:
+    return str(_structure_payload()["menu_entrypoints"]["launcher"])
+
+
+def pause_menu_id() -> str:
+    return str(_structure_payload()["menu_entrypoints"]["pause"])
+
+
+def menu_definition(menu_id: str) -> dict[str, Any]:
+    clean_menu_id = _as_non_empty_string(menu_id, path="menu_id").lower()
+    menus = _structure_payload()["menus"]
+    menu = menus.get(clean_menu_id)
+    if menu is None:
+        raise KeyError(f"Unknown menu id: {clean_menu_id}")
+    return deepcopy(menu)
+
+
+def menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
+    menu = menu_definition(menu_id)
+    return tuple(menu["items"])
+
+
+def reachable_action_ids(start_menu_id: str) -> tuple[str, ...]:
+    clean_start = _as_non_empty_string(start_menu_id, path="start_menu_id").lower()
+    payload = _structure_payload()
+    menus: dict[str, dict[str, Any]] = payload["menus"]
+    reachable_menus = _collect_reachable_menu_ids(menus, start_menu_id=clean_start)
+    actions = _collect_actions_for_menu_ids(menus, menu_ids=reachable_menus)
+    return tuple(sorted(actions))
 
 
 def launcher_menu_items() -> tuple[tuple[str, str], ...]:

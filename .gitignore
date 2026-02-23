@@ -31,3 +31,10 @@ artifacts/installers/
 assets/transform_icons_full_pack/
 assets/help/translation_keys.gif
 assets/help/rotation_keys.gif
+
+# Local workspace/Codex policy artifacts (not part of public project source)
+.policy/
+.workspace_policy_version.json
+config/project/policy_manifest.json
+scripts/check_git_sanitation.sh
+scripts/check_policy_compliance.sh

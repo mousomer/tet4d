@@ -11,6 +11,7 @@ All requirement/design specs are in:
 - `docs/rds/RDS_PLAYBOT.md`
 - `docs/rds/RDS_SCORE_ANALYZER.md`
 - `docs/rds/RDS_PACKAGING.md`
+- `docs/rds/RDS_FILE_FETCH_LIBRARY.md`
 - `docs/rds/RDS_2D_TETRIS.md`
 - `docs/rds/RDS_3D_TETRIS.md`
 - `docs/rds/RDS_4D_TETRIS.md`
@@ -21,8 +22,9 @@ Read order:
 3. Menu structure RDS
 4. Playbot + score-analyzer RDS
 5. Packaging RDS
-6. Mode-specific RDS
-7. This Codex instructions page
+6. File-fetch library RDS
+7. Mode-specific RDS
+8. This Codex instructions page
 
 ## Codex contributor workflow
 
@@ -31,6 +33,8 @@ Read order:
 3. Preserve deterministic behavior where seeds are used.
 4. When refactoring frontends, keep behavior parity with existing tests.
 5. Prefer small, composable helpers over large event/render functions.
+6. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
+7. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
 
 ## Coding best practices
 
@@ -55,6 +59,14 @@ python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3.14 -m compileall -q  front2d.py  tetris_nd
+```
+
+For repository governance/CI changes, also run:
+
+```bash
+./scripts/check_git_sanitation.sh
+./scripts/check_policy_compliance.sh
+./scripts/verify.sh
 ```
 
 Minimum required coverage for gameplay-affecting changes:
@@ -98,6 +110,13 @@ Minimum required coverage for gameplay-affecting changes:
 17. `docs/help/HELP_INDEX.md`+`assets/help/manifest.json`,
 18. `docs/RELEASE_CHECKLIST.md`.
 19. `docs/RELEASE_INSTALLERS.md`+`packaging/`+`.github/workflows/release-packaging.yml`.
+20. Repo governance enforcement files:
+21. `AGENTS.md`,
+22. `.workspace_policy_version.json`,
+23. `config/project/policy_manifest.json`,
+24. `scripts/verify.sh`,
+25. `scripts/check_git_sanitation.sh`,
+26. `scripts/check_policy_compliance.sh`.
 
 ## Simplification and Technical Debt Tracking (2026-02-18)
 

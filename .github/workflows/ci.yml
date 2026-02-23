@@ -7,10 +7,17 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,5 +28,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install ruff pytest
+      - name: Check git sanitation
+        run: scripts/check_git_sanitation.sh
+      - name: Check policy compliance
+        run: scripts/check_policy_compliance.sh
       - name: Run lint, tests, and planner benchmark
         run: ./scripts/ci_check.sh

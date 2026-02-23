@@ -37,6 +37,7 @@ require_module ruff ruff
 require_module pytest pytest
 
 "$PYTHON_BIN" tools/validate_project_contracts.py
+"$PYTHON_BIN" tools/lint_menu_graph.py
 "$PYTHON_BIN" tools/scan_secrets.py
 "$PYTHON_BIN" tools/check_pygame_ce.py
 run_module ruff check .

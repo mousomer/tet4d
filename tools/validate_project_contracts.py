@@ -290,6 +290,15 @@ def _validate_help_topic_contract(manifest: dict[str, object]) -> list[Validatio
     return issues
 
 
+def _validate_menu_graph_contract() -> list[ValidationIssue]:
+    from tetris_nd.menu_graph_linter import lint_menu_graph
+
+    issues: list[ValidationIssue] = []
+    for issue in lint_menu_graph():
+        issues.append(ValidationIssue("menu_graph", issue.message))
+    return issues
+
+
 def _validate_canonical_candidates(manifest: dict[str, object]) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     candidates = manifest.get("canonical_candidates", [])
@@ -441,6 +450,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_required_paths(manifest))
     issues.extend(_validate_required_json_files(manifest))
     issues.extend(_validate_help_topic_contract(manifest))
+    issues.extend(_validate_menu_graph_contract())
     issues.extend(_validate_canonical_candidates(manifest))
     issues.extend(_validate_content_rules(manifest))
     return issues

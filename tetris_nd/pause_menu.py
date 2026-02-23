@@ -17,9 +17,9 @@ from .keybindings import (
 )
 from .keybindings_menu import run_keybindings_menu
 from .launcher_settings import run_settings_hub_menu
-from .menu_config import pause_menu_actions, pause_menu_rows
-from .menu_model import cycle_index, is_confirm_key
+from .menu_config import menu_items, pause_menu_id
 from .menu_persistence import load_audio_payload, load_display_payload
+from .menu_runner import ActionRegistry, MenuRunner
 from .ui_utils import draw_vertical_gradient, fit_text
 
 
@@ -31,7 +31,10 @@ _MUTED_COLOR = (192, 200, 228)
 _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
 
-_PAUSE_ROWS: tuple[str, ...] = pause_menu_rows()
+_PAUSE_MENU_ID = pause_menu_id()
+_PAUSE_MENU_ITEMS = menu_items(_PAUSE_MENU_ID)
+if any(item.get("type") != "action" for item in _PAUSE_MENU_ITEMS):
+    raise RuntimeError("pause menu graph currently supports action items only")
 
 
 @dataclass
@@ -160,11 +163,18 @@ def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     return tuple(action_values.get(action, "") for action in _PAUSE_ACTION_CODES)
 
 
-def _draw_pause_menu(screen: pygame.Surface, fonts, state: _PauseState, *, dimension: int) -> None:
+def _draw_pause_menu(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+    *,
+    dimension: int,
+    title: str,
+) -> None:
     _draw_list_menu_panel(
         screen,
         fonts,
-        title="Pause Menu",
+        title=title,
         subtitle=f"{dimension}D in-game controls and settings",
         rows=_PAUSE_ROWS,
         selected_index=state.selected,
@@ -192,7 +202,8 @@ def _display_settings_from_payload() -> DisplaySettings:
     )
 
 
-_PAUSE_ACTION_CODES: tuple[str, ...] = pause_menu_actions()
+_PAUSE_ROWS: tuple[str, ...] = tuple(item["label"] for item in _PAUSE_MENU_ITEMS)
+_PAUSE_ACTION_CODES: tuple[str, ...] = tuple(item["action_id"] for item in _PAUSE_MENU_ITEMS)
 _SUPPORTED_PAUSE_ACTIONS = {
     "resume",
     "restart",
@@ -210,12 +221,12 @@ _SUPPORTED_PAUSE_ACTIONS = {
 
 if len(_PAUSE_ROWS) != len(_PAUSE_ACTION_CODES):
     raise RuntimeError(
-        f"pause_menu_rows length ({len(_PAUSE_ROWS)}) must match pause action count ({len(_PAUSE_ACTION_CODES)})"
+        f"pause menu labels length ({len(_PAUSE_ROWS)}) must match pause action count ({len(_PAUSE_ACTION_CODES)})"
     )
 unknown_pause_actions = sorted(set(_PAUSE_ACTION_CODES) - _SUPPORTED_PAUSE_ACTIONS)
 if unknown_pause_actions:
     raise RuntimeError(
-        "pause_menu_actions contains unsupported actions: " + ", ".join(unknown_pause_actions)
+        "pause menu contains unsupported actions: " + ", ".join(unknown_pause_actions)
     )
 
 
@@ -260,16 +271,14 @@ def _handle_pause_bindings_io(state: _PauseState, dimension: int, *, save: bool)
     _set_pause_status(state, ok, msg)
 
 
-def _handle_pause_row(
+def _handle_pause_action(
+    action: str,
     screen: pygame.Surface,
     fonts,
     state: _PauseState,
     *,
     dimension: int,
 ) -> tuple[pygame.Surface, bool]:
-    safe_index = max(0, min(len(_PAUSE_ACTION_CODES) - 1, state.selected))
-    action = _PAUSE_ACTION_CODES[safe_index]
-
     if action in {"resume", "restart", "menu", "quit"}:
         _set_pause_decision(state, action)
         return screen, True
@@ -302,37 +311,51 @@ def _handle_pause_row(
     return screen, True
 
 
-def _handle_pause_key(
+def _handle_pause_row(
     screen: pygame.Surface,
     fonts,
     state: _PauseState,
     *,
     dimension: int,
-    key: int,
 ) -> tuple[pygame.Surface, bool]:
-    if key == pygame.K_ESCAPE:
-        state.decision = "resume"
-        state.running = False
-        return screen, True
-    if key == pygame.K_UP:
-        state.selected = cycle_index(state.selected, len(_PAUSE_ROWS), -1)
-        return screen, False
-    if key == pygame.K_DOWN:
-        state.selected = cycle_index(state.selected, len(_PAUSE_ROWS), 1)
-        return screen, False
-    if not is_confirm_key(key):
-        return screen, False
-    screen, keep_running = _handle_pause_row(
-        screen,
+    safe_index = max(0, min(len(_PAUSE_ACTION_CODES) - 1, state.selected))
+    action = _PAUSE_ACTION_CODES[safe_index]
+    return _handle_pause_action(action, screen, fonts, state, dimension=dimension)
+
+
+def _pause_action_dispatcher(
+    action: str,
+    *,
+    state: _PauseState,
+    dimension: int,
+    fonts,
+    screen_ref: list[pygame.Surface],
+) -> bool:
+    new_screen, keep_running = _handle_pause_action(
+        action,
+        screen_ref[0],
         fonts,
         state,
         dimension=dimension,
     )
+    screen_ref[0] = new_screen
     if not keep_running:
         state.decision = "quit"
         state.running = False
-        return screen, True
-    return screen, False
+        return True
+    if not state.running:
+        return True
+    return False
+
+
+def _pause_root_escape(state: _PauseState) -> bool:
+    _set_pause_decision(state, "resume")
+    return True
+
+
+def _pause_quit_event(state: _PauseState) -> bool:
+    _set_pause_decision(state, "quit")
+    return True
 
 
 def run_pause_menu(
@@ -342,30 +365,52 @@ def run_pause_menu(
     dimension: int,
 ) -> tuple[PauseDecision, pygame.Surface]:
     state = _PauseState()
-    clock = pygame.time.Clock()
+    screen_ref = [screen]
 
-    while state.running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return "quit", screen
-            if event.type != pygame.KEYDOWN:
-                continue
-            screen, done = _handle_pause_key(
-                screen,
-                fonts,
-                state,
+    registry = ActionRegistry()
+    for action in _PAUSE_ACTION_CODES:
+        registry.register(
+            action,
+            lambda action_id=action: _pause_action_dispatcher(
+                action_id,
+                state=state,
                 dimension=dimension,
-                key=event.key,
-            )
-            if done:
-                return state.decision, screen
-            if not state.running:
-                break
+                fonts=fonts,
+                screen_ref=screen_ref,
+            ),
+        )
 
-        if not state.running:
-            break
-        _draw_pause_menu(screen, fonts, state, dimension=dimension)
+    def _render_pause_menu(
+        _menu_id: str,
+        title: str,
+        _items: tuple[dict[str, str], ...],
+        selected: int,
+        _depth: int,
+    ) -> None:
+        state.selected = selected
+        _draw_pause_menu(
+            screen_ref[0],
+            fonts,
+            state,
+            dimension=dimension,
+            title=title,
+        )
         pygame.display.flip()
 
-    return state.decision, screen
+    runner = MenuRunner(
+        menus={
+            _PAUSE_MENU_ID: {
+                "title": "Pause Menu",
+                "items": _PAUSE_MENU_ITEMS,
+            }
+        },
+        start_menu_id=_PAUSE_MENU_ID,
+        action_registry=registry,
+        render_menu=_render_pause_menu,
+        on_root_escape=lambda: _pause_root_escape(state),
+        on_quit_event=lambda: _pause_quit_event(state),
+        initial_selected={_PAUSE_MENU_ID: 0},
+    )
+    runner.run()
+
+    return state.decision, screen_ref[0]

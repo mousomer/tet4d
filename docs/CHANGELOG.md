@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-02-21
+
+### Added
+1. Menu graph linting contract:
+   - runtime linter module: `tetris_nd/menu_graph_linter.py`
+   - CLI tool: `tools/lint_menu_graph.py`
+   - regression test: `tetris_nd/tests/test_menu_graph_linter.py`
+
+### Changed
+1. Menu structure config now includes graph-defined menus and explicit entrypoints:
+   - `config/menu/structure.json` (`menu_entrypoints`, `menus`)
+2. Menu config validation now supports graph-first menu payloads with legacy fallback compatibility:
+   - `tetris_nd/menu_config.py`
+3. New generic menu runtime primitives were introduced:
+   - `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`)
+4. Launcher menu flow now runs through graph navigation and action dispatch; hardcoded play picker removed:
+   - `front.py`
+5. Pause menu flow now runs through graph navigation and action dispatch while preserving pause decisions/status behavior:
+   - `tetris_nd/pause_menu.py`
+6. CI/contract hooks now include menu graph linting:
+   - `scripts/ci_check.sh`
+   - `tools/validate_project_contracts.py`
+   - `config/project/canonical_maintenance.json`
+7. Menu policy tests now assert graph IA and play-route capacity:
+   - `tetris_nd/tests/test_menu_policy.py`
+
 ## 2026-02-20
 
 ### Changed

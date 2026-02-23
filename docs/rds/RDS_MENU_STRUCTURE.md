@@ -1,6 +1,6 @@
 # Menu Structure RDS
 
-Status: Active v0.7 (Verified 2026-02-20)  
+Status: Active v0.8 (Verified 2026-02-21)  
 Author: Omer + Codex  
 Date: 2026-02-20  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`
@@ -71,7 +71,9 @@ Main Menu
 ├── Play
 │   ├── 2D
 │   ├── 3D
-│   └── 4D
+│   ├── 4D
+│   ├── Tutorials (future route)
+│   └── Topology Lab (future route)
 ├── Continue
 │   └── Launch last used mode setup
 ├── Settings
@@ -255,13 +257,13 @@ Add persistent settings file:
 
 ## 9. Implementation Notes (Current)
 
-1. Extract reusable menu view model:
-2. `tetris_nd/menu_model.py`
-3. Extract persistence helpers:
-4. `tetris_nd/menu_persistence.py`
-5. Keep mode-specific field lists in existing frontend files.
-6. Reuse `menu_controls.py` for action dispatch; extend with reset/apply/cancel actions.
-7. Keep profile actions identical in main/setup and pause menus.
+1. Menu graph source-of-truth lives in `config/menu/structure.json` under `menus` and `menu_entrypoints`.
+2. Runtime graph parsing/validation lives in `tetris_nd/menu_config.py` with legacy fallback support for older payloads.
+3. Generic runtime navigation and dispatch lives in:
+4. `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
+5. Launcher and pause menus must consume graph items; no hardcoded tree/picker lists in runtime modules.
+6. Menu graph lint contract lives in:
+7. `tetris_nd/menu_graph_linter.py` + `tools/lint_menu_graph.py`.
 
 ## 10. Testing Instructions
 
@@ -269,7 +271,10 @@ Required checks after implementation:
 ```bash
 ruff check .
 pytest -q
-```Manual tests:
+python tools/lint_menu_graph.py
+python tools/validate_project_contracts.py
+```
+Manual tests:
 1. Keyboard-only navigation across all menu screens.
 2. Controller digital input parity (where available).
 3. Save, quit, relaunch, load: values persist correctly.
@@ -304,7 +309,7 @@ pytest -q
 3. Profile actions are identical in main/setup and pause menus.
 4. Non-default profiles can be redefined, saved, and loaded.
 
-## 14. Implementation Status (2026-02-18)
+## 14. Implementation Status (2026-02-21)
 
 Implemented in code:
 1. Unified launcher added at `front.py`.
@@ -341,6 +346,14 @@ Stabilization details:
 18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
+21. Launcher and pause menu trees now run through one generic graph runtime (`tetris_nd/menu_runner.py`) with per-surface action registries.
+22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
+23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` are routed under `Play`.
+24. Menu graph lint contract is enforced via:
+25. `tetris_nd/menu_graph_linter.py`,
+26. `tools/lint_menu_graph.py`,
+27. `tools/validate_project_contracts.py`,
+28. `scripts/ci_check.sh`.
 
 ## 15. Follow-up Status
 
@@ -379,6 +392,7 @@ Stabilization details:
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
 34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
 35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `tetris_nd/launcher_settings.py`.
+36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
 
 ## 16. Menu Rehaul v2 (Core IA Implemented, `BKL-P1-006`)
 
@@ -398,7 +412,7 @@ Guideline basis (re-validated 2026-02-20):
 Target IA delta:
 1. Replace broad top-level labels with intent labels:
 2. `Play`, `Continue`, `Settings`, `Controls`, `Help`, `Bot`, `Quit`.
-3. Move dimension selection under `Play` with a mode card list (`2D`,`3D`,`4D`) and a one-line mode summary.
+3. Move dimension selection under `Play` with graph-defined mode rows (`2D`,`3D`,`4D`) and route capacity for `Tutorials` + `Topology Lab` without adding top-level entries.
 4. Keep `Audio` and `Display` as top-level settings categories while they remain small.
 5. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`) inside per-mode setup screens only.
 6. Keep `Controls` separate from `Settings`, with first-level scopes:

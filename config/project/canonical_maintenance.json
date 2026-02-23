@@ -79,11 +79,21 @@
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
       "scripts/ci_check.sh",
+      "scripts/verify.sh",
+      "scripts/check_git_sanitation.sh",
+      "scripts/check_policy_compliance.sh",
       "tools/check_pygame_ce.py",
       "tools/scan_secrets.py",
+      "tools/lint_menu_graph.py",
       "tools/validate_project_contracts.py",
+      ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
       ".github/workflows/release-packaging.yml"
+    ],
+    "governance": [
+      "AGENTS.md",
+      ".workspace_policy_version.json",
+      "config/project/policy_manifest.json"
     ],
     "packaging_scripts": [
       "packaging/pyinstaller/tet4d.spec",
@@ -176,11 +186,68 @@
         "require_module pytest pytest",
         "run_module ruff check .",
         "run_module ruff check --select C901 .",
+        "tools/lint_menu_graph.py",
         "tools/scan_secrets.py",
         "run_module pytest -q"
       ],
       "must_not_contain": [
         "run_module_or_command"
+      ]
+    },
+    {
+      "file": "AGENTS.md",
+      "must_contain": [
+        "docs/RDS_AND_CODEX.md",
+        "config/project/canonical_maintenance.json",
+        "tools/validate_project_contracts.py",
+        "./scripts/verify.sh",
+        "config/project/io_paths.json"
+      ]
+    },
+    {
+      "file": "scripts/verify.sh",
+      "must_contain": [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "exec ./scripts/ci_check.sh"
+      ]
+    },
+    {
+      "file": "scripts/check_policy_compliance.sh",
+      "must_contain": [
+        ".workspace_policy_version.json",
+        "config/project/policy_manifest.json",
+        "python3 tools/validate_project_contracts.py",
+        "python3 tools/scan_secrets.py"
+      ]
+    },
+    {
+      "file": "scripts/check_git_sanitation.sh",
+      "must_contain": [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "Absolute filesystem paths detected.",
+        "Potential unsafe path traversal patterns detected."
+      ]
+    },
+    {
+      "file": "config/project/policy_manifest.json",
+      "must_contain": [
+        "\"project_name\": \"tet4d\"",
+        "\"verification_command\": \"./scripts/verify.sh\"",
+        "\"ci_entrypoint\": \"./scripts/ci_check.sh\"",
+        "\"contract_validation\": \"python3 tools/validate_project_contracts.py\"",
+        "\"secret_scan\": \"python3 tools/scan_secrets.py\""
+      ]
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "must_contain": [
+        "SDL_VIDEODRIVER: dummy",
+        "SDL_AUDIODRIVER: dummy",
+        "scripts/check_git_sanitation.sh",
+        "scripts/check_policy_compliance.sh",
+        "./scripts/ci_check.sh"
       ]
     },
     {

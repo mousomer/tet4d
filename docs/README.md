@@ -37,6 +37,7 @@ This repository documentation is unified into exactly three sections.
 - `docs/rds/RDS_PLAYBOT.md`
 - `docs/rds/RDS_SCORE_ANALYZER.md`
 - `docs/rds/RDS_PACKAGING.md`
+- `docs/rds/RDS_FILE_FETCH_LIBRARY.md`
 - `docs/rds/RDS_2D_TETRIS.md`
 - `docs/rds/RDS_3D_TETRIS.md`
 - `docs/rds/RDS_4D_TETRIS.md`

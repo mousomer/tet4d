@@ -47,8 +47,8 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertIn("topology_profile_index", attrs)
 
     def test_launcher_pause_entrypoint_parity(self) -> None:
-        launcher_actions = {action for action, _label in menu_config.launcher_menu_items()}
-        pause_actions = set(menu_config.pause_menu_actions())
+        launcher_actions = set(menu_config.reachable_action_ids(menu_config.launcher_menu_id()))
+        pause_actions = set(menu_config.reachable_action_ids(menu_config.pause_menu_id()))
         required = {"settings", "keybindings", "help", "bot_options", "quit"}
         self.assertTrue(required.issubset(launcher_actions))
         self.assertTrue(required.issubset(pause_actions))
@@ -68,3 +68,20 @@ class TestMenuPolicy(unittest.TestCase):
         pause_actions = set(menu_config.pause_menu_actions())
         expected = {"resume", "restart", "settings", "keybindings", "help", "bot_options", "menu", "quit"}
         self.assertTrue(expected.issubset(pause_actions))
+
+    def test_menu_graph_root_labels_preserve_top_level_ia(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        labels = [item["label"] for item in root_items]
+        self.assertEqual(labels, ["Play", "Continue", "Settings", "Controls", "Help", "Bot", "Quit"])
+
+    def test_play_menu_is_graph_defined_and_includes_future_routes(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        play_links = [item for item in root_items if item["type"] == "submenu" and item["label"] == "Play"]
+        self.assertEqual(len(play_links), 1)
+        play_menu_id = play_links[0]["menu_id"]
+
+        play_items = menu_config.menu_items(play_menu_id)
+        play_actions = {item["action_id"] for item in play_items if item["type"] == "action"}
+        play_routes = {item["route_id"] for item in play_items if item["type"] == "route"}
+        self.assertTrue({"play_2d", "play_3d", "play_4d"}.issubset(play_actions))
+        self.assertTrue({"tutorials", "topology_lab"}.issubset(play_routes))

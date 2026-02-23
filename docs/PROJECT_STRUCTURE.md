@@ -117,6 +117,7 @@ tet4d/
         ├── RDS_MENU_STRUCTURE.md
         ├── RDS_SCORE_ANALYZER.md
         ├── RDS_PACKAGING.md
+        ├── RDS_FILE_FETCH_LIBRARY.md
         ├── RDS_2D_TETRIS.md
         ├── RDS_3D_TETRIS.md
         └── RDS_4D_TETRIS.md
