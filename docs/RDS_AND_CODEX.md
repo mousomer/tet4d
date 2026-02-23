@@ -112,11 +112,11 @@ Minimum required coverage for gameplay-affecting changes:
 19. `docs/RELEASE_INSTALLERS.md`+`packaging/`+`.github/workflows/release-packaging.yml`.
 20. Repo governance enforcement files:
 21. `AGENTS.md`,
-22. `.workspace_policy_version.json`,
-23. `config/project/policy_manifest.json`,
-24. `scripts/verify.sh`,
-25. `scripts/check_git_sanitation.sh`,
-26. `scripts/check_policy_compliance.sh`.
+22. `config/project/policy_manifest.json`,
+23. `scripts/verify.sh`,
+24. `scripts/check_git_sanitation.sh`,
+25. `scripts/check_policy_compliance.sh`.
+26. Workspace-local policy marker files (for example, `.workspace_policy_version.json`) are optional and must not be required by CI/policy checks.
 
 ## Simplification and Technical Debt Tracking (2026-02-18)
 

@@ -92,7 +92,6 @@
     ],
     "governance": [
       "AGENTS.md",
-      ".workspace_policy_version.json",
       "config/project/policy_manifest.json"
     ],
     "packaging_scripts": [
@@ -215,7 +214,8 @@
     {
       "file": "scripts/check_policy_compliance.sh",
       "must_contain": [
-        ".workspace_policy_version.json",
+        "AGENTS.md",
+        "scripts/verify.sh",
         "config/project/policy_manifest.json",
         "python3 tools/validate_project_contracts.py",
         "python3 tools/scan_secrets.py"
@@ -227,7 +227,7 @@
         "#!/usr/bin/env bash",
         "set -euo pipefail",
         "Absolute filesystem paths detected.",
-        "Potential unsafe path traversal patterns detected."
+        "Filenames with spaces detected:"
       ]
     },
     {

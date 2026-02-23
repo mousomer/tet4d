@@ -12,6 +12,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 2. Unified Change Set (Implemented Baseline)
 
+1. `DONE` Governance audit follow-up (public-repo hardening):
+2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
+3. `DONE` workspace-only policy marker files are no longer required by compliance checks/contracts.
+
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
 3. `DONE` General keybindings are now separated in the main keybindings menu (not merged into default dimension views).
