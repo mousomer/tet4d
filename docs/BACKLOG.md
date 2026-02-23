@@ -15,6 +15,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
 3. `DONE` workspace-only policy marker files are no longer required by compliance checks/contracts.
+4. `DONE` Local/Codex verification wrapper now supports quiet success + fail-loud logs with `CODEX_MODE=1` reduced stability repeats while CI remains on `scripts/ci_check.sh`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).

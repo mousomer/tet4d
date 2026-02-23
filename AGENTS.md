@@ -20,6 +20,12 @@ Run:
 ./scripts/verify.sh
 ```
 
+Codex/local quick mode (same checks, lower stability repeats, quieter success output):
+
+```bash
+CODEX_MODE=1 ./scripts/verify.sh
+```
+
 Verification must pass:
 - ruff
 - ruff (C901)
@@ -30,6 +36,8 @@ Verification must pass:
 - playbot stability sweep
 - compileall
 - planner benchmark assertions
+
+CI remains authoritative and runs `./scripts/ci_check.sh` via `.github/workflows/ci.yml`.
 
 ## Safety & sanitation
 - No secrets in repo.

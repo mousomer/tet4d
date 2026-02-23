@@ -3,27 +3,19 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# ----------------------------
-# Configuration (Codex-friendly)
-# ----------------------------
-# CODEX_MODE=1 reduces token-heavy output and runtime while preserving core correctness checks.
+# CODEX_MODE=1 reduces token-heavy runtime while preserving core correctness checks.
 CODEX_MODE="${CODEX_MODE:-0}"
-
-# If you want verify to be quiet by default (good for Codex), leave QUIET=1 default.
 QUIET="${QUIET:-1}"
 
-# In CODEX_MODE, reduce stability repeats to limit log volume.
+# Reduce stability repeats in CODEX_MODE to keep logs/time bounded.
 if [[ "$CODEX_MODE" == "1" ]]; then
   STABILITY_REPEATS="${STABILITY_REPEATS:-5}"
 else
   STABILITY_REPEATS="${STABILITY_REPEATS:-20}"
 fi
-
 STABILITY_SEED_BASE="${STABILITY_SEED_BASE:-0}"
 
-# ----------------------------
-# Python selection (mirrors ci_check.sh)
-# ----------------------------
+# Select python
 if [[ -n "${PYTHON_BIN:-}" ]]; then
   :
 elif [[ -x ".venv/bin/python" ]]; then
@@ -48,14 +40,8 @@ require_module() {
   exit 1
 }
 
-run_module() {
-  local module="$1"; shift
-  "$PYTHON_BIN" -m "$module" "$@"
-}
+run_module() { "$PYTHON_BIN" -m "$@"; }
 
-# ----------------------------
-# Pass-quiet / fail-loud runner
-# ----------------------------
 run_step() {
   local name="$1"; shift
   local tmp
@@ -75,32 +61,24 @@ run_step() {
   fi
 }
 
-# ----------------------------
-# Verify steps (same intent as ci_check, quieter)
-# ----------------------------
+# Minimal output verification steps (same intent as ci_check.sh)
 require_module ruff ruff
 require_module pytest pytest
 
-# Governance/contract checks (keep these; they’re high signal)
-run_step "contracts" "$PYTHON_BIN" tools/validate_project_contracts.py
-run_step "secret_scan" "$PYTHON_BIN" tools/scan_secrets.py
-run_step "pygame_ce_check" "$PYTHON_BIN" tools/check_pygame_ce.py
+run_step "contracts"      "$PYTHON_BIN" tools/validate_project_contracts.py
+run_step "secret_scan"    "$PYTHON_BIN" tools/scan_secrets.py
+run_step "pygame_ce"      "$PYTHON_BIN" tools/check_pygame_ce.py
 
-# Lint + complexity
-run_step "ruff" run_module ruff check .
-run_step "ruff_c901" run_module ruff check --select C901 .
+run_step "ruff"           run_module ruff check .
+run_step "ruff_c901"      run_module ruff check --select C901 .
 
-# Tests: already quiet
-run_step "pytest" run_module pytest -q
+# Keep pytest quiet and bounded in interactive mode
+run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings
 
-# Stability sweep (token-heavy). In CODEX_MODE defaults to fewer repeats.
 run_step "playbot_stability" \
-  "$PYTHON_BIN" tools/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+  env PYTHONPATH=. "$PYTHON_BIN" tools/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
-# Compileall: already quiet
-run_step "compileall" "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tetris_nd
-
-# Bench assertions: keep, but keep output quiet unless failing
-run_step "bench_playbot" "$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
+run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tetris_nd
+run_step "bench_playbot"  "$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
 
 echo "verify: OK"

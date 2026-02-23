@@ -183,8 +183,8 @@
       "must_contain": [
         "require_module ruff ruff",
         "require_module pytest pytest",
-        "run_module ruff check .",
-        "run_module ruff check --select C901 .",
+        "run_module ruff check . --quiet",
+        "run_module ruff check --quiet --select C901 .",
         "tools/lint_menu_graph.py",
         "tools/scan_secrets.py",
         "run_module pytest -q"
@@ -208,7 +208,9 @@
       "must_contain": [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
-        "exec ./scripts/ci_check.sh"
+        "CODEX_MODE=\"${CODEX_MODE:-0}\"",
+        "run_step \"contracts\"",
+        "echo \"verify: OK\""
       ]
     },
     {
@@ -227,6 +229,7 @@
         "#!/usr/bin/env bash",
         "set -euo pipefail",
         "Absolute filesystem paths detected.",
+        "Potential unsafe path traversal patterns detected in docs/ or config/.",
         "Filenames with spaces detected:"
       ]
     },

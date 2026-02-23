@@ -69,6 +69,8 @@ For repository governance/CI changes, also run:
 ./scripts/verify.sh
 ```
 
+For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`.
+
 Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).
 2. Replay determinism tests.
