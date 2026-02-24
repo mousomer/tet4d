@@ -4,6 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ENGINE_DIR="src/tet4d/engine"
+REPLAY_DIR="src/tet4d/replay"
+UI_DIR="src/tet4d/ui"
 AI_DIR="src/tet4d/ai"
 TOOLS_STABILITY_DIR="tools/stability"
 TOOLS_BENCHMARKS_DIR="tools/benchmarks"
@@ -152,25 +154,20 @@ if ((${#tools_top_imports[@]})); then
   fail "Architecture violation: engine imports top-level tools (forbidden)."
 fi
 
-# 4) AI package should depend on engine.api only (no deep engine imports).
-if [[ -d "$AI_DIR" ]]; then
-  ai_engine_import_lines="$("${RG_BASE[@]}" \
-    '^\s*(import|from)\s+tet4d\.engine(\.|(\s|$))' \
-    "$AI_DIR" \
-    --glob '!src/tet4d/ai/tests/**' || true)"
-  if [[ -n "${ai_engine_import_lines}" ]]; then
-    ai_disallowed_lines="$(printf '%s\n' "$ai_engine_import_lines" | grep -Ev \
-      '^\s*[^:]+:[0-9]+:\s*(import|from)\s+tet4d\.engine\.api(\.|(\s|$))|^\s*[^:]+:[0-9]+:\s*from\s+tet4d\.engine\s+import\s+api(\s|,|$)' \
-      || true)"
-    if [[ -n "${ai_disallowed_lines}" ]]; then
-      echo "Architecture violation: tet4d.ai imports deep engine internals (use tet4d.engine.api)." >&2
-      printf '%s\n' "$ai_disallowed_lines" >&2
-      fail "Architecture violation: tet4d.ai must import tet4d.engine.api only."
-    fi
-  fi
+# 3b) Engine must not import replay modules (tests may import replay helpers).
+replay_imports=()
+append_lines_to_array replay_imports < <(
+  collect_import_files \
+    '^\s*(import|from)\s+tet4d\.replay(\.|(\s|$))' \
+    "$ENGINE_DIR" \
+    --glob '!src/tet4d/engine/tests/**'
+)
+if ((${#replay_imports[@]})); then
+  print_unexpected_list "Architecture violation: engine imports tet4d.replay (forbidden)." "${replay_imports[@]}"
+  fail "Architecture violation: engine imports tet4d.replay (forbidden)."
 fi
 
-check_tools_engine_api_only() {
+check_engine_api_only_imports() {
   local dir="$1"
   local label="$2"
   local exclude_glob="${3:-}"
@@ -195,10 +192,43 @@ check_tools_engine_api_only() {
   fi
 }
 
+# 4) Replay + AI packages should depend on engine.api only (no deep engine imports).
+check_engine_api_only_imports "$REPLAY_DIR" "tet4d.replay"
+check_engine_api_only_imports "$AI_DIR" "tet4d.ai" '!src/tet4d/ai/tests/**'
+
+# 4b) UI adapters may still import engine internals during migration, but lock the current baseline.
+if [[ -d "$UI_DIR" ]]; then
+  ui_engine_imports=()
+  append_lines_to_array ui_engine_imports < <(
+    collect_import_files \
+      '^\s*(import|from)\s+tet4d\.engine(\.|(\s|$))' \
+      "$UI_DIR" \
+      --glob '!src/tet4d/ui/tests/**'
+  )
+  UI_ENGINE_IMPORT_ALLOWLIST=$(cat <<'EOF'
+src/tet4d/ui/pygame/front3d.py
+src/tet4d/ui/pygame/front4d.py
+src/tet4d/ui/pygame/profile_4d.py
+EOF
+)
+  unexpected_ui_engine_imports=()
+  for f in "${ui_engine_imports[@]}"; do
+    if ! grep -Fqx "$f" <<<"$UI_ENGINE_IMPORT_ALLOWLIST"; then
+      unexpected_ui_engine_imports+=("$f")
+    fi
+  done
+  if ((${#unexpected_ui_engine_imports[@]})); then
+    print_unexpected_list \
+      "Architecture violation: new ui adapter deep engine imports detected outside Stage 8 allowlist." \
+      "${unexpected_ui_engine_imports[@]}"
+    fail "Architecture violation: tet4d.ui imports deep engine internals outside baseline allowlist."
+  fi
+fi
+
 # 5) Stability + benchmark tools should import engine via API only.
 # profile_4d_render is a renderer benchmark and may use the UI adapter seam.
-check_tools_engine_api_only "$TOOLS_STABILITY_DIR" "tools/stability"
-check_tools_engine_api_only "$TOOLS_BENCHMARKS_DIR" "tools/benchmarks" '!tools/benchmarks/profile_4d_render.py'
+check_engine_api_only_imports "$TOOLS_STABILITY_DIR" "tools/stability"
+check_engine_api_only_imports "$TOOLS_BENCHMARKS_DIR" "tools/benchmarks" '!tools/benchmarks/profile_4d_render.py'
 
 # 6) Tools should not import deep UI internals directly; benchmark render profiler may use ui adapter package.
 if [[ -d "$TOOLS_BENCHMARKS_DIR" ]]; then

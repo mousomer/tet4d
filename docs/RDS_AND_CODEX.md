@@ -71,6 +71,7 @@ For repository governance/CI changes, also run:
 ```bash
 ./scripts/check_git_sanitation.sh
 ./scripts/check_policy_compliance.sh
+# includes scripts/check_architecture_boundaries.sh (import boundary gate)
 ./scripts/verify.sh
 ```
 

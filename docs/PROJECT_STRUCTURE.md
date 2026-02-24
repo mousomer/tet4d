@@ -190,7 +190,8 @@ tet4d/
 5. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
 6. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
 7. Prefer `tet4d.engine.api` for tool imports; UI/render profiling tools may use `src/tet4d/ui/pygame/` adapter seams.
-8. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
+8. `scripts/check_architecture_boundaries.sh` enforces incremental import boundaries (with documented temporary baselines).
+9. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
 
 ## Unified documentation sections
 

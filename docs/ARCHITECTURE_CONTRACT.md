@@ -27,6 +27,7 @@ incremental enforcement strategy used while refactoring.
 
 - Replay schema and serialization/deserialization live outside engine core.
 - Engine consumes replay data, not replay files.
+- Stage 8 enforces `tet4d.replay` -> `tet4d.engine.api` only (no deep engine imports).
 
 ### AI / Playbot (`tet4d.ai`)
 
@@ -61,4 +62,6 @@ incremental enforcement strategy used while refactoring.
 - Because `src/tet4d/engine/` is currently mixed (logic + `pygame` adapters),
   the initial checker uses a locked baseline for existing `pygame` imports and
   fails on new violations.
+- Stage 8 also locks the current `src/tet4d/ui/` deep-engine import baseline while
+  enforcing strict `engine -> replay` and `replay/ai/tools -> engine.api` rules.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
