@@ -106,6 +106,10 @@ def main() -> int:
             _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
             r"\.step\s*\(",
         ),
+        "core_step_private_state_method_calls": _match_lines(
+            _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
+            r"\._[A-Za-z]\w*\s*\(",
+        ),
         "file_io_calls_non_test": _match_lines(
             engine_paths,
             r"\bopen\s*\(|\.open\s*\(|\.read_text\s*\(|\.write_text\s*\(|\.read_bytes\s*\(|\.write_bytes\s*\(",
@@ -113,7 +117,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 12,
+        "arch_stage": 13,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",

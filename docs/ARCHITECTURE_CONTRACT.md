@@ -78,4 +78,7 @@ incremental enforcement strategy used while refactoring.
   `engine/core/step` while keeping `game2d.py` as a compatibility delegator.
 - Stage 12 (slice 3) moves the ND tick/gravity reducer path into `engine/core/step`,
   leaving `game_nd.py` as a compatibility delegator and eliminating reducer wrapper debt.
+- Stage 13 (slice 4, 2D model/action seam) moves 2D `Action` and reducer-facing state
+  protocols into `engine/core/model` and makes core 2D action dispatch independent of
+  `game2d.py` private helpers.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

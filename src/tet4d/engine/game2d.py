@@ -1,10 +1,9 @@
 # tetris_nd/game2d.py
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from typing import List, Optional
 import random
 
-from .board import BoardND
+from .core.model import Action, BoardND
 from .pieces2d import (
     ActivePiece2D,
     PieceShape2D,
@@ -19,6 +18,7 @@ from .score_analyzer import (
 )
 from .core.rules.scoring import score_for_clear
 from .core.rules.locking import apply_lock_and_score
+from .core.step.reducer import apply_action_2d as core_apply_action_2d
 from .core.step.reducer import step_2d as core_step_2d
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -30,16 +30,6 @@ from .topology import (
 
 def _score_for_clear(cleared_lines: int) -> int:
     return score_for_clear(cleared_lines)
-
-
-class Action(Enum):
-    MOVE_LEFT = auto()
-    MOVE_RIGHT = auto()
-    SOFT_DROP = auto()
-    HARD_DROP = auto()
-    ROTATE_CW = auto()
-    ROTATE_CCW = auto()
-    NONE = auto()          # no user input, just gravity tick
 
 
 @dataclass
@@ -306,21 +296,7 @@ class GameState:
             self.spawn_new_piece()
 
     def _apply_action(self, action: Action) -> bool:
-        if action == Action.HARD_DROP:
-            self.hard_drop()
-            return True
-
-        action_handlers = {
-            Action.MOVE_LEFT: lambda: self.try_move(-1, 0),
-            Action.MOVE_RIGHT: lambda: self.try_move(1, 0),
-            Action.SOFT_DROP: lambda: self.try_move(0, 1),
-            Action.ROTATE_CW: lambda: self.try_rotate(+1),
-            Action.ROTATE_CCW: lambda: self.try_rotate(-1),
-        }
-        handler = action_handlers.get(action)
-        if handler is not None:
-            handler()
-        return False
+        return core_apply_action_2d(self, action)
 
     # --- Main step function ---
 

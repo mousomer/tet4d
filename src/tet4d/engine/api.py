@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from .core.model import BoardND
+from .core.model import Action, BoardND
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
     current_piece_cells as core_current_piece_cells,
@@ -11,7 +11,7 @@ from .core.rules.state_queries import (
 )
 from .core.step.reducer import step_2d as core_step_2d
 from .core.step.reducer import step_nd as core_step_nd
-from .game2d import Action, GameConfig, GameState
+from .game2d import GameConfig, GameState
 from .game_nd import GameConfigND, GameStateND
 from .pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
 from .pieces_nd import (
