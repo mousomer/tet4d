@@ -5,6 +5,7 @@ import random
 from .board import BoardND
 from .game2d import Action, GameConfig, GameState
 from .game_nd import GameConfigND, GameStateND
+from .rng import EngineRNG, coerce_random
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -20,8 +21,7 @@ def new_game_state_2d(
     rng: random.Random | None = None,
     seed: int | None = None,
 ) -> GameState:
-    if rng is None:
-        rng = random.Random(seed)
+    rng = coerce_random(rng=rng, seed=seed)
     if board is None:
         board = BoardND((config.width, config.height))
     return GameState(config=config, board=board, rng=rng)
@@ -34,11 +34,14 @@ def new_game_state_nd(
     rng: random.Random | None = None,
     seed: int | None = None,
 ) -> GameStateND:
-    if rng is None:
-        rng = random.Random(seed)
+    rng = coerce_random(rng=rng, seed=seed)
     if board is None:
         board = BoardND(config.dims)
     return GameStateND(config=config, board=board, rng=rng)
+
+
+def new_rng(seed: int | float | str | bytes | bytearray | None = None) -> EngineRNG:
+    return EngineRNG(seed)
 
 
 def step_2d(state: GameState, action: Action = Action.NONE) -> GameState:
@@ -94,6 +97,7 @@ __all__ = [
     "GameState",
     "GameState2D",
     "GameStateND",
+    "EngineRNG",
     "board_cells",
     "current_piece_cells",
     "is_game_over",
@@ -101,6 +105,7 @@ __all__ = [
     "legal_actions_2d",
     "new_game_state_2d",
     "new_game_state_nd",
+    "new_rng",
     "step",
     "step_2d",
     "step_nd",
