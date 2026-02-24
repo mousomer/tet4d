@@ -178,15 +178,24 @@ class GameState:
             return None
         return tuple((coord[0], coord[1]) for coord in mapped)
 
+    def mapped_piece_cells_for_piece(
+        self,
+        piece: ActivePiece2D,
+        *,
+        include_above: bool = True,
+    ) -> tuple[tuple[int, int], ...] | None:
+        mapped = self._mapped_piece_cells(piece)
+        if mapped is None or include_above:
+            return mapped
+        return tuple(coord for coord in mapped if coord[1] >= 0)
+
     def current_piece_cells_mapped(self, *, include_above: bool = False) -> tuple[tuple[int, int], ...]:
         if self.current_piece is None:
             return ()
-        mapped = self._mapped_piece_cells(self.current_piece)
+        mapped = self.mapped_piece_cells_for_piece(self.current_piece, include_above=include_above)
         if mapped is None:
             return ()
-        if include_above:
-            return mapped
-        return tuple(coord for coord in mapped if coord[1] >= 0)
+        return mapped
 
     def _can_exist(self, piece: ActivePiece2D) -> bool:
         """Compatibility wrapper over the core 2D existence/collision helper."""

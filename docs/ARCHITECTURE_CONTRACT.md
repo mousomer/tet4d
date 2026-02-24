@@ -84,4 +84,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 14 (slice 5, 2D collision/existence seam) routes the 2D gravity-step existence
   check through `engine/core/rules`, removing direct private-state helper calls from the
   core reducer path and shrinking reducer impurity debt.
+- Stage 15 (slice 6, 2D mapped-cell adapter seam) moves the remaining reducer-rule
+  dependency on private 2D state mapping helpers behind a public compatibility adapter,
+  reducing `engine/core` private-helper debt in `core/rules`.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

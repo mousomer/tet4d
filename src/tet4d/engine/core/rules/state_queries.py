@@ -23,7 +23,7 @@ def is_game_over(state: Any) -> bool:
 
 
 def can_piece_exist_2d(state: GameState2DLike, piece: ActivePiece2DLike) -> bool:
-    mapped_cells = state._mapped_piece_cells(piece)
+    mapped_cells = state.mapped_piece_cells_for_piece(piece, include_above=True)
     if mapped_cells is None:
         return False
     for x, y in mapped_cells:
