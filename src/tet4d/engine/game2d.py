@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 import random
 
-from .core.model import Action, BoardND
+from .core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
 from .pieces2d import (
     ActivePiece2D,
     PieceShape2D,
@@ -74,6 +74,21 @@ class GameConfig:
             mode=self.topology_mode,
             wrap_gravity_axis=self.wrap_gravity_axis,
             edge_rules=self.topology_edge_rules,
+        )
+
+    def to_core_view(self) -> GameConfig2DCoreView:
+        return GameConfig2DCoreView(
+            width=self.width,
+            height=self.height,
+            gravity_axis=self.gravity_axis,
+            speed_level=self.speed_level,
+            topology_mode=self.topology_mode,
+            wrap_gravity_axis=self.wrap_gravity_axis,
+            piece_set=self.piece_set,
+            random_cell_count=self.random_cell_count,
+            challenge_layers=self.challenge_layers,
+            lock_piece_points=self.lock_piece_points,
+            exploration_mode=self.exploration_mode,
         )
 
 
@@ -302,3 +317,14 @@ class GameState:
     def step(self, action: Action = Action.NONE):
         """Advance the game by one tick with the given player action."""
         core_step_2d(self, action)
+
+    def to_core_view(self) -> GameState2DCoreView:
+        return GameState2DCoreView(
+            config=self.config.to_core_view(),
+            score=int(self.score),
+            lines_cleared=int(self.lines_cleared),
+            game_over=bool(self.game_over),
+            board_cells=tuple(sorted((tuple(coord), int(color)) for coord, color in self.board.cells.items())),
+            current_piece_cells=tuple(tuple(cell) for cell in self.current_piece_cells_mapped(include_above=True)),
+            has_current_piece=self.current_piece is not None,
+        )

@@ -87,4 +87,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 15 (slice 6, 2D mapped-cell adapter seam) moves the remaining reducer-rule
   dependency on private 2D state mapping helpers behind a public compatibility adapter,
   reducing `engine/core` private-helper debt in `core/rules`.
+- Stage 16 (slice 7, 2D core-view types) introduces core-owned 2D config/state view
+  dataclasses and API adapters, starting the migration of 2D state/config representations
+  into `engine/core/model` without changing gameplay behavior.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

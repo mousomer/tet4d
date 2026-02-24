@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from .core.model import Action, BoardND
+from .core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
     current_piece_cells as core_current_piece_cells,
@@ -192,6 +192,14 @@ def is_game_over(state: GameState | GameStateND) -> bool:
     return core_is_game_over(state)
 
 
+def config_view_2d(config: GameConfig) -> GameConfig2DCoreView:
+    return config.to_core_view()
+
+
+def state_view_2d(state: GameState) -> GameState2DCoreView:
+    return state.to_core_view()
+
+
 __all__ = [
     "Action",
     "Action2D",
@@ -219,6 +227,7 @@ __all__ = [
     "bot_planner_profile_from_index",
     "bot_planner_profile_label",
     "current_piece_cells",
+    "config_view_2d",
     "default_planning_budget_ms",
     "is_game_over",
     "legal_actions",
@@ -238,6 +247,7 @@ __all__ = [
     "playbot_benchmark_p95_thresholds",
     "run_dry_run_2d",
     "run_dry_run_nd",
+    "state_view_2d",
     "step",
     "step_2d",
     "step_nd",
