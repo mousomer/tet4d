@@ -115,4 +115,7 @@ incremental enforcement strategy used while refactoring.
   `engine/playbot/lookahead_common.py` to `ai/playbot/lookahead_common.py` and leaves an
   engine compatibility shim, beginning physical playbot-internal relocation without
   introducing deep engine imports into `tet4d.ai`.
+- Stage 26 (slice 16, pygame key-display extraction) moves key-name formatting helpers to
+  `tet4d.ui.pygame.key_display`, leaving `tet4d.engine.key_display` as a compatibility shim
+  and further reducing engine `pygame` imports without gameplay changes.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
