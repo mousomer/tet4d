@@ -28,10 +28,12 @@ incremental enforcement strategy used while refactoring.
 - Replay schema and serialization/deserialization live outside engine core.
 - Engine consumes replay data, not replay files.
 
-### AI / Playbot (`tet4d.ai` planned)
+### AI / Playbot (`tet4d.ai`)
 
 - Depends on `tet4d.engine.api` (and replay schema if needed).
 - Must not depend on deep engine internals long-term.
+- Stage 6 introduces `tet4d.ai.playbot` as the stable AI seam while playbot internals
+  are still physically hosted under `tet4d.engine.playbot` during migration.
 
 ### Tools (`tools/*`)
 

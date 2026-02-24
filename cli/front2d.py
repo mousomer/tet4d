@@ -71,11 +71,9 @@ from tet4d.engine.menu_settings_state import (
     save_menu_settings,
 )
 from tet4d.engine.project_config import project_constant_float
-from tet4d.engine.playbot import (
+from tet4d.ai.playbot import (
     PlayBotController,
     run_dry_run_2d,
-)
-from tet4d.engine.playbot.types import (
     BotMode,
     bot_planner_algorithm_from_index,
     bot_mode_from_index,

@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ENGINE_DIR="src/tet4d/engine"
+AI_DIR="src/tet4d/ai"
 
 if [[ ! -d "$ENGINE_DIR" ]]; then
   exit 0
@@ -147,6 +148,24 @@ append_lines_to_array tools_top_imports < <(
 if ((${#tools_top_imports[@]})); then
   print_unexpected_list "Architecture violation: engine imports top-level tools (forbidden)." "${tools_top_imports[@]}"
   fail "Architecture violation: engine imports top-level tools (forbidden)."
+fi
+
+# 4) AI package should depend on engine.api only (no deep engine imports).
+if [[ -d "$AI_DIR" ]]; then
+  ai_engine_import_lines="$("${RG_BASE[@]}" \
+    '^\s*(import|from)\s+tet4d\.engine(\.|(\s|$))' \
+    "$AI_DIR" \
+    --glob '!src/tet4d/ai/tests/**' || true)"
+  if [[ -n "${ai_engine_import_lines}" ]]; then
+    ai_disallowed_lines="$(printf '%s\n' "$ai_engine_import_lines" | grep -Ev \
+      '^\s*[^:]+:\d+:\s*(import|from)\s+tet4d\.engine\.api(\.|(\s|$))|^\s*[^:]+:\d+:\s*from\s+tet4d\.engine\s+import\s+api(\s|,|$)' \
+      || true)"
+    if [[ -n "${ai_disallowed_lines}" ]]; then
+      echo "Architecture violation: tet4d.ai imports deep engine internals (use tet4d.engine.api)." >&2
+      printf '%s\n' "$ai_disallowed_lines" >&2
+      fail "Architecture violation: tet4d.ai must import tet4d.engine.api only."
+    fi
+  fi
 fi
 
 exit 0
