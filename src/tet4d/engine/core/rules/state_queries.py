@@ -1,32 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ...game2d import Action, GameState
-    from ...game_nd import GameStateND
+from typing import Any
 
 
-def legal_actions_2d(_: "GameState | None" = None) -> tuple["Action", ...]:
-    from ...game2d import Action
-
-    return tuple(Action)
-
-
-def legal_actions(state: "GameState | GameStateND") -> tuple["Action", ...]:
-    from ...game2d import GameState
-
-    if isinstance(state, GameState):
-        return legal_actions_2d(state)
-    return ()
-
-
-def board_cells(state: "GameState | GameStateND") -> dict[tuple[int, ...], int]:
+def board_cells(state: Any) -> dict[tuple[int, ...], int]:
     return dict(state.board.cells)
 
 
 def current_piece_cells(
-    state: "GameState | GameStateND",
+    state: Any,
     *,
     include_above: bool = False,
 ) -> tuple[tuple[int, ...], ...]:
@@ -34,7 +16,7 @@ def current_piece_cells(
     return tuple(tuple(cell) for cell in cells)
 
 
-def is_game_over(state: "GameState | GameStateND") -> bool:
+def is_game_over(state: Any) -> bool:
     return bool(state.game_over)
 
 
@@ -42,7 +24,4 @@ __all__ = [
     "board_cells",
     "current_piece_cells",
     "is_game_over",
-    "legal_actions",
-    "legal_actions_2d",
 ]
-

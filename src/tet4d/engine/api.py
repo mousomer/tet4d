@@ -8,10 +8,7 @@ from .core.rules.state_queries import (
     board_cells as core_board_cells,
     current_piece_cells as core_current_piece_cells,
     is_game_over as core_is_game_over,
-    legal_actions as core_legal_actions,
-    legal_actions_2d as core_legal_actions_2d,
 )
-from .core.step.reducer import step as core_step
 from .core.step.reducer import step_2d as core_step_2d
 from .core.step.reducer import step_nd as core_step_nd
 from .game2d import Action, GameConfig, GameState
@@ -165,15 +162,22 @@ def step_nd(state: GameStateND) -> GameStateND:
 
 
 def step(state: GameState | GameStateND, action: Action | None = None) -> GameState | GameStateND:
-    return core_step(state, action)
+    if isinstance(state, GameState):
+        return core_step_2d(state, Action.NONE if action is None else action)
+    if action is not None:
+        raise TypeError("ND engine step does not accept a 2D Action")
+    return core_step_nd(state)
 
 
 def legal_actions_2d(_: GameState | None = None) -> tuple[Action, ...]:
-    return core_legal_actions_2d(_)
+    del _
+    return tuple(Action)
 
 
 def legal_actions(state: GameState | GameStateND) -> tuple[Action, ...]:
-    return core_legal_actions(state)
+    if isinstance(state, GameState):
+        return legal_actions_2d(state)
+    return ()
 
 
 def board_cells(state: GameState | GameStateND) -> dict[tuple[int, ...], int]:

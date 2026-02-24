@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List
 
-from ..rules.board_rules import clear_planes as clear_planes_rule
-from ..rules.board_rules import full_levels as full_levels_rule
 from .types import Coord
 
 
@@ -43,9 +41,13 @@ class BoardND:
             self.cells[c] = cell_id
 
     def full_levels(self, gravity_axis: int) -> List[int]:
+        from ..rules.board_rules import full_levels as full_levels_rule
+
         return full_levels_rule(self.dims, self.cells, gravity_axis)
 
     def clear_planes(self, gravity_axis: int) -> int:
+        from ..rules.board_rules import clear_planes as clear_planes_rule
+
         cleared, new_cells, cleared_levels, cleared_cells = clear_planes_rule(
             self.dims,
             self.cells,
@@ -58,4 +60,3 @@ class BoardND:
 
 
 __all__ = ["BoardND"]
-

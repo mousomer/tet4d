@@ -38,6 +38,23 @@ if [[ -n "$forbidden_import_lines" ]]; then
   fail "engine/core must not import pygame/ui/tools."
 fi
 
+# 1b) engine/core must not import non-core engine modules.
+non_core_engine_imports="$(
+  collect_lines '^\s*(import|from)\s+tet4d\.engine(\.|(\s|$))' "$CORE_DIR" | sort -u
+)"
+if [[ -n "$non_core_engine_imports" ]]; then
+  disallowed_non_core_engine_imports="$(
+    printf '%s\n' "$non_core_engine_imports" | grep -Ev \
+      '^\s*[^:]+:[0-9]+:\s*(import|from)\s+tet4d\.engine\.core(\.|(\s|$))|^\s*[^:]+:[0-9]+:\s*from\s+tet4d\.engine\s+import\s+core(\s|,|$)' \
+      || true
+  )"
+  if [[ -n "$disallowed_non_core_engine_imports" ]]; then
+    echo "Engine core purity violation: non-core engine imports detected." >&2
+    printf '%s\n' "$disallowed_non_core_engine_imports" >&2
+    fail "engine/core must not import non-core tet4d.engine modules."
+  fi
+fi
+
 # 2) No time/logging imports in engine/core.
 side_effect_imports="$(
   {
@@ -86,4 +103,3 @@ if [[ -n "$effect_calls" ]]; then
 fi
 
 exit 0
-

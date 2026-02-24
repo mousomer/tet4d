@@ -50,6 +50,20 @@ def _match_engine_deep_import_lines(paths: list[Path]) -> list[str]:
     return hits
 
 
+def _match_core_to_non_core_engine_imports(paths: list[Path]) -> list[str]:
+    rx = re.compile(r"^\s*(?:from|import)\s+tet4d\.engine(?:\.|\b)")
+    allow_rx = re.compile(
+        r"^\s*(?:from|import)\s+tet4d\.engine\.core(?:\.|\b)|^\s*from\s+tet4d\.engine\s+import\s+core(?:\s|,|$)"
+    )
+    hits: list[str] = []
+    for path in paths:
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        for lineno, line in enumerate(_read(path).splitlines(), start=1):
+            if rx.search(line) and not allow_rx.search(line):
+                hits.append(f"{rel}:{lineno}: {line.strip()}")
+    return hits
+
+
 def main() -> int:
     engine_paths = [p for p in _py_files(REPO_ROOT / "src/tet4d/engine") if "tests" not in p.parts]
     core_paths = _py_files(REPO_ROOT / "src/tet4d/engine/core")
@@ -62,6 +76,7 @@ def main() -> int:
     ui_deep_engine = _match_engine_deep_import_lines(ui_paths)
     replay_deep_engine = _match_engine_deep_import_lines(replay_paths)
     ai_deep_engine = _match_engine_deep_import_lines(ai_paths)
+    core_non_core_engine = _match_core_to_non_core_engine_imports(core_paths)
     tools_stability_deep_engine = _match_engine_deep_import_lines(tools_stability_paths)
     tools_bench_deep_engine = _match_engine_deep_import_lines(tools_bench_paths)
 
@@ -94,7 +109,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 9,
+        "arch_stage": 10,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
@@ -103,6 +118,10 @@ def main() -> int:
             "ui": "src/tet4d/ui",
         },
         "deep_imports": {
+            "engine_core_to_engine_non_core_imports": {
+                "count": len(core_non_core_engine),
+                "samples": core_non_core_engine[:20],
+            },
             "ui_to_engine_non_api": {"count": len(ui_deep_engine), "samples": ui_deep_engine[:20]},
             "replay_to_engine_non_api": {"count": len(replay_deep_engine), "samples": replay_deep_engine[:20]},
             "ai_to_engine_non_api": {"count": len(ai_deep_engine), "samples": ai_deep_engine[:20]},
@@ -130,4 +149,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

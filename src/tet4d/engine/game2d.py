@@ -18,6 +18,7 @@ from .score_analyzer import (
     record_score_analysis_event,
 )
 from .core.rules.scoring import score_for_clear
+from .core.rules.locking import apply_lock_and_score
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -233,15 +234,18 @@ class GameState:
             if y < 0:
                 self.game_over = True
 
-        # Lock only visible cells (inside the board)
-        for (x, y) in visible_piece_cells:
-            self.board.cells[(x, y)] = piece.shape.color_id
-
-        cleared = self.board.clear_planes(self.config.gravity_axis)
+        lock_result = apply_lock_and_score(
+            board=self.board,
+            visible_piece_cells=visible_piece_cells,
+            color_id=piece.shape.color_id,
+            gravity_axis=self.config.gravity_axis,
+            lock_piece_points=self.config.lock_piece_points,
+            score_multiplier=self.score_multiplier,
+        )
+        cleared = lock_result.cleared
         self.lines_cleared += cleared
-        raw_points = self.config.lock_piece_points + _score_for_clear(cleared)
-        mult = max(0.1, float(self.score_multiplier))
-        awarded_points = max(0, int(round(raw_points * mult)))
+        raw_points = lock_result.raw_points
+        awarded_points = lock_result.awarded_points
         self.score += awarded_points
 
         self.analysis_seq += 1

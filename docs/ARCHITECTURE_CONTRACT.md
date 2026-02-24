@@ -72,4 +72,6 @@ incremental enforcement strategy used while refactoring.
   enforcing strict `engine -> replay` and `replay/ai/tools -> engine.api` rules.
 - Stage 9 adds a strict `engine/core` purity gate and architecture metrics (`scripts/arch_metrics.py`)
   to track remaining deep imports and side-effect migration debt.
+- Stage 10 (slice 1) makes `engine/core` self-contained with no imports back into non-core
+  `tet4d.engine` modules and begins routing lock/clear/score application through core rules.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
