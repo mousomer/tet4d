@@ -165,9 +165,9 @@ User-facing feature map for the shipped `tet4d` experience.
 - Deterministic replay tests (2D/3D/4D controls).
 - Long-run deterministic score snapshots across assist combinations.
 - Playbot tests (planning fallback, dry run, greedy priorities, hard-drop thresholds).
-- Repeated playbot dry-run stability checks via `tools/check_playbot_stability.py`.
+- Repeated playbot dry-run stability checks via `tools/stability/check_playbot_stability.py`.
 - Benchmark checks integrated in CI script.
-- 4D renderer profiling tool for projection/cache/zoom change validation: `tools/profile_4d_render.py`.
+- 4D renderer profiling tool for projection/cache/zoom change validation: `tools/benchmarks/profile_4d_render.py`.
 - CI matrix validates Python `3.11`,`3.12`,`3.13`, and`3.14`.
 - Scheduled stability watch runs repeated dry-run checks and policy-analysis snapshots.
 
@@ -176,9 +176,9 @@ User-facing feature map for the shipped `tet4d` experience.
 - Canonical maintenance contract file:
   - `config/project/canonical_maintenance.json`
 - Contract validator:
-  - `tools/validate_project_contracts.py`
+  - `tools/governance/validate_project_contracts.py`
 - Secret scanner:
-  - `tools/scan_secrets.py`
+  - `tools/governance/scan_secrets.py`
 - CI runs this validator through:
   - `scripts/ci_check.sh`
 - `.github/workflows/stability-watch.yml`

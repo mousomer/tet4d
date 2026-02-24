@@ -82,10 +82,10 @@
       "scripts/verify.sh",
       "scripts/check_git_sanitation.sh",
       "scripts/check_policy_compliance.sh",
-      "tools/check_pygame_ce.py",
-      "tools/scan_secrets.py",
-      "tools/lint_menu_graph.py",
-      "tools/validate_project_contracts.py",
+      "tools/governance/check_pygame_ce.py",
+      "tools/governance/scan_secrets.py",
+      "tools/governance/lint_menu_graph.py",
+      "tools/governance/validate_project_contracts.py",
       ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
       ".github/workflows/release-packaging.yml"
@@ -111,8 +111,8 @@
         "menu_control_guides.py",
         "draw_translation_rotation_guides",
         "scripts/ci_check.sh",
-        "tools/check_pygame_ce.py",
-        "tools/scan_secrets.py",
+        "tools/governance/check_pygame_ce.py",
+        "tools/governance/scan_secrets.py",
         "config/project/io_paths.json",
         "config/project/constants.json",
         "config/project/secret_scan.json",
@@ -185,8 +185,8 @@
         "require_module pytest pytest",
         "run_module ruff check . --quiet",
         "run_module ruff check --quiet --select C901 .",
-        "tools/lint_menu_graph.py",
-        "tools/scan_secrets.py",
+        "tools/governance/lint_menu_graph.py",
+        "tools/governance/scan_secrets.py",
         "run_module pytest -q"
       ],
       "must_not_contain": [
@@ -198,7 +198,7 @@
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
         "config/project/canonical_maintenance.json",
-        "tools/validate_project_contracts.py",
+        "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
         "config/project/io_paths.json"
       ]
@@ -219,8 +219,8 @@
         "AGENTS.md",
         "scripts/verify.sh",
         "config/project/policy_manifest.json",
-        "python3 tools/validate_project_contracts.py",
-        "python3 tools/scan_secrets.py"
+        "python3 tools/governance/validate_project_contracts.py",
+        "python3 tools/governance/scan_secrets.py"
       ]
     },
     {
@@ -239,8 +239,8 @@
         "\"project_name\": \"tet4d\"",
         "\"verification_command\": \"./scripts/verify.sh\"",
         "\"ci_entrypoint\": \"./scripts/ci_check.sh\"",
-        "\"contract_validation\": \"python3 tools/validate_project_contracts.py\"",
-        "\"secret_scan\": \"python3 tools/scan_secrets.py\""
+        "\"contract_validation\": \"python3 tools/governance/validate_project_contracts.py\"",
+        "\"secret_scan\": \"python3 tools/governance/scan_secrets.py\""
       ]
     },
     {
@@ -258,7 +258,7 @@
       "must_contain": [
         "## 2. Secret scanning policy",
         "config/project/secret_scan.json",
-        "tools/scan_secrets.py",
+        "tools/governance/scan_secrets.py",
         "## 3. Path/config externalization policy",
         "config/project/io_paths.json",
         "config/project/constants.json"
@@ -475,7 +475,7 @@
         "config/project/io_paths.json",
         "config/project/constants.json",
         "config/project/secret_scan.json",
-        "tools/scan_secrets.py"
+        "tools/governance/scan_secrets.py"
       ],
       "status": "connected"
     }

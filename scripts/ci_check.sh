@@ -36,13 +36,13 @@ run_module() {
 require_module ruff ruff
 require_module pytest pytest
 
-"$PYTHON_BIN" tools/validate_project_contracts.py
-"$PYTHON_BIN" tools/lint_menu_graph.py
-"$PYTHON_BIN" tools/scan_secrets.py
-"$PYTHON_BIN" tools/check_pygame_ce.py
+"$PYTHON_BIN" tools/governance/validate_project_contracts.py
+"$PYTHON_BIN" tools/governance/lint_menu_graph.py
+"$PYTHON_BIN" tools/governance/scan_secrets.py
+"$PYTHON_BIN" tools/governance/check_pygame_ce.py
 run_module ruff check . --quiet
 run_module ruff check --quiet --select C901 .
 run_module pytest -q --disable-warnings --maxfail=1
-PYTHONPATH=. "$PYTHON_BIN" tools/check_playbot_stability.py --repeats 20 --seed-base 0
-"$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tet4d tetris_nd src/tet4d
-"$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
+PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
+"$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py tet4d tetris_nd src/tet4d/engine
+"$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend

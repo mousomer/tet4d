@@ -263,7 +263,7 @@ Add persistent settings file:
 4. `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
 5. Launcher and pause menus must consume graph items; no hardcoded tree/picker lists in runtime modules.
 6. Menu graph lint contract lives in:
-7. `tetris_nd/menu_graph_linter.py` + `tools/lint_menu_graph.py`.
+7. `tetris_nd/menu_graph_linter.py` + `tools/governance/lint_menu_graph.py`.
 
 ## 10. Testing Instructions
 
@@ -271,8 +271,8 @@ Required checks after implementation:
 ```bash
 ruff check .
 pytest -q
-python tools/lint_menu_graph.py
-python tools/validate_project_contracts.py
+python tools/governance/lint_menu_graph.py
+python tools/governance/validate_project_contracts.py
 ```
 Manual tests:
 1. Keyboard-only navigation across all menu screens.
@@ -351,8 +351,8 @@ Stabilization details:
 23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` are routed under `Play`.
 24. Menu graph lint contract is enforced via:
 25. `tetris_nd/menu_graph_linter.py`,
-26. `tools/lint_menu_graph.py`,
-27. `tools/validate_project_contracts.py`,
+26. `tools/governance/lint_menu_graph.py`,
+27. `tools/governance/validate_project_contracts.py`,
 28. `scripts/ci_check.sh`.
 
 ## 15. Follow-up Status
@@ -366,7 +366,7 @@ Stabilization details:
 7. `config/help/topics.json`, `config/help/action_map.json`,
 8. `config/schema/help_topics.schema.json`, `config/schema/help_action_map.schema.json`,
 9. runtime validator/loader in `tetris_nd/help_topics.py`,
-10. contract checks in `tools/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
+10. contract checks in `tools/governance/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
 11. Closed (`M2`): shared layout-zone renderer implemented to eliminate fixed-coordinate overlap risk:
 12. shared zone engine in `tetris_nd/menu_layout.py`,
 13. help renderer migrated to zone-based layout in `tetris_nd/help_menu.py`,
@@ -375,7 +375,7 @@ Stabilization details:
 16. context/dimension-filtered topic rendering in `tetris_nd/help_topics.py` + `tetris_nd/help_menu.py`,
 17. live action->key rows sourced from runtime bindings + `config/help/action_map.json`,
 18. explicit subpage controls (`[`/`]`, `PgUp`/`PgDn`) replacing silent truncation,
-19. contract lane checks in `tools/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
+19. contract lane checks in `tools/governance/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
 20. Closed (`M4`): launcher/pause parity + compact-window validation implemented via:
 21. config-driven pause action mapping in `config/menu/structure.json` (`pause_menu_actions`),
 22. parity enforcement in `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`),

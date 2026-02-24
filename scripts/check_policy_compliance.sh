@@ -23,5 +23,5 @@ if [[ "$missing" -ne 0 ]]; then
 fi
 
 # Delegate to the repo's canonical policy/security checks.
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
+python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/scan_secrets.py

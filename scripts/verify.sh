@@ -65,9 +65,9 @@ run_step() {
 require_module ruff ruff
 require_module pytest pytest
 
-run_step "contracts"      "$PYTHON_BIN" tools/validate_project_contracts.py
-run_step "secret_scan"    "$PYTHON_BIN" tools/scan_secrets.py
-run_step "pygame_ce"      "$PYTHON_BIN" tools/check_pygame_ce.py
+run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
+run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 
 run_step "ruff"           run_module ruff check .
 run_step "ruff_c901"      run_module ruff check --select C901 .
@@ -76,9 +76,9 @@ run_step "ruff_c901"      run_module ruff check --select C901 .
 run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings
 
 run_step "playbot_stability" \
-  env PYTHONPATH=. "$PYTHON_BIN" tools/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+  env PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
-run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tet4d tetris_nd src/tet4d
-run_step "bench_playbot"  "$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
+run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py tet4d tetris_nd src/tet4d/engine
+run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend
 
 echo "verify: OK"

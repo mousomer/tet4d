@@ -38,7 +38,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 19. `DONE`4D render/view/clear animation layer extracted to`tetris_nd/front4d_render.py`.
 20. `DONE` P3 tuning/tooling executed:
 21. `DONE`playbot policy budgets/thresholds retuned in`config/playbot/policy.json`.
-22. `DONE`offline policy comparison tool added:`tools/analyze_playbot_policies.py`.
+22. `DONE`offline policy comparison tool added:`tools/benchmarks/analyze_playbot_policies.py`.
 23. `DONE` Translation/rotation arrow-diagram guide panel integrated into launcher menu, pause menu, unified settings, and keybindings menus.
 24. `DONE` Complexity hotspots reduced in:
 25. `tetris_nd/keybindings_menu.py` (`_run_menu_action`,`run_keybindings_menu`),
@@ -59,7 +59,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 40. `DONE` Canonical maintenance contract added in:
 41. `config/project/canonical_maintenance.json`
 42. `DONE` Machine validator added and CI-wired:
-43. `tools/validate_project_contracts.py`+`scripts/ci_check.sh`
+43. `tools/governance/validate_project_contracts.py`+`scripts/ci_check.sh`
 44. `DONE` Contract coverage includes docs/help/tests/config synchronization checks.
 45. `DONE` Canonical-maintenance expansion connected and enforced:
 46. settings/save-state schemas + migration docs,
@@ -71,7 +71,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 52. logging toggle persists via menu state and controls event/summary file writes,
 53. analyzer protocol/persistence tests added in `tetris_nd/tests/test_score_analyzer.py`.
 54. `DONE` CI stability follow-up implemented:
-55. repeated dry-run stability tool added at `tools/check_playbot_stability.py`,
+55. repeated dry-run stability tool added at `tools/stability/check_playbot_stability.py`,
 56. wired into local CI script (`scripts/ci_check.sh`).
 57. `DONE` Small-window readability pass completed:
 58. control helper rows now use constrained key/action columns to avoid overlap,
@@ -83,7 +83,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 64. `DONE` Local toolchain bootstrap was standardized:
 65. `scripts/bootstrap_env.sh` now creates/updates `.venv` and installs `pygame-ce`, `ruff`, and `pytest`.
 66. `DONE` Canonical docs freshness checks were strengthened:
-67. `tools/validate_project_contracts.py` now supports regex content rules,
+67. `tools/governance/validate_project_contracts.py` now supports regex content rules,
 68. stale fixed pass-count snapshots are blocked by `must_not_match_regex` rules in `config/project/canonical_maintenance.json`.
 69. `DONE` Control-helper optimization batch completed:
 70. action icons are now cached by `(action,width,height)` in `tetris_nd/control_icons.py` to avoid repeated per-frame redraw.
@@ -148,7 +148,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 129. `./scripts/ci_check.sh` passed.
 130. `DONE` Repository secret scanning policy + scanner added and CI/local CI enforced:
 131. `config/project/secret_scan.json`,
-132. `tools/scan_secrets.py`,
+132. `tools/governance/scan_secrets.py`,
 133. `scripts/ci_check.sh`.
 134. `DONE` Path/constants externalization batch executed via:
 135. `config/project/io_paths.json`,
@@ -207,11 +207,11 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 188. `DONE` Projection-lattice cache observability helpers added for regression/profiling validation:
 189. `tetris_nd/projection3d.py` (`clear_projection_lattice_cache`, `projection_lattice_cache_keys`, `projection_lattice_cache_size`).
 190. `DONE` 4D render profiling tool added and exercised:
-191. `tools/profile_4d_render.py` with latest report at `state/bench/4d_render_profile_latest.json`.
+191. `tools/benchmarks/profile_4d_render.py` with latest report at `state/bench/4d_render_profile_latest.json`.
 192. `DONE` Sparse hyper-view overhead threshold assertion passed (no immediate optimization needed).
 193. `DONE` Unreferenced helper cleanup pass executed:
 194. removed definition-only helpers in `tetris_nd/frontend_nd.py`, `tetris_nd/menu_keybinding_shortcuts.py`, `tetris_nd/menu_model.py`, `tetris_nd/project_config.py`, and `tetris_nd/score_analyzer.py`.
-195. profiler/policy tool output paths remain constrained to project root (`tools/profile_4d_render.py`,`tools/bench_playbot.py`,`tools/analyze_playbot_policies.py`).
+195. profiler/policy tool output paths remain constrained to project root (`tools/benchmarks/profile_4d_render.py`,`tools/benchmarks/bench_playbot.py`,`tools/benchmarks/analyze_playbot_policies.py`).
 196. `DONE` Setup-menu dedup follow-up (`BKL-P2-007`) completed:
 197. `tetris_nd/front3d_setup.py` was collapsed to a thin adapter over shared ND setup logic in `tetris_nd/frontend_nd.py`,
 198. removing duplicated 3D setup render/value/config paths while preserving runtime behavior.
@@ -292,8 +292,8 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 273. duplicated 2D/3D/4D launch flow in `tetris_nd/launcher_play.py` is now routed through one shared `_launch_mode_flow` pipeline with shared bot-kwargs and window-size helpers.
 274. playbot benchmark wrapper indirection was removed from `tetris_nd/playbot/types.py`.
 275. benchmark/policy tools now read thresholds/history paths directly from runtime config in:
-276. `tools/bench_playbot.py`,
-277. `tools/analyze_playbot_policies.py`.
+276. `tools/benchmarks/bench_playbot.py`,
+277. `tools/benchmarks/analyze_playbot_policies.py`.
 278. `DONE` `[BKL-P2-016]` Stage-5 runtime-config dedup cleanup:
 279. removed unused `STATE_DIR` constant/import path from `tetris_nd/runtime_config.py`,
 280. shared bucket/key helpers now reduce repeated dimension-bucket lookup boilerplate in runtime-config accessors,
@@ -333,8 +333,8 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 314. pause runtime migrated to menu graph runner while preserving pause decision semantics in `tetris_nd/pause_menu.py`.
 315. menu graph lint contract added and CI/contract-wired:
 316. `tetris_nd/menu_graph_linter.py`,
-317. `tools/lint_menu_graph.py`,
-318. `tools/validate_project_contracts.py`,
+317. `tools/governance/lint_menu_graph.py`,
+318. `tools/governance/validate_project_contracts.py`,
 319. `scripts/ci_check.sh`.
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
@@ -345,7 +345,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 4. `Done criteria:` latest `scripts/ci_check.sh` run exits `0` with no unresolved failures.
 5. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
 6. `Cadence:` at least weekly and after workflow/config changes.
-7. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/check_playbot_stability.py`, or `tools/analyze_playbot_policies.py` changes.
+7. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/stability/check_playbot_stability.py`, or `tools/benchmarks/analyze_playbot_policies.py` changes.
 8. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
 9. `[P3][BKL-P3-003] Runtime-config validation module split watch`
 10. `Cadence:` when adding new policy sections.
@@ -358,7 +358,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 17. `[P3][BKL-P3-005] Projection/cache profiling watch`
 18. `Cadence:` after projection/camera/cache changes and before release.
 19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
-20. `Done criteria:` `tools/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
+20. `Done criteria:` `tools/benchmarks/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
 21. `[P3][BKL-P3-006] Desktop release hardening watch`
 22. `Cadence:` before each public release.
 23. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
@@ -366,7 +366,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 25. `[P3][BKL-P3-007] Repository hygiene watch (history + secret scan)`
 26. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
 27. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
-28. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
+28. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -394,12 +394,12 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 `tetris_nd/tests/test_score_analyzer.py`,
 `.github/workflows/ci.yml`,
 `scripts/ci_check.sh`,
-`tools/check_playbot_stability.py`,
+`tools/stability/check_playbot_stability.py`,
 `docs/rds/RDS_SCORE_ANALYZER.md`,
 `docs/FEATURE_MAP.md`,
 `README.md`,
 `config/project/canonical_maintenance.json`,
-`tools/validate_project_contracts.py`,
+`tools/governance/validate_project_contracts.py`,
 `tetris_nd/tests/test_project_contracts.py`,
 `config/schema/menu_settings.schema.json`,
 `config/schema/save_state.schema.json`,
@@ -425,8 +425,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 `tetris_nd/launcher_nd_runner.py`,
 `tetris_nd/playbot/lookahead_common.py`.
 3. Offline/stability analysis tooling added:
-`tools/analyze_playbot_policies.py`.
-`tools/check_playbot_stability.py`.
+`tools/benchmarks/analyze_playbot_policies.py`.
+`tools/stability/check_playbot_stability.py`.
 4. Runtime policy retuned:
 `config/playbot/policy.json` (reduced default budgets + tightened benchmark thresholds).
 5. New score-analyzer defaults and telemetry hooks added:
@@ -441,7 +441,7 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 7. Toolchain/contract hardening additions:
 `scripts/bootstrap_env.sh`,
 `scripts/ci_check.sh`,
-`tools/validate_project_contracts.py`,
+`tools/governance/validate_project_contracts.py`,
 `config/project/canonical_maintenance.json`,
 `README.md`,
 `docs/GUIDELINES_RESEARCH.md`,
@@ -488,7 +488,7 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 `config/project/io_paths.json`,
 `config/project/constants.json`,
 `config/project/secret_scan.json`,
-`tools/scan_secrets.py`,
+`tools/governance/scan_secrets.py`,
 `scripts/ci_check.sh`,
 `tetris_nd/runtime_config.py`,
 `tetris_nd/menu_settings_state.py`,
@@ -532,8 +532,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 17. Stage-4 simplification follow-up touched:
 `tetris_nd/launcher_play.py`,
 `tetris_nd/playbot/types.py`,
-`tools/bench_playbot.py`,
-`tools/analyze_playbot_policies.py`.
+`tools/benchmarks/bench_playbot.py`,
+`tools/benchmarks/analyze_playbot_policies.py`.
 18. Stage-5 simplification follow-up touched:
 `tetris_nd/runtime_config.py`.
 19. Current menu-graph modularization batch touched:
@@ -541,10 +541,10 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 `tetris_nd/menu_config.py`,
 `tetris_nd/menu_runner.py`,
 `tetris_nd/menu_graph_linter.py`,
-`tools/lint_menu_graph.py`,
+`tools/governance/lint_menu_graph.py`,
 `front.py`,
 `tetris_nd/pause_menu.py`,
-`tools/validate_project_contracts.py`,
+`tools/governance/validate_project_contracts.py`,
 `scripts/ci_check.sh`,
 `config/project/canonical_maintenance.json`,
 `tetris_nd/tests/test_menu_policy.py`,

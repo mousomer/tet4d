@@ -24,10 +24,10 @@ jobs:
           pip install ruff pytest
       - name: Dry-run stability sweep
         run: |
-          PYTHONPATH=. python tools/check_playbot_stability.py --repeats 24 --seed-base 0
+          PYTHONPATH=. python tools/stability/check_playbot_stability.py --repeats 24 --seed-base 0
       - name: Planner benchmark trend sample
         run: |
-          python tools/bench_playbot.py --assert --record-trend
+          python tools/benchmarks/bench_playbot.py --assert --record-trend
       - name: Upload trend sample
         uses: actions/upload-artifact@v4
         with:
@@ -49,7 +49,7 @@ jobs:
           pip install -r requirements.txt
       - name: Analyze policy snapshots
         run: |
-          python tools/analyze_playbot_policies.py \
+          python tools/benchmarks/analyze_playbot_policies.py \
             --board-set all \
             --runs 20 \
             --seed-start 120 \

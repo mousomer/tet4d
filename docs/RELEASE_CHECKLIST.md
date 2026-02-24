@@ -4,7 +4,7 @@
 
 1. `ruff check .`
 2. `ruff check . --select C901`
-3. `python3 tools/validate_project_contracts.py`
+3. `python3 tools/governance/validate_project_contracts.py`
 4. `pytest -q`
 5. `scripts/ci_check.sh`
 

@@ -10,7 +10,7 @@ This plan defines:
 
 Implemented controls:
 1. policy file: `config/project/secret_scan.json`,
-2. scanner: `tools/scan_secrets.py`,
+2. scanner: `tools/governance/scan_secrets.py`,
 3. CI/local gate: `scripts/ci_check.sh` (runs the scanner before lint/tests).
 
 Rules:

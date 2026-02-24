@@ -4,7 +4,7 @@
 - RDS + workflow: `docs/RDS_AND_CODEX.md`
 - Canonical maintenance contract:
   - `config/project/canonical_maintenance.json`
-  - `tools/validate_project_contracts.py`
+  - `tools/governance/validate_project_contracts.py`
 
 ## Governance rules
 For any restructuring/update:

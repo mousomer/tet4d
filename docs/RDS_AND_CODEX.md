@@ -53,11 +53,11 @@ Run after every gameplay or input change:
 scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
-python3 tools/check_pygame_ce.py
+python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/scan_secrets.py
+python3 tools/governance/check_pygame_ce.py
 pytest -q
-PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
+PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
 python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
 ```
 
@@ -93,10 +93,10 @@ Minimum required coverage for gameplay-affecting changes:
 1. Canonical maintenance rules are machine-checked and source-controlled in:
 2. `config/project/canonical_maintenance.json`
 3. Validation command:
-4. `python3 tools/validate_project_contracts.py`
+4. `python3 tools/governance/validate_project_contracts.py`
 5. Secret scan policy + command:
 6. `config/project/secret_scan.json`
-7. `python3 tools/scan_secrets.py`
+7. `python3 tools/governance/scan_secrets.py`
 5. Validation is part of CI via:
 6. `scripts/ci_check.sh`
 7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:

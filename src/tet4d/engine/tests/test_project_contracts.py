@@ -9,13 +9,17 @@ from pathlib import Path
 def _detect_project_root() -> Path:
     here = Path(__file__).resolve()
     for candidate in (here.parent, *here.parents):
+        if (candidate / "tools" / "governance" / "validate_project_contracts.py").exists():
+            return candidate
         if (candidate / "tools" / "validate_project_contracts.py").exists():
             return candidate
     return here.parents[2]
 
 
 PROJECT_ROOT = _detect_project_root()
-VALIDATOR = PROJECT_ROOT / "tools" / "validate_project_contracts.py"
+_NEW_VALIDATOR = PROJECT_ROOT / "tools" / "governance" / "validate_project_contracts.py"
+_OLD_VALIDATOR = PROJECT_ROOT / "tools" / "validate_project_contracts.py"
+VALIDATOR = _NEW_VALIDATOR if _NEW_VALIDATOR.exists() else _OLD_VALIDATOR
 
 
 class TestProjectContracts(unittest.TestCase):

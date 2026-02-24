@@ -6,6 +6,6 @@
     "docs/RDS_AND_CODEX.md",
     "docs/rds/"
   ],
-  "contract_validation": "python3 tools/validate_project_contracts.py",
-  "secret_scan": "python3 tools/scan_secrets.py"
+  "contract_validation": "python3 tools/governance/validate_project_contracts.py",
+  "secret_scan": "python3 tools/governance/scan_secrets.py"
 }

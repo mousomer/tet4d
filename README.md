@@ -122,12 +122,12 @@ Control guide renderer (legacy contract reference):
 ```bash
 ruff check .
 ruff check --select C901 .
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
-python3 tools/check_pygame_ce.py
+python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/scan_secrets.py
+python3 tools/governance/check_pygame_ce.py
 pytest -q
-PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
-python3 tools/bench_playbot.py --assert --record-trend
+PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
+python3 tools/benchmarks/bench_playbot.py --assert --record-trend
 scripts/ci_check.sh
 ```
 
@@ -149,8 +149,8 @@ scripts/ci_check.sh
 ## Canonical maintenance
 
 - Contract source: `config/project/canonical_maintenance.json`
-- Validator: `tools/validate_project_contracts.py`
-- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/scan_secrets.py`
+- Validator: `tools/governance/validate_project_contracts.py`
+- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/governance/scan_secrets.py`
 
 ## Local pytest warning
 

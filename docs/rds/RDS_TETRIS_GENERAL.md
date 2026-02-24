@@ -138,13 +138,13 @@ Cross-cutting requirements are defined in:
 22. Canonical maintenance contract rules are defined in:
 23. `config/project/canonical_maintenance.json`
 24. Contract validation script is:
-25. `tools/validate_project_contracts.py`
+25. `tools/governance/validate_project_contracts.py`
 26. Repository path/constant/secret policy configs are source-controlled:
 27. `config/project/io_paths.json`
 28. `config/project/constants.json`
 29. `config/project/secret_scan.json`
 30. Secret scan command is:
-31. `python3 tools/scan_secrets.py`
+31. `python3 tools/governance/scan_secrets.py`
 32. Shared safe path/constants loader is:
 33. `tetris_nd/project_config.py`
 34. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
@@ -192,12 +192,12 @@ Required checks for behavior changes:
 scripts/bootstrap_env.sh
 ruff check .
 ruff check . --select C901
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
-python3 tools/check_pygame_ce.py
+python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/scan_secrets.py
+python3 tools/governance/check_pygame_ce.py
 pytest -q
-PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
-python3 tools/bench_playbot.py --assert --record-trend
+PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
+python3 tools/benchmarks/bench_playbot.py --assert --record-trend
 python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
 ./scripts/ci_check.sh
 ```
@@ -243,7 +243,7 @@ Completed in current implementation:
 11. 4D helper-grid guidance propagated across all rendered `w` layer boards.
 12. Shared ND runtime loop orchestration extracted for 3D/4D (`tetris_nd/loop_runner_nd.py`).
 13. Frontend split executed: launcher orchestration/settings and 3D/4D setup/render modules extracted for maintainability.
-14. Offline playbot policy analysis tool added (`tools/analyze_playbot_policies.py`).
+14. Offline playbot policy analysis tool added (`tools/benchmarks/analyze_playbot_policies.py`).
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
 16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
 17. Help/menu restructure `M1` contract completed with config-backed topic registry + action mapping and validator/test coverage.
@@ -285,7 +285,7 @@ Remaining follow-up:
 11. Closed: remaining decomposition pass completed for 3D frontend runtime/render split and runtime-config validator section split.
 12. Closed: further runtime optimization pass completed (shared text-render cache, cached control-helper text, and 4D layer rendering pre-indexing by `w` layer).
 13. Closed: security/config hardening batch:
-14. CI-enforced repository secret scan policy added (`config/project/secret_scan.json`,`tools/scan_secrets.py`,`scripts/ci_check.sh`),
+14. CI-enforced repository secret scan policy added (`config/project/secret_scan.json`,`tools/governance/scan_secrets.py`,`scripts/ci_check.sh`),
 15. I/O path definitions centralized in `config/project/io_paths.json` with safe `Path` resolution helpers in `tetris_nd/project_config.py`,
 16. selected runtime constants (cache/render limits and layout values) externalized to `config/project/constants.json`.
 17. Closed: projection-lattice caching pass implemented for static camera/view signatures in 3D/4D projection grid paths.
@@ -299,7 +299,7 @@ Remaining follow-up:
 25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`tetris_nd/frontend_nd.py`) via thin adapter in `tetris_nd/front3d_setup.py`.
 26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `tetris_nd/menu_layout.py` and wired in `tetris_nd/help_menu.py`.
 27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `tetris_nd/help_menu.py` and `tetris_nd/help_topics.py`.
-28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/validate_project_contracts.py`.
+28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/governance/validate_project_contracts.py`.
 29. Closed: help/menu restructure phase `M4` (launcher/pause parity + compact-window hardening) is implemented with config-enforced parity and compact help layout policy.
 
 ## 11. Long-Term Goal: Non-Euclidean Geometry Extensions
