@@ -25,6 +25,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 11. `DONE` Arch Stage 15 slice 6 added a public 2D mapped-piece adapter on `GameState` and switched core rules to use it, reducing `core_rules_private_state_method_calls` to `0`.
 12. `DONE` Arch Stage 16 slice 7 introduced core-owned 2D config/state view dataclasses (`src/tet4d/engine/core/model/game2d_views.py`) plus `game2d.py`/`engine.api` adapters, starting 2D state/config representation migration into core.
 13. `DONE` Arch Stage 17 slice 8 moved the 2D gravity-tick mutation branch into `src/tet4d/engine/core/rules/gravity_2d.py`, reducing `core_step_state_field_assignments` in `scripts/arch_metrics.py` to `0`.
+14. `DONE` Arch Stage 18 slice 9 introduced core-owned ND config/state view dataclasses (`src/tet4d/engine/core/model/game_nd_views.py`) plus `game_nd.py`/`engine.api` adapters, extending core-view extraction to shared 3D/4D state representations.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).

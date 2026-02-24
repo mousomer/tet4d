@@ -3,7 +3,14 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from .core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
+from .core.model import (
+    Action,
+    BoardND,
+    GameConfig2DCoreView,
+    GameConfigNDCoreView,
+    GameState2DCoreView,
+    GameStateNDCoreView,
+)
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
     current_piece_cells as core_current_piece_cells,
@@ -200,6 +207,14 @@ def state_view_2d(state: GameState) -> GameState2DCoreView:
     return state.to_core_view()
 
 
+def config_view_nd(config: GameConfigND) -> GameConfigNDCoreView:
+    return config.to_core_view()
+
+
+def state_view_nd(state: GameStateND) -> GameStateNDCoreView:
+    return state.to_core_view()
+
+
 __all__ = [
     "Action",
     "Action2D",
@@ -228,6 +243,7 @@ __all__ = [
     "bot_planner_profile_label",
     "current_piece_cells",
     "config_view_2d",
+    "config_view_nd",
     "default_planning_budget_ms",
     "is_game_over",
     "legal_actions",
@@ -248,6 +264,7 @@ __all__ = [
     "run_dry_run_2d",
     "run_dry_run_nd",
     "state_view_2d",
+    "state_view_nd",
     "step",
     "step_2d",
     "step_nd",

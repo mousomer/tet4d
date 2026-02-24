@@ -93,4 +93,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 17 (slice 8, 2D gravity transition helper) moves the 2D gravity-tick mutation
   branch out of `engine/core/step/reducer.py` into `engine/core/rules`, reducing direct
   state-field mutation debt in the core reducer.
+- Stage 18 (slice 9, ND core-view types) mirrors Stage 16 for ND by introducing
+  core-owned ND config/state view dataclasses plus `game_nd.py`/`engine.api` adapters,
+  covering both 3D and 4D runtime states through the shared ND path.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

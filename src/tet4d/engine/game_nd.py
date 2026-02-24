@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import random
 from typing import List, Optional, Sequence
 
+from .core.model import GameConfigNDCoreView, GameStateNDCoreView
 from .board import BoardND
 from .pieces_nd import (
     ActivePieceND,
@@ -89,6 +90,20 @@ class GameConfigND:
             mode=self.topology_mode,
             wrap_gravity_axis=self.wrap_gravity_axis,
             edge_rules=self.topology_edge_rules,
+        )
+
+    def to_core_view(self) -> GameConfigNDCoreView:
+        return GameConfigNDCoreView(
+            dims=tuple(self.dims),
+            gravity_axis=self.gravity_axis,
+            speed_level=self.speed_level,
+            topology_mode=self.topology_mode,
+            wrap_gravity_axis=self.wrap_gravity_axis,
+            piece_set_id=self.piece_set_id,
+            random_cell_count=self.random_cell_count,
+            challenge_layers=self.challenge_layers,
+            lock_piece_points=self.lock_piece_points,
+            exploration_mode=self.exploration_mode,
         )
 
 
@@ -334,3 +349,14 @@ class GameStateND:
 
     def step(self) -> None:
         core_step_nd(self)
+
+    def to_core_view(self) -> GameStateNDCoreView:
+        return GameStateNDCoreView(
+            config=self.config.to_core_view(),
+            score=int(self.score),
+            lines_cleared=int(self.lines_cleared),
+            game_over=bool(self.game_over),
+            board_cells=tuple(sorted((tuple(coord), int(color)) for coord, color in self.board.cells.items())),
+            current_piece_cells=tuple(tuple(cell) for cell in self.current_piece_cells_mapped(include_above=True)),
+            has_current_piece=self.current_piece is not None,
+        )
