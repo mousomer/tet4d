@@ -20,8 +20,11 @@ if __name__ == "__main__":
 import pygame
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
+_SRC_ROOT = _REPO_ROOT / "src"
+if str(_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SRC_ROOT))
 if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+    sys.path.insert(1, str(_REPO_ROOT))
 
 from tet4d.engine.app_runtime import initialize_runtime, open_display
 from tet4d.engine.audio import AudioSettings, play_sfx
