@@ -86,7 +86,7 @@ python3 -m pip install -e ".[dev]"
 ```
 
 For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`.
-CI now also runs `scripts/arch_metrics.py` (informational) via `scripts/ci_check.sh` to track architecture migration debt (including private-helper debt, reducer field-mutation debt, and 2D/ND core-view extraction progress across Stages 13-18).
+CI now also runs `scripts/arch_metrics.py` (informational) via `scripts/ci_check.sh` to track architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, and UI deep-import reduction progress across Stages 13-19).
 
 Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).

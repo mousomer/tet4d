@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from tet4d.engine import api as engine_api
+
 
 def run_4d() -> None:
-    # Transitional adapter: delegates to existing pygame-heavy engine module.
-    from tet4d.engine.front4d_game import run
-
-    run()
+    engine_api.run_front4d_ui()

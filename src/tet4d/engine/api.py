@@ -215,6 +215,48 @@ def state_view_nd(state: GameStateND) -> GameStateNDCoreView:
     return state.to_core_view()
 
 
+def run_front3d_ui() -> None:
+    from .front3d_game import run as _run_front3d
+
+    _run_front3d()
+
+
+def run_front4d_ui() -> None:
+    from .front4d_game import run as _run_front4d
+
+    _run_front4d()
+
+
+def profile_4d_new_layer_view_3d(*, xw_deg: float = 0.0, zw_deg: float = 0.0) -> Any:
+    from .front4d_game import LayerView3D as _LayerView3D
+
+    return _LayerView3D(xw_deg=xw_deg, zw_deg=zw_deg)
+
+
+def profile_4d_draw_game_frame(*args: Any, **kwargs: Any) -> Any:
+    from .front4d_render import draw_game_frame as _draw_game_frame
+
+    return _draw_game_frame(*args, **kwargs)
+
+
+def profile_4d_create_initial_state(cfg: GameConfigND) -> GameStateND:
+    from .frontend_nd import create_initial_state as _create_initial_state
+
+    return _create_initial_state(cfg)
+
+
+def profile_4d_init_fonts() -> Any:
+    from .frontend_nd import init_fonts as _init_fonts
+
+    return _init_fonts()
+
+
+def profile_4d_grid_mode_full() -> Any:
+    from .view_modes import GridMode as _GridMode
+
+    return _GridMode.FULL
+
+
 __all__ = [
     "Action",
     "Action2D",
@@ -261,8 +303,15 @@ __all__ = [
     "plan_best_nd_move",
     "playbot_benchmark_history_file",
     "playbot_benchmark_p95_thresholds",
+    "profile_4d_create_initial_state",
+    "profile_4d_draw_game_frame",
+    "profile_4d_grid_mode_full",
+    "profile_4d_init_fonts",
+    "profile_4d_new_layer_view_3d",
     "run_dry_run_2d",
     "run_dry_run_nd",
+    "run_front3d_ui",
+    "run_front4d_ui",
     "state_view_2d",
     "state_view_nd",
     "step",

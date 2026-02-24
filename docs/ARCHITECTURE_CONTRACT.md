@@ -96,4 +96,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 18 (slice 9, ND core-view types) mirrors Stage 16 for ND by introducing
   core-owned ND config/state view dataclasses plus `game_nd.py`/`engine.api` adapters,
   covering both 3D and 4D runtime states through the shared ND path.
+- Stage 19 (slice 10, UI adapter import cleanup) routes the existing `tet4d.ui.pygame`
+  entry/profile adapters through `tet4d.engine.api` lazy wrappers so UI modules stop
+  importing deep engine internals directly.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
