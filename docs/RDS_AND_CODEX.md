@@ -35,6 +35,7 @@ Read order:
 5. Prefer small, composable helpers over large event/render functions.
 6. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 7. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
+8. Current source layout: runtime code is under `src/tet4d/engine/`; `tetris_nd/` is a legacy compatibility shim and `tet4d/` is a repo-root import shim.
 
 ## Coding best practices
 
@@ -58,7 +59,7 @@ python3 tools/governance/scan_secrets.py
 python3 tools/governance/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
-python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
+python3.14 -m compileall -q  front2d.py  cli/front2d.py  tetris_nd  src/tet4d/engine
 ```
 
 For repository governance/CI changes, also run:
@@ -175,4 +176,4 @@ Authoritative open/deferred items are tracked in:
 5. `ruff check .`
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
-8. `python3.14 -m compileall -q  front.py  tetris_nd  src/tet4d`
+8. `python3.14 -m compileall -q  front.py  cli/front.py  tetris_nd  src/tet4d/engine`

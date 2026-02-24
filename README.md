@@ -10,6 +10,8 @@ This repository contains:
 - `3D Tetris` direct mode (`front3d.py`)
 - `4D Tetris` direct mode (`front4d.py`)
 
+Primary Python entrypoints live under `cli/` (`cli/front*.py`).
+Root `front*.py` files are compatibility wrappers that preserve existing commands.
 All modes share core logic under `src/tet4d/engine/` (with legacy `tetris_nd` imports preserved via shim).
 
 Boundary topology presets are available in setup menus:
@@ -51,16 +53,16 @@ pip install ruff pytest
 ## Run
 
 ```bash
-# Unified launcher (recommended)
+# Unified launcher via compatibility wrapper (kept stable)
 python front.py
 
-# Direct modes
+# Canonical direct entrypoints (primary scripts)
+python cli/front.py
+
+# Direct modes (wrapper-compatible and canonical cli forms)
 python front2d.py
 python front3d.py
 python front4d.py
-
-# Equivalent direct CLI paths
-python cli/front.py
 python cli/front2d.py
 python cli/front3d.py
 python cli/front4d.py
