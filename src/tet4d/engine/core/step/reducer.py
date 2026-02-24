@@ -28,7 +28,14 @@ def step_2d(state: Any, action: Any) -> Any:
 
 
 def step_nd(state: Any) -> Any:
-    state.step()
+    if state.config.exploration_mode or state.game_over or state.current_piece is None:
+        return state
+
+    g = state.config.gravity_axis
+    if not state.try_move_axis(g, 1):
+        state.lock_current_piece()
+        if not state.game_over:
+            state.spawn_new_piece()
     return state
 
 

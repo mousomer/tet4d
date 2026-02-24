@@ -20,6 +20,7 @@ from .score_analyzer import (
 )
 from .core.rules.scoring import score_for_clear
 from .core.rules.locking import apply_lock_and_score
+from .core.step.reducer import step_nd as core_step_nd
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -332,4 +333,4 @@ class GameStateND:
                 self.spawn_new_piece()
 
     def step(self) -> None:
-        self.step_gravity()
+        core_step_nd(self)

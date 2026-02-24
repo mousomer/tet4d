@@ -76,4 +76,6 @@ incremental enforcement strategy used while refactoring.
   `tet4d.engine` modules and begins routing lock/clear/score application through core rules.
 - Stage 11 (slice 2, 2D-first) moves the actual 2D tick/gravity reducer path into
   `engine/core/step` while keeping `game2d.py` as a compatibility delegator.
+- Stage 12 (slice 3) moves the ND tick/gravity reducer path into `engine/core/step`,
+  leaving `game_nd.py` as a compatibility delegator and eliminating reducer wrapper debt.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
