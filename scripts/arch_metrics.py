@@ -110,6 +110,10 @@ def main() -> int:
             _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
             r"\._[A-Za-z]\w*\s*\(",
         ),
+        "core_step_state_field_assignments": _match_lines(
+            _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
+            r"\bstate\.[A-Za-z]\w*\s*=",
+        ),
         "core_rules_private_state_method_calls": _match_lines(
             _py_files(REPO_ROOT / "src/tet4d/engine/core/rules"),
             r"\._[A-Za-z]\w*\s*\(",
@@ -121,7 +125,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 16,
+        "arch_stage": 17,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",

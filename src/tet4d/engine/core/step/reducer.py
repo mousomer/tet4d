@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..model.game2d_types import Action, GameState2DLike
-from ..rules.state_queries import can_piece_exist_2d
+from ..rules.gravity_2d import apply_gravity_tick_2d
 
 
 def apply_action_2d(state: GameState2DLike, action: Action) -> bool:
@@ -32,20 +32,7 @@ def step_2d(state: GameState2DLike, action: Action) -> GameState2DLike:
     if apply_action_2d(state, action):
         return state
 
-    if state.config.exploration_mode:
-        return state
-
-    if state.current_piece is None:
-        return state
-
-    moved_down = state.current_piece.moved(0, 1)
-    if can_piece_exist_2d(state, moved_down):
-        state.current_piece = moved_down
-    else:
-        state.lock_current_piece()
-        if not state.game_over:
-            state.spawn_new_piece()
-    return state
+    return apply_gravity_tick_2d(state)
 
 
 def step_nd(state: Any) -> Any:

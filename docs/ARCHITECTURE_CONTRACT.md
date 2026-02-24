@@ -90,4 +90,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 16 (slice 7, 2D core-view types) introduces core-owned 2D config/state view
   dataclasses and API adapters, starting the migration of 2D state/config representations
   into `engine/core/model` without changing gameplay behavior.
+- Stage 17 (slice 8, 2D gravity transition helper) moves the 2D gravity-tick mutation
+  branch out of `engine/core/step/reducer.py` into `engine/core/rules`, reducing direct
+  state-field mutation debt in the core reducer.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
