@@ -111,4 +111,8 @@ incremental enforcement strategy used while refactoring.
 - Stage 24 (slice 14, pygame font-profile extraction) moves font profile creation into
   `tet4d.ui.pygame.font_profiles`, leaving `tet4d.engine.font_profiles` as a
   compatibility shim and further reducing engine-level `pygame` imports.
+- Stage 25 (slice 15, playbot internal module relocation start) moves
+  `engine/playbot/lookahead_common.py` to `ai/playbot/lookahead_common.py` and leaves an
+  engine compatibility shim, beginning physical playbot-internal relocation without
+  introducing deep engine imports into `tet4d.ai`.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
