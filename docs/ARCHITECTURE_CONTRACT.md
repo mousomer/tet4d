@@ -81,4 +81,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 13 (slice 4, 2D model/action seam) moves 2D `Action` and reducer-facing state
   protocols into `engine/core/model` and makes core 2D action dispatch independent of
   `game2d.py` private helpers.
+- Stage 14 (slice 5, 2D collision/existence seam) routes the 2D gravity-step existence
+  check through `engine/core/rules`, removing direct private-state helper calls from the
+  core reducer path and shrinking reducer impurity debt.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

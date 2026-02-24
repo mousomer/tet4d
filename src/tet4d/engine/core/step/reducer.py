@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..model.game2d_types import Action, GameState2DLike
+from ..rules.state_queries import can_piece_exist_2d
 
 
 def apply_action_2d(state: GameState2DLike, action: Action) -> bool:
@@ -38,7 +39,7 @@ def step_2d(state: GameState2DLike, action: Action) -> GameState2DLike:
         return state
 
     moved_down = state.current_piece.moved(0, 1)
-    if state._can_exist(moved_down):
+    if can_piece_exist_2d(state, moved_down):
         state.current_piece = moved_down
     else:
         state.lock_current_piece()

@@ -18,6 +18,7 @@ from .score_analyzer import (
 )
 from .core.rules.scoring import score_for_clear
 from .core.rules.locking import apply_lock_and_score
+from .core.rules.state_queries import can_piece_exist_2d
 from .core.step.reducer import apply_action_2d as core_apply_action_2d
 from .core.step.reducer import step_2d as core_step_2d
 from .topology import (
@@ -188,19 +189,8 @@ class GameState:
         return tuple(coord for coord in mapped if coord[1] >= 0)
 
     def _can_exist(self, piece: ActivePiece2D) -> bool:
-        """
-        Check if a piece configuration is valid under configured topology mode.
-        Cells above top (y < 0) are allowed before lock.
-        """
-        mapped_cells = self._mapped_piece_cells(piece)
-        if mapped_cells is None:
-            return False
-        for x, y in mapped_cells:
-            if y < 0:
-                continue
-            if (x, y) in self.board.cells:
-                return False
-        return True
+        """Compatibility wrapper over the core 2D existence/collision helper."""
+        return can_piece_exist_2d(self, piece)
 
     def lock_current_piece(self) -> int:
         """

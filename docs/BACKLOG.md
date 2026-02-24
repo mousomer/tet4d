@@ -21,6 +21,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 7. `DONE` Arch Stage 11 slice 2 moved the real 2D reducer tick/gravity path into `src/tet4d/engine/core/step/reducer.py` and left `game2d.py` as a compatibility delegator.
 8. `DONE` Arch Stage 12 slice 3 moved the ND reducer tick/gravity path into `src/tet4d/engine/core/step/reducer.py`; reducer wrapper debt metric (`core_step_state_method_calls`) is now expected to be `0`.
 9. `DONE` Arch Stage 13 slice 4 moved 2D `Action` + reducer-facing state protocols into `src/tet4d/engine/core/model/`, and core 2D action dispatch no longer calls `game2d.py` private `_apply_action`.
+10. `DONE` Arch Stage 14 slice 5 routed 2D piece-existence/collision checks through `src/tet4d/engine/core/rules/state_queries.py`, reducing reducer private-state helper debt (`core_step_private_state_method_calls`) to `0`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
