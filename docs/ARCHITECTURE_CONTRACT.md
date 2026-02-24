@@ -118,4 +118,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 26 (slice 16, pygame key-display extraction) moves key-name formatting helpers to
   `tet4d.ui.pygame.key_display`, leaving `tet4d.engine.key_display` as a compatibility shim
   and further reducing engine `pygame` imports without gameplay changes.
+- Stage 27 (slice 17, pygame control-guide extraction) moves translation/rotation guide
+  rendering to `tet4d.ui.pygame.menu_control_guides`, leaving `tet4d.engine.menu_control_guides`
+  as a compatibility shim and continuing the low-risk pygame-helper extraction path.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

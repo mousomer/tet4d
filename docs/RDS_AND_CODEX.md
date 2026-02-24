@@ -86,7 +86,7 @@ python3 -m pip install -e ".[dev]"
 ```
 
 For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`.
-CI now runs `scripts/arch_metrics.py` (informational) plus `scripts/check_architecture_metric_budgets.sh` (fail-on-regression) via `scripts/ci_check.sh` to track and lock architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, UI deep-import reduction, playbot import-surface migration, early pygame-module extraction progress, and playbot internal relocation progress across Stages 13-26).
+CI now runs `scripts/arch_metrics.py` (informational) plus `scripts/check_architecture_metric_budgets.sh` (fail-on-regression) via `scripts/ci_check.sh` to track and lock architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, UI deep-import reduction, playbot import-surface migration, early pygame-module extraction progress, and playbot internal relocation progress across Stages 13-27).
 
 Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).
