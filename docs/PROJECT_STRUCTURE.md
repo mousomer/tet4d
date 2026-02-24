@@ -70,6 +70,7 @@ tet4d/
 │   └── tet4d/
 │       ├── __init__.py          # installable package root (src layout)
 │       ├── ui/                  # UI adapters (incremental separation; pygame adapters live here)
+│       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
 │       └── engine/              # shared engine + frontends + tests (source of truth)
 │       ├── board.py             # sparse ND board + plane clear logic
 │       ├── game2d.py            # 2D game rules/state
@@ -183,9 +184,10 @@ tet4d/
 
 1. New runtime/gameplay modules go in `src/tet4d/engine/`.
 2. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`.
-3. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
-4. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-5. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
+3. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
+4. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
+5. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
+6. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
 
 ## Unified documentation sections
 
