@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from .keybindings_catalog import binding_action_ids
+from .project_config import project_root_path
 
-HELP_CONFIG_DIR = Path(__file__).resolve().parent.parent / "config" / "help"
+HELP_CONFIG_DIR = project_root_path() / "config" / "help"
 TOPICS_FILE = HELP_CONFIG_DIR / "topics.json"
 ACTION_MAP_FILE = HELP_CONFIG_DIR / "action_map.json"
 

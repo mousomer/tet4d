@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .project_config import topology_profile_export_file_default_path
+from .project_config import project_root_path, topology_profile_export_file_default_path
 from .topology import (
     EDGE_BOUNDED,
     AxisEdgeRule,
@@ -19,7 +19,7 @@ from .topology import (
 
 
 _DESIGNER_PRESETS_FILE = (
-    Path(__file__).resolve().parent.parent / "config" / "topology" / "designer_presets.json"
+    project_root_path() / "config" / "topology" / "designer_presets.json"
 )
 _PROFILE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 _AXIS_NAMES = ("x", "y", "z", "w")

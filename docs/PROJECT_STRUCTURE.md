@@ -61,7 +61,9 @@ tet4d/
 │       ├── manifest.json        # canonical replay fixture manifest
 │       └── golden/
 │           └── .gitkeep         # anchor for golden replay fixtures
-├── tetris_nd/                   # shared engine + frontends + tests
+├── tet4d/                       # root shim package forwarding to src/tet4d for local imports
+├── tetris_nd/                   # legacy compatibility shim forwarding to tet4d.engine
+├── src/tet4d/engine/            # shared engine + frontends + tests (source of truth)
 │   ├── board.py                 # sparse ND board + plane clear logic
 │   ├── game2d.py                # 2D game rules/state
 │   ├── game_nd.py               # ND game rules/state (3D/4D)
@@ -141,12 +143,12 @@ tet4d/
 14. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py`and`menu_control_guides.py`.
 15. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
 16. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
-17. Tests in `tetris_nd/tests/` cover engine behavior and replay/smoke gameplay paths.
+17. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.
 18. `config/menu/*` drives launcher/setup menu structure and default values.
 19. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
 20. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
 21. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-22. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `tetris_nd/project_config.py`.
+22. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/project_config.py`.
 23. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/scan_secrets.py`.
 24. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
 25. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.

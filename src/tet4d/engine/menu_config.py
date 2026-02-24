@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from .menu_action_contracts import PARITY_ACTION_IDS
+from .project_config import project_root_path
 from .runtime_config import playbot_budget_table_for_ndim
 
 FieldSpec = tuple[str, str, int, int]
 
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "config" / "menu"
+CONFIG_DIR = project_root_path() / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
 STRUCTURE_FILE = CONFIG_DIR / "structure.json"
 _MODE_KEYS = ("2d", "3d", "4d")

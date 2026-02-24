@@ -58,7 +58,7 @@ python3 tools/scan_secrets.py
 python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
-python3.14 -m compileall -q  front2d.py  tetris_nd
+python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
 ```
 
 For repository governance/CI changes, also run:
@@ -104,7 +104,7 @@ Minimum required coverage for gameplay-affecting changes:
 9. `docs/FEATURE_MAP.md`
 10. `docs/rds/`
 11. `README.md`
-12. `tetris_nd/tests/` (or relevant test suites)
+12. `src/tet4d/engine/tests/` (or relevant test suites)
 13. Canonical connected artifacts now include:
 14. `config/schema/*.schema.json`,
 15. `docs/migrations/*.md`,
@@ -175,4 +175,4 @@ Authoritative open/deferred items are tracked in:
 5. `ruff check .`
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
-8. `python3.14 -m compileall -q  front.py  tetris_nd`
+8. `python3.14 -m compileall -q  front.py  tetris_nd  src/tet4d`

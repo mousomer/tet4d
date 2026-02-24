@@ -6,7 +6,15 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+def _detect_project_root() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in (here.parent, *here.parents):
+        if (candidate / "config" / "project" / "io_paths.json").exists():
+            return candidate
+    return here.parent.parent
+
+
+PROJECT_ROOT = _detect_project_root()
 PROJECT_CONFIG_DIR = PROJECT_ROOT / "config" / "project"
 IO_PATHS_FILE = PROJECT_CONFIG_DIR / "io_paths.json"
 CONSTANTS_FILE = PROJECT_CONFIG_DIR / "constants.json"
@@ -132,6 +140,10 @@ def _resolve_repo_relative(relative_path: str, default_relative: str) -> Path:
     if resolved == root or root in resolved.parents:
         return resolved
     return default_path
+
+
+def project_root_path() -> Path:
+    return PROJECT_ROOT
 
 
 def state_dir_relative() -> str:

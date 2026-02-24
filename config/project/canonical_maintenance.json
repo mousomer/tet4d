@@ -25,8 +25,8 @@
       "docs/rds/RDS_PACKAGING.md"
     ],
     "help_assets": [
-      "tetris_nd/menu_control_guides.py",
-      "tetris_nd/control_icons.py",
+      "src/tet4d/engine/menu_control_guides.py",
+      "src/tet4d/engine/control_icons.py",
       "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
     "canonical_schemas": [
@@ -52,13 +52,13 @@
       "docs/RELEASE_INSTALLERS.md"
     ],
     "core_tests": [
-      "tetris_nd/tests/test_playbot.py",
-      "tetris_nd/tests/test_score_analyzer.py",
-      "tetris_nd/tests/test_runtime_config.py",
-      "tetris_nd/tests/test_menu_policy.py",
-      "tetris_nd/tests/test_project_config.py",
-      "tetris_nd/tests/test_help_topics.py",
-      "tetris_nd/tests/test_help_menu.py"
+      "src/tet4d/engine/tests/test_playbot.py",
+      "src/tet4d/engine/tests/test_score_analyzer.py",
+      "src/tet4d/engine/tests/test_runtime_config.py",
+      "src/tet4d/engine/tests/test_menu_policy.py",
+      "src/tet4d/engine/tests/test_project_config.py",
+      "src/tet4d/engine/tests/test_help_topics.py",
+      "src/tet4d/engine/tests/test_help_menu.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",

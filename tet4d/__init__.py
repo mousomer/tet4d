@@ -4,8 +4,8 @@ from importlib import import_module
 from pathlib import Path
 from pkgutil import iter_modules
 
-_ENGINE_PACKAGE_ROOT = Path(__file__).resolve().parent.parent / "src" / "tet4d" / "engine"
-__path__ = [str(_ENGINE_PACKAGE_ROOT)]
+_SRC_PACKAGE_ROOT = Path(__file__).resolve().parent.parent / "src" / "tet4d"
+__path__ = [str(_SRC_PACKAGE_ROOT)]
 
 
 def __getattr__(name: str):

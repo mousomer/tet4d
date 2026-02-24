@@ -198,7 +198,7 @@ python3 tools/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
 python3 tools/bench_playbot.py --assert --record-trend
-python3.14 -m compileall -q  front2d.py  tetris_nd
+python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
 ./scripts/ci_check.sh
 ```
 

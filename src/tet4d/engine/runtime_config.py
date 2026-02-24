@@ -8,6 +8,7 @@ from typing import Any
 from .project_config import (
     playbot_history_file_default_path,
     playbot_history_file_default_relative,
+    project_root_path,
     resolve_state_relative_path,
 )
 from .runtime_config_validation import (
@@ -18,7 +19,7 @@ from .runtime_config_validation import (
 )
 
 
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
+CONFIG_DIR = project_root_path() / "config"
 GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
 PLAYBOT_POLICY_FILE = CONFIG_DIR / "playbot" / "policy.json"
 AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"

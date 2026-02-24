@@ -10,7 +10,7 @@ This repository contains:
 - `3D Tetris` direct mode (`front3d.py`)
 - `4D Tetris` direct mode (`front4d.py`)
 
-All modes share core logic under `tetris_nd/`.
+All modes share core logic under `src/tet4d/engine/` (with legacy `tetris_nd` imports preserved via shim).
 
 Boundary topology presets are available in setup menus:
 - `bounded` (default)
@@ -114,7 +114,7 @@ Keybindings:
 - `keybindings/4d.json`
 
 Control guide renderer (legacy contract reference):
-- `tetris_nd/menu_control_guides.py`
+- `src/tet4d/engine/menu_control_guides.py`
 - `draw_translation_rotation_guides`
 
 ## Quality checks

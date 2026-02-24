@@ -6,7 +6,15 @@ import unittest
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+def _detect_project_root() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in (here.parent, *here.parents):
+        if (candidate / "tools" / "validate_project_contracts.py").exists():
+            return candidate
+    return here.parents[2]
+
+
+PROJECT_ROOT = _detect_project_root()
 VALIDATOR = PROJECT_ROOT / "tools" / "validate_project_contracts.py"
 
 
