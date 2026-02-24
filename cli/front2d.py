@@ -36,10 +36,9 @@ from tet4d.engine.app_runtime import (
 )
 from tet4d.engine.audio import play_sfx
 from tet4d.engine.assist_scoring import combined_score_multiplier
-from tet4d.engine.board import BoardND
+from tet4d.engine.api import Action, BoardND, GameConfig, GameState
 from tet4d.engine.challenge_mode import apply_challenge_prefill_2d
 from tet4d.engine.display import DisplaySettings
-from tet4d.engine.game2d import GameConfig, GameState, Action
 from tet4d.engine.game_loop_common import process_game_events
 from tet4d.engine.gfx_game import (
     ClearEffect2D,
