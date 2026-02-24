@@ -189,7 +189,8 @@ tet4d/
 4. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
 5. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
 6. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-7. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
+7. Prefer `tet4d.engine.api` for tool imports; UI/render profiling tools may use `src/tet4d/ui/pygame/` adapter seams.
+8. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
 
 ## Unified documentation sections
 

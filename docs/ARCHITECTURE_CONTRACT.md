@@ -38,7 +38,8 @@ incremental enforcement strategy used while refactoring.
 ### Tools (`tools/*`)
 
 - Governance, benchmarks, and stability tools should use stable public engine APIs.
-- Deep imports are tolerated temporarily while `tet4d.engine.api` is introduced.
+- Stage 7 enforces `tet4d.engine.api`-only imports for stability/playbot benchmark tools.
+- Renderer profiling tools may use `tet4d.ui.pygame` adapter seams while UI extraction remains in progress.
 
 ## Dependency Direction (Target)
 

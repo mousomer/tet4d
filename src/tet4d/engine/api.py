@@ -6,6 +6,13 @@ from typing import Any
 from .board import BoardND
 from .game2d import Action, GameConfig, GameState
 from .game_nd import GameConfigND, GameStateND
+from .pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
+from .pieces_nd import (
+    PIECE_SET_3D_DEBUG,
+    PIECE_SET_3D_STANDARD,
+    PIECE_SET_4D_DEBUG,
+    PIECE_SET_4D_STANDARD,
+)
 from .playbot import PlayBotController
 from .playbot.types import (
     BOT_MODE_OPTIONS,
@@ -24,6 +31,7 @@ from .playbot.types import (
     default_planning_budget_ms,
 )
 from .rng import EngineRNG, coerce_random
+from .runtime_config import playbot_benchmark_history_file, playbot_benchmark_p95_thresholds
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -215,8 +223,16 @@ __all__ = [
     "new_game_state_2d",
     "new_game_state_nd",
     "new_rng",
+    "PIECE_SET_2D_CLASSIC",
+    "PIECE_SET_2D_DEBUG",
+    "PIECE_SET_3D_DEBUG",
+    "PIECE_SET_3D_STANDARD",
+    "PIECE_SET_4D_DEBUG",
+    "PIECE_SET_4D_STANDARD",
     "plan_best_2d_move",
     "plan_best_nd_move",
+    "playbot_benchmark_history_file",
+    "playbot_benchmark_p95_thresholds",
     "run_dry_run_2d",
     "run_dry_run_nd",
     "step",

@@ -18,9 +18,14 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dependent
     raise SystemExit("pygame-ce is required for profiling") from exc
 
-from tet4d.engine import front4d_game, front4d_render, frontend_nd
 from tet4d.engine.api import GameConfigND
-from tet4d.engine.view_modes import GridMode
+from tet4d.ui.pygame.profile_4d import (
+    GridMode,
+    LayerView3D,
+    create_initial_state,
+    draw_game_frame,
+    init_fonts,
+)
 
 
 @dataclass(frozen=True)
@@ -61,13 +66,13 @@ def _run_scenario(
     dims4: tuple[int, int, int, int],
 ) -> dict[str, float | int | str | bool]:
     cfg = GameConfigND(dims=dims4, gravity_axis=1, speed_level=1)
-    state = frontend_nd.create_initial_state(cfg)
+    state = create_initial_state(cfg)
     if scenario.dense:
         _fill_dense_board(state)
-    view = front4d_game.LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
+    view = LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
 
     for _ in range(warmup):
-        front4d_render.draw_game_frame(
+        draw_game_frame(
             surface,
             state,
             view,
@@ -77,7 +82,7 @@ def _run_scenario(
 
     t0 = time.perf_counter()
     for _ in range(frames):
-        front4d_render.draw_game_frame(
+        draw_game_frame(
             surface,
             state,
             view,
@@ -135,7 +140,7 @@ def main() -> int:
 
     pygame.init()
     try:
-        fonts = frontend_nd.init_fonts()
+        fonts = init_fonts()
         surface = pygame.Surface((args.width, args.height), pygame.SRCALPHA)
         scenarios = (
             Scenario(name="default_sparse", xw_deg=0.0, zw_deg=0.0, dense=False),

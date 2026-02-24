@@ -5,6 +5,8 @@ cd "$(dirname "$0")/.."
 
 ENGINE_DIR="src/tet4d/engine"
 AI_DIR="src/tet4d/ai"
+TOOLS_STABILITY_DIR="tools/stability"
+TOOLS_BENCHMARKS_DIR="tools/benchmarks"
 
 if [[ ! -d "$ENGINE_DIR" ]]; then
   exit 0
@@ -158,12 +160,59 @@ if [[ -d "$AI_DIR" ]]; then
     --glob '!src/tet4d/ai/tests/**' || true)"
   if [[ -n "${ai_engine_import_lines}" ]]; then
     ai_disallowed_lines="$(printf '%s\n' "$ai_engine_import_lines" | grep -Ev \
-      '^\s*[^:]+:\d+:\s*(import|from)\s+tet4d\.engine\.api(\.|(\s|$))|^\s*[^:]+:\d+:\s*from\s+tet4d\.engine\s+import\s+api(\s|,|$)' \
+      '^\s*[^:]+:[0-9]+:\s*(import|from)\s+tet4d\.engine\.api(\.|(\s|$))|^\s*[^:]+:[0-9]+:\s*from\s+tet4d\.engine\s+import\s+api(\s|,|$)' \
       || true)"
     if [[ -n "${ai_disallowed_lines}" ]]; then
       echo "Architecture violation: tet4d.ai imports deep engine internals (use tet4d.engine.api)." >&2
       printf '%s\n' "$ai_disallowed_lines" >&2
       fail "Architecture violation: tet4d.ai must import tet4d.engine.api only."
+    fi
+  fi
+fi
+
+check_tools_engine_api_only() {
+  local dir="$1"
+  local label="$2"
+  local exclude_glob="${3:-}"
+  [[ -d "$dir" ]] || return 0
+
+  local args=("$dir")
+  if [[ -n "$exclude_glob" ]]; then
+    args+=(--glob "$exclude_glob")
+  fi
+  local import_lines
+  import_lines="$("${RG_BASE[@]}" '^\s*(import|from)\s+tet4d\.engine(\.|(\s|$))' "${args[@]}" || true)"
+  [[ -n "$import_lines" ]] || return 0
+
+  local disallowed_lines
+  disallowed_lines="$(printf '%s\n' "$import_lines" | grep -Ev \
+    '^\s*[^:]+:[0-9]+:\s*(import|from)\s+tet4d\.engine\.api(\.|(\s|$))|^\s*[^:]+:[0-9]+:\s*from\s+tet4d\.engine\s+import\s+api(\s|,|$)' \
+    || true)"
+  if [[ -n "$disallowed_lines" ]]; then
+    echo "Architecture violation: ${label} imports deep engine internals (use tet4d.engine.api)." >&2
+    printf '%s\n' "$disallowed_lines" >&2
+    fail "Architecture violation: ${label} must import tet4d.engine.api only."
+  fi
+}
+
+# 5) Stability + benchmark tools should import engine via API only.
+# profile_4d_render is a renderer benchmark and may use the UI adapter seam.
+check_tools_engine_api_only "$TOOLS_STABILITY_DIR" "tools/stability"
+check_tools_engine_api_only "$TOOLS_BENCHMARKS_DIR" "tools/benchmarks" '!tools/benchmarks/profile_4d_render.py'
+
+# 6) Tools should not import deep UI internals directly; benchmark render profiler may use ui adapter package.
+if [[ -d "$TOOLS_BENCHMARKS_DIR" ]]; then
+  benchmark_ui_lines="$("${RG_BASE[@]}" \
+    '^\s*(import|from)\s+tet4d\.ui(\.|(\s|$))' \
+    "$TOOLS_BENCHMARKS_DIR" || true)"
+  if [[ -n "$benchmark_ui_lines" ]]; then
+    benchmark_ui_disallowed="$(printf '%s\n' "$benchmark_ui_lines" | grep -Ev \
+      '^\s*tools/benchmarks/profile_4d_render\.py:[0-9]+:\s*(import|from)\s+tet4d\.ui\.pygame(\.|(\s|$))' \
+      || true)"
+    if [[ -n "$benchmark_ui_disallowed" ]]; then
+      echo "Architecture violation: benchmark tools import unsupported UI modules." >&2
+      printf '%s\n' "$benchmark_ui_disallowed" >&2
+      fail "Architecture violation: tools/benchmarks may only use tet4d.ui.pygame for renderer profiling."
     fi
   fi
 fi
