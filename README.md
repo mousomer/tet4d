@@ -58,6 +58,12 @@ python front.py
 python front2d.py
 python front3d.py
 python front4d.py
+
+# Equivalent direct CLI paths
+python cli/front.py
+python cli/front2d.py
+python cli/front3d.py
+python cli/front4d.py
 ```
 
 ## Local desktop packaging (bundled runtime)
