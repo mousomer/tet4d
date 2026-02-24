@@ -42,6 +42,7 @@ if ! "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
 fi
 
 # Fast architecture policy guardrail (pass-quiet / fail-loud).
+scripts/check_engine_core_purity.sh
 scripts/check_architecture_boundaries.sh
 
 # Delegate to the repo's canonical policy/security checks.

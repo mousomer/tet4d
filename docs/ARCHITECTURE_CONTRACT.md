@@ -18,6 +18,12 @@ incremental enforcement strategy used while refactoring.
 - No file I/O or runtime persistence side effects in core update paths.
 - No imports from UI adapters or tooling.
 
+### Engine Core (`tet4d.engine.core`)
+
+- Strict-purity subtree for extracted deterministic logic slices.
+- No `pygame`, `tet4d.ui`, tooling imports, file I/O, `time`, `logging`, or `print`.
+- `random` usage is isolated to `tet4d.engine.core.rng` for injected RNG support.
+
 ### UI Adapter (`tet4d.ui.pygame` planned)
 
 - Owns `pygame` event loop, rendering, audio playback, and input mapping.
@@ -64,4 +70,6 @@ incremental enforcement strategy used while refactoring.
   fails on new violations.
 - Stage 8 also locks the current `src/tet4d/ui/` deep-engine import baseline while
   enforcing strict `engine -> replay` and `replay/ai/tools -> engine.api` rules.
+- Stage 9 adds a strict `engine/core` purity gate and architecture metrics (`scripts/arch_metrics.py`)
+  to track remaining deep imports and side-effect migration debt.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

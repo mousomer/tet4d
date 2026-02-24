@@ -18,6 +18,7 @@ from .score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from .core.rules.scoring import score_for_clear
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -28,17 +29,7 @@ from .types import Coord
 
 
 def _score_for_clear(cleared_planes: int) -> int:
-    if cleared_planes <= 0:
-        return 0
-    table = {
-        1: 40,
-        2: 100,
-        3: 300,
-        4: 1200,
-    }
-    if cleared_planes in table:
-        return table[cleared_planes]
-    return table[4] + (cleared_planes - 4) * 400
+    return score_for_clear(cleared_planes)
 
 
 @dataclass

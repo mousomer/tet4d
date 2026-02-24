@@ -17,6 +17,7 @@ from .score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from .core.rules.scoring import score_for_clear
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -26,17 +27,7 @@ from .topology import (
 
 
 def _score_for_clear(cleared_lines: int) -> int:
-    if cleared_lines <= 0:
-        return 0
-    table = {
-        1: 40,
-        2: 100,
-        3: 300,
-        4: 1200,
-    }
-    if cleared_lines in table:
-        return table[cleared_lines]
-    return table[4] + (cleared_lines - 4) * 400
+    return score_for_clear(cleared_lines)
 
 
 class Action(Enum):

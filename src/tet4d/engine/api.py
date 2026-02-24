@@ -3,7 +3,17 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from .board import BoardND
+from .core.model import BoardND
+from .core.rules.state_queries import (
+    board_cells as core_board_cells,
+    current_piece_cells as core_current_piece_cells,
+    is_game_over as core_is_game_over,
+    legal_actions as core_legal_actions,
+    legal_actions_2d as core_legal_actions_2d,
+)
+from .core.step.reducer import step as core_step
+from .core.step.reducer import step_2d as core_step_2d
+from .core.step.reducer import step_nd as core_step_nd
 from .game2d import Action, GameConfig, GameState
 from .game_nd import GameConfigND, GameStateND
 from .pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
@@ -30,7 +40,7 @@ from .playbot.types import (
     bot_planner_profile_label,
     default_planning_budget_ms,
 )
-from .rng import EngineRNG, coerce_random
+from .core.rng import EngineRNG, coerce_random
 from .runtime_config import playbot_benchmark_history_file, playbot_benchmark_p95_thresholds
 
 
@@ -147,46 +157,35 @@ def run_dry_run_nd(
 
 
 def step_2d(state: GameState, action: Action = Action.NONE) -> GameState:
-    state.step(action)
-    return state
+    return core_step_2d(state, action)
 
 
 def step_nd(state: GameStateND) -> GameStateND:
-    state.step()
-    return state
+    return core_step_nd(state)
 
 
 def step(state: GameState | GameStateND, action: Action | None = None) -> GameState | GameStateND:
-    if isinstance(state, GameState):
-        step_2d(state, Action.NONE if action is None else action)
-        return state
-    if action is not None:
-        raise TypeError("ND engine step does not accept a 2D Action")
-    step_nd(state)
-    return state
+    return core_step(state, action)
 
 
 def legal_actions_2d(_: GameState | None = None) -> tuple[Action, ...]:
-    return tuple(Action)
+    return core_legal_actions_2d(_)
 
 
 def legal_actions(state: GameState | GameStateND) -> tuple[Action, ...]:
-    if isinstance(state, GameState):
-        return legal_actions_2d(state)
-    return ()
+    return core_legal_actions(state)
 
 
 def board_cells(state: GameState | GameStateND) -> dict[tuple[int, ...], int]:
-    return dict(state.board.cells)
+    return core_board_cells(state)
 
 
 def current_piece_cells(state: GameState | GameStateND, *, include_above: bool = False) -> tuple[tuple[int, ...], ...]:
-    cells = state.current_piece_cells_mapped(include_above=include_above)
-    return tuple(tuple(cell) for cell in cells)
+    return core_current_piece_cells(state, include_above=include_above)
 
 
 def is_game_over(state: GameState | GameStateND) -> bool:
-    return bool(state.game_over)
+    return core_is_game_over(state)
 
 
 __all__ = [

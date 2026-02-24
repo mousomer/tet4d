@@ -1,4 +1,3 @@
-# tetris_nd/types.py
-from typing import Tuple
+from .core.model.types import Coord
 
-Coord = Tuple[int, ...]  # e.g. (x, y) for 2D, (x, y, z) for 3D, etc.
+__all__ = ["Coord"]

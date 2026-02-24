@@ -73,6 +73,7 @@ tet4d/
 │       ├── ai/                  # AI facades (playbot boundary seam over engine.api)
 │       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
 │       └── engine/              # shared engine + frontends + tests (source of truth)
+│           └── core/            # strict-purity deterministic logic extraction subtree
 │       ├── board.py             # sparse ND board + plane clear logic
 │       ├── game2d.py            # 2D game rules/state
 │       ├── game_nd.py           # ND game rules/state (3D/4D)
@@ -183,15 +184,17 @@ tet4d/
 
 ## Placement rubric
 
-1. New runtime/gameplay modules go in `src/tet4d/engine/`.
-2. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`.
-3. New AI/playbot entry/facade modules go in `src/tet4d/ai/` and should depend on `src/tet4d/engine/api.py`.
-4. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
-5. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
-6. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-7. Prefer `tet4d.engine.api` for tool imports; UI/render profiling tools may use `src/tet4d/ui/pygame/` adapter seams.
-8. `scripts/check_architecture_boundaries.sh` enforces incremental import boundaries (with documented temporary baselines).
-9. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
+1. New pure deterministic logic slices (no pygame/I/O/time/logging) go in `src/tet4d/engine/core/`.
+2. New runtime/gameplay modules that are not yet pure-core-ready go in `src/tet4d/engine/`.
+3. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`.
+4. New AI/playbot entry/facade modules go in `src/tet4d/ai/` and should depend on `src/tet4d/engine/api.py`.
+5. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
+6. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
+7. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
+8. Prefer `tet4d.engine.api` for tool imports; UI/render profiling tools may use `src/tet4d/ui/pygame/` adapter seams.
+9. `scripts/check_architecture_boundaries.sh` enforces incremental import boundaries (with documented temporary baselines).
+10. `scripts/check_engine_core_purity.sh` strictly enforces `src/tet4d/engine/core/` purity.
+11. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
 
 ## Unified documentation sections
 
