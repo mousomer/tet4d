@@ -41,6 +41,9 @@ if ! "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
   exit 1
 fi
 
+# Fast architecture policy guardrail (pass-quiet / fail-loud).
+scripts/check_architecture_boundaries.sh
+
 # Delegate to the repo's canonical policy/security checks.
 # Canonical command tokens retained for contract validation:
 # python3 tools/governance/validate_project_contracts.py

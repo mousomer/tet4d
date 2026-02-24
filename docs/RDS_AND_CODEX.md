@@ -2,6 +2,9 @@
 
 This document is section `3` of the unified documentation layout.
 
+Architecture boundary contract:
+- `docs/ARCHITECTURE_CONTRACT.md`
+
 ## RDS index
 
 All requirement/design specs are in:
@@ -36,6 +39,7 @@ Read order:
 6. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 7. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
 8. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
+9. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
 
 ## Coding best practices
 

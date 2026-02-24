@@ -1,0 +1,61 @@
+# Architecture Contract (Incremental Refactor)
+
+This document defines the target dependency boundaries for `tet4d` and the
+incremental enforcement strategy used while refactoring.
+
+## Goals
+
+- Preserve gameplay behavior while improving maintainability.
+- Establish stable module boundaries and dependency direction.
+- Keep CI green during incremental refactors.
+
+## Target Boundaries
+
+### Engine (`tet4d.engine`)
+
+- Pure game logic and deterministic state transitions.
+- No `pygame` imports.
+- No file I/O or runtime persistence side effects in core update paths.
+- No imports from UI adapters or tooling.
+
+### UI Adapter (`tet4d.ui.pygame` planned)
+
+- Owns `pygame` event loop, rendering, audio playback, and input mapping.
+- Depends on `tet4d.engine.api` only (target state).
+
+### Replay (`tet4d.replay` planned)
+
+- Replay schema and serialization/deserialization live outside engine core.
+- Engine consumes replay data, not replay files.
+
+### AI / Playbot (`tet4d.ai` planned)
+
+- Depends on `tet4d.engine.api` (and replay schema if needed).
+- Must not depend on deep engine internals long-term.
+
+### Tools (`tools/*`)
+
+- Governance, benchmarks, and stability tools should use stable public engine APIs.
+- Deep imports are tolerated temporarily while `tet4d.engine.api` is introduced.
+
+## Dependency Direction (Target)
+
+- `ui` -> `engine.api`
+- `ai` -> `engine.api`
+- `tools` -> `engine.api`
+- `replay` -> `engine.api`
+- `engine` -> (no `ui`, no `tools`, no `pygame`)
+
+## 2D / 3D / 4D Principle
+
+- 2D/3D/4D modes are configuration and adapter concerns over shared engine logic.
+- Mode-specific rendering and input handling belong in UI adapters.
+- Shared rules (collision, scoring, topology, rotations) belong in engine core.
+
+## Enforcement Strategy (Incremental)
+
+- Stage 1 introduces a boundary check script and wires it into policy checks.
+- Because `src/tet4d/engine/` is currently mixed (logic + `pygame` adapters),
+  the initial checker uses a locked baseline for existing `pygame` imports and
+  fails on new violations.
+- Future stages tighten this until `pygame` imports are fully removed from engine.
