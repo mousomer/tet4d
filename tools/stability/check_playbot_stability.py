@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import argparse
 
-from tetris_nd.game2d import GameConfig
-from tetris_nd.game_nd import GameConfigND
-from tetris_nd.pieces2d import PIECE_SET_2D_DEBUG
-from tetris_nd.pieces_nd import PIECE_SET_3D_DEBUG, PIECE_SET_4D_DEBUG
-from tetris_nd.playbot.dry_run import run_dry_run_2d, run_dry_run_nd
+from tet4d.engine.game2d import GameConfig
+from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.pieces2d import PIECE_SET_2D_DEBUG
+from tet4d.engine.pieces_nd import PIECE_SET_3D_DEBUG, PIECE_SET_4D_DEBUG
+from tet4d.engine.playbot.dry_run import run_dry_run_2d, run_dry_run_nd
 
 
 def _assert_report(ok: bool, details: str) -> None:

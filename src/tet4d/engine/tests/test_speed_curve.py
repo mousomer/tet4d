@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.speed_curve import gravity_interval_ms
+from tet4d.engine.speed_curve import gravity_interval_ms
 
 
 class TestSpeedCurve(unittest.TestCase):

@@ -17,15 +17,15 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tetris_nd.board import BoardND
-from tetris_nd.game2d import GameConfig, GameState
-from tetris_nd.game_nd import GameConfigND, GameStateND
-from tetris_nd.pieces2d import PIECE_SET_2D_CLASSIC
-from tetris_nd.pieces_nd import PIECE_SET_3D_STANDARD, PIECE_SET_4D_STANDARD
-from tetris_nd.playbot.planner_2d import plan_best_2d_move
-from tetris_nd.playbot.planner_nd import plan_best_nd_move
-from tetris_nd.runtime_config import playbot_benchmark_p95_thresholds
-from tetris_nd.playbot.types import (
+from tet4d.engine.board import BoardND
+from tet4d.engine.game2d import GameConfig, GameState
+from tet4d.engine.game_nd import GameConfigND, GameStateND
+from tet4d.engine.pieces2d import PIECE_SET_2D_CLASSIC
+from tet4d.engine.pieces_nd import PIECE_SET_3D_STANDARD, PIECE_SET_4D_STANDARD
+from tet4d.engine.playbot.planner_2d import plan_best_2d_move
+from tet4d.engine.playbot.planner_nd import plan_best_nd_move
+from tet4d.engine.runtime_config import playbot_benchmark_p95_thresholds
+from tet4d.engine.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     default_planning_budget_ms,

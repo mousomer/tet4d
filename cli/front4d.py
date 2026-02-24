@@ -18,7 +18,7 @@ def _parse_cli_args(argv=None):
 
 def main(argv=None):
     _parse_cli_args(sys.argv[1:] if argv is None else argv)
-    from tetris_nd.front4d_game import run
+    from tet4d.engine.front4d_game import run
     run()
 
 

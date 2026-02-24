@@ -12,7 +12,7 @@ This repository contains:
 
 Primary Python entrypoints live under `cli/` (`cli/front*.py`).
 Root `front*.py` files are compatibility wrappers that preserve existing commands.
-All modes share core logic under `src/tet4d/engine/` (with legacy `tetris_nd` imports preserved via shim).
+All modes share core logic under `src/tet4d/engine/`.
 
 Boundary topology presets are available in setup menus:
 - `bounded` (default)
@@ -53,9 +53,9 @@ pip install ruff pytest
 ## Development
 
 - Canonical runtime source path is `src/tet4d/engine/`.
-- Compatibility shims exist at repo root (`tet4d/` and `tetris_nd/`) to preserve local imports and legacy code paths.
-- Do not introduce new `tetris_nd` imports; prefer `tet4d.engine.*`.
-- See `docs/MIGRATION_NOTES.md` for shim purpose and removal milestones.
+- A repo-root `tet4d/` shim preserves local imports from a fresh clone without `PYTHONPATH=src`.
+- Use `tet4d.engine.*` imports for runtime/tests/tools (legacy `tetris_nd` imports were removed).
+- See `docs/MIGRATION_NOTES.md` for structure history and shim policy.
 
 ## Run
 

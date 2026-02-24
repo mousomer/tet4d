@@ -26,19 +26,19 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from tetris_nd.app_runtime import (
+from tet4d.engine.app_runtime import (
     capture_windowed_display_settings,
     initialize_runtime,
     open_display,
 )
-from tetris_nd.audio import play_sfx
-from tetris_nd.assist_scoring import combined_score_multiplier
-from tetris_nd.board import BoardND
-from tetris_nd.challenge_mode import apply_challenge_prefill_2d
-from tetris_nd.display import DisplaySettings
-from tetris_nd.game2d import GameConfig, GameState, Action
-from tetris_nd.game_loop_common import process_game_events
-from tetris_nd.gfx_game import (
+from tet4d.engine.audio import play_sfx
+from tet4d.engine.assist_scoring import combined_score_multiplier
+from tet4d.engine.board import BoardND
+from tet4d.engine.challenge_mode import apply_challenge_prefill_2d
+from tet4d.engine.display import DisplaySettings
+from tet4d.engine.game2d import GameConfig, GameState, Action
+from tet4d.engine.game_loop_common import process_game_events
+from tet4d.engine.gfx_game import (
     ClearEffect2D,
     GfxFonts,
     init_fonts,
@@ -46,52 +46,52 @@ from tetris_nd.gfx_game import (
     draw_game_frame,
     gravity_interval_ms_from_config,
 )
-from tetris_nd.keybindings import (
+from tet4d.engine.keybindings import (
     DISABLED_KEYS_2D,
     KEYS_2D,
     SYSTEM_KEYS,
     active_key_profile,
     load_active_profile_bindings,
 )
-from tetris_nd.key_dispatch import (
+from tet4d.engine.key_dispatch import (
     dispatch_bound_action,
     match_bound_action,
 )
-from tetris_nd.menu_controls import (
+from tet4d.engine.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,
     gather_menu_actions,
 )
-from tetris_nd.menu_config import default_settings_payload, setup_fields_for_dimension
-from tetris_nd.menu_settings_state import (
+from tet4d.engine.menu_config import default_settings_payload, setup_fields_for_dimension
+from tet4d.engine.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
 )
-from tetris_nd.project_config import project_constant_float
-from tetris_nd.playbot import (
+from tet4d.engine.project_config import project_constant_float
+from tet4d.engine.playbot import (
     PlayBotController,
     run_dry_run_2d,
 )
-from tetris_nd.playbot.types import (
+from tet4d.engine.playbot.types import (
     BotMode,
     bot_planner_algorithm_from_index,
     bot_mode_from_index,
     bot_planner_profile_from_index,
 )
-from tetris_nd.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
-from tetris_nd.exploration_mode import minimal_exploration_dims_2d
-from tetris_nd.rotation_anim import PieceRotationAnimator2D
-from tetris_nd.topology import topology_mode_from_index, topology_mode_label
-from tetris_nd.topology_designer import (
+from tet4d.engine.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tet4d.engine.exploration_mode import minimal_exploration_dims_2d
+from tet4d.engine.rotation_anim import PieceRotationAnimator2D
+from tet4d.engine.topology import topology_mode_from_index, topology_mode_label
+from tet4d.engine.topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
 )
-from tetris_nd.view_modes import GridMode, cycle_grid_mode
-from tetris_nd.pause_menu import run_pause_menu
-from tetris_nd.help_menu import run_help_menu
+from tet4d.engine.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.pause_menu import run_pause_menu
+from tet4d.engine.help_menu import run_help_menu
 
 DEFAULT_GAME_SEED = 1337
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]

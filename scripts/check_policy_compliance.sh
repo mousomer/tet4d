@@ -26,8 +26,7 @@ fi
 python3 tools/governance/validate_project_contracts.py
 python3 tools/governance/scan_secrets.py
 
-# Stage 5 guardrail (warn-only): detect legacy tetris_nd imports outside the shim path.
-# This prevents silent backsliding while the repo is still migrating imports to tet4d.engine.
+# Stage 6 guardrail (enforced): block legacy tetris_nd imports outside the removed shim path.
 python3 - <<'PY'
 from __future__ import annotations
 
@@ -47,9 +46,9 @@ try:
         capture_output=True,
         text=True,
     )
-except Exception as exc:  # pragma: no cover - policy check should remain best-effort here
-    print(f"WARNING: legacy import guardrail skipped (git ls-files failed: {exc})", file=sys.stderr)
-    raise SystemExit(0)
+except Exception as exc:  # pragma: no cover - policy check should remain deterministic in CI
+    print(f"ERROR: legacy import guardrail failed (git ls-files failed: {exc})", file=sys.stderr)
+    raise SystemExit(1)
 
 hits: list[str] = []
 for rel in result.stdout.splitlines():
@@ -68,19 +67,20 @@ for rel in result.stdout.splitlines():
 
 if hits:
     print(
-        "WARNING: legacy 'tetris_nd' imports detected outside the shim (warn-only in Stage 5).",
+        "ERROR: legacy 'tetris_nd' imports detected. The compatibility shim was removed in Stage 6.",
         file=sys.stderr,
     )
     print(
-        "WARNING: Prefer 'tet4d.engine.*' for new/modified code. See docs/MIGRATION_NOTES.md.",
+        "ERROR: Use 'tet4d.engine.*' imports instead. See docs/MIGRATION_NOTES.md.",
         file=sys.stderr,
     )
     sample_limit = 20
     for hit in hits[:sample_limit]:
-        print(f"WARNING: {hit}", file=sys.stderr)
+        print(f"ERROR: {hit}", file=sys.stderr)
     if len(hits) > sample_limit:
         print(
-            f"WARNING: ... {len(hits) - sample_limit} more legacy import occurrences not shown.",
+            f"ERROR: ... {len(hits) - sample_limit} more legacy import occurrences not shown.",
             file=sys.stderr,
         )
+    raise SystemExit(1)
 PY

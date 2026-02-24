@@ -1,9 +1,9 @@
 import unittest
 import random
 
-from tetris_nd.board import BoardND
-from tetris_nd.game_nd import GameConfigND, GameStateND, _score_for_clear
-from tetris_nd.pieces_nd import (
+from tet4d.engine.board import BoardND
+from tet4d.engine.game_nd import GameConfigND, GameStateND, _score_for_clear
+from tet4d.engine.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_3D_EMBED_2D,
@@ -14,7 +14,7 @@ from tetris_nd.pieces_nd import (
     PIECE_SET_4D_SIX,
     PieceShapeND,
 )
-from tetris_nd.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 
 
 class TestGameND(unittest.TestCase):

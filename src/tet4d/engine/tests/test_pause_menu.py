@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pygame
 
-from tetris_nd.audio import AudioSettings
-from tetris_nd.display import DisplaySettings
-from tetris_nd.launcher_settings import SettingsHubResult
-from tetris_nd import pause_menu
+from tet4d.engine.audio import AudioSettings
+from tet4d.engine.display import DisplaySettings
+from tet4d.engine.launcher_settings import SettingsHubResult
+from tet4d.engine import pause_menu
 
 
 class TestPauseMenuSettingsRouting(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         screen = pygame.Surface((640, 480))
         state = pause_menu._PauseState(selected=pause_menu._PAUSE_ACTION_CODES.index("settings"))
 
-        with patch("tetris_nd.pause_menu.run_settings_hub_menu") as run_hub:
+        with patch("tet4d.engine.pause_menu.run_settings_hub_menu") as run_hub:
             run_hub.return_value = SettingsHubResult(
                 screen=screen,
                 audio_settings=AudioSettings(),
@@ -48,7 +48,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         screen = pygame.Surface((640, 480))
         state = pause_menu._PauseState(selected=pause_menu._PAUSE_ACTION_CODES.index("settings"))
 
-        with patch("tetris_nd.pause_menu.run_settings_hub_menu") as run_hub:
+        with patch("tet4d.engine.pause_menu.run_settings_hub_menu") as run_hub:
             run_hub.return_value = SettingsHubResult(
                 screen=screen,
                 audio_settings=AudioSettings(),
@@ -71,4 +71,3 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
     def test_pause_values_show_analytics_in_settings_summary(self) -> None:
         values = pause_menu._pause_menu_values(4)
         self.assertEqual(values[2], "Audio + Display + Analytics")
-

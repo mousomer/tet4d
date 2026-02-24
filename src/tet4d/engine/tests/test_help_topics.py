@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.help_topics import (
+from tet4d.engine.help_topics import (
     clear_help_topic_caches,
     help_action_topic_registry,
     help_topics_for_context,
@@ -10,7 +10,7 @@ from tetris_nd.help_topics import (
     help_topics_registry,
     validate_help_topic_contract,
 )
-from tetris_nd.keybindings_catalog import binding_action_ids
+from tet4d.engine.keybindings_catalog import binding_action_ids
 
 
 class TestHelpTopics(unittest.TestCase):

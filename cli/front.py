@@ -23,20 +23,20 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from tetris_nd.app_runtime import initialize_runtime, open_display
-from tetris_nd.audio import AudioSettings, play_sfx
-from tetris_nd.bot_options_menu import run_bot_options_menu
-from tetris_nd.display import DisplaySettings
-from tetris_nd.font_profiles import init_fonts as init_fonts_for_profile
-from tetris_nd.help_menu import run_help_menu
-from tetris_nd.keybindings import active_key_profile, load_active_profile_bindings, set_active_key_profile
-from tetris_nd.keybindings_menu import run_keybindings_menu
-from tetris_nd.launcher_play import launch_2d, launch_3d, launch_4d
-from tetris_nd.launcher_settings import run_settings_hub_menu
-from tetris_nd.menu_config import launcher_menu_id, menu_graph
-from tetris_nd.menu_persistence import load_menu_payload, save_menu_payload
-from tetris_nd.menu_runner import ActionRegistry, MenuRunner
-from tetris_nd.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.engine.app_runtime import initialize_runtime, open_display
+from tet4d.engine.audio import AudioSettings, play_sfx
+from tet4d.engine.bot_options_menu import run_bot_options_menu
+from tet4d.engine.display import DisplaySettings
+from tet4d.engine.font_profiles import init_fonts as init_fonts_for_profile
+from tet4d.engine.help_menu import run_help_menu
+from tet4d.engine.keybindings import active_key_profile, load_active_profile_bindings, set_active_key_profile
+from tet4d.engine.keybindings_menu import run_keybindings_menu
+from tet4d.engine.launcher_play import launch_2d, launch_3d, launch_4d
+from tet4d.engine.launcher_settings import run_settings_hub_menu
+from tet4d.engine.menu_config import launcher_menu_id, menu_graph
+from tet4d.engine.menu_persistence import load_menu_payload, save_menu_payload
+from tet4d.engine.menu_runner import ActionRegistry, MenuRunner
+from tet4d.engine.ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)

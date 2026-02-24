@@ -7,7 +7,7 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment guard
     raise unittest.SkipTest("pygame-ce is required for keybinding menu model tests") from exc
 
-from tetris_nd.keybindings_menu_model import rows_for_scope
+from tet4d.engine.keybindings_menu_model import rows_for_scope
 
 
 def _header_titles(scope: str) -> list[str]:

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
-from tetris_nd.pieces_nd import ActivePieceND, PieceShapeND
-from tetris_nd.rotation_anim import PieceRotationAnimator2D, PieceRotationAnimatorND
+from tet4d.engine.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.rotation_anim import PieceRotationAnimator2D, PieceRotationAnimatorND
 
 
 def _centroid(cells: tuple[tuple[float, ...], ...]) -> tuple[float, ...]:

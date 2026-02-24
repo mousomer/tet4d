@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.assist_scoring import combined_score_multiplier
-from tetris_nd.playbot.types import BotMode
-from tetris_nd.view_modes import GridMode
+from tet4d.engine.assist_scoring import combined_score_multiplier
+from tet4d.engine.playbot.types import BotMode
+from tet4d.engine.view_modes import GridMode
 
 
 class TestAssistScoring(unittest.TestCase):

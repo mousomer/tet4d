@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.project_config import (
+from tet4d.engine.project_config import (
     PROJECT_ROOT,
     keybindings_dir_relative,
     menu_settings_file_relative,

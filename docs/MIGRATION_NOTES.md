@@ -2,7 +2,7 @@
 
 This repository was restructured in stages to reduce top-level clutter and prepare for a `src/` layout.
 
-## What Changed (Stages 1-4)
+## What Changed (Stages 1-6)
 
 - Entry scripts moved to `cli/` (`cli/front*.py`).
 - Root `front*.py` files remain as compatibility wrappers.
@@ -11,6 +11,8 @@ This repository was restructured in stages to reduce top-level clutter and prepa
   - `tools/governance/`
   - `tools/stability/`
   - `tools/benchmarks/`
+- Imports were migrated from `tetris_nd.*` to `tet4d.engine.*`.
+- The root `tetris_nd/` legacy shim was removed after the import migration passed CI.
 
 ## Why the Shims Exist
 
@@ -18,9 +20,9 @@ This repository was restructured in stages to reduce top-level clutter and prepa
   - Lets `python -c "import tet4d.engine"` work from a fresh clone without requiring `PYTHONPATH=src`.
   - Keeps local developer workflows simple before install/editable-install standardization.
 
-- `tetris_nd/` (legacy import shim):
-  - Preserves existing imports while the repo migrates to the canonical package path.
-  - Avoids a risky mass import rewrite during structure-only stages.
+- `tetris_nd/` (legacy import shim, removed in Stage 6):
+  - Existed temporarily to preserve imports during the `src/` layout transition.
+  - Removed after repo imports were migrated to `tet4d.engine.*` and validation passed.
 
 ## Canonical Import Path (Going Forward)
 
@@ -30,13 +32,11 @@ Prefer:
 from tet4d.engine import ...
 ```
 
-Do not introduce new imports from `tetris_nd` in new or modified code.
+Do not introduce imports from `tetris_nd`.
 
 ## Shim Removal Milestones
 
-- Remove `tetris_nd/` shim after:
-  - repo contains zero non-shim imports of `tetris_nd`, and
-  - CI/verify passes after the import migration.
+- `tetris_nd/` shim removal completed in Stage 6 after repo imports were migrated and CI/verify passed.
 
 - Remove repo-root `tet4d/` shim after:
   - tests/tools run through an install/editable-install path (or an equivalent standardized import setup), and

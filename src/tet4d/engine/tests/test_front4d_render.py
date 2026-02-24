@@ -10,11 +10,11 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in environments with
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
-from tetris_nd import front4d_game, front4d_render, frontend_nd, projection3d
-from tetris_nd.game_nd import GameConfigND
-from tetris_nd.keybindings import CAMERA_KEYS_4D
-from tetris_nd.projection3d import box_raw_corners, projection_cache_key
-from tetris_nd.view_modes import GridMode
+from tet4d.engine import front4d_game, front4d_render, frontend_nd, projection3d
+from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.keybindings import CAMERA_KEYS_4D
+from tet4d.engine.projection3d import box_raw_corners, projection_cache_key
+from tet4d.engine.view_modes import GridMode
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:

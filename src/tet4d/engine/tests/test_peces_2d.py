@@ -1,7 +1,7 @@
 # tests/test_pieces2d.py
 import unittest
 
-from tetris_nd.pieces2d import (
+from tet4d.engine.pieces2d import (
     ActivePiece2D,
     PIECE_SET_2D_OPTIONS,
     PieceShape2D,

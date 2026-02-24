@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.topology import (
+from tet4d.engine.topology import (
     EDGE_BOUNDED,
     EDGE_INVERT,
     EDGE_WRAP,
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
 )
-from tetris_nd.topology_designer import (
+from tet4d.engine.topology_designer import (
     designer_profile_index_by_id,
     designer_profiles_for_dimension,
     resolve_topology_designer_selection,

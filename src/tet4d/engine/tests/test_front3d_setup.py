@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd import front3d_setup, frontend_nd
+from tet4d.engine import front3d_setup, frontend_nd
 
 
 class TestFront3DSetupDedup(unittest.TestCase):

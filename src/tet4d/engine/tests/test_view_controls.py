@@ -1,6 +1,6 @@
 import unittest
 
-from tetris_nd.view_controls import (
+from tet4d.engine.view_controls import (
     YawPitchTurnAnimator,
     viewer_relative_move_axis_delta,
     wrapped_pitch_target,

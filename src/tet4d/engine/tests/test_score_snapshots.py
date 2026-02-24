@@ -3,14 +3,14 @@ from __future__ import annotations
 import random
 import unittest
 
-from tetris_nd.assist_scoring import combined_score_multiplier
-from tetris_nd.board import BoardND
-from tetris_nd.game2d import GameConfig, GameState
-from tetris_nd.pieces2d import PIECE_SET_2D_CLASSIC
-from tetris_nd.playbot import PlayBotController
-from tetris_nd.playbot.planner_2d import plan_best_2d_move
-from tetris_nd.playbot.types import BotMode, BotPlannerProfile
-from tetris_nd.view_modes import GridMode
+from tet4d.engine.assist_scoring import combined_score_multiplier
+from tet4d.engine.board import BoardND
+from tet4d.engine.game2d import GameConfig, GameState
+from tet4d.engine.pieces2d import PIECE_SET_2D_CLASSIC
+from tet4d.engine.playbot import PlayBotController
+from tet4d.engine.playbot.planner_2d import plan_best_2d_move
+from tet4d.engine.playbot.types import BotMode, BotPlannerProfile
+from tet4d.engine.view_modes import GridMode
 
 
 _EXPECTED_2D_SNAPSHOTS: dict[BotMode, tuple[tuple[int, int, int], ...]] = {

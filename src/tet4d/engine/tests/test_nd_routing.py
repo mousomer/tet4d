@@ -10,9 +10,9 @@ except ModuleNotFoundError:  # pragma: no cover - exercised without pygame-ce
 if pygame is None:  # pragma: no cover - exercised without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for ND routing tests")
 
-from tetris_nd import frontend_nd
-from tetris_nd.game_nd import GameConfigND
-from tetris_nd.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
+from tet4d.engine import frontend_nd
+from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:

@@ -18,9 +18,9 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dependent
     raise SystemExit("pygame-ce is required for profiling") from exc
 
-from tetris_nd import front4d_game, front4d_render, frontend_nd
-from tetris_nd.game_nd import GameConfigND
-from tetris_nd.view_modes import GridMode
+from tet4d.engine import front4d_game, front4d_render, frontend_nd
+from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.view_modes import GridMode
 
 
 @dataclass(frozen=True)

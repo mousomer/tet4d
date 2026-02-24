@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in environments with
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for camera mouse tests")
 
-from tetris_nd.camera_mouse import (
+from tet4d.engine.camera_mouse import (
     MAX_ABS_MOUSE_PITCH,
     MouseOrbitState,
     apply_mouse_orbit_event,

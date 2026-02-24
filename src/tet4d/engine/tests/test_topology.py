@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd.topology import (
+from tet4d.engine.topology import (
     TOPOLOGY_INVERT_ALL,
     TOPOLOGY_WRAP_ALL,
     TopologyPolicy,

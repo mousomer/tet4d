@@ -1,5 +1,5 @@
 import unittest
-from tetris_nd.board import BoardND
+from tet4d.engine.board import BoardND
 
 class TestBoard2D(unittest.TestCase):
 

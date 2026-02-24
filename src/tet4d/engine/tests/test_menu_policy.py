@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tetris_nd import launcher_settings, menu_config
+from tet4d.engine import launcher_settings, menu_config
 
 
 class TestMenuPolicy(unittest.TestCase):

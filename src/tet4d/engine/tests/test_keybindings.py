@@ -15,7 +15,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in environments with
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
-from tetris_nd import keybindings, menu_config, menu_settings_state
+from tet4d.engine import keybindings, menu_config, menu_settings_state
 
 
 @dataclass

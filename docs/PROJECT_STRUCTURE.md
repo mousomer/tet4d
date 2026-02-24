@@ -67,7 +67,6 @@ tet4d/
 │       └── golden/
 │           └── .gitkeep         # anchor for golden replay fixtures
 ├── tet4d/                       # root shim package forwarding to src/tet4d for local imports
-├── tetris_nd/                   # legacy compatibility shim forwarding to tet4d.engine
 ├── src/
 │   └── tet4d/
 │       ├── __init__.py          # installable package root (src layout)
@@ -185,7 +184,7 @@ tet4d/
 1. New runtime/gameplay modules go in `src/tet4d/engine/`.
 2. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
 3. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-4. Keep `tet4d/` and `tetris_nd/` limited to compatibility shims (avoid adding new runtime logic there).
+4. Keep `tet4d/` limited to a compatibility shim (avoid adding runtime logic there).
 
 ## Unified documentation sections
 

@@ -3,23 +3,23 @@ from __future__ import annotations
 import random
 import unittest
 
-from tetris_nd.board import BoardND
-from tetris_nd.game2d import GameConfig, GameState
-from tetris_nd.game_nd import GameConfigND, GameStateND
-from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
-from tetris_nd.pieces2d import PIECE_SET_2D_DEBUG
-from tetris_nd.pieces_nd import (
+from tet4d.engine.board import BoardND
+from tet4d.engine.game2d import GameConfig, GameState
+from tet4d.engine.game_nd import GameConfigND, GameStateND
+from tet4d.engine.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.pieces2d import PIECE_SET_2D_DEBUG
+from tet4d.engine.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_4D_DEBUG,
     PieceShapeND,
 )
-from tetris_nd.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
-from tetris_nd.playbot.planner_2d import plan_best_2d_move
-from tetris_nd.playbot.planner_nd import plan_best_nd_move
-from tetris_nd.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
-from tetris_nd.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
-from tetris_nd.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
+from tet4d.engine.playbot.planner_2d import plan_best_2d_move
+from tet4d.engine.playbot.planner_nd import plan_best_nd_move
+from tet4d.engine.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
+from tet4d.engine.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
+from tet4d.engine.view_modes import GridMode, cycle_grid_mode
 
 
 class TestPlaybot(unittest.TestCase):

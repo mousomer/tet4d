@@ -3,10 +3,10 @@ from __future__ import annotations
 import random
 import unittest
 
-from tetris_nd.board import BoardND
-from tetris_nd.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
-from tetris_nd.game2d import GameConfig, GameState
-from tetris_nd.game_nd import GameConfigND, GameStateND
+from tet4d.engine.board import BoardND
+from tet4d.engine.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
+from tet4d.engine.game2d import GameConfig, GameState
+from tet4d.engine.game_nd import GameConfigND, GameStateND
 
 
 class TestChallengeMode(unittest.TestCase):

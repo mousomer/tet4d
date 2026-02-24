@@ -11,10 +11,10 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
 import front2d
-from tetris_nd import front3d_game, front4d_game, frontend_nd
-from tetris_nd.game2d import Action, GameConfig
-from tetris_nd.game_nd import GameConfigND
-from tetris_nd.keybindings import (
+from tet4d.engine import front3d_game, front4d_game, frontend_nd
+from tet4d.engine.game2d import Action, GameConfig
+from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.keybindings import (
     CAMERA_KEYS_3D,
     CAMERA_KEYS_4D,
     KEYS_2D,
@@ -22,8 +22,8 @@ from tetris_nd.keybindings import (
     KEYS_4D,
     SYSTEM_KEYS,
 )
-from tetris_nd.pieces2d import ActivePiece2D, PieceShape2D
-from tetris_nd.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.pieces_nd import ActivePieceND, PieceShapeND
 
 
 def _keydown(key: int) -> pygame.event.Event:

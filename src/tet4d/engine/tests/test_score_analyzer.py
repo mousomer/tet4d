@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tetris_nd import score_analyzer
-from tetris_nd.score_analyzer import (
+from tet4d.engine import score_analyzer
+from tet4d.engine.score_analyzer import (
     analyze_lock_event,
     hud_analysis_lines,
     record_score_analysis_event,
