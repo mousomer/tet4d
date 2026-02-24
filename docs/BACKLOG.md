@@ -37,6 +37,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 23. `DONE` Arch Stage 28 slice 18 moved default keybinding maps/profile helpers to `src/tet4d/ui/pygame/keybindings_defaults.py` and converted `src/tet4d/engine/keybindings_defaults.py` into a lazy compatibility shim, reducing `pygame_imports_non_test` again.
 24. `DONE` Arch Stage 29 slice 19 moved shared pygame event-loop processing to `src/tet4d/ui/pygame/game_loop_common.py` and converted `src/tet4d/engine/game_loop_common.py` into a compatibility shim, reducing `pygame_imports_non_test` again.
 25. `DONE` Arch Stage 30 slice 20 moved menu-loop state/index helpers to `src/tet4d/ui/pygame/menu_model.py` and converted `src/tet4d/engine/menu_model.py` into a compatibility shim, reducing `pygame_imports_non_test` again.
+26. `DONE` Arch Stage 31 slice 21 moved the generic menu event-loop runner to `src/tet4d/ui/pygame/menu_runner.py` and converted `src/tet4d/engine/menu_runner.py` into a lazy compatibility shim, reducing `pygame_imports_non_test` again.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).

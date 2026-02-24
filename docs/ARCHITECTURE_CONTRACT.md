@@ -130,4 +130,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 30 (slice 20, pygame menu-model helper extraction) moves menu-loop state/index
   helpers to `tet4d.ui.pygame.menu_model`, leaving `tet4d.engine.menu_model` as a
   compatibility shim while preserving current frontend imports.
+- Stage 31 (slice 21, pygame menu-runner extraction) moves the generic menu event-loop
+  runner to `tet4d.ui.pygame.menu_runner`, leaving `tet4d.engine.menu_runner` as a lazy
+  compatibility shim while reducing another engine `pygame` import.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
