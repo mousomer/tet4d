@@ -12,8 +12,8 @@ if [ ! -x "${VENV_PYTHON}" ]; then
 fi
 
 PIP_ARGS=(--disable-pip-version-check --no-input)
-"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" -r requirements.txt
-"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" ruff pytest
+"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" --upgrade pip
+"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" -e ".[dev]"
 
 echo "Environment bootstrap complete: ${VENV_PATH}"
 echo "Use it with: source ${VENV_PATH}/bin/activate"

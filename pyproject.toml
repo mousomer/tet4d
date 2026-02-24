@@ -7,6 +7,15 @@ name = "tet4d"
 version = "0.0.0"
 description = "tet4d"
 requires-python = ">=3.11"
+dependencies = [
+  "pygame-ce",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

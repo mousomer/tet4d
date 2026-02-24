@@ -66,7 +66,6 @@ tet4d/
 │       ├── manifest.json        # canonical replay fixture manifest
 │       └── golden/
 │           └── .gitkeep         # anchor for golden replay fixtures
-├── tet4d/                       # root shim package forwarding to src/tet4d for local imports
 ├── src/
 │   └── tet4d/
 │       ├── __init__.py          # installable package root (src layout)
@@ -184,7 +183,7 @@ tet4d/
 1. New runtime/gameplay modules go in `src/tet4d/engine/`.
 2. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
 3. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-4. Keep `tet4d/` limited to a compatibility shim (avoid adding runtime logic there).
+4. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
 
 ## Unified documentation sections
 

@@ -2,7 +2,7 @@
 
 This repository was restructured in stages to reduce top-level clutter and prepare for a `src/` layout.
 
-## What Changed (Stages 1-6)
+## What Changed (Stages 1-7)
 
 - Entry scripts moved to `cli/` (`cli/front*.py`).
 - Root `front*.py` files remain as compatibility wrappers.
@@ -13,12 +13,13 @@ This repository was restructured in stages to reduce top-level clutter and prepa
   - `tools/benchmarks/`
 - Imports were migrated from `tetris_nd.*` to `tet4d.engine.*`.
 - The root `tetris_nd/` legacy shim was removed after the import migration passed CI.
+- The root `tet4d/` shim was removed; local development now relies on editable install (`pip install -e .[dev]`).
 
 ## Why the Shims Exist
 
-- `tet4d/` (repo-root shim):
-  - Lets `python -c "import tet4d.engine"` work from a fresh clone without requiring `PYTHONPATH=src`.
-  - Keeps local developer workflows simple before install/editable-install standardization.
+- `tet4d/` (repo-root shim, removed in Stage 7):
+  - Existed temporarily so repo-root imports worked before editable-install setup was standardized.
+  - Removed after CI/scripts/docs were updated to rely on editable install.
 
 - `tetris_nd/` (legacy import shim, removed in Stage 6):
   - Existed temporarily to preserve imports during the `src/` layout transition.
@@ -38,6 +39,5 @@ Do not introduce imports from `tetris_nd`.
 
 - `tetris_nd/` shim removal completed in Stage 6 after repo imports were migrated and CI/verify passed.
 
-- Remove repo-root `tet4d/` shim after:
-  - tests/tools run through an install/editable-install path (or an equivalent standardized import setup), and
-  - `python -c "import tet4d.engine"` is no longer expected to work from repo root without install.
+- Repo-root `tet4d/` shim removal completed in Stage 7.
+- Standard dev/CI import path now requires editable install (`pip install -e .[dev]` locally; CI installs `-e .[dev]`).

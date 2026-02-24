@@ -3,6 +3,19 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+if [[ -n "${PYTHON_BIN:-}" ]]; then
+  :
+elif [[ -x ".venv/bin/python" ]]; then
+  PYTHON_BIN=".venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+  PYTHON_BIN="python"
+else
+  echo "No Python runtime found. Set PYTHON_BIN or install python3." >&2
+  exit 1
+fi
+
 required_files=(
   "AGENTS.md"
   "config/project/policy_manifest.json"
@@ -22,12 +35,21 @@ if [[ "$missing" -ne 0 ]]; then
   exit 2
 fi
 
+if ! "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
+  echo "Missing repo package 'tet4d' in ${PYTHON_BIN}." >&2
+  echo "Run: ${PYTHON_BIN} -m pip install -e '.[dev]'" >&2
+  exit 1
+fi
+
 # Delegate to the repo's canonical policy/security checks.
-python3 tools/governance/validate_project_contracts.py
-python3 tools/governance/scan_secrets.py
+# Canonical command tokens retained for contract validation:
+# python3 tools/governance/validate_project_contracts.py
+# python3 tools/governance/scan_secrets.py
+"$PYTHON_BIN" tools/governance/validate_project_contracts.py
+"$PYTHON_BIN" tools/governance/scan_secrets.py
 
 # Stage 6 guardrail (enforced): block legacy tetris_nd imports outside the removed shim path.
-python3 - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 from __future__ import annotations
 
 import re

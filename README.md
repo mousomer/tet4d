@@ -48,14 +48,23 @@ pip install -r requirements.txt
 pip install ruff pytest
 ```
 
-`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects `ruff` + `pytest` to be installed in that same environment.
+`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects the repo to be installed in editable mode (`pip install -e .[dev]`) in that same environment.
+
+## Dev setup (editable install)
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -e ".[dev]"
+```
 
 ## Development
 
 - Canonical runtime source path is `src/tet4d/engine/`.
-- A repo-root `tet4d/` shim preserves local imports from a fresh clone without `PYTHONPATH=src`.
-- Use `tet4d.engine.*` imports for runtime/tests/tools (legacy `tetris_nd` imports were removed).
-- See `docs/MIGRATION_NOTES.md` for structure history and shim policy.
+- `tet4d.engine.*` is the canonical import path for runtime/tests/tools.
+- The repo expects an editable install for development and verification (`pip install -e ".[dev]"`).
+- See `docs/MIGRATION_NOTES.md` for structure history and shim removal milestones.
 
 ## Run
 

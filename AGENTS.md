@@ -14,7 +14,7 @@ For any restructuring/update:
 4. Update `docs/BACKLOG.md` when scope changes.
 5. Do not introduce `tetris_nd` imports; use `tet4d.engine.*` only.
 6. `tetris_nd/` compatibility shim is removed; treat any new `tetris_nd` import as a policy violation.
-7. Treat repo-root `tet4d/` shim removal as gated work only after import setup is standardized (install/editable install or equivalent).
+7. Repo uses `src/` layout with editable install for dev/CI (`pip install -e .[dev]`); do not add repo-root import shims.
 
 ## Verification contract
 Run:
@@ -41,6 +41,7 @@ Verification must pass:
 - planner benchmark assertions
 
 CI remains authoritative and runs `./scripts/ci_check.sh` via `.github/workflows/ci.yml`.
+CI and local verification assume the repo package is installed in editable mode.
 
 ## Safety & sanitation
 - No secrets in repo.
