@@ -30,6 +30,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 16. `DONE` Arch Stage 20 slice 11 converted `tet4d.ai.playbot` into an API-only package (with planner/controller/type submodules) and migrated external callers off `tet4d.engine.playbot.*` imports (`external_callers_to_engine_playbot = 0`).
 17. `DONE` Arch Stage 21 slice 12 added `scripts/check_architecture_metric_budgets.sh` and wired it into local/CI verification to fail on architecture debt regressions (UI deep imports, core-purity debt, and current engine side-effect baselines).
 18. `DONE` Arch Stage 23 slice 13 moved pygame display-mode implementation to `src/tet4d/ui/pygame/display.py` and converted `src/tet4d/engine/display.py` into a compatibility shim, reducing `pygame_imports_non_test`.
+19. `DONE` Arch Stage 24 slice 14 moved pygame font profile initialization to `src/tet4d/ui/pygame/font_profiles.py` and converted `src/tet4d/engine/font_profiles.py` into a compatibility shim, reducing `pygame_imports_non_test` again.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).

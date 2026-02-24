@@ -108,4 +108,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 23 (slice 13, first pygame module extraction) moves display-mode pygame calls
   into `tet4d.ui.pygame.display`, leaving `tet4d.engine.display` as a compatibility shim
   so `pygame_imports_non_test` can start decreasing without gameplay changes.
+- Stage 24 (slice 14, pygame font-profile extraction) moves font profile creation into
+  `tet4d.ui.pygame.font_profiles`, leaving `tet4d.engine.font_profiles` as a
+  compatibility shim and further reducing engine-level `pygame` imports.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
