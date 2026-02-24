@@ -102,4 +102,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 20 (slice 11, AI/playbot package migration seam) converts `tet4d.ai.playbot`
   into an API-only package with planner/controller/type submodules and migrates external
   callers (tests/tools/CLI) off `tet4d.engine.playbot.*` imports.
+- Stage 21 (slice 12, debt budget gate) adds a fail-on-regression architecture budget
+  check (`scripts/check_architecture_metric_budgets.sh`) to lock current debt counts
+  while deeper engine/UI/AI extractions continue.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

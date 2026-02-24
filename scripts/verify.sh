@@ -82,6 +82,7 @@ run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 run_step "ruff"           run_module ruff check .
 run_step "ruff_c901"      run_module ruff check --select C901 .
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
+run_step "arch_metric_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings

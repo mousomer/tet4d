@@ -28,6 +28,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 14. `DONE` Arch Stage 18 slice 9 introduced core-owned ND config/state view dataclasses (`src/tet4d/engine/core/model/game_nd_views.py`) plus `game_nd.py`/`engine.api` adapters, extending core-view extraction to shared 3D/4D state representations.
 15. `DONE` Arch Stage 19 slice 10 routed `src/tet4d/ui/pygame/{front3d,front4d,profile_4d}.py` through `tet4d.engine.api` lazy wrappers, reducing `ui_to_engine_non_api` to `0`.
 16. `DONE` Arch Stage 20 slice 11 converted `tet4d.ai.playbot` into an API-only package (with planner/controller/type submodules) and migrated external callers off `tet4d.engine.playbot.*` imports (`external_callers_to_engine_playbot = 0`).
+17. `DONE` Arch Stage 21 slice 12 added `scripts/check_architecture_metric_budgets.sh` and wired it into local/CI verification to fail on architecture debt regressions (UI deep imports, core-purity debt, and current engine side-effect baselines).
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
