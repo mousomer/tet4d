@@ -12,6 +12,10 @@ For any restructuring/update:
 2. Compare against relevant RDS sections and update RDS if required.
 3. Keep canonical maintenance artifacts synchronized.
 4. Update `docs/BACKLOG.md` when scope changes.
+5. Do not introduce new imports of `tetris_nd`; prefer `tet4d.engine.*`.
+6. Treat shim removal as gated work:
+   - remove `tetris_nd/` only after zero non-shim `tetris_nd` imports remain and CI passes
+   - remove repo-root `tet4d/` shim only after import setup is standardized (install/editable install or equivalent)
 
 ## Verification contract
 Run:

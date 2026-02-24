@@ -50,6 +50,13 @@ pip install ruff pytest
 
 `scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects `ruff` + `pytest` to be installed in that same environment.
 
+## Development
+
+- Canonical runtime source path is `src/tet4d/engine/`.
+- Compatibility shims exist at repo root (`tet4d/` and `tetris_nd/`) to preserve local imports and legacy code paths.
+- Do not introduce new `tetris_nd` imports; prefer `tet4d.engine.*`.
+- See `docs/MIGRATION_NOTES.md` for shim purpose and removal milestones.
+
 ## Run
 
 ```bash
