@@ -19,6 +19,7 @@ from .score_analyzer import (
 )
 from .core.rules.scoring import score_for_clear
 from .core.rules.locking import apply_lock_and_score
+from .core.step.reducer import step_2d as core_step_2d
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -324,29 +325,5 @@ class GameState:
     # --- Main step function ---
 
     def step(self, action: Action = Action.NONE):
-        """
-        Advance the game by one tick with the given player action.
-        Action is applied first, then we apply gravity (one row down).
-        """
-        if self.game_over:
-            return
-
-        # Hard drop locks immediately and already handles spawning.
-        if self._apply_action(action):
-            return
-
-        if self.config.exploration_mode:
-            return
-
-        # Gravity tick
-        if self.current_piece is None:
-            return
-
-        moved_down = self.current_piece.moved(0, 1)
-        if self._can_exist(moved_down):
-            self.current_piece = moved_down
-        else:
-            # Lock and spawn new piece
-            self.lock_current_piece()
-            if not self.game_over:
-                self.spawn_new_piece()
+        """Advance the game by one tick with the given player action."""
+        core_step_2d(self, action)

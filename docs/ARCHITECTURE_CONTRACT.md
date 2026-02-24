@@ -74,4 +74,6 @@ incremental enforcement strategy used while refactoring.
   to track remaining deep imports and side-effect migration debt.
 - Stage 10 (slice 1) makes `engine/core` self-contained with no imports back into non-core
   `tet4d.engine` modules and begins routing lock/clear/score application through core rules.
+- Stage 11 (slice 2, 2D-first) moves the actual 2D tick/gravity reducer path into
+  `engine/core/step` while keeping `game2d.py` as a compatibility delegator.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

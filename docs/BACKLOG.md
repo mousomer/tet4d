@@ -18,6 +18,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 4. `DONE` Local/Codex verification wrapper now supports quiet success + fail-loud logs with `CODEX_MODE=1` reduced stability repeats while CI remains on `scripts/ci_check.sh`.
 5. `DONE` Arch Stage 9 baseline introduced `src/tet4d/engine/core/` purity split scaffolding, strict `engine/core` purity gate (`scripts/check_engine_core_purity.sh`), and CI-wired architecture debt metrics (`scripts/arch_metrics.py`).
 6. `DONE` Arch Stage 10 slice 1 tightened `engine/core` self-containment (no non-core engine imports) and routed shared lock/clear/score application through `src/tet4d/engine/core/rules/locking.py`.
+7. `DONE` Arch Stage 11 slice 2 moved the real 2D reducer tick/gravity path into `src/tet4d/engine/core/step/reducer.py` and left `game2d.py` as a compatibility delegator.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).

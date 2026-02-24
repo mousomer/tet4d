@@ -102,6 +102,10 @@ def main() -> int:
         "pygame_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+pygame(?:\.|\b)"),
         "time_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+time(?:\.|\b)"),
         "random_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+random(?:\.|\b)"),
+        "core_step_state_method_calls": _match_lines(
+            _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
+            r"\.step\s*\(",
+        ),
         "file_io_calls_non_test": _match_lines(
             engine_paths,
             r"\bopen\s*\(|\.open\s*\(|\.read_text\s*\(|\.write_text\s*\(|\.read_bytes\s*\(|\.write_bytes\s*\(",
@@ -109,7 +113,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 10,
+        "arch_stage": 11,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
