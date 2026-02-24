@@ -133,4 +133,8 @@ incremental enforcement strategy used while refactoring.
 - Stage 31 (slice 21, pygame menu-runner extraction) moves the generic menu event-loop
   runner to `tet4d.ui.pygame.menu_runner`, leaving `tet4d.engine.menu_runner` as a lazy
   compatibility shim while reducing another engine `pygame` import.
+- Stage 32 (slice 22, keybindings-menu input loop extraction) moves keybindings menu
+  pygame event polling to `tet4d.ui.pygame.keybindings_menu_input`, leaving
+  `tet4d.engine.keybindings_menu_input` as a compatibility shim and keeping UI imports
+  free of deep engine dependencies.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
