@@ -7,9 +7,9 @@ from tet4d.engine.assist_scoring import combined_score_multiplier
 from tet4d.engine.board import BoardND
 from tet4d.engine.game2d import GameConfig, GameState
 from tet4d.engine.pieces2d import PIECE_SET_2D_CLASSIC
-from tet4d.engine.playbot import PlayBotController
-from tet4d.engine.playbot.planner_2d import plan_best_2d_move
-from tet4d.engine.playbot.types import BotMode, BotPlannerProfile
+from tet4d.ai.playbot import PlayBotController
+from tet4d.ai.playbot.planner_2d import plan_best_2d_move
+from tet4d.ai.playbot.types import BotMode, BotPlannerProfile
 from tet4d.engine.view_modes import GridMode
 
 

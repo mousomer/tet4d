@@ -72,6 +72,9 @@ def main() -> int:
     ui_paths = _py_files(REPO_ROOT / "src/tet4d/ui")
     tools_stability_paths = _py_files(REPO_ROOT / "tools/stability")
     tools_bench_paths = _py_files(REPO_ROOT / "tools/benchmarks")
+    playbot_external_paths = _py_files(REPO_ROOT / "cli") + _py_files(REPO_ROOT / "tools") + _py_files(
+        REPO_ROOT / "src/tet4d/engine/tests"
+    )
 
     ui_deep_engine = _match_engine_deep_import_lines(ui_paths)
     replay_deep_engine = _match_engine_deep_import_lines(replay_paths)
@@ -79,6 +82,10 @@ def main() -> int:
     core_non_core_engine = _match_core_to_non_core_engine_imports(core_paths)
     tools_stability_deep_engine = _match_engine_deep_import_lines(tools_stability_paths)
     tools_bench_deep_engine = _match_engine_deep_import_lines(tools_bench_paths)
+    legacy_engine_playbot_external = _match_lines(
+        playbot_external_paths,
+        r"^\s*(?:from|import)\s+tet4d\.engine\.playbot(?:\.|\b)",
+    )
 
     core_random_imports = [
         line
@@ -125,7 +132,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 19,
+        "arch_stage": 20,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
@@ -148,6 +155,10 @@ def main() -> int:
             "tools_benchmarks_to_engine_non_api": {
                 "count": len(tools_bench_deep_engine),
                 "samples": tools_bench_deep_engine[:20],
+            },
+            "external_callers_to_engine_playbot": {
+                "count": len(legacy_engine_playbot_external),
+                "samples": legacy_engine_playbot_external[:20],
             },
         },
         "engine_core_purity": {

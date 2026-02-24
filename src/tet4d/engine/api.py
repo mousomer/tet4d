@@ -118,6 +118,31 @@ def plan_best_nd_move(
     )
 
 
+def simulate_lock_board(state: GameStateND, piece: Any) -> tuple[dict[tuple[int, ...], int], int, bool]:
+    from .playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
+
+    return _simulate_lock_board(state, piece)
+
+
+def greedy_key_4d(
+    cells: dict[tuple[int, ...], int],
+    *,
+    dims: tuple[int, ...],
+    gravity_axis: int,
+    cleared: int,
+    game_over: bool,
+) -> tuple[int, int, int, int]:
+    from .playbot.planner_nd_core import greedy_key_4d as _greedy_key_4d
+
+    return _greedy_key_4d(
+        cells,
+        dims=dims,
+        gravity_axis=gravity_axis,
+        cleared=cleared,
+        game_over=game_over,
+    )
+
+
 def run_dry_run_2d(
     cfg: GameConfig,
     *,
@@ -287,6 +312,7 @@ __all__ = [
     "config_view_2d",
     "config_view_nd",
     "default_planning_budget_ms",
+    "greedy_key_4d",
     "is_game_over",
     "legal_actions",
     "legal_actions_2d",
@@ -312,6 +338,7 @@ __all__ = [
     "run_dry_run_nd",
     "run_front3d_ui",
     "run_front4d_ui",
+    "simulate_lock_board",
     "state_view_2d",
     "state_view_nd",
     "step",

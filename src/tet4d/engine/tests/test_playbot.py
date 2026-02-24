@@ -14,11 +14,11 @@ from tet4d.engine.pieces_nd import (
     PIECE_SET_4D_DEBUG,
     PieceShapeND,
 )
-from tet4d.engine.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
-from tet4d.engine.playbot.planner_2d import plan_best_2d_move
-from tet4d.engine.playbot.planner_nd import plan_best_nd_move
-from tet4d.engine.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
-from tet4d.engine.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
+from tet4d.ai.playbot import PlayBotController, run_dry_run_2d, run_dry_run_nd
+from tet4d.ai.playbot.planner_2d import plan_best_2d_move
+from tet4d.ai.playbot.planner_nd import plan_best_nd_move
+from tet4d.ai.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
+from tet4d.ai.playbot.types import BotMode, BotPlannerAlgorithm, BotPlannerProfile
 from tet4d.engine.view_modes import GridMode, cycle_grid_mode
 
 

@@ -99,4 +99,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 19 (slice 10, UI adapter import cleanup) routes the existing `tet4d.ui.pygame`
   entry/profile adapters through `tet4d.engine.api` lazy wrappers so UI modules stop
   importing deep engine internals directly.
+- Stage 20 (slice 11, AI/playbot package migration seam) converts `tet4d.ai.playbot`
+  into an API-only package with planner/controller/type submodules and migrates external
+  callers (tests/tools/CLI) off `tet4d.engine.playbot.*` imports.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
