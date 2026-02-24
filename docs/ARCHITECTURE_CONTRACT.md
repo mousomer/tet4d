@@ -121,4 +121,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 27 (slice 17, pygame control-guide extraction) moves translation/rotation guide
   rendering to `tet4d.ui.pygame.menu_control_guides`, leaving `tet4d.engine.menu_control_guides`
   as a compatibility shim and continuing the low-risk pygame-helper extraction path.
+- Stage 28 (slice 18, pygame keybinding-defaults extraction) moves default keybinding
+  maps/profile helpers to `tet4d.ui.pygame.keybindings_defaults`, leaving
+  `tet4d.engine.keybindings_defaults` as a lazy compatibility shim for existing imports.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
