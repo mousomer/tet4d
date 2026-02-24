@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from importlib import import_module
-from typing import Any
+
+import pygame
 
 
 @dataclass
@@ -21,10 +21,11 @@ def apply_display_mode(
     settings: DisplaySettings,
     *,
     preferred_windowed_size: tuple[int, int] | None = None,
-) -> Any:
-    # Transitional compatibility shim: pygame display implementation now lives in tet4d.ui.pygame.display.
-    ui_display = import_module("tet4d.ui.pygame.display")
-    return ui_display.apply_display_mode(
-        settings,
-        preferred_windowed_size=preferred_windowed_size,
-    )
+) -> pygame.Surface:
+    normalized = normalize_display_settings(settings)
+    if normalized.fullscreen:
+        return pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    size = preferred_windowed_size if preferred_windowed_size is not None else normalized.windowed_size
+    width = max(640, int(size[0]))
+    height = max(480, int(size[1]))
+    return pygame.display.set_mode((width, height), pygame.RESIZABLE)

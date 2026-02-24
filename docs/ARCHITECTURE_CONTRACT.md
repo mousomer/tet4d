@@ -105,4 +105,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 21 (slice 12, debt budget gate) adds a fail-on-regression architecture budget
   check (`scripts/check_architecture_metric_budgets.sh`) to lock current debt counts
   while deeper engine/UI/AI extractions continue.
+- Stage 23 (slice 13, first pygame module extraction) moves display-mode pygame calls
+  into `tet4d.ui.pygame.display`, leaving `tet4d.engine.display` as a compatibility shim
+  so `pygame_imports_non_test` can start decreasing without gameplay changes.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
