@@ -66,7 +66,7 @@ from tet4d.engine.ui_logic.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from tet4d.engine.menu_config import (
+from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     setup_fields_for_dimension,
 )
