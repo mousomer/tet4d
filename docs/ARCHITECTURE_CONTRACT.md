@@ -363,3 +363,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 103 (slice 93, ui shim pruning) removes the zero-caller
   `engine/menu_runner.py` compatibility shim after engine/CLI migration to
   `tet4d.ui.pygame.menu_runner`.
+- Stage 104 (slice 94, ui shim canonicalization) migrates engine callers to
+  canonical `tet4d.ui.pygame.panel_utils` and `tet4d.ui.pygame.text_render_cache`
+  imports before pruning the `engine/panel_utils.py` and `engine/text_render_cache.py` shims.

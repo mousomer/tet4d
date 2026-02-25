@@ -16,7 +16,7 @@ from .frontend_nd import (
 from .gameplay.game_nd import GameStateND
 from .ui_logic.key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_4D
-from .panel_utils import draw_game_side_panel
+from tet4d.ui.pygame.panel_utils import draw_game_side_panel
 from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
@@ -39,7 +39,7 @@ from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .runtime.score_analyzer import hud_analysis_lines
 from .grid_mode_render import draw_projected_grid_mode
-from .text_render_cache import render_text_cached
+from tet4d.ui.pygame.text_render_cache import render_text_cached
 from .topology import map_overlay_cells
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label

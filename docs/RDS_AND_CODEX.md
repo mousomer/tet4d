@@ -204,6 +204,9 @@ Read order:
 67. `menu_runner` prune stages should still run `ci_check.sh` (not just
     `verify.sh`) because launcher/menu loops are exercised indirectly by compile
     and benchmark imports even when pytest coverage is unchanged.
+68. For paired UI utility shims that are imported together (`panel_utils` +
+    `text_render_cache`), migrate callers in one stage and prune both shims in a
+    single follow-up stage after a combined zero-caller audit.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
