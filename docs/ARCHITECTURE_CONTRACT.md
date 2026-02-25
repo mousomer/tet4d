@@ -372,3 +372,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 106 (slice 96, ui shim canonicalization) migrates engine callers to
   canonical `tet4d.ui.pygame.keybindings_defaults` imports before pruning the
   `engine/keybindings_defaults.py` compatibility shim.
+- Stage 107 (slice 97, ui shim pruning) removes the zero-caller
+  `engine/keybindings_defaults.py` compatibility shim after canonical engine
+  migration to `tet4d.ui.pygame.keybindings_defaults`.
