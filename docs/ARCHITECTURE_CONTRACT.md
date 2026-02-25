@@ -415,3 +415,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 122 (slice 112, gameplay shim canonicalization) migrates engine/CLI/test
   callers to canonical `engine.gameplay.topology_designer` imports before
   pruning `engine/topology_designer.py`.
+- Stage 123 (slice 113, gameplay shim pruning) removes the zero-caller
+  `engine/topology_designer.py` compatibility shim after canonical
+  `engine.gameplay.topology_designer` migration.
