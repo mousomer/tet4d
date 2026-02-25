@@ -83,7 +83,7 @@ from tet4d.engine.api import (
     bot_mode_from_index,
     bot_planner_profile_from_index,
 )
-from tet4d.engine.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
+from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
 from tet4d.engine.rotation_anim import PieceRotationAnimator2D
 from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label

@@ -24,7 +24,7 @@ from tet4d.engine.keybindings import (
     KEYS_4D,
     SYSTEM_KEYS,
 )
-from tet4d.engine.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.pieces_nd import ActivePieceND, PieceShapeND
 
 

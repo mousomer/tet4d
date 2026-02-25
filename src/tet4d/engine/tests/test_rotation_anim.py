@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.rotation_anim import PieceRotationAnimator2D, PieceRotationAnimatorND
 

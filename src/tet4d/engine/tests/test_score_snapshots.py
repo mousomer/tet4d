@@ -6,7 +6,7 @@ import unittest
 from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
-from tet4d.engine.pieces2d import PIECE_SET_2D_CLASSIC
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_CLASSIC
 from tet4d.engine.api import (
     PlayBotController,
     plan_best_2d_move,
