@@ -305,6 +305,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 86 (slice 76, runtime shim canonicalization) migrates engine callers to
   canonical `engine.runtime.project_config` imports before CLI/test migration
   and `engine/project_config.py` compatibility-shim pruning.
+- Stage 87 (slice 77, runtime shim canonicalization) migrates remaining CLI and
+  tests to canonical `engine.runtime.project_config` imports before pruning the
+  `engine/project_config.py` compatibility shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

@@ -157,6 +157,9 @@ Read order:
 51. For high-fanout runtime shims (for example `project_config`), split
     canonicalization into engine-first, then CLI/tests, then prune to keep
     breakages easy to localize.
+52. When pruning runtime shims after CLI/test migration, run a final repo-wide
+    grep for `from tet4d.engine import <shim>` forms; test modules often use the
+    aggregated import style and are easy to miss.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing

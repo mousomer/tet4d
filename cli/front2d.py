@@ -74,7 +74,7 @@ from tet4d.engine.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
 )
-from tet4d.engine.project_config import project_constant_float
+from tet4d.engine.runtime.project_config import project_constant_float
 from tet4d.engine.api import (
     PlayBotController,
     run_dry_run_2d,
