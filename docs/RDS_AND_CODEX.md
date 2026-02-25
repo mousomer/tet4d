@@ -174,6 +174,13 @@ Read order:
 57. Runtime shim prune stages should include a final `ci_check.sh` run (not just
     `verify.sh`) when they remove persistence/config modules used by launchers,
     so compileall + benchmark checks exercise the post-shim import graph.
+58. `check_architecture_boundaries.sh` baseline-locks current transitional
+    `engine -> tet4d.ui` imports (same model as pygame baseline locking) and
+    should fail only on new imports outside the recorded allowlist until UI extraction completes.
+59. Workspace policy-template marker files (`.workspace_policy_version.json`,
+    `.policy/policy_template_hashes.json`) are optional in a fresh public clone;
+    baseline policy/drift scripts should no-op on missing markers while repo-extension
+    policy checks continue enforcing repo-specific governance.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
@@ -242,7 +249,7 @@ Editable install is expected before running verification locally:
 python3 -m pip install -e ".[dev]"
 ```
 
-For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`.
+For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`, which now delegates to `./scripts/verify.sh` as a thin wrapper to avoid local/CI pipeline drift.
 CI now runs `scripts/arch_metrics.py` (informational) plus `scripts/check_architecture_metric_budgets.sh` (fail-on-regression) via `scripts/ci_check.sh` to track and lock architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, UI deep-import reduction, playbot import-surface migration, early pygame-module extraction progress, and playbot internal relocation progress across Stages 13-32).
 
 Minimum required coverage for gameplay-affecting changes:

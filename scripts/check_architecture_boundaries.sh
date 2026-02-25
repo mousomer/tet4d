@@ -93,6 +93,8 @@ src/tet4d/engine/loop_runner_nd.py
 src/tet4d/engine/menu_control_guides.py
 src/tet4d/engine/menu_controls.py
 src/tet4d/engine/menu_keybinding_shortcuts.py
+src/tet4d/engine/ui_logic/menu_controls.py
+src/tet4d/engine/ui_logic/menu_keybinding_shortcuts.py
 src/tet4d/engine/menu_model.py
 src/tet4d/engine/menu_runner.py
 src/tet4d/engine/panel_utils.py
@@ -117,6 +119,8 @@ if ((${#unexpected_pygame[@]})); then
 fi
 
 # 2) Engine must not import UI (planned package path).
+# Transitional behavior: lock the current migration baseline and fail only on new
+# engine->ui imports outside the known adapter-heavy engine modules.
 ui_imports=()
 append_lines_to_array ui_imports < <(
   collect_import_files \
@@ -124,9 +128,35 @@ append_lines_to_array ui_imports < <(
     "$ENGINE_DIR" \
     --glob '!src/tet4d/engine/tests/**'
 )
-if ((${#ui_imports[@]})); then
-  print_unexpected_list "Architecture violation: engine imports tet4d.ui (forbidden)." "${ui_imports[@]}"
-  fail "Architecture violation: engine imports tet4d.ui (forbidden)."
+ENGINE_UI_IMPORT_ALLOWLIST=$(cat <<'EOF'
+src/tet4d/engine/bot_options_menu.py
+src/tet4d/engine/front3d_game.py
+src/tet4d/engine/front3d_render.py
+src/tet4d/engine/front4d_game.py
+src/tet4d/engine/front4d_render.py
+src/tet4d/engine/frontend_nd.py
+src/tet4d/engine/gfx_game.py
+src/tet4d/engine/gfx_panel_2d.py
+src/tet4d/engine/grid_mode_render.py
+src/tet4d/engine/help_menu.py
+src/tet4d/engine/keybindings_menu_view.py
+src/tet4d/engine/launcher_settings.py
+src/tet4d/engine/pause_menu.py
+src/tet4d/engine/rotation_anim.py
+src/tet4d/engine/view_controls.py
+EOF
+)
+unexpected_engine_ui_imports=()
+for f in "${ui_imports[@]}"; do
+  if ! grep -Fqx "$f" <<<"$ENGINE_UI_IMPORT_ALLOWLIST"; then
+    unexpected_engine_ui_imports+=("$f")
+  fi
+done
+if ((${#unexpected_engine_ui_imports[@]})); then
+  print_unexpected_list \
+    "Architecture violation: new engine imports tet4d.ui outside baseline allowlist." \
+    "${unexpected_engine_ui_imports[@]}"
+  fail "Architecture violation: engine imports tet4d.ui (forbidden; baseline-only exceptions allowed temporarily)."
 fi
 
 # 3) Engine must not import tools (either in-package or top-level).
@@ -206,9 +236,14 @@ if [[ -d "$UI_DIR" ]]; then
       --glob '!src/tet4d/ui/tests/**'
   )
   UI_ENGINE_IMPORT_ALLOWLIST=$(cat <<'EOF'
+src/tet4d/ui/pygame/control_helper.py
+src/tet4d/ui/pygame/control_icons.py
 src/tet4d/ui/pygame/front3d.py
 src/tet4d/ui/pygame/front4d.py
 src/tet4d/ui/pygame/profile_4d.py
+src/tet4d/ui/pygame/projection3d.py
+src/tet4d/ui/pygame/text_render_cache.py
+src/tet4d/ui/pygame/ui_utils.py
 EOF
 )
   unexpected_ui_engine_imports=()

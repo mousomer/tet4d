@@ -185,16 +185,15 @@
     {
       "file": "scripts/ci_check.sh",
       "must_contain": [
-        "require_module ruff ruff",
-        "require_module pytest pytest",
-        "run_module ruff check . --quiet",
-        "run_module ruff check --quiet --select C901 .",
-        "tools/governance/lint_menu_graph.py",
-        "tools/governance/scan_secrets.py",
-        "run_module pytest -q"
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "QUIET=\"${QUIET:-1}\"",
+        "CODEX_MODE=\"${CODEX_MODE:-0}\"",
+        "exec ./scripts/verify.sh"
       ],
       "must_not_contain": [
-        "run_module_or_command"
+        "run_module_or_command",
+        "require_module ruff ruff"
       ]
     },
     {

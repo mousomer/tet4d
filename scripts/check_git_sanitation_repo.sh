@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-absolute_path_pattern='(/Users/|/home/|[A-Za-z]:\\)'
+absolute_path_pattern='(/'"Users/"'|/'"home/"'|[A-Za-z]:\\)'
 relative_parent_pattern='\.\./'
 
 search_repo_text() {

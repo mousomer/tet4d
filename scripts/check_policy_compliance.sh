@@ -4,12 +4,10 @@ set -euo pipefail
 echo "Checking required files and directories..."
 
 REQUIRED_FILES=(
-  ".workspace_policy_version.json"
   "scripts/verify.sh"
   "scripts/check_git_sanitation.sh"
   "scripts/check_policy_compliance.sh"
   "scripts/check_policy_template_drift.sh"
-  ".policy/policy_template_hashes.json"
 )
 
 REQUIRED_DIRS=(
@@ -24,6 +22,19 @@ for file in "${REQUIRED_FILES[@]}"; do
   if [ ! -f "$file" ]; then
     echo "Missing required file: $file"
     FAILED=1
+  fi
+done
+
+# Optional workspace policy-kit markers may exist locally but are not required in
+# a fresh public-repo clone (for example GitHub CI checkout).
+OPTIONAL_WORKSPACE_FILES=(
+  ".workspace_policy_version.json"
+  ".policy/policy_template_hashes.json"
+)
+
+for file in "${OPTIONAL_WORKSPACE_FILES[@]}"; do
+  if [ ! -f "$file" ]; then
+    continue
   fi
 done
 

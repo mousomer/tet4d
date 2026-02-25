@@ -336,3 +336,6 @@ incremental enforcement strategy used while refactoring.
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
+- Boundary guards use baseline-lock allowlists for transitional engine-owned UI
+  modules (including current `engine -> tet4d.ui` imports) and fail on new
+  additions outside the recorded baseline until those modules are extracted.
