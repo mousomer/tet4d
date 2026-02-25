@@ -31,7 +31,7 @@ from .projection3d import (
     transform_point,
 )
 from .project_config import project_constant_float, project_constant_int
-from .score_analyzer import hud_analysis_lines
+from .runtime.score_analyzer import hud_analysis_lines
 from .topology import map_overlay_cells
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label

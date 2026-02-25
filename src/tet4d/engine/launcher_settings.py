@@ -19,7 +19,7 @@ from .menu_persistence import (
     persist_display_payload,
 )
 from .menu_settings_state import DEFAULT_WINDOWED_SIZE
-from .score_analyzer import set_score_analyzer_logging_enabled
+from .runtime.score_analyzer import set_score_analyzer_logging_enabled
 from .ui_utils import draw_vertical_gradient, fit_text
 
 

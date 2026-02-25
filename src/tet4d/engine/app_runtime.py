@@ -13,7 +13,7 @@ from .menu_settings_state import (
     get_display_settings,
     save_display_settings,
 )
-from .score_analyzer import set_score_analyzer_logging_enabled
+from .runtime.score_analyzer import set_score_analyzer_logging_enabled
 
 
 @dataclass(frozen=True)

@@ -37,7 +37,7 @@ from .projection3d import (
 )
 from .project_config import project_constant_float, project_constant_int
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
-from .score_analyzer import hud_analysis_lines
+from .runtime.score_analyzer import hud_analysis_lines
 from .grid_mode_render import draw_projected_grid_mode
 from .text_render_cache import render_text_cached
 from .topology import map_overlay_cells

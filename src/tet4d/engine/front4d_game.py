@@ -10,7 +10,7 @@ from .app_runtime import (
     initialize_runtime,
 )
 from .audio import play_sfx
-from .assist_scoring import combined_score_multiplier
+from .runtime.assist_scoring import combined_score_multiplier
 from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
 from .display import DisplaySettings
 from .front4d_render import (

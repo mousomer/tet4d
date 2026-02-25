@@ -7,7 +7,7 @@ import pygame
 
 from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
 from .panel_utils import render_text_cached, truncate_lines_to_height
-from .score_analyzer import hud_analysis_lines
+from .runtime.score_analyzer import hud_analysis_lines
 from .ui_utils import fit_text
 from .view_modes import GridMode, grid_mode_label
 
