@@ -233,6 +233,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 62 (slice 52, UI camera input extraction) moves `camera_mouse.py` into
   `ui/pygame`, rebasing its dependency on `projection3d` locally and preserving
   engine imports for callers/tests with a module-alias shim.
+- Stage 63 (slice 53, UI-logic clustering) moves `menu_layout.py` into
+  `engine/ui_logic`, continuing the prefix-based consolidation of non-rendering
+  menu/input logic while preserving engine-path imports via shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

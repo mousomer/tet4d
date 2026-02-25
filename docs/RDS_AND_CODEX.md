@@ -123,9 +123,12 @@ Read order:
     temporary deep imports from `ui/pygame` into engine internals.
 39. Move UI camera/input helpers after projection utilities so local `ui/pygame`
     imports replace engine-path imports cleanly without extra compatibility layers.
-40. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-41. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-42. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+40. Continue consolidating non-rendering menu/input modules under `engine/ui_logic`
+    in parallel with UI pygame extractions to reduce top-level `engine/` crowding
+    without increasing `ui -> engine.api` surface area.
+41. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+42. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+43. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
