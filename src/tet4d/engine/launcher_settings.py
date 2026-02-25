@@ -18,7 +18,7 @@ from .menu_persistence import (
     persist_audio_payload,
     persist_display_payload,
 )
-from .menu_settings_state import DEFAULT_WINDOWED_SIZE
+from .runtime.menu_settings_state import DEFAULT_WINDOWED_SIZE
 from .runtime.score_analyzer import set_score_analyzer_logging_enabled
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 

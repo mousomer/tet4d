@@ -7,7 +7,7 @@ import pygame
 from .audio import AudioSettings, initialize_audio, set_audio_settings
 from .display import DisplaySettings, apply_display_mode, normalize_display_settings
 from .keybindings import initialize_keybinding_files
-from .menu_settings_state import (
+from .runtime.menu_settings_state import (
     get_analytics_settings,
     get_audio_settings,
     get_display_settings,

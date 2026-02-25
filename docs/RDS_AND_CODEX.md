@@ -163,6 +163,9 @@ Read order:
 53. When a shim prune changes the canonical path mentioned in structure docs,
     update `docs/PROJECT_STRUCTURE.md` in the same stage so the folder map
     reflects the post-prune path immediately.
+54. Apply the same engine-first / CLI+tests-followup / prune sequence to runtime
+    state-persistence shims (`menu_settings_state`, `menu_persistence`) to keep
+    launcher/settings regressions localized during migration.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
