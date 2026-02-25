@@ -385,3 +385,5 @@ incremental enforcement strategy used while refactoring.
   `engine/menu_model.py` compatibility shim after canonical UI-path migration.
 - Stage 111 (slice 101, ui shim pruning) removes the zero-caller
   `engine/menu_control_guides.py` compatibility shim after canonical UI-path migration.
+- Stage 112 (slice 102, ai relocation) physically moves `engine/playbot/types.py`
+  to `ai/playbot/types.py` while keeping an engine compatibility shim.
