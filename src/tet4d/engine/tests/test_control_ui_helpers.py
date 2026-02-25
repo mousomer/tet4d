@@ -7,8 +7,8 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment guard
     raise unittest.SkipTest("pygame-ce is required for control helper tests") from exc
 
-from tet4d.engine.control_helper import control_groups_for_dimension
-from tet4d.engine.control_icons import (
+from tet4d.ui.pygame.control_helper import control_groups_for_dimension
+from tet4d.ui.pygame.control_icons import (
     action_icon_cache_size,
     clear_action_icon_cache,
     draw_action_icon,

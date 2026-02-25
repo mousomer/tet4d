@@ -269,6 +269,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 74 (slice 64, UI shim canonicalization) migrates engine render/help/menu
   callers to canonical `tet4d.ui.pygame.control_helper` and
   `tet4d.ui.pygame.control_icons` imports before test migration and shim pruning.
+- Stage 75 (slice 65, UI shim canonicalization) migrates control-helper/icon
+  tests to canonical `tet4d.ui.pygame.*` imports while preserving test placement
+  prior to pruning the corresponding engine compatibility shims.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
