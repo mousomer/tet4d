@@ -317,6 +317,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 90 (slice 80, runtime shim canonicalization) migrates remaining CLI/test
   callers to canonical `engine.runtime.menu_settings_state` imports before
   pruning the `engine/menu_settings_state.py` compatibility shim.
+- Stage 91 (slice 81, runtime shim pruning) removes the zero-caller
+  `engine/menu_settings_state.py` compatibility shim after engine, CLI, and test
+  migration to the canonical `engine.runtime.menu_settings_state` module.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

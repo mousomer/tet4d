@@ -169,6 +169,9 @@ Read order:
 55. For runtime state shims referenced by tests via `from tet4d.engine import ...`,
     expect aggregated-import cleanup during the CLI/test stage and treat those
     test rewrites as part of shim-prune prep (not post-prune fixes).
+56. Runtime shim zero-caller audits should allow canonical imports within
+    `engine/runtime/*` (for example `.menu_settings_state` in
+    `runtime/menu_persistence.py`) and only block external shim callers.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
