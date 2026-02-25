@@ -168,6 +168,9 @@ Read order:
     launcher/settings regressions localized during migration.
 55. For runtime state shims referenced by tests via `from tet4d.engine import ...`,
     expect aggregated-import cleanup during the CLI/test stage and treat those
+56. For `menu_persistence`-style runtime shims used by both launchers and in-game
+    menus, migrate engine and CLI callers in the same stage when there are no
+    test imports, then prune in a follow-up stage after a repo-wide zero-caller audit.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

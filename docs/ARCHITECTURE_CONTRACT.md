@@ -326,6 +326,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 93 (slice 83, runtime shim pruning) removes the zero-caller
   `engine/runtime_config.py` compatibility shim after engine and test migration
   to the canonical `engine.runtime.runtime_config` module.
+- Stage 94 (slice 84, runtime shim canonicalization) migrates engine and CLI
+  callers to canonical `engine.runtime.menu_persistence` imports before pruning
+  the `engine/menu_persistence.py` compatibility shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

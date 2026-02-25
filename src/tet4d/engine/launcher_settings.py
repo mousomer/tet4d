@@ -12,7 +12,7 @@ from .runtime.menu_config import (
     settings_hub_layout_rows,
     settings_top_level_categories,
 )
-from .menu_persistence import (
+from .runtime.menu_persistence import (
     load_analytics_payload,
     persist_analytics_payload,
     persist_audio_payload,
