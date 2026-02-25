@@ -4,14 +4,14 @@ from typing import List, Optional
 import random
 
 from .core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
-from .pieces2d import (
+from .gameplay.pieces2d import (
     ActivePiece2D,
     PieceShape2D,
     PIECE_SET_2D_CLASSIC,
     get_piece_bag_2d,
     normalize_piece_set_2d,
 )
-from .score_analyzer import (
+from .runtime.score_analyzer import (
     analyze_lock_event,
     new_analysis_session_id,
     record_score_analysis_event,
@@ -21,7 +21,7 @@ from .core.rules.locking import apply_lock_and_score
 from .core.rules.state_queries import can_piece_exist_2d
 from .core.step.reducer import apply_action_2d as core_apply_action_2d
 from .core.step.reducer import step_2d as core_step_2d
-from .topology import (
+from .gameplay.topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
     map_piece_cells,

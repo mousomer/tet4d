@@ -173,6 +173,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 43 (slice 33, gameplay primitives move) moves `pieces2d`, `pieces_nd`,
   and `topology` into `engine/gameplay`, with engine-path module-alias shims and
   local gameplay-cluster imports for moved primitives.
+- Stage 44 (slice 34, game module prep seam) updates `game2d.py` and `game_nd.py`
+  to import moved gameplay/runtime modules from their new cluster paths directly,
+  reducing future shim-pruning churn before moving the main game modules.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

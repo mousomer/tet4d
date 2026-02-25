@@ -5,7 +5,7 @@ from typing import List, Optional, Sequence
 
 from .core.model import GameConfigNDCoreView, GameStateNDCoreView
 from .core.model import BoardND
-from .pieces_nd import (
+from .gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_STANDARD,
@@ -14,7 +14,7 @@ from .pieces_nd import (
     normalize_piece_set_for_dimension,
     normalize_piece_set_4d,  # backward-compatible parameter support
 )
-from .score_analyzer import (
+from .runtime.score_analyzer import (
     analyze_lock_event,
     new_analysis_session_id,
     record_score_analysis_event,
@@ -22,7 +22,7 @@ from .score_analyzer import (
 from .core.rules.scoring import score_for_clear
 from .core.rules.locking import apply_lock_and_score
 from .core.step.reducer import step_nd as core_step_nd
-from .topology import (
+from .gameplay.topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
     map_piece_cells,
