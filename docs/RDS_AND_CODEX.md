@@ -195,6 +195,9 @@ Read order:
 64. `game_loop_common` prune stages should include a final zero-caller grep for
     `process_game_events` import forms because launcher and loop-runner imports
     often differ (absolute vs relative).
+65. When a `game_loop_common`-style shim is fully canonicalized (engine+CLI only,
+    no test imports), prune the shim immediately in the next stage to keep UI
+    migration progress visible in top-level `engine/`.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

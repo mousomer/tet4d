@@ -111,6 +111,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 97. `DONE` Arch Stage 98 slice 88 removed the zero-caller `src/tet4d/engine/font_profiles.py` compatibility shim after canonical engine/CLI import migration.
 98. `DONE` Arch Stage 99 slice 89 migrated engine callers to canonical `src/tet4d/ui/pygame/game_loop_common.py` imports before CLI migration and shim pruning.
 99. `DONE` Arch Stage 100 slice 90 migrated CLI callers to canonical `src/tet4d/ui/pygame/game_loop_common.py` imports before shim pruning.
+100. `DONE` Arch Stage 101 slice 91 removed the zero-caller `src/tet4d/engine/game_loop_common.py` compatibility shim after canonical engine/CLI import migration.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

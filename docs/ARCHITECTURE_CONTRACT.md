@@ -354,3 +354,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 100 (slice 90, ui shim canonicalization) migrates CLI callers to
   canonical `tet4d.ui.pygame.game_loop_common` imports before pruning the
   `engine/game_loop_common.py` compatibility shim.
+- Stage 101 (slice 91, ui shim pruning) removes the zero-caller
+  `engine/game_loop_common.py` compatibility shim after engine/CLI migration to
+  `tet4d.ui.pygame.game_loop_common`.
