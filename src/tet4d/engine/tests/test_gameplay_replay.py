@@ -14,8 +14,8 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
 
 from cli import front2d
 from tet4d.engine import front3d_game, front4d_game, frontend_nd
-from tet4d.engine.game2d import Action, GameConfig
-from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.gameplay.game2d import Action, GameConfig
+from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.keybindings import (
     CAMERA_KEYS_3D,
     CAMERA_KEYS_4D,

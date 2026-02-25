@@ -13,7 +13,7 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
 from tet4d.engine import front4d_game, front4d_render, frontend_nd, projection3d
-from tet4d.engine.game_nd import GameConfigND
+from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.keybindings import CAMERA_KEYS_4D
 from tet4d.engine.projection3d import box_raw_corners, projection_cache_key
 from tet4d.engine.view_modes import GridMode

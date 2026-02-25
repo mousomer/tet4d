@@ -8,8 +8,8 @@ from tet4d.engine.challenge_mode import (
     apply_challenge_prefill_2d,
     apply_challenge_prefill_nd,
 )
-from tet4d.engine.game2d import GameConfig, GameState
-from tet4d.engine.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 
 
 class TestChallengeMode(unittest.TestCase):

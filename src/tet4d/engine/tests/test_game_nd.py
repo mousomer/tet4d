@@ -2,7 +2,7 @@ import unittest
 import random
 
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.game_nd import GameConfigND, GameStateND, _score_for_clear
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND, _score_for_clear
 from tet4d.engine.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
