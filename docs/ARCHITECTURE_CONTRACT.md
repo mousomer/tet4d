@@ -394,3 +394,6 @@ incremental enforcement strategy used while refactoring.
   preset JSON reads through `engine.runtime.topology_designer_storage`.
 - Stage 115 (slice 105, runtime side-effect extraction) routes topology-designer
   export JSON writes through `engine.runtime.topology_designer_storage`.
+- Stage 116 (slice 106, gameplay shim canonicalization) migrates engine/CLI/test
+  callers to canonical `engine.gameplay.challenge_mode` imports before pruning
+  the top-level `engine/challenge_mode.py` compatibility shim.

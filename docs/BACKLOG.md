@@ -126,6 +126,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 112. `DONE` Arch Stage 113 slice 103 migrated engine playbot/API callers to canonical `src/tet4d/ai/playbot/types.py` imports and removed the zero-caller `src/tet4d/engine/playbot/types.py` compatibility shim.
 113. `DONE` Arch Stage 114 slice 104 routed topology-designer preset JSON reads through `src/tet4d/engine/runtime/topology_designer_storage.py` (runtime-owned I/O seam).
 114. `DONE` Arch Stage 115 slice 105 routed topology-designer export JSON writes through `src/tet4d/engine/runtime/topology_designer_storage.py` (runtime-owned I/O seam).
+115. `DONE` Arch Stage 116 slice 106 migrated engine/CLI/test callers to canonical `src/tet4d/engine/gameplay/challenge_mode.py` imports before shim pruning.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

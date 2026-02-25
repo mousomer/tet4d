@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from ..core.model import BoardND
-from ..challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
+from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
 from ..pieces_nd import PIECE_SET_4D_DEBUG

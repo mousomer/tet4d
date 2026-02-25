@@ -4,7 +4,7 @@ import random
 import unittest
 
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.challenge_mode import (
+from tet4d.engine.gameplay.challenge_mode import (
     apply_challenge_prefill_2d,
     apply_challenge_prefill_nd,
 )
