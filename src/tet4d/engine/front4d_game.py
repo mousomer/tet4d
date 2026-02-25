@@ -33,7 +33,7 @@ from .frontend_nd import (
     route_nd_keydown,
     run_menu,
 )
-from .game_nd import GameConfigND, GameStateND
+from .gameplay.game_nd import GameConfigND, GameStateND
 from .playbot import PlayBotController
 from .playbot.types import (
     BotMode,

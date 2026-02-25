@@ -28,7 +28,7 @@ from .front3d_setup import (
     run_menu,
 )
 from .frontend_nd import route_nd_keydown
-from .game_nd import GameConfigND, GameStateND
+from .gameplay.game_nd import GameConfigND, GameStateND
 from .help_menu import run_help_menu
 from .key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_3D

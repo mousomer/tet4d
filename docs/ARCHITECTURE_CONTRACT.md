@@ -196,6 +196,10 @@ incremental enforcement strategy used while refactoring.
 - Stage 50 (slice 40, high-risk gameplay move) applies the same physical-move +
   module-alias-shim pattern to `game_nd.py`, so 3D/4D runtime paths migrate to
   `engine/gameplay` without breaking existing imports during the transition.
+- Stage 51 (slice 41, shim-prune checkpoint) migrates engine-internal callers to
+  `engine.gameplay.game2d/game_nd` and intentionally retains `engine.game2d` /
+  `engine.game_nd` shims for tests and external-facing compatibility until a later
+  prune stage can remove them with lower risk.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

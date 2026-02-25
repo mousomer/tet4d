@@ -9,7 +9,7 @@ import pygame
 from .core.model import BoardND
 from .challenge_mode import apply_challenge_prefill_nd
 from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
-from .game_nd import GameConfigND, GameStateND
+from .gameplay.game_nd import GameConfigND, GameStateND
 from .key_dispatch import match_bound_action
 from .keybindings import (
     KEYS_3D,

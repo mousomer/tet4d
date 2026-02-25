@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..game_nd import GameStateND
+from ..gameplay.game_nd import GameStateND
 from ..pieces_nd import ActivePieceND
 from .planner_nd_search import plan_best_nd_with_budget
 from .types import (

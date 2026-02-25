@@ -4,8 +4,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Iterable
 
-from ..game2d import GameState
-from ..game_nd import GameStateND
+from ..gameplay.game2d import GameState
+from ..gameplay.game_nd import GameStateND
 from ..pieces_nd import ActivePieceND, rotate_point_nd
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move

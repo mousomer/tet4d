@@ -6,7 +6,7 @@ import pygame
 
 from .app_runtime import capture_windowed_display_settings, open_display
 from .display import DisplaySettings
-from .game_nd import GameConfigND
+from .gameplay.game_nd import GameConfigND
 
 
 SettingsT = TypeVar("SettingsT")

@@ -7,7 +7,7 @@ from itertools import product
 from typing import Iterable
 
 from ..core.model import BoardND
-from ..game_nd import GameStateND
+from ..gameplay.game_nd import GameStateND
 from ..pieces_nd import ActivePieceND, PieceShapeND, rotate_point_nd
 
 

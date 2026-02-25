@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..core.model import BoardND
-from ..game2d import GameState
+from ..gameplay.game2d import GameState
 from ..pieces2d import ActivePiece2D, PieceShape2D, rotate_point_2d
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
 from .types import (

@@ -13,7 +13,7 @@ from .frontend_nd import (
     gravity_interval_ms_from_config,
     piece_set_4d_label,
 )
-from .game_nd import GameStateND
+from .gameplay.game_nd import GameStateND
 from .key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_4D
 from .panel_utils import draw_game_side_panel

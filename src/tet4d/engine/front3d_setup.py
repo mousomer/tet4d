@@ -11,7 +11,7 @@ from .frontend_nd import (
     gravity_interval_ms_from_config as gravity_interval_ms_from_config_nd,
     run_menu as run_menu_nd,
 )
-from .game_nd import GameConfigND, GameStateND
+from .gameplay.game_nd import GameConfigND, GameStateND
 
 
 # 3D setup now reuses the shared ND setup/menu implementation.

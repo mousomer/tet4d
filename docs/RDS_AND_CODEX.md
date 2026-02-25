@@ -89,9 +89,12 @@ Read order:
     old engine paths so tests and monkeypatch-heavy callers keep module-global behavior.
 27. Move `game2d.py` and `game_nd.py` in separate stages (2D first, then ND/3D/4D)
     even when the move mechanics are identical, so regressions are easier to isolate.
-28. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-29. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-30. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+28. After moving `game2d.py` / `game_nd.py`, migrate engine-internal callers to
+    `engine.gameplay.game2d/game_nd` before pruning old engine-path shims; keep
+    tests/external imports stable until a dedicated compatibility-prune stage.
+29. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+30. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+31. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

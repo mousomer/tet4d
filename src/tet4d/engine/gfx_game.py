@@ -6,7 +6,7 @@ from typing import Callable, Optional, Sequence, Tuple
 import pygame
 
 from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
-from .game2d import GameState, GameConfig
+from .gameplay.game2d import GameState, GameConfig
 from .gfx_panel_2d import draw_side_panel_2d
 from .project_config import project_constant_int
 from .speed_curve import gravity_interval_ms
