@@ -172,6 +172,9 @@ Read order:
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
     `runtime/menu_persistence.py`) and only block external shim callers.
+57. Runtime shims with no CLI callers (for example `runtime_config`) can use a
+    two-stage engine+tests canonicalization followed by prune, but still require
+    a repo-wide zero-caller audit before deletion.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing

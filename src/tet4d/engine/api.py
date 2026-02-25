@@ -45,7 +45,7 @@ from .playbot.types import (
     default_planning_budget_ms,
 )
 from .core.rng import EngineRNG, coerce_random
-from .runtime_config import (
+from .runtime.runtime_config import (
     playbot_benchmark_history_file,
     playbot_benchmark_p95_thresholds,
 )

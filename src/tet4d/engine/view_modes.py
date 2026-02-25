@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from .runtime_config import grid_mode_cycle_names, grid_mode_fallback_name
+from .runtime.runtime_config import grid_mode_cycle_names, grid_mode_fallback_name
 
 
 class GridMode(str, Enum):

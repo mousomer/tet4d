@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from .runtime_config import audio_event_specs
+from .runtime.runtime_config import audio_event_specs
 
 
 @dataclass

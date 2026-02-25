@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tet4d.engine import runtime_config
-from tet4d.engine.runtime_config import (
+from tet4d.engine.runtime import runtime_config
+from tet4d.engine.runtime.runtime_config import (
     audio_event_specs,
     gameplay_tuning_payload,
     grid_mode_cycle_names,
