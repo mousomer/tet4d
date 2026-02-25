@@ -56,11 +56,11 @@ from tet4d.engine.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from tet4d.engine.key_dispatch import (
+from tet4d.engine.ui_logic.key_dispatch import (
     dispatch_bound_action,
     match_bound_action,
 )
-from tet4d.engine.menu_controls import (
+from tet4d.engine.ui_logic.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,

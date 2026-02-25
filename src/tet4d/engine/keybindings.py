@@ -29,7 +29,7 @@ from .keybindings_defaults import (
     default_system_bindings_for_profile,
 )
 from .project_config import keybindings_dir_path, keybindings_profiles_dir_path
-from .keybindings_catalog import (
+from .ui_logic.keybindings_catalog import (
     binding_action_description as _binding_action_description,
     binding_group_description as _binding_group_description,
     binding_group_label as _binding_group_label,

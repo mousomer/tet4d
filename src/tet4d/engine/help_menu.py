@@ -15,9 +15,9 @@ from .keybindings import (
     binding_group_label,
     runtime_binding_groups_for_dimension,
 )
-from .keybindings_catalog import gameplay_action_category
+from .ui_logic.keybindings_catalog import gameplay_action_category
 from .menu_config import settings_category_docs
-from .menu_layout import LayoutRect, compute_menu_layout_zones
+from .ui_logic.menu_layout import LayoutRect, compute_menu_layout_zones
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .project_config import project_constant_int

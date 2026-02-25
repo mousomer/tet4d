@@ -30,7 +30,7 @@ from .front3d_setup import (
 from .frontend_nd import route_nd_keydown
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .help_menu import run_help_menu
-from .key_dispatch import dispatch_bound_action
+from .ui_logic.key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_3D
 from .launcher_nd_runner import run_nd_mode_launcher
 from .loop_runner_nd import run_nd_loop

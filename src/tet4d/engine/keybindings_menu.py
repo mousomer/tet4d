@@ -21,7 +21,7 @@ from .keybindings import (
     save_keybindings_file,
     set_active_key_profile,
 )
-from .keybindings_menu_model import (
+from .ui_logic.keybindings_menu_model import (
     BindingRow,
     RenderedRow,
     SECTION_MENU,

@@ -14,7 +14,7 @@ from .frontend_nd import (
     piece_set_4d_label,
 )
 from .gameplay.game_nd import GameStateND
-from .key_dispatch import dispatch_bound_action
+from .ui_logic.key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_4D
 from .panel_utils import draw_game_side_panel
 from .projection3d import (

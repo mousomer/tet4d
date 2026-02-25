@@ -7,7 +7,12 @@ import pygame
 from .control_icons import draw_action_icon
 from .key_display import format_key_tuple
 from .keybindings import binding_action_description
-from .keybindings_menu_model import BindingRow, RenderedRow, binding_keys, binding_title
+from .ui_logic.keybindings_menu_model import (
+    BindingRow,
+    RenderedRow,
+    binding_keys,
+    binding_title,
+)
 from .ui_utils import draw_vertical_gradient, fit_text
 
 

@@ -10,7 +10,7 @@ from .core.model import BoardND
 from .challenge_mode import apply_challenge_prefill_nd
 from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .gameplay.game_nd import GameConfigND, GameStateND
-from .key_dispatch import match_bound_action
+from .ui_logic.key_dispatch import match_bound_action
 from .keybindings import (
     KEYS_3D,
     KEYS_4D,
@@ -18,14 +18,14 @@ from .keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from .menu_controls import (
+from .ui_logic.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,
     gather_menu_actions,
 )
 from .menu_config import default_settings_payload, setup_fields_for_dimension
-from .menu_keybinding_shortcuts import menu_binding_status_color
+from .ui_logic.menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .exploration_mode import minimal_exploration_dims_nd
