@@ -141,9 +141,10 @@ Read order:
 50. For single-helper `ui/pygame` shim pruning, prefer one helper family per stage batch (engine callers -> tests -> prune) to keep CI triage simple.
 51. For small paired UI helpers (e.g., `control_helper` + `control_icons`), treat them as one family and migrate engine callers together before test updates and shim pruning.
 52. For paired UI helper test migrations, prefer changing both helper imports in the same test file before pruning either shim to avoid mixed-module import states.
-53. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-54. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-55. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+53. After paired UI helper caller audits reach zero, prune both shims in one stage to ensure a measurable top-level `engine/` file-count reduction.
+54. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+55. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+56. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
