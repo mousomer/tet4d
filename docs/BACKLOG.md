@@ -48,6 +48,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 34. `DONE` Arch Stage 39 slice 29 created `src/tet4d/engine/runtime/` and moved menu settings/config persistence modules (`menu_settings_state.py`, `menu_persistence.py`, `menu_config.py`) behind engine-path compatibility shims.
 35. `DONE` Arch Stage 40 slice 30 moved project/runtime config and runtime validation modules into `src/tet4d/engine/runtime/`, adding engine-path module-alias shims to preserve import behavior during the folder split.
 36. `DONE` Arch Stage 41 slice 31 moved `score_analyzer.py` and `score_analyzer_features.py` into `src/tet4d/engine/runtime/` with engine-path module-alias shims to preserve gameplay/HUD/tests behavior.
+37. `DONE` Arch Stage 42 slice 32 created `src/tet4d/engine/gameplay/` and moved low-coupling gameplay helpers (`challenge_mode.py`, `speed_curve.py`, `exploration_mode.py`) behind engine-path module-alias shims.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

@@ -167,6 +167,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 41 (slice 31, runtime analytics cluster move) moves score analyzer modules
   into `engine/runtime`, keeping engine-path module-alias shims so HUD, gameplay,
   and tests continue to resolve imports without behavior change.
+- Stage 42 (slice 32, gameplay cluster start) creates `engine/gameplay` and moves
+  low-coupling gameplay helpers (`challenge_mode`, `speed_curve`,
+  `exploration_mode`) behind engine-path module-alias shims.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
