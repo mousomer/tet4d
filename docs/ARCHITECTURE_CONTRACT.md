@@ -278,6 +278,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 77 (slice 67, UI shim canonicalization) migrates engine render/view
   callers to canonical `tet4d.ui.pygame.projection3d` imports before test
   migration and shim pruning for the `projection3d` helper family.
+- Stage 78 (slice 68, UI shim canonicalization) migrates `projection3d` tests to
+  the canonical `tet4d.ui.pygame.projection3d` module while preserving test
+  placement before removing the engine-path compatibility shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

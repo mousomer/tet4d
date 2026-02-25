@@ -131,6 +131,9 @@ Read order:
 42. Canonicalize engine and test callers to UI helper modules (`tet4d.ui.pygame.*`)
     in separate stages before pruning engine-path compatibility shims; this keeps
     shim-removal stages small and easy to validate.
+43. Apply the same pattern to shared math/projection helpers (`projection3d`)
+    before attempting renderer-module moves so rendering regressions are easier to
+    localize.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
