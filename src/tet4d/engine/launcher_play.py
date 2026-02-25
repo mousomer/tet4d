@@ -18,7 +18,7 @@ from .front4d_game import (
     suggested_window_size as suggested_window_size_4d,
 )
 from .frontend_nd import build_config as build_config_nd, run_menu as run_menu_nd
-from .playbot.types import bot_mode_from_index
+from tet4d.ai.playbot.types import bot_mode_from_index
 
 
 @dataclass

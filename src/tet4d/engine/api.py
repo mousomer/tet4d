@@ -28,7 +28,7 @@ from .pieces_nd import (
     PIECE_SET_4D_STANDARD,
 )
 from .playbot import PlayBotController
-from .playbot.types import (
+from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
     BOT_PLANNER_ALGORITHM_OPTIONS,
     BOT_PLANNER_PROFILE_OPTIONS,

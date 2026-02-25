@@ -39,7 +39,7 @@ from .frontend_nd import (
 )
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .playbot import PlayBotController
-from .playbot.types import (
+from tet4d.ai.playbot.types import (
     BotMode,
     bot_planner_algorithm_from_index,
     bot_mode_from_index,

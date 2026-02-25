@@ -123,6 +123,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 109. `DONE` Arch Stage 110 slice 100 removed the zero-caller `src/tet4d/engine/menu_model.py` compatibility shim after canonical UI-path migration.
 110. `DONE` Arch Stage 111 slice 101 removed the zero-caller `src/tet4d/engine/menu_control_guides.py` compatibility shim after canonical UI-path migration.
 111. `DONE` Arch Stage 112 slice 102 moved `src/tet4d/engine/playbot/types.py` to `src/tet4d/ai/playbot/types.py` and retained an engine compatibility shim pending canonical caller migration.
+112. `DONE` Arch Stage 113 slice 103 migrated engine playbot/API callers to canonical `src/tet4d/ai/playbot/types.py` imports and removed the zero-caller `src/tet4d/engine/playbot/types.py` compatibility shim.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

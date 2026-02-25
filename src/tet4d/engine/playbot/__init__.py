@@ -1,6 +1,6 @@
 from .controller import PlayBotController
 from .dry_run import DryRunReport, run_dry_run_2d, run_dry_run_nd
-from .types import (
+from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
     BOT_PLANNER_ALGORITHM_OPTIONS,
     BOT_PLANNER_PROFILE_OPTIONS,

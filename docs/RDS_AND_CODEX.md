@@ -399,6 +399,7 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 112`) continues staged physical
-   playbot relocation by moving `src/tet4d/engine/playbot/types.py` to
-   `src/tet4d/ai/playbot/types.py` with an engine compatibility shim.
+9. Architecture stage checkpoint (`arch_stage: 113`) continues staged playbot
+   relocation by canonicalizing engine/API imports to
+   `src/tet4d/ai/playbot/types.py` and pruning the zero-caller
+   `src/tet4d/engine/playbot/types.py` compatibility shim.

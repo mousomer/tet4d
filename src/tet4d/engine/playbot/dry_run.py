@@ -10,7 +10,7 @@ from ..pieces_nd import PIECE_SET_4D_DEBUG
 from ..runtime.runtime_config import playbot_dry_run_defaults
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
-from .types import (
+from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     DryRunReport,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..playbot.types import BotMode
+from tet4d.ai.playbot.types import BotMode
 from .runtime_config import (
     assist_bot_factor,
     assist_combined_bounds,

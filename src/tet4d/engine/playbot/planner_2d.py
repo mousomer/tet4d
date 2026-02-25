@@ -8,7 +8,7 @@ from ..core.model import BoardND
 from ..gameplay.game2d import GameState
 from ..pieces2d import ActivePiece2D, PieceShape2D, rotate_point_2d
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
-from .types import (
+from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     PlanStats,

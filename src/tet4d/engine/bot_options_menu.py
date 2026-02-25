@@ -15,7 +15,7 @@ from .playbot import (
     bot_planner_algorithm_label,
     bot_planner_profile_label,
 )
-from .playbot.types import (
+from tet4d.ai.playbot.types import (
     bot_mode_from_index,
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,

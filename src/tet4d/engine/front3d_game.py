@@ -40,7 +40,7 @@ from .launcher_nd_runner import run_nd_mode_launcher
 from .loop_runner_nd import run_nd_loop
 from .pause_menu import run_pause_menu
 from .playbot import PlayBotController
-from .playbot.types import (
+from tet4d.ai.playbot.types import (
     BotMode,
     bot_mode_from_index,
     bot_planner_algorithm_from_index,

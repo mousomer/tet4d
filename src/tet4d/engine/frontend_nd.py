@@ -30,7 +30,7 @@ from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .exploration_mode import minimal_exploration_dims_nd
 from .playbot import run_dry_run_nd
-from .playbot.types import (
+from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )

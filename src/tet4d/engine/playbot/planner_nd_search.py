@@ -18,7 +18,7 @@ from .planner_nd_core import (
     iter_settled_candidates,
     simulate_lock_board,
 )
-from .types import (
+from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     PlanStats,

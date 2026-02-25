@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from ..gameplay.game_nd import GameStateND
 from ..pieces_nd import ActivePieceND
 from .planner_nd_search import plan_best_nd_with_budget
-from .types import (
+from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     PlanStats,
