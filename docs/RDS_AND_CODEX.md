@@ -98,9 +98,12 @@ Read order:
 30. Before deleting compatibility shims for moved modules, run a repo-wide import
     audit and record a zero-caller checkpoint in docs/backlog to make the prune
     stage clearly reversible and easier to review.
-31. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-32. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-33. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+31. Once a moved-module shim is deleted, treat the new path as canonical in docs,
+    tests, and tooling immediately; do not reintroduce compatibility imports in
+    follow-up stages.
+32. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+33. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+34. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
