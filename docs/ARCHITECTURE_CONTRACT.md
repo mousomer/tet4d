@@ -266,6 +266,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 73 (slice 63, UI shim pruning) removes the zero-caller
   `engine/camera_mouse.py` compatibility shim after engine+test migration to the
   canonical `tet4d.ui.pygame.camera_mouse` module.
+- Stage 74 (slice 64, UI shim canonicalization) migrates engine render/help/menu
+  callers to canonical `tet4d.ui.pygame.control_helper` and
+  `tet4d.ui.pygame.control_icons` imports before test migration and shim pruning.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

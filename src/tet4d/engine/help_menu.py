@@ -6,7 +6,10 @@ from typing import Any
 
 import pygame
 
-from .control_helper import control_groups_for_dimension, draw_grouped_control_helper
+from tet4d.ui.pygame.control_helper import (
+    control_groups_for_dimension,
+    draw_grouped_control_helper,
+)
 from .runtime.help_topics import help_action_topic_registry, help_topics_for_context
 from .key_display import format_key_tuple
 from .keybindings import (

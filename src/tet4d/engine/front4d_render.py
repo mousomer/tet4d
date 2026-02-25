@@ -7,7 +7,7 @@ from typing import Optional
 
 import pygame
 
-from .control_helper import control_groups_for_dimension
+from tet4d.ui.pygame.control_helper import control_groups_for_dimension
 from .frontend_nd import (
     GfxFonts,
     gravity_interval_ms_from_config,
