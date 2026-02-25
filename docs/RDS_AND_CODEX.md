@@ -151,6 +151,9 @@ Read order:
     CLI callers when both exist.
 49. For runtime helpers used by launchers/menus, keep CLI canonicalization in its
     own stage before shim deletion so launcher regressions remain easy to bisect.
+50. Zero-caller audits for runtime shim pruning should ignore canonical relative
+    imports inside `src/tet4d/engine/runtime/*` (for example `.menu_config`
+    within runtime modules) and only block external/legacy shim callers.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
