@@ -3,7 +3,11 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .projection3d import interpolate_angle_deg, normalize_angle_deg, smoothstep01
+from tet4d.ui.pygame.projection3d import (
+    interpolate_angle_deg,
+    normalize_angle_deg,
+    smoothstep01,
+)
 
 
 _MAX_SAFE_ABS_PITCH = 74.0

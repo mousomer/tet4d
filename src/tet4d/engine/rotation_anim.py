@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from .pieces2d import rotate_point_2d
 from .project_config import project_constant_float
-from .projection3d import smoothstep01
+from tet4d.ui.pygame.projection3d import smoothstep01
 
 if TYPE_CHECKING:
     from .pieces2d import ActivePiece2D

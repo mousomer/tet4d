@@ -13,7 +13,7 @@ from .gameplay.game_nd import GameConfigND, GameStateND
 from .grid_mode_render import draw_projected_grid_mode
 from .panel_utils import draw_game_side_panel
 from .pieces_nd import piece_set_label
-from .projection3d import (
+from tet4d.ui.pygame.projection3d import (
     Face,
     Cell3,
     Point2,

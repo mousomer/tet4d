@@ -5,7 +5,7 @@ from typing import TypeAlias
 
 import pygame
 
-from .projection3d import (
+from tet4d.ui.pygame.projection3d import (
     draw_projected_box_edges,
     draw_projected_box_shadow,
     draw_projected_helper_lattice,

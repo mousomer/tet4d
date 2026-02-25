@@ -83,6 +83,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 69. `DONE` Arch Stage 74 slice 64 migrated engine callers to canonical `src/tet4d/ui/pygame/control_helper.py` and `control_icons.py` imports before test migration and shim pruning.
 70. `DONE` Arch Stage 75 slice 65 migrated control-helper/icon tests to canonical `src/tet4d/ui/pygame/*` imports, preserving test placement before shim pruning.
 71. `DONE` Arch Stage 76 slice 66 removed zero-caller `src/tet4d/engine/control_helper.py` and `control_icons.py` compatibility shims after canonical engine/test import migration.
+72. `DONE` Arch Stage 77 slice 67 migrated engine render/view callers to canonical `src/tet4d/ui/pygame/projection3d.py` imports before test migration and shim pruning.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
