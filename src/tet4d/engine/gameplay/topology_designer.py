@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass
 from functools import lru_cache
@@ -11,7 +10,7 @@ from ..runtime.project_config import (
     project_root_path,
     topology_profile_export_file_default_path,
 )
-from ..runtime.topology_designer_storage import read_json_object
+from ..runtime.topology_designer_storage import read_json_object, write_json_object
 from .topology import (
     EDGE_BOUNDED,
     AxisEdgeRule,
@@ -263,11 +262,7 @@ def export_resolved_topology_profile(
         ]
 
     try:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        write_json_object(destination, payload)
     except OSError as exc:
         return False, f"Failed exporting topology profile: {exc}", None
     return True, f"Exported topology profile to {destination}", destination

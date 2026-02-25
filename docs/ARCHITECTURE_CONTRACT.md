@@ -392,3 +392,5 @@ incremental enforcement strategy used while refactoring.
   `engine/playbot/types.py` compatibility shim.
 - Stage 114 (slice 104, runtime side-effect extraction) routes topology-designer
   preset JSON reads through `engine.runtime.topology_designer_storage`.
+- Stage 115 (slice 105, runtime side-effect extraction) routes topology-designer
+  export JSON writes through `engine.runtime.topology_designer_storage`.

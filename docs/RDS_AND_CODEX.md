@@ -399,6 +399,6 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 114`) continues runtime
-   side-effect extraction by routing topology-designer preset JSON reads through
-   `src/tet4d/engine/runtime/topology_designer_storage.py`.
+9. Architecture stage checkpoint (`arch_stage: 115`) continues runtime
+   side-effect extraction by routing topology-designer preset reads and export
+   writes through `src/tet4d/engine/runtime/topology_designer_storage.py`.
