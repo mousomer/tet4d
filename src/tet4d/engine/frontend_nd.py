@@ -36,7 +36,7 @@ from tet4d.ai.playbot.types import (
 )
 from .gameplay.speed_curve import gravity_interval_ms
 from .topology import topology_mode_from_index, topology_mode_label
-from .topology_designer import (
+from .gameplay.topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,

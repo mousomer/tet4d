@@ -9,7 +9,7 @@ from tet4d.engine.topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
 )
-from tet4d.engine.topology_designer import (
+from tet4d.engine.gameplay.topology_designer import (
     designer_profile_index_by_id,
     designer_profiles_for_dimension,
     resolve_topology_designer_selection,
