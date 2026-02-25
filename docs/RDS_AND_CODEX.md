@@ -107,9 +107,11 @@ Read order:
 33. When moving UI helpers that still need config constants, add a narrow
     `engine.api` wrapper (for example `project_constant_int`) instead of allowing
     `ui/pygame` modules to import deep engine config modules directly.
-34. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-35. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-36. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+34. Prefer extracting shared UI utility/caching helpers before renderers and menus;
+    this reduces `pygame` imports in top-level engine with minimal behavior risk.
+35. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+36. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+37. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

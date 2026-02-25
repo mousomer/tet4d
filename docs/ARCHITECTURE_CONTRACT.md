@@ -215,6 +215,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 56 (slice 46, UI cache extraction) moves `text_render_cache.py` into
   `ui/pygame` and adds a small `engine.api` wrapper for `project_constant_int` so
   the moved UI module stays compliant with the `ui -> engine.api` boundary.
+- Stage 57 (slice 47, UI helper extraction) moves `ui_utils.py` into `ui/pygame`
+  using the same `engine.api.project_constant_int` seam, shrinking top-level
+  engine pygame helpers while preserving existing engine-path imports via shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
