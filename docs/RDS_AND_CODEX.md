@@ -210,6 +210,9 @@ Read order:
 69. Combined zero-caller audits for paired shims should ignore canonical relative
     imports inside `src/tet4d/ui/pygame/*` (for example `.text_render_cache`
     within `panel_utils.py`) and only block legacy engine/CLI/tool callers.
+70. For simple constant/lookup UI shims (`keybindings_defaults`), engine-caller
+    canonicalization is usually a single-file change; keep it isolated before the
+    prune stage to simplify regression triage.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
