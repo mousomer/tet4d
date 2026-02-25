@@ -439,3 +439,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 130 (slice 120, runtime side-effect extraction) routes keybindings JSON
   file reads through `engine.runtime.keybindings_storage` before extracting
   write paths from `engine/keybindings.py`.
+- Stage 131 (slice 121, runtime side-effect extraction) routes keybindings
+  atomic-write persistence through `engine.runtime.keybindings_storage`.

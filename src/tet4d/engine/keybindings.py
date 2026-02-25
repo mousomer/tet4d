@@ -29,7 +29,7 @@ from tet4d.ui.pygame.keybindings_defaults import (
     default_system_bindings_for_profile,
 )
 from .runtime.project_config import keybindings_dir_path, keybindings_profiles_dir_path
-from .runtime.keybindings_storage import load_json_file
+from .runtime.keybindings_storage import atomic_write_text, load_json_file
 from .ui_logic.keybindings_catalog import (
     binding_action_description as _binding_action_description,
     binding_group_description as _binding_group_description,
@@ -621,10 +621,7 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
 
 
 def _atomic_write(path: Path, payload: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_suffix(path.suffix + ".tmp")
-    temp_path.write_text(payload, encoding="utf-8")
-    temp_path.replace(path)
+    atomic_write_text(path, payload)
 
 
 def _clone_keybinding_dimension(
