@@ -30,7 +30,7 @@ from tet4d.ui.pygame.projection3d import (
     raw_to_world,
     transform_point,
 )
-from .project_config import project_constant_float, project_constant_int
+from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.score_analyzer import hud_analysis_lines
 from .topology import map_overlay_cells
 from .view_controls import YawPitchTurnAnimator

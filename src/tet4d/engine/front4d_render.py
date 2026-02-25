@@ -35,7 +35,7 @@ from tet4d.ui.pygame.projection3d import (
     smoothstep01,
     transform_point,
 )
-from .project_config import project_constant_float, project_constant_int
+from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .runtime.score_analyzer import hud_analysis_lines
 from .grid_mode_render import draw_projected_grid_mode

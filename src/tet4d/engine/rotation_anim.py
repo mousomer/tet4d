@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .pieces2d import rotate_point_2d
-from .project_config import project_constant_float
+from .runtime.project_config import project_constant_float
 from tet4d.ui.pygame.projection3d import smoothstep01
 
 if TYPE_CHECKING:
