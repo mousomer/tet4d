@@ -390,3 +390,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 113 (slice 103, ai relocation canonicalization) migrates engine playbot
   and API callers to `ai/playbot/types.py` and removes the zero-caller
   `engine/playbot/types.py` compatibility shim.
+- Stage 114 (slice 104, runtime side-effect extraction) routes topology-designer
+  preset JSON reads through `engine.runtime.topology_designer_storage`.

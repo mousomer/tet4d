@@ -11,6 +11,7 @@ from ..runtime.project_config import (
     project_root_path,
     topology_profile_export_file_default_path,
 )
+from ..runtime.topology_designer_storage import read_json_object
 from .topology import (
     EDGE_BOUNDED,
     AxisEdgeRule,
@@ -39,17 +40,7 @@ class TopologyDesignerProfile:
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError:
-        return {}
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    return payload
+    return read_json_object(path)
 
 
 def _axis_index_from_key(raw_key: object) -> int | None:
