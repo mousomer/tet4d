@@ -193,6 +193,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 49 (slice 39, high-risk gameplay move) performs the physical move of
   `game2d.py` into `engine/gameplay`, keeping the old path as a module-alias shim
   so tests/callers retain existing import and monkeypatch behavior.
+- Stage 50 (slice 40, high-risk gameplay move) applies the same physical-move +
+  module-alias-shim pattern to `game_nd.py`, so 3D/4D runtime paths migrate to
+  `engine/gameplay` without breaking existing imports during the transition.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
