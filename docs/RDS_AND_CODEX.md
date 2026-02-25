@@ -136,9 +136,10 @@ Read order:
 45. Apply the same caller-migration-then-prune sequence to `engine/runtime` shims (analytics/help modules) to keep runtime clustering consistent with the `ui_logic` cleanup flow.
 46. Keep tests in test folders while migrating canonical imports; only change import paths, not test placement, when pruning compatibility shims.
 47. After runtime shim caller audits reach zero, prune those shims promptly to keep top-level `engine/` focused on canonical modules and active compatibility needs only.
-48. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-49. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-50. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+48. For `ui/pygame` helper shim removal, migrate engine callers first, then tests, then prune the shim to keep failures easy to triage.
+49. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+50. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+51. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

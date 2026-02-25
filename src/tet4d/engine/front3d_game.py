@@ -10,7 +10,11 @@ import pygame
 from .app_runtime import initialize_runtime
 from .audio import play_sfx
 from .runtime.assist_scoring import combined_score_multiplier
-from .camera_mouse import MouseOrbitState, apply_mouse_orbit_event, mouse_wheel_delta
+from tet4d.ui.pygame.camera_mouse import (
+    MouseOrbitState,
+    apply_mouse_orbit_event,
+    mouse_wheel_delta,
+)
 from .display import DisplaySettings
 from .front3d_render import (
     Camera3D,

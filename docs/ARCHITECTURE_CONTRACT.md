@@ -257,6 +257,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 70 (slice 60, runtime shim pruning) removes zero-caller engine-path
   compatibility shims for `assist_scoring`, `help_topics`, and `score_analyzer`
   after engine/CLI/tests caller migration to canonical `engine/runtime/*` paths.
+- Stage 71 (slice 61, UI shim canonicalization) migrates engine front-game
+  callers to `tet4d.ui.pygame.camera_mouse` directly before test migration and
+  shim pruning, keeping the change scoped to a single helper family.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
