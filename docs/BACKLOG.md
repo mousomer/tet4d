@@ -61,6 +61,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 47. `DONE` Arch Stage 52 slice 42 migrated engine test imports to `engine.gameplay.game2d/game_nd`, reducing legacy game-module shim callers to external compatibility only.
 48. `DONE` Arch Stage 53 slice 43 audited repo callers and found zero remaining imports of `tet4d.engine.game2d` / `tet4d.engine.game_nd`, clearing the way for shim removal.
 49. `DONE` Arch Stage 54 slice 44 removed `src/tet4d/engine/game2d.py` and `src/tet4d/engine/game_nd.py` compatibility shims after the zero-caller audit, making `engine.gameplay.game2d/game_nd` canonical in-repo paths.
+50. `DONE` Arch Stage 55 slice 45 moved `help_topics.py` into `src/tet4d/engine/runtime/` with an engine-path module-alias shim, reducing top-level engine file-I/O surface.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

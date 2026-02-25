@@ -209,6 +209,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 54 (slice 44, compatibility prune) deletes `engine.game2d` and
   `engine.game_nd` compatibility shims after the zero-caller audit, making
   `engine.gameplay.game2d/game_nd` the only in-repo game-module paths.
+- Stage 55 (slice 45, runtime I/O extraction) moves `help_topics.py` into
+  `engine/runtime`, keeping an engine-path module-alias shim so help-menu callers
+  remain stable while reducing top-level engine file-I/O ownership.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

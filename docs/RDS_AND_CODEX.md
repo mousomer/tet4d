@@ -101,9 +101,12 @@ Read order:
 31. Once a moved-module shim is deleted, treat the new path as canonical in docs,
     tests, and tooling immediately; do not reintroduce compatibility imports in
     follow-up stages.
-32. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-33. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-34. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+32. Prioritize moving file-I/O-heavy helper modules (for example help/config/topic
+    loaders) into `engine/runtime` before deeper gameplay/UI classes; this reduces
+    side-effect debt with lower regression risk.
+33. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+34. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+35. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
