@@ -43,7 +43,7 @@ from .playbot.types import (
     bot_planner_profile_from_index,
 )
 from .rotation_anim import PieceRotationAnimatorND
-from .runtime_helpers import collect_cleared_ghost_cells
+from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .view_modes import GridMode, cycle_grid_mode
 
 

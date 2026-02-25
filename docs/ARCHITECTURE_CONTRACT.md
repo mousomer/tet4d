@@ -176,6 +176,10 @@ incremental enforcement strategy used while refactoring.
 - Stage 44 (slice 34, game module prep seam) updates `game2d.py` and `game_nd.py`
   to import moved gameplay/runtime modules from their new cluster paths directly,
   reducing future shim-pruning churn before moving the main game modules.
+- Stage 45 (slice 35, shim pruning checkpoint) removes unused compatibility shims
+  from Stages 36-41 (including runtime validation leaf shims and unused UI-logic
+  shims) and migrates the last runtime-helper callers to `engine.runtime.*`,
+  keeping net LOC decreasing while documenting folder-ratio progress.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

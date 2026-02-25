@@ -74,9 +74,12 @@ Read order:
 21. Before moving `game2d.py` / `game_nd.py`, first update them to import from the
     new gameplay/runtime clusters directly (prep seam stage) so later moves do not
     combine path migration with large import rewrites.
-22. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-23. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-24. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+22. Add periodic shim-prune stages: remove only compatibility shims with zero callers
+    (or after migrating the final callers) and prefer net-LOC-reduction batches to
+    keep the restructuring maintainable.
+23. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+24. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+25. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

@@ -6,7 +6,7 @@ from typing import Any
 import pygame
 
 from .game_loop_common import process_game_events
-from .runtime_helpers import advance_gravity, tick_animation
+from .runtime.runtime_helpers import advance_gravity, tick_animation
 
 
 def _open_help(
