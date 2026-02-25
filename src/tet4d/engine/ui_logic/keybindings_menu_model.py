@@ -9,7 +9,7 @@ from ..keybindings import (
     keybinding_file_label,
     runtime_binding_groups_for_dimension,
 )
-from ..menu_config import keybinding_category_docs
+from ..runtime.menu_config import keybinding_category_docs
 
 
 CATEGORY_DOCS = keybinding_category_docs()

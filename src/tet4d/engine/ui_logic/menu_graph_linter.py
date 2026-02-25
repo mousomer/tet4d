@@ -8,7 +8,7 @@ from .menu_action_contracts import (
     PARITY_ACTION_IDS,
     PAUSE_ACTION_IDS,
 )
-from ..menu_config import (
+from ..runtime.menu_config import (
     launcher_menu_id,
     menu_graph,
     pause_menu_id,

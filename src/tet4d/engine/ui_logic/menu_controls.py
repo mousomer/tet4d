@@ -20,7 +20,7 @@ from ..keybindings import (
     reset_active_profile_bindings,
     set_active_key_profile,
 )
-from ..menu_settings_state import (
+from ..runtime.menu_settings_state import (
     load_menu_settings,
     reset_menu_settings_to_defaults,
     save_menu_settings,

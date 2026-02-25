@@ -56,9 +56,12 @@ Read order:
 15. When multiple moved modules form a coherent cluster (for example `ui_logic`
     keybindings helpers), update moved callers to import from the same new folder
     immediately to reduce future shim-pruning churn.
-16. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-17. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-18. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+16. Start `engine/runtime` with menu settings/config/persistence modules first; they
+    are runtime/file-I/O concerns and a low-risk way to reduce the top-level
+    `engine/` catch-all.
+17. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+18. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+19. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

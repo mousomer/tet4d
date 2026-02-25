@@ -158,6 +158,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 38 (slice 28, keybindings catalog consolidation) moves the keybinding
   action catalog into `engine/ui_logic` and updates `ui_logic` callers to import
   the shared catalog from the same merged folder.
+- Stage 39 (slice 29, runtime cluster start) creates `engine/runtime` and moves
+  menu settings/config persistence modules behind engine-path compatibility shims,
+  while `ui_logic` callers start using `engine.runtime.*` imports directly.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
