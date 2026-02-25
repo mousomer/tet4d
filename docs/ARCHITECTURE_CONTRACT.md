@@ -149,6 +149,9 @@ incremental enforcement strategy used while refactoring.
   engine folder split strategy using merged responsibility buckets (`gameplay`,
   `ui_logic`, `runtime`) instead of many tiny folders, and moves low-risk
   menu/input helpers into `engine/ui_logic` with engine-path compatibility shims.
+- Stage 36 (slice 26, `ui_logic` cluster expansion) moves menu interaction and
+  keybindings-menu model helpers into `engine/ui_logic`, keeping engine-path
+  compatibility shims while redirecting moved modules toward merged-folder imports.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

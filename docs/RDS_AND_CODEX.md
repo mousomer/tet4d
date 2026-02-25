@@ -48,9 +48,12 @@ Read order:
 12. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
     `engine/ui_logic`, `engine/runtime`) over many tiny folders; keep moves prefix-based
     and compatibility-shimmed to minimize import churn.
-13. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-14. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-15. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+13. As merged-folder moves land, update imports inside moved modules to use the new
+    merged buckets (for example `engine.runtime.*`) so old engine-path shims can be
+    pruned later without broad churn.
+14. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+15. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+16. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
