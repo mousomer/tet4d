@@ -56,5 +56,5 @@ run_module ruff check --quiet --select C901 .
 PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 run_module pytest -q --disable-warnings --maxfail=1
 PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
-"$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
+"$PYTHON_BIN" -m compileall -q front.py cli/__init__.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
 "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend

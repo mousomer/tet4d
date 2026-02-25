@@ -88,7 +88,11 @@
       "tools/governance/validate_project_contracts.py",
       ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
-      ".github/workflows/release-packaging.yml"
+      ".github/workflows/release-packaging.yml",
+      "scripts/check_policy_template_drift.sh",
+      "scripts/update_policy_template_hashes.sh",
+      "scripts/check_git_sanitation_repo.sh",
+      "scripts/check_policy_compliance_repo.sh"
     ],
     "governance": [
       "AGENTS.md",
@@ -214,33 +218,24 @@
       ]
     },
     {
-      "file": "scripts/check_policy_compliance.sh",
-      "must_contain": [
-        "AGENTS.md",
-        "scripts/verify.sh",
-        "config/project/policy_manifest.json",
-        "python3 tools/governance/validate_project_contracts.py",
-        "python3 tools/governance/scan_secrets.py"
-      ]
-    },
-    {
-      "file": "scripts/check_git_sanitation.sh",
-      "must_contain": [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-        "Absolute filesystem paths detected.",
-        "Potential unsafe path traversal patterns detected in docs/ or config/.",
-        "Filenames with spaces detected:"
-      ]
-    },
-    {
       "file": "config/project/policy_manifest.json",
       "must_contain": [
         "\"project_name\": \"tet4d\"",
         "\"verification_command\": \"./scripts/verify.sh\"",
         "\"ci_entrypoint\": \"./scripts/ci_check.sh\"",
         "\"contract_validation\": \"python3 tools/governance/validate_project_contracts.py\"",
-        "\"secret_scan\": \"python3 tools/governance/scan_secrets.py\""
+        "\"secret_scan\": \"python3 tools/governance/scan_secrets.py\"",
+        "\"policy_id\": \"workspace-github-sanitation-and-security\"",
+        "\"policy_source\": \"workspace/policy-kit\"",
+        "\"enforcement\"",
+        "\"scripts/check_policy_template_drift.sh\"",
+        "\"extended_enforcement\"",
+        "\"scripts/check_policy_compliance_repo.sh\"",
+        "\"scripts/check_git_sanitation_repo.sh\""
+      ],
+      "must_match_regex": [
+        "\\\"policy_version\\\"\\s*:\\s*\\\"1\\.1\\.\\d+\\\"",
+        "\\\"policy_source_path\\\"\\s*:\\s*\\\"(\\$\\{HOME\\}/workspace/policy-kit|/[^\\\"\\n]+)\\\""
       ]
     },
     {
@@ -250,7 +245,10 @@
         "SDL_AUDIODRIVER: dummy",
         "scripts/check_git_sanitation.sh",
         "scripts/check_policy_compliance.sh",
-        "./scripts/ci_check.sh"
+        "./scripts/ci_check.sh",
+        "scripts/check_policy_template_drift.sh",
+        "scripts/check_git_sanitation_repo.sh",
+        "scripts/check_policy_compliance_repo.sh"
       ]
     },
     {
@@ -415,6 +413,27 @@
         "## Code and tests",
         "## Documentation and RDS sync",
         "## Artifacts and config"
+      ]
+    },
+    {
+      "file": "scripts/check_policy_compliance_repo.sh",
+      "must_contain": [
+        "AGENTS.md",
+        "config/project/policy_manifest.json",
+        "python3 tools/governance/validate_project_contracts.py",
+        "python3 tools/governance/scan_secrets.py",
+        "scripts/check_engine_core_purity.sh",
+        "scripts/check_architecture_boundaries.sh",
+        "legacy 'tetris_nd' imports detected"
+      ]
+    },
+    {
+      "file": "scripts/check_git_sanitation_repo.sh",
+      "must_contain": [
+        "#!/usr/bin/env bash",
+        "Absolute filesystem paths detected.",
+        "Potential unsafe path traversal patterns detected in docs/ or config/.",
+        "Filenames with spaces detected:"
       ]
     }
   ],

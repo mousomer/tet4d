@@ -4,7 +4,7 @@ import random
 from typing import List, Optional, Sequence
 
 from .core.model import GameConfigNDCoreView, GameStateNDCoreView
-from .board import BoardND
+from .core.model import BoardND
 from .pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_STANDARD,
@@ -28,7 +28,7 @@ from .topology import (
     map_piece_cells,
     normalize_topology_mode,
 )
-from .types import Coord
+from .core.model import Coord
 
 
 def _score_for_clear(cleared_planes: int) -> int:

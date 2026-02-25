@@ -4,10 +4,10 @@ import random
 import time
 from dataclasses import dataclass
 
-from ..board import BoardND
+from ..core.model import BoardND
 from ..game_nd import GameConfigND, GameStateND
 from ..pieces_nd import ActivePieceND, PieceShapeND
-from .lookahead_common import choose_best_with_followup
+from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
 from .planner_nd_core import (
     build_column_levels,
     canonical_blocks,

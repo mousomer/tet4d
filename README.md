@@ -5,13 +5,11 @@ Usage guide for the 2D/3D/4D Tetris project.
 ## What this is
 
 This repository contains:
-- Unified launcher (`front.py`)
-- `2D Tetris` direct mode (`front2d.py`)
-- `3D Tetris` direct mode (`front3d.py`)
-- `4D Tetris` direct mode (`front4d.py`)
+- Unified launcher wrapper (`front.py`)
+- Direct mode launchers under `cli/` (`cli/front2d.py`, `cli/front3d.py`, `cli/front4d.py`)
 
 Primary Python entrypoints live under `cli/` (`cli/front*.py`).
-Root `front*.py` files are compatibility wrappers that preserve existing commands.
+Root `front.py` is the compatibility wrapper entrypoint.
 All modes share core logic under `src/tet4d/engine/`.
 
 Boundary topology presets are available in setup menus:
@@ -72,13 +70,14 @@ python -m pip install -e ".[dev]"
 # Unified launcher via compatibility wrapper (kept stable)
 python front.py
 
+# Unified wrapper selector (routes to main/2d/3d/4d; default is "main")
+python front.py --frontend 4d
+python front.py --mode 2d
+
 # Canonical direct entrypoints (primary scripts)
 python cli/front.py
 
-# Direct modes (wrapper-compatible and canonical cli forms)
-python front2d.py
-python front3d.py
-python front4d.py
+# Direct modes (canonical cli forms; root wrapper supports --frontend/--mode)
 python cli/front2d.py
 python cli/front3d.py
 python cli/front4d.py

@@ -1,7 +1,7 @@
 import unittest
 import random
 
-from tet4d.engine.board import BoardND
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.game_nd import GameConfigND, GameStateND, _score_for_clear
 from tet4d.engine.pieces_nd import (
     ActivePieceND,

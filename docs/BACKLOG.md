@@ -14,7 +14,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
-3. `DONE` workspace-only policy marker files are no longer required by compliance checks/contracts.
+3. `DONE` workspace baseline policy marker files are adopted (with repo-native policy checks preserved in `*_repo.sh` extension scripts).
 4. `DONE` Local/Codex verification wrapper now supports quiet success + fail-loud logs with `CODEX_MODE=1` reduced stability repeats while CI remains on `scripts/ci_check.sh`.
 5. `DONE` Arch Stage 9 baseline introduced `src/tet4d/engine/core/` purity split scaffolding, strict `engine/core` purity gate (`scripts/check_engine_core_purity.sh`), and CI-wired architecture debt metrics (`scripts/arch_metrics.py`).
 6. `DONE` Arch Stage 10 slice 1 tightened `engine/core` self-containment (no non-core engine imports) and routed shared lock/clear/score application through `src/tet4d/engine/core/rules/locking.py`.
@@ -39,6 +39,8 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 25. `DONE` Arch Stage 30 slice 20 moved menu-loop state/index helpers to `src/tet4d/ui/pygame/menu_model.py` and converted `src/tet4d/engine/menu_model.py` into a compatibility shim, reducing `pygame_imports_non_test` again.
 26. `DONE` Arch Stage 31 slice 21 moved the generic menu event-loop runner to `src/tet4d/ui/pygame/menu_runner.py` and converted `src/tet4d/engine/menu_runner.py` into a lazy compatibility shim, reducing `pygame_imports_non_test` again.
 27. `DONE` Arch Stage 32 slice 22 moved keybindings-menu pygame event polling to `src/tet4d/ui/pygame/keybindings_menu_input.py` and converted `src/tet4d/engine/keybindings_menu_input.py` into a compatibility shim, reducing `pygame_imports_non_test` again while preserving `ui_to_engine_non_api = 0`.
+28. `DONE` Arch Stage 33 slice 23 removed redundant engine re-export facades (`src/tet4d/engine/{board,rng,types}.py`) and the stale `src/tet4d/engine/playbot/lookahead_common.py` shim after migrating callers, while explicitly retaining `engine -> ui` compatibility adapters as boundary-preserving layers.
+28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
 2. `DONE`Keybindings menu now supports`General/2D/3D/4D` scopes and clear category separation (`gameplay/camera/system`).
@@ -54,6 +56,8 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 12. `DONE` `ruff check` currently passes.
 13. `DONE` `pytest -q` currently passes.
 14. `DONE` `./scripts/ci_check.sh` is available and remains the expected local CI command.
+15. `DONE` workspace baseline template scripts are now layered with tet4d repo extension policy checks (`scripts/check_*_repo.sh`) to preserve canonical maintenance contracts while staying policy-kit compatible.
+16. `DONE` canonical-maintenance contract no longer pins workspace baseline template script text or exact workspace-policy metadata patch/path literals; baseline template identity is enforced by policy template drift hashes while contract content rules remain focused on repo-native scripts and CI entrypoints (with regex/presence checks for portable metadata).
 15. `DONE` P2 frontend split executed:
 16. `DONE`launcher flow extracted to`tetris_nd/launcher_play.py`.
 17. `DONE`launcher settings/audio/display hub extracted to`tetris_nd/launcher_settings.py`.

@@ -7,5 +7,18 @@
     "docs/rds/"
   ],
   "contract_validation": "python3 tools/governance/validate_project_contracts.py",
-  "secret_scan": "python3 tools/governance/scan_secrets.py"
+  "secret_scan": "python3 tools/governance/scan_secrets.py",
+  "policy_version": "1.1.2",
+  "policy_id": "workspace-github-sanitation-and-security",
+  "policy_source": "workspace/policy-kit",
+  "policy_source_path": "${HOME}/workspace/policy-kit",
+  "enforcement": [
+    "scripts/check_policy_compliance.sh",
+    "scripts/check_git_sanitation.sh",
+    "scripts/check_policy_template_drift.sh"
+  ],
+  "extended_enforcement": [
+    "scripts/check_policy_compliance_repo.sh",
+    "scripts/check_git_sanitation_repo.sh"
+  ]
 }

@@ -40,5 +40,14 @@ jobs:
       - name: Check policy compliance
         run: scripts/check_policy_compliance.sh
 
+      - name: Check policy template drift
+        run: scripts/check_policy_template_drift.sh
+
+      - name: Check git sanitation (repo extensions)
+        run: scripts/check_git_sanitation_repo.sh
+
+      - name: Check policy compliance (repo extensions)
+        run: scripts/check_policy_compliance_repo.sh
+
       - name: Run lint, tests, and planner benchmark
         run: ./scripts/ci_check.sh

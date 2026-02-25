@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from ..board import BoardND
+from ..core.model import BoardND
 from ..challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
 from ..game2d import GameConfig, GameState
 from ..game_nd import GameConfigND, GameStateND

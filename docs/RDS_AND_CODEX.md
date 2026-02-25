@@ -40,6 +40,9 @@ Read order:
 7. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
 8. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
 9. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
+10. Redundant compatibility facades may be removed when callers are migrated, but keep
+    boundary-enforcing adapters (for example `engine -> ui` compatibility shims) until the
+    corresponding modules are physically moved and boundary checks remain green.
 10. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
 11. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
 12. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
@@ -118,6 +121,7 @@ Minimum required coverage for gameplay-affecting changes:
 6. `scripts/ci_check.sh`
 7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:
 8. `docs/BACKLOG.md`
+9. Root wrapper entrypoint is `front.py`; it may provide wrapper-only mode selection (for example `--frontend/--mode`) so long as it delegates to `cli/front*.py` without gameplay changes.
 9. `docs/FEATURE_MAP.md`
 10. `docs/rds/`
 11. `README.md`
@@ -133,9 +137,12 @@ Minimum required coverage for gameplay-affecting changes:
 21. `AGENTS.md`,
 22. `config/project/policy_manifest.json`,
 23. `scripts/verify.sh`,
-24. `scripts/check_git_sanitation.sh`,
-25. `scripts/check_policy_compliance.sh`.
-26. Workspace-local policy marker files (for example, `.workspace_policy_version.json`) are optional and must not be required by CI/policy checks.
+24. `scripts/check_git_sanitation.sh` (workspace baseline template),
+25. `scripts/check_policy_compliance.sh` (workspace baseline template),
+26. `scripts/check_policy_template_drift.sh` (workspace baseline template),
+27. `scripts/check_git_sanitation_repo.sh` + `scripts/check_policy_compliance_repo.sh` (repo-native extensions).
+28. Workspace policy marker files (for example, `.workspace_policy_version.json`) are required when the workspace baseline is adopted; repo-native CI checks must remain in the `*_repo.sh` extension layer.
+29. Canonical maintenance should not pin workspace baseline template script message text or exact workspace-policy metadata patch values/path literals (`policy_version`, `policy_source_path`); baseline identity is enforced by `scripts/check_policy_template_drift.sh` + `.policy/policy_template_hashes.json`, while local contract content rules should focus on repo-native scripts and CI entrypoints (using regex/presence checks for portable metadata).
 
 ## Simplification and Technical Debt Tracking (2026-02-18)
 

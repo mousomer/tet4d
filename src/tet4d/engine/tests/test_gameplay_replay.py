@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in environments with
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
-import front2d
+from cli import front2d
 from tet4d.engine import front3d_game, front4d_game, frontend_nd
 from tet4d.engine.game2d import Action, GameConfig
 from tet4d.engine.game_nd import GameConfigND

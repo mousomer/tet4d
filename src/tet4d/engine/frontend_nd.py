@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from .board import BoardND
+from .core.model import BoardND
 from .challenge_mode import apply_challenge_prefill_nd
 from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .game_nd import GameConfigND, GameStateND

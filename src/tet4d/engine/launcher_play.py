@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pygame
 
-import front2d
+from cli import front2d
 from .app_runtime import capture_windowed_display_settings, open_display
 from .display import DisplaySettings
 from .front3d_game import (

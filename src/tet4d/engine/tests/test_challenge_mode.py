@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import unittest
 
-from tet4d.engine.board import BoardND
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
 from tet4d.engine.game2d import GameConfig, GameState
 from tet4d.engine.game_nd import GameConfigND, GameStateND

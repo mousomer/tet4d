@@ -137,4 +137,8 @@ incremental enforcement strategy used while refactoring.
   pygame event polling to `tet4d.ui.pygame.keybindings_menu_input`, leaving
   `tet4d.engine.keybindings_menu_input` as a compatibility shim and keeping UI imports
   free of deep engine dependencies.
+- Stage 33 (slice 23, redundant facade cleanup) removes trivial `engine -> core`
+  re-export shims (`board.py`, `rng.py`, `types.py`) and the stale
+  `engine/playbot/lookahead_common.py` shim while retaining `engine -> ui` compatibility
+  adapters that still enforce the current architecture boundary.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

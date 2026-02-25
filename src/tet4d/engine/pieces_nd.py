@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Iterable, List, Sequence, Tuple
 
 from .pieces2d import get_standard_tetrominoes
-from .types import Coord
+from .core.model import Coord
 
 
 RelCoordND = Coord

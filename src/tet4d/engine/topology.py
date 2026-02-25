@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from itertools import product
 from typing import Iterable, Sequence
 
-from .types import Coord
+from .core.model import Coord
 
 
 TOPOLOGY_BOUNDED = "bounded"
