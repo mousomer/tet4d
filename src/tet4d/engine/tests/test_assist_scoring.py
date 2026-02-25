@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.assist_scoring import combined_score_multiplier
+from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.api import BotMode
 from tet4d.engine.view_modes import GridMode
 

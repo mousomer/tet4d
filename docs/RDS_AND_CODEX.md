@@ -134,9 +134,10 @@ Read order:
     path cleanup with behavioral test changes and to keep tests in test folders.
 44. After a zero-caller audit, delete compatibility shims promptly to avoid top-level `engine/` clutter regrowth and to ensure net LOC decreases over the cleanup sequence.
 45. Apply the same caller-migration-then-prune sequence to `engine/runtime` shims (analytics/help modules) to keep runtime clustering consistent with the `ui_logic` cleanup flow.
-46. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-47. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-48. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+46. Keep tests in test folders while migrating canonical imports; only change import paths, not test placement, when pruning compatibility shims.
+47. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+48. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+49. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
