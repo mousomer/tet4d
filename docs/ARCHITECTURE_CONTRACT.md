@@ -141,4 +141,8 @@ incremental enforcement strategy used while refactoring.
   re-export shims (`board.py`, `rng.py`, `types.py`) and the stale
   `engine/playbot/lookahead_common.py` shim while retaining `engine -> ui` compatibility
   adapters that still enforce the current architecture boundary.
+- Stage 34 (slice 24, AI facade pruning) removes redundant `tet4d.ai.playbot`
+  planner/controller/type wrapper modules and routes callers directly to
+  `tet4d.engine.api`, leaving only the shared `ai/playbot/lookahead_common.py`
+  implementation module in the `tet4d.ai.playbot` package.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

@@ -43,9 +43,11 @@ Read order:
 10. Redundant compatibility facades may be removed when callers are migrated, but keep
     boundary-enforcing adapters (for example `engine -> ui` compatibility shims) until the
     corresponding modules are physically moved and boundary checks remain green.
-10. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-11. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-12. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+11. Public playbot APIs should now be imported from `tet4d.engine.api`; the
+    `tet4d.ai.playbot` package only retains shared internal helper logic during migration.
+12. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+13. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+14. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
