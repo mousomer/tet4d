@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pygame
 
 from .audio import play_sfx
-from .menu_config import bot_defaults_by_mode, bot_options_rows
+from .runtime.menu_config import bot_defaults_by_mode, bot_options_rows
 from .menu_persistence import load_menu_payload, save_menu_payload
 from .playbot import (
     BOT_MODE_OPTIONS,

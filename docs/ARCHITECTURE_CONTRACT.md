@@ -293,6 +293,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 82 (slice 72, UI shim pruning) removes the zero-caller
   `engine/ui_utils.py` compatibility shim after engine and CLI migration to the
   canonical `tet4d.ui.pygame.ui_utils` module.
+- Stage 83 (slice 73, runtime shim canonicalization) migrates engine callers to
+  canonical `engine.runtime.menu_config` imports before CLI migration and
+  `engine/menu_config.py` compatibility-shim pruning.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

@@ -24,7 +24,7 @@ from .ui_logic.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from .menu_config import default_settings_payload, setup_fields_for_dimension
+from .runtime.menu_config import default_settings_payload, setup_fields_for_dimension
 from .ui_logic.menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
