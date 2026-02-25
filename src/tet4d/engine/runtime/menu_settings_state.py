@@ -10,6 +10,7 @@ from ..keybindings import (
     set_active_key_profile,
 )
 from .menu_config import default_settings_payload
+from .menu_settings_state_storage import load_json_file
 from .project_config import menu_settings_file_path, state_dir_path
 
 STATE_DIR = state_dir_path()
@@ -103,8 +104,7 @@ def _load_payload() -> dict[str, Any]:
     if not STATE_FILE.exists():
         return payload
     try:
-        raw = STATE_FILE.read_text(encoding="utf-8")
-        loaded = json.loads(raw)
+        loaded = load_json_file(STATE_FILE)
     except (OSError, json.JSONDecodeError):
         return payload
     if not isinstance(loaded, dict):

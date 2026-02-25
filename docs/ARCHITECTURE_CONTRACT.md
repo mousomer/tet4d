@@ -446,3 +446,5 @@ incremental enforcement strategy used while refactoring.
   `engine.runtime.keybindings_storage`.
 - Stage 133 (slice 123, runtime side-effect extraction) routes help-topics JSON
   file reads through `engine.runtime.help_topics_storage`.
+- Stage 134 (slice 124, runtime side-effect extraction) routes menu settings
+  state JSON reads through `engine.runtime.menu_settings_state_storage`.
