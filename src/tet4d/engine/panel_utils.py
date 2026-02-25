@@ -129,7 +129,9 @@ def draw_game_side_panel(
                 panel_rect.width - 16,
                 low_height,
             )
-            draw_translucent_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
+            draw_translucent_panel(
+                surface, low_rect, alpha=100, radius=8, color=(8, 12, 26)
+            )
             draw_text_lines(
                 surface,
                 lines=low_lines,
@@ -140,5 +142,7 @@ def draw_game_side_panel(
             )
 
     if game_over:
-        over = render_text_cached(font=fonts.panel_font, text="GAME OVER", color=(255, 80, 80))
+        over = render_text_cached(
+            font=fonts.panel_font, text="GAME OVER", color=(255, 80, 80)
+        )
         surface.blit(over, (panel_rect.x + 12, panel_rect.bottom - 26))

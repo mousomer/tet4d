@@ -38,8 +38,12 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertTrue(playbot_adaptive_fallback_enabled())
 
     def test_playbot_board_size_scaling_policy_is_exposed(self) -> None:
-        ref_2d, min_scale_2d, max_scale_2d, exponent_2d = playbot_board_size_scaling_policy_for_ndim(2)
-        ref_4d, min_scale_4d, max_scale_4d, exponent_4d = playbot_board_size_scaling_policy_for_ndim(4)
+        ref_2d, min_scale_2d, max_scale_2d, exponent_2d = (
+            playbot_board_size_scaling_policy_for_ndim(2)
+        )
+        ref_4d, min_scale_4d, max_scale_4d, exponent_4d = (
+            playbot_board_size_scaling_policy_for_ndim(4)
+        )
         self.assertEqual(ref_2d, 200)
         self.assertEqual(ref_4d, 2592)
         self.assertLessEqual(min_scale_2d, max_scale_2d)
@@ -55,20 +59,35 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertGreater(thresholds["4d"], thresholds["3d"])
 
     def test_playbot_benchmark_history_file_sanitized_to_state_root(self) -> None:
-        valid_policy = {"benchmark": {"history_file": "state/bench/custom_history.jsonl"}}
-        with mock.patch.object(runtime_config, "_playbot_policy", return_value=valid_policy):
+        valid_policy = {
+            "benchmark": {"history_file": "state/bench/custom_history.jsonl"}
+        }
+        with mock.patch.object(
+            runtime_config, "_playbot_policy", return_value=valid_policy
+        ):
             resolved = playbot_benchmark_history_file()
-        expected = (runtime_config.CONFIG_DIR.parent / "state/bench/custom_history.jsonl").resolve()
+        expected = (
+            runtime_config.CONFIG_DIR.parent / "state/bench/custom_history.jsonl"
+        ).resolve()
         self.assertEqual(resolved, expected)
 
         invalid_policy = {"benchmark": {"history_file": "../../outside/history.jsonl"}}
-        with mock.patch.object(runtime_config, "_playbot_policy", return_value=invalid_policy):
+        with mock.patch.object(
+            runtime_config, "_playbot_policy", return_value=invalid_policy
+        ):
             fallback = playbot_benchmark_history_file()
-        fallback_expected = (runtime_config.CONFIG_DIR.parent / runtime_config.DEFAULT_PLAYBOT_HISTORY_FILE).resolve()
+        fallback_expected = (
+            runtime_config.CONFIG_DIR.parent
+            / runtime_config.DEFAULT_PLAYBOT_HISTORY_FILE
+        ).resolve()
         self.assertEqual(fallback, fallback_expected)
 
-        absolute_policy = {"benchmark": {"history_file": str(Path("/tmp/unsafe.jsonl"))}}
-        with mock.patch.object(runtime_config, "_playbot_policy", return_value=absolute_policy):
+        absolute_policy = {
+            "benchmark": {"history_file": str(Path("/tmp/unsafe.jsonl"))}
+        }
+        with mock.patch.object(
+            runtime_config, "_playbot_policy", return_value=absolute_policy
+        ):
             absolute_fallback = playbot_benchmark_history_file()
         self.assertEqual(absolute_fallback, fallback_expected)
 

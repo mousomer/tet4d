@@ -175,7 +175,9 @@ def _validate_defaults_settings(payload: dict[str, Any]) -> dict[str, dict[str, 
     for mode_key in _MODE_KEYS:
         if mode_key not in settings:
             raise RuntimeError(f"defaults.settings missing mode key: {mode_key}")
-        validated_settings[mode_key] = _validate_mode_settings(mode_key, settings[mode_key])
+        validated_settings[mode_key] = _validate_mode_settings(
+            mode_key, settings[mode_key]
+        )
     return validated_settings
 
 
@@ -251,20 +253,26 @@ def _validate_menu_graph_item(
             f"{path}.type must be one of: " + ", ".join(sorted(_MENU_ITEM_TYPES))
         )
     if item_type == "action":
-        action_id = _as_non_empty_string(item.get("action_id"), path=f"{path}.action_id").lower()
+        action_id = _as_non_empty_string(
+            item.get("action_id"), path=f"{path}.action_id"
+        ).lower()
         return {
             "type": "action",
             "label": label,
             "action_id": action_id,
         }
     if item_type == "submenu":
-        target_menu_id = _as_non_empty_string(item.get("menu_id"), path=f"{path}.menu_id").lower()
+        target_menu_id = _as_non_empty_string(
+            item.get("menu_id"), path=f"{path}.menu_id"
+        ).lower()
         return {
             "type": "submenu",
             "label": label,
             "menu_id": target_menu_id,
         }
-    route_id = _as_non_empty_string(item.get("route_id"), path=f"{path}.route_id").lower()
+    route_id = _as_non_empty_string(
+        item.get("route_id"), path=f"{path}.route_id"
+    ).lower()
     return {
         "type": "route",
         "label": label,
@@ -281,10 +289,14 @@ def _validate_menus_graph(raw_menus: object) -> dict[str, dict[str, Any]]:
     for raw_menu_id, raw_menu in menus.items():
         menu_id = _as_non_empty_string(raw_menu_id, path="structure.menus keys").lower()
         menu_obj = _require_object(raw_menu, path=f"structure.menus.{menu_id}")
-        title = _as_non_empty_string(menu_obj.get("title"), path=f"structure.menus.{menu_id}.title")
+        title = _as_non_empty_string(
+            menu_obj.get("title"), path=f"structure.menus.{menu_id}.title"
+        )
         raw_items = menu_obj.get("items")
         if not isinstance(raw_items, list) or not raw_items:
-            raise RuntimeError(f"structure.menus.{menu_id}.items must be a non-empty list")
+            raise RuntimeError(
+                f"structure.menus.{menu_id}.items must be a non-empty list"
+            )
         items = tuple(
             _validate_menu_graph_item(raw_item, menu_id=menu_id, idx=idx)
             for idx, raw_item in enumerate(raw_items)
@@ -316,7 +328,9 @@ def _validate_menu_entrypoints(
     if raw_entrypoints is None:
         entrypoints = dict(_DEFAULT_MENU_ENTRYPOINTS)
     else:
-        entrypoints_obj = _require_object(raw_entrypoints, path="structure.menu_entrypoints")
+        entrypoints_obj = _require_object(
+            raw_entrypoints, path="structure.menu_entrypoints"
+        )
         entrypoints = {}
         for key in _MENU_ENTRYPOINT_KEYS:
             default_id = _DEFAULT_MENU_ENTRYPOINTS[key]
@@ -407,14 +421,18 @@ def _validate_or_build_menus(
             raise RuntimeError(
                 "structure.pause_menu_rows and structure.pause_menu_actions must be provided when structure.menus is absent"
             )
-        return _legacy_menus_graph(launcher_menu, pause_rows, pause_actions), dict(_DEFAULT_MENU_ENTRYPOINTS)
+        return _legacy_menus_graph(launcher_menu, pause_rows, pause_actions), dict(
+            _DEFAULT_MENU_ENTRYPOINTS
+        )
 
     menus = _validate_menus_graph(raw_menus)
     entrypoints = _validate_menu_entrypoints(payload, menus=menus)
     return menus, entrypoints
 
 
-def _validate_settings_hub_layout_row(raw_row: object, *, idx: int) -> tuple[dict[str, str], bool]:
+def _validate_settings_hub_layout_row(
+    raw_row: object, *, idx: int
+) -> tuple[dict[str, str], bool]:
     path = f"structure.settings_hub_layout_rows[{idx}]"
     row = _require_object(raw_row, path=path)
     kind = row.get("kind")
@@ -427,18 +445,16 @@ def _validate_settings_hub_layout_row(raw_row: object, *, idx: int) -> tuple[dic
     label = _as_non_empty_string(row.get("label"), path=f"{path}.label")
     if kind == "header":
         if row_key not in ("", None):
-            raise RuntimeError(
-                f"{path}.row_key must be empty for header rows"
-            )
+            raise RuntimeError(f"{path}.row_key must be empty for header rows")
         return {"kind": "header", "label": label, "row_key": ""}, False
     if not isinstance(row_key, str) or not row_key.strip():
-        raise RuntimeError(
-            f"{path}.row_key must be a non-empty string for item rows"
-        )
+        raise RuntimeError(f"{path}.row_key must be a non-empty string for item rows")
     return {"kind": "item", "label": label, "row_key": row_key.strip().lower()}, True
 
 
-def _validate_settings_hub_layout_rows(payload: dict[str, Any]) -> tuple[dict[str, str], ...]:
+def _validate_settings_hub_layout_rows(
+    payload: dict[str, Any],
+) -> tuple[dict[str, str], ...]:
     raw_rows = payload.get("settings_hub_layout_rows")
     if not isinstance(raw_rows, list):
         raise RuntimeError("structure.settings_hub_layout_rows must be a list")
@@ -451,7 +467,9 @@ def _validate_settings_hub_layout_rows(payload: dict[str, Any]) -> tuple[dict[st
     if not rows:
         raise RuntimeError("structure.settings_hub_layout_rows must not be empty")
     if item_count == 0:
-        raise RuntimeError("structure.settings_hub_layout_rows must include at least one item row")
+        raise RuntimeError(
+            "structure.settings_hub_layout_rows must include at least one item row"
+        )
     return tuple(rows)
 
 
@@ -473,7 +491,9 @@ def _resolve_field_max(
     return raw_max
 
 
-def _validate_setup_field(raw_field: object, *, mode_key: str, idx: int) -> dict[str, Any]:
+def _validate_setup_field(
+    raw_field: object, *, mode_key: str, idx: int
+) -> dict[str, Any]:
     path = f"structure.setup_fields.{mode_key}[{idx}]"
     field = _require_object(raw_field, path=path)
     label = _as_non_empty_string(field.get("label"), path=f"{path}.label")
@@ -481,9 +501,7 @@ def _validate_setup_field(raw_field: object, *, mode_key: str, idx: int) -> dict
     min_val = _require_int(field.get("min"), path=f"{path}.min")
     max_val = field.get("max")
     if isinstance(max_val, bool) or not isinstance(max_val, (int, str)):
-        raise RuntimeError(
-            f"{path}.max must be int or 'piece_set_max'"
-        )
+        raise RuntimeError(f"{path}.max must be int or 'piece_set_max'")
     return {
         "label": label,
         "attr": attr_name,
@@ -520,13 +538,17 @@ def _validate_scope_order(raw_docs: dict[str, Any]) -> tuple[str, ...]:
     )
 
 
-def _validate_group_doc(group_name: str, raw_group: object) -> tuple[str, dict[str, str]]:
+def _validate_group_doc(
+    group_name: str, raw_group: object
+) -> tuple[str, dict[str, str]]:
     clean_name = _as_non_empty_string(
         group_name,
         path="structure.keybinding_category_docs.groups keys",
     ).lower()
     if not isinstance(raw_group, dict):
-        raise RuntimeError(f"structure.keybinding_category_docs.groups.{group_name} must be an object")
+        raise RuntimeError(
+            f"structure.keybinding_category_docs.groups.{group_name} must be an object"
+        )
     label = _as_non_empty_string(
         raw_group.get("label"),
         path=f"structure.keybinding_category_docs.groups.{group_name}.label",
@@ -544,7 +566,9 @@ def _validate_group_doc(group_name: str, raw_group: object) -> tuple[str, dict[s
 def _validate_group_docs(raw_docs: dict[str, Any]) -> dict[str, dict[str, str]]:
     raw_groups = raw_docs.get("groups")
     if not isinstance(raw_groups, dict):
-        raise RuntimeError("structure.keybinding_category_docs.groups must be an object")
+        raise RuntimeError(
+            "structure.keybinding_category_docs.groups must be an object"
+        )
     groups: dict[str, dict[str, str]] = {}
     for group_name, raw_group in raw_groups.items():
         key, value = _validate_group_doc(group_name, raw_group)
@@ -567,7 +591,9 @@ def _validate_keybinding_category_docs(payload: dict[str, Any]) -> dict[str, Any
     }
 
 
-def _validate_settings_category_docs(payload: dict[str, Any]) -> tuple[dict[str, str], ...]:
+def _validate_settings_category_docs(
+    payload: dict[str, Any],
+) -> tuple[dict[str, str], ...]:
     raw_docs = payload.get("settings_category_docs")
     if raw_docs is None:
         return tuple()
@@ -576,7 +602,9 @@ def _validate_settings_category_docs(payload: dict[str, Any]) -> tuple[dict[str,
 
     docs: list[dict[str, str]] = []
     for idx, raw_item in enumerate(raw_docs):
-        entry = _require_object(raw_item, path=f"structure.settings_category_docs[{idx}]")
+        entry = _require_object(
+            raw_item, path=f"structure.settings_category_docs[{idx}]"
+        )
         item_id = _as_non_empty_string(
             entry.get("id"),
             path=f"structure.settings_category_docs[{idx}].id",
@@ -641,7 +669,9 @@ def _validate_settings_category_metrics(
     metrics: dict[str, dict[str, Any]] = {}
     for category_id, raw_entry in raw.items():
         if not isinstance(category_id, str) or not category_id.strip():
-            raise RuntimeError("structure.settings_category_metrics keys must be non-empty strings")
+            raise RuntimeError(
+                "structure.settings_category_metrics keys must be non-empty strings"
+            )
         clean_id = category_id.strip().lower()
         if clean_id not in docs_by_id:
             raise RuntimeError(
@@ -718,9 +748,13 @@ def _enforce_settings_split_policy(validated: dict[str, Any]) -> None:
             f"settings_hub_rows missing top-level categories required by split policy: {', '.join(missing_labels)}"
         )
     layout_rows = tuple(validated["settings_hub_layout_rows"])
-    layout_headers = tuple(row["label"] for row in layout_rows if row["kind"] == "header")
+    layout_headers = tuple(
+        row["label"] for row in layout_rows if row["kind"] == "header"
+    )
     layout_header_set = set(layout_headers)
-    missing_layout_headers = [label for label in required_top_labels if label not in layout_header_set]
+    missing_layout_headers = [
+        label for label in required_top_labels if label not in layout_header_set
+    ]
     if missing_layout_headers:
         raise RuntimeError(
             "settings_hub_layout_rows missing required top-level headers: "
@@ -821,11 +855,13 @@ def _enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
     pause_missing = sorted(required_actions - pause_actions)
     if launcher_missing:
         raise RuntimeError(
-            "launcher entrypoint missing required parity actions: " + ", ".join(launcher_missing)
+            "launcher entrypoint missing required parity actions: "
+            + ", ".join(launcher_missing)
         )
     if pause_missing:
         raise RuntimeError(
-            "pause entrypoint missing required parity actions: " + ", ".join(pause_missing)
+            "pause entrypoint missing required parity actions: "
+            + ", ".join(pause_missing)
         )
 
 
@@ -836,7 +872,9 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     else:
         if not isinstance(raw_launcher_menu, list):
             raise RuntimeError("structure.launcher_menu must be a list")
-        launcher_menu_items = tuple(_validate_menu_item(item) for item in raw_launcher_menu)
+        launcher_menu_items = tuple(
+            _validate_menu_item(item) for item in raw_launcher_menu
+        )
         if not launcher_menu_items:
             raise RuntimeError("structure.launcher_menu must not be empty")
 
@@ -853,7 +891,9 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         pause_actions = _validate_action_list(raw_pause_actions, "pause_menu_actions")
 
     if pause_rows and pause_actions and len(pause_rows) != len(pause_actions):
-        raise RuntimeError("pause_menu_rows and pause_menu_actions must have equal length")
+        raise RuntimeError(
+            "pause_menu_rows and pause_menu_actions must have equal length"
+        )
 
     menus, entrypoints = _validate_or_build_menus(
         payload,
@@ -876,16 +916,22 @@ def _validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "launcher_menu": launcher_menu_items,
         "menus": menus,
         "menu_entrypoints": entrypoints,
-        "settings_hub_rows": _validate_row_list(payload.get("settings_hub_rows"), "settings_hub_rows"),
+        "settings_hub_rows": _validate_row_list(
+            payload.get("settings_hub_rows"), "settings_hub_rows"
+        ),
         "settings_hub_layout_rows": _validate_settings_hub_layout_rows(payload),
-        "bot_options_rows": _validate_row_list(payload.get("bot_options_rows"), "bot_options_rows"),
+        "bot_options_rows": _validate_row_list(
+            payload.get("bot_options_rows"), "bot_options_rows"
+        ),
         "pause_menu_rows": pause_rows,
         "pause_menu_actions": pause_actions,
         "setup_fields": _validate_setup_fields(payload),
         "keybinding_category_docs": _validate_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
         "settings_split_rules": _validate_settings_split_rules(payload),
-        "settings_category_metrics": _validate_settings_category_metrics(payload, settings_docs),
+        "settings_category_metrics": _validate_settings_category_metrics(
+            payload, settings_docs
+        ),
     }
     _enforce_settings_split_policy(validated)
     _enforce_menu_entrypoint_parity(validated)

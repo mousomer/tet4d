@@ -39,4 +39,3 @@ def apply_lock_and_score(
 
 
 __all__ = ["LockScoreResult", "apply_lock_and_score"]
-

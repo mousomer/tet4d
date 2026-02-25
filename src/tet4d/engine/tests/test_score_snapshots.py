@@ -43,7 +43,9 @@ _EXPECTED_2D_SNAPSHOTS: dict[BotMode, tuple[tuple[int, int, int], ...]] = {
 
 class TestScoreSnapshots(unittest.TestCase):
     def _run_2d_progression(self, mode: BotMode) -> tuple[tuple[int, int, int], ...]:
-        cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_CLASSIC, speed_level=4)
+        cfg = GameConfig(
+            width=10, height=20, piece_set=PIECE_SET_2D_CLASSIC, speed_level=4
+        )
         state = GameState(
             config=cfg,
             board=BoardND((cfg.width, cfg.height)),
@@ -87,7 +89,9 @@ class TestScoreSnapshots(unittest.TestCase):
 
     def test_2d_long_run_snapshots_are_deterministic(self) -> None:
         for mode in (BotMode.OFF, BotMode.ASSIST, BotMode.AUTO):
-            self.assertEqual(self._run_2d_progression(mode), self._run_2d_progression(mode))
+            self.assertEqual(
+                self._run_2d_progression(mode), self._run_2d_progression(mode)
+            )
 
 
 if __name__ == "__main__":

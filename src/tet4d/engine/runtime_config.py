@@ -117,7 +117,9 @@ def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int, int]:
     return bucket["fast"], bucket["balanced"], bucket["deep"], bucket["ultra"]
 
 
-def playbot_board_size_scaling_policy_for_ndim(ndim: int) -> tuple[int, float, float, float]:
+def playbot_board_size_scaling_policy_for_ndim(
+    ndim: int,
+) -> tuple[int, float, float, float]:
     scaling = _playbot_policy()["board_size_scaling"]
     return (
         int(_bucket_lookup(scaling["reference_cells"], ndim)),
@@ -179,7 +181,9 @@ def playbot_adaptive_lookahead_min_budget_ms(ndim: int) -> int:
 
 
 def playbot_adaptive_candidate_cap_for_ndim(ndim: int) -> tuple[float, int, int]:
-    cap_obj = _bucket_lookup(_playbot_policy()["adaptive_fallback"]["candidate_cap"], ndim)
+    cap_obj = _bucket_lookup(
+        _playbot_policy()["adaptive_fallback"]["candidate_cap"], ndim
+    )
     return float(cap_obj["per_ms"]), int(cap_obj["min"]), int(cap_obj["max"])
 
 
@@ -187,7 +191,9 @@ def playbot_deadline_safety_ms() -> float:
     return float(_playbot_policy()["adaptive_fallback"]["deadline_safety_ms"])
 
 
-def playbot_auto_algorithm_policy_for_ndim(ndim: int) -> tuple[float, float, float, float]:
+def playbot_auto_algorithm_policy_for_ndim(
+    ndim: int,
+) -> tuple[float, float, float, float]:
     auto_obj = _playbot_policy()["auto_algorithm"]
     key = _dimension_bucket_key(ndim)
     return (

@@ -24,9 +24,15 @@ _DEFAULT_WINDOWED_SIZE_RAW = (
 if (
     isinstance(_DEFAULT_WINDOWED_SIZE_RAW, list)
     and len(_DEFAULT_WINDOWED_SIZE_RAW) == 2
-    and all(isinstance(v, int) and not isinstance(v, bool) for v in _DEFAULT_WINDOWED_SIZE_RAW)
+    and all(
+        isinstance(v, int) and not isinstance(v, bool)
+        for v in _DEFAULT_WINDOWED_SIZE_RAW
+    )
 ):
-    DEFAULT_WINDOWED_SIZE = (_DEFAULT_WINDOWED_SIZE_RAW[0], _DEFAULT_WINDOWED_SIZE_RAW[1])
+    DEFAULT_WINDOWED_SIZE = (
+        _DEFAULT_WINDOWED_SIZE_RAW[0],
+        _DEFAULT_WINDOWED_SIZE_RAW[1],
+    )
 else:  # pragma: no cover - guarded by config validation
     DEFAULT_WINDOWED_SIZE = (1200, 760)
 _PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
@@ -44,7 +50,10 @@ def _default_settings_payload() -> dict[str, Any]:
             or len(windowed_size) != 2
             or any(isinstance(v, bool) or not isinstance(v, int) for v in windowed_size)
         ):
-            display["windowed_size"] = [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
+            display["windowed_size"] = [
+                DEFAULT_WINDOWED_SIZE[0],
+                DEFAULT_WINDOWED_SIZE[1],
+            ]
     payload.setdefault("analytics", {"score_logging_enabled": False})
     analytics = payload.get("analytics")
     if not isinstance(analytics, dict):
@@ -66,14 +75,18 @@ def _merge_loaded_scalars(payload: dict[str, Any], loaded: dict[str, Any]) -> No
             payload[key] = loaded[key]
 
 
-def _merge_loaded_section(payload: dict[str, Any], loaded: dict[str, Any], key: str) -> None:
+def _merge_loaded_section(
+    payload: dict[str, Any], loaded: dict[str, Any], key: str
+) -> None:
     target = payload.get(key)
     incoming = loaded.get(key)
     if isinstance(target, dict) and isinstance(incoming, dict):
         target.update(incoming)
 
 
-def _merge_loaded_mode_settings(payload: dict[str, Any], loaded: dict[str, Any]) -> None:
+def _merge_loaded_mode_settings(
+    payload: dict[str, Any], loaded: dict[str, Any]
+) -> None:
     loaded_settings = loaded.get("settings")
     if not isinstance(loaded_settings, dict):
         return
@@ -109,14 +122,18 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     try:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         temp_path = STATE_FILE.with_suffix(".tmp")
-        temp_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        temp_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+        )
         temp_path.replace(STATE_FILE)
     except OSError as exc:
         return False, f"Failed saving menu state: {exc}"
     return True, f"Saved menu state to {STATE_FILE}"
 
 
-def _sanitize_version_profile_mode(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+def _sanitize_version_profile_mode(
+    payload: dict[str, Any], default_payload: dict[str, Any]
+) -> None:
     version = payload.get("version")
     if isinstance(version, int) and version > 0:
         payload["version"] = version
@@ -134,10 +151,14 @@ def _sanitize_version_profile_mode(payload: dict[str, Any], default_payload: dic
             payload["active_profile"] = default_payload["active_profile"]
 
     raw_mode = payload.get("last_mode")
-    payload["last_mode"] = raw_mode if raw_mode in _MODE_KEYS else default_payload["last_mode"]
+    payload["last_mode"] = (
+        raw_mode if raw_mode in _MODE_KEYS else default_payload["last_mode"]
+    )
 
 
-def _sanitize_display_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+def _sanitize_display_section(
+    payload: dict[str, Any], default_payload: dict[str, Any]
+) -> None:
     display = payload.setdefault("display", {})
     if not isinstance(display, dict):
         payload["display"] = {}
@@ -151,7 +172,9 @@ def _sanitize_display_section(payload: dict[str, Any], default_payload: dict[str
         if (
             isinstance(raw_default_size, list)
             and len(raw_default_size) == 2
-            and all(isinstance(v, int) and not isinstance(v, bool) for v in raw_default_size)
+            and all(
+                isinstance(v, int) and not isinstance(v, bool) for v in raw_default_size
+            )
         ):
             default_windowed_size = raw_default_size
 
@@ -169,7 +192,9 @@ def _sanitize_display_section(payload: dict[str, Any], default_payload: dict[str
     display["windowed_size"] = [width, height]
 
 
-def _sanitize_audio_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+def _sanitize_audio_section(
+    payload: dict[str, Any], default_payload: dict[str, Any]
+) -> None:
     audio = payload.setdefault("audio", {})
     if not isinstance(audio, dict):
         payload["audio"] = {}
@@ -199,7 +224,9 @@ def _sanitize_audio_section(payload: dict[str, Any], default_payload: dict[str, 
     audio["mute"] = mute
 
 
-def _sanitize_analytics_section(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+def _sanitize_analytics_section(
+    payload: dict[str, Any], default_payload: dict[str, Any]
+) -> None:
     analytics = payload.setdefault("analytics", {})
     if not isinstance(analytics, dict):
         payload["analytics"] = {}
@@ -215,7 +242,9 @@ def _sanitize_analytics_section(payload: dict[str, Any], default_payload: dict[s
     )
 
 
-def _sanitize_mode_settings(payload: dict[str, Any], default_payload: dict[str, Any]) -> None:
+def _sanitize_mode_settings(
+    payload: dict[str, Any], default_payload: dict[str, Any]
+) -> None:
     settings = payload.get("settings")
     if not isinstance(settings, dict):
         settings = {}
@@ -365,9 +394,18 @@ def get_display_settings() -> dict[str, Any]:
     display = payload.get("display", {})
     if not isinstance(display, dict):
         defaults = _default_settings_payload().get("display", {})
-        default_fullscreen = bool(defaults.get("fullscreen", False)) if isinstance(defaults, dict) else False
+        default_fullscreen = (
+            bool(defaults.get("fullscreen", False))
+            if isinstance(defaults, dict)
+            else False
+        )
         default_windowed_size = (
-            list(defaults.get("windowed_size", [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]))
+            list(
+                defaults.get(
+                    "windowed_size",
+                    [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]],
+                )
+            )
             if isinstance(defaults, dict)
             else [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
         )
@@ -376,9 +414,15 @@ def get_display_settings() -> dict[str, Any]:
             "windowed_size": default_windowed_size,
         }
     defaults = _default_settings_payload().get("display", {})
-    default_fullscreen = bool(defaults.get("fullscreen", False)) if isinstance(defaults, dict) else False
+    default_fullscreen = (
+        bool(defaults.get("fullscreen", False)) if isinstance(defaults, dict) else False
+    )
     default_windowed_size = (
-        list(defaults.get("windowed_size", [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]))
+        list(
+            defaults.get(
+                "windowed_size", [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
+            )
+        )
         if isinstance(defaults, dict)
         else [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
     )
@@ -433,11 +477,21 @@ def get_audio_settings() -> dict[str, Any]:
     payload = _load_payload()
     audio = payload.get("audio", {})
     defaults = _default_settings_payload().get("audio", {})
-    default_master = float(defaults.get("master_volume", 0.8)) if isinstance(defaults, dict) else 0.8
-    default_sfx = float(defaults.get("sfx_volume", 0.7)) if isinstance(defaults, dict) else 0.7
-    default_mute = bool(defaults.get("mute", False)) if isinstance(defaults, dict) else False
+    default_master = (
+        float(defaults.get("master_volume", 0.8)) if isinstance(defaults, dict) else 0.8
+    )
+    default_sfx = (
+        float(defaults.get("sfx_volume", 0.7)) if isinstance(defaults, dict) else 0.7
+    )
+    default_mute = (
+        bool(defaults.get("mute", False)) if isinstance(defaults, dict) else False
+    )
     if not isinstance(audio, dict):
-        return {"master_volume": default_master, "sfx_volume": default_sfx, "mute": default_mute}
+        return {
+            "master_volume": default_master,
+            "sfx_volume": default_sfx,
+            "mute": default_mute,
+        }
     return {
         "master_volume": float(audio.get("master_volume", default_master)),
         "sfx_volume": float(audio.get("sfx_volume", default_sfx)),

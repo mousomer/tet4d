@@ -5,7 +5,11 @@ from typing import TypeAlias
 
 import pygame
 
-from .projection3d import draw_projected_box_edges, draw_projected_box_shadow, draw_projected_helper_lattice
+from .projection3d import (
+    draw_projected_box_edges,
+    draw_projected_box_shadow,
+    draw_projected_helper_lattice,
+)
 from .view_modes import GridMode
 
 
@@ -50,7 +54,9 @@ def draw_projected_grid_mode(
     if grid_mode != GridMode.HELPER:
         return
 
-    x_marks, y_marks, z_marks = helper_marks if helper_marks is not None else (set(), set(), set())
+    x_marks, y_marks, z_marks = (
+        helper_marks if helper_marks is not None else (set(), set(), set())
+    )
     draw_projected_helper_lattice(
         surface,
         dims,

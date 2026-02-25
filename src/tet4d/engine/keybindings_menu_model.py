@@ -190,7 +190,9 @@ def rows_for_scope(scope: str) -> tuple[list[RenderedRow], list[BindingRow]]:
 
     for section in sections_for_scope(scope):
         rendered.append(RenderedRow(kind="header", text=section.title))
-        group_bindings = runtime_binding_groups_for_dimension(section.dimension).get(section.group, {})
+        group_bindings = runtime_binding_groups_for_dimension(section.dimension).get(
+            section.group, {}
+        )
         if not group_bindings:
             rendered.append(RenderedRow(kind="header", text=""))
             continue
@@ -208,9 +210,13 @@ def rows_for_scope(scope: str) -> tuple[list[RenderedRow], list[BindingRow]]:
                     text=f"  {_doc_description(section.group)}",
                 )
             )
-        action_names = _bucket_actions(tuple(group_bindings.keys()), bucket=section.action_bucket)
+        action_names = _bucket_actions(
+            tuple(group_bindings.keys()), bucket=section.action_bucket
+        )
         for action_name in action_names:
-            row = BindingRow(dimension=section.dimension, group=section.group, action=action_name)
+            row = BindingRow(
+                dimension=section.dimension, group=section.group, action=action_name
+            )
             binding_rows.append(row)
             rendered.append(RenderedRow(kind="binding", text=action_name, binding=row))
         rendered.append(RenderedRow(kind="header", text=""))

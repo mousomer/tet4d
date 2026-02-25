@@ -54,8 +54,12 @@ def initialize_runtime(*, sync_audio_state: bool = True) -> RuntimeSettings:
         )
     display_settings = load_display_settings_from_store()
     analytics = get_analytics_settings()
-    set_score_analyzer_logging_enabled(bool(analytics.get("score_logging_enabled", False)))
-    return RuntimeSettings(audio_settings=audio_settings, display_settings=display_settings)
+    set_score_analyzer_logging_enabled(
+        bool(analytics.get("score_logging_enabled", False))
+    )
+    return RuntimeSettings(
+        audio_settings=audio_settings, display_settings=display_settings
+    )
 
 
 def open_display(

@@ -174,7 +174,9 @@ def resolve_state_relative_path(raw: object, *, default_relative: str) -> Path:
     return _resolve_repo_relative(rel, default_relative)
 
 
-def _path_value(name: str, *, default_relative: str, required_prefix: str | None = None) -> str:
+def _path_value(
+    name: str, *, default_relative: str, required_prefix: str | None = None
+) -> str:
     paths = io_paths_payload().get("paths", {})
     raw = paths.get(name) if isinstance(paths, dict) else None
     return _normalize_relative_path(

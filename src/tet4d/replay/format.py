@@ -46,7 +46,9 @@ class ReplayScript2D:
             gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
             speed_level=int(cfg_payload.get("speed_level", 1)),
         )
-        events = tuple(ReplayEvent2D.from_dict(item) for item in payload.get("events", ()))
+        events = tuple(
+            ReplayEvent2D.from_dict(item) for item in payload.get("events", ())
+        )
         return cls(seed=int(payload.get("seed", 0)), config=cfg, events=events)
 
 
@@ -76,4 +78,8 @@ class ReplayTickScriptND:
             gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
             speed_level=int(cfg_payload.get("speed_level", 1)),
         )
-        return cls(seed=int(payload.get("seed", 0)), config=cfg, ticks=int(payload.get("ticks", 0)))
+        return cls(
+            seed=int(payload.get("seed", 0)),
+            config=cfg,
+            ticks=int(payload.get("ticks", 0)),
+        )

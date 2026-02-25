@@ -83,7 +83,9 @@ def _text_mode_label(mode: str) -> str:
     return "Save profile as"
 
 
-def _cycle_binding(state: KeybindingsMenuState, binding_rows: list[BindingRow], step: int) -> None:
+def _cycle_binding(
+    state: KeybindingsMenuState, binding_rows: list[BindingRow], step: int
+) -> None:
     if not binding_rows:
         return
     state.selected_binding = (state.selected_binding + step) % len(binding_rows)
@@ -181,7 +183,9 @@ def _run_scope_operation(
     return ok_all, " | ".join(results)
 
 
-def _active_binding(binding_rows: list[BindingRow], state: KeybindingsMenuState) -> BindingRow | None:
+def _active_binding(
+    binding_rows: list[BindingRow], state: KeybindingsMenuState
+) -> BindingRow | None:
     if not binding_rows:
         return None
     safe_index = max(0, min(len(binding_rows) - 1, state.selected_binding))
@@ -250,7 +254,9 @@ def _action_capture_start(state: KeybindingsMenuState, rows: list[BindingRow]) -
     return False
 
 
-def _action_conflict_cycle(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
+def _action_conflict_cycle(
+    state: KeybindingsMenuState, _rows: list[BindingRow]
+) -> bool:
     state.conflict_mode = cycle_rebind_conflict_mode(state.conflict_mode, 1)
     _set_status(state, True, f"Conflict mode: {state.conflict_mode}")
     return False
@@ -268,7 +274,9 @@ def _action_save_file(state: KeybindingsMenuState, _rows: list[BindingRow]) -> b
     return False
 
 
-def _action_reset_bindings(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
+def _action_reset_bindings(
+    state: KeybindingsMenuState, _rows: list[BindingRow]
+) -> bool:
     if not state.pending_reset_confirm:
         state.pending_reset_confirm = True
         _set_status(state, True, "Press F6 again to confirm profile reset")
@@ -294,17 +302,23 @@ def _action_profile_new(state: KeybindingsMenuState, _rows: list[BindingRow]) ->
     return False
 
 
-def _action_profile_rename(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
+def _action_profile_rename(
+    state: KeybindingsMenuState, _rows: list[BindingRow]
+) -> bool:
     _start_text_mode(state, _TEXT_MODE_RENAME)
     return False
 
 
-def _action_profile_save_as(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
+def _action_profile_save_as(
+    state: KeybindingsMenuState, _rows: list[BindingRow]
+) -> bool:
     _start_text_mode(state, _TEXT_MODE_SAVE_AS)
     return False
 
 
-def _action_profile_delete(state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
+def _action_profile_delete(
+    state: KeybindingsMenuState, _rows: list[BindingRow]
+) -> bool:
     _delete_profile(state)
     return False
 
@@ -328,7 +342,9 @@ _MENU_KEY_HANDLERS = {
 }
 
 
-def _run_menu_action(state: KeybindingsMenuState, key: int, rows: list[BindingRow]) -> bool:
+def _run_menu_action(
+    state: KeybindingsMenuState, key: int, rows: list[BindingRow]
+) -> bool:
     if state.section_mode:
         return _run_section_mode_action(state, key)
     return _run_binding_mode_action(state, key, rows)
@@ -350,7 +366,9 @@ def _run_section_mode_action(state: KeybindingsMenuState, key: int) -> bool:
     return _handle_section_key(state, key)
 
 
-def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[BindingRow]) -> bool:
+def _run_binding_mode_action(
+    state: KeybindingsMenuState, key: int, rows: list[BindingRow]
+) -> bool:
     if state.capture_mode:
         _clear_reset_confirmation(state)
         return _handle_capture_input(state, key, rows)
@@ -379,7 +397,9 @@ def _run_binding_mode_action(state: KeybindingsMenuState, key: int, rows: list[B
     return handler(state, rows)
 
 
-def _draw_section_menu(surface: pygame.Surface, fonts, state: KeybindingsMenuState) -> None:
+def _draw_section_menu(
+    surface: pygame.Surface, fonts, state: KeybindingsMenuState
+) -> None:
     from .keybindings_menu_view import draw_section_menu
 
     draw_section_menu(
@@ -461,14 +481,20 @@ def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
     )
 
 
-def _sync_selection(state: KeybindingsMenuState, binding_rows: list[BindingRow]) -> None:
+def _sync_selection(
+    state: KeybindingsMenuState, binding_rows: list[BindingRow]
+) -> None:
     if binding_rows:
-        state.selected_binding = max(0, min(len(binding_rows) - 1, state.selected_binding))
+        state.selected_binding = max(
+            0, min(len(binding_rows) - 1, state.selected_binding)
+        )
     else:
         state.selected_binding = 0
 
 
-def _process_menu_events(state: KeybindingsMenuState, binding_rows: list[BindingRow]) -> bool:
+def _process_menu_events(
+    state: KeybindingsMenuState, binding_rows: list[BindingRow]
+) -> bool:
     from .keybindings_menu_input import process_menu_events
 
     return process_menu_events(

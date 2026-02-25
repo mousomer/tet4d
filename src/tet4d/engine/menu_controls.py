@@ -133,7 +133,9 @@ def _action_for_menu_key(key: int) -> MenuAction | None:
     )
 
 
-def gather_menu_actions(state: Any | None = None, _dimension: int | None = None) -> list[MenuInput]:
+def gather_menu_actions(
+    state: Any | None = None, _dimension: int | None = None
+) -> list[MenuInput]:
     actions: list[MenuInput] = []
     rebind_mode = bool(getattr(state, "rebind_mode", False))
     for event in pygame.event.get():
@@ -313,7 +315,9 @@ def _apply_state_only_action(state: Any, action: MenuAction) -> bool:
         _shift_rebind_target(state, -1)
         return True
     if action == MenuAction.REBIND_CONFLICT_NEXT:
-        state.rebind_conflict_mode = cycle_rebind_conflict_mode(state.rebind_conflict_mode, 1)
+        state.rebind_conflict_mode = cycle_rebind_conflict_mode(
+            state.rebind_conflict_mode, 1
+        )
         state.bindings_status = f"Rebind conflict mode: {state.rebind_conflict_mode}"
         state.bindings_status_error = False
         return True

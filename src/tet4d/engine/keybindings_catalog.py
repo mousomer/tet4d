@@ -87,9 +87,19 @@ def gameplay_action_category(action: str) -> str:
     return "other"
 
 
-def partition_gameplay_actions(actions: Sequence[str]) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+def partition_gameplay_actions(
+    actions: Sequence[str],
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     ordered = sorted(actions)
-    translation = tuple(action for action in ordered if gameplay_action_category(action) == "translation")
-    rotation = tuple(action for action in ordered if gameplay_action_category(action) == "rotation")
-    other = tuple(action for action in ordered if gameplay_action_category(action) == "other")
+    translation = tuple(
+        action
+        for action in ordered
+        if gameplay_action_category(action) == "translation"
+    )
+    rotation = tuple(
+        action for action in ordered if gameplay_action_category(action) == "rotation"
+    )
+    other = tuple(
+        action for action in ordered if gameplay_action_category(action) == "other"
+    )
     return translation, rotation, other

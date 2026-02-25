@@ -81,7 +81,9 @@ def _validate_assist_scoring(raw_assist: object) -> dict[str, Any]:
         mode_names=GRID_MODE_NAMES,
     )
 
-    speed_obj = require_object(assist.get("speed"), path="gameplay.assist_scoring.speed")
+    speed_obj = require_object(
+        assist.get("speed"), path="gameplay.assist_scoring.speed"
+    )
     speed_min_level = require_int(
         speed_obj.get("min_level"),
         path="gameplay.assist_scoring.speed.min_level",
@@ -105,7 +107,9 @@ def _validate_assist_scoring(raw_assist: object) -> dict[str, Any]:
         "max_level": speed_max_level,
     }
 
-    combined_obj = require_object(assist.get("combined"), path="gameplay.assist_scoring.combined")
+    combined_obj = require_object(
+        assist.get("combined"), path="gameplay.assist_scoring.combined"
+    )
     combined_min = require_number(
         combined_obj.get("min"),
         path="gameplay.assist_scoring.combined.min",
@@ -148,7 +152,9 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
         raise RuntimeError("gameplay.grid_modes.fallback must be a string")
     fallback_mode = fallback.strip().lower()
     if fallback_mode not in cycle:
-        raise RuntimeError("gameplay.grid_modes.fallback must be present in gameplay.grid_modes.cycle")
+        raise RuntimeError(
+            "gameplay.grid_modes.fallback must be present in gameplay.grid_modes.cycle"
+        )
     return {
         "cycle": tuple(cycle),
         "fallback": fallback_mode,

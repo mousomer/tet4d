@@ -113,12 +113,22 @@ def _relative_overhead(base_ms: float, current_ms: float) -> tuple[float, float]
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Profile 4D renderer draw_game_frame overhead.")
-    parser.add_argument("--frames", type=int, default=120, help="Measured frames per scenario.")
-    parser.add_argument("--warmup", type=int, default=20, help="Warmup frames per scenario.")
+    parser = argparse.ArgumentParser(
+        description="Profile 4D renderer draw_game_frame overhead."
+    )
+    parser.add_argument(
+        "--frames", type=int, default=120, help="Measured frames per scenario."
+    )
+    parser.add_argument(
+        "--warmup", type=int, default=20, help="Warmup frames per scenario."
+    )
     parser.add_argument("--width", type=int, default=1400, help="Render surface width.")
-    parser.add_argument("--height", type=int, default=900, help="Render surface height.")
-    parser.add_argument("--dims", type=str, default="6,12,6,4", help="4D dims as x,y,z,w.")
+    parser.add_argument(
+        "--height", type=int, default=900, help="Render surface height."
+    )
+    parser.add_argument(
+        "--dims", type=str, default="6,12,6,4", help="4D dims as x,y,z,w."
+    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -134,7 +144,9 @@ def main() -> int:
     parser.add_argument("--overhead-ms-threshold", type=float, default=2.0)
     args = parser.parse_args()
 
-    dims_parts = tuple(int(part.strip()) for part in args.dims.split(",") if part.strip())
+    dims_parts = tuple(
+        int(part.strip()) for part in args.dims.split(",") if part.strip()
+    )
     if len(dims_parts) != 4 or any(value <= 0 for value in dims_parts):
         raise SystemExit("--dims must be four positive integers (x,y,z,w)")
 

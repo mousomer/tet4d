@@ -37,7 +37,9 @@ def _resolve_menu_decision(
         return "quit", screen
     if decision != "menu":
         return "continue", screen
-    pause_decision, next_screen = run_pause_menu(screen, fonts, dimension=pause_dimension)
+    pause_decision, next_screen = run_pause_menu(
+        screen, fonts, dimension=pause_dimension
+    )
     if pause_decision == "quit":
         return "quit", next_screen
     if pause_decision == "menu":

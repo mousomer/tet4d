@@ -4,7 +4,9 @@ import unittest
 
 try:
     import pygame
-except ModuleNotFoundError:  # pragma: no cover - exercised in environments without pygame-ce
+except (
+    ModuleNotFoundError
+):  # pragma: no cover - exercised in environments without pygame-ce
     pygame = None
 
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
@@ -46,8 +48,10 @@ class TestCameraMouse(unittest.TestCase):
             pitch_deg=pitch,
         )
         self.assertTrue(changed2)
-        self.assertAlmostEqual(yaw2, 42.0, places=4)   # +20 * 0.5
-        self.assertAlmostEqual(pitch2, -23.5, places=4)  # -26 + (-dy * 0.25) where dy=-10
+        self.assertAlmostEqual(yaw2, 42.0, places=4)  # +20 * 0.5
+        self.assertAlmostEqual(
+            pitch2, -23.5, places=4
+        )  # -26 + (-dy * 0.25) where dy=-10
 
     def test_pitch_is_clamped(self) -> None:
         state = MouseOrbitState(yaw_sensitivity=0.0, pitch_sensitivity=2.0)
@@ -68,10 +72,18 @@ class TestCameraMouse(unittest.TestCase):
         self.assertEqual(clamp_pitch_deg(-999.0), -MAX_ABS_MOUSE_PITCH)
 
     def test_mouse_wheel_delta(self) -> None:
-        self.assertEqual(mouse_wheel_delta(pygame.event.Event(pygame.MOUSEWHEEL, y=2)), 2)
-        self.assertEqual(mouse_wheel_delta(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=4)), 1)
-        self.assertEqual(mouse_wheel_delta(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=5)), -1)
-        self.assertEqual(mouse_wheel_delta(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)), 0)
+        self.assertEqual(
+            mouse_wheel_delta(pygame.event.Event(pygame.MOUSEWHEEL, y=2)), 2
+        )
+        self.assertEqual(
+            mouse_wheel_delta(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=4)), 1
+        )
+        self.assertEqual(
+            mouse_wheel_delta(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=5)), -1
+        )
+        self.assertEqual(
+            mouse_wheel_delta(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)), 0
+        )
 
 
 if __name__ == "__main__":

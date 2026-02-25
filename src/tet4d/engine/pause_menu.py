@@ -92,7 +92,9 @@ def _draw_list_menu_panel(
     draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
     width, height = screen.get_size()
     title_surf = fonts.title_font.render(title, True, _TEXT_COLOR)
-    subtitle_surf = fonts.hint_font.render(fit_text(fonts.hint_font, subtitle, width - 24), True, _MUTED_COLOR)
+    subtitle_surf = fonts.hint_font.render(
+        fit_text(fonts.hint_font, subtitle, width - 24), True, _MUTED_COLOR
+    )
     title_y = 40
     subtitle_y = title_y + title_surf.get_height() + 8
     screen.blit(title_surf, ((width - title_surf.get_width()) // 2, title_y))
@@ -103,10 +105,16 @@ def _draw_list_menu_panel(
     panel_top = subtitle_y + subtitle_surf.get_height() + 10
     bottom_lines = len(hints) + (1 if status else 0)
     panel_max_h = max(150, height - panel_top - (bottom_lines * line_h) - 10)
-    row_h = min(42, max(fonts.menu_font.get_height() + 8, (panel_max_h - 36) // max(1, len(rows))))
+    row_h = min(
+        42,
+        max(fonts.menu_font.get_height() + 8, (panel_max_h - 36) // max(1, len(rows))),
+    )
     panel_h = min(panel_max_h, 36 + len(rows) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8))
+    panel_y = max(
+        panel_top,
+        min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8),
+    )
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
@@ -121,15 +129,23 @@ def _draw_list_menu_panel(
         selected = idx == selected_index
         color = _HIGHLIGHT_COLOR if selected else _TEXT_COLOR
         if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
+            hi = pygame.Surface(
+                (panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA
+            )
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 3))
         value_text = values[idx] if idx < len(values) else ""
         value_width = int(panel_w * 0.34) if value_text else 0
         value_draw = fit_text(fonts.menu_font, value_text, value_width)
-        value_surf = fonts.menu_font.render(value_draw, True, color) if value_draw else None
-        value_x = label_right - (value_surf.get_width() if value_surf is not None else 0)
-        label_width = max(64, value_x - label_left - 10 if value_surf is not None else panel_w - 52)
+        value_surf = (
+            fonts.menu_font.render(value_draw, True, color) if value_draw else None
+        )
+        value_x = label_right - (
+            value_surf.get_width() if value_surf is not None else 0
+        )
+        label_width = max(
+            64, value_x - label_left - 10 if value_surf is not None else panel_w - 52
+        )
         label_draw = fit_text(fonts.menu_font, row, label_width)
         label = fonts.menu_font.render(label_draw, True, color)
         screen.blit(label, (label_left, y))
@@ -198,12 +214,17 @@ def _display_settings_from_payload() -> DisplaySettings:
     display = load_display_payload()
     return DisplaySettings(
         fullscreen=bool(display["fullscreen"]),
-        windowed_size=(int(display["windowed_size"][0]), int(display["windowed_size"][1])),
+        windowed_size=(
+            int(display["windowed_size"][0]),
+            int(display["windowed_size"][1]),
+        ),
     )
 
 
 _PAUSE_ROWS: tuple[str, ...] = tuple(item["label"] for item in _PAUSE_MENU_ITEMS)
-_PAUSE_ACTION_CODES: tuple[str, ...] = tuple(item["action_id"] for item in _PAUSE_MENU_ITEMS)
+_PAUSE_ACTION_CODES: tuple[str, ...] = tuple(
+    item["action_id"] for item in _PAUSE_MENU_ITEMS
+)
 _SUPPORTED_PAUSE_ACTIONS = {
     "resume",
     "restart",
@@ -263,7 +284,9 @@ def _handle_pause_profile_cycle(state: _PauseState, step: int) -> None:
     _set_pause_status(state, ok, msg)
 
 
-def _handle_pause_bindings_io(state: _PauseState, dimension: int, *, save: bool) -> None:
+def _handle_pause_bindings_io(
+    state: _PauseState, dimension: int, *, save: bool
+) -> None:
     if save:
         ok, msg = save_keybindings_file(dimension)
     else:
@@ -305,7 +328,9 @@ def _handle_pause_action(
         _handle_pause_bindings_io(state, dimension, save=False)
         return screen, True
     if action == "help":
-        screen = run_help_menu(screen, fonts, dimension=dimension, context_label="Pause Menu")
+        screen = run_help_menu(
+            screen, fonts, dimension=dimension, context_label="Pause Menu"
+        )
         _set_pause_status(state, True, "Returned from help")
         return screen, True
     return screen, True

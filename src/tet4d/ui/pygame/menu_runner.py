@@ -76,7 +76,10 @@ class MenuRunner:
     def run(self) -> None:  # noqa: C901
         state = _RunnerState(
             stack=[self._start_menu_id],
-            selected_by_menu={menu_id.strip().lower(): int(idx) for menu_id, idx in self._initial_selected.items()},
+            selected_by_menu={
+                menu_id.strip().lower(): int(idx)
+                for menu_id, idx in self._initial_selected.items()
+            },
         )
         clock = pygame.time.Clock()
 

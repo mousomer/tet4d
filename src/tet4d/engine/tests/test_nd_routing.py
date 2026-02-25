@@ -120,7 +120,9 @@ class TestNdRouting(unittest.TestCase):
         view_calls: list[int] = []
         sfx: list[str] = []
         camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
-        pos_before = state.current_piece.pos if state.current_piece is not None else None
+        pos_before = (
+            state.current_piece.pos if state.current_piece is not None else None
+        )
 
         result = frontend_nd.route_nd_keydown(
             camera_key,
@@ -136,7 +138,9 @@ class TestNdRouting(unittest.TestCase):
             self.assertEqual(state.current_piece.pos, pos_before)
 
     def test_axis_override_routes_w_move_to_target_axis(self) -> None:
-        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=True)
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
         state = frontend_nd.create_initial_state(cfg)
         piece = state.current_piece
         if piece is None:

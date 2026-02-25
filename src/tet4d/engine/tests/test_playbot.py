@@ -32,17 +32,24 @@ class TestPlaybot(unittest.TestCase):
 
     def test_controller_can_place_one_piece_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
         bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0)
 
         before_piece = state.current_piece
         before_lines = state.lines_cleared
         self.assertTrue(bot.play_one_piece_2d(state))
         self.assertIsNotNone(state.current_piece)
-        self.assertTrue(state.current_piece is not before_piece or state.lines_cleared > before_lines)
+        self.assertTrue(
+            state.current_piece is not before_piece
+            or state.lines_cleared > before_lines
+        )
 
     def test_controller_can_place_one_piece_nd(self) -> None:
-        cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        cfg = GameConfigND(
+            dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
         bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0)
 
@@ -50,11 +57,16 @@ class TestPlaybot(unittest.TestCase):
         before_lines = state.lines_cleared
         self.assertTrue(bot.play_one_piece_nd(state))
         self.assertIsNotNone(state.current_piece)
-        self.assertTrue(state.current_piece is not before_piece or state.lines_cleared > before_lines)
+        self.assertTrue(
+            state.current_piece is not before_piece
+            or state.lines_cleared > before_lines
+        )
 
     def test_auto_tick_is_incremental_soft_drop_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
         bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=1)
 
         before_cells = len(state.board.cells)
@@ -64,7 +76,12 @@ class TestPlaybot(unittest.TestCase):
         bot.tick_2d(state, dt_ms=16)
 
         self.assertEqual(len(state.board.cells), before_cells)
-        if before_piece is not None and state.current_piece is not None and before_pos is not None and before_rot is not None:
+        if (
+            before_piece is not None
+            and state.current_piece is not None
+            and before_pos is not None
+            and before_rot is not None
+        ):
             changed = (
                 state.current_piece.pos != before_pos
                 or state.current_piece.rotation != before_rot
@@ -77,12 +94,16 @@ class TestPlaybot(unittest.TestCase):
         self.assertTrue(report_2d.passed)
         self.assertGreater(report_2d.clears_observed, 0)
 
-        cfg_3d = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        cfg_3d = GameConfigND(
+            dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG
+        )
         report_3d = run_dry_run_nd(cfg_3d, max_pieces=24, seed=0)
         self.assertTrue(report_3d.passed)
         self.assertGreater(report_3d.clears_observed, 0)
 
-        cfg_4d = GameConfigND(dims=(6, 14, 4, 3), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+        cfg_4d = GameConfigND(
+            dims=(6, 14, 4, 3), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG
+        )
         report_4d = run_dry_run_nd(cfg_4d, max_pieces=16, seed=0)
         self.assertTrue(report_4d.passed)
         self.assertGreater(report_4d.clears_observed, 0)
@@ -96,17 +117,25 @@ class TestPlaybot(unittest.TestCase):
 
     def test_2d_planner_budget_fallback_still_returns_plan(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
 
-        tight = plan_best_2d_move(state, profile=BotPlannerProfile.BALANCED, budget_ms=2)
-        relaxed = plan_best_2d_move(state, profile=BotPlannerProfile.BALANCED, budget_ms=80)
+        tight = plan_best_2d_move(
+            state, profile=BotPlannerProfile.BALANCED, budget_ms=2
+        )
+        relaxed = plan_best_2d_move(
+            state, profile=BotPlannerProfile.BALANCED, budget_ms=80
+        )
 
         self.assertIsNotNone(tight)
         self.assertIsNotNone(relaxed)
         self.assertLessEqual(tight.stats.candidate_count, relaxed.stats.candidate_count)
 
     def test_3d_planner_profile_runs_with_budget(self) -> None:
-        cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        cfg = GameConfigND(
+            dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
 
         fast = plan_best_nd_move(
@@ -123,7 +152,9 @@ class TestPlaybot(unittest.TestCase):
         self.assertIsNotNone(ultra)
 
     def test_nd_algorithm_override_runs(self) -> None:
-        cfg = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+        cfg = GameConfigND(
+            dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
 
         heuristic = plan_best_nd_move(
@@ -143,7 +174,9 @@ class TestPlaybot(unittest.TestCase):
 
     def test_rotations_wait_until_piece_is_visible_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
         state.board.cells.clear()
         state.current_piece = ActivePiece2D(
             PieceShape2D("domino", [(0, 0), (1, 0)], color_id=8),
@@ -221,7 +254,9 @@ class TestPlaybot(unittest.TestCase):
         self.assertGreater(key_clear, key_no_clear)
 
     def test_4d_planner_prefers_placement_that_clears_a_plane(self) -> None:
-        cfg = GameConfigND(dims=(3, 5, 2, 2), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+        cfg = GameConfigND(
+            dims=(3, 5, 2, 2), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
         state.board.cells.clear()
 
@@ -250,7 +285,9 @@ class TestPlaybot(unittest.TestCase):
 
     def test_bot_hard_drops_after_configured_soft_drops_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
         state.board.cells.clear()
         state.current_piece = ActivePiece2D(
             PieceShape2D("domino", [(0, 0), (1, 0)], color_id=8),
@@ -258,7 +295,9 @@ class TestPlaybot(unittest.TestCase):
             rotation=0,
         )
 
-        bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2)
+        bot = PlayBotController(
+            mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2
+        )
         # Freeze target so only descent behavior is tested.
         bot._update_assist_2d = lambda _state: None  # type: ignore[method-assign]
         bot._target_rot_2d = state.current_piece.rotation
@@ -273,7 +312,9 @@ class TestPlaybot(unittest.TestCase):
         self.assertGreater(len(state.board.cells), before_cells)
 
     def test_bot_hard_drops_after_configured_soft_drops_nd(self) -> None:
-        cfg = GameConfigND(dims=(4, 8, 2, 1), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+        cfg = GameConfigND(
+            dims=(4, 8, 2, 1), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
         state.board.cells.clear()
         shape = PieceShapeND(
@@ -283,11 +324,19 @@ class TestPlaybot(unittest.TestCase):
         )
         state.current_piece = ActivePieceND.from_shape(shape, (1, 0, 0, 0))
 
-        bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2)
+        bot = PlayBotController(
+            mode=BotMode.AUTO, action_interval_ms=0, hard_drop_after_soft_drops=2
+        )
         # Freeze target so only descent behavior is tested.
         bot._update_assist_nd = lambda _state: None  # type: ignore[method-assign]
-        bot._target_blocks_nd = tuple(sorted(tuple(block) for block in state.current_piece.rel_blocks))
-        bot._target_lateral_nd = (state.current_piece.pos[0], state.current_piece.pos[2], state.current_piece.pos[3])
+        bot._target_blocks_nd = tuple(
+            sorted(tuple(block) for block in state.current_piece.rel_blocks)
+        )
+        bot._target_lateral_nd = (
+            state.current_piece.pos[0],
+            state.current_piece.pos[2],
+            state.current_piece.pos[3],
+        )
         bot._rotation_plan_nd = []
 
         before_cells = len(state.board.cells)

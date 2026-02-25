@@ -4,7 +4,9 @@ import unittest
 
 try:
     import pygame
-except ModuleNotFoundError:  # pragma: no cover - exercised in environments without pygame-ce
+except (
+    ModuleNotFoundError
+):  # pragma: no cover - exercised in environments without pygame-ce
     pygame = None
 
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
@@ -138,11 +140,15 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(run_once(), run_once())
 
     def test_exploration_mode_disables_gravity_and_locking_2d(self) -> None:
-        cfg = GameConfig(width=8, height=8, gravity_axis=1, speed_level=1, exploration_mode=True)
+        cfg = GameConfig(
+            width=8, height=8, gravity_axis=1, speed_level=1, exploration_mode=True
+        )
         state = front2d.create_initial_state(cfg)
         self.assertFalse(state.game_over)
         piece_before = state.current_piece
-        y_before = state.current_piece.pos[1] if state.current_piece is not None else None
+        y_before = (
+            state.current_piece.pos[1] if state.current_piece is not None else None
+        )
 
         # Gravity ticks do nothing in exploration mode.
         state.step(Action.NONE)
@@ -151,29 +157,39 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(state.score, 0)
 
         move_up = self._key_for(KEYS_2D, "move_y_neg")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(move_up), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(move_up), state, cfg), "continue"
+        )
         if state.current_piece is not None and y_before is not None:
             self.assertEqual(state.current_piece.pos[1], y_before - 1)
 
         move_down = self._key_for(KEYS_2D, "move_y_pos")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(move_down), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(move_down), state, cfg), "continue"
+        )
         if state.current_piece is not None and y_before is not None:
             self.assertEqual(state.current_piece.pos[1], y_before)
 
         # Hard drop cycles to next piece without locking into board.
         hard_drop = self._key_for(KEYS_2D, "hard_drop")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue"
+        )
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
         self.assertIsNot(state.current_piece, piece_before)
 
     def test_exploration_mode_disables_gravity_and_locking_nd(self) -> None:
-        cfg = GameConfigND(dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True)
+        cfg = GameConfigND(
+            dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
         state = frontend_nd.create_initial_state(cfg)
         self.assertFalse(state.game_over)
         piece_before = state.current_piece
-        pos_before = state.current_piece.pos if state.current_piece is not None else None
+        pos_before = (
+            state.current_piece.pos if state.current_piece is not None else None
+        )
 
         state.step_gravity()
         self.assertEqual(len(state.board.cells), 0)
@@ -183,17 +199,23 @@ class TestGameplayReplay(unittest.TestCase):
             self.assertEqual(state.current_piece.pos, pos_before)
 
         move_up = self._key_for(KEYS_4D, "move_y_neg")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_up), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(move_up), state), "continue"
+        )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
 
         move_down = self._key_for(KEYS_4D, "move_y_pos")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_down), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(move_down), state), "continue"
+        )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1])
 
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue"
+        )
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
@@ -242,22 +264,50 @@ class TestGameplayReplay(unittest.TestCase):
         rotate = self._key_for(KEYS_2D, "rotate_xy_pos")
         hard_drop = self._key_for(KEYS_2D, "hard_drop")
 
-        self.assertEqual(front2d.handle_game_keydown(_keydown(move_left), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(move_left), state, cfg), "continue"
+        )
         self.assertEqual(state.current_piece.pos, (3, 1))
 
         before_cells = tuple(sorted(state.current_piece.cells()))
-        self.assertEqual(front2d.handle_game_keydown(_keydown(rotate), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(rotate), state, cfg), "continue"
+        )
         self.assertNotEqual(tuple(sorted(state.current_piece.cells())), before_cells)
 
-        self.assertEqual(front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue"
+        )
         self.assertGreater(len(state.board.cells), 0)
 
-        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "quit")), state, cfg), "quit")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "menu")), state, cfg), "menu")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "restart")), state, cfg), "restart")
-        self.assertEqual(front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg), "help")
         self.assertEqual(
-            front2d.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
+            front2d.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "quit")), state, cfg
+            ),
+            "quit",
+        )
+        self.assertEqual(
+            front2d.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "menu")), state, cfg
+            ),
+            "menu",
+        )
+        self.assertEqual(
+            front2d.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "restart")), state, cfg
+            ),
+            "restart",
+        )
+        self.assertEqual(
+            front2d.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg
+            ),
+            "help",
+        )
+        self.assertEqual(
+            front2d.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg
+            ),
             "toggle_grid",
         )
 
@@ -274,22 +324,37 @@ class TestGameplayReplay(unittest.TestCase):
         rotate_xz = self._key_for(KEYS_3D, "rotate_xz_pos")
         hard_drop = self._key_for(KEYS_3D, "hard_drop")
 
-        self.assertEqual(front3d_game.handle_game_keydown(_keydown(move_z_neg), state, cfg), "continue")
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(move_z_neg), state, cfg),
+            "continue",
+        )
         self.assertEqual(state.current_piece.pos, (3, 2, 4))
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
-        self.assertEqual(front3d_game.handle_game_keydown(_keydown(rotate_xz), state, cfg), "continue")
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(rotate_xz), state, cfg),
+            "continue",
+        )
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
-        self.assertEqual(front3d_game.handle_game_keydown(_keydown(hard_drop), state, cfg), "continue")
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(hard_drop), state, cfg),
+            "continue",
+        )
         self.assertGreater(len(state.board.cells), 0)
 
         self.assertEqual(
-            front3d_game.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg),
+            front3d_game.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg
+            ),
             "toggle_grid",
         )
         self.assertEqual(
-            front3d_game.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg),
+            front3d_game.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "help")), state, cfg
+            ),
             "help",
         )
 
@@ -319,25 +384,39 @@ class TestGameplayReplay(unittest.TestCase):
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_z_neg), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(move_z_neg), state), "continue"
+        )
         self.assertEqual(state.current_piece.pos, (3, 2, 2, 2))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(move_w_pos), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(move_w_pos), state), "continue"
+        )
         self.assertEqual(state.current_piece.pos, (3, 2, 2, 3))
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(rotate_xw), state), "continue")
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(rotate_xw), state), "continue"
+        )
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
-        self.assertEqual(frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue")
+        self.assertEqual(
+            frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue"
+        )
         self.assertGreater(len(state.board.cells), 0)
 
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state),
+            frontend_nd.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state
+            ),
             "toggle_grid",
         )
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(self._key_for(SYSTEM_KEYS, "help")), state),
+            frontend_nd.handle_game_keydown(
+                _keydown(self._key_for(SYSTEM_KEYS, "help")), state
+            ),
             "help",
         )
 
@@ -402,13 +481,17 @@ class TestGameplayReplay(unittest.TestCase):
                     frontend_nd.route_nd_keydown(
                         view_key,
                         state,
-                        view_key_handler=lambda raw_key: front4d_game.handle_view_key(raw_key, view),
+                        view_key_handler=lambda raw_key: front4d_game.handle_view_key(
+                            raw_key, view
+                        ),
                     )
                     view.step_animation(120.0)
                 state.step_gravity()
             return _state_signature_nd(state)
 
-        self.assertEqual(run_once(with_view_turns=False), run_once(with_view_turns=True))
+        self.assertEqual(
+            run_once(with_view_turns=False), run_once(with_view_turns=True)
+        )
 
 
 if __name__ == "__main__":

@@ -26,7 +26,6 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(_score_for_clear(4), 1200)
         self.assertEqual(_score_for_clear(5), 1600)
 
-
     def test_spawn_piece_matches_config_dimension(self):
         cfg = GameConfigND(dims=(6, 12, 4), gravity_axis=1)
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
@@ -104,7 +103,9 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(state.score, 105)
 
     def test_score_multiplier_scales_awarded_points(self):
-        cfg = GameConfigND(dims=(2, 3, 1), gravity_axis=1, piece_set_id=PIECE_SET_3D_EMBED_2D)
+        cfg = GameConfigND(
+            dims=(2, 3, 1), gravity_axis=1, piece_set_id=PIECE_SET_3D_EMBED_2D
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
         state.board.cells.clear()
         state.board.cells[(0, 2, 0)] = 1
@@ -117,25 +118,35 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(state.score, 22)
 
     def test_4d_config_can_use_six_cell_piece_set(self):
-        cfg = GameConfigND(dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d=PIECE_SET_4D_SIX)
+        cfg = GameConfigND(
+            dims=(5, 10, 5, 4), gravity_axis=1, piece_set_4d=PIECE_SET_4D_SIX
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
 
         self.assertIsNotNone(state.current_piece)
         self.assertEqual(len(state.current_piece.shape.blocks), 6)
 
     def test_3d_config_can_use_embedded_2d_piece_set(self):
-        cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, piece_set_id=PIECE_SET_3D_EMBED_2D)
+        cfg = GameConfigND(
+            dims=(6, 12, 6), gravity_axis=1, piece_set_id=PIECE_SET_3D_EMBED_2D
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
 
         self.assertIsNotNone(state.current_piece)
-        self.assertTrue(all(block[2] == 0 for block in state.current_piece.shape.blocks))
+        self.assertTrue(
+            all(block[2] == 0 for block in state.current_piece.shape.blocks)
+        )
 
     def test_4d_config_can_use_embedded_3d_piece_set(self):
-        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, piece_set_id=PIECE_SET_4D_EMBED_3D)
+        cfg = GameConfigND(
+            dims=(6, 12, 6, 4), gravity_axis=1, piece_set_id=PIECE_SET_4D_EMBED_3D
+        )
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
 
         self.assertIsNotNone(state.current_piece)
-        self.assertTrue(all(block[3] == 0 for block in state.current_piece.shape.blocks))
+        self.assertTrue(
+            all(block[3] == 0 for block in state.current_piece.shape.blocks)
+        )
 
     def test_random_piece_set_respects_random_cell_count(self):
         cfg = GameConfigND(
@@ -208,7 +219,9 @@ class TestGameND(unittest.TestCase):
         state.current_piece = ActivePieceND.from_shape(dot, pos=(-1, 3, cfg.dims[2]))
 
         self.assertTrue(state._can_exist(state.current_piece))
-        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 3, 0),))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((3, 3, 0),)
+        )
 
     def test_wrap_all_keeps_gravity_axis_bounded_3d(self):
         cfg = GameConfigND(
@@ -235,7 +248,9 @@ class TestGameND(unittest.TestCase):
         state.current_piece = ActivePieceND.from_shape(dot, pos=(-1, 3, 1))
 
         # Crossing x edge mirrors z for invert_all.
-        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 3, 2),))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((3, 3, 2),)
+        )
 
     def test_invert_all_straddling_w_seam_can_move(self):
         cfg = GameConfigND(

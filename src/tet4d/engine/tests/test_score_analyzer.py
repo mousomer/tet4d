@@ -20,7 +20,9 @@ from tet4d.engine.score_analyzer import (
 
 
 class TestScoreAnalyzer(unittest.TestCase):
-    def _sample_event(self, *, seq: int = 1, session_id: str = "test-session") -> dict[str, object]:
+    def _sample_event(
+        self, *, seq: int = 1, session_id: str = "test-session"
+    ) -> dict[str, object]:
         board_pre = {(0, 3): 1, (1, 3): 1}
         board_post = {(0, 3): 1, (1, 3): 1, (2, 3): 1, (3, 3): 1}
         return analyze_lock_event(
@@ -152,13 +154,17 @@ class TestScoreAnalyzer(unittest.TestCase):
                 mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
             ):
                 reset_score_analyzer_runtime_state()
-                record_score_analysis_event(self._sample_event(seq=1, session_id="sanitized"))
+                record_score_analysis_event(
+                    self._sample_event(seq=1, session_id="sanitized")
+                )
 
                 safe_events = tmp_path / "state" / "analytics" / "score_events.jsonl"
                 safe_summary = tmp_path / "state" / "analytics" / "score_summary.json"
                 self.assertTrue(safe_events.exists())
                 self.assertTrue(safe_summary.exists())
-                self.assertFalse((tmp_path.parent / "outside" / "events.jsonl").exists())
+                self.assertFalse(
+                    (tmp_path.parent / "outside" / "events.jsonl").exists()
+                )
 
             reset_score_analyzer_runtime_state()
 

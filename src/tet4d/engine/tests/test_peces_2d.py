@@ -12,14 +12,13 @@ from tet4d.engine.pieces2d import (
 
 
 class TestPieces2D(unittest.TestCase):
-
     def test_rotate_point_2d(self):
         # Rotate (1, 0) around origin
-        self.assertEqual(rotate_point_2d(1, 0, 0), (1, 0))   # 0°
+        self.assertEqual(rotate_point_2d(1, 0, 0), (1, 0))  # 0°
         self.assertEqual(rotate_point_2d(1, 0, 1), (0, -1))  # 90° CW
         self.assertEqual(rotate_point_2d(1, 0, 2), (-1, 0))  # 180°
-        self.assertEqual(rotate_point_2d(1, 0, 3), (0, 1))   # 270° CW
-        self.assertEqual(rotate_point_2d(1, 0, 4), (1, 0))   # 360° -> back
+        self.assertEqual(rotate_point_2d(1, 0, 3), (0, 1))  # 270° CW
+        self.assertEqual(rotate_point_2d(1, 0, 4), (1, 0))  # 360° -> back
 
     def test_active_piece_cells_no_rotation(self):
         shape = PieceShape2D("test", [(0, 0), (1, 0)], color_id=1)
@@ -56,18 +55,26 @@ class TestPieces2D(unittest.TestCase):
         large_counts = {shape.name: len(shape.blocks) for shape in large_shapes}
 
         self.assertGreater(large_counts["DBG_LONG_1D"], small_counts["DBG_LONG_1D"])
-        self.assertGreater(large_counts["DBG_SURFACE_THICK"], small_counts["DBG_SURFACE_THICK"])
+        self.assertGreater(
+            large_counts["DBG_SURFACE_THICK"], small_counts["DBG_SURFACE_THICK"]
+        )
 
     def test_all_2d_piece_sets_have_no_zero_sized_pieces(self):
         for piece_set in PIECE_SET_2D_OPTIONS:
             shapes = get_piece_bag_2d(piece_set, board_dims=(10, 20))
             self.assertTrue(shapes, f"empty bag for 2D set: {piece_set}")
             for shape in shapes:
-                self.assertTrue(shape.blocks, f"empty shape blocks: {piece_set}/{shape.name}")
+                self.assertTrue(
+                    shape.blocks, f"empty shape blocks: {piece_set}/{shape.name}"
+                )
                 xs = [block[0] for block in shape.blocks]
                 ys = [block[1] for block in shape.blocks]
-                self.assertGreaterEqual(max(xs) - min(xs) + 1, 1, f"zero x-span: {piece_set}/{shape.name}")
-                self.assertGreaterEqual(max(ys) - min(ys) + 1, 1, f"zero y-span: {piece_set}/{shape.name}")
+                self.assertGreaterEqual(
+                    max(xs) - min(xs) + 1, 1, f"zero x-span: {piece_set}/{shape.name}"
+                )
+                self.assertGreaterEqual(
+                    max(ys) - min(ys) + 1, 1, f"zero y-span: {piece_set}/{shape.name}"
+                )
 
 
 if __name__ == "__main__":

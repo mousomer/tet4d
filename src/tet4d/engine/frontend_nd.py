@@ -18,7 +18,12 @@ from .keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from .menu_controls import FieldSpec, MenuAction, apply_menu_actions, gather_menu_actions
+from .menu_controls import (
+    FieldSpec,
+    MenuAction,
+    apply_menu_actions,
+    gather_menu_actions,
+)
 from .menu_config import default_settings_payload, setup_fields_for_dimension
 from .menu_keybinding_shortcuts import menu_binding_status_color
 from .menu_settings_state import load_menu_settings, save_menu_settings
@@ -51,9 +56,11 @@ def init_fonts() -> GfxFonts:
     return init_fonts_for_profile("nd")
 
 
-def draw_gradient_background(surface: pygame.Surface,
-                             top_color: Tuple[int, int, int],
-                             bottom_color: Tuple[int, int, int]) -> None:
+def draw_gradient_background(
+    surface: pygame.Surface,
+    top_color: Tuple[int, int, int],
+    bottom_color: Tuple[int, int, int],
+) -> None:
     draw_vertical_gradient(surface, top_color, bottom_color)
 
 
@@ -86,7 +93,9 @@ _PIECE_SET_LABELS = {
     for dimension, choices in _PIECE_SET_CHOICES.items()
 }
 _TOPOLOGY_PROFILE_LABELS = {
-    dimension: tuple(profile.label for profile in designer_profiles_for_dimension(dimension))
+    dimension: tuple(
+        profile.label for profile in designer_profiles_for_dimension(dimension)
+    )
     for dimension in (2, 3, 4)
 }
 
@@ -117,7 +126,9 @@ class MenuState:
     run_dry_run: bool = False
 
 
-def menu_fields_for_settings(settings: GameSettingsND, dimension: int) -> list[FieldSpec]:
+def menu_fields_for_settings(
+    settings: GameSettingsND, dimension: int
+) -> list[FieldSpec]:
     choices = _PIECE_SET_CHOICES.get(dimension)
     piece_set_max = 0 if choices is None else max(0, len(choices) - 1)
     topology_profile_max = max(0, len(_TOPOLOGY_PROFILE_LABELS.get(dimension, ())) - 1)
@@ -165,10 +176,9 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
     return str(value)
 
 
-def draw_menu(screen: pygame.Surface,
-              fonts: GfxFonts,
-              state: MenuState,
-              dimension: int) -> None:
+def draw_menu(
+    screen: pygame.Surface, fonts: GfxFonts, state: MenuState, dimension: int
+) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     width, height = screen.get_size()
     fields = menu_fields_for_settings(state.settings, dimension)
@@ -195,13 +205,25 @@ def draw_menu(screen: pygame.Surface,
     bottom_lines = 4 + (1 if state.bindings_status else 0)
     panel_top = subtitle_y + subtitle_surf.get_height() + 12
     panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
-    row_h = min(44, max(fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(fields))))
+    row_h = min(
+        44,
+        max(
+            fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(fields))
+        ),
+    )
     panel_h = min(panel_max_h, 40 + len(fields) * row_h)
     panel_x = (width - panel_w) // 2
-    panel_y = max(panel_top, min((height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8))
+    panel_y = max(
+        panel_top,
+        min(
+            (height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8
+        ),
+    )
 
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16)
+    pygame.draw.rect(
+        panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16
+    )
     screen.blit(panel_surf, (panel_x, panel_y))
 
     y = panel_y + 20
@@ -220,9 +242,16 @@ def draw_menu(screen: pygame.Surface,
         text_surf = fonts.menu_font.render(text_fit, True, txt_color)
         text_rect = text_surf.get_rect(topleft=(option_x, y))
         if selected:
-            highlight_rect = pygame.Rect(option_x - 8, y - 4, option_w + 16, text_rect.height + 10)
+            highlight_rect = pygame.Rect(
+                option_x - 8, y - 4, option_w + 16, text_rect.height + 10
+            )
             highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(highlight_surf, (255, 255, 255, 40), highlight_surf.get_rect(), border_radius=10)
+            pygame.draw.rect(
+                highlight_surf,
+                (255, 255, 255, 40),
+                highlight_surf.get_rect(),
+                border_radius=10,
+            )
             screen.blit(highlight_surf, highlight_rect.topleft)
         screen.blit(text_surf, text_rect.topleft)
         y += row_h
@@ -251,9 +280,9 @@ def draw_menu(screen: pygame.Surface,
         screen.blit(status_surf, (status_x, hint_y))
 
 
-def run_menu(screen: pygame.Surface,
-             fonts: GfxFonts,
-             dimension: int) -> Optional[GameSettingsND]:
+def run_menu(
+    screen: pygame.Surface, fonts: GfxFonts, dimension: int
+) -> Optional[GameSettingsND]:
     clock = pygame.time.Clock()
     load_active_profile_bindings()
     state = MenuState()
@@ -282,9 +311,13 @@ def run_menu(screen: pygame.Surface,
             else:
                 report = run_dry_run_nd(
                     build_config(state.settings, dimension),
-                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planner_profile=bot_planner_profile_from_index(
+                        state.settings.bot_profile_index
+                    ),
                     planning_budget_ms=state.settings.bot_budget_ms,
-                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                    planner_algorithm=bot_planner_algorithm_from_index(
+                        state.settings.bot_algorithm_index
+                    ),
                 )
                 state.bindings_status = report.reason
                 state.bindings_status_error = not report.passed
@@ -431,16 +464,18 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
         "rotate_yz_neg": lambda: state.try_rotate(cfg.gravity_axis, 2, -1),
     }
     if ndim >= 4:
-        gameplay_handlers.update({
-            "move_w_neg": lambda: state.try_move_axis(3, -1),
-            "move_w_pos": lambda: state.try_move_axis(3, 1),
-            "rotate_xw_pos": lambda: state.try_rotate(0, 3, 1),
-            "rotate_xw_neg": lambda: state.try_rotate(0, 3, -1),
-            "rotate_yw_pos": lambda: state.try_rotate(cfg.gravity_axis, 3, 1),
-            "rotate_yw_neg": lambda: state.try_rotate(cfg.gravity_axis, 3, -1),
-            "rotate_zw_pos": lambda: state.try_rotate(2, 3, 1),
-            "rotate_zw_neg": lambda: state.try_rotate(2, 3, -1),
-        })
+        gameplay_handlers.update(
+            {
+                "move_w_neg": lambda: state.try_move_axis(3, -1),
+                "move_w_pos": lambda: state.try_move_axis(3, 1),
+                "rotate_xw_pos": lambda: state.try_rotate(0, 3, 1),
+                "rotate_xw_neg": lambda: state.try_rotate(0, 3, -1),
+                "rotate_yw_pos": lambda: state.try_rotate(cfg.gravity_axis, 3, 1),
+                "rotate_yw_neg": lambda: state.try_rotate(cfg.gravity_axis, 3, -1),
+                "rotate_zw_pos": lambda: state.try_rotate(2, 3, 1),
+                "rotate_zw_neg": lambda: state.try_rotate(2, 3, -1),
+            }
+        )
     handler = gameplay_handlers.get(action)
     if handler is None:
         return False
@@ -491,7 +526,9 @@ def apply_nd_gameplay_action_with_view(
     if yaw_deg_for_view_movement is not None:
         intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
         if intent is not None:
-            axis, delta = viewer_relative_move_axis_delta(yaw_deg_for_view_movement, intent)
+            axis, delta = viewer_relative_move_axis_delta(
+                yaw_deg_for_view_movement, intent
+            )
             state.try_move_axis(axis, delta)
             return True
     return apply_nd_gameplay_action(state, action)
@@ -554,8 +591,7 @@ def route_nd_keydown(
     return "continue"
 
 
-def handle_game_keydown(event: pygame.event.Event,
-                        state: GameStateND) -> str:
+def handle_game_keydown(event: pygame.event.Event, state: GameStateND) -> str:
     return route_nd_keydown(
         event.key,
         state,

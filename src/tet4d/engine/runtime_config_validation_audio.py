@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from .runtime_config_validation_shared import require_int, require_number, require_object
+from .runtime_config_validation_shared import (
+    require_int,
+    require_number,
+    require_object,
+)
 
 
 def validate_audio_sfx_payload(payload: dict[str, Any]) -> dict[str, Any]:

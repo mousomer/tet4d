@@ -14,7 +14,9 @@ class DisplaySettings:
 def normalize_display_settings(settings: DisplaySettings) -> DisplaySettings:
     width = max(640, int(settings.windowed_size[0]))
     height = max(480, int(settings.windowed_size[1]))
-    return DisplaySettings(fullscreen=bool(settings.fullscreen), windowed_size=(width, height))
+    return DisplaySettings(
+        fullscreen=bool(settings.fullscreen), windowed_size=(width, height)
+    )
 
 
 def apply_display_mode(

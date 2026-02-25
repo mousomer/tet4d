@@ -15,7 +15,9 @@ def _validate_budget(raw_budget: object) -> dict[str, dict[str, int]]:
     budget_obj = require_object(raw_budget, path="playbot.budget_ms")
     budgets: dict[str, dict[str, int]] = {}
     for dim_key in ("2d", "3d", "4d_plus"):
-        raw_dim = require_object(budget_obj.get(dim_key), path=f"playbot.budget_ms.{dim_key}")
+        raw_dim = require_object(
+            budget_obj.get(dim_key), path=f"playbot.budget_ms.{dim_key}"
+        )
         dim_budget: dict[str, int] = {}
         for profile_name in BOT_PROFILE_NAMES:
             dim_budget[profile_name] = require_int(
@@ -102,10 +104,16 @@ def _validate_clamp(raw_clamp: object) -> dict[str, int]:
 
 def _validate_lookahead(raw_lookahead: object) -> dict[str, dict[str, int]]:
     lookahead_obj = require_object(raw_lookahead, path="playbot.lookahead")
-    depth_obj = require_object(lookahead_obj.get("depth"), path="playbot.lookahead.depth")
-    top_k_obj = require_object(lookahead_obj.get("top_k"), path="playbot.lookahead.top_k")
+    depth_obj = require_object(
+        lookahead_obj.get("depth"), path="playbot.lookahead.depth"
+    )
+    top_k_obj = require_object(
+        lookahead_obj.get("top_k"), path="playbot.lookahead.top_k"
+    )
     depth = {
-        "fast": require_int(depth_obj.get("fast"), path="playbot.lookahead.depth.fast", min_value=1),
+        "fast": require_int(
+            depth_obj.get("fast"), path="playbot.lookahead.depth.fast", min_value=1
+        ),
         "balanced_2d_3d": require_int(
             depth_obj.get("balanced_2d_3d"),
             path="playbot.lookahead.depth.balanced_2d_3d",

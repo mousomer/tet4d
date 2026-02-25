@@ -14,7 +14,9 @@ _GRADIENT_CACHE_MAX = project_constant_int(
     min_value=1,
     max_value=1024,
 )
-_GRADIENT_CACHE: OrderedDict[tuple[int, int, Color3, Color3], pygame.Surface] = OrderedDict()
+_GRADIENT_CACHE: OrderedDict[tuple[int, int, Color3, Color3], pygame.Surface] = (
+    OrderedDict()
+)
 
 
 def fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
@@ -31,7 +33,9 @@ def fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
     return trimmed + ellipsis if trimmed else ""
 
 
-def _gradient_surface(width: int, height: int, top_color: Color3, bottom_color: Color3) -> pygame.Surface:
+def _gradient_surface(
+    width: int, height: int, top_color: Color3, bottom_color: Color3
+) -> pygame.Surface:
     key = (width, height, top_color, bottom_color)
     cached = _GRADIENT_CACHE.get(key)
     if cached is not None:
@@ -55,7 +59,9 @@ def _gradient_surface(width: int, height: int, top_color: Color3, bottom_color: 
     return gradient
 
 
-def draw_vertical_gradient(surface: pygame.Surface, top_color: Color3, bottom_color: Color3) -> None:
+def draw_vertical_gradient(
+    surface: pygame.Surface, top_color: Color3, bottom_color: Color3
+) -> None:
     width, height = surface.get_size()
     if width <= 0 or height <= 0:
         return

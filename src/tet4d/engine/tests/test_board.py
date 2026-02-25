@@ -1,8 +1,8 @@
 import unittest
 from tet4d.engine.core.model import BoardND
 
-class TestBoard2D(unittest.TestCase):
 
+class TestBoard2D(unittest.TestCase):
     def test_inside_bounds_and_can_place(self):
         board = BoardND((10, 20))
 

@@ -22,7 +22,9 @@ class MouseOrbitState:
         self.last_pos = None
 
 
-def clamp_pitch_deg(pitch_deg: float, *, max_abs_pitch: float = MAX_ABS_MOUSE_PITCH) -> float:
+def clamp_pitch_deg(
+    pitch_deg: float, *, max_abs_pitch: float = MAX_ABS_MOUSE_PITCH
+) -> float:
     return max(-max_abs_pitch, min(max_abs_pitch, pitch_deg))
 
 

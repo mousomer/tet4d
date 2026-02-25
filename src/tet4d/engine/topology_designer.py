@@ -89,7 +89,9 @@ def _normalize_profile_meta(
     return profile_id, label.strip(), description.strip(), mode_override, axis_edges_raw
 
 
-def _normalize_axis_edges(axis_edges_raw: dict[object, object]) -> dict[int, AxisEdgeRule] | None:
+def _normalize_axis_edges(
+    axis_edges_raw: dict[object, object],
+) -> dict[int, AxisEdgeRule] | None:
     axis_edges: dict[int, AxisEdgeRule] = {}
     for axis_key, edge_rule_raw in axis_edges_raw.items():
         axis_index = _axis_index_from_key(axis_key)
@@ -155,14 +157,17 @@ def _profiles_all() -> tuple[TopologyDesignerProfile, ...]:
     return tuple(profiles)
 
 
-def designer_profiles_for_dimension(dimension: int) -> tuple[TopologyDesignerProfile, ...]:
+def designer_profiles_for_dimension(
+    dimension: int,
+) -> tuple[TopologyDesignerProfile, ...]:
     if dimension not in (2, 3, 4):
         raise ValueError("dimension must be one of: 2, 3, 4")
     profiles = _profiles_all()
     filtered = tuple(
         profile
         for profile in profiles
-        if not profile.axis_edges or any(axis < dimension for axis in profile.axis_edges)
+        if not profile.axis_edges
+        or any(axis < dimension for axis in profile.axis_edges)
     )
     if filtered:
         return filtered

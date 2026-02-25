@@ -130,7 +130,9 @@ def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
     return _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / normalized / filename)
 
 
-def keybinding_file_path_for_profile(dimension: int, profile: str | None = None) -> Path:
+def keybinding_file_path_for_profile(
+    dimension: int, profile: str | None = None
+) -> Path:
     selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
     return profile_keybinding_file_path(dimension, selected)
 
@@ -139,13 +141,15 @@ def key_matches(bindings: Mapping[str, KeyTuple], action: str, key: int) -> bool
     return key in bindings.get(action, ())
 
 
-def _replace_map(target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]) -> None:
+def _replace_map(
+    target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]
+) -> None:
     target.clear()
     target.update(source)
 
 
-_DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = default_game_bindings_for_profile(
-    ACTIVE_KEY_PROFILE
+_DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = (
+    default_game_bindings_for_profile(ACTIVE_KEY_PROFILE)
 )
 _DEFAULT_CAMERA_KEYS_3D, _DEFAULT_CAMERA_KEYS_4D = default_camera_bindings_for_profile(
     ACTIVE_KEY_PROFILE
@@ -250,7 +254,9 @@ def _parse_key_list(raw_keys: object) -> KeyTuple | None:
     return tuple(parsed)
 
 
-def _apply_group_payload(target: MutableMapping[str, KeyTuple], raw_group: object) -> None:
+def _apply_group_payload(
+    target: MutableMapping[str, KeyTuple], raw_group: object
+) -> None:
     if not isinstance(raw_group, dict):
         return
     updated: Dict[str, KeyTuple] = dict(target)
@@ -263,7 +269,9 @@ def _apply_group_payload(target: MutableMapping[str, KeyTuple], raw_group: objec
     _replace_map(target, updated)
 
 
-def _binding_groups_for_dimension(dimension: int) -> Dict[str, MutableMapping[str, KeyTuple]]:
+def _binding_groups_for_dimension(
+    dimension: int,
+) -> Dict[str, MutableMapping[str, KeyTuple]]:
     if dimension == 2:
         return {
             "game": KEYS_2D,
@@ -291,14 +299,18 @@ def _resolve_keybindings_io_context(
     profile: str | None,
 ) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str, bool]:
     groups = _binding_groups_for_dimension(dimension)
-    selected_profile = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
+    selected_profile = (
+        _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
+    )
     if file_path is not None:
         return groups, _safe_resolve_path(Path(file_path)), selected_profile, True
     path = keybinding_file_path_for_profile(dimension, selected_profile)
     return groups, path, selected_profile, False
 
 
-def runtime_binding_groups_for_dimension(dimension: int) -> Dict[str, Mapping[str, KeyTuple]]:
+def runtime_binding_groups_for_dimension(
+    dimension: int,
+) -> Dict[str, Mapping[str, KeyTuple]]:
     groups = _binding_groups_for_dimension(dimension)
     return {group: dict(bindings) for group, bindings in groups.items()}
 
@@ -325,10 +337,12 @@ def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
     return filtered
 
 
-def _find_conflicts(groups: Mapping[str, Mapping[str, KeyTuple]],
-                    key: int,
-                    skip_group: str,
-                    skip_action: str) -> list[tuple[str, str]]:
+def _find_conflicts(
+    groups: Mapping[str, Mapping[str, KeyTuple]],
+    key: int,
+    skip_group: str,
+    skip_action: str,
+) -> list[tuple[str, str]]:
     conflicts: list[tuple[str, str]] = []
     for group_name, binding_map in groups.items():
         for action_name, keys in binding_map.items():
@@ -375,7 +389,9 @@ def _replace_conflicts(
 ) -> None:
     for conflict_group, conflict_action in conflicts:
         conflict_map = groups[conflict_group]
-        conflict_map[conflict_action] = _remove_key_from_tuple(conflict_map[conflict_action], key)
+        conflict_map[conflict_action] = _remove_key_from_tuple(
+            conflict_map[conflict_action], key
+        )
 
 
 def _apply_rebind_conflicts(
@@ -458,6 +474,7 @@ def rebind_action_key(
 def keybinding_file_path(dimension: int) -> Path:
     return keybinding_file_path_for_profile(dimension, ACTIVE_KEY_PROFILE)
 
+
 def keybinding_file_label(dimension: int) -> str:
     path = keybinding_file_path(dimension)
     try:
@@ -500,8 +517,12 @@ def set_active_key_profile(profile: str) -> tuple[bool, str]:
     return True, f"Active key profile: {normalized}"
 
 
-def create_auto_profile(base_profile: str | None = None) -> tuple[bool, str, str | None]:
-    source = _normalize_profile_name(base_profile) if base_profile else ACTIVE_KEY_PROFILE
+def create_auto_profile(
+    base_profile: str | None = None,
+) -> tuple[bool, str, str | None]:
+    source = (
+        _normalize_profile_name(base_profile) if base_profile else ACTIVE_KEY_PROFILE
+    )
     candidate = next_auto_profile_name("custom")
     ok, msg = clone_key_profile(candidate, source)
     if not ok:
@@ -509,9 +530,15 @@ def create_auto_profile(base_profile: str | None = None) -> tuple[bool, str, str
     return True, msg, candidate
 
 
-def clone_key_profile(target_profile: str, source_profile: str | None = None) -> tuple[bool, str]:
+def clone_key_profile(
+    target_profile: str, source_profile: str | None = None
+) -> tuple[bool, str]:
     target = _normalize_profile_name(target_profile)
-    source = _normalize_profile_name(source_profile) if source_profile else ACTIVE_KEY_PROFILE
+    source = (
+        _normalize_profile_name(source_profile)
+        if source_profile
+        else ACTIVE_KEY_PROFILE
+    )
     if target in BUILTIN_PROFILES:
         return False, "cannot overwrite built-in profile"
     if target in list_key_profiles():
@@ -599,7 +626,9 @@ def _atomic_write(path: Path, payload: str) -> None:
     temp_path.replace(path)
 
 
-def _clone_keybinding_dimension(source_profile: str, target_profile: str, dimension: int) -> None:
+def _clone_keybinding_dimension(
+    source_profile: str, target_profile: str, dimension: int
+) -> None:
     src_path = keybinding_file_path_for_profile(dimension, source_profile)
     if not src_path.exists():
         # Fallback: materialize defaults for source profile first.

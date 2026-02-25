@@ -22,7 +22,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
     def test_settings_action_routes_to_shared_settings_hub(self) -> None:
         screen = pygame.Surface((640, 480))
-        state = pause_menu._PauseState(selected=pause_menu._PAUSE_ACTION_CODES.index("settings"))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("settings")
+        )
 
         with patch("tet4d.engine.pause_menu.run_settings_hub_menu") as run_hub:
             run_hub.return_value = SettingsHubResult(
@@ -46,7 +48,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
     def test_settings_action_propagates_quit_when_hub_requests_stop(self) -> None:
         screen = pygame.Surface((640, 480))
-        state = pause_menu._PauseState(selected=pause_menu._PAUSE_ACTION_CODES.index("settings"))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("settings")
+        )
 
         with patch("tet4d.engine.pause_menu.run_settings_hub_menu") as run_hub:
             run_hub.return_value = SettingsHubResult(

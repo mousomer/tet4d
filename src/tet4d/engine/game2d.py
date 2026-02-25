@@ -37,8 +37,8 @@ def _score_for_clear(cleared_lines: int) -> int:
 class GameConfig:
     width: int = 10
     height: int = 20
-    gravity_axis: int = 1   # for 2D, dims=(width, height), so y-axis
-    speed_level: int = 1    # 1..10, used by frontend to pick gravity speed
+    gravity_axis: int = 1  # for 2D, dims=(width, height), so y-axis
+    speed_level: int = 1  # 1..10, used by frontend to pick gravity speed
     topology_mode: str = TOPOLOGY_BOUNDED
     wrap_gravity_axis: bool = False
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None
@@ -183,7 +183,9 @@ class GameState:
         span_y = max_y - min_y + 1
         return span_x <= self.config.width and span_y <= self.config.height
 
-    def _mapped_piece_cells(self, piece: ActivePiece2D) -> tuple[tuple[int, int], ...] | None:
+    def _mapped_piece_cells(
+        self, piece: ActivePiece2D
+    ) -> tuple[tuple[int, int], ...] | None:
         mapped = map_piece_cells(
             self.topology_policy,
             piece.cells(),
@@ -204,10 +206,14 @@ class GameState:
             return mapped
         return tuple(coord for coord in mapped if coord[1] >= 0)
 
-    def current_piece_cells_mapped(self, *, include_above: bool = False) -> tuple[tuple[int, int], ...]:
+    def current_piece_cells_mapped(
+        self, *, include_above: bool = False
+    ) -> tuple[tuple[int, int], ...]:
         if self.current_piece is None:
             return ()
-        mapped = self.mapped_piece_cells_for_piece(self.current_piece, include_above=include_above)
+        mapped = self.mapped_piece_cells_for_piece(
+            self.current_piece, include_above=include_above
+        )
         if mapped is None:
             return ()
         return mapped
@@ -235,7 +241,7 @@ class GameState:
         visible_piece_cells = tuple(coord for coord in mapped_cells if coord[1] >= 0)
 
         # If any block is above the top row, the game is over.
-        for (x, y) in mapped_cells:
+        for x, y in mapped_cells:
             if y < 0:
                 self.game_over = True
 
@@ -324,7 +330,15 @@ class GameState:
             score=int(self.score),
             lines_cleared=int(self.lines_cleared),
             game_over=bool(self.game_over),
-            board_cells=tuple(sorted((tuple(coord), int(color)) for coord, color in self.board.cells.items())),
-            current_piece_cells=tuple(tuple(cell) for cell in self.current_piece_cells_mapped(include_above=True)),
+            board_cells=tuple(
+                sorted(
+                    (tuple(coord), int(color))
+                    for coord, color in self.board.cells.items()
+                )
+            ),
+            current_piece_cells=tuple(
+                tuple(cell)
+                for cell in self.current_piece_cells_mapped(include_above=True)
+            ),
             has_current_piece=self.current_piece is not None,
         )

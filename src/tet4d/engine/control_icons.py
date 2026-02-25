@@ -99,7 +99,11 @@ def _normalize_relative_asset_path(raw: object, *, default_relative: str) -> str
     if candidate.is_absolute():
         return default_relative
     parts = [part for part in candidate.parts if part not in ("", ".")]
-    if not parts or any(part == ".." for part in parts) or any(":" in part for part in parts):
+    if (
+        not parts
+        or any(part == ".." for part in parts)
+        or any(":" in part for part in parts)
+    ):
         return default_relative
     return "/".join(parts)
 
@@ -168,7 +172,9 @@ def _icon_map_payload() -> dict[str, Any]:
     loaded = _read_json_object(_ICON_MAP_FILE)
     merged = _merge_objects(_DEFAULT_ICON_MAP, loaded)
     default_rel = str(_DEFAULT_ICON_MAP["pack_root"])
-    pack_rel = _normalize_relative_asset_path(merged.get("pack_root"), default_relative=default_rel)
+    pack_rel = _normalize_relative_asset_path(
+        merged.get("pack_root"), default_relative=default_rel
+    )
     pack_root = _resolve_repo_asset_root(pack_rel, default_rel)
     themes = _normalized_theme_list(merged.get("themes"))
     default_theme = str(merged.get("default_theme", "dark")).strip().lower()
@@ -211,7 +217,9 @@ def _draw_arrow(
     pygame.draw.polygon(surface, color, [end, left, right])
 
 
-def _draw_move_icon(surface: pygame.Surface, rect: pygame.Rect, axis: str, direction: int) -> None:
+def _draw_move_icon(
+    surface: pygame.Surface, rect: pygame.Rect, axis: str, direction: int
+) -> None:
     cx = rect.centerx
     cy = rect.centery
     span = max(6, min(rect.width, rect.height) // 2 - 4)
@@ -310,7 +318,7 @@ def _mapped_asset_name(action: str) -> str | None:
     if normalized.startswith("move_"):
         return normalized
     if normalized.startswith("rotate_"):
-        return f"rot_{normalized[len('rotate_'):]}"
+        return f"rot_{normalized[len('rotate_') :]}"
     if normalized.startswith("rot_"):
         return normalized
     return None
@@ -327,7 +335,9 @@ def _icon_candidate_paths(action: str, *, width: int, height: int) -> tuple[Path
     default_theme: str = settings["default_theme"]
     target_size = max(width, height)
     ordered_sizes = sorted(sizes, key=lambda size: (abs(size - target_size), size))
-    ordered_themes = [default_theme] + [theme for theme in themes if theme != default_theme]
+    ordered_themes = [default_theme] + [
+        theme for theme in themes if theme != default_theme
+    ]
     return tuple(
         root / str(size) / theme / f"{asset_name}.svg"
         for size in ordered_sizes
@@ -347,7 +357,9 @@ def _load_svg_icon(path: Path, *, width: int, height: int) -> pygame.Surface | N
     return loaded
 
 
-def _vector_icon_surface(action: str, *, width: int, height: int) -> pygame.Surface | None:
+def _vector_icon_surface(
+    action: str, *, width: int, height: int
+) -> pygame.Surface | None:
     for path in _icon_candidate_paths(action, width=width, height=height):
         loaded = _load_svg_icon(path, width=width, height=height)
         if loaded is not None:

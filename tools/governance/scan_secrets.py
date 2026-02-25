@@ -70,7 +70,9 @@ def _compile_patterns(payload: dict[str, Any]) -> list[SecretPattern]:
         try:
             regex = re.compile(regex_text)
         except re.error as exc:
-            raise SystemExit(f"Invalid regex for patterns[{idx}] ({pattern_id}): {exc}") from exc
+            raise SystemExit(
+                f"Invalid regex for patterns[{idx}] ({pattern_id}): {exc}"
+            ) from exc
         compiled.append(SecretPattern(pattern_id.strip(), regex))
     return compiled
 
@@ -87,11 +89,15 @@ def _compile_allowlist(payload: dict[str, Any]) -> list[AllowlistRule]:
         if not isinstance(path_glob, str) or not path_glob:
             raise SystemExit(f"allowlist[{idx}].path_glob must be a non-empty string")
         raw_ids = entry.get("pattern_ids", [])
-        if not isinstance(raw_ids, list) or any(not isinstance(item, str) for item in raw_ids):
+        if not isinstance(raw_ids, list) or any(
+            not isinstance(item, str) for item in raw_ids
+        ):
             raise SystemExit(f"allowlist[{idx}].pattern_ids must be a list[str]")
         contains = entry.get("contains")
         if contains is not None and (not isinstance(contains, str) or not contains):
-            raise SystemExit(f"allowlist[{idx}].contains must be a non-empty string when set")
+            raise SystemExit(
+                f"allowlist[{idx}].contains must be a non-empty string when set"
+            )
         rules.append(
             AllowlistRule(
                 path_glob=path_glob,
@@ -197,10 +203,18 @@ def _token_preview(token: str) -> str:
 def run_scan() -> list[Finding]:
     payload = _load_json(CONFIG_PATH)
     scan_roots = _string_list(payload.get("scan_roots", ["."]), field="scan_roots")
-    exclude_dirs = set(_string_list(payload.get("exclude_dirs", []), field="exclude_dirs"))
-    exclude_globs = _string_list(payload.get("exclude_globs", []), field="exclude_globs")
+    exclude_dirs = set(
+        _string_list(payload.get("exclude_dirs", []), field="exclude_dirs")
+    )
+    exclude_globs = _string_list(
+        payload.get("exclude_globs", []), field="exclude_globs"
+    )
     max_file_bytes = payload.get("max_file_bytes", 1_048_576)
-    if isinstance(max_file_bytes, bool) or not isinstance(max_file_bytes, int) or max_file_bytes <= 0:
+    if (
+        isinstance(max_file_bytes, bool)
+        or not isinstance(max_file_bytes, int)
+        or max_file_bytes <= 0
+    ):
         raise SystemExit("max_file_bytes must be a positive integer")
 
     patterns = _compile_patterns(payload)

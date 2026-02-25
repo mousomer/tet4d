@@ -29,7 +29,11 @@ def _sig_nd(state: api.GameStateND) -> tuple[object, ...]:
     piece = state.current_piece
     piece_sig = None
     if piece is not None:
-        piece_sig = (piece.shape.name, tuple(piece.pos), tuple(sorted(piece.rel_blocks)))
+        piece_sig = (
+            piece.shape.name,
+            tuple(piece.pos),
+            tuple(sorted(piece.rel_blocks)),
+        )
     return (
         state.score,
         state.lines_cleared,
@@ -42,7 +46,12 @@ def _sig_nd(state: api.GameStateND) -> tuple[object, ...]:
 
 def test_replay_2d_record_and_payload_roundtrip() -> None:
     cfg = api.GameConfig(width=8, height=16, speed_level=2)
-    actions = (api.Action.MOVE_LEFT, api.Action.ROTATE_CW, api.Action.SOFT_DROP, api.Action.NONE)
+    actions = (
+        api.Action.MOVE_LEFT,
+        api.Action.ROTATE_CW,
+        api.Action.SOFT_DROP,
+        api.Action.NONE,
+    )
     script = record_replay_2d(config=cfg, seed=55, actions=actions)
 
     payload = script.to_dict()
@@ -50,7 +59,9 @@ def test_replay_2d_record_and_payload_roundtrip() -> None:
 
     assert restored.seed == 55
     assert restored.config.width == cfg.width
-    assert tuple(event.action for event in restored.events) == tuple(a.name for a in actions)
+    assert tuple(event.action for event in restored.events) == tuple(
+        a.name for a in actions
+    )
 
 
 def test_replay_2d_playback_matches_direct_api_execution() -> None:

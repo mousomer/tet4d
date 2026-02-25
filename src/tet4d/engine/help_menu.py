@@ -30,23 +30,41 @@ _TEXT_COLOR = (232, 232, 240)
 _MUTED_COLOR = (192, 200, 228)
 _HIGHLIGHT = (255, 224, 128)
 _RUNTIME_GROUP_ORDER = ("system", "game", "camera")
-_LIVE_KEY_GROUP_ORDER = ("system", "game_translation", "game_rotation", "game_other", "camera")
+_LIVE_KEY_GROUP_ORDER = (
+    "system",
+    "game_translation",
+    "game_rotation",
+    "game_other",
+    "camera",
+)
 _CONTROL_TOPIC_ID = "movement_rotation"
 _KEY_REFERENCE_TOPIC_ID = "key_reference"
 _SETTINGS_DOCS = settings_category_docs()
 
-_HELP_OUTER_PAD = project_constant_int(("layout", "help", "outer_pad"), 20, min_value=4, max_value=96)
-_HELP_HEADER_EXTRA = project_constant_int(("layout", "help", "header_extra"), 16, min_value=4, max_value=120)
-_HELP_GAP = project_constant_int(("layout", "help", "gap"), 8, min_value=1, max_value=40)
-_HELP_FOOTER_HEIGHT = project_constant_int(("layout", "help", "footer_height"), 24, min_value=12, max_value=80)
+_HELP_OUTER_PAD = project_constant_int(
+    ("layout", "help", "outer_pad"), 20, min_value=4, max_value=96
+)
+_HELP_HEADER_EXTRA = project_constant_int(
+    ("layout", "help", "header_extra"), 16, min_value=4, max_value=120
+)
+_HELP_GAP = project_constant_int(
+    ("layout", "help", "gap"), 8, min_value=1, max_value=40
+)
+_HELP_FOOTER_HEIGHT = project_constant_int(
+    ("layout", "help", "footer_height"), 24, min_value=12, max_value=80
+)
 _HELP_MIN_CONTENT_HEIGHT = project_constant_int(
     ("layout", "help", "min_content_height"),
     160,
     min_value=60,
     max_value=1000,
 )
-_HELP_CONTENT_PAD_X = project_constant_int(("layout", "help", "content_pad_x"), 12, min_value=0, max_value=80)
-_HELP_CONTENT_PAD_Y = project_constant_int(("layout", "help", "content_pad_y"), 8, min_value=0, max_value=80)
+_HELP_CONTENT_PAD_X = project_constant_int(
+    ("layout", "help", "content_pad_x"), 12, min_value=0, max_value=80
+)
+_HELP_CONTENT_PAD_Y = project_constant_int(
+    ("layout", "help", "content_pad_y"), 8, min_value=0, max_value=80
+)
 _HELP_COMPACT_WIDTH = project_constant_int(
     ("layout", "help", "compact_width_threshold"),
     760,
@@ -69,7 +87,9 @@ class _HelpState:
     running: bool = True
 
 
-def paginate_help_lines(lines: Sequence[str], rows_per_page: int) -> tuple[tuple[str, ...], ...]:
+def paginate_help_lines(
+    lines: Sequence[str], rows_per_page: int
+) -> tuple[tuple[str, ...], ...]:
     if rows_per_page <= 0:
         rows_per_page = 1
     if not lines:
@@ -98,14 +118,20 @@ def is_compact_help_view(*, width: int, height: int) -> bool:
     return int(width) <= _HELP_COMPACT_WIDTH or int(height) <= _HELP_COMPACT_HEIGHT
 
 
-def _help_layout_zones(surface: pygame.Surface, fonts) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+def _help_layout_zones(
+    surface: pygame.Surface, fonts
+) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
     width, height = surface.get_size()
     compact = is_compact_help_view(width=width, height=height)
     header_extra = max(8, _HELP_HEADER_EXTRA // 2) if compact else _HELP_HEADER_EXTRA
     footer_height = max(16, _HELP_FOOTER_HEIGHT - 6) if compact else _HELP_FOOTER_HEIGHT
     gap = max(4, _HELP_GAP - 3) if compact else _HELP_GAP
-    min_content_height = max(90, _HELP_MIN_CONTENT_HEIGHT // 2) if compact else _HELP_MIN_CONTENT_HEIGHT
-    header_height = fonts.title_font.get_height() + fonts.hint_font.get_height() + header_extra
+    min_content_height = (
+        max(90, _HELP_MIN_CONTENT_HEIGHT // 2) if compact else _HELP_MIN_CONTENT_HEIGHT
+    )
+    header_height = (
+        fonts.title_font.get_height() + fonts.hint_font.get_height() + header_extra
+    )
     zones = compute_menu_layout_zones(
         width=width,
         height=height,
@@ -115,7 +141,12 @@ def _help_layout_zones(surface: pygame.Surface, fonts) -> tuple[pygame.Rect, pyg
         gap=gap,
         min_content_height=min_content_height,
     )
-    return _as_rect(zones.frame), _as_rect(zones.header), _as_rect(zones.content), _as_rect(zones.footer)
+    return (
+        _as_rect(zones.frame),
+        _as_rect(zones.header),
+        _as_rect(zones.content),
+        _as_rect(zones.footer),
+    )
 
 
 def _draw_content_title(
@@ -133,7 +164,9 @@ def _draw_content_title(
     return y + title.get_height() + 8
 
 
-def _line_capacity(font: pygame.font.Font, *, content_rect: pygame.Rect, y_start: int) -> int:
+def _line_capacity(
+    font: pygame.font.Font, *, content_rect: pygame.Rect, y_start: int
+) -> int:
     available_h = max(1, content_rect.bottom - _HELP_CONTENT_PAD_Y - y_start)
     row_h = max(1, font.get_height() + 4)
     return max(1, available_h // row_h)
@@ -187,14 +220,20 @@ def _fallback_topic() -> dict[str, Any]:
     }
 
 
-def _topics_for_state(state: _HelpState, context_label: str) -> tuple[dict[str, Any], ...]:
-    topics = help_topics_for_context(dimension=state.dimension, context_label=context_label)
+def _topics_for_state(
+    state: _HelpState, context_label: str
+) -> tuple[dict[str, Any], ...]:
+    topics = help_topics_for_context(
+        dimension=state.dimension, context_label=context_label
+    )
     if topics:
         return topics
     return (_fallback_topic(),)
 
 
-def _current_topic(state: _HelpState, context_label: str) -> tuple[dict[str, Any], tuple[dict[str, Any], ...]]:
+def _current_topic(
+    state: _HelpState, context_label: str
+) -> tuple[dict[str, Any], tuple[dict[str, Any], ...]]:
     topics = _topics_for_state(state, context_label)
     state.page = max(0, min(len(topics) - 1, state.page))
     return topics[state.page], topics
@@ -278,7 +317,9 @@ def _topic_action_lines(
         include_all=include_all,
     )
     lines: list[str] = []
-    grouped: dict[str, list[tuple[str, str]]] = {group: [] for group in _LIVE_KEY_GROUP_ORDER}
+    grouped: dict[str, list[tuple[str, str]]] = {
+        group: [] for group in _LIVE_KEY_GROUP_ORDER
+    }
     for group, action_name, key_text in rows:
         target_group = group
         if group == "game":
@@ -357,9 +398,17 @@ def _extend_game_types_lines(lines: list[str], *, compact: bool) -> None:
             ]
         )
         return
-    piece_sets_2d = ", ".join(piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS)
-    piece_sets_3d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(3))
-    piece_sets_4d = ", ".join(piece_set_label(piece_set_id) for piece_set_id in piece_set_options_for_dimension(4))
+    piece_sets_2d = ", ".join(
+        piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS
+    )
+    piece_sets_3d = ", ".join(
+        piece_set_label(piece_set_id)
+        for piece_set_id in piece_set_options_for_dimension(3)
+    )
+    piece_sets_4d = ", ".join(
+        piece_set_label(piece_set_id)
+        for piece_set_id in piece_set_options_for_dimension(4)
+    )
     lines.extend(
         [
             "",
@@ -453,7 +502,9 @@ def _extend_workflow_lines(lines: list[str], *, compact: bool) -> None:
     )
 
 
-def _extend_troubleshooting_lines(lines: list[str], state: _HelpState, *, compact: bool) -> None:
+def _extend_troubleshooting_lines(
+    lines: list[str], state: _HelpState, *, compact: bool
+) -> None:
     lines.extend(
         [
             "",
@@ -488,7 +539,13 @@ def _topic_text_lines(
     lines = _topic_section_lines(topic)
 
     if topic_id == "overview":
-        _extend_overview_lines(lines, state=state, context_label=context_label, topics=topics, compact=compact)
+        _extend_overview_lines(
+            lines,
+            state=state,
+            context_label=context_label,
+            topics=topics,
+            compact=compact,
+        )
     elif topic_id == "game_types":
         _extend_game_types_lines(lines, compact=compact)
     elif topic_id == "gameplay_features":
@@ -513,7 +570,9 @@ def _topic_text_lines(
     return lines
 
 
-def _group_box_height(*, rows: int, panel_font: pygame.font.Font, hint_font: pygame.font.Font) -> int:
+def _group_box_height(
+    *, rows: int, panel_font: pygame.font.Font, hint_font: pygame.font.Font
+) -> int:
     base = 10 + hint_font.get_height() + 6 + (rows * (panel_font.get_height() + 2)) + 8
     return base + 6
 
@@ -530,7 +589,9 @@ def _paginate_control_groups(
     used_height = 0
 
     for group_name, rows in groups:
-        block_h = _group_box_height(rows=len(rows), panel_font=panel_font, hint_font=hint_font)
+        block_h = _group_box_height(
+            rows=len(rows), panel_font=panel_font, hint_font=hint_font
+        )
         if current and used_height + block_h > available_height:
             pages.append(tuple(current))
             current = [(group_name, rows)]
@@ -555,7 +616,12 @@ def _draw_controls_topic(
     content_rect: pygame.Rect,
 ) -> int:
     title = str(topic.get("title", "Controls"))
-    y = _draw_content_title(surface, font=fonts.hint_font, text=f"{title} ({state.dimension}D)", rect=content_rect)
+    y = _draw_content_title(
+        surface,
+        font=fonts.hint_font,
+        text=f"{title} ({state.dimension}D)",
+        rect=content_rect,
+    )
     groups = tuple(control_groups_for_dimension(state.dimension))
     helper_rect = pygame.Rect(
         content_rect.x + _HELP_CONTENT_PAD_X,
@@ -593,7 +659,12 @@ def _draw_topic_text(
     compact: bool,
 ) -> int:
     title = str(topic.get("title", "Help"))
-    y = _draw_content_title(surface, font=fonts.hint_font, text=f"{title} ({state.dimension}D)", rect=content_rect)
+    y = _draw_content_title(
+        surface,
+        font=fonts.hint_font,
+        text=f"{title} ({state.dimension}D)",
+        rect=content_rect,
+    )
     lines = _topic_text_lines(
         topic=topic,
         state=state,
@@ -601,7 +672,9 @@ def _draw_topic_text(
         topics=topics,
         compact=compact,
     )
-    rows_per_page = _line_capacity(fonts.hint_font, content_rect=content_rect, y_start=y)
+    rows_per_page = _line_capacity(
+        fonts.hint_font, content_rect=content_rect, y_start=y
+    )
     line_pages = paginate_help_lines(lines, rows_per_page)
     state.subpage = max(0, min(len(line_pages) - 1, state.subpage))
     _draw_lines(
@@ -614,11 +687,15 @@ def _draw_topic_text(
     return len(line_pages)
 
 
-def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label: str) -> None:
+def _draw_help(
+    surface: pygame.Surface, fonts, state: _HelpState, context_label: str
+) -> None:
     _draw_gradient(surface)
     width, height = surface.get_size()
     compact = is_compact_help_view(width=width, height=height)
-    frame_rect, header_rect, content_rect, footer_rect = _help_layout_zones(surface, fonts)
+    frame_rect, header_rect, content_rect, footer_rect = _help_layout_zones(
+        surface, fonts
+    )
 
     topic, topics = _current_topic(state, context_label)
     total_pages = len(topics)
@@ -643,8 +720,17 @@ def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label:
     subtitle = fonts.hint_font.render(subtitle_draw, True, _MUTED_COLOR)
     title_y = header_rect.y + _HELP_CONTENT_PAD_Y
     subtitle_y = title_y + title.get_height() + 6
-    surface.blit(title, (header_rect.x + max(0, (header_rect.width - title.get_width()) // 2), title_y))
-    surface.blit(subtitle, (header_rect.x + max(0, (header_rect.width - subtitle.get_width()) // 2), subtitle_y))
+    surface.blit(
+        title,
+        (header_rect.x + max(0, (header_rect.width - title.get_width()) // 2), title_y),
+    )
+    surface.blit(
+        subtitle,
+        (
+            header_rect.x + max(0, (header_rect.width - subtitle.get_width()) // 2),
+            subtitle_y,
+        ),
+    )
 
     topic_id = str(topic.get("id", ""))
     if topic_id == _CONTROL_TOPIC_ID:
@@ -668,8 +754,12 @@ def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label:
         )
 
     state.subpage = max(0, min(subpage_count - 1, state.subpage))
-    page_label = fonts.hint_font.render(f"Topic {state.page + 1}/{total_pages}", True, _MUTED_COLOR)
-    part_label = fonts.hint_font.render(f"Part {state.subpage + 1}/{subpage_count}", True, _MUTED_COLOR)
+    page_label = fonts.hint_font.render(
+        f"Topic {state.page + 1}/{total_pages}", True, _MUTED_COLOR
+    )
+    part_label = fonts.hint_font.render(
+        f"Part {state.subpage + 1}/{subpage_count}", True, _MUTED_COLOR
+    )
     page_x = frame_rect.right - page_label.get_width() - _HELP_CONTENT_PAD_X
     part_x = page_x
     page_y = header_rect.y + _HELP_CONTENT_PAD_Y
@@ -691,7 +781,9 @@ def _draw_help(surface: pygame.Surface, fonts, state: _HelpState, context_label:
         _MUTED_COLOR,
     )
     footer_x = footer_rect.x + max(0, (footer_rect.width - footer_msg.get_width()) // 2)
-    footer_y = footer_rect.y + max(0, (footer_rect.height - footer_msg.get_height()) // 2)
+    footer_y = footer_rect.y + max(
+        0, (footer_rect.height - footer_msg.get_height()) // 2
+    )
     surface.blit(footer_msg, (footer_x, footer_y))
 
 

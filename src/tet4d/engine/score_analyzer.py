@@ -14,7 +14,11 @@ from .project_config import (
     score_summary_file_default_relative,
     state_dir_relative,
 )
-from .score_analyzer_features import board_health_features, placement_features, weighted_score
+from .score_analyzer_features import (
+    board_health_features,
+    placement_features,
+    weighted_score,
+)
 
 _ROOT_DIR = PROJECT_ROOT
 _CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
@@ -156,8 +160,14 @@ def analyze_lock_event(
 ) -> dict[str, object]:
     cfg = _score_analyzer_config()
     board_obj = cfg.get("board", {})
-    near_threshold = float(board_obj.get("near_complete_threshold", 0.8)) if isinstance(board_obj, dict) else 0.8
-    top_layers = int(board_obj.get("top_zone_layers", 3)) if isinstance(board_obj, dict) else 3
+    near_threshold = (
+        float(board_obj.get("near_complete_threshold", 0.8))
+        if isinstance(board_obj, dict)
+        else 0.8
+    )
+    top_layers = (
+        int(board_obj.get("top_zone_layers", 3)) if isinstance(board_obj, dict) else 3
+    )
 
     board_pre_features = board_health_features(
         board_pre,
@@ -191,11 +201,15 @@ def analyze_lock_event(
     scores_obj = cfg.get("scores", {})
     board_health_score = weighted_score(
         board_post_features,
-        dict(scores_obj.get("board_health", {})) if isinstance(scores_obj, dict) else {},
+        dict(scores_obj.get("board_health", {}))
+        if isinstance(scores_obj, dict)
+        else {},
     )
     placement_quality_score = weighted_score(
         placement,
-        dict(scores_obj.get("placement_quality", {})) if isinstance(scores_obj, dict) else {},
+        dict(scores_obj.get("placement_quality", {}))
+        if isinstance(scores_obj, dict)
+        else {},
     )
 
     timestamp = datetime.now(timezone.utc).isoformat()
@@ -262,7 +276,9 @@ def _is_number(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _require_fields(payload: dict[str, object], fields: tuple[str, ...], *, label: str) -> tuple[bool, str]:
+def _require_fields(
+    payload: dict[str, object], fields: tuple[str, ...], *, label: str
+) -> tuple[bool, str]:
     for key in fields:
         if key not in payload:
             return False, f"missing {label} field: {key}"
@@ -334,7 +350,9 @@ def validate_score_analysis_event(event: dict[str, object]) -> tuple[bool, str]:
     ok, msg = _require_fields(event, _EVENT_REQUIRED_FIELDS, label="event")
     if not ok:
         return ok, msg
-    ok, msg = _require_non_empty_string_fields(event, ("session_id", "piece_id"), label="event")
+    ok, msg = _require_non_empty_string_fields(
+        event, ("session_id", "piece_id"), label="event"
+    )
     if not ok:
         return ok, msg
     ok, msg = _require_integer_fields(
@@ -347,7 +365,9 @@ def validate_score_analysis_event(event: dict[str, object]) -> tuple[bool, str]:
     board_dims = event.get("board_dims")
     if not isinstance(board_dims, list) or not board_dims:
         return False, "event.board_dims must be a non-empty list"
-    ok, msg = _require_object_fields(event, ("board_pre", "placement", "board_post", "delta"), label="event")
+    ok, msg = _require_object_fields(
+        event, ("board_pre", "placement", "board_post", "delta"), label="event"
+    )
     if not ok:
         return ok, msg
     ok, msg = _require_numeric_fields(
@@ -401,17 +421,25 @@ def _load_summary(path: Path) -> dict[str, object]:
 def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = path.with_suffix(path.suffix + ".tmp")
-    temp_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temp_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     temp_path.replace(path)
 
 
 def _increment_counter(target: dict[str, object], key: str, amount: int = 1) -> None:
     current = target.get(key, 0)
-    count = int(current) if isinstance(current, int) and not isinstance(current, bool) else 0
+    count = (
+        int(current)
+        if isinstance(current, int) and not isinstance(current, bool)
+        else 0
+    )
     target[key] = count + amount
 
 
-def _update_summary(summary: dict[str, object], event: dict[str, object]) -> dict[str, object]:
+def _update_summary(
+    summary: dict[str, object], event: dict[str, object]
+) -> dict[str, object]:
     totals = summary.get("totals")
     if not isinstance(totals, dict):
         totals = {}
@@ -427,16 +455,26 @@ def _update_summary(summary: dict[str, object], event: dict[str, object]) -> dic
 
     events = int(totals.get("events", 0)) + 1
     totals["events"] = events
-    totals["cleared_total"] = int(totals.get("cleared_total", 0)) + int(event["cleared"])
-    totals["raw_points_total"] = int(totals.get("raw_points_total", 0)) + int(event["raw_points"])
-    totals["final_points_total"] = int(totals.get("final_points_total", 0)) + int(event["final_points"])
+    totals["cleared_total"] = int(totals.get("cleared_total", 0)) + int(
+        event["cleared"]
+    )
+    totals["raw_points_total"] = int(totals.get("raw_points_total", 0)) + int(
+        event["raw_points"]
+    )
+    totals["final_points_total"] = int(totals.get("final_points_total", 0)) + int(
+        event["final_points"]
+    )
 
     prev_health = float(score_means.get("board_health", 0.0))
     prev_quality = float(score_means.get("placement_quality", 0.0))
     health = float(event["board_health_score"])
     quality = float(event["placement_quality_score"])
-    score_means["board_health"] = round(prev_health + ((health - prev_health) / events), 6)
-    score_means["placement_quality"] = round(prev_quality + ((quality - prev_quality) / events), 6)
+    score_means["board_health"] = round(
+        prev_health + ((health - prev_health) / events), 6
+    )
+    score_means["placement_quality"] = round(
+        prev_quality + ((quality - prev_quality) / events), 6
+    )
 
     for summary_key, event_key in (
         ("dimensions", "dimension"),
@@ -457,7 +495,9 @@ def _update_summary(summary: dict[str, object], event: dict[str, object]) -> dic
     session_obj["last_seq"] = int(event["seq"])
     session_obj["last_timestamp_utc"] = str(event["timestamp_utc"])
 
-    summary["schema_version"] = int(event.get("schema_version", summary.get("schema_version", 1)))
+    summary["schema_version"] = int(
+        event.get("schema_version", summary.get("schema_version", 1))
+    )
     summary["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
     return summary
 
@@ -549,7 +589,9 @@ def hud_analysis_lines(event: dict[str, object] | None) -> tuple[str, ...]:
     raw_quality = event.get("placement_quality_score")
     raw_health = event.get("board_health_score")
     raw_delta = event.get("delta")
-    if not isinstance(raw_quality, (int, float)) or not isinstance(raw_health, (int, float)):
+    if not isinstance(raw_quality, (int, float)) or not isinstance(
+        raw_health, (int, float)
+    ):
         return ()
 
     quality = float(raw_quality)

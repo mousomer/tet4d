@@ -26,20 +26,28 @@ class TestHelpMenu(unittest.TestCase):
         self.assertEqual(flattened, lines)
 
     def test_topic_action_rows_include_mapped_actions_for_dimension(self) -> None:
-        rows = help_topic_action_rows(topic_id="movement_rotation", dimension=4, include_all=False)
+        rows = help_topic_action_rows(
+            topic_id="movement_rotation", dimension=4, include_all=False
+        )
         actions = {action for _group, action, _keys in rows}
         self.assertIn("move_x_neg", actions)
         self.assertIn("rotate_xw_pos", actions)
         self.assertNotIn("menu", actions)
 
     def test_topic_action_rows_include_all_groups_for_key_reference(self) -> None:
-        rows = help_topic_action_rows(topic_id="key_reference", dimension=4, include_all=True)
+        rows = help_topic_action_rows(
+            topic_id="key_reference", dimension=4, include_all=True
+        )
         groups = {group for group, _action, _keys in rows}
         self.assertTrue({"system", "game", "camera"}.issubset(groups))
         self.assertNotIn("slice", groups)
 
-    def test_key_reference_lines_split_gameplay_into_translation_and_rotation(self) -> None:
-        lines = help_menu.help_topic_action_lines(topic_id="key_reference", dimension=4, include_all=True)
+    def test_key_reference_lines_split_gameplay_into_translation_and_rotation(
+        self,
+    ) -> None:
+        lines = help_menu.help_topic_action_lines(
+            topic_id="key_reference", dimension=4, include_all=True
+        )
         text = "\n".join(lines)
         self.assertIn("-- Gameplay / Translation", text)
         self.assertIn("-- Gameplay / Rotation", text)

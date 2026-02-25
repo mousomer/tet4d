@@ -64,7 +64,9 @@ class LoopContext4D:
     was_game_over: bool = False
 
     @classmethod
-    def create(cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext4D":
+    def create(
+        cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF
+    ) -> "LoopContext4D":
         state = create_initial_state(cfg)
         return cls(
             cfg=cfg,
@@ -72,7 +74,9 @@ class LoopContext4D:
             view=LayerView3D(),
             mouse_orbit=MouseOrbitState(),
             bot=PlayBotController(mode=bot_mode),
-            rotation_anim=PieceRotationAnimatorND(ndim=4, gravity_axis=cfg.gravity_axis),
+            rotation_anim=PieceRotationAnimatorND(
+                ndim=4, gravity_axis=cfg.gravity_axis
+            ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
         )
@@ -91,7 +95,9 @@ class LoopContext4D:
             event.key,
             self.state,
             yaw_deg_for_view_movement=self.view.yaw_deg,
-            axis_overrides_by_action=movement_axis_overrides_for_view(self.view, self.cfg.dims),
+            axis_overrides_by_action=movement_axis_overrides_for_view(
+                self.view, self.cfg.dims
+            ),
             view_key_handler=lambda key: handle_view_key(key, self.view),
             sfx_handler=play_sfx,
             allow_gameplay=self.bot.user_gameplay_enabled,
@@ -119,7 +125,9 @@ class LoopContext4D:
             speed_level=self.cfg.speed_level,
         )
         mode_name = self.bot.mode.value
-        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_actor_mode = (
+            "human" if self.bot.mode == BotMode.OFF else mode_name
+        )
         self.state.analysis_bot_mode = mode_name
         self.state.analysis_grid_mode = self.grid_mode.value
 
@@ -128,9 +136,11 @@ class LoopContext4D:
         if wheel != 0:
             self.view.stop_animation()
             if wheel > 0:
-                self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08 ** wheel))
+                self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08**wheel))
             else:
-                self.view.zoom_scale = max(0.45, self.view.zoom_scale / (1.08 ** abs(wheel)))
+                self.view.zoom_scale = max(
+                    0.45, self.view.zoom_scale / (1.08 ** abs(wheel))
+                )
             return
 
         yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
@@ -226,7 +236,9 @@ def run() -> None:
         fonts=fonts,
         setup_caption="4D Tetris – Setup",
         game_caption="4D Tetris",
-        run_menu=lambda menu_screen, active_fonts: run_menu(menu_screen, active_fonts, 4),
+        run_menu=lambda menu_screen, active_fonts: run_menu(
+            menu_screen, active_fonts, 4
+        ),
         build_config=lambda settings: build_config(settings, 4),
         suggested_window_size=suggested_window_size,
         run_game=lambda game_screen, cfg, active_fonts, settings: run_game_loop(

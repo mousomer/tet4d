@@ -3,8 +3,17 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 
-from .menu_action_contracts import LAUNCHER_ACTION_IDS, PARITY_ACTION_IDS, PAUSE_ACTION_IDS
-from .menu_config import launcher_menu_id, menu_graph, pause_menu_id, reachable_action_ids
+from .menu_action_contracts import (
+    LAUNCHER_ACTION_IDS,
+    PARITY_ACTION_IDS,
+    PAUSE_ACTION_IDS,
+)
+from .menu_config import (
+    launcher_menu_id,
+    menu_graph,
+    pause_menu_id,
+    reachable_action_ids,
+)
 
 
 @dataclass(frozen=True)
@@ -64,7 +73,8 @@ def lint_menu_graph() -> list[MenuGraphIssue]:
         issues.append(
             MenuGraphIssue(
                 "handlers",
-                "launcher actions missing handlers: " + ", ".join(launcher_missing_handlers),
+                "launcher actions missing handlers: "
+                + ", ".join(launcher_missing_handlers),
             )
         )
 
@@ -84,7 +94,8 @@ def lint_menu_graph() -> list[MenuGraphIssue]:
         issues.append(
             MenuGraphIssue(
                 "parity",
-                "launcher parity actions missing: " + ", ".join(launcher_parity_missing),
+                "launcher parity actions missing: "
+                + ", ".join(launcher_parity_missing),
             )
         )
     if pause_parity_missing:

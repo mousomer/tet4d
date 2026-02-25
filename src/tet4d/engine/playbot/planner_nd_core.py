@@ -55,8 +55,7 @@ def enumerate_orientations(
         for axis_a, axis_b in planes:
             for step in (1, -1):
                 rotated = canonical_blocks(
-                    rotate_point_nd(block, axis_a, axis_b, step)
-                    for block in blocks
+                    rotate_point_nd(block, axis_a, axis_b, step) for block in blocks
                 )
                 if rotated in seen:
                     continue
@@ -116,11 +115,15 @@ def drop_piece_fast(
     return piece.moved(delta)
 
 
-def column_key(coord: tuple[int, ...], lateral_axes: tuple[int, ...]) -> tuple[int, ...]:
+def column_key(
+    coord: tuple[int, ...], lateral_axes: tuple[int, ...]
+) -> tuple[int, ...]:
     return tuple(coord[axis] for axis in lateral_axes)
 
 
-def iter_lateral_columns(dims: tuple[int, ...], lateral_axes: tuple[int, ...]) -> Iterable[tuple[int, ...]]:
+def iter_lateral_columns(
+    dims: tuple[int, ...], lateral_axes: tuple[int, ...]
+) -> Iterable[tuple[int, ...]]:
     axis_sizes = [dims[axis] for axis in lateral_axes]
     if not axis_sizes:
         yield tuple()
@@ -243,7 +246,9 @@ def evaluate_nd_board(
     cleared: int,
     game_over: bool,
 ) -> float:
-    aggregate_height, holes, roughness, max_height = height_features(cells, dims, gravity_axis)
+    aggregate_height, holes, roughness, max_height = height_features(
+        cells, dims, gravity_axis
+    )
     score = (
         cleared * 12000
         - aggregate_height * 3.8
@@ -299,7 +304,9 @@ def hole_count(
             continue
         seen_block = False
         for g_val in range(top, dims[gravity_axis]):
-            coord = coord_from_column(column, lateral_axes, gravity_axis, g_val, len(dims))
+            coord = coord_from_column(
+                column, lateral_axes, gravity_axis, g_val, len(dims)
+            )
             if coord in cells:
                 seen_block = True
             elif seen_block:
@@ -328,7 +335,9 @@ def greedy_key_4d(
 def greedy_score_4d(greedy_key: tuple[int, int, int, int]) -> float:
     alive, cleared, completion, neg_holes = greedy_key
     holes = -neg_holes
-    return float(alive * 1_000_000_000 + cleared * 10_000_000 + completion - holes * 1_000)
+    return float(
+        alive * 1_000_000_000 + cleared * 10_000_000 + completion - holes * 1_000
+    )
 
 
 def lateral_ranges_for_blocks(

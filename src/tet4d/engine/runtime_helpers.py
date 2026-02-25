@@ -9,18 +9,18 @@ CoordN = tuple[int, ...]
 
 
 class _StepDoneAnimation(Protocol):
-    def step(self, dt_ms: float) -> None:
-        ...
+    def step(self, dt_ms: float) -> None: ...
 
     @property
-    def done(self) -> bool:
-        ...
+    def done(self) -> bool: ...
 
 
 TAnimation = TypeVar("TAnimation", bound=_StepDoneAnimation)
 
 
-def advance_gravity(state: GameStateND, gravity_accumulator: int, gravity_interval_ms: int) -> int:
+def advance_gravity(
+    state: GameStateND, gravity_accumulator: int, gravity_interval_ms: int
+) -> int:
     while not state.game_over and gravity_accumulator >= gravity_interval_ms:
         state.step_gravity()
         gravity_accumulator -= gravity_interval_ms

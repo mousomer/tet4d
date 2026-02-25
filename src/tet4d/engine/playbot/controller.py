@@ -53,7 +53,9 @@ def _rotation_sequence_nd(
     max_states = 240
 
     queue: deque[tuple[RelBlocks, int]] = deque([(start_blocks, 0)])
-    parent: dict[RelBlocks, tuple[RelBlocks, RotationStep] | None] = {start_blocks: None}
+    parent: dict[RelBlocks, tuple[RelBlocks, RotationStep] | None] = {
+        start_blocks: None
+    }
 
     while queue and len(parent) < max_states:
         blocks, depth = queue.popleft()
@@ -79,8 +81,7 @@ def _rotation_neighbors(
     for axis_a, axis_b in planes:
         for delta in (1, -1):
             rotated = _canonical_blocks(
-                rotate_point_nd(block, axis_a, axis_b, delta)
-                for block in blocks
+                rotate_point_nd(block, axis_a, axis_b, delta) for block in blocks
             )
             yield rotated, (axis_a, axis_b, delta)
 
@@ -109,7 +110,9 @@ class PlayBotController:
     planner_profile: BotPlannerProfile = BotPlannerProfile.BALANCED
     planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO
     planning_budget_ms: int = 24
-    hard_drop_after_soft_drops: int = field(default_factory=playbot_default_hard_drop_after_soft_drops)
+    hard_drop_after_soft_drops: int = field(
+        default_factory=playbot_default_hard_drop_after_soft_drops
+    )
     _accumulator_ms: int = 0
     _step_requested: bool = False
     _piece_token: tuple[object, ...] | None = None
@@ -150,7 +153,9 @@ class PlayBotController:
 
     def configure_speed(self, gravity_interval_ms: int, speed_level: int) -> None:
         self.speed_level = max(1, min(10, int(speed_level)))
-        self.action_interval_ms = self.action_interval_from_speed(gravity_interval_ms, self.speed_level)
+        self.action_interval_ms = self.action_interval_from_speed(
+            gravity_interval_ms, self.speed_level
+        )
 
     def configure_planner(
         self,
@@ -167,7 +172,9 @@ class PlayBotController:
         selected = budget_ms
         if selected is None:
             selected = default_planning_budget_ms(ndim, profile, dims=dims)
-        self.planning_budget_ms = clamp_planning_budget_ms(ndim, int(selected), dims=dims)
+        self.planning_budget_ms = clamp_planning_budget_ms(
+            ndim, int(selected), dims=dims
+        )
 
     def reset_runtime(self) -> None:
         self._accumulator_ms = 0
@@ -262,7 +269,9 @@ class PlayBotController:
         self.last_error = ""
         self._target_rot_2d = plan.final_piece.rotation
         self._target_x_2d = plan.final_piece.pos[0]
-        self._assist_preview_cells = tuple(tuple(cell) for cell in plan.final_piece.cells())
+        self._assist_preview_cells = tuple(
+            tuple(cell) for cell in plan.final_piece.cells()
+        )
 
     def _update_assist_nd(self, state: GameStateND) -> None:
         token = self._piece_token_nd(state)
@@ -285,8 +294,14 @@ class PlayBotController:
             return
 
         gravity_axis = state.config.gravity_axis
-        lateral_axes = tuple(axis for axis in range(state.config.ndim) if axis != gravity_axis)
-        start_blocks = _canonical_blocks(state.current_piece.rel_blocks) if state.current_piece else tuple()
+        lateral_axes = tuple(
+            axis for axis in range(state.config.ndim) if axis != gravity_axis
+        )
+        start_blocks = (
+            _canonical_blocks(state.current_piece.rel_blocks)
+            if state.current_piece
+            else tuple()
+        )
         target_blocks = _canonical_blocks(plan.final_piece.rel_blocks)
         self._rotation_plan_nd = _rotation_sequence_nd(
             start_blocks,
@@ -295,10 +310,14 @@ class PlayBotController:
             gravity_axis=gravity_axis,
         )
         self._target_blocks_nd = target_blocks
-        self._target_lateral_nd = tuple(plan.final_piece.pos[axis] for axis in lateral_axes)
+        self._target_lateral_nd = tuple(
+            plan.final_piece.pos[axis] for axis in lateral_axes
+        )
         self.last_stats = plan.stats
         self.last_error = ""
-        self._assist_preview_cells = tuple(tuple(cell) for cell in plan.final_piece.cells())
+        self._assist_preview_cells = tuple(
+            tuple(cell) for cell in plan.final_piece.cells()
+        )
 
     def _soft_drop_or_lock_2d(self, state: GameState, *, allow_hard_drop: bool) -> bool:
         piece = state.current_piece
@@ -338,19 +357,29 @@ class PlayBotController:
         if piece is None:
             return False
 
-        target_rot = self._target_rot_2d if self._target_rot_2d is not None else piece.rotation
+        target_rot = (
+            self._target_rot_2d if self._target_rot_2d is not None else piece.rotation
+        )
         if piece.rotation != target_rot:
             diff = (target_rot - piece.rotation) % 4
             primary = 1 if diff in (1, 2) else -1
             before = piece.rotation
             state.try_rotate(primary)
-            if state.current_piece is not None and state.current_piece.rotation != before:
+            if (
+                state.current_piece is not None
+                and state.current_piece.rotation != before
+            ):
                 return True
             if diff == 2:
                 piece_after = state.current_piece
-                before_retry = piece_after.rotation if piece_after is not None else before
+                before_retry = (
+                    piece_after.rotation if piece_after is not None else before
+                )
                 state.try_rotate(-primary)
-                if state.current_piece is not None and state.current_piece.rotation != before_retry:
+                if (
+                    state.current_piece is not None
+                    and state.current_piece.rotation != before_retry
+                ):
                     return True
             return self._soft_drop_or_lock_2d(state, allow_hard_drop=False)
 
@@ -359,13 +388,18 @@ class PlayBotController:
             delta = 1 if target_x > piece.pos[0] else -1
             before_pos = piece.pos
             state.try_move(delta, 0)
-            if state.current_piece is not None and state.current_piece.pos != before_pos:
+            if (
+                state.current_piece is not None
+                and state.current_piece.pos != before_pos
+            ):
                 return True
             return self._soft_drop_or_lock_2d(state, allow_hard_drop=False)
 
         return self._soft_drop_or_lock_2d(state, allow_hard_drop=True)
 
-    def _soft_drop_or_lock_nd(self, state: GameStateND, *, allow_hard_drop: bool) -> bool:
+    def _soft_drop_or_lock_nd(
+        self, state: GameStateND, *, allow_hard_drop: bool
+    ) -> bool:
         gravity_axis = state.config.gravity_axis
         threshold = max(0, int(self.hard_drop_after_soft_drops))
         if allow_hard_drop and threshold > 0 and self._soft_drop_count_nd >= threshold:
@@ -399,9 +433,15 @@ class PlayBotController:
             return False
 
         current_blocks = _canonical_blocks(piece.rel_blocks)
-        target_blocks = self._target_blocks_nd if self._target_blocks_nd is not None else current_blocks
+        target_blocks = (
+            self._target_blocks_nd
+            if self._target_blocks_nd is not None
+            else current_blocks
+        )
         if current_blocks != target_blocks:
-            if self._apply_planned_rotation_step_nd(state, current_blocks, target_blocks):
+            if self._apply_planned_rotation_step_nd(
+                state, current_blocks, target_blocks
+            ):
                 return True
             return self._soft_drop_or_lock_nd(state, allow_hard_drop=False)
 
@@ -437,7 +477,9 @@ class PlayBotController:
         piece: ActivePieceND,
     ) -> bool:
         gravity_axis = state.config.gravity_axis
-        lateral_axes = tuple(axis for axis in range(state.config.ndim) if axis != gravity_axis)
+        lateral_axes = tuple(
+            axis for axis in range(state.config.ndim) if axis != gravity_axis
+        )
         target_lateral = self._target_lateral_nd
         if len(target_lateral) != len(lateral_axes):
             target_lateral = tuple(piece.pos[axis] for axis in lateral_axes)
