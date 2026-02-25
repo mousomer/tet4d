@@ -79,6 +79,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 65. `DONE` Arch Stage 70 slice 60 removed zero-caller engine-path compatibility shims for `assist_scoring`, `help_topics`, and `score_analyzer` after runtime canonicalization.
 66. `DONE` Arch Stage 71 slice 61 migrated engine front-game callers to `tet4d.ui.pygame.camera_mouse` as the first step in pruning the `camera_mouse` compatibility shim.
 67. `DONE` Arch Stage 72 slice 62 migrated `camera_mouse` tests to `tet4d.ui.pygame.camera_mouse`, preserving test placement before removing the engine-path shim.
+68. `DONE` Arch Stage 73 slice 63 removed the zero-caller `src/tet4d/engine/camera_mouse.py` compatibility shim after canonical engine/test import migration.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
