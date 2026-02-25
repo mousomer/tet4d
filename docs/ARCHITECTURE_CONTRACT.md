@@ -152,6 +152,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 36 (slice 26, `ui_logic` cluster expansion) moves menu interaction and
   keybindings-menu model helpers into `engine/ui_logic`, keeping engine-path
   compatibility shims while redirecting moved modules toward merged-folder imports.
+- Stage 37 (slice 27, menu graph logic consolidation) moves the menu graph linter
+  module into `engine/ui_logic` and keeps a compatibility shim at the legacy
+  engine path so governance tooling can migrate without churn.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

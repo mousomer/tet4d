@@ -51,9 +51,11 @@ Read order:
 13. As merged-folder moves land, update imports inside moved modules to use the new
     merged buckets (for example `engine.runtime.*`) so old engine-path shims can be
     pruned later without broad churn.
-14. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-15. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-16. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+14. Keep governance/tooling call sites stable during folder moves by leaving short
+    engine-path compatibility shims until the next prune stage.
+15. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+16. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+17. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
