@@ -207,6 +207,9 @@ Read order:
 68. For paired UI utility shims that are imported together (`panel_utils` +
     `text_render_cache`), migrate callers in one stage and prune both shims in a
     single follow-up stage after a combined zero-caller audit.
+69. Combined zero-caller audits for paired shims should ignore canonical relative
+    imports inside `src/tet4d/ui/pygame/*` (for example `.text_render_cache`
+    within `panel_utils.py`) and only block legacy engine/CLI/tool callers.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

@@ -366,3 +366,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 104 (slice 94, ui shim canonicalization) migrates engine callers to
   canonical `tet4d.ui.pygame.panel_utils` and `tet4d.ui.pygame.text_render_cache`
   imports before pruning the `engine/panel_utils.py` and `engine/text_render_cache.py` shims.
+- Stage 105 (slice 95, ui shim pruning) removes the zero-caller
+  `engine/panel_utils.py` and `engine/text_render_cache.py` compatibility shims
+  after canonical engine-caller migration.
