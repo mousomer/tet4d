@@ -360,3 +360,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 102 (slice 92, ui shim canonicalization) migrates engine and CLI
   callers to canonical `tet4d.ui.pygame.menu_runner` imports before pruning the
   `engine/menu_runner.py` compatibility shim.
+- Stage 103 (slice 93, ui shim pruning) removes the zero-caller
+  `engine/menu_runner.py` compatibility shim after engine/CLI migration to
+  `tet4d.ui.pygame.menu_runner`.

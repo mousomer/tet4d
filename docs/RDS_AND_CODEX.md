@@ -201,6 +201,9 @@ Read order:
 66. `menu_runner` canonicalization can combine engine and CLI callers in one
     stage when there are no test imports, followed by an immediate zero-caller
     prune stage.
+67. `menu_runner` prune stages should still run `ci_check.sh` (not just
+    `verify.sh`) because launcher/menu loops are exercised indirectly by compile
+    and benchmark imports even when pytest coverage is unchanged.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
