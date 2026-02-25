@@ -70,6 +70,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 56. `DONE` Arch Stage 61 slice 51 moved `panel_utils.py` into `src/tet4d/ui/pygame/` with an engine-path module-alias shim after moving its helper dependencies.
 57. `DONE` Arch Stage 62 slice 52 moved `camera_mouse.py` into `src/tet4d/ui/pygame/`, localizing its `projection3d` dependency and preserving engine-path imports for callers/tests.
 58. `DONE` Arch Stage 63 slice 53 moved `menu_layout.py` into `src/tet4d/engine/ui_logic/` with an engine-path compatibility shim as part of UI-logic cluster consolidation.
+59. `DONE` Arch Stage 64 slice 54 moved `key_dispatch.py` into `src/tet4d/engine/ui_logic/` with an engine-path compatibility shim, continuing non-rendering input/menu clustering.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
