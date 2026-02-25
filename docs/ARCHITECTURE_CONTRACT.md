@@ -400,3 +400,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 117 (slice 107, gameplay shim pruning) removes the zero-caller
   `engine/challenge_mode.py` compatibility shim after canonical
   `engine.gameplay.challenge_mode` migration.
+- Stage 118 (slice 108, gameplay shim canonicalization) migrates engine/CLI
+  callers to canonical `engine.gameplay.exploration_mode` imports before
+  pruning `engine/exploration_mode.py`.
