@@ -409,3 +409,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 120 (slice 110, gameplay shim canonicalization) migrates engine/test
   callers to canonical `engine.gameplay.speed_curve` imports before pruning
   `engine/speed_curve.py`.
+- Stage 121 (slice 111, gameplay shim pruning) removes the zero-caller
+  `engine/speed_curve.py` compatibility shim after canonical
+  `engine.gameplay.speed_curve` migration.
