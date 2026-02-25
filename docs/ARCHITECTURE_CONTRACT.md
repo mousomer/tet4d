@@ -436,3 +436,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 129 (slice 119, gameplay shim pruning) removes the zero-caller
   `engine/pieces_nd.py` compatibility shim after canonical
   `engine.gameplay.pieces_nd` migration.
+- Stage 130 (slice 120, runtime side-effect extraction) routes keybindings JSON
+  file reads through `engine.runtime.keybindings_storage` before extracting
+  write paths from `engine/keybindings.py`.

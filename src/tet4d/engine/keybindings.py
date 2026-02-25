@@ -29,6 +29,7 @@ from tet4d.ui.pygame.keybindings_defaults import (
     default_system_bindings_for_profile,
 )
 from .runtime.project_config import keybindings_dir_path, keybindings_profiles_dir_path
+from .runtime.keybindings_storage import load_json_file
 from .ui_logic.keybindings_catalog import (
     binding_action_description as _binding_action_description,
     binding_group_description as _binding_group_description,
@@ -687,12 +688,9 @@ def load_keybindings_file(
         return False, str(exc)
 
     try:
-        raw = path.read_text(encoding="utf-8")
+        payload = load_json_file(path)
     except OSError as exc:
         return False, f"Failed loading keybindings: {exc}"
-
-    try:
-        payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         return False, f"Invalid keybindings JSON: {exc}"
 
