@@ -21,7 +21,7 @@ from .core.step.reducer import step_nd as core_step_nd
 from .gameplay.game2d import GameConfig, GameState
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .gameplay.pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
-from .pieces_nd import (
+from .gameplay.pieces_nd import (
     PIECE_SET_3D_DEBUG,
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_DEBUG,

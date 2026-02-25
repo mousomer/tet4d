@@ -27,7 +27,7 @@ from .ui_logic.menu_controls import (
 from .runtime.menu_config import default_settings_payload, setup_fields_for_dimension
 from .ui_logic.menu_keybinding_shortcuts import menu_binding_status_color
 from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
-from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .gameplay.exploration_mode import minimal_exploration_dims_nd
 from .playbot import run_dry_run_nd
 from tet4d.ai.playbot.types import (

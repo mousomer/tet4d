@@ -25,7 +25,7 @@ from tet4d.engine.keybindings import (
     SYSTEM_KEYS,
 )
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 
 
 def _keydown(key: int) -> pygame.event.Event:

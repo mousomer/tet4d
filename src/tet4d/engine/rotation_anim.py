@@ -9,7 +9,7 @@ from tet4d.ui.pygame.projection3d import smoothstep01
 
 if TYPE_CHECKING:
     from .gameplay.pieces2d import ActivePiece2D
-    from .pieces_nd import ActivePieceND
+    from .gameplay.pieces_nd import ActivePieceND
 
 
 CoordF = tuple[float, ...]

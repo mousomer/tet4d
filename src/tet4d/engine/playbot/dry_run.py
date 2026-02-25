@@ -6,7 +6,7 @@ from ..core.model import BoardND
 from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
-from ..pieces_nd import PIECE_SET_4D_DEBUG
+from ..gameplay.pieces_nd import PIECE_SET_4D_DEBUG
 from ..runtime.runtime_config import playbot_dry_run_defaults
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move

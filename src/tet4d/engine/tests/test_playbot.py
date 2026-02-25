@@ -8,7 +8,7 @@ from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG
-from tet4d.engine.pieces_nd import (
+from tet4d.engine.gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_4D_DEBUG,

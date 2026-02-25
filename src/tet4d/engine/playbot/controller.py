@@ -6,7 +6,7 @@ from typing import Iterable
 
 from ..gameplay.game2d import GameState
 from ..gameplay.game_nd import GameStateND
-from ..pieces_nd import ActivePieceND, rotate_point_nd
+from ..gameplay.pieces_nd import ActivePieceND, rotate_point_nd
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
 from .planner_nd_core import canonical_blocks as _canonical_blocks

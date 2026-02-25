@@ -1,7 +1,7 @@
 import unittest
 import random
 
-from tet4d.engine.pieces_nd import (
+from tet4d.engine.gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_4D_OPTIONS,
     PIECE_SET_3D_OPTIONS,

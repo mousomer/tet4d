@@ -22,7 +22,7 @@ from .ui_logic.keybindings_catalog import gameplay_action_category
 from .runtime.menu_config import settings_category_docs
 from .ui_logic.menu_layout import LayoutRect, compute_menu_layout_zones
 from .gameplay.pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
-from .pieces_nd import piece_set_label, piece_set_options_for_dimension
+from .gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .runtime.project_config import project_constant_int
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 

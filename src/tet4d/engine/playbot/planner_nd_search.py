@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from ..core.model import BoardND
 from ..gameplay.game_nd import GameConfigND, GameStateND
-from ..pieces_nd import ActivePieceND, PieceShapeND
+from ..gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
 from .planner_nd_core import (
     build_column_levels,

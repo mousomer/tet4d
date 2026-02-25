@@ -8,7 +8,7 @@ from typing import Iterable
 
 from ..core.model import BoardND
 from ..gameplay.game_nd import GameStateND
-from ..pieces_nd import ActivePieceND, PieceShapeND, rotate_point_nd
+from ..gameplay.pieces_nd import ActivePieceND, PieceShapeND, rotate_point_nd
 
 
 RelBlocks = tuple[tuple[int, ...], ...]
