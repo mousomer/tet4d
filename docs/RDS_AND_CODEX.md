@@ -217,6 +217,8 @@ Read order:
     repo-wide grep confirms there are no non-engine callers before deletion.
 72. `keybindings_menu_input` is typically an engine-only shim; canonicalize the
     import in `keybindings_menu.py` first, then prune after a zero-caller audit.
+73. Engine-only UI-input shim prune stages (`keybindings_menu_input`) can reuse
+    the standard verify+ci_check prune cadence even when no CLI/tests change.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
