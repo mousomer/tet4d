@@ -227,6 +227,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 60 (slice 50, UI control-helper extraction) moves `control_helper.py`
   into `ui/pygame` and uses narrow `engine.api` wrappers for key formatting and
   runtime binding groups so the moved UI helper avoids deep engine imports.
+- Stage 61 (slice 51, UI panel helper extraction) moves `panel_utils.py` into
+  `ui/pygame`, localizing panel/text/helper rendering utilities under the UI layer
+  while preserving engine-path imports via a module-alias shim.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

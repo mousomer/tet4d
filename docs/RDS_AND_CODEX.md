@@ -118,9 +118,12 @@ Read order:
 37. When moving UI helpers that need engine keybinding utilities, prefer adding
     narrow `engine.api` wrappers (for example `format_key_tuple` and runtime
     binding-group lookup) rather than importing `keybindings.py` directly from UI.
-38. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-39. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-40. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+38. Sequence UI helper moves by dependency chain (icons/cache/utils -> control helper
+    -> panel helper -> renderers) so each stage can keep imports local and avoid
+    temporary deep imports from `ui/pygame` into engine internals.
+39. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+40. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+41. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
