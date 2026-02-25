@@ -164,6 +164,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 40 (slice 30, runtime config cluster move) expands `engine/runtime` with
   project/runtime config and validation modules, preserving legacy engine import
   paths via module-alias shims for minimal churn.
+- Stage 41 (slice 31, runtime analytics cluster move) moves score analyzer modules
+  into `engine/runtime`, keeping engine-path module-alias shims so HUD, gameplay,
+  and tests continue to resolve imports without behavior change.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

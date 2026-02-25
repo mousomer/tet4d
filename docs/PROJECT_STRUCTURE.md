@@ -74,7 +74,7 @@ tet4d/
 │       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
 │       └── engine/              # shared engine + frontends + tests (source of truth)
 │           ├── core/            # strict-purity deterministic logic extraction subtree
-│           ├── runtime/         # runtime/config/validation/persistence helpers (merged folder split sequence)
+│           ├── runtime/         # runtime/config/validation/analytics/persistence helpers (merged folder split sequence)
 │           ├── ui_logic/        # non-rendering menu/input helpers (merged folder split sequence)
 │           ├── board.py         # sparse ND board + plane clear logic
 │           ├── game2d.py        # 2D game rules/state

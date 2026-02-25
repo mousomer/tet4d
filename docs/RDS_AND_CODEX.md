@@ -62,9 +62,12 @@ Read order:
 17. When moving runtime/config modules, prefer module-alias compatibility shims
     (`sys.modules[__name__] = impl`) over `import *` shims when tests or callers
     patch module-level globals/private helpers.
-18. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-19. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-20. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+18. Continue building `engine/runtime` with score/analytics modules before touching
+    gameplay-heavy files; this reduces top-level `engine/` count without affecting
+    pygame/UI boundaries.
+19. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+20. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+21. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
