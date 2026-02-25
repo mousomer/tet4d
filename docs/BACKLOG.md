@@ -73,6 +73,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 59. `DONE` Arch Stage 64 slice 54 moved `key_dispatch.py` into `src/tet4d/engine/ui_logic/` with an engine-path compatibility shim, continuing non-rendering input/menu clustering.
 60. `DONE` Arch Stage 65 slice 55 migrated engine and CLI callers to canonical `src/tet4d/engine/ui_logic/*` imports for dispatch/menu helper modules ahead of shim pruning.
 61. `DONE` Arch Stage 66 slice 56 migrated tools and tests to canonical `src/tet4d/engine/ui_logic/*` imports, clearing remaining callers to UI-logic compatibility shims.
+62. `DONE` Arch Stage 67 slice 57 removed zero-caller engine-path compatibility shims for migrated `ui_logic` modules after canonical import migration across engine/CLI/tools/tests.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

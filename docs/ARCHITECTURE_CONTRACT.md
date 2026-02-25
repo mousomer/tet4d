@@ -245,6 +245,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 66 (slice 56, UI-logic canonicalization) migrates tools and tests to
   canonical `engine/ui_logic/*` imports so compatibility shims can be pruned
   without changing behavior or test placement.
+- Stage 67 (slice 57, UI-logic shim pruning) removes zero-caller engine-path
+  compatibility shims for migrated `ui_logic` modules after caller audits and
+  canonical import rewrites across engine, CLI, tools, and tests.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

@@ -132,9 +132,10 @@ Read order:
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
     path cleanup with behavioral test changes and to keep tests in test folders.
-44. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-45. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-46. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+44. After a zero-caller audit, delete compatibility shims promptly to avoid top-level `engine/` clutter regrowth and to ensure net LOC decreases over the cleanup sequence.
+45. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+46. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+47. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
