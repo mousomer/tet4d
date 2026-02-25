@@ -19,7 +19,7 @@ from .keybindings_menu import run_keybindings_menu
 from .launcher_settings import run_settings_hub_menu
 from .runtime.menu_config import menu_items, pause_menu_id
 from .runtime.menu_persistence import load_audio_payload, load_display_payload
-from .menu_runner import ActionRegistry, MenuRunner
+from tet4d.ui.pygame.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 

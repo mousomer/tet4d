@@ -198,6 +198,9 @@ Read order:
 65. When a `game_loop_common`-style shim is fully canonicalized (engine+CLI only,
     no test imports), prune the shim immediately in the next stage to keep UI
     migration progress visible in top-level `engine/`.
+66. `menu_runner` canonicalization can combine engine and CLI callers in one
+    stage when there are no test imports, followed by an immediate zero-caller
+    prune stage.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
