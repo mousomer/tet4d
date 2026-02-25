@@ -49,6 +49,7 @@ from .runtime_config import (
     playbot_benchmark_history_file,
     playbot_benchmark_p95_thresholds,
 )
+from .runtime.project_config import project_constant_int as _project_constant_int
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -247,6 +248,21 @@ def config_view_nd(config: GameConfigND) -> GameConfigNDCoreView:
 
 def state_view_nd(state: GameStateND) -> GameStateNDCoreView:
     return state.to_core_view()
+
+
+def project_constant_int(
+    path: tuple[str, ...],
+    default: int,
+    *,
+    min_value: int | None = None,
+    max_value: int | None = None,
+) -> int:
+    return _project_constant_int(
+        path,
+        default,
+        min_value=min_value,
+        max_value=max_value,
+    )
 
 
 def run_front3d_ui() -> None:

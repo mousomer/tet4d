@@ -212,6 +212,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 55 (slice 45, runtime I/O extraction) moves `help_topics.py` into
   `engine/runtime`, keeping an engine-path module-alias shim so help-menu callers
   remain stable while reducing top-level engine file-I/O ownership.
+- Stage 56 (slice 46, UI cache extraction) moves `text_render_cache.py` into
+  `ui/pygame` and adds a small `engine.api` wrapper for `project_constant_int` so
+  the moved UI module stays compliant with the `ui -> engine.api` boundary.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
