@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..ui_logic.keybindings_catalog import binding_action_ids
+from .help_topics_storage import load_json_file
 from .project_config import project_root_path
 
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"
@@ -23,13 +24,11 @@ class HelpTopicsValidationError(RuntimeError):
 
 def _read_json_object(path: Path) -> dict[str, Any]:
     try:
-        raw = path.read_text(encoding="utf-8")
+        payload = load_json_file(path)
     except OSError as exc:
         raise HelpTopicsValidationError(
             f"Failed reading help config file {path}: {exc}"
         ) from exc
-    try:
-        payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise HelpTopicsValidationError(
             f"Invalid JSON in help config file {path}: {exc}"

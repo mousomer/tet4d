@@ -444,3 +444,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 132 (slice 122, runtime side-effect extraction) routes keybindings
   profile-clone file copy persistence through
   `engine.runtime.keybindings_storage`.
+- Stage 133 (slice 123, runtime side-effect extraction) routes help-topics JSON
+  file reads through `engine.runtime.help_topics_storage`.
