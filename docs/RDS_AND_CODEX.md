@@ -190,6 +190,8 @@ Read order:
 62. `font_profiles`-style UI shims can be pruned without a test migration stage
     when repo-wide grep confirms zero engine/CLI/tests callers and the canonical
     module (`tet4d.ui.pygame.font_profiles`) is already imported directly.
+63. Apply the same engine-first / CLI-followup / prune sequence to `game_loop_common`
+    because it is used by both launcher CLI and engine loop runners.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

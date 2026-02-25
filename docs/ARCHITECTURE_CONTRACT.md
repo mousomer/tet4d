@@ -348,3 +348,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 98 (slice 88, ui shim pruning) removes the zero-caller
   `engine/font_profiles.py` compatibility shim after engine/CLI migration to
   `tet4d.ui.pygame.font_profiles`.
+- Stage 99 (slice 89, ui shim canonicalization) migrates engine callers to
+  canonical `tet4d.ui.pygame.game_loop_common` imports before CLI migration and
+  pruning the `engine/game_loop_common.py` compatibility shim.
