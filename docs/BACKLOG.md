@@ -118,6 +118,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 104. `DONE` Arch Stage 105 slice 95 removed the zero-caller `src/tet4d/engine/panel_utils.py` and `src/tet4d/engine/text_render_cache.py` compatibility shims after canonical engine-caller migration.
 105. `DONE` Arch Stage 106 slice 96 migrated engine callers to canonical `src/tet4d/ui/pygame/keybindings_defaults.py` imports before shim pruning.
 106. `DONE` Arch Stage 107 slice 97 removed the zero-caller `src/tet4d/engine/keybindings_defaults.py` compatibility shim after canonical engine import migration.
+107. `DONE` Arch Stage 108 slice 98 migrated engine callers to canonical `src/tet4d/ui/pygame/keybindings_menu_input.py` imports before shim pruning.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

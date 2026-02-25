@@ -495,7 +495,7 @@ def _sync_selection(
 def _process_menu_events(
     state: KeybindingsMenuState, binding_rows: list[BindingRow]
 ) -> bool:
-    from .keybindings_menu_input import process_menu_events
+    from tet4d.ui.pygame.keybindings_menu_input import process_menu_events
 
     return process_menu_events(
         state,

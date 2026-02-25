@@ -215,6 +215,8 @@ Read order:
     prune stage to simplify regression triage.
 71. `keybindings_defaults` prune stages can skip a CLI/test migration phase when
     repo-wide grep confirms there are no non-engine callers before deletion.
+72. `keybindings_menu_input` is typically an engine-only shim; canonicalize the
+    import in `keybindings_menu.py` first, then prune after a zero-caller audit.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
