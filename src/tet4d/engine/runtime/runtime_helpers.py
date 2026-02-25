@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Protocol, TypeVar
 
-from ..game_nd import GameStateND
+from ..gameplay.game_nd import GameStateND
 
 Color = tuple[int, int, int]
 CoordN = tuple[int, ...]

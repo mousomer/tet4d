@@ -82,9 +82,12 @@ Read order:
 24. Before moving `game2d.py` / `game_nd.py`, move supporting gameplay modules such as
     `topology_designer.py` into `engine/gameplay` so game-module moves have fewer
     cross-folder concerns.
-25. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-26. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-27. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+25. Use a prep seam for high-risk `game2d.py` / `game_nd.py` moves: add temporary
+    `engine.gameplay.game2d/game_nd` aliases first, migrate a few internal callers,
+    then swap in the real moved modules in the next stages.
+26. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+27. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+28. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

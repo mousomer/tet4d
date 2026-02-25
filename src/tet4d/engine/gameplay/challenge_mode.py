@@ -3,8 +3,8 @@ from __future__ import annotations
 import random
 from itertools import product
 
-from ..game2d import GameState
-from ..game_nd import GameStateND
+from .game2d import GameState
+from .game_nd import GameStateND
 from ..runtime_config import challenge_prefill_ratio
 
 

@@ -186,6 +186,10 @@ incremental enforcement strategy used while refactoring.
 - Stage 47 (slice 37, gameplay support move) moves `topology_designer.py` into
   `engine/gameplay`, updating it to depend on `engine.runtime.project_config` and
   local gameplay `topology`, with an engine-path module-alias shim for callers.
+- Stage 48 (slice 38, game-module move prep) introduces temporary
+  `engine.gameplay.game2d` / `engine.gameplay.game_nd` alias modules and migrates
+  selected internal callers to those paths so the upcoming physical game-module
+  moves are mostly file relocations plus import retargeting.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
