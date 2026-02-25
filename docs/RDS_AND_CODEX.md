@@ -184,6 +184,9 @@ Read order:
 60. For UI shims used by both engine and CLI launchers (for example
     `font_profiles`), keep the engine-caller migration and CLI-caller migration
     in separate stages before shim pruning so launcher regressions remain isolated.
+61. Before pruning a UI compatibility shim after CLI migration, run a repo-wide
+    grep for aggregated imports (`from tet4d.engine import <shim>`) in tests and
+    support modules; they are easy to miss even when engine/CLI callers are clean.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

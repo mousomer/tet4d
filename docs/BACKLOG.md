@@ -107,6 +107,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 93. `DONE` `scripts/check_architecture_boundaries.sh` now baseline-locks current transitional `engine -> tet4d.ui` imports (fail on new imports only), fixing GitHub repo-policy gate failures caused by stale allowlists.
 94. `DONE` baseline policy/drift scripts now treat workspace policy-template marker files as optional in fresh public clones, preventing GitHub CI failures on missing local-only `.policy` assets.
 95. `DONE` Arch Stage 96 slice 86 migrated engine callers to canonical `src/tet4d/ui/pygame/font_profiles.py` imports before CLI migration and shim pruning.
+96. `DONE` Arch Stage 97 slice 87 migrated CLI callers to canonical `src/tet4d/ui/pygame/font_profiles.py` imports before shim pruning.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

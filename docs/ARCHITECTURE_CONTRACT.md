@@ -342,3 +342,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 96 (slice 86, ui shim canonicalization) migrates engine callers to
   canonical `tet4d.ui.pygame.font_profiles` imports before CLI migration and
   pruning the `engine/font_profiles.py` compatibility shim.
+- Stage 97 (slice 87, ui shim canonicalization) migrates CLI callers to
+  canonical `tet4d.ui.pygame.font_profiles` imports before pruning the
+  `engine/font_profiles.py` compatibility shim.
