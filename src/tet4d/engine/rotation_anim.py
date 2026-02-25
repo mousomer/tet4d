@@ -26,7 +26,9 @@ def _distance_sq(a: CoordF, b: CoordF) -> float:
     return sum((a[idx] - b[idx]) ** 2 for idx in range(min(len(a), len(b))))
 
 
-def _pair_endpoints(start_rel: tuple[CoordF, ...], end_rel: tuple[CoordF, ...]) -> tuple[CoordF, ...]:
+def _pair_endpoints(
+    start_rel: tuple[CoordF, ...], end_rel: tuple[CoordF, ...]
+) -> tuple[CoordF, ...]:
     if len(start_rel) != len(end_rel):
         return end_rel
     remaining = list(end_rel)
@@ -83,7 +85,9 @@ def _build_tween(
     duration_ms: float,
 ) -> _RotationTween:
     if not start_rel or len(start_rel) != len(end_rel):
-        return _RotationTween(start_rel=end_rel, end_rel=end_rel, duration_ms=duration_ms)
+        return _RotationTween(
+            start_rel=end_rel, end_rel=end_rel, duration_ms=duration_ms
+        )
     return _RotationTween(
         start_rel=start_rel,
         end_rel=_pair_endpoints(start_rel, end_rel),
@@ -118,8 +122,7 @@ class PieceRotationAnimator2D:
     def _rel_signature(self, piece: ActivePiece2D) -> tuple[tuple[int, int], ...]:
         return tuple(
             sorted(
-                rotate_point_2d(bx, by, piece.rotation)
-                for bx, by in piece.shape.blocks
+                rotate_point_2d(bx, by, piece.rotation) for bx, by in piece.shape.blocks
             )
         )
 
@@ -139,7 +142,9 @@ class PieceRotationAnimator2D:
         curr_cells = tuple((float(x), float(y)) for x, y in piece.cells())
         curr_visible = _visible_along_gravity(curr_cells, self.gravity_axis)
 
-        shape_changed = self._prev_shape_name is not None and curr_shape != self._prev_shape_name
+        shape_changed = (
+            self._prev_shape_name is not None and curr_shape != self._prev_shape_name
+        )
         rel_changed = self._prev_rel_sig is not None and curr_sig != self._prev_rel_sig
 
         if shape_changed:
@@ -196,8 +201,7 @@ class PieceRotationAnimatorND:
 
     def _rel_blocks(self, piece: ActivePieceND) -> tuple[CoordF, ...]:
         return tuple(
-            tuple(float(value) for value in block)
-            for block in piece.rel_blocks
+            tuple(float(value) for value in block) for block in piece.rel_blocks
         )
 
     def _rel_signature(self, piece: ActivePieceND) -> tuple[tuple[int, ...], ...]:
@@ -218,10 +222,14 @@ class PieceRotationAnimatorND:
         curr_rel = self._rel_blocks(piece)
         curr_sig = self._rel_signature(piece)
         curr_shape = piece.shape.name
-        curr_cells = tuple(tuple(float(value) for value in coord) for coord in piece.cells())
+        curr_cells = tuple(
+            tuple(float(value) for value in coord) for coord in piece.cells()
+        )
         curr_visible = _visible_along_gravity(curr_cells, self.gravity_axis)
 
-        shape_changed = self._prev_shape_name is not None and curr_shape != self._prev_shape_name
+        shape_changed = (
+            self._prev_shape_name is not None and curr_shape != self._prev_shape_name
+        )
         rel_changed = self._prev_rel_sig is not None and curr_sig != self._prev_rel_sig
 
         if shape_changed:
@@ -257,9 +265,6 @@ class PieceRotationAnimatorND:
         cells: list[CoordF] = []
         for block in rel:
             cells.append(
-                tuple(
-                    float(pos[idx]) + block[idx]
-                    for idx in range(self.ndim)
-                )
+                tuple(float(pos[idx]) + block[idx] for idx in range(self.ndim))
             )
         return tuple(cells), int(piece.shape.color_id)

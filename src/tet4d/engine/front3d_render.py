@@ -37,8 +37,12 @@ from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label
 
 
-MARGIN = project_constant_int(("rendering", "3d", "margin"), 20, min_value=0, max_value=400)
-SIDE_PANEL = project_constant_int(("rendering", "3d", "side_panel"), 360, min_value=180, max_value=960)
+MARGIN = project_constant_int(
+    ("rendering", "3d", "margin"), 20, min_value=0, max_value=400
+)
+SIDE_PANEL = project_constant_int(
+    ("rendering", "3d", "side_panel"), 360, min_value=180, max_value=960
+)
 BG_TOP = (18, 24, 50)
 BG_BOTTOM = (6, 8, 20)
 TEXT_COLOR = (230, 230, 230)
@@ -392,7 +396,9 @@ def _draw_board_3d(
 
     _draw_sorted_faces(
         surface,
-        _faces_for_cells(_collect_visible_cells(state, active_overlay), camera, center_px, dims),
+        _faces_for_cells(
+            _collect_visible_cells(state, active_overlay), camera, center_px, dims
+        ),
     )
     _draw_clear_animation(surface, clear_anim, camera, center_px, dims)
 
@@ -410,7 +416,11 @@ def _draw_side_panel(
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
-    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
+    low_priority_lines = [
+        *bot_lines,
+        *([""] if bot_lines and analysis_lines else []),
+        *analysis_lines,
+    ]
     lines = (
         "3D Tetris",
         "",
@@ -512,7 +522,15 @@ def draw_game_frame(
         clear_anim=clear_anim,
         active_overlay=active_overlay,
     )
-    _draw_side_panel(screen, state, camera, panel_rect, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
+    _draw_side_panel(
+        screen,
+        state,
+        camera,
+        panel_rect,
+        fonts,
+        grid_mode=grid_mode,
+        bot_lines=bot_lines,
+    )
 
 
 def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:

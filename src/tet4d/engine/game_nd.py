@@ -149,20 +149,28 @@ class GameStateND:
                 rng=self.rng,
                 board_dims=self.config.dims,
             )
-            self.next_bag = [shape for shape in generated if self._shape_fits_board(shape)]
+            self.next_bag = [
+                shape for shape in generated if self._shape_fits_board(shape)
+            ]
             if self.next_bag:
                 break
             attempts += 1
             if attempts >= 4:
                 # Stable fallback for tiny boards.
-                fallback_id = PIECE_SET_3D_STANDARD if self.config.ndim == 3 else PIECE_SET_4D_STANDARD
+                fallback_id = (
+                    PIECE_SET_3D_STANDARD
+                    if self.config.ndim == 3
+                    else PIECE_SET_4D_STANDARD
+                )
                 fallback = get_piece_shapes_nd(
                     self.config.ndim,
                     piece_set_id=fallback_id,
                     rng=self.rng,
                     board_dims=self.config.dims,
                 )
-                self.next_bag = [shape for shape in fallback if self._shape_fits_board(shape)]
+                self.next_bag = [
+                    shape for shape in fallback if self._shape_fits_board(shape)
+                ]
                 if self.next_bag:
                     break
                 raise RuntimeError("no spawnable pieces for current board dimensions")
@@ -194,7 +202,9 @@ class GameStateND:
 
     def spawn_new_piece(self) -> None:
         shape = self.draw_next_piece_shape()
-        self.current_piece = ActivePieceND.from_shape(shape, self._spawn_pos_for_shape(shape))
+        self.current_piece = ActivePieceND.from_shape(
+            shape, self._spawn_pos_for_shape(shape)
+        )
         if not self._can_exist(self.current_piece):
             self.game_over = True
 
@@ -213,7 +223,9 @@ class GameStateND:
             allow_above_gravity=True,
         )
 
-    def current_piece_cells_mapped(self, *, include_above: bool = False) -> tuple[Coord, ...]:
+    def current_piece_cells_mapped(
+        self, *, include_above: bool = False
+    ) -> tuple[Coord, ...]:
         if self.current_piece is None:
             return ()
         mapped = self._mapped_piece_cells(self.current_piece)
@@ -356,7 +368,15 @@ class GameStateND:
             score=int(self.score),
             lines_cleared=int(self.lines_cleared),
             game_over=bool(self.game_over),
-            board_cells=tuple(sorted((tuple(coord), int(color)) for coord, color in self.board.cells.items())),
-            current_piece_cells=tuple(tuple(cell) for cell in self.current_piece_cells_mapped(include_above=True)),
+            board_cells=tuple(
+                sorted(
+                    (tuple(coord), int(color))
+                    for coord, color in self.board.cells.items()
+                )
+            ),
+            current_piece_cells=tuple(
+                tuple(cell)
+                for cell in self.current_piece_cells_mapped(include_above=True)
+            ),
             has_current_piece=self.current_piece is not None,
         )

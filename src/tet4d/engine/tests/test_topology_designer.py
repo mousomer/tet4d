@@ -17,21 +17,27 @@ from tet4d.engine.topology_designer import (
 
 
 class TestTopologyDesigner(unittest.TestCase):
-    def test_custom_per_edge_rules_apply_inversion_only_for_configured_edge(self) -> None:
+    def test_custom_per_edge_rules_apply_inversion_only_for_configured_edge(
+        self,
+    ) -> None:
         policy = TopologyPolicy(
             dims=(4, 8, 4),
             gravity_axis=1,
             mode=TOPOLOGY_BOUNDED,
             edge_rules=(
-                (EDGE_INVERT, EDGE_WRAP),   # x: neg invert, pos wrap
+                (EDGE_INVERT, EDGE_WRAP),  # x: neg invert, pos wrap
                 (EDGE_BOUNDED, EDGE_BOUNDED),  # y: bounded
-                (EDGE_WRAP, EDGE_WRAP),     # z: wrap
+                (EDGE_WRAP, EDGE_WRAP),  # z: wrap
             ),
         )
         # Negative x edge inverts z.
-        self.assertEqual(policy.map_coord((-1, 3, 1), allow_above_gravity=True), (3, 3, 2))
+        self.assertEqual(
+            policy.map_coord((-1, 3, 1), allow_above_gravity=True), (3, 3, 2)
+        )
         # Positive x edge wraps without inversion.
-        self.assertEqual(policy.map_coord((4, 3, 1), allow_above_gravity=True), (0, 3, 1))
+        self.assertEqual(
+            policy.map_coord((4, 3, 1), allow_above_gravity=True), (0, 3, 1)
+        )
 
     def test_designer_profiles_load_for_dimensions(self) -> None:
         profiles_2d = designer_profiles_for_dimension(2)

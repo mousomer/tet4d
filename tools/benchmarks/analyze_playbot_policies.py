@@ -70,7 +70,9 @@ def _parse_csv_values(raw: str, *, allowed: set[str], label: str) -> list[str]:
     unknown = [item for item in parts if item not in allowed]
     if unknown:
         allowed_text = ", ".join(sorted(allowed))
-        raise SystemExit(f"unsupported {label}: {', '.join(unknown)} (allowed: {allowed_text})")
+        raise SystemExit(
+            f"unsupported {label}: {', '.join(unknown)} (allowed: {allowed_text})"
+        )
     return parts
 
 
@@ -97,9 +99,13 @@ def _planner_sample_ms(
             piece_set=PIECE_SET_2D_CLASSIC,
             speed_level=3,
         )
-        state2 = GameState(config=cfg2, board=BoardND(case.dims), rng=random.Random(seed))
+        state2 = GameState(
+            config=cfg2, board=BoardND(case.dims), rng=random.Random(seed)
+        )
         t0 = time.perf_counter()
-        plan = plan_best_2d_move(state2, profile=profile, budget_ms=budget_ms, algorithm=algorithm)
+        plan = plan_best_2d_move(
+            state2, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+        )
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         if plan is None:
             return None
@@ -120,9 +126,13 @@ def _planner_sample_ms(
             speed_level=3,
         )
 
-    state_nd = GameStateND(config=cfg_nd, board=BoardND(case.dims), rng=random.Random(seed))
+    state_nd = GameStateND(
+        config=cfg_nd, board=BoardND(case.dims), rng=random.Random(seed)
+    )
     t0 = time.perf_counter()
-    plan_nd = plan_best_nd_move(state_nd, profile=profile, budget_ms=budget_ms, algorithm=algorithm)
+    plan_nd = plan_best_nd_move(
+        state_nd, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+    )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     if plan_nd is None:
         return None
@@ -211,7 +221,9 @@ def main() -> int:
     parser.add_argument("--board-set", choices=("base", "stress", "all"), default="all")
     parser.add_argument("--runs", type=int, default=24, help="plans per case/policy")
     parser.add_argument("--seed-start", type=int, default=100, help="first RNG seed")
-    parser.add_argument("--budget-scale", type=float, default=1.0, help="multiplier on default budgets")
+    parser.add_argument(
+        "--budget-scale", type=float, default=1.0, help="multiplier on default budgets"
+    )
     parser.add_argument(
         "--profiles",
         default="fast,balanced,deep,ultra",
@@ -222,9 +234,19 @@ def main() -> int:
         default="auto,heuristic,greedy_layer",
         help="comma-separated planner algorithms",
     )
-    parser.add_argument("--output-json", default="", help="optional JSON output file (inside project root)")
-    parser.add_argument("--output-csv", default="", help="optional CSV output file (inside project root)")
-    parser.add_argument("--show-top", type=int, default=18, help="rows to show in terminal summary")
+    parser.add_argument(
+        "--output-json",
+        default="",
+        help="optional JSON output file (inside project root)",
+    )
+    parser.add_argument(
+        "--output-csv",
+        default="",
+        help="optional CSV output file (inside project root)",
+    )
+    parser.add_argument(
+        "--show-top", type=int, default=18, help="rows to show in terminal summary"
+    )
     args = parser.parse_args()
 
     profiles = _parse_csv_values(
@@ -245,7 +267,9 @@ def main() -> int:
             algorithm = BotPlannerAlgorithm(algorithm_name)
             for profile_name in profiles:
                 profile = BotPlannerProfile(profile_name)
-                base_budget = default_planning_budget_ms(case.ndim, profile, dims=case.dims)
+                base_budget = default_planning_budget_ms(
+                    case.ndim, profile, dims=case.dims
+                )
                 budget_ms = max(1, int(round(base_budget * args.budget_scale)))
                 rows.append(
                     _summarize_case(
@@ -274,7 +298,9 @@ def main() -> int:
     if args.output_json:
         json_path = _resolve_repo_local_path(Path(args.output_json))
         json_path.parent.mkdir(parents=True, exist_ok=True)
-        json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        json_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         print(f"wrote JSON: {json_path}")
     if args.output_csv:
         csv_path = _resolve_repo_local_path(Path(args.output_csv))

@@ -45,7 +45,9 @@ class _CandidateND:
     game_over: bool
 
 
-def _resolve_nd_algorithm(state: GameStateND, algorithm: BotPlannerAlgorithm) -> BotPlannerAlgorithm:
+def _resolve_nd_algorithm(
+    state: GameStateND, algorithm: BotPlannerAlgorithm
+) -> BotPlannerAlgorithm:
     if algorithm != BotPlannerAlgorithm.AUTO:
         return algorithm
     return resolve_auto_planner_algorithm(
@@ -103,7 +105,9 @@ def _build_candidate(
     )
 
 
-def _better_candidate(current: _CandidateND | None, candidate: _CandidateND) -> _CandidateND:
+def _better_candidate(
+    current: _CandidateND | None, candidate: _CandidateND
+) -> _CandidateND:
     if current is None:
         return candidate
     if candidate.score > current.score:
@@ -184,7 +188,9 @@ def _apply_optional_lookahead(
     if not can_lookahead or next_shape is None or not top_candidates:
         return best_candidate, best_candidate.score
 
-    ranked = sorted(top_candidates, key=lambda item: (item.score, item.cleared), reverse=True)
+    ranked = sorted(
+        top_candidates, key=lambda item: (item.score, item.cleared), reverse=True
+    )
     return choose_best_with_followup(
         candidates=ranked,
         base_candidate=best_candidate,

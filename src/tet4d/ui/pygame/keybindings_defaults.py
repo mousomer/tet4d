@@ -20,7 +20,9 @@ def _merge_bindings(*maps: dict[str, KeyTuple]) -> KeyBindingMap:
     return merged
 
 
-def profile_movement_maps(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+def profile_movement_maps(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
     if profile == PROFILE_FULL:
         movement_2d = {
             "move_x_neg": (pygame.K_KP4,),
@@ -227,7 +229,9 @@ DEFAULT_SYSTEM_KEYS_MACBOOK: KeyBindingMap = {
 }
 
 
-def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+def default_game_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
     movement_2d, movement_3d, movement_4d = profile_movement_maps(profile)
     if profile == PROFILE_FULL:
         rotations_2d = ROTATIONS_2D_FULL
@@ -244,7 +248,9 @@ def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyB
     )
 
 
-def default_camera_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap]:
+def default_camera_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap]:
     if profile == PROFILE_MACBOOK:
         return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D_MACBOOK)
     return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D)

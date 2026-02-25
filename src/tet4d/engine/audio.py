@@ -54,7 +54,9 @@ class AudioEngine:
             return 0.0
         return self.settings.master_volume * self.settings.sfx_volume
 
-    def _tone_buffer(self, frequency: float, duration_ms: int, amplitude: float) -> bytes:
+    def _tone_buffer(
+        self, frequency: float, duration_ms: int, amplitude: float
+    ) -> bytes:
         frame_count = max(1, int(self._sample_rate * (duration_ms / 1000.0)))
         peak = int(32767 * max(0.0, min(1.0, amplitude)))
         wave = array("h")
@@ -78,7 +80,9 @@ class AudioEngine:
             return cached
         frequency, duration_ms, amplitude = _EVENT_SPECS[event_name]
         try:
-            sound = pygame.mixer.Sound(buffer=self._tone_buffer(frequency, duration_ms, amplitude))
+            sound = pygame.mixer.Sound(
+                buffer=self._tone_buffer(frequency, duration_ms, amplitude)
+            )
         except pygame.error:
             return None
         self._sounds[event_name] = sound

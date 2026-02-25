@@ -93,7 +93,9 @@ def _bot_values(loop: _BotMenuState) -> tuple[str, ...]:
     )
 
 
-def _set_bot_status(loop: _BotMenuState, message: str, *, is_error: bool = False) -> None:
+def _set_bot_status(
+    loop: _BotMenuState, message: str, *, is_error: bool = False
+) -> None:
     loop.status = message
     loop.status_error = is_error
 
@@ -123,7 +125,9 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
     _draw_gradient(screen)
     width, height = screen.get_size()
     title = fonts.title_font.render("Bot Options", True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render("Dimension-specific bot controls in one place", True, _MUTED_COLOR)
+    subtitle = fonts.hint_font.render(
+        "Dimension-specific bot controls in one place", True, _MUTED_COLOR
+    )
     screen.blit(title, ((width - title.get_width()) // 2, 40))
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 88))
 
@@ -141,7 +145,9 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
         selected = idx == loop.selected
         color = _HIGHLIGHT_COLOR if selected else _TEXT_COLOR
         if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA)
+            hi = pygame.Surface(
+                (panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA
+            )
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 3))
         label = fonts.menu_font.render(row, True, color)
@@ -184,10 +190,14 @@ def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
         mode_settings["bot_mode_index"] = max(0, min(len(BOT_MODE_OPTIONS) - 1, value))
     elif loop.selected == 2:
         value = mode_settings["bot_algorithm_index"] + delta
-        mode_settings["bot_algorithm_index"] = max(0, min(len(BOT_PLANNER_ALGORITHM_OPTIONS) - 1, value))
+        mode_settings["bot_algorithm_index"] = max(
+            0, min(len(BOT_PLANNER_ALGORITHM_OPTIONS) - 1, value)
+        )
     elif loop.selected == 3:
         value = mode_settings["bot_profile_index"] + delta
-        mode_settings["bot_profile_index"] = max(0, min(len(BOT_PLANNER_PROFILE_OPTIONS) - 1, value))
+        mode_settings["bot_profile_index"] = max(
+            0, min(len(BOT_PLANNER_PROFILE_OPTIONS) - 1, value)
+        )
     elif loop.selected == 4:
         value = mode_settings["bot_speed_level"] + delta
         mode_settings["bot_speed_level"] = max(1, min(10, value))

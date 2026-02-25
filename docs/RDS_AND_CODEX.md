@@ -43,9 +43,28 @@ Read order:
 10. Redundant compatibility facades may be removed when callers are migrated, but keep
     boundary-enforcing adapters (for example `engine -> ui` compatibility shims) until the
     corresponding modules are physically moved and boundary checks remain green.
-10. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-11. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-12. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+11. Public playbot APIs should now be imported from `tet4d.engine.api`; the
+    `tet4d.ai.playbot` package only retains shared internal helper logic during migration.
+12. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
+    `engine/ui_logic`, `engine/runtime`) over many tiny folders; keep moves prefix-based
+    and compatibility-shimmed to minimize import churn.
+13. As merged-folder moves land, update imports inside moved modules to use the new
+    merged buckets (for example `engine.runtime.*`) so old engine-path shims can be
+    pruned later without broad churn.
+14. Keep governance/tooling call sites stable during folder moves by leaving short
+    engine-path compatibility shims until the next prune stage.
+15. When multiple moved modules form a coherent cluster (for example `ui_logic`
+    keybindings helpers), update moved callers to import from the same new folder
+    immediately to reduce future shim-pruning churn.
+16. Start `engine/runtime` with menu settings/config/persistence modules first; they
+    are runtime/file-I/O concerns and a low-risk way to reduce the top-level
+    `engine/` catch-all.
+17. When moving runtime/config modules, prefer module-alias compatibility shims
+    (`sys.modules[__name__] = impl`) over `import *` shims when tests or callers
+    patch module-level globals/private helpers.
+18. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+19. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+20. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

@@ -24,7 +24,7 @@ DEFAULT_RANDOM_BAG_SIZE_2D = 7
 class PieceShape2D:
     name: str
     blocks: List[RelCoord2D]  # relative to pivot at (0,0)
-    color_id: int             # just an int; front-end will map to colors
+    color_id: int  # just an int; front-end will map to colors
 
 
 def get_standard_tetrominoes() -> List[PieceShape2D]:
@@ -74,7 +74,9 @@ def _normalize_offsets(blocks: Iterable[RelCoord2D]) -> Tuple[RelCoord2D, ...]:
     return tuple(normalized)
 
 
-def _neighbors_2d(cell: RelCoord2D) -> tuple[RelCoord2D, RelCoord2D, RelCoord2D, RelCoord2D]:
+def _neighbors_2d(
+    cell: RelCoord2D,
+) -> tuple[RelCoord2D, RelCoord2D, RelCoord2D, RelCoord2D]:
     x, y = cell
     return (
         (x - 1, y),
@@ -84,7 +86,9 @@ def _neighbors_2d(cell: RelCoord2D) -> tuple[RelCoord2D, RelCoord2D, RelCoord2D,
     )
 
 
-def _random_connected_blocks_2d(cell_count: int, rng: random.Random) -> Tuple[RelCoord2D, ...]:
+def _random_connected_blocks_2d(
+    cell_count: int, rng: random.Random
+) -> Tuple[RelCoord2D, ...]:
     if cell_count < 1:
         raise ValueError("cell_count must be >= 1")
     cells = {(0, 0)}
@@ -142,7 +146,9 @@ def _rect_blocks_2d(width: int, height: int) -> list[RelCoord2D]:
     return list(normalized)
 
 
-def _scaled_span(axis_size: int, ratio: float, min_size: int, max_cap: int | None = None) -> int:
+def _scaled_span(
+    axis_size: int, ratio: float, min_size: int, max_cap: int | None = None
+) -> int:
     clamped_axis = max(1, int(axis_size))
     scaled = max(min_size, int(round(clamped_axis * ratio)))
     scaled = min(scaled, clamped_axis)
@@ -151,7 +157,9 @@ def _scaled_span(axis_size: int, ratio: float, min_size: int, max_cap: int | Non
     return max(1, scaled)
 
 
-def get_debug_rectangles_2d(board_dims: tuple[int, int] | None = None) -> List[PieceShape2D]:
+def get_debug_rectangles_2d(
+    board_dims: tuple[int, int] | None = None,
+) -> List[PieceShape2D]:
     width, height = board_dims if board_dims is not None else (10, 20)
     width = max(1, int(width))
     height = max(1, int(height))
@@ -202,11 +210,11 @@ def rotate_point_2d(x: int, y: int, steps_cw: int) -> RelCoord2D:
     steps = steps_cw % 4
     if steps == 0:
         return x, y
-    elif steps == 1:      # 90° CW: (x, y) -> (y, -x)
+    elif steps == 1:  # 90° CW: (x, y) -> (y, -x)
         return y, -x
-    elif steps == 2:      # 180°
+    elif steps == 2:  # 180°
         return -x, -y
-    else:                 # 270° CW == 90° CCW
+    else:  # 270° CW == 90° CCW
         return -y, x
 
 
@@ -215,9 +223,10 @@ class ActivePiece2D:
     """
     A falling tetromino in 2D. Position is the pivot's location on the board.
     """
+
     shape: PieceShape2D
-    pos: Tuple[int, int]      # (x, y) of pivot on board
-    rotation: int = 0         # 0,1,2,3 -> 0°,90°,180°,270° CW
+    pos: Tuple[int, int]  # (x, y) of pivot on board
+    rotation: int = 0  # 0,1,2,3 -> 0°,90°,180°,270° CW
 
     def cells(self) -> List[Tuple[int, int]]:
         """
@@ -225,13 +234,15 @@ class ActivePiece2D:
         """
         px, py = self.pos
         result: List[Tuple[int, int]] = []
-        for (bx, by) in self.shape.blocks:
+        for bx, by in self.shape.blocks:
             rx, ry = rotate_point_2d(bx, by, self.rotation)
             result.append((px + rx, py + ry))
         return result
 
     def moved(self, dx: int, dy: int) -> "ActivePiece2D":
-        return ActivePiece2D(self.shape, (self.pos[0] + dx, self.pos[1] + dy), self.rotation)
+        return ActivePiece2D(
+            self.shape, (self.pos[0] + dx, self.pos[1] + dy), self.rotation
+        )
 
     def rotated(self, delta_steps: int) -> "ActivePiece2D":
         return ActivePiece2D(self.shape, self.pos, (self.rotation + delta_steps) % 4)

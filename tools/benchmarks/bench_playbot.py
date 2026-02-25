@@ -68,9 +68,15 @@ def _bench_2d(
             piece_set=PIECE_SET_2D_CLASSIC,
             speed_level=3,
         )
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(100 + i))
+        state = GameState(
+            config=cfg,
+            board=BoardND((cfg.width, cfg.height)),
+            rng=random.Random(100 + i),
+        )
         t0 = time.perf_counter()
-        plan = plan_best_2d_move(state, profile=profile, budget_ms=budget_ms, algorithm=algorithm)
+        plan = plan_best_2d_move(
+            state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+        )
         elapsed = (time.perf_counter() - t0) * 1000.0
         if plan is None:
             continue
@@ -103,9 +109,13 @@ def _bench_nd(
 
     samples: list[BenchSample] = []
     for i in range(runs):
-        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(200 + i))
+        state = GameStateND(
+            config=cfg, board=BoardND(cfg.dims), rng=random.Random(200 + i)
+        )
         t0 = time.perf_counter()
-        plan = plan_best_nd_move(state, profile=profile, budget_ms=budget_ms, algorithm=algorithm)
+        plan = plan_best_nd_move(
+            state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+        )
         elapsed = (time.perf_counter() - t0) * 1000.0
         if plan is None:
             continue
@@ -115,16 +125,28 @@ def _bench_nd(
 
 def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
     if not samples:
-        return {"runs": 0, "p50_ms": 0.0, "p95_ms": 0.0, "max_ms": 0.0, "avg_candidates": 0}
+        return {
+            "runs": 0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "max_ms": 0.0,
+            "avg_candidates": 0,
+        }
     ms_values = [sample.ms for sample in samples]
     p50 = statistics.median(ms_values)
-    p95 = statistics.quantiles(ms_values, n=20)[18] if len(ms_values) >= 20 else max(ms_values)
+    p95 = (
+        statistics.quantiles(ms_values, n=20)[18]
+        if len(ms_values) >= 20
+        else max(ms_values)
+    )
     return {
         "runs": len(samples),
         "p50_ms": round(p50, 3),
         "p95_ms": round(p95, 3),
         "max_ms": round(max(ms_values), 3),
-        "avg_candidates": int(round(statistics.mean(sample.candidates for sample in samples))),
+        "avg_candidates": int(
+            round(statistics.mean(sample.candidates for sample in samples))
+        ),
     }
 
 
@@ -161,7 +183,9 @@ def _append_trend_sample(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Benchmark playbot planner latency.")
-    parser.add_argument("--runs", type=int, default=40, help="number of plans per dimension")
+    parser.add_argument(
+        "--runs", type=int, default=40, help="number of plans per dimension"
+    )
     parser.add_argument(
         "--profile",
         choices=[p.value for p in BotPlannerProfile],
@@ -174,10 +198,21 @@ def main() -> int:
         default=BotPlannerAlgorithm.AUTO.value,
         help="planner algorithm",
     )
-    parser.add_argument("--budget-2d", type=int, default=0, help="override 2D planning budget in ms")
-    parser.add_argument("--budget-3d", type=int, default=0, help="override 3D planning budget in ms")
-    parser.add_argument("--budget-4d", type=int, default=0, help="override 4D planning budget in ms")
-    parser.add_argument("--assert", action="store_true", dest="assert_mode", help="fail on threshold regressions")
+    parser.add_argument(
+        "--budget-2d", type=int, default=0, help="override 2D planning budget in ms"
+    )
+    parser.add_argument(
+        "--budget-3d", type=int, default=0, help="override 3D planning budget in ms"
+    )
+    parser.add_argument(
+        "--budget-4d", type=int, default=0, help="override 4D planning budget in ms"
+    )
+    parser.add_argument(
+        "--assert",
+        action="store_true",
+        dest="assert_mode",
+        help="fail on threshold regressions",
+    )
     parser.add_argument(
         "--record-trend",
         action="store_true",
@@ -199,8 +234,12 @@ def main() -> int:
 
     results = {
         "2d": _summary(_bench_2d(profile, budget_2d, args.runs, algorithm=algorithm)),
-        "3d": _summary(_bench_nd(profile, budget_3d, args.runs, ndim=3, algorithm=algorithm)),
-        "4d": _summary(_bench_nd(profile, budget_4d, args.runs, ndim=4, algorithm=algorithm)),
+        "3d": _summary(
+            _bench_nd(profile, budget_3d, args.runs, ndim=3, algorithm=algorithm)
+        ),
+        "4d": _summary(
+            _bench_nd(profile, budget_4d, args.runs, ndim=4, algorithm=algorithm)
+        ),
     }
     payload = {
         "algorithm": algorithm.value,
@@ -216,7 +255,11 @@ def main() -> int:
     print(json.dumps(payload, indent=2, sort_keys=True))
 
     if args.record_trend:
-        trend_raw = Path(args.trend_file) if args.trend_file else playbot_benchmark_history_file()
+        trend_raw = (
+            Path(args.trend_file)
+            if args.trend_file
+            else playbot_benchmark_history_file()
+        )
         trend_path = _resolve_repo_local_path(trend_raw)
         _append_trend_sample(
             output_path=trend_path,

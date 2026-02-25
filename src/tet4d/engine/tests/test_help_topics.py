@@ -53,8 +53,7 @@ class TestHelpTopics(unittest.TestCase):
     def test_action_topics_prefer_quick_or_full_lanes(self) -> None:
         topics_registry = help_topics_registry()
         topic_lanes = {
-            topic["id"]: topic["lane"]
-            for topic in topics_registry["topics"]
+            topic["id"]: topic["lane"] for topic in topics_registry["topics"]
         }
         action_registry = help_action_topic_registry()
         for action in binding_action_ids():

@@ -101,7 +101,9 @@ def bot_planner_algorithm_from_index(index: int) -> BotPlannerAlgorithm:
 def _board_size_scale(ndim: int, dims: tuple[int, ...] | None) -> float:
     if not dims:
         return 1.0
-    ref_cells, min_scale, max_scale, exponent = playbot_board_size_scaling_policy_for_ndim(ndim)
+    ref_cells, min_scale, max_scale, exponent = (
+        playbot_board_size_scaling_policy_for_ndim(ndim)
+    )
     normalized_cells = max(1, prod(max(1, int(size)) for size in dims))
     ratio = normalized_cells / max(1, int(ref_cells))
     raw_scale = ratio ** max(0.01, float(exponent))
@@ -136,11 +138,13 @@ def clamp_planning_budget_ms(
     floor_divisor, floor_min, ceil_multiplier, ceil_min = playbot_clamp_policy()
     floor = max(
         floor_min,
-        default_planning_budget_ms(ndim, BotPlannerProfile.FAST, dims=dims) // max(1, floor_divisor),
+        default_planning_budget_ms(ndim, BotPlannerProfile.FAST, dims=dims)
+        // max(1, floor_divisor),
     )
     ceil = max(
         ceil_min,
-        default_planning_budget_ms(ndim, BotPlannerProfile.ULTRA, dims=dims) * max(1, ceil_multiplier),
+        default_planning_budget_ms(ndim, BotPlannerProfile.ULTRA, dims=dims)
+        * max(1, ceil_multiplier),
     )
     return max(floor, min(ceil, int(budget_ms)))
 
@@ -196,7 +200,9 @@ def resolve_auto_planner_algorithm(
 ) -> BotPlannerAlgorithm:
     if ndim <= 2:
         return BotPlannerAlgorithm.HEURISTIC
-    bias, density_weight, lines_weight, threshold = playbot_auto_algorithm_policy_for_ndim(ndim)
+    bias, density_weight, lines_weight, threshold = (
+        playbot_auto_algorithm_policy_for_ndim(ndim)
+    )
     total_cells = max(1, prod(max(1, int(size)) for size in dims))
     density = min(1.0, max(0.0, occupied_cells / total_cells))
     greedy_score = bias + density_weight * density + lines_weight * float(lines_cleared)

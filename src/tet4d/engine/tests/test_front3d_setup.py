@@ -34,7 +34,9 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(cfg_adapter.speed_level, cfg_shared.speed_level)
         self.assertEqual(cfg_adapter.piece_set_id, cfg_shared.piece_set_id)
         self.assertEqual(cfg_adapter.topology_mode, cfg_shared.topology_mode)
-        self.assertEqual(cfg_adapter.topology_edge_rules, cfg_shared.topology_edge_rules)
+        self.assertEqual(
+            cfg_adapter.topology_edge_rules, cfg_shared.topology_edge_rules
+        )
 
     def test_gravity_interval_matches_shared_nd_builder(self) -> None:
         settings = front3d_setup.GameSettings3D(speed_level=4)

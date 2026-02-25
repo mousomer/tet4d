@@ -38,13 +38,19 @@ class TestControlIconCaching(unittest.TestCase):
 
     def test_icon_cache_tracks_size_variants(self) -> None:
         surface = pygame.Surface((120, 80), pygame.SRCALPHA)
-        draw_action_icon(surface, rect=pygame.Rect(8, 8, 20, 20), action="rotate_xy_pos")
-        draw_action_icon(surface, rect=pygame.Rect(8, 8, 26, 26), action="rotate_xy_pos")
+        draw_action_icon(
+            surface, rect=pygame.Rect(8, 8, 20, 20), action="rotate_xy_pos"
+        )
+        draw_action_icon(
+            surface, rect=pygame.Rect(8, 8, 26, 26), action="rotate_xy_pos"
+        )
         self.assertEqual(action_icon_cache_size(), 2)
 
     def test_invalid_action_does_not_create_cache_entry(self) -> None:
         surface = pygame.Surface((120, 80), pygame.SRCALPHA)
-        draw_action_icon(surface, rect=pygame.Rect(8, 8, 20, 20), action="unknown_action")
+        draw_action_icon(
+            surface, rect=pygame.Rect(8, 8, 20, 20), action="unknown_action"
+        )
         self.assertEqual(action_icon_cache_size(), 0)
 
 

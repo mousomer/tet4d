@@ -40,6 +40,13 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 26. `DONE` Arch Stage 31 slice 21 moved the generic menu event-loop runner to `src/tet4d/ui/pygame/menu_runner.py` and converted `src/tet4d/engine/menu_runner.py` into a lazy compatibility shim, reducing `pygame_imports_non_test` again.
 27. `DONE` Arch Stage 32 slice 22 moved keybindings-menu pygame event polling to `src/tet4d/ui/pygame/keybindings_menu_input.py` and converted `src/tet4d/engine/keybindings_menu_input.py` into a compatibility shim, reducing `pygame_imports_non_test` again while preserving `ui_to_engine_non_api = 0`.
 28. `DONE` Arch Stage 33 slice 23 removed redundant engine re-export facades (`src/tet4d/engine/{board,rng,types}.py`) and the stale `src/tet4d/engine/playbot/lookahead_common.py` shim after migrating callers, while explicitly retaining `engine -> ui` compatibility adapters as boundary-preserving layers.
+29. `DONE` Arch Stage 34 slice 24 removed redundant `src/tet4d/ai/playbot/` wrapper modules (planner/controller/types facades), migrated internal callers to `tet4d.engine.api`, and retained only `src/tet4d/ai/playbot/lookahead_common.py` as real package logic.
+30. `DONE` Arch Stage 35 slice 25 started the merged-folder engine split sequence (`gameplay` / `ui_logic` / `runtime`) and moved low-risk menu/input helpers into `src/tet4d/engine/ui_logic/` with engine-path compatibility shims to minimize import churn.
+31. `DONE` Arch Stage 36 slice 26 moved `menu_controls.py` and `keybindings_menu_model.py` into `src/tet4d/engine/ui_logic/`, leaving engine-path compatibility shims and establishing the next `ui_logic` cluster slice without behavior change.
+32. `DONE` Arch Stage 37 slice 27 moved `menu_graph_linter.py` into `src/tet4d/engine/ui_logic/` and left a legacy engine-path shim so governance tooling remains stable during the folder split.
+33. `DONE` Arch Stage 38 slice 28 moved `keybindings_catalog.py` into `src/tet4d/engine/ui_logic/` and updated `ui_logic` keybindings-menu model imports to use the same merged folder.
+34. `DONE` Arch Stage 39 slice 29 created `src/tet4d/engine/runtime/` and moved menu settings/config persistence modules (`menu_settings_state.py`, `menu_persistence.py`, `menu_config.py`) behind engine-path compatibility shims.
+35. `DONE` Arch Stage 40 slice 30 moved project/runtime config and runtime validation modules into `src/tet4d/engine/runtime/`, adding engine-path module-alias shims to preserve import behavior during the folder split.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
@@ -394,6 +401,22 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 26. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
 27. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
 28. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
+29. `[P1][BKL-P1-002] 3D/4D active-piece transparency control`
+30. `Cadence:` when adjusting 3D/4D rendering UX or accessibility settings.
+31. `Trigger:` user feedback on occlusion/readability in 3D/4D boards.
+32. `Done criteria:` active-piece transparency is supported in 3D/4D renders and user-adjustable via settings/config UI with documented defaults.
+33. `[P1][BKL-P1-003] Viewer-relative movement regression verification (3D/4D)`
+34. `Cadence:` after changes to camera/view rotation, movement routing, or ND input mapping.
+35. `Trigger:` edits in 3D/4D key routing, camera transforms, or movement remapping logic.
+36. `Done criteria:` automated and/or manual verification confirms movement inputs remain viewer-relative after board/view rotations in 3D and 4D.
+37. `[P2][BKL-P2-010] True-random piece mode with configurable seed`
+38. `Cadence:` when expanding piece-generation options or setup-menu gameplay settings.
+39. `Trigger:` random piece-generator feature work (2D/3D/4D) or seed-handling changes.
+40. `Done criteria:` a true-random piece mode exists with explicit seed configuration exposed in setup/config UI, and fixed-seed runs remain deterministic.
+41. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
+42. `Cadence:` when extending 4D gameplay content and balancing.
+43. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
+44. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.

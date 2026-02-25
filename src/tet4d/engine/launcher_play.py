@@ -13,7 +13,10 @@ from .front3d_game import (
     run_menu as run_menu_3d,
     suggested_window_size as suggested_window_size_3d,
 )
-from .front4d_game import run_game_loop as run_game_loop_4d, suggested_window_size as suggested_window_size_4d
+from .front4d_game import (
+    run_game_loop as run_game_loop_4d,
+    suggested_window_size as suggested_window_size_4d,
+)
 from .frontend_nd import build_config as build_config_nd, run_menu as run_menu_nd
 from .playbot.types import bot_mode_from_index
 
@@ -67,7 +70,9 @@ def _launch_mode_flow(
     screen = open_display(display_settings, caption=setup_caption)
     settings = run_menu_fn(screen, fonts)
     if settings is None:
-        return LaunchResult(screen=screen, display_settings=display_settings, keep_running=True)
+        return LaunchResult(
+            screen=screen, display_settings=display_settings, keep_running=True
+        )
 
     cfg = build_cfg_fn(settings)
     preferred_size = _preferred_windowed_size(display_settings, suggested_size_fn(cfg))
@@ -83,10 +88,14 @@ def _launch_mode_flow(
         **_bot_kwargs(settings, default_budget_ms),
     )
     if not back_to_menu:
-        return LaunchResult(screen=screen, display_settings=display_settings, keep_running=False)
+        return LaunchResult(
+            screen=screen, display_settings=display_settings, keep_running=False
+        )
     display_settings = capture_windowed_display_settings(display_settings)
     screen = open_display(display_settings)
-    return LaunchResult(screen=screen, display_settings=display_settings, keep_running=True)
+    return LaunchResult(
+        screen=screen, display_settings=display_settings, keep_running=True
+    )
 
 
 def launch_2d(
@@ -138,7 +147,9 @@ def launch_4d(
         display_settings=display_settings,
         setup_caption="4D Tetris – Setup",
         game_caption="4D Tetris",
-        run_menu_fn=lambda menu_screen, menu_fonts: run_menu_nd(menu_screen, menu_fonts, 4),
+        run_menu_fn=lambda menu_screen, menu_fonts: run_menu_nd(
+            menu_screen, menu_fonts, 4
+        ),
         build_cfg_fn=lambda settings: build_config_nd(settings, 4),
         suggested_size_fn=suggested_window_size_4d,
         run_game_loop_fn=run_game_loop_4d,

@@ -25,8 +25,12 @@ class TestSpeedCurve(unittest.TestCase):
             self.assertGreater(interval_4d, interval_3d)
 
     def test_speed_level_is_clamped(self) -> None:
-        self.assertEqual(gravity_interval_ms(0, dimension=2), gravity_interval_ms(1, dimension=2))
-        self.assertEqual(gravity_interval_ms(99, dimension=4), gravity_interval_ms(10, dimension=4))
+        self.assertEqual(
+            gravity_interval_ms(0, dimension=2), gravity_interval_ms(1, dimension=2)
+        )
+        self.assertEqual(
+            gravity_interval_ms(99, dimension=4), gravity_interval_ms(10, dimension=4)
+        )
 
 
 if __name__ == "__main__":

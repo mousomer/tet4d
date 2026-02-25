@@ -141,4 +141,30 @@ incremental enforcement strategy used while refactoring.
   re-export shims (`board.py`, `rng.py`, `types.py`) and the stale
   `engine/playbot/lookahead_common.py` shim while retaining `engine -> ui` compatibility
   adapters that still enforce the current architecture boundary.
+- Stage 34 (slice 24, AI facade pruning) removes redundant `tet4d.ai.playbot`
+  planner/controller/type wrapper modules and routes callers directly to
+  `tet4d.engine.api`, leaving only the shared `ai/playbot/lookahead_common.py`
+  implementation module in the `tet4d.ai.playbot` package.
+- Stage 35 (slice 25, merged-folder sequence start) formalizes a minimal-change
+  engine folder split strategy using merged responsibility buckets (`gameplay`,
+  `ui_logic`, `runtime`) instead of many tiny folders, and moves low-risk
+  menu/input helpers into `engine/ui_logic` with engine-path compatibility shims.
+- Stage 36 (slice 26, `ui_logic` cluster expansion) moves menu interaction and
+  keybindings-menu model helpers into `engine/ui_logic`, keeping engine-path
+  compatibility shims while redirecting moved modules toward merged-folder imports.
+- Stage 37 (slice 27, menu graph logic consolidation) moves the menu graph linter
+  module into `engine/ui_logic` and keeps a compatibility shim at the legacy
+  engine path so governance tooling can migrate without churn.
+- Stage 38 (slice 28, keybindings catalog consolidation) moves the keybinding
+  action catalog into `engine/ui_logic` and updates `ui_logic` callers to import
+  the shared catalog from the same merged folder.
+- Stage 39 (slice 29, runtime cluster start) creates `engine/runtime` and moves
+  menu settings/config persistence modules behind engine-path compatibility shims,
+  while `ui_logic` callers start using `engine.runtime.*` imports directly.
+- Stage 40 (slice 30, runtime config cluster move) expands `engine/runtime` with
+  project/runtime config and validation modules, preserving legacy engine import
+  paths via module-alias shims for minimal churn.
+- Preferred foldering heuristic for future slices: target roughly `6-15` files per
+  leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
+  creating new folders that would remain `<=3` files without a strong boundary reason.
 - Future stages tighten this until `pygame` imports are fully removed from engine.

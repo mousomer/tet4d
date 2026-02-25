@@ -296,7 +296,9 @@ def placement_features(
 ) -> dict[str, float]:
     gravity_size = max(1, dims[gravity_axis])
     post_cells = set(board_post.keys())
-    locked = [coord for coord in locked_cells if 0 <= coord[gravity_axis] < gravity_size]
+    locked = [
+        coord for coord in locked_cells if 0 <= coord[gravity_axis] < gravity_size
+    ]
 
     if not locked:
         return {
@@ -316,14 +318,18 @@ def placement_features(
         }
 
     locked_count = len(locked)
-    drop_distance_norm = sum(coord[gravity_axis] for coord in locked) / (locked_count * max(1, gravity_size - 1))
+    drop_distance_norm = sum(coord[gravity_axis] for coord in locked) / (
+        locked_count * max(1, gravity_size - 1)
+    )
 
     lateral_axes = _lateral_axes(dims, gravity_axis)
     if lateral_axes:
         landing_values: list[float] = []
         for axis in lateral_axes:
             denom = max(1, dims[axis] - 1)
-            landing_values.append(sum(coord[axis] for coord in locked) / (locked_count * denom))
+            landing_values.append(
+                sum(coord[axis] for coord in locked) / (locked_count * denom)
+            )
         landing_coords_norm = _clamp01(sum(landing_values) / len(landing_values))
     else:
         landing_coords_norm = 0.0

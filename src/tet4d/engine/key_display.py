@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from importlib import import_module
+
 _ui_key_display = import_module("tet4d.ui.pygame.key_display")
 
 

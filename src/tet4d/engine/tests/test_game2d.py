@@ -18,7 +18,6 @@ class TestGame2D(unittest.TestCase):
         self.assertEqual(_score_for_clear(4), 1200)
         self.assertEqual(_score_for_clear(5), 1600)
 
-
     def make_empty_state(self, width=10, height=20) -> GameState:
         cfg = GameConfig(width=width, height=height)
         board = BoardND((cfg.width, cfg.height))
@@ -104,7 +103,9 @@ class TestGame2D(unittest.TestCase):
         state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
         state.board.cells.clear()
         state.board.cells[(0, 1)] = 1
-        state.current_piece = ActivePiece2D(PieceShape2D("dot", [(0, 0)], color_id=2), pos=(1, 1), rotation=0)
+        state.current_piece = ActivePiece2D(
+            PieceShape2D("dot", [(0, 0)], color_id=2), pos=(1, 1), rotation=0
+        )
         state.score_multiplier = 0.5
         cleared = state.lock_current_piece()
         self.assertEqual(cleared, 1)
@@ -185,7 +186,9 @@ class TestGame2D(unittest.TestCase):
         state.current_piece = ActivePiece2D(shape=dot, pos=(-1, 2), rotation=0)
 
         self.assertTrue(state._can_exist(state.current_piece))
-        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((3, 2),))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((3, 2),)
+        )
 
         state.lock_current_piece()
         self.assertIn((3, 2), state.board.cells)
@@ -205,7 +208,9 @@ class TestGame2D(unittest.TestCase):
         state.current_piece = ActivePiece2D(shape=dot, pos=(cfg.width, 3), rotation=0)
 
         self.assertTrue(state._can_exist(state.current_piece))
-        self.assertEqual(state.current_piece_cells_mapped(include_above=False), ((0, 3),))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((0, 3),)
+        )
 
 
 if __name__ == "__main__":

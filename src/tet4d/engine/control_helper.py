@@ -22,12 +22,17 @@ ControlGroup = tuple[str, tuple[str, ...]]
 class _GuideFonts:
     hint_font: pygame.font.Font
 
+
 def _format_action(bindings: Mapping[str, tuple[int, ...]], action: str) -> str:
     return format_key_tuple(bindings.get(action, ()))
 
 
-def _format_pair(bindings: Mapping[str, tuple[int, ...]], neg_action: str, pos_action: str) -> str:
-    return f"{_format_action(bindings, neg_action)}/{_format_action(bindings, pos_action)}"
+def _format_pair(
+    bindings: Mapping[str, tuple[int, ...]], neg_action: str, pos_action: str
+) -> str:
+    return (
+        f"{_format_action(bindings, neg_action)}/{_format_action(bindings, pos_action)}"
+    )
 
 
 def _line(keys: str, text: str) -> str:
@@ -44,9 +49,7 @@ _PairLineSpec = tuple[str, str, str]
 _SingleLineSpec = tuple[str, str]
 
 _TRANSLATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
-    2: (
-        ("move_x_neg", "move_x_pos", "move x", "move_x_pos"),
-    ),
+    2: (("move_x_neg", "move_x_pos", "move x", "move_x_pos"),),
     3: (
         ("move_x_neg", "move_x_pos", "left/right", "move_x_pos"),
         ("move_z_neg", "move_z_pos", "away/closer", "move_z_neg"),
@@ -65,9 +68,18 @@ _TRANSLATION_EXPLORATION_ROWS: dict[int, _PairIconSpec] = {
 }
 
 _TRANSLATION_SINGLE_ROWS: dict[int, tuple[_SingleIconSpec, ...]] = {
-    2: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
-    3: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
-    4: (("soft_drop", "soft drop", "soft_drop"), ("hard_drop", "hard drop", "hard_drop")),
+    2: (
+        ("soft_drop", "soft drop", "soft_drop"),
+        ("hard_drop", "hard drop", "hard_drop"),
+    ),
+    3: (
+        ("soft_drop", "soft drop", "soft_drop"),
+        ("hard_drop", "hard drop", "hard_drop"),
+    ),
+    4: (
+        ("soft_drop", "soft drop", "soft_drop"),
+        ("hard_drop", "hard drop", "hard_drop"),
+    ),
 }
 
 _ROTATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
@@ -117,12 +129,15 @@ _CAMERA_SINGLE_ROWS: dict[int, tuple[_SingleLineSpec, ...]] = {
     4: (("reset", "reset view"),),
 }
 
+
 def _rows_with_icon_pairs(
     bindings: Mapping[str, tuple[int, ...]],
     specs: tuple[_PairIconSpec, ...],
 ) -> tuple[str, ...]:
     return tuple(
-        _line_with_icon(_format_pair(bindings, neg_action, pos_action), label, icon_action)
+        _line_with_icon(
+            _format_pair(bindings, neg_action, pos_action), label, icon_action
+        )
         for neg_action, pos_action, label, icon_action in specs
     )
 
@@ -151,10 +166,14 @@ def _rows_with_actions(
     bindings: Mapping[str, tuple[int, ...]],
     specs: tuple[_SingleLineSpec, ...],
 ) -> tuple[str, ...]:
-    return tuple(_line(_format_action(bindings, action), label) for action, label in specs)
+    return tuple(
+        _line(_format_action(bindings, action), label) for action, label in specs
+    )
 
 
-def control_groups_for_dimension(dimension: int, *, include_exploration: bool = True) -> list[ControlGroup]:
+def control_groups_for_dimension(
+    dimension: int, *, include_exploration: bool = True
+) -> list[ControlGroup]:
     dim = max(2, min(4, int(dimension)))
     groups = runtime_binding_groups_for_dimension(dim)
     game_keys = groups.get("game", {})
@@ -164,7 +183,9 @@ def control_groups_for_dimension(dimension: int, *, include_exploration: bool = 
     translation_specs = list(_TRANSLATION_PAIR_ROWS[dim])
     if include_exploration:
         translation_specs.append(_TRANSLATION_EXPLORATION_ROWS[dim])
-    translation_rows = _rows_with_icon_pairs(game_keys, tuple(translation_specs)) + _rows_with_icon_actions(
+    translation_rows = _rows_with_icon_pairs(
+        game_keys, tuple(translation_specs)
+    ) + _rows_with_icon_actions(
         game_keys,
         _TRANSLATION_SINGLE_ROWS[dim],
     )
@@ -176,9 +197,9 @@ def control_groups_for_dimension(dimension: int, *, include_exploration: bool = 
     ]
 
     if dim >= 3:
-        camera_rows = _rows_with_pairs(camera_keys, _CAMERA_PAIR_ROWS[dim]) + _rows_with_actions(
-            camera_keys, _CAMERA_SINGLE_ROWS[dim]
-        )
+        camera_rows = _rows_with_pairs(
+            camera_keys, _CAMERA_PAIR_ROWS[dim]
+        ) + _rows_with_actions(camera_keys, _CAMERA_SINGLE_ROWS[dim])
         control_groups.append(("Camera/View", camera_rows))
 
     return control_groups
@@ -235,7 +256,9 @@ def _draw_group_rows(
     margin_x: int,
     panel_font: pygame.font.Font,
 ) -> None:
-    key_col_w, icon_x, value_x, value_w = _row_columns(box_rect=box_rect, margin_x=margin_x)
+    key_col_w, icon_x, value_x, value_w = _row_columns(
+        box_rect=box_rect, margin_x=margin_x
+    )
     for row in rows:
         parts = row.split("\t")
         if not parts:
@@ -311,9 +334,17 @@ def draw_grouped_control_helper(
     y = rect.y
     margin_x = 10
     for group_name, rows in groups:
-        box_h = 10 + hint_font.get_height() + 6 + (len(rows) * (panel_font.get_height() + 2)) + 8
+        box_h = (
+            10
+            + hint_font.get_height()
+            + 6
+            + (len(rows) * (panel_font.get_height() + 2))
+            + 8
+        )
         if y + box_h > rect.bottom:
-            return _draw_overflow_hint(surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font)
+            return _draw_overflow_hint(
+                surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font
+            )
 
         box_rect = pygame.Rect(rect.x + 2, y, rect.width - 4, box_h)
         _draw_group_box(surface, box_rect=box_rect)

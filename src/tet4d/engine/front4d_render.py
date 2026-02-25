@@ -45,9 +45,15 @@ from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label
 
 
-MARGIN = project_constant_int(("rendering", "4d", "margin"), 16, min_value=0, max_value=400)
-LAYER_GAP = project_constant_int(("rendering", "4d", "layer_gap"), 12, min_value=0, max_value=200)
-SIDE_PANEL = project_constant_int(("rendering", "4d", "side_panel"), 360, min_value=180, max_value=960)
+MARGIN = project_constant_int(
+    ("rendering", "4d", "margin"), 16, min_value=0, max_value=400
+)
+LAYER_GAP = project_constant_int(
+    ("rendering", "4d", "layer_gap"), 12, min_value=0, max_value=200
+)
+SIDE_PANEL = project_constant_int(
+    ("rendering", "4d", "side_panel"), 360, min_value=180, max_value=960
+)
 BG_TOP = (18, 24, 50)
 BG_BOTTOM = (6, 8, 20)
 TEXT_COLOR = (230, 230, 230)
@@ -91,7 +97,9 @@ class LayerView3D(YawPitchTurnAnimator):
     hyper_target_zw: float = 0.0
     hyper_elapsed_ms: float = 0.0
 
-    def _start_hyper_turn(self, *, xw_delta_deg: float = 0.0, zw_delta_deg: float = 0.0) -> None:
+    def _start_hyper_turn(
+        self, *, xw_delta_deg: float = 0.0, zw_delta_deg: float = 0.0
+    ) -> None:
         self.hyper_animating = True
         self.hyper_elapsed_ms = 0.0
         self.hyper_start_xw = _snap_hyper_quarter_angle(self.xw_deg)
@@ -125,8 +133,12 @@ class LayerView3D(YawPitchTurnAnimator):
         else:
             progress = min(1.0, self.hyper_elapsed_ms / self.anim_duration_ms)
         eased = smoothstep01(progress)
-        self.xw_deg = interpolate_angle_deg(self.hyper_start_xw, self.hyper_target_xw, eased)
-        self.zw_deg = interpolate_angle_deg(self.hyper_start_zw, self.hyper_target_zw, eased)
+        self.xw_deg = interpolate_angle_deg(
+            self.hyper_start_xw, self.hyper_target_xw, eased
+        )
+        self.zw_deg = interpolate_angle_deg(
+            self.hyper_start_zw, self.hyper_target_zw, eased
+        )
         if progress >= 1.0:
             self.xw_deg = normalize_angle_deg(self.hyper_target_xw)
             self.zw_deg = normalize_angle_deg(self.hyper_target_zw)
@@ -199,7 +211,9 @@ def _quarter_turn_steps(angle_deg: float) -> int:
     return int(round(normalize_angle_deg(angle_deg) / 90.0)) % 4
 
 
-def _basis_for_view(view: LayerView3D, dims4: tuple[int, int, int, int]) -> RenderBasis4D:
+def _basis_for_view(
+    view: LayerView3D, dims4: tuple[int, int, int, int]
+) -> RenderBasis4D:
     xw_deg, zw_deg = _effective_hyper_angles(view)
     xw_steps = _quarter_turn_steps(xw_deg)
     zw_steps = _quarter_turn_steps(zw_deg)
@@ -246,7 +260,9 @@ def _layer_index_if_discrete(layer_value: float) -> int | None:
     return layer_idx
 
 
-def _cell3_if_discrete(cell3: tuple[float, float, float]) -> tuple[int, int, int] | None:
+def _cell3_if_discrete(
+    cell3: tuple[float, float, float],
+) -> tuple[int, int, int] | None:
     x, y, z = (int(round(cell3[0])), int(round(cell3[1])), int(round(cell3[2])))
     if (
         abs(cell3[0] - float(x)) > 1e-6
@@ -296,8 +312,7 @@ def _fit_zoom(
     rect: pygame.Rect,
 ) -> float:
     transformed = [
-        _transform_raw_point(raw, dims3, view)
-        for raw in box_raw_corners(dims3)
+        _transform_raw_point(raw, dims3, view) for raw in box_raw_corners(dims3)
     ]
     max_abs_x = max(max(abs(point[0]) for point in transformed), 0.01)
     max_abs_y = max(max(abs(point[1]) for point in transformed), 0.01)
@@ -398,10 +413,15 @@ def _layer_cells(
     basis: RenderBasis4D,
     active_overlay: ActiveOverlay4D | None = None,
 ) -> list[tuple[tuple[float, float, float], int, bool]]:
-    return [*locked_by_layer.get(layer_index, ()), *_layer_active_cells(state, layer_index, basis, active_overlay)]
+    return [
+        *locked_by_layer.get(layer_index, ()),
+        *_layer_active_cells(state, layer_index, basis, active_overlay),
+    ]
 
 
-def _locked_cells_by_layer(state: GameStateND, basis: RenderBasis4D) -> LockedLayerCells:
+def _locked_cells_by_layer(
+    state: GameStateND, basis: RenderBasis4D
+) -> LockedLayerCells:
     dims4 = state.config.dims
     cells_by_layer: dict[int, list[tuple[tuple[float, float, float], int, bool]]] = {}
     for coord, cell_id in state.board.cells.items():
@@ -409,7 +429,9 @@ def _locked_cells_by_layer(state: GameStateND, basis: RenderBasis4D) -> LockedLa
         layer_idx = _layer_index_if_discrete(layer_value)
         if layer_idx is None or not _in_bounds_layer_cell(layer_idx, cell3, basis):
             continue
-        cells_by_layer.setdefault(layer_idx, []).append(((cell3[0], cell3[1], cell3[2]), cell_id, False))
+        cells_by_layer.setdefault(layer_idx, []).append(
+            ((cell3[0], cell3[1], cell3[2]), cell_id, False)
+        )
     return {layer: tuple(cells) for layer, cells in cells_by_layer.items()}
 
 
@@ -479,7 +501,9 @@ def _helper_grid_marks_by_layer(
         cell3_i = _cell3_if_discrete(cell3)
         if layer_idx is None or cell3_i is None:
             continue
-        if not _in_bounds_layer_cell(layer_idx, (float(cell3_i[0]), float(cell3_i[1]), float(cell3_i[2])), basis):
+        if not _in_bounds_layer_cell(
+            layer_idx, (float(cell3_i[0]), float(cell3_i[1]), float(cell3_i[2])), basis
+        ):
             continue
         x, y, z = cell3_i
         entry = marks_by_layer.setdefault(layer_idx, [set(), set(), set()])
@@ -489,7 +513,9 @@ def _helper_grid_marks_by_layer(
         entry[1].add(y + 1)
         entry[2].add(z)
         entry[2].add(z + 1)
-    return {layer: (entry[0], entry[1], entry[2]) for layer, entry in marks_by_layer.items()}
+    return {
+        layer: (entry[0], entry[1], entry[2]) for layer, entry in marks_by_layer.items()
+    }
 
 
 def _draw_layer_grid_or_shadow(
@@ -520,7 +546,9 @@ def _draw_layer_grid_or_shadow(
         surface=surface,
         dims=dims3,
         grid_mode=grid_mode,
-        draw_full_grid=lambda: _draw_board_grid(surface, dims3, dims4, layer_index, basis, view, draw_rect, zoom),
+        draw_full_grid=lambda: _draw_board_grid(
+            surface, dims3, dims4, layer_index, basis, view, draw_rect, zoom
+        ),
         project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
         helper_marks=helper_marks,
@@ -745,7 +773,11 @@ def _draw_side_panel(
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
-    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
+    low_priority_lines = [
+        *bot_lines,
+        *([""] if bot_lines and analysis_lines else []),
+        *analysis_lines,
+    ]
 
     lines = (
         "4D Tetris",
@@ -810,7 +842,11 @@ def draw_game_frame(
     pygame.draw.rect(screen, (14, 18, 36), layers_rect, border_radius=10)
 
     basis = _basis_for_view(view, state.config.dims)
-    helper_marks_by_layer = _helper_grid_marks_by_layer(state, basis) if grid_mode == GridMode.HELPER else {}
+    helper_marks_by_layer = (
+        _helper_grid_marks_by_layer(state, basis)
+        if grid_mode == GridMode.HELPER
+        else {}
+    )
     locked_by_layer = _locked_cells_by_layer(state, basis)
     layer_rect_by_layer = _layer_rects_by_layer(
         area=layers_rect,
@@ -871,8 +907,12 @@ def handle_view_key(key: int, view: LayerView3D) -> bool:
                 "view_xw_pos": lambda: view.start_xw_turn(90.0),
                 "view_zw_neg": lambda: view.start_zw_turn(-90.0),
                 "view_zw_pos": lambda: view.start_zw_turn(90.0),
-                "zoom_in": lambda: setattr(view, "zoom_scale", min(2.6, view.zoom_scale * 1.08)),
-                "zoom_out": lambda: setattr(view, "zoom_scale", max(0.45, view.zoom_scale / 1.08)),
+                "zoom_in": lambda: setattr(
+                    view, "zoom_scale", min(2.6, view.zoom_scale * 1.08)
+                ),
+                "zoom_out": lambda: setattr(
+                    view, "zoom_scale", max(0.45, view.zoom_scale / 1.08)
+                ),
                 "reset": lambda: _reset_view(view),
                 "cycle_projection": lambda: None,
             },

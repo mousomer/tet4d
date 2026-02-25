@@ -25,8 +25,7 @@ def _grid_mode_from_name(mode_name: str) -> GridMode:
 
 
 _GRID_MODE_CYCLE: tuple[GridMode, ...] = tuple(
-    _grid_mode_from_name(mode_name)
-    for mode_name in grid_mode_cycle_names()
+    _grid_mode_from_name(mode_name) for mode_name in grid_mode_cycle_names()
 )
 _GRID_MODE_FALLBACK = _grid_mode_from_name(grid_mode_fallback_name())
 

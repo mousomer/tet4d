@@ -5,6 +5,7 @@ from typing import Any
 
 import pygame
 
+
 def process_menu_events(
     state: Any,
     binding_rows: list[Any],

@@ -9,7 +9,9 @@ from pathlib import Path
 def _detect_project_root() -> Path:
     here = Path(__file__).resolve()
     for candidate in (here.parent, *here.parents):
-        if (candidate / "tools" / "governance" / "validate_project_contracts.py").exists():
+        if (
+            candidate / "tools" / "governance" / "validate_project_contracts.py"
+        ).exists():
             return candidate
         if (candidate / "tools" / "validate_project_contracts.py").exists():
             return candidate

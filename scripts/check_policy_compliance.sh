@@ -39,4 +39,6 @@ if [ "$FAILED" -ne 0 ]; then
   exit 1
 fi
 
+./scripts/check_text_formatting.sh
+
 echo "Policy compliance check complete."

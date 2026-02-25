@@ -25,13 +25,19 @@ def _read_json_object(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise HelpTopicsValidationError(f"Failed reading help config file {path}: {exc}") from exc
+        raise HelpTopicsValidationError(
+            f"Failed reading help config file {path}: {exc}"
+        ) from exc
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise HelpTopicsValidationError(f"Invalid JSON in help config file {path}: {exc}") from exc
+        raise HelpTopicsValidationError(
+            f"Invalid JSON in help config file {path}: {exc}"
+        ) from exc
     if not isinstance(payload, dict):
-        raise HelpTopicsValidationError(f"Help config file {path} must contain a JSON object")
+        raise HelpTopicsValidationError(
+            f"Help config file {path} must contain a JSON object"
+        )
     return payload
 
 
@@ -61,7 +67,9 @@ def _validate_topic_lines(raw_lines: object, *, path: str) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _validate_topic_sections(raw_sections: object, *, path: str) -> tuple[dict[str, Any], ...]:
+def _validate_topic_sections(
+    raw_sections: object, *, path: str
+) -> tuple[dict[str, Any], ...]:
     if not isinstance(raw_sections, list) or not raw_sections:
         raise HelpTopicsValidationError(f"{path} must be a non-empty list")
     section_ids: set[str] = set()
@@ -72,13 +80,19 @@ def _validate_topic_sections(raw_sections: object, *, path: str) -> tuple[dict[s
             raise HelpTopicsValidationError(f"{item_path} must be an object")
         section_id = _clean_string(raw_section.get("id"), path=f"{item_path}.id")
         if section_id in section_ids:
-            raise HelpTopicsValidationError(f"{path} contains duplicate section id: {section_id}")
+            raise HelpTopicsValidationError(
+                f"{path} contains duplicate section id: {section_id}"
+            )
         section_ids.add(section_id)
         sections.append(
             {
                 "id": section_id,
-                "title": _clean_string(raw_section.get("title"), path=f"{item_path}.title"),
-                "lines": _validate_topic_lines(raw_section.get("lines"), path=f"{item_path}.lines"),
+                "title": _clean_string(
+                    raw_section.get("title"), path=f"{item_path}.title"
+                ),
+                "lines": _validate_topic_lines(
+                    raw_section.get("lines"), path=f"{item_path}.lines"
+                ),
             }
         )
     return tuple(sections)
@@ -94,7 +108,9 @@ def _validate_dimensions(raw_dimensions: object, *, path: str) -> tuple[int, ...
         if value not in _ALLOWED_DIMENSIONS:
             raise HelpTopicsValidationError(f"{path}[{idx}] must be one of: 2, 3, 4")
         if value in seen:
-            raise HelpTopicsValidationError(f"{path} contains duplicate dimension: {value}")
+            raise HelpTopicsValidationError(
+                f"{path} contains duplicate dimension: {value}"
+            )
         seen.add(value)
         cleaned.append(value)
     return tuple(cleaned)
@@ -111,13 +127,17 @@ def _validate_contexts(raw_contexts: object, *, path: str) -> tuple[str, ...]:
             allowed = ", ".join(sorted(_ALLOWED_CONTEXTS))
             raise HelpTopicsValidationError(f"{path}[{idx}] must be one of: {allowed}")
         if context in seen:
-            raise HelpTopicsValidationError(f"{path} contains duplicate context: {context}")
+            raise HelpTopicsValidationError(
+                f"{path} contains duplicate context: {context}"
+            )
         seen.add(context)
         cleaned.append(context)
     return tuple(cleaned)
 
 
-def _validate_topics_payload(payload: dict[str, Any]) -> tuple[int, tuple[dict[str, Any], ...], tuple[str, ...]]:
+def _validate_topics_payload(
+    payload: dict[str, Any],
+) -> tuple[int, tuple[dict[str, Any], ...], tuple[str, ...]]:
     version = _clean_int(payload.get("version"), path="topics.version", minimum=1)
     raw_topics = payload.get("topics")
     if not isinstance(raw_topics, list) or not raw_topics:
@@ -131,7 +151,9 @@ def _validate_topics_payload(payload: dict[str, Any]) -> tuple[int, tuple[dict[s
             raise HelpTopicsValidationError(f"{path} must be an object")
         topic_id = _clean_string(raw_topic.get("id"), path=f"{path}.id")
         if topic_id in seen_ids:
-            raise HelpTopicsValidationError(f"topics.topics has duplicate id: {topic_id}")
+            raise HelpTopicsValidationError(
+                f"topics.topics has duplicate id: {topic_id}"
+            )
         seen_ids.add(topic_id)
         lane = _clean_string(raw_topic.get("lane"), path=f"{path}.lane").lower()
         if lane not in _ALLOWED_LANES:
@@ -142,11 +164,21 @@ def _validate_topics_payload(payload: dict[str, Any]) -> tuple[int, tuple[dict[s
                 "id": topic_id,
                 "title": _clean_string(raw_topic.get("title"), path=f"{path}.title"),
                 "lane": lane,
-                "priority": _clean_int(raw_topic.get("priority"), path=f"{path}.priority", minimum=0),
-                "dimensions": _validate_dimensions(raw_topic.get("dimensions"), path=f"{path}.dimensions"),
-                "contexts": _validate_contexts(raw_topic.get("contexts"), path=f"{path}.contexts"),
-                "summary": _clean_string(raw_topic.get("summary"), path=f"{path}.summary"),
-                "sections": _validate_topic_sections(raw_topic.get("sections"), path=f"{path}.sections"),
+                "priority": _clean_int(
+                    raw_topic.get("priority"), path=f"{path}.priority", minimum=0
+                ),
+                "dimensions": _validate_dimensions(
+                    raw_topic.get("dimensions"), path=f"{path}.dimensions"
+                ),
+                "contexts": _validate_contexts(
+                    raw_topic.get("contexts"), path=f"{path}.contexts"
+                ),
+                "summary": _clean_string(
+                    raw_topic.get("summary"), path=f"{path}.summary"
+                ),
+                "sections": _validate_topic_sections(
+                    raw_topic.get("sections"), path=f"{path}.sections"
+                ),
             }
         )
         topic_ids.append(topic_id)
@@ -159,20 +191,26 @@ def _validate_action_map_payload(
     topic_ids: set[str],
 ) -> tuple[int, str, dict[str, str]]:
     version = _clean_int(payload.get("version"), path="action_map.version", minimum=1)
-    default_topic = _clean_string(payload.get("default_topic"), path="action_map.default_topic")
+    default_topic = _clean_string(
+        payload.get("default_topic"), path="action_map.default_topic"
+    )
     if default_topic not in topic_ids:
         raise HelpTopicsValidationError(
             "action_map.default_topic must reference an existing help topic id"
         )
     raw_action_topics = payload.get("action_topics")
     if not isinstance(raw_action_topics, dict) or not raw_action_topics:
-        raise HelpTopicsValidationError("action_map.action_topics must be a non-empty object")
+        raise HelpTopicsValidationError(
+            "action_map.action_topics must be a non-empty object"
+        )
 
     known_actions = set(binding_action_ids())
     action_topics: dict[str, str] = {}
     for raw_action, raw_topic_id in raw_action_topics.items():
         action = _clean_string(raw_action, path="action_map.action_topics keys")
-        topic_id = _clean_string(raw_topic_id, path=f"action_map.action_topics.{action}")
+        topic_id = _clean_string(
+            raw_topic_id, path=f"action_map.action_topics.{action}"
+        )
         if topic_id not in topic_ids:
             raise HelpTopicsValidationError(
                 f"action_map.action_topics.{action} points to unknown topic id: {topic_id}"
@@ -182,13 +220,15 @@ def _validate_action_map_payload(
     unknown_actions = sorted(set(action_topics.keys()) - known_actions)
     if unknown_actions:
         raise HelpTopicsValidationError(
-            "action_map.action_topics includes unknown actions: " + ", ".join(unknown_actions)
+            "action_map.action_topics includes unknown actions: "
+            + ", ".join(unknown_actions)
         )
 
     missing_actions = sorted(known_actions - set(action_topics.keys()))
     if missing_actions:
         raise HelpTopicsValidationError(
-            "action_map.action_topics missing mappings for actions: " + ", ".join(missing_actions)
+            "action_map.action_topics missing mappings for actions: "
+            + ", ".join(missing_actions)
         )
 
     return version, default_topic, action_topics
@@ -212,7 +252,9 @@ def help_action_topic_registry() -> dict[str, Any]:
     topics = help_topics_registry()
     topic_ids = set(topics["topic_ids"])
     payload = _read_json_object(ACTION_MAP_FILE)
-    version, default_topic, action_topics = _validate_action_map_payload(payload, topic_ids=topic_ids)
+    version, default_topic, action_topics = _validate_action_map_payload(
+        payload, topic_ids=topic_ids
+    )
     return {
         "version": version,
         "default_topic": default_topic,
@@ -239,7 +281,9 @@ def normalize_help_context(context_label: str) -> str:
     return "launcher"
 
 
-def help_topics_for_context(*, dimension: int, context_label: str) -> tuple[dict[str, Any], ...]:
+def help_topics_for_context(
+    *, dimension: int, context_label: str
+) -> tuple[dict[str, Any], ...]:
     dim = max(2, min(4, int(dimension)))
     context = normalize_help_context(context_label)
     registry = help_topics_registry()

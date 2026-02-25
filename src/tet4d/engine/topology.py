@@ -257,10 +257,7 @@ def _resolve_invert_piece_mapping(
     first_crossed = observed_cross_sets[0]
     candidate_sets.append(first_crossed)
     for mask in product((0, 1), repeat=len(wrap_axes)):
-        candidate = frozenset(
-            axis for idx, axis in enumerate(wrap_axes)
-            if mask[idx]
-        )
+        candidate = frozenset(axis for idx, axis in enumerate(wrap_axes) if mask[idx])
         if candidate not in candidate_sets:
             candidate_sets.append(candidate)
 

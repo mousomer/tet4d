@@ -61,7 +61,9 @@ def _dry_run_budget_nd(
     return budget
 
 
-def _dry_run_algorithm_nd(cfg: GameConfigND, planner_algorithm: BotPlannerAlgorithm) -> BotPlannerAlgorithm:
+def _dry_run_algorithm_nd(
+    cfg: GameConfigND, planner_algorithm: BotPlannerAlgorithm
+) -> BotPlannerAlgorithm:
     if _is_4d_debug_dry_run(cfg):
         # Debug dry-run should prioritize reliable clear completion over other planner modes.
         return BotPlannerAlgorithm.GREEDY_LAYER
@@ -109,7 +111,11 @@ def _run_dry_run_nd_once(
         if state.lines_cleared > before_clears:
             clears_observed += 1
 
-    passed = (not state.game_over) and pieces_dropped >= max(1, max_pieces) and clears_observed > 0
+    passed = (
+        (not state.game_over)
+        and pieces_dropped >= max(1, max_pieces)
+        and clears_observed > 0
+    )
     reason = _dry_run_reason(
         passed=passed,
         game_over=state.game_over,
@@ -146,7 +152,9 @@ def run_dry_run_2d(
     budget = (
         planning_budget_ms
         if planning_budget_ms is not None
-        else default_planning_budget_ms(2, planner_profile, dims=(cfg.width, cfg.height))
+        else default_planning_budget_ms(
+            2, planner_profile, dims=(cfg.width, cfg.height)
+        )
     )
 
     for _ in range(max(1, max_pieces)):
@@ -169,7 +177,11 @@ def run_dry_run_2d(
         if state.lines_cleared > before_clears:
             clears_observed += 1
 
-    passed = (not state.game_over) and pieces_dropped >= max(1, max_pieces) and clears_observed > 0
+    passed = (
+        (not state.game_over)
+        and pieces_dropped >= max(1, max_pieces)
+        and clears_observed > 0
+    )
     reason = _dry_run_reason(
         passed=passed,
         game_over=state.game_over,

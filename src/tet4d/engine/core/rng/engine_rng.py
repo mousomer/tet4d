@@ -6,7 +6,9 @@ import random
 class EngineRNG(random.Random):
     """Seedable RNG wrapper with a stable engine-facing type."""
 
-    def __init__(self, seed: int | float | str | bytes | bytearray | None = None) -> None:
+    def __init__(
+        self, seed: int | float | str | bytes | bytearray | None = None
+    ) -> None:
         super().__init__(seed)
 
     def fork(self) -> "EngineRNG":

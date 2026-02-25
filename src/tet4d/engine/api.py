@@ -45,7 +45,10 @@ from .playbot.types import (
     default_planning_budget_ms,
 )
 from .core.rng import EngineRNG, coerce_random
-from .runtime_config import playbot_benchmark_history_file, playbot_benchmark_p95_thresholds
+from .runtime_config import (
+    playbot_benchmark_history_file,
+    playbot_benchmark_p95_thresholds,
+)
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -118,7 +121,9 @@ def plan_best_nd_move(
     )
 
 
-def simulate_lock_board(state: GameStateND, piece: Any) -> tuple[dict[tuple[int, ...], int], int, bool]:
+def simulate_lock_board(
+    state: GameStateND, piece: Any
+) -> tuple[dict[tuple[int, ...], int], int, bool]:
     from .playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
 
     return _simulate_lock_board(state, piece)
@@ -193,7 +198,9 @@ def step_nd(state: GameStateND) -> GameStateND:
     return core_step_nd(state)
 
 
-def step(state: GameState | GameStateND, action: Action | None = None) -> GameState | GameStateND:
+def step(
+    state: GameState | GameStateND, action: Action | None = None
+) -> GameState | GameStateND:
     if isinstance(state, GameState):
         return core_step_2d(state, Action.NONE if action is None else action)
     if action is not None:
@@ -216,7 +223,9 @@ def board_cells(state: GameState | GameStateND) -> dict[tuple[int, ...], int]:
     return core_board_cells(state)
 
 
-def current_piece_cells(state: GameState | GameStateND, *, include_above: bool = False) -> tuple[tuple[int, ...], ...]:
+def current_piece_cells(
+    state: GameState | GameStateND, *, include_above: bool = False
+) -> tuple[tuple[int, ...], ...]:
     return core_current_piece_cells(state, include_above=include_above)
 
 

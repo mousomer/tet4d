@@ -53,4 +53,3 @@ def plan_best_nd_move(
         final_piece=search_plan.final_piece,
         stats=search_plan.stats,
     )
-

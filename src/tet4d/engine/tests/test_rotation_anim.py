@@ -39,7 +39,8 @@ class TestRotationAnim(unittest.TestCase):
         cells_mid, _color = overlay_mid
         self.assertTrue(
             any(
-                abs(cell[0] - round(cell[0])) > 1e-4 or abs(cell[1] - round(cell[1])) > 1e-4
+                abs(cell[0] - round(cell[0])) > 1e-4
+                or abs(cell[1] - round(cell[1])) > 1e-4
                 for cell in cells_mid
             )
         )

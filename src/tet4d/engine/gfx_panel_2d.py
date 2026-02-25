@@ -42,7 +42,9 @@ def _draw_side_panel_text(
     y = py
     for line in lines:
         render_line = fit_text(fonts.panel_font, line, side_panel_width - 4)
-        surf = render_text_cached(font=fonts.panel_font, text=render_line, color=text_color)
+        surf = render_text_cached(
+            font=fonts.panel_font, text=render_line, color=text_color
+        )
         surface.blit(surf, (px, y))
         y += surf.get_height() + 4
     return y
@@ -61,7 +63,11 @@ def draw_side_panel_2d(
     gravity_interval_from_config: Callable[[Any], int],
 ) -> None:
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
-    low_priority_lines = [*bot_lines, *([""] if bot_lines and analysis_lines else []), *analysis_lines]
+    low_priority_lines = [
+        *bot_lines,
+        *([""] if bot_lines and analysis_lines else []),
+        *analysis_lines,
+    ]
     y_after_text = _draw_side_panel_text(
         surface,
         state,
@@ -100,7 +106,9 @@ def draw_side_panel_2d(
         low_h = 0
         controls_bottom = panel_bottom - reserve_bottom
 
-    controls_rect = pygame.Rect(px, controls_top, side_panel_width, max(42, controls_bottom - controls_top))
+    controls_rect = pygame.Rect(
+        px, controls_top, side_panel_width, max(42, controls_bottom - controls_top)
+    )
     draw_grouped_control_helper(
         surface,
         groups=control_groups_for_dimension(
@@ -135,7 +143,9 @@ def draw_side_panel_2d(
 
     if state.game_over:
         y = surface.get_height() - 58
-        surf = render_text_cached(font=fonts.panel_font, text="GAME OVER", color=(255, 80, 80))
+        surf = render_text_cached(
+            font=fonts.panel_font, text="GAME OVER", color=(255, 80, 80)
+        )
         surface.blit(surf, (px, y))
         y += surf.get_height() + 4
         surf2 = render_text_cached(

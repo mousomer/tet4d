@@ -185,11 +185,17 @@ def _enumerate_candidates_2d(
             if len(candidates) >= candidate_cap:
                 return candidates, True
 
-            candidate = ActivePiece2D(shape=shape, pos=(target_x, spawn_y), rotation=rotation)
-            if not _can_exist_on_cells(candidate, cells=board_cells, width=width, height=height):
+            candidate = ActivePiece2D(
+                shape=shape, pos=(target_x, spawn_y), rotation=rotation
+            )
+            if not _can_exist_on_cells(
+                candidate, cells=board_cells, width=width, height=height
+            ):
                 continue
 
-            settled = _drop_piece_on_cells(candidate, cells=board_cells, width=width, height=height)
+            settled = _drop_piece_on_cells(
+                candidate, cells=board_cells, width=width, height=height
+            )
             score, cleared, cells_after, game_over = _simulate_lock_result(
                 board_cells=board_cells,
                 width=width,
@@ -221,7 +227,9 @@ def _pick_best_immediate(candidates: Iterable[_Candidate2D]) -> _Candidate2D | N
             best_score = candidate.score
             best_clears = candidate.cleared
             continue
-        if candidate.score > best_score or (candidate.score == best_score and candidate.cleared > best_clears):
+        if candidate.score > best_score or (
+            candidate.score == best_score and candidate.cleared > best_clears
+        ):
             best = candidate
             best_score = candidate.score
             best_clears = candidate.cleared
@@ -287,7 +295,9 @@ def _pick_with_optional_lookahead(
         return best_immediate, best_immediate.score
 
     top_k = planning_lookahead_top_k(2, profile, budget_ms=budget_ms)
-    ranked = sorted(candidates, key=lambda c: (c.score, c.cleared), reverse=True)[:top_k]
+    ranked = sorted(candidates, key=lambda c: (c.score, c.cleared), reverse=True)[
+        :top_k
+    ]
     return choose_best_with_followup(
         candidates=ranked,
         base_candidate=best_immediate,
@@ -325,8 +335,12 @@ def plan_best_2d_move(
 
     planning_budget_ms = budget_ms
     if planning_budget_ms is None:
-        planning_budget_ms = default_planning_budget_ms(2, profile, dims=(width, height))
-    planning_budget_ms = clamp_planning_budget_ms(2, planning_budget_ms, dims=(width, height))
+        planning_budget_ms = default_planning_budget_ms(
+            2, profile, dims=(width, height)
+        )
+    planning_budget_ms = clamp_planning_budget_ms(
+        2, planning_budget_ms, dims=(width, height)
+    )
 
     t0 = time.perf_counter()
     deadline_s = t0 + planning_budget_ms / 1000.0

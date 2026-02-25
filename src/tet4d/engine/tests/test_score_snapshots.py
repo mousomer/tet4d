@@ -7,9 +7,12 @@ from tet4d.engine.assist_scoring import combined_score_multiplier
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.game2d import GameConfig, GameState
 from tet4d.engine.pieces2d import PIECE_SET_2D_CLASSIC
-from tet4d.ai.playbot import PlayBotController
-from tet4d.ai.playbot.planner_2d import plan_best_2d_move
-from tet4d.ai.playbot.types import BotMode, BotPlannerProfile
+from tet4d.engine.api import (
+    PlayBotController,
+    plan_best_2d_move,
+    BotMode,
+    BotPlannerProfile,
+)
 from tet4d.engine.view_modes import GridMode
 
 
@@ -43,7 +46,9 @@ _EXPECTED_2D_SNAPSHOTS: dict[BotMode, tuple[tuple[int, int, int], ...]] = {
 
 class TestScoreSnapshots(unittest.TestCase):
     def _run_2d_progression(self, mode: BotMode) -> tuple[tuple[int, int, int], ...]:
-        cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_CLASSIC, speed_level=4)
+        cfg = GameConfig(
+            width=10, height=20, piece_set=PIECE_SET_2D_CLASSIC, speed_level=4
+        )
         state = GameState(
             config=cfg,
             board=BoardND((cfg.width, cfg.height)),
@@ -87,7 +92,9 @@ class TestScoreSnapshots(unittest.TestCase):
 
     def test_2d_long_run_snapshots_are_deterministic(self) -> None:
         for mode in (BotMode.OFF, BotMode.ASSIST, BotMode.AUTO):
-            self.assertEqual(self._run_2d_progression(mode), self._run_2d_progression(mode))
+            self.assertEqual(
+                self._run_2d_progression(mode), self._run_2d_progression(mode)
+            )
 
 
 if __name__ == "__main__":

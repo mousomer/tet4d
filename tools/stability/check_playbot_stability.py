@@ -27,14 +27,18 @@ def _check_once(seed: int) -> None:
         f"2D dry-run failed (seed={seed}): {report_2d}",
     )
 
-    cfg_3d = GameConfigND(dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG)
+    cfg_3d = GameConfigND(
+        dims=(6, 14, 4), gravity_axis=1, piece_set_id=PIECE_SET_3D_DEBUG
+    )
     report_3d = run_dry_run_nd(cfg_3d, max_pieces=24, seed=seed)
     _assert_report(
         report_3d.passed and report_3d.clears_observed > 0,
         f"3D dry-run failed (seed={seed}): {report_3d}",
     )
 
-    cfg_4d = GameConfigND(dims=(6, 14, 4, 3), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG)
+    cfg_4d = GameConfigND(
+        dims=(6, 14, 4, 3), gravity_axis=1, piece_set_id=PIECE_SET_4D_DEBUG
+    )
     report_4d = run_dry_run_nd(cfg_4d, max_pieces=40, seed=seed)
     _assert_report(
         report_4d.passed and report_4d.clears_observed > 0,
@@ -43,9 +47,15 @@ def _check_once(seed: int) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Repeated playbot dry-run stability checks.")
-    parser.add_argument("--repeats", type=int, default=24, help="number of repeated dry-run checks")
-    parser.add_argument("--seed-base", type=int, default=0, help="base seed for repeat sequence")
+    parser = argparse.ArgumentParser(
+        description="Repeated playbot dry-run stability checks."
+    )
+    parser.add_argument(
+        "--repeats", type=int, default=24, help="number of repeated dry-run checks"
+    )
+    parser.add_argument(
+        "--seed-base", type=int, default=0, help="base seed for repeat sequence"
+    )
     args = parser.parse_args()
 
     repeats = max(1, int(args.repeats))

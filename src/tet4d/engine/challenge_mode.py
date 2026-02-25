@@ -51,7 +51,11 @@ def apply_challenge_prefill_nd(
 ) -> int:
     if layers <= 0:
         return 0
-    ratio = challenge_prefill_ratio(state.config.ndim) if fill_ratio is None else float(fill_ratio)
+    ratio = (
+        challenge_prefill_ratio(state.config.ndim)
+        if fill_ratio is None
+        else float(fill_ratio)
+    )
     ratio = max(0.0, min(1.0, ratio))
     cfg = state.config
     gravity_axis = cfg.gravity_axis

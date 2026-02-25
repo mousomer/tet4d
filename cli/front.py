@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from dataclasses import dataclass
 
+
 def _parse_cli_args(argv=None):
     parser = argparse.ArgumentParser(
         prog=Path(__file__).name,
@@ -32,7 +33,11 @@ from tet4d.engine.bot_options_menu import run_bot_options_menu
 from tet4d.engine.display import DisplaySettings
 from tet4d.engine.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.engine.help_menu import run_help_menu
-from tet4d.engine.keybindings import active_key_profile, load_active_profile_bindings, set_active_key_profile
+from tet4d.engine.keybindings import (
+    active_key_profile,
+    load_active_profile_bindings,
+    set_active_key_profile,
+)
 from tet4d.engine.keybindings_menu import run_keybindings_menu
 from tet4d.engine.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.engine.launcher_settings import run_settings_hub_menu
@@ -89,7 +94,9 @@ def _play_menu_id() -> str | None:
 
 def _menu_subtitle(menu_id: str) -> str:
     if menu_id == _LAUNCHER_ROOT_MENU_ID:
-        return "Play or continue, then adjust Settings, Controls, Help, and Bot options."
+        return (
+            "Play or continue, then adjust Settings, Controls, Help, and Bot options."
+        )
     if menu_id == _play_menu_id():
         return "Select a dimension; Tutorials and Topology Lab are routed here without top-level growth."
     return "Up/Down select and Enter open actions."
@@ -127,10 +134,15 @@ def _draw_main_menu(
     panel_w = min(620, max(320, width - 40))
     row_count = max(1, len(items))
     max_panel_h = max(120, height - top_reserved - bottom_reserved - 10)
-    row_step = min(52, max(fonts.menu_font.get_height() + 8, (max_panel_h - 48) // row_count))
+    row_step = min(
+        52, max(fonts.menu_font.get_height() + 8, (max_panel_h - 48) // row_count)
+    )
     panel_h = min(max_panel_h, 48 + row_count * row_step)
     panel_x = (width - panel_w) // 2
-    panel_y = max(top_reserved, min((height - panel_h) // 2, height - bottom_reserved - panel_h - 8))
+    panel_y = max(
+        top_reserved,
+        min((height - panel_h) // 2, height - bottom_reserved - panel_h - 8),
+    )
 
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=14)
@@ -143,7 +155,9 @@ def _draw_main_menu(
         label = str(item.get("label", ""))
         selected = idx == selected_index
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        label_text = fit_text(fonts.menu_font, label, row_right - (panel_x + row_margin))
+        label_text = fit_text(
+            fonts.menu_font, label, row_right - (panel_x + row_margin)
+        )
         text = fonts.menu_font.render(label_text, True, color)
         row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
         if selected:
@@ -172,7 +186,9 @@ def _draw_main_menu(
         status_color = (255, 150, 150) if state.status_error else (170, 240, 170)
         status_text = fit_text(fonts.hint_font, state.status, width - 24)
         status = fonts.hint_font.render(status_text, True, status_color)
-        screen.blit(status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2)))
+        screen.blit(
+            status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2))
+        )
 
 
 def _persist_global_state(
@@ -186,7 +202,10 @@ def _persist_global_state(
     payload["active_profile"] = active_key_profile()
     payload["display"] = {
         "fullscreen": bool(display_settings.fullscreen),
-        "windowed_size": [int(display_settings.windowed_size[0]), int(display_settings.windowed_size[1])],
+        "windowed_size": [
+            int(display_settings.windowed_size[0]),
+            int(display_settings.windowed_size[1]),
+        ],
     }
     payload["audio"] = {
         "master_volume": float(audio_settings.master_volume),
@@ -380,8 +399,12 @@ def _menu_action_bot_options(
     session: _LauncherSession,
     fonts_nd,
 ) -> bool:
-    start_dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
-    ok, msg = run_bot_options_menu(session.screen, fonts_nd, start_dimension=start_dimension)
+    start_dimension = (
+        int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
+    )
+    ok, msg = run_bot_options_menu(
+        session.screen, fonts_nd, start_dimension=start_dimension
+    )
     _persist_session_status(state, session)
     state.status = msg
     state.status_error = not ok
@@ -395,15 +418,34 @@ def _build_action_registry(
     fonts_2d,
 ) -> ActionRegistry:
     registry = ActionRegistry()
-    registry.register("play", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
-    registry.register("play_2d", lambda: _menu_action_play_dimension("2d", state, session, fonts_nd, fonts_2d))
-    registry.register("play_3d", lambda: _menu_action_play_dimension("3d", state, session, fonts_nd, fonts_2d))
-    registry.register("play_4d", lambda: _menu_action_play_dimension("4d", state, session, fonts_nd, fonts_2d))
-    registry.register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
+    registry.register(
+        "play", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)
+    )
+    registry.register(
+        "play_2d",
+        lambda: _menu_action_play_dimension("2d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "play_3d",
+        lambda: _menu_action_play_dimension("3d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "play_4d",
+        lambda: _menu_action_play_dimension("4d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)
+    )
     registry.register("help", lambda: _menu_action_help(state, session, fonts_nd))
-    registry.register("settings", lambda: _menu_action_settings(state, session, fonts_nd))
-    registry.register("keybindings", lambda: _menu_action_keybindings(state, session, fonts_nd))
-    registry.register("bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd))
+    registry.register(
+        "settings", lambda: _menu_action_settings(state, session, fonts_nd)
+    )
+    registry.register(
+        "keybindings", lambda: _menu_action_keybindings(state, session, fonts_nd)
+    )
+    registry.register(
+        "bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd)
+    )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry
 
@@ -501,7 +543,9 @@ def run() -> None:
         action_registry=registry,
         render_menu=_render_launcher_menu,
         handle_route=lambda route_id: _handle_launcher_route(route_id, state),
-        handle_missing_action=lambda action_id: _handle_missing_action(action_id, state),
+        handle_missing_action=lambda action_id: _handle_missing_action(
+            action_id, state
+        ),
         on_root_escape=lambda: _menu_action_quit(state, session),
         on_quit_event=lambda: _menu_action_quit(state, session),
         on_move=_play_move_sfx,

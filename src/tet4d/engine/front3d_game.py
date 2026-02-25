@@ -59,8 +59,12 @@ def handle_camera_key(key: int, camera: Camera3D) -> bool:
                 "yaw_fine_pos": lambda: camera.start_yaw_turn(15.0),
                 "pitch_pos": lambda: camera.start_pitch_turn(90.0),
                 "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
-                "zoom_in": lambda: setattr(camera, "zoom", min(140.0, camera.zoom + 3.0)),
-                "zoom_out": lambda: setattr(camera, "zoom", max(18.0, camera.zoom - 3.0)),
+                "zoom_in": lambda: setattr(
+                    camera, "zoom", min(140.0, camera.zoom + 3.0)
+                ),
+                "zoom_out": lambda: setattr(
+                    camera, "zoom", max(18.0, camera.zoom - 3.0)
+                ),
                 "reset": camera.reset,
                 "cycle_projection": camera.cycle_projection,
             },
@@ -104,8 +108,7 @@ def _spawn_clear_animation_if_needed(
         color_for_cell=color_for_cell_3d,
     )
     ghost_cells = tuple(
-        ((coord[0], coord[1], coord[2]), color)
-        for coord, color in raw_ghost_cells
+        ((coord[0], coord[1], coord[2]), color) for coord, color in raw_ghost_cells
     )
     if not ghost_cells:
         return None, state.lines_cleared
@@ -129,7 +132,9 @@ class LoopContext3D:
     was_game_over: bool = False
 
     @classmethod
-    def create(cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext3D":
+    def create(
+        cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF
+    ) -> "LoopContext3D":
         state = create_initial_state(cfg)
         return cls(
             cfg=cfg,
@@ -180,7 +185,9 @@ class LoopContext3D:
             speed_level=self.cfg.speed_level,
         )
         mode_name = self.bot.mode.value
-        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_actor_mode = (
+            "human" if self.bot.mode == BotMode.OFF else mode_name
+        )
         self.state.analysis_bot_mode = mode_name
         self.state.analysis_grid_mode = self.grid_mode.value
 

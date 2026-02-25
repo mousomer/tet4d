@@ -47,7 +47,9 @@ def inspect_pygame_runtime() -> PygameRuntimeReport:
         module_path = str(getattr(pygame, "__file__", "unknown"))
         is_ce = bool(getattr(pygame, "IS_CE", False))
         if not is_ce:
-            issues.append("Imported pygame module is not pygame-ce (pygame.IS_CE != True).")
+            issues.append(
+                "Imported pygame module is not pygame-ce (pygame.IS_CE != True)."
+            )
 
     return PygameRuntimeReport(
         pygame_ce_version=pygame_ce_version,

@@ -13,4 +13,3 @@ def score_for_clear(cleared_count: int) -> int:
 
 
 __all__ = ["score_for_clear"]
-

@@ -73,10 +73,12 @@ tet4d/
 │       ├── ai/                  # AI facades (playbot boundary seam over engine.api)
 │       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
 │       └── engine/              # shared engine + frontends + tests (source of truth)
-│           └── core/            # strict-purity deterministic logic extraction subtree
-│       ├── board.py             # sparse ND board + plane clear logic
-│       ├── game2d.py            # 2D game rules/state
-│       ├── game_nd.py           # ND game rules/state (3D/4D)
+│           ├── core/            # strict-purity deterministic logic extraction subtree
+│           ├── runtime/         # runtime/config/validation/persistence helpers (merged folder split sequence)
+│           ├── ui_logic/        # non-rendering menu/input helpers (merged folder split sequence)
+│           ├── board.py         # sparse ND board + plane clear logic
+│           ├── game2d.py        # 2D game rules/state
+│           └── game_nd.py       # ND game rules/state (3D/4D)
 │       ├── topology.py          # bounded/wrap/invert topology rules and mapping helpers
 │       ├── topology_designer.py # advanced topology profile loader/resolver/export helpers
 │       ├── pieces2d.py          # classic tetromino set

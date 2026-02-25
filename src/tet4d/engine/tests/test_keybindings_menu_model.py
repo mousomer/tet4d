@@ -5,7 +5,9 @@ import unittest
 try:
     import pygame
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment guard
-    raise unittest.SkipTest("pygame-ce is required for keybinding menu model tests") from exc
+    raise unittest.SkipTest(
+        "pygame-ce is required for keybinding menu model tests"
+    ) from exc
 
 from tet4d.engine.keybindings_menu_model import rows_for_scope
 
@@ -48,4 +50,3 @@ class TestKeybindingsMenuModel(unittest.TestCase):
         self.assertTrue(any("Gameplay / Translation" in title for title in headers))
         self.assertTrue(any("Gameplay / Rotation" in title for title in headers))
         self.assertFalse(any("slice" in title.lower() for title in headers))
-

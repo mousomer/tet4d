@@ -33,7 +33,9 @@ class YawPitchTurnAnimator:
         self._start_turn(self.yaw_deg + delta_deg, self.pitch_deg)
 
     def start_pitch_turn(self, delta_deg: float) -> None:
-        target_yaw, target_pitch = wrapped_pitch_target(self.yaw_deg, self.pitch_deg, delta_deg)
+        target_yaw, target_pitch = wrapped_pitch_target(
+            self.yaw_deg, self.pitch_deg, delta_deg
+        )
         self._start_turn(target_yaw, target_pitch)
 
     def is_animating(self) -> bool:
@@ -51,9 +53,14 @@ class YawPitchTurnAnimator:
             progress = 1.0
         else:
             progress = min(1.0, self.anim_elapsed_ms / self.anim_duration_ms)
-        self.yaw_deg = interpolate_angle_deg(self.anim_start_yaw, self.anim_target_yaw, progress)
+        self.yaw_deg = interpolate_angle_deg(
+            self.anim_start_yaw, self.anim_target_yaw, progress
+        )
         eased = smoothstep01(progress)
-        self.pitch_deg = self.anim_start_pitch + (self.anim_target_pitch - self.anim_start_pitch) * eased
+        self.pitch_deg = (
+            self.anim_start_pitch
+            + (self.anim_target_pitch - self.anim_start_pitch) * eased
+        )
         if progress >= 1.0:
             self.yaw_deg = normalize_angle_deg(self.anim_target_yaw)
             self.pitch_deg = self.anim_target_pitch

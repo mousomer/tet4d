@@ -18,7 +18,9 @@ def choose_best_with_followup(
     deadline_s: float,
     followup_weight: float,
 ) -> tuple[CandidateT, float]:
-    ranked = sorted(candidates, key=lambda item: (score_of(item), cleared_of(item)), reverse=True)
+    ranked = sorted(
+        candidates, key=lambda item: (score_of(item), cleared_of(item)), reverse=True
+    )
     final_candidate = base_candidate
     best_combined = score_of(base_candidate)
 
@@ -28,7 +30,8 @@ def choose_best_with_followup(
         followup_score = followup_score_of(candidate)
         combined = score_of(candidate) + followup_weight * followup_score
         if combined > best_combined or (
-            combined == best_combined and cleared_of(candidate) > cleared_of(final_candidate)
+            combined == best_combined
+            and cleared_of(candidate) > cleared_of(final_candidate)
         ):
             final_candidate = candidate
             best_combined = combined

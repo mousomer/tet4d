@@ -18,15 +18,21 @@ class TestProjectConfig(unittest.TestCase):
     def test_state_path_sanitization_rejects_unsafe_values(self) -> None:
         default_rel = "state/analytics/events.jsonl"
         self.assertEqual(
-            sanitize_state_relative_path("../../outside.jsonl", default_relative=default_rel),
+            sanitize_state_relative_path(
+                "../../outside.jsonl", default_relative=default_rel
+            ),
             default_rel,
         )
         self.assertEqual(
-            sanitize_state_relative_path("/tmp/absolute.jsonl", default_relative=default_rel),
+            sanitize_state_relative_path(
+                "/tmp/absolute.jsonl", default_relative=default_rel
+            ),
             default_rel,
         )
         self.assertEqual(
-            sanitize_state_relative_path("state/analytics/custom.jsonl", default_relative=default_rel),
+            sanitize_state_relative_path(
+                "state/analytics/custom.jsonl", default_relative=default_rel
+            ),
             "state/analytics/custom.jsonl",
         )
 
@@ -39,15 +45,23 @@ class TestProjectConfig(unittest.TestCase):
         self.assertEqual(resolved, expected)
 
     def test_project_constant_int_uses_externalized_values(self) -> None:
-        self.assertGreater(project_constant_int(("cache_limits", "text_surface_max"), 0), 0)
-        self.assertGreater(project_constant_int(("rendering", "3d", "side_panel"), 0), 0)
+        self.assertGreater(
+            project_constant_int(("cache_limits", "text_surface_max"), 0), 0
+        )
+        self.assertGreater(
+            project_constant_int(("rendering", "3d", "side_panel"), 0), 0
+        )
         self.assertEqual(project_constant_int(("rendering", "missing"), 123), 123)
 
     def test_externalized_relative_paths_keep_expected_prefixes(self) -> None:
-        self.assertTrue(menu_settings_file_relative().startswith(state_dir_relative() + "/"))
+        self.assertTrue(
+            menu_settings_file_relative().startswith(state_dir_relative() + "/")
+        )
         self.assertTrue(keybindings_dir_relative().startswith("keybindings"))
         self.assertTrue(
-            topology_profile_export_file_default_relative().startswith(state_dir_relative() + "/")
+            topology_profile_export_file_default_relative().startswith(
+                state_dir_relative() + "/"
+            )
         )
 
 

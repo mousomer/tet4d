@@ -21,13 +21,19 @@ class TestTopology(unittest.TestCase):
 
     def test_wrap_all_maps_non_gravity_axes(self) -> None:
         policy = TopologyPolicy(dims=(4, 8, 4), gravity_axis=1, mode=TOPOLOGY_WRAP_ALL)
-        self.assertEqual(policy.map_coord((-1, 3, 4), allow_above_gravity=True), (3, 3, 0))
+        self.assertEqual(
+            policy.map_coord((-1, 3, 4), allow_above_gravity=True), (3, 3, 0)
+        )
         self.assertIsNone(policy.map_coord((1, 8, 1), allow_above_gravity=True))
 
     def test_invert_all_mirrors_other_wrapped_axes(self) -> None:
-        policy = TopologyPolicy(dims=(4, 8, 4), gravity_axis=1, mode=TOPOLOGY_INVERT_ALL)
+        policy = TopologyPolicy(
+            dims=(4, 8, 4), gravity_axis=1, mode=TOPOLOGY_INVERT_ALL
+        )
         # Crossing x edge wraps x and mirrors z.
-        self.assertEqual(policy.map_coord((-1, 2, 1), allow_above_gravity=True), (3, 2, 2))
+        self.assertEqual(
+            policy.map_coord((-1, 2, 1), allow_above_gravity=True), (3, 2, 2)
+        )
 
     def test_piece_mapping_rejects_duplicate_wrapped_cells(self) -> None:
         policy = TopologyPolicy(dims=(2, 6, 2), gravity_axis=1, mode=TOPOLOGY_WRAP_ALL)
@@ -39,7 +45,9 @@ class TestTopology(unittest.TestCase):
         self.assertIsNone(mapped)
 
     def test_invert_piece_mapping_keeps_seam_straddling_piece_unique(self) -> None:
-        policy = TopologyPolicy(dims=(6, 14, 4, 3), gravity_axis=1, mode=TOPOLOGY_INVERT_ALL)
+        policy = TopologyPolicy(
+            dims=(6, 14, 4, 3), gravity_axis=1, mode=TOPOLOGY_INVERT_ALL
+        )
         mapped = map_piece_cells(
             policy,
             (

@@ -38,19 +38,31 @@ def _validate_required_paths(manifest: dict[str, object]) -> list[ValidationIssu
     seen: set[str] = set()
     for group, rel_paths in required_paths.items():
         if not isinstance(rel_paths, list):
-            issues.append(ValidationIssue("schema", f"required_paths.{group} must be a list"))
+            issues.append(
+                ValidationIssue("schema", f"required_paths.{group} must be a list")
+            )
             continue
         for rel in rel_paths:
             if not isinstance(rel, str):
-                issues.append(ValidationIssue("schema", f"required_paths.{group} includes non-string entry"))
+                issues.append(
+                    ValidationIssue(
+                        "schema", f"required_paths.{group} includes non-string entry"
+                    )
+                )
                 continue
             if rel in seen:
-                issues.append(ValidationIssue("duplicate", f"path appears in multiple groups: {rel}"))
+                issues.append(
+                    ValidationIssue(
+                        "duplicate", f"path appears in multiple groups: {rel}"
+                    )
+                )
                 continue
             seen.add(rel)
             path = PROJECT_ROOT / rel
             if not path.exists():
-                issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+                issues.append(
+                    ValidationIssue("missing", f"missing required path: {rel}")
+                )
     return issues
 
 
@@ -68,7 +80,9 @@ def _iter_required_paths(manifest: dict[str, object]) -> list[str]:
     return rels
 
 
-def _load_json_payload(path: Path, rel: str, issues: list[ValidationIssue]) -> object | None:
+def _load_json_payload(
+    path: Path, rel: str, issues: list[ValidationIssue]
+) -> object | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -76,12 +90,20 @@ def _load_json_payload(path: Path, rel: str, issues: list[ValidationIssue]) -> o
         return None
 
 
-def _validate_schema_payload(rel: str, payload: object, issues: list[ValidationIssue]) -> None:
-    if rel.endswith(".schema.json") and (not isinstance(payload, dict) or "$schema" not in payload):
-        issues.append(ValidationIssue("json", f"{rel} must contain a top-level '$schema'"))
+def _validate_schema_payload(
+    rel: str, payload: object, issues: list[ValidationIssue]
+) -> None:
+    if rel.endswith(".schema.json") and (
+        not isinstance(payload, dict) or "$schema" not in payload
+    ):
+        issues.append(
+            ValidationIssue("json", f"{rel} must contain a top-level '$schema'")
+        )
 
 
-def _validate_replay_manifest_payload(rel: str, payload: object, issues: list[ValidationIssue]) -> None:
+def _validate_replay_manifest_payload(
+    rel: str, payload: object, issues: list[ValidationIssue]
+) -> None:
     if rel != "tests/replay/manifest.json":
         return
     if not isinstance(payload, dict):
@@ -144,24 +166,39 @@ def _collect_topic_lanes(
 ) -> dict[str, str]:
     raw_topics = topics_payload.get("topics")
     if not isinstance(raw_topics, list) or not raw_topics:
-        issues.append(ValidationIssue("json", f"{topics_rel} must define non-empty list 'topics'"))
+        issues.append(
+            ValidationIssue("json", f"{topics_rel} must define non-empty list 'topics'")
+        )
         return {}
 
     topic_lanes: dict[str, str] = {}
     for idx, raw_topic in enumerate(raw_topics):
         if not isinstance(raw_topic, dict):
-            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}] must be an object"))
+            issues.append(
+                ValidationIssue("json", f"{topics_rel}.topics[{idx}] must be an object")
+            )
             continue
         topic_id = raw_topic.get("id")
         if not isinstance(topic_id, str) or not topic_id.strip():
-            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}].id must be a non-empty string"))
+            issues.append(
+                ValidationIssue(
+                    "json", f"{topics_rel}.topics[{idx}].id must be a non-empty string"
+                )
+            )
             continue
         lane = raw_topic.get("lane")
         if not isinstance(lane, str) or not lane.strip():
-            issues.append(ValidationIssue("json", f"{topics_rel}.topics[{idx}].lane must be a non-empty string"))
+            issues.append(
+                ValidationIssue(
+                    "json",
+                    f"{topics_rel}.topics[{idx}].lane must be a non-empty string",
+                )
+            )
             continue
         if topic_id in topic_lanes:
-            issues.append(ValidationIssue("json", f"{topics_rel} duplicate topic id: {topic_id}"))
+            issues.append(
+                ValidationIssue("json", f"{topics_rel} duplicate topic id: {topic_id}")
+            )
             continue
         topic_lanes[topic_id] = lane.strip().lower()
     return topic_lanes
@@ -176,25 +213,52 @@ def _collect_action_topics(
 ) -> dict[str, str]:
     default_topic = map_payload.get("default_topic")
     if not isinstance(default_topic, str) or not default_topic.strip():
-        issues.append(ValidationIssue("json", f"{map_rel}.default_topic must be a non-empty string"))
+        issues.append(
+            ValidationIssue(
+                "json", f"{map_rel}.default_topic must be a non-empty string"
+            )
+        )
     elif default_topic not in topic_ids:
-        issues.append(ValidationIssue("json", f"{map_rel}.default_topic references unknown topic id: {default_topic}"))
+        issues.append(
+            ValidationIssue(
+                "json",
+                f"{map_rel}.default_topic references unknown topic id: {default_topic}",
+            )
+        )
 
     raw_action_topics = map_payload.get("action_topics")
     if not isinstance(raw_action_topics, dict) or not raw_action_topics:
-        issues.append(ValidationIssue("json", f"{map_rel}.action_topics must be a non-empty object"))
+        issues.append(
+            ValidationIssue(
+                "json", f"{map_rel}.action_topics must be a non-empty object"
+            )
+        )
         return {}
 
     action_topics: dict[str, str] = {}
     for action, topic_id in raw_action_topics.items():
         if not isinstance(action, str) or not action.strip():
-            issues.append(ValidationIssue("json", f"{map_rel}.action_topics includes non-string action key"))
+            issues.append(
+                ValidationIssue(
+                    "json", f"{map_rel}.action_topics includes non-string action key"
+                )
+            )
             continue
         if not isinstance(topic_id, str) or not topic_id.strip():
-            issues.append(ValidationIssue("json", f"{map_rel}.action_topics.{action} must be a non-empty string"))
+            issues.append(
+                ValidationIssue(
+                    "json",
+                    f"{map_rel}.action_topics.{action} must be a non-empty string",
+                )
+            )
             continue
         if topic_id not in topic_ids:
-            issues.append(ValidationIssue("json", f"{map_rel}.action_topics.{action} references unknown topic id: {topic_id}"))
+            issues.append(
+                ValidationIssue(
+                    "json",
+                    f"{map_rel}.action_topics.{action} references unknown topic id: {topic_id}",
+                )
+            )
         action_topics[action] = topic_id
     return action_topics
 
@@ -258,12 +322,16 @@ def _validate_help_topic_contract(manifest: dict[str, object]) -> list[Validatio
         return issues
     topics_rel, map_rel = paths
 
-    payloads = _load_help_payloads(topics_rel=topics_rel, map_rel=map_rel, issues=issues)
+    payloads = _load_help_payloads(
+        topics_rel=topics_rel, map_rel=map_rel, issues=issues
+    )
     if payloads is None:
         return issues
     topics_payload, map_payload = payloads
 
-    topic_lanes = _collect_topic_lanes(topics_payload, topics_rel=topics_rel, issues=issues)
+    topic_lanes = _collect_topic_lanes(
+        topics_payload, topics_rel=topics_rel, issues=issues
+    )
     if not topic_lanes:
         return issues
 
@@ -299,7 +367,9 @@ def _validate_menu_graph_contract() -> list[ValidationIssue]:
     return issues
 
 
-def _validate_canonical_candidates(manifest: dict[str, object]) -> list[ValidationIssue]:
+def _validate_canonical_candidates(
+    manifest: dict[str, object],
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     candidates = manifest.get("canonical_candidates", [])
     if not isinstance(candidates, list):
@@ -307,13 +377,21 @@ def _validate_canonical_candidates(manifest: dict[str, object]) -> list[Validati
 
     for index, item in enumerate(candidates, start=1):
         if not isinstance(item, dict):
-            issues.append(ValidationIssue("schema", f"canonical_candidates[{index}] must be an object"))
+            issues.append(
+                ValidationIssue(
+                    "schema", f"canonical_candidates[{index}] must be an object"
+                )
+            )
             continue
         name = item.get("name")
         status = item.get("status")
         paths = item.get("paths", [])
         if not isinstance(name, str) or not name:
-            issues.append(ValidationIssue("schema", f"canonical_candidates[{index}].name must be a string"))
+            issues.append(
+                ValidationIssue(
+                    "schema", f"canonical_candidates[{index}].name must be a string"
+                )
+            )
         if not isinstance(status, str) or status not in {"planned", "connected"}:
             issues.append(
                 ValidationIssue(
@@ -321,13 +399,23 @@ def _validate_canonical_candidates(manifest: dict[str, object]) -> list[Validati
                     f"canonical_candidates[{index}].status must be 'planned' or 'connected'",
                 )
             )
-        if not isinstance(paths, list) or any(not isinstance(path, str) for path in paths):
-            issues.append(ValidationIssue("schema", f"canonical_candidates[{index}].paths must be a list[str]"))
+        if not isinstance(paths, list) or any(
+            not isinstance(path, str) for path in paths
+        ):
+            issues.append(
+                ValidationIssue(
+                    "schema", f"canonical_candidates[{index}].paths must be a list[str]"
+                )
+            )
             continue
         for rel in paths:
             path = PROJECT_ROOT / rel
             if not path.exists():
-                issues.append(ValidationIssue("missing", f"canonical candidate path missing: {rel}"))
+                issues.append(
+                    ValidationIssue(
+                        "missing", f"canonical candidate path missing: {rel}"
+                    )
+                )
     return issues
 
 
@@ -345,7 +433,9 @@ def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue
         rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes = parsed
         path = PROJECT_ROOT / rel
         if not path.exists():
-            issues.append(ValidationIssue("missing", f"content rule file does not exist: {rel}"))
+            issues.append(
+                ValidationIssue("missing", f"content rule file does not exist: {rel}")
+            )
             continue
         _validate_text_rules(
             path,
@@ -360,7 +450,9 @@ def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue
 
 
 def _as_string_list(value: object) -> list[str] | None:
-    if not isinstance(value, list) or any(not isinstance(token, str) for token in value):
+    if not isinstance(value, list) or any(
+        not isinstance(token, str) for token in value
+    ):
         return None
     return value
 
@@ -374,23 +466,33 @@ def _parse_content_rule(
 
     rel = rule.get("file")
     if not isinstance(rel, str):
-        return ValidationIssue("schema", f"content_rules[{index}].file must be a string")
+        return ValidationIssue(
+            "schema", f"content_rules[{index}].file must be a string"
+        )
 
     tokens = _as_string_list(rule.get("must_contain", []))
     if tokens is None:
-        return ValidationIssue("schema", f"content_rules[{index}].must_contain must be a list[str]")
+        return ValidationIssue(
+            "schema", f"content_rules[{index}].must_contain must be a list[str]"
+        )
 
     forbidden_tokens = _as_string_list(rule.get("must_not_contain", []))
     if forbidden_tokens is None:
-        return ValidationIssue("schema", f"content_rules[{index}].must_not_contain must be a list[str]")
+        return ValidationIssue(
+            "schema", f"content_rules[{index}].must_not_contain must be a list[str]"
+        )
 
     required_regexes = _as_string_list(rule.get("must_match_regex", []))
     if required_regexes is None:
-        return ValidationIssue("schema", f"content_rules[{index}].must_match_regex must be a list[str]")
+        return ValidationIssue(
+            "schema", f"content_rules[{index}].must_match_regex must be a list[str]"
+        )
 
     forbidden_regexes = _as_string_list(rule.get("must_not_match_regex", []))
     if forbidden_regexes is None:
-        return ValidationIssue("schema", f"content_rules[{index}].must_not_match_regex must be a list[str]")
+        return ValidationIssue(
+            "schema", f"content_rules[{index}].must_not_match_regex must be a list[str]"
+        )
 
     return rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes
 
@@ -410,7 +512,9 @@ def _validate_text_rules(
             issues.append(ValidationIssue("content", f"{rel} missing token: {token!r}"))
     for token in forbidden_tokens:
         if token in text:
-            issues.append(ValidationIssue("content", f"{rel} contains forbidden token: {token!r}"))
+            issues.append(
+                ValidationIssue("content", f"{rel} contains forbidden token: {token!r}")
+            )
     _validate_regex_rules(rel, text, required_regexes, forbidden_regexes, issues)
 
 
@@ -426,21 +530,34 @@ def _validate_regex_rules(
         if compiled is None:
             continue
         if compiled.search(text) is None:
-            issues.append(ValidationIssue("content", f"{rel} missing regex match: {pattern!r}"))
+            issues.append(
+                ValidationIssue("content", f"{rel} missing regex match: {pattern!r}")
+            )
 
     for pattern in forbidden_regexes:
         compiled = _compile_pattern(rel, pattern, issues)
         if compiled is None:
             continue
         if compiled.search(text) is not None:
-            issues.append(ValidationIssue("content", f"{rel} matched forbidden regex: {pattern!r}"))
+            issues.append(
+                ValidationIssue(
+                    "content", f"{rel} matched forbidden regex: {pattern!r}"
+                )
+            )
 
 
-def _compile_pattern(rel: str, pattern: str, issues: list[ValidationIssue]) -> re.Pattern[str] | None:
+def _compile_pattern(
+    rel: str, pattern: str, issues: list[ValidationIssue]
+) -> re.Pattern[str] | None:
     try:
         return re.compile(pattern, flags=re.MULTILINE)
     except re.error as exc:
-        issues.append(ValidationIssue("schema", f"invalid regex in content rule for {rel}: {pattern!r} ({exc})"))
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"invalid regex in content rule for {rel}: {pattern!r} ({exc})",
+            )
+        )
         return None
 
 

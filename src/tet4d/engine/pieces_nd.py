@@ -183,8 +183,7 @@ def _normalize_blocks_nd(blocks: Iterable[RelCoordND]) -> Tuple[RelCoordND, ...]
     maxs = [max(coord[axis] for coord in coords) for axis in range(ndim)]
     centers = [(mins[axis] + maxs[axis]) // 2 for axis in range(ndim)]
     normalized = sorted(
-        tuple(coord[axis] - centers[axis] for axis in range(ndim))
-        for coord in coords
+        tuple(coord[axis] - centers[axis] for axis in range(ndim)) for coord in coords
     )
     return tuple(normalized)
 
@@ -281,7 +280,9 @@ def _rect_blocks_nd(size_by_axis: Sequence[int]) -> Tuple[RelCoordND, ...]:
     return _normalize_blocks_nd(coords)
 
 
-def _scaled_span(axis_size: int, ratio: float, min_size: int, max_cap: int | None = None) -> int:
+def _scaled_span(
+    axis_size: int, ratio: float, min_size: int, max_cap: int | None = None
+) -> int:
     clamped_axis = max(1, int(axis_size))
     scaled = max(min_size, int(round(clamped_axis * ratio)))
     scaled = min(scaled, clamped_axis)
@@ -306,7 +307,9 @@ def _extend_sizes(head: Sequence[int], ndim: int) -> tuple[int, ...]:
     return tuple(head) + tuple(1 for _ in range(max(0, ndim - len(head))))
 
 
-def get_debug_rectangles_nd(ndim: int, board_dims: Sequence[int] | None = None) -> List["PieceShapeND"]:
+def get_debug_rectangles_nd(
+    ndim: int, board_dims: Sequence[int] | None = None
+) -> List["PieceShapeND"]:
     _validate_ndim(ndim)
     dims = _debug_board_dims(ndim, board_dims)
     x_size = dims[0]
@@ -338,11 +341,17 @@ def get_debug_rectangles_nd(ndim: int, board_dims: Sequence[int] | None = None) 
     if ndim >= 3:
         specs.append(("DBG_LONG_3D", _extend_sizes((long_x, thin_y, thin_z), ndim), 3))
         specs.append(("DBG_SURFACE_FLAT", _extend_sizes((flat_x, 1, flat_z), ndim), 4))
-        specs.append(("DBG_SURFACE_THICK", _extend_sizes((thick_x, thick_y, thick_z), ndim), 5))
+        specs.append(
+            ("DBG_SURFACE_THICK", _extend_sizes((thick_x, thick_y, thick_z), ndim), 5)
+        )
 
     if ndim >= 4:
-        specs.append(("DBG_LONG_4D", _extend_sizes((long_x, thin_y, thin_z, thin_w), ndim), 6))
-        specs.append(("DBG_LAYER_4D", _extend_sizes((layer_x, 1, layer_z, layer_w), ndim), 7))
+        specs.append(
+            ("DBG_LONG_4D", _extend_sizes((long_x, thin_y, thin_z, thin_w), ndim), 6)
+        )
+        specs.append(
+            ("DBG_LAYER_4D", _extend_sizes((layer_x, 1, layer_z, layer_w), ndim), 7)
+        )
 
     return [
         PieceShapeND(name=name, blocks=_rect_blocks_nd(size_by_axis), color_id=color_id)
@@ -364,25 +373,130 @@ _PIECES_3D: Tuple[Tuple[str, Tuple[Tuple[int, int, int], ...], int], ...] = (
 
 # Dedicated 4D set (5 cells per piece) where each shape spans x, y, z, and w.
 _PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
-    ("CROSS4", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)), 1),
-    ("SKEW4_A", ((0, 0, 0, 0), (-1, 0, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)), 2),
-    ("SKEW4_B", ((0, 0, 0, 0), (1, 0, 0, 0), (1, -1, 0, 0), (1, -1, 1, 0), (1, -1, 1, 1)), 3),
-    ("TEE4", ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)), 4),
-    ("CORK4", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)), 5),
-    ("STAIR4", ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)), 6),
-    ("FORK4", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 1), (0, 0, 1, 1)), 7),
+    (
+        "CROSS4",
+        ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)),
+        1,
+    ),
+    (
+        "SKEW4_A",
+        ((0, 0, 0, 0), (-1, 0, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)),
+        2,
+    ),
+    (
+        "SKEW4_B",
+        ((0, 0, 0, 0), (1, 0, 0, 0), (1, -1, 0, 0), (1, -1, 1, 0), (1, -1, 1, 1)),
+        3,
+    ),
+    (
+        "TEE4",
+        ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)),
+        4,
+    ),
+    (
+        "CORK4",
+        ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)),
+        5,
+    ),
+    (
+        "STAIR4",
+        ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)),
+        6,
+    ),
+    (
+        "FORK4",
+        ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 1), (0, 0, 1, 1)),
+        7,
+    ),
 )
 
 
 # Optional dedicated 4D set (6 cells per piece).
 _PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
-    ("CROSS6", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)), 1),
-    ("RIBBON6_A", ((0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1), (0, 1, 1, 1)), 2),
-    ("RIBBON6_B", ((0, 0, 0, 0), (-1, 0, 0, 0), (-1, 1, 0, 0), (-1, 1, 1, 0), (-1, 1, 1, 1), (0, 1, 1, 1)), 3),
-    ("STAIR6", ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1), (2, 1, 1, 1)), 4),
-    ("FORK6", ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 1), (0, 1, 1, 1)), 5),
-    ("TWIST6", ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (2, 1, 1, 0), (2, 1, 1, 1)), 6),
-    ("PLANE6", ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)), 7),
+    (
+        "CROSS6",
+        (
+            (0, 0, 0, 0),
+            (-1, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 1, 0, 0),
+            (0, 0, 1, 0),
+            (0, 0, 0, 1),
+        ),
+        1,
+    ),
+    (
+        "RIBBON6_A",
+        (
+            (0, 0, 0, 0),
+            (1, 0, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (1, 1, 1, 1),
+            (0, 1, 1, 1),
+        ),
+        2,
+    ),
+    (
+        "RIBBON6_B",
+        (
+            (0, 0, 0, 0),
+            (-1, 0, 0, 0),
+            (-1, 1, 0, 0),
+            (-1, 1, 1, 0),
+            (-1, 1, 1, 1),
+            (0, 1, 1, 1),
+        ),
+        3,
+    ),
+    (
+        "STAIR6",
+        (
+            (0, 0, 0, 0),
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (1, 1, 1, 1),
+            (2, 1, 1, 1),
+        ),
+        4,
+    ),
+    (
+        "FORK6",
+        (
+            (0, 0, 0, 0),
+            (-1, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 1, 0, 0),
+            (0, 0, 1, 1),
+            (0, 1, 1, 1),
+        ),
+        5,
+    ),
+    (
+        "TWIST6",
+        (
+            (0, 0, 0, 0),
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (2, 1, 1, 0),
+            (2, 1, 1, 1),
+        ),
+        6,
+    ),
+    (
+        "PLANE6",
+        (
+            (0, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (1, 1, 1, 1),
+        ),
+        7,
+    ),
 )
 
 
@@ -404,7 +518,9 @@ def _shape_records_to_nd(
     ndim: int,
 ) -> List[PieceShapeND]:
     return [
-        PieceShapeND(name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id)
+        PieceShapeND(
+            name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id
+        )
         for name, blocks, color_id in records
     ]
 
@@ -457,7 +573,9 @@ def _random_piece_set(
     name_prefix: str,
 ) -> List[PieceShapeND]:
     active_rng = rng if rng is not None else random.Random()
-    count = default_random_cell_count if random_cell_count is None else random_cell_count
+    count = (
+        default_random_cell_count if random_cell_count is None else random_cell_count
+    )
     return _random_piece_bag_nd(
         ndim,
         active_rng,
@@ -580,7 +698,9 @@ def get_piece_shapes_nd(
     return factory(ndim, rng, random_cell_count, board_dims)
 
 
-def get_standard_pieces_nd(ndim: int, piece_set_4d: str | None = None) -> List[PieceShapeND]:
+def get_standard_pieces_nd(
+    ndim: int, piece_set_4d: str | None = None
+) -> List[PieceShapeND]:
     """
     Backward-compatible API:
     - 2D: classic tetrominoes

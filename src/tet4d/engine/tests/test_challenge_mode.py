@@ -4,7 +4,10 @@ import random
 import unittest
 
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill_nd
+from tet4d.engine.challenge_mode import (
+    apply_challenge_prefill_2d,
+    apply_challenge_prefill_nd,
+)
 from tet4d.engine.game2d import GameConfig, GameState
 from tet4d.engine.game_nd import GameConfigND, GameStateND
 
@@ -12,7 +15,9 @@ from tet4d.engine.game_nd import GameConfigND, GameStateND
 class TestChallengeMode(unittest.TestCase):
     def test_prefill_2d_fills_lower_layers_with_holes(self) -> None:
         cfg = GameConfig(width=8, height=12)
-        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0))
+        state = GameState(
+            config=cfg, board=BoardND((cfg.width, cfg.height)), rng=random.Random(0)
+        )
         state.board.cells.clear()
 
         layers = 3
@@ -21,7 +26,9 @@ class TestChallengeMode(unittest.TestCase):
 
         for i in range(layers):
             y = cfg.height - 1 - i
-            count = sum(1 for (x, yy) in state.board.cells if yy == y and 0 <= x < cfg.width)
+            count = sum(
+                1 for (x, yy) in state.board.cells if yy == y and 0 <= x < cfg.width
+            )
             self.assertEqual(count, cfg.width - 1)
 
     def test_prefill_nd_fills_lower_layers_with_holes(self) -> None:
@@ -36,7 +43,11 @@ class TestChallengeMode(unittest.TestCase):
 
         for i in range(layers):
             y = cfg.dims[1] - 1 - i
-            count = sum(1 for (x, yy, z) in state.board.cells if yy == y and 0 <= x < cfg.dims[0] and 0 <= z < cfg.dims[2])
+            count = sum(
+                1
+                for (x, yy, z) in state.board.cells
+                if yy == y and 0 <= x < cfg.dims[0] and 0 <= z < cfg.dims[2]
+            )
             self.assertEqual(count, layer_size - 1)
 
 

@@ -17,9 +17,15 @@ from .view_modes import GridMode
 
 # ---------- Visual config & colors ----------
 
-CELL_SIZE = project_constant_int(("rendering", "2d", "cell_size"), 30, min_value=12, max_value=120)
-MARGIN = project_constant_int(("rendering", "2d", "margin"), 20, min_value=0, max_value=240)
-SIDE_PANEL = project_constant_int(("rendering", "2d", "side_panel"), 200, min_value=120, max_value=720)
+CELL_SIZE = project_constant_int(
+    ("rendering", "2d", "cell_size"), 30, min_value=12, max_value=120
+)
+MARGIN = project_constant_int(
+    ("rendering", "2d", "margin"), 20, min_value=0, max_value=240
+)
+SIDE_PANEL = project_constant_int(
+    ("rendering", "2d", "side_panel"), 200, min_value=120, max_value=720
+)
 
 BG_COLOR = (10, 10, 30)
 GRID_COLOR = (40, 40, 80)
@@ -28,13 +34,13 @@ HIGHLIGHT_COLOR = (255, 215, 0)
 
 # Tetromino-ish colors for IDs 1..7
 COLOR_MAP = {
-    1: (0, 255, 255),    # I - cyan
-    2: (255, 255, 0),    # O - yellow
-    3: (160, 0, 240),    # T - purple
-    4: (0, 255, 0),      # S - green
-    5: (255, 0, 0),      # Z - red
-    6: (0, 0, 255),      # J - blue
-    7: (255, 165, 0),    # L - orange
+    1: (0, 255, 255),  # I - cyan
+    2: (255, 255, 0),  # O - yellow
+    3: (160, 0, 240),  # T - purple
+    4: (0, 255, 0),  # S - green
+    5: (255, 0, 0),  # Z - red
+    6: (0, 0, 255),  # J - blue
+    7: (255, 165, 0),  # L - orange
 }
 
 
@@ -60,9 +66,12 @@ def init_fonts() -> GfxFonts:
 
 # ---------- Misc helpers ----------
 
-def draw_gradient_background(surface: pygame.Surface,
-                             top_color: Tuple[int, int, int],
-                             bottom_color: Tuple[int, int, int]) -> None:
+
+def draw_gradient_background(
+    surface: pygame.Surface,
+    top_color: Tuple[int, int, int],
+    bottom_color: Tuple[int, int, int],
+) -> None:
     """Simple vertical gradient fill."""
     draw_vertical_gradient(surface, top_color, bottom_color)
 
@@ -71,7 +80,7 @@ def draw_button_with_arrow(
     surface: pygame.Surface,
     center: Tuple[int, int],
     size: Tuple[int, int],
-    direction: Optional[str],   # 'up', 'down', 'left', 'right', or None
+    direction: Optional[str],  # 'up', 'down', 'left', 'right', or None
     label: str,
     font: pygame.font.Font,
     bg_color: Tuple[int, int, int],
@@ -139,6 +148,7 @@ def draw_button_with_arrow(
 
 # ---------- Menu drawing ----------
 
+
 def _draw_menu_header(
     screen: pygame.Surface,
     fonts: GfxFonts,
@@ -201,7 +211,9 @@ def _draw_menu_settings_panel(
         labels = []
         for label, attr_name, _min_val, _max_val in menu_fields:
             value = getattr(settings, attr_name)
-            value_text = value_formatter(attr_name, value) if value_formatter else str(value)
+            value_text = (
+                value_formatter(attr_name, value) if value_formatter else str(value)
+            )
             labels.append(f"{label}:  {value_text}")
     else:
         labels = [
@@ -218,7 +230,9 @@ def _draw_menu_settings_panel(
     panel_y = min(panel_y, max(60, height - panel_h - 126))
 
     panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16)
+    pygame.draw.rect(
+        panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16
+    )
     screen.blit(panel_surf, (panel_x, panel_y))
 
     option_y = panel_y + 24
@@ -228,7 +242,10 @@ def _draw_menu_settings_panel(
     row_h_default = fonts.menu_font.get_height() + 18
     row_h = min(
         row_h_default,
-        max(fonts.menu_font.get_height() + 8, (option_bottom - option_y) // max(1, len(labels))),
+        max(
+            fonts.menu_font.get_height() + 8,
+            (option_bottom - option_y) // max(1, len(labels)),
+        ),
     )
 
     for i, text in enumerate(labels):
@@ -241,9 +258,16 @@ def _draw_menu_settings_panel(
         text_rect = text_surf.get_rect(topleft=(option_x, option_y))
 
         if is_selected:
-            highlight_rect = pygame.Rect(option_x - 8, option_y - 4, option_w + 16, text_rect.height + 10)
+            highlight_rect = pygame.Rect(
+                option_x - 8, option_y - 4, option_w + 16, text_rect.height + 10
+            )
             highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(highlight_surf, (255, 255, 255, 40), highlight_surf.get_rect(), border_radius=10)
+            pygame.draw.rect(
+                highlight_surf,
+                (255, 255, 255, 40),
+                highlight_surf.get_rect(),
+                border_radius=10,
+            )
             screen.blit(highlight_surf, highlight_rect.topleft)
 
         screen.blit(text_surf, text_rect.topleft)
@@ -264,7 +288,9 @@ def _draw_menu_dpad_and_commands(
     dpad_offset = 50
     button_size = (36, 36)
 
-    full_block_bottom = dpad_center_y + dpad_offset + 50 + 32 + fonts.hint_font.get_height() + 8
+    full_block_bottom = (
+        dpad_center_y + dpad_offset + 50 + 32 + fonts.hint_font.get_height() + 8
+    )
     if full_block_bottom > height - 6:
         compact_text = fit_text(
             fonts.hint_font,
@@ -280,18 +306,72 @@ def _draw_menu_dpad_and_commands(
     down_color = (80, 200, 140)
     side_color = (255, 190, 80)
     border = (240, 240, 255)
-    draw_button_with_arrow(screen, (dpad_center_x, dpad_center_y - dpad_offset), button_size, "up", "Up", fonts.hint_font, up_color, border)
-    draw_button_with_arrow(screen, (dpad_center_x, dpad_center_y + dpad_offset), button_size, "down", "Down", fonts.hint_font, down_color, border)
-    draw_button_with_arrow(screen, (dpad_center_x - dpad_offset, dpad_center_y), button_size, "left", "Left", fonts.hint_font, side_color, border)
-    draw_button_with_arrow(screen, (dpad_center_x + dpad_offset, dpad_center_y), button_size, "right", "Right", fonts.hint_font, side_color, border)
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x, dpad_center_y - dpad_offset),
+        button_size,
+        "up",
+        "Up",
+        fonts.hint_font,
+        up_color,
+        border,
+    )
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x, dpad_center_y + dpad_offset),
+        button_size,
+        "down",
+        "Down",
+        fonts.hint_font,
+        down_color,
+        border,
+    )
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x - dpad_offset, dpad_center_y),
+        button_size,
+        "left",
+        "Left",
+        fonts.hint_font,
+        side_color,
+        border,
+    )
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x + dpad_offset, dpad_center_y),
+        button_size,
+        "right",
+        "Right",
+        fonts.hint_font,
+        side_color,
+        border,
+    )
 
     cmd_y = dpad_center_y + dpad_offset + 50
     cmd_spacing = 140
     cmd_size = (100, 32)
     cmd_color = (100, 100, 160)
     cmd_border = (230, 230, 255)
-    draw_button_with_arrow(screen, (dpad_center_x - cmd_spacing // 2, cmd_y), cmd_size, None, "Enter = Start", fonts.hint_font, cmd_color, cmd_border)
-    draw_button_with_arrow(screen, (dpad_center_x + cmd_spacing // 2, cmd_y), cmd_size, None, "Esc = Quit", fonts.hint_font, cmd_color, cmd_border)
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x - cmd_spacing // 2, cmd_y),
+        cmd_size,
+        None,
+        "Enter = Start",
+        fonts.hint_font,
+        cmd_color,
+        cmd_border,
+    )
+    draw_button_with_arrow(
+        screen,
+        (dpad_center_x + cmd_spacing // 2, cmd_y),
+        cmd_size,
+        None,
+        "Esc = Quit",
+        fonts.hint_font,
+        cmd_color,
+        cmd_border,
+    )
 
 
 def draw_menu(
@@ -307,7 +387,14 @@ def draw_menu(
     value_formatter: Optional[Callable[[str, object], str]] = None,
 ) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
-    header_bottom = _draw_menu_header(screen, fonts, bindings_file_hint, extra_hint_lines, bindings_status, bindings_status_error)
+    header_bottom = _draw_menu_header(
+        screen,
+        fonts,
+        bindings_file_hint,
+        extra_hint_lines,
+        bindings_status,
+        bindings_status_error,
+    )
     _panel_x, panel_y, _panel_w, panel_h = _draw_menu_settings_panel(
         screen,
         fonts,
@@ -322,8 +409,10 @@ def draw_menu(
 
 # ---------- Game drawing ----------
 
-def compute_game_layout(screen: pygame.Surface,
-                        cfg: GameConfig) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+
+def compute_game_layout(
+    screen: pygame.Surface, cfg: GameConfig
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     """
     Compute offsets for board and side panel based on current window size.
     Returns (board_offset, panel_offset).
@@ -349,7 +438,9 @@ def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None
     step = max(6, CELL_SIZE)
     for y in range(0, board_rect.height, step):
         alpha = 20 if (y // step) % 2 == 0 else 10
-        pygame.draw.line(shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1)
+        pygame.draw.line(
+            shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1
+        )
 
     for x in range(0, board_rect.width, step * 2):
         pygame.draw.line(
@@ -368,7 +459,9 @@ def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> 
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 
 
-def _helper_grid_marks_2d(state: GameState, width: int, height: int) -> tuple[set[int], set[int]]:
+def _helper_grid_marks_2d(
+    state: GameState, width: int, height: int
+) -> tuple[set[int], set[int]]:
     x_marks: set[int] = set()
     y_marks: set[int] = set()
     for x, y in state.current_piece_cells_mapped(include_above=False):
@@ -380,28 +473,36 @@ def _helper_grid_marks_2d(state: GameState, width: int, height: int) -> tuple[se
     return x_marks, y_marks
 
 
-def _draw_helper_grid(surface: pygame.Surface,
-                      board_rect: pygame.Rect,
-                      width_cells: int,
-                      height_cells: int,
-                      x_marks: set[int],
-                      y_marks: set[int]) -> None:
+def _draw_helper_grid(
+    surface: pygame.Surface,
+    board_rect: pygame.Rect,
+    width_cells: int,
+    height_cells: int,
+    x_marks: set[int],
+    y_marks: set[int],
+) -> None:
     for x in sorted(x_marks):
         if not (0 <= x <= width_cells):
             continue
         x_px = board_rect.x + x * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (x_px, board_rect.y), (x_px, board_rect.bottom))
+        pygame.draw.line(
+            surface, GRID_COLOR, (x_px, board_rect.y), (x_px, board_rect.bottom)
+        )
     for y in sorted(y_marks):
         if not (0 <= y <= height_cells):
             continue
         y_px = board_rect.y + y * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (board_rect.x, y_px), (board_rect.right, y_px))
+        pygame.draw.line(
+            surface, GRID_COLOR, (board_rect.x, y_px), (board_rect.right, y_px)
+        )
 
 
-def _draw_clear_effect(surface: pygame.Surface,
-                       board_rect: pygame.Rect,
-                       width_cells: int,
-                       clear_effect: Optional[ClearEffect2D]) -> None:
+def _draw_clear_effect(
+    surface: pygame.Surface,
+    board_rect: pygame.Rect,
+    width_cells: int,
+    clear_effect: Optional[ClearEffect2D],
+) -> None:
     if clear_effect is None or not clear_effect.levels:
         return
 
@@ -421,29 +522,41 @@ def _draw_clear_effect(surface: pygame.Surface,
 
         sweep_center = int(progress * row_rect.width)
         sweep_rect = pygame.Rect(max(0, sweep_center - 24), 0, 48, row_rect.height)
-        pygame.draw.rect(overlay, (120, 220, 255, min(255, base_alpha + 45)), sweep_rect)
-        pygame.draw.rect(overlay, (255, 255, 255, min(255, base_alpha + 55)), overlay.get_rect(), 2)
+        pygame.draw.rect(
+            overlay, (120, 220, 255, min(255, base_alpha + 45)), sweep_rect
+        )
+        pygame.draw.rect(
+            overlay, (255, 255, 255, min(255, base_alpha + 55)), overlay.get_rect(), 2
+        )
 
         surface.blit(overlay, row_rect.topleft)
 
 
-def _draw_full_grid(surface: pygame.Surface, ox: int, oy: int, width_cells: int, height_cells: int) -> None:
+def _draw_full_grid(
+    surface: pygame.Surface, ox: int, oy: int, width_cells: int, height_cells: int
+) -> None:
     for x in range(width_cells + 1):
         x_px = ox + x * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (x_px, oy), (x_px, oy + height_cells * CELL_SIZE))
+        pygame.draw.line(
+            surface, GRID_COLOR, (x_px, oy), (x_px, oy + height_cells * CELL_SIZE)
+        )
     for y in range(height_cells + 1):
         y_px = oy + y * CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (ox, y_px), (ox + width_cells * CELL_SIZE, y_px))
+        pygame.draw.line(
+            surface, GRID_COLOR, (ox, y_px), (ox + width_cells * CELL_SIZE, y_px)
+        )
 
 
-def _draw_grid_variant(surface: pygame.Surface,
-                       board_rect: pygame.Rect,
-                       state: GameState,
-                       ox: int,
-                       oy: int,
-                       width_cells: int,
-                       height_cells: int,
-                       grid_mode: GridMode) -> None:
+def _draw_grid_variant(
+    surface: pygame.Surface,
+    board_rect: pygame.Rect,
+    state: GameState,
+    ox: int,
+    oy: int,
+    width_cells: int,
+    height_cells: int,
+    grid_mode: GridMode,
+) -> None:
     if grid_mode in (GridMode.OFF, GridMode.SHADOW, GridMode.HELPER):
         _draw_board_shadow(surface, board_rect)
     elif grid_mode == GridMode.EDGE:
@@ -453,28 +566,34 @@ def _draw_grid_variant(surface: pygame.Surface,
         _draw_full_grid(surface, ox, oy, width_cells, height_cells)
     elif grid_mode == GridMode.HELPER:
         x_marks, y_marks = _helper_grid_marks_2d(state, width_cells, height_cells)
-        _draw_helper_grid(surface, board_rect, width_cells, height_cells, x_marks, y_marks)
+        _draw_helper_grid(
+            surface, board_rect, width_cells, height_cells, x_marks, y_marks
+        )
 
 
-def _draw_locked_cells(surface: pygame.Surface,
-                       state: GameState,
-                       board_offset: tuple[int, int],
-                       width_cells: int,
-                       height_cells: int,
-                       *,
-                       outline: bool) -> None:
+def _draw_locked_cells(
+    surface: pygame.Surface,
+    state: GameState,
+    board_offset: tuple[int, int],
+    width_cells: int,
+    height_cells: int,
+    *,
+    outline: bool,
+) -> None:
     for (x, y), cell_id in state.board.cells.items():
         if 0 <= x < width_cells and 0 <= y < height_cells:
             _draw_cell(surface, x, y, cell_id, board_offset, outline=outline)
 
 
-def _draw_cell_float(surface: pygame.Surface,
-                     x: float,
-                     y: float,
-                     cell_id: int,
-                     board_offset: tuple[int, int],
-                     *,
-                     outline: bool) -> None:
+def _draw_cell_float(
+    surface: pygame.Surface,
+    x: float,
+    y: float,
+    cell_id: int,
+    board_offset: tuple[int, int],
+    *,
+    outline: bool,
+) -> None:
     ox, oy = board_offset
     rect = pygame.Rect(
         round(ox + x * CELL_SIZE + 1),
@@ -488,13 +607,15 @@ def _draw_cell_float(surface: pygame.Surface,
         pygame.draw.rect(surface, (255, 255, 255), rect, 2)
 
 
-def _draw_active_piece_cells(surface: pygame.Surface,
-                             state: GameState,
-                             board_offset: tuple[int, int],
-                             width_cells: int,
-                             height_cells: int,
-                             *,
-                             overlay: ActiveOverlay2D | None) -> None:
+def _draw_active_piece_cells(
+    surface: pygame.Surface,
+    state: GameState,
+    board_offset: tuple[int, int],
+    width_cells: int,
+    height_cells: int,
+    *,
+    overlay: ActiveOverlay2D | None,
+) -> None:
     if overlay is not None:
         raw_cells, color_id = overlay
         mapped_overlay = map_overlay_cells(
@@ -522,11 +643,14 @@ def _draw_active_piece_cells(surface: pygame.Surface,
             _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
 
 
-def draw_board(surface: pygame.Surface, state: GameState,
-               board_offset: Tuple[int, int],
-               grid_mode: GridMode = GridMode.FULL,
-               clear_effect: Optional[ClearEffect2D] = None,
-               active_piece_overlay: ActiveOverlay2D | None = None) -> None:
+def draw_board(
+    surface: pygame.Surface,
+    state: GameState,
+    board_offset: Tuple[int, int],
+    grid_mode: GridMode = GridMode.FULL,
+    clear_effect: Optional[ClearEffect2D] = None,
+    active_piece_overlay: ActiveOverlay2D | None = None,
+) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
     w, h = state.config.width, state.config.height
@@ -555,8 +679,14 @@ def draw_board(surface: pygame.Surface, state: GameState,
     _draw_clear_effect(surface, board_rect, w, clear_effect)
 
 
-def _draw_cell(surface: pygame.Surface, x: int, y: int, cell_id: int,
-               board_offset: Tuple[int, int], outline: bool = False) -> None:
+def _draw_cell(
+    surface: pygame.Surface,
+    x: int,
+    y: int,
+    cell_id: int,
+    board_offset: Tuple[int, int],
+    outline: bool = False,
+) -> None:
     ox, oy = board_offset
     rect = pygame.Rect(
         ox + x * CELL_SIZE + 1,
@@ -570,12 +700,14 @@ def _draw_cell(surface: pygame.Surface, x: int, y: int, cell_id: int,
         pygame.draw.rect(surface, (255, 255, 255), rect, 2)
 
 
-def draw_side_panel(surface: pygame.Surface,
-                    state: GameState,
-                    panel_offset: Tuple[int, int],
-                    fonts: GfxFonts,
-                    grid_mode: GridMode = GridMode.FULL,
-                    bot_lines: Sequence[str] = ()) -> None:
+def draw_side_panel(
+    surface: pygame.Surface,
+    state: GameState,
+    panel_offset: Tuple[int, int],
+    fonts: GfxFonts,
+    grid_mode: GridMode = GridMode.FULL,
+    bot_lines: Sequence[str] = (),
+) -> None:
     draw_side_panel_2d(
         surface,
         state,
@@ -593,14 +725,16 @@ def gravity_interval_ms_from_config(cfg: GameConfig) -> int:
     return gravity_interval_ms(cfg.speed_level, dimension=2)
 
 
-def draw_game_frame(screen: pygame.Surface,
-                    cfg: GameConfig,
-                    state: GameState,
-                    fonts: GfxFonts,
-                    grid_mode: GridMode = GridMode.FULL,
-                    bot_lines: Sequence[str] = (),
-                    clear_effect: Optional[ClearEffect2D] = None,
-                    active_piece_overlay: ActiveOverlay2D | None = None) -> None:
+def draw_game_frame(
+    screen: pygame.Surface,
+    cfg: GameConfig,
+    state: GameState,
+    fonts: GfxFonts,
+    grid_mode: GridMode = GridMode.FULL,
+    bot_lines: Sequence[str] = (),
+    clear_effect: Optional[ClearEffect2D] = None,
+    active_piece_overlay: ActiveOverlay2D | None = None,
+) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, cfg)
@@ -612,4 +746,6 @@ def draw_game_frame(screen: pygame.Surface,
         clear_effect=clear_effect,
         active_piece_overlay=active_piece_overlay,
     )
-    draw_side_panel(screen, state, panel_offset, fonts, grid_mode=grid_mode, bot_lines=bot_lines)
+    draw_side_panel(
+        screen, state, panel_offset, fonts, grid_mode=grid_mode, bot_lines=bot_lines
+    )

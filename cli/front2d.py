@@ -8,6 +8,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
+
 def _parse_cli_args(argv=None):
     parser = argparse.ArgumentParser(
         prog=Path(__file__).name,
@@ -65,13 +66,16 @@ from tet4d.engine.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from tet4d.engine.menu_config import default_settings_payload, setup_fields_for_dimension
+from tet4d.engine.menu_config import (
+    default_settings_payload,
+    setup_fields_for_dimension,
+)
 from tet4d.engine.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
 )
 from tet4d.engine.project_config import project_constant_float
-from tet4d.ai.playbot import (
+from tet4d.engine.api import (
     PlayBotController,
     run_dry_run_2d,
     BotMode,
@@ -99,6 +103,7 @@ _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 
 # ---------- Menu state & actions (logic, not drawing) ----------
 
+
 @dataclass
 class GameSettings:
     width: int = _DEFAULT_MODE_2D["width"]
@@ -114,7 +119,9 @@ class GameSettings:
     bot_budget_ms: int = _DEFAULT_MODE_2D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_2D["challenge_layers"]
     exploration_mode: int = _DEFAULT_MODE_2D["exploration_mode"]
-    speed_level: int = _DEFAULT_MODE_2D["speed_level"]  # 1..10, mapped to gravity interval
+    speed_level: int = _DEFAULT_MODE_2D[
+        "speed_level"
+    ]  # 1..10, mapped to gravity interval
 
 
 @dataclass
@@ -147,6 +154,7 @@ def _menu_fields(settings: GameSettings) -> list[FieldSpec]:
     if int(settings.topology_advanced):
         return fields
     return [field for field in fields if field[1] != "topology_profile_index"]
+
 
 _SETUP_BLOCKED_ACTIONS = {
     MenuAction.LOAD_BINDINGS,
@@ -222,6 +230,7 @@ def _config_from_settings(settings: GameSettings) -> GameConfig:
 
 # ---------- Menu loop ----------
 
+
 def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
     """
     Intro screen where width, height, and speed_level can be set.
@@ -255,9 +264,13 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             else:
                 report = run_dry_run_2d(
                     _config_from_settings(state.settings),
-                    planner_profile=bot_planner_profile_from_index(state.settings.bot_profile_index),
+                    planner_profile=bot_planner_profile_from_index(
+                        state.settings.bot_profile_index
+                    ),
                     planning_budget_ms=state.settings.bot_budget_ms,
-                    planner_algorithm=bot_planner_algorithm_from_index(state.settings.bot_algorithm_index),
+                    planner_algorithm=bot_planner_algorithm_from_index(
+                        state.settings.bot_algorithm_index
+                    ),
                 )
                 state.bindings_status = report.reason
                 state.bindings_status_error = not report.passed
@@ -301,6 +314,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
 
 # ---------- Game helpers ----------
 
+
 def create_initial_state(cfg: GameConfig) -> GameState:
     board = BoardND((cfg.width, cfg.height))
     state = GameState(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
@@ -342,10 +356,12 @@ def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
         "soft_drop": lambda: state.try_move(0, 1),
     }
     if state.config.exploration_mode:
-        handlers.update({
-            "move_y_neg": lambda: state.try_move(0, -1),
-            "move_y_pos": lambda: state.try_move(0, 1),
-        })
+        handlers.update(
+            {
+                "move_y_neg": lambda: state.try_move(0, -1),
+                "move_y_pos": lambda: state.try_move(0, 1),
+            }
+        )
     action = dispatch_bound_action(key, KEYS_2D, handlers)
     if action is None:
         return None
@@ -358,11 +374,13 @@ def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
     return action
 
 
-def handle_game_keydown(event: pygame.event.Event,
-                        state: GameState,
-                        _cfg: GameConfig,
-                        *,
-                        allow_gameplay: bool = True) -> Optional[str]:
+def handle_game_keydown(
+    event: pygame.event.Event,
+    state: GameState,
+    _cfg: GameConfig,
+    *,
+    allow_gameplay: bool = True,
+) -> Optional[str]:
     """
     Handle a single KEYDOWN event during the game.
     Returns:
@@ -394,19 +412,23 @@ def handle_game_keydown(event: pygame.event.Event,
     return "continue"
 
 
-def _step_gravity_tick(state: GameState, gravity_accumulator: int, gravity_interval_ms: int) -> int:
+def _step_gravity_tick(
+    state: GameState, gravity_accumulator: int, gravity_interval_ms: int
+) -> int:
     if not state.game_over and gravity_accumulator >= gravity_interval_ms:
         state.step(Action.NONE)
         return 0
     return gravity_accumulator
 
 
-def _update_clear_animation(state: GameState,
-                            last_lines_cleared: int,
-                            clear_anim_levels: tuple[int, ...],
-                            clear_anim_elapsed_ms: float,
-                            clear_anim_duration_ms: float,
-                            dt_ms: int) -> tuple[tuple[int, ...], float, int]:
+def _update_clear_animation(
+    state: GameState,
+    last_lines_cleared: int,
+    clear_anim_levels: tuple[int, ...],
+    clear_anim_elapsed_ms: float,
+    clear_anim_duration_ms: float,
+    dt_ms: int,
+) -> tuple[tuple[int, ...], float, int]:
     if state.lines_cleared != last_lines_cleared:
         clear_anim_levels = tuple(state.board.last_cleared_levels)
         clear_anim_elapsed_ms = 0.0
@@ -418,9 +440,9 @@ def _update_clear_animation(state: GameState,
     return clear_anim_levels, clear_anim_elapsed_ms, last_lines_cleared
 
 
-def _clear_effect(levels: tuple[int, ...],
-                  elapsed_ms: float,
-                  duration_ms: float) -> Optional[ClearEffect2D]:
+def _clear_effect(
+    levels: tuple[int, ...], elapsed_ms: float, duration_ms: float
+) -> Optional[ClearEffect2D]:
     if not levels:
         return None
     return ClearEffect2D(
@@ -434,7 +456,9 @@ class LoopContext2D:
     cfg: GameConfig
     state: GameState
     bot: PlayBotController = field(default_factory=PlayBotController)
-    rotation_anim: PieceRotationAnimator2D = field(default_factory=PieceRotationAnimator2D)
+    rotation_anim: PieceRotationAnimator2D = field(
+        default_factory=PieceRotationAnimator2D
+    )
     gravity_accumulator: int = 0
     grid_mode: GridMode = GridMode.FULL
     clear_anim_levels: tuple[int, ...] = ()
@@ -443,7 +467,9 @@ class LoopContext2D:
     was_game_over: bool = False
 
     @classmethod
-    def create(cls, cfg: GameConfig, *, bot_mode: BotMode = BotMode.OFF) -> "LoopContext2D":
+    def create(
+        cls, cfg: GameConfig, *, bot_mode: BotMode = BotMode.OFF
+    ) -> "LoopContext2D":
         state = create_initial_state(cfg)
         return cls(
             cfg=cfg,
@@ -492,7 +518,9 @@ class LoopContext2D:
             speed_level=self.cfg.speed_level,
         )
         mode_name = self.bot.mode.value
-        self.state.analysis_actor_mode = "human" if self.bot.mode == BotMode.OFF else mode_name
+        self.state.analysis_actor_mode = (
+            "human" if self.bot.mode == BotMode.OFF else mode_name
+        )
         self.state.analysis_bot_mode = mode_name
         self.state.analysis_grid_mode = self.grid_mode.value
 
@@ -594,15 +622,17 @@ def _update_feedback_and_animation(
     )
 
 
-def run_game_loop(screen: pygame.Surface,
-                  cfg: GameConfig,
-                  fonts: GfxFonts,
-                  *,
-                  bot_mode: BotMode = BotMode.OFF,
-                  bot_speed_level: int = 7,
-                  bot_algorithm_index: int = 0,
-                  bot_profile_index: int = 1,
-                  bot_budget_ms: int = 12) -> bool:
+def run_game_loop(
+    screen: pygame.Surface,
+    cfg: GameConfig,
+    fonts: GfxFonts,
+    *,
+    bot_mode: BotMode = BotMode.OFF,
+    bot_speed_level: int = 7,
+    bot_algorithm_index: int = 0,
+    bot_profile_index: int = 1,
+    bot_budget_ms: int = 12,
+) -> bool:
     """
     Run a single game session.
     Returns:
@@ -689,6 +719,7 @@ def run_game_loop(screen: pygame.Surface,
 
 
 # ---------- Main run ----------
+
 
 def run():
     runtime = initialize_runtime(sync_audio_state=False)

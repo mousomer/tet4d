@@ -9,7 +9,9 @@ from unittest.mock import patch
 
 try:
     import pygame
-except ModuleNotFoundError:  # pragma: no cover - exercised in environments without pygame-ce
+except (
+    ModuleNotFoundError
+):  # pragma: no cover - exercised in environments without pygame-ce
     pygame = None
 
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
@@ -44,10 +46,16 @@ class _TempKeybindingRoot:
         }
         self.patches = [
             patch.object(keybindings, "KEYBINDINGS_DIR", self.keybindings_dir),
-            patch.object(keybindings, "KEYBINDINGS_PROFILES_DIR", self.keybindings_dir / "profiles"),
+            patch.object(
+                keybindings,
+                "KEYBINDINGS_PROFILES_DIR",
+                self.keybindings_dir / "profiles",
+            ),
             patch.object(keybindings, "KEYBINDING_FILES", self.files),
             patch.object(menu_settings_state, "STATE_DIR", self.state_dir),
-            patch.object(menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"),
+            patch.object(
+                menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"
+            ),
         ]
 
     def start(self) -> None:
@@ -95,7 +103,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("pitch_pos"), (pygame.K_6,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("zoom_out"), (pygame.K_7,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("zoom_in"), (pygame.K_8,))
-        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("cycle_projection"), (pygame.K_9,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_3D.get("cycle_projection"), (pygame.K_9,)
+        )
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("reset"), (pygame.K_0,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_neg"), (pygame.K_1,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_pos"), (pygame.K_2,))
@@ -121,7 +131,9 @@ class TestKeybindingProfiles(unittest.TestCase):
 
         self.assertEqual(keybindings.active_key_profile(), profile_name)
         active_path = keybindings.keybinding_file_path(4)
-        self.assertEqual(active_path, keybindings.profile_keybinding_file_path(4, profile_name))
+        self.assertEqual(
+            active_path, keybindings.profile_keybinding_file_path(4, profile_name)
+        )
         self.assertTrue(active_path.exists())
 
     def test_rename_custom_profile(self) -> None:
@@ -197,7 +209,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertIn(rotation_key, keybindings.KEYS_4D["rotate_zw_neg"])
 
     def test_small_profile_rotation_ladder_defaults(self) -> None:
-        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_UP, pygame.K_q))
+        self.assertEqual(
+            keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_UP, pygame.K_q)
+        )
         self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_w,))
         self.assertEqual(keybindings.KEYS_4D["rotate_xy_pos"], (pygame.K_q,))
         self.assertEqual(keybindings.KEYS_4D["rotate_xy_neg"], (pygame.K_w,))
@@ -248,13 +262,17 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_4,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_KP7,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_KP9,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_KP1,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_KP1,)
+        )
         self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_KP3,))
 
     def test_system_defaults_are_deconflicted_from_rotation_ladder(self) -> None:
         self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_y,))
         self.assertEqual(keybindings.SYSTEM_KEYS["toggle_grid"], (pygame.K_c,))
-        gameplay_keys_4d = {key for keys in keybindings.KEYS_4D.values() for key in keys}
+        gameplay_keys_4d = {
+            key for keys in keybindings.KEYS_4D.values() for key in keys
+        }
         self.assertNotIn(keybindings.SYSTEM_KEYS["restart"][0], gameplay_keys_4d)
         self.assertNotIn(keybindings.SYSTEM_KEYS["toggle_grid"][0], gameplay_keys_4d)
 
@@ -368,9 +386,15 @@ class TestMenuSettingsPersistence(unittest.TestCase):
 
         self.assertEqual(loaded["version"], defaults["version"])
         self.assertEqual(loaded["active_profile"], defaults["active_profile"])
-        self.assertEqual(loaded["settings"]["2d"]["width"], defaults["settings"]["2d"]["width"])
-        self.assertEqual(loaded["settings"]["3d"]["depth"], defaults["settings"]["3d"]["depth"])
-        self.assertEqual(loaded["settings"]["4d"]["fourth"], defaults["settings"]["4d"]["fourth"])
+        self.assertEqual(
+            loaded["settings"]["2d"]["width"], defaults["settings"]["2d"]["width"]
+        )
+        self.assertEqual(
+            loaded["settings"]["3d"]["depth"], defaults["settings"]["3d"]["depth"]
+        )
+        self.assertEqual(
+            loaded["settings"]["4d"]["fourth"], defaults["settings"]["4d"]["fourth"]
+        )
 
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()
