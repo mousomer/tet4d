@@ -180,6 +180,9 @@ incremental enforcement strategy used while refactoring.
   from Stages 36-41 (including runtime validation leaf shims and unused UI-logic
   shims) and migrates the last runtime-helper callers to `engine.runtime.*`,
   keeping net LOC decreasing while documenting folder-ratio progress.
+- Stage 46 (slice 36, runtime analytics completion) moves `assist_scoring.py`
+  into `engine/runtime` alongside score-analyzer modules and keeps an engine-path
+  module-alias shim for callers and tests during the transition.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
