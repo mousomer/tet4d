@@ -260,6 +260,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 71 (slice 61, UI shim canonicalization) migrates engine front-game
   callers to `tet4d.ui.pygame.camera_mouse` directly before test migration and
   shim pruning, keeping the change scoped to a single helper family.
+- Stage 72 (slice 62, UI shim canonicalization) migrates `camera_mouse` tests to
+  the canonical `tet4d.ui.pygame.camera_mouse` module while keeping tests in
+  `src/tet4d/engine/tests/` prior to shim removal.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

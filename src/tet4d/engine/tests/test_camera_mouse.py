@@ -12,7 +12,7 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for camera mouse tests")
 
-from tet4d.engine.camera_mouse import (
+from tet4d.ui.pygame.camera_mouse import (
     MAX_ABS_MOUSE_PITCH,
     MouseOrbitState,
     apply_mouse_orbit_event,
