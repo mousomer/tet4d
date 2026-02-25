@@ -190,6 +190,9 @@ incremental enforcement strategy used while refactoring.
   `engine.gameplay.game2d` / `engine.gameplay.game_nd` alias modules and migrates
   selected internal callers to those paths so the upcoming physical game-module
   moves are mostly file relocations plus import retargeting.
+- Stage 49 (slice 39, high-risk gameplay move) performs the physical move of
+  `game2d.py` into `engine/gameplay`, keeping the old path as a module-alias shim
+  so tests/callers retain existing import and monkeypatch behavior.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

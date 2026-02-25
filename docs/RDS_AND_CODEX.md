@@ -85,9 +85,11 @@ Read order:
 25. Use a prep seam for high-risk `game2d.py` / `game_nd.py` moves: add temporary
     `engine.gameplay.game2d/game_nd` aliases first, migrate a few internal callers,
     then swap in the real moved modules in the next stages.
-26. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-27. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-28. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+26. For physical `game2d.py` / `game_nd.py` moves, prefer module-alias shims at the
+    old engine paths so tests and monkeypatch-heavy callers keep module-global behavior.
+27. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+28. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+29. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
