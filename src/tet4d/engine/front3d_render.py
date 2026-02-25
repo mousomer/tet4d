@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 import pygame
 
 from tet4d.ui.pygame.control_helper import control_groups_for_dimension
-from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
+from tet4d.ui.pygame.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .front3d_setup import gravity_interval_ms_from_config
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .grid_mode_render import draw_projected_grid_mode

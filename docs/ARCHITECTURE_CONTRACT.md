@@ -339,3 +339,6 @@ incremental enforcement strategy used while refactoring.
 - Boundary guards use baseline-lock allowlists for transitional engine-owned UI
   modules (including current `engine -> tet4d.ui` imports) and fail on new
   additions outside the recorded baseline until those modules are extracted.
+- Stage 96 (slice 86, ui shim canonicalization) migrates engine callers to
+  canonical `tet4d.ui.pygame.font_profiles` imports before CLI migration and
+  pruning the `engine/font_profiles.py` compatibility shim.

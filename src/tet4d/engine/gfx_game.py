@@ -5,7 +5,7 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
-from .font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
+from tet4d.ui.pygame.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .gameplay.game2d import GameState, GameConfig
 from .gfx_panel_2d import draw_side_panel_2d
 from .runtime.project_config import project_constant_int

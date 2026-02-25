@@ -181,6 +181,9 @@ Read order:
     `.policy/policy_template_hashes.json`) are optional in a fresh public clone;
     baseline policy/drift scripts should no-op on missing markers while repo-extension
     policy checks continue enforcing repo-specific governance.
+60. For UI shims used by both engine and CLI launchers (for example
+    `font_profiles`), keep the engine-caller migration and CLI-caller migration
+    in separate stages before shim pruning so launcher regressions remain isolated.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
