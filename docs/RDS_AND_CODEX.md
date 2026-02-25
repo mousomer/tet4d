@@ -134,6 +134,9 @@ Read order:
 43. Apply the same pattern to shared math/projection helpers (`projection3d`)
     before attempting renderer-module moves so rendering regressions are easier to
     localize.
+44. Treat shared UI math/projection helpers as high-value shim-pruning targets:
+    once engine and test callers are canonicalized, remove the engine-path shim
+    promptly to prevent renderer modules from drifting back to legacy imports.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
