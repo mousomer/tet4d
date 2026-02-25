@@ -20,7 +20,7 @@ from .menu_persistence import (
 )
 from .menu_settings_state import DEFAULT_WINDOWED_SIZE
 from .runtime.score_analyzer import set_score_analyzer_logging_enabled
-from .ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)

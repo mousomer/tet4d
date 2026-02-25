@@ -42,7 +42,7 @@ from .topology_designer import (
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
 )
-from .ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 from .view_controls import viewer_relative_move_axis_delta
 
 

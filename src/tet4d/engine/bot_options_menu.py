@@ -20,7 +20,7 @@ from .playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )
-from .ui_utils import draw_vertical_gradient
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient
 
 
 _BG_TOP = (14, 18, 44)

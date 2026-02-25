@@ -11,7 +11,7 @@ from .gfx_panel_2d import draw_side_panel_2d
 from .project_config import project_constant_int
 from .speed_curve import gravity_interval_ms
 from .topology import map_overlay_cells
-from .ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 from .view_modes import GridMode
 
 

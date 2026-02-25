@@ -13,7 +13,7 @@ from .ui_logic.keybindings_menu_model import (
     binding_keys,
     binding_title,
 )
-from .ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 def _draw_background(surface: pygame.Surface) -> None:

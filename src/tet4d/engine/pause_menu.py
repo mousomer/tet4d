@@ -20,7 +20,7 @@ from .launcher_settings import run_settings_hub_menu
 from .menu_config import menu_items, pause_menu_id
 from .menu_persistence import load_audio_payload, load_display_payload
 from .menu_runner import ActionRegistry, MenuRunner
-from .ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 PauseDecision = Literal["resume", "restart", "menu", "quit"]

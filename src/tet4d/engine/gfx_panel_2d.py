@@ -11,7 +11,7 @@ from tet4d.ui.pygame.control_helper import (
 )
 from .panel_utils import render_text_cached, truncate_lines_to_height
 from .runtime.score_analyzer import hud_analysis_lines
-from .ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import fit_text
 from .view_modes import GridMode, grid_mode_label
 
 
