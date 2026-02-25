@@ -10,7 +10,7 @@ from tet4d.engine.help_topics import (
     help_topics_registry,
     validate_help_topic_contract,
 )
-from tet4d.engine.keybindings_catalog import binding_action_ids
+from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 
 
 class TestHelpTopics(unittest.TestCase):

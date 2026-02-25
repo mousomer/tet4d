@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.menu_graph_linter import lint_menu_graph
+from tet4d.engine.ui_logic.menu_graph_linter import lint_menu_graph
 
 
 class TestMenuGraphLinter(unittest.TestCase):

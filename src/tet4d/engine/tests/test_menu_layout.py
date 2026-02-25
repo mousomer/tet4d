@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.menu_layout import compute_menu_layout_zones
+from tet4d.engine.ui_logic.menu_layout import compute_menu_layout_zones
 
 
 class TestMenuLayout(unittest.TestCase):

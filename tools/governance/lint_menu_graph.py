@@ -9,7 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 def main() -> int:
-    from tet4d.engine.menu_graph_linter import lint_menu_graph
+    from tet4d.engine.ui_logic.menu_graph_linter import lint_menu_graph
 
     issues = lint_menu_graph()
     if issues:

@@ -269,7 +269,7 @@ def _validate_action_topics_coverage(
     action_topics: dict[str, str],
     issues: list[ValidationIssue],
 ) -> None:
-    from tet4d.engine.keybindings_catalog import binding_action_ids
+    from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 
     known_actions = set(binding_action_ids())
     mapped_actions = set(action_topics.keys())
@@ -359,7 +359,7 @@ def _validate_help_topic_contract(manifest: dict[str, object]) -> list[Validatio
 
 
 def _validate_menu_graph_contract() -> list[ValidationIssue]:
-    from tet4d.engine.menu_graph_linter import lint_menu_graph
+    from tet4d.engine.ui_logic.menu_graph_linter import lint_menu_graph
 
     issues: list[ValidationIssue] = []
     for issue in lint_menu_graph():
