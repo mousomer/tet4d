@@ -441,3 +441,6 @@ incremental enforcement strategy used while refactoring.
   write paths from `engine/keybindings.py`.
 - Stage 131 (slice 121, runtime side-effect extraction) routes keybindings
   atomic-write persistence through `engine.runtime.keybindings_storage`.
+- Stage 132 (slice 122, runtime side-effect extraction) routes keybindings
+  profile-clone file copy persistence through
+  `engine.runtime.keybindings_storage`.

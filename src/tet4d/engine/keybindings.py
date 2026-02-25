@@ -29,7 +29,11 @@ from tet4d.ui.pygame.keybindings_defaults import (
     default_system_bindings_for_profile,
 )
 from .runtime.project_config import keybindings_dir_path, keybindings_profiles_dir_path
-from .runtime.keybindings_storage import atomic_write_text, load_json_file
+from .runtime.keybindings_storage import (
+    atomic_write_text,
+    copy_text_file,
+    load_json_file,
+)
 from .ui_logic.keybindings_catalog import (
     binding_action_description as _binding_action_description,
     binding_group_description as _binding_group_description,
@@ -634,8 +638,7 @@ def _clone_keybinding_dimension(
         save_keybindings_file(dimension, profile=source_profile)
         src_path = keybinding_file_path_for_profile(dimension, source_profile)
     dst_path = keybinding_file_path_for_profile(dimension, target_profile)
-    dst_path.parent.mkdir(parents=True, exist_ok=True)
-    dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
+    copy_text_file(src_path, dst_path)
 
 
 def save_keybindings_file(

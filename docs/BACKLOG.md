@@ -142,6 +142,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 128. `DONE` Arch Stage 129 slice 119 removed the zero-caller `src/tet4d/engine/pieces_nd.py` compatibility shim after canonical gameplay import migration.
 129. `DONE` Arch Stage 130 slice 120 routed keybindings JSON reads through `src/tet4d/engine/runtime/keybindings_storage.py` before write-path extraction.
 130. `DONE` Arch Stage 131 slice 121 routed keybindings atomic-write persistence through `src/tet4d/engine/runtime/keybindings_storage.py`.
+131. `DONE` Arch Stage 132 slice 122 routed keybindings profile-clone file copy persistence through `src/tet4d/engine/runtime/keybindings_storage.py`.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

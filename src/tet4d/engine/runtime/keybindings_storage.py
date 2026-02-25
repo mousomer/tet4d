@@ -15,3 +15,8 @@ def atomic_write_text(path: Path, payload: str) -> None:
     temp_path = path.with_suffix(path.suffix + ".tmp")
     temp_path.write_text(payload, encoding="utf-8")
     temp_path.replace(path)
+
+
+def copy_text_file(src_path: Path, dst_path: Path) -> None:
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")
