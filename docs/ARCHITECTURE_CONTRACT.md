@@ -406,3 +406,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 119 (slice 109, gameplay shim pruning) removes the zero-caller
   `engine/exploration_mode.py` compatibility shim after canonical
   `engine.gameplay.exploration_mode` migration.
+- Stage 120 (slice 110, gameplay shim canonicalization) migrates engine/test
+  callers to canonical `engine.gameplay.speed_curve` imports before pruning
+  `engine/speed_curve.py`.
