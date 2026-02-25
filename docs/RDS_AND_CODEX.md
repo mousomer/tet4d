@@ -171,6 +171,9 @@ Read order:
 56. For `menu_persistence`-style runtime shims used by both launchers and in-game
     menus, migrate engine and CLI callers in the same stage when there are no
     test imports, then prune in a follow-up stage after a repo-wide zero-caller audit.
+57. Runtime shim prune stages should include a final `ci_check.sh` run (not just
+    `verify.sh`) when they remove persistence/config modules used by launchers,
+    so compileall + benchmark checks exercise the post-shim import graph.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in

@@ -101,6 +101,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 87. `DONE` Arch Stage 92 slice 82 migrated engine/test callers to canonical `src/tet4d/engine/runtime/runtime_config.py` imports before shim pruning.
 88. `DONE` Arch Stage 93 slice 83 removed the zero-caller `src/tet4d/engine/runtime_config.py` compatibility shim after canonical engine/test import migration.
 89. `DONE` Arch Stage 94 slice 84 migrated engine/CLI callers to canonical `src/tet4d/engine/runtime/menu_persistence.py` imports before shim pruning.
+90. `DONE` Arch Stage 95 slice 85 removed the zero-caller `src/tet4d/engine/menu_persistence.py` compatibility shim after canonical engine/CLI import migration.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

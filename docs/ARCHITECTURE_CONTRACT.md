@@ -329,6 +329,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 94 (slice 84, runtime shim canonicalization) migrates engine and CLI
   callers to canonical `engine.runtime.menu_persistence` imports before pruning
   the `engine/menu_persistence.py` compatibility shim.
+- Stage 95 (slice 85, runtime shim pruning) removes the zero-caller
+  `engine/menu_persistence.py` compatibility shim after canonical engine/CLI
+  migration to `engine.runtime.menu_persistence`.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
