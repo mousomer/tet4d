@@ -3,8 +3,8 @@ from __future__ import annotations
 import random
 from typing import Iterable, Sequence
 
-from ..pieces2d import DEFAULT_RANDOM_CELL_COUNT_2D, get_piece_bag_2d
-from ..pieces_nd import (
+from .pieces2d import DEFAULT_RANDOM_CELL_COUNT_2D, get_piece_bag_2d
+from .pieces_nd import (
     DEFAULT_RANDOM_CELL_COUNT_3D,
     DEFAULT_RANDOM_CELL_COUNT_4D,
     get_piece_shapes_nd,

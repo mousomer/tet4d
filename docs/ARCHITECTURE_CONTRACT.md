@@ -170,6 +170,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 42 (slice 32, gameplay cluster start) creates `engine/gameplay` and moves
   low-coupling gameplay helpers (`challenge_mode`, `speed_curve`,
   `exploration_mode`) behind engine-path module-alias shims.
+- Stage 43 (slice 33, gameplay primitives move) moves `pieces2d`, `pieces_nd`,
+  and `topology` into `engine/gameplay`, with engine-path module-alias shims and
+  local gameplay-cluster imports for moved primitives.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

@@ -68,9 +68,12 @@ Read order:
 19. Start `engine/gameplay` with low-coupling helpers first (`challenge_mode`,
     `speed_curve`, `exploration_mode`) before moving heavily reused primitives or
     the main `game2d.py` / `game_nd.py` modules.
-20. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-21. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-22. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+20. Once gameplay helpers land, move shared gameplay primitives (`pieces2d`,
+    `pieces_nd`, `topology`) next and update moved gameplay modules to use local
+    `engine.gameplay.*` imports before broad caller rewrites.
+21. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+22. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+23. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
