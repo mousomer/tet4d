@@ -44,7 +44,7 @@ from tet4d.engine.launcher_settings import run_settings_hub_menu
 from tet4d.engine.menu_config import launcher_menu_id, menu_graph
 from tet4d.engine.menu_persistence import load_menu_payload, save_menu_payload
 from tet4d.engine.menu_runner import ActionRegistry, MenuRunner
-from tet4d.engine.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)

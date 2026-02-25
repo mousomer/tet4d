@@ -287,6 +287,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 80 (slice 70, UI shim canonicalization) migrates engine callers to
   canonical `tet4d.ui.pygame.ui_utils` imports before CLI caller migration and
   `engine/ui_utils.py` compatibility-shim pruning.
+- Stage 81 (slice 71, UI shim canonicalization) migrates the remaining CLI
+  caller (`cli/front.py`) to canonical `tet4d.ui.pygame.ui_utils` imports,
+  clearing known non-UI callers before shim pruning.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

@@ -140,6 +140,9 @@ Read order:
 45. For UI helpers referenced by both engine modules and `cli/*`, split
     canonicalization into engine-first and CLI-followup stages before pruning the
     engine-path shim to keep launcher-risk changes isolated.
+46. Treat CLI launcher imports as their own canonicalization step even when no
+    tests change, so wrapper/help regressions can be isolated from engine and
+    shim-pruning diffs.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing
