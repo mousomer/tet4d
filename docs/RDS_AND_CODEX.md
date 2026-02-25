@@ -59,9 +59,12 @@ Read order:
 16. Start `engine/runtime` with menu settings/config/persistence modules first; they
     are runtime/file-I/O concerns and a low-risk way to reduce the top-level
     `engine/` catch-all.
-17. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-18. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-19. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+17. When moving runtime/config modules, prefer module-alias compatibility shims
+    (`sys.modules[__name__] = impl`) over `import *` shims when tests or callers
+    patch module-level globals/private helpers.
+18. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+19. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+20. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

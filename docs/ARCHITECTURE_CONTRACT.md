@@ -161,6 +161,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 39 (slice 29, runtime cluster start) creates `engine/runtime` and moves
   menu settings/config persistence modules behind engine-path compatibility shims,
   while `ui_logic` callers start using `engine.runtime.*` imports directly.
+- Stage 40 (slice 30, runtime config cluster move) expands `engine/runtime` with
+  project/runtime config and validation modules, preserving legacy engine import
+  paths via module-alias shims for minimal churn.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

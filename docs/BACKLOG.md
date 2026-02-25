@@ -46,6 +46,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 32. `DONE` Arch Stage 37 slice 27 moved `menu_graph_linter.py` into `src/tet4d/engine/ui_logic/` and left a legacy engine-path shim so governance tooling remains stable during the folder split.
 33. `DONE` Arch Stage 38 slice 28 moved `keybindings_catalog.py` into `src/tet4d/engine/ui_logic/` and updated `ui_logic` keybindings-menu model imports to use the same merged folder.
 34. `DONE` Arch Stage 39 slice 29 created `src/tet4d/engine/runtime/` and moved menu settings/config persistence modules (`menu_settings_state.py`, `menu_persistence.py`, `menu_config.py`) behind engine-path compatibility shims.
+35. `DONE` Arch Stage 40 slice 30 moved project/runtime config and runtime validation modules into `src/tet4d/engine/runtime/`, adding engine-path module-alias shims to preserve import behavior during the folder split.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
