@@ -271,6 +271,20 @@ def project_root_path():
     return _project_root_path()
 
 
+def format_key_tuple(keys):
+    from .key_display import format_key_tuple as _format_key_tuple
+
+    return _format_key_tuple(keys)
+
+
+def runtime_binding_groups_for_dimension(dimension: int):
+    from .keybindings import (
+        runtime_binding_groups_for_dimension as _runtime_binding_groups_for_dimension,
+    )
+
+    return _runtime_binding_groups_for_dimension(dimension)
+
+
 def run_front3d_ui() -> None:
     from .front3d_game import run as _run_front3d
 
