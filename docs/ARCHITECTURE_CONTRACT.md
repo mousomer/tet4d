@@ -427,3 +427,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 126 (slice 116, gameplay shim canonicalization) migrates engine/CLI/test
   callers to canonical `engine.gameplay.pieces2d` imports before pruning
   `engine/pieces2d.py`.
+- Stage 127 (slice 117, gameplay shim pruning) removes the zero-caller
+  `engine/pieces2d.py` compatibility shim after canonical
+  `engine.gameplay.pieces2d` migration.
