@@ -95,9 +95,12 @@ Read order:
 29. Migrate tests to canonical `engine.gameplay.game2d/game_nd` imports before
     deleting `engine.game2d` / `engine.game_nd`; this isolates shim-prune failures
     to true external callers rather than internal test churn.
-30. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-31. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-32. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+30. Before deleting compatibility shims for moved modules, run a repo-wide import
+    audit and record a zero-caller checkpoint in docs/backlog to make the prune
+    stage clearly reversible and easier to review.
+31. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+32. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+33. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

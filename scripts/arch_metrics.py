@@ -132,7 +132,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 52,
+        "arch_stage": 53,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
