@@ -10,7 +10,7 @@ from ..keybindings import (
     set_active_key_profile,
 )
 from .menu_config import default_settings_payload
-from .menu_settings_state_storage import load_json_file
+from .menu_settings_state_storage import atomic_write_json, load_json_file
 from .project_config import menu_settings_file_path, state_dir_path
 
 STATE_DIR = state_dir_path()
@@ -120,12 +120,7 @@ def _load_payload() -> dict[str, Any]:
 
 def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     try:
-        STATE_DIR.mkdir(parents=True, exist_ok=True)
-        temp_path = STATE_FILE.with_suffix(".tmp")
-        temp_path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
-        )
-        temp_path.replace(STATE_FILE)
+        atomic_write_json(STATE_FILE, payload)
     except OSError as exc:
         return False, f"Failed saving menu state: {exc}"
     return True, f"Saved menu state to {STATE_FILE}"
