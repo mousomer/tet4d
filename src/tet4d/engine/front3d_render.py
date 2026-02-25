@@ -32,7 +32,7 @@ from tet4d.ui.pygame.projection3d import (
 )
 from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.score_analyzer import hud_analysis_lines
-from .topology import map_overlay_cells
+from .gameplay.topology import map_overlay_cells
 from .view_controls import YawPitchTurnAnimator
 from .view_modes import GridMode, grid_mode_label
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.topology import (
+from tet4d.engine.gameplay.topology import (
     EDGE_BOUNDED,
     EDGE_INVERT,
     EDGE_WRAP,

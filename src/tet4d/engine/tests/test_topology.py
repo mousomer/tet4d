@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.topology import (
+from tet4d.engine.gameplay.topology import (
     TOPOLOGY_INVERT_ALL,
     TOPOLOGY_WRAP_ALL,
     TopologyPolicy,

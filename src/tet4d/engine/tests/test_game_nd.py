@@ -14,7 +14,7 @@ from tet4d.engine.pieces_nd import (
     PIECE_SET_4D_SIX,
     PieceShapeND,
 )
-from tet4d.engine.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 
 
 class TestGameND(unittest.TestCase):
