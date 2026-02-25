@@ -187,6 +187,9 @@ Read order:
 61. Before pruning a UI compatibility shim after CLI migration, run a repo-wide
     grep for aggregated imports (`from tet4d.engine import <shim>`) in tests and
     support modules; they are easy to miss even when engine/CLI callers are clean.
+62. `font_profiles`-style UI shims can be pruned without a test migration stage
+    when repo-wide grep confirms zero engine/CLI/tests callers and the canonical
+    module (`tet4d.ui.pygame.font_profiles`) is already imported directly.
     test rewrites as part of shim-prune prep (not post-prune fixes).
 56. Runtime shim zero-caller audits should allow canonical imports within
     `engine/runtime/*` (for example `.menu_settings_state` in
