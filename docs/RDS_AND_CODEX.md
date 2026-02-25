@@ -166,6 +166,9 @@ Read order:
 54. Apply the same engine-first / CLI+tests-followup / prune sequence to runtime
     state-persistence shims (`menu_settings_state`, `menu_persistence`) to keep
     launcher/settings regressions localized during migration.
+55. For runtime state shims referenced by tests via `from tet4d.engine import ...`,
+    expect aggregated-import cleanup during the CLI/test stage and treat those
+    test rewrites as part of shim-prune prep (not post-prune fixes).
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing

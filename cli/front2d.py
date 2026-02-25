@@ -70,7 +70,7 @@ from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     setup_fields_for_dimension,
 )
-from tet4d.engine.menu_settings_state import (
+from tet4d.engine.runtime.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
 )
