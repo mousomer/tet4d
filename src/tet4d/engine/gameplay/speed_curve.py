@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..runtime_config import speed_curve_for_dimension
+from ..runtime.runtime_config import speed_curve_for_dimension
 
 
 def gravity_interval_ms(speed_level: int, *, dimension: int) -> int:

@@ -5,7 +5,7 @@ from enum import Enum
 from math import prod
 from typing import TypeVar
 
-from ..runtime_config import (
+from ..runtime.runtime_config import (
     playbot_adaptive_candidate_cap_for_ndim,
     playbot_adaptive_fallback_enabled,
     playbot_adaptive_lookahead_min_budget_ms,

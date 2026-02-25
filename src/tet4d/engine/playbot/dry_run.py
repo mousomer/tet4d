@@ -7,7 +7,7 @@ from ..challenge_mode import apply_challenge_prefill_2d, apply_challenge_prefill
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
 from ..pieces_nd import PIECE_SET_4D_DEBUG
-from ..runtime_config import playbot_dry_run_defaults
+from ..runtime.runtime_config import playbot_dry_run_defaults
 from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
 from .types import (

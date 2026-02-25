@@ -11,7 +11,7 @@ from .planner_2d import plan_best_2d_move
 from .planner_nd import plan_best_nd_move
 from .planner_nd_core import canonical_blocks as _canonical_blocks
 from .planner_nd_core import rotation_planes
-from ..runtime_config import playbot_default_hard_drop_after_soft_drops
+from ..runtime.runtime_config import playbot_default_hard_drop_after_soft_drops
 from .types import (
     BOT_MODE_OPTIONS,
     BotMode,

@@ -5,7 +5,7 @@ from itertools import product
 
 from .game2d import GameState
 from .game_nd import GameStateND
-from ..runtime_config import challenge_prefill_ratio
+from ..runtime.runtime_config import challenge_prefill_ratio
 
 
 def apply_challenge_prefill_2d(
