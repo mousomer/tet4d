@@ -45,9 +45,12 @@ Read order:
     corresponding modules are physically moved and boundary checks remain green.
 11. Public playbot APIs should now be imported from `tet4d.engine.api`; the
     `tet4d.ai.playbot` package only retains shared internal helper logic during migration.
-12. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-13. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-14. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+12. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
+    `engine/ui_logic`, `engine/runtime`) over many tiny folders; keep moves prefix-based
+    and compatibility-shimmed to minimize import churn.
+13. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+14. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+15. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

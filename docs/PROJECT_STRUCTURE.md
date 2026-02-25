@@ -73,7 +73,8 @@ tet4d/
 │       ├── ai/                  # AI facades (playbot boundary seam over engine.api)
 │       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
 │       └── engine/              # shared engine + frontends + tests (source of truth)
-│           └── core/            # strict-purity deterministic logic extraction subtree
+│           ├── core/            # strict-purity deterministic logic extraction subtree
+│           └── ui_logic/        # non-rendering menu/input helpers (merged folder split sequence)
 │       ├── board.py             # sparse ND board + plane clear logic
 │       ├── game2d.py            # 2D game rules/state
 │       ├── game_nd.py           # ND game rules/state (3D/4D)

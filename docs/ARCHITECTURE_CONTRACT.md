@@ -145,4 +145,11 @@ incremental enforcement strategy used while refactoring.
   planner/controller/type wrapper modules and routes callers directly to
   `tet4d.engine.api`, leaving only the shared `ai/playbot/lookahead_common.py`
   implementation module in the `tet4d.ai.playbot` package.
+- Stage 35 (slice 25, merged-folder sequence start) formalizes a minimal-change
+  engine folder split strategy using merged responsibility buckets (`gameplay`,
+  `ui_logic`, `runtime`) instead of many tiny folders, and moves low-risk
+  menu/input helpers into `engine/ui_logic` with engine-path compatibility shims.
+- Preferred foldering heuristic for future slices: target roughly `6-15` files per
+  leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
+  creating new folders that would remain `<=3` files without a strong boundary reason.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
