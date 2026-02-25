@@ -76,6 +76,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 62. `DONE` Arch Stage 67 slice 57 removed zero-caller engine-path compatibility shims for migrated `ui_logic` modules after canonical import migration across engine/CLI/tools/tests.
 63. `DONE` Arch Stage 68 slice 58 migrated engine and CLI callers to canonical `src/tet4d/engine/runtime/*` imports for analytics/help modules before runtime shim pruning.
 64. `DONE` Arch Stage 69 slice 59 migrated tests to canonical `src/tet4d/engine/runtime/*` imports for analytics/help modules, preserving test placement and clearing remaining shim callers.
+65. `DONE` Arch Stage 70 slice 60 removed zero-caller engine-path compatibility shims for `assist_scoring`, `help_topics`, and `score_analyzer` after runtime canonicalization.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.

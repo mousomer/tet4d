@@ -254,6 +254,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 69 (slice 59, runtime canonicalization) migrates tests to canonical
   `engine/runtime/*` imports while keeping tests in `src/tet4d/engine/tests/`,
   clearing remaining known callers to runtime compatibility shims.
+- Stage 70 (slice 60, runtime shim pruning) removes zero-caller engine-path
+  compatibility shims for `assist_scoring`, `help_topics`, and `score_analyzer`
+  after engine/CLI/tests caller migration to canonical `engine/runtime/*` paths.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
