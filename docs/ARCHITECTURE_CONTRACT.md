@@ -155,6 +155,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 37 (slice 27, menu graph logic consolidation) moves the menu graph linter
   module into `engine/ui_logic` and keeps a compatibility shim at the legacy
   engine path so governance tooling can migrate without churn.
+- Stage 38 (slice 28, keybindings catalog consolidation) moves the keybinding
+  action catalog into `engine/ui_logic` and updates `ui_logic` callers to import
+  the shared catalog from the same merged folder.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

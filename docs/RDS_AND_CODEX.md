@@ -53,9 +53,12 @@ Read order:
     pruned later without broad churn.
 14. Keep governance/tooling call sites stable during folder moves by leaving short
     engine-path compatibility shims until the next prune stage.
-15. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-16. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-17. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+15. When multiple moved modules form a coherent cluster (for example `ui_logic`
+    keybindings helpers), update moved callers to import from the same new folder
+    immediately to reduce future shim-pruning churn.
+16. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+17. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+18. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
