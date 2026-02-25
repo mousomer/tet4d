@@ -403,3 +403,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 118 (slice 108, gameplay shim canonicalization) migrates engine/CLI
   callers to canonical `engine.gameplay.exploration_mode` imports before
   pruning `engine/exploration_mode.py`.
+- Stage 119 (slice 109, gameplay shim pruning) removes the zero-caller
+  `engine/exploration_mode.py` compatibility shim after canonical
+  `engine.gameplay.exploration_mode` migration.
