@@ -183,6 +183,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 46 (slice 36, runtime analytics completion) moves `assist_scoring.py`
   into `engine/runtime` alongside score-analyzer modules and keeps an engine-path
   module-alias shim for callers and tests during the transition.
+- Stage 47 (slice 37, gameplay support move) moves `topology_designer.py` into
+  `engine/gameplay`, updating it to depend on `engine.runtime.project_config` and
+  local gameplay `topology`, with an engine-path module-alias shim for callers.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

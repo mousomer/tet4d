@@ -79,9 +79,12 @@ Read order:
     keep the restructuring maintainable.
 23. Complete the `engine/runtime` analytics cluster (`score_analyzer*` and
     `assist_scoring`) before moving the main `game2d.py` / `game_nd.py` modules.
-24. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-25. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-26. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+24. Before moving `game2d.py` / `game_nd.py`, move supporting gameplay modules such as
+    `topology_designer.py` into `engine/gameplay` so game-module moves have fewer
+    cross-folder concerns.
+25. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+26. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+27. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 
