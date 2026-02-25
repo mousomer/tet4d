@@ -160,6 +160,9 @@ Read order:
 52. When pruning runtime shims after CLI/test migration, run a final repo-wide
     grep for `from tet4d.engine import <shim>` forms; test modules often use the
     aggregated import style and are easy to miss.
+53. When a shim prune changes the canonical path mentioned in structure docs,
+    update `docs/PROJECT_STRUCTURE.md` in the same stage so the folder map
+    reflects the post-prune path immediately.
 42. After moving a helper into `engine/ui_logic`, migrate internal engine/CLI callers
     to the canonical path first, then remove the compatibility shim in a follow-up stage.
 43. Migrate tools/tests to canonical paths before shim pruning to avoid mixing

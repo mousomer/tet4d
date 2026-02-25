@@ -169,7 +169,7 @@ tet4d/
 20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
 21. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
 22. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-23. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/project_config.py`.
+23. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
 24. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
 25. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
 26. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.

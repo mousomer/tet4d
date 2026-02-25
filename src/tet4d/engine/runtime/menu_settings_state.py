@@ -10,7 +10,7 @@ from ..keybindings import (
     set_active_key_profile,
 )
 from .menu_config import default_settings_payload
-from ..project_config import menu_settings_file_path, state_dir_path
+from .project_config import menu_settings_file_path, state_dir_path
 
 STATE_DIR = state_dir_path()
 STATE_FILE = menu_settings_file_path()
