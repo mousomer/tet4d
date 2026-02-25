@@ -381,3 +381,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 109 (slice 99, ui shim pruning) removes the zero-caller
   `engine/keybindings_menu_input.py` compatibility shim after canonical engine
   migration to `tet4d.ui.pygame.keybindings_menu_input`.
+- Stage 110 (slice 100, ui shim pruning) removes the zero-caller
+  `engine/menu_model.py` compatibility shim after canonical UI-path migration.
