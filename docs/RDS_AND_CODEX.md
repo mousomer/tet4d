@@ -112,9 +112,12 @@ Read order:
 35. After shared UI helpers (`ui_utils`, text caches) move, extract projection/math
     render helpers next (`projection3d`) before larger renderer modules so import
     rebasing stays localized.
-36. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
-37. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
-38. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
+36. For UI helpers that need project-root/file-path context (for example icon/theme
+    loaders), add a narrow `engine.api` path wrapper rather than importing
+    `engine.runtime.project_config` directly from `ui/pygame`.
+37. For `engine/core` work, keep `scripts/check_engine_core_purity.sh` green and avoid imports from non-core `tet4d.engine` modules.
+38. Prefer 2D-first reducer/core slices when extracting gameplay logic to keep diffs small and CI triage simple.
+39. After a 2D-first slice lands, close the same reducer seam for ND next to retire metrics debt (`core_step_state_method_calls`).
 
 ## Coding best practices
 

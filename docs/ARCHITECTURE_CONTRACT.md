@@ -221,6 +221,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 58 (slice 48, UI projection extraction) moves `projection3d.py` into
   `ui/pygame`, keeping engine-path imports stable via module-alias shim and using
   `engine.api.project_constant_int` to preserve the `ui -> engine.api` boundary.
+- Stage 59 (slice 49, UI icon extraction) moves `control_icons.py` into
+  `ui/pygame`, replacing direct `project_config` access with a narrow
+  `engine.api.project_root_path()` wrapper to keep UI modules off deep engine imports.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.

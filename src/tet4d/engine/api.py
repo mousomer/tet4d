@@ -265,6 +265,12 @@ def project_constant_int(
     )
 
 
+def project_root_path():
+    from .runtime.project_config import project_root_path as _project_root_path
+
+    return _project_root_path()
+
+
 def run_front3d_ui() -> None:
     from .front3d_game import run as _run_front3d
 
