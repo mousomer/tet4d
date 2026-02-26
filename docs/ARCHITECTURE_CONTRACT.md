@@ -676,3 +676,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 319 (slice 309, canonicalized engine.api keybindings wrappers to import from ui/pygame/keybindings instead of the transitional engine/ui_logic shim).
 - Stage 320 (slice 310, canonicalized engine keybindings callers to ui/pygame/keybindings and routed runtime/menu_settings_state through engine.api keybinding wrappers).
 - Stage 321 (slice 311, canonicalized CLI launchers to import keybindings from ui/pygame/keybindings before shim pruning).
+- Stage 322 (slice 312, canonicalized ui_logic/key_dispatch.py to ui/pygame/keybindings and baseline-locked it as a transitional engine-to-ui adapter).

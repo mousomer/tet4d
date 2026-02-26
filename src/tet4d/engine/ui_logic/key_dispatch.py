@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
-from .keybindings import KeyTuple, key_matches
+from tet4d.ui.pygame.keybindings import key_matches
+
+
+KeyTuple = tuple[int, ...]
 
 
 ActionHandler = Callable[[], None]

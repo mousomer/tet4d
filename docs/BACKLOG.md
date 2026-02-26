@@ -970,3 +970,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 303. `DONE` Arch Stage 319 slice 309 canonicalized engine.api keybindings wrappers to import from ui/pygame/keybindings instead of the transitional engine/ui_logic shim.
 304. `DONE` Arch Stage 320 slice 310 canonicalized engine keybindings callers to ui/pygame/keybindings and routed runtime/menu_settings_state through engine.api keybinding wrappers.
 305. `DONE` Arch Stage 321 slice 311 canonicalized CLI launchers to import keybindings from ui/pygame/keybindings before shim pruning.
+306. `DONE` Arch Stage 322 slice 312 canonicalized ui_logic/key_dispatch.py to ui/pygame/keybindings and baseline-locked it as a transitional engine-to-ui adapter.
