@@ -708,3 +708,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 350 (slice 5, key_dispatch zero caller checkpoint).
 - Stage 351 (slice 6, prune key_dispatch engine shim).
 - Stage 352 (slice 7, drop stale key_dispatch allowlist entry).
+- Stage 353 (slice 8, key_dispatch family checkpoint).
