@@ -13,7 +13,6 @@ REQUIRED_FILES=(
 REQUIRED_DIRS=(
   "docs"
   "scripts"
-  ".policy"
 )
 
 FAILED=0
@@ -32,6 +31,10 @@ OPTIONAL_WORKSPACE_FILES=(
   ".policy/policy_template_hashes.json"
 )
 
+OPTIONAL_WORKSPACE_DIRS=(
+  ".policy"
+)
+
 for file in "${OPTIONAL_WORKSPACE_FILES[@]}"; do
   if [ ! -f "$file" ]; then
     continue
@@ -42,6 +45,12 @@ for dir in "${REQUIRED_DIRS[@]}"; do
   if [ ! -d "$dir" ]; then
     echo "Missing required directory: $dir"
     FAILED=1
+  fi
+done
+
+for dir in "${OPTIONAL_WORKSPACE_DIRS[@]}"; do
+  if [ ! -d "$dir" ]; then
+    continue
   fi
 done
 
