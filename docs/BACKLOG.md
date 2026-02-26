@@ -985,3 +985,5 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 318. `DONE` Arch Stage 333 slice 323 recorded zero direct callers of the removed engine/ui_logic/keybindings.py shim and preserved canonical imports for engine.api, engine callers, CLI, and tests.
 319. `DONE` Arch Stage 334 slice 324 recorded staged handoff into the final verification checkpoint for the Stage 316-333 keybindings migration batch.
 320. `DONE` Arch Stage 335 slice 325 advanced arch_stage to 335 and verified the Stage 316-334 keybindings migration batch with full local verify.sh and ci_check.sh.
+321. `DONE` Arch Stage 336 slice 1 keybindings_menu_model API prep wrappers.
+322. `DONE` Arch Stage 337 slice 2 move keybindings_menu_model to ui pygame with shim.
