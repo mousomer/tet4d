@@ -28,7 +28,7 @@ def run_dry_run_nd(*args, **kwargs):
 
 def __getattr__(name: str):
     if name == "PlayBotController":
-        mod = import_module("tet4d.engine.playbot.controller")
+        mod = import_module("tet4d.ai.playbot.controller")
         return getattr(mod, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
