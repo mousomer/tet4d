@@ -541,3 +541,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 351 (slice 6, prune key_dispatch engine shim).
 - Stage 352 (slice 7, drop stale key_dispatch allowlist entry).
 - Stage 353 (slice 8, key_dispatch family checkpoint).
+- Stage 354 (slice 9, batch pre verification checkpoint).

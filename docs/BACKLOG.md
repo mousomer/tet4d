@@ -1003,3 +1003,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 336. `DONE` Arch Stage 351 slice 6 prune key_dispatch engine shim.
 337. `DONE` Arch Stage 352 slice 7 drop stale key_dispatch allowlist entry.
 338. `DONE` Arch Stage 353 slice 8 key_dispatch family checkpoint.
+339. `DONE` Arch Stage 354 slice 9 batch pre verification checkpoint.
