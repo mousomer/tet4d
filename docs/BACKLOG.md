@@ -954,3 +954,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 287. `DONE` Arch Stage 303 slice 293 moved `engine/ui_logic/menu_keybinding_shortcuts.py` implementation into `ui/pygame/menu_keybinding_shortcuts.py`, rewired keybinding file I/O through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
 288. `DONE` Arch Stage 304 slice 294 migrated engine callers (`frontend_nd.py`, `engine/ui_logic/menu_controls.py`) to canonical `ui/pygame/menu_keybinding_shortcuts.py` imports before shim pruning.
 289. `DONE` Arch Stage 305 slice 295 retargeted `engine.api` shortcut wrappers to canonical `ui/pygame/menu_keybinding_shortcuts.py` imports before shim pruning.
+290. `DONE` Arch Stage 306 slice 296 recorded zero remaining callers and removed the transitional `engine/ui_logic/menu_keybinding_shortcuts.py` compatibility shim after canonicalization to `ui/pygame/menu_keybinding_shortcuts.py`.
