@@ -20,7 +20,12 @@ from .core.step.reducer import step_2d as core_step_2d
 from .core.step.reducer import step_nd as core_step_nd
 from .gameplay.game2d import GameConfig, GameState
 from .gameplay.game_nd import GameConfigND, GameStateND
-from .gameplay.pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
+from .gameplay.pieces2d import (
+    PIECE_SET_2D_CLASSIC,
+    PIECE_SET_2D_DEBUG,
+    ActivePiece2D,
+    PieceShape2D,
+)
 from .gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
@@ -895,6 +900,7 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     "Action",
     "Action2D",
+    "ActivePiece2D",
     "ActivePieceND",
     "BoardND",
     "BOT_MODE_OPTIONS",
@@ -942,6 +948,7 @@ __all__ = [
     "open_display_runtime",
     "PIECE_SET_2D_CLASSIC",
     "PIECE_SET_2D_DEBUG",
+    "PieceShape2D",
     "PIECE_SET_3D_DEBUG",
     "PIECE_SET_3D_STANDARD",
     "PIECE_SET_4D_DEBUG",
