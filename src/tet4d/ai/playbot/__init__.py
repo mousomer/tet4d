@@ -11,6 +11,7 @@ __all__ = [
     "PlayBotController",
     "plan_best_2d_move",
     "plan_best_nd_move",
+    "plan_best_nd_with_budget",
     "run_dry_run_2d",
     "run_dry_run_nd",
 ]
@@ -25,6 +26,9 @@ def __getattr__(name: str):
         return getattr(mod, name)
     if name == "plan_best_nd_move":
         mod = import_module("tet4d.ai.playbot.planner_nd")
+        return getattr(mod, name)
+    if name == "plan_best_nd_with_budget":
+        mod = import_module("tet4d.ai.playbot.planner_nd_search")
         return getattr(mod, name)
     if name in {"run_dry_run_2d", "run_dry_run_nd"}:
         mod = import_module("tet4d.ai.playbot.dry_run")
