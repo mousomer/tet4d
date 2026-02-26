@@ -90,10 +90,9 @@ tet4d/
 │       ├── loop/                # shared gameplay loop orchestration helper subpackage
 │       ├── menu/                # menu + keybindings-menu UI subpackage
 │       ├── render/              # rendering/panel/icon/font helper UI subpackage
+│       ├── runtime_ui/          # runtime audio/display/bootstrap UI helper subpackage
 │       ├── help_menu.py         # launcher/pause help and explanation UI
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
-│       ├── audio.py             # generated SFX + volume/mute runtime
-│       ├── display.py           # shared fullscreen/windowed mode helpers
 │       ├── runtime_config_validation.py # runtime-config schema validation helpers
 │       ├── front3d_game.py      # 3D gameplay frontend
 │       ├── front4d_game.py      # 4D gameplay frontend
@@ -157,7 +156,8 @@ tet4d/
 9. Shared key-name formatting is centralized in `input/key_display.py`.
 10. Shared keybinding editor model/scope helpers are in `menu/keybindings_menu_model.py`.
 11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
-12. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
+12. Audio/display/bootstrap runtime helpers are in `runtime_ui/audio.py`,
+    `runtime_ui/display.py`, and `runtime_ui/app_runtime.py`.
 13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
 14. Shared in-game key helper grouping is in `render/control_helper.py`.
 15. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py` and `menu/menu_control_guides.py`.

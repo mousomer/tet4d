@@ -9,7 +9,7 @@ from tet4d.engine.api import (
     capture_windowed_display_settings_runtime as capture_windowed_display_settings,
     open_display_runtime as open_display,
 )
-from tet4d.ui.pygame.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
 
 
 SettingsT = TypeVar("SettingsT")

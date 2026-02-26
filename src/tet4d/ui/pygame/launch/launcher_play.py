@@ -6,8 +6,8 @@ import pygame
 
 import tet4d.engine.api as engine_api
 from cli import front2d
-from tet4d.ui.pygame.app_runtime import capture_windowed_display_settings, open_display
-from tet4d.ui.pygame.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.app_runtime import capture_windowed_display_settings, open_display
+from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
 from tet4d.ai.playbot.types import bot_mode_from_index
 
 

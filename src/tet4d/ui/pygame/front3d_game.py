@@ -8,14 +8,14 @@ from typing import Any, Optional
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.app_runtime import initialize_runtime
-from tet4d.ui.pygame.audio import play_sfx
+from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
     mouse_wheel_delta,
 )
-from tet4d.ui.pygame.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
 from tet4d.ui.pygame.launch.front3d_setup import (
     build_config,
     create_initial_state,

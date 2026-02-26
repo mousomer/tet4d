@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-26
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 471-480 batch)
+Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 481-490 batch)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `480` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `490` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -42,12 +42,13 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `src/tet4d/engine/ui_logic`: `6`
 - `src/tet4d/engine/runtime`: `22`
 - `src/tet4d/engine/gameplay`: `11`
-- `src/tet4d/ui/pygame`: `13`
+- `src/tet4d/ui/pygame`: `10`
 - `src/tet4d/ui/pygame/menu`: `10`
 - `src/tet4d/ui/pygame/launch`: `7`
 - `src/tet4d/ui/pygame/input`: `6`
 - `src/tet4d/ui/pygame/loop`: `3`
 - `src/tet4d/ui/pygame/render`: `9`
+- `src/tet4d/ui/pygame/runtime_ui`: `4`
 - `src/tet4d/ai/playbot`: `9`
 
 ### Balance Assessment
@@ -62,8 +63,10 @@ Read this first in a new Codex thread before continuing staged refactors.
   containing shared loop orchestration helpers (`game_loop_common`, `loop_runner_nd`).
 - `ui/pygame/render` is now a balanced leaf package (`9` files, fuzzy `balanced`) after
   panel/control/gfx/grid/font helper relocation.
-- `ui/pygame` top-level remains balanced and dropped further to `13` files after the
-  `loop/` extraction follow-up.
+- `ui/pygame/runtime_ui` is a coherent small leaf package (`4` files, fuzzy `watch`)
+  for audio/display/app bootstrap helpers with shared caller patterns.
+- `ui/pygame` top-level remains balanced and dropped further to `10` files after the
+  `runtime_ui/` extraction follow-up.
 
 ## Major Completed Milestones (Condensed)
 
@@ -86,25 +89,25 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 471-480)
+## Recent Batch Status (Stages 481-490)
 
 Completed:
-- Created `src/tet4d/ui/pygame/loop/` and moved shared loop helpers:
-  - `ui/pygame/game_loop_common.py` -> `ui/pygame/loop/game_loop_common.py`
-  - `ui/pygame/loop_runner_nd.py` -> `ui/pygame/loop/loop_runner_nd.py`
-- Canonicalized callers:
-  - `cli/front2d.py` -> `tet4d.ui.pygame.loop.game_loop_common`
-  - `front3d_game.py` / `front4d_game.py` -> `tet4d.ui.pygame.loop.loop_runner_nd`
-- Normalized the moved `loop_runner_nd` internal import to canonical
-  `tet4d.ui.pygame.loop.game_loop_common`.
-- Recorded zero-caller audits for the old top-level `ui/pygame/game_loop_common.py` and
-  `ui/pygame/loop_runner_nd.py` paths before final checkpoint docs/metrics refresh.
+- Created `src/tet4d/ui/pygame/runtime_ui/` and moved runtime helper modules:
+  - `ui/pygame/audio.py` -> `ui/pygame/runtime_ui/audio.py`
+  - `ui/pygame/display.py` -> `ui/pygame/runtime_ui/display.py`
+  - `ui/pygame/app_runtime.py` -> `ui/pygame/runtime_ui/app_runtime.py`
+- Canonicalized CLI/UI/engine/test callers to `tet4d.ui.pygame.runtime_ui.*` imports
+  (including `engine.api` lazy wrappers and launcher/settings helpers).
+- Normalized moved `app_runtime` internal imports to canonical
+  `tet4d.ui.pygame.runtime_ui.audio` / `tet4d.ui.pygame.runtime_ui.display`.
+- Recorded zero-caller audits for the old top-level `ui/pygame/{audio,display,app_runtime}.py`
+  paths before final checkpoint docs/metrics refresh.
 
 Balance note:
-- `src/tet4d/ui/pygame/loop` is a coherent small leaf at `3` Python files (`186` LOC
-  total), fuzzy score `0.67` (`watch`).
-- Top-level `src/tet4d/ui/pygame` dropped from `15` to `13` Python files and remains
-  fuzzy `0.99` (`balanced`) after the `loop/` follow-up extraction.
+- `src/tet4d/ui/pygame/runtime_ui` is a coherent small leaf at `4` Python files
+  (including package `__init__`), fuzzy score `0.83` (`watch`).
+- Top-level `src/tet4d/ui/pygame` dropped from `13` to `10` Python files and remains
+  fuzzy `1.0` (`balanced`) after the `runtime_ui/` follow-up extraction.
 - Leaf folder-balance gate remains non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
@@ -126,11 +129,12 @@ Recommended subpackages (incremental, not all at once):
 - `src/tet4d/ui/pygame/input/` (balanced)
 - `src/tet4d/ui/pygame/loop/` (small/coherent)
 - `src/tet4d/ui/pygame/render/` (balanced)
+- `src/tet4d/ui/pygame/runtime_ui/` (small/coherent)
 - `src/tet4d/ui/pygame/launch/` (balanced)
 
 Recommended next family moves (same staged pattern):
-- `ui_utils` / `display` / `app_runtime` review (either keep stable or seed a `runtime_ui/` helper subpackage)
-- `audio` / `display` / `app_runtime` cohesion pass (if a runtime-ui helper cluster is introduced)
+- `ui_utils` extraction decision (keep top-level utility, or seed a tiny `layout/` or `draw/` helper subpackage only if another paired move is ready)
+- `help_menu` / `pause_menu` support helpers (identify low-risk helper slices before module decomposition)
 - `help_menu` / `pause_menu` split planning (decompose before moving, due high caller breadth)
 - `projection3d` / `front3d_game` / `front4d_game` watch (defer until a renderer/viewer feature batch)
 
@@ -175,8 +179,8 @@ Do:
 
 ### Estimated Remaining Effort
 
-- Practical completion (high confidence, low churn): `~8-20` stages
-- Maximal clean architecture (strict cleanup / deeper pruning): `~18-40` stages
+- Practical completion (high confidence, low churn): `~6-18` stages
+- Maximal clean architecture (strict cleanup / deeper pruning): `~16-36` stages
 
 ### Estimated LOC Impact
 

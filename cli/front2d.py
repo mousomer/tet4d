@@ -30,16 +30,16 @@ if str(_SRC_ROOT) not in sys.path:
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(1, str(_REPO_ROOT))
 
-from tet4d.ui.pygame.app_runtime import (
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
     capture_windowed_display_settings,
     initialize_runtime,
     open_display,
 )
-from tet4d.ui.pygame.audio import play_sfx
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.api import Action, BoardND, GameConfig, GameState
 from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d
-from tet4d.ui.pygame.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
 from tet4d.ui.pygame.loop.game_loop_common import process_game_events
 from tet4d.ui.pygame.render.gfx_game import (
     ClearEffect2D,

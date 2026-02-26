@@ -991,3 +991,27 @@ incremental enforcement strategy used while refactoring.
 - Stage 480 (slice 115, loop subpackage checkpoint and verify) records completion of the
   Stage 471-479 loop-helper extraction batch, advances `arch_stage` to `480`, and
   verifies the checkpoint locally with `verify.sh`.
+- Stage 481 (slice 116, runtime-ui subpackage seed I) creates
+  `src/tet4d/ui/pygame/runtime_ui/` and moves `audio.py` into the new runtime-helper
+  subpackage.
+- Stage 482 (slice 117, runtime-ui subpackage seed II) moves `display.py` into
+  `src/tet4d/ui/pygame/runtime_ui/` to cluster display helpers with runtime adapters.
+- Stage 483 (slice 118, runtime-ui subpackage seed III) moves `app_runtime.py` into
+  `src/tet4d/ui/pygame/runtime_ui/`, completing the initial runtime-helper family move.
+- Stage 484 (slice 119, runtime-ui caller canonicalization I) migrates CLI and frontend
+  callers to canonical `tet4d.ui.pygame.runtime_ui.{app_runtime,audio,display}` imports.
+- Stage 485 (slice 120, runtime-ui caller canonicalization II) migrates launcher,
+  pause-menu, engine API wrappers, and tests to canonical `runtime_ui` imports.
+- Stage 486 (slice 121, runtime-ui internal import normalization) rewires the moved
+  `app_runtime` module to import `audio` and `display` through canonical
+  `tet4d.ui.pygame.runtime_ui.*` paths.
+- Stage 487 (slice 122, runtime-ui zero-caller checkpoint I) records zero remaining
+  imports of the old top-level `ui/pygame/audio.py` and `ui/pygame/display.py` paths.
+- Stage 488 (slice 123, runtime-ui zero-caller checkpoint II) records zero remaining
+  imports of the old top-level `ui/pygame/app_runtime.py` path before prune completion.
+- Stage 489 (slice 124, runtime-ui path-doc/history sync) updates structure docs,
+  backlog history, and handoff notes to record canonical `ui/pygame/runtime_ui/*` paths
+  plus the post-move folder-balance snapshot.
+- Stage 490 (slice 125, runtime-ui batch checkpoint and verify) records completion of
+  the Stage 481-489 runtime-helper extraction batch, advances `arch_stage` to `490`, and
+  verifies the checkpoint locally with `verify.sh`.

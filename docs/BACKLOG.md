@@ -1140,3 +1140,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 463. `DONE` Arch Stage 478 slice 113 updated structure docs to record `src/tet4d/ui/pygame/loop/` as the canonical loop-helper subpackage.
 464. `DONE` Arch Stage 479 slice 114 refreshed architecture/backlog/current-state handoff notes with the canonical `ui/pygame/loop/*` paths and post-move balancer snapshot.
 465. `DONE` Arch Stage 480 slice 115 recorded completion of the Stage 471-479 loop-helper extraction batch, advanced `arch_stage` to `480`, and verified the checkpoint locally.
+466. `DONE` Arch Stage 481 slice 116 created `src/tet4d/ui/pygame/runtime_ui/` and moved `ui/pygame/audio.py` into the new runtime-helper subpackage.
+467. `DONE` Arch Stage 482 slice 117 moved `ui/pygame/display.py` into `src/tet4d/ui/pygame/runtime_ui/`.
+468. `DONE` Arch Stage 483 slice 118 moved `ui/pygame/app_runtime.py` into `src/tet4d/ui/pygame/runtime_ui/`.
+469. `DONE` Arch Stage 484 slice 119 canonicalized CLI and frontend callers to `tet4d.ui.pygame.runtime_ui.{app_runtime,audio,display}` imports.
+470. `DONE` Arch Stage 485 slice 120 canonicalized launcher/pause-menu/engine-api/test callers to `tet4d.ui.pygame.runtime_ui.*` imports.
+471. `DONE` Arch Stage 486 slice 121 normalized moved `app_runtime` internal imports to canonical `tet4d.ui.pygame.runtime_ui.audio` and `tet4d.ui.pygame.runtime_ui.display`.
+472. `DONE` Arch Stage 487 slice 122 recorded zero remaining imports of old top-level `ui/pygame/audio.py` and `ui/pygame/display.py` paths after canonicalization.
+473. `DONE` Arch Stage 488 slice 123 recorded zero remaining imports of old top-level `ui/pygame/app_runtime.py` paths after canonicalization.
+474. `DONE` Arch Stage 489 slice 124 refreshed docs/handoff to record the canonical `ui/pygame/runtime_ui/*` paths and post-move balancer snapshot.
+475. `DONE` Arch Stage 490 slice 125 recorded completion of the Stage 481-489 runtime-helper extraction batch, advanced `arch_stage` to `490`, and verified the checkpoint locally.

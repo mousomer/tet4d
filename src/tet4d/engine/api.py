@@ -456,13 +456,13 @@ def keybindings_copy_text_file_runtime(src_path: Path, dst_path: Path) -> None:
 
 
 def open_display_runtime(*args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame.app_runtime import open_display as _open_display
+    from tet4d.ui.pygame.runtime_ui.app_runtime import open_display as _open_display
 
     return _open_display(*args, **kwargs)
 
 
 def capture_windowed_display_settings_runtime(display_settings: Any) -> Any:
-    from tet4d.ui.pygame.app_runtime import (
+    from tet4d.ui.pygame.runtime_ui.app_runtime import (
         capture_windowed_display_settings as _capture_windowed_display_settings,
     )
 

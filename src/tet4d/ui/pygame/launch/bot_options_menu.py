@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.audio import play_sfx
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ai.playbot.types import (
     bot_mode_from_index,
     bot_planner_algorithm_from_index,

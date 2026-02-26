@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.audio import AudioSettings, initialize_audio, set_audio_settings
-from tet4d.ui.pygame.display import DisplaySettings, apply_display_mode, normalize_display_settings
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, initialize_audio, set_audio_settings
+from tet4d.ui.pygame.runtime_ui.display import DisplaySettings, apply_display_mode, normalize_display_settings
 
 
 @dataclass(frozen=True)
