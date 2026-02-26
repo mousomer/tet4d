@@ -12,7 +12,7 @@ from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.ui.pygame.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launcher_settings import run_settings_hub_menu
-from tet4d.ui.pygame.menu_runner import ActionRegistry, MenuRunner
+from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 active_key_profile = engine_api.keybindings_active_key_profile

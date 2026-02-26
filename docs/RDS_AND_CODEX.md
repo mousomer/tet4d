@@ -564,3 +564,5 @@ Authoritative open/deferred items are tracked in:
 - Stage 374 (slice 9, front4d_game family checkpoint).
 - Stage 375 (slice 10, front4d_game verification checkpoint).
 - Stage 376 (slice 20, menu_runner subpackage move).
+- Stage 377 (slice 20, menu_runner cli caller canonicalization).
+- Stage 378 (slice 20, menu_runner pause_menu caller canonicalization).
