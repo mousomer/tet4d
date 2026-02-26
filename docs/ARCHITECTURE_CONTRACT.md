@@ -668,3 +668,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 312 (slice 302, menu-controls shim pruning) removes the zero-caller `src/tet4d/engine/ui_logic/menu_controls.py` compatibility shim after canonicalization to `src/tet4d/ui/pygame/menu_controls.py`.
 - Stage 313 (slice 303, menu-controls post-prune docs sync) records `src/tet4d/ui/pygame/menu_controls.py` as the canonical menu-controls module after shim removal and advances `arch_stage` to `313`.
 - Stage 314 (slice 304, menu-controls family checkpoint) records completion of the Stage 308-313 menu-controls API-prep/move/canonicalize/prune sequence and advances `arch_stage` to `314` before the verification checkpoint.
+- Stage 315 (slice 305, menu-controls family verification checkpoint) advances `arch_stage` to `315` and verifies the Stage 308-314 menu-controls batch with full local `verify.sh` + `ci_check.sh`.
