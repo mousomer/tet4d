@@ -911,3 +911,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 244. `DONE` Arch Stage 260 slice 250 advanced `arch_stage` to `260` and verified the Stage 251-259 playbot-controller batch with full local `verify.sh` + `ci_check.sh`.
 245. `DONE` Arch Stage 261 slice 251 exported `ActivePiece2D` and `PieceShape2D` from `engine.api` to prepare a boundary-safe move of `engine/playbot/planner_2d.py` into `ai/playbot`.
 246. `DONE` Arch Stage 262 slice 252 exported `rotate_point_2d` from `engine.api` to complete boundary-safe API prep for moving `engine/playbot/planner_2d.py` into `ai/playbot`.
+247. `DONE` Arch Stage 263 slice 253 moved `engine/playbot/planner_2d.py` to `ai/playbot/planner_2d.py`, kept an engine-path module-alias shim, and rewired the planner implementation to `tet4d.engine.api` exports to preserve the AI API-only boundary.
