@@ -246,6 +246,7 @@ if [[ -d "$UI_DIR" ]]; then
   UI_ENGINE_IMPORT_ALLOWLIST=$(cat <<'EOF'
 src/tet4d/ui/pygame/control_helper.py
 src/tet4d/ui/pygame/control_icons.py
+src/tet4d/ui/pygame/audio.py
 src/tet4d/ui/pygame/front3d.py
 src/tet4d/ui/pygame/front3d_setup.py
 src/tet4d/ui/pygame/front4d.py
