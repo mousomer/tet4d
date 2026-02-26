@@ -399,7 +399,7 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 180`) routes score-analyzer
+9. Architecture stage checkpoint (`arch_stage: 190`) routes score-analyzer
    summary writes and event-log appends through
    `src/tet4d/engine/runtime/score_analyzer_storage.py`, and begins the
    `view_controls` UI canonicalization by moving implementation to
@@ -420,4 +420,9 @@ Authoritative open/deferred items are tracked in:
    shim, adds `engine.api` wrappers for the next `front3d_setup` UI relocation
    slice, and moves `src/tet4d/engine/front3d_setup.py` implementation to
    `src/tet4d/ui/pygame/front3d_setup.py` with caller canonicalization, and
-   prunes the legacy `src/tet4d/engine/front3d_setup.py` shim.
+   prunes the legacy `src/tet4d/engine/front3d_setup.py` shim, then adds
+   `engine.api` keybindings-menu wrappers, moves `keybindings_menu_view.py` and
+   `keybindings_menu.py` implementations under `src/tet4d/ui/pygame/`,
+   migrates engine/CLI callers to canonical UI imports, and prunes the legacy
+   `src/tet4d/engine/keybindings_menu_view.py` and
+   `src/tet4d/engine/keybindings_menu.py` shims.

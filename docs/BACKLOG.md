@@ -844,3 +844,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 4. `docs/RDS_AND_CODEX.md`
 5. `config/project/canonical_maintenance.json`
 6. Consolidated implementation diffs in current workspace batch.
+180. `DONE` Arch Stage 181 slice 171 added lazy `engine.api` wrappers for keybindings and keybindings-menu-model operations to prepare keybindings-menu UI relocation without deep `ui -> engine` imports.
+181. `DONE` Arch Stage 182 slice 172 moved `src/tet4d/engine/keybindings_menu_view.py` implementation into `src/tet4d/ui/pygame/keybindings_menu_view.py` and retained a temporary engine compatibility shim.
+182. `DONE` Arch Stage 183 slice 173 migrated `keybindings_menu` to canonical `src/tet4d/ui/pygame/keybindings_menu_view.py` imports before shim pruning.
+183. `DONE` Arch Stage 184 slice 174 removed the zero-caller `src/tet4d/engine/keybindings_menu_view.py` compatibility shim after canonical UI import migration.
+184. `DONE` Arch Stage 185 slice 175 moved `src/tet4d/engine/keybindings_menu.py` implementation into `src/tet4d/ui/pygame/keybindings_menu.py` and rewired it through `tet4d.engine.api` wrappers while retaining an engine compatibility shim.
+185. `DONE` Arch Stage 186 slice 176 migrated `src/tet4d/engine/pause_menu.py` to canonical `src/tet4d/ui/pygame/keybindings_menu.py` imports before shim pruning.
+186. `DONE` Arch Stage 187 slice 177 migrated CLI callers to canonical `src/tet4d/ui/pygame/keybindings_menu.py` imports before shim pruning.
+187. `DONE` Arch Stage 188 slice 178 removed the zero-caller `src/tet4d/engine/keybindings_menu.py` compatibility shim after canonical UI import migration.
+188. `DONE` Arch Stage 189 slice 179 synced architecture docs/backlog and RDS checkpoint notes for the keybindings-menu UI migration batch.
+189. `DONE` Arch Stage 190 slice 180 advanced `arch_stage` to `190` after full verification and CI-gate checkpoint for the keybindings-menu UI migration batch.

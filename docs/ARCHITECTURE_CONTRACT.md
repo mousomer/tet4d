@@ -549,3 +549,13 @@ incremental enforcement strategy used while refactoring.
 - Stage 180 (slice 170, sequential cleanup) removed the zero-caller
   `src/tet4d/engine/front3d_setup.py` compatibility shim after canonical UI
   `front3d_setup` import migration.
+- Stage 181 (slice 171, keybindings menu UI prep) adds lazy `engine.api` wrappers for keybindings and keybindings-menu-model operations to prepare UI relocation without `ui -> engine` deep imports.
+- Stage 182 (slice 172, keybindings menu UI relocation) moves `src/tet4d/engine/keybindings_menu_view.py` implementation into `src/tet4d/ui/pygame/keybindings_menu_view.py` and retains a temporary engine compatibility shim.
+- Stage 183 (slice 173, keybindings menu UI canonicalization) migrates `keybindings_menu` to import `tet4d.ui.pygame.keybindings_menu_view` before shim pruning.
+- Stage 184 (slice 174, keybindings menu UI shim pruning) removes the zero-caller `src/tet4d/engine/keybindings_menu_view.py` compatibility shim.
+- Stage 185 (slice 175, keybindings menu UI relocation) moves `src/tet4d/engine/keybindings_menu.py` implementation into `src/tet4d/ui/pygame/keybindings_menu.py` and rewires it through `tet4d.engine.api` wrappers, retaining a temporary engine compatibility shim.
+- Stage 186 (slice 176, keybindings menu UI canonicalization) migrates `src/tet4d/engine/pause_menu.py` to canonical `tet4d.ui.pygame.keybindings_menu` imports.
+- Stage 187 (slice 177, keybindings menu UI canonicalization) migrates CLI keybindings-menu callers to canonical `tet4d.ui.pygame.keybindings_menu` imports.
+- Stage 188 (slice 178, keybindings menu UI shim pruning) removes the zero-caller `src/tet4d/engine/keybindings_menu.py` compatibility shim.
+- Stage 189 (slice 179, architecture checkpoint) records the keybindings-menu UI family migration and shim pruning sequence in RDS/contract tracking artifacts.
+- Stage 190 (slice 180, validation checkpoint) advances `arch_stage` to `190` after full verification/CI gate confirmation for the batch.
