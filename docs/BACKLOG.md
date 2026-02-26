@@ -959,3 +959,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 292. `DONE` Arch Stage 308 slice 298 added `engine.api` wrappers for keybinding/profile/menu-settings helpers to prepare moving `engine/ui_logic/menu_controls.py` into `ui/pygame` without deep engine imports.
 293. `DONE` Arch Stage 309 slice 299 moved `engine/ui_logic/menu_controls.py` implementation into `ui/pygame/menu_controls.py`, rewired menu control dependencies through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
 294. `DONE` Arch Stage 310 slice 300 migrated engine and CLI callers (`frontend_nd.py`, `cli/front2d.py`) to canonical `ui/pygame/menu_controls.py` imports before shim pruning.
+295. `DONE` Arch Stage 311 slice 301 recorded zero remaining callers of the transitional `engine/ui_logic/menu_controls.py` shim after engine/CLI canonicalization and advanced `arch_stage` to `311` before shim pruning.
