@@ -650,3 +650,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 294 (slice 284, plannerND-core family checkpoint) records completion of the Stage 288-293 plannerND-core move/canonicalize/prune sequence and advances `arch_stage` to `294` before the aggregate ND-planner checkpoint stages.
 - Stage 295 (slice 285, ND planner aggregate checkpoint I) records completion of the Stage 271-294 ND planner family migrations (`planner_nd`, `planner_nd_search`, `planner_nd_core`) and advances `arch_stage` to `295`.
 - Stage 296 (slice 286, ND planner aggregate checkpoint II) records the staged checkpoint handoff into the final verification stage for the Stage 271-295 ND planner migration batch and advances `arch_stage` to `296`.
+- Stage 297 (slice 287, ND planner aggregate verification checkpoint) advances `arch_stage` to `297` and verifies the Stage 271-296 ND planner migration batch with full local `verify.sh` + `ci_check.sh`.
