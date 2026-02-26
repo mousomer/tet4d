@@ -749,6 +749,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 146. `DONE` Arch Stage 147 slice 137 migrated engine and CLI callers to canonical `src/tet4d/engine/gameplay/rotation_anim.py` imports before shim pruning.
 
+147. `DONE` Arch Stage 148 slice 138 migrated tests to canonical `src/tet4d/engine/gameplay/rotation_anim.py` imports before shim pruning.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`
