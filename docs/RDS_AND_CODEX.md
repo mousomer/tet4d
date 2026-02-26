@@ -478,3 +478,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 290 (slice 280, plannerND-core engine-api canonicalization II) retargets `engine.api` wrappers for ND board evaluation, greedy scoring, and settled-candidate iteration to import from `ai.playbot.planner_nd_core`, further reducing reliance on the transitional engine shim.
 - Stage 291 (slice 281, plannerND-core zero-caller checkpoint) records zero remaining callers of `engine/playbot/planner_nd_core.py` after engine-api canonicalization and advances `arch_stage` to `291` before shim pruning.
 - Stage 292 (slice 282, plannerND-core shim pruning) removes the zero-caller `engine/playbot/planner_nd_core.py` compatibility shim after the core relocation to `ai/playbot/planner_nd_core.py` and engine-api canonicalization.
+- Stage 293 (slice 283, plannerND-core post-prune docs sync) records the canonical `ai/playbot/planner_nd_core.py` path after shim removal and advances `arch_stage` to `293`.
