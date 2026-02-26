@@ -485,3 +485,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 155 (slice 145, sequential cleanup) removed the zero-caller `src/tet4d/engine/key_display.py` compatibility shim after canonical UI key-display import migration.
 - Stage 156 (slice 146, sequential cleanup) added `engine.api` dry-run support wrappers for challenge prefills and runtime defaults to prepare `playbot.dry_run` relocation.
 - Stage 157 (slice 147, sequential cleanup) moved `src/tet4d/engine/playbot/dry_run.py` to `src/tet4d/ai/playbot/dry_run.py` and retained an engine compatibility shim using only `tet4d.engine.api` in the moved module.
+- Stage 158 (slice 148, sequential cleanup) migrated `engine.api` dry-run wrappers to canonical `src/tet4d/ai/playbot/dry_run.py` imports before shim pruning.

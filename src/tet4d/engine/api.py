@@ -176,7 +176,7 @@ def run_dry_run_2d(
     planning_budget_ms: int | None = None,
     planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
-    from .playbot.dry_run import run_dry_run_2d as _run_dry_run_2d
+    from tet4d.ai.playbot.dry_run import run_dry_run_2d as _run_dry_run_2d
 
     return _run_dry_run_2d(
         cfg,
@@ -197,7 +197,7 @@ def run_dry_run_nd(
     planning_budget_ms: int | None = None,
     planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
-    from .playbot.dry_run import run_dry_run_nd as _run_dry_run_nd
+    from tet4d.ai.playbot.dry_run import run_dry_run_nd as _run_dry_run_nd
 
     return _run_dry_run_nd(
         cfg,
