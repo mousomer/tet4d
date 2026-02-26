@@ -1115,6 +1115,72 @@ def hud_analysis_lines_runtime(event: dict[str, object] | None) -> tuple[str, ..
     return _hud_analysis_lines(event)
 
 
+def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
+    from .runtime.assist_scoring import combined_score_multiplier as _combined_score_multiplier
+
+    return _combined_score_multiplier(*args, **kwargs)
+
+
+def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
+    from .runtime.runtime_helpers import collect_cleared_ghost_cells as _collect
+
+    return _collect(*args, **kwargs)
+
+
+def frontend_nd_route_keydown(*args: Any, **kwargs: Any) -> Any:
+    from .frontend_nd import route_nd_keydown as _route_nd_keydown
+
+    return _route_nd_keydown(*args, **kwargs)
+
+
+def front3d_render_camera_type() -> Any:
+    from .front3d_render import Camera3D as _Camera3D
+
+    return _Camera3D
+
+
+def front3d_render_clear_animation_type() -> Any:
+    from .front3d_render import ClearAnimation3D as _ClearAnimation3D
+
+    return _ClearAnimation3D
+
+
+def front3d_render_color_for_cell_3d(*args: Any, **kwargs: Any) -> Any:
+    from .front3d_render import color_for_cell_3d as _color_for_cell_3d
+
+    return _color_for_cell_3d(*args, **kwargs)
+
+
+def front3d_render_draw_game_frame(*args: Any, **kwargs: Any) -> Any:
+    from .front3d_render import draw_game_frame as _draw_game_frame
+
+    return _draw_game_frame(*args, **kwargs)
+
+
+def front3d_render_init_fonts(*args: Any, **kwargs: Any) -> Any:
+    from .front3d_render import init_fonts as _init_fonts
+
+    return _init_fonts(*args, **kwargs)
+
+
+def front3d_render_suggested_window_size(*args: Any, **kwargs: Any) -> Any:
+    from .front3d_render import suggested_window_size as _suggested_window_size
+
+    return _suggested_window_size(*args, **kwargs)
+
+
+def rotation_anim_piece_rotation_animator_nd_type() -> Any:
+    from .gameplay.rotation_anim import PieceRotationAnimatorND as _PieceRotationAnimatorND
+
+    return _PieceRotationAnimatorND
+
+
+def grid_mode_cycle_view(mode: GridMode) -> GridMode:
+    from .ui_logic.view_modes import cycle_grid_mode as _cycle_grid_mode
+
+    return _cycle_grid_mode(mode)
+
+
 def grid_mode_label_view(mode: GridMode) -> str:
     from .ui_logic.view_modes import grid_mode_label as _grid_mode_label
 

@@ -1014,3 +1014,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 347. `DONE` Arch Stage 362 slice 7 prune front3d_game engine shim.
 348. `DONE` Arch Stage 363 slice 8 clean front3d_game allowlist entries.
 349. `DONE` Arch Stage 364 slice 9 front3d_game family checkpoint.
+350. `DONE` Arch Stage 365 slice 10 front3d_game verification checkpoint.

@@ -3,52 +3,54 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import pygame
 
+import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.app_runtime import initialize_runtime
 from tet4d.ui.pygame.audio import play_sfx
-from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.ui.pygame.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
     mouse_wheel_delta,
 )
 from tet4d.ui.pygame.display import DisplaySettings
-from tet4d.engine.front3d_render import (
-    Camera3D,
-    ClearAnimation3D,
-    GfxFonts,
-    color_for_cell_3d,
-    draw_game_frame,
-    init_fonts,
-    suggested_window_size,
-)
 from tet4d.ui.pygame.front3d_setup import (
     build_config,
     create_initial_state,
     gravity_interval_ms_from_config,
     run_menu,
 )
-from tet4d.engine.frontend_nd import route_nd_keydown
-from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.help_menu import run_help_menu
 from tet4d.ui.pygame.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
 from tet4d.ui.pygame.launcher_nd_runner import run_nd_mode_launcher
 from tet4d.ui.pygame.loop_runner_nd import run_nd_loop
 from tet4d.ui.pygame.pause_menu import run_pause_menu
-from tet4d.engine.api import PlayBotController
 from tet4d.ai.playbot.types import (
     BotMode,
     bot_mode_from_index,
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )
-from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
-from tet4d.engine.runtime.runtime_helpers import collect_cleared_ghost_cells
-from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
+
+GameConfigND = engine_api.GameConfigND
+GameStateND = engine_api.GameStateND
+PlayBotController = engine_api.PlayBotController
+GfxFonts = Any
+Camera3D = engine_api.front3d_render_camera_type()
+ClearAnimation3D = engine_api.front3d_render_clear_animation_type()
+color_for_cell_3d = engine_api.front3d_render_color_for_cell_3d
+draw_game_frame = engine_api.front3d_render_draw_game_frame
+init_fonts = engine_api.front3d_render_init_fonts
+suggested_window_size = engine_api.front3d_render_suggested_window_size
+route_nd_keydown = engine_api.frontend_nd_route_keydown
+combined_score_multiplier = engine_api.runtime_assist_combined_score_multiplier
+collect_cleared_ghost_cells = engine_api.runtime_collect_cleared_ghost_cells
+PieceRotationAnimatorND = engine_api.rotation_anim_piece_rotation_animator_nd_type()
+GridMode = engine_api.GridMode
+cycle_grid_mode = engine_api.grid_mode_cycle_view
 
 
 def handle_camera_key(key: int, camera: Camera3D) -> bool:
