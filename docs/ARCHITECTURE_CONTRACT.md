@@ -740,3 +740,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 382 (slice 20, menu_model subpackage move).
 - Stage 383 (slice 20, menu_model zero-caller checkpoint).
 - Stage 384 (slice 20, prune menu_model ui shim).
+- Stage 385 (slice 20, ui pygame menu subpackage checkpoint and verify).

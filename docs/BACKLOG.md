@@ -1034,3 +1034,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 367. `DONE` Arch Stage 382 slice 20 menu_model subpackage move.
 368. `DONE` Arch Stage 383 slice 20 menu_model zero-caller checkpoint.
 369. `DONE` Arch Stage 384 slice 20 prune menu_model ui shim.
+370. `DONE` Arch Stage 385 slice 20 ui pygame menu subpackage checkpoint and verify.
