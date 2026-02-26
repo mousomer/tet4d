@@ -982,3 +982,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 315. `DONE` Arch Stage 330 slice 320 advanced arch_stage to 330 and verified the Stage 316-329 keybindings migration batch with full local verify.sh and ci_check.sh.
 316. `DONE` Arch Stage 331 slice 321 recorded src/tet4d/ui/pygame/keybindings.py as the canonical shared keybindings runtime after Stage 316-330 migration and shim pruning.
 317. `DONE` Arch Stage 332 slice 322 recorded the keybindings family API-prep wrappers and transitional engine-to-ui adapter allowlists as baseline locks pending later key_dispatch and keybindings_menu_model family cleanup.
+318. `DONE` Arch Stage 333 slice 323 recorded zero direct callers of the removed engine/ui_logic/keybindings.py shim and preserved canonical imports for engine.api, engine callers, CLI, and tests.
