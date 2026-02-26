@@ -1029,3 +1029,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 362. `DONE` Arch Stage 377 slice 20 menu_runner cli caller canonicalization.
 363. `DONE` Arch Stage 378 slice 20 menu_runner pause_menu caller canonicalization.
 364. `DONE` Arch Stage 379 slice 20 menu_runner zero-caller checkpoint.
+365. `DONE` Arch Stage 380 slice 20 prune menu_runner ui shim.

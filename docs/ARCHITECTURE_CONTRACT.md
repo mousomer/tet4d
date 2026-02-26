@@ -735,3 +735,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 377 (slice 20, menu_runner cli caller canonicalization).
 - Stage 378 (slice 20, menu_runner pause_menu caller canonicalization).
 - Stage 379 (slice 20, menu_runner zero-caller checkpoint).
+- Stage 380 (slice 20, prune menu_runner ui shim).
