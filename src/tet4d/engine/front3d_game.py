@@ -46,7 +46,7 @@ from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )
-from .rotation_anim import PieceRotationAnimatorND
+from .gameplay.rotation_anim import PieceRotationAnimatorND
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .view_modes import GridMode, cycle_grid_mode
 
