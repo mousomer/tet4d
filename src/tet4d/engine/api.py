@@ -316,6 +316,46 @@ def tick_animation_runtime(animation: Any, dt_ms: int) -> Any:
     return _tick_animation(animation, dt_ms)
 
 
+def initialize_keybinding_files_runtime() -> None:
+    from .keybindings import initialize_keybinding_files as _initialize_keybinding_files
+
+    _initialize_keybinding_files()
+
+
+def get_audio_settings_runtime() -> dict[str, Any]:
+    from .runtime.menu_settings_state import get_audio_settings as _get_audio_settings
+
+    return _get_audio_settings()
+
+
+def get_display_settings_runtime() -> dict[str, Any]:
+    from .runtime.menu_settings_state import get_display_settings as _get_display_settings
+
+    return _get_display_settings()
+
+
+def get_analytics_settings_runtime() -> dict[str, Any]:
+    from .runtime.menu_settings_state import (
+        get_analytics_settings as _get_analytics_settings,
+    )
+
+    return _get_analytics_settings()
+
+
+def save_display_settings_runtime(*, windowed_size: tuple[int, int]) -> None:
+    from .runtime.menu_settings_state import save_display_settings as _save_display_settings
+
+    _save_display_settings(windowed_size=windowed_size)
+
+
+def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
+    from .runtime.score_analyzer import (
+        set_score_analyzer_logging_enabled as _set_score_analyzer_logging_enabled,
+    )
+
+    _set_score_analyzer_logging_enabled(enabled)
+
+
 def front3d_setup_game_settings_type() -> Any:
     from .frontend_nd import GameSettingsND as _GameSettingsND
 
