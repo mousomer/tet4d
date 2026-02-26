@@ -961,3 +961,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 294. `DONE` Arch Stage 310 slice 300 migrated engine and CLI callers (`frontend_nd.py`, `cli/front2d.py`) to canonical `ui/pygame/menu_controls.py` imports before shim pruning.
 295. `DONE` Arch Stage 311 slice 301 recorded zero remaining callers of the transitional `engine/ui_logic/menu_controls.py` shim after engine/CLI canonicalization and advanced `arch_stage` to `311` before shim pruning.
 296. `DONE` Arch Stage 312 slice 302 removed the zero-caller `engine/ui_logic/menu_controls.py` compatibility shim after canonicalization to `ui/pygame/menu_controls.py`.
+297. `DONE` Arch Stage 313 slice 303 recorded `src/tet4d/ui/pygame/menu_controls.py` as the canonical menu-controls module after shim removal and advanced `arch_stage` to `313`.
