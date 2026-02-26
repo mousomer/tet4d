@@ -350,6 +350,12 @@ def runtime_binding_groups_for_dimension(dimension: int):
     return _runtime_binding_groups_for_dimension(dimension)
 
 
+def audio_event_specs_runtime() -> dict[str, tuple[float, int, float]]:
+    from .runtime.runtime_config import audio_event_specs as _audio_event_specs
+
+    return _audio_event_specs()
+
+
 def binding_action_description(action: str) -> str:
     from .keybindings import binding_action_description as _binding_action_description
 
