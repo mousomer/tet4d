@@ -400,7 +400,7 @@ def _run_binding_mode_action(
 def _draw_section_menu(
     surface: pygame.Surface, fonts, state: KeybindingsMenuState
 ) -> None:
-    from .keybindings_menu_view import draw_section_menu
+    from tet4d.ui.pygame.keybindings_menu_view import draw_section_menu
 
     draw_section_menu(
         surface,
@@ -452,7 +452,7 @@ def _draw_menu(
     rendered_rows: list[RenderedRow],
     binding_rows: list[BindingRow],
 ) -> None:
-    from .keybindings_menu_view import draw_binding_menu
+    from tet4d.ui.pygame.keybindings_menu_view import draw_binding_menu
 
     draw_binding_menu(
         surface,
