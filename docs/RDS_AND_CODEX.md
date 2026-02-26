@@ -431,3 +431,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 234 (slice 224, help-menu UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/help_menu.py` after engine/CLI/test canonicalization and advances `arch_stage` to `234` before shim pruning.
 - Stage 235 (slice 225, help-menu UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/help_menu.py` compatibility shim and advances `arch_stage` to `235` after full verification/CI checkpoint.
 - Stage 239 (slice 229, pause-menu UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/pause_menu.py` after engine/CLI/test canonicalization and advances `arch_stage` to `239` before shim pruning.
+- Stage 240 (slice 230, pause-menu UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/pause_menu.py` compatibility shim and advances `arch_stage` to `240` after full verification/CI checkpoint.
