@@ -699,3 +699,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 341 (slice 6, keybindings_menu_model zero caller checkpoint).
 - Stage 342 (slice 7, prune keybindings_menu_model engine shim).
 - Stage 343 (slice 8, drop stale keybindings_menu_model allowlist entry).
+- Stage 344 (slice 9, keybindings_menu_model family checkpoint).

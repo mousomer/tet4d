@@ -993,3 +993,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 326. `DONE` Arch Stage 341 slice 6 keybindings_menu_model zero caller checkpoint.
 327. `DONE` Arch Stage 342 slice 7 prune keybindings_menu_model engine shim.
 328. `DONE` Arch Stage 343 slice 8 drop stale keybindings_menu_model allowlist entry.
+329. `DONE` Arch Stage 344 slice 9 keybindings_menu_model family checkpoint.
