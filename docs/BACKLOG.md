@@ -987,3 +987,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 320. `DONE` Arch Stage 335 slice 325 advanced arch_stage to 335 and verified the Stage 316-334 keybindings migration batch with full local verify.sh and ci_check.sh.
 321. `DONE` Arch Stage 336 slice 1 keybindings_menu_model API prep wrappers.
 322. `DONE` Arch Stage 337 slice 2 move keybindings_menu_model to ui pygame with shim.
+323. `DONE` Arch Stage 338 slice 3 baseline lock ui keybindings_menu_model adapter.

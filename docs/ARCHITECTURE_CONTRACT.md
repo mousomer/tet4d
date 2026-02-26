@@ -693,3 +693,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 335 (slice 325, advanced arch_stage to 335 and verified the Stage 316-334 keybindings migration batch with full local verify.sh and ci_check.sh).
 - Stage 336 (slice 1, keybindings_menu_model API prep wrappers).
 - Stage 337 (slice 2, move keybindings_menu_model to ui pygame with shim).
+- Stage 338 (slice 3, baseline lock ui keybindings_menu_model adapter).

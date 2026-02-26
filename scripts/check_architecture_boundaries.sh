@@ -264,6 +264,7 @@ src/tet4d/ui/pygame/launcher_nd_runner.py
 src/tet4d/ui/pygame/launcher_play.py
 src/tet4d/ui/pygame/keybindings_menu.py
 src/tet4d/ui/pygame/keybindings_menu_view.py
+src/tet4d/ui/pygame/keybindings_menu_model.py
 src/tet4d/ui/pygame/launcher_settings.py
 src/tet4d/ui/pygame/loop_runner_nd.py
 src/tet4d/ui/pygame/menu_controls.py
