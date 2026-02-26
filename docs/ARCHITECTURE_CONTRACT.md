@@ -516,3 +516,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 170 (slice 160, sequential cleanup) exported `GridMode` from
   `src/tet4d/engine/api.py` to prepare `grid_mode_render` UI relocation without
   introducing `ui -> engine` deep imports.
+- Stage 171 (slice 161, sequential cleanup) moved
+  `src/tet4d/engine/grid_mode_render.py` implementation into
+  `src/tet4d/ui/pygame/grid_mode_render.py` and retained an engine
+  compatibility shim pending caller migration.

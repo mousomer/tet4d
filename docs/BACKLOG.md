@@ -801,6 +801,10 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 169. `DONE` Arch Stage 170 slice 160 exported `GridMode` from
     `src/tet4d/engine/api.py` to prepare `grid_mode_render` UI relocation
     without deep engine imports from `ui/`.
+170. `DONE` Arch Stage 171 slice 161 moved
+    `src/tet4d/engine/grid_mode_render.py` implementation to
+    `src/tet4d/ui/pygame/grid_mode_render.py` and retained an engine
+    compatibility shim pending caller migration.
 
 ## 6. Source Inputs
 
