@@ -247,6 +247,39 @@ def greedy_key_4d(
     )
 
 
+def playbot_greedy_score_4d(greedy_key: tuple[int, int, int, int]) -> float:
+    from .playbot.planner_nd_core import greedy_score_4d as _greedy_score_4d
+
+    return _greedy_score_4d(greedy_key)
+
+
+def playbot_iter_settled_candidates_nd(
+    state: GameStateND,
+    *,
+    piece: ActivePieceND,
+    orientations: tuple[tuple[tuple[int, ...], ...], ...],
+    ndim: int,
+    dims: tuple[int, ...],
+    gravity_axis: int,
+    lateral_axes: tuple[int, ...],
+    column_levels: dict[tuple[int, ...], list[int]],
+) -> Any:
+    from .playbot.planner_nd_core import (
+        iter_settled_candidates as _iter_settled_candidates,
+    )
+
+    return _iter_settled_candidates(
+        state,
+        piece=piece,
+        orientations=orientations,
+        ndim=ndim,
+        dims=dims,
+        gravity_axis=gravity_axis,
+        lateral_axes=lateral_axes,
+        column_levels=column_levels,
+    )
+
+
 def apply_challenge_prefill_2d(state: GameState, *, layers: int) -> None:
     from .gameplay.challenge_mode import apply_challenge_prefill_2d as _apply
 
@@ -1031,6 +1064,8 @@ __all__ = [
     "playbot_enumerate_orientations_nd",
     "playbot_evaluate_nd_board",
     "playbot_dry_run_defaults",
+    "playbot_greedy_score_4d",
+    "playbot_iter_settled_candidates_nd",
     "playbot_rotation_planes_nd",
     "profile_4d_create_initial_state",
     "profile_4d_draw_game_frame",
