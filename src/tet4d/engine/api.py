@@ -177,7 +177,6 @@ def playbot_canonical_blocks_nd(blocks: Any) -> tuple[tuple[int, ...], ...]:
 
 def playbot_enumerate_orientations_nd(
     start_blocks: tuple[tuple[int, ...], ...],
-    *,
     ndim: int,
     gravity_axis: int,
 ) -> tuple[tuple[tuple[int, ...], ...], ...]:
@@ -203,7 +202,6 @@ def playbot_build_column_levels_nd(
 
 def playbot_evaluate_nd_board(
     cells: dict[tuple[int, ...], int],
-    *,
     dims: tuple[int, ...],
     gravity_axis: int,
     cleared: int,

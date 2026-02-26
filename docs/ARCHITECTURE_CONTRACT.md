@@ -640,3 +640,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 284 (slice 274, plannerND-search shim pruning) removes the zero-caller `engine/playbot/planner_nd_search.py` compatibility shim after the search planner relocation to `ai/playbot/planner_nd_search.py` and canonicalization.
 - Stage 285 (slice 275, plannerND-search post-prune docs sync) records the canonical `ai/playbot/planner_nd_search.py` path after shim removal and advances `arch_stage` to `285`.
 - Stage 286 (slice 276, plannerND-search family checkpoint) records completion of the Stage 278-285 plannerND-search API-prep/move/prune sequence and advances `arch_stage` to `286` before the full batch verification checkpoint.
+- Stage 287 (slice 277, plannerND-search batch verification checkpoint) advances `arch_stage` to `287` and verifies the Stage 278-286 plannerND-search batch with full local `verify.sh` + `ci_check.sh`.
