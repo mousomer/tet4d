@@ -33,6 +33,7 @@ from .gameplay.pieces_nd import (
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_DEBUG,
     PIECE_SET_4D_STANDARD,
+    PieceShapeND,
     rotate_point_nd,
 )
 from tet4d.ai.playbot.types import (
@@ -172,6 +173,51 @@ def playbot_canonical_blocks_nd(blocks: Any) -> tuple[tuple[int, ...], ...]:
     from .playbot.planner_nd_core import canonical_blocks as _canonical_blocks
 
     return _canonical_blocks(blocks)
+
+
+def playbot_enumerate_orientations_nd(
+    start_blocks: tuple[tuple[int, ...], ...],
+    *,
+    ndim: int,
+    gravity_axis: int,
+) -> tuple[tuple[tuple[int, ...], ...], ...]:
+    from .playbot.planner_nd_core import enumerate_orientations as _enumerate_orientations
+
+    return _enumerate_orientations(start_blocks, ndim, gravity_axis)
+
+
+def playbot_build_column_levels_nd(
+    cells: dict[tuple[int, ...], int],
+    *,
+    lateral_axes: tuple[int, ...],
+    gravity_axis: int,
+) -> dict[tuple[int, ...], list[int]]:
+    from .playbot.planner_nd_core import build_column_levels as _build_column_levels
+
+    return _build_column_levels(
+        cells,
+        lateral_axes=lateral_axes,
+        gravity_axis=gravity_axis,
+    )
+
+
+def playbot_evaluate_nd_board(
+    cells: dict[tuple[int, ...], int],
+    *,
+    dims: tuple[int, ...],
+    gravity_axis: int,
+    cleared: int,
+    game_over: bool,
+) -> float:
+    from .playbot.planner_nd_core import evaluate_nd_board as _evaluate_nd_board
+
+    return _evaluate_nd_board(
+        cells,
+        dims,
+        gravity_axis,
+        cleared,
+        game_over,
+    )
 
 
 def playbot_default_hard_drop_after_soft_drops_runtime() -> int:
@@ -973,13 +1019,17 @@ __all__ = [
     "PIECE_SET_3D_STANDARD",
     "PIECE_SET_4D_DEBUG",
     "PIECE_SET_4D_STANDARD",
+    "PieceShapeND",
     "plan_best_2d_move",
     "plan_best_nd_with_budget",
     "plan_best_nd_move",
     "playbot_benchmark_history_file",
     "playbot_benchmark_p95_thresholds",
+    "playbot_build_column_levels_nd",
     "playbot_canonical_blocks_nd",
     "playbot_default_hard_drop_after_soft_drops_runtime",
+    "playbot_enumerate_orientations_nd",
+    "playbot_evaluate_nd_board",
     "playbot_dry_run_defaults",
     "playbot_rotation_planes_nd",
     "profile_4d_create_initial_state",
