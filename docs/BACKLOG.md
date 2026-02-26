@@ -771,6 +771,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 157. `DONE` Arch Stage 158 slice 148 migrated `engine.api` dry-run wrappers to canonical `src/tet4d/ai/playbot/dry_run.py` imports before shim pruning.
 
+158. `DONE` Arch Stage 159 slice 149 expanded `src/tet4d/ai/playbot/__init__.py` lazy exports for dry-run APIs to strengthen the canonical AI package surface before shim pruning.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`

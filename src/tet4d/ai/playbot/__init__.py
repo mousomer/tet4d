@@ -1,5 +1,23 @@
 """AI playbot package.
 
-Contains the migrated shared lookahead helper used by legacy engine playbot planners.
-Public playbot APIs should be imported from ``tet4d.engine.api``.
+Contains migrated playbot helpers and AI-owned implementations.
+Public playbot APIs should generally be imported from ``tet4d.engine.api``.
 """
+
+from importlib import import_module
+
+__all__ = [
+    "DryRunReport",
+    "run_dry_run_2d",
+    "run_dry_run_nd",
+]
+
+
+def __getattr__(name: str):
+    if name in {"run_dry_run_2d", "run_dry_run_nd"}:
+        mod = import_module("tet4d.ai.playbot.dry_run")
+        return getattr(mod, name)
+    if name == "DryRunReport":
+        mod = import_module("tet4d.ai.playbot.types")
+        return getattr(mod, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
