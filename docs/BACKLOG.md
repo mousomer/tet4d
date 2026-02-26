@@ -980,3 +980,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 313. `DONE` Arch Stage 328 slice 318 recorded src/tet4d/ui/pygame/keybindings.py as the canonical keybindings implementation path after engine/ui_logic shim removal.
 314. `DONE` Arch Stage 329 slice 319 recorded completion of the Stage 316-328 keybindings API-prep, UI relocation, caller canonicalization, and shim-prune sequence before verification checkpoint.
 315. `DONE` Arch Stage 330 slice 320 advanced arch_stage to 330 and verified the Stage 316-329 keybindings migration batch with full local verify.sh and ci_check.sh.
+316. `DONE` Arch Stage 331 slice 321 recorded src/tet4d/ui/pygame/keybindings.py as the canonical shared keybindings runtime after Stage 316-330 migration and shim pruning.
