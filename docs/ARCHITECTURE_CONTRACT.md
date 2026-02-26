@@ -697,3 +697,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 339 (slice 4, canonicalize engine api wrappers to ui keybindings_menu_model).
 - Stage 340 (slice 5, canonicalize keybindings_menu_model test import).
 - Stage 341 (slice 6, keybindings_menu_model zero caller checkpoint).
+- Stage 342 (slice 7, prune keybindings_menu_model engine shim).
