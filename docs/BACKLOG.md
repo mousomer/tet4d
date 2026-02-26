@@ -921,3 +921,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 254. `DONE` Arch Stage 270 slice 260 advanced `arch_stage` to `270` and verified the Stage 261-269 planner2d batch with full local `verify.sh` + `ci_check.sh`.
 255. `DONE` Arch Stage 271 slice 261 added `engine.api.plan_best_nd_with_budget(...)` to prepare a boundary-safe move of `engine/playbot/planner_nd.py` into `ai/playbot` and advanced `arch_stage` to `271`.
 256. `DONE` Arch Stage 272 slice 262 moved `engine/playbot/planner_nd.py` to `ai/playbot/planner_nd.py`, kept an engine-path module-alias shim, and rewired planner imports to `tet4d.engine.api` wrappers so the AI boundary remained API-only.
+257. `DONE` Arch Stage 273 slice 263 updated `engine.api.plan_best_nd_move(...)` to import from `ai.playbot.planner_nd` directly, reducing reliance on the transitional `engine/playbot/planner_nd.py` shim.

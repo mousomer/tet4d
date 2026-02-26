@@ -123,7 +123,7 @@ def plan_best_nd_move(
     budget_ms: int | None = None,
     algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> Any:
-    from .playbot.planner_nd import plan_best_nd_move as _plan_best_nd_move
+    from tet4d.ai.playbot.planner_nd import plan_best_nd_move as _plan_best_nd_move
 
     return _plan_best_nd_move(
         state,

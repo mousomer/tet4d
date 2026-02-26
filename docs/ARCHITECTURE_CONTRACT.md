@@ -626,3 +626,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 270 (slice 260, planner2d batch verification checkpoint) advances `arch_stage` to `270` and verifies the Stage 261-269 planner2d batch with full local `verify.sh` + `ci_check.sh`.
 - Stage 271 (slice 261, plannerND API prep search wrapper) adds `engine.api.plan_best_nd_with_budget(...)` so `planner_nd` can move to `ai/playbot` while remaining API-only at the AI boundary.
 - Stage 272 (slice 262, plannerND physical relocation) moves `engine/playbot/planner_nd.py` to `ai/playbot/planner_nd.py`, keeps an engine-path module-alias shim, and rewires planner imports to `tet4d.engine.api` wrappers so the AI boundary remains API-only.
+- Stage 273 (slice 263, plannerND engine-api canonicalization) updates `engine.api.plan_best_nd_move(...)` to import from `ai.playbot.planner_nd` directly, reducing reliance on the transitional `engine/playbot/planner_nd.py` shim.
