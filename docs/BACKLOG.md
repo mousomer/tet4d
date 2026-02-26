@@ -988,3 +988,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 321. `DONE` Arch Stage 336 slice 1 keybindings_menu_model API prep wrappers.
 322. `DONE` Arch Stage 337 slice 2 move keybindings_menu_model to ui pygame with shim.
 323. `DONE` Arch Stage 338 slice 3 baseline lock ui keybindings_menu_model adapter.
+324. `DONE` Arch Stage 339 slice 4 canonicalize engine api wrappers to ui keybindings_menu_model.

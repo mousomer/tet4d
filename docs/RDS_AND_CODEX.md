@@ -526,3 +526,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 336 (slice 1, keybindings_menu_model API prep wrappers).
 - Stage 337 (slice 2, move keybindings_menu_model to ui pygame with shim).
 - Stage 338 (slice 3, baseline lock ui keybindings_menu_model adapter).
+- Stage 339 (slice 4, canonicalize engine api wrappers to ui keybindings_menu_model).
