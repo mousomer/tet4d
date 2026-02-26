@@ -767,6 +767,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 155. `DONE` Arch Stage 156 slice 146 added `engine.api` dry-run support wrappers for challenge prefills and runtime defaults to prepare `playbot.dry_run` relocation.
 
+156. `DONE` Arch Stage 157 slice 147 moved `src/tet4d/engine/playbot/dry_run.py` to `src/tet4d/ai/playbot/dry_run.py` and retained an engine compatibility shim using only `tet4d.engine.api` in the moved module.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`

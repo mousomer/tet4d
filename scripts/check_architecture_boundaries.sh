@@ -129,20 +129,27 @@ append_lines_to_array ui_imports < <(
     --glob '!src/tet4d/engine/tests/**'
 )
 ENGINE_UI_IMPORT_ALLOWLIST=$(cat <<'EOF'
+src/tet4d/engine/api.py
+src/tet4d/engine/app_runtime.py
 src/tet4d/engine/bot_options_menu.py
 src/tet4d/engine/front3d_game.py
 src/tet4d/engine/front3d_render.py
 src/tet4d/engine/front4d_game.py
 src/tet4d/engine/front4d_render.py
 src/tet4d/engine/frontend_nd.py
+src/tet4d/engine/gameplay/rotation_anim.py
 src/tet4d/engine/gfx_game.py
 src/tet4d/engine/gfx_panel_2d.py
 src/tet4d/engine/grid_mode_render.py
 src/tet4d/engine/help_menu.py
+src/tet4d/engine/keybindings.py
+src/tet4d/engine/keybindings_menu.py
 src/tet4d/engine/keybindings_menu_view.py
+src/tet4d/engine/launcher_nd_runner.py
+src/tet4d/engine/launcher_play.py
 src/tet4d/engine/launcher_settings.py
+src/tet4d/engine/loop_runner_nd.py
 src/tet4d/engine/pause_menu.py
-src/tet4d/engine/rotation_anim.py
 src/tet4d/engine/view_controls.py
 EOF
 )
