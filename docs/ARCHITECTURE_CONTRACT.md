@@ -597,3 +597,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 229 (slice 219, gfx-game UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/gfx_game.py` after CLI canonicalization and advances `arch_stage` to `229` before shim pruning.
 - Stage 230 (slice 220, gfx-game UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/gfx_game.py` compatibility shim and advances `arch_stage` to `230` after full verification/CI checkpoint.
 - Stage 234 (slice 224, help-menu UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/help_menu.py` after engine/CLI/test canonicalization and advances `arch_stage` to `234` before shim pruning.
+- Stage 235 (slice 225, help-menu UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/help_menu.py` compatibility shim and advances `arch_stage` to `235` after full verification/CI checkpoint.

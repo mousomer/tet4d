@@ -772,10 +772,10 @@ def help_action_topic_registry_runtime() -> dict[str, str]:
     return _registry()
 
 
-def help_topics_for_context_runtime(context: str):
+def help_topics_for_context_runtime(*args: Any, **kwargs: Any):
     from .runtime.help_topics import help_topics_for_context as _help_topics_for_context
 
-    return _help_topics_for_context(context)
+    return _help_topics_for_context(*args, **kwargs)
 
 
 def piece_set_2d_options_gameplay():
