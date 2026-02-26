@@ -705,3 +705,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 347 (slice 2, canonicalize key_dispatch engine render callers).
 - Stage 348 (slice 3, canonicalize key_dispatch frontend_nd caller).
 - Stage 349 (slice 4, canonicalize key_dispatch cli caller).
+- Stage 350 (slice 5, key_dispatch zero caller checkpoint).
