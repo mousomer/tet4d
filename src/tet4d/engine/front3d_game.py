@@ -36,7 +36,7 @@ from .gameplay.game_nd import GameConfigND, GameStateND
 from .help_menu import run_help_menu
 from .ui_logic.key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_3D
-from .launcher_nd_runner import run_nd_mode_launcher
+from tet4d.ui.pygame.launcher_nd_runner import run_nd_mode_launcher
 from .loop_runner_nd import run_nd_loop
 from .pause_menu import run_pause_menu
 from .playbot import PlayBotController

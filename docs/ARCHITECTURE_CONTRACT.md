@@ -533,3 +533,6 @@ incremental enforcement strategy used while refactoring.
   `src/tet4d/engine/launcher_nd_runner.py` implementation into
   `src/tet4d/ui/pygame/launcher_nd_runner.py` and retained an engine
   compatibility shim pending caller migration.
+- Stage 176 (slice 166, sequential cleanup) migrated engine callers to
+  canonical `src/tet4d/ui/pygame/launcher_nd_runner.py` imports before shim
+  pruning.
