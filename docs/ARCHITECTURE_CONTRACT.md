@@ -627,3 +627,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 271 (slice 261, plannerND API prep search wrapper) adds `engine.api.plan_best_nd_with_budget(...)` so `planner_nd` can move to `ai/playbot` while remaining API-only at the AI boundary.
 - Stage 272 (slice 262, plannerND physical relocation) moves `engine/playbot/planner_nd.py` to `ai/playbot/planner_nd.py`, keeps an engine-path module-alias shim, and rewires planner imports to `tet4d.engine.api` wrappers so the AI boundary remains API-only.
 - Stage 273 (slice 263, plannerND engine-api canonicalization) updates `engine.api.plan_best_nd_move(...)` to import from `ai.playbot.planner_nd` directly, reducing reliance on the transitional `engine/playbot/planner_nd.py` shim.
+- Stage 274 (slice 264, plannerND AI package export polish) adds `plan_best_nd_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
