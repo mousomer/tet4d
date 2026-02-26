@@ -19,6 +19,7 @@ from .score_analyzer_features import (
     placement_features,
     weighted_score,
 )
+from .score_analyzer_storage import load_json_object_or_default
 
 _ROOT_DIR = PROJECT_ROOT
 _CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
@@ -61,13 +62,7 @@ def _default_config() -> dict[str, Any]:
 @lru_cache(maxsize=1)
 def _score_analyzer_config() -> dict[str, Any]:
     config = _default_config()
-    try:
-        raw = _CONFIG_PATH.read_text(encoding="utf-8")
-        loaded = json.loads(raw)
-    except (OSError, json.JSONDecodeError):
-        return config
-    if not isinstance(loaded, dict):
-        return config
+    loaded = load_json_object_or_default(_CONFIG_PATH, config)
     merged = dict(config)
     for key, value in loaded.items():
         merged[key] = value
@@ -405,13 +400,7 @@ def _new_summary() -> dict[str, object]:
 
 
 def _load_summary(path: Path) -> dict[str, object]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-        loaded = json.loads(raw)
-    except (OSError, json.JSONDecodeError):
-        return _new_summary()
-    if not isinstance(loaded, dict):
-        return _new_summary()
+    loaded = load_json_object_or_default(path, _new_summary())
     ok, _msg = validate_score_analysis_summary(loaded)
     if not ok:
         return _new_summary()
