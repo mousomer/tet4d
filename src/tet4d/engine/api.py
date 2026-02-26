@@ -22,12 +22,13 @@ from .gameplay.game2d import GameConfig, GameState
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .gameplay.pieces2d import PIECE_SET_2D_CLASSIC, PIECE_SET_2D_DEBUG
 from .gameplay.pieces_nd import (
+    ActivePieceND,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_DEBUG,
     PIECE_SET_4D_STANDARD,
+    rotate_point_nd,
 )
-from .playbot import PlayBotController
 from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
     BOT_PLANNER_ALGORITHM_OPTIONS,
@@ -129,6 +130,28 @@ def simulate_lock_board(
     from .playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
 
     return _simulate_lock_board(state, piece)
+
+
+def playbot_rotation_planes_nd(
+    ndim: int, gravity_axis: int
+) -> tuple[tuple[int, int], ...]:
+    from .playbot.planner_nd_core import rotation_planes as _rotation_planes
+
+    return _rotation_planes(ndim, gravity_axis)
+
+
+def playbot_canonical_blocks_nd(blocks: Any) -> tuple[tuple[int, ...], ...]:
+    from .playbot.planner_nd_core import canonical_blocks as _canonical_blocks
+
+    return _canonical_blocks(blocks)
+
+
+def playbot_default_hard_drop_after_soft_drops_runtime() -> int:
+    from .runtime.runtime_config import (
+        playbot_default_hard_drop_after_soft_drops as _soft_drop_default,
+    )
+
+    return _soft_drop_default()
 
 
 def greedy_key_4d(
@@ -858,9 +881,18 @@ def grid_mode_label_view(mode: GridMode) -> str:
     return _grid_mode_label(mode)
 
 
+def __getattr__(name: str) -> Any:
+    if name == "PlayBotController":
+        from .playbot import PlayBotController as _PlayBotController
+
+        return _PlayBotController
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "Action",
     "Action2D",
+    "ActivePieceND",
     "BoardND",
     "BOT_MODE_OPTIONS",
     "BOT_PLANNER_ALGORITHM_OPTIONS",
@@ -913,9 +945,12 @@ __all__ = [
     "PIECE_SET_4D_STANDARD",
     "plan_best_2d_move",
     "plan_best_nd_move",
-    "playbot_dry_run_defaults",
     "playbot_benchmark_history_file",
     "playbot_benchmark_p95_thresholds",
+    "playbot_canonical_blocks_nd",
+    "playbot_default_hard_drop_after_soft_drops_runtime",
+    "playbot_dry_run_defaults",
+    "playbot_rotation_planes_nd",
     "profile_4d_create_initial_state",
     "profile_4d_draw_game_frame",
     "profile_4d_grid_mode_full",
@@ -925,6 +960,7 @@ __all__ = [
     "run_dry_run_nd",
     "run_front3d_ui",
     "run_front4d_ui",
+    "rotate_point_nd",
     "simulate_lock_board",
     "state_view_2d",
     "state_view_nd",

@@ -899,3 +899,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 232. `DONE` Arch Stage 248 slice 238 removed the zero-caller `src/tet4d/engine/keybindings.py` compatibility shim and advanced `arch_stage` to `248` after verification/CI checkpoint.
 233. `DONE` Arch Stage 249 slice 239 updated historical architecture notes to reference `engine.ui_logic.keybindings` as the canonical keybindings implementation path after shim removal and advanced `arch_stage` to `249`.
 234. `DONE` Arch Stage 250 slice 240 recorded the completed Stage 241-249 keybindings ui-logic migration/prune sequence, advanced `arch_stage` to `250`, and verified the checkpoint with full local `verify.sh` + `ci_check.sh`.
+235. `DONE` Arch Stage 251 slice 241 made `engine.api.PlayBotController` lazy and added controller-facing playbot ND helper wrappers/exports to prepare a cycle-safe `engine/playbot/controller.py` relocation, advancing `arch_stage` to `251`.
