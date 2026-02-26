@@ -1020,3 +1020,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 353. `DONE` Arch Stage 368 slice 3 canonicalize front4d_game engine api wrappers.
 354. `DONE` Arch Stage 369 slice 4 canonicalize front4d_game front4d_render test import.
 355. `DONE` Arch Stage 370 slice 5 canonicalize front4d_game gameplay replay test import.
+356. `DONE` Arch Stage 371 slice 6 front4d_game zero caller checkpoint.
