@@ -1000,3 +1000,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 333. `DONE` Arch Stage 348 slice 3 canonicalize key_dispatch frontend_nd caller.
 334. `DONE` Arch Stage 349 slice 4 canonicalize key_dispatch cli caller.
 335. `DONE` Arch Stage 350 slice 5 key_dispatch zero caller checkpoint.
+336. `DONE` Arch Stage 351 slice 6 prune key_dispatch engine shim.
