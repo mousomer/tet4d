@@ -814,6 +814,10 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 173. `DONE` Arch Stage 174 slice 164 added `engine.api` wrappers for ND
     launcher display-open/capture helpers to prepare `launcher_nd_runner` UI
     relocation without deep UI imports into engine internals.
+174. `DONE` Arch Stage 175 slice 165 moved
+    `src/tet4d/engine/launcher_nd_runner.py` implementation to
+    `src/tet4d/ui/pygame/launcher_nd_runner.py` and retained an engine
+    compatibility shim pending caller migration.
 
 ## 6. Source Inputs
 

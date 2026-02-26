@@ -529,3 +529,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 174 (slice 164, sequential cleanup) added `engine.api` wrappers for ND
   launcher display-open/capture helpers to prepare `launcher_nd_runner` UI
   relocation without deep UI imports into engine internals.
+- Stage 175 (slice 165, sequential cleanup) moved
+  `src/tet4d/engine/launcher_nd_runner.py` implementation into
+  `src/tet4d/ui/pygame/launcher_nd_runner.py` and retained an engine
+  compatibility shim pending caller migration.
