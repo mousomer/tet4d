@@ -491,3 +491,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 161 (slice 151, sequential cleanup) moved `src/tet4d/engine/view_controls.py`
   implementation into `src/tet4d/ui/pygame/view_controls.py` and retained an
   engine compatibility shim pending caller migration.
+- Stage 162 (slice 152, sequential cleanup) migrated tests to canonical
+  `src/tet4d/ui/pygame/view_controls.py` imports before shim pruning.
