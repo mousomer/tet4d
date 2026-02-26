@@ -707,3 +707,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 349 (slice 4, canonicalize key_dispatch cli caller).
 - Stage 350 (slice 5, key_dispatch zero caller checkpoint).
 - Stage 351 (slice 6, prune key_dispatch engine shim).
+- Stage 352 (slice 7, drop stale key_dispatch allowlist entry).

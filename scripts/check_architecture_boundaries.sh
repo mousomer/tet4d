@@ -144,7 +144,6 @@ src/tet4d/engine/gfx_panel_2d.py
 src/tet4d/engine/grid_mode_render.py
 src/tet4d/engine/help_menu.py
 src/tet4d/engine/ui_logic/keybindings.py
-src/tet4d/engine/ui_logic/key_dispatch.py
 src/tet4d/engine/ui_logic/menu_controls.py
 src/tet4d/engine/keybindings_menu.py
 src/tet4d/engine/keybindings_menu_view.py
