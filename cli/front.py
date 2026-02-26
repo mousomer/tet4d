@@ -28,7 +28,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(1, str(_REPO_ROOT))
 
 from tet4d.engine.app_runtime import initialize_runtime, open_display
-from tet4d.engine.audio import AudioSettings, play_sfx
+from tet4d.ui.pygame.audio import AudioSettings, play_sfx
 from tet4d.engine.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.ui.pygame.font_profiles import init_fonts as init_fonts_for_profile
