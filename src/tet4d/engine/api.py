@@ -451,6 +451,54 @@ def front3d_setup_gravity_interval_ms_from_config_nd(cfg: GameConfigND) -> int:
     return _gravity_interval_ms_from_config(cfg)
 
 
+def launcher_play_run_menu_3d(screen: Any, fonts: Any) -> Any:
+    from .front3d_game import run_menu as _run_menu
+
+    return _run_menu(screen, fonts)
+
+
+def launcher_play_build_config_3d(settings: Any) -> Any:
+    from .front3d_game import build_config as _build_config
+
+    return _build_config(settings)
+
+
+def launcher_play_suggested_window_size_3d(cfg: Any) -> tuple[int, int]:
+    from .front3d_game import suggested_window_size as _suggested_window_size
+
+    return _suggested_window_size(cfg)
+
+
+def launcher_play_run_game_loop_3d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
+    from .front3d_game import run_game_loop as _run_game_loop
+
+    return _run_game_loop(screen, cfg, fonts, **kwargs)
+
+
+def launcher_play_run_game_loop_4d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
+    from .front4d_game import run_game_loop as _run_game_loop
+
+    return _run_game_loop(screen, cfg, fonts, **kwargs)
+
+
+def launcher_play_suggested_window_size_4d(cfg: Any) -> tuple[int, int]:
+    from .front4d_game import suggested_window_size as _suggested_window_size
+
+    return _suggested_window_size(cfg)
+
+
+def launcher_play_run_menu_nd(screen: Any, fonts: Any, dimension: int) -> Any:
+    from .frontend_nd import run_menu as _run_menu
+
+    return _run_menu(screen, fonts, dimension)
+
+
+def launcher_play_build_config_nd(settings: Any, dimension: int) -> Any:
+    from .frontend_nd import build_config as _build_config
+
+    return _build_config(settings, dimension)
+
+
 def format_key_tuple(keys):
     from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
 
