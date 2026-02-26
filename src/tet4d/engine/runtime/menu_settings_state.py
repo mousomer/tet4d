@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any
 
-from ..keybindings import (
+from ..ui_logic.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
     set_active_key_profile,

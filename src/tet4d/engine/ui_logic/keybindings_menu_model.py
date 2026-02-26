@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .keybindings_catalog import partition_gameplay_actions
-from ..keybindings import (
+from .keybindings import (
     binding_group_description,
     binding_group_label,
     keybinding_file_label,

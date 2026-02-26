@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
-from ..keybindings import KeyTuple, key_matches
+from .keybindings import KeyTuple, key_matches
 
 
 ActionHandler = Callable[[], None]

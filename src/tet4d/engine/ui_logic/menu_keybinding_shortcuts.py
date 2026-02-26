@@ -4,7 +4,7 @@ from typing import Any
 
 import pygame
 
-from ..keybindings import load_keybindings_file, save_keybindings_file
+from .keybindings import load_keybindings_file, save_keybindings_file
 
 
 def menu_binding_action_for_key(
@@ -34,4 +34,3 @@ def apply_menu_binding_action(
 
 def menu_binding_status_color(is_error: bool) -> tuple[int, int, int]:
     return (255, 150, 150) if is_error else (170, 240, 170)
-

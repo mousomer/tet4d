@@ -7,7 +7,7 @@ from typing import Any
 
 import pygame
 
-from ..keybindings import (
+from .keybindings import (
     active_key_profile,
     binding_actions_for_dimension,
     cycle_rebind_conflict_mode,
