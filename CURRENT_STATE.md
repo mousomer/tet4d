@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-26
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 391-410 batch)
+Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 411-430 batch)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `410` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `430` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -42,9 +42,10 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `src/tet4d/engine/ui_logic`: `6`
 - `src/tet4d/engine/runtime`: `22`
 - `src/tet4d/engine/gameplay`: `11`
-- `src/tet4d/ui/pygame`: `28`
+- `src/tet4d/ui/pygame`: `26`
 - `src/tet4d/ui/pygame/menu`: `10`
 - `src/tet4d/ui/pygame/launch`: `7`
+- `src/tet4d/ui/pygame/input`: `3`
 - `src/tet4d/ai/playbot`: `9`
 
 ### Balance Assessment
@@ -53,9 +54,10 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `engine/ui_logic` and `engine/gameplay` are healthy.
 - `engine/runtime` is large but coherent (and leaf-gated at `watch` baseline).
 - `ui/pygame/menu` and `ui/pygame/launch` are now balanced leaf subpackages.
-- `ui/pygame` remains the current structural hotspot, but it dropped from `38` to `28`
-  top-level Python files and improved from `rebalance_signal` to `skewed` in the fuzzy
-  non-leaf report.
+- `ui/pygame/input` is now a small seed leaf package (`3` files, fuzzy `watch`) and is a
+  good target for the next input-family moves.
+- `ui/pygame` remains the current structural hotspot, but it dropped from `28` to `26`
+  top-level Python files and improved further within the non-leaf `skewed` band.
 
 ## Major Completed Milestones (Condensed)
 
@@ -78,34 +80,25 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 391-410)
+## Recent Batch Status (Stages 411-430)
 
 Completed:
-- Extended `src/tet4d/ui/pygame/menu/` with the keybindings-menu family:
-  - `ui/pygame/keybindings_menu.py` -> `ui/pygame/menu/keybindings_menu.py`
-  - `ui/pygame/keybindings_menu_model.py` -> `ui/pygame/menu/keybindings_menu_model.py`
-  - `ui/pygame/keybindings_menu_view.py` -> `ui/pygame/menu/keybindings_menu_view.py`
-  - `ui/pygame/keybindings_menu_input.py` -> `ui/pygame/menu/keybindings_menu_input.py`
-- Created `src/tet4d/ui/pygame/launch/` and moved the launcher/setup family:
-  - `ui/pygame/launcher_nd_runner.py` -> `ui/pygame/launch/launcher_nd_runner.py`
-  - `ui/pygame/front3d_setup.py` -> `ui/pygame/launch/front3d_setup.py`
-  - `ui/pygame/profile_4d.py` -> `ui/pygame/launch/profile_4d.py`
-  - `ui/pygame/launcher_play.py` -> `ui/pygame/launch/launcher_play.py`
-  - `ui/pygame/bot_options_menu.py` -> `ui/pygame/launch/bot_options_menu.py`
-  - `ui/pygame/launcher_settings.py` -> `ui/pygame/launch/launcher_settings.py`
-- Canonicalized callers across CLI, UI, engine wrappers, and tests to `menu.*` and
-  `launch.*` imports.
-- Pruned zero-caller top-level `ui/pygame` shims for all moved keybindings-menu and
-  launch-family modules.
-- Updated path-sensitive policy/docs:
-  - `scripts/check_architecture_boundaries.sh` UI import allowlist
-  - `docs/PROJECT_STRUCTURE.md` keybindings-menu + launch/menu subpackage references
+- Created `src/tet4d/ui/pygame/input/` as the next `ui/pygame` subpackage seed.
+- Moved:
+  - `ui/pygame/key_dispatch.py` -> `ui/pygame/input/key_dispatch.py`
+  - `ui/pygame/key_display.py` -> `ui/pygame/input/key_display.py`
+- Canonicalized callers across CLI, UI, engine wrappers, and engine tests to
+  `tet4d.ui.pygame.input.*` imports.
+- Pruned zero-caller top-level `ui/pygame/key_dispatch.py` and
+  `ui/pygame/key_display.py` shims after caller canonicalization.
+- Updated structure docs to record `ui/pygame/input/` and canonical `input/key_display.py`
+  pathing.
 
 Balance note:
-- `src/tet4d/ui/pygame/menu` is balanced at `10` Python files (`1663` LOC total).
-- `src/tet4d/ui/pygame/launch` is balanced at `7` Python files (`941` LOC total).
-- Top-level `src/tet4d/ui/pygame` dropped from `38` to `28` Python files and improved to
-  fuzzy status `skewed` (`0.40`) from the prior `rebalance_signal` state.
+- `src/tet4d/ui/pygame/input` is a small seed leaf at `3` Python files (`65` LOC total),
+  fuzzy status `watch` (`0.67`) due low file count.
+- Top-level `src/tet4d/ui/pygame` dropped from `28` to `26` Python files and improved to
+  fuzzy score `0.49` (`skewed`, still the primary structural hotspot).
 - Leaf folder-balance gate remains non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
@@ -124,13 +117,14 @@ Goal: reduce folder sprawl in `ui/pygame` by introducing a small number of coher
 
 Recommended subpackages (incremental, not all at once):
 - `src/tet4d/ui/pygame/menu/` (balanced)
-- `src/tet4d/ui/pygame/input/`
+- `src/tet4d/ui/pygame/input/` (seeded; currently small)
 - `src/tet4d/ui/pygame/render/`
 - `src/tet4d/ui/pygame/launch/` (balanced)
 
 Recommended next family moves (same staged pattern):
-- `key_dispatch` (likely `input/` subpackage seed, with low caller surface and low LOC)
-- `key_display` (small shared key-label helper; colocate with keybindings/menu UI helpers if desired)
+- `camera_mouse` (good fit for `input/`; used by 3D/4D frontends, moderate size)
+- `view_controls` (input-facing control routing helpers; likely `input/` fit)
+- optionally `keybindings_defaults` later if keeping keybinding/input helpers clustered
 
 Pattern per family:
 1. move implementation to subpackage

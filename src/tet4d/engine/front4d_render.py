@@ -14,7 +14,7 @@ from .frontend_nd import (
     piece_set_4d_label,
 )
 from .gameplay.game_nd import GameStateND
-from tet4d.ui.pygame.key_dispatch import dispatch_bound_action
+from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.panel_utils import draw_game_side_panel
 from tet4d.ui.pygame.projection3d import (

@@ -85,9 +85,9 @@ tet4d/
 │       ├── pieces2d.py          # classic tetromino set
 │       ├── pieces_nd.py         # 3D + 4D native piece sets
 │       ├── keybindings.py       # binding definitions + load/save
+│       ├── input/               # key dispatch/name formatting input helper subpackage
 │       ├── launch/              # launcher/setup/profile UI subpackage
 │       ├── menu/                # menu + keybindings-menu UI subpackage
-│       ├── key_display.py       # shared key-name formatting and display helpers
 │       ├── font_profiles.py     # shared per-mode font profiles and font factory
 │       ├── control_helper.py    # grouped in-game key-helper rendering
 │       ├── help_menu.py         # launcher/pause help and explanation UI
@@ -154,7 +154,7 @@ tet4d/
 6. Boundary topology mapping (`bounded`,`wrap_all`,`invert_all`) lives in `topology.py` and is consumed by `game2d.py`/`game_nd.py`.
 7. Advanced topology profile loading/resolution/export is handled in `topology_designer.py` using `config/topology/designer_presets.json`.
 8. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
-9. Shared key-name formatting is centralized in `key_display.py`.
+9. Shared key-name formatting is centralized in `input/key_display.py`.
 10. Shared keybinding editor model/scope helpers are in `menu/keybindings_menu_model.py`.
 11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
 12. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.

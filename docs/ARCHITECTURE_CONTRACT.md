@@ -828,3 +828,48 @@ incremental enforcement strategy used while refactoring.
 - Stage 410 (slice 45, launch subpackage batch checkpoint and verify) records completion
   of the Stage 401-409 launch-family subpackage migration/prune batch and verifies the
   checkpoint with local `verify.sh`, continuing `ui/pygame` folder rebalancing.
+- Stage 411 (slice 46, input subpackage bootstrap) creates `src/tet4d/ui/pygame/input/`
+  and moves `key_dispatch.py` into it with a temporary top-level compatibility shim.
+- Stage 412 (slice 47, key-dispatch caller canonicalization I) migrates engine callers
+  to canonical `tet4d.ui.pygame.input.key_dispatch` imports.
+- Stage 413 (slice 48, key-dispatch caller canonicalization II) migrates UI and CLI
+  callers to canonical `tet4d.ui.pygame.input.key_dispatch` imports.
+- Stage 414 (slice 49, key-dispatch zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame/key_dispatch.py` path before pruning.
+- Stage 415 (slice 50, key-dispatch shim pruning) removes the zero-caller top-level
+  `ui/pygame/key_dispatch.py` shim after canonicalization.
+- Stage 416 (slice 51, key-dispatch family checkpoint) records completion of the staged
+  key-dispatch move/canonicalize/prune sequence into `ui/pygame/input/`.
+- Stage 417 (slice 52, key-display subpackage move) moves `key_display.py` into
+  `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+- Stage 418 (slice 53, key-display caller canonicalization) migrates engine/API and UI
+  callers to canonical `tet4d.ui.pygame.input.key_display` imports.
+- Stage 419 (slice 54, key-display zero-caller checkpoint + prune) records zero
+  remaining imports of the old top-level `ui/pygame/key_display.py` path and removes the
+  temporary shim.
+- Stage 420 (slice 55, input subpackage family checkpoint and verify) records completion
+  of the Stage 411-419 `key_dispatch` + `key_display` input-subpackage batch and verifies
+  the checkpoint with local `verify.sh`.
+- Stage 421 (slice 56, input subpackage path-doc sync I) updates structure and handoff
+  docs to record `src/tet4d/ui/pygame/input/` as the canonical location for dispatch and
+  key-name formatting helpers.
+- Stage 422 (slice 57, input subpackage path-doc sync II) records the canonical
+  `tet4d.ui.pygame.input.key_dispatch` and `tet4d.ui.pygame.input.key_display` import
+  paths in stage/backlog history.
+- Stage 423 (slice 58, batch metrics checkpoint prep) advances staged checkpoint notes
+  for the post-move folder-balance scan before final verification.
+- Stage 424 (slice 59, batch metrics checkpoint I) records the expected `ui/pygame`
+  top-level file-count reduction after the `input/` subpackage seed.
+- Stage 425 (slice 60, batch metrics checkpoint II) records the new `ui/pygame/input`
+  leaf package as an intentionally small seed pending future input-family moves.
+- Stage 426 (slice 61, verification checkpoint prep) records the staged handoff into the
+  final local verification checkpoint for the `411-425` batch.
+- Stage 427 (slice 62, verification checkpoint) runs the local verification checkpoint
+  for the `411-426` input-subpackage batch.
+- Stage 428 (slice 63, post-verify metric capture) records the post-verify architecture
+  and folder-balance snapshot for the new `input/` subpackage.
+- Stage 429 (slice 64, current-state handoff refresh) updates `CURRENT_STATE.md` with
+  the `input/` subpackage migration status and next recommended `ui/pygame` family moves.
+- Stage 430 (slice 65, input subpackage batch checkpoint and verify) records completion
+  of the Stage 411-429 `input/` subpackage seed batch and verifies the checkpoint with
+  local `verify.sh`, continuing `ui/pygame` top-level sprawl reduction.

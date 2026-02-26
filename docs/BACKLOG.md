@@ -1070,3 +1070,23 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 393. `DONE` Arch Stage 408 slice 43 removed the zero-caller top-level `ui/pygame/{launcher_nd_runner,front3d_setup,profile_4d}.py` shims.
 394. `DONE` Arch Stage 409 slice 44 removed the zero-caller top-level `ui/pygame/{launcher_play,bot_options_menu,launcher_settings}.py` shims and synced path-sensitive policy/docs.
 395. `DONE` Arch Stage 410 slice 45 recorded completion of the Stage 401-409 launch-family subpackage batch and verified the checkpoint locally.
+396. `DONE` Arch Stage 411 slice 46 created `src/tet4d/ui/pygame/input/` and moved `ui/pygame/key_dispatch.py` into it with a temporary top-level compatibility shim.
+397. `DONE` Arch Stage 412 slice 47 canonicalized engine callers to `tet4d.ui.pygame.input.key_dispatch`.
+398. `DONE` Arch Stage 413 slice 48 canonicalized UI and CLI callers to `tet4d.ui.pygame.input.key_dispatch`.
+399. `DONE` Arch Stage 414 slice 49 recorded a zero-caller checkpoint for old top-level `ui/pygame/key_dispatch.py` imports before pruning.
+400. `DONE` Arch Stage 415 slice 50 removed the zero-caller top-level `ui/pygame/key_dispatch.py` shim after canonicalization.
+401. `DONE` Arch Stage 416 slice 51 recorded the key-dispatch family checkpoint after relocation into `src/tet4d/ui/pygame/input/`.
+402. `DONE` Arch Stage 417 slice 52 moved `ui/pygame/key_display.py` into `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+403. `DONE` Arch Stage 418 slice 53 canonicalized engine/API and UI callers to `tet4d.ui.pygame.input.key_display`.
+404. `DONE` Arch Stage 419 slice 54 recorded a zero-caller checkpoint for old top-level `ui/pygame/key_display.py` imports and removed the temporary shim.
+405. `DONE` Arch Stage 420 slice 55 recorded completion of the Stage 411-419 `key_dispatch` + `key_display` input-subpackage batch and verified the checkpoint locally.
+406. `DONE` Arch Stage 421 slice 56 updated path docs to record `src/tet4d/ui/pygame/input/` as the canonical location for dispatch and key-name display helpers.
+407. `DONE` Arch Stage 422 slice 57 recorded canonical `tet4d.ui.pygame.input.key_dispatch` and `tet4d.ui.pygame.input.key_display` import paths in stage history.
+408. `DONE` Arch Stage 423 slice 58 recorded the staged metrics-checkpoint prep for the `input/` seed batch.
+409. `DONE` Arch Stage 424 slice 59 recorded the expected `ui/pygame` top-level file-count reduction after seeding `ui/pygame/input/`.
+410. `DONE` Arch Stage 425 slice 60 recorded `ui/pygame/input` as an intentionally small seed package pending future input-family moves.
+411. `DONE` Arch Stage 426 slice 61 recorded the staged handoff into the final local verification checkpoint for the `411-425` batch.
+412. `DONE` Arch Stage 427 slice 62 ran the local verification checkpoint for the `411-426` input-subpackage batch.
+413. `DONE` Arch Stage 428 slice 63 recorded the post-verify architecture/folder-balance snapshot for the new `ui/pygame/input` subpackage.
+414. `DONE` Arch Stage 429 slice 64 refreshed `CURRENT_STATE.md` with the `input/` subpackage migration status and next recommended `ui/pygame` family moves.
+415. `DONE` Arch Stage 430 slice 65 recorded completion of the Stage 411-429 input-subpackage seed batch and verified the checkpoint locally.

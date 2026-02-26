@@ -23,7 +23,7 @@ from tet4d.ui.pygame.launch.front3d_setup import (
     run_menu,
 )
 from tet4d.ui.pygame.help_menu import run_help_menu
-from tet4d.ui.pygame.key_dispatch import dispatch_bound_action
+from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
 from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
 from tet4d.ui.pygame.loop_runner_nd import run_nd_loop

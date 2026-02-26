@@ -11,7 +11,7 @@ from tet4d.ui.pygame.control_helper import (
     control_groups_for_dimension,
     draw_grouped_control_helper,
 )
-from tet4d.ui.pygame.key_display import format_key_tuple
+from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 help_action_topic_registry = engine_api.help_action_topic_registry_runtime

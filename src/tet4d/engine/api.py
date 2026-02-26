@@ -677,7 +677,7 @@ def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
 
 
 def format_key_tuple(keys):
-    from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
+    from tet4d.ui.pygame.input.key_display import format_key_tuple as _format_key_tuple
 
     return _format_key_tuple(keys)
 
