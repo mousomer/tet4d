@@ -702,3 +702,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 344 (slice 9, keybindings_menu_model family checkpoint).
 - Stage 345 (slice 10, keybindings_menu_model verification checkpoint).
 - Stage 346 (slice 1, move key_dispatch to ui pygame with shim).
+- Stage 347 (slice 2, canonicalize key_dispatch engine render callers).

@@ -996,3 +996,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 329. `DONE` Arch Stage 344 slice 9 keybindings_menu_model family checkpoint.
 330. `DONE` Arch Stage 345 slice 10 keybindings_menu_model verification checkpoint.
 331. `DONE` Arch Stage 346 slice 1 move key_dispatch to ui pygame with shim.
+332. `DONE` Arch Stage 347 slice 2 canonicalize key_dispatch engine render callers.
