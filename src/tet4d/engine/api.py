@@ -61,7 +61,7 @@ from .runtime.project_config import project_constant_int as _project_constant_in
 from .ui_logic.view_modes import GridMode
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .playbot import PlayBotController as PlayBotController
+    from tet4d.ai.playbot import PlayBotController as PlayBotController
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -992,7 +992,7 @@ def grid_mode_label_view(mode: GridMode) -> str:
 
 def __getattr__(name: str) -> Any:
     if name == "PlayBotController":
-        from .playbot import PlayBotController as _PlayBotController
+        from tet4d.ai.playbot import PlayBotController as _PlayBotController
 
         return _PlayBotController
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
