@@ -60,7 +60,7 @@ from tet4d.ui.pygame.key_dispatch import (
     dispatch_bound_action,
     match_bound_action,
 )
-from tet4d.ui.pygame.menu_controls import (
+from tet4d.ui.pygame.menu.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,

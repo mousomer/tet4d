@@ -8,7 +8,7 @@ from typing import Any
 import pygame
 
 from tet4d.engine import api
-from tet4d.ui.pygame.menu_keybinding_shortcuts import (
+from .menu_keybinding_shortcuts import (
     apply_menu_binding_action,
     menu_binding_action_for_key,
 )

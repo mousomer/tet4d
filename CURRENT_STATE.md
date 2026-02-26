@@ -1,0 +1,215 @@
+# CURRENT_STATE (Restart Handoff)
+
+Last updated: 2026-02-26
+Branch: `codex/foldersrestructuring`
+Worktree expectation at handoff: clean
+
+## Purpose
+
+This file is a restart-ready handoff for long-running architecture cleanup work.
+Read this first in a new Codex thread before continuing staged refactors.
+
+## Current Architecture Snapshot
+
+- `arch_stage`: `390` (from `scripts/arch_metrics.py`)
+- Verification pipeline:
+  - canonical local/CI gate is `./scripts/verify.sh`
+  - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
+- Architecture gates (must remain green):
+  - `ui_to_engine_non_api = 0`
+  - `ai_to_engine_non_api = 0`
+  - `engine_core_to_engine_non_core_imports = 0`
+  - `engine_core_purity.violation_count = 0`
+
+## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
+
+- `pygame_imports_non_test = 3`
+  - currently concentrated in:
+    - `src/tet4d/engine/front3d_render.py`
+    - `src/tet4d/engine/front4d_render.py`
+    - `src/tet4d/engine/frontend_nd.py`
+- `file_io_calls_non_test = 10`
+  - concentrated in runtime storage helpers (acceptable placement debt):
+    - `src/tet4d/engine/runtime/json_storage.py`
+    - `src/tet4d/engine/runtime/keybindings_storage.py`
+    - `src/tet4d/engine/runtime/score_analyzer_storage.py`
+- `random_imports_non_test = 9`
+- `time_imports_non_test = 0`
+
+## Folder Balance Snapshot (top-level `.py` per package)
+
+- `src/tet4d/engine`: `5`
+- `src/tet4d/engine/ui_logic`: `6`
+- `src/tet4d/engine/runtime`: `22`
+- `src/tet4d/engine/gameplay`: `11`
+- `src/tet4d/ui/pygame`: `38`
+- `src/tet4d/ai/playbot`: `9`
+
+### Balance Assessment
+
+- `engine` top-level is now healthy.
+- `engine/ui_logic` and `engine/gameplay` are healthy.
+- `engine/runtime` is large but coherent.
+- `ui/pygame` is the current structural hotspot (largest folder).
+
+## Major Completed Milestones (Condensed)
+
+- `src/` layout migration completed; old `tetris_nd` shim removed.
+- Root entrypoints consolidated; single root wrapper `front.py`.
+- Governance pipeline hardened:
+  - `ci_check.sh` wraps `verify.sh`
+  - policy, boundary, purity, and metric-budget checks are active
+- Engine purity architecture established:
+  - `src/tet4d/engine/core` with strict purity gate
+  - architecture metrics + budgets enforced
+- Boundary cleanup largely completed:
+  - `ui -> engine` canonicalized through `engine.api`
+  - `ai -> engine.api` enforced
+- Large staged folder restructuring completed:
+  - `engine/gameplay`
+  - `engine/runtime`
+  - `engine/ui_logic`
+- Significant playbot physical relocation completed into `src/tet4d/ai/playbot`
+  - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
+- UI migration continues; many engine compatibility shims already pruned.
+
+## Recent Batch Status (Stages 376-390)
+
+Completed:
+- Introduced `src/tet4d/ui/pygame/menu/` subpackage.
+- Moved:
+  - `ui/pygame/menu_runner.py` -> `ui/pygame/menu/menu_runner.py`
+  - `ui/pygame/menu_model.py` -> `ui/pygame/menu/menu_model.py`
+  - `ui/pygame/menu_controls.py` -> `ui/pygame/menu/menu_controls.py`
+  - `ui/pygame/menu_control_guides.py` -> `ui/pygame/menu/menu_control_guides.py`
+  - `ui/pygame/menu_keybinding_shortcuts.py` -> `ui/pygame/menu/menu_keybinding_shortcuts.py`
+- Canonicalized callers:
+  - `cli/front.py`
+  - `src/tet4d/ui/pygame/pause_menu.py`
+  - `cli/front2d.py`
+  - `src/tet4d/engine/frontend_nd.py`
+  - `src/tet4d/engine/api.py`
+  - `src/tet4d/ui/pygame/control_helper.py`
+- Pruned old root `ui/pygame/menu_runner.py` and `ui/pygame/menu_model.py` shims.
+  - Old top-level menu helper paths are now pruned after caller canonicalization.
+
+Balance note:
+- `src/tet4d/ui/pygame/menu` now sits in the target file-count band (`6` files).
+- Top-level `src/tet4d/ui/pygame` dropped from `41` to `38` Python files (still the
+  primary structural hotspot).
+
+Note:
+- A move-race regression briefly replaced `menu/menu_runner.py` with a shim body; it was
+  caught by `verify.sh` and fixed in the same batch before final checkpoint commit.
+
+## Open Issues / Operational Notes
+
+- Some verification runs can fail transiently (historically score-snapshot determinism / benchmark spikes).
+  - Policy: rerun once if failure matches known flaky pattern and no code changed.
+- GitHub CI should be checked if local green diverges again, but recent governance fixes addressed the prior CI drift.
+
+## Short-Term Plan (Next 10-20 stages)
+
+### Track A (highest value): Rebalance `src/tet4d/ui/pygame`
+
+Goal: reduce folder sprawl in `ui/pygame` by introducing a small number of coherent subpackages.
+
+Recommended subpackages (incremental, not all at once):
+- `src/tet4d/ui/pygame/menu/` (started)
+- `src/tet4d/ui/pygame/input/`
+- `src/tet4d/ui/pygame/render/`
+- `src/tet4d/ui/pygame/launch/` (or `launcher/`)
+
+Recommended next family moves (same staged pattern):
+- `key_dispatch` / `keybindings_menu_model` (if not already moved in the current local history branch state)
+
+Pattern per family:
+1. move implementation to subpackage
+2. add compatibility shim at old path
+3. canonicalize callers
+4. zero-caller checkpoint
+5. prune shim
+6. checkpoint docs + metrics + verification
+
+### Track B: Continue playbot physical relocation cleanup
+
+Goal: finish remaining `engine/playbot` physical ownership debt.
+
+Do:
+- audit `src/tet4d/engine/playbot/*` remaining files
+- move low-risk stragglers to `src/tet4d/ai/playbot/`
+- keep `ai_to_engine_non_api = 0` by extending `engine.api` wrappers if needed
+
+### Track C: Runtime side-effect extraction (selective)
+
+Goal: ensure any remaining file I/O outside `engine/runtime` is routed to runtime helpers.
+
+Do:
+- grep for `read_text`, `write_text`, `open(` in `src/tet4d/engine/**/*.py`
+- only extract misplaced I/O (do not churn runtime-owned storage helpers)
+
+## Long-Term Plan (Maximal Clean Architecture)
+
+### Definition of Done (strict target)
+
+- All boundary metrics remain zero:
+  - `ui_to_engine_non_api`
+  - `ai_to_engine_non_api`
+  - `engine_core_to_engine_non_core_imports`
+  - `engine_core_purity.violation_count`
+- `ui/pygame` split into manageable subpackages with coherent ownership
+- Remaining compatibility shims are minimal or removed
+- `engine/playbot` compatibility package/surfaces retired after zero-caller audits
+- File I/O is centralized under `engine/runtime` (or explicitly accepted if runtime-owned)
+- Docs and architecture contract reflect the final canonical paths
+
+### Estimated Remaining Effort
+
+- Practical completion (high confidence, low churn): `~20-35` stages
+- Maximal clean architecture (strict cleanup / deeper pruning): `~30-55` stages
+
+### Estimated LOC Impact
+
+- Next ~10 stages: roughly `-50` to `+50` LOC net (API prep adds, shim pruning removes)
+- Near-maximal completion: roughly `-200` to `-600` LOC net (shim retirement dominates)
+
+## Test Structure Preference (Planned Future Refactor)
+
+Preference recorded:
+- move toward a single top-level test root `./tests/`
+- organize by sub-test tasks/domains (unit/integration/runtime/ui/etc.)
+
+Status:
+- not started (tests remain in `src/tet4d/engine/tests/` and other existing locations)
+
+Recommended approach:
+- dedicated staged migration (do not mix with architecture module moves)
+- migrate one test family/domain at a time
+- update pytest discovery and path-based tooling incrementally
+
+## Restart Checklist (for a new Codex thread)
+
+1. Confirm branch and cleanliness:
+   - `git branch --show-current`
+   - `git status --short`
+2. Read:
+   - `AGENTS.md`
+   - `docs/RDS_AND_CODEX.md`
+   - `docs/ARCHITECTURE_CONTRACT.md`
+   - this file (`CURRENT_STATE.md`)
+3. Capture fresh metrics:
+   - `python3 scripts/arch_metrics.py`
+4. Choose one family and execute staged sequence:
+   - move -> canonicalize -> zero-caller -> prune -> checkpoint
+5. Validate at checkpoint:
+   - `./scripts/check_git_sanitation.sh`
+   - `./scripts/check_policy_compliance.sh`
+   - `CODEX_MODE=1 ./scripts/verify.sh`
+   - `./scripts/ci_check.sh`
+
+## Current Source of Truth References
+
+- Architecture contract: `docs/ARCHITECTURE_CONTRACT.md`
+- RDS + Codex workflow: `docs/RDS_AND_CODEX.md`
+- Backlog: `docs/BACKLOG.md`
+- Canonical maintenance contract: `config/project/canonical_maintenance.json`

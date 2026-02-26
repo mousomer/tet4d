@@ -308,7 +308,7 @@ def _draw_optional_guides(
     if guide_rect.height < 88 or guide_rect.width < 140:
         return y
     try:
-        from .menu_control_guides import draw_translation_rotation_guides
+        from .menu.menu_control_guides import draw_translation_rotation_guides
     except Exception:  # pragma: no cover - import/runtime optional path
         return y
     draw_translation_rotation_guides(

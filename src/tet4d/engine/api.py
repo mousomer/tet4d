@@ -864,7 +864,7 @@ def menu_settings_reset_to_defaults(state: Any, dimension: int) -> tuple[bool, s
 def keybindings_menu_shortcut_action_for_key(
     key: int, load_action: Any, save_action: Any
 ) -> Any | None:
-    from tet4d.ui.pygame.menu_keybinding_shortcuts import (
+    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
         menu_binding_action_for_key as _menu_binding_action_for_key,
     )
 
@@ -878,7 +878,7 @@ def keybindings_apply_menu_shortcut_action(
     dimension: int,
     state: Any,
 ) -> bool:
-    from tet4d.ui.pygame.menu_keybinding_shortcuts import (
+    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
         apply_menu_binding_action as _apply_menu_binding_action,
     )
 
@@ -886,7 +886,7 @@ def keybindings_apply_menu_shortcut_action(
 
 
 def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
-    from tet4d.ui.pygame.menu_keybinding_shortcuts import (
+    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
         menu_binding_status_color as _menu_binding_status_color,
     )
 

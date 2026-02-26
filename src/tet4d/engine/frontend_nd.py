@@ -18,14 +18,14 @@ from tet4d.ui.pygame.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from tet4d.ui.pygame.menu_controls import (
+from tet4d.ui.pygame.menu.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,
     gather_menu_actions,
 )
 from .runtime.menu_config import default_settings_payload, setup_fields_for_dimension
-from tet4d.ui.pygame.menu_keybinding_shortcuts import menu_binding_status_color
+from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
 from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
 from .gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .gameplay.exploration_mode import minimal_exploration_dims_nd

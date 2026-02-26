@@ -91,7 +91,7 @@ tet4d/
 │       ├── font_profiles.py     # shared per-mode font profiles and font factory
 │       ├── control_helper.py    # grouped in-game key-helper rendering
 │       ├── help_menu.py         # launcher/pause help and explanation UI
-│       ├── menu_control_guides.py # rendered translation/rotation arrow diagrams
+│       ├── menu/                  # pygame menu subpackage (runner/model/helpers)
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── audio.py             # generated SFX + volume/mute runtime
 │       ├── display.py           # shared fullscreen/windowed mode helpers
@@ -161,7 +161,7 @@ tet4d/
 12. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
 13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
 14. Shared in-game key helper grouping is in `control_helper.py`.
-15. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py`and`menu_control_guides.py`.
+15. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py` and `menu/menu_control_guides.py`.
 16. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
 18. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.

@@ -764,3 +764,16 @@ incremental enforcement strategy used while refactoring.
 - Stage 383 (slice 20, menu_model zero-caller checkpoint).
 - Stage 384 (slice 20, prune menu_model ui shim).
 - Stage 385 (slice 20, ui pygame menu subpackage checkpoint and verify).
+- Stage 386 (slice 21, menu helper trio subpackage move) moves `menu_controls.py`,
+  `menu_control_guides.py`, and `menu_keybinding_shortcuts.py` into
+  `src/tet4d/ui/pygame/menu/` to continue `ui/pygame` folder rebalancing.
+- Stage 387 (slice 22, menu helper trio caller canonicalization) migrates CLI, engine,
+  and UI callers to canonical `tet4d.ui.pygame.menu.*` imports.
+- Stage 388 (slice 23, menu helper trio zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame` menu-helper module paths before pruning.
+- Stage 389 (slice 24, menu helper trio shim pruning) completes the top-level helper
+  path pruning after canonicalization to `src/tet4d/ui/pygame/menu/*`.
+- Stage 390 (slice 25, menu helper trio batch checkpoint and verify) records completion
+  of the Stage 386-389 menu helper subpackage batch and verifies the checkpoint with
+  local `verify.sh`; `ui/pygame/menu` reaches the target folder-size band while
+  reducing top-level `ui/pygame` sprawl.

@@ -132,7 +132,7 @@ Keybindings:
 - `keybindings/4d.json`
 
 Control guide renderer (legacy contract reference):
-- `src/tet4d/engine/menu_control_guides.py`
+- `src/tet4d/ui/pygame/menu/menu_control_guides.py`
 - `draw_translation_rotation_guides`
 
 ## Quality checks

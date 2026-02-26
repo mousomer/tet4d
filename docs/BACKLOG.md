@@ -1045,3 +1045,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 368. `DONE` Arch Stage 383 slice 20 menu_model zero-caller checkpoint.
 369. `DONE` Arch Stage 384 slice 20 prune menu_model ui shim.
 370. `DONE` Arch Stage 385 slice 20 ui pygame menu subpackage checkpoint and verify.
+371. `DONE` Arch Stage 386 slice 21 moved `ui/pygame/menu_controls.py`, `ui/pygame/menu_control_guides.py`, and `ui/pygame/menu_keybinding_shortcuts.py` into `src/tet4d/ui/pygame/menu/` to continue `ui/pygame` folder rebalancing.
+372. `DONE` Arch Stage 387 slice 22 canonicalized CLI, engine, and UI callers to `tet4d.ui.pygame.menu.*` imports for the moved menu helper trio.
+373. `DONE` Arch Stage 388 slice 23 recorded a zero-caller checkpoint for the old top-level `ui/pygame` menu-helper module paths before pruning.
+374. `DONE` Arch Stage 389 slice 24 completed top-level helper-path pruning after canonicalization to `src/tet4d/ui/pygame/menu/*`.
+375. `DONE` Arch Stage 390 slice 25 recorded completion of the Stage 386-389 menu helper subpackage batch, verified the checkpoint locally, and improved folder balance (`ui/pygame/menu` reached the target file-count band while top-level `ui/pygame` shrank).
