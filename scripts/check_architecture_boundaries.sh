@@ -257,6 +257,7 @@ src/tet4d/ui/pygame/grid_mode_render.py
 src/tet4d/ui/pygame/gfx_game.py
 src/tet4d/ui/pygame/gfx_panel_2d.py
 src/tet4d/ui/pygame/help_menu.py
+src/tet4d/ui/pygame/keybindings.py
 src/tet4d/ui/pygame/launcher_nd_runner.py
 src/tet4d/ui/pygame/launcher_play.py
 src/tet4d/ui/pygame/keybindings_menu.py

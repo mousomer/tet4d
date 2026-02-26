@@ -966,3 +966,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 299. `DONE` Arch Stage 315 slice 305 advanced `arch_stage` to `315` and verified the Stage 308-314 menu-controls batch with full local `verify.sh` + `ci_check.sh`.
 300. `DONE` Arch Stage 316 slice 306 retargeted binding label/description engine.api wrappers to keybindings_catalog to prepare keybindings UI relocation without circular imports.
 301. `DONE` Arch Stage 317 slice 307 added engine.api wrappers for keybindings runtime path and storage helpers to prepare keybindings UI relocation.
+302. `DONE` Arch Stage 318 slice 308 moved engine/ui_logic/keybindings.py into ui/pygame, rewired runtime paths and storage through engine.api, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
