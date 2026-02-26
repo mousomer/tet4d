@@ -893,6 +893,20 @@ def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
     return _menu_binding_status_color(is_error)
 
 
+def keybindings_partition_gameplay_actions_ui_logic(action_names):
+    from .ui_logic.keybindings_catalog import (
+        partition_gameplay_actions as _partition_gameplay_actions,
+    )
+
+    return _partition_gameplay_actions(action_names)
+
+
+def keybinding_category_docs_runtime():
+    from .runtime.menu_config import keybinding_category_docs as _keybinding_category_docs
+
+    return _keybinding_category_docs()
+
+
 def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
     from .ui_logic.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
 
