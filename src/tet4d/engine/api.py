@@ -675,6 +675,14 @@ def binding_group_label(group: str) -> str:
     return _binding_group_label(group)
 
 
+def binding_group_description(group: str) -> str:
+    from .ui_logic.keybindings import (
+        binding_group_description as _binding_group_description,
+    )
+
+    return _binding_group_description(group)
+
+
 def keybindings_rebind_conflict_replace() -> str:
     from .ui_logic.keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
 
@@ -709,10 +717,24 @@ def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
     return _cycle_rebind_conflict_mode(mode, step)
 
 
+def keybindings_normalize_rebind_conflict_mode(mode: str | None) -> str:
+    from .ui_logic.keybindings import (
+        normalize_rebind_conflict_mode as _normalize_rebind_conflict_mode,
+    )
+
+    return _normalize_rebind_conflict_mode(mode)
+
+
 def keybindings_delete_key_profile(profile_name: str) -> tuple[bool, str]:
     from .ui_logic.keybindings import delete_key_profile as _delete_key_profile
 
     return _delete_key_profile(profile_name)
+
+
+def keybindings_create_auto_profile() -> tuple[bool, str, str | None]:
+    from .ui_logic.keybindings import create_auto_profile as _create_auto_profile
+
+    return _create_auto_profile()
 
 
 def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
@@ -774,6 +796,34 @@ def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
     from .ui_logic.keybindings import set_active_key_profile as _set_active_key_profile
 
     return _set_active_key_profile(profile_name)
+
+
+def keybindings_binding_actions_for_dimension(dimension: int):
+    from .ui_logic.keybindings import (
+        binding_actions_for_dimension as _binding_actions_for_dimension,
+    )
+
+    return _binding_actions_for_dimension(dimension)
+
+
+def menu_settings_load(state: Any, dimension: int) -> tuple[bool, str]:
+    from .runtime.menu_settings_state import load_menu_settings as _load_menu_settings
+
+    return _load_menu_settings(state, dimension)
+
+
+def menu_settings_save(state: Any, dimension: int) -> tuple[bool, str]:
+    from .runtime.menu_settings_state import save_menu_settings as _save_menu_settings
+
+    return _save_menu_settings(state, dimension)
+
+
+def menu_settings_reset_to_defaults(state: Any, dimension: int) -> tuple[bool, str]:
+    from .runtime.menu_settings_state import (
+        reset_menu_settings_to_defaults as _reset_menu_settings_to_defaults,
+    )
+
+    return _reset_menu_settings_to_defaults(state, dimension)
 
 
 def keybindings_menu_shortcut_action_for_key(

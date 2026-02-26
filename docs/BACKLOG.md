@@ -956,3 +956,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 289. `DONE` Arch Stage 305 slice 295 retargeted `engine.api` shortcut wrappers to canonical `ui/pygame/menu_keybinding_shortcuts.py` imports before shim pruning.
 290. `DONE` Arch Stage 306 slice 296 recorded zero remaining callers and removed the transitional `engine/ui_logic/menu_keybinding_shortcuts.py` compatibility shim after canonicalization to `ui/pygame/menu_keybinding_shortcuts.py`.
 291. `DONE` Arch Stage 307 slice 297 recorded completion of the Stage 302-306 menu-keybinding-shortcuts API-prep/move/canonicalize/prune sequence, advanced `arch_stage` to `307`, and verified the checkpoint with full local `verify.sh` + `ci_check.sh`.
+292. `DONE` Arch Stage 308 slice 298 added `engine.api` wrappers for keybinding/profile/menu-settings helpers to prepare moving `engine/ui_logic/menu_controls.py` into `ui/pygame` without deep engine imports.
