@@ -990,3 +990,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 323. `DONE` Arch Stage 338 slice 3 baseline lock ui keybindings_menu_model adapter.
 324. `DONE` Arch Stage 339 slice 4 canonicalize engine api wrappers to ui keybindings_menu_model.
 325. `DONE` Arch Stage 340 slice 5 canonicalize keybindings_menu_model test import.
+326. `DONE` Arch Stage 341 slice 6 keybindings_menu_model zero caller checkpoint.
