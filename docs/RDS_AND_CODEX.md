@@ -399,7 +399,7 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 166`) routes score-analyzer
+9. Architecture stage checkpoint (`arch_stage: 167`) routes score-analyzer
    summary writes and event-log appends through
    `src/tet4d/engine/runtime/score_analyzer_storage.py`, and begins the
    `view_controls` UI canonicalization by moving implementation to
@@ -407,5 +407,5 @@ Authoritative open/deferred items are tracked in:
    render/input callers to the canonical UI import path, prunes the legacy
    `src/tet4d/engine/view_controls.py` shim, begins `view_modes`
    canonicalization via `src/tet4d/engine/ui_logic/view_modes.py`, and migrates
-   engine/CLI callers to the canonical `engine.ui_logic.view_modes` import
-   path before shim pruning.
+   engine/CLI/tests callers to the canonical `engine.ui_logic.view_modes`
+   import path before shim pruning.

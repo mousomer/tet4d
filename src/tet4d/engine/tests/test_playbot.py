@@ -26,7 +26,7 @@ from tet4d.engine.api import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
 )
-from tet4d.engine.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 
 
 class TestPlaybot(unittest.TestCase):

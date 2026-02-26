@@ -13,7 +13,7 @@ from tet4d.engine.api import (
     BotMode,
     BotPlannerProfile,
 )
-from tet4d.engine.view_modes import GridMode
+from tet4d.engine.ui_logic.view_modes import GridMode
 
 
 _EXPECTED_2D_SNAPSHOTS: dict[BotMode, tuple[tuple[int, int, int], ...]] = {

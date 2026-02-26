@@ -505,3 +505,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 166 (slice 156, sequential cleanup) migrated engine, CLI, and
   `engine.api` callers to canonical `src/tet4d/engine/ui_logic/view_modes.py`
   imports before shim pruning.
+- Stage 167 (slice 157, sequential cleanup) migrated tests to canonical
+  `src/tet4d/engine/ui_logic/view_modes.py` imports before shim pruning.

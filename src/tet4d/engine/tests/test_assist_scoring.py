@@ -4,7 +4,7 @@ import unittest
 
 from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.api import BotMode
-from tet4d.engine.view_modes import GridMode
+from tet4d.engine.ui_logic.view_modes import GridMode
 
 
 class TestAssistScoring(unittest.TestCase):

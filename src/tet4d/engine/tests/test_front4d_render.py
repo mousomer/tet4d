@@ -17,7 +17,7 @@ from tet4d.ui.pygame import projection3d
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.projection3d import box_raw_corners, projection_cache_key
-from tet4d.engine.view_modes import GridMode
+from tet4d.engine.ui_logic.view_modes import GridMode
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:

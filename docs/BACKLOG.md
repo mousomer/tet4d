@@ -791,6 +791,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 165. `DONE` Arch Stage 166 slice 156 migrated engine, CLI, and `engine.api`
     callers to canonical `src/tet4d/engine/ui_logic/view_modes.py` imports
     before shim pruning.
+166. `DONE` Arch Stage 167 slice 157 migrated tests to canonical
+    `src/tet4d/engine/ui_logic/view_modes.py` imports before shim pruning.
 
 ## 6. Source Inputs
 
