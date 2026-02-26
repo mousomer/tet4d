@@ -683,3 +683,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 326 (slice 316, recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization).
 - Stage 326 (slice 316, recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization).
 - Stage 327 (slice 317, removed the zero-caller engine/ui_logic/keybindings.py compatibility shim after canonicalization to ui/pygame/keybindings).
+- Stage 328 (slice 318, recorded src/tet4d/ui/pygame/keybindings.py as the canonical keybindings implementation path after engine/ui_logic shim removal).
