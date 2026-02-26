@@ -513,3 +513,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 169 (slice 159, sequential cleanup) removed the zero-caller
   `src/tet4d/engine/view_modes.py` compatibility shim after canonical
   `engine.ui_logic.view_modes` import migration.
+- Stage 170 (slice 160, sequential cleanup) exported `GridMode` from
+  `src/tet4d/engine/api.py` to prepare `grid_mode_render` UI relocation without
+  introducing `ui -> engine` deep imports.

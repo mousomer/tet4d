@@ -50,6 +50,7 @@ from .runtime.runtime_config import (
     playbot_benchmark_p95_thresholds,
 )
 from .runtime.project_config import project_constant_int as _project_constant_int
+from .ui_logic.view_modes import GridMode
 
 
 # Stable aliases for callers that want explicit dimensional naming.
@@ -364,6 +365,7 @@ __all__ = [
     "GameState2D",
     "GameStateND",
     "EngineRNG",
+    "GridMode",
     "board_cells",
     "bot_mode_from_index",
     "bot_mode_label",
