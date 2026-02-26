@@ -144,6 +144,7 @@ src/tet4d/engine/gfx_panel_2d.py
 src/tet4d/engine/grid_mode_render.py
 src/tet4d/engine/help_menu.py
 src/tet4d/engine/ui_logic/keybindings.py
+src/tet4d/engine/ui_logic/menu_controls.py
 src/tet4d/engine/keybindings_menu.py
 src/tet4d/engine/keybindings_menu_view.py
 src/tet4d/engine/launcher_nd_runner.py
@@ -262,6 +263,7 @@ src/tet4d/ui/pygame/keybindings_menu.py
 src/tet4d/ui/pygame/keybindings_menu_view.py
 src/tet4d/ui/pygame/launcher_settings.py
 src/tet4d/ui/pygame/loop_runner_nd.py
+src/tet4d/ui/pygame/menu_controls.py
 src/tet4d/ui/pygame/menu_keybinding_shortcuts.py
 src/tet4d/ui/pygame/pause_menu.py
 src/tet4d/ui/pygame/profile_4d.py
