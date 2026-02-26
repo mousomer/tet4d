@@ -721,3 +721,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 363 (slice 8, clean front3d_game allowlist entries).
 - Stage 364 (slice 9, front3d_game family checkpoint).
 - Stage 365 (slice 10, front3d_game verification checkpoint).
+- Stage 366 (slice 1, move front4d_game to ui pygame with shim).

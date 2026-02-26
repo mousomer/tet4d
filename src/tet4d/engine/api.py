@@ -1169,6 +1169,64 @@ def front3d_render_suggested_window_size(*args: Any, **kwargs: Any) -> Any:
     return _suggested_window_size(*args, **kwargs)
 
 
+def front4d_render_margin() -> int:
+    from .front4d_render import MARGIN as _MARGIN
+
+    return _MARGIN
+
+
+def front4d_render_layer_gap() -> int:
+    from .front4d_render import LAYER_GAP as _LAYER_GAP
+
+    return _LAYER_GAP
+
+
+def front4d_render_side_panel() -> int:
+    from .front4d_render import SIDE_PANEL as _SIDE_PANEL
+
+    return _SIDE_PANEL
+
+
+def front4d_render_layer_view3d_type() -> Any:
+    from .front4d_render import LayerView3D as _LayerView3D
+
+    return _LayerView3D
+
+
+def front4d_render_clear_animation_type() -> Any:
+    from .front4d_render import ClearAnimation4D as _ClearAnimation4D
+
+    return _ClearAnimation4D
+
+
+def front4d_render_draw_game_frame_api(*args: Any, **kwargs: Any) -> Any:
+    from .front4d_render import draw_game_frame as _draw_game_frame
+
+    return _draw_game_frame(*args, **kwargs)
+
+
+def front4d_render_handle_view_key(*args: Any, **kwargs: Any) -> Any:
+    from .front4d_render import handle_view_key as _handle_view_key
+
+    return _handle_view_key(*args, **kwargs)
+
+
+def front4d_render_movement_axis_overrides(*args: Any, **kwargs: Any) -> Any:
+    from .front4d_render import (
+        movement_axis_overrides_for_view as _movement_axis_overrides_for_view,
+    )
+
+    return _movement_axis_overrides_for_view(*args, **kwargs)
+
+
+def front4d_render_spawn_clear_anim(*args: Any, **kwargs: Any) -> Any:
+    from .front4d_render import (
+        spawn_clear_animation_if_needed as _spawn_clear_animation_if_needed,
+    )
+
+    return _spawn_clear_animation_if_needed(*args, **kwargs)
+
+
 def rotation_anim_piece_rotation_animator_nd_type() -> Any:
     from .gameplay.rotation_anim import PieceRotationAnimatorND as _PieceRotationAnimatorND
 
