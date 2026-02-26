@@ -569,3 +569,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 198 (slice 188, bot-options UI canonicalization) migrates `pause_menu.py` to canonical `tet4d.ui.pygame.bot_options_menu` imports before shim pruning.
 - Stage 199 (slice 189, bot-options UI canonicalization) migrates CLI bot-options-menu callers to canonical `tet4d.ui.pygame.bot_options_menu` imports before shim pruning.
 - Stage 200 (slice 190, bot-options UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/bot_options_menu.py` compatibility shim, baseline-locks `src/tet4d/ui/pygame/bot_options_menu.py`, and advances `arch_stage` to `200` after full verification/CI checkpoint.
+- Stage 201 (slice 191, loop-runner UI prep) adds lazy `engine.api` wrappers for runtime gravity and animation helper functions so ND loop orchestration can move to UI without `ui -> engine.runtime` deep imports.
+- Stage 202 (slice 192, loop-runner UI relocation) moves `src/tet4d/engine/loop_runner_nd.py` implementation into `src/tet4d/ui/pygame/loop_runner_nd.py`, rewires runtime helper calls through `tet4d.engine.api`, and retains an engine compatibility shim.
+- Stage 203 (slice 193, loop-runner UI canonicalization) migrates `front3d_game.py` and `front4d_game.py` to canonical `tet4d.ui.pygame.loop_runner_nd` imports.
+- Stage 204 (slice 194, loop-runner UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/loop_runner_nd.py` before shim pruning and advances `arch_stage` to `204`.
