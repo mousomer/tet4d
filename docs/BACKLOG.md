@@ -831,6 +831,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
     `src/tet4d/ui/pygame/front3d_setup.py`, migrated engine/test callers to the
     canonical UI import path, and retained an engine compatibility shim pending
     final prune.
+179. `DONE` Arch Stage 180 slice 170 removed the zero-caller
+    `src/tet4d/engine/front3d_setup.py` compatibility shim after canonical UI
+    `front3d_setup` import migration.
 
 ## 6. Source Inputs
 

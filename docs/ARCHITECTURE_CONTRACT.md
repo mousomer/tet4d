@@ -546,3 +546,6 @@ incremental enforcement strategy used while refactoring.
   implementation into `src/tet4d/ui/pygame/front3d_setup.py`, migrated
   engine/test callers to the canonical UI import path, and retained an engine
   compatibility shim pending final prune.
+- Stage 180 (slice 170, sequential cleanup) removed the zero-caller
+  `src/tet4d/engine/front3d_setup.py` compatibility shim after canonical UI
+  `front3d_setup` import migration.
