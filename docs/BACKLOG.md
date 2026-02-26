@@ -893,3 +893,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 226. `DONE` Arch Stage 230 slice 220 removed the zero-caller `src/tet4d/engine/gfx_game.py` compatibility shim and advanced `arch_stage` to `230` after verification/CI checkpoint.
 227. `DONE` Arch Stage 234 slice 224 recorded a zero-caller audit for `src/tet4d/engine/help_menu.py` after engine/CLI/test canonicalization and advanced `arch_stage` to `234` before shim pruning.
 228. `DONE` Arch Stage 235 slice 225 removed the zero-caller `src/tet4d/engine/help_menu.py` compatibility shim and advanced `arch_stage` to `235` after verification/CI checkpoint.
+229. `DONE` Arch Stage 239 slice 229 recorded a zero-caller audit for `src/tet4d/engine/pause_menu.py` after engine/CLI/test canonicalization and advanced `arch_stage` to `239` before shim pruning.
