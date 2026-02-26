@@ -964,3 +964,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 297. `DONE` Arch Stage 313 slice 303 recorded `src/tet4d/ui/pygame/menu_controls.py` as the canonical menu-controls module after shim removal and advanced `arch_stage` to `313`.
 298. `DONE` Arch Stage 314 slice 304 recorded completion of the Stage 308-313 menu-controls API-prep/move/canonicalize/prune sequence and advanced `arch_stage` to `314` before the verification checkpoint.
 299. `DONE` Arch Stage 315 slice 305 advanced `arch_stage` to `315` and verified the Stage 308-314 menu-controls batch with full local `verify.sh` + `ci_check.sh`.
+300. `DONE` Arch Stage 316 slice 306 retargeted binding label/description engine.api wrappers to keybindings_catalog to prepare keybindings UI relocation without circular imports.

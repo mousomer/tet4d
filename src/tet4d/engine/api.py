@@ -664,19 +664,21 @@ def audio_event_specs_runtime() -> dict[str, tuple[float, int, float]]:
 
 
 def binding_action_description(action: str) -> str:
-    from .ui_logic.keybindings import binding_action_description as _binding_action_description
+    from .ui_logic.keybindings_catalog import (
+        binding_action_description as _binding_action_description,
+    )
 
     return _binding_action_description(action)
 
 
 def binding_group_label(group: str) -> str:
-    from .ui_logic.keybindings import binding_group_label as _binding_group_label
+    from .ui_logic.keybindings_catalog import binding_group_label as _binding_group_label
 
     return _binding_group_label(group)
 
 
 def binding_group_description(group: str) -> str:
-    from .ui_logic.keybindings import (
+    from .ui_logic.keybindings_catalog import (
         binding_group_description as _binding_group_description,
     )
 
