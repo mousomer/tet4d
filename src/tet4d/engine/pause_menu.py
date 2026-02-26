@@ -15,7 +15,7 @@ from .keybindings import (
     load_keybindings_file,
     save_keybindings_file,
 )
-from .keybindings_menu import run_keybindings_menu
+from tet4d.ui.pygame.keybindings_menu import run_keybindings_menu
 from .launcher_settings import run_settings_hub_menu
 from .runtime.menu_config import menu_items, pause_menu_id
 from .runtime.menu_persistence import load_audio_payload, load_display_payload
