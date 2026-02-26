@@ -910,3 +910,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 243. `DONE` Arch Stage 259 slice 249 recorded completion of the Stage 251-258 `PlayBotController` API-prep/move/prune sequence and advanced `arch_stage` to `259` before the full batch verification checkpoint.
 244. `DONE` Arch Stage 260 slice 250 advanced `arch_stage` to `260` and verified the Stage 251-259 playbot-controller batch with full local `verify.sh` + `ci_check.sh`.
 245. `DONE` Arch Stage 261 slice 251 exported `ActivePiece2D` and `PieceShape2D` from `engine.api` to prepare a boundary-safe move of `engine/playbot/planner_2d.py` into `ai/playbot`.
+246. `DONE` Arch Stage 262 slice 252 exported `rotate_point_2d` from `engine.api` to complete boundary-safe API prep for moving `engine/playbot/planner_2d.py` into `ai/playbot`.

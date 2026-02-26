@@ -447,3 +447,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 259 (slice 249, playbot controller family checkpoint) records completion of the Stage 251-258 `PlayBotController` API-prep/move/prune sequence and advances `arch_stage` to `259` before the full batch verification checkpoint.
 - Stage 260 (slice 250, playbot controller batch verification checkpoint) advances `arch_stage` to `260` and verifies the Stage 251-259 playbot-controller batch with full local `verify.sh` + `ci_check.sh`.
 - Stage 261 (slice 251, planner2d API prep types) exports `ActivePiece2D` and `PieceShape2D` from `engine.api` so the upcoming `playbot/planner_2d.py` move can avoid direct gameplay module imports while keeping the AI boundary API-only.
+- Stage 262 (slice 252, planner2d API prep rotation helper) exports `rotate_point_2d` from `engine.api` so `planner_2d` can complete its move to `ai/playbot` without importing `gameplay.pieces2d` directly.

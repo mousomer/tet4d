@@ -25,6 +25,7 @@ from .gameplay.pieces2d import (
     PIECE_SET_2D_DEBUG,
     ActivePiece2D,
     PieceShape2D,
+    rotate_point_2d,
 )
 from .gameplay.pieces_nd import (
     ActivePieceND,
@@ -970,6 +971,7 @@ __all__ = [
     "run_dry_run_nd",
     "run_front3d_ui",
     "run_front4d_ui",
+    "rotate_point_2d",
     "rotate_point_nd",
     "simulate_lock_board",
     "state_view_2d",
