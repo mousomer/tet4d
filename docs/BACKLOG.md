@@ -932,3 +932,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 265. `DONE` Arch Stage 281 slice 271 updated `engine.api.plan_best_nd_with_budget(...)` to import from `ai.playbot.planner_nd_search` directly, reducing reliance on the transitional `engine/playbot/planner_nd_search.py` shim.
 266. `DONE` Arch Stage 282 slice 272 added `plan_best_nd_with_budget` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the search planner relocation.
 267. `DONE` Arch Stage 283 slice 273 recorded a zero-caller checkpoint for `engine/playbot/planner_nd_search.py` after engine-api and AI-package canonicalization and advanced `arch_stage` to `283` before shim pruning.
+268. `DONE` Arch Stage 284 slice 274 removed the zero-caller `engine/playbot/planner_nd_search.py` compatibility shim after the search planner relocation to `ai/playbot/planner_nd_search.py` and canonicalization.
