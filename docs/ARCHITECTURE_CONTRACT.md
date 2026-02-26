@@ -496,3 +496,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 163 (slice 153, sequential cleanup) migrated engine render/input callers
   to canonical `src/tet4d/ui/pygame/view_controls.py` imports before shim
   pruning.
+- Stage 164 (slice 154, sequential cleanup) removed the zero-caller
+  `src/tet4d/engine/view_controls.py` compatibility shim after canonical UI
+  `view_controls` import migration.
