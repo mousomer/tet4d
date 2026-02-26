@@ -6,7 +6,7 @@ from typing import Literal
 import pygame
 
 from tet4d.ui.pygame.audio import AudioSettings
-from .bot_options_menu import run_bot_options_menu
+from tet4d.ui.pygame.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
 from .help_menu import run_help_menu
 from .keybindings import (
