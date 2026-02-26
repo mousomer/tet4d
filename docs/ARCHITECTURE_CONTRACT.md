@@ -438,7 +438,7 @@ incremental enforcement strategy used while refactoring.
   `engine.gameplay.pieces_nd` migration.
 - Stage 130 (slice 120, runtime side-effect extraction) routes keybindings JSON
   file reads through `engine.runtime.keybindings_storage` before extracting
-  write paths from `engine/keybindings.py`.
+  write paths from `engine.ui_logic.keybindings`.
 - Stage 131 (slice 121, runtime side-effect extraction) routes keybindings
   atomic-write persistence through `engine.runtime.keybindings_storage`.
 - Stage 132 (slice 122, runtime side-effect extraction) routes keybindings
@@ -602,3 +602,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 240 (slice 230, pause-menu UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/pause_menu.py` compatibility shim and advances `arch_stage` to `240` after full verification/CI checkpoint.
 - Stage 247 (slice 237, keybindings ui-logic zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/keybindings.py` after engine/API/CLI/test canonicalization and advances `arch_stage` to `247` before shim pruning.
 - Stage 248 (slice 238, keybindings ui-logic shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/keybindings.py` compatibility shim and advances `arch_stage` to `248` after full verification/CI checkpoint.
+- Stage 249 (slice 239, keybindings post-prune docs sync) updates historical architecture notes to reference `engine.ui_logic.keybindings` as the canonical keybindings implementation path after shim removal and advances `arch_stage` to `249`.
