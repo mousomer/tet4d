@@ -1090,3 +1090,23 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 413. `DONE` Arch Stage 428 slice 63 recorded the post-verify architecture/folder-balance snapshot for the new `ui/pygame/input` subpackage.
 414. `DONE` Arch Stage 429 slice 64 refreshed `CURRENT_STATE.md` with the `input/` subpackage migration status and next recommended `ui/pygame` family moves.
 415. `DONE` Arch Stage 430 slice 65 recorded completion of the Stage 411-429 input-subpackage seed batch and verified the checkpoint locally.
+416. `DONE` Arch Stage 431 slice 66 moved `ui/pygame/camera_mouse.py` into `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+417. `DONE` Arch Stage 432 slice 67 canonicalized 3D/4D frontend callers to `tet4d.ui.pygame.input.camera_mouse`.
+418. `DONE` Arch Stage 433 slice 68 canonicalized camera-mouse tests to `tet4d.ui.pygame.input.camera_mouse`.
+419. `DONE` Arch Stage 434 slice 69 normalized the moved `camera_mouse` module to import `projection3d` through canonical `tet4d.ui.pygame.projection3d`.
+420. `DONE` Arch Stage 435 slice 70 recorded a zero-caller checkpoint for old top-level `ui/pygame/camera_mouse.py` imports before pruning.
+421. `DONE` Arch Stage 436 slice 71 removed the zero-caller top-level `ui/pygame/camera_mouse.py` shim after canonicalization.
+422. `DONE` Arch Stage 437 slice 72 recorded the `camera_mouse` family checkpoint after relocation into `src/tet4d/ui/pygame/input/`.
+423. `DONE` Arch Stage 438 slice 73 moved `ui/pygame/view_controls.py` into `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+424. `DONE` Arch Stage 439 slice 74 canonicalized engine render callers to `tet4d.ui.pygame.input.view_controls`.
+425. `DONE` Arch Stage 440 slice 75 canonicalized `frontend_nd` and view-controls tests to `tet4d.ui.pygame.input.view_controls`.
+426. `DONE` Arch Stage 441 slice 76 recorded a zero-caller checkpoint for old top-level `ui/pygame/view_controls.py` imports before pruning.
+427. `DONE` Arch Stage 442 slice 77 removed the zero-caller top-level `ui/pygame/view_controls.py` shim after canonicalization.
+428. `DONE` Arch Stage 443 slice 78 recorded the `view_controls` family checkpoint after relocation into `src/tet4d/ui/pygame/input/`.
+429. `DONE` Arch Stage 444 slice 79 recorded `ui/pygame/input` growth into the target balance band after adding mouse/view helpers.
+430. `DONE` Arch Stage 445 slice 80 recorded the corresponding top-level `ui/pygame` file-count reduction and non-leaf balance improvement.
+431. `DONE` Arch Stage 446 slice 81 recorded the staged handoff into the docs/backlog/current-state refresh for the `431-445` input-family moves.
+432. `DONE` Arch Stage 447 slice 82 refreshed docs/handoff to record canonical `tet4d.ui.pygame.input.camera_mouse` and `tet4d.ui.pygame.input.view_controls` paths.
+433. `DONE` Arch Stage 448 slice 83 recorded the staged handoff into the final local verification checkpoint for the `431-447` batch.
+434. `DONE` Arch Stage 449 slice 84 ran the local verification checkpoint for the `431-448` input-family batch.
+435. `DONE` Arch Stage 450 slice 85 recorded completion of the Stage 431-449 `camera_mouse` + `view_controls` input-subpackage batch and verified the checkpoint locally.

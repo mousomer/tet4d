@@ -873,3 +873,44 @@ incremental enforcement strategy used while refactoring.
 - Stage 430 (slice 65, input subpackage batch checkpoint and verify) records completion
   of the Stage 411-429 `input/` subpackage seed batch and verifies the checkpoint with
   local `verify.sh`, continuing `ui/pygame` top-level sprawl reduction.
+- Stage 431 (slice 66, input family move I) moves `camera_mouse.py` into
+  `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+- Stage 432 (slice 67, camera-mouse caller canonicalization I) migrates 3D/4D frontend
+  callers to canonical `tet4d.ui.pygame.input.camera_mouse` imports.
+- Stage 433 (slice 68, camera-mouse caller canonicalization II) migrates camera-mouse
+  engine tests to canonical `tet4d.ui.pygame.input.camera_mouse` imports.
+- Stage 434 (slice 69, camera-mouse import-path normalization) rewires the moved module
+  to import `projection3d` through canonical `tet4d.ui.pygame.projection3d`.
+- Stage 435 (slice 70, camera-mouse zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame/camera_mouse.py` path before pruning.
+- Stage 436 (slice 71, camera-mouse shim pruning) removes the zero-caller top-level
+  `ui/pygame/camera_mouse.py` shim after canonicalization.
+- Stage 437 (slice 72, camera-mouse family checkpoint) records completion of the staged
+  `camera_mouse` relocation into `ui/pygame/input/`.
+- Stage 438 (slice 73, input family move II) moves `view_controls.py` into
+  `src/tet4d/ui/pygame/input/` with a temporary top-level compatibility shim.
+- Stage 439 (slice 74, view-controls caller canonicalization I) migrates engine render
+  callers to canonical `tet4d.ui.pygame.input.view_controls` imports.
+- Stage 440 (slice 75, view-controls caller canonicalization II) migrates `frontend_nd`
+  and view-controls tests to canonical `tet4d.ui.pygame.input.view_controls` imports.
+- Stage 441 (slice 76, view-controls zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame/view_controls.py` path before pruning.
+- Stage 442 (slice 77, view-controls shim pruning) removes the zero-caller top-level
+  `ui/pygame/view_controls.py` shim after canonicalization.
+- Stage 443 (slice 78, view-controls family checkpoint) records completion of the staged
+  `view_controls` relocation into `ui/pygame/input/`.
+- Stage 444 (slice 79, input subpackage balance checkpoint I) records `ui/pygame/input`
+  growth from a small seed into the target balance band after adding mouse/view helpers.
+- Stage 445 (slice 80, input subpackage balance checkpoint II) records the corresponding
+  top-level `ui/pygame` file-count reduction and non-leaf balance improvement.
+- Stage 446 (slice 81, path-doc checkpoint prep) records staged handoff into the batch
+  checkpoint docs/backlog/current-state refresh for the `431-445` input-family moves.
+- Stage 447 (slice 82, path-doc checkpoint) updates handoff/docs to record canonical
+  `tet4d.ui.pygame.input.camera_mouse` and `tet4d.ui.pygame.input.view_controls` paths.
+- Stage 448 (slice 83, verification checkpoint prep) records the staged handoff into the
+  final local verification checkpoint for the `431-447` batch.
+- Stage 449 (slice 84, verification checkpoint) runs the local verification checkpoint
+  for the `431-448` input-family batch.
+- Stage 450 (slice 85, input family batch checkpoint and verify) records completion of
+  the Stage 431-449 `camera_mouse` + `view_controls` input-subpackage batch and verifies
+  the checkpoint with local `verify.sh`, continuing `ui/pygame` rebalancing.

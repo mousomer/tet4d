@@ -10,7 +10,7 @@ import pygame
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.app_runtime import initialize_runtime
 from tet4d.ui.pygame.audio import play_sfx
-from tet4d.ui.pygame.camera_mouse import (
+from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
     mouse_wheel_delta,

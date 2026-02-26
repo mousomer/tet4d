@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from .projection3d import normalize_angle_deg
+from tet4d.ui.pygame.projection3d import normalize_angle_deg
 
 MAX_ABS_MOUSE_PITCH = 74.0
 
