@@ -533,3 +533,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 343 (slice 8, drop stale keybindings_menu_model allowlist entry).
 - Stage 344 (slice 9, keybindings_menu_model family checkpoint).
 - Stage 345 (slice 10, keybindings_menu_model verification checkpoint).
+- Stage 346 (slice 1, move key_dispatch to ui pygame with shim).
