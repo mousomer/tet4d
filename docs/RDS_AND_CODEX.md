@@ -454,3 +454,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 266 (slice 256, planner2d zero-caller checkpoint) records zero remaining callers of `engine/playbot/planner_2d.py` after engine-api and package canonicalization and advances `arch_stage` to `266` before shim pruning.
 - Stage 267 (slice 257, planner2d shim pruning) removes the zero-caller `engine/playbot/planner_2d.py` compatibility shim after the planner relocation to `ai/playbot/planner_2d.py` and canonicalization.
 - Stage 268 (slice 258, planner2d post-prune docs sync) records the canonical `ai/playbot/planner_2d.py` path after shim removal and advances `arch_stage` to `268`.
+- Stage 269 (slice 259, planner2d family checkpoint) records completion of the Stage 261-268 planner2d API-prep/move/prune sequence and advances `arch_stage` to `269` before the full batch verification checkpoint.

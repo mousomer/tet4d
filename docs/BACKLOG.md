@@ -917,3 +917,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 250. `DONE` Arch Stage 266 slice 256 recorded a zero-caller checkpoint for `engine/playbot/planner_2d.py` after engine-api and package canonicalization and advanced `arch_stage` to `266` before shim pruning.
 251. `DONE` Arch Stage 267 slice 257 removed the zero-caller `engine/playbot/planner_2d.py` compatibility shim after the planner relocation to `ai/playbot/planner_2d.py` and canonicalization.
 252. `DONE` Arch Stage 268 slice 258 recorded the canonical `ai/playbot/planner_2d.py` path after planner2d shim removal and advanced `arch_stage` to `268`.
+253. `DONE` Arch Stage 269 slice 259 recorded completion of the Stage 261-268 planner2d API-prep/move/prune sequence and advanced `arch_stage` to `269` before the full batch verification checkpoint.
