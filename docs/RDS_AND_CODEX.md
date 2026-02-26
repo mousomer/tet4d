@@ -550,3 +550,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 360 (slice 5, canonicalize front3d_game test import).
 - Stage 361 (slice 6, front3d_game zero caller checkpoint).
 - Stage 362 (slice 7, prune front3d_game engine shim).
+- Stage 363 (slice 8, clean front3d_game allowlist entries).

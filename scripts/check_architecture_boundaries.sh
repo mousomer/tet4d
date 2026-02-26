@@ -69,7 +69,6 @@ src/tet4d/engine/control_helper.py
 src/tet4d/engine/control_icons.py
 src/tet4d/engine/display.py
 src/tet4d/engine/font_profiles.py
-src/tet4d/engine/front3d_game.py
 src/tet4d/engine/front3d_render.py
 src/tet4d/engine/front3d_setup.py
 src/tet4d/engine/front4d_game.py
@@ -132,7 +131,6 @@ ENGINE_UI_IMPORT_ALLOWLIST=$(cat <<'EOF'
 src/tet4d/engine/api.py
 src/tet4d/engine/app_runtime.py
 src/tet4d/engine/bot_options_menu.py
-src/tet4d/engine/front3d_game.py
 src/tet4d/engine/front3d_render.py
 src/tet4d/engine/front3d_setup.py
 src/tet4d/engine/front4d_game.py

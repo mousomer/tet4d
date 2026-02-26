@@ -1012,3 +1012,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 345. `DONE` Arch Stage 360 slice 5 canonicalize front3d_game test import.
 346. `DONE` Arch Stage 361 slice 6 front3d_game zero caller checkpoint.
 347. `DONE` Arch Stage 362 slice 7 prune front3d_game engine shim.
+348. `DONE` Arch Stage 363 slice 8 clean front3d_game allowlist entries.
