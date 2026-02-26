@@ -739,3 +739,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 381 (slice 20, menu_runner family checkpoint and verify).
 - Stage 382 (slice 20, menu_model subpackage move).
 - Stage 383 (slice 20, menu_model zero-caller checkpoint).
+- Stage 384 (slice 20, prune menu_model ui shim).
