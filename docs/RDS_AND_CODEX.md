@@ -320,7 +320,7 @@ Minimum required coverage for gameplay-affecting changes:
 6. `scripts/ci_check.sh`
 7. Any change touching gameplay/config/menu/help should keep these artifacts synchronized in the same PR:
 8. `docs/BACKLOG.md`
-9. Root wrapper entrypoint is `front.py`; it may provide wrapper-only mode selection (for example `--frontend/--mode`) so long as it delegates to `cli/front*.py` without gameplay changes.
+9. Root wrapper entrypoint is `front.py`; it may provide wrapper-only mode selection (for example `--frontend/--mode`, where `front` is an alias of `main`) so long as it delegates to `cli/front*.py` without gameplay changes.
 9. `docs/FEATURE_MAP.md`
 10. `docs/rds/`
 11. `README.md`

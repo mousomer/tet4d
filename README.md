@@ -71,6 +71,7 @@ python -m pip install -e ".[dev]"
 python front.py
 
 # Unified wrapper selector (routes to main/2d/3d/4d; default is "main")
+# `front` is an alias for `main` (same target)
 python front.py --frontend 4d
 python front.py --mode 2d
 

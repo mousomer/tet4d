@@ -103,6 +103,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 89. `DONE` Arch Stage 94 slice 84 migrated engine/CLI callers to canonical `src/tet4d/engine/runtime/menu_persistence.py` imports before shim pruning.
 90. `DONE` Arch Stage 95 slice 85 removed the zero-caller `src/tet4d/engine/menu_persistence.py` compatibility shim after canonical engine/CLI import migration.
 91. `DONE` Root `front.py --help` now shows wrapper selector options and delegates to the selected CLI frontend help output, so launcher help exposes actual runtime options.
+91a. `DONE` Root `front.py` help flags are unified (`-h`, `--h`, `--help`) and `front` is documented as an alias of `main` (same launcher target).
 92. `DONE` `scripts/ci_check.sh` now delegates to `scripts/verify.sh` as the canonical CI/local pipeline to reduce drift between local and GitHub checks.
 93. `DONE` `scripts/check_architecture_boundaries.sh` now baseline-locks current transitional `engine -> tet4d.ui` imports (fail on new imports only), fixing GitHub repo-policy gate failures caused by stale allowlists.
 94. `DONE` baseline policy/drift scripts now treat workspace policy-template marker files as optional in fresh public clones, preventing GitHub CI failures on missing local-only `.policy` assets.
