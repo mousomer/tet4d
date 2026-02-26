@@ -1008,3 +1008,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 341. `DONE` Arch Stage 356 slice 1 move front3d_game to ui pygame with shim.
 342. `DONE` Arch Stage 357 slice 2 baseline lock ui front3d_game adapter.
 343. `DONE` Arch Stage 358 slice 3 canonicalize engine api launcher 3d wrappers.
+344. `DONE` Arch Stage 359 slice 4 canonicalize engine api run_front3d wrapper.

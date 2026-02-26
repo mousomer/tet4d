@@ -546,3 +546,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 356 (slice 1, move front3d_game to ui pygame with shim).
 - Stage 357 (slice 2, baseline lock ui front3d_game adapter).
 - Stage 358 (slice 3, canonicalize engine api launcher 3d wrappers).
+- Stage 359 (slice 4, canonicalize engine api run_front3d wrapper).

@@ -1068,7 +1068,7 @@ def piece_set_options_for_dimension_gameplay(dimension: int):
 
 
 def run_front3d_ui() -> None:
-    from .front3d_game import run as _run_front3d
+    from tet4d.ui.pygame.front3d_game import run as _run_front3d
 
     _run_front3d()
 
