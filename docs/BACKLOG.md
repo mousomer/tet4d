@@ -889,3 +889,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 222. `DONE` Arch Stage 223 slice 213 migrated `src/tet4d/engine/gfx_game.py` to canonical `src/tet4d/ui/pygame/gfx_panel_2d.py` imports before shim pruning.
 223. `DONE` Arch Stage 224 slice 214 recorded a zero-caller audit for `src/tet4d/engine/gfx_panel_2d.py` and advanced `arch_stage` to `224` before shim pruning.
 224. `DONE` Arch Stage 225 slice 215 removed the zero-caller `src/tet4d/engine/gfx_panel_2d.py` compatibility shim and advanced `arch_stage` to `225` after verification/CI checkpoint.
+225. `DONE` Arch Stage 229 slice 219 recorded a zero-caller audit for `src/tet4d/engine/gfx_game.py` after CLI canonicalization and advanced `arch_stage` to `229` before shim pruning.
