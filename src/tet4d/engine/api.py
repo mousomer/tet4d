@@ -746,6 +746,18 @@ def profile_4d_grid_mode_full() -> Any:
     return _GridMode.FULL
 
 
+def hud_analysis_lines_runtime(event: dict[str, object] | None) -> tuple[str, ...]:
+    from .runtime.score_analyzer import hud_analysis_lines as _hud_analysis_lines
+
+    return _hud_analysis_lines(event)
+
+
+def grid_mode_label_view(mode: GridMode) -> str:
+    from .ui_logic.view_modes import grid_mode_label as _grid_mode_label
+
+    return _grid_mode_label(mode)
+
+
 __all__ = [
     "Action",
     "Action2D",
