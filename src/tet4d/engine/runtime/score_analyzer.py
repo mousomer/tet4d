@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -19,7 +18,11 @@ from .score_analyzer_features import (
     placement_features,
     weighted_score,
 )
-from .score_analyzer_storage import load_json_object_or_default
+from .score_analyzer_storage import (
+    append_json_line,
+    atomic_write_json as _atomic_write_summary_json,
+    load_json_object_or_default,
+)
 
 _ROOT_DIR = PROJECT_ROOT
 _CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
@@ -408,12 +411,7 @@ def _load_summary(path: Path) -> dict[str, object]:
 
 
 def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_suffix(path.suffix + ".tmp")
-    temp_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    temp_path.replace(path)
+    _atomic_write_summary_json(path, payload)
 
 
 def _increment_counter(target: dict[str, object], key: str, amount: int = 1) -> None:
@@ -555,9 +553,7 @@ def record_score_analysis_event(event: dict[str, object]) -> None:
     summary_cache_key = str(summary_path)
 
     try:
-        events_path.parent.mkdir(parents=True, exist_ok=True)
-        with events_path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(event, sort_keys=True) + "\n")
+        append_json_line(events_path, event)
     except OSError:
         return
 

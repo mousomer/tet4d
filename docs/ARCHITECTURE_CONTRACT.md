@@ -470,3 +470,6 @@ incremental enforcement strategy used while refactoring.
   storage JSON reads through shared helper `engine.runtime.json_storage`.
 - Stage 144 (slice 134, runtime side-effect extraction) routes score-analyzer
   config/summary JSON reads through `engine.runtime.score_analyzer_storage`.
+- Stage 145 (slice 135, runtime side-effect extraction) routes score-analyzer
+  summary writes and event-log appends through
+  `engine.runtime.score_analyzer_storage`.
