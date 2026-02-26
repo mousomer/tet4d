@@ -211,7 +211,7 @@ def playbot_evaluate_nd_board(
     cleared: int,
     game_over: bool,
 ) -> float:
-    from .playbot.planner_nd_core import evaluate_nd_board as _evaluate_nd_board
+    from tet4d.ai.playbot.planner_nd_core import evaluate_nd_board as _evaluate_nd_board
 
     return _evaluate_nd_board(
         cells,
@@ -238,7 +238,7 @@ def greedy_key_4d(
     cleared: int,
     game_over: bool,
 ) -> tuple[int, int, int, int]:
-    from .playbot.planner_nd_core import greedy_key_4d as _greedy_key_4d
+    from tet4d.ai.playbot.planner_nd_core import greedy_key_4d as _greedy_key_4d
 
     return _greedy_key_4d(
         cells,
@@ -250,7 +250,7 @@ def greedy_key_4d(
 
 
 def playbot_greedy_score_4d(greedy_key: tuple[int, int, int, int]) -> float:
-    from .playbot.planner_nd_core import greedy_score_4d as _greedy_score_4d
+    from tet4d.ai.playbot.planner_nd_core import greedy_score_4d as _greedy_score_4d
 
     return _greedy_score_4d(greedy_key)
 
@@ -266,7 +266,7 @@ def playbot_iter_settled_candidates_nd(
     lateral_axes: tuple[int, ...],
     column_levels: dict[tuple[int, ...], list[int]],
 ) -> Any:
-    from .playbot.planner_nd_core import (
+    from tet4d.ai.playbot.planner_nd_core import (
         iter_settled_candidates as _iter_settled_candidates,
     )
 

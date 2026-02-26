@@ -938,3 +938,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 271. `DONE` Arch Stage 287 slice 277 advanced `arch_stage` to `287` and verified the Stage 278-286 plannerND-search batch with full local `verify.sh` + `ci_check.sh`.
 272. `DONE` Arch Stage 288 slice 278 moved `engine/playbot/planner_nd_core.py` to `ai/playbot/planner_nd_core.py`, kept an engine-path module-alias shim, and rewired core imports to `tet4d.engine.api` exports so the AI boundary remained API-only.
 273. `DONE` Arch Stage 289 slice 279 retargeted `engine.api` wrappers for lock/rotation/canonical-block/orientation/column-level helpers to import from `ai.playbot.planner_nd_core`, reducing reliance on the transitional engine shim.
+274. `DONE` Arch Stage 290 slice 280 retargeted `engine.api` wrappers for ND board evaluation, greedy scoring, and settled-candidate iteration to import from `ai.playbot.planner_nd_core`, further reducing reliance on the transitional engine shim.
