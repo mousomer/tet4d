@@ -13,6 +13,8 @@ search_repo_text() {
       --glob '!**/.git/**' \
       --glob '!**/.venv/**' \
       --glob '!**/__pycache__/**' \
+      --glob '!scripts/check_git_sanitation.sh' \
+      --glob '!scripts/check_git_sanitation_repo.sh' \
       "$pattern" .
     return
   fi
@@ -20,6 +22,8 @@ search_repo_text() {
     --exclude-dir=.git \
     --exclude-dir=.venv \
     --exclude-dir=__pycache__ \
+    --exclude=scripts/check_git_sanitation.sh \
+    --exclude=scripts/check_git_sanitation_repo.sh \
     --binary-files=without-match \
     "$pattern" .
 }
