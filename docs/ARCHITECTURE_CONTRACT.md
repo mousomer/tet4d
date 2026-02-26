@@ -612,3 +612,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 256 (slice 246, playbot controller zero-caller checkpoint) records zero remaining direct callers of `engine/playbot/controller.py` after engine package/caller canonicalization and advances `arch_stage` to `256` before shim pruning.
 - Stage 257 (slice 247, playbot controller shim pruning) removes the zero-caller `engine/playbot/controller.py` compatibility shim after the controller relocation to `ai/playbot/controller.py` and caller canonicalization.
 - Stage 258 (slice 248, playbot package canonical export polish) adds `PlayBotController` as a lazy export from `ai.playbot.__init__`, making the canonical AI package path self-describing after controller shim pruning.
+- Stage 259 (slice 249, playbot controller family checkpoint) records completion of the Stage 251-258 `PlayBotController` API-prep/move/prune sequence and advances `arch_stage` to `259` before the full batch verification checkpoint.
