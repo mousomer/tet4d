@@ -1,26 +1,5 @@
-from __future__ import annotations
+from importlib import import_module as _import_module
+import sys as _sys
 
-from dataclasses import dataclass
-
-import pygame
-
-
-CONFIRM_KEYS: tuple[int, ...] = (pygame.K_RETURN, pygame.K_KP_ENTER)
-
-
-@dataclass
-class MenuLoopState:
-    selected: int = 0
-    running: bool = True
-    status: str = ""
-    status_error: bool = False
-
-
-def is_confirm_key(key: int) -> bool:
-    return key in CONFIRM_KEYS
-
-
-def cycle_index(current: int, size: int, step: int) -> int:
-    if size <= 0:
-        return 0
-    return (current + step) % size
+_impl = _import_module('tet4d.ui.pygame.menu.menu_model')
+_sys.modules[__name__] = _impl

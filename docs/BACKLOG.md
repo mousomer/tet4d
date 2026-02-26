@@ -1031,3 +1031,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 364. `DONE` Arch Stage 379 slice 20 menu_runner zero-caller checkpoint.
 365. `DONE` Arch Stage 380 slice 20 prune menu_runner ui shim.
 366. `DONE` Arch Stage 381 slice 20 menu_runner family checkpoint and verify.
+367. `DONE` Arch Stage 382 slice 20 menu_model subpackage move.
