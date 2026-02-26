@@ -454,3 +454,6 @@ incremental enforcement strategy used while refactoring.
   object reads through shared helper `engine.runtime.json_storage`.
 - Stage 137 (slice 127, runtime side-effect extraction) routes project-config
   JSON object reads through shared helper `engine.runtime.json_storage`.
+- Stage 138 (slice 128, runtime side-effect extraction) routes runtime-config
+  validation JSON object reads through shared helper
+  `engine.runtime.json_storage`.

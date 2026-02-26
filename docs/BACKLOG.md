@@ -148,6 +148,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 134. `DONE` Arch Stage 135 slice 125 routed menu settings state atomic JSON writes through `src/tet4d/engine/runtime/menu_settings_state_storage.py`.
 135. `DONE` Arch Stage 136 slice 126 routed menu-config JSON object reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 136. `DONE` Arch Stage 137 slice 127 routed project-config JSON object reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
+137. `DONE` Arch Stage 138 slice 128 routed runtime-config validation JSON object reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
