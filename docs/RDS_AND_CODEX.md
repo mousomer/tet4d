@@ -561,3 +561,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 371 (slice 6, front4d_game zero caller checkpoint).
 - Stage 372 (slice 7, prune front4d_game engine shim).
 - Stage 373 (slice 8, clean front4d_game allowlist entries).
+- Stage 374 (slice 9, front4d_game family checkpoint).
