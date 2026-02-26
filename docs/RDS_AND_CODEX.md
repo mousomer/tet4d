@@ -462,3 +462,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 274 (slice 264, plannerND AI package export polish) adds `plan_best_nd_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
 - Stage 275 (slice 265, plannerND zero-caller checkpoint) records zero remaining callers of `engine/playbot/planner_nd.py` after engine-api and AI-package canonicalization and advances `arch_stage` to `275` before shim pruning.
 - Stage 276 (slice 266, plannerND shim pruning) removes the zero-caller `engine/playbot/planner_nd.py` compatibility shim after the planner relocation to `ai/playbot/planner_nd.py` and canonicalization.
+- Stage 277 (slice 267, plannerND family verification checkpoint) records completion of the Stage 271-276 plannerND API-prep/move/prune sequence, advances `arch_stage` to `277`, and verifies the checkpoint with full local `verify.sh` + `ci_check.sh`.
