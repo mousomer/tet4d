@@ -427,3 +427,4 @@ Authoritative open/deferred items are tracked in:
    `src/tet4d/engine/keybindings_menu_view.py` and
    `src/tet4d/engine/keybindings_menu.py` shims.
 - Stage 229 (slice 219, gfx-game UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/gfx_game.py` after CLI canonicalization and advances `arch_stage` to `229` before shim pruning.
+- Stage 230 (slice 220, gfx-game UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/gfx_game.py` compatibility shim and advances `arch_stage` to `230` after full verification/CI checkpoint.
