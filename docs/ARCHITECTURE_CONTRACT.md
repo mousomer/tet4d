@@ -559,3 +559,13 @@ incremental enforcement strategy used while refactoring.
 - Stage 188 (slice 178, keybindings menu UI shim pruning) removes the zero-caller `src/tet4d/engine/keybindings_menu.py` compatibility shim.
 - Stage 189 (slice 179, architecture checkpoint) records the keybindings-menu UI family migration and shim pruning sequence in RDS/contract tracking artifacts.
 - Stage 190 (slice 180, validation checkpoint) advances `arch_stage` to `190` after full verification/CI gate confirmation for the batch.
+- Stage 191 (slice 181, audio UI prep) adds lazy `engine.api` wrapper `audio_event_specs_runtime()` so audio UI code can consume runtime audio config without `ui -> engine.runtime` deep imports.
+- Stage 192 (slice 182, audio UI relocation) moves `src/tet4d/engine/audio.py` implementation into `src/tet4d/ui/pygame/audio.py`, rewires it through `tet4d.engine.api`, and retains a temporary engine compatibility shim.
+- Stage 193 (slice 183, audio UI canonicalization) migrates engine callers (`app_runtime`, front games, launcher/settings, pause/bot-options menus) to canonical `tet4d.ui.pygame.audio` imports.
+- Stage 194 (slice 184, audio UI canonicalization) migrates CLI and test callers to canonical `tet4d.ui.pygame.audio` imports before shim pruning.
+- Stage 195 (slice 185, audio UI shim pruning) removes the zero-caller `src/tet4d/engine/audio.py` compatibility shim and baseline-locks `src/tet4d/ui/pygame/audio.py` in architecture boundaries.
+- Stage 196 (slice 186, bot-options UI prep) adds lazy `engine.api` wrappers for runtime menu row/default/payload helpers so the bot-options menu UI can avoid deep runtime imports.
+- Stage 197 (slice 187, bot-options UI relocation) moves `src/tet4d/engine/bot_options_menu.py` implementation into `src/tet4d/ui/pygame/bot_options_menu.py`, routes runtime access through `tet4d.engine.api`, and retains a temporary engine compatibility shim.
+- Stage 198 (slice 188, bot-options UI canonicalization) migrates `pause_menu.py` to canonical `tet4d.ui.pygame.bot_options_menu` imports before shim pruning.
+- Stage 199 (slice 189, bot-options UI canonicalization) migrates CLI bot-options-menu callers to canonical `tet4d.ui.pygame.bot_options_menu` imports before shim pruning.
+- Stage 200 (slice 190, bot-options UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/bot_options_menu.py` compatibility shim, baseline-locks `src/tet4d/ui/pygame/bot_options_menu.py`, and advances `arch_stage` to `200` after full verification/CI checkpoint.

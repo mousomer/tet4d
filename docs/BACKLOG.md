@@ -854,3 +854,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 187. `DONE` Arch Stage 188 slice 178 removed the zero-caller `src/tet4d/engine/keybindings_menu.py` compatibility shim after canonical UI import migration.
 188. `DONE` Arch Stage 189 slice 179 synced architecture docs/backlog and RDS checkpoint notes for the keybindings-menu UI migration batch.
 189. `DONE` Arch Stage 190 slice 180 advanced `arch_stage` to `190` after full verification and CI-gate checkpoint for the keybindings-menu UI migration batch.
+190. `DONE` Arch Stage 191 slice 181 added lazy `engine.api` wrapper `audio_event_specs_runtime()` so audio UI code can read runtime audio config without deep `ui -> engine.runtime` imports.
+191. `DONE` Arch Stage 192 slice 182 moved `src/tet4d/engine/audio.py` implementation into `src/tet4d/ui/pygame/audio.py`, rewired it through `tet4d.engine.api`, and retained a temporary engine compatibility shim.
+192. `DONE` Arch Stage 193 slice 183 migrated engine callers to canonical `src/tet4d/ui/pygame/audio.py` imports before shim pruning.
+193. `DONE` Arch Stage 194 slice 184 migrated CLI and test callers to canonical `src/tet4d/ui/pygame/audio.py` imports before shim pruning.
+194. `DONE` Arch Stage 195 slice 185 removed the zero-caller `src/tet4d/engine/audio.py` compatibility shim and baseline-locked the new UI adapter path in architecture boundaries.
+195. `DONE` Arch Stage 196 slice 186 added lazy `engine.api` wrappers for bot-options runtime row/default/payload helpers to prepare UI relocation without deep `ui -> engine.runtime` imports.
+196. `DONE` Arch Stage 197 slice 187 moved `src/tet4d/engine/bot_options_menu.py` implementation into `src/tet4d/ui/pygame/bot_options_menu.py`, routed runtime access through `tet4d.engine.api`, and retained an engine compatibility shim.
+197. `DONE` Arch Stage 198 slice 188 migrated `src/tet4d/engine/pause_menu.py` to canonical `src/tet4d/ui/pygame/bot_options_menu.py` imports before shim pruning.
+198. `DONE` Arch Stage 199 slice 189 migrated CLI bot-options-menu callers to canonical `src/tet4d/ui/pygame/bot_options_menu.py` imports before shim pruning.
+199. `DONE` Arch Stage 200 slice 190 removed the zero-caller `src/tet4d/engine/bot_options_menu.py` compatibility shim, baseline-locked the new UI adapter path, and advanced `arch_stage` to `200` after full verification/CI checkpoint.

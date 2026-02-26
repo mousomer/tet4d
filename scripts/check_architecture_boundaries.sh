@@ -247,6 +247,7 @@ if [[ -d "$UI_DIR" ]]; then
 src/tet4d/ui/pygame/control_helper.py
 src/tet4d/ui/pygame/control_icons.py
 src/tet4d/ui/pygame/audio.py
+src/tet4d/ui/pygame/bot_options_menu.py
 src/tet4d/ui/pygame/front3d.py
 src/tet4d/ui/pygame/front3d_setup.py
 src/tet4d/ui/pygame/front4d.py
