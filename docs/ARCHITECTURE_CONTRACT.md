@@ -510,3 +510,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 168 (slice 158, sequential cleanup) migrated runtime callers to
   canonical `src/tet4d/engine/ui_logic/view_modes.py` imports before shim
   pruning.
+- Stage 169 (slice 159, sequential cleanup) removed the zero-caller
+  `src/tet4d/engine/view_modes.py` compatibility shim after canonical
+  `engine.ui_logic.view_modes` import migration.

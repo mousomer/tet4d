@@ -795,6 +795,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
     `src/tet4d/engine/ui_logic/view_modes.py` imports before shim pruning.
 167. `DONE` Arch Stage 168 slice 158 migrated runtime callers to canonical
     `src/tet4d/engine/ui_logic/view_modes.py` imports before shim pruning.
+168. `DONE` Arch Stage 169 slice 159 removed the zero-caller
+    `src/tet4d/engine/view_modes.py` compatibility shim after canonical
+    `engine.ui_logic.view_modes` import migration.
 
 ## 6. Source Inputs
 
