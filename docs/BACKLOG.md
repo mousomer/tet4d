@@ -905,3 +905,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 238. `DONE` Arch Stage 254 slice 244 updated `engine.playbot.PlayBotController` lazy resolution to import directly from `ai.playbot.controller`, turning `engine/playbot/controller.py` into a removable compatibility shim for the next prune stages.
 239. `DONE` Arch Stage 255 slice 245 migrated `front3d_game.py` and `front4d_game.py` to import `PlayBotController` from `engine.api`, reducing engine-internal use of the transitional `engine.playbot` compatibility package.
 240. `DONE` Arch Stage 256 slice 246 recorded a zero-caller checkpoint for `engine/playbot/controller.py` after package/caller canonicalization and advanced `arch_stage` to `256` before shim pruning.
+241. `DONE` Arch Stage 257 slice 247 removed the zero-caller `engine/playbot/controller.py` compatibility shim after the controller relocation to `ai/playbot/controller.py` and caller canonicalization.
