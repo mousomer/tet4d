@@ -944,3 +944,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 277. `DONE` Arch Stage 293 slice 283 recorded the canonical `ai/playbot/planner_nd_core.py` path after core shim removal and advanced `arch_stage` to `293`.
 278. `DONE` Arch Stage 294 slice 284 recorded completion of the Stage 288-293 plannerND-core move/canonicalize/prune sequence and advanced `arch_stage` to `294` before aggregate ND-planner checkpoints.
 279. `DONE` Arch Stage 295 slice 285 recorded completion of the Stage 271-294 ND planner family migrations (`planner_nd`, `planner_nd_search`, `planner_nd_core`) and advanced `arch_stage` to `295`.
+280. `DONE` Arch Stage 296 slice 286 recorded the staged checkpoint handoff into the final verification stage for the Stage 271-295 ND planner migration batch and advanced `arch_stage` to `296`.
