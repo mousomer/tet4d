@@ -544,3 +544,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 354 (slice 9, batch pre verification checkpoint).
 - Stage 355 (slice 10, key_dispatch verification checkpoint).
 - Stage 356 (slice 1, move front3d_game to ui pygame with shim).
+- Stage 357 (slice 2, baseline lock ui front3d_game adapter).

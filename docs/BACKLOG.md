@@ -1006,3 +1006,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 339. `DONE` Arch Stage 354 slice 9 batch pre verification checkpoint.
 340. `DONE` Arch Stage 355 slice 10 key_dispatch verification checkpoint.
 341. `DONE` Arch Stage 356 slice 1 move front3d_game to ui pygame with shim.
+342. `DONE` Arch Stage 357 slice 2 baseline lock ui front3d_game adapter.
