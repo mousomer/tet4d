@@ -12,7 +12,7 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tet4d.engine import frontend_nd
 from tet4d.engine.gameplay.game_nd import GameConfigND
-from tet4d.engine.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
+from tet4d.engine.ui_logic.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
