@@ -779,6 +779,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
     engine compatibility shim pending caller migration.
 161. `DONE` Arch Stage 162 slice 152 migrated tests to canonical
     `src/tet4d/ui/pygame/view_controls.py` imports before shim pruning.
+162. `DONE` Arch Stage 163 slice 153 migrated engine render/input callers to
+    canonical `src/tet4d/ui/pygame/view_controls.py` imports before shim
+    pruning.
 
 ## 6. Source Inputs
 

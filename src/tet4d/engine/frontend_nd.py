@@ -43,7 +43,7 @@ from .gameplay.topology_designer import (
     resolve_topology_designer_selection,
 )
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
-from .view_controls import viewer_relative_move_axis_delta
+from tet4d.ui.pygame.view_controls import viewer_relative_move_axis_delta
 
 
 TEXT_COLOR = (230, 230, 230)

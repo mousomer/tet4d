@@ -493,3 +493,6 @@ incremental enforcement strategy used while refactoring.
   engine compatibility shim pending caller migration.
 - Stage 162 (slice 152, sequential cleanup) migrated tests to canonical
   `src/tet4d/ui/pygame/view_controls.py` imports before shim pruning.
+- Stage 163 (slice 153, sequential cleanup) migrated engine render/input callers
+  to canonical `src/tet4d/ui/pygame/view_controls.py` imports before shim
+  pruning.
