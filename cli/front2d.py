@@ -30,7 +30,7 @@ if str(_SRC_ROOT) not in sys.path:
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(1, str(_REPO_ROOT))
 
-from tet4d.engine.app_runtime import (
+from tet4d.ui.pygame.app_runtime import (
     capture_windowed_display_settings,
     initialize_runtime,
     open_display,
