@@ -573,3 +573,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 202 (slice 192, loop-runner UI relocation) moves `src/tet4d/engine/loop_runner_nd.py` implementation into `src/tet4d/ui/pygame/loop_runner_nd.py`, rewires runtime helper calls through `tet4d.engine.api`, and retains an engine compatibility shim.
 - Stage 203 (slice 193, loop-runner UI canonicalization) migrates `front3d_game.py` and `front4d_game.py` to canonical `tet4d.ui.pygame.loop_runner_nd` imports.
 - Stage 204 (slice 194, loop-runner UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/loop_runner_nd.py` before shim pruning and advances `arch_stage` to `204`.
+- Stage 205 (slice 195, loop-runner UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/loop_runner_nd.py` compatibility shim and advances `arch_stage` to `205` after full verification/CI checkpoint.

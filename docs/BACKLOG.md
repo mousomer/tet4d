@@ -868,3 +868,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 201. `DONE` Arch Stage 202 slice 192 moved `src/tet4d/engine/loop_runner_nd.py` implementation into `src/tet4d/ui/pygame/loop_runner_nd.py`, rewired runtime helper calls through `tet4d.engine.api`, and retained an engine compatibility shim.
 202. `DONE` Arch Stage 203 slice 193 migrated `front3d_game.py` and `front4d_game.py` to canonical `src/tet4d/ui/pygame/loop_runner_nd.py` imports before shim pruning.
 203. `DONE` Arch Stage 204 slice 194 recorded a zero-caller audit for `src/tet4d/engine/loop_runner_nd.py` and advanced `arch_stage` to `204` before shim pruning.
+204. `DONE` Arch Stage 205 slice 195 removed the zero-caller `src/tet4d/engine/loop_runner_nd.py` compatibility shim and advanced `arch_stage` to `205` after verification/CI checkpoint.
