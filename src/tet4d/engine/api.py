@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .core.model import (
     Action,
@@ -52,6 +52,9 @@ from .runtime.runtime_config import (
 )
 from .runtime.project_config import project_constant_int as _project_constant_int
 from .ui_logic.view_modes import GridMode
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .playbot import PlayBotController as PlayBotController
 
 
 # Stable aliases for callers that want explicit dimensional naming.

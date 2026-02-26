@@ -908,3 +908,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 241. `DONE` Arch Stage 257 slice 247 removed the zero-caller `engine/playbot/controller.py` compatibility shim after the controller relocation to `ai/playbot/controller.py` and caller canonicalization.
 242. `DONE` Arch Stage 258 slice 248 added `PlayBotController` as a lazy export from `ai.playbot.__init__`, making the canonical AI package path self-describing after controller shim pruning.
 243. `DONE` Arch Stage 259 slice 249 recorded completion of the Stage 251-258 `PlayBotController` API-prep/move/prune sequence and advanced `arch_stage` to `259` before the full batch verification checkpoint.
+244. `DONE` Arch Stage 260 slice 250 advanced `arch_stage` to `260` and verified the Stage 251-259 playbot-controller batch with full local `verify.sh` + `ci_check.sh`.
