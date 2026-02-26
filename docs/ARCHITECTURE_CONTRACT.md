@@ -520,3 +520,6 @@ incremental enforcement strategy used while refactoring.
   `src/tet4d/engine/grid_mode_render.py` implementation into
   `src/tet4d/ui/pygame/grid_mode_render.py` and retained an engine
   compatibility shim pending caller migration.
+- Stage 172 (slice 162, sequential cleanup) migrated engine render callers to
+  canonical `src/tet4d/ui/pygame/grid_mode_render.py` imports before shim
+  pruning.

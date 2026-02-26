@@ -247,6 +247,7 @@ src/tet4d/ui/pygame/control_helper.py
 src/tet4d/ui/pygame/control_icons.py
 src/tet4d/ui/pygame/front3d.py
 src/tet4d/ui/pygame/front4d.py
+src/tet4d/ui/pygame/grid_mode_render.py
 src/tet4d/ui/pygame/profile_4d.py
 src/tet4d/ui/pygame/projection3d.py
 src/tet4d/ui/pygame/text_render_cache.py

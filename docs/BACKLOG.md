@@ -805,6 +805,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
     `src/tet4d/engine/grid_mode_render.py` implementation to
     `src/tet4d/ui/pygame/grid_mode_render.py` and retained an engine
     compatibility shim pending caller migration.
+171. `DONE` Arch Stage 172 slice 162 migrated engine render callers to
+    canonical `src/tet4d/ui/pygame/grid_mode_render.py` imports before shim
+    pruning.
 
 ## 6. Source Inputs
 

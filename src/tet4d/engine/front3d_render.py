@@ -10,7 +10,7 @@ from tet4d.ui.pygame.control_helper import control_groups_for_dimension
 from tet4d.ui.pygame.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .front3d_setup import gravity_interval_ms_from_config
 from .gameplay.game_nd import GameConfigND, GameStateND
-from .grid_mode_render import draw_projected_grid_mode
+from tet4d.ui.pygame.grid_mode_render import draw_projected_grid_mode
 from tet4d.ui.pygame.panel_utils import draw_game_side_panel
 from .gameplay.pieces_nd import piece_set_label
 from tet4d.ui.pygame.projection3d import (
