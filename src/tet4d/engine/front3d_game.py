@@ -33,7 +33,7 @@ from tet4d.ui.pygame.front3d_setup import (
 )
 from .frontend_nd import route_nd_keydown
 from .gameplay.game_nd import GameConfigND, GameStateND
-from .help_menu import run_help_menu
+from tet4d.ui.pygame.help_menu import run_help_menu
 from .ui_logic.key_dispatch import dispatch_bound_action
 from .keybindings import CAMERA_KEYS_3D
 from tet4d.ui.pygame.launcher_nd_runner import run_nd_mode_launcher

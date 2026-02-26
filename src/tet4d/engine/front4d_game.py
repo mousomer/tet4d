@@ -49,7 +49,7 @@ from tet4d.ui.pygame.loop_runner_nd import run_nd_loop
 from .gameplay.rotation_anim import PieceRotationAnimatorND
 from .ui_logic.view_modes import GridMode, cycle_grid_mode
 from .pause_menu import run_pause_menu
-from .help_menu import run_help_menu
+from tet4d.ui.pygame.help_menu import run_help_menu
 from tet4d.ui.pygame.launcher_nd_runner import run_nd_mode_launcher
 
 
