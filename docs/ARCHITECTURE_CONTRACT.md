@@ -629,3 +629,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 273 (slice 263, plannerND engine-api canonicalization) updates `engine.api.plan_best_nd_move(...)` to import from `ai.playbot.planner_nd` directly, reducing reliance on the transitional `engine/playbot/planner_nd.py` shim.
 - Stage 274 (slice 264, plannerND AI package export polish) adds `plan_best_nd_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
 - Stage 275 (slice 265, plannerND zero-caller checkpoint) records zero remaining callers of `engine/playbot/planner_nd.py` after engine-api and AI-package canonicalization and advances `arch_stage` to `275` before shim pruning.
+- Stage 276 (slice 266, plannerND shim pruning) removes the zero-caller `engine/playbot/planner_nd.py` compatibility shim after the planner relocation to `ai/playbot/planner_nd.py` and canonicalization.

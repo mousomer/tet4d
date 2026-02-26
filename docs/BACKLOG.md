@@ -924,3 +924,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 257. `DONE` Arch Stage 273 slice 263 updated `engine.api.plan_best_nd_move(...)` to import from `ai.playbot.planner_nd` directly, reducing reliance on the transitional `engine/playbot/planner_nd.py` shim.
 258. `DONE` Arch Stage 274 slice 264 added `plan_best_nd_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
 259. `DONE` Arch Stage 275 slice 265 recorded a zero-caller checkpoint for `engine/playbot/planner_nd.py` after engine-api and AI-package canonicalization and advanced `arch_stage` to `275` before shim pruning.
+260. `DONE` Arch Stage 276 slice 266 removed the zero-caller `engine/playbot/planner_nd.py` compatibility shim after the planner relocation to `ai/playbot/planner_nd.py` and canonicalization.
