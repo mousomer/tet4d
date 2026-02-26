@@ -913,3 +913,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 246. `DONE` Arch Stage 262 slice 252 exported `rotate_point_2d` from `engine.api` to complete boundary-safe API prep for moving `engine/playbot/planner_2d.py` into `ai/playbot`.
 247. `DONE` Arch Stage 263 slice 253 moved `engine/playbot/planner_2d.py` to `ai/playbot/planner_2d.py`, kept an engine-path module-alias shim, and rewired the planner implementation to `tet4d.engine.api` exports to preserve the AI API-only boundary.
 248. `DONE` Arch Stage 264 slice 254 updated `engine.api.plan_best_2d_move` to import from `ai.playbot.planner_2d` directly, reducing reliance on the transitional `engine/playbot/planner_2d.py` compatibility shim.
+249. `DONE` Arch Stage 265 slice 255 added `plan_best_2d_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
