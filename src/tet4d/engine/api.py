@@ -272,7 +272,7 @@ def project_root_path():
 
 
 def format_key_tuple(keys):
-    from .key_display import format_key_tuple as _format_key_tuple
+    from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
 
     return _format_key_tuple(keys)
 

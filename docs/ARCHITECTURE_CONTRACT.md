@@ -481,3 +481,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 151 (slice 141, sequential cleanup) migrated CLI and tests to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
 - Stage 152 (slice 142, sequential cleanup) removed the zero-caller `src/tet4d/engine/display.py` compatibility shim after canonical UI display import migration.
 - Stage 153 (slice 143, sequential cleanup) migrated engine callers to canonical `src/tet4d/ui/pygame/key_display.py` imports before shim pruning.
+- Stage 154 (slice 144, sequential cleanup) migrated `engine.api` helper usage to canonical `src/tet4d/ui/pygame/key_display.py` before shim pruning.
