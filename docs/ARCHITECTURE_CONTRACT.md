@@ -621,3 +621,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 265 (slice 255, planner2d AI package export polish) adds `plan_best_2d_move` as a lazy export from `ai.playbot.__init__`, improving canonical AI package discoverability after the planner relocation.
 - Stage 266 (slice 256, planner2d zero-caller checkpoint) records zero remaining callers of `engine/playbot/planner_2d.py` after engine-api and package canonicalization and advances `arch_stage` to `266` before shim pruning.
 - Stage 267 (slice 257, planner2d shim pruning) removes the zero-caller `engine/playbot/planner_2d.py` compatibility shim after the planner relocation to `ai/playbot/planner_2d.py` and canonicalization.
+- Stage 268 (slice 258, planner2d post-prune docs sync) records the canonical `ai/playbot/planner_2d.py` path after shim removal and advances `arch_stage` to `268`.
