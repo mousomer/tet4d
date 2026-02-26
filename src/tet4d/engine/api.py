@@ -317,7 +317,7 @@ def tick_animation_runtime(animation: Any, dt_ms: int) -> Any:
 
 
 def initialize_keybinding_files_runtime() -> None:
-    from .keybindings import initialize_keybinding_files as _initialize_keybinding_files
+    from .ui_logic.keybindings import initialize_keybinding_files as _initialize_keybinding_files
 
     _initialize_keybinding_files()
 
@@ -518,7 +518,7 @@ def format_key_tuple(keys):
 
 
 def runtime_binding_groups_for_dimension(dimension: int):
-    from .keybindings import (
+    from .ui_logic.keybindings import (
         runtime_binding_groups_for_dimension as _runtime_binding_groups_for_dimension,
     )
 
@@ -532,25 +532,25 @@ def audio_event_specs_runtime() -> dict[str, tuple[float, int, float]]:
 
 
 def binding_action_description(action: str) -> str:
-    from .keybindings import binding_action_description as _binding_action_description
+    from .ui_logic.keybindings import binding_action_description as _binding_action_description
 
     return _binding_action_description(action)
 
 
 def binding_group_label(group: str) -> str:
-    from .keybindings import binding_group_label as _binding_group_label
+    from .ui_logic.keybindings import binding_group_label as _binding_group_label
 
     return _binding_group_label(group)
 
 
 def keybindings_rebind_conflict_replace() -> str:
-    from .keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
+    from .ui_logic.keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
 
     return _REPLACE
 
 
 def keybindings_active_key_profile() -> str:
-    from .keybindings import active_key_profile as _active_key_profile
+    from .ui_logic.keybindings import active_key_profile as _active_key_profile
 
     return _active_key_profile()
 
@@ -558,19 +558,19 @@ def keybindings_active_key_profile() -> str:
 def keybindings_clone_key_profile(
     profile_name: str, *, source_profile: str | None = None
 ) -> tuple[bool, str]:
-    from .keybindings import clone_key_profile as _clone_key_profile
+    from .ui_logic.keybindings import clone_key_profile as _clone_key_profile
 
     return _clone_key_profile(profile_name, source_profile=source_profile)
 
 
 def keybindings_cycle_key_profile(step: int) -> tuple[bool, str, str]:
-    from .keybindings import cycle_key_profile as _cycle_key_profile
+    from .ui_logic.keybindings import cycle_key_profile as _cycle_key_profile
 
     return _cycle_key_profile(step)
 
 
 def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
-    from .keybindings import (
+    from .ui_logic.keybindings import (
         cycle_rebind_conflict_mode as _cycle_rebind_conflict_mode,
     )
 
@@ -578,25 +578,25 @@ def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
 
 
 def keybindings_delete_key_profile(profile_name: str) -> tuple[bool, str]:
-    from .keybindings import delete_key_profile as _delete_key_profile
+    from .ui_logic.keybindings import delete_key_profile as _delete_key_profile
 
     return _delete_key_profile(profile_name)
 
 
 def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
-    from .keybindings import load_active_profile_bindings as _load_active_profile_bindings
+    from .ui_logic.keybindings import load_active_profile_bindings as _load_active_profile_bindings
 
     return _load_active_profile_bindings()
 
 
 def keybindings_load_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from .keybindings import load_keybindings_file as _load_keybindings_file
+    from .ui_logic.keybindings import load_keybindings_file as _load_keybindings_file
 
     return _load_keybindings_file(dimension)
 
 
 def keybindings_next_auto_profile_name(prefix: str = "custom") -> str:
-    from .keybindings import next_auto_profile_name as _next_auto_profile_name
+    from .ui_logic.keybindings import next_auto_profile_name as _next_auto_profile_name
 
     return _next_auto_profile_name(prefix)
 
@@ -609,7 +609,7 @@ def keybindings_rebind_action_key(
     *,
     conflict_mode: str,
 ) -> tuple[bool, str]:
-    from .keybindings import rebind_action_key as _rebind_action_key
+    from .ui_logic.keybindings import rebind_action_key as _rebind_action_key
 
     return _rebind_action_key(
         dimension, group, action, key, conflict_mode=conflict_mode
@@ -619,13 +619,13 @@ def keybindings_rebind_action_key(
 def keybindings_rename_key_profile(
     old_name: str, new_name: str
 ) -> tuple[bool, str]:
-    from .keybindings import rename_key_profile as _rename_key_profile
+    from .ui_logic.keybindings import rename_key_profile as _rename_key_profile
 
     return _rename_key_profile(old_name, new_name)
 
 
 def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str]:
-    from .keybindings import (
+    from .ui_logic.keybindings import (
         reset_active_profile_bindings as _reset_active_profile_bindings,
     )
 
@@ -633,13 +633,13 @@ def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str
 
 
 def keybindings_save_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from .keybindings import save_keybindings_file as _save_keybindings_file
+    from .ui_logic.keybindings import save_keybindings_file as _save_keybindings_file
 
     return _save_keybindings_file(dimension)
 
 
 def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
-    from .keybindings import set_active_key_profile as _set_active_key_profile
+    from .ui_logic.keybindings import set_active_key_profile as _set_active_key_profile
 
     return _set_active_key_profile(profile_name)
 
