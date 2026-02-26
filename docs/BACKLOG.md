@@ -820,6 +820,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
     compatibility shim pending caller migration.
 175. `DONE` Arch Stage 176 slice 166 migrated engine callers to canonical
     `src/tet4d/ui/pygame/launcher_nd_runner.py` imports before shim pruning.
+176. `DONE` Arch Stage 177 slice 167 removed the zero-caller
+    `src/tet4d/engine/launcher_nd_runner.py` compatibility shim after canonical
+    UI launcher import migration.
 
 ## 6. Source Inputs
 

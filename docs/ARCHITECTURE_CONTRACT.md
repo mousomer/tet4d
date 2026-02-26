@@ -536,3 +536,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 176 (slice 166, sequential cleanup) migrated engine callers to
   canonical `src/tet4d/ui/pygame/launcher_nd_runner.py` imports before shim
   pruning.
+- Stage 177 (slice 167, sequential cleanup) removed the zero-caller
+  `src/tet4d/engine/launcher_nd_runner.py` compatibility shim after canonical
+  UI launcher import migration.
