@@ -717,3 +717,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 359 (slice 4, canonicalize engine api run_front3d wrapper).
 - Stage 360 (slice 5, canonicalize front3d_game test import).
 - Stage 361 (slice 6, front3d_game zero caller checkpoint).
+- Stage 362 (slice 7, prune front3d_game engine shim).
