@@ -492,3 +492,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 304 (slice 294, menu-keybinding-shortcuts caller canonicalization) migrates engine callers to canonical `src/tet4d/ui/pygame/menu_keybinding_shortcuts.py` imports before shim pruning.
 - Stage 305 (slice 295, menu-keybinding-shortcuts engine-api canonicalization) retargets `engine.api` wrappers to canonical `src/tet4d/ui/pygame/menu_keybinding_shortcuts.py` imports before shim pruning.
 - Stage 306 (slice 296, menu-keybinding-shortcuts shim pruning) records zero remaining callers and removes the transitional `src/tet4d/engine/ui_logic/menu_keybinding_shortcuts.py` compatibility shim after canonicalization to `src/tet4d/ui/pygame/menu_keybinding_shortcuts.py`.
+- Stage 307 (slice 297, menu-keybinding-shortcuts family verification checkpoint) records completion of the Stage 302-306 sequence, advances `arch_stage` to `307`, and verifies the checkpoint with full local `verify.sh` + `ci_check.sh`.
