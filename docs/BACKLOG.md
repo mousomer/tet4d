@@ -1160,3 +1160,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 483. `DONE` Arch Stage 498 slice 133 removed the zero-caller top-level `ui/pygame/pause_menu.py` shim/path after canonicalization.
 484. `DONE` Arch Stage 499 slice 134 refreshed path docs/backlog/current-state notes for canonical `ui/pygame/runtime_ui/{help_menu,pause_menu}` paths and the post-move folder-balance snapshot.
 485. `DONE` Arch Stage 500 slice 135 recorded completion of the Stage 491-499 runtime-overlay move batch, advanced `arch_stage` to `500`, synced path allowlists/contracts, and verified the checkpoint locally.
+486. `DONE` Arch Stage 501 slice 136 added `docs/help/runtime_help_text.json` as the canonical runtime help-copy source document.
+487. `DONE` Arch Stage 502 slice 137 added `src/tet4d/engine/help_text.py` to load and validate runtime help-copy payloads from the help doc source.
+488. `DONE` Arch Stage 503 slice 138 exposed runtime help-copy accessors through new `tet4d.engine.api` wrappers.
+489. `DONE` Arch Stage 504 slice 139 rewired runtime help-menu fallback topic copy to the doc-driven runtime help-copy source.
+490. `DONE` Arch Stage 505 slice 140 migrated runtime help-menu topic-extension prose blocks to template-driven lines loaded from `docs/help/runtime_help_text.json`.
+491. `DONE` Arch Stage 506 slice 141 migrated live-key/action-group headings to runtime help-copy document templates.
+492. `DONE` Arch Stage 507 slice 142 updated canonical maintenance and help-index contracts to include `docs/help/runtime_help_text.json`.
+493. `DONE` Arch Stage 508 slice 143 added runtime help-copy loader coverage in `src/tet4d/engine/tests/test_help_text.py`.
+494. `DONE` Arch Stage 509 slice 144 refreshed structure docs and current-state handoff notes for the doc-driven runtime help-copy architecture.
+495. `DONE` Arch Stage 510 slice 145 recorded completion of the Stage 501-509 help-copy externalization batch, advanced `arch_stage` to `510`, and verified the checkpoint locally.

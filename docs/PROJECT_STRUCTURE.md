@@ -163,7 +163,7 @@ tet4d/
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
 18. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.
 19. `config/menu/*` drives launcher/setup menu structure and default values.
-20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
+20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `docs/help/runtime_help_text.json` is the canonical runtime help-copy text source formatted by `runtime_ui/help_menu.py`.
 21. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
 22. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
 23. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
@@ -171,7 +171,7 @@ tet4d/
 25. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
 26. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
 27. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-28. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+28. `docs/help/HELP_INDEX.md`,`docs/help/runtime_help_text.json`, and`assets/help/manifest.json` are canonical help-content contracts.
 29. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
 30. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
 31. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.

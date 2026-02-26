@@ -582,3 +582,9 @@ Authoritative open/deferred items are tracked in:
 - Stage 383 (slice 20, menu_model zero-caller checkpoint).
 - Stage 384 (slice 20, prune menu_model ui shim).
 - Stage 385 (slice 20, ui pygame menu subpackage checkpoint and verify).
+- Stage 501 (slice 136, add doc-driven runtime help-copy source `docs/help/runtime_help_text.json`).
+- Stage 502 (slice 137, add runtime help-copy loader `engine/help_text.py`).
+- Stage 503 (slice 138, expose runtime help-copy access through `tet4d.engine.api` wrappers).
+- Stage 505 (slice 140, migrate runtime help-menu topic prose blocks from Python literals to doc templates).
+- Stage 507 (slice 142, add runtime help-copy doc to canonical maintenance help contracts).
+- Stage 510 (slice 145, complete doc-driven help-copy checkpoint and verify).

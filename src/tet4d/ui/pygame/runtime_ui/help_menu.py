@@ -16,6 +16,12 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 help_action_topic_registry = engine_api.help_action_topic_registry_runtime
 help_topics_for_context = engine_api.help_topics_for_context_runtime
+help_topic_block_lines = engine_api.help_topic_block_lines_runtime
+help_topic_compact_limit = engine_api.help_topic_compact_limit_runtime
+help_topic_compact_overflow_line = engine_api.help_topic_compact_overflow_line_runtime
+help_value_template = engine_api.help_value_template_runtime
+help_action_group_heading = engine_api.help_action_group_heading_runtime
+help_fallback_topic = engine_api.help_fallback_topic_runtime
 active_key_profile = engine_api.keybindings_active_key_profile
 binding_action_description = engine_api.binding_action_description
 binding_group_label = engine_api.binding_group_label
@@ -91,6 +97,20 @@ class _HelpState:
     subpage: int = 0
     dimension: int = 2
     running: bool = True
+
+
+class _HelpFormatValues(dict[str, str]):
+    def __missing__(self, key: str) -> str:
+        return "{" + key + "}"
+
+
+def _format_help_line(template: str, **values: object) -> str:
+    formatted = _HelpFormatValues({key: str(value) for key, value in values.items()})
+    return str(template).format_map(formatted)
+
+
+def _format_help_lines(templates: Sequence[str], **values: object) -> list[str]:
+    return [_format_help_line(template, **values) for template in templates]
 
 
 def paginate_help_lines(
@@ -209,21 +229,7 @@ def _draw_lines(
 
 
 def _fallback_topic() -> dict[str, Any]:
-    return {
-        "id": "overview",
-        "title": "Help Overview",
-        "summary": "No context-specific help topics were found.",
-        "sections": (
-            {
-                "id": "fallback",
-                "title": "What",
-                "lines": (
-                    "Use Left/Right to switch topics.",
-                    "Use Up/Down to switch dimensions.",
-                ),
-            },
-        ),
-    }
+    return help_fallback_topic()
 
 
 def _topics_for_state(
@@ -336,14 +342,7 @@ def _topic_action_lines(
         action_rows = grouped.get(group, [])
         if not action_rows:
             continue
-        if group == "game_translation":
-            heading = "Gameplay / Translation"
-        elif group == "game_rotation":
-            heading = "Gameplay / Rotation"
-        elif group == "game_other":
-            heading = "Gameplay / Other"
-        else:
-            heading = binding_group_label(group)
+        heading = help_action_group_heading(group) or binding_group_label(group)
         lines.append(f"-- {heading}")
         for action_name, key_text in action_rows:
             desc = binding_action_description(action_name)
@@ -375,161 +374,97 @@ def _extend_overview_lines(
     compact: bool,
 ) -> None:
     lines.extend(
-        [
-            "",
-            f"## Context: {context_label}",
-            f"- Active profile: {active_key_profile()}",
-            f"- Help key: {_current_binding_text(state.dimension, 'help')}",
-            "- Left/Right switches topic. Up/Down switches dimension.",
-            "- [ or ] (also PgUp/PgDn) switches subpage when needed.",
-            "",
-            "## Topics in this context",
-        ]
+        _format_help_lines(
+            help_topic_block_lines("overview", compact=compact),
+            context_label=context_label,
+            active_key_profile=active_key_profile(),
+            help_key=_current_binding_text(state.dimension, "help"),
+        )
     )
-    max_topics = 5 if compact else len(topics)
+    compact_limit = help_topic_compact_limit("overview")
+    max_topics = compact_limit if compact and compact_limit > 0 else len(topics)
     for idx, topic in enumerate(topics[:max_topics], start=1):
         title = str(topic.get("title", "Topic"))
         lines.append(f"- {idx}. {title}")
     if compact and len(topics) > max_topics:
-        lines.append(f"- ... and {len(topics) - max_topics} more topics")
+        overflow_template = help_topic_compact_overflow_line("overview")
+        if overflow_template:
+            lines.append(
+                _format_help_line(
+                    overflow_template, extra_count=len(topics) - max_topics
+                )
+            )
 
 
 def _extend_game_types_lines(lines: list[str], *, compact: bool) -> None:
-    if compact:
-        lines.extend(
-            [
-                "",
-                "## Piece sets",
-                "- Use Full Key Map topic for complete live key coverage.",
-            ]
+    piece_sets_2d = ""
+    piece_sets_3d = ""
+    piece_sets_4d = ""
+    if not compact:
+        piece_sets_2d = ", ".join(
+            piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS
         )
-        return
-    piece_sets_2d = ", ".join(
-        piece_set_2d_label(piece_set_id) for piece_set_id in PIECE_SET_2D_OPTIONS
-    )
-    piece_sets_3d = ", ".join(
-        piece_set_label(piece_set_id)
-        for piece_set_id in piece_set_options_for_dimension(3)
-    )
-    piece_sets_4d = ", ".join(
-        piece_set_label(piece_set_id)
-        for piece_set_id in piece_set_options_for_dimension(4)
-    )
+        piece_sets_3d = ", ".join(
+            piece_set_label(piece_set_id)
+            for piece_set_id in piece_set_options_for_dimension(3)
+        )
+        piece_sets_4d = ", ".join(
+            piece_set_label(piece_set_id)
+            for piece_set_id in piece_set_options_for_dimension(4)
+        )
     lines.extend(
-        [
-            "",
-            "## Piece sets",
-            f"- 2D: {piece_sets_2d}",
-            f"- 3D: {piece_sets_3d}",
-            f"- 4D: {piece_sets_4d}",
-        ]
+        _format_help_lines(
+            help_topic_block_lines("game_types", compact=compact),
+            piece_sets_2d=piece_sets_2d,
+            piece_sets_3d=piece_sets_3d,
+            piece_sets_4d=piece_sets_4d,
+        )
     )
 
 
 def _extend_features_lines(lines: list[str], *, compact: bool) -> None:
-    if compact:
-        lines.extend(
-            [
-                "",
-                "## Practical notes",
-                "- Challenge mode pre-fills lower layers.",
-                "- Exploration mode disables gravity/lock/clear.",
-            ]
-        )
-        return
-    lines.extend(
-        [
-            "",
-            "## Practical notes",
-            "- Challenge mode prefills lower layers to raise early-game pressure.",
-            "- Exploration mode disables gravity/locking/clears for practice.",
-            "- Dry-run checks whether a selected setup can clear layers.",
-        ]
-    )
+    lines.extend(help_topic_block_lines("gameplay_features", compact=compact))
 
 
 def _extend_settings_lines(lines: list[str], *, compact: bool) -> None:
-    lines.extend(
-        [
-            "",
-            "## Settings categories",
-        ]
-    )
+    lines.extend(help_topic_block_lines("settings_profiles", compact=compact))
     docs = _SETTINGS_DOCS[:3] if compact else _SETTINGS_DOCS
+    entry_template = help_value_template(
+        "settings_entry_template", default="- {label}: {description}"
+    )
     for entry in docs:
-        lines.append(f"- {entry['label']}: {entry['description']}")
+        lines.append(
+            _format_help_line(
+                entry_template, label=entry["label"], description=entry["description"]
+            )
+        )
     if compact and len(_SETTINGS_DOCS) > len(docs):
-        lines.append("- Open full-size window to view all category descriptions.")
+        lines.append(
+            help_value_template(
+                "settings_compact_overflow",
+                default="- Open full-size window to view all category descriptions.",
+            )
+        )
 
 
 def _extend_camera_view_lines(lines: list[str], *, compact: bool) -> None:
-    lines.extend(
-        [
-            "",
-            "## Grid modes",
-            "- OFF: board shadow only.",
-            "- EDGE: only outer board edges.",
-            "- FULL: full lattice grid.",
-            "- HELPER: only lines intersecting active piece cells.",
-        ]
-    )
-    if compact:
-        return
-    lines.extend(
-        [
-            "",
-            "## 4D view note",
-            "- 4D is shown as multiple 3D boards (one per W layer).",
-        ]
-    )
+    lines.extend(help_topic_block_lines("camera_and_view", compact=compact))
 
 
 def _extend_workflow_lines(lines: list[str], *, compact: bool) -> None:
-    lines.extend(
-        [
-            "",
-            "## Launcher sections",
-            "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
-        ]
-    )
-    if compact:
-        lines.append("- Pause menu keeps Help/Settings/Keybindings/Bot options parity.")
-        return
-    lines.extend(
-        [
-            "",
-            "## Keybindings menu",
-            "- Sections: General, 2D, 3D, 4D.",
-            "- Rows show action, key(s), and action description.",
-            "",
-            "## Pause parity",
-            "- Pause includes Help, Settings, Keybindings, Bot Options, Restart, and Quit.",
-        ]
-    )
+    lines.extend(help_topic_block_lines("menu_workflows", compact=compact))
 
 
 def _extend_troubleshooting_lines(
     lines: list[str], state: _HelpState, *, compact: bool
 ) -> None:
     lines.extend(
-        [
-            "",
-            "## Quick recovery",
-            "- Re-open Keybindings Setup if controls feel inconsistent.",
-            "- Use explicit Save when you want a durable checkpoint.",
-            "- Use Edge/OFF grid if visuals feel crowded.",
-        ]
-    )
-    if compact:
-        return
-    lines.extend(
-        [
-            "",
-            "## Gameplay shortcuts",
-            f"- Help: {_current_binding_text(state.dimension, 'help')}",
-            f"- Grid mode: {_current_binding_text(state.dimension, 'toggle_grid')}",
-            f"- Pause menu: {_current_binding_text(state.dimension, 'menu')}",
-        ]
+        _format_help_lines(
+            help_topic_block_lines("troubleshooting", compact=compact),
+            help_key=_current_binding_text(state.dimension, "help"),
+            grid_key=_current_binding_text(state.dimension, "toggle_grid"),
+            menu_key=_current_binding_text(state.dimension, "menu"),
+        )
     )
 
 
@@ -572,7 +507,9 @@ def _topic_text_lines(
         include_all=include_all,
     )
     if action_lines:
-        lines.extend(["", "## Live keys (active profile)", *action_lines])
+        lines.extend(
+            ["", help_value_template("live_keys_heading", default="## Live keys (active profile)"), *action_lines]
+        )
     return lines
 
 

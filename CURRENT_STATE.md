@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `500` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `510` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -89,25 +89,34 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 481-490)
+## Recent Batch Status (Stages 501-510)
 
 Completed:
-- Created `src/tet4d/ui/pygame/runtime_ui/` and moved runtime helper modules:
-  - `ui/pygame/audio.py` -> `ui/pygame/runtime_ui/audio.py`
-  - `ui/pygame/display.py` -> `ui/pygame/runtime_ui/display.py`
-  - `ui/pygame/app_runtime.py` -> `ui/pygame/runtime_ui/app_runtime.py`
-- Canonicalized CLI/UI/engine/test callers to `tet4d.ui.pygame.runtime_ui.*` imports
-  (including `engine.api` lazy wrappers and launcher/settings helpers).
-- Normalized moved `app_runtime` internal imports to canonical
-  `tet4d.ui.pygame.runtime_ui.audio` / `tet4d.ui.pygame.runtime_ui.display`.
-- Recorded zero-caller audits for the old top-level `ui/pygame/{audio,display,app_runtime}.py`
-  paths before final checkpoint docs/metrics refresh.
+- Added doc-driven runtime help-copy source:
+  - `docs/help/runtime_help_text.json`
+- Added runtime loader/validation helper:
+  - `src/tet4d/engine/help_text.py`
+- Added engine API wrappers used by pygame runtime help UI:
+  - `help_topic_block_lines_runtime`
+  - `help_topic_compact_limit_runtime`
+  - `help_topic_compact_overflow_line_runtime`
+  - `help_value_template_runtime`
+  - `help_action_group_heading_runtime`
+  - `help_fallback_topic_runtime`
+- Rewired `src/tet4d/ui/pygame/runtime_ui/help_menu.py` to load runtime help prose from
+  the doc source and format dynamic placeholders in Python (`context`, profile name,
+  live bindings, piece-set labels, compact overflow counters).
+- Added runtime help-copy loader tests:
+  - `src/tet4d/engine/tests/test_help_text.py`
+- Synced help contracts:
+  - `config/project/canonical_maintenance.json`
+  - `docs/help/HELP_INDEX.md`
+  - `docs/PROJECT_STRUCTURE.md`
 
 Balance note:
-- `src/tet4d/ui/pygame/runtime_ui` is a coherent small leaf at `4` Python files
-  (including package `__init__`), fuzzy score `0.83` (`watch`).
-- Top-level `src/tet4d/ui/pygame` dropped from `13` to `10` Python files and remains
-  fuzzy `1.0` (`balanced`) after the `runtime_ui/` follow-up extraction.
+- Folder balance is unchanged by this batch (text externalization + helper wiring only).
+- `src/tet4d/ui/pygame/runtime_ui` remains `6` Python files and `balanced`.
+- Top-level `src/tet4d/ui/pygame` remains `8` Python files and `balanced`.
 - Leaf folder-balance gate remains non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
@@ -136,6 +145,7 @@ Recommended next family moves (same staged pattern):
 - `ui_utils` extraction decision (keep top-level utility, or pair it with another draw/layout helper if a coherent subpackage is justified)
 - `projection3d` / `front3d_game` / `front4d_game` watch (defer until a renderer/viewer feature batch)
 - `keybindings.py` decomposition planning (split internal sections before any package move)
+- maintain `docs/help/runtime_help_text.json` as the single source for runtime help prose (no new hardcoded topic prose in Python)
 - `loop/` and `runtime_ui/` optional follow-up consolidation only when a cohesive helper pair is ready (avoid tiny leaf churn)
 
 Pattern per family:

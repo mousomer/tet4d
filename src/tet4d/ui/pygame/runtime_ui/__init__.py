@@ -1,1 +1,1 @@
-"""Runtime audio/display/bootstrap helpers for pygame UI adapters."""
+"""Runtime audio/display/bootstrap/help overlay helpers for pygame UI adapters."""

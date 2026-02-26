@@ -1041,6 +1041,44 @@ def help_topics_for_context_runtime(*args: Any, **kwargs: Any):
     return _help_topics_for_context(*args, **kwargs)
 
 
+def help_topic_block_lines_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_topic_block_lines as _help_topic_block_lines
+
+    return _help_topic_block_lines(*args, **kwargs)
+
+
+def help_topic_compact_limit_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_topic_compact_limit as _help_topic_compact_limit
+
+    return _help_topic_compact_limit(*args, **kwargs)
+
+
+def help_topic_compact_overflow_line_runtime(*args: Any, **kwargs: Any):
+    from .help_text import (
+        help_topic_compact_overflow_line as _help_topic_compact_overflow_line,
+    )
+
+    return _help_topic_compact_overflow_line(*args, **kwargs)
+
+
+def help_value_template_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_value_template as _help_value_template
+
+    return _help_value_template(*args, **kwargs)
+
+
+def help_action_group_heading_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_action_group_heading as _help_action_group_heading
+
+    return _help_action_group_heading(*args, **kwargs)
+
+
+def help_fallback_topic_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_fallback_topic as _help_fallback_topic
+
+    return _help_fallback_topic(*args, **kwargs)
+
+
 def piece_set_2d_options_gameplay():
     from .gameplay.pieces2d import PIECE_SET_2D_OPTIONS as _PIECE_SET_2D_OPTIONS
 

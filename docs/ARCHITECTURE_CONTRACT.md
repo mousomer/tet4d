@@ -1043,3 +1043,28 @@ incremental enforcement strategy used while refactoring.
 - Stage 500 (slice 135, runtime-ui overlay checkpoint and verify) records completion of
   the Stage 491-499 runtime-overlay move batch, advances `arch_stage` to `500`, updates
   path allowlists/contracts, and verifies the checkpoint locally with `verify.sh`.
+- Stage 501 (slice 136, help-copy doc source scaffold) adds
+  `docs/help/runtime_help_text.json` as the canonical runtime help-copy source and wires
+  it into project contracts.
+- Stage 502 (slice 137, help-copy runtime loader) adds
+  `src/tet4d/engine/help_text.py` to load and validate runtime help-copy payloads from
+  the help doc source.
+- Stage 503 (slice 138, engine-api help-copy wrappers) exposes runtime help-copy loader
+  access through new `tet4d.engine.api` wrappers used by the pygame help adapter.
+- Stage 504 (slice 139, help-menu fallback doc wiring) migrates help-menu fallback topic
+  copy to the runtime help-copy document source.
+- Stage 505 (slice 140, help-menu topic appendix doc wiring) migrates hardcoded
+  topic-extension prose blocks to template-driven lines loaded from
+  `docs/help/runtime_help_text.json`.
+- Stage 506 (slice 141, help-menu heading template wiring) migrates live-key section
+  headings and gameplay action-group headings to doc-driven templates.
+- Stage 507 (slice 142, help-copy contract sync) updates canonical maintenance + help
+  index contracts to include `docs/help/runtime_help_text.json` as required help
+  contract input.
+- Stage 508 (slice 143, help-copy unit coverage) adds runtime help-copy loader tests in
+  `src/tet4d/engine/tests/test_help_text.py`.
+- Stage 509 (slice 144, docs/state handoff sync) refreshes structure docs and
+  `CURRENT_STATE.md` with the doc-driven runtime help-copy architecture.
+- Stage 510 (slice 145, help-copy checkpoint and verify) records completion of the
+  Stage 501-509 help-copy externalization batch, advances `arch_stage` to `510`, and
+  verifies the checkpoint locally with `verify.sh`.

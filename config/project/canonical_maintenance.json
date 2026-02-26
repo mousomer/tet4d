@@ -45,6 +45,7 @@
     ],
     "help_contract": [
       "docs/help/HELP_INDEX.md",
+      "docs/help/runtime_help_text.json",
       "assets/help/manifest.json"
     ],
     "release_contract": [
@@ -58,7 +59,8 @@
       "src/tet4d/engine/tests/test_menu_policy.py",
       "src/tet4d/engine/tests/test_project_config.py",
       "src/tet4d/engine/tests/test_help_topics.py",
-      "src/tet4d/engine/tests/test_help_menu.py"
+      "src/tet4d/engine/tests/test_help_menu.py",
+      "src/tet4d/engine/tests/test_help_text.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",
@@ -413,6 +415,14 @@
       ]
     },
     {
+      "file": "docs/help/runtime_help_text.json",
+      "must_contain": [
+        "\"version\": 1",
+        "\"topic_blocks\"",
+        "\"fallback_topic\""
+      ]
+    },
+    {
       "file": "assets/help/manifest.json",
       "must_contain": [
         "\"translation_keys\"",
@@ -478,6 +488,7 @@
       "name": "Help content index",
       "paths": [
         "docs/help/HELP_INDEX.md",
+        "docs/help/runtime_help_text.json",
         "assets/help/manifest.json"
       ],
       "status": "connected"
