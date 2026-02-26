@@ -745,6 +745,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 `docs/README.md`,
 `docs/PROJECT_STRUCTURE.md`.
 
+145. `DONE` Arch Stage 146 slice 136 moved `src/tet4d/engine/rotation_anim.py` implementation into `src/tet4d/engine/gameplay/rotation_anim.py` and retained an engine compatibility shim pending caller migration.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`

@@ -473,3 +473,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 145 (slice 135, runtime side-effect extraction) routes score-analyzer
   summary writes and event-log appends through
   `engine.runtime.score_analyzer_storage`.
+- Stage 146 (slice 136, sequential cleanup) moved `src/tet4d/engine/rotation_anim.py` implementation into `src/tet4d/engine/gameplay/rotation_anim.py` and retained an engine compatibility shim pending caller migration.
