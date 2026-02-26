@@ -947,3 +947,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 280. `DONE` Arch Stage 296 slice 286 recorded the staged checkpoint handoff into the final verification stage for the Stage 271-295 ND planner migration batch and advanced `arch_stage` to `296`.
 281. `DONE` Arch Stage 297 slice 287 advanced `arch_stage` to `297` and verified the Stage 271-296 ND planner migration batch with full local `verify.sh` + `ci_check.sh`.
 282. `DONE` Arch Stage 298 slice 288 recorded zero remaining imports of the transitional `engine/playbot/__init__.py` compatibility package and advanced `arch_stage` to `298` before package-shim pruning.
+283. `DONE` Arch Stage 299 slice 289 removed the zero-caller `engine/playbot/__init__.py` compatibility package after AI playbot family canonicalization.

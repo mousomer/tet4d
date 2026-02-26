@@ -652,3 +652,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 296 (slice 286, ND planner aggregate checkpoint II) records the staged checkpoint handoff into the final verification stage for the Stage 271-295 ND planner migration batch and advances `arch_stage` to `296`.
 - Stage 297 (slice 287, ND planner aggregate verification checkpoint) advances `arch_stage` to `297` and verifies the Stage 271-296 ND planner migration batch with full local `verify.sh` + `ci_check.sh`.
 - Stage 298 (slice 288, playbot package shim zero-caller checkpoint) records zero remaining imports of the transitional `src/tet4d/engine/playbot/__init__.py` compatibility package and advances `arch_stage` to `298` before package-shim pruning.
+- Stage 299 (slice 289, playbot package shim pruning) removes the zero-caller `src/tet4d/engine/playbot/__init__.py` compatibility package after AI playbot family canonicalization.
