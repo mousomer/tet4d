@@ -495,3 +495,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 307 (slice 297, menu-keybinding-shortcuts family verification checkpoint) records completion of the Stage 302-306 sequence, advances `arch_stage` to `307`, and verifies the checkpoint with full local `verify.sh` + `ci_check.sh`.
 - Stage 308 (slice 298, menu-controls API prep I) adds `engine.api` wrappers for keybinding/profile/menu-settings helpers so `engine/ui_logic/menu_controls.py` can move to `ui/pygame` while preserving `ui_to_engine_non_api = 0`.
 - Stage 309 (slice 299, menu-controls UI relocation) moves `src/tet4d/engine/ui_logic/menu_controls.py` implementation into `src/tet4d/ui/pygame/menu_controls.py`, rewires it through `tet4d.engine.api`, and retains an engine compatibility shim before caller canonicalization.
+- Stage 310 (slice 300, menu-controls caller canonicalization) migrates engine and CLI callers to canonical `src/tet4d/ui/pygame/menu_controls.py` imports before shim pruning.

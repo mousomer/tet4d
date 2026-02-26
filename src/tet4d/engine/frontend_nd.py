@@ -18,7 +18,7 @@ from .ui_logic.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from .ui_logic.menu_controls import (
+from tet4d.ui.pygame.menu_controls import (
     FieldSpec,
     MenuAction,
     apply_menu_actions,
