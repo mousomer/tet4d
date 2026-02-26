@@ -254,6 +254,7 @@ src/tet4d/ui/pygame/front3d_setup.py
 src/tet4d/ui/pygame/front4d.py
 src/tet4d/ui/pygame/grid_mode_render.py
 src/tet4d/ui/pygame/launcher_nd_runner.py
+src/tet4d/ui/pygame/launcher_play.py
 src/tet4d/ui/pygame/keybindings_menu.py
 src/tet4d/ui/pygame/keybindings_menu_view.py
 src/tet4d/ui/pygame/launcher_settings.py
