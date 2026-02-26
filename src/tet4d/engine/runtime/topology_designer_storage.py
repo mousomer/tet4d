@@ -4,19 +4,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .json_storage import read_json_object_or_empty
 
 def read_json_object(path: Path) -> dict[str, Any]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError:
-        return {}
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    return payload
+    return read_json_object_or_empty(path)
 
 
 def write_json_object(path: Path, payload: dict[str, Any]) -> None:
