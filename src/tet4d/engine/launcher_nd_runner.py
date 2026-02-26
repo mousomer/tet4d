@@ -5,7 +5,7 @@ from typing import Callable, Optional, TypeVar
 import pygame
 
 from .app_runtime import capture_windowed_display_settings, open_display
-from .display import DisplaySettings
+from tet4d.ui.pygame.display import DisplaySettings
 from .gameplay.game_nd import GameConfigND
 
 

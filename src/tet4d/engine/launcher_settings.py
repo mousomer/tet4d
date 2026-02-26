@@ -6,7 +6,7 @@ import pygame
 
 from .app_runtime import capture_windowed_display_settings
 from .audio import AudioSettings, play_sfx, set_audio_settings
-from .display import DisplaySettings, apply_display_mode, normalize_display_settings
+from tet4d.ui.pygame.display import DisplaySettings, apply_display_mode, normalize_display_settings
 from .runtime.menu_config import (
     default_settings_payload,
     settings_hub_layout_rows,

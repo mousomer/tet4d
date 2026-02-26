@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pygame
 
 from .audio import AudioSettings, initialize_audio, set_audio_settings
-from .display import DisplaySettings, apply_display_mode, normalize_display_settings
+from tet4d.ui.pygame.display import DisplaySettings, apply_display_mode, normalize_display_settings
 from .keybindings import initialize_keybinding_files
 from .runtime.menu_settings_state import (
     get_analytics_settings,

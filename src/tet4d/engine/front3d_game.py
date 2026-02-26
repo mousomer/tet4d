@@ -15,7 +15,7 @@ from tet4d.ui.pygame.camera_mouse import (
     apply_mouse_orbit_event,
     mouse_wheel_delta,
 )
-from .display import DisplaySettings
+from tet4d.ui.pygame.display import DisplaySettings
 from .front3d_render import (
     Camera3D,
     ClearAnimation3D,

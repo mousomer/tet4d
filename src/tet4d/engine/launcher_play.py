@@ -6,7 +6,7 @@ import pygame
 
 from cli import front2d
 from .app_runtime import capture_windowed_display_settings, open_display
-from .display import DisplaySettings
+from tet4d.ui.pygame.display import DisplaySettings
 from .front3d_game import (
     build_config as build_config_3d,
     run_game_loop as run_game_loop_3d,

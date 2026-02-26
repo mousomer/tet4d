@@ -753,6 +753,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 148. `DONE` Arch Stage 149 slice 139 removed the zero-caller `src/tet4d/engine/rotation_anim.py` compatibility shim after canonical gameplay import migration.
 
+149. `DONE` Arch Stage 150 slice 140 migrated engine callers to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`
