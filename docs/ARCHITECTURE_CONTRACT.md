@@ -690,3 +690,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 332 (slice 322, recorded the keybindings family API-prep wrappers and transitional engine-to-ui adapter allowlists as baseline locks pending later key_dispatch and keybindings_menu_model family cleanup).
 - Stage 333 (slice 323, recorded zero direct callers of the removed engine/ui_logic/keybindings.py shim and preserved canonical imports for engine.api, engine callers, CLI, and tests).
 - Stage 334 (slice 324, recorded staged handoff into the final verification checkpoint for the Stage 316-333 keybindings migration batch).
+- Stage 335 (slice 325, advanced arch_stage to 335 and verified the Stage 316-334 keybindings migration batch with full local verify.sh and ci_check.sh).
