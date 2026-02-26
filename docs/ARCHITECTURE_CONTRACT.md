@@ -488,3 +488,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 158 (slice 148, sequential cleanup) migrated `engine.api` dry-run wrappers to canonical `src/tet4d/ai/playbot/dry_run.py` imports before shim pruning.
 - Stage 159 (slice 149, sequential cleanup) expanded `src/tet4d/ai/playbot/__init__.py` lazy exports for dry-run APIs to strengthen the canonical AI package surface before shim pruning.
 - Stage 160 (slice 150, sequential cleanup) removed the zero-caller `src/tet4d/engine/playbot/dry_run.py` compatibility shim after canonical AI dry-run import migration.
+- Stage 161 (slice 151, sequential cleanup) moved `src/tet4d/engine/view_controls.py`
+  implementation into `src/tet4d/ui/pygame/view_controls.py` and retained an
+  engine compatibility shim pending caller migration.

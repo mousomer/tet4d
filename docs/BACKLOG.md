@@ -774,6 +774,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 158. `DONE` Arch Stage 159 slice 149 expanded `src/tet4d/ai/playbot/__init__.py` lazy exports for dry-run APIs to strengthen the canonical AI package surface before shim pruning.
 
 159. `DONE` Arch Stage 160 slice 150 removed the zero-caller `src/tet4d/engine/playbot/dry_run.py` compatibility shim after canonical AI dry-run import migration.
+160. `DONE` Arch Stage 161 slice 151 moved `src/tet4d/engine/view_controls.py`
+    implementation to `src/tet4d/ui/pygame/view_controls.py` and retained an
+    engine compatibility shim pending caller migration.
 
 ## 6. Source Inputs
 
