@@ -485,3 +485,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 297 (slice 287, ND planner aggregate verification checkpoint) advances `arch_stage` to `297` and verifies the Stage 271-296 ND planner migration batch with full local `verify.sh` + `ci_check.sh`.
 - Stage 298 (slice 288, playbot package shim zero-caller checkpoint) records zero remaining imports of the transitional `engine/playbot/__init__.py` compatibility package and advances `arch_stage` to `298` before package-shim pruning.
 - Stage 299 (slice 289, playbot package shim pruning) removes the zero-caller `engine/playbot/__init__.py` compatibility package after AI playbot family canonicalization.
+- Stage 300 (slice 290, playbot package post-prune docs sync) records `src/tet4d/ai/playbot/__init__.py` as the canonical playbot package surface after engine package shim removal and advances `arch_stage` to `300`.
