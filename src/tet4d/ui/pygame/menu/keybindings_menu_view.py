@@ -4,7 +4,7 @@ from typing import Any
 
 import pygame
 
-from tet4d.ui.pygame.control_icons import draw_action_icon
+from tet4d.ui.pygame.render.control_icons import draw_action_icon
 from tet4d.ui.pygame.input.key_display import format_key_tuple
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text

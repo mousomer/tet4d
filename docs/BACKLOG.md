@@ -1110,3 +1110,23 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 433. `DONE` Arch Stage 448 slice 83 recorded the staged handoff into the final local verification checkpoint for the `431-447` batch.
 434. `DONE` Arch Stage 449 slice 84 ran the local verification checkpoint for the `431-448` input-family batch.
 435. `DONE` Arch Stage 450 slice 85 recorded completion of the Stage 431-449 `camera_mouse` + `view_controls` input-subpackage batch and verified the checkpoint locally.
+436. `DONE` Arch Stage 451 slice 86 created `src/tet4d/ui/pygame/render/` and moved `ui/pygame/text_render_cache.py` into the new render-helper subpackage.
+437. `DONE` Arch Stage 452 slice 87 moved `ui/pygame/panel_utils.py` into `src/tet4d/ui/pygame/render/` to pair panel helpers with text-cache rendering utilities.
+438. `DONE` Arch Stage 453 slice 88 canonicalized engine and UI callers to `tet4d.ui.pygame.render.panel_utils` and `tet4d.ui.pygame.render.text_render_cache`.
+439. `DONE` Arch Stage 454 slice 89 recorded a zero-caller checkpoint for old top-level `ui/pygame/panel_utils.py` and `ui/pygame/text_render_cache.py` imports before pruning.
+440. `DONE` Arch Stage 455 slice 90 removed the zero-caller top-level `ui/pygame/text_render_cache.py` shim after canonicalization.
+441. `DONE` Arch Stage 456 slice 91 removed the zero-caller top-level `ui/pygame/panel_utils.py` shim after canonicalization.
+442. `DONE` Arch Stage 457 slice 92 moved `ui/pygame/control_icons.py` into `src/tet4d/ui/pygame/render/` as part of the render-helper family extraction.
+443. `DONE` Arch Stage 458 slice 93 moved `ui/pygame/control_helper.py` into `src/tet4d/ui/pygame/render/` and normalized its helper imports to canonical render paths.
+444. `DONE` Arch Stage 459 slice 94 canonicalized engine/UI/test callers to `tet4d.ui.pygame.render.control_helper` and `tet4d.ui.pygame.render.control_icons`.
+445. `DONE` Arch Stage 460 slice 95 recorded the render-helper checkpoint (`control_helper` + `control_icons`) with zero-caller audits, shim pruning, and a local verification pass.
+446. `DONE` Arch Stage 461 slice 96 moved `ui/pygame/gfx_panel_2d.py` into `src/tet4d/ui/pygame/render/`.
+447. `DONE` Arch Stage 462 slice 97 moved `ui/pygame/gfx_game.py` into `src/tet4d/ui/pygame/render/`.
+448. `DONE` Arch Stage 463 slice 98 canonicalized CLI/UI callers and internal imports to `tet4d.ui.pygame.render.gfx_panel_2d` and `tet4d.ui.pygame.render.gfx_game`.
+449. `DONE` Arch Stage 464 slice 99 recorded zero-caller audits and removed the old top-level `ui/pygame/gfx_panel_2d.py` and `ui/pygame/gfx_game.py` shims.
+450. `DONE` Arch Stage 465 slice 100 moved `ui/pygame/grid_mode_render.py` into `src/tet4d/ui/pygame/render/`.
+451. `DONE` Arch Stage 466 slice 101 canonicalized engine render callers to `tet4d.ui.pygame.render.grid_mode_render`, recorded a zero-caller checkpoint, and removed the old top-level shim.
+452. `DONE` Arch Stage 467 slice 102 moved `ui/pygame/font_profiles.py` into `src/tet4d/ui/pygame/render/`.
+453. `DONE` Arch Stage 468 slice 103 canonicalized CLI/engine callers to `tet4d.ui.pygame.render.font_profiles`, recorded a zero-caller checkpoint, and removed the old top-level shim.
+454. `DONE` Arch Stage 469 slice 104 moved `ui/pygame/keybindings_defaults.py` into `src/tet4d/ui/pygame/input/`, canonicalized `keybindings.py`, and removed the old top-level shim after zero-caller audit.
+455. `DONE` Arch Stage 470 slice 105 recorded completion of the Stage 451-469 `render/` extraction + `input/keybindings_defaults` move batch, refreshed docs/handoff/metrics, and verified the checkpoint locally.

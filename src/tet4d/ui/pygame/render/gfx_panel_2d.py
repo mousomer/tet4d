@@ -6,11 +6,11 @@ from typing import Any
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.control_helper import (
+from tet4d.ui.pygame.render.control_helper import (
     control_groups_for_dimension,
     draw_grouped_control_helper,
 )
-from tet4d.ui.pygame.panel_utils import render_text_cached, truncate_lines_to_height
+from tet4d.ui.pygame.render.panel_utils import render_text_cached, truncate_lines_to_height
 from tet4d.ui.pygame.ui_utils import fit_text
 
 

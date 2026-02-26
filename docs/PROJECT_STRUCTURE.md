@@ -85,11 +85,10 @@ tet4d/
 │       ├── pieces2d.py          # classic tetromino set
 │       ├── pieces_nd.py         # 3D + 4D native piece sets
 │       ├── keybindings.py       # binding definitions + load/save
-│       ├── input/               # key dispatch/name formatting input helper subpackage
+│       ├── input/               # key dispatch/name formatting + default key maps helper subpackage
 │       ├── launch/              # launcher/setup/profile UI subpackage
 │       ├── menu/                # menu + keybindings-menu UI subpackage
-│       ├── font_profiles.py     # shared per-mode font profiles and font factory
-│       ├── control_helper.py    # grouped in-game key-helper rendering
+│       ├── render/              # rendering/panel/icon/font helper UI subpackage
 │       ├── help_menu.py         # launcher/pause help and explanation UI
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── audio.py             # generated SFX + volume/mute runtime
@@ -159,7 +158,7 @@ tet4d/
 11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
 12. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
 13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
-14. Shared in-game key helper grouping is in `control_helper.py`.
+14. Shared in-game key helper grouping is in `render/control_helper.py`.
 15. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py` and `menu/menu_control_guides.py`.
 16. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
@@ -167,22 +166,23 @@ tet4d/
 19. `config/menu/*` drives launcher/setup menu structure and default values.
 20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts.
 21. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
-22. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-23. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
-24. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
-25. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-26. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-27. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
-28. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-29. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-30. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-31. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-32. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-33. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-34. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-35. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-36. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-37. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+22. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
+23. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+24. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
+25. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
+26. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+27. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+28. `docs/help/HELP_INDEX.md`and`assets/help/manifest.json` are canonical help-content contracts.
+29. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+30. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+31. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+32. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+33. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+34. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+35. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+36. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+37. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+38. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
 
 ## Placement rubric
 

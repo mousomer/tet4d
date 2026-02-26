@@ -7,7 +7,7 @@ from typing import Optional
 
 import pygame
 
-from tet4d.ui.pygame.control_helper import control_groups_for_dimension
+from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from .frontend_nd import (
     GfxFonts,
     gravity_interval_ms_from_config,
@@ -16,7 +16,7 @@ from .frontend_nd import (
 from .gameplay.game_nd import GameStateND
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
-from tet4d.ui.pygame.panel_utils import draw_game_side_panel
+from tet4d.ui.pygame.render.panel_utils import draw_game_side_panel
 from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
@@ -38,8 +38,8 @@ from tet4d.ui.pygame.projection3d import (
 from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .runtime.score_analyzer import hud_analysis_lines
-from tet4d.ui.pygame.grid_mode_render import draw_projected_grid_mode
-from tet4d.ui.pygame.text_render_cache import render_text_cached
+from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
+from tet4d.ui.pygame.render.text_render_cache import render_text_cached
 from .gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from .ui_logic.view_modes import GridMode, grid_mode_label

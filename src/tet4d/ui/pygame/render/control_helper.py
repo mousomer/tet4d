@@ -10,7 +10,7 @@ from tet4d.engine.api import format_key_tuple, runtime_binding_groups_for_dimens
 
 from .control_icons import draw_action_icon
 from .text_render_cache import render_text_cached
-from .ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import fit_text
 
 
 ControlGroup = tuple[str, tuple[str, ...]]

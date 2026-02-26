@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-26
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 431-450 batch)
+Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 451-470 batch)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `450` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `470` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -42,10 +42,11 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `src/tet4d/engine/ui_logic`: `6`
 - `src/tet4d/engine/runtime`: `22`
 - `src/tet4d/engine/gameplay`: `11`
-- `src/tet4d/ui/pygame`: `24`
+- `src/tet4d/ui/pygame`: `15`
 - `src/tet4d/ui/pygame/menu`: `10`
 - `src/tet4d/ui/pygame/launch`: `7`
-- `src/tet4d/ui/pygame/input`: `5`
+- `src/tet4d/ui/pygame/input`: `6`
+- `src/tet4d/ui/pygame/render`: `9`
 - `src/tet4d/ai/playbot`: `9`
 
 ### Balance Assessment
@@ -54,10 +55,12 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `engine/ui_logic` and `engine/gameplay` are healthy.
 - `engine/runtime` is large but coherent (and leaf-gated at `watch` baseline).
 - `ui/pygame/menu` and `ui/pygame/launch` are now balanced leaf subpackages.
-- `ui/pygame/input` is now a balanced leaf package (`5` files, fuzzy `balanced`) after
-  the mouse/view helper moves.
-- `ui/pygame` remains the current structural hotspot, but it dropped from `26` to `24`
-  top-level Python files and improved again within the non-leaf `skewed` band.
+- `ui/pygame/input` is now a balanced leaf package (`6` files, fuzzy `balanced`) after
+  adding `keybindings_defaults`.
+- `ui/pygame/render` is now a balanced leaf package (`9` files, fuzzy `balanced`) after
+  panel/control/gfx/grid/font helper relocation.
+- `ui/pygame` top-level is no longer the primary hotspot; it dropped to `15` files and
+  now scores `balanced` as a non-leaf package after the `render/` extraction batch.
 
 ## Major Completed Milestones (Condensed)
 
@@ -80,24 +83,33 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 431-450)
+## Recent Batch Status (Stages 451-470)
 
 Completed:
-- Extended `src/tet4d/ui/pygame/input/` with camera/view input helpers:
-  - `ui/pygame/camera_mouse.py` -> `ui/pygame/input/camera_mouse.py`
-  - `ui/pygame/view_controls.py` -> `ui/pygame/input/view_controls.py`
-- Canonicalized callers across UI frontends, engine render/front helpers, and engine
-  tests to `tet4d.ui.pygame.input.camera_mouse` / `tet4d.ui.pygame.input.view_controls`.
-- Pruned zero-caller top-level `ui/pygame/camera_mouse.py` and
-  `ui/pygame/view_controls.py` shims after caller canonicalization.
-- Updated staged architecture/backlog checkpoint history and handoff notes for the new
-  canonical `ui/pygame/input/*` paths.
+- Created `src/tet4d/ui/pygame/render/` and moved render/panel/icon/font helpers:
+  - `text_render_cache.py`
+  - `panel_utils.py`
+  - `control_icons.py`
+  - `control_helper.py`
+  - `gfx_panel_2d.py`
+  - `gfx_game.py`
+  - `grid_mode_render.py`
+  - `font_profiles.py`
+- Canonicalized engine/CLI/UI/test callers to `tet4d.ui.pygame.render.*` imports.
+- Moved `ui/pygame/keybindings_defaults.py` into
+  `src/tet4d/ui/pygame/input/keybindings_defaults.py` and canonicalized `keybindings.py`
+  to `tet4d.ui.pygame.input.keybindings_defaults`.
+- Updated contract-maintenance path tracking for the canonical `render/control_icons.py`
+  help asset dependency.
+- Recorded staged checkpoints at Stage 460 and Stage 470 with local verification.
 
 Balance note:
-- `src/tet4d/ui/pygame/input` is now balanced at `5` Python files (`234` LOC total),
-  fuzzy score `1.0` (`balanced`) due margin-expanded target plateau.
-- Top-level `src/tet4d/ui/pygame` dropped from `26` to `24` Python files and improved to
-  fuzzy score `0.58` (`skewed`, still the primary structural hotspot).
+- `src/tet4d/ui/pygame/render` is now balanced at `9` Python files (`1709` LOC total),
+  fuzzy score `1.0` (`balanced`).
+- `src/tet4d/ui/pygame/input` is now balanced at `6` Python files (`488` LOC total),
+  fuzzy score `1.0` (`balanced`).
+- Top-level `src/tet4d/ui/pygame` dropped from `24` to `15` Python files and now scores
+  fuzzy `0.98` (`balanced`) after the `render/` extraction batch.
 - Leaf folder-balance gate remains non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
@@ -117,13 +129,14 @@ Goal: reduce folder sprawl in `ui/pygame` by introducing a small number of coher
 Recommended subpackages (incremental, not all at once):
 - `src/tet4d/ui/pygame/menu/` (balanced)
 - `src/tet4d/ui/pygame/input/` (balanced)
-- `src/tet4d/ui/pygame/render/`
+- `src/tet4d/ui/pygame/render/` (balanced)
 - `src/tet4d/ui/pygame/launch/` (balanced)
 
 Recommended next family moves (same staged pattern):
-- `keybindings_defaults` (pairs naturally with `input/key_dispatch.py` + `input/key_display.py`)
 - `game_loop_common` (candidate for `input/` or a future `loop/` subpackage, depending on caller review)
-- `panel_utils` / `ui_utils` family (likely better grouped under a future `render/` or `layout/` subpackage)
+- `ui_utils` / `display` / `app_runtime` review (either keep stable or seed a `runtime_ui/` helper subpackage)
+- `help_menu` / `pause_menu` split planning (decompose before moving, due high caller breadth)
+- `projection3d` / `front3d_game` / `front4d_game` watch (defer until a renderer/viewer feature batch)
 
 Pattern per family:
 1. move implementation to subpackage
@@ -133,14 +146,13 @@ Pattern per family:
 5. prune shim
 6. checkpoint docs + metrics + verification
 
-### Track B: Continue playbot physical relocation cleanup
+### Track B: Playbot relocation audit-only (deprioritized)
 
-Goal: finish remaining `engine/playbot` physical ownership debt.
+Goal: confirm no real `engine/playbot` Python module stragglers remain.
 
-Do:
-- audit `src/tet4d/engine/playbot/*` remaining files
-- move low-risk stragglers to `src/tet4d/ai/playbot/`
-- keep `ai_to_engine_non_api = 0` by extending `engine.api` wrappers if needed
+Current note:
+- latest audit found no `*.py` files under `src/tet4d/engine/playbot/` (only local
+  `__pycache__` artifacts), so no staged relocation work is currently queued.
 
 ### Track C: Runtime side-effect extraction (selective)
 
@@ -167,8 +179,8 @@ Do:
 
 ### Estimated Remaining Effort
 
-- Practical completion (high confidence, low churn): `~20-35` stages
-- Maximal clean architecture (strict cleanup / deeper pruning): `~30-55` stages
+- Practical completion (high confidence, low churn): `~10-25` stages
+- Maximal clean architecture (strict cleanup / deeper pruning): `~20-45` stages
 
 ### Estimated LOC Impact
 

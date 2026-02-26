@@ -914,3 +914,53 @@ incremental enforcement strategy used while refactoring.
 - Stage 450 (slice 85, input family batch checkpoint and verify) records completion of
   the Stage 431-449 `camera_mouse` + `view_controls` input-subpackage batch and verifies
   the checkpoint with local `verify.sh`, continuing `ui/pygame` rebalancing.
+- Stage 451 (slice 86, render subpackage seed I) creates `src/tet4d/ui/pygame/render/`
+  and moves `text_render_cache.py` into the new render-helper subpackage.
+- Stage 452 (slice 87, render subpackage seed II) moves `panel_utils.py` into
+  `src/tet4d/ui/pygame/render/` to pair panel rendering helpers with text-cache logic.
+- Stage 453 (slice 88, panel/cache caller canonicalization) migrates engine and UI
+  callers to canonical `tet4d.ui.pygame.render.panel_utils` and
+  `tet4d.ui.pygame.render.text_render_cache` imports.
+- Stage 454 (slice 89, panel/cache zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame/panel_utils.py` and `text_render_cache.py`
+  paths before pruning.
+- Stage 455 (slice 90, text-cache shim pruning) removes the zero-caller top-level
+  `ui/pygame/text_render_cache.py` compatibility shim after canonicalization.
+- Stage 456 (slice 91, panel-utils shim pruning) removes the zero-caller top-level
+  `ui/pygame/panel_utils.py` compatibility shim after canonicalization.
+- Stage 457 (slice 92, render helper move I) moves `control_icons.py` into
+  `src/tet4d/ui/pygame/render/` as part of the render-helper family extraction.
+- Stage 458 (slice 93, render helper move II) moves `control_helper.py` into
+  `src/tet4d/ui/pygame/render/` and normalizes helper imports to canonical render paths.
+- Stage 459 (slice 94, control helper/icon caller canonicalization) migrates engine/UI
+  callers and tests to canonical `tet4d.ui.pygame.render.control_helper` and
+  `tet4d.ui.pygame.render.control_icons` imports.
+- Stage 460 (slice 95, render helper checkpoint and verify) records zero remaining
+  callers of the old top-level control helper/icon paths, prunes the shims, advances
+  the staged checkpoint, and verifies the batch locally with `verify.sh`.
+- Stage 461 (slice 96, render gfx move I) moves `gfx_panel_2d.py` into
+  `src/tet4d/ui/pygame/render/` with staged caller migration follow-up.
+- Stage 462 (slice 97, render gfx move II) moves `gfx_game.py` into
+  `src/tet4d/ui/pygame/render/` and keeps the render-family extraction contiguous.
+- Stage 463 (slice 98, render gfx caller canonicalization) migrates CLI/UI callers and
+  internal render imports to canonical `tet4d.ui.pygame.render.gfx_*` modules.
+- Stage 464 (slice 99, render gfx zero-caller checkpoint + prune) records zero
+  remaining imports of the old top-level `gfx_panel_2d.py` / `gfx_game.py` paths and
+  removes the corresponding compatibility shims.
+- Stage 465 (slice 100, render grid-mode move) moves `grid_mode_render.py` into
+  `src/tet4d/ui/pygame/render/`, continuing the render-helper consolidation.
+- Stage 466 (slice 101, render grid-mode canonicalization + prune) migrates engine
+  render callers to `tet4d.ui.pygame.render.grid_mode_render`, records a zero-caller
+  checkpoint for the old top-level path, and prunes the shim.
+- Stage 467 (slice 102, render font-profile move) moves `font_profiles.py` into
+  `src/tet4d/ui/pygame/render/`, aligning font factories with the render-helper family.
+- Stage 468 (slice 103, render font-profile canonicalization + prune) migrates CLI and
+  engine callers to canonical `tet4d.ui.pygame.render.font_profiles` imports, records a
+  zero-caller checkpoint for the old top-level path, and prunes the shim.
+- Stage 469 (slice 104, input defaults canonicalization checkpoint) moves
+  `keybindings_defaults.py` into `src/tet4d/ui/pygame/input/`, migrates
+  `keybindings.py` to canonical `tet4d.ui.pygame.input.keybindings_defaults` imports,
+  records a zero-caller checkpoint for the old path, and prunes the shim.
+- Stage 470 (slice 105, render/input batch checkpoint and verify) records completion of
+  the Stage 451-469 render-family and keybinding-defaults moves, refreshes docs/handoff
+  and architecture metrics, and verifies the checkpoint locally with `verify.sh`.

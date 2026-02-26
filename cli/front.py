@@ -31,7 +31,7 @@ from tet4d.ui.pygame.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
-from tet4d.ui.pygame.font_profiles import init_fonts as init_fonts_for_profile
+from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,

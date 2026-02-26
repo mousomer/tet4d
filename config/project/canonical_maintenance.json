@@ -26,7 +26,7 @@
     ],
     "help_assets": [
       "src/tet4d/ui/pygame/menu/menu_control_guides.py",
-      "src/tet4d/ui/pygame/control_icons.py",
+      "src/tet4d/ui/pygame/render/control_icons.py",
       "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
     "canonical_schemas": [
