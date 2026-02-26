@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pygame
 
 from cli import front2d
-from .app_runtime import capture_windowed_display_settings, open_display
+from tet4d.ui.pygame.app_runtime import capture_windowed_display_settings, open_display
 from tet4d.ui.pygame.display import DisplaySettings
 from .front3d_game import (
     build_config as build_config_3d,

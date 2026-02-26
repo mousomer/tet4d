@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from .app_runtime import (
+from tet4d.ui.pygame.app_runtime import (
     initialize_runtime,
 )
 from tet4d.ui.pygame.audio import play_sfx

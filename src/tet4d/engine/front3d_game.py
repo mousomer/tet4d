@@ -7,7 +7,7 @@ from typing import Optional
 
 import pygame
 
-from .app_runtime import initialize_runtime
+from tet4d.ui.pygame.app_runtime import initialize_runtime
 from tet4d.ui.pygame.audio import play_sfx
 from .runtime.assist_scoring import combined_score_multiplier
 from tet4d.ui.pygame.camera_mouse import (
