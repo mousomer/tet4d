@@ -559,3 +559,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 369 (slice 4, canonicalize front4d_game front4d_render test import).
 - Stage 370 (slice 5, canonicalize front4d_game gameplay replay test import).
 - Stage 371 (slice 6, front4d_game zero caller checkpoint).
+- Stage 372 (slice 7, prune front4d_game engine shim).
