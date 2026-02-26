@@ -45,7 +45,7 @@ from tet4d.ai.playbot.types import (
     bot_mode_from_index,
     bot_planner_profile_from_index,
 )
-from .loop_runner_nd import run_nd_loop
+from tet4d.ui.pygame.loop_runner_nd import run_nd_loop
 from .gameplay.rotation_anim import PieceRotationAnimatorND
 from .ui_logic.view_modes import GridMode, cycle_grid_mode
 from .pause_menu import run_pause_menu
