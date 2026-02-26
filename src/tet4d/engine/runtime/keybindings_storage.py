@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
+from .json_storage import read_json_value_or_raise
 
 def load_json_file(path: Path) -> Any:
     """Read and decode JSON from disk for keybindings persistence."""
-    return json.loads(path.read_text(encoding="utf-8"))
+    return read_json_value_or_raise(path)
 
 
 def atomic_write_text(path: Path, payload: str) -> None:

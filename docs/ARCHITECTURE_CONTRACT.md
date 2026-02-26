@@ -466,3 +466,5 @@ incremental enforcement strategy used while refactoring.
 - Stage 142 (slice 132, runtime side-effect extraction) routes menu-settings
   state storage JSON reads and atomic writes through shared helper
   `engine.runtime.json_storage`.
+- Stage 143 (slice 133, runtime side-effect extraction) routes keybindings
+  storage JSON reads through shared helper `engine.runtime.json_storage`.
