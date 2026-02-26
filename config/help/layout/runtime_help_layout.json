@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "colors": {
+    "bg_top": [14, 18, 44],
+    "bg_bottom": [4, 7, 20],
+    "text": [232, 232, 240],
+    "muted": [192, 200, 228],
+    "highlight": [255, 224, 128]
+  },
+  "thresholds": {
+    "compact_width_threshold": 760,
+    "compact_height_threshold": 460
+  },
+  "geometry": {
+    "outer_pad": 20,
+    "header_extra": 16,
+    "gap": 8,
+    "footer_height": 24,
+    "min_content_height": 160,
+    "content_pad_x": 12,
+    "content_pad_y": 8,
+    "compact_adjustments": {
+      "header_extra_min": 8,
+      "header_extra_divisor": 2,
+      "footer_height_min": 16,
+      "footer_height_reduce": 6,
+      "gap_min": 4,
+      "gap_reduce": 3,
+      "min_content_height_min": 90,
+      "min_content_height_divisor": 2
+    }
+  },
+  "topic_rules": {
+    "controls_topic_id": "movement_rotation",
+    "key_reference_topic_id": "key_reference"
+  },
+  "controls_helper_layout": {
+    "inset_x": 12,
+    "bottom_pad_y": 8,
+    "icon_placement": "grouped_helper",
+    "image_placement": "none"
+  },
+  "header": {
+    "title": "Help & Explanations",
+    "subtitle_compact": "{context_label} | {dimension}D | Help: {help_key}",
+    "subtitle_full": "Context: {context_label}   Dim: {dimension}D   Help: {help_key} (live profile)"
+  },
+  "labels": {
+    "topic": "Topic {topic_index}/{topic_total}",
+    "part": "Part {part_index}/{part_total}"
+  },
+  "footer_hints": {
+    "compact": "Esc | <- -> topic | [ ] part",
+    "full": "Esc back | Left/Right topic | Up/Down dimension | [ ] subpage"
+  },
+  "topic_media_placement": {
+    "default": {
+      "mode": "text",
+      "icon_placement": "inline_rows",
+      "image_placement": "none"
+    },
+    "movement_rotation": {
+      "mode": "controls",
+      "icon_placement": "grouped_helper",
+      "image_placement": "none"
+    }
+  }
+}

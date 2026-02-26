@@ -29,14 +29,20 @@ tet4d/
 │   │   └── structure.json       # menu row/field definitions (source-controlled)
 │   ├── schema/
 │   │   ├── menu_settings.schema.json  # canonical menu-settings schema
-│   │   └── save_state.schema.json     # canonical saved-state schema (planned runtime file)
+│   │   ├── save_state.schema.json     # canonical saved-state schema (planned runtime file)
+│   │   ├── help_runtime_content.schema.json # runtime help content contract
+│   │   └── help_runtime_layout.schema.json  # runtime help layout contract
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
 │   ├── help/
 │   │   ├── topics.json          # help topic registry
 │   │   ├── action_map.json      # action-to-topic mapping
-│   │   └── icon_map.json        # action-to-icon mapping for external SVG icon pack
+│   │   ├── icon_map.json        # action-to-icon mapping for external SVG icon pack
+│   │   ├── content/
+│   │   │   └── runtime_help_content.json # runtime help content templates
+│   │   └── layout/
+│   │       └── runtime_help_layout.json # runtime help layout/media placement rules
 │   ├── topology/
 │   │   └── designer_presets.json # advanced boundary topology profile definitions
 │   ├── playbot/
@@ -163,25 +169,26 @@ tet4d/
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
 18. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.
 19. `config/menu/*` drives launcher/setup menu structure and default values.
-20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `docs/help/runtime_help_text.json` is the canonical runtime help-copy text source formatted by `runtime_ui/help_menu.py`.
-21. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
-22. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
-23. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-24. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
-25. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
-26. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-27. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-28. `docs/help/HELP_INDEX.md`,`docs/help/runtime_help_text.json`, and`assets/help/manifest.json` are canonical help-content contracts.
-29. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-30. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-31. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-32. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-33. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-34. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-35. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-36. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-37. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-38. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
+21. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.
+22. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
+23. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
+24. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+25. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
+26. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
+27. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+28. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
+29. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`assets/help/manifest.json` are canonical help-content/layout contracts.
+30. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+31. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+32. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+33. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+34. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+35. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+36. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+37. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+38. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+39. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
 
 ## Placement rubric
 

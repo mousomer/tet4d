@@ -1079,6 +1079,18 @@ def help_fallback_topic_runtime(*args: Any, **kwargs: Any):
     return _help_fallback_topic(*args, **kwargs)
 
 
+def help_layout_payload_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_layout_payload as _help_layout_payload
+
+    return _help_layout_payload(*args, **kwargs)
+
+
+def help_topic_media_rule_runtime(*args: Any, **kwargs: Any):
+    from .help_text import help_topic_media_rule as _help_topic_media_rule
+
+    return _help_topic_media_rule(*args, **kwargs)
+
+
 def piece_set_2d_options_gameplay():
     from .gameplay.pieces2d import PIECE_SET_2D_OPTIONS as _PIECE_SET_2D_OPTIONS
 

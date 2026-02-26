@@ -33,7 +33,9 @@
       "config/schema/menu_settings.schema.json",
       "config/schema/save_state.schema.json",
       "config/schema/help_topics.schema.json",
-      "config/schema/help_action_map.schema.json"
+      "config/schema/help_action_map.schema.json",
+      "config/schema/help_runtime_content.schema.json",
+      "config/schema/help_runtime_layout.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -45,7 +47,6 @@
     ],
     "help_contract": [
       "docs/help/HELP_INDEX.md",
-      "docs/help/runtime_help_text.json",
       "assets/help/manifest.json"
     ],
     "release_contract": [
@@ -69,6 +70,8 @@
       "config/help/topics.json",
       "config/help/action_map.json",
       "config/help/icon_map.json",
+      "config/help/content/runtime_help_content.json",
+      "config/help/layout/runtime_help_layout.json",
       "config/gameplay/tuning.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
@@ -415,11 +418,35 @@
       ]
     },
     {
-      "file": "docs/help/runtime_help_text.json",
+      "file": "config/help/content/runtime_help_content.json",
       "must_contain": [
         "\"version\": 1",
         "\"topic_blocks\"",
         "\"fallback_topic\""
+      ]
+    },
+    {
+      "file": "config/help/layout/runtime_help_layout.json",
+      "must_contain": [
+        "\"version\": 1",
+        "\"topic_media_placement\"",
+        "\"controls_topic_id\""
+      ]
+    },
+    {
+      "file": "config/schema/help_runtime_content.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d runtime help content\"",
+        "\"topic_blocks\""
+      ]
+    },
+    {
+      "file": "config/schema/help_runtime_layout.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d runtime help layout rules\"",
+        "\"topic_media_placement\""
       ]
     },
     {
@@ -488,7 +515,8 @@
       "name": "Help content index",
       "paths": [
         "docs/help/HELP_INDEX.md",
-        "docs/help/runtime_help_text.json",
+        "config/help/content/runtime_help_content.json",
+        "config/help/layout/runtime_help_layout.json",
         "assets/help/manifest.json"
       ],
       "status": "connected"
@@ -500,6 +528,16 @@
         "config/help/action_map.json",
         "config/schema/help_topics.schema.json",
         "config/schema/help_action_map.schema.json"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Runtime help content/layout contracts",
+      "paths": [
+        "config/help/content/runtime_help_content.json",
+        "config/help/layout/runtime_help_layout.json",
+        "config/schema/help_runtime_content.schema.json",
+        "config/schema/help_runtime_layout.schema.json"
       ],
       "status": "connected"
     },

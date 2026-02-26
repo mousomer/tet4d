@@ -22,6 +22,8 @@ help_topic_compact_overflow_line = engine_api.help_topic_compact_overflow_line_r
 help_value_template = engine_api.help_value_template_runtime
 help_action_group_heading = engine_api.help_action_group_heading_runtime
 help_fallback_topic = engine_api.help_fallback_topic_runtime
+help_layout_payload = engine_api.help_layout_payload_runtime
+help_topic_media_rule = engine_api.help_topic_media_rule_runtime
 active_key_profile = engine_api.keybindings_active_key_profile
 binding_action_description = engine_api.binding_action_description
 binding_group_label = engine_api.binding_group_label
@@ -33,14 +35,8 @@ PIECE_SET_2D_OPTIONS = engine_api.piece_set_2d_options_gameplay()
 piece_set_2d_label = engine_api.piece_set_2d_label_gameplay
 piece_set_label = engine_api.piece_set_label_gameplay
 piece_set_options_for_dimension = engine_api.piece_set_options_for_dimension_gameplay
-project_constant_int = engine_api.project_constant_int
 
 
-_BG_TOP = (14, 18, 44)
-_BG_BOTTOM = (4, 7, 20)
-_TEXT_COLOR = (232, 232, 240)
-_MUTED_COLOR = (192, 200, 228)
-_HIGHLIGHT = (255, 224, 128)
 _RUNTIME_GROUP_ORDER = ("system", "game", "camera")
 _LIVE_KEY_GROUP_ORDER = (
     "system",
@@ -49,46 +45,49 @@ _LIVE_KEY_GROUP_ORDER = (
     "game_other",
     "camera",
 )
-_CONTROL_TOPIC_ID = "movement_rotation"
-_KEY_REFERENCE_TOPIC_ID = "key_reference"
 _SETTINGS_DOCS = settings_category_docs()
+_HELP_LAYOUT = help_layout_payload()
+_HELP_COLORS = _HELP_LAYOUT["colors"]
+_BG_TOP = tuple(_HELP_COLORS["bg_top"])
+_BG_BOTTOM = tuple(_HELP_COLORS["bg_bottom"])
+_TEXT_COLOR = tuple(_HELP_COLORS["text"])
+_MUTED_COLOR = tuple(_HELP_COLORS["muted"])
+_HIGHLIGHT = tuple(_HELP_COLORS["highlight"])
 
-_HELP_OUTER_PAD = project_constant_int(
-    ("layout", "help", "outer_pad"), 20, min_value=4, max_value=96
-)
-_HELP_HEADER_EXTRA = project_constant_int(
-    ("layout", "help", "header_extra"), 16, min_value=4, max_value=120
-)
-_HELP_GAP = project_constant_int(
-    ("layout", "help", "gap"), 8, min_value=1, max_value=40
-)
-_HELP_FOOTER_HEIGHT = project_constant_int(
-    ("layout", "help", "footer_height"), 24, min_value=12, max_value=80
-)
-_HELP_MIN_CONTENT_HEIGHT = project_constant_int(
-    ("layout", "help", "min_content_height"),
-    160,
-    min_value=60,
-    max_value=1000,
-)
-_HELP_CONTENT_PAD_X = project_constant_int(
-    ("layout", "help", "content_pad_x"), 12, min_value=0, max_value=80
-)
-_HELP_CONTENT_PAD_Y = project_constant_int(
-    ("layout", "help", "content_pad_y"), 8, min_value=0, max_value=80
-)
-_HELP_COMPACT_WIDTH = project_constant_int(
-    ("layout", "help", "compact_width_threshold"),
-    760,
-    min_value=300,
-    max_value=2000,
-)
-_HELP_COMPACT_HEIGHT = project_constant_int(
-    ("layout", "help", "compact_height_threshold"),
-    460,
-    min_value=220,
-    max_value=1600,
-)
+_HELP_THRESHOLDS = _HELP_LAYOUT["thresholds"]
+_HELP_COMPACT_WIDTH = int(_HELP_THRESHOLDS["compact_width_threshold"])
+_HELP_COMPACT_HEIGHT = int(_HELP_THRESHOLDS["compact_height_threshold"])
+
+_HELP_GEOMETRY = _HELP_LAYOUT["geometry"]
+_HELP_COMPACT_ADJUSTMENTS = _HELP_GEOMETRY["compact_adjustments"]
+_HELP_OUTER_PAD = int(_HELP_GEOMETRY["outer_pad"])
+_HELP_HEADER_EXTRA = int(_HELP_GEOMETRY["header_extra"])
+_HELP_GAP = int(_HELP_GEOMETRY["gap"])
+_HELP_FOOTER_HEIGHT = int(_HELP_GEOMETRY["footer_height"])
+_HELP_MIN_CONTENT_HEIGHT = int(_HELP_GEOMETRY["min_content_height"])
+_HELP_CONTENT_PAD_X = int(_HELP_GEOMETRY["content_pad_x"])
+_HELP_CONTENT_PAD_Y = int(_HELP_GEOMETRY["content_pad_y"])
+
+_HELP_TOPIC_RULES = _HELP_LAYOUT["topic_rules"]
+_CONTROL_TOPIC_ID = str(_HELP_TOPIC_RULES["controls_topic_id"])
+_KEY_REFERENCE_TOPIC_ID = str(_HELP_TOPIC_RULES["key_reference_topic_id"])
+
+_HELP_CONTROLS_LAYOUT = _HELP_LAYOUT["controls_helper_layout"]
+_HELP_CONTROLS_INSET_X = int(_HELP_CONTROLS_LAYOUT["inset_x"])
+_HELP_CONTROLS_BOTTOM_PAD_Y = int(_HELP_CONTROLS_LAYOUT["bottom_pad_y"])
+
+_HELP_HEADER = _HELP_LAYOUT["header"]
+_HELP_TITLE_TEMPLATE = str(_HELP_HEADER["title"])
+_HELP_SUBTITLE_COMPACT_TEMPLATE = str(_HELP_HEADER["subtitle_compact"])
+_HELP_SUBTITLE_FULL_TEMPLATE = str(_HELP_HEADER["subtitle_full"])
+
+_HELP_LABELS = _HELP_LAYOUT["labels"]
+_HELP_TOPIC_LABEL_TEMPLATE = str(_HELP_LABELS["topic"])
+_HELP_PART_LABEL_TEMPLATE = str(_HELP_LABELS["part"])
+
+_HELP_FOOTER_HINTS = _HELP_LAYOUT["footer_hints"]
+_HELP_FOOTER_HINT_COMPACT = str(_HELP_FOOTER_HINTS["compact"])
+_HELP_FOOTER_HINT_FULL = str(_HELP_FOOTER_HINTS["full"])
 
 
 @dataclass
@@ -149,12 +148,31 @@ def _help_layout_zones(
 ) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
     width, height = surface.get_size()
     compact = is_compact_help_view(width=width, height=height)
-    header_extra = max(8, _HELP_HEADER_EXTRA // 2) if compact else _HELP_HEADER_EXTRA
-    footer_height = max(16, _HELP_FOOTER_HEIGHT - 6) if compact else _HELP_FOOTER_HEIGHT
-    gap = max(4, _HELP_GAP - 3) if compact else _HELP_GAP
-    min_content_height = (
-        max(90, _HELP_MIN_CONTENT_HEIGHT // 2) if compact else _HELP_MIN_CONTENT_HEIGHT
-    )
+    if compact:
+        header_extra = max(
+            int(_HELP_COMPACT_ADJUSTMENTS["header_extra_min"]),
+            _HELP_HEADER_EXTRA
+            // int(_HELP_COMPACT_ADJUSTMENTS["header_extra_divisor"]),
+        )
+        footer_height = max(
+            int(_HELP_COMPACT_ADJUSTMENTS["footer_height_min"]),
+            _HELP_FOOTER_HEIGHT
+            - int(_HELP_COMPACT_ADJUSTMENTS["footer_height_reduce"]),
+        )
+        gap = max(
+            int(_HELP_COMPACT_ADJUSTMENTS["gap_min"]),
+            _HELP_GAP - int(_HELP_COMPACT_ADJUSTMENTS["gap_reduce"]),
+        )
+        min_content_height = max(
+            int(_HELP_COMPACT_ADJUSTMENTS["min_content_height_min"]),
+            _HELP_MIN_CONTENT_HEIGHT
+            // int(_HELP_COMPACT_ADJUSTMENTS["min_content_height_divisor"]),
+        )
+    else:
+        header_extra = _HELP_HEADER_EXTRA
+        footer_height = _HELP_FOOTER_HEIGHT
+        gap = _HELP_GAP
+        min_content_height = _HELP_MIN_CONTENT_HEIGHT
     header_height = (
         fonts.title_font.get_height() + fonts.hint_font.get_height() + header_extra
     )
@@ -567,10 +585,10 @@ def _draw_controls_topic(
     )
     groups = tuple(control_groups_for_dimension(state.dimension))
     helper_rect = pygame.Rect(
-        content_rect.x + _HELP_CONTENT_PAD_X,
+        content_rect.x + _HELP_CONTROLS_INSET_X,
         y,
-        max(1, content_rect.width - (_HELP_CONTENT_PAD_X * 2)),
-        max(1, content_rect.bottom - y - _HELP_CONTENT_PAD_Y),
+        max(1, content_rect.width - (_HELP_CONTROLS_INSET_X * 2)),
+        max(1, content_rect.bottom - y - _HELP_CONTROLS_BOTTOM_PAD_Y),
     )
     pages = _paginate_control_groups(
         groups,
@@ -646,13 +664,22 @@ def _draw_help(
     help_binding = _current_binding_text(state.dimension, "help")
     title_text = fit_text(
         fonts.title_font,
-        "Help & Explanations",
+        _format_help_line(
+            _HELP_TITLE_TEMPLATE,
+            context_label=context_label,
+            dimension=state.dimension,
+            help_key=help_binding,
+        ),
         max(40, header_rect.width - (_HELP_CONTENT_PAD_X * 2)),
     )
-    subtitle_text = (
-        f"{context_label} | {state.dimension}D | Help: {help_binding}"
-        if compact
-        else f"Context: {context_label}   Dim: {state.dimension}D   Help: {help_binding} (live profile)"
+    subtitle_template = (
+        _HELP_SUBTITLE_COMPACT_TEMPLATE if compact else _HELP_SUBTITLE_FULL_TEMPLATE
+    )
+    subtitle_text = _format_help_line(
+        subtitle_template,
+        context_label=context_label,
+        dimension=state.dimension,
+        help_key=help_binding,
     )
     subtitle_draw = fit_text(
         fonts.hint_font,
@@ -676,7 +703,9 @@ def _draw_help(
     )
 
     topic_id = str(topic.get("id", ""))
-    if topic_id == _CONTROL_TOPIC_ID:
+    media_rule = help_topic_media_rule(topic_id)
+    topic_mode = str(media_rule.get("mode", "text")).strip().lower()
+    if topic_mode == "controls" or topic_id == _CONTROL_TOPIC_ID:
         subpage_count = _draw_controls_topic(
             surface,
             fonts,
@@ -698,10 +727,22 @@ def _draw_help(
 
     state.subpage = max(0, min(subpage_count - 1, state.subpage))
     page_label = fonts.hint_font.render(
-        f"Topic {state.page + 1}/{total_pages}", True, _MUTED_COLOR
+        _format_help_line(
+            _HELP_TOPIC_LABEL_TEMPLATE,
+            topic_index=state.page + 1,
+            topic_total=total_pages,
+        ),
+        True,
+        _MUTED_COLOR,
     )
     part_label = fonts.hint_font.render(
-        f"Part {state.subpage + 1}/{subpage_count}", True, _MUTED_COLOR
+        _format_help_line(
+            _HELP_PART_LABEL_TEMPLATE,
+            part_index=state.subpage + 1,
+            part_total=subpage_count,
+        ),
+        True,
+        _MUTED_COLOR,
     )
     page_x = frame_rect.right - page_label.get_width() - _HELP_CONTENT_PAD_X
     part_x = page_x
@@ -713,11 +754,7 @@ def _draw_help(
     footer_msg = fonts.hint_font.render(
         fit_text(
             fonts.hint_font,
-            (
-                "Esc | <- -> topic | [ ] part"
-                if compact
-                else "Esc back | Left/Right topic | Up/Down dimension | [ ] subpage"
-            ),
+            _HELP_FOOTER_HINT_COMPACT if compact else _HELP_FOOTER_HINT_FULL,
             max(40, footer_rect.width - (_HELP_CONTENT_PAD_X * 2)),
         ),
         True,

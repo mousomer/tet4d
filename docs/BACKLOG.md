@@ -1160,13 +1160,23 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 483. `DONE` Arch Stage 498 slice 133 removed the zero-caller top-level `ui/pygame/pause_menu.py` shim/path after canonicalization.
 484. `DONE` Arch Stage 499 slice 134 refreshed path docs/backlog/current-state notes for canonical `ui/pygame/runtime_ui/{help_menu,pause_menu}` paths and the post-move folder-balance snapshot.
 485. `DONE` Arch Stage 500 slice 135 recorded completion of the Stage 491-499 runtime-overlay move batch, advanced `arch_stage` to `500`, synced path allowlists/contracts, and verified the checkpoint locally.
-486. `DONE` Arch Stage 501 slice 136 added `docs/help/runtime_help_text.json` as the canonical runtime help-copy source document.
+486. `DONE` Arch Stage 501 slice 136 added `config/help/content/runtime_help_content.json` as the canonical runtime help-copy source document.
 487. `DONE` Arch Stage 502 slice 137 added `src/tet4d/engine/help_text.py` to load and validate runtime help-copy payloads from the help doc source.
 488. `DONE` Arch Stage 503 slice 138 exposed runtime help-copy accessors through new `tet4d.engine.api` wrappers.
 489. `DONE` Arch Stage 504 slice 139 rewired runtime help-menu fallback topic copy to the doc-driven runtime help-copy source.
-490. `DONE` Arch Stage 505 slice 140 migrated runtime help-menu topic-extension prose blocks to template-driven lines loaded from `docs/help/runtime_help_text.json`.
+490. `DONE` Arch Stage 505 slice 140 migrated runtime help-menu topic-extension prose blocks to template-driven lines loaded from `config/help/content/runtime_help_content.json`.
 491. `DONE` Arch Stage 506 slice 141 migrated live-key/action-group headings to runtime help-copy document templates.
-492. `DONE` Arch Stage 507 slice 142 updated canonical maintenance and help-index contracts to include `docs/help/runtime_help_text.json`.
+492. `DONE` Arch Stage 507 slice 142 updated canonical maintenance and help-index contracts to include split runtime help content/layout assets.
 493. `DONE` Arch Stage 508 slice 143 added runtime help-copy loader coverage in `src/tet4d/engine/tests/test_help_text.py`.
 494. `DONE` Arch Stage 509 slice 144 refreshed structure docs and current-state handoff notes for the doc-driven runtime help-copy architecture.
 495. `DONE` Arch Stage 510 slice 145 recorded completion of the Stage 501-509 help-copy externalization batch, advanced `arch_stage` to `510`, and verified the checkpoint locally.
+496. `DONE` Arch Stage 511 slice 146 introduced split runtime help assets under `config/help/content/runtime_help_content.json` and `config/help/layout/runtime_help_layout.json`.
+497. `DONE` Arch Stage 512 slice 147 added split runtime help schemas `config/schema/help_runtime_content.schema.json` and `config/schema/help_runtime_layout.schema.json`.
+498. `DONE` Arch Stage 513 slice 148 refactored `src/tet4d/engine/help_text.py` to independently load/validate runtime help content and layout payloads.
+499. `DONE` Arch Stage 514 slice 149 exposed layout/media rule access through new `tet4d.engine.api` wrappers for the pygame help adapter.
+500. `DONE` Arch Stage 515 slice 150 rewired `runtime_ui/help_menu.py` to consume non-python layout thresholds/geometry/header/footer/label rules.
+501. `DONE` Arch Stage 516 slice 151 rewired controls-topic rendering selection to non-python topic media placement rules.
+502. `DONE` Arch Stage 517 slice 152 synchronized canonical maintenance rules for split runtime help content/layout/schema assets.
+503. `DONE` Arch Stage 518 slice 153 expanded runtime help tests to cover layout payload/media-rule loading and contract validation.
+504. `DONE` Arch Stage 519 slice 154 added stage-level overall LOC logging fields in `scripts/arch_metrics.py`.
+505. `DONE` Arch Stage 520 slice 155 recorded completion of the Stage 511-519 runtime-help split + stage-loc logging batch, advanced `arch_stage` to `520`, and verified the checkpoint locally.

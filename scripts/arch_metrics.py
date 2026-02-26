@@ -248,6 +248,36 @@ def _folder_balance_gate_config() -> dict[str, Any] | None:
     return _read_json_if_exists(FOLDER_BALANCE_BUDGETS_PATH)
 
 
+def _build_stage_loc_logger(src_paths: list[Path], *, arch_stage: int) -> dict[str, object]:
+    package_loc: dict[str, int] = {}
+    unique_folders: set[str] = set()
+    total_loc = 0
+    for path in src_paths:
+        loc = _python_loc(path)
+        total_loc += loc
+        unique_folders.add(path.parent.relative_to(REPO_ROOT).as_posix())
+        rel_parts = path.relative_to(REPO_ROOT).parts
+        if len(rel_parts) >= 4 and rel_parts[0] == "src" and rel_parts[1] == "tet4d":
+            top_package = rel_parts[2]
+        elif len(rel_parts) >= 3 and rel_parts[0] == "src" and rel_parts[1] == "tet4d":
+            top_package = "root"
+        else:
+            top_package = "other"
+        package_loc[top_package] = package_loc.get(top_package, 0) + loc
+    ordered_packages = dict(sorted(package_loc.items(), key=lambda item: item[0]))
+    return {
+        "arch_stage": arch_stage,
+        "overall_python_loc": total_loc,
+        "overall_python_file_count": len(src_paths),
+        "overall_python_folder_count": len(unique_folders),
+        "by_top_package_loc": ordered_packages,
+        "log_entry": (
+            f"stage={arch_stage} loc={total_loc} "
+            f"files={len(src_paths)} folders={len(unique_folders)}"
+        ),
+    }
+
+
 def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
     profiles = _folder_balance_profiles()
     gate_config = _folder_balance_gate_config()
@@ -595,7 +625,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 510,
+        "arch_stage": 520,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
@@ -633,6 +663,7 @@ def main() -> int:
             for k, v in engine_side_effect_signals.items()
         },
         "folder_balance": _build_folder_balance(src_paths),
+        "stage_loc_logger": _build_stage_loc_logger(src_paths, arch_stage=520),
     }
     print(json.dumps(metrics, indent=2, sort_keys=True))
     return 0

@@ -1044,8 +1044,8 @@ incremental enforcement strategy used while refactoring.
   the Stage 491-499 runtime-overlay move batch, advances `arch_stage` to `500`, updates
   path allowlists/contracts, and verifies the checkpoint locally with `verify.sh`.
 - Stage 501 (slice 136, help-copy doc source scaffold) adds
-  `docs/help/runtime_help_text.json` as the canonical runtime help-copy source and wires
-  it into project contracts.
+  `config/help/content/runtime_help_content.json` as the canonical runtime help-copy
+  source and wires it into project contracts.
 - Stage 502 (slice 137, help-copy runtime loader) adds
   `src/tet4d/engine/help_text.py` to load and validate runtime help-copy payloads from
   the help doc source.
@@ -1055,11 +1055,11 @@ incremental enforcement strategy used while refactoring.
   copy to the runtime help-copy document source.
 - Stage 505 (slice 140, help-menu topic appendix doc wiring) migrates hardcoded
   topic-extension prose blocks to template-driven lines loaded from
-  `docs/help/runtime_help_text.json`.
+  `config/help/content/runtime_help_content.json`.
 - Stage 506 (slice 141, help-menu heading template wiring) migrates live-key section
   headings and gameplay action-group headings to doc-driven templates.
 - Stage 507 (slice 142, help-copy contract sync) updates canonical maintenance + help
-  index contracts to include `docs/help/runtime_help_text.json` as required help
+  index contracts to include content/layout help assets as required help
   contract input.
 - Stage 508 (slice 143, help-copy unit coverage) adds runtime help-copy loader tests in
   `src/tet4d/engine/tests/test_help_text.py`.
@@ -1067,4 +1067,32 @@ incremental enforcement strategy used while refactoring.
   `CURRENT_STATE.md` with the doc-driven runtime help-copy architecture.
 - Stage 510 (slice 145, help-copy checkpoint and verify) records completion of the
   Stage 501-509 help-copy externalization batch, advances `arch_stage` to `510`, and
+  verifies the checkpoint locally with `verify.sh`.
+- Stage 511 (slice 146, runtime help content/layout split scaffold) introduces separate
+  canonical assets for runtime help content and layout rules:
+  `config/help/content/runtime_help_content.json` and
+  `config/help/layout/runtime_help_layout.json`.
+- Stage 512 (slice 147, runtime help schema split scaffold) adds dedicated schema
+  contracts for content and layout:
+  `config/schema/help_runtime_content.schema.json` and
+  `config/schema/help_runtime_layout.schema.json`.
+- Stage 513 (slice 148, runtime help loader split) refactors
+  `src/tet4d/engine/help_text.py` to load/validate content and layout assets
+  independently with separate caches.
+- Stage 514 (slice 149, runtime help API layout wrappers) exposes layout payload/media
+  rules via new `tet4d.engine.api` wrappers for the pygame help adapter.
+- Stage 515 (slice 150, help-menu layout-rule wiring) rewires
+  `runtime_ui/help_menu.py` to consume layout thresholds/geometry/header/footer/page
+  label rules from `config/help/layout/runtime_help_layout.json`.
+- Stage 516 (slice 151, help-menu topic media mode wiring) rewires controls-topic
+  rendering selection to use non-python topic media placement rules from layout assets.
+- Stage 517 (slice 152, canonical maintenance split sync) updates canonical maintenance
+  required paths/content rules/connectivity to track split runtime help
+  content/layout/schema artifacts.
+- Stage 518 (slice 153, runtime help split test coverage) extends runtime help tests to
+  cover layout payload/media-rule loading and contract validation.
+- Stage 519 (slice 154, stage-loc logger addition) extends `scripts/arch_metrics.py`
+  with stage-level overall LOC logging fields for checkpoint tracking.
+- Stage 520 (slice 155, runtime help split checkpoint and verify) records completion of
+  Stage 511-519, advances `arch_stage` to `520`, refreshes docs/current-state, and
   verifies the checkpoint locally with `verify.sh`.

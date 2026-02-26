@@ -338,7 +338,7 @@ Minimum required coverage for gameplay-affecting changes:
 14. `config/schema/*.schema.json`,
 15. `docs/migrations/*.md`,
 16. `tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`,
-17. `docs/help/HELP_INDEX.md`+`assets/help/manifest.json`,
+17. `docs/help/HELP_INDEX.md`+`config/help/content/runtime_help_content.json`+`config/help/layout/runtime_help_layout.json`+`assets/help/manifest.json`,
 18. `docs/RELEASE_CHECKLIST.md`.
 19. `docs/RELEASE_INSTALLERS.md`+`packaging/`+`.github/workflows/release-packaging.yml`.
 20. Repo governance enforcement files:
@@ -582,9 +582,16 @@ Authoritative open/deferred items are tracked in:
 - Stage 383 (slice 20, menu_model zero-caller checkpoint).
 - Stage 384 (slice 20, prune menu_model ui shim).
 - Stage 385 (slice 20, ui pygame menu subpackage checkpoint and verify).
-- Stage 501 (slice 136, add doc-driven runtime help-copy source `docs/help/runtime_help_text.json`).
+- Stage 501 (slice 136, add doc-driven runtime help-copy source `config/help/content/runtime_help_content.json`).
 - Stage 502 (slice 137, add runtime help-copy loader `engine/help_text.py`).
 - Stage 503 (slice 138, expose runtime help-copy access through `tet4d.engine.api` wrappers).
 - Stage 505 (slice 140, migrate runtime help-menu topic prose blocks from Python literals to doc templates).
 - Stage 507 (slice 142, add runtime help-copy doc to canonical maintenance help contracts).
 - Stage 510 (slice 145, complete doc-driven help-copy checkpoint and verify).
+- Stage 511 (slice 146, split runtime help into content/layout assets under `config/help/content/` and `config/help/layout/`).
+- Stage 512 (slice 147, add dedicated runtime help content/layout schemas).
+- Stage 514 (slice 149, expose runtime help layout/media rules via `tet4d.engine.api` wrappers).
+- Stage 515 (slice 150, wire runtime help-menu layout thresholds/geometry/header/footer labels to non-python layout rules).
+- Stage 516 (slice 151, wire controls topic rendering mode to non-python topic media placement rules).
+- Stage 519 (slice 154, add stage-level overall LOC logger fields to `scripts/arch_metrics.py`).
+- Stage 520 (slice 155, complete runtime help split + stage-LOC logging checkpoint and verify).
