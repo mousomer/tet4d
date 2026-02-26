@@ -869,3 +869,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 202. `DONE` Arch Stage 203 slice 193 migrated `front3d_game.py` and `front4d_game.py` to canonical `src/tet4d/ui/pygame/loop_runner_nd.py` imports before shim pruning.
 203. `DONE` Arch Stage 204 slice 194 recorded a zero-caller audit for `src/tet4d/engine/loop_runner_nd.py` and advanced `arch_stage` to `204` before shim pruning.
 204. `DONE` Arch Stage 205 slice 195 removed the zero-caller `src/tet4d/engine/loop_runner_nd.py` compatibility shim and advanced `arch_stage` to `205` after verification/CI checkpoint.
+205. `DONE` Arch Stage 206 slice 196 added lazy `engine.api` wrappers for app-runtime keybindings initialization, runtime settings payload access/save, and score-analyzer logging toggles to prepare UI relocation without deep `ui -> engine.runtime` imports.
+206. `DONE` Arch Stage 207 slice 197 moved `src/tet4d/engine/app_runtime.py` implementation into `src/tet4d/ui/pygame/app_runtime.py`, rewired runtime/keybindings access through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
+207. `DONE` Arch Stage 208 slice 198 migrated engine callers (`front3d_game`, `front4d_game`, `launcher_play`, `launcher_settings`) to canonical `src/tet4d/ui/pygame/app_runtime.py` imports before shim pruning.
+208. `DONE` Arch Stage 209 slice 199 migrated CLI callers and `tet4d.engine.api` lazy app-runtime wrappers to canonical `src/tet4d/ui/pygame/app_runtime.py` imports before shim pruning.
+209. `DONE` Arch Stage 210 slice 200 removed the zero-caller `src/tet4d/engine/app_runtime.py` compatibility shim and advanced `arch_stage` to `210` after verification/CI checkpoint.

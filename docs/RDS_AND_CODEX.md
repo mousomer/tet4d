@@ -399,7 +399,7 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 205`) completes the shared ND loop-runner UI migration by pruning the zero-caller `src/tet4d/engine/loop_runner_nd.py` shim after relocation/canonicalization, while preserving `ui_to_engine_non_api = 0`.
+9. Architecture stage checkpoint (`arch_stage: 210`) completes the shared ND loop-runner and app-runtime UI migrations by pruning the zero-caller `src/tet4d/engine/{loop_runner_nd,app_runtime}.py` shims after relocation/canonicalization, while preserving `ui_to_engine_non_api = 0` via `engine.api` wrappers and UI allowlist baseline locks.
    summary writes and event-log appends through
    `src/tet4d/engine/runtime/score_analyzer_storage.py`, and begins the
    `view_controls` UI canonicalization by moving implementation to
