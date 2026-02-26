@@ -422,6 +422,38 @@ def project_root_path():
     return _project_root_path()
 
 
+def keybindings_dir_path_runtime() -> Path:
+    from .runtime.project_config import keybindings_dir_path as _keybindings_dir_path
+
+    return _keybindings_dir_path()
+
+
+def keybindings_profiles_dir_path_runtime() -> Path:
+    from .runtime.project_config import (
+        keybindings_profiles_dir_path as _keybindings_profiles_dir_path,
+    )
+
+    return _keybindings_profiles_dir_path()
+
+
+def keybindings_load_json_file_runtime(path: Path) -> Any:
+    from .runtime.keybindings_storage import load_json_file as _load_json_file
+
+    return _load_json_file(path)
+
+
+def keybindings_atomic_write_text_runtime(path: Path, payload: str) -> None:
+    from .runtime.keybindings_storage import atomic_write_text as _atomic_write_text
+
+    _atomic_write_text(path, payload)
+
+
+def keybindings_copy_text_file_runtime(src_path: Path, dst_path: Path) -> None:
+    from .runtime.keybindings_storage import copy_text_file as _copy_text_file
+
+    _copy_text_file(src_path, dst_path)
+
+
 def open_display_runtime(*args: Any, **kwargs: Any) -> Any:
     from tet4d.ui.pygame.app_runtime import open_display as _open_display
 

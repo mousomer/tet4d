@@ -671,3 +671,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 315 (slice 305, menu-controls family verification checkpoint) advances `arch_stage` to `315` and verifies the Stage 308-314 menu-controls batch with full local `verify.sh` + `ci_check.sh`.
 
 - Stage 316 (slice 306, retargeted binding label/description engine.api wrappers to keybindings_catalog to prepare keybindings UI relocation without circular imports).
+- Stage 317 (slice 307, added engine.api wrappers for keybindings runtime path and storage helpers to prepare keybindings UI relocation).
