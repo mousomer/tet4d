@@ -11,7 +11,7 @@ from tet4d.ui.pygame.control_helper import (
     draw_grouped_control_helper,
 )
 from .runtime.help_topics import help_action_topic_registry, help_topics_for_context
-from .key_display import format_key_tuple
+from tet4d.ui.pygame.key_display import format_key_tuple
 from .keybindings import (
     active_key_profile,
     binding_action_description,

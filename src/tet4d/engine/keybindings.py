@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
-from .key_display import display_key_name
+from tet4d.ui.pygame.key_display import display_key_name
 from tet4d.ui.pygame.keybindings_defaults import (
     DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
     PROFILE_MACBOOK,

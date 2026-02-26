@@ -5,7 +5,7 @@ from typing import Any
 import pygame
 
 from tet4d.ui.pygame.control_icons import draw_action_icon
-from .key_display import format_key_tuple
+from tet4d.ui.pygame.key_display import format_key_tuple
 from .keybindings import binding_action_description
 from .ui_logic.keybindings_menu_model import (
     BindingRow,
