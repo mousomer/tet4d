@@ -4,10 +4,10 @@ import json
 import re
 from typing import Any
 
-from ..ui_logic.keybindings import (
-    active_key_profile,
-    load_active_profile_bindings,
-    set_active_key_profile,
+from ..api import (
+    keybindings_active_key_profile as active_key_profile,
+    keybindings_load_active_profile_bindings as load_active_profile_bindings,
+    keybindings_set_active_key_profile as set_active_key_profile,
 )
 from .menu_config import default_settings_payload
 from .menu_settings_state_storage import atomic_write_json, load_json_file

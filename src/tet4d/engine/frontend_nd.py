@@ -11,7 +11,7 @@ from .gameplay.challenge_mode import apply_challenge_prefill_nd
 from tet4d.ui.pygame.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .ui_logic.key_dispatch import match_bound_action
-from .ui_logic.keybindings import (
+from tet4d.ui.pygame.keybindings import (
     KEYS_3D,
     KEYS_4D,
     SYSTEM_KEYS,
