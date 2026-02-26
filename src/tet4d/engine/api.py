@@ -156,7 +156,7 @@ def plan_best_nd_with_budget(
 def simulate_lock_board(
     state: GameStateND, piece: Any
 ) -> tuple[dict[tuple[int, ...], int], int, bool]:
-    from .playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
+    from tet4d.ai.playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
 
     return _simulate_lock_board(state, piece)
 
@@ -164,13 +164,13 @@ def simulate_lock_board(
 def playbot_rotation_planes_nd(
     ndim: int, gravity_axis: int
 ) -> tuple[tuple[int, int], ...]:
-    from .playbot.planner_nd_core import rotation_planes as _rotation_planes
+    from tet4d.ai.playbot.planner_nd_core import rotation_planes as _rotation_planes
 
     return _rotation_planes(ndim, gravity_axis)
 
 
 def playbot_canonical_blocks_nd(blocks: Any) -> tuple[tuple[int, ...], ...]:
-    from .playbot.planner_nd_core import canonical_blocks as _canonical_blocks
+    from tet4d.ai.playbot.planner_nd_core import canonical_blocks as _canonical_blocks
 
     return _canonical_blocks(blocks)
 
@@ -180,7 +180,9 @@ def playbot_enumerate_orientations_nd(
     ndim: int,
     gravity_axis: int,
 ) -> tuple[tuple[tuple[int, ...], ...], ...]:
-    from .playbot.planner_nd_core import enumerate_orientations as _enumerate_orientations
+    from tet4d.ai.playbot.planner_nd_core import (
+        enumerate_orientations as _enumerate_orientations,
+    )
 
     return _enumerate_orientations(start_blocks, ndim, gravity_axis)
 
@@ -191,7 +193,9 @@ def playbot_build_column_levels_nd(
     lateral_axes: tuple[int, ...],
     gravity_axis: int,
 ) -> dict[tuple[int, ...], list[int]]:
-    from .playbot.planner_nd_core import build_column_levels as _build_column_levels
+    from tet4d.ai.playbot.planner_nd_core import (
+        build_column_levels as _build_column_levels,
+    )
 
     return _build_column_levels(
         cells,
