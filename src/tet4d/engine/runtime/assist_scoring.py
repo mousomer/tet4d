@@ -7,7 +7,7 @@ from .runtime_config import (
     assist_grid_factor,
     assist_speed_formula,
 )
-from ..view_modes import GridMode
+from ..ui_logic.view_modes import GridMode
 
 
 def bot_score_factor(mode: BotMode) -> float:
