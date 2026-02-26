@@ -157,6 +157,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 142. `DONE` Arch Stage 143 slice 133 routed keybindings storage JSON reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 143. `DONE` Arch Stage 144 slice 134 routed score-analyzer config/summary JSON reads through `src/tet4d/engine/runtime/score_analyzer_storage.py`.
 144. `DONE` Arch Stage 145 slice 135 routed score-analyzer summary writes and event-log appends through `src/tet4d/engine/runtime/score_analyzer_storage.py`.
+145. `DONE` Added `CURRENT_STATE.md` restart handoff with architecture stage, metrics snapshot, folder-balance snapshot, and short/long-term continuation plan.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
@@ -527,6 +528,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 42. `Cadence:` when extending 4D gameplay content and balancing.
 43. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
 44. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
+45. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
+46. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
+47. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
+48. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -601,10 +606,15 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 7. Toolchain/contract hardening additions:
 `scripts/bootstrap_env.sh`,
 `scripts/ci_check.sh`,
+`scripts/arch_metrics.py`,
+`scripts/check_architecture_metric_budgets.sh`,
 `tools/governance/validate_project_contracts.py`,
+`tools/governance/update_folder_balance_budgets.py`,
 `config/project/canonical_maintenance.json`,
+`config/project/folder_balance_budgets.json`,
 `README.md`,
 `docs/GUIDELINES_RESEARCH.md`,
+`docs/ARCHITECTURE_CONTRACT.md`,
 `docs/RDS_AND_CODEX.md`,
 `docs/rds/RDS_TETRIS_GENERAL.md`.
 8. Control-helper optimization additions:

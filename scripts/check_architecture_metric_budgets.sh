@@ -28,6 +28,8 @@ import json
 import sys
 from pathlib import Path
 
+from tools.governance.folder_balance_budget import evaluate_folder_balance_gate
+
 path = Path(sys.argv[1])
 metrics = json.loads(path.read_text(encoding="utf-8"))
 
@@ -66,6 +68,11 @@ for metric_path, budget in budgets.items():
     value = get(metric_path)
     if value > budget:
         violations.append(f"{metric_path}: {value} > budget {budget}")
+
+gate_cfg_path = Path("config/project/folder_balance_budgets.json")
+if gate_cfg_path.exists():
+    gate_cfg = json.loads(gate_cfg_path.read_text(encoding="utf-8"))
+    violations.extend(evaluate_folder_balance_gate(metrics, gate_cfg))
 
 if violations:
     print("Architecture metric budget violations:", file=sys.stderr)

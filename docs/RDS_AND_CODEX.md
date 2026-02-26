@@ -4,6 +4,8 @@ This document is section `3` of the unified documentation layout.
 
 Architecture boundary contract:
 - `docs/ARCHITECTURE_CONTRACT.md`
+Current restart handoff / progress snapshot:
+- `CURRENT_STATE.md`
 
 ## RDS index
 
@@ -36,24 +38,29 @@ Read order:
 3. Preserve deterministic behavior where seeds are used.
 4. When refactoring frontends, keep behavior parity with existing tests.
 5. Prefer small, composable helpers over large event/render functions.
-6. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
-7. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
-8. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
-9. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
-10. Redundant compatibility facades may be removed when callers are migrated, but keep
+6. Prefer existing repo helpers/functions (`tet4d.engine.api`, shared runtime helpers,
+   existing adapters) before writing new implementation code.
+7. Avoid magic numbers in Python code; prefer config-backed constants and runtime/config
+   accessors unless externalizing the value is clearly not worth the complexity.
+8. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
+9. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
+10. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
+11. For long-running refactor threads, read `CURRENT_STATE.md` first to resume the latest architecture stage, metrics snapshot, and next-step plan before making changes.
+12. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
+13. Redundant compatibility facades may be removed when callers are migrated, but keep
     boundary-enforcing adapters (for example `engine -> ui` compatibility shims) until the
     corresponding modules are physically moved and boundary checks remain green.
-11. Public playbot APIs should now be imported from `tet4d.engine.api`; the
+14. Public playbot APIs should now be imported from `tet4d.engine.api`; the
     `tet4d.ai.playbot` package only retains shared internal helper logic during migration.
-12. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
+15. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
     `engine/ui_logic`, `engine/runtime`) over many tiny folders; keep moves prefix-based
     and compatibility-shimmed to minimize import churn.
-13. As merged-folder moves land, update imports inside moved modules to use the new
+16. As merged-folder moves land, update imports inside moved modules to use the new
     merged buckets (for example `engine.runtime.*`) so old engine-path shims can be
     pruned later without broad churn.
-14. Keep governance/tooling call sites stable during folder moves by leaving short
+17. Keep governance/tooling call sites stable during folder moves by leaving short
     engine-path compatibility shims until the next prune stage.
-15. When multiple moved modules form a coherent cluster (for example `ui_logic`
+18. When multiple moved modules form a coherent cluster (for example `ui_logic`
     keybindings helpers), update moved callers to import from the same new folder
     immediately to reduce future shim-pruning churn.
 16. Start `engine/runtime` with menu settings/config/persistence modules first; they
@@ -288,7 +295,9 @@ python3 -m pip install -e ".[dev]"
 ```
 
 For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`, which now delegates to `./scripts/verify.sh` as a thin wrapper to avoid local/CI pipeline drift.
-CI now runs `scripts/arch_metrics.py` (informational) plus `scripts/check_architecture_metric_budgets.sh` (fail-on-regression) via `scripts/ci_check.sh` to track and lock architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, UI deep-import reduction, playbot import-surface migration, early pygame-module extraction progress, and playbot internal relocation progress across Stages 13-32).
+CI now runs `scripts/arch_metrics.py` (informational) plus `scripts/check_architecture_metric_budgets.sh` (fail-on-regression) via `scripts/ci_check.sh` to track and lock architecture migration debt (including private-helper debt, reducer field-mutation debt, 2D/ND core-view extraction, UI deep-import reduction, playbot import-surface migration, early pygame-module extraction progress, playbot internal relocation progress across Stages 13-32, and folder-balance telemetry such as fuzzy files-to-leaf-folder ratio with LOC/file + LOC/folder counters plus a fuzzy weighted folder balancer score/status using margin-expanded target bands to reduce churn from small fluctuations). The folder-balance gate is leaf-only, currently enforces a curated baseline subset, and uses a dedicated `tests_leaf` profile for test aggregation folders.
+When intentionally rebalancing a tracked folder, refresh the recorded folder-balance baselines before final verification with:
+`python3 tools/governance/update_folder_balance_budgets.py`
 
 Minimum required coverage for gameplay-affecting changes:
 1. Unit tests for engine correctness (move/rotate/lock/clear/scoring).

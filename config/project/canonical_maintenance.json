@@ -73,6 +73,7 @@
       "config/audio/sfx.json",
       "config/project/io_paths.json",
       "config/project/constants.json",
+      "config/project/folder_balance_budgets.json",
       "config/project/secret_scan.json",
       "config/project/canonical_maintenance.json"
     ],
@@ -301,6 +302,18 @@
         "\"cache_limits\"",
         "\"animation\"",
         "\"rendering\""
+      ]
+    },
+    {
+      "file": "config/project/folder_balance_budgets.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"gate_mode\"",
+        "\"scope\"",
+        "\"profiles\"",
+        "\"tracked_leaf_folders\"",
+        "\"score_epsilon\"",
+        "\"status_order\""
       ]
     },
     {

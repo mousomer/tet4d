@@ -9,6 +9,15 @@ incremental enforcement strategy used while refactoring.
 - Establish stable module boundaries and dependency direction.
 - Keep CI green during incremental refactors.
 
+## Implementation Discipline
+
+- Prefer existing helpers, functions, and public seams (`tet4d.engine.api`,
+  shared runtime helpers, existing UI adapters) before introducing new code paths.
+- Prefer config-backed constants (non-Python config files + runtime/config accessors)
+  over inline magic numbers in Python modules.
+- Exception: small fixed values may remain inline when externalizing them would add
+  disproportionate complexity and no meaningful tuning/behavior value.
+
 ## Target Boundaries
 
 ### Engine (`tet4d.engine`)
@@ -335,6 +344,20 @@ incremental enforcement strategy used while refactoring.
 - Preferred foldering heuristic for future slices: target roughly `6-15` files per
   leaf folder, treat `>20` mixed-responsibility files as a split signal, and avoid
   creating new folders that would remain `<=3` files without a strong boundary reason.
+- `scripts/arch_metrics.py` reports a `folder_balance` snapshot to support this
+  heuristic, including a fuzzy files-to-leaf-folder ratio plus LOC/file, LOC/folder,
+  and balancer status counters for Python folders under `src/tet4d`, with a fuzzy
+  weighted score combining file-count balance, LOC/file balance, and LOC/folder
+  balance for refactor triage. The fuzzy component scores use margin-expanded
+  target bands so small fluctuations do not change scores/statuses until a margin
+  boundary is crossed.
+- `scripts/check_architecture_metric_budgets.sh` now enforces a non-regression
+  folder-balance gate for a curated leaf-folder subset only (currently
+  `engine/runtime` + `engine/tests`), while non-leaf hotspots (for example
+  `src/tet4d/ui/pygame`) remain report-only.
+- Test-heavy leaf folders use a dedicated `tests_leaf` profile (looser file-count
+  and LOC/folder bands) so the folder-balance gate does not impose runtime/UI
+  thresholds on test aggregation folders.
 - Future stages tighten this until `pygame` imports are fully removed from engine.
 - Boundary guards use baseline-lock allowlists for transitional engine-owned UI
   modules (including current `engine -> tet4d.ui` imports) and fail on new
