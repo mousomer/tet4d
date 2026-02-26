@@ -95,7 +95,7 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.engine.pause_menu import run_pause_menu
-from tet4d.engine.help_menu import run_help_menu
+from tet4d.ui.pygame.help_menu import run_help_menu
 
 DEFAULT_GAME_SEED = 1337
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
