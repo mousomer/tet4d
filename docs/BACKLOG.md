@@ -934,3 +934,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 267. `DONE` Arch Stage 283 slice 273 recorded a zero-caller checkpoint for `engine/playbot/planner_nd_search.py` after engine-api and AI-package canonicalization and advanced `arch_stage` to `283` before shim pruning.
 268. `DONE` Arch Stage 284 slice 274 removed the zero-caller `engine/playbot/planner_nd_search.py` compatibility shim after the search planner relocation to `ai/playbot/planner_nd_search.py` and canonicalization.
 269. `DONE` Arch Stage 285 slice 275 recorded the canonical `ai/playbot/planner_nd_search.py` path after search-planner shim removal and advanced `arch_stage` to `285`.
+270. `DONE` Arch Stage 286 slice 276 recorded completion of the Stage 278-285 plannerND-search API-prep/move/prune sequence and advanced `arch_stage` to `286` before the full batch verification checkpoint.
