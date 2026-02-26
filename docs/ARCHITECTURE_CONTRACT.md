@@ -593,3 +593,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 222 (slice 212, gfx-panel UI relocation) moves `src/tet4d/engine/gfx_panel_2d.py` implementation into `src/tet4d/ui/pygame/gfx_panel_2d.py`, rewires runtime/ui_logic lookups through `tet4d.engine.api`, retains an engine compatibility shim, and baseline-locks the new UI adapter path.
 - Stage 223 (slice 213, gfx-panel UI canonicalization) migrates `src/tet4d/engine/gfx_game.py` to canonical `tet4d.ui.pygame.gfx_panel_2d` imports before shim pruning.
 - Stage 224 (slice 214, gfx-panel UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/gfx_panel_2d.py` before shim pruning and advances `arch_stage` to `224`.
+- Stage 225 (slice 215, gfx-panel UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/gfx_panel_2d.py` compatibility shim and advances `arch_stage` to `225` after full verification/CI checkpoint.

@@ -888,3 +888,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 221. `DONE` Arch Stage 222 slice 212 moved `src/tet4d/engine/gfx_panel_2d.py` implementation into `src/tet4d/ui/pygame/gfx_panel_2d.py`, rewired runtime/ui_logic access through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
 222. `DONE` Arch Stage 223 slice 213 migrated `src/tet4d/engine/gfx_game.py` to canonical `src/tet4d/ui/pygame/gfx_panel_2d.py` imports before shim pruning.
 223. `DONE` Arch Stage 224 slice 214 recorded a zero-caller audit for `src/tet4d/engine/gfx_panel_2d.py` and advanced `arch_stage` to `224` before shim pruning.
+224. `DONE` Arch Stage 225 slice 215 removed the zero-caller `src/tet4d/engine/gfx_panel_2d.py` compatibility shim and advanced `arch_stage` to `225` after verification/CI checkpoint.
