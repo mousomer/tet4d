@@ -964,3 +964,30 @@ incremental enforcement strategy used while refactoring.
 - Stage 470 (slice 105, render/input batch checkpoint and verify) records completion of
   the Stage 451-469 render-family and keybinding-defaults moves, refreshes docs/handoff
   and architecture metrics, and verifies the checkpoint locally with `verify.sh`.
+- Stage 471 (slice 106, loop subpackage seed I) creates `src/tet4d/ui/pygame/loop/`
+  and moves `game_loop_common.py` into the new loop-helper subpackage.
+- Stage 472 (slice 107, loop common caller canonicalization) migrates `cli/front2d.py`
+  to canonical `tet4d.ui.pygame.loop.game_loop_common` imports.
+- Stage 473 (slice 108, loop common zero-caller checkpoint + prune) records zero
+  remaining imports of the old top-level `ui/pygame/game_loop_common.py` path and prunes
+  the shim/path after canonicalization.
+- Stage 474 (slice 109, loop subpackage seed II) moves `loop_runner_nd.py` into
+  `src/tet4d/ui/pygame/loop/` as the second shared loop orchestration helper.
+- Stage 475 (slice 110, loop runner caller canonicalization) migrates
+  `front3d_game.py` and `front4d_game.py` to canonical
+  `tet4d.ui.pygame.loop.loop_runner_nd` imports.
+- Stage 476 (slice 111, loop runner internal import normalization) rewires the moved
+  `loop_runner_nd` module to import `process_game_events` from canonical
+  `tet4d.ui.pygame.loop.game_loop_common`.
+- Stage 477 (slice 112, loop runner zero-caller checkpoint + prune) records zero
+  remaining imports of the old top-level `ui/pygame/loop_runner_nd.py` path and prunes
+  the shim/path after canonicalization.
+- Stage 478 (slice 113, loop subpackage path-doc sync) updates structure docs to record
+  `src/tet4d/ui/pygame/loop/` as the canonical location for shared gameplay loop
+  orchestration helpers.
+- Stage 479 (slice 114, loop subpackage handoff/history sync) refreshes architecture
+  checkpoint logs/backlog/current-state notes to record the canonical `ui/pygame/loop/*`
+  paths and post-move folder-balance snapshot.
+- Stage 480 (slice 115, loop subpackage checkpoint and verify) records completion of the
+  Stage 471-479 loop-helper extraction batch, advances `arch_stage` to `480`, and
+  verifies the checkpoint locally with `verify.sh`.

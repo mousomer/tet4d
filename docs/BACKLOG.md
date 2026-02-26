@@ -1130,3 +1130,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 453. `DONE` Arch Stage 468 slice 103 canonicalized CLI/engine callers to `tet4d.ui.pygame.render.font_profiles`, recorded a zero-caller checkpoint, and removed the old top-level shim.
 454. `DONE` Arch Stage 469 slice 104 moved `ui/pygame/keybindings_defaults.py` into `src/tet4d/ui/pygame/input/`, canonicalized `keybindings.py`, and removed the old top-level shim after zero-caller audit.
 455. `DONE` Arch Stage 470 slice 105 recorded completion of the Stage 451-469 `render/` extraction + `input/keybindings_defaults` move batch, refreshed docs/handoff/metrics, and verified the checkpoint locally.
+456. `DONE` Arch Stage 471 slice 106 created `src/tet4d/ui/pygame/loop/` and moved `ui/pygame/game_loop_common.py` into the new loop-helper subpackage.
+457. `DONE` Arch Stage 472 slice 107 canonicalized `cli/front2d.py` to `tet4d.ui.pygame.loop.game_loop_common`.
+458. `DONE` Arch Stage 473 slice 108 recorded a zero-caller checkpoint for old top-level `ui/pygame/game_loop_common.py` imports and removed the old path after canonicalization.
+459. `DONE` Arch Stage 474 slice 109 moved `ui/pygame/loop_runner_nd.py` into `src/tet4d/ui/pygame/loop/`.
+460. `DONE` Arch Stage 475 slice 110 canonicalized `front3d_game.py` and `front4d_game.py` to `tet4d.ui.pygame.loop.loop_runner_nd`.
+461. `DONE` Arch Stage 476 slice 111 normalized the moved `loop_runner_nd` module to import `process_game_events` from canonical `tet4d.ui.pygame.loop.game_loop_common`.
+462. `DONE` Arch Stage 477 slice 112 recorded a zero-caller checkpoint for old top-level `ui/pygame/loop_runner_nd.py` imports and removed the old path after canonicalization.
+463. `DONE` Arch Stage 478 slice 113 updated structure docs to record `src/tet4d/ui/pygame/loop/` as the canonical loop-helper subpackage.
+464. `DONE` Arch Stage 479 slice 114 refreshed architecture/backlog/current-state handoff notes with the canonical `ui/pygame/loop/*` paths and post-move balancer snapshot.
+465. `DONE` Arch Stage 480 slice 115 recorded completion of the Stage 471-479 loop-helper extraction batch, advanced `arch_stage` to `480`, and verified the checkpoint locally.

@@ -7,7 +7,7 @@ import pygame
 
 import tet4d.engine.api as engine_api
 
-from .game_loop_common import process_game_events
+from tet4d.ui.pygame.loop.game_loop_common import process_game_events
 
 
 def _open_help(

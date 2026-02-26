@@ -87,6 +87,7 @@ tet4d/
 │       ├── keybindings.py       # binding definitions + load/save
 │       ├── input/               # key dispatch/name formatting + default key maps helper subpackage
 │       ├── launch/              # launcher/setup/profile UI subpackage
+│       ├── loop/                # shared gameplay loop orchestration helper subpackage
 │       ├── menu/                # menu + keybindings-menu UI subpackage
 │       ├── render/              # rendering/panel/icon/font helper UI subpackage
 │       ├── help_menu.py         # launcher/pause help and explanation UI
