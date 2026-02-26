@@ -71,7 +71,6 @@ src/tet4d/engine/display.py
 src/tet4d/engine/font_profiles.py
 src/tet4d/engine/front3d_render.py
 src/tet4d/engine/front3d_setup.py
-src/tet4d/engine/front4d_game.py
 src/tet4d/engine/front4d_render.py
 src/tet4d/engine/frontend_nd.py
 src/tet4d/engine/game_loop_common.py
@@ -133,7 +132,6 @@ src/tet4d/engine/app_runtime.py
 src/tet4d/engine/bot_options_menu.py
 src/tet4d/engine/front3d_render.py
 src/tet4d/engine/front3d_setup.py
-src/tet4d/engine/front4d_game.py
 src/tet4d/engine/front4d_render.py
 src/tet4d/engine/frontend_nd.py
 src/tet4d/engine/gameplay/rotation_anim.py

@@ -728,3 +728,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 370 (slice 5, canonicalize front4d_game gameplay replay test import).
 - Stage 371 (slice 6, front4d_game zero caller checkpoint).
 - Stage 372 (slice 7, prune front4d_game engine shim).
+- Stage 373 (slice 8, clean front4d_game allowlist entries).
