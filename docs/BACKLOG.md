@@ -811,6 +811,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 172. `DONE` Arch Stage 173 slice 163 removed the zero-caller
     `src/tet4d/engine/grid_mode_render.py` compatibility shim after canonical
     UI grid-mode renderer import migration.
+173. `DONE` Arch Stage 174 slice 164 added `engine.api` wrappers for ND
+    launcher display-open/capture helpers to prepare `launcher_nd_runner` UI
+    relocation without deep UI imports into engine internals.
 
 ## 6. Source Inputs
 

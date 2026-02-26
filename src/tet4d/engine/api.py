@@ -290,6 +290,20 @@ def project_root_path():
     return _project_root_path()
 
 
+def open_display_runtime(*args: Any, **kwargs: Any) -> Any:
+    from .app_runtime import open_display as _open_display
+
+    return _open_display(*args, **kwargs)
+
+
+def capture_windowed_display_settings_runtime(display_settings: Any) -> Any:
+    from .app_runtime import (
+        capture_windowed_display_settings as _capture_windowed_display_settings,
+    )
+
+    return _capture_windowed_display_settings(display_settings)
+
+
 def format_key_tuple(keys):
     from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
 
@@ -374,6 +388,7 @@ __all__ = [
     "bot_planner_profile_from_index",
     "bot_planner_profile_label",
     "current_piece_cells",
+    "capture_windowed_display_settings_runtime",
     "apply_challenge_prefill_2d",
     "apply_challenge_prefill_nd",
     "config_view_2d",
@@ -386,6 +401,7 @@ __all__ = [
     "new_game_state_2d",
     "new_game_state_nd",
     "new_rng",
+    "open_display_runtime",
     "PIECE_SET_2D_CLASSIC",
     "PIECE_SET_2D_DEBUG",
     "PIECE_SET_3D_DEBUG",

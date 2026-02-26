@@ -526,3 +526,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 173 (slice 163, sequential cleanup) removed the zero-caller
   `src/tet4d/engine/grid_mode_render.py` compatibility shim after canonical UI
   grid-mode renderer import migration.
+- Stage 174 (slice 164, sequential cleanup) added `engine.api` wrappers for ND
+  launcher display-open/capture helpers to prepare `launcher_nd_runner` UI
+  relocation without deep UI imports into engine internals.
