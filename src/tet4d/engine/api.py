@@ -517,6 +517,30 @@ def keybindings_menu_binding_title(row, scope: str) -> str:
     return _binding_title(row, scope)
 
 
+def bot_options_rows_runtime() -> tuple[str, ...]:
+    from .runtime.menu_config import bot_options_rows as _bot_options_rows
+
+    return _bot_options_rows()
+
+
+def bot_defaults_by_mode_runtime() -> dict[str, dict[str, int]]:
+    from .runtime.menu_config import bot_defaults_by_mode as _bot_defaults_by_mode
+
+    return _bot_defaults_by_mode()
+
+
+def load_menu_payload_runtime() -> dict[str, Any]:
+    from .runtime.menu_persistence import load_menu_payload as _load_menu_payload
+
+    return _load_menu_payload()
+
+
+def save_menu_payload_runtime(payload: dict[str, Any]) -> tuple[bool, str]:
+    from .runtime.menu_persistence import save_menu_payload as _save_menu_payload
+
+    return _save_menu_payload(payload)
+
+
 def run_front3d_ui() -> None:
     from .front3d_game import run as _run_front3d
 
