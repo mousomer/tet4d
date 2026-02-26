@@ -149,6 +149,24 @@ def greedy_key_4d(
     )
 
 
+def apply_challenge_prefill_2d(state: GameState, *, layers: int) -> None:
+    from .gameplay.challenge_mode import apply_challenge_prefill_2d as _apply
+
+    _apply(state, layers=layers)
+
+
+def apply_challenge_prefill_nd(state: GameStateND, *, layers: int) -> None:
+    from .gameplay.challenge_mode import apply_challenge_prefill_nd as _apply
+
+    _apply(state, layers=layers)
+
+
+def playbot_dry_run_defaults() -> tuple[int, int]:
+    from .runtime.runtime_config import playbot_dry_run_defaults as _defaults
+
+    return _defaults()
+
+
 def run_dry_run_2d(
     cfg: GameConfig,
     *,
@@ -354,6 +372,8 @@ __all__ = [
     "bot_planner_profile_from_index",
     "bot_planner_profile_label",
     "current_piece_cells",
+    "apply_challenge_prefill_2d",
+    "apply_challenge_prefill_nd",
     "config_view_2d",
     "config_view_nd",
     "default_planning_budget_ms",
@@ -372,6 +392,7 @@ __all__ = [
     "PIECE_SET_4D_STANDARD",
     "plan_best_2d_move",
     "plan_best_nd_move",
+    "playbot_dry_run_defaults",
     "playbot_benchmark_history_file",
     "playbot_benchmark_p95_thresholds",
     "profile_4d_create_initial_state",

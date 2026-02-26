@@ -765,6 +765,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 154. `DONE` Arch Stage 155 slice 145 removed the zero-caller `src/tet4d/engine/key_display.py` compatibility shim after canonical UI key-display import migration.
 
+155. `DONE` Arch Stage 156 slice 146 added `engine.api` dry-run support wrappers for challenge prefills and runtime defaults to prepare `playbot.dry_run` relocation.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`
