@@ -479,3 +479,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 149 (slice 139, sequential cleanup) removed the zero-caller `src/tet4d/engine/rotation_anim.py` compatibility shim after canonical gameplay import migration.
 - Stage 150 (slice 140, sequential cleanup) migrated engine callers to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
 - Stage 151 (slice 141, sequential cleanup) migrated CLI and tests to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
+- Stage 152 (slice 142, sequential cleanup) removed the zero-caller `src/tet4d/engine/display.py` compatibility shim after canonical UI display import migration.
