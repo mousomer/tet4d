@@ -141,7 +141,7 @@ def plan_best_nd_with_budget(
     planning_budget_ms: int,
     algorithm: BotPlannerAlgorithm,
 ) -> Any:
-    from .playbot.planner_nd_search import (
+    from tet4d.ai.playbot.planner_nd_search import (
         plan_best_nd_with_budget as _plan_best_nd_with_budget,
     )
 
