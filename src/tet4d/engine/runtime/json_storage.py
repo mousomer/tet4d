@@ -43,3 +43,13 @@ def write_json_object(path: Path, payload: dict[str, Any]) -> None:
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def atomic_write_json(path: Path, payload: Any, *, trailing_newline: bool = False) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(".tmp")
+    encoded = json.dumps(payload, indent=2, sort_keys=True)
+    if trailing_newline:
+        encoded += "\n"
+    temp_path.write_text(encoded, encoding="utf-8")
+    temp_path.replace(path)

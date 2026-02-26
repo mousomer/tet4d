@@ -463,3 +463,6 @@ incremental enforcement strategy used while refactoring.
   storage JSON writes through shared helper `engine.runtime.json_storage`.
 - Stage 141 (slice 131, runtime side-effect extraction) routes help-topics
   storage JSON reads through shared helper `engine.runtime.json_storage`.
+- Stage 142 (slice 132, runtime side-effect extraction) routes menu-settings
+  state storage JSON reads and atomic writes through shared helper
+  `engine.runtime.json_storage`.
