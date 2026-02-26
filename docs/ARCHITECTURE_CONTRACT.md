@@ -655,3 +655,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 299 (slice 289, playbot package shim pruning) removes the zero-caller `src/tet4d/engine/playbot/__init__.py` compatibility package after AI playbot family canonicalization.
 - Stage 300 (slice 290, playbot package post-prune docs sync) records `src/tet4d/ai/playbot/__init__.py` as the canonical playbot package surface after engine package shim removal and advances `arch_stage` to `300`.
 - Stage 301 (slice 291, playbot package cleanup verification checkpoint) advances `arch_stage` to `301` and verifies the Stage 298-300 playbot package shim cleanup batch with full local `verify.sh` + `ci_check.sh`.
+- Stage 302 (slice 292, menu-keybinding-shortcuts API prep) adds narrow `engine.api` wrappers for menu keybinding shortcut action dispatch/status helpers so `engine/ui_logic/menu_keybinding_shortcuts.py` can move to `ui/pygame` without deep engine imports.

@@ -950,3 +950,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 283. `DONE` Arch Stage 299 slice 289 removed the zero-caller `engine/playbot/__init__.py` compatibility package after AI playbot family canonicalization.
 284. `DONE` Arch Stage 300 slice 290 recorded `src/tet4d/ai/playbot/__init__.py` as the canonical playbot package surface after engine package shim removal and advanced `arch_stage` to `300`.
 285. `DONE` Arch Stage 301 slice 291 advanced `arch_stage` to `301` and verified the Stage 298-300 playbot package shim cleanup batch with full local `verify.sh` + `ci_check.sh`.
+286. `DONE` Arch Stage 302 slice 292 added narrow `engine.api` wrappers for menu keybinding shortcut action dispatch/status helpers to prepare moving `engine/ui_logic/menu_keybinding_shortcuts.py` into `ui/pygame` without deep engine imports.

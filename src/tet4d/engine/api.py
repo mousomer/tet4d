@@ -776,6 +776,38 @@ def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
     return _set_active_key_profile(profile_name)
 
 
+def keybindings_menu_shortcut_action_for_key(
+    key: int, load_action: Any, save_action: Any
+) -> Any | None:
+    from .ui_logic.menu_keybinding_shortcuts import (
+        menu_binding_action_for_key as _menu_binding_action_for_key,
+    )
+
+    return _menu_binding_action_for_key(key, load_action, save_action)
+
+
+def keybindings_apply_menu_shortcut_action(
+    action: Any,
+    load_action: Any,
+    save_action: Any,
+    dimension: int,
+    state: Any,
+) -> bool:
+    from .ui_logic.menu_keybinding_shortcuts import (
+        apply_menu_binding_action as _apply_menu_binding_action,
+    )
+
+    return _apply_menu_binding_action(action, load_action, save_action, dimension, state)
+
+
+def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
+    from .ui_logic.menu_keybinding_shortcuts import (
+        menu_binding_status_color as _menu_binding_status_color,
+    )
+
+    return _menu_binding_status_color(is_error)
+
+
 def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
     from .ui_logic.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
 
