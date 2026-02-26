@@ -304,6 +304,18 @@ def capture_windowed_display_settings_runtime(display_settings: Any) -> Any:
     return _capture_windowed_display_settings(display_settings)
 
 
+def advance_gravity_runtime(state: Any, accumulator_ms: int, gravity_interval_ms: int) -> int:
+    from .runtime.runtime_helpers import advance_gravity as _advance_gravity
+
+    return _advance_gravity(state, accumulator_ms, gravity_interval_ms)
+
+
+def tick_animation_runtime(animation: Any, dt_ms: int) -> Any:
+    from .runtime.runtime_helpers import tick_animation as _tick_animation
+
+    return _tick_animation(animation, dt_ms)
+
+
 def front3d_setup_game_settings_type() -> Any:
     from .frontend_nd import GameSettingsND as _GameSettingsND
 
