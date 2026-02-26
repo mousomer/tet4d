@@ -7,7 +7,7 @@ import pygame
 
 from tet4d.ui.pygame.audio import AudioSettings
 from tet4d.ui.pygame.display import DisplaySettings
-from tet4d.ui.pygame.launcher_settings import SettingsHubResult
+from tet4d.ui.pygame.launch.launcher_settings import SettingsHubResult
 from tet4d.ui.pygame import pause_menu
 
 

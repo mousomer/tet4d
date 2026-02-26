@@ -777,3 +777,54 @@ incremental enforcement strategy used while refactoring.
   of the Stage 386-389 menu helper subpackage batch and verifies the checkpoint with
   local `verify.sh`; `ui/pygame/menu` reaches the target folder-size band while
   reducing top-level `ui/pygame` sprawl.
+- Stage 391 (slice 26, keybindings-menu family subpackage move I) moves
+  `keybindings_menu_model.py` into `src/tet4d/ui/pygame/menu/` with a temporary
+  compatibility shim at the old top-level `ui/pygame` path.
+- Stage 392 (slice 27, keybindings-menu family subpackage move II) moves
+  `keybindings_menu_input.py` and `keybindings_menu_view.py` into
+  `src/tet4d/ui/pygame/menu/` with temporary compatibility shims.
+- Stage 393 (slice 28, keybindings-menu family subpackage move III) moves
+  `keybindings_menu.py` into `src/tet4d/ui/pygame/menu/` and retains a temporary
+  top-level shim for incremental caller migration.
+- Stage 394 (slice 29, keybindings-menu engine/test caller canonicalization) migrates
+  `engine.api` wrappers and `engine/tests/test_keybindings_menu_model.py` to canonical
+  `tet4d.ui.pygame.menu.keybindings_menu_model` imports.
+- Stage 395 (slice 30, keybindings-menu UI/CLI canonicalization) migrates CLI and pause
+  menu callers to `tet4d.ui.pygame.menu.keybindings_menu` and updates internal lazy
+  imports in the moved module to canonical `menu.*` paths.
+- Stage 396 (slice 31, keybindings-menu zero-caller checkpoint) records zero remaining
+  imports of the old top-level `ui/pygame/keybindings_menu*` module paths.
+- Stage 397 (slice 32, keybindings-menu shim pruning I) removes the zero-caller
+  top-level `ui/pygame/keybindings_menu_model.py` shim.
+- Stage 398 (slice 33, keybindings-menu shim pruning II) removes the zero-caller
+  top-level `ui/pygame/keybindings_menu_input.py` and
+  `ui/pygame/keybindings_menu_view.py` shims.
+- Stage 399 (slice 34, keybindings-menu shim pruning III) removes the zero-caller
+  top-level `ui/pygame/keybindings_menu.py` shim after canonicalization.
+- Stage 400 (slice 35, keybindings-menu family checkpoint and verify) records completion
+  of the Stage 391-399 keybindings-menu subpackage migration/prune batch and verifies
+  the checkpoint with local `verify.sh`.
+- Stage 401 (slice 36, launch subpackage bootstrap) creates `src/tet4d/ui/pygame/launch/`
+  and moves `launcher_nd_runner.py` into it with a temporary top-level compatibility shim.
+- Stage 402 (slice 37, launch subpackage move I) moves `front3d_setup.py` and
+  `profile_4d.py` into `src/tet4d/ui/pygame/launch/` with temporary top-level shims.
+- Stage 403 (slice 38, launch subpackage move II) moves `launcher_play.py` and
+  `bot_options_menu.py` into `src/tet4d/ui/pygame/launch/` with temporary shims.
+- Stage 404 (slice 39, launch subpackage move III) moves `launcher_settings.py` into
+  `src/tet4d/ui/pygame/launch/` with a temporary top-level shim.
+- Stage 405 (slice 40, launch caller canonicalization I) migrates CLI and UI callers to
+  canonical `tet4d.ui.pygame.launch.*` imports for bot-options, launcher-play, launcher-
+  settings, front3d-setup, and launcher-nd-runner helpers.
+- Stage 406 (slice 41, launch caller canonicalization II) migrates engine/test callers to
+  canonical `tet4d.ui.pygame.launch.*` imports and preserves behavior parity.
+- Stage 407 (slice 42, launch zero-caller checkpoint) records zero remaining imports of
+  the old top-level `ui/pygame` launch-family module paths before pruning.
+- Stage 408 (slice 43, launch shim pruning I) removes the zero-caller top-level
+  `ui/pygame/launcher_nd_runner.py`, `ui/pygame/front3d_setup.py`, and
+  `ui/pygame/profile_4d.py` shims.
+- Stage 409 (slice 44, launch shim pruning II + policy/doc sync) removes the zero-caller
+  top-level `ui/pygame/launcher_play.py`, `ui/pygame/bot_options_menu.py`, and
+  `ui/pygame/launcher_settings.py` shims and updates path-sensitive boundary/doc refs.
+- Stage 410 (slice 45, launch subpackage batch checkpoint and verify) records completion
+  of the Stage 401-409 launch-family subpackage migration/prune batch and verifies the
+  checkpoint with local `verify.sh`, continuing `ui/pygame` folder rebalancing.

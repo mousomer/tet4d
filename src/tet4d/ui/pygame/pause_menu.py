@@ -7,11 +7,11 @@ import pygame
 
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.audio import AudioSettings
-from tet4d.ui.pygame.bot_options_menu import run_bot_options_menu
+from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.ui.pygame.help_menu import run_help_menu
-from tet4d.ui.pygame.keybindings_menu import run_keybindings_menu
-from tet4d.ui.pygame.launcher_settings import run_settings_hub_menu
+from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
+from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 

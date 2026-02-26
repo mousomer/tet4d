@@ -26,7 +26,7 @@ from tet4d.ai.playbot.types import (
 from tet4d.ui.pygame.loop_runner_nd import run_nd_loop
 from tet4d.ui.pygame.pause_menu import run_pause_menu
 from tet4d.ui.pygame.help_menu import run_help_menu
-from tet4d.ui.pygame.launcher_nd_runner import run_nd_mode_launcher
+from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
 
 GameConfigND = engine_api.GameConfigND
 GameStateND = engine_api.GameStateND

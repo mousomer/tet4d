@@ -85,13 +85,12 @@ tet4d/
 │       ├── pieces2d.py          # classic tetromino set
 │       ├── pieces_nd.py         # 3D + 4D native piece sets
 │       ├── keybindings.py       # binding definitions + load/save
-│       ├── keybindings_menu.py  # dedicated keybinding setup screen
-│       ├── keybindings_menu_model.py # scope/row model helpers for keybinding UI
+│       ├── launch/              # launcher/setup/profile UI subpackage
+│       ├── menu/                # menu + keybindings-menu UI subpackage
 │       ├── key_display.py       # shared key-name formatting and display helpers
 │       ├── font_profiles.py     # shared per-mode font profiles and font factory
 │       ├── control_helper.py    # grouped in-game key-helper rendering
 │       ├── help_menu.py         # launcher/pause help and explanation UI
-│       ├── menu/                  # pygame menu subpackage (runner/model/helpers)
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── audio.py             # generated SFX + volume/mute runtime
 │       ├── display.py           # shared fullscreen/windowed mode helpers
@@ -156,8 +155,8 @@ tet4d/
 7. Advanced topology profile loading/resolution/export is handled in `topology_designer.py` using `config/topology/designer_presets.json`.
 8. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
 9. Shared key-name formatting is centralized in `key_display.py`.
-10. Shared keybinding editor model/scope helpers are in `keybindings_menu_model.py`.
-11. Shared keybinding editor UI is in `keybindings_menu.py`.
+10. Shared keybinding editor model/scope helpers are in `menu/keybindings_menu_model.py`.
+11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
 12. Audio runtime helpers are in `audio.py`; display mode helpers are in`display.py`.
 13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
 14. Shared in-game key helper grouping is in `control_helper.py`.

@@ -29,7 +29,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from tet4d.ui.pygame.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.audio import AudioSettings, play_sfx
-from tet4d.ui.pygame.bot_options_menu import run_bot_options_menu
+from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.ui.pygame.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.help_menu import run_help_menu
@@ -38,9 +38,9 @@ from tet4d.ui.pygame.keybindings import (
     load_active_profile_bindings,
     set_active_key_profile,
 )
-from tet4d.ui.pygame.keybindings_menu import run_keybindings_menu
-from tet4d.ui.pygame.launcher_play import launch_2d, launch_3d, launch_4d
-from tet4d.ui.pygame.launcher_settings import run_settings_hub_menu
+from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
+from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
+from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import launcher_menu_id, menu_graph
 from tet4d.engine.runtime.menu_persistence import load_menu_payload, save_menu_payload
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner

@@ -1050,3 +1050,23 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 373. `DONE` Arch Stage 388 slice 23 recorded a zero-caller checkpoint for the old top-level `ui/pygame` menu-helper module paths before pruning.
 374. `DONE` Arch Stage 389 slice 24 completed top-level helper-path pruning after canonicalization to `src/tet4d/ui/pygame/menu/*`.
 375. `DONE` Arch Stage 390 slice 25 recorded completion of the Stage 386-389 menu helper subpackage batch, verified the checkpoint locally, and improved folder balance (`ui/pygame/menu` reached the target file-count band while top-level `ui/pygame` shrank).
+376. `DONE` Arch Stage 391 slice 26 moved `ui/pygame/keybindings_menu_model.py` into `src/tet4d/ui/pygame/menu/` with a temporary top-level compatibility shim.
+377. `DONE` Arch Stage 392 slice 27 moved `ui/pygame/keybindings_menu_input.py` and `ui/pygame/keybindings_menu_view.py` into `src/tet4d/ui/pygame/menu/` with temporary top-level compatibility shims.
+378. `DONE` Arch Stage 393 slice 28 moved `ui/pygame/keybindings_menu.py` into `src/tet4d/ui/pygame/menu/` with a temporary top-level compatibility shim for staged caller migration.
+379. `DONE` Arch Stage 394 slice 29 canonicalized `engine.api` wrappers and `engine/tests/test_keybindings_menu_model.py` to `tet4d.ui.pygame.menu.keybindings_menu_model`.
+380. `DONE` Arch Stage 395 slice 30 canonicalized CLI/pause-menu callers and internal lazy imports to `tet4d.ui.pygame.menu.keybindings_menu*` paths.
+381. `DONE` Arch Stage 396 slice 31 recorded a zero-caller checkpoint for old top-level `ui/pygame/keybindings_menu*` module imports before pruning.
+382. `DONE` Arch Stage 397 slice 32 removed the zero-caller top-level `ui/pygame/keybindings_menu_model.py` shim.
+383. `DONE` Arch Stage 398 slice 33 removed the zero-caller top-level `ui/pygame/keybindings_menu_input.py` and `ui/pygame/keybindings_menu_view.py` shims.
+384. `DONE` Arch Stage 399 slice 34 removed the zero-caller top-level `ui/pygame/keybindings_menu.py` shim after canonicalization.
+385. `DONE` Arch Stage 400 slice 35 recorded completion of the Stage 391-399 keybindings-menu subpackage batch and verified the checkpoint locally.
+386. `DONE` Arch Stage 401 slice 36 created `src/tet4d/ui/pygame/launch/` and moved `launcher_nd_runner.py` into it with a temporary top-level compatibility shim.
+387. `DONE` Arch Stage 402 slice 37 moved `ui/pygame/front3d_setup.py` and `ui/pygame/profile_4d.py` into `src/tet4d/ui/pygame/launch/` with temporary top-level shims.
+388. `DONE` Arch Stage 403 slice 38 moved `ui/pygame/launcher_play.py` and `ui/pygame/bot_options_menu.py` into `src/tet4d/ui/pygame/launch/` with temporary top-level shims.
+389. `DONE` Arch Stage 404 slice 39 moved `ui/pygame/launcher_settings.py` into `src/tet4d/ui/pygame/launch/` with a temporary top-level shim.
+390. `DONE` Arch Stage 405 slice 40 canonicalized CLI and UI callers to `tet4d.ui.pygame.launch.*` imports for the launch/setup family.
+391. `DONE` Arch Stage 406 slice 41 canonicalized engine and test callers to `tet4d.ui.pygame.launch.*` imports for the launch/setup family.
+392. `DONE` Arch Stage 407 slice 42 recorded a zero-caller checkpoint for old top-level `ui/pygame` launch-family module imports before pruning.
+393. `DONE` Arch Stage 408 slice 43 removed the zero-caller top-level `ui/pygame/{launcher_nd_runner,front3d_setup,profile_4d}.py` shims.
+394. `DONE` Arch Stage 409 slice 44 removed the zero-caller top-level `ui/pygame/{launcher_play,bot_options_menu,launcher_settings}.py` shims and synced path-sensitive policy/docs.
+395. `DONE` Arch Stage 410 slice 45 recorded completion of the Stage 401-409 launch-family subpackage batch and verified the checkpoint locally.

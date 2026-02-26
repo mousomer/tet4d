@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.ui.pygame import launcher_settings
+from tet4d.ui.pygame.launch import launcher_settings
 from tet4d.engine.runtime import menu_config
 
 

@@ -908,13 +908,13 @@ def keybinding_category_docs_runtime():
 
 
 def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
-    from tet4d.ui.pygame.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
+    from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
 
     return _SECTION_MENU
 
 
 def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) -> str:
-    from tet4d.ui.pygame.keybindings_menu_model import (
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
         resolve_initial_scope as _resolve_initial_scope,
     )
 
@@ -922,13 +922,13 @@ def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) ->
 
 
 def keybindings_menu_rows_for_scope(scope: str):
-    from tet4d.ui.pygame.keybindings_menu_model import rows_for_scope as _rows_for_scope
+    from tet4d.ui.pygame.menu.keybindings_menu_model import rows_for_scope as _rows_for_scope
 
     return _rows_for_scope(scope)
 
 
 def keybindings_menu_scope_dimensions(scope: str) -> tuple[int, ...]:
-    from tet4d.ui.pygame.keybindings_menu_model import (
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
         scope_dimensions as _scope_dimensions,
     )
 
@@ -936,7 +936,7 @@ def keybindings_menu_scope_dimensions(scope: str) -> tuple[int, ...]:
 
 
 def keybindings_menu_scope_file_hint(scope: str) -> str:
-    from tet4d.ui.pygame.keybindings_menu_model import (
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
         scope_file_hint as _scope_file_hint,
     )
 
@@ -944,19 +944,19 @@ def keybindings_menu_scope_file_hint(scope: str) -> str:
 
 
 def keybindings_menu_scope_label(scope: str) -> str:
-    from tet4d.ui.pygame.keybindings_menu_model import scope_label as _scope_label
+    from tet4d.ui.pygame.menu.keybindings_menu_model import scope_label as _scope_label
 
     return _scope_label(scope)
 
 
 def keybindings_menu_binding_keys(row):
-    from tet4d.ui.pygame.keybindings_menu_model import binding_keys as _binding_keys
+    from tet4d.ui.pygame.menu.keybindings_menu_model import binding_keys as _binding_keys
 
     return _binding_keys(row)
 
 
 def keybindings_menu_binding_title(row, scope: str) -> str:
-    from tet4d.ui.pygame.keybindings_menu_model import binding_title as _binding_title
+    from tet4d.ui.pygame.menu.keybindings_menu_model import binding_title as _binding_title
 
     return _binding_title(row, scope)
 
