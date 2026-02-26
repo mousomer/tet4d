@@ -808,6 +808,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 171. `DONE` Arch Stage 172 slice 162 migrated engine render callers to
     canonical `src/tet4d/ui/pygame/grid_mode_render.py` imports before shim
     pruning.
+172. `DONE` Arch Stage 173 slice 163 removed the zero-caller
+    `src/tet4d/engine/grid_mode_render.py` compatibility shim after canonical
+    UI grid-mode renderer import migration.
 
 ## 6. Source Inputs
 
