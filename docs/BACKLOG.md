@@ -823,6 +823,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 176. `DONE` Arch Stage 177 slice 167 removed the zero-caller
     `src/tet4d/engine/launcher_nd_runner.py` compatibility shim after canonical
     UI launcher import migration.
+177. `DONE` Arch Stage 178 slice 168 added `engine.api` wrappers for shared ND
+    setup/menu functions and settings type access to prepare `front3d_setup` UI
+    relocation without deep UI imports into engine internals.
 
 ## 6. Source Inputs
 

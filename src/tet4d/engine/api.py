@@ -304,6 +304,38 @@ def capture_windowed_display_settings_runtime(display_settings: Any) -> Any:
     return _capture_windowed_display_settings(display_settings)
 
 
+def front3d_setup_game_settings_type() -> Any:
+    from .frontend_nd import GameSettingsND as _GameSettingsND
+
+    return _GameSettingsND
+
+
+def front3d_setup_run_menu_nd(screen: Any, fonts: Any, dimension: int) -> Any:
+    from .frontend_nd import run_menu as _run_menu
+
+    return _run_menu(screen, fonts, dimension)
+
+
+def front3d_setup_build_config_nd(settings: Any, dimension: int) -> GameConfigND:
+    from .frontend_nd import build_config as _build_config
+
+    return _build_config(settings, dimension)
+
+
+def front3d_setup_create_initial_state_nd(cfg: GameConfigND) -> GameStateND:
+    from .frontend_nd import create_initial_state as _create_initial_state
+
+    return _create_initial_state(cfg)
+
+
+def front3d_setup_gravity_interval_ms_from_config_nd(cfg: GameConfigND) -> int:
+    from .frontend_nd import (
+        gravity_interval_ms_from_config as _gravity_interval_ms_from_config,
+    )
+
+    return _gravity_interval_ms_from_config(cfg)
+
+
 def format_key_tuple(keys):
     from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
 
@@ -393,6 +425,11 @@ __all__ = [
     "apply_challenge_prefill_nd",
     "config_view_2d",
     "config_view_nd",
+    "front3d_setup_build_config_nd",
+    "front3d_setup_create_initial_state_nd",
+    "front3d_setup_game_settings_type",
+    "front3d_setup_gravity_interval_ms_from_config_nd",
+    "front3d_setup_run_menu_nd",
     "default_planning_budget_ms",
     "greedy_key_4d",
     "is_game_over",

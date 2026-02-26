@@ -539,3 +539,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 177 (slice 167, sequential cleanup) removed the zero-caller
   `src/tet4d/engine/launcher_nd_runner.py` compatibility shim after canonical
   UI launcher import migration.
+- Stage 178 (slice 168, sequential cleanup) added `engine.api` wrappers for
+  shared ND setup/menu functions and settings type access to prepare
+  `front3d_setup` UI relocation without deep UI imports into engine internals.
