@@ -473,3 +473,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 285 (slice 275, plannerND-search post-prune docs sync) records the canonical `ai/playbot/planner_nd_search.py` path after shim removal and advances `arch_stage` to `285`.
 - Stage 286 (slice 276, plannerND-search family checkpoint) records completion of the Stage 278-285 plannerND-search API-prep/move/prune sequence and advances `arch_stage` to `286` before the full batch verification checkpoint.
 - Stage 287 (slice 277, plannerND-search batch verification checkpoint) advances `arch_stage` to `287` and verifies the Stage 278-286 plannerND-search batch with full local `verify.sh` + `ci_check.sh`.
+- Stage 288 (slice 278, plannerND-core physical relocation) moves `engine/playbot/planner_nd_core.py` to `ai/playbot/planner_nd_core.py`, keeps an engine-path module-alias shim, and rewires core imports to `tet4d.engine.api` exports so the AI boundary remains API-only.
