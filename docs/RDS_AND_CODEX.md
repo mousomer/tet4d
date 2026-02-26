@@ -568,3 +568,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 378 (slice 20, menu_runner pause_menu caller canonicalization).
 - Stage 379 (slice 20, menu_runner zero-caller checkpoint).
 - Stage 380 (slice 20, prune menu_runner ui shim).
+- Stage 381 (slice 20, menu_runner family checkpoint and verify).

@@ -189,7 +189,7 @@ tet4d/
 
 1. New pure deterministic logic slices (no pygame/I/O/time/logging) go in `src/tet4d/engine/core/`.
 2. New runtime/gameplay modules that are not yet pure-core-ready go in `src/tet4d/engine/`.
-3. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`.
+3. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`; cluster subpackage families (for example `src/tet4d/ui/pygame/menu/`) once a prefix group grows.
 4. New AI/playbot entry/facade modules go in `src/tet4d/ai/` and should depend on `src/tet4d/engine/api.py`.
 5. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
 6. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
