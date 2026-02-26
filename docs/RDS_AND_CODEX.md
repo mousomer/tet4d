@@ -512,3 +512,5 @@ Authoritative open/deferred items are tracked in:
 - Stage 323 (slice 313, canonicalized the first keybindings test slice to ui/pygame/keybindings imports while keeping tests in engine/tests).
 - Stage 324 (slice 314, canonicalized the remaining keybindings module test import to ui/pygame/keybindings before shim pruning).
 - Stage 325 (slice 315, canonicalized ui_logic/keybindings_menu_model to ui/pygame/keybindings and baseline-locked it as a transitional engine-to-ui adapter).
+- Stage 326 (slice 316, recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization).
+- Stage 326 (slice 316, recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization).
