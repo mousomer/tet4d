@@ -450,3 +450,5 @@ incremental enforcement strategy used while refactoring.
   state JSON reads through `engine.runtime.menu_settings_state_storage`.
 - Stage 135 (slice 125, runtime side-effect extraction) routes menu settings
   state atomic JSON writes through `engine.runtime.menu_settings_state_storage`.
+- Stage 136 (slice 126, runtime side-effect extraction) routes menu-config JSON
+  object reads through shared helper `engine.runtime.json_storage`.

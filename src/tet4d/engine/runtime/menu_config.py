@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import json
 from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from ..ui_logic.menu_action_contracts import PARITY_ACTION_IDS
+from .json_storage import read_json_object_or_raise
 from .project_config import project_root_path
 from .runtime_config import playbot_budget_table_for_ndim
 
@@ -27,17 +27,7 @@ _LEGACY_PLAY_MENU_ID = "launcher_play"
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError as exc:  # pragma: no cover - exercised by runtime failures
-        raise RuntimeError(f"Failed reading config file {path}: {exc}") from exc
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Invalid JSON in config file {path}: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Config file {path} must contain a JSON object")
-    return payload
+    return read_json_object_or_raise(path)
 
 
 def _as_non_empty_string(value: object, *, path: str) -> str:
