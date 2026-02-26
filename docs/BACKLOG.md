@@ -879,3 +879,7 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 212. `DONE` Arch Stage 213 slice 203 migrated `src/tet4d/engine/pause_menu.py` to canonical `src/tet4d/ui/pygame/launcher_settings.py` imports before shim pruning.
 213. `DONE` Arch Stage 214 slice 204 migrated CLI and test callers to canonical `src/tet4d/ui/pygame/launcher_settings.py` imports before shim pruning.
 214. `DONE` Arch Stage 215 slice 205 removed the zero-caller `src/tet4d/engine/launcher_settings.py` compatibility shim and advanced `arch_stage` to `215` after verification/CI checkpoint.
+215. `DONE` Arch Stage 216 slice 206 added lazy `engine.api` wrappers for launcher-play dependencies (`front3d_game`, `front4d_game`, `frontend_nd` launch/menu/build/sizing functions) to prepare UI relocation without deep `ui -> engine` imports.
+216. `DONE` Arch Stage 217 slice 207 moved `src/tet4d/engine/launcher_play.py` implementation into `src/tet4d/ui/pygame/launcher_play.py`, rewired engine-side launch dependencies through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
+217. `DONE` Arch Stage 218 slice 208 migrated CLI launcher imports to canonical `src/tet4d/ui/pygame/launcher_play.py` before shim pruning.
+218. `DONE` Arch Stage 219 slice 209 recorded a zero-caller audit for `src/tet4d/engine/launcher_play.py` and advanced `arch_stage` to `219` before shim pruning.
