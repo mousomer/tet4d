@@ -976,3 +976,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 309. `DONE` Arch Stage 325 slice 315 canonicalized ui_logic/keybindings_menu_model to ui/pygame/keybindings and baseline-locked it as a transitional engine-to-ui adapter.
 310. `DONE` Arch Stage 326 slice 316 recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization.
 311. `DONE` Arch Stage 326 slice 316 recorded zero remaining callers of the transitional engine/ui_logic/keybindings.py shim after engine.api, engine, CLI, and test canonicalization.
+312. `DONE` Arch Stage 327 slice 317 removed the zero-caller engine/ui_logic/keybindings.py compatibility shim after canonicalization to ui/pygame/keybindings.
