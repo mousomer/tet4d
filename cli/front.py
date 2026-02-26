@@ -33,7 +33,7 @@ from tet4d.ui.pygame.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.ui.pygame.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.help_menu import run_help_menu
-from tet4d.engine.ui_logic.keybindings import (
+from tet4d.ui.pygame.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
     set_active_key_profile,
