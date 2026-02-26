@@ -505,3 +505,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 316 (slice 306, retargeted binding label/description engine.api wrappers to keybindings_catalog to prepare keybindings UI relocation without circular imports).
 - Stage 317 (slice 307, added engine.api wrappers for keybindings runtime path and storage helpers to prepare keybindings UI relocation).
 - Stage 318 (slice 308, moved engine/ui_logic/keybindings.py into ui/pygame, rewired runtime paths and storage through engine.api, retained an engine compatibility shim, and baseline-locked the new UI adapter path).
+- Stage 319 (slice 309, canonicalized engine.api keybindings wrappers to import from ui/pygame/keybindings instead of the transitional engine/ui_logic shim).
