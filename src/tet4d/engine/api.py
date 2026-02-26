@@ -499,6 +499,18 @@ def launcher_play_build_config_nd(settings: Any, dimension: int) -> Any:
     return _build_config(settings, dimension)
 
 
+def gravity_interval_ms_gameplay(speed_level: int, *, dimension: int) -> int:
+    from .gameplay.speed_curve import gravity_interval_ms as _gravity_interval_ms
+
+    return _gravity_interval_ms(speed_level, dimension=dimension)
+
+
+def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
+    from .gameplay.topology import map_overlay_cells as _map_overlay_cells
+
+    return _map_overlay_cells(*args, **kwargs)
+
+
 def format_key_tuple(keys):
     from tet4d.ui.pygame.key_display import format_key_tuple as _format_key_tuple
 
