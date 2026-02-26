@@ -1015,3 +1015,31 @@ incremental enforcement strategy used while refactoring.
 - Stage 490 (slice 125, runtime-ui batch checkpoint and verify) records completion of
   the Stage 481-489 runtime-helper extraction batch, advances `arch_stage` to `490`, and
   verifies the checkpoint locally with `verify.sh`.
+- Stage 491 (slice 126, runtime-ui overlay move I) moves `help_menu.py` into
+  `src/tet4d/ui/pygame/runtime_ui/` with staged caller canonicalization follow-up.
+- Stage 492 (slice 127, runtime-ui overlay move II) moves `pause_menu.py` into
+  `src/tet4d/ui/pygame/runtime_ui/` to colocate shared runtime overlays with runtime UI
+  helpers.
+- Stage 493 (slice 128, runtime-ui overlay caller canonicalization I) migrates CLI and
+  UI frontend callers to canonical `tet4d.ui.pygame.runtime_ui.{help_menu,pause_menu}`
+  imports.
+- Stage 494 (slice 129, runtime-ui overlay caller canonicalization II) migrates engine
+  tests to canonical `tet4d.ui.pygame.runtime_ui.help_menu` and
+  `tet4d.ui.pygame.runtime_ui.pause_menu` imports, including patch-path updates.
+- Stage 495 (slice 130, runtime-ui overlay internal import normalization) rewires the
+  moved `pause_menu` module to import `run_help_menu` from canonical
+  `tet4d.ui.pygame.runtime_ui.help_menu`.
+- Stage 496 (slice 131, runtime-ui overlay zero-caller checkpoint) records zero
+  remaining imports of the old top-level `ui/pygame/help_menu.py` and
+  `ui/pygame/pause_menu.py` paths before shim pruning.
+- Stage 497 (slice 132, runtime-ui help-menu shim prune) removes the zero-caller
+  top-level `ui/pygame/help_menu.py` compatibility shim/path after canonicalization.
+- Stage 498 (slice 133, runtime-ui pause-menu shim prune) removes the zero-caller
+  top-level `ui/pygame/pause_menu.py` compatibility shim/path after canonicalization.
+- Stage 499 (slice 134, runtime-ui overlay path-doc/history sync) refreshes structure
+  docs, backlog history, and current-state handoff notes to record canonical
+  `ui/pygame/runtime_ui/{help_menu,pause_menu}` paths and the updated folder-balance
+  snapshot.
+- Stage 500 (slice 135, runtime-ui overlay checkpoint and verify) records completion of
+  the Stage 491-499 runtime-overlay move batch, advances `arch_stage` to `500`, updates
+  path allowlists/contracts, and verifies the checkpoint locally with `verify.sh`.

@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-26
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (local `AGENTS.md` edit + uncommitted Stage 481-490 batch)
+Worktree expectation at handoff: dirty (local `AGENTS.md` edit)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `490` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `500` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -42,13 +42,13 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `src/tet4d/engine/ui_logic`: `6`
 - `src/tet4d/engine/runtime`: `22`
 - `src/tet4d/engine/gameplay`: `11`
-- `src/tet4d/ui/pygame`: `10`
+- `src/tet4d/ui/pygame`: `8`
 - `src/tet4d/ui/pygame/menu`: `10`
 - `src/tet4d/ui/pygame/launch`: `7`
 - `src/tet4d/ui/pygame/input`: `6`
 - `src/tet4d/ui/pygame/loop`: `3`
 - `src/tet4d/ui/pygame/render`: `9`
-- `src/tet4d/ui/pygame/runtime_ui`: `4`
+- `src/tet4d/ui/pygame/runtime_ui`: `6`
 - `src/tet4d/ai/playbot`: `9`
 
 ### Balance Assessment
@@ -63,10 +63,10 @@ Read this first in a new Codex thread before continuing staged refactors.
   containing shared loop orchestration helpers (`game_loop_common`, `loop_runner_nd`).
 - `ui/pygame/render` is now a balanced leaf package (`9` files, fuzzy `balanced`) after
   panel/control/gfx/grid/font helper relocation.
-- `ui/pygame/runtime_ui` is a coherent small leaf package (`4` files, fuzzy `watch`)
-  for audio/display/app bootstrap helpers with shared caller patterns.
-- `ui/pygame` top-level remains balanced and dropped further to `10` files after the
-  `runtime_ui/` extraction follow-up.
+- `ui/pygame/runtime_ui` is now a balanced leaf package (`6` files, fuzzy `balanced`)
+  after moving shared pause/help overlays alongside audio/display/app bootstrap helpers.
+- `ui/pygame` top-level remains balanced and dropped further to `8` files after the
+  `runtime_ui` help/pause move batch.
 
 ## Major Completed Milestones (Condensed)
 
@@ -129,14 +129,14 @@ Recommended subpackages (incremental, not all at once):
 - `src/tet4d/ui/pygame/input/` (balanced)
 - `src/tet4d/ui/pygame/loop/` (small/coherent)
 - `src/tet4d/ui/pygame/render/` (balanced)
-- `src/tet4d/ui/pygame/runtime_ui/` (small/coherent)
+- `src/tet4d/ui/pygame/runtime_ui/` (balanced)
 - `src/tet4d/ui/pygame/launch/` (balanced)
 
 Recommended next family moves (same staged pattern):
-- `ui_utils` extraction decision (keep top-level utility, or seed a tiny `layout/` or `draw/` helper subpackage only if another paired move is ready)
-- `help_menu` / `pause_menu` support helpers (identify low-risk helper slices before module decomposition)
-- `help_menu` / `pause_menu` split planning (decompose before moving, due high caller breadth)
+- `ui_utils` extraction decision (keep top-level utility, or pair it with another draw/layout helper if a coherent subpackage is justified)
 - `projection3d` / `front3d_game` / `front4d_game` watch (defer until a renderer/viewer feature batch)
+- `keybindings.py` decomposition planning (split internal sections before any package move)
+- `loop/` and `runtime_ui/` optional follow-up consolidation only when a cohesive helper pair is ready (avoid tiny leaf churn)
 
 Pattern per family:
 1. move implementation to subpackage

@@ -1150,3 +1150,13 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 473. `DONE` Arch Stage 488 slice 123 recorded zero remaining imports of old top-level `ui/pygame/app_runtime.py` paths after canonicalization.
 474. `DONE` Arch Stage 489 slice 124 refreshed docs/handoff to record the canonical `ui/pygame/runtime_ui/*` paths and post-move balancer snapshot.
 475. `DONE` Arch Stage 490 slice 125 recorded completion of the Stage 481-489 runtime-helper extraction batch, advanced `arch_stage` to `490`, and verified the checkpoint locally.
+476. `DONE` Arch Stage 491 slice 126 moved `ui/pygame/help_menu.py` into `src/tet4d/ui/pygame/runtime_ui/` with staged caller canonicalization follow-up.
+477. `DONE` Arch Stage 492 slice 127 moved `ui/pygame/pause_menu.py` into `src/tet4d/ui/pygame/runtime_ui/` to colocate shared runtime overlays.
+478. `DONE` Arch Stage 493 slice 128 canonicalized CLI and UI frontend callers to `tet4d.ui.pygame.runtime_ui.{help_menu,pause_menu}` imports.
+479. `DONE` Arch Stage 494 slice 129 canonicalized engine tests and patch paths to `tet4d.ui.pygame.runtime_ui.help_menu` and `tet4d.ui.pygame.runtime_ui.pause_menu`.
+480. `DONE` Arch Stage 495 slice 130 normalized moved `pause_menu` internal imports to canonical `tet4d.ui.pygame.runtime_ui.help_menu`.
+481. `DONE` Arch Stage 496 slice 131 recorded zero remaining imports of old top-level `ui/pygame/help_menu.py` and `ui/pygame/pause_menu.py` paths after canonicalization.
+482. `DONE` Arch Stage 497 slice 132 removed the zero-caller top-level `ui/pygame/help_menu.py` shim/path after canonicalization.
+483. `DONE` Arch Stage 498 slice 133 removed the zero-caller top-level `ui/pygame/pause_menu.py` shim/path after canonicalization.
+484. `DONE` Arch Stage 499 slice 134 refreshed path docs/backlog/current-state notes for canonical `ui/pygame/runtime_ui/{help_menu,pause_menu}` paths and the post-move folder-balance snapshot.
+485. `DONE` Arch Stage 500 slice 135 recorded completion of the Stage 491-499 runtime-overlay move batch, advanced `arch_stage` to `500`, synced path allowlists/contracts, and verified the checkpoint locally.

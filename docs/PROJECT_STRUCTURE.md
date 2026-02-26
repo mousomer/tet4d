@@ -90,13 +90,11 @@ tet4d/
 │       ├── loop/                # shared gameplay loop orchestration helper subpackage
 │       ├── menu/                # menu + keybindings-menu UI subpackage
 │       ├── render/              # rendering/panel/icon/font helper UI subpackage
-│       ├── runtime_ui/          # runtime audio/display/bootstrap UI helper subpackage
-│       ├── help_menu.py         # launcher/pause help and explanation UI
+│       ├── runtime_ui/          # runtime audio/display/bootstrap + pause/help UI helper subpackage
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── runtime_config_validation.py # runtime-config schema validation helpers
 │       ├── front3d_game.py      # 3D gameplay frontend
 │       ├── front4d_game.py      # 4D gameplay frontend
-│       ├── pause_menu.py        # shared in-game pause/settings/keybinding menu
 │       ├── projection3d.py      # shared projection/camera helpers
 │       ├── menu_model.py        # shared menu loop helpers (selection/confirm/clamp)
 │       ├── menu_persistence.py  # shared menu settings persistence facade
@@ -158,9 +156,9 @@ tet4d/
 11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
 12. Audio/display/bootstrap runtime helpers are in `runtime_ui/audio.py`,
     `runtime_ui/display.py`, and `runtime_ui/app_runtime.py`.
-13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `pause_menu.py`.
+13. Shared in-game pause flows (settings + keybindings + profiles + help) are in `runtime_ui/pause_menu.py`.
 14. Shared in-game key helper grouping is in `render/control_helper.py`.
-15. Help/explanation pages (including rendered arrow-diagram guides) are in `help_menu.py` and `menu/menu_control_guides.py`.
+15. Help/explanation pages (including rendered arrow-diagram guides) are in `runtime_ui/help_menu.py` and `menu/menu_control_guides.py`.
 16. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
 18. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.

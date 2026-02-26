@@ -254,7 +254,7 @@ src/tet4d/ui/pygame/front4d_game.py
 src/tet4d/ui/pygame/grid_mode_render.py
 src/tet4d/ui/pygame/gfx_game.py
 src/tet4d/ui/pygame/gfx_panel_2d.py
-src/tet4d/ui/pygame/help_menu.py
+src/tet4d/ui/pygame/runtime_ui/help_menu.py
 src/tet4d/ui/pygame/keybindings.py
 src/tet4d/ui/pygame/launch/launcher_nd_runner.py
 src/tet4d/ui/pygame/launch/launcher_play.py
@@ -265,7 +265,7 @@ src/tet4d/ui/pygame/menu/keybindings_menu_model.py
 src/tet4d/ui/pygame/loop_runner_nd.py
 src/tet4d/ui/pygame/menu/menu_controls.py
 src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py
-src/tet4d/ui/pygame/pause_menu.py
+src/tet4d/ui/pygame/runtime_ui/pause_menu.py
 src/tet4d/ui/pygame/launch/profile_4d.py
 src/tet4d/ui/pygame/projection3d.py
 src/tet4d/ui/pygame/text_render_cache.py
