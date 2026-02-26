@@ -8,12 +8,16 @@ from importlib import import_module
 
 __all__ = [
     "DryRunReport",
+    "PlayBotController",
     "run_dry_run_2d",
     "run_dry_run_nd",
 ]
 
 
 def __getattr__(name: str):
+    if name == "PlayBotController":
+        mod = import_module("tet4d.ai.playbot.controller")
+        return getattr(mod, name)
     if name in {"run_dry_run_2d", "run_dry_run_nd"}:
         mod = import_module("tet4d.ai.playbot.dry_run")
         return getattr(mod, name)
