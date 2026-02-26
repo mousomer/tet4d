@@ -81,7 +81,7 @@ src/tet4d/engine/gfx_panel_2d.py
 src/tet4d/engine/grid_mode_render.py
 src/tet4d/engine/help_menu.py
 src/tet4d/engine/key_display.py
-src/tet4d/engine/keybindings.py
+src/tet4d/engine/ui_logic/keybindings.py
 src/tet4d/engine/keybindings_defaults.py
 src/tet4d/engine/keybindings_menu.py
 src/tet4d/engine/keybindings_menu_input.py
@@ -143,7 +143,7 @@ src/tet4d/engine/gfx_game.py
 src/tet4d/engine/gfx_panel_2d.py
 src/tet4d/engine/grid_mode_render.py
 src/tet4d/engine/help_menu.py
-src/tet4d/engine/keybindings.py
+src/tet4d/engine/ui_logic/keybindings.py
 src/tet4d/engine/keybindings_menu.py
 src/tet4d/engine/keybindings_menu_view.py
 src/tet4d/engine/launcher_nd_runner.py
