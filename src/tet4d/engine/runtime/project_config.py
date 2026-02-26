@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+
+from .json_storage import read_json_object_or_empty
 
 
 def _detect_project_root() -> Path:
@@ -66,17 +67,7 @@ _DEFAULT_CONSTANTS = {
 
 
 def _read_json_object(path: Path) -> dict[str, Any]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError:
-        return {}
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    return payload
+    return read_json_object_or_empty(path)
 
 
 def _merge_objects(base: dict[str, Any], incoming: dict[str, Any]) -> dict[str, Any]:
