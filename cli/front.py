@@ -39,7 +39,7 @@ from tet4d.engine.keybindings import (
     set_active_key_profile,
 )
 from tet4d.ui.pygame.keybindings_menu import run_keybindings_menu
-from tet4d.engine.launcher_play import launch_2d, launch_3d, launch_4d
+from tet4d.ui.pygame.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.ui.pygame.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import launcher_menu_id, menu_graph
 from tet4d.engine.runtime.menu_persistence import load_menu_payload, save_menu_payload
