@@ -617,25 +617,25 @@ def front3d_setup_gravity_interval_ms_from_config_nd(cfg: GameConfigND) -> int:
 
 
 def launcher_play_run_menu_3d(screen: Any, fonts: Any) -> Any:
-    from .front3d_game import run_menu as _run_menu
+    from tet4d.ui.pygame.front3d_game import run_menu as _run_menu
 
     return _run_menu(screen, fonts)
 
 
 def launcher_play_build_config_3d(settings: Any) -> Any:
-    from .front3d_game import build_config as _build_config
+    from tet4d.ui.pygame.front3d_game import build_config as _build_config
 
     return _build_config(settings)
 
 
 def launcher_play_suggested_window_size_3d(cfg: Any) -> tuple[int, int]:
-    from .front3d_game import suggested_window_size as _suggested_window_size
+    from tet4d.ui.pygame.front3d_game import suggested_window_size as _suggested_window_size
 
     return _suggested_window_size(cfg)
 
 
 def launcher_play_run_game_loop_3d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
-    from .front3d_game import run_game_loop as _run_game_loop
+    from tet4d.ui.pygame.front3d_game import run_game_loop as _run_game_loop
 
     return _run_game_loop(screen, cfg, fonts, **kwargs)
 
