@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pygame
 
 from tet4d.engine.audio import AudioSettings
-from tet4d.engine.display import DisplaySettings
+from tet4d.ui.pygame.display import DisplaySettings
 from tet4d.engine.launcher_settings import SettingsHubResult
 from tet4d.engine import pause_menu
 

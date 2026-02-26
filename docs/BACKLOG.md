@@ -755,6 +755,8 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 
 149. `DONE` Arch Stage 150 slice 140 migrated engine callers to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
 
+150. `DONE` Arch Stage 151 slice 141 migrated CLI and tests to canonical `src/tet4d/ui/pygame/display.py` imports before shim pruning.
+
 ## 6. Source Inputs
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`
