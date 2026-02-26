@@ -998,3 +998,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 331. `DONE` Arch Stage 346 slice 1 move key_dispatch to ui pygame with shim.
 332. `DONE` Arch Stage 347 slice 2 canonicalize key_dispatch engine render callers.
 333. `DONE` Arch Stage 348 slice 3 canonicalize key_dispatch frontend_nd caller.
+334. `DONE` Arch Stage 349 slice 4 canonicalize key_dispatch cli caller.

@@ -56,7 +56,7 @@ from tet4d.ui.pygame.keybindings import (
     active_key_profile,
     load_active_profile_bindings,
 )
-from tet4d.engine.ui_logic.key_dispatch import (
+from tet4d.ui.pygame.key_dispatch import (
     dispatch_bound_action,
     match_bound_action,
 )
