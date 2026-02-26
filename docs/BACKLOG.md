@@ -1016,3 +1016,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 349. `DONE` Arch Stage 364 slice 9 front3d_game family checkpoint.
 350. `DONE` Arch Stage 365 slice 10 front3d_game verification checkpoint.
 351. `DONE` Arch Stage 366 slice 1 move front4d_game to ui pygame with shim.
+352. `DONE` Arch Stage 367 slice 2 baseline lock ui front4d_game adapter.

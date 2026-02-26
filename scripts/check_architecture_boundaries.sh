@@ -252,6 +252,7 @@ src/tet4d/ui/pygame/front3d.py
 src/tet4d/ui/pygame/front3d_game.py
 src/tet4d/ui/pygame/front3d_setup.py
 src/tet4d/ui/pygame/front4d.py
+src/tet4d/ui/pygame/front4d_game.py
 src/tet4d/ui/pygame/grid_mode_render.py
 src/tet4d/ui/pygame/gfx_game.py
 src/tet4d/ui/pygame/gfx_panel_2d.py
