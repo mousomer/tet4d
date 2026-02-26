@@ -883,3 +883,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 216. `DONE` Arch Stage 217 slice 207 moved `src/tet4d/engine/launcher_play.py` implementation into `src/tet4d/ui/pygame/launcher_play.py`, rewired engine-side launch dependencies through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
 217. `DONE` Arch Stage 218 slice 208 migrated CLI launcher imports to canonical `src/tet4d/ui/pygame/launcher_play.py` before shim pruning.
 218. `DONE` Arch Stage 219 slice 209 recorded a zero-caller audit for `src/tet4d/engine/launcher_play.py` and advanced `arch_stage` to `219` before shim pruning.
+219. `DONE` Arch Stage 220 slice 210 removed the zero-caller `src/tet4d/engine/launcher_play.py` compatibility shim and advanced `arch_stage` to `220` after verification/CI checkpoint.

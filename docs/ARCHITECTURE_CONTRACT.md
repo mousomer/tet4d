@@ -588,3 +588,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 217 (slice 207, launcher-play UI relocation) moves `src/tet4d/engine/launcher_play.py` implementation into `src/tet4d/ui/pygame/launcher_play.py`, rewires engine-side launch dependencies through `tet4d.engine.api`, retains an engine compatibility shim, and baseline-locks the new UI adapter path.
 - Stage 218 (slice 208, launcher-play UI canonicalization) migrates CLI launcher imports to canonical `tet4d.ui.pygame.launcher_play` before shim pruning.
 - Stage 219 (slice 209, launcher-play UI zero-caller audit checkpoint) records zero remaining imports of `src/tet4d/engine/launcher_play.py` before shim pruning and advances `arch_stage` to `219`.
+- Stage 220 (slice 210, launcher-play UI shim pruning/checkpoint) removes the zero-caller `src/tet4d/engine/launcher_play.py` compatibility shim and advances `arch_stage` to `220` after full verification/CI checkpoint.
