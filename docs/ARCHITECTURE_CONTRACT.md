@@ -502,3 +502,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 165 (slice 155, sequential cleanup) moved `src/tet4d/engine/view_modes.py`
   implementation into `src/tet4d/engine/ui_logic/view_modes.py` and retained an
   engine compatibility shim pending caller migration.
+- Stage 166 (slice 156, sequential cleanup) migrated engine, CLI, and
+  `engine.api` callers to canonical `src/tet4d/engine/ui_logic/view_modes.py`
+  imports before shim pruning.

@@ -93,7 +93,7 @@ from tet4d.engine.gameplay.topology_designer import (
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
 )
-from tet4d.engine.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.engine.pause_menu import run_pause_menu
 from tet4d.engine.help_menu import run_help_menu
 

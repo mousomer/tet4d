@@ -12,7 +12,7 @@ from .runtime.project_config import project_constant_int
 from .gameplay.speed_curve import gravity_interval_ms
 from .gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
-from .view_modes import GridMode
+from .ui_logic.view_modes import GridMode
 
 
 # ---------- Visual config & colors ----------

@@ -42,7 +42,7 @@ from .grid_mode_render import draw_projected_grid_mode
 from tet4d.ui.pygame.text_render_cache import render_text_cached
 from .gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.view_controls import YawPitchTurnAnimator
-from .view_modes import GridMode, grid_mode_label
+from .ui_logic.view_modes import GridMode, grid_mode_label
 
 
 MARGIN = project_constant_int(

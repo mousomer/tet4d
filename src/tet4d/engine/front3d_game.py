@@ -48,7 +48,7 @@ from tet4d.ai.playbot.types import (
 )
 from .gameplay.rotation_anim import PieceRotationAnimatorND
 from .runtime.runtime_helpers import collect_cleared_ghost_cells
-from .view_modes import GridMode, cycle_grid_mode
+from .ui_logic.view_modes import GridMode, cycle_grid_mode
 
 
 def handle_camera_key(key: int, camera: Camera3D) -> bool:

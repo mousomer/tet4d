@@ -34,7 +34,7 @@ from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.score_analyzer import hud_analysis_lines
 from .gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.view_controls import YawPitchTurnAnimator
-from .view_modes import GridMode, grid_mode_label
+from .ui_logic.view_modes import GridMode, grid_mode_label
 
 
 MARGIN = project_constant_int(

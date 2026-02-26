@@ -12,7 +12,7 @@ from tet4d.ui.pygame.control_helper import (
 from tet4d.ui.pygame.panel_utils import render_text_cached, truncate_lines_to_height
 from .runtime.score_analyzer import hud_analysis_lines
 from tet4d.ui.pygame.ui_utils import fit_text
-from .view_modes import GridMode, grid_mode_label
+from .ui_logic.view_modes import GridMode, grid_mode_label
 
 
 def _draw_side_panel_text(

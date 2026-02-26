@@ -340,7 +340,7 @@ def profile_4d_init_fonts() -> Any:
 
 
 def profile_4d_grid_mode_full() -> Any:
-    from .view_modes import GridMode as _GridMode
+    from .ui_logic.view_modes import GridMode as _GridMode
 
     return _GridMode.FULL
 

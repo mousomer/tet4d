@@ -788,6 +788,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 164. `DONE` Arch Stage 165 slice 155 moved `src/tet4d/engine/view_modes.py`
     implementation to `src/tet4d/engine/ui_logic/view_modes.py` and retained an
     engine compatibility shim pending caller migration.
+165. `DONE` Arch Stage 166 slice 156 migrated engine, CLI, and `engine.api`
+    callers to canonical `src/tet4d/engine/ui_logic/view_modes.py` imports
+    before shim pruning.
 
 ## 6. Source Inputs
 
