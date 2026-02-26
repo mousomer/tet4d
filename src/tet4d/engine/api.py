@@ -356,6 +356,69 @@ def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
     _set_score_analyzer_logging_enabled(enabled)
 
 
+def settings_hub_layout_rows_runtime():
+    from .runtime.menu_config import settings_hub_layout_rows as _settings_hub_layout_rows
+
+    return _settings_hub_layout_rows()
+
+
+def settings_top_level_categories_runtime():
+    from .runtime.menu_config import (
+        settings_top_level_categories as _settings_top_level_categories,
+    )
+
+    return _settings_top_level_categories()
+
+
+def default_settings_payload_runtime():
+    from .runtime.menu_config import default_settings_payload as _default_settings_payload
+
+    return _default_settings_payload()
+
+
+def load_analytics_payload_runtime():
+    from .runtime.menu_persistence import (
+        load_analytics_payload as _load_analytics_payload,
+    )
+
+    return _load_analytics_payload()
+
+
+def persist_audio_payload_runtime(*, master_volume: float, sfx_volume: float, mute: bool):
+    from .runtime.menu_persistence import persist_audio_payload as _persist_audio_payload
+
+    return _persist_audio_payload(
+        master_volume=master_volume,
+        sfx_volume=sfx_volume,
+        mute=mute,
+    )
+
+
+def persist_display_payload_runtime(*, fullscreen: bool, windowed_size: tuple[int, int]):
+    from .runtime.menu_persistence import (
+        persist_display_payload as _persist_display_payload,
+    )
+
+    return _persist_display_payload(
+        fullscreen=fullscreen,
+        windowed_size=windowed_size,
+    )
+
+
+def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
+    from .runtime.menu_persistence import (
+        persist_analytics_payload as _persist_analytics_payload,
+    )
+
+    return _persist_analytics_payload(score_logging_enabled=score_logging_enabled)
+
+
+def default_windowed_size_runtime() -> tuple[int, int]:
+    from .runtime.menu_settings_state import DEFAULT_WINDOWED_SIZE as _DEFAULT_WINDOWED_SIZE
+
+    return _DEFAULT_WINDOWED_SIZE
+
+
 def front3d_setup_game_settings_type() -> Any:
     from .frontend_nd import GameSettingsND as _GameSettingsND
 
