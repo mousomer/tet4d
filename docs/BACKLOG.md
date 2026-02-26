@@ -943,3 +943,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 276. `DONE` Arch Stage 292 slice 282 removed the zero-caller `engine/playbot/planner_nd_core.py` compatibility shim after the core relocation to `ai/playbot/planner_nd_core.py` and engine-api canonicalization.
 277. `DONE` Arch Stage 293 slice 283 recorded the canonical `ai/playbot/planner_nd_core.py` path after core shim removal and advanced `arch_stage` to `293`.
 278. `DONE` Arch Stage 294 slice 284 recorded completion of the Stage 288-293 plannerND-core move/canonicalize/prune sequence and advanced `arch_stage` to `294` before aggregate ND-planner checkpoints.
+279. `DONE` Arch Stage 295 slice 285 recorded completion of the Stage 271-294 ND planner family migrations (`planner_nd`, `planner_nd_search`, `planner_nd_core`) and advanced `arch_stage` to `295`.
