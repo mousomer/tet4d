@@ -884,3 +884,7 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 217. `DONE` Arch Stage 218 slice 208 migrated CLI launcher imports to canonical `src/tet4d/ui/pygame/launcher_play.py` before shim pruning.
 218. `DONE` Arch Stage 219 slice 209 recorded a zero-caller audit for `src/tet4d/engine/launcher_play.py` and advanced `arch_stage` to `219` before shim pruning.
 219. `DONE` Arch Stage 220 slice 210 removed the zero-caller `src/tet4d/engine/launcher_play.py` compatibility shim and advanced `arch_stage` to `220` after verification/CI checkpoint.
+220. `DONE` Arch Stage 221 slice 211 added lazy `engine.api` wrappers for score-analyzer HUD lines and grid-mode labels to prepare `gfx_panel_2d` UI relocation without deep `ui -> engine.runtime/ui_logic` imports.
+221. `DONE` Arch Stage 222 slice 212 moved `src/tet4d/engine/gfx_panel_2d.py` implementation into `src/tet4d/ui/pygame/gfx_panel_2d.py`, rewired runtime/ui_logic access through `tet4d.engine.api`, retained an engine compatibility shim, and baseline-locked the new UI adapter path.
+222. `DONE` Arch Stage 223 slice 213 migrated `src/tet4d/engine/gfx_game.py` to canonical `src/tet4d/ui/pygame/gfx_panel_2d.py` imports before shim pruning.
+223. `DONE` Arch Stage 224 slice 214 recorded a zero-caller audit for `src/tet4d/engine/gfx_panel_2d.py` and advanced `arch_stage` to `224` before shim pruning.

@@ -399,7 +399,7 @@ Authoritative open/deferred items are tracked in:
 6. `ruff check . --select C901`
 7. `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python3.11 -m pytest -q`
 8. `python3.14 -m compileall -q  front.py  cli/front.py  src/tet4d  src/tet4d/engine`
-9. Architecture stage checkpoint (`arch_stage: 220`) additionally completes launcher-play UI migration by pruning the zero-caller `src/tet4d/engine/launcher_play.py` shim after relocation/canonicalization while preserving `ui_to_engine_non_api = 0`.
+9. Architecture stage checkpoint (`arch_stage: 224`) additionally prepares and relocates the 2D side-panel renderer (`gfx_panel_2d`) to `src/tet4d/ui/pygame/gfx_panel_2d.py`, canonicalizes `gfx_game` imports, and records a zero-caller audit before final shim pruning while preserving `ui_to_engine_non_api = 0`.
    summary writes and event-log appends through
    `src/tet4d/engine/runtime/score_analyzer_storage.py`, and begins the
    `view_controls` UI canonicalization by moving implementation to
