@@ -476,3 +476,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 146 (slice 136, sequential cleanup) moved `src/tet4d/engine/rotation_anim.py` implementation into `src/tet4d/engine/gameplay/rotation_anim.py` and retained an engine compatibility shim pending caller migration.
 - Stage 147 (slice 137, sequential cleanup) migrated engine and CLI callers to canonical `src/tet4d/engine/gameplay/rotation_anim.py` imports before shim pruning.
 - Stage 148 (slice 138, sequential cleanup) migrated tests to canonical `src/tet4d/engine/gameplay/rotation_anim.py` imports before shim pruning.
+- Stage 149 (slice 139, sequential cleanup) removed the zero-caller `src/tet4d/engine/rotation_anim.py` compatibility shim after canonical gameplay import migration.
