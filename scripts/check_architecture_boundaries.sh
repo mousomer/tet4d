@@ -262,6 +262,7 @@ src/tet4d/ui/pygame/keybindings_menu.py
 src/tet4d/ui/pygame/keybindings_menu_view.py
 src/tet4d/ui/pygame/launcher_settings.py
 src/tet4d/ui/pygame/loop_runner_nd.py
+src/tet4d/ui/pygame/menu_keybinding_shortcuts.py
 src/tet4d/ui/pygame/pause_menu.py
 src/tet4d/ui/pygame/profile_4d.py
 src/tet4d/ui/pygame/projection3d.py
