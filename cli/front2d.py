@@ -49,7 +49,7 @@ from tet4d.ui.pygame.gfx_game import (
     draw_game_frame,
     gravity_interval_ms_from_config,
 )
-from tet4d.engine.keybindings import (
+from tet4d.engine.ui_logic.keybindings import (
     DISABLED_KEYS_2D,
     KEYS_2D,
     SYSTEM_KEYS,
