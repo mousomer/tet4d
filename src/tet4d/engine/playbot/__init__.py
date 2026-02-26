@@ -1,4 +1,5 @@
-from .controller import PlayBotController
+from importlib import import_module
+
 from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
     BOT_PLANNER_ALGORITHM_OPTIONS,
@@ -23,6 +24,13 @@ def run_dry_run_nd(*args, **kwargs):
     from tet4d.ai.playbot.dry_run import run_dry_run_nd as _run_dry_run_nd
 
     return _run_dry_run_nd(*args, **kwargs)
+
+
+def __getattr__(name: str):
+    if name == "PlayBotController":
+        mod = import_module("tet4d.engine.playbot.controller")
+        return getattr(mod, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "BOT_MODE_OPTIONS",
