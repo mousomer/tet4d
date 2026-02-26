@@ -350,6 +350,167 @@ def runtime_binding_groups_for_dimension(dimension: int):
     return _runtime_binding_groups_for_dimension(dimension)
 
 
+def binding_action_description(action: str) -> str:
+    from .keybindings import binding_action_description as _binding_action_description
+
+    return _binding_action_description(action)
+
+
+def keybindings_rebind_conflict_replace() -> str:
+    from .keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
+
+    return _REPLACE
+
+
+def keybindings_active_key_profile() -> str:
+    from .keybindings import active_key_profile as _active_key_profile
+
+    return _active_key_profile()
+
+
+def keybindings_clone_key_profile(
+    profile_name: str, *, source_profile: str | None = None
+) -> tuple[bool, str]:
+    from .keybindings import clone_key_profile as _clone_key_profile
+
+    return _clone_key_profile(profile_name, source_profile=source_profile)
+
+
+def keybindings_cycle_key_profile(step: int) -> tuple[bool, str, str]:
+    from .keybindings import cycle_key_profile as _cycle_key_profile
+
+    return _cycle_key_profile(step)
+
+
+def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
+    from .keybindings import (
+        cycle_rebind_conflict_mode as _cycle_rebind_conflict_mode,
+    )
+
+    return _cycle_rebind_conflict_mode(mode, step)
+
+
+def keybindings_delete_key_profile(profile_name: str) -> tuple[bool, str]:
+    from .keybindings import delete_key_profile as _delete_key_profile
+
+    return _delete_key_profile(profile_name)
+
+
+def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
+    from .keybindings import load_active_profile_bindings as _load_active_profile_bindings
+
+    return _load_active_profile_bindings()
+
+
+def keybindings_load_keybindings_file(dimension: int) -> tuple[bool, str]:
+    from .keybindings import load_keybindings_file as _load_keybindings_file
+
+    return _load_keybindings_file(dimension)
+
+
+def keybindings_next_auto_profile_name(prefix: str = "custom") -> str:
+    from .keybindings import next_auto_profile_name as _next_auto_profile_name
+
+    return _next_auto_profile_name(prefix)
+
+
+def keybindings_rebind_action_key(
+    dimension: int,
+    group: str,
+    action: str,
+    key: int,
+    *,
+    conflict_mode: str,
+) -> tuple[bool, str]:
+    from .keybindings import rebind_action_key as _rebind_action_key
+
+    return _rebind_action_key(
+        dimension, group, action, key, conflict_mode=conflict_mode
+    )
+
+
+def keybindings_rename_key_profile(
+    old_name: str, new_name: str
+) -> tuple[bool, str]:
+    from .keybindings import rename_key_profile as _rename_key_profile
+
+    return _rename_key_profile(old_name, new_name)
+
+
+def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str]:
+    from .keybindings import (
+        reset_active_profile_bindings as _reset_active_profile_bindings,
+    )
+
+    return _reset_active_profile_bindings(dimension)
+
+
+def keybindings_save_keybindings_file(dimension: int) -> tuple[bool, str]:
+    from .keybindings import save_keybindings_file as _save_keybindings_file
+
+    return _save_keybindings_file(dimension)
+
+
+def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
+    from .keybindings import set_active_key_profile as _set_active_key_profile
+
+    return _set_active_key_profile(profile_name)
+
+
+def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
+    from .ui_logic.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
+
+    return _SECTION_MENU
+
+
+def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) -> str:
+    from .ui_logic.keybindings_menu_model import (
+        resolve_initial_scope as _resolve_initial_scope,
+    )
+
+    return _resolve_initial_scope(dimension, scope)
+
+
+def keybindings_menu_rows_for_scope(scope: str):
+    from .ui_logic.keybindings_menu_model import rows_for_scope as _rows_for_scope
+
+    return _rows_for_scope(scope)
+
+
+def keybindings_menu_scope_dimensions(scope: str) -> tuple[int, ...]:
+    from .ui_logic.keybindings_menu_model import (
+        scope_dimensions as _scope_dimensions,
+    )
+
+    return _scope_dimensions(scope)
+
+
+def keybindings_menu_scope_file_hint(scope: str) -> str:
+    from .ui_logic.keybindings_menu_model import (
+        scope_file_hint as _scope_file_hint,
+    )
+
+    return _scope_file_hint(scope)
+
+
+def keybindings_menu_scope_label(scope: str) -> str:
+    from .ui_logic.keybindings_menu_model import scope_label as _scope_label
+
+    return _scope_label(scope)
+
+
+def keybindings_menu_binding_keys(row):
+    from .ui_logic.keybindings_menu_model import binding_keys as _binding_keys
+
+    return _binding_keys(row)
+
+
+def keybindings_menu_binding_title(row, scope: str) -> str:
+    from .ui_logic.keybindings_menu_model import binding_title as _binding_title
+
+    return _binding_title(row, scope)
+
+
 def run_front3d_ui() -> None:
     from .front3d_game import run as _run_front3d
 
