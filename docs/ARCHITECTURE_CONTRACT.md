@@ -723,3 +723,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 365 (slice 10, front3d_game verification checkpoint).
 - Stage 366 (slice 1, move front4d_game to ui pygame with shim).
 - Stage 367 (slice 2, baseline lock ui front4d_game adapter).
+- Stage 368 (slice 3, canonicalize front4d_game engine api wrappers).

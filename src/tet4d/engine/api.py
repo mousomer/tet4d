@@ -641,13 +641,13 @@ def launcher_play_run_game_loop_3d(screen: Any, cfg: Any, fonts: Any, **kwargs: 
 
 
 def launcher_play_run_game_loop_4d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
-    from .front4d_game import run_game_loop as _run_game_loop
+    from tet4d.ui.pygame.front4d_game import run_game_loop as _run_game_loop
 
     return _run_game_loop(screen, cfg, fonts, **kwargs)
 
 
 def launcher_play_suggested_window_size_4d(cfg: Any) -> tuple[int, int]:
-    from .front4d_game import suggested_window_size as _suggested_window_size
+    from tet4d.ui.pygame.front4d_game import suggested_window_size as _suggested_window_size
 
     return _suggested_window_size(cfg)
 
@@ -1074,13 +1074,13 @@ def run_front3d_ui() -> None:
 
 
 def run_front4d_ui() -> None:
-    from .front4d_game import run as _run_front4d
+    from tet4d.ui.pygame.front4d_game import run as _run_front4d
 
     _run_front4d()
 
 
 def profile_4d_new_layer_view_3d(*, xw_deg: float = 0.0, zw_deg: float = 0.0) -> Any:
-    from .front4d_game import LayerView3D as _LayerView3D
+    from tet4d.ui.pygame.front4d_game import LayerView3D as _LayerView3D
 
     return _LayerView3D(xw_deg=xw_deg, zw_deg=zw_deg)
 
