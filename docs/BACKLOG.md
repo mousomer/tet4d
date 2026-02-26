@@ -1025,3 +1025,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 358. `DONE` Arch Stage 373 slice 8 clean front4d_game allowlist entries.
 359. `DONE` Arch Stage 374 slice 9 front4d_game family checkpoint.
 360. `DONE` Arch Stage 375 slice 10 front4d_game verification checkpoint.
+361. `DONE` Arch Stage 376 slice 20 menu_runner subpackage move.
