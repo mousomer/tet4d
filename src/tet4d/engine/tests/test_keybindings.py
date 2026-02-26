@@ -17,7 +17,7 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
-from tet4d.engine.ui_logic import keybindings
+from tet4d.ui.pygame import keybindings
 from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime import menu_config
 
