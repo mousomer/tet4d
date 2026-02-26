@@ -624,3 +624,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 268 (slice 258, planner2d post-prune docs sync) records the canonical `ai/playbot/planner_2d.py` path after shim removal and advances `arch_stage` to `268`.
 - Stage 269 (slice 259, planner2d family checkpoint) records completion of the Stage 261-268 planner2d API-prep/move/prune sequence and advances `arch_stage` to `269` before the full batch verification checkpoint.
 - Stage 270 (slice 260, planner2d batch verification checkpoint) advances `arch_stage` to `270` and verifies the Stage 261-269 planner2d batch with full local `verify.sh` + `ci_check.sh`.
+- Stage 271 (slice 261, plannerND API prep search wrapper) adds `engine.api.plan_best_nd_with_budget(...)` so `planner_nd` can move to `ai/playbot` while remaining API-only at the AI boundary.

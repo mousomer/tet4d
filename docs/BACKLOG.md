@@ -919,3 +919,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 252. `DONE` Arch Stage 268 slice 258 recorded the canonical `ai/playbot/planner_2d.py` path after planner2d shim removal and advanced `arch_stage` to `268`.
 253. `DONE` Arch Stage 269 slice 259 recorded completion of the Stage 261-268 planner2d API-prep/move/prune sequence and advanced `arch_stage` to `269` before the full batch verification checkpoint.
 254. `DONE` Arch Stage 270 slice 260 advanced `arch_stage` to `270` and verified the Stage 261-269 planner2d batch with full local `verify.sh` + `ci_check.sh`.
+255. `DONE` Arch Stage 271 slice 261 added `engine.api.plan_best_nd_with_budget(...)` to prepare a boundary-safe move of `engine/playbot/planner_nd.py` into `ai/playbot` and advanced `arch_stage` to `271`.

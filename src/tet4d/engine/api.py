@@ -133,6 +133,25 @@ def plan_best_nd_move(
     )
 
 
+def plan_best_nd_with_budget(
+    state: GameStateND,
+    *,
+    profile: BotPlannerProfile,
+    planning_budget_ms: int,
+    algorithm: BotPlannerAlgorithm,
+) -> Any:
+    from .playbot.planner_nd_search import (
+        plan_best_nd_with_budget as _plan_best_nd_with_budget,
+    )
+
+    return _plan_best_nd_with_budget(
+        state,
+        profile=profile,
+        planning_budget_ms=planning_budget_ms,
+        algorithm=algorithm,
+    )
+
+
 def simulate_lock_board(
     state: GameStateND, piece: Any
 ) -> tuple[dict[tuple[int, ...], int], int, bool]:
@@ -955,6 +974,7 @@ __all__ = [
     "PIECE_SET_4D_DEBUG",
     "PIECE_SET_4D_STANDARD",
     "plan_best_2d_move",
+    "plan_best_nd_with_budget",
     "plan_best_nd_move",
     "playbot_benchmark_history_file",
     "playbot_benchmark_p95_thresholds",
