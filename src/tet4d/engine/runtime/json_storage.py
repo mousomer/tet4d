@@ -33,6 +33,10 @@ def read_json_object_or_empty(path: Path) -> dict[str, Any]:
     return payload
 
 
+def read_json_value_or_raise(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def write_json_object(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

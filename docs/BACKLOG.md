@@ -151,6 +151,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 137. `DONE` Arch Stage 138 slice 128 routed runtime-config validation JSON object reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 138. `DONE` Arch Stage 139 slice 129 routed topology-designer storage JSON object reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 139. `DONE` Arch Stage 140 slice 130 routed topology-designer storage JSON writes through shared helper `src/tet4d/engine/runtime/json_storage.py`.
+140. `DONE` Arch Stage 141 slice 131 routed help-topics storage JSON reads through shared helper `src/tet4d/engine/runtime/json_storage.py`.
 28. `DONE` Root entrypoint wrapping is consolidated into `front.py` only (no root `front2d.py`/`front3d.py`/`front4d.py` wrappers), and `front.py` accepts wrapper-level `--frontend/--mode {main,2d,3d,4d}` selection while delegating to `cli/front*.py`.
 
 1. `DONE` Pause/main menu parity updates: launcher and pause both expose settings, bot options, keybindings, help, and quit.
