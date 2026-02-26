@@ -785,6 +785,9 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 163. `DONE` Arch Stage 164 slice 154 removed the zero-caller
     `src/tet4d/engine/view_controls.py` compatibility shim after canonical UI
     `view_controls` import migration.
+164. `DONE` Arch Stage 165 slice 155 moved `src/tet4d/engine/view_modes.py`
+    implementation to `src/tet4d/engine/ui_logic/view_modes.py` and retained an
+    engine compatibility shim pending caller migration.
 
 ## 6. Source Inputs
 

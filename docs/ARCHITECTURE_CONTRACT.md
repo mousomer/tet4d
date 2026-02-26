@@ -499,3 +499,6 @@ incremental enforcement strategy used while refactoring.
 - Stage 164 (slice 154, sequential cleanup) removed the zero-caller
   `src/tet4d/engine/view_controls.py` compatibility shim after canonical UI
   `view_controls` import migration.
+- Stage 165 (slice 155, sequential cleanup) moved `src/tet4d/engine/view_modes.py`
+  implementation into `src/tet4d/engine/ui_logic/view_modes.py` and retained an
+  engine compatibility shim pending caller migration.
