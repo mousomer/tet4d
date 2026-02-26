@@ -537,6 +537,12 @@ def binding_action_description(action: str) -> str:
     return _binding_action_description(action)
 
 
+def binding_group_label(group: str) -> str:
+    from .keybindings import binding_group_label as _binding_group_label
+
+    return _binding_group_label(group)
+
+
 def keybindings_rebind_conflict_replace() -> str:
     from .keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
 
@@ -692,6 +698,20 @@ def keybindings_menu_binding_title(row, scope: str) -> str:
     return _binding_title(row, scope)
 
 
+def gameplay_action_category_ui_logic(action: str) -> str:
+    from .ui_logic.keybindings_catalog import (
+        gameplay_action_category as _gameplay_action_category,
+    )
+
+    return _gameplay_action_category(action)
+
+
+def compute_menu_layout_zones_ui_logic(*args: Any, **kwargs: Any) -> Any:
+    from .ui_logic.menu_layout import compute_menu_layout_zones as _compute_zones
+
+    return _compute_zones(*args, **kwargs)
+
+
 def bot_options_rows_runtime() -> tuple[str, ...]:
     from .runtime.menu_config import bot_options_rows as _bot_options_rows
 
@@ -704,6 +724,24 @@ def bot_defaults_by_mode_runtime() -> dict[str, dict[str, int]]:
     return _bot_defaults_by_mode()
 
 
+def settings_category_docs_runtime():
+    from .runtime.menu_config import settings_category_docs as _settings_category_docs
+
+    return _settings_category_docs()
+
+
+def pause_menu_id_runtime() -> str:
+    from .runtime.menu_config import pause_menu_id as _pause_menu_id
+
+    return _pause_menu_id()
+
+
+def menu_items_runtime(menu_id: str):
+    from .runtime.menu_config import menu_items as _menu_items
+
+    return _menu_items(menu_id)
+
+
 def load_menu_payload_runtime() -> dict[str, Any]:
     from .runtime.menu_persistence import load_menu_payload as _load_menu_payload
 
@@ -714,6 +752,56 @@ def save_menu_payload_runtime(payload: dict[str, Any]) -> tuple[bool, str]:
     from .runtime.menu_persistence import save_menu_payload as _save_menu_payload
 
     return _save_menu_payload(payload)
+
+
+def load_audio_payload_runtime() -> dict[str, Any]:
+    from .runtime.menu_persistence import load_audio_payload as _load_audio_payload
+
+    return _load_audio_payload()
+
+
+def load_display_payload_runtime() -> dict[str, Any]:
+    from .runtime.menu_persistence import load_display_payload as _load_display_payload
+
+    return _load_display_payload()
+
+
+def help_action_topic_registry_runtime() -> dict[str, str]:
+    from .runtime.help_topics import help_action_topic_registry as _registry
+
+    return _registry()
+
+
+def help_topics_for_context_runtime(context: str):
+    from .runtime.help_topics import help_topics_for_context as _help_topics_for_context
+
+    return _help_topics_for_context(context)
+
+
+def piece_set_2d_options_gameplay():
+    from .gameplay.pieces2d import PIECE_SET_2D_OPTIONS as _PIECE_SET_2D_OPTIONS
+
+    return _PIECE_SET_2D_OPTIONS
+
+
+def piece_set_2d_label_gameplay(piece_set_id: str) -> str:
+    from .gameplay.pieces2d import piece_set_2d_label as _piece_set_2d_label
+
+    return _piece_set_2d_label(piece_set_id)
+
+
+def piece_set_label_gameplay(piece_set_id: str) -> str:
+    from .gameplay.pieces_nd import piece_set_label as _piece_set_label
+
+    return _piece_set_label(piece_set_id)
+
+
+def piece_set_options_for_dimension_gameplay(dimension: int):
+    from .gameplay.pieces_nd import (
+        piece_set_options_for_dimension as _piece_set_options_for_dimension,
+    )
+
+    return _piece_set_options_for_dimension(dimension)
 
 
 def run_front3d_ui() -> None:
