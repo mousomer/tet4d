@@ -106,7 +106,7 @@ def plan_best_2d_move(
     budget_ms: int | None = None,
     algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> Any:
-    from .playbot.planner_2d import plan_best_2d_move as _plan_best_2d_move
+    from tet4d.ai.playbot.planner_2d import plan_best_2d_move as _plan_best_2d_move
 
     return _plan_best_2d_move(
         state,
