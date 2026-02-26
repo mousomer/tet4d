@@ -25,7 +25,7 @@ from ..runtime.menu_settings_state import (
     reset_menu_settings_to_defaults,
     save_menu_settings,
 )
-from .menu_keybinding_shortcuts import (
+from tet4d.ui.pygame.menu_keybinding_shortcuts import (
     apply_menu_binding_action,
     menu_binding_action_for_key,
 )
