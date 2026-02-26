@@ -13,7 +13,8 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
 from cli import front2d
-from tet4d.engine import front3d_game, front4d_game, frontend_nd
+from tet4d.engine import front4d_game, frontend_nd
+from tet4d.ui.pygame import front3d_game
 from tet4d.engine.gameplay.game2d import Action, GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import (

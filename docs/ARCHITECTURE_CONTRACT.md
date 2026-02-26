@@ -715,3 +715,4 @@ incremental enforcement strategy used while refactoring.
 - Stage 357 (slice 2, baseline lock ui front3d_game adapter).
 - Stage 358 (slice 3, canonicalize engine api launcher 3d wrappers).
 - Stage 359 (slice 4, canonicalize engine api run_front3d wrapper).
+- Stage 360 (slice 5, canonicalize front3d_game test import).
