@@ -25,7 +25,7 @@ from .front3d_render import (
     init_fonts,
     suggested_window_size,
 )
-from .front3d_setup import (
+from tet4d.ui.pygame.front3d_setup import (
     build_config,
     create_initial_state,
     gravity_interval_ms_from_config,

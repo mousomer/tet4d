@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine import front3d_setup, frontend_nd
+from tet4d.ui.pygame import front3d_setup
+from tet4d.engine import frontend_nd
 
 
 class TestFront3DSetupDedup(unittest.TestCase):

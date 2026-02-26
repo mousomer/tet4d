@@ -542,3 +542,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 178 (slice 168, sequential cleanup) added `engine.api` wrappers for
   shared ND setup/menu functions and settings type access to prepare
   `front3d_setup` UI relocation without deep UI imports into engine internals.
+- Stage 179 (slice 169, sequential cleanup) moved `src/tet4d/engine/front3d_setup.py`
+  implementation into `src/tet4d/ui/pygame/front3d_setup.py`, migrated
+  engine/test callers to the canonical UI import path, and retained an engine
+  compatibility shim pending final prune.
