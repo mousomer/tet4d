@@ -940,3 +940,4 @@ Current sub-batch (2026-02-23): repo governance alignment and CI hardening only 
 273. `DONE` Arch Stage 289 slice 279 retargeted `engine.api` wrappers for lock/rotation/canonical-block/orientation/column-level helpers to import from `ai.playbot.planner_nd_core`, reducing reliance on the transitional engine shim.
 274. `DONE` Arch Stage 290 slice 280 retargeted `engine.api` wrappers for ND board evaluation, greedy scoring, and settled-candidate iteration to import from `ai.playbot.planner_nd_core`, further reducing reliance on the transitional engine shim.
 275. `DONE` Arch Stage 291 slice 281 recorded a zero-caller checkpoint for `engine/playbot/planner_nd_core.py` after engine-api canonicalization and advanced `arch_stage` to `291` before shim pruning.
+276. `DONE` Arch Stage 292 slice 282 removed the zero-caller `engine/playbot/planner_nd_core.py` compatibility shim after the core relocation to `ai/playbot/planner_nd_core.py` and engine-api canonicalization.
