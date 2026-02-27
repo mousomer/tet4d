@@ -87,7 +87,8 @@
         "- EDGE: only outer board edges.",
         "- FULL: full lattice grid.",
         "- HELPER: only lines intersecting active piece cells.",
-        "- Overlay transparency affects rotation overlays only; active piece stays opaque."
+        "- Locked-cell transparency affects board cells already on the board (including challenge layers and landed pieces).",
+        "- Range: 0%-85% (default 25%)."
       ],
       "full_lines": [
         "",
@@ -97,10 +98,11 @@
         "- FULL: full lattice grid.",
         "- HELPER: only lines intersecting active piece cells.",
         "",
-        "## Overlay transparency",
-        "- Applies to active overlays only (not the active piece).",
-        "- Default is 70% from Settings > Display.",
-        "- In-game adjust uses camera overlay-alpha keybinds (shown in side panel controls).",
+        "## Locked-cell transparency",
+        "- Applies to locked board cells only (challenge layers + landed pieces).",
+        "- Active moving piece remains opaque.",
+        "- Range is 0%-85%; default is 25% from Settings > Display.",
+        "- In-game adjust uses camera transparency keybinds (shown in side panel controls).",
         "",
         "## 4D view note",
         "- 4D is shown as multiple 3D boards (one per W layer)."

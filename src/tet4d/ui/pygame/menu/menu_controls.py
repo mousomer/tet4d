@@ -94,7 +94,9 @@ def _ensure_rebind_state(state: Any, dimension: int) -> None:
     if not hasattr(state, "active_profile"):
         state.active_profile = api.keybindings_active_key_profile()
     if not hasattr(state, "rebind_conflict_mode"):
-        state.rebind_conflict_mode = api.keybindings_normalize_rebind_conflict_mode(None)
+        state.rebind_conflict_mode = api.keybindings_normalize_rebind_conflict_mode(
+            None
+        )
 
 
 def _action_for_rebind_key(key: int) -> MenuInput:

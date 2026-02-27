@@ -36,7 +36,6 @@ from tet4d.ui.pygame.projection3d import (
     transform_point,
 )
 from .runtime.project_config import project_constant_float, project_constant_int
-from .runtime.runtime_helpers import collect_cleared_ghost_cells
 from .runtime.score_analyzer import hud_analysis_lines
 from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
@@ -76,6 +75,7 @@ COLOR_MAP = {
     6: (0, 0, 255),
     7: (255, 165, 0),
 }
+_ASSIST_OVERLAY_OPACITY_SCALE = 0.3
 
 ActiveOverlay4D = tuple[tuple[tuple[float, float, float, float], ...], int]
 VisibleLayerCell = tuple[tuple[float, float, float], int, bool, bool]
@@ -644,18 +644,29 @@ def _draw_layer_cells(
         locked_by_layer,
         active_overlay=active_overlay,
     )
-    solid_faces.sort(key=lambda x: x[0], reverse=True)
-    for _depth, poly, color, active in solid_faces:
+    locked_faces = [face for face in solid_faces if not face[3]]
+    active_faces = [face for face in solid_faces if face[3]]
+    if locked_faces:
+        locked_alpha = _overlay_opacity_scale(overlay_transparency)
+        _draw_translucent_faces(
+            surface,
+            locked_faces,
+            fill_alpha=int(round(255 * locked_alpha)),
+            outline_alpha=max(70, int(round(255 * min(1.0, locked_alpha + 0.12)))),
+        )
+    active_faces.sort(key=lambda x: x[0], reverse=True)
+    for _depth, poly, color, active in active_faces:
         pygame.draw.polygon(surface, color, poly)
         border_col = (255, 255, 255) if active else (24, 24, 34)
         pygame.draw.polygon(surface, border_col, poly, 2 if active else 1)
     if overlay_faces:
-        overlay_alpha = _overlay_opacity_scale(overlay_transparency)
         _draw_translucent_faces(
             surface,
             overlay_faces,
-            fill_alpha=int(round(255 * overlay_alpha)),
-            outline_alpha=max(70, int(round(255 * min(1.0, overlay_alpha + 0.12)))),
+            fill_alpha=int(round(255 * _ASSIST_OVERLAY_OPACITY_SCALE)),
+            outline_alpha=max(
+                70, int(round(255 * min(1.0, _ASSIST_OVERLAY_OPACITY_SCALE + 0.12)))
+            ),
         )
 
 
@@ -717,7 +728,7 @@ def _draw_layer_clear_animation(
 
     ghost_faces.sort(key=lambda x: x[0], reverse=True)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    alpha_scale = _overlay_opacity_scale(overlay_transparency)
+    alpha_scale = _ASSIST_OVERLAY_OPACITY_SCALE
     fill_alpha = int(160 * fade * alpha_scale)
     outline_alpha = int(220 * fade * alpha_scale)
     for _depth, poly, color, _active in ghost_faces:
@@ -739,7 +750,7 @@ def _draw_layer_board(
     helper_marks: tuple[set[int], set[int], set[int]] | None = None,
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
@@ -847,7 +858,7 @@ def _draw_side_panel(
     fonts: GfxFonts,
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
@@ -875,7 +886,7 @@ def _draw_side_panel(
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
-        f"Overlay transparency: {_overlay_alpha_label(overlay_transparency)}",
+        f"Locked-cell transparency: {_overlay_alpha_label(overlay_transparency)}",
     )
 
     draw_game_side_panel(
@@ -890,7 +901,7 @@ def _draw_side_panel(
         low_priority_lines=tuple(low_priority_lines),
         game_over=state.game_over,
         min_controls_h=150,
-        meter_label="Overlay transparency",
+        meter_label="Locked-cell transparency",
         meter_value=max(0.0, min(1.0, float(overlay_transparency))),
         meter_hint="Use [ and ] keys",
     )
@@ -905,7 +916,7 @@ def draw_game_frame(
     bot_lines: tuple[str, ...] = (),
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
@@ -1025,6 +1036,17 @@ def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
     return handle_view_key(event.key, view)
 
 
+def _collect_cleared_ghost_cells(
+    state: GameStateND,
+) -> tuple[tuple[tuple[int, ...], tuple[int, int, int]], ...]:
+    ghost_cells: list[tuple[tuple[int, ...], tuple[int, int, int]]] = []
+    for coord, cell_id in state.board.last_cleared_cells:
+        if len(coord) != 4:
+            continue
+        ghost_cells.append((tuple(coord), color_for_cell(cell_id, COLOR_MAP)))
+    return tuple(ghost_cells)
+
+
 def spawn_clear_animation_if_needed(
     state: GameStateND,
     last_lines_cleared: int,
@@ -1032,11 +1054,7 @@ def spawn_clear_animation_if_needed(
     if state.lines_cleared == last_lines_cleared:
         return None, last_lines_cleared
 
-    ghost_cells = collect_cleared_ghost_cells(
-        state,
-        expected_coord_len=4,
-        color_for_cell=lambda cell_id: color_for_cell(cell_id, COLOR_MAP),
-    )
+    ghost_cells = _collect_cleared_ghost_cells(state)
     if not ghost_cells:
         return None, state.lines_cleared
     return ClearAnimation4D(ghost_cells=tuple(ghost_cells)), state.lines_cleared

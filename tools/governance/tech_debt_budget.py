@@ -29,7 +29,9 @@ def _status_order(gate_config: dict[str, Any]) -> dict[str, int]:
     return parsed
 
 
-def _current_state(metrics: dict[str, Any]) -> tuple[int | None, float | None, str | None]:
+def _current_state(
+    metrics: dict[str, Any],
+) -> tuple[int | None, float | None, str | None]:
     stage_raw = metrics.get("arch_stage")
     stage = stage_raw if isinstance(stage_raw, int) else None
     tech_debt = metrics.get("tech_debt")
@@ -119,7 +121,9 @@ def _score_violations(
     return []
 
 
-def evaluate_tech_debt_gate(metrics: dict[str, Any], gate_config: dict[str, Any]) -> list[str]:
+def evaluate_tech_debt_gate(
+    metrics: dict[str, Any], gate_config: dict[str, Any]
+) -> list[str]:
     baseline_stage, baseline_score, baseline_status = _baseline_state(gate_config)
 
     stage, score, status = _current_state(metrics)
@@ -160,7 +164,9 @@ def evaluate_tech_debt_gate(metrics: dict[str, Any], gate_config: dict[str, Any]
     return violations
 
 
-def refresh_tech_debt_budgets(metrics: dict[str, Any], gate_config: dict[str, Any]) -> dict[str, Any]:
+def refresh_tech_debt_budgets(
+    metrics: dict[str, Any], gate_config: dict[str, Any]
+) -> dict[str, Any]:
     stage, score, status = _current_state(metrics)
     if stage is None:
         raise ValueError("metrics missing arch_stage")

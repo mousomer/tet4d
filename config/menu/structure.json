@@ -52,6 +52,7 @@
   "settings_hub_rows": [
     "Audio",
     "Display",
+    "Gameplay",
     "Analytics",
     "Back"
   ],
@@ -64,8 +65,10 @@
     {"kind": "item", "label": "Fullscreen", "row_key": "display_fullscreen"},
     {"kind": "item", "label": "Window width", "row_key": "display_width"},
     {"kind": "item", "label": "Window height", "row_key": "display_height"},
-    {"kind": "item", "label": "Overlay transparency", "row_key": "display_overlay_transparency"},
+    {"kind": "item", "label": "Locked-cell transparency", "row_key": "display_overlay_transparency"},
     {"kind": "item", "label": "Apply display", "row_key": "display_apply"},
+    {"kind": "header", "label": "Gameplay"},
+    {"kind": "item", "label": "Game seed (all modes)", "row_key": "game_seed"},
     {"kind": "header", "label": "Analytics"},
     {"kind": "item", "label": "Score logging", "row_key": "analytics_score_logging"},
     {"kind": "item", "label": "Save", "row_key": "save"},
@@ -109,7 +112,6 @@
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
-      {"label": "Game seed", "attr": "game_seed", "min": 0, "max": 999999999},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
       {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
@@ -123,7 +125,6 @@
       {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
       {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
-      {"label": "Game seed", "attr": "game_seed", "min": 0, "max": 999999999},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
       {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
@@ -138,7 +139,6 @@
       {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
       {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
       {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
-      {"label": "Game seed", "attr": "game_seed", "min": 0, "max": 999999999},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
       {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
@@ -173,7 +173,12 @@
     {
       "id": "display",
       "label": "Display",
-      "description": "Fullscreen/windowed mode, window size, overlay transparency baseline, and display apply/reset actions."
+      "description": "Fullscreen/windowed mode, window size, locked-cell transparency baseline, and display apply/reset actions."
+    },
+    {
+      "id": "gameplay",
+      "label": "Gameplay",
+      "description": "Shared deterministic run controls (global game seed used by 2D/3D/4D setup runs)."
     },
     {
       "id": "analytics",
@@ -211,6 +216,12 @@
     "display": {
       "field_count": 5,
       "action_count": 2,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "gameplay": {
+      "field_count": 1,
+      "action_count": 0,
       "mode_specific": false,
       "top_level": true
     },

@@ -6,7 +6,10 @@ import pygame
 
 from tet4d.engine import frontend_nd
 from tet4d.ui.pygame.runtime_ui import help_menu
-from tet4d.ui.pygame.runtime_ui.help_menu import help_topic_action_rows, paginate_help_lines
+from tet4d.ui.pygame.runtime_ui.help_menu import (
+    help_topic_action_rows,
+    paginate_help_lines,
+)
 
 
 class TestHelpMenu(unittest.TestCase):

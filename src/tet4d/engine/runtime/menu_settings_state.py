@@ -9,8 +9,8 @@ from ..api import (
     keybindings_load_active_profile_bindings as load_active_profile_bindings,
     keybindings_set_active_key_profile as set_active_key_profile,
 )
+from .json_storage import atomic_write_json, read_json_value_or_raise
 from .menu_config import default_settings_payload
-from .menu_settings_state_storage import atomic_write_json, load_json_file
 from .project_config import menu_settings_file_path, state_dir_path
 
 STATE_DIR = state_dir_path()
@@ -41,8 +41,8 @@ _DEFAULT_OVERLAY_TRANSPARENCY_RAW = (
     if isinstance(_DEFAULT_DISPLAY, dict)
     else None
 )
-OVERLAY_TRANSPARENCY_MIN = 0.2
-OVERLAY_TRANSPARENCY_MAX = 1.0
+OVERLAY_TRANSPARENCY_MIN = 0.0
+OVERLAY_TRANSPARENCY_MAX = 0.85
 OVERLAY_TRANSPARENCY_STEP = 0.05
 if isinstance(_DEFAULT_OVERLAY_TRANSPARENCY_RAW, (int, float)) and not isinstance(
     _DEFAULT_OVERLAY_TRANSPARENCY_RAW, bool
@@ -52,7 +52,21 @@ if isinstance(_DEFAULT_OVERLAY_TRANSPARENCY_RAW, (int, float)) and not isinstanc
         min(OVERLAY_TRANSPARENCY_MAX, float(_DEFAULT_OVERLAY_TRANSPARENCY_RAW)),
     )
 else:  # pragma: no cover - guarded by config validation
-    DEFAULT_OVERLAY_TRANSPARENCY = 0.7
+    DEFAULT_OVERLAY_TRANSPARENCY = 0.25
+_DEFAULT_GAME_SEED_RAW = (
+    _BASE_DEFAULTS.get("settings", {}).get("2d", {}).get("game_seed")
+    if isinstance(_BASE_DEFAULTS.get("settings"), dict)
+    else None
+)
+GAME_SEED_MIN = 0
+GAME_SEED_MAX = 999_999_999
+GAME_SEED_STEP = 1
+if isinstance(_DEFAULT_GAME_SEED_RAW, int) and not isinstance(
+    _DEFAULT_GAME_SEED_RAW, bool
+):
+    DEFAULT_GAME_SEED = max(GAME_SEED_MIN, min(GAME_SEED_MAX, _DEFAULT_GAME_SEED_RAW))
+else:  # pragma: no cover - guarded by config validation
+    DEFAULT_GAME_SEED = 1337
 _PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _MODE_KEYS = {"2d", "3d", "4d"}
 
@@ -65,6 +79,14 @@ def clamp_overlay_transparency(
     else:
         numeric = float(value)
     return max(OVERLAY_TRANSPARENCY_MIN, min(OVERLAY_TRANSPARENCY_MAX, numeric))
+
+
+def clamp_game_seed(value: object, *, default: int = DEFAULT_GAME_SEED) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(GAME_SEED_MIN, min(GAME_SEED_MAX, numeric))
 
 
 def _default_settings_payload() -> dict[str, Any]:
@@ -134,7 +156,7 @@ def _load_payload() -> dict[str, Any]:
     if not STATE_FILE.exists():
         return payload
     try:
-        loaded = load_json_file(STATE_FILE)
+        loaded = read_json_value_or_raise(STATE_FILE)
     except (OSError, json.JSONDecodeError):
         return payload
     if not isinstance(loaded, dict):
@@ -150,7 +172,7 @@ def _load_payload() -> dict[str, Any]:
 
 def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     try:
-        atomic_write_json(STATE_FILE, payload)
+        atomic_write_json(STATE_FILE, payload, trailing_newline=False)
     except OSError as exc:
         return False, f"Failed saving menu state: {exc}"
     return True, f"Saved menu state to {STATE_FILE}"
@@ -294,6 +316,8 @@ def _sanitize_mode_settings(
             if isinstance(default_value, int):
                 if isinstance(value, bool) or not isinstance(value, int):
                     value = default_value
+                elif attr_name == "game_seed":
+                    value = clamp_game_seed(value, default=default_value)
             elif not isinstance(value, type(default_value)):
                 value = default_value
             merged_mode[attr_name] = value
@@ -581,5 +605,31 @@ def save_analytics_settings(
     analytics = payload.setdefault("analytics", {})
     if score_logging_enabled is not None:
         analytics["score_logging_enabled"] = bool(score_logging_enabled)
+    _sanitize_payload(payload)
+    return _save_payload(payload)
+
+
+def get_global_game_seed() -> int:
+    payload = _load_payload()
+    settings = payload.get("settings")
+    if not isinstance(settings, dict):
+        return DEFAULT_GAME_SEED
+    raw_seed = settings.get("2d", {}).get("game_seed")
+    return clamp_game_seed(raw_seed, default=DEFAULT_GAME_SEED)
+
+
+def save_global_game_seed(seed: int) -> tuple[bool, str]:
+    payload = _load_payload()
+    settings = payload.setdefault("settings", {})
+    if not isinstance(settings, dict):
+        settings = {}
+        payload["settings"] = settings
+    clamped_seed = clamp_game_seed(seed, default=DEFAULT_GAME_SEED)
+    for mode_key in _MODE_KEYS:
+        mode_settings = settings.setdefault(mode_key, {})
+        if not isinstance(mode_settings, dict):
+            mode_settings = {}
+            settings[mode_key] = mode_settings
+        mode_settings["game_seed"] = clamped_seed
     _sanitize_payload(payload)
     return _save_payload(payload)

@@ -80,9 +80,11 @@ run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 
 run_step "ruff"           run_module ruff check .
+run_step "ruff_format"    run_module ruff format --check scripts tools
 run_step "ruff_c901"      run_module ruff check --select C901 .
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
 run_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
+run_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings

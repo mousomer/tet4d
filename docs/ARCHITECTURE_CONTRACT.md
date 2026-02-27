@@ -1098,7 +1098,8 @@ incremental enforcement strategy used while refactoring.
   verifies the checkpoint locally with `verify.sh`.
 - Stage 530 (slice 165, weighted tech-debt gate) adds a top-level `tech_debt` metric
   in `scripts/arch_metrics.py` that blends prioritized backlog load, bug/regression
-  backlog load, CI gate overage signals, and fuzzy folder-balance pressure, then
+  backlog load, CI gate overage signals, fuzzy folder-balance pressure, and a
+  low-weight positive delivery-size pressure signal (weighted LOC/file growth), then
   enforces a strict stage-batch decrease policy via
   `config/project/tech_debt_budgets.json` in
   `scripts/check_architecture_metric_budgets.sh`.
@@ -1109,9 +1110,10 @@ incremental enforcement strategy used while refactoring.
   routing regression coverage in `tests/unit/engine/test_nd_routing.py` for
   3D/4D viewer-relative movement mapping and action-override precedence rules.
 - Stage 533 (slice 168, overlay-transparency controls) adds display-level
-  `overlay_transparency` settings persistence (default `70%`), in-game camera-key
-  adjustments with side-panel bar feedback, and render-path separation so alpha
-  applies to active overlays only while active-piece cells remain opaque.
+  `overlay_transparency` settings persistence (current default `25%`, range
+  `0%..85%`), in-game camera-key adjustments with side-panel bar feedback, and
+  render-path separation so transparency applies to locked board cells only
+  while active-piece cells remain opaque.
 - Stage 534 (slice 169, test-tree consolidation checkpoint) migrates canonical
   engine regression suites from `src/tet4d/engine/tests/` to
   `tests/unit/engine/`, updates architecture metrics/folder-balance tracked leaf
@@ -1120,7 +1122,67 @@ incremental enforcement strategy used while refactoring.
   `ui/pygame/loop/{game_loop_common,loop_runner_nd}.py` into
   `ui/pygame/runtime_ui/`, removes the tiny `ui/pygame/loop` Python leaf, and
   canonicalizes all runtime callers to the `runtime_ui` path family.
-- Post-stage 533 gameplay RNG-mode extension adds config-driven setup fields for
-  `random_mode_index` + `game_seed` (2D/3D/4D), routes them into gameplay configs as
-  `rng_mode` + `rng_seed`, and keeps fixed-seed deterministic replay paths while
-  enabling true-random runtime starts.
+- Stage 536-555 (slice 171, runtime resize persistence + strict debt gate) adds
+  event-driven runtime window resize persistence (`display.windowed_size` user
+  overrides only), wires 2D/3D/4D gameplay loops and launchers to capture latest
+  window size on resize and quit/menu paths, closes `BKL-P1-007`, closes
+  `BKL-P3-007` under enforced hygiene controls, makes strict architecture/debt
+  budget checks blocking in `verify.sh`, and advances `arch_stage` metadata to
+  `555`.
+- Stage 556-575 (slice 172, projection/cache profiling watch closure) fixes
+  stale module-path coupling in `tools/benchmarks/profile_4d_render.py`,
+  hardens profiling for headless execution, records a current benchmark snapshot
+  in `docs/benchmarks/4d_render_profile_2026-02-27.md`, closes `BKL-P3-005`
+  based on threshold-compliant sparse overhead, and advances `arch_stage`
+  metadata to `575`.
+- Stage 576-595 (slice 173, debt-driver reduction checkpoint) introduces a
+  class-aware micro-leaf folder-balance profile for
+  `src/tet4d/engine/core/{step,rng}` via
+  `config/project/architecture_metrics.json` class overrides/profile mapping,
+  reduces code-balance pressure without touching gated runtime/test leaf
+  baselines, moves recurring operations watches (`BKL-P3-002`, `BKL-P3-006`)
+  to backlog operational watchlist (non-debt), and advances stage metadata to
+  `595`.
+- Stage 596-615 (slice 174, 3D renderer decomposition closure) splits
+  `src/tet4d/engine/front3d_render.py` responsibilities by extracting
+  projection and face/cell rendering helpers into
+  `src/tet4d/ui/pygame/render/front3d_projection_helpers.py` and
+  `src/tet4d/ui/pygame/render/front3d_cell_render.py`, keeps
+  `front3d_render.py` as a public orchestration façade for compatibility,
+  closes `BKL-P3-004`, and advances stage metadata to `615`.
+- Stage 616-635 (slice 175, runtime consolidation + formatting hygiene) removes
+  thin runtime storage/aggregation wrappers
+  (`help_topics_storage`, `menu_settings_state_storage`,
+  `topology_designer_storage`, `runtime_config_validation`,
+  `score_analyzer_storage`), canonicalizes callers to direct runtime/json and
+  split-validation modules, adds `ruff format --check scripts tools` to
+  `scripts/verify.sh`, improves `engine/runtime` folder balance from `watch` to
+  `balanced`, and advances stage metadata to `635`.
+- Stage 636-655 (slice 176, replay leaf-profile debt reduction checkpoint) adds
+  a class-aware folder-balance override for `src/tet4d/replay`
+  (`micro_feature_leaf` -> `micro_leaf`) in
+  `config/project/architecture_metrics.json`, removes false-positive watch
+  pressure for the intentionally small replay leaf, keeps tracked runtime/tests
+  folder-balance gates non-regressed, advances stage metadata to `655`, and
+  refreshes the strict tech-debt baseline after verified decrease.
+- Stage 656-675 (slice 177, runtime loader simplification debt reduction checkpoint)
+  simplifies config-backed runtime loader validation in
+  `src/tet4d/engine/runtime/menu_config.py` and
+  `src/tet4d/engine/help_text.py` while preserving public loader APIs and
+  policy checks, advances stage metadata to `675`, and refreshes the strict
+  tech-debt baseline after verified decrease (`2.44 -> 2.31`).
+- Stage 676-695 (slice 178, wrapper-pruning + delivery-size recalibration)
+  removes thin UI/runtime/replay wrapper leaves
+  (`ui/pygame/front3d.py`, `ui/pygame/front4d.py`,
+  `ui/pygame/launch/front3d_setup.py`, `ui/pygame/launch/profile_4d.py`,
+  `ui/pygame/runtime_ui/display.py`, `ui/pygame/runtime_ui/game_loop_common.py`,
+  `engine/runtime/{assist_scoring,runtime_helpers,runtime_config_validation_audio,runtime_config_validation_gameplay}.py`,
+  `replay/{playback,record}.py`), canonicalizes callers to engine-api/runtime
+  surfaces, recalibrates delivery-size normalization
+  (`loc_unit=10600`, `file_unit=64`) while keeping monotonic LOC/file pressure,
+  advances stage metadata to `695`, and refreshes the strict tech-debt baseline
+  after verified decrease (`2.31 -> 2.19`).
+- Post-stage 533 gameplay RNG-mode extension keeps config-driven setup fields for
+  `random_mode_index` (2D/3D/4D), centralizes `game_seed` in the shared settings
+  hub, routes values into gameplay configs as `rng_mode` + `rng_seed`, and keeps
+  fixed-seed deterministic replay paths while enabling true-random runtime starts.

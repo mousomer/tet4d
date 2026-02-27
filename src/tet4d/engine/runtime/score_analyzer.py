@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -17,11 +18,6 @@ from .score_analyzer_features import (
     board_health_features,
     placement_features,
     weighted_score,
-)
-from .score_analyzer_storage import (
-    append_json_line,
-    atomic_write_json as _atomic_write_summary_json,
-    load_json_object_or_default,
 )
 
 _ROOT_DIR = PROJECT_ROOT
@@ -62,10 +58,37 @@ def _default_config() -> dict[str, Any]:
     }
 
 
+def _load_json_object_or_default(path: Path, default: dict[str, Any]) -> dict[str, Any]:
+    try:
+        raw = path.read_text(encoding="utf-8")
+        loaded = json.loads(raw)
+    except (OSError, json.JSONDecodeError):
+        return default
+    if not isinstance(loaded, dict):
+        return default
+    return loaded
+
+
+def _atomic_write_summary_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temp_path.replace(path)
+
+
+def _append_json_line(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
 @lru_cache(maxsize=1)
 def _score_analyzer_config() -> dict[str, Any]:
     config = _default_config()
-    loaded = load_json_object_or_default(_CONFIG_PATH, config)
+    loaded = _load_json_object_or_default(_CONFIG_PATH, config)
     merged = dict(config)
     for key, value in loaded.items():
         merged[key] = value
@@ -403,7 +426,7 @@ def _new_summary() -> dict[str, object]:
 
 
 def _load_summary(path: Path) -> dict[str, object]:
-    loaded = load_json_object_or_default(path, _new_summary())
+    loaded = _load_json_object_or_default(path, _new_summary())
     ok, _msg = validate_score_analysis_summary(loaded)
     if not ok:
         return _new_summary()
@@ -553,7 +576,7 @@ def record_score_analysis_event(event: dict[str, object]) -> None:
     summary_cache_key = str(summary_path)
 
     try:
-        append_json_line(events_path, event)
+        _append_json_line(events_path, event)
     except OSError:
         return
 

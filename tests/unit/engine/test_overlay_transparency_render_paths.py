@@ -89,7 +89,9 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         self.assertIsNotNone(layer_idx)
         assert layer_idx is not None
 
-        piece_entries = front4d_render._piece_active_layer_cells(state, layer_idx, basis)
+        piece_entries = front4d_render._piece_active_layer_cells(
+            state, layer_idx, basis
+        )
         self.assertTrue(piece_entries)
         self.assertTrue(all(not entry[3] for entry in piece_entries))
 
@@ -106,20 +108,11 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         self.assertTrue(overlay_entries)
         self.assertTrue(all(entry[3] for entry in overlay_entries))
 
-    def test_3d_overlay_keydown_changes_rendered_overlay_alpha(self) -> None:
+    def test_3d_overlay_keydown_changes_locked_cell_alpha(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
         loop = front3d_game.LoopContext3D.create(cfg)
-        loop.state.current_piece = ActivePieceND.from_shape(
-            PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=7),
-            pos=(2, 3, 2),
-        )
-        overlay = (
-            tuple(
-                (float(x), float(y), float(z))
-                for x, y, z in loop.state.current_piece_cells_mapped(include_above=False)
-            ),
-            int(loop.state.current_piece.shape.color_id),
-        )
+        loop.state.current_piece = None
+        loop.state.board.cells[(2, 8, 2)] = 7
         board_rect = pygame.Rect(20, 20, 600, 600)
         before_surface = pygame.Surface((820, 720), pygame.SRCALPHA)
         front3d_render._draw_board_3d(
@@ -127,14 +120,16 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
             loop.state,
             loop.camera,
             board_rect,
-            active_overlay=overlay,
+            active_overlay=None,
             overlay_transparency=loop.overlay_transparency,
         )
         before_alpha_total = self._surface_alpha_total(before_surface)
         before_transparency = loop.overlay_transparency
 
         overlay_dec_key = self._key_for(CAMERA_KEYS_3D, "overlay_alpha_dec")
-        loop.keydown_handler(pygame.event.Event(pygame.KEYDOWN, {"key": overlay_dec_key}))
+        loop.keydown_handler(
+            pygame.event.Event(pygame.KEYDOWN, {"key": overlay_dec_key})
+        )
         self.assertLess(loop.overlay_transparency, before_transparency)
 
         after_surface = pygame.Surface((820, 720), pygame.SRCALPHA)
@@ -143,39 +138,31 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
             loop.state,
             loop.camera,
             board_rect,
-            active_overlay=overlay,
+            active_overlay=None,
             overlay_transparency=loop.overlay_transparency,
         )
         after_alpha_total = self._surface_alpha_total(after_surface)
         self.assertGreater(after_alpha_total, before_alpha_total)
 
-    def test_4d_overlay_keydown_changes_rendered_overlay_alpha(self) -> None:
+    def test_4d_overlay_keydown_changes_locked_cell_alpha(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         loop = front4d_game.LoopContext4D.create(cfg)
-        loop.state.current_piece = ActivePieceND.from_shape(
-            PieceShapeND(
-                "tri4",
-                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
-                color_id=5,
-            ),
-            pos=(2, 3, 2, 1),
-        )
+        loop.state.current_piece = None
+        locked_coord = (2, 8, 2, 1)
+        loop.state.board.cells[locked_coord] = 5
         basis = front4d_render._basis_for_view(loop.view, cfg.dims)
-        piece_cells = tuple(loop.state.current_piece_cells_mapped(include_above=False))
         layer_value, _cell3 = front4d_render._map_coord_to_layer_cell3(
-            piece_cells[0], dims4=cfg.dims, basis=basis
+            locked_coord, dims4=cfg.dims, basis=basis
         )
         layer_idx = front4d_render._layer_index_if_discrete(layer_value)
         self.assertIsNotNone(layer_idx)
         assert layer_idx is not None
-        overlay = (
-            tuple(tuple(float(axis) for axis in coord) for coord in piece_cells),
-            int(loop.state.current_piece.shape.color_id),
-        )
         locked_by_layer = front4d_render._locked_cells_by_layer(loop.state, basis)
         draw_rect = pygame.Rect(20, 20, 420, 420)
         dims3 = basis.dims3
-        zoom = front4d_render._fit_zoom(dims3, loop.view, draw_rect) * loop.view.zoom_scale
+        zoom = (
+            front4d_render._fit_zoom(dims3, loop.view, draw_rect) * loop.view.zoom_scale
+        )
         center_px = (draw_rect.centerx, draw_rect.centery)
 
         before_surface = pygame.Surface((840, 760), pygame.SRCALPHA)
@@ -189,14 +176,16 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
             basis=basis,
             zoom=zoom,
             locked_by_layer=locked_by_layer,
-            active_overlay=overlay,
+            active_overlay=None,
             overlay_transparency=loop.overlay_transparency,
         )
         before_alpha_total = self._surface_alpha_total(before_surface)
         before_transparency = loop.overlay_transparency
 
         overlay_inc_key = self._key_for(CAMERA_KEYS_4D, "overlay_alpha_inc")
-        loop.keydown_handler(pygame.event.Event(pygame.KEYDOWN, {"key": overlay_inc_key}))
+        loop.keydown_handler(
+            pygame.event.Event(pygame.KEYDOWN, {"key": overlay_inc_key})
+        )
         self.assertGreater(loop.overlay_transparency, before_transparency)
 
         after_surface = pygame.Surface((840, 760), pygame.SRCALPHA)
@@ -210,7 +199,7 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
             basis=basis,
             zoom=zoom,
             locked_by_layer=locked_by_layer,
-            active_overlay=overlay,
+            active_overlay=None,
             overlay_transparency=loop.overlay_transparency,
         )
         after_alpha_total = self._surface_alpha_total(after_surface)

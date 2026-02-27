@@ -526,7 +526,13 @@ def _topic_text_lines(
     )
     if action_lines:
         lines.extend(
-            ["", help_value_template("live_keys_heading", default="## Live keys (active profile)"), *action_lines]
+            [
+                "",
+                help_value_template(
+                    "live_keys_heading", default="## Live keys (active profile)"
+                ),
+                *action_lines,
+            ]
         )
     return lines
 

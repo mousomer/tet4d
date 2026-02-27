@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "active_debt_items": [],
+  "operational_watch_items": [
+    {
+      "id": "BKL-P3-002",
+      "priority": "P3",
+      "title": "Scheduled stability + policy workflow watch"
+    },
+    {
+      "id": "BKL-P3-003",
+      "priority": "P3",
+      "title": "Runtime-config validation module split watch"
+    },
+    {
+      "id": "BKL-P3-006",
+      "priority": "P3",
+      "title": "Desktop release hardening watch"
+    }
+  ]
+}

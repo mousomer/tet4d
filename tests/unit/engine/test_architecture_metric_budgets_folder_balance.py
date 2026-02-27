@@ -54,24 +54,34 @@ def _base_gate_config() -> dict:
 
 class TestArchitectureMetricBudgetsFolderBalance(unittest.TestCase):
     def test_passes_when_score_and_status_match_baseline(self) -> None:
-        self.assertEqual(evaluate_folder_balance_gate(_base_metrics(), _base_gate_config()), [])
+        self.assertEqual(
+            evaluate_folder_balance_gate(_base_metrics(), _base_gate_config()), []
+        )
 
     def test_passes_when_score_drops_within_epsilon(self) -> None:
         metrics = _base_metrics()
-        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = 0.70
+        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = (
+            0.70
+        )
         self.assertEqual(evaluate_folder_balance_gate(metrics, _base_gate_config()), [])
 
     def test_fails_when_status_worsens_even_if_score_close(self) -> None:
         metrics = _base_metrics()
-        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = 0.70
-        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_status"] = "skewed"
+        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = (
+            0.70
+        )
+        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_status"] = (
+            "skewed"
+        )
         violations = evaluate_folder_balance_gate(metrics, _base_gate_config())
         self.assertEqual(len(violations), 1)
         self.assertIn("status worsened", violations[0])
 
     def test_fails_when_score_drops_beyond_epsilon(self) -> None:
         metrics = _base_metrics()
-        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = 0.68
+        metrics["folder_balance"]["folders"][0]["balancer"]["fuzzy_weighted_score"] = (
+            0.68
+        )
         violations = evaluate_folder_balance_gate(metrics, _base_gate_config())
         self.assertEqual(len(violations), 1)
         self.assertIn("score regressed", violations[0])

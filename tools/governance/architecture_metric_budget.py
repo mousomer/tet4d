@@ -46,4 +46,3 @@ def evaluate_architecture_metric_budget_overages(
         if value > int(budget):
             violations.append(f"{metric_path}: {value} > budget {budget}")
     return violations
-

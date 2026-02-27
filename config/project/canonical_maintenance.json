@@ -80,6 +80,7 @@
       "config/project/constants.json",
       "config/project/folder_balance_budgets.json",
       "config/project/tech_debt_budgets.json",
+      "config/project/backlog_debt.json",
       "config/project/secret_scan.json",
       "config/project/canonical_maintenance.json",
       "config/project/architecture_metrics.json"
@@ -353,7 +354,17 @@
         "\"baseline\"",
         "\"scoring\"",
         "\"component_weights\"",
-        "\"priority_weights\""
+        "\"priority_weights\"",
+        "\"delivery_size_pressure\"",
+        "\"delivery_size\""
+      ]
+    },
+    {
+      "file": "config/project/backlog_debt.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"active_debt_items\"",
+        "\"operational_watch_items\""
       ]
     },
     {

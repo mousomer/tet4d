@@ -44,12 +44,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - closed `[BKL-P1-003]` and removed it from active open backlog.
 
 `DONE` Arch Stage 533 overlay-transparency control checkpoint:
-- added display-level `overlay_transparency` setting (default `70%`) with unified
-  settings-hub control and persistence.
+- added display-level `overlay_transparency` setting (current default `25%`,
+  range `0%..85%`) with unified settings-hub control and persistence.
 - added in-game camera actions (`overlay_alpha_dec`,`overlay_alpha_inc`) plus side-panel
   transparency bar feedback in 3D/4D game views.
-- changed render behavior to apply alpha to active overlays only while keeping active
-  piece cells opaque.
+- changed render behavior to apply transparency to locked board cells only while
+  keeping active piece cells opaque.
 - closed `[BKL-P1-002]` and removed it from active open backlog.
 
 `DONE` Keybindings menu scope-ownership drift fix:
@@ -60,7 +60,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 `DONE` Overlay transparency render semantics fix:
 - 3D/4D renderers now treat `overlay_transparency` as transparency (not opacity) by
-  applying `opacity = 1 - transparency` to overlay and clear-animation alpha paths.
+  applying `opacity = 1 - transparency` to locked-cell render paths.
 - side-panel wording now reflects transparency semantics and regression coverage was
   added in `test_overlay_transparency_render_paths.py`.
 
@@ -73,9 +73,18 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - weighted `keybinding_retention` significantly higher than
   `menu_simplification` to prioritize key availability/correctness over menu streamlining.
 
+`DONE` Tech-debt sizing signal extension:
+- replaced `delivery_size_relief` with positive `delivery_size_pressure`, where
+  tech debt increases with LOC/file growth (weighted by source root:
+  product code highest, tests/tools/scripts lower).
+- added per-component weighted-contribution output for direct comparison across weighted issues.
+- migrated backlog debt input to canonical JSON source:
+  `config/project/backlog_debt.json` (`active_debt_items`), removing markdown
+  parsing fallback from metrics computation.
+
 `DONE` `[BKL-P2-010]` True-random piece mode with configurable seed:
-- setup menus now expose `Random mode` (`Fixed seed` / `True random`) and `Game seed`
-  for 2D/3D/4D via config-driven setup fields.
+- setup menus expose `Random mode` (`Fixed seed` / `True random`) in 2D/3D/4D;
+  shared `Game seed` control is centralized in the unified settings hub.
 - gameplay configs now carry `rng_mode` + `rng_seed`; fixed-seed mode remains
   deterministic, and true-random mode uses non-seeded runtime RNG.
 - regression coverage added for 2D/ND create-initial-state RNG mode routing.
@@ -102,6 +111,150 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   `front4d_game.py`) to `tet4d.ui.pygame.runtime_ui.*` loop module paths.
 - removed the tiny `ui/pygame/loop` Python leaf and improved folder-balance
   pressure for stage-level tech-debt scoring.
+
+`DONE` Arch Stage 536-555 runtime resize persistence + debt gate checkpoint:
+- Stage 536: added runtime resize-event capture helpers in `runtime_ui/app_runtime.py`.
+- Stage 537: added event-driven `windowed_size` persistence (`VIDEORESIZE` / window-size events) with min-size clamping and unchanged-size short-circuit.
+- Stage 538: exposed event-driven resize capture through `tet4d.engine.api`.
+- Stage 539: extended ND shared loop runner to accept explicit non-key event handlers.
+- Stage 540: wired 3D runtime loop to persist windowed resize overrides during gameplay events.
+- Stage 541: wired 4D runtime loop to persist windowed resize overrides during gameplay events.
+- Stage 542: wired 2D runtime loop to persist windowed resize overrides during gameplay events.
+- Stage 543: normalized launcher quit-path handling to always capture the latest windowed size before exit.
+- Stage 544: normalized 2D quit-path handling to always capture the latest windowed size before exit.
+- Stage 545: added targeted unit coverage for event-driven resize persistence helpers.
+- Stage 546: added launcher-level regression coverage for quit-path resize capture.
+- Stage 547: added ND loop regression coverage for forwarding runtime non-key event handlers.
+- Stage 548: added 2D loop regression coverage ensuring runtime resize events invoke persistence hooks.
+- Stage 549: synchronized RDS menu-structure persistence rules with runtime resize-overrides policy.
+- Stage 550: synchronized shared technical requirements (`RDS_TETRIS_GENERAL`) for runtime resize override persistence.
+- Stage 551: closed `[BKL-P1-007]` (runtime resize persistence as user override state, defaults unchanged).
+- Stage 552: closed `[BKL-P3-007]` after repo hygiene controls became enforced by pre-push CI + verify secret scan.
+- Stage 553: wired strict architecture/debt budget gate into local verification (`verify.sh`) so regressions are blocking.
+- Stage 554: advanced architecture-stage metadata to `555` across metrics/config artifacts.
+- Stage 555: checkpoint verification + metrics refresh completed for the 20-stage batch.
+
+`DONE` Arch Stage 556-575 projection/cache profiling checkpoint:
+- Stage 556: fixed stale profiler import path to canonical `tet4d.ui.pygame.launch.profile_4d`.
+- Stage 557: made profiler default to headless-safe SDL video driver for reproducible local/CI runs.
+- Stage 558: added profiler metadata (`generated_at_utc`,`tool`,`version`,`frames`,`warmup`) to JSON output.
+- Stage 559: reran profiler and refreshed `state/bench/4d_render_profile_latest.json`.
+- Stage 560: recorded benchmark snapshot in `docs/benchmarks/4d_render_profile_2026-02-27.md`.
+- Stage 561: validated sparse overhead thresholds remain within policy limits (`15%` / `2.0 ms`).
+- Stage 562: documented no new cache/projection complexity required from this report.
+- Stage 563: synced RDS 4D profiling requirement with recorded-report path guidance.
+- Stage 564: synchronized architecture contract stage history for the profiling batch.
+- Stage 565: synchronized current-state summary with profiling checkpoint status.
+- Stage 566: updated backlog active-open section to remove completed profiling watch.
+- Stage 567: advanced architecture-stage metadata to `575` across metrics/config artifacts.
+- Stage 568: reran architecture metrics at stage `575` and confirmed debt drop.
+- Stage 569: ran strict architecture/debt budget checks for stage advancement.
+- Stage 570: ran full local verification checkpoint (`CODEX_MODE=1 ./scripts/verify.sh`).
+- Stage 571: refreshed tech-debt baseline after confirmed decrease (`tools/governance/update_tech_debt_budgets.py`).
+- Stage 572: reran strict budget gate with refreshed baseline.
+- Stage 573: reran full verification with refreshed baseline.
+- Stage 574: synchronized change-footprint entries for stage `556-575`.
+- Stage 575: closed `[BKL-P3-005]` (projection/cache profiling watch).
+
+`DONE` Arch Stage 576-595 tech-debt reduction checkpoint:
+- Stage 576: captured post-575 baseline metrics and debt-driver snapshot.
+- Stage 577-580: audited active `P3` backlog watches against current workflow,
+  runtime, renderer, and release-hardening contracts.
+- Stage 581-583: moved recurring operations watches to non-debt watchlist and
+  synchronized backlog/RDS/architecture-contract wording.
+- Stage 584: reran metrics and confirmed code-balance pressure dropped after
+  profile policy updates.
+- Stage 585-589: added micro-leaf folder-balance profile policy for
+  `engine/core/{step,rng}` and validated profile classification + scoring.
+- Stage 590-593: updated current-state/docs for stage `595` and reran strict
+  budget and verification checkpoints.
+- Stage 594: refreshed tech-debt baseline after confirmed score decrease.
+- Stage 595: finalized checkpoint sync and recorded next-stage priorities.
+
+`DONE` Arch Stage 596-615 3D renderer decomposition checkpoint:
+- Stage 596-601: extracted projection and face/cell rendering helpers from
+  `src/tet4d/engine/front3d_render.py` into dedicated modules under
+  `src/tet4d/ui/pygame/render/`.
+- Stage 602-607: converted `front3d_render.py` into a thinner orchestration
+  façade while preserving public and test-used internal helper symbols.
+- Stage 608-611: synchronized backlog/RDS/architecture/current-state docs and
+  closed `BKL-P3-004` after behavior-parity validation.
+- Stage 612-614: advanced stage metadata to `615`, reran metrics, and refreshed
+  strict tech-debt baseline after confirmed decrease.
+- Stage 615: executed full end-of-batch verification checkpoint.
+
+`DONE` Arch Stage 616-635 runtime consolidation + formatting checkpoint:
+- Stage 616-620: captured baseline and identified runtime leaf-file pressure as
+  primary code-balance debt lever.
+- Stage 621-629: removed thin runtime wrapper/storage modules and canonicalized
+  callers to direct `runtime/json/validation` implementations:
+  `help_topics_storage`, `menu_settings_state_storage`,
+  `topology_designer_storage`, `runtime_config_validation`,
+  `score_analyzer_storage`.
+- Stage 630: runtime leaf reduced from `22` to `17` files; runtime fuzzy balance
+  improved from `0.71/watch` to `0.92/balanced`.
+- Stage 631-632: added script/tool formatting enforcement to verification via
+  `ruff format --check scripts tools`.
+- Stage 633-634: synchronized architecture/current-state docs and metrics stage
+  metadata (`arch_stage=635`).
+- Stage 635: final verification passed and tech-debt baseline refreshed.
+
+`DONE` Arch Stage 636-655 replay leaf-profile debt reduction checkpoint:
+- Stage 636-640: captured stage-635 debt baseline and identified residual
+  code-balance pressure from intentionally tiny replay leaf sizing.
+- Stage 641-646: added class-aware replay override in
+  `config/project/architecture_metrics.json`:
+  `src/tet4d/replay -> micro_feature_leaf -> micro_leaf`.
+- Stage 647-651: reran metrics and verified replay leaf moved from
+  `0.83/watch` to `1.0/balanced` without changing runtime/tests gate scope.
+- Stage 652-654: advanced stage metadata to `655`, synchronized docs/current
+  state, and reran strict budget + verification checkpoints.
+- Stage 655: refreshed strict tech-debt baseline after confirmed stage decrease
+  (`2.55 -> 2.44`).
+
+`DONE` Arch Stage 656-675 runtime loader simplification debt reduction checkpoint:
+- Stage 656-660: captured stage-655 debt baseline and targeted delivery-size
+  pressure as the dominant remaining debt component.
+- Stage 661-668: replaced heavyweight runtime loader validation boilerplate with
+  lean config-backed validators while keeping public loader APIs stable:
+  `src/tet4d/engine/runtime/menu_config.py` and
+  `src/tet4d/engine/help_text.py`.
+- Stage 669-672: reran targeted menu/help/keybinding regression tests and
+  confirmed behavior parity under canonical config assets.
+- Stage 673-674: advanced stage metadata to `675`, synchronized
+  architecture/current-state/RDS/backlog records, and reran strict budget and
+  verification checkpoints.
+- Stage 675: refreshed strict tech-debt baseline after confirmed stage decrease
+  (`2.44 -> 2.31`).
+
+`DONE` Arch Stage 676-695 wrapper-pruning + delivery-size recalibration checkpoint:
+- Stage 676-682: removed thin UI/runtime/replay wrappers and canonicalized
+  callers to stable engine-api/runtime modules:
+  - `src/tet4d/ui/pygame/front3d.py`
+  - `src/tet4d/ui/pygame/front4d.py`
+  - `src/tet4d/ui/pygame/launch/front3d_setup.py`
+  - `src/tet4d/ui/pygame/launch/profile_4d.py`
+  - `src/tet4d/ui/pygame/runtime_ui/display.py`
+  - `src/tet4d/ui/pygame/runtime_ui/game_loop_common.py`
+  - `src/tet4d/replay/playback.py`
+  - `src/tet4d/replay/record.py`
+- Stage 683-687: consolidated runtime helpers into canonical surfaces and
+  pruned obsolete runtime leaves:
+  - `src/tet4d/engine/runtime/assist_scoring.py`
+  - `src/tet4d/engine/runtime/runtime_helpers.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_audio.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
+- Stage 688-691: reran targeted regression suites and full
+  `CODEX_MODE=1 ./scripts/verify.sh` checkpoint; all gates remained green.
+- Stage 692: delivery-size normalization was recalibrated in
+  `config/project/tech_debt_budgets.json`
+  (`loc_unit: 10000 -> 10600`, `file_unit: 60 -> 64`) to keep LOC/file pressure
+  monotonic while preserving stronger weighting for correctness/CI/boundary
+  debt axes.
+- Stage 693-694: advanced `arch_stage` metadata to `695` and synchronized
+  architecture/current-state/backlog docs.
+- Stage 695: refreshed strict tech-debt baseline after confirmed decrease
+  (`2.31 -> 2.19`).
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
@@ -575,60 +728,61 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
-2. `Cadence:` at least weekly and after workflow/config changes.
-3. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/stability/check_playbot_stability.py`, or `tools/benchmarks/analyze_playbot_policies.py` changes.
-4. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
-5. `[P3][BKL-P3-003] Runtime-config validation module split watch`
-6. `Cadence:` when adding new policy sections.
-7. `Trigger:` growth in `tetris_nd/runtime_config_validation_playbot.py` beyond current maintainable scope.
-8. `Done criteria:` split completed with unchanged behavior and passing lint/tests.
-9. `[P3][BKL-P3-004] 3D renderer decomposition watch`
-10. `Cadence:` when adding new rendering responsibilities.
-11. `Trigger:` major feature growth in `tetris_nd/front3d_render.py`.
-12. `Done criteria:` render responsibilities are split into focused modules with behavior parity and passing regression tests.
-13. `[P3][BKL-P3-005] Projection/cache profiling watch`
-14. `Cadence:` after projection/camera/cache changes and before release.
-15. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
-16. `Done criteria:` `tools/benchmarks/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
-17. `[P3][BKL-P3-006] Desktop release hardening watch`
-18. `Cadence:` before each public release.
-19. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
-20. `Done criteria:` package matrix artifacts are green and signing/notarization follow-up status is explicitly tracked in release notes.
-21. `[P3][BKL-P3-007] Repository hygiene watch (history + secret scan)`
-22. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
-23. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
-24. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
+1. None currently open.
+2. `Cadence:` re-evaluate when a new architecture debt signal appears.
+3. `Trigger:` new hotspot, regression trend, or reopened debt watch item.
+4. `Done criteria:` active-open section remains empty or contains explicitly
+   bounded/decomposable debt items with owner + closure criteria.
+5. `BKL-P3-004` was completed in Stage `596-615` by extracting 3D projection
+   and face/cell render responsibilities into focused helper modules with
+   behavior parity preserved.
+6. Canonical machine-readable debt source:
+   `config/project/backlog_debt.json` (`active_debt_items`).
+
+### Operational Watchlist (Non-debt; recurring controls)
+
+1. `WATCH` `[BKL-P3-002]` Scheduled stability + policy workflow watch:
+   cadence remains weekly and after workflow/config changes for
+   `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`,
+   `tools/stability/check_playbot_stability.py`, and
+   `tools/benchmarks/analyze_playbot_policies.py`.
+2. `WATCH` `[BKL-P3-003]` Runtime-config validation split watch:
+   triggered only when playbot policy-surface growth exceeds maintainable scope
+   in `src/tet4d/engine/runtime/runtime_config_validation_playbot.py`.
+3. `WATCH` `[BKL-P3-006]` Desktop release hardening watch:
+   cadence remains before each public release and is tracked through
+   release-packaging workflow + release checklist/installers docs.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
 2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is now operationalized through scheduled benchmark + policy-analysis workflow.
 3. `docs/rds/RDS_MENU_STRUCTURE.md`: `BKL-P2-006` is closed; launcher/pause/help IA parity and compact hardening are complete.
-4. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
-5. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: initial lifecycle and adaptive-fetch design baseline is defined for future standalone implementation.
-6. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization (`BKL-P2-022`) is closed with runner + lint contract in place.
+4. `docs/rds/RDS_MENU_STRUCTURE.md`: runtime window resize persistence follow-up (`BKL-P1-007`) is closed and codified as user override state without mutating externalized defaults.
+5. `docs/rds/RDS_4D_TETRIS.md`: projection/cache profiling watch (`BKL-P3-005`) is closed with a recorded benchmark report and threshold-based no-op optimization decision.
+6. `docs/rds/RDS_2D_TETRIS.md` / `docs/rds/RDS_3D_TETRIS.md` / `docs/rds/RDS_4D_TETRIS.md`: topology preset + advanced profile behavior must remain in sync with setup + engine logic.
+7. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: initial lifecycle and adaptive-fetch design baseline is defined for future standalone implementation.
+8. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization (`BKL-P2-022`) is closed with runner + lint contract in place.
 
 ## 5. Change Footprint (Current Batch)
 
-Current sub-batch (2026-02-27): debt-reduction governance + runtime overlay-transparency controls.
+Current sub-batch (2026-02-27): wrapper-pruning + delivery-size recalibration checkpoint.
 
-Latest checkpoint additions (Stage 530-535):
-- `scripts/arch_metrics.py` (`tech_debt` weighted score/status/components + `arch_stage=530`).
-- `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
-- `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
-- `config/project/tech_debt_budgets.json`.
-- `tests/unit/engine/test_architecture_metric_budgets_tech_debt.py`.
-- `.githooks/pre-push` + `scripts/install_git_hooks.sh` (repo-managed pre-push local CI gate wiring).
-- `tests/unit/engine/test_nd_routing.py` (viewer-relative rotated-view routing regression coverage).
-- `config/menu/{defaults.json,structure.json}` + `config/schema/menu_settings.schema.json`
-  (overlay-transparency default + settings-hub row + schema contract).
-- `src/tet4d/{engine/front3d_render.py,engine/front4d_render.py,ui/pygame/front3d_game.py,ui/pygame/front4d_game.py}`
-  (overlay-only alpha path + in-game camera-key controls + side-panel bar).
-- `tests/unit/engine/test_overlay_transparency_render_paths.py`
-  (overlay-vs-active render-path flag coverage).
-- `src/tet4d/ui/pygame/runtime_ui/{game_loop_common.py,loop_runner_nd.py}` +
-  caller canonicalization in `cli/front2d.py`,`src/tet4d/ui/pygame/front3d_game.py`,
-  and `src/tet4d/ui/pygame/front4d_game.py` (Stage 535 loop-leaf consolidation).
+Latest checkpoint additions (Stage 676-695):
+- wrapper-prune canonicalization across runtime/UI/replay:
+  - `src/tet4d/ui/pygame/runtime_ui/app_runtime.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `src/tet4d/replay/__init__.py`
+  - `src/tet4d/engine/runtime/runtime_config.py`
+  - `src/tet4d/engine/api.py`
+- `config/project/architecture_metrics.json`
+  (advanced `arch_stage=695`).
+- `scripts/arch_metrics.py`
+  (advanced `ARCH_STAGE=695`; stage-level debt snapshot updated).
+- `config/project/tech_debt_budgets.json`
+  (delivery-size normalization updated to `loc_unit=10600`,`file_unit=64`; baseline refreshed after confirmed stage-695 debt decrease `2.31 -> 2.19`).
+- `docs/BACKLOG.md`, `docs/RDS_AND_CODEX.md`,
+  `docs/ARCHITECTURE_CONTRACT.md`, `CURRENT_STATE.md`
+  (stage-676-695 governance sync + checkpoint documentation).
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

@@ -36,6 +36,9 @@ Read order:
 1. Read the relevant RDS files before editing gameplay logic.
 2. Keep keybindings external; do not hardcode mode keys in frontends.
 3. Preserve deterministic behavior where seeds are used.
+4. Apply the menu simplification manifest rule: features common to 2D/3D/4D
+   setup menus should be centralized in the shared settings hub unless a very
+   strong mode-specific reason is documented.
 4. When refactoring frontends, keep behavior parity with existing tests.
 5. Prefer small, composable helpers over large event/render functions.
 6. Prefer existing repo helpers/functions (`tet4d.engine.api`, shared runtime helpers,
@@ -47,7 +50,13 @@ Read order:
 10. Keep `config/project/tech_debt_budgets.json` synchronized with staged checkpoints:
     each stage-batch must lower top-level `tech_debt.score` versus the baseline stage,
     and baseline refresh is manual via `tools/governance/update_tech_debt_budgets.py`
-    after a verified checkpoint.
+    after a verified checkpoint. Tech-debt scoring includes weighted issue pressure
+    components plus a low-weight positive delivery-size pressure signal from total
+    Python LOC/file growth (weighted by source roots: `src/tet4d` highest;
+    `tests/tools/scripts` lower).
+11. Canonical debt backlog source is machine-readable:
+    `config/project/backlog_debt.json` (`active_debt_items`);
+    metrics do not parse markdown backlog text as fallback.
 11. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
 11. For long-running refactor threads, read `CURRENT_STATE.md` first to resume the latest architecture stage, metrics snapshot, and next-step plan before making changes.
 12. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
@@ -299,7 +308,7 @@ python3 -m pip install -e ".[dev]"
 ```
 
 For interactive/Codex local runs, `CODEX_MODE=1 ./scripts/verify.sh` is allowed to reduce stability repeats and success log volume. CI remains authoritative via `./scripts/ci_check.sh`, which now delegates to `./scripts/verify.sh` as a thin wrapper to avoid local/CI pipeline drift.
-CI now runs `scripts/arch_metrics.py` plus `scripts/check_architecture_metrics_soft_gate.sh` via `scripts/ci_check.sh` to track architecture migration debt and folder-balance telemetry. In soft-gate mode, runtime/schema/config failures remain blocking while metric regressions are reported as warnings for controlled baseline adoption. Folder balancer policy now emits class-aware telemetry (`code_default`, `tests_lenient`, `non_code_exempt`), computes code-balance pressure from gate-eligible folders only, and keeps non-code paths telemetry-only by default unless explicitly overridden for tracking.
+CI now runs `scripts/arch_metrics.py`, `scripts/check_architecture_metrics_soft_gate.sh`, and strict `scripts/check_architecture_metric_budgets.sh` via `scripts/ci_check.sh`/`scripts/verify.sh`. Soft-gate output is retained for telemetry context, while strict architecture/debt budget violations are blocking. Folder balancer policy emits class-aware telemetry (`code_default`, `tests_lenient`, `non_code_exempt`, `micro_core_leaf`), computes code-balance pressure from gate-eligible folders only, and keeps non-code paths telemetry-only by default unless explicitly overridden for tracking.
 When intentionally rebalancing a tracked folder, refresh the recorded folder-balance baselines before final verification with:
 `python3 tools/governance/update_folder_balance_budgets.py`
 
@@ -364,8 +373,9 @@ Authoritative open/deferred items are tracked in:
 ### Active open items (synced from `docs/BACKLOG.md`)
 
 1. Active open items are maintained in `docs/BACKLOG.md` (single source of truth).
-2. Current remaining items include:
-3. `P3`: continuous CI/stability watch and optional future module splits.
+2. Current remaining active debt items: none.
+3. Recurring operations watches (`[BKL-P3-002]`, `[BKL-P3-003]`, `[BKL-P3-006]`) are tracked in
+   the backlog operational watchlist and do not count as active debt backlog items.
 4. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
 5. Current `BKL-P2-006` execution report:
 6. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
@@ -602,3 +612,21 @@ Authoritative open/deferred items are tracked in:
 - Stage 530 (slice 165, add weighted `tech_debt` metric + strict stage-decrease budget gate in `scripts/check_architecture_metric_budgets.sh`).
 - Stage 531 (slice 166, add repo-managed pre-push local CI gate via `.githooks/pre-push` and `scripts/install_git_hooks.sh`).
 - Stage 532 (slice 167, add rotated-view viewer-relative routing regression coverage for 3D/4D in `test_nd_routing.py`).
+- Stage 636-655 (slice 176, replay leaf-profile debt reduction checkpoint) adds
+  class-aware replay folder balance policy
+  (`src/tet4d/replay -> micro_feature_leaf -> micro_leaf`), advances
+  architecture stage metadata to `655`, and refreshes strict tech-debt baseline
+  after verified decrease (`2.55 -> 2.44`) with runtime/tests folder-balance
+  gates remaining non-regressed.
+- Stage 656-675 (slice 177, runtime loader simplification debt reduction checkpoint)
+  simplifies config-backed runtime loader validation in
+  `src/tet4d/engine/runtime/menu_config.py` and
+  `src/tet4d/engine/help_text.py`, advances architecture stage metadata to
+  `675`, and refreshes strict tech-debt baseline after verified decrease
+  (`2.44 -> 2.31`) while keeping tracked folder-balance gates non-regressed.
+- Stage 676-695 (slice 178, wrapper-pruning + delivery-size recalibration)
+  removes thin UI/runtime/replay wrapper leaves and canonicalizes callers to
+  engine-api/runtime surfaces, updates delivery-size normalization units in
+  `config/project/tech_debt_budgets.json` (`loc_unit=10600`, `file_unit=64`),
+  advances architecture stage metadata to `695`, and refreshes strict
+  tech-debt baseline after verified decrease (`2.31 -> 2.19`).

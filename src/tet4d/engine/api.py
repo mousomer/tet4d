@@ -157,7 +157,9 @@ def plan_best_nd_with_budget(
 def simulate_lock_board(
     state: GameStateND, piece: Any
 ) -> tuple[dict[tuple[int, ...], int], int, bool]:
-    from tet4d.ai.playbot.planner_nd_core import simulate_lock_board as _simulate_lock_board
+    from tet4d.ai.playbot.planner_nd_core import (
+        simulate_lock_board as _simulate_lock_board,
+    )
 
     return _simulate_lock_board(state, piece)
 
@@ -438,19 +440,19 @@ def keybindings_profiles_dir_path_runtime() -> Path:
 
 
 def keybindings_load_json_file_runtime(path: Path) -> Any:
-    from .runtime.keybindings_storage import load_json_file as _load_json_file
+    from .runtime.json_storage import read_json_value_or_raise as _load_json_file
 
     return _load_json_file(path)
 
 
 def keybindings_atomic_write_text_runtime(path: Path, payload: str) -> None:
-    from .runtime.keybindings_storage import atomic_write_text as _atomic_write_text
+    from .runtime.json_storage import atomic_write_text as _atomic_write_text
 
     _atomic_write_text(path, payload)
 
 
 def keybindings_copy_text_file_runtime(src_path: Path, dst_path: Path) -> None:
-    from .runtime.keybindings_storage import copy_text_file as _copy_text_file
+    from .runtime.json_storage import copy_text_file as _copy_text_file
 
     _copy_text_file(src_path, dst_path)
 
@@ -469,20 +471,40 @@ def capture_windowed_display_settings_runtime(display_settings: Any) -> Any:
     return _capture_windowed_display_settings(display_settings)
 
 
-def advance_gravity_runtime(state: Any, accumulator_ms: int, gravity_interval_ms: int) -> int:
-    from .runtime.runtime_helpers import advance_gravity as _advance_gravity
+def capture_windowed_display_settings_from_event_runtime(
+    display_settings: Any,
+    *,
+    event: Any,
+) -> Any:
+    from tet4d.ui.pygame.runtime_ui.app_runtime import (
+        capture_windowed_display_settings_from_event as _capture_windowed_display_settings_from_event,
+    )
 
-    return _advance_gravity(state, accumulator_ms, gravity_interval_ms)
+    return _capture_windowed_display_settings_from_event(display_settings, event=event)
+
+
+def advance_gravity_runtime(
+    state: Any, accumulator_ms: int, gravity_interval_ms: int
+) -> int:
+    while not state.game_over and accumulator_ms >= gravity_interval_ms:
+        state.step_gravity()
+        accumulator_ms -= gravity_interval_ms
+    return accumulator_ms
 
 
 def tick_animation_runtime(animation: Any, dt_ms: int) -> Any:
-    from .runtime.runtime_helpers import tick_animation as _tick_animation
-
-    return _tick_animation(animation, dt_ms)
+    if animation is None:
+        return None
+    animation.step(dt_ms)
+    if getattr(animation, "done", False):
+        return None
+    return animation
 
 
 def initialize_keybinding_files_runtime() -> None:
-    from tet4d.ui.pygame.keybindings import initialize_keybinding_files as _initialize_keybinding_files
+    from tet4d.ui.pygame.keybindings import (
+        initialize_keybinding_files as _initialize_keybinding_files,
+    )
 
     _initialize_keybinding_files()
 
@@ -494,7 +516,9 @@ def get_audio_settings_runtime() -> dict[str, Any]:
 
 
 def get_display_settings_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import get_display_settings as _get_display_settings
+    from .runtime.menu_settings_state import (
+        get_display_settings as _get_display_settings,
+    )
 
     return _get_display_settings()
 
@@ -508,7 +532,9 @@ def get_analytics_settings_runtime() -> dict[str, Any]:
 
 
 def save_display_settings_runtime(*, windowed_size: tuple[int, int]) -> None:
-    from .runtime.menu_settings_state import save_display_settings as _save_display_settings
+    from .runtime.menu_settings_state import (
+        save_display_settings as _save_display_settings,
+    )
 
     _save_display_settings(windowed_size=windowed_size)
 
@@ -522,7 +548,9 @@ def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
 
 
 def settings_hub_layout_rows_runtime():
-    from .runtime.menu_config import settings_hub_layout_rows as _settings_hub_layout_rows
+    from .runtime.menu_config import (
+        settings_hub_layout_rows as _settings_hub_layout_rows,
+    )
 
     return _settings_hub_layout_rows()
 
@@ -536,7 +564,9 @@ def settings_top_level_categories_runtime():
 
 
 def default_settings_payload_runtime():
-    from .runtime.menu_config import default_settings_payload as _default_settings_payload
+    from .runtime.menu_config import (
+        default_settings_payload as _default_settings_payload,
+    )
 
     return _default_settings_payload()
 
@@ -549,8 +579,12 @@ def load_analytics_payload_runtime():
     return _load_analytics_payload()
 
 
-def persist_audio_payload_runtime(*, master_volume: float, sfx_volume: float, mute: bool):
-    from .runtime.menu_persistence import persist_audio_payload as _persist_audio_payload
+def persist_audio_payload_runtime(
+    *, master_volume: float, sfx_volume: float, mute: bool
+):
+    from .runtime.menu_persistence import (
+        persist_audio_payload as _persist_audio_payload,
+    )
 
     return _persist_audio_payload(
         master_volume=master_volume,
@@ -585,7 +619,9 @@ def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
 
 
 def default_windowed_size_runtime() -> tuple[int, int]:
-    from .runtime.menu_settings_state import DEFAULT_WINDOWED_SIZE as _DEFAULT_WINDOWED_SIZE
+    from .runtime.menu_settings_state import (
+        DEFAULT_WINDOWED_SIZE as _DEFAULT_WINDOWED_SIZE,
+    )
 
     return _DEFAULT_WINDOWED_SIZE
 
@@ -620,6 +656,44 @@ def clamp_overlay_transparency_runtime(
     return float(_clamp_overlay_transparency(value, default=fallback))
 
 
+def default_game_seed_runtime() -> int:
+    from .runtime.menu_settings_state import DEFAULT_GAME_SEED as _DEFAULT_GAME_SEED
+
+    return int(_DEFAULT_GAME_SEED)
+
+
+def game_seed_step_runtime() -> int:
+    from .runtime.menu_settings_state import GAME_SEED_STEP as _GAME_SEED_STEP
+
+    return int(_GAME_SEED_STEP)
+
+
+def clamp_game_seed_runtime(value: Any, *, default: int | None = None) -> int:
+    from .runtime.menu_settings_state import (
+        DEFAULT_GAME_SEED as _DEFAULT_GAME_SEED,
+        clamp_game_seed as _clamp_game_seed,
+    )
+
+    fallback = int(_DEFAULT_GAME_SEED) if default is None else int(default)
+    return int(_clamp_game_seed(value, default=fallback))
+
+
+def get_global_game_seed_runtime() -> int:
+    from .runtime.menu_settings_state import (
+        get_global_game_seed as _get_global_game_seed,
+    )
+
+    return int(_get_global_game_seed())
+
+
+def save_global_game_seed_runtime(seed: int):
+    from .runtime.menu_settings_state import (
+        save_global_game_seed as _save_global_game_seed,
+    )
+
+    return _save_global_game_seed(seed)
+
+
 def front3d_setup_game_settings_type() -> Any:
     from .frontend_nd import GameSettingsND as _GameSettingsND
 
@@ -629,13 +703,13 @@ def front3d_setup_game_settings_type() -> Any:
 def front3d_setup_run_menu_nd(screen: Any, fonts: Any, dimension: int) -> Any:
     from .frontend_nd import run_menu as _run_menu
 
-    return _run_menu(screen, fonts, dimension)
+    return _run_menu(screen, fonts, max(2, min(4, int(dimension))))
 
 
 def front3d_setup_build_config_nd(settings: Any, dimension: int) -> GameConfigND:
     from .frontend_nd import build_config as _build_config
 
-    return _build_config(settings, dimension)
+    return _build_config(settings, max(2, min(4, int(dimension))))
 
 
 def front3d_setup_create_initial_state_nd(cfg: GameConfigND) -> GameStateND:
@@ -665,25 +739,33 @@ def launcher_play_build_config_3d(settings: Any) -> Any:
 
 
 def launcher_play_suggested_window_size_3d(cfg: Any) -> tuple[int, int]:
-    from tet4d.ui.pygame.front3d_game import suggested_window_size as _suggested_window_size
+    from tet4d.ui.pygame.front3d_game import (
+        suggested_window_size as _suggested_window_size,
+    )
 
     return _suggested_window_size(cfg)
 
 
-def launcher_play_run_game_loop_3d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
+def launcher_play_run_game_loop_3d(
+    screen: Any, cfg: Any, fonts: Any, **kwargs: Any
+) -> Any:
     from tet4d.ui.pygame.front3d_game import run_game_loop as _run_game_loop
 
     return _run_game_loop(screen, cfg, fonts, **kwargs)
 
 
-def launcher_play_run_game_loop_4d(screen: Any, cfg: Any, fonts: Any, **kwargs: Any) -> Any:
+def launcher_play_run_game_loop_4d(
+    screen: Any, cfg: Any, fonts: Any, **kwargs: Any
+) -> Any:
     from tet4d.ui.pygame.front4d_game import run_game_loop as _run_game_loop
 
     return _run_game_loop(screen, cfg, fonts, **kwargs)
 
 
 def launcher_play_suggested_window_size_4d(cfg: Any) -> tuple[int, int]:
-    from tet4d.ui.pygame.front4d_game import suggested_window_size as _suggested_window_size
+    from tet4d.ui.pygame.front4d_game import (
+        suggested_window_size as _suggested_window_size,
+    )
 
     return _suggested_window_size(cfg)
 
@@ -741,7 +823,9 @@ def binding_action_description(action: str) -> str:
 
 
 def binding_group_label(group: str) -> str:
-    from .ui_logic.keybindings_catalog import binding_group_label as _binding_group_label
+    from .ui_logic.keybindings_catalog import (
+        binding_group_label as _binding_group_label,
+    )
 
     return _binding_group_label(group)
 
@@ -809,19 +893,25 @@ def keybindings_create_auto_profile() -> tuple[bool, str, str | None]:
 
 
 def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import load_active_profile_bindings as _load_active_profile_bindings
+    from tet4d.ui.pygame.keybindings import (
+        load_active_profile_bindings as _load_active_profile_bindings,
+    )
 
     return _load_active_profile_bindings()
 
 
 def keybindings_load_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import load_keybindings_file as _load_keybindings_file
+    from tet4d.ui.pygame.keybindings import (
+        load_keybindings_file as _load_keybindings_file,
+    )
 
     return _load_keybindings_file(dimension)
 
 
 def keybindings_next_auto_profile_name(prefix: str = "custom") -> str:
-    from tet4d.ui.pygame.keybindings import next_auto_profile_name as _next_auto_profile_name
+    from tet4d.ui.pygame.keybindings import (
+        next_auto_profile_name as _next_auto_profile_name,
+    )
 
     return _next_auto_profile_name(prefix)
 
@@ -841,9 +931,7 @@ def keybindings_rebind_action_key(
     )
 
 
-def keybindings_rename_key_profile(
-    old_name: str, new_name: str
-) -> tuple[bool, str]:
+def keybindings_rename_key_profile(old_name: str, new_name: str) -> tuple[bool, str]:
     from tet4d.ui.pygame.keybindings import rename_key_profile as _rename_key_profile
 
     return _rename_key_profile(old_name, new_name)
@@ -858,13 +946,17 @@ def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str
 
 
 def keybindings_save_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import save_keybindings_file as _save_keybindings_file
+    from tet4d.ui.pygame.keybindings import (
+        save_keybindings_file as _save_keybindings_file,
+    )
 
     return _save_keybindings_file(dimension)
 
 
 def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import set_active_key_profile as _set_active_key_profile
+    from tet4d.ui.pygame.keybindings import (
+        set_active_key_profile as _set_active_key_profile,
+    )
 
     return _set_active_key_profile(profile_name)
 
@@ -918,7 +1010,9 @@ def keybindings_apply_menu_shortcut_action(
         apply_menu_binding_action as _apply_menu_binding_action,
     )
 
-    return _apply_menu_binding_action(action, load_action, save_action, dimension, state)
+    return _apply_menu_binding_action(
+        action, load_action, save_action, dimension, state
+    )
 
 
 def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
@@ -938,13 +1032,17 @@ def keybindings_partition_gameplay_actions_ui_logic(action_names):
 
 
 def keybinding_category_docs_runtime():
-    from .runtime.menu_config import keybinding_category_docs as _keybinding_category_docs
+    from .runtime.menu_config import (
+        keybinding_category_docs as _keybinding_category_docs,
+    )
 
     return _keybinding_category_docs()
 
 
 def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU as _SECTION_MENU
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
+        SECTION_MENU as _SECTION_MENU,
+    )
 
     return _SECTION_MENU
 
@@ -958,7 +1056,9 @@ def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) ->
 
 
 def keybindings_menu_rows_for_scope(scope: str):
-    from tet4d.ui.pygame.menu.keybindings_menu_model import rows_for_scope as _rows_for_scope
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
+        rows_for_scope as _rows_for_scope,
+    )
 
     return _rows_for_scope(scope)
 
@@ -986,13 +1086,17 @@ def keybindings_menu_scope_label(scope: str) -> str:
 
 
 def keybindings_menu_binding_keys(row):
-    from tet4d.ui.pygame.menu.keybindings_menu_model import binding_keys as _binding_keys
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
+        binding_keys as _binding_keys,
+    )
 
     return _binding_keys(row)
 
 
 def keybindings_menu_binding_title(row, scope: str) -> str:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import binding_title as _binding_title
+    from tet4d.ui.pygame.menu.keybindings_menu_model import (
+        binding_title as _binding_title,
+    )
 
     return _binding_title(row, scope)
 
@@ -1202,15 +1306,40 @@ def hud_analysis_lines_runtime(event: dict[str, object] | None) -> tuple[str, ..
 
 
 def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
-    from .runtime.assist_scoring import combined_score_multiplier as _combined_score_multiplier
+    from .runtime.runtime_config import (
+        assist_bot_factor,
+        assist_combined_bounds,
+        assist_grid_factor,
+        assist_speed_formula,
+    )
 
-    return _combined_score_multiplier(*args, **kwargs)
+    bot_mode = kwargs.get("bot_mode") if kwargs else args[0]
+    grid_mode = kwargs.get("grid_mode") if kwargs else args[1]
+    speed_level = kwargs.get("speed_level") if kwargs else args[2]
+    bot_name = getattr(bot_mode, "value", bot_mode)
+    grid_name = getattr(grid_mode, "value", grid_mode)
+    base, per_level, min_level, max_level = assist_speed_formula()
+    level = max(min_level, min(max_level, int(speed_level)))
+    speed_factor = min(1.0, base + (per_level * level))
+    combined = (
+        assist_bot_factor(str(bot_name))
+        * assist_grid_factor(str(grid_name))
+        * speed_factor
+    )
+    min_factor, max_factor = assist_combined_bounds()
+    return max(min_factor, min(max_factor, combined))
 
 
 def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
-    from .runtime.runtime_helpers import collect_cleared_ghost_cells as _collect
-
-    return _collect(*args, **kwargs)
+    state = kwargs.get("state") if kwargs else args[0]
+    expected_coord_len = kwargs.get("expected_coord_len") if kwargs else args[1]
+    color_for_cell = kwargs.get("color_for_cell") if kwargs else args[2]
+    ghost_cells: list[tuple[tuple[int, ...], tuple[int, int, int]]] = []
+    for coord, cell_id in state.board.last_cleared_cells:
+        if len(coord) != int(expected_coord_len):
+            continue
+        ghost_cells.append((tuple(coord), color_for_cell(cell_id)))
+    return tuple(ghost_cells)
 
 
 def frontend_nd_route_keydown(*args: Any, **kwargs: Any) -> Any:
@@ -1314,7 +1443,9 @@ def front4d_render_spawn_clear_anim(*args: Any, **kwargs: Any) -> Any:
 
 
 def rotation_anim_piece_rotation_animator_nd_type() -> Any:
-    from .gameplay.rotation_anim import PieceRotationAnimatorND as _PieceRotationAnimatorND
+    from .gameplay.rotation_anim import (
+        PieceRotationAnimatorND as _PieceRotationAnimatorND,
+    )
 
     return _PieceRotationAnimatorND
 
@@ -1370,6 +1501,7 @@ __all__ = [
     "bot_planner_profile_label",
     "current_piece_cells",
     "capture_windowed_display_settings_runtime",
+    "capture_windowed_display_settings_from_event_runtime",
     "apply_challenge_prefill_2d",
     "apply_challenge_prefill_nd",
     "config_view_2d",

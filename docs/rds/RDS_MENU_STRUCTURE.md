@@ -225,6 +225,8 @@ Add persistent settings file:
 7. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
 8. Display and audio settings are persisted in the same settings state.
 9. Analytics settings are persisted in the same settings state.
+10. Runtime window resize events in windowed mode must persist `display.windowed_size` to `state/menu_settings.json` as user override state.
+11. Runtime resize persistence must never mutate `config/menu/defaults.json`.
 
 ### 7.5 Category depth/split rule
 
@@ -283,6 +285,7 @@ Manual tests:
 6. Non-default profile create/rename/delete and profile-specific load/save.
 7. Edit keybindings in setup and pause menus; save and reload locally.
 8. Toggle fullscreen in setup, start game, return to menu, and verify layout size remains correct.
+9. Resize window during gameplay and verify the new `windowed_size` is persisted in `state/menu_settings.json` and used on next startup.
 9. Change audio settings, restart app, and verify persistence.
 
 ## 11. Implementation Additions (Completed)
@@ -298,7 +301,7 @@ Manual tests:
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
 2. Dedicated `Controls` screen is implemented (backed by `tetris_nd/keybindings_menu.py`).
-3. Unified settings hub (`audio/display/analytics`) is implemented.
+3. Unified settings hub (`audio/display/gameplay/analytics`) is implemented.
 4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
 6. Fullscreen return-to-menu shrinkage issue is resolved.
@@ -314,7 +317,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
-3. `Settings` submenu unifies audio, display, and analytics controls.
+3. `Settings` submenu unifies audio, display, gameplay seed, and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Controls setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -335,7 +338,7 @@ Stabilization details:
 7. Unified main menu controls 2D/3D/4D startup consistently.
 8. In-game pause menu is implemented in all modes with:
 9. resume/restart/back-to-main/quit actions
-10. settings routed to shared settings hub (audio/display/analytics + save/reset/back)
+10. settings routed to shared settings hub (audio/display/gameplay/analytics + save/reset/back)
 11. keybindings editor entry
 12. profile cycle and per-dimension keybinding load/save actions
 13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/view guidance.
@@ -390,7 +393,7 @@ Stabilization details:
 31. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
 32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
-34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Gameplay`,`Analytics`,`Save`,`Reset`,`Back`).
 35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `tetris_nd/launcher_settings.py`.
 36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
 

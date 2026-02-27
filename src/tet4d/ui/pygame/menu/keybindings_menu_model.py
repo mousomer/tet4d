@@ -105,8 +105,8 @@ def _bucket_actions(
 ) -> tuple[str, ...]:
     if bucket == _BUCKET_ALL:
         return tuple(sorted(action_names))
-    translation, rotation, other = engine_api.keybindings_partition_gameplay_actions_ui_logic(
-        action_names
+    translation, rotation, other = (
+        engine_api.keybindings_partition_gameplay_actions_ui_logic(action_names)
     )
     if bucket == _BUCKET_TRANSLATION:
         return translation

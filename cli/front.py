@@ -30,7 +30,7 @@ if str(_REPO_ROOT) not in sys.path:
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings import (

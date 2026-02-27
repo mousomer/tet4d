@@ -45,7 +45,9 @@ def write_json_object(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
-def atomic_write_json(path: Path, payload: Any, *, trailing_newline: bool = False) -> None:
+def atomic_write_json(
+    path: Path, payload: Any, *, trailing_newline: bool = False
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = path.with_suffix(".tmp")
     encoded = json.dumps(payload, indent=2, sort_keys=True)
@@ -53,3 +55,15 @@ def atomic_write_json(path: Path, payload: Any, *, trailing_newline: bool = Fals
         encoded += "\n"
     temp_path.write_text(encoded, encoding="utf-8")
     temp_path.replace(path)
+
+
+def atomic_write_text(path: Path, payload: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_text(payload, encoding="utf-8")
+    temp_path.replace(path)
+
+
+def copy_text_file(src_path: Path, dst_path: Path) -> None:
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    dst_path.write_text(src_path.read_text(encoding="utf-8"), encoding="utf-8")

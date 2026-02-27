@@ -7,7 +7,11 @@ import pygame
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.runtime_ui.app_runtime import capture_windowed_display_settings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx, set_audio_settings
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings, apply_display_mode, normalize_display_settings
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
+    apply_display_mode,
+    normalize_display_settings,
+)
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
@@ -31,10 +35,12 @@ class _UnifiedSettingsState:
     audio_settings: AudioSettings
     display_settings: DisplaySettings
     overlay_transparency: float
+    game_seed: int
     score_logging_enabled: bool
     original_audio: AudioSettings
     original_display: DisplaySettings
     original_overlay_transparency: float
+    original_game_seed: int
     original_score_logging_enabled: bool
     selected: int = 0
     status: str = ""
@@ -123,6 +129,10 @@ def _overlay_transparency_default() -> float:
     return engine_api.default_overlay_transparency_runtime()
 
 
+def _game_seed_default() -> int:
+    return int(engine_api.default_game_seed_runtime())
+
+
 def _load_overlay_transparency_setting() -> float:
     payload = engine_api.get_display_settings_runtime()
     if isinstance(payload, dict):
@@ -131,6 +141,15 @@ def _load_overlay_transparency_setting() -> float:
             default=_overlay_transparency_default(),
         )
     return _overlay_transparency_default()
+
+
+def _load_game_seed_setting() -> int:
+    return int(
+        engine_api.clamp_game_seed_runtime(
+            engine_api.get_global_game_seed_runtime(),
+            default=_game_seed_default(),
+        )
+    )
 
 
 def _load_score_logging_setting() -> bool:
@@ -203,19 +222,27 @@ def _save_unified_settings(
     ok_analytics, msg_analytics = engine_api.persist_analytics_payload_runtime(
         score_logging_enabled=state.score_logging_enabled,
     )
-    if ok_audio and ok_display and ok_analytics:
+    ok_game_seed, msg_game_seed = engine_api.save_global_game_seed_runtime(
+        int(state.game_seed)
+    )
+    if ok_audio and ok_display and ok_analytics and ok_game_seed:
         state.original_audio = _clone_audio_settings(state.audio_settings)
         state.original_display = _clone_display_settings(state.display_settings)
         state.original_overlay_transparency = float(state.overlay_transparency)
+        state.original_game_seed = int(state.game_seed)
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
         state.saved = True
-        _set_unified_status(state, "Saved audio/display/overlay/analytics settings")
+        _set_unified_status(state, "Saved audio/display/gameplay/analytics settings")
         play_sfx("menu_confirm")
         return screen
 
-    error = (
-        msg_audio if not ok_audio else msg_display if not ok_display else msg_analytics
-    )
+    error = msg_audio
+    if ok_audio:
+        error = msg_display
+    if ok_audio and ok_display:
+        error = msg_analytics
+    if ok_audio and ok_display and ok_analytics:
+        error = msg_game_seed
     _set_unified_status(state, error, is_error=True)
     return screen
 
@@ -226,6 +253,7 @@ def _reset_unified_settings(
     state.audio_settings = _audio_defaults()
     state.display_settings = _display_defaults()
     state.overlay_transparency = _overlay_transparency_default()
+    state.game_seed = _game_seed_default()
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
@@ -240,50 +268,95 @@ def _reset_unified_settings(
     return screen
 
 
-def _adjust_unified_with_arrows(state: _UnifiedSettingsState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
-        return False
-    delta_sign = -1 if key == pygame.K_LEFT else 1
-    row_key = _unified_row_key(state)
+def _adjust_unified_audio_row(
+    state: _UnifiedSettingsState, row_key: str, delta_sign: int
+) -> bool:
     if row_key == "audio_master":
         state.audio_settings.master_volume = max(
             0.0, min(1.0, state.audio_settings.master_volume + delta_sign * 0.05)
         )
         _sync_audio_preview(state.audio_settings)
-    elif row_key == "audio_sfx":
+        return True
+    if row_key == "audio_sfx":
         state.audio_settings.sfx_volume = max(
             0.0, min(1.0, state.audio_settings.sfx_volume + delta_sign * 0.05)
         )
         _sync_audio_preview(state.audio_settings)
-    elif row_key == "audio_mute":
+        return True
+    if row_key == "audio_mute":
         state.audio_settings.mute = not state.audio_settings.mute
         _sync_audio_preview(state.audio_settings)
-    elif row_key == "display_fullscreen":
+        return True
+    return False
+
+
+def _adjust_unified_display_row(
+    state: _UnifiedSettingsState, row_key: str, delta_sign: int
+) -> bool:
+    if row_key == "display_fullscreen":
         state.display_settings = DisplaySettings(
             not state.display_settings.fullscreen, state.display_settings.windowed_size
         )
-    elif row_key == "display_width":
+        return True
+    if row_key == "display_width":
         width, height = state.display_settings.windowed_size
         state.display_settings = DisplaySettings(
             state.display_settings.fullscreen,
             (max(640, width + delta_sign * 40), height),
         )
-    elif row_key == "display_height":
+        return True
+    if row_key == "display_height":
         width, height = state.display_settings.windowed_size
         state.display_settings = DisplaySettings(
             state.display_settings.fullscreen,
             (width, max(480, height + delta_sign * 40)),
         )
-    elif row_key == "display_overlay_transparency":
+        return True
+    if row_key == "display_overlay_transparency":
         state.overlay_transparency = engine_api.clamp_overlay_transparency_runtime(
             state.overlay_transparency
             + delta_sign * engine_api.overlay_transparency_step_runtime(),
             default=_overlay_transparency_default(),
         )
-    elif row_key == "analytics_score_logging":
-        state.score_logging_enabled = not state.score_logging_enabled
-        _sync_analytics_preview(state.score_logging_enabled)
-    else:
+        return True
+    return False
+
+
+def _adjust_unified_gameplay_row(
+    state: _UnifiedSettingsState, row_key: str, delta_sign: int
+) -> bool:
+    if row_key != "game_seed":
+        return False
+    state.game_seed = int(
+        engine_api.clamp_game_seed_runtime(
+            int(state.game_seed)
+            + delta_sign * int(engine_api.game_seed_step_runtime()),
+            default=_game_seed_default(),
+        )
+    )
+    return True
+
+
+def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) -> bool:
+    if row_key != "analytics_score_logging":
+        return False
+    state.score_logging_enabled = not state.score_logging_enabled
+    _sync_analytics_preview(state.score_logging_enabled)
+    return True
+
+
+def _adjust_unified_with_arrows(state: _UnifiedSettingsState, key: int) -> bool:
+    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
+        return False
+    delta_sign = -1 if key == pygame.K_LEFT else 1
+    row_key = _unified_row_key(state)
+    handled = (
+        _adjust_unified_audio_row(state, row_key, delta_sign)
+        or _adjust_unified_display_row(state, row_key, delta_sign)
+        or _adjust_unified_gameplay_row(state, row_key, delta_sign)
+        or _adjust_unified_analytics_row(state, row_key)
+    )
+    if not handled:
         return False
     _mark_unified_dirty(state)
     state.pending_reset_confirm = False
@@ -340,6 +413,8 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         return str(state.display_settings.windowed_size[1])
     if row_key == "display_overlay_transparency":
         return f"{int(round(state.overlay_transparency * 100.0))}%"
+    if row_key == "game_seed":
+        return str(int(state.game_seed))
     if row_key == "analytics_score_logging":
         return "ON" if state.score_logging_enabled else "OFF"
     return ""
@@ -523,14 +598,17 @@ def run_settings_hub_menu(
 ) -> SettingsHubResult:
     score_logging_enabled = _load_score_logging_setting()
     overlay_transparency = _load_overlay_transparency_setting()
+    game_seed = _load_game_seed_setting()
     state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
         overlay_transparency=overlay_transparency,
+        game_seed=game_seed,
         score_logging_enabled=score_logging_enabled,
         original_audio=_clone_audio_settings(audio_settings),
         original_display=_clone_display_settings(display_settings),
         original_overlay_transparency=overlay_transparency,
+        original_game_seed=game_seed,
         original_score_logging_enabled=score_logging_enabled,
     )
     ok_layout, msg_layout = _validate_unified_layout_against_policy()

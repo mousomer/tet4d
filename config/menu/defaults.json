@@ -5,7 +5,7 @@
   "display": {
     "fullscreen": false,
     "windowed_size": [1200, 760],
-    "overlay_transparency": 0.7
+    "overlay_transparency": 0.25
   },
   "audio": {
     "master_volume": 0.8,

@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `535` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `695` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,14 +23,14 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 5.37` (`low`)
-  - weighted components:
-    - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
-    - backlog bug/regression pressure (keyword-classified open backlog issues)
-    - CI gate pressure (architecture budget overages + folder-balance gate violations)
-    - code-balance pressure (`1 - leaf_fuzzy_weighted_balance_score_avg`)
-    - keybinding-retention pressure (runtime binding inventory vs keybindings menu scope rendering; weighted higher than menu simplification)
-    - menu-simplification pressure (launcher/pause/settings-hub complexity vs split-policy targets)
+- `tech_debt.score = 2.19` (`low`)
+  - weighted components (current dominant drivers):
+    - backlog priority pressure (`+0.00`, no active open backlog debt items)
+    - code-balance pressure (`+0.12`, runtime leaf dropped to `0.87` fuzzy while still `balanced`)
+    - delivery-size pressure (`+2.07`; increases with weighted LOC/file growth)
+  - delivery-size calibration:
+    - `loc_unit = 10600`, `file_unit = 64` (keeps size pressure monotonic while
+      preserving stronger weighting for correctness/CI/boundary signals)
   - collection note:
     - keybinding-retention now runs in headless environments via a metrics-only pygame stub fallback, preventing false `unavailable` pressure in CI/local non-graphics contexts
   - strict gate policy:
@@ -45,39 +45,45 @@ Read this first in a new Codex thread before continuing staged refactors.
   - concentrated in runtime storage helpers (acceptable placement debt):
     - `src/tet4d/engine/runtime/json_storage.py`
     - `src/tet4d/engine/runtime/keybindings_storage.py`
-    - `src/tet4d/engine/runtime/score_analyzer_storage.py`
+    - `src/tet4d/engine/runtime/score_analyzer.py`
 - `random_imports_non_test = 9`
 - `time_imports_non_test = 0`
+- Debt input source:
+  - canonical JSON backlog debt source is now `config/project/backlog_debt.json`
+    (`active_debt_items`) with no markdown fallback parsing.
 
 ## Folder Balance Snapshot (top-level `.py` per package)
 
-- `src/tet4d/engine`: `5`
+- `src/tet4d/engine`: `6`
 - `src/tet4d/engine/ui_logic`: `6`
-- `src/tet4d/engine/runtime`: `22`
+- `src/tet4d/engine/runtime`: `12`
 - `src/tet4d/engine/gameplay`: `11`
-- `src/tet4d/ui/pygame`: `8`
+- `src/tet4d/ui/pygame`: `6`
 - `src/tet4d/ui/pygame/menu`: `10`
-- `src/tet4d/ui/pygame/launch`: `7`
+- `src/tet4d/ui/pygame/launch`: `5`
 - `src/tet4d/ui/pygame/input`: `6`
-- `src/tet4d/ui/pygame/render`: `9`
-- `src/tet4d/ui/pygame/runtime_ui`: `8`
+- `src/tet4d/ui/pygame/render`: `11`
+- `src/tet4d/ui/pygame/runtime_ui`: `6`
 - `src/tet4d/ai/playbot`: `9`
+- `src/tet4d/replay`: `2`
 
 ### Balance Assessment
 
 - `engine` top-level is now healthy.
+- `engine/core/step` and `engine/core/rng` now use a micro-leaf balance profile and
+  score `balanced`, reducing technical debt pressure without changing gate scope.
 - `engine/ui_logic` and `engine/gameplay` are healthy.
-- `engine/runtime` is large but coherent (and leaf-gated at `watch` baseline).
-- `ui/pygame/menu` and `ui/pygame/launch` are now balanced leaf subpackages.
+- `engine/runtime` remains gate-eligible and balanced (`0.87` fuzzy), but is now
+  the primary code-balance watch hotspot after wrapper pruning.
+- `ui/pygame/menu` and `ui/pygame/launch` are balanced after launcher wrapper pruning.
 - `ui/pygame/input` is now a balanced leaf package (`6` files, fuzzy `balanced`) after
   adding `keybindings_defaults`.
-- `ui/pygame/render` is now a balanced leaf package (`9` files, fuzzy `balanced`) after
+- `ui/pygame/render` is now a balanced leaf package (`11` files, fuzzy `balanced`) after
   panel/control/gfx/grid/font helper relocation.
-- `ui/pygame/runtime_ui` is now a balanced leaf package (`8` files, fuzzy `balanced`)
-  after consolidating shared loop orchestration helpers (`game_loop_common`,
-  `loop_runner_nd`) with pause/help/audio/display/app bootstrap runtime UI helpers.
-- `ui/pygame` top-level remains balanced and dropped further to `8` files after the
-  `runtime_ui` help/pause move batch.
+- `ui/pygame/runtime_ui` remains balanced at `6` files after consolidating
+  `display` and shared event-loop logic into canonical runtime modules.
+- `ui/pygame` top-level remains balanced at `6` files after removing thin 3D/4D launch wrappers.
+- `replay` remains `micro_feature_leaf` and balanced at `2` files.
 
 ## Major Completed Milestones (Condensed)
 
@@ -100,44 +106,39 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 531-535)
+## Recent Batch Status (Stages 676-695)
 
 Completed:
-- Added repo-managed pre-push local CI gate:
-  - `.githooks/pre-push`
-  - `scripts/install_git_hooks.sh`
-  - `scripts/bootstrap_env.sh` now installs hooks path (`core.hooksPath=.githooks`)
-- Added rotated-view viewer-relative routing regression coverage in:
-  - `tests/unit/engine/test_nd_routing.py`
-  - coverage includes 3D yaw-based remapping, 4D `move_w_*` precedence, and axis-override precedence.
-- Closed backlog items:
-  - `BKL-P3-001` (pre-push local CI gate)
-  - `BKL-P1-003` (viewer-relative movement regression verification)
-  - `BKL-P1-002` (overlay-transparency control)
-- Added overlay-transparency controls:
-  - display default/persistence via `config/menu/defaults.json` + settings hub row
-    (`Overlay transparency`, default `70%`).
-  - in-game camera-key adjustment actions (`overlay_alpha_dec/inc`) in 3D/4D.
-  - side-panel transparency bar + render-path split so alpha applies to active overlays
-    only (active-piece cells remain opaque).
-- Consolidated canonical tests under top-level `tests/unit/engine/`:
-  - moved Python suites from legacy `src/tet4d/engine/tests/`.
-  - updated folder-balance tracked leaf + class overrides and metrics source roots.
-  - synchronized docs/contracts/backlog references and closed `BKL-P2-012`.
-- Consolidated runtime loop helpers into `runtime_ui`:
-  - moved `ui/pygame/loop/game_loop_common.py` and `ui/pygame/loop/loop_runner_nd.py`
-    to `ui/pygame/runtime_ui/`.
-  - canonicalized `cli/front2d.py`, `front3d_game.py`, and `front4d_game.py` imports
-    to `tet4d.ui.pygame.runtime_ui.*`.
-  - removed the tiny `ui/pygame/loop` Python leaf from folder-balance reporting.
+- Completed help/menu/runtime wrapper pruning and canonicalized callers to
+  stable engine-api/runtime entry points.
+- Moved replay helpers into `src/tet4d/replay/__init__.py` and pruned
+  thin replay wrapper modules.
+- Consolidated runtime UI display and event-loop helpers into:
+  - `src/tet4d/ui/pygame/runtime_ui/app_runtime.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+- Removed obsolete wrapper modules:
+  - `src/tet4d/ui/pygame/front3d.py`
+  - `src/tet4d/ui/pygame/front4d.py`
+  - `src/tet4d/ui/pygame/launch/front3d_setup.py`
+  - `src/tet4d/ui/pygame/launch/profile_4d.py`
+  - `src/tet4d/ui/pygame/runtime_ui/display.py`
+  - `src/tet4d/ui/pygame/runtime_ui/game_loop_common.py`
+  - `src/tet4d/engine/runtime/assist_scoring.py`
+  - `src/tet4d/engine/runtime/runtime_helpers.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_audio.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
+  - `src/tet4d/replay/playback.py`
+  - `src/tet4d/replay/record.py`
+- Advanced stage metadata to `arch_stage=695`.
+- Verified strict stage-advance debt decrease (`2.31 -> 2.19`) and refreshed strict
+  tech-debt baseline at stage `695`.
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
-  - `src/tet4d/engine/runtime`: `0.71 / watch`
+  - `src/tet4d/engine/runtime`: `0.87 / balanced`
   - `tests/unit/engine`: `1.0 / balanced`
-- Tech-debt dropped vs stage-530 baseline:
-  - `32.42 -> 5.37`
-  - `moderate -> low`
+- Replay leaf remains `1.0 / balanced` under the micro profile.
+- Tech debt decreased in this batch (`2.31 -> 2.19`) and baseline was refreshed at stage `695`.
 
 ## Open Issues / Operational Notes
 
@@ -147,25 +148,15 @@ Balance note:
 
 ## Short-Term Plan (Next 10-20 stages)
 
-### Track A (highest value): Rebalance `src/tet4d/ui/pygame`
+### Track A (highest value): Continue Delivery-Size Pressure Reduction
 
-Goal: reduce folder sprawl in `ui/pygame` by introducing a small number of coherent subpackages.
+Goal: reduce Python LOC in large runtime/UI modules without changing behavior.
 
-Recommended subpackages (incremental, not all at once):
-- `src/tet4d/ui/pygame/menu/` (balanced)
-- `src/tet4d/ui/pygame/input/` (balanced)
-- `src/tet4d/ui/pygame/render/` (balanced)
-- `src/tet4d/ui/pygame/runtime_ui/` (balanced)
-- `src/tet4d/ui/pygame/launch/` (balanced)
-
-Recommended next family moves (same staged pattern):
-- `ui_utils` extraction decision (keep top-level utility, or pair it with another draw/layout helper if a coherent subpackage is justified)
-- `projection3d` / `front3d_game` / `front4d_game` watch (defer until a renderer/viewer feature batch)
-- `keybindings.py` decomposition planning (split internal sections before any package move)
-- maintain split runtime help assets as the source of truth:
-  - `config/help/content/runtime_help_content.json` (content)
-  - `config/help/layout/runtime_help_layout.json` (layout/media placement rules)
-  - no new hardcoded topic prose/layout rules in Python
+Recommended next family moves:
+- split `src/tet4d/ui/pygame/keybindings.py` into profile/IO/rebind helpers.
+- split `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize slices.
+- trim duplicated runtime API wrapper boilerplate in `src/tet4d/engine/api.py` where safe.
+- preserve config/help/menu assets as source-of-truth; avoid reintroducing large Python literals.
 
 Pattern per family:
 1. move implementation to subpackage
@@ -212,8 +203,8 @@ Do:
 
 ### Estimated Remaining Effort
 
-- Practical completion (high confidence, low churn): `~6-18` stages
-- Maximal clean architecture (strict cleanup / deeper pruning): `~16-36` stages
+- Practical completion (high confidence, low churn): `~6-16` stages
+- Maximal clean architecture (strict cleanup / deeper pruning): `~14-30` stages
 
 ### Estimated LOC Impact
 

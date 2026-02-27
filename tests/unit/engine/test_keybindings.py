@@ -434,12 +434,26 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         ok, msg = menu_settings_state.save_display_settings(overlay_transparency=2.5)
         self.assertTrue(ok, msg)
         payload = menu_settings_state.get_display_settings()
-        self.assertEqual(payload["overlay_transparency"], 1.0)
+        self.assertEqual(payload["overlay_transparency"], 0.85)
 
         ok, msg = menu_settings_state.save_display_settings(overlay_transparency=0.01)
         self.assertTrue(ok, msg)
         payload = menu_settings_state.get_display_settings()
-        self.assertEqual(payload["overlay_transparency"], 0.2)
+        self.assertEqual(payload["overlay_transparency"], 0.01)
+
+    def test_global_game_seed_persists_across_all_modes(self) -> None:
+        ok, msg = menu_settings_state.save_global_game_seed(424242)
+        self.assertTrue(ok, msg)
+        self.assertEqual(menu_settings_state.get_global_game_seed(), 424242)
+
+        payload = menu_settings_state.load_app_settings_payload()
+        for mode_key in ("2d", "3d", "4d"):
+            self.assertEqual(payload["settings"][mode_key]["game_seed"], 424242)
+
+    def test_global_game_seed_is_clamped_on_save(self) -> None:
+        ok, msg = menu_settings_state.save_global_game_seed(2_000_000_000)
+        self.assertTrue(ok, msg)
+        self.assertEqual(menu_settings_state.get_global_game_seed(), 999_999_999)
 
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()

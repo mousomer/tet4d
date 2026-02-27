@@ -16,7 +16,9 @@ class AudioSettings:
     mute: bool = False
 
 
-_EVENT_SPECS: dict[str, tuple[float, int, float]] = engine_api.audio_event_specs_runtime()
+_EVENT_SPECS: dict[str, tuple[float, int, float]] = (
+    engine_api.audio_event_specs_runtime()
+)
 
 
 class AudioEngine:

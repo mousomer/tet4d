@@ -8,20 +8,17 @@ from typing import Any, Callable, Optional
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    capture_windowed_display_settings_from_event,
+    initialize_runtime,
+)
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
     mouse_wheel_delta,
 )
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
-from tet4d.ui.pygame.launch.front3d_setup import (
-    build_config,
-    create_initial_state,
-    gravity_interval_ms_from_config,
-    run_menu,
-)
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
@@ -46,6 +43,12 @@ draw_game_frame = engine_api.front3d_render_draw_game_frame
 init_fonts = engine_api.front3d_render_init_fonts
 suggested_window_size = engine_api.front3d_render_suggested_window_size
 route_nd_keydown = engine_api.frontend_nd_route_keydown
+build_config = engine_api.front3d_setup_build_config_nd
+create_initial_state = engine_api.front3d_setup_create_initial_state_nd
+gravity_interval_ms_from_config = (
+    engine_api.front3d_setup_gravity_interval_ms_from_config_nd
+)
+run_menu = engine_api.front3d_setup_run_menu_nd
 combined_score_multiplier = engine_api.runtime_assist_combined_score_multiplier
 collect_cleared_ghost_cells = engine_api.runtime_collect_cleared_ghost_cells
 PieceRotationAnimatorND = engine_api.rotation_anim_piece_rotation_animator_nd_type()
@@ -276,6 +279,15 @@ def run_game_loop(
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
     display_payload = engine_api.get_display_settings_runtime()
+    fullscreen = (
+        bool(display_payload.get("fullscreen", False))
+        if isinstance(display_payload, dict)
+        else False
+    )
+    display_settings = DisplaySettings(
+        fullscreen=fullscreen,
+        windowed_size=screen.get_size(),
+    )
     default_overlay = default_overlay_transparency()
     overlay_transparency = (
         clamp_overlay_transparency(
@@ -299,6 +311,15 @@ def run_game_loop(
         algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
     )
     loop.refresh_score_multiplier()
+
+    def runtime_event_handler(event: pygame.event.Event) -> None:
+        nonlocal display_settings
+        display_settings = capture_windowed_display_settings_from_event(
+            display_settings,
+            event=event,
+        )
+        loop.pointer_event_handler(event)
+
     return run_nd_loop(
         screen=screen,
         fonts=fonts,
@@ -327,6 +348,7 @@ def run_game_loop(
         ),
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),
+        event_handler=runtime_event_handler,
     )
 
 

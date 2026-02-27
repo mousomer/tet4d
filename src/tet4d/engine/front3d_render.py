@@ -6,34 +6,46 @@ from typing import Optional, Tuple
 
 import pygame
 
-from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
-from tet4d.ui.pygame.render.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
-from tet4d.ui.pygame.launch.front3d_setup import gravity_interval_ms_from_config
-from .gameplay.game_nd import GameConfigND, GameStateND
-from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
-from tet4d.ui.pygame.render.panel_utils import draw_game_side_panel
-from .gameplay.pieces_nd import piece_set_label
+from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from tet4d.ui.pygame.projection3d import (
-    Face,
     Cell3,
+    Face,
     Point2,
-    build_cube_faces,
     color_for_cell,
     draw_gradient_background,
-    draw_projected_lattice,
-    fit_orthographic_zoom,
-    orthographic_point,
-    perspective_point,
-    projective_point,
-    projection_cache_key,
     projection_helper_cache_key,
-    raw_to_world,
-    transform_point,
 )
+from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
+from tet4d.ui.pygame.render.font_profiles import (
+    GfxFonts,
+    init_fonts as init_fonts_for_profile,
+)
+from tet4d.ui.pygame.render.front3d_cell_render import (
+    draw_cells as draw_cells_helper,
+    draw_sorted_faces as draw_sorted_faces_helper,
+    draw_translucent_faces as draw_translucent_faces_helper,
+    overlay_alpha_label as overlay_alpha_label_helper,
+    overlay_opacity_scale as overlay_opacity_scale_helper,
+    split_faces_for_cells as split_faces_for_cells_helper,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    ProjectionParams3D,
+    build_cell_faces as build_cell_faces_helper,
+    draw_board_grid as draw_board_grid_helper,
+    fit_orthographic_zoom_for_rect,
+    project_point as project_point_helper,
+    project_raw_point as project_raw_point_helper,
+    transform_raw_point as transform_raw_point_helper,
+)
+from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
+from tet4d.ui.pygame.render.panel_utils import draw_game_side_panel
+
+from .gameplay.game_nd import GameConfigND, GameStateND
+from .frontend_nd import gravity_interval_ms_from_config
+from .gameplay.pieces_nd import piece_set_label
+from .gameplay.topology import map_overlay_cells
 from .runtime.project_config import project_constant_float, project_constant_int
 from .runtime.score_analyzer import hud_analysis_lines
-from .gameplay.topology import map_overlay_cells
-from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from .ui_logic.view_modes import GridMode, grid_mode_label
 
 
@@ -63,6 +75,7 @@ COLOR_MAP_3D = {
     6: (0, 0, 255),
     7: (255, 165, 0),
 }
+_ASSIST_OVERLAY_OPACITY_SCALE = 0.3
 
 ActiveOverlay3D = tuple[tuple[tuple[float, float, float], ...], int]
 VisibleCell3D = tuple[tuple[float, float, float], int, bool, bool]
@@ -143,13 +156,24 @@ def color_for_cell_3d(cell_id: int) -> tuple[int, int, int]:
     return color_for_cell(cell_id, COLOR_MAP_3D)
 
 
+def _projection_params(camera: Camera3D) -> ProjectionParams3D:
+    return ProjectionParams3D(
+        projection_name=camera.projection.name,
+        yaw_deg=camera.yaw_deg,
+        pitch_deg=camera.pitch_deg,
+        zoom=camera.zoom,
+        cam_dist=camera.cam_dist,
+        projective_strength=camera.projective_strength,
+        projective_bias=camera.projective_bias,
+    )
+
+
 def _transform_raw_point(
     raw: Cell3 | tuple[float, float, float],
     dims: Cell3,
     camera: Camera3D,
 ) -> tuple[float, float, float]:
-    world = raw_to_world(raw, dims)
-    return transform_point(world, camera.yaw_deg, camera.pitch_deg)
+    return transform_raw_point_helper(raw, dims, _projection_params(camera))
 
 
 def _project_point(
@@ -157,17 +181,7 @@ def _project_point(
     camera: Camera3D,
     center_px: Point2,
 ) -> Point2 | None:
-    if camera.projection == ProjectionMode3D.ORTHOGRAPHIC:
-        return orthographic_point(trans, center_px, camera.zoom)
-    if camera.projection == ProjectionMode3D.PERSPECTIVE:
-        return perspective_point(trans, center_px, camera.zoom, camera.cam_dist)
-    return projective_point(
-        trans,
-        center_px,
-        camera.zoom,
-        camera.projective_strength,
-        camera.projective_bias,
-    )
+    return project_point_helper(trans, _projection_params(camera), center_px)
 
 
 def _project_raw_point(
@@ -176,8 +190,7 @@ def _project_raw_point(
     camera: Camera3D,
     center_px: Point2,
 ) -> Point2 | None:
-    trans = _transform_raw_point(raw, dims, camera)
-    return _project_point(trans, camera, center_px)
+    return project_raw_point_helper(raw, dims, _projection_params(camera), center_px)
 
 
 def _draw_board_grid(
@@ -186,29 +199,14 @@ def _draw_board_grid(
     camera: Camera3D,
     board_rect: pygame.Rect,
 ) -> None:
-    center_px = (board_rect.centerx, board_rect.centery)
-    cache_key = projection_cache_key(
-        prefix="3d-full",
-        dims=dims,
-        center_px=center_px,
-        yaw_deg=camera.yaw_deg,
-        pitch_deg=camera.pitch_deg,
-        zoom=camera.zoom,
-        extras=(
-            camera.projection.name,
-            round(camera.cam_dist, 3),
-            round(camera.projective_strength, 4),
-            round(camera.projective_bias, 4),
-        ),
-    )
-    draw_projected_lattice(
+    draw_board_grid_helper(
         surface,
         dims,
-        lambda raw: _project_raw_point(raw, dims, camera, center_px),
+        _projection_params(camera),
+        board_rect,
         inner_color=(52, 64, 95),
         frame_color=GRID_COLOR,
         frame_width=2,
-        cache_key=cache_key,
     )
 
 
@@ -220,11 +218,12 @@ def _build_cell_faces(
     dims: Cell3,
     active: bool,
 ) -> list[Face]:
-    return build_cube_faces(
+    return build_cell_faces_helper(
         cell=cell,
         color=color,
-        project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
-        transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        params=_projection_params(camera),
+        center_px=center_px,
+        dims=dims,
         active=active,
     )
 
@@ -285,31 +284,23 @@ def _split_faces_for_cells(
     camera: Camera3D,
     center_px: Point2,
     dims: Cell3,
-) -> tuple[list[Face], list[Face]]:
-    solid_faces: list[Face] = []
-    overlay_faces: list[Face] = []
-    for coord, cell_id, active, is_overlay in cells:
-        cell_faces = _build_cell_faces(
+) -> tuple[list[Face], list[Face], list[Face]]:
+    return split_faces_for_cells_helper(
+        cells,
+        build_faces_fn=lambda coord, color, active: _build_cell_faces(
             cell=coord,
-            color=color_for_cell_3d(cell_id),
+            color=color,
             camera=camera,
             center_px=center_px,
             dims=dims,
             active=active,
-        )
-        if is_overlay:
-            overlay_faces.extend(cell_faces)
-        else:
-            solid_faces.extend(cell_faces)
-    return solid_faces, overlay_faces
+        ),
+        color_for_cell_fn=color_for_cell_3d,
+    )
 
 
 def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
-    faces.sort(key=lambda x: x[0], reverse=True)
-    for _depth, poly, color, active in faces:
-        pygame.draw.polygon(surface, color, poly)
-        border = (255, 255, 255) if active else (25, 25, 35)
-        pygame.draw.polygon(surface, border, poly, 2 if active else 1)
+    draw_sorted_faces_helper(surface, faces)
 
 
 def _draw_translucent_faces(
@@ -319,19 +310,12 @@ def _draw_translucent_faces(
     fill_alpha: int,
     outline_alpha: int,
 ) -> None:
-    if not faces:
-        return
-    faces.sort(key=lambda x: x[0], reverse=True)
-    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    for _depth, poly, color, active in faces:
-        pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
-        border = (
-            (255, 255, 255, outline_alpha)
-            if active
-            else (25, 25, 35, max(24, outline_alpha - 40))
-        )
-        pygame.draw.polygon(overlay, border, poly, 2 if active else 1)
-    surface.blit(overlay, (0, 0))
+    draw_translucent_faces_helper(
+        surface,
+        faces,
+        fill_alpha=fill_alpha,
+        outline_alpha=outline_alpha,
+    )
 
 
 def _draw_cells(
@@ -343,27 +327,29 @@ def _draw_cells(
     dims: Cell3,
     overlay_transparency: float,
 ) -> None:
-    solid_faces, overlay_faces = _split_faces_for_cells(cells, camera, center_px, dims)
-    _draw_sorted_faces(surface, solid_faces)
-    if overlay_faces:
-        overlay_alpha = _overlay_opacity_scale(overlay_transparency)
-        _draw_translucent_faces(
-            surface,
-            overlay_faces,
-            fill_alpha=int(round(255 * overlay_alpha)),
-            outline_alpha=max(70, int(round(255 * min(1.0, overlay_alpha + 0.12)))),
-        )
+    draw_cells_helper(
+        surface,
+        cells=cells,
+        build_faces_fn=lambda coord, color, active: _build_cell_faces(
+            cell=coord,
+            color=color,
+            camera=camera,
+            center_px=center_px,
+            dims=dims,
+            active=active,
+        ),
+        color_for_cell_fn=color_for_cell_3d,
+        overlay_transparency=overlay_transparency,
+        assist_overlay_opacity_scale=_ASSIST_OVERLAY_OPACITY_SCALE,
+    )
 
 
 def _overlay_alpha_label(overlay_transparency: float) -> str:
-    clamped = max(0.0, min(1.0, float(overlay_transparency)))
-    return f"{int(round(clamped * 100.0))}%"
+    return overlay_alpha_label_helper(overlay_transparency)
 
 
 def _overlay_opacity_scale(overlay_transparency: float) -> float:
-    # Settings store transparency; renderer needs opacity.
-    clamped = max(0.0, min(1.0, float(overlay_transparency)))
-    return 1.0 - clamped
+    return overlay_opacity_scale_helper(overlay_transparency)
 
 
 def _draw_clear_animation(
@@ -403,7 +389,7 @@ def _draw_clear_animation(
 
     ghost_faces.sort(key=lambda x: x[0], reverse=True)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    alpha_scale = _overlay_opacity_scale(overlay_transparency)
+    alpha_scale = _ASSIST_OVERLAY_OPACITY_SCALE
     fill_alpha = int(160 * fade * alpha_scale)
     outline_alpha = int(220 * fade * alpha_scale)
     for _depth, poly, color, _active in ghost_faces:
@@ -420,24 +406,25 @@ def _draw_board_3d(
     grid_mode: GridMode = GridMode.FULL,
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
     helper_marks = _helper_grid_marks_3d(state)
+    params = _projection_params(camera)
     helper_cache_key = projection_helper_cache_key(
         prefix="3d-helper",
         dims=dims,
         center_px=center_px,
-        yaw_deg=camera.yaw_deg,
-        pitch_deg=camera.pitch_deg,
-        zoom=camera.zoom,
+        yaw_deg=params.yaw_deg,
+        pitch_deg=params.pitch_deg,
+        zoom=params.zoom,
         marks=helper_marks,
         extras=(
-            camera.projection.name,
-            round(camera.cam_dist, 3),
-            round(camera.projective_strength, 4),
-            round(camera.projective_bias, 4),
+            params.projection_name,
+            round(params.cam_dist, 3),
+            round(params.projective_strength, 4),
+            round(params.projective_bias, 4),
         ),
     )
     draw_projected_grid_mode(
@@ -445,8 +432,8 @@ def _draw_board_3d(
         dims=dims,
         grid_mode=grid_mode,
         draw_full_grid=lambda: _draw_board_grid(surface, dims, camera, board_rect),
-        project_raw=lambda raw: _project_raw_point(raw, dims, camera, center_px),
-        transform_raw=lambda raw: _transform_raw_point(raw, dims, camera),
+        project_raw=lambda raw: project_raw_point_helper(raw, dims, params, center_px),
+        transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
         helper_marks=helper_marks,
         helper_cache_key=helper_cache_key,
         frame_color=GRID_COLOR,
@@ -481,7 +468,7 @@ def _draw_side_panel(
     fonts: GfxFonts,
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
@@ -506,7 +493,7 @@ def _draw_side_panel(
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
-        f"Overlay transparency: {_overlay_alpha_label(overlay_transparency)}",
+        f"Locked-cell transparency: {_overlay_alpha_label(overlay_transparency)}",
         "",
         f"Yaw: {camera.yaw_deg:.1f}",
         f"Pitch: {camera.pitch_deg:.1f}",
@@ -525,7 +512,7 @@ def _draw_side_panel(
         low_priority_lines=tuple(low_priority_lines),
         game_over=state.game_over,
         min_controls_h=138,
-        meter_label="Overlay transparency",
+        meter_label="Locked-cell transparency",
         meter_value=max(0.0, min(1.0, float(overlay_transparency))),
         meter_hint="Use [ and ] keys",
     )
@@ -545,7 +532,7 @@ def _auto_fit_orthographic_zoom(
     if camera.projection != ProjectionMode3D.ORTHOGRAPHIC:
         return
 
-    camera.zoom = fit_orthographic_zoom(
+    camera.zoom = fit_orthographic_zoom_for_rect(
         dims=dims,
         yaw_deg=camera.yaw_deg,
         pitch_deg=camera.pitch_deg,
@@ -568,7 +555,7 @@ def draw_game_frame(
     bot_lines: tuple[str, ...] = (),
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
-    overlay_transparency: float = 0.7,
+    overlay_transparency: float = 0.25,
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()

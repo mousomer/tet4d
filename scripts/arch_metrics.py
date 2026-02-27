@@ -12,17 +12,24 @@ TARGET_SRC_ROOT = REPO_ROOT / "src/tet4d"
 SRC_LAYOUT_ROOT = REPO_ROOT / "src"
 FOLDER_BALANCE_BUDGETS_PATH = REPO_ROOT / "config/project/folder_balance_budgets.json"
 TECH_DEBT_BUDGETS_PATH = REPO_ROOT / "config/project/tech_debt_budgets.json"
-BACKLOG_PATH = REPO_ROOT / "docs/BACKLOG.md"
+BACKLOG_DEBT_PATH = REPO_ROOT / "config/project/backlog_debt.json"
 MENU_STRUCTURE_PATH = REPO_ROOT / "config/menu/structure.json"
 ARCH_METRICS_CONFIG_PATH = REPO_ROOT / "config/project/architecture_metrics.json"
-POLICY_KIT_DIR = Path(__import__("os").environ.get("POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit")))
+POLICY_KIT_DIR = Path(
+    __import__("os").environ.get(
+        "POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit")
+    )
+)
 OPTIONAL_ARCH_METRICS_PATH = POLICY_KIT_DIR / "optional/architecture_metrics"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 if str(SRC_LAYOUT_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_LAYOUT_ROOT))
-if OPTIONAL_ARCH_METRICS_PATH.exists() and str(OPTIONAL_ARCH_METRICS_PATH) not in sys.path:
+if (
+    OPTIONAL_ARCH_METRICS_PATH.exists()
+    and str(OPTIONAL_ARCH_METRICS_PATH) not in sys.path
+):
     sys.path.insert(0, str(OPTIONAL_ARCH_METRICS_PATH))
 
 from tools.governance.architecture_metric_budget import (  # noqa: E402
@@ -69,6 +76,24 @@ TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN = 1
 TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX = 50000
 TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN = 1200
 
+MICRO_FOLDER_BALANCE_TARGET_FILES_MIN = 2
+MICRO_FOLDER_BALANCE_TARGET_FILES_MAX = 5
+MICRO_FOLDER_BALANCE_FILES_SOFT_MIN = 1
+MICRO_FOLDER_BALANCE_FILES_SOFT_MAX = 8
+MICRO_FOLDER_BALANCE_FILES_TARGET_MARGIN = 1
+
+MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FILE_MIN = 12
+MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FILE_MAX = 180
+MICRO_FOLDER_BALANCE_LOC_PER_FILE_SOFT_MIN = 5
+MICRO_FOLDER_BALANCE_LOC_PER_FILE_SOFT_MAX = 320
+MICRO_FOLDER_BALANCE_LOC_PER_FILE_TARGET_MARGIN = 15
+
+MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN = 30
+MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX = 650
+MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN = 10
+MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX = 1800
+MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN = 80
+
 FOLDER_BALANCE_WEIGHT_FILES = 0.5
 FOLDER_BALANCE_WEIGHT_LOC_PER_FILE = 0.3
 FOLDER_BALANCE_WEIGHT_LOC_PER_FOLDER = 0.2
@@ -79,7 +104,7 @@ TECH_DEBT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
-ARCH_STAGE = 535
+ARCH_STAGE = 695
 
 
 def _py_files(root: Path) -> list[Path]:
@@ -88,7 +113,9 @@ def _py_files(root: Path) -> list[Path]:
     return [
         p
         for p in sorted(root.rglob("*.py"))
-        if ".git" not in p.parts and ".venv" not in p.parts and "__pycache__" not in p.parts
+        if ".git" not in p.parts
+        and ".venv" not in p.parts
+        and "__pycache__" not in p.parts
     ]
 
 
@@ -204,26 +231,50 @@ def _folder_balance_profiles() -> dict[str, dict[str, Any]]:
     return {
         "default_leaf": {
             "py_files": {
-                "target_band": [FOLDER_BALANCE_TARGET_FILES_MIN, FOLDER_BALANCE_TARGET_FILES_MAX],
-                "soft_band": [FOLDER_BALANCE_FILES_SOFT_MIN, FOLDER_BALANCE_FILES_SOFT_MAX],
+                "target_band": [
+                    FOLDER_BALANCE_TARGET_FILES_MIN,
+                    FOLDER_BALANCE_TARGET_FILES_MAX,
+                ],
+                "soft_band": [
+                    FOLDER_BALANCE_FILES_SOFT_MIN,
+                    FOLDER_BALANCE_FILES_SOFT_MAX,
+                ],
                 "target_margin": FOLDER_BALANCE_FILES_TARGET_MARGIN,
             },
             "avg_loc_per_file": {
-                "target_band": [FOLDER_BALANCE_TARGET_LOC_PER_FILE_MIN, FOLDER_BALANCE_TARGET_LOC_PER_FILE_MAX],
-                "soft_band": [FOLDER_BALANCE_LOC_PER_FILE_SOFT_MIN, FOLDER_BALANCE_LOC_PER_FILE_SOFT_MAX],
+                "target_band": [
+                    FOLDER_BALANCE_TARGET_LOC_PER_FILE_MIN,
+                    FOLDER_BALANCE_TARGET_LOC_PER_FILE_MAX,
+                ],
+                "soft_band": [
+                    FOLDER_BALANCE_LOC_PER_FILE_SOFT_MIN,
+                    FOLDER_BALANCE_LOC_PER_FILE_SOFT_MAX,
+                ],
                 "target_margin": FOLDER_BALANCE_LOC_PER_FILE_TARGET_MARGIN,
             },
             "py_loc_total": {
-                "target_band": [FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN, FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX],
-                "soft_band": [FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN, FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX],
+                "target_band": [
+                    FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN,
+                    FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX,
+                ],
+                "soft_band": [
+                    FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN,
+                    FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX,
+                ],
                 "target_margin": FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN,
             },
             "weights": common_weights,
         },
         "tests_leaf": {
             "py_files": {
-                "target_band": [TESTS_FOLDER_BALANCE_TARGET_FILES_MIN, TESTS_FOLDER_BALANCE_TARGET_FILES_MAX],
-                "soft_band": [TESTS_FOLDER_BALANCE_FILES_SOFT_MIN, TESTS_FOLDER_BALANCE_FILES_SOFT_MAX],
+                "target_band": [
+                    TESTS_FOLDER_BALANCE_TARGET_FILES_MIN,
+                    TESTS_FOLDER_BALANCE_TARGET_FILES_MAX,
+                ],
+                "soft_band": [
+                    TESTS_FOLDER_BALANCE_FILES_SOFT_MIN,
+                    TESTS_FOLDER_BALANCE_FILES_SOFT_MAX,
+                ],
                 "target_margin": TESTS_FOLDER_BALANCE_FILES_TARGET_MARGIN,
             },
             "avg_loc_per_file": {
@@ -232,18 +283,112 @@ def _folder_balance_profiles() -> dict[str, dict[str, Any]]:
                 "target_margin": 60,
             },
             "py_loc_total": {
-                "target_band": [TESTS_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN, TESTS_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX],
-                "soft_band": [TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN, TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX],
+                "target_band": [
+                    TESTS_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN,
+                    TESTS_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX,
+                ],
+                "soft_band": [
+                    TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN,
+                    TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX,
+                ],
                 "target_margin": TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN,
             },
             "weights": common_weights,
         },
+        "micro_leaf": {
+            "py_files": {
+                "target_band": [
+                    MICRO_FOLDER_BALANCE_TARGET_FILES_MIN,
+                    MICRO_FOLDER_BALANCE_TARGET_FILES_MAX,
+                ],
+                "soft_band": [
+                    MICRO_FOLDER_BALANCE_FILES_SOFT_MIN,
+                    MICRO_FOLDER_BALANCE_FILES_SOFT_MAX,
+                ],
+                "target_margin": MICRO_FOLDER_BALANCE_FILES_TARGET_MARGIN,
+            },
+            "avg_loc_per_file": {
+                "target_band": [
+                    MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FILE_MIN,
+                    MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FILE_MAX,
+                ],
+                "soft_band": [
+                    MICRO_FOLDER_BALANCE_LOC_PER_FILE_SOFT_MIN,
+                    MICRO_FOLDER_BALANCE_LOC_PER_FILE_SOFT_MAX,
+                ],
+                "target_margin": MICRO_FOLDER_BALANCE_LOC_PER_FILE_TARGET_MARGIN,
+            },
+            "py_loc_total": {
+                "target_band": [
+                    MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MIN,
+                    MICRO_FOLDER_BALANCE_TARGET_LOC_PER_FOLDER_MAX,
+                ],
+                "soft_band": [
+                    MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MIN,
+                    MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_SOFT_MAX,
+                ],
+                "target_margin": MICRO_FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN,
+            },
+            "weights": common_weights,
+        },
+        "non_code_exempt": {
+            "py_files": {
+                "target_band": [0, 9999],
+                "soft_band": [0, 99999],
+                "target_margin": 0,
+            },
+            "avg_loc_per_file": {
+                "target_band": [0, 9999],
+                "soft_band": [0, 99999],
+                "target_margin": 0,
+            },
+            "py_loc_total": {
+                "target_band": [0, 99999],
+                "soft_band": [0, 999999],
+                "target_margin": 0,
+            },
+            "weights": {
+                "py_files": 0.34,
+                "avg_loc_per_file": 0.33,
+                "py_loc_total": 0.33,
+            },
+        },
     }
 
 
-def _folder_balance_profile_for_folder(folder_path: str, *, leaf_folder: bool) -> str | None:
+def _folder_balance_class_to_profile() -> dict[str, str]:
+    cfg = _architecture_metrics_config()
+    mapping = {
+        "code_default": "default_leaf",
+        "tests_lenient": "tests_leaf",
+        "non_code_exempt": "non_code_exempt",
+    }
+    raw = cfg.get("class_to_profile", {})
+    if isinstance(raw, dict):
+        for class_name, profile_name in raw.items():
+            if (
+                isinstance(class_name, str)
+                and isinstance(profile_name, str)
+                and class_name
+                and profile_name
+            ):
+                mapping[class_name] = profile_name
+    return mapping
+
+
+def _folder_balance_profile_for_folder(
+    folder_path: str,
+    *,
+    leaf_folder: bool,
+    class_cfg: dict[str, Any] | None = None,
+    class_to_profile: dict[str, str] | None = None,
+) -> str | None:
     if not leaf_folder:
         return None
+    folder_class = classify_folder_path(folder_path, class_cfg or {})
+    mapped_profile = (class_to_profile or {}).get(folder_class)
+    if isinstance(mapped_profile, str) and mapped_profile:
+        return mapped_profile
     parts = folder_path.split("/")
     return "tests_leaf" if "tests" in parts else "default_leaf"
 
@@ -281,11 +426,36 @@ def _metric_source_roots() -> list[Path]:
     return roots if roots else [TARGET_SRC_ROOT]
 
 
-def _folder_policy_context(gate_config: dict[str, Any] | None) -> tuple[dict[str, Any], dict[str, bool], dict[str, bool], dict[str, dict[str, Any]]]:
+def _folder_policy_context(
+    gate_config: dict[str, Any] | None,
+) -> tuple[
+    dict[str, Any],
+    dict[str, bool],
+    dict[str, bool],
+    dict[str, dict[str, Any]],
+    dict[str, str],
+]:
     cfg = _architecture_metrics_config()
-    class_cfg = cfg.get("classification", {}) if isinstance(cfg.get("classification"), dict) else {}
-    class_gate = cfg.get("class_gate_eligibility", {}) if isinstance(cfg.get("class_gate_eligibility"), dict) else {}
-    gate_overrides_raw = class_cfg.get("gate_overrides", {}) if isinstance(class_cfg.get("gate_overrides"), dict) else {}
+    class_cfg = (
+        cfg.get("classification", {})
+        if isinstance(cfg.get("classification"), dict)
+        else {}
+    )
+    class_gate = (
+        cfg.get("class_gate_eligibility", {})
+        if isinstance(cfg.get("class_gate_eligibility"), dict)
+        else {}
+    )
+    class_to_profile_cfg = (
+        cfg.get("class_to_profile", {})
+        if isinstance(cfg.get("class_to_profile"), dict)
+        else {}
+    )
+    gate_overrides_raw = (
+        class_cfg.get("gate_overrides", {})
+        if isinstance(class_cfg.get("gate_overrides"), dict)
+        else {}
+    )
 
     defaults = {"code_default": True, "tests_lenient": True, "non_code_exempt": False}
     for key, value in class_gate.items():
@@ -297,14 +467,23 @@ def _folder_policy_context(gate_config: dict[str, Any] | None) -> tuple[dict[str
         if isinstance(key, str) and isinstance(value, bool):
             gate_overrides[key] = value
 
+    class_to_profile = _folder_balance_class_to_profile()
+    for key, value in class_to_profile_cfg.items():
+        if isinstance(key, str) and isinstance(value, str) and key and value:
+            class_to_profile[key] = value
+
     tracked_cfg: dict[str, dict[str, Any]] = {}
-    tracked = gate_config.get("tracked_leaf_folders", []) if isinstance(gate_config, dict) else []
+    tracked = (
+        gate_config.get("tracked_leaf_folders", [])
+        if isinstance(gate_config, dict)
+        else []
+    )
     if isinstance(tracked, list):
         for item in tracked:
             if isinstance(item, dict) and isinstance(item.get("path"), str):
                 tracked_cfg[item["path"]] = item
 
-    return class_cfg, defaults, gate_overrides, tracked_cfg
+    return class_cfg, defaults, gate_overrides, tracked_cfg, class_to_profile
 
 
 def _apply_folder_policy_row(
@@ -314,13 +493,14 @@ def _apply_folder_policy_row(
     defaults: dict[str, bool],
     gate_overrides: dict[str, bool],
     tracked_cfg: dict[str, dict[str, Any]],
+    class_to_profile: dict[str, str],
 ) -> bool:
     path = str(row.get("path", ""))
     folder_class = classify_folder_path(path, class_cfg)
-    if folder_class == "tests_lenient":
-        row["folder_profile"] = "tests_leaf"
-    elif folder_class == "non_code_exempt":
-        row["folder_profile"] = "non_code_exempt"
+    mapped_profile = class_to_profile.get(folder_class)
+    if isinstance(mapped_profile, str) and mapped_profile:
+        if bool(row.get("leaf_folder")) or mapped_profile == "non_code_exempt":
+            row["folder_profile"] = mapped_profile
 
     gate_eligible = bool(defaults.get(folder_class, True))
     if path in gate_overrides:
@@ -335,32 +515,50 @@ def _apply_folder_policy_row(
     return bool(row.get("leaf_folder")) and gate_eligible
 
 
-def _update_folder_policy_summary(summary: dict[str, Any], folder_class_counts: dict[str, int], eligible_leaf_rows: list[dict[str, Any]]) -> None:
+def _update_folder_policy_summary(
+    summary: dict[str, Any],
+    folder_class_counts: dict[str, int],
+    eligible_leaf_rows: list[dict[str, Any]],
+) -> None:
     summary["folder_class_counts"] = folder_class_counts
     summary["gate_eligible_leaf_folder_count"] = len(eligible_leaf_rows)
-    summary["gate_eligible_leaf_python_file_count"] = sum(int(r.get("py_files", 0)) for r in eligible_leaf_rows)
-    summary["gate_eligible_leaf_python_loc_total"] = sum(int(r.get("py_loc_total", 0)) for r in eligible_leaf_rows)
+    summary["gate_eligible_leaf_python_file_count"] = sum(
+        int(r.get("py_files", 0)) for r in eligible_leaf_rows
+    )
+    summary["gate_eligible_leaf_python_loc_total"] = sum(
+        int(r.get("py_loc_total", 0)) for r in eligible_leaf_rows
+    )
     if eligible_leaf_rows:
         summary["gate_eligible_leaf_fuzzy_weighted_balance_score_avg"] = _round2(
-            sum(float(r.get("balancer", {}).get("fuzzy_weighted_score", 0.0)) for r in eligible_leaf_rows)
+            sum(
+                float(r.get("balancer", {}).get("fuzzy_weighted_score", 0.0))
+                for r in eligible_leaf_rows
+            )
             / len(eligible_leaf_rows)
         )
     else:
         summary["gate_eligible_leaf_fuzzy_weighted_balance_score_avg"] = 0.0
 
 
-def _filter_rebalance_priority(balancer: dict[str, Any], row_index: dict[str, dict[str, Any]]) -> None:
+def _filter_rebalance_priority(
+    balancer: dict[str, Any], row_index: dict[str, dict[str, Any]]
+) -> None:
     rebalance = balancer.get("rebalance_priority_folders", [])
     if not isinstance(rebalance, list):
         return
     balancer["rebalance_priority_folders"] = [
         item
         for item in rebalance
-        if isinstance(item, dict) and bool(row_index.get(str(item.get("path", "")), {}).get("gate_eligible", False))
+        if isinstance(item, dict)
+        and bool(
+            row_index.get(str(item.get("path", "")), {}).get("gate_eligible", False)
+        )
     ]
 
 
-def _annotate_tracked_gate_rows(gate: dict[str, Any], row_index: dict[str, dict[str, Any]]) -> None:
+def _annotate_tracked_gate_rows(
+    gate: dict[str, Any], row_index: dict[str, dict[str, Any]]
+) -> None:
     tracked_rows = gate.get("tracked_folders", [])
     if not isinstance(tracked_rows, list):
         return
@@ -374,12 +572,16 @@ def _annotate_tracked_gate_rows(gate: dict[str, Any], row_index: dict[str, dict[
         item["gate_eligible"] = row.get("gate_eligible")
 
 
-def _apply_folder_class_policy(balance: dict[str, Any], gate_config: dict[str, Any] | None) -> dict[str, Any]:
+def _apply_folder_class_policy(
+    balance: dict[str, Any], gate_config: dict[str, Any] | None
+) -> dict[str, Any]:
     rows = balance.get("folders", [])
     if not isinstance(rows, list):
         return balance
 
-    class_cfg, defaults, gate_overrides, tracked_cfg = _folder_policy_context(gate_config)
+    class_cfg, defaults, gate_overrides, tracked_cfg, class_to_profile = (
+        _folder_policy_context(gate_config)
+    )
 
     folder_class_counts: dict[str, int] = {}
     eligible_leaf_rows: list[dict[str, Any]] = []
@@ -394,6 +596,7 @@ def _apply_folder_class_policy(balance: dict[str, Any], gate_config: dict[str, A
             defaults=defaults,
             gate_overrides=gate_overrides,
             tracked_cfg=tracked_cfg,
+            class_to_profile=class_to_profile,
         )
         folder_class = str(row.get("folder_class", "code_default"))
         folder_class_counts[folder_class] = folder_class_counts.get(folder_class, 0) + 1
@@ -417,20 +620,44 @@ def _apply_folder_class_policy(balance: dict[str, Any], gate_config: dict[str, A
     return balance
 
 
-def _active_backlog_rows(backlog_text: str) -> list[tuple[str, str, str]]:
-    section_match = re.search(
-        r"^## 3\. Active Open Backlog / TODO.*?(?=^## |\Z)",
-        backlog_text,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    if section_match is None:
-        return []
-    section = section_match.group(0)
-    item_rx = re.compile(
-        r"^\d+\.\s+`?\[(P[1-3])\]\[(BKL-[A-Z0-9-]+)\]\s+(.+?)`?\s*$",
-        flags=re.MULTILINE,
-    )
-    return [(match.group(1), match.group(2), match.group(3)) for match in item_rx.finditer(section)]
+def _active_backlog_rows() -> list[tuple[str, str, str]]:
+    payload = _read_json_if_exists(BACKLOG_DEBT_PATH)
+    if payload is None:
+        raise RuntimeError(
+            f"Missing canonical backlog debt config: {BACKLOG_DEBT_PATH}"
+        )
+    items = payload.get("active_debt_items", [])
+    if not isinstance(items, list):
+        raise RuntimeError(
+            "config/project/backlog_debt.json active_debt_items must be a list"
+        )
+    rows: list[tuple[str, str, str]] = []
+    for idx, raw in enumerate(items):
+        if not isinstance(raw, dict):
+            raise RuntimeError(
+                "config/project/backlog_debt.json active_debt_items"
+                f"[{idx}] must be an object"
+            )
+        priority = raw.get("priority")
+        issue_id = raw.get("id")
+        title = raw.get("title")
+        if not isinstance(priority, str) or priority not in {"P1", "P2", "P3"}:
+            raise RuntimeError(
+                "config/project/backlog_debt.json active_debt_items"
+                f"[{idx}].priority must be one of P1/P2/P3"
+            )
+        if not isinstance(issue_id, str) or not issue_id.strip():
+            raise RuntimeError(
+                "config/project/backlog_debt.json active_debt_items"
+                f"[{idx}].id must be a non-empty string"
+            )
+        if not isinstance(title, str) or not title.strip():
+            raise RuntimeError(
+                "config/project/backlog_debt.json active_debt_items"
+                f"[{idx}].title must be a non-empty string"
+            )
+        rows.append((priority, issue_id.strip(), title.strip()))
+    return rows
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -453,6 +680,12 @@ def _tech_debt_scoring_config(tech_debt_cfg: dict[str, Any]) -> dict[str, Any]:
         "code_balance": float(weight_cfg.get("code_balance", 0.12)),
         "keybinding_retention": float(weight_cfg.get("keybinding_retention", 0.2)),
         "menu_simplification": float(weight_cfg.get("menu_simplification", 0.05)),
+        "delivery_size_pressure": float(
+            weight_cfg.get(
+                "delivery_size_pressure",
+                weight_cfg.get("delivery_size_relief", 0.01),
+            )
+        ),
     }
     weight_total = sum(component_weights.values())
     if weight_total <= 0:
@@ -468,10 +701,39 @@ def _tech_debt_scoring_config(tech_debt_cfg: dict[str, Any]) -> dict[str, Any]:
     priority_points_cap = float(normalization_cfg.get("priority_points_cap", 40.0))
     bug_items_cap = float(normalization_cfg.get("bug_items_cap", 6.0))
     ci_issue_cap = float(normalization_cfg.get("ci_issue_cap", 6.0))
-    if priority_points_cap <= 0 or bug_items_cap <= 0 or ci_issue_cap <= 0:
+    delivery_cfg = _as_dict(scoring_cfg.get("delivery_size"))
+    loc_unit = float(delivery_cfg.get("loc_unit", 10000.0))
+    file_unit = float(delivery_cfg.get("file_unit", 60.0))
+    raw_source_root_weights = _as_dict(delivery_cfg.get("source_root_weights"))
+    if (
+        priority_points_cap <= 0
+        or bug_items_cap <= 0
+        or ci_issue_cap <= 0
+        or loc_unit <= 0
+        or file_unit <= 0
+    ):
         raise ValueError("tech debt normalization caps must be > 0")
+    source_root_weights: dict[str, float] = {}
+    for key, value in raw_source_root_weights.items():
+        if isinstance(key, str):
+            try:
+                parsed = float(value)
+            except (TypeError, ValueError):
+                continue
+            if parsed >= 0:
+                source_root_weights[key] = parsed
+    if not source_root_weights:
+        source_root_weights = {
+            "src/tet4d": 1.0,
+            "tests": 0.35,
+            "tools": 0.2,
+            "scripts": 0.2,
+            "other": 0.1,
+        }
     bug_keywords = [
-        token.strip().lower() for token in raw_bug_keywords if isinstance(token, str) and token.strip()
+        token.strip().lower()
+        for token in raw_bug_keywords
+        if isinstance(token, str) and token.strip()
     ]
     return {
         "component_weights": normalized_component_weights,
@@ -479,6 +741,9 @@ def _tech_debt_scoring_config(tech_debt_cfg: dict[str, Any]) -> dict[str, Any]:
         "priority_points_cap": priority_points_cap,
         "bug_items_cap": bug_items_cap,
         "ci_issue_cap": ci_issue_cap,
+        "loc_unit": loc_unit,
+        "file_unit": file_unit,
+        "source_root_weights": source_root_weights,
         "bug_keywords": bug_keywords,
     }
 
@@ -652,6 +917,7 @@ def _load_keybinding_retention_imports() -> tuple[Any, Any, str]:
             _install_pygame_stub()
             from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
             from tet4d.ui.pygame.menu.keybindings_menu_model import rows_for_scope
+
             return runtime_binding_groups_for_dimension, rows_for_scope, "pygame_stub"
     return runtime_binding_groups_for_dimension, rows_for_scope, "pygame_runtime"
 
@@ -802,12 +1068,16 @@ def _build_menu_simplification_signal() -> dict[str, Any]:
     launcher_root_count = (
         _menu_item_count(menus, launcher_id) if isinstance(launcher_id, str) else 0
     )
-    pause_root_count = _menu_item_count(menus, pause_id) if isinstance(pause_id, str) else 0
+    pause_root_count = (
+        _menu_item_count(menus, pause_id) if isinstance(pause_id, str) else 0
+    )
     settings_hub_count = len(settings_hub_rows)
 
     max_fields = int(settings_split_rules.get("max_top_level_fields", 5))
     max_actions = int(settings_split_rules.get("max_top_level_actions", 2))
-    split_when_mode_specific = bool(settings_split_rules.get("split_when_mode_specific", True))
+    split_when_mode_specific = bool(
+        settings_split_rules.get("split_when_mode_specific", True)
+    )
 
     top_level_categories = [
         category_id
@@ -910,8 +1180,7 @@ def _build_menu_simplification_signal() -> dict[str, Any]:
 def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
     tech_debt_cfg = _tech_debt_gate_config() or {}
     scoring_cfg = _tech_debt_scoring_config(tech_debt_cfg)
-    backlog_text = _read(BACKLOG_PATH) if BACKLOG_PATH.exists() else ""
-    backlog_rows = _active_backlog_rows(backlog_text)
+    backlog_rows = _active_backlog_rows()
     backlog_stats = _active_backlog_debt_stats(
         backlog_rows=backlog_rows,
         priority_weights=scoring_cfg["priority_weights"],
@@ -921,14 +1190,22 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
     ci_issue_count = len(budget_violations) + len(folder_gate_violations)
     keybinding_retention = _build_keybinding_retention_signal()
     menu_simplification = _build_menu_simplification_signal()
+    stage_loc = _as_dict(metrics.get("stage_loc_logger"))
 
     folder_summary = _as_dict(_as_dict(metrics.get("folder_balance")).get("summary"))
-    leaf_balance_score = float(folder_summary.get("gate_eligible_leaf_fuzzy_weighted_balance_score_avg", folder_summary.get("leaf_fuzzy_weighted_balance_score_avg", 0.0)))
+    leaf_balance_score = float(
+        folder_summary.get(
+            "gate_eligible_leaf_fuzzy_weighted_balance_score_avg",
+            folder_summary.get("leaf_fuzzy_weighted_balance_score_avg", 0.0),
+        )
+    )
     code_balance_pressure = _clamp01(1.0 - leaf_balance_score)
     backlog_priority_pressure = _clamp01(
         backlog_stats["weighted_priority_points"] / scoring_cfg["priority_points_cap"]
     )
-    bug_pressure = _clamp01(len(backlog_stats["bug_rows"]) / scoring_cfg["bug_items_cap"])
+    bug_pressure = _clamp01(
+        len(backlog_stats["bug_rows"]) / scoring_cfg["bug_items_cap"]
+    )
     ci_gate_pressure = _clamp01(ci_issue_count / scoring_cfg["ci_issue_cap"])
     keybinding_retention_pressure = _clamp01(
         float(keybinding_retention.get("pressure", 1.0))
@@ -936,6 +1213,73 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
     menu_simplification_pressure = _clamp01(
         float(menu_simplification.get("pressure", 1.0))
     )
+    by_source_root_loc = _as_dict(stage_loc.get("by_source_root_loc"))
+    by_source_root_files = _as_dict(stage_loc.get("by_source_root_file_count"))
+    weighted_loc_total = 0.0
+    weighted_file_total = 0.0
+    weighted_sources: dict[str, dict[str, float]] = {}
+    for source_root, raw_loc in by_source_root_loc.items():
+        if not isinstance(source_root, str):
+            continue
+        try:
+            loc_value = float(raw_loc)
+        except (TypeError, ValueError):
+            continue
+        try:
+            file_value = float(by_source_root_files.get(source_root, 0))
+        except (TypeError, ValueError):
+            file_value = 0.0
+        root_weight = float(scoring_cfg["source_root_weights"].get(source_root, 0.0))
+        weighted_loc = max(0.0, loc_value) * root_weight
+        weighted_files = max(0.0, file_value) * root_weight
+        weighted_loc_total += weighted_loc
+        weighted_file_total += weighted_files
+        weighted_sources[source_root] = {
+            "weight": _round2(root_weight),
+            "loc": _round2(max(0.0, loc_value)),
+            "files": _round2(max(0.0, file_value)),
+            "weighted_loc": _round2(weighted_loc),
+            "weighted_files": _round2(weighted_files),
+        }
+    total_loc = max(0, int(stage_loc.get("overall_python_loc", 0)))
+    total_files = max(0, int(stage_loc.get("overall_python_file_count", 0)))
+    loc_growth_pressure = weighted_loc_total / scoring_cfg["loc_unit"]
+    file_growth_pressure = weighted_file_total / scoring_cfg["file_unit"]
+    delivery_size_pressure = (loc_growth_pressure + file_growth_pressure) / 2.0
+
+    weighted_component_contributions = {
+        "backlog_priority": _round2(
+            scoring_cfg["component_weights"]["backlog_priority"]
+            * backlog_priority_pressure
+            * 100.0
+        ),
+        "backlog_bug": _round2(
+            scoring_cfg["component_weights"]["backlog_bug"] * bug_pressure * 100.0
+        ),
+        "ci_gate": _round2(
+            scoring_cfg["component_weights"]["ci_gate"] * ci_gate_pressure * 100.0
+        ),
+        "code_balance": _round2(
+            scoring_cfg["component_weights"]["code_balance"]
+            * code_balance_pressure
+            * 100.0
+        ),
+        "keybinding_retention": _round2(
+            scoring_cfg["component_weights"]["keybinding_retention"]
+            * keybinding_retention_pressure
+            * 100.0
+        ),
+        "menu_simplification": _round2(
+            scoring_cfg["component_weights"]["menu_simplification"]
+            * menu_simplification_pressure
+            * 100.0
+        ),
+        "delivery_size_pressure": _round2(
+            scoring_cfg["component_weights"]["delivery_size_pressure"]
+            * delivery_size_pressure
+            * 100.0
+        ),
+    }
 
     overall_pressure = (
         scoring_cfg["component_weights"]["backlog_priority"] * backlog_priority_pressure
@@ -946,6 +1290,8 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
         * keybinding_retention_pressure
         + scoring_cfg["component_weights"]["menu_simplification"]
         * menu_simplification_pressure
+        + scoring_cfg["component_weights"]["delivery_size_pressure"]
+        * delivery_size_pressure
     )
     score = _round2(overall_pressure * 100.0)
     status = _tech_debt_status(score)
@@ -959,7 +1305,9 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
             "backlog_priority": {
                 "weight": _round2(scoring_cfg["component_weights"]["backlog_priority"]),
                 "pressure": _round2(backlog_priority_pressure),
-                "weighted_open_points": _round2(backlog_stats["weighted_priority_points"]),
+                "weighted_open_points": _round2(
+                    backlog_stats["weighted_priority_points"]
+                ),
                 "priority_weights": {
                     "P1": scoring_cfg["priority_weights"]["P1"],
                     "P2": scoring_cfg["priority_weights"]["P2"],
@@ -968,14 +1316,22 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
                 "open_counts": backlog_stats["priority_counts"],
                 "open_issue_count": len(backlog_rows),
                 "normalization_cap": scoring_cfg["priority_points_cap"],
+                "weighted_contribution": weighted_component_contributions[
+                    "backlog_priority"
+                ],
             },
             "backlog_bug": {
                 "weight": _round2(scoring_cfg["component_weights"]["backlog_bug"]),
                 "pressure": _round2(bug_pressure),
                 "bug_issue_count": len(backlog_stats["bug_rows"]),
                 "keywords": scoring_cfg["bug_keywords"],
-                "sample_issue_ids": [item["id"] for item in backlog_stats["bug_rows"][:10]],
+                "sample_issue_ids": [
+                    item["id"] for item in backlog_stats["bug_rows"][:10]
+                ],
                 "normalization_cap": scoring_cfg["bug_items_cap"],
+                "weighted_contribution": weighted_component_contributions[
+                    "backlog_bug"
+                ],
             },
             "ci_gate": {
                 "weight": _round2(scoring_cfg["component_weights"]["ci_gate"]),
@@ -984,11 +1340,17 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
                 "architecture_budget_overages": budget_violations,
                 "folder_balance_gate_violations": folder_gate_violations,
                 "normalization_cap": scoring_cfg["ci_issue_cap"],
+                "weighted_contribution": weighted_component_contributions["ci_gate"],
             },
             "code_balance": {
                 "weight": _round2(scoring_cfg["component_weights"]["code_balance"]),
                 "pressure": _round2(code_balance_pressure),
-                "gate_eligible_leaf_fuzzy_weighted_balance_score_avg": _round2(leaf_balance_score),
+                "gate_eligible_leaf_fuzzy_weighted_balance_score_avg": _round2(
+                    leaf_balance_score
+                ),
+                "weighted_contribution": weighted_component_contributions[
+                    "code_balance"
+                ],
             },
             "keybinding_retention": {
                 "weight": _round2(
@@ -996,6 +1358,9 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
                 ),
                 "pressure": _round2(keybinding_retention_pressure),
                 "signal": keybinding_retention,
+                "weighted_contribution": weighted_component_contributions[
+                    "keybinding_retention"
+                ],
             },
             "menu_simplification": {
                 "weight": _round2(
@@ -1003,8 +1368,34 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
                 ),
                 "pressure": _round2(menu_simplification_pressure),
                 "signal": menu_simplification,
+                "weighted_contribution": weighted_component_contributions[
+                    "menu_simplification"
+                ],
+            },
+            "delivery_size_pressure": {
+                "weight": _round2(
+                    scoring_cfg["component_weights"]["delivery_size_pressure"]
+                ),
+                "pressure": _round2(delivery_size_pressure),
+                "loc_growth_pressure": _round2(loc_growth_pressure),
+                "file_growth_pressure": _round2(file_growth_pressure),
+                "total_python_loc": total_loc,
+                "total_python_file_count": total_files,
+                "loc_unit": _round2(scoring_cfg["loc_unit"]),
+                "file_unit": _round2(scoring_cfg["file_unit"]),
+                "weighted_source_roots": dict(sorted(weighted_sources.items())),
+                "weighted_contribution": weighted_component_contributions[
+                    "delivery_size_pressure"
+                ],
             },
         },
+        "weighted_component_contributions": dict(
+            sorted(
+                weighted_component_contributions.items(),
+                key=lambda item: float(item[1]),
+                reverse=True,
+            )
+        ),
         "gate_context": {
             "mode": tech_debt_cfg.get("gate_mode"),
             "score_epsilon": tech_debt_cfg.get("score_epsilon"),
@@ -1014,14 +1405,35 @@ def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_stage_loc_logger(src_paths: list[Path], *, arch_stage: int) -> dict[str, object]:
+def _build_stage_loc_logger(
+    src_paths: list[Path], *, arch_stage: int
+) -> dict[str, object]:
     package_loc: dict[str, int] = {}
+    source_root_loc: dict[str, int] = {}
+    source_root_files: dict[str, int] = {}
+    configured_source_roots = _architecture_metrics_config().get(
+        "source_roots", ["src/tet4d", "tests", "tools", "scripts"]
+    )
+    source_roots = (
+        [item for item in configured_source_roots if isinstance(item, str) and item]
+        if isinstance(configured_source_roots, list)
+        else ["src/tet4d", "tests", "tools", "scripts"]
+    )
     unique_folders: set[str] = set()
     total_loc = 0
     for path in src_paths:
         loc = _python_loc(path)
         total_loc += loc
-        unique_folders.add(path.parent.relative_to(REPO_ROOT).as_posix())
+        rel_parent = path.parent.relative_to(REPO_ROOT).as_posix()
+        rel_path = path.relative_to(REPO_ROOT).as_posix()
+        unique_folders.add(rel_parent)
+        source_root = "other"
+        for root in source_roots:
+            if rel_path == root or rel_path.startswith(f"{root}/"):
+                source_root = root
+                break
+        source_root_loc[source_root] = source_root_loc.get(source_root, 0) + loc
+        source_root_files[source_root] = source_root_files.get(source_root, 0) + 1
         rel_parts = path.relative_to(REPO_ROOT).parts
         if len(rel_parts) >= 4 and rel_parts[0] == "src" and rel_parts[1] == "tet4d":
             top_package = rel_parts[2]
@@ -1037,6 +1449,8 @@ def _build_stage_loc_logger(src_paths: list[Path], *, arch_stage: int) -> dict[s
         "overall_python_file_count": len(src_paths),
         "overall_python_folder_count": len(unique_folders),
         "by_top_package_loc": ordered_packages,
+        "by_source_root_loc": dict(sorted(source_root_loc.items())),
+        "by_source_root_file_count": dict(sorted(source_root_files.items())),
         "log_entry": (
             f"stage={arch_stage} loc={total_loc} "
             f"files={len(src_paths)} folders={len(unique_folders)}"
@@ -1046,8 +1460,17 @@ def _build_stage_loc_logger(src_paths: list[Path], *, arch_stage: int) -> dict[s
 
 def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
     profiles = _folder_balance_profiles()
+    metrics_cfg = _architecture_metrics_config()
+    class_cfg = (
+        metrics_cfg.get("classification", {})
+        if isinstance(metrics_cfg.get("classification"), dict)
+        else {}
+    )
+    class_to_profile = _folder_balance_class_to_profile()
     gate_config = _folder_balance_gate_config()
-    tracked_leaf_folders_raw = gate_config.get("tracked_leaf_folders", []) if gate_config else []
+    tracked_leaf_folders_raw = (
+        gate_config.get("tracked_leaf_folders", []) if gate_config else []
+    )
     tracked_leaf_folder_index: dict[str, dict[str, Any]] = {}
     if isinstance(tracked_leaf_folders_raw, list):
         for item in tracked_leaf_folders_raw:
@@ -1079,7 +1502,11 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
     leaf_folders = [
         folder
         for folder in sorted_folder_paths
-        if not any(other.startswith(f"{folder}/") for other in sorted_folder_paths if other != folder)
+        if not any(
+            other.startswith(f"{folder}/")
+            for other in sorted_folder_paths
+            if other != folder
+        )
     ]
 
     folder_rows: list[dict[str, object]] = []
@@ -1090,8 +1517,17 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         py_loc_total = int(row["py_loc_total"])
         avg_loc_per_file = _round2(py_loc_total / py_files) if py_files else 0.0
         leaf_folder = folder in leaf_folders
-        folder_profile = _folder_balance_profile_for_folder(folder, leaf_folder=leaf_folder)
-        profile_def = profiles.get(folder_profile) if folder_profile else profiles["default_leaf"]
+        folder_profile = _folder_balance_profile_for_folder(
+            folder,
+            leaf_folder=leaf_folder,
+            class_cfg=class_cfg,
+            class_to_profile=class_to_profile,
+        )
+        profile_def = (
+            profiles.get(folder_profile, profiles["default_leaf"])
+            if folder_profile
+            else profiles["default_leaf"]
+        )
         status = _classify_folder_balance(py_files)
 
         py_files_cfg = profile_def["py_files"]
@@ -1133,10 +1569,15 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         row["avg_loc_per_file"] = avg_loc_per_file
         row["leaf_folder"] = leaf_folder
         row["folder_profile"] = folder_profile
-        row["gate_candidate"] = bool(leaf_folder and folder in tracked_leaf_folder_index)
+        row["gate_candidate"] = bool(
+            leaf_folder and folder in tracked_leaf_folder_index
+        )
         row["balancer"] = {
             "status": status,
-            "target_file_band": [FOLDER_BALANCE_TARGET_FILES_MIN, FOLDER_BALANCE_TARGET_FILES_MAX],
+            "target_file_band": [
+                FOLDER_BALANCE_TARGET_FILES_MIN,
+                FOLDER_BALANCE_TARGET_FILES_MAX,
+            ],
             "delta_from_target_min": max(0, FOLDER_BALANCE_TARGET_FILES_MIN - py_files),
             "delta_from_target_max": max(0, py_files - FOLDER_BALANCE_TARGET_FILES_MAX),
             "fuzzy_weighted_score": _round2(fuzzy_weighted_score),
@@ -1185,11 +1626,15 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         status = str(row["balancer"]["status"])
         leaf_status_counts[status] = leaf_status_counts.get(status, 0) + 1
         fuzzy_status = str(row["balancer"]["fuzzy_weighted_status"])
-        leaf_fuzzy_status_counts[fuzzy_status] = leaf_fuzzy_status_counts.get(fuzzy_status, 0) + 1
+        leaf_fuzzy_status_counts[fuzzy_status] = (
+            leaf_fuzzy_status_counts.get(fuzzy_status, 0) + 1
+        )
 
     split_candidates = [
         row["path"]
-        for row in sorted(leaf_rows, key=lambda item: int(item["py_files"]), reverse=True)
+        for row in sorted(
+            leaf_rows, key=lambda item: int(item["py_files"]), reverse=True
+        )
         if row["balancer"]["status"] == "split_signal"
     ][:10]
     thin_folder_candidates = [
@@ -1204,7 +1649,9 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
             "py_loc_total": row["py_loc_total"],
             "avg_loc_per_file": row["avg_loc_per_file"],
         }
-        for row in sorted(folder_rows, key=lambda item: int(item["py_loc_total"]), reverse=True)[:10]
+        for row in sorted(
+            folder_rows, key=lambda item: int(item["py_loc_total"]), reverse=True
+        )[:10]
     ]
     rebalance_priority_folders = [
         {
@@ -1225,7 +1672,10 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         )[:10]
     ]
     leaf_fuzzy_avg_score = (
-        _round2(sum(float(row["balancer"]["fuzzy_weighted_score"]) for row in leaf_rows) / leaf_folder_count)
+        _round2(
+            sum(float(row["balancer"]["fuzzy_weighted_score"]) for row in leaf_rows)
+            / leaf_folder_count
+        )
         if leaf_folder_count
         else 0.0
     )
@@ -1269,11 +1719,21 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         "leaf_python_file_count": leaf_total_files,
         "python_loc_total": total_loc,
         "leaf_python_loc_total": leaf_total_loc,
-        "fuzzy_files_to_leaf_folder_ratio": _round2(leaf_total_files / leaf_folder_count) if leaf_folder_count else 0.0,
+        "fuzzy_files_to_leaf_folder_ratio": _round2(
+            leaf_total_files / leaf_folder_count
+        )
+        if leaf_folder_count
+        else 0.0,
         "avg_loc_per_file": _round2(total_loc / total_files) if total_files else 0.0,
-        "avg_loc_per_folder": _round2(total_loc / folder_count) if folder_count else 0.0,
-        "leaf_avg_loc_per_file": _round2(leaf_total_loc / leaf_total_files) if leaf_total_files else 0.0,
-        "leaf_avg_loc_per_folder": _round2(leaf_total_loc / leaf_folder_count) if leaf_folder_count else 0.0,
+        "avg_loc_per_folder": _round2(total_loc / folder_count)
+        if folder_count
+        else 0.0,
+        "leaf_avg_loc_per_file": _round2(leaf_total_loc / leaf_total_files)
+        if leaf_total_files
+        else 0.0,
+        "leaf_avg_loc_per_folder": _round2(leaf_total_loc / leaf_folder_count)
+        if leaf_folder_count
+        else 0.0,
         "leaf_fuzzy_weighted_balance_score_avg": leaf_fuzzy_avg_score,
     }
 
@@ -1315,7 +1775,13 @@ def _build_folder_balance(src_paths: list[Path]) -> dict[str, object]:
         "gate": {
             "mode": gate_config.get("gate_mode") if gate_config else None,
             "scope": gate_config.get("scope") if gate_config else None,
-            "profile_names": sorted({str(row["folder_profile"]) for row in leaf_rows if row.get("folder_profile")}),
+            "profile_names": sorted(
+                {
+                    str(row["folder_profile"])
+                    for row in leaf_rows
+                    if row.get("folder_profile")
+                }
+            ),
             "tracked_folders": tracked_gate_records,
         },
         "folders": folder_rows,
@@ -1331,15 +1797,19 @@ def main() -> int:
                 continue
             seen_paths.add(candidate)
             src_paths.append(candidate)
-    engine_paths = [p for p in _py_files(REPO_ROOT / "src/tet4d/engine") if "tests" not in p.parts]
+    engine_paths = [
+        p for p in _py_files(REPO_ROOT / "src/tet4d/engine") if "tests" not in p.parts
+    ]
     core_paths = _py_files(REPO_ROOT / "src/tet4d/engine/core")
     replay_paths = _py_files(REPO_ROOT / "src/tet4d/replay")
     ai_paths = _py_files(REPO_ROOT / "src/tet4d/ai")
     ui_paths = _py_files(REPO_ROOT / "src/tet4d/ui")
     tools_stability_paths = _py_files(REPO_ROOT / "tools/stability")
     tools_bench_paths = _py_files(REPO_ROOT / "tools/benchmarks")
-    playbot_external_paths = _py_files(REPO_ROOT / "cli") + _py_files(REPO_ROOT / "tools") + _py_files(
-        REPO_ROOT / "tests/unit/engine"
+    playbot_external_paths = (
+        _py_files(REPO_ROOT / "cli")
+        + _py_files(REPO_ROOT / "tools")
+        + _py_files(REPO_ROOT / "tests/unit/engine")
     )
 
     ui_deep_engine = _match_engine_deep_import_lines(ui_paths)
@@ -1363,7 +1833,9 @@ def main() -> int:
             core_paths,
             r"^\s*(?:from|import)\s+(?:pygame(?:\.|\b)|tet4d\.ui(?:\.|\b)|tet4d\.tools(?:\.|\b)|tools(?:\.|\b))",
         ),
-        "time_logging_imports": _match_lines(core_paths, r"^\s*(?:from|import)\s+(?:time(?:\.|\b)|logging(?:\.|\b))"),
+        "time_logging_imports": _match_lines(
+            core_paths, r"^\s*(?:from|import)\s+(?:time(?:\.|\b)|logging(?:\.|\b))"
+        ),
         "random_imports_outside_rng": core_random_imports,
         "io_or_print_calls": _match_lines(
             core_paths,
@@ -1372,9 +1844,15 @@ def main() -> int:
     }
 
     engine_side_effect_signals = {
-        "pygame_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+pygame(?:\.|\b)"),
-        "time_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+time(?:\.|\b)"),
-        "random_imports_non_test": _match_lines(engine_paths, r"^\s*(?:from|import)\s+random(?:\.|\b)"),
+        "pygame_imports_non_test": _match_lines(
+            engine_paths, r"^\s*(?:from|import)\s+pygame(?:\.|\b)"
+        ),
+        "time_imports_non_test": _match_lines(
+            engine_paths, r"^\s*(?:from|import)\s+time(?:\.|\b)"
+        ),
+        "random_imports_non_test": _match_lines(
+            engine_paths, r"^\s*(?:from|import)\s+random(?:\.|\b)"
+        ),
         "core_step_state_method_calls": _match_lines(
             _py_files(REPO_ROOT / "src/tet4d/engine/core/step"),
             r"\.step\s*\(",
@@ -1411,9 +1889,18 @@ def main() -> int:
                 "count": len(core_non_core_engine),
                 "samples": core_non_core_engine[:20],
             },
-            "ui_to_engine_non_api": {"count": len(ui_deep_engine), "samples": ui_deep_engine[:20]},
-            "replay_to_engine_non_api": {"count": len(replay_deep_engine), "samples": replay_deep_engine[:20]},
-            "ai_to_engine_non_api": {"count": len(ai_deep_engine), "samples": ai_deep_engine[:20]},
+            "ui_to_engine_non_api": {
+                "count": len(ui_deep_engine),
+                "samples": ui_deep_engine[:20],
+            },
+            "replay_to_engine_non_api": {
+                "count": len(replay_deep_engine),
+                "samples": replay_deep_engine[:20],
+            },
+            "ai_to_engine_non_api": {
+                "count": len(ai_deep_engine),
+                "samples": ai_deep_engine[:20],
+            },
             "tools_stability_to_engine_non_api": {
                 "count": len(tools_stability_deep_engine),
                 "samples": tools_stability_deep_engine[:20],
@@ -1429,13 +1916,18 @@ def main() -> int:
         },
         "engine_core_purity": {
             "violation_count": sum(len(v) for v in core_purity_hits.values()),
-            "checks": {k: {"count": len(v), "samples": v[:20]} for k, v in core_purity_hits.items()},
+            "checks": {
+                k: {"count": len(v), "samples": v[:20]}
+                for k, v in core_purity_hits.items()
+            },
         },
         "migration_debt_signals": {
             k: {"count": len(v), "samples": v[:20]}
             for k, v in engine_side_effect_signals.items()
         },
-        "folder_balance": _apply_folder_class_policy(_build_folder_balance(src_paths), _folder_balance_gate_config()),
+        "folder_balance": _apply_folder_class_policy(
+            _build_folder_balance(src_paths), _folder_balance_gate_config()
+        ),
         "stage_loc_logger": _build_stage_loc_logger(src_paths, arch_stage=ARCH_STAGE),
     }
     metrics["tech_debt"] = _build_tech_debt(metrics)

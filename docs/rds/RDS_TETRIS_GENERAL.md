@@ -88,8 +88,8 @@ Cross-cutting requirements are defined in:
 8. Audio controls (master volume, SFX volume, mute) must be available in settings.
 9. Fullscreen/windowed toggle must be supported without layout corruption.
 10. Piece rotations must use a soft visual animation instead of a single-frame snap.
-11. 3D/4D overlay transparency must be user-adjustable from settings with default `70%`.
-12. Overlay transparency must affect active overlays only; active-piece cells remain opaque.
+11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..85%`.
+12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
 
 ### 4.1 Soft piece-rotation animation requirements
@@ -115,7 +115,9 @@ Cross-cutting requirements are defined in:
 7. Keybinding edit flow must support per-action rebind, conflict handling, and local save/load.
 8. Keybindings setup must be reachable from unified main menu and in-game pause menu.
 9. 3D/4D camera keybindings must include in-game overlay-transparency adjustment actions.
-10. Setup menus must expose random-mode/seed controls in 2D/3D/4D.
+10. Setup menus must expose random-mode controls in 2D/3D/4D; seed control is
+    centralized in the shared Settings hub and applies across 2D/3D/4D unless a
+    mode-specific exception is explicitly justified.
 
 ## 6. Technical Requirements
 
@@ -128,8 +130,9 @@ Cross-cutting requirements are defined in:
 7. Piece set registration must include metadata (`id`,`dimension`,`cell_count`,`generator`,`is_embedded`).
 8. Embedding helpers must convert lower-dimensional piece offsets into target board dimensions deterministically.
 9. Display mode changes (windowed/fullscreen) must run through a shared display-state manager.
-10. Settings/keybindings/state writes must be atomic and recover from corrupt files with warning.
-11. Menu/default config files are source-controlled:
+10. Windowed runtime resizes must be persisted as user override display state (`display.windowed_size`) without mutating source-controlled defaults.
+11. Settings/keybindings/state writes must be atomic and recover from corrupt files with warning.
+12. Menu/default config files are source-controlled:
 12. `config/menu/structure.json`
 13. `config/menu/defaults.json`
 14. Help topic contracts are source-controlled:

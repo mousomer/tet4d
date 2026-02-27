@@ -55,8 +55,8 @@ _COMMON_ACTION_DESCRIPTIONS = {
     "view_zw_pos": "Turn view in z-w plane by +90 degrees (camera only).",
     "zoom_in": "Zoom camera in.",
     "zoom_out": "Zoom camera out.",
-    "overlay_alpha_dec": "Decrease active-overlay transparency.",
-    "overlay_alpha_inc": "Increase active-overlay transparency.",
+    "overlay_alpha_dec": "Decrease locked-cell transparency.",
+    "overlay_alpha_inc": "Increase locked-cell transparency.",
     "cycle_projection": "Cycle projection mode.",
     "reset": "Reset camera/view transform.",
 }

@@ -6,8 +6,11 @@ import pygame
 
 import tet4d.engine.api as engine_api
 from cli import front2d
-from tet4d.ui.pygame.runtime_ui.app_runtime import capture_windowed_display_settings, open_display
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    capture_windowed_display_settings,
+    open_display,
+)
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ai.playbot.types import bot_mode_from_index
 
 
@@ -137,9 +140,8 @@ def launch_4d(
         display_settings=display_settings,
         setup_caption="4D Tetris – Setup",
         game_caption="4D Tetris",
-        run_menu_fn=lambda menu_screen, menu_fonts: engine_api.launcher_play_run_menu_nd(
-            menu_screen, menu_fonts, 4
-        ),
+        run_menu_fn=lambda menu_screen,
+        menu_fonts: engine_api.launcher_play_run_menu_nd(menu_screen, menu_fonts, 4),
         build_cfg_fn=lambda settings: engine_api.launcher_play_build_config_nd(
             settings, 4
         ),

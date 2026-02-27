@@ -31,17 +31,17 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(1, str(_REPO_ROOT))
 
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    capture_windowed_display_settings_from_event,
     capture_windowed_display_settings,
     initialize_runtime,
     open_display,
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
-from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.api import Action, BoardND, GameConfig, GameState
 from tet4d.engine.core.rng import RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM
 from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
-from tet4d.ui.pygame.runtime_ui.game_loop_common import process_game_events
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.loop_runner_nd import process_game_events
 from tet4d.ui.pygame.render.gfx_game import (
     ClearEffect2D,
     GfxFonts,
@@ -83,10 +83,13 @@ from tet4d.engine.api import (
     bot_planner_algorithm_from_index,
     bot_mode_from_index,
     bot_planner_profile_from_index,
+    runtime_assist_combined_score_multiplier,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
 from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimator2D
+
+combined_score_multiplier = runtime_assist_combined_score_multiplier
 from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
 from tet4d.engine.gameplay.topology_designer import (
     designer_profile_label_for_index,
@@ -658,6 +661,7 @@ def run_game_loop(
     screen: pygame.Surface,
     cfg: GameConfig,
     fonts: GfxFonts,
+    display_settings: DisplaySettings,
     *,
     bot_mode: BotMode = BotMode.OFF,
     bot_speed_level: int = 7,
@@ -694,10 +698,18 @@ def run_game_loop(
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
+        def _runtime_event_handler(event: pygame.event.Event) -> None:
+            nonlocal display_settings
+            display_settings = capture_windowed_display_settings_from_event(
+                display_settings,
+                event=event,
+            )
+
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
             on_restart=loop.on_restart,
             on_toggle_grid=loop.on_toggle_grid,
+            event_handler=_runtime_event_handler,
         )
         if decision == "help":
             screen = _open_help_screen(screen, fonts)
@@ -803,17 +815,17 @@ def run():
             game_screen,
             cfg,
             fonts,
+            display_settings,
             bot_mode=bot_mode_from_index(settings.bot_mode_index),
             bot_speed_level=settings.bot_speed_level,
             bot_algorithm_index=settings.bot_algorithm_index,
             bot_profile_index=settings.bot_profile_index,
             bot_budget_ms=settings.bot_budget_ms,
         )
+        display_settings = capture_windowed_display_settings(display_settings)
         if not back_to_menu:
             running = False
             continue
-
-        display_settings = capture_windowed_display_settings(display_settings)
 
     pygame.quit()
     sys.exit()

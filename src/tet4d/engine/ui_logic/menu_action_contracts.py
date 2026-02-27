@@ -41,4 +41,3 @@ PAUSE_ACTION_IDS: frozenset[str] = frozenset(
         "quit",
     }
 )
-

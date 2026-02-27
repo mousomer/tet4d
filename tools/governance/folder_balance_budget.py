@@ -25,7 +25,9 @@ def _require_list(value: Any, *, label: str) -> list[Any]:
 
 
 def _folder_rows(metrics: dict[str, Any]) -> list[dict[str, Any]]:
-    folder_balance = _require_dict(metrics.get("folder_balance"), label="folder_balance")
+    folder_balance = _require_dict(
+        metrics.get("folder_balance"), label="folder_balance"
+    )
     rows = _require_list(folder_balance.get("folders"), label="folder_balance.folders")
     normalized: list[dict[str, Any]] = []
     for row in rows:
@@ -34,7 +36,11 @@ def _folder_rows(metrics: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def folder_row_index(metrics: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    return {str(row.get("path")): row for row in _folder_rows(metrics) if isinstance(row.get("path"), str)}
+    return {
+        str(row.get("path")): row
+        for row in _folder_rows(metrics)
+        if isinstance(row.get("path"), str)
+    }
 
 
 def _status_order(gate_config: dict[str, Any]) -> dict[str, int]:
@@ -145,7 +151,9 @@ def _evaluate_tracked_folder(
     return reasons
 
 
-def evaluate_folder_balance_gate(metrics: dict[str, Any], gate_config: dict[str, Any]) -> list[str]:
+def evaluate_folder_balance_gate(
+    metrics: dict[str, Any], gate_config: dict[str, Any]
+) -> list[str]:
     violations: list[str] = []
     index = folder_row_index(metrics)
     epsilon = float(gate_config.get("score_epsilon", 0.0))
@@ -158,7 +166,9 @@ def evaluate_folder_balance_gate(metrics: dict[str, Any], gate_config: dict[str,
             continue
 
         row = index.get(path)
-        reasons = _evaluate_tracked_folder(tracked=tracked, row=row, epsilon=epsilon, order=order)
+        reasons = _evaluate_tracked_folder(
+            tracked=tracked, row=row, epsilon=epsilon, order=order
+        )
         if not reasons:
             continue
         current_score, current_status = _tracked_folder_current_state(row)
@@ -171,7 +181,9 @@ def evaluate_folder_balance_gate(metrics: dict[str, Any], gate_config: dict[str,
     return violations
 
 
-def refresh_folder_balance_budgets(metrics: dict[str, Any], gate_config: dict[str, Any]) -> dict[str, Any]:
+def refresh_folder_balance_budgets(
+    metrics: dict[str, Any], gate_config: dict[str, Any]
+) -> dict[str, Any]:
     updated = deepcopy(gate_config)
     index = folder_row_index(metrics)
     tracked = _tracked_leaf_folders(updated)
@@ -187,7 +199,9 @@ def refresh_folder_balance_budgets(metrics: dict[str, Any], gate_config: dict[st
         expected_profile = item.get("profile")
         actual_profile = row.get("folder_profile")
         if expected_profile != actual_profile:
-            raise ValueError(f"tracked folder profile mismatch for {path}: {actual_profile!r} != {expected_profile!r}")
+            raise ValueError(
+                f"tracked folder profile mismatch for {path}: {actual_profile!r} != {expected_profile!r}"
+            )
         balancer = _require_dict(row.get("balancer"), label=f"{path}.balancer")
         item["baseline_score"] = float(balancer["fuzzy_weighted_score"])
         item["baseline_status"] = str(balancer["fuzzy_weighted_status"])

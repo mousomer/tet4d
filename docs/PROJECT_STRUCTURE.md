@@ -53,6 +53,7 @@ tet4d/
 │   │   ├── constants.json              # externalized shared runtime constants
 │   │   ├── folder_balance_budgets.json # leaf-folder fuzzy balance non-regression gate baselines
 │   │   ├── tech_debt_budgets.json      # weighted tech-debt metric baseline + strict stage-decrease gate
+│   │   ├── backlog_debt.json           # canonical machine-readable active debt backlog source
 │   │   └── secret_scan.json            # secret scanning policy and pattern set
 │   └── audio/
 │       └── sfx.json             # generated SFX event tone specs
@@ -197,7 +198,8 @@ tet4d/
 39. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
 40. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
 41. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
-    `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
+    active debt backlog input is read from `config/project/backlog_debt.json`,
+    and `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
     non-increase (same stage) and strict decrease (new stage) through
     `config/project/tech_debt_budgets.json`.
 42. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs

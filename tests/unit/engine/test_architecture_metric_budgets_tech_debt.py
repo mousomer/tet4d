@@ -34,7 +34,9 @@ def _base_gate_config() -> dict:
 
 class TestArchitectureMetricBudgetsTechDebt(unittest.TestCase):
     def test_passes_when_stage_advances_and_score_decreases(self) -> None:
-        self.assertEqual(evaluate_tech_debt_gate(_base_metrics(), _base_gate_config()), [])
+        self.assertEqual(
+            evaluate_tech_debt_gate(_base_metrics(), _base_gate_config()), []
+        )
 
     def test_fails_when_stage_advances_without_strict_decrease(self) -> None:
         metrics = _base_metrics()
@@ -75,4 +77,3 @@ class TestArchitectureMetricBudgetsTechDebt(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

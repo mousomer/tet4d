@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pygame
 
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.launch.launcher_settings import SettingsHubResult
 from tet4d.ui.pygame.runtime_ui import pause_menu
 
@@ -26,7 +26,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             selected=pause_menu._PAUSE_ACTION_CODES.index("settings")
         )
 
-        with patch("tet4d.ui.pygame.runtime_ui.pause_menu.run_settings_hub_menu") as run_hub:
+        with patch(
+            "tet4d.ui.pygame.runtime_ui.pause_menu.run_settings_hub_menu"
+        ) as run_hub:
             run_hub.return_value = SettingsHubResult(
                 screen=screen,
                 audio_settings=AudioSettings(),
@@ -52,7 +54,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             selected=pause_menu._PAUSE_ACTION_CODES.index("settings")
         )
 
-        with patch("tet4d.ui.pygame.runtime_ui.pause_menu.run_settings_hub_menu") as run_hub:
+        with patch(
+            "tet4d.ui.pygame.runtime_ui.pause_menu.run_settings_hub_menu"
+        ) as run_hub:
             run_hub.return_value = SettingsHubResult(
                 screen=screen,
                 audio_settings=AudioSettings(),

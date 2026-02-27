@@ -6,7 +6,10 @@ from typing import Callable, Optional, Sequence, Tuple
 import pygame
 
 import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.render.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
+from tet4d.ui.pygame.render.font_profiles import (
+    GfxFonts,
+    init_fonts as init_fonts_for_profile,
+)
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 

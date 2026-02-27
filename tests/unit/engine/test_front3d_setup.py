@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.ui.pygame.launch import front3d_setup
 from tet4d.engine import frontend_nd
 from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_SIX,
@@ -13,7 +12,7 @@ from tet4d.engine.gameplay.pieces_nd import (
 
 class TestFront3DSetupDedup(unittest.TestCase):
     def test_build_config_matches_shared_nd_builder(self) -> None:
-        settings = front3d_setup.GameSettings3D(
+        settings = frontend_nd.GameSettingsND(
             width=6,
             height=14,
             depth=5,
@@ -34,7 +33,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
             exploration_mode=0,
         )
 
-        cfg_adapter = front3d_setup.build_config(settings)
+        cfg_adapter = frontend_nd.build_config(settings, 3)
         cfg_shared = frontend_nd.build_config(settings, 3)
 
         self.assertEqual(cfg_adapter.dims, cfg_shared.dims)
@@ -49,10 +48,10 @@ class TestFront3DSetupDedup(unittest.TestCase):
         )
 
     def test_gravity_interval_matches_shared_nd_builder(self) -> None:
-        settings = front3d_setup.GameSettings3D(speed_level=4)
-        cfg = front3d_setup.build_config(settings)
+        settings = frontend_nd.GameSettingsND(speed_level=4)
+        cfg = frontend_nd.build_config(settings, 3)
         self.assertEqual(
-            front3d_setup.gravity_interval_ms_from_config(cfg),
+            frontend_nd.gravity_interval_ms_from_config(cfg),
             frontend_nd.gravity_interval_ms_from_config(cfg),
         )
 

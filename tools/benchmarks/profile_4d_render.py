@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,19 +15,17 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# Benchmark renders into offscreen surfaces only; prefer headless-safe SDL defaults.
+if not os.environ.get("SDL_VIDEODRIVER"):
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 try:
     import pygame
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dependent
     raise SystemExit("pygame-ce is required for profiling") from exc
 
+from tet4d.engine import api as engine_api
 from tet4d.engine.api import GameConfigND
-from tet4d.ui.pygame.profile_4d import (
-    GridMode,
-    LayerView3D,
-    create_initial_state,
-    draw_game_frame,
-    init_fonts,
-)
 
 
 @dataclass(frozen=True)
@@ -66,28 +66,30 @@ def _run_scenario(
     dims4: tuple[int, int, int, int],
 ) -> dict[str, float | int | str | bool]:
     cfg = GameConfigND(dims=dims4, gravity_axis=1, speed_level=1)
-    state = create_initial_state(cfg)
+    state = engine_api.profile_4d_create_initial_state(cfg)
     if scenario.dense:
         _fill_dense_board(state)
-    view = LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
+    view = engine_api.profile_4d_new_layer_view_3d(
+        xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg
+    )
 
     for _ in range(warmup):
-        draw_game_frame(
+        engine_api.profile_4d_draw_game_frame(
             surface,
             state,
             view,
             fonts,
-            grid_mode=GridMode.FULL,
+            grid_mode=engine_api.GridMode.FULL,
         )
 
     t0 = time.perf_counter()
     for _ in range(frames):
-        draw_game_frame(
+        engine_api.profile_4d_draw_game_frame(
             surface,
             state,
             view,
             fonts,
-            grid_mode=GridMode.FULL,
+            grid_mode=engine_api.GridMode.FULL,
         )
     elapsed_s = time.perf_counter() - t0
     avg_ms = (elapsed_s / max(1, frames)) * 1000.0
@@ -152,7 +154,7 @@ def main() -> int:
 
     pygame.init()
     try:
-        fonts = init_fonts()
+        fonts = engine_api.profile_4d_init_fonts()
         surface = pygame.Surface((args.width, args.height), pygame.SRCALPHA)
         scenarios = (
             Scenario(name="default_sparse", xw_deg=0.0, zw_deg=0.0, dense=False),
@@ -190,6 +192,11 @@ def main() -> int:
     )
 
     summary = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "tool": "tools/benchmarks/profile_4d_render.py",
+        "version": 1,
+        "frames": max(1, args.frames),
+        "warmup": max(0, args.warmup),
         "dims": dims_parts,
         "scenarios": results,
         "overhead": {

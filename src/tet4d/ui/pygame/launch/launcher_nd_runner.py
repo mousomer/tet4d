@@ -9,7 +9,7 @@ from tet4d.engine.api import (
     capture_windowed_display_settings_runtime as capture_windowed_display_settings,
     open_display_runtime as open_display,
 )
-from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 SettingsT = TypeVar("SettingsT")
@@ -49,8 +49,7 @@ def run_nd_mode_launcher(
         )
 
         back_to_menu = run_game(game_screen, cfg, fonts, settings)
+        display_settings = capture_windowed_display_settings(display_settings)
         if not back_to_menu:
             running = False
             continue
-
-        display_settings = capture_windowed_display_settings(display_settings)
