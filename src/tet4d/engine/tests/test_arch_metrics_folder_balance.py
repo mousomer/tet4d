@@ -99,6 +99,14 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
             self.mod._folder_balance_profile_for_folder("src/tet4d/ui/pygame", leaf_folder=False)
         )
 
+    def test_keybinding_retention_signal_is_available(self) -> None:
+        signal = self.mod._build_keybinding_retention_signal()
+        self.assertTrue(signal["available"], signal.get("error"))
+        self.assertGreater(signal["expected_count"], 0)
+        self.assertGreaterEqual(signal["coverage_ratio"], 0.0)
+        self.assertLessEqual(signal["coverage_ratio"], 1.0)
+        self.assertIn(signal.get("source"), {"pygame_runtime", "pygame_stub"})
+
     def test_script_output_preserves_core_keys_and_adds_folder_balance_fields(self) -> None:
         proc = subprocess.run(
             [sys.executable, str(ARCH_METRICS_PATH)],
@@ -121,6 +129,20 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
         self.assertIn("profiles", folder_balance["heuristic"])
         self.assertIn("components", data["tech_debt"])
         self.assertIn("score", data["tech_debt"])
+        self.assertIn("keybinding_retention", data["tech_debt"]["components"])
+        self.assertIn("menu_simplification", data["tech_debt"]["components"])
+        self.assertGreaterEqual(
+            data["tech_debt"]["components"]["keybinding_retention"]["pressure"], 0.0
+        )
+        self.assertLessEqual(
+            data["tech_debt"]["components"]["keybinding_retention"]["pressure"], 1.0
+        )
+        self.assertGreaterEqual(
+            data["tech_debt"]["components"]["menu_simplification"]["pressure"], 0.0
+        )
+        self.assertLessEqual(
+            data["tech_debt"]["components"]["menu_simplification"]["pressure"], 1.0
+        )
 
         runtime_row = next(
             row for row in folder_balance["folders"] if row["path"] == "src/tet4d/engine/runtime"
@@ -133,7 +155,12 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
         )
         self.assertEqual(runtime_row["folder_profile"], "default_leaf")
         self.assertEqual(tests_row["folder_profile"], "tests_leaf")
+        self.assertEqual(runtime_row["folder_class"], "code_default")
+        self.assertEqual(tests_row["folder_class"], "tests_lenient")
+        self.assertTrue(runtime_row["gate_eligible"])
+        self.assertFalse(runtime_row["exclude_from_code_balance"])
         self.assertTrue(isinstance(runtime_row["gate_candidate"], bool))
+        self.assertIn("gate_eligible_leaf_fuzzy_weighted_balance_score_avg", folder_balance["summary"])
         self.assertIsNone(ui_parent_row["folder_profile"])
 
 

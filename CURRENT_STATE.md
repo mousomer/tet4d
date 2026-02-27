@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `532` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `533` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,12 +23,16 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 20.5` (`low`)
+- `tech_debt.score = 11.93` (`low`)
   - weighted components:
     - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
     - backlog bug/regression pressure (keyword-classified open backlog issues)
     - CI gate pressure (architecture budget overages + folder-balance gate violations)
     - code-balance pressure (`1 - leaf_fuzzy_weighted_balance_score_avg`)
+    - keybinding-retention pressure (runtime binding inventory vs keybindings menu scope rendering; weighted higher than menu simplification)
+    - menu-simplification pressure (launcher/pause/settings-hub complexity vs split-policy targets)
+  - collection note:
+    - keybinding-retention now runs in headless environments via a metrics-only pygame stub fallback, preventing false `unavailable` pressure in CI/local non-graphics contexts
   - strict gate policy:
     - same-stage commits: must not regress baseline score/status
     - stage-advance batches: must strictly decrease score versus baseline stage
@@ -98,7 +102,7 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 531-532)
+## Recent Batch Status (Stages 531-533)
 
 Completed:
 - Added repo-managed pre-push local CI gate:
@@ -111,13 +115,20 @@ Completed:
 - Closed backlog items:
   - `BKL-P3-001` (pre-push local CI gate)
   - `BKL-P1-003` (viewer-relative movement regression verification)
+  - `BKL-P1-002` (overlay-transparency control)
+- Added overlay-transparency controls:
+  - display default/persistence via `config/menu/defaults.json` + settings hub row
+    (`Overlay transparency`, default `70%`).
+  - in-game camera-key adjustment actions (`overlay_alpha_dec/inc`) in 3D/4D.
+  - side-panel transparency bar + render-path split so alpha applies to active overlays
+    only (active-piece cells remain opaque).
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
 - Tech-debt dropped vs stage-530 baseline:
-  - `32.42 -> 20.5`
+  - `32.42 -> 16.12`
   - `moderate -> low`
 
 ## Open Issues / Operational Notes
@@ -189,6 +200,8 @@ Do:
 - Remaining compatibility shims are minimal or removed
 - `engine/playbot` compatibility package/surfaces retired after zero-caller audits
 - File I/O is centralized under `engine/runtime` (or explicitly accepted if runtime-owned)
+- keybinding-retention metric remains aligned (`pressure = 0.0`, no missing/unexpected bindings)
+- menu-simplification metric remains at least `manageable` (`simplification_score >= 0.65`)
 - Docs and architecture contract reflect the final canonical paths
 
 ### Estimated Remaining Effort
