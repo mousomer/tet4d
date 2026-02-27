@@ -19,6 +19,7 @@
   ],
   "extended_enforcement": [
     "scripts/check_policy_compliance_repo.sh",
-    "scripts/check_git_sanitation_repo.sh"
+    "scripts/check_git_sanitation_repo.sh",
+    "scripts/check_architecture_metrics_soft_gate.sh"
   ]
 }

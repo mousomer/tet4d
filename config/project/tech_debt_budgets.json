@@ -9,16 +9,18 @@
     "critical": 3
   },
   "baseline": {
-    "arch_stage": 532,
-    "score": 20.5,
+    "arch_stage": 533,
+    "score": 11.93,
     "status": "low"
   },
   "scoring": {
     "component_weights": {
-      "backlog_priority": 0.35,
-      "backlog_bug": 0.2,
-      "ci_gate": 0.25,
-      "code_balance": 0.2
+      "backlog_priority": 0.27,
+      "backlog_bug": 0.16,
+      "ci_gate": 0.2,
+      "code_balance": 0.12,
+      "keybinding_retention": 0.2,
+      "menu_simplification": 0.05
     },
     "priority_weights": {
       "P1": 5,

@@ -81,7 +81,8 @@
       "config/project/folder_balance_budgets.json",
       "config/project/tech_debt_budgets.json",
       "config/project/secret_scan.json",
-      "config/project/canonical_maintenance.json"
+      "config/project/canonical_maintenance.json",
+      "config/project/architecture_metrics.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
@@ -103,7 +104,8 @@
       "scripts/check_policy_template_drift.sh",
       "scripts/update_policy_template_hashes.sh",
       "scripts/check_git_sanitation_repo.sh",
-      "scripts/check_policy_compliance_repo.sh"
+      "scripts/check_policy_compliance_repo.sh",
+      "scripts/check_architecture_metrics_soft_gate.sh"
     ],
     "governance": [
       "AGENTS.md",
@@ -225,7 +227,8 @@
         "set -euo pipefail",
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
-        "echo \"verify: OK\""
+        "echo \"verify: OK\"",
+        "check_architecture_metrics_soft_gate.sh"
       ]
     },
     {
