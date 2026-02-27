@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "gate_mode": "strict_stage_decrease",
+  "score_epsilon": 0.1,
+  "status_order": {
+    "low": 0,
+    "moderate": 1,
+    "high": 2,
+    "critical": 3
+  },
+  "baseline": {
+    "arch_stage": 530,
+    "score": 32.42,
+    "status": "moderate"
+  },
+  "scoring": {
+    "component_weights": {
+      "backlog_priority": 0.35,
+      "backlog_bug": 0.2,
+      "ci_gate": 0.25,
+      "code_balance": 0.2
+    },
+    "priority_weights": {
+      "P1": 5,
+      "P2": 3,
+      "P3": 1
+    },
+    "normalization": {
+      "priority_points_cap": 40,
+      "bug_items_cap": 6,
+      "ci_issue_cap": 6
+    },
+    "bug_keywords": [
+      "bug",
+      "regression",
+      "correctness",
+      "broken",
+      "failure",
+      "ci",
+      "alert"
+    ]
+  }
+}

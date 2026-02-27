@@ -28,51 +28,25 @@ import json
 import sys
 from pathlib import Path
 
+from tools.governance.architecture_metric_budget import (
+    evaluate_architecture_metric_budget_overages,
+)
 from tools.governance.folder_balance_budget import evaluate_folder_balance_gate
+from tools.governance.tech_debt_budget import evaluate_tech_debt_gate
 
 path = Path(sys.argv[1])
 metrics = json.loads(path.read_text(encoding="utf-8"))
-
-
-def get(metric_path: str) -> int:
-    node = metrics
-    for part in metric_path.split("."):
-        node = node[part]
-    if not isinstance(node, int):
-        raise TypeError(f"{metric_path} is not an int: {node!r}")
-    return node
-
-
-# Stage 21 baseline budgets (non-increasing debt lock).
-budgets = {
-    "engine_core_purity.violation_count": 0,
-    "deep_imports.engine_core_to_engine_non_core_imports.count": 0,
-    "deep_imports.ui_to_engine_non_api.count": 0,
-    "deep_imports.replay_to_engine_non_api.count": 0,
-    "deep_imports.ai_to_engine_non_api.count": 0,
-    "deep_imports.tools_stability_to_engine_non_api.count": 0,
-    "deep_imports.tools_benchmarks_to_engine_non_api.count": 0,
-    "deep_imports.external_callers_to_engine_playbot.count": 0,
-    "migration_debt_signals.core_step_state_method_calls.count": 0,
-    "migration_debt_signals.core_step_private_state_method_calls.count": 0,
-    "migration_debt_signals.core_step_state_field_assignments.count": 0,
-    "migration_debt_signals.core_rules_private_state_method_calls.count": 0,
-    "migration_debt_signals.pygame_imports_non_test.count": 39,
-    "migration_debt_signals.file_io_calls_non_test.count": 16,
-    "migration_debt_signals.random_imports_non_test.count": 11,
-    "migration_debt_signals.time_imports_non_test.count": 3,
-}
-
-violations: list[str] = []
-for metric_path, budget in budgets.items():
-    value = get(metric_path)
-    if value > budget:
-        violations.append(f"{metric_path}: {value} > budget {budget}")
+violations = evaluate_architecture_metric_budget_overages(metrics)
 
 gate_cfg_path = Path("config/project/folder_balance_budgets.json")
 if gate_cfg_path.exists():
     gate_cfg = json.loads(gate_cfg_path.read_text(encoding="utf-8"))
     violations.extend(evaluate_folder_balance_gate(metrics, gate_cfg))
+
+tech_debt_cfg_path = Path("config/project/tech_debt_budgets.json")
+if tech_debt_cfg_path.exists():
+    tech_debt_cfg = json.loads(tech_debt_cfg_path.read_text(encoding="utf-8"))
+    violations.extend(evaluate_tech_debt_gate(metrics, tech_debt_cfg))
 
 if violations:
     print("Architecture metric budget violations:", file=sys.stderr)

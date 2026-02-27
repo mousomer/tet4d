@@ -113,11 +113,14 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
         self.assertIn("engine_core_purity", data)
         self.assertIn("migration_debt_signals", data)
         self.assertIn("folder_balance", data)
+        self.assertIn("tech_debt", data)
 
         folder_balance = data["folder_balance"]
         self.assertIn("gate", folder_balance)
         self.assertIn("heuristic", folder_balance)
         self.assertIn("profiles", folder_balance["heuristic"])
+        self.assertIn("components", data["tech_debt"])
+        self.assertIn("score", data["tech_debt"])
 
         runtime_row = next(
             row for row in folder_balance["folders"] if row["path"] == "src/tet4d/engine/runtime"

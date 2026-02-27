@@ -44,7 +44,11 @@ Read order:
    accessors unless externalizing the value is clearly not worth the complexity.
 8. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 9. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
-10. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
+10. Keep `config/project/tech_debt_budgets.json` synchronized with staged checkpoints:
+    each stage-batch must lower top-level `tech_debt.score` versus the baseline stage,
+    and baseline refresh is manual via `tools/governance/update_tech_debt_budgets.py`
+    after a verified checkpoint.
+11. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
 11. For long-running refactor threads, read `CURRENT_STATE.md` first to resume the latest architecture stage, metrics snapshot, and next-step plan before making changes.
 12. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
 13. Redundant compatibility facades may be removed when callers are migrated, but keep
@@ -595,3 +599,4 @@ Authoritative open/deferred items are tracked in:
 - Stage 516 (slice 151, wire controls topic rendering mode to non-python topic media placement rules).
 - Stage 519 (slice 154, add stage-level overall LOC logger fields to `scripts/arch_metrics.py`).
 - Stage 520 (slice 155, complete runtime help split + stage-LOC logging checkpoint and verify).
+- Stage 530 (slice 165, add weighted `tech_debt` metric + strict stage-decrease budget gate in `scripts/check_architecture_metric_budgets.sh`).

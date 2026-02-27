@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `520` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `530` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,6 +23,15 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
+- `tech_debt.score = 32.42` (`moderate`)
+  - weighted components:
+    - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
+    - backlog bug/regression pressure (keyword-classified open backlog issues)
+    - CI gate pressure (architecture budget overages + folder-balance gate violations)
+    - code-balance pressure (`1 - leaf_fuzzy_weighted_balance_score_avg`)
+  - strict gate policy:
+    - same-stage commits: must not regress baseline score/status
+    - stage-advance batches: must strictly decrease score versus baseline stage
 - `pygame_imports_non_test = 3`
   - currently concentrated in:
     - `src/tet4d/engine/front3d_render.py`
@@ -89,51 +98,33 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 511-520)
+## Recent Batch Status (Stages 521-530)
 
 Completed:
-- Split runtime help assets into separate non-python content and layout files:
-  - `config/help/content/runtime_help_content.json`
-  - `config/help/layout/runtime_help_layout.json`
-- Added dedicated runtime help schemas:
-  - `config/schema/help_runtime_content.schema.json`
-  - `config/schema/help_runtime_layout.schema.json`
-- Refactored runtime loader/validation helper:
-  - `src/tet4d/engine/help_text.py`
-- Added engine API wrappers used by pygame runtime help UI:
-  - `help_topic_block_lines_runtime`
-  - `help_topic_compact_limit_runtime`
-  - `help_topic_compact_overflow_line_runtime`
-  - `help_value_template_runtime`
-  - `help_action_group_heading_runtime`
-  - `help_fallback_topic_runtime`
-  - `help_layout_payload_runtime`
-  - `help_topic_media_rule_runtime`
-- Rewired `src/tet4d/ui/pygame/runtime_ui/help_menu.py` to load runtime help prose from
-  `config/help/content/runtime_help_content.json` and layout/media placement rules from
-  `config/help/layout/runtime_help_layout.json` (`context`, profile name, live
-  bindings, piece-set labels, compact overflow counters, controls topic media mode).
-- Added/extended runtime help loader tests:
-  - `src/tet4d/engine/tests/test_help_text.py`
-- Synced help contracts:
-  - `config/project/canonical_maintenance.json`
-  - `docs/help/HELP_INDEX.md`
-  - `docs/PROJECT_STRUCTURE.md`
-  - `docs/RDS_AND_CODEX.md`
-- Added stage-level LOC logger output in `scripts/arch_metrics.py`:
-  - `stage_loc_logger.arch_stage`
-  - `stage_loc_logger.overall_python_loc`
-  - `stage_loc_logger.overall_python_file_count`
-  - `stage_loc_logger.overall_python_folder_count`
-  - `stage_loc_logger.by_top_package_loc`
+- Added weighted top-level `tech_debt` metric in `scripts/arch_metrics.py` using:
+  - prioritized open backlog load (`docs/BACKLOG.md` active open items, weighted by `P1/P2/P3`)
+  - bug/regression backlog load (keyword-classified open items)
+  - CI gate pressure (architecture budget overages + folder-balance gate violations)
+  - folder-balance pressure (`leaf_fuzzy_weighted_balance_score_avg`)
+- Added strict stage-decrease debt gate in `scripts/check_architecture_metric_budgets.sh`:
+  - config: `config/project/tech_debt_budgets.json`
+  - same-stage policy: no score/status regression
+  - stage-advance policy: strict score decrease
+- Added governance helpers:
+  - `tools/governance/architecture_metric_budget.py`
+  - `tools/governance/tech_debt_budget.py`
+  - `tools/governance/update_tech_debt_budgets.py`
+- Added test coverage:
+  - `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`
+  - updated `src/tet4d/engine/tests/test_arch_metrics_folder_balance.py` to assert `tech_debt` output
 
 Balance note:
-- Folder balance is unchanged by this batch (text externalization + helper wiring only).
-- `src/tet4d/ui/pygame/runtime_ui` remains `6` Python files and `balanced`.
-- Top-level `src/tet4d/ui/pygame` remains `8` Python files and `balanced`.
-- Leaf folder-balance gate remains non-regressed:
+- Folder-balance tracked leaf gates remain non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
+- New tech-debt baseline captured at stage `530`:
+  - `score: 32.42`
+  - `status: moderate`
 
 ## Open Issues / Operational Notes
 
@@ -172,6 +163,8 @@ Pattern per family:
 4. zero-caller checkpoint
 5. prune shim
 6. checkpoint docs + metrics + verification
+7. for each stage-batch checkpoint, ensure `tech_debt.score` decreases versus prior
+   baseline stage before refreshing `config/project/tech_debt_budgets.json`
 
 ### Track B: Playbot relocation audit-only (deprioritized)
 

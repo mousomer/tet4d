@@ -12,6 +12,16 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 2. Unified Change Set (Implemented Baseline)
 
+`DONE` Arch Stage 530 metric-governance checkpoint:
+- added weighted top-level `tech_debt` metric in `scripts/arch_metrics.py` blending
+  prioritized open backlog load, bug/regression backlog load, CI gate pressure, and
+  folder-balance pressure.
+- added strict stage-batch decrease gate in
+  `scripts/check_architecture_metric_budgets.sh` via
+  `config/project/tech_debt_budgets.json`.
+- added manual baseline maintenance helper
+  `tools/governance/update_tech_debt_budgets.py`.
+
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
 3. `DONE` workspace baseline policy marker files are adopted (with repo-native policy checks preserved in `*_repo.sh` extension scripts).
@@ -543,7 +553,14 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 5. Change Footprint (Current Batch)
 
-Current sub-batch (2026-02-23): repo governance alignment and CI hardening only (no gameplay logic changes).
+Current sub-batch (2026-02-26): architecture metric governance hardening (no gameplay logic changes).
+
+Latest checkpoint additions (Stage 530):
+- `scripts/arch_metrics.py` (`tech_debt` weighted score/status/components + `arch_stage=530`).
+- `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
+- `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
+- `config/project/tech_debt_budgets.json`.
+- `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`.
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

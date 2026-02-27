@@ -3,12 +3,23 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TARGET_SRC_ROOT = REPO_ROOT / "src/tet4d"
 FOLDER_BALANCE_BUDGETS_PATH = REPO_ROOT / "config/project/folder_balance_budgets.json"
+TECH_DEBT_BUDGETS_PATH = REPO_ROOT / "config/project/tech_debt_budgets.json"
+BACKLOG_PATH = REPO_ROOT / "docs/BACKLOG.md"
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.governance.architecture_metric_budget import (  # noqa: E402
+    evaluate_architecture_metric_budget_overages,
+)
+from tools.governance.folder_balance_budget import evaluate_folder_balance_gate  # noqa: E402
 
 # Folder-balance heuristic mirrors the documented architecture-contract guidance.
 FOLDER_BALANCE_TARGET_FILES_MIN = 6
@@ -48,6 +59,14 @@ TESTS_FOLDER_BALANCE_LOC_PER_FOLDER_TARGET_MARGIN = 500
 FOLDER_BALANCE_WEIGHT_FILES = 0.5
 FOLDER_BALANCE_WEIGHT_LOC_PER_FILE = 0.3
 FOLDER_BALANCE_WEIGHT_LOC_PER_FOLDER = 0.2
+
+TECH_DEBT_STATUS_ORDER = {
+    "low": 0,
+    "moderate": 1,
+    "high": 2,
+    "critical": 3,
+}
+ARCH_STAGE = 530
 
 
 def _py_files(root: Path) -> list[Path]:
@@ -246,6 +265,208 @@ def _read_json_if_exists(path: Path) -> dict[str, Any] | None:
 
 def _folder_balance_gate_config() -> dict[str, Any] | None:
     return _read_json_if_exists(FOLDER_BALANCE_BUDGETS_PATH)
+
+
+def _tech_debt_gate_config() -> dict[str, Any] | None:
+    return _read_json_if_exists(TECH_DEBT_BUDGETS_PATH)
+
+
+def _active_backlog_rows(backlog_text: str) -> list[tuple[str, str, str]]:
+    section_match = re.search(
+        r"^## 3\. Active Open Backlog / TODO.*?(?=^## |\Z)",
+        backlog_text,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if section_match is None:
+        return []
+    section = section_match.group(0)
+    item_rx = re.compile(
+        r"^\d+\.\s+`?\[(P[1-3])\]\[(BKL-[A-Z0-9-]+)\]\s+(.+?)`?\s*$",
+        flags=re.MULTILINE,
+    )
+    return [(match.group(1), match.group(2), match.group(3)) for match in item_rx.finditer(section)]
+
+
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _tech_debt_scoring_config(tech_debt_cfg: dict[str, Any]) -> dict[str, Any]:
+    scoring_cfg = _as_dict(tech_debt_cfg.get("scoring"))
+    weight_cfg = _as_dict(scoring_cfg.get("component_weights"))
+    priority_weight_cfg = _as_dict(scoring_cfg.get("priority_weights"))
+    normalization_cfg = _as_dict(scoring_cfg.get("normalization"))
+    raw_bug_keywords = scoring_cfg.get("bug_keywords", [])
+    if not isinstance(raw_bug_keywords, list):
+        raw_bug_keywords = []
+
+    component_weights = {
+        "backlog_priority": float(weight_cfg.get("backlog_priority", 0.35)),
+        "backlog_bug": float(weight_cfg.get("backlog_bug", 0.2)),
+        "ci_gate": float(weight_cfg.get("ci_gate", 0.25)),
+        "code_balance": float(weight_cfg.get("code_balance", 0.2)),
+    }
+    weight_total = sum(component_weights.values())
+    if weight_total <= 0:
+        raise ValueError("tech debt component weights must sum to > 0")
+    normalized_component_weights = {
+        key: value / weight_total for key, value in component_weights.items()
+    }
+    priority_weights = {
+        "P1": float(priority_weight_cfg.get("P1", 5.0)),
+        "P2": float(priority_weight_cfg.get("P2", 3.0)),
+        "P3": float(priority_weight_cfg.get("P3", 1.0)),
+    }
+    priority_points_cap = float(normalization_cfg.get("priority_points_cap", 40.0))
+    bug_items_cap = float(normalization_cfg.get("bug_items_cap", 6.0))
+    ci_issue_cap = float(normalization_cfg.get("ci_issue_cap", 6.0))
+    if priority_points_cap <= 0 or bug_items_cap <= 0 or ci_issue_cap <= 0:
+        raise ValueError("tech debt normalization caps must be > 0")
+    bug_keywords = [
+        token.strip().lower() for token in raw_bug_keywords if isinstance(token, str) and token.strip()
+    ]
+    return {
+        "component_weights": normalized_component_weights,
+        "priority_weights": priority_weights,
+        "priority_points_cap": priority_points_cap,
+        "bug_items_cap": bug_items_cap,
+        "ci_issue_cap": ci_issue_cap,
+        "bug_keywords": bug_keywords,
+    }
+
+
+def _active_backlog_debt_stats(
+    *,
+    backlog_rows: list[tuple[str, str, str]],
+    priority_weights: dict[str, float],
+    bug_keywords: list[str],
+) -> dict[str, Any]:
+    backlog_priority_counts = {"P1": 0, "P2": 0, "P3": 0}
+    weighted_priority_points = 0.0
+    bug_rows: list[dict[str, str]] = []
+    for priority, issue_id, title in backlog_rows:
+        backlog_priority_counts[priority] = backlog_priority_counts.get(priority, 0) + 1
+        weighted_priority_points += priority_weights.get(priority, 0.0)
+        lowered_title = title.lower()
+        if any(keyword in lowered_title for keyword in bug_keywords):
+            bug_rows.append({"priority": priority, "id": issue_id, "title": title})
+    return {
+        "priority_counts": backlog_priority_counts,
+        "weighted_priority_points": weighted_priority_points,
+        "bug_rows": bug_rows,
+    }
+
+
+def _ci_gate_violations(metrics: dict[str, Any]) -> tuple[list[str], list[str]]:
+    folder_gate_cfg = _folder_balance_gate_config()
+    folder_gate_violations = (
+        evaluate_folder_balance_gate(metrics, folder_gate_cfg)
+        if isinstance(folder_gate_cfg, dict)
+        else []
+    )
+    budget_violations = evaluate_architecture_metric_budget_overages(metrics)
+    return budget_violations, folder_gate_violations
+
+
+def _tech_debt_status(score: float) -> str:
+    if score <= 25:
+        return "low"
+    if score <= 50:
+        return "moderate"
+    if score <= 75:
+        return "high"
+    return "critical"
+
+
+def _normalized_status_order(tech_debt_cfg: dict[str, Any]) -> dict[str, int]:
+    raw = tech_debt_cfg.get("status_order", TECH_DEBT_STATUS_ORDER)
+    status_order = raw if isinstance(raw, dict) else TECH_DEBT_STATUS_ORDER
+    normalized: dict[str, int] = {}
+    for key, value in status_order.items():
+        if isinstance(key, str) and isinstance(value, int):
+            normalized[key] = value
+    return normalized if normalized else dict(TECH_DEBT_STATUS_ORDER)
+
+
+def _build_tech_debt(metrics: dict[str, Any]) -> dict[str, Any]:
+    tech_debt_cfg = _tech_debt_gate_config() or {}
+    scoring_cfg = _tech_debt_scoring_config(tech_debt_cfg)
+    backlog_text = _read(BACKLOG_PATH) if BACKLOG_PATH.exists() else ""
+    backlog_rows = _active_backlog_rows(backlog_text)
+    backlog_stats = _active_backlog_debt_stats(
+        backlog_rows=backlog_rows,
+        priority_weights=scoring_cfg["priority_weights"],
+        bug_keywords=scoring_cfg["bug_keywords"],
+    )
+    budget_violations, folder_gate_violations = _ci_gate_violations(metrics)
+    ci_issue_count = len(budget_violations) + len(folder_gate_violations)
+
+    folder_summary = _as_dict(_as_dict(metrics.get("folder_balance")).get("summary"))
+    leaf_balance_score = float(folder_summary.get("leaf_fuzzy_weighted_balance_score_avg", 0.0))
+    code_balance_pressure = _clamp01(1.0 - leaf_balance_score)
+    backlog_priority_pressure = _clamp01(
+        backlog_stats["weighted_priority_points"] / scoring_cfg["priority_points_cap"]
+    )
+    bug_pressure = _clamp01(len(backlog_stats["bug_rows"]) / scoring_cfg["bug_items_cap"])
+    ci_gate_pressure = _clamp01(ci_issue_count / scoring_cfg["ci_issue_cap"])
+
+    overall_pressure = (
+        scoring_cfg["component_weights"]["backlog_priority"] * backlog_priority_pressure
+        + scoring_cfg["component_weights"]["backlog_bug"] * bug_pressure
+        + scoring_cfg["component_weights"]["ci_gate"] * ci_gate_pressure
+        + scoring_cfg["component_weights"]["code_balance"] * code_balance_pressure
+    )
+    score = _round2(overall_pressure * 100.0)
+    status = _tech_debt_status(score)
+
+    return {
+        "score": score,
+        "status": status,
+        "direction": "down",
+        "formula": "weighted_pressure_x100",
+        "components": {
+            "backlog_priority": {
+                "weight": _round2(scoring_cfg["component_weights"]["backlog_priority"]),
+                "pressure": _round2(backlog_priority_pressure),
+                "weighted_open_points": _round2(backlog_stats["weighted_priority_points"]),
+                "priority_weights": {
+                    "P1": scoring_cfg["priority_weights"]["P1"],
+                    "P2": scoring_cfg["priority_weights"]["P2"],
+                    "P3": scoring_cfg["priority_weights"]["P3"],
+                },
+                "open_counts": backlog_stats["priority_counts"],
+                "open_issue_count": len(backlog_rows),
+                "normalization_cap": scoring_cfg["priority_points_cap"],
+            },
+            "backlog_bug": {
+                "weight": _round2(scoring_cfg["component_weights"]["backlog_bug"]),
+                "pressure": _round2(bug_pressure),
+                "bug_issue_count": len(backlog_stats["bug_rows"]),
+                "keywords": scoring_cfg["bug_keywords"],
+                "sample_issue_ids": [item["id"] for item in backlog_stats["bug_rows"][:10]],
+                "normalization_cap": scoring_cfg["bug_items_cap"],
+            },
+            "ci_gate": {
+                "weight": _round2(scoring_cfg["component_weights"]["ci_gate"]),
+                "pressure": _round2(ci_gate_pressure),
+                "issue_count": ci_issue_count,
+                "architecture_budget_overages": budget_violations,
+                "folder_balance_gate_violations": folder_gate_violations,
+                "normalization_cap": scoring_cfg["ci_issue_cap"],
+            },
+            "code_balance": {
+                "weight": _round2(scoring_cfg["component_weights"]["code_balance"]),
+                "pressure": _round2(code_balance_pressure),
+                "leaf_fuzzy_weighted_balance_score_avg": _round2(leaf_balance_score),
+            },
+        },
+        "gate_context": {
+            "mode": tech_debt_cfg.get("gate_mode"),
+            "score_epsilon": tech_debt_cfg.get("score_epsilon"),
+            "status_order": _normalized_status_order(tech_debt_cfg),
+            "baseline": tech_debt_cfg.get("baseline"),
+        },
+    }
 
 
 def _build_stage_loc_logger(src_paths: list[Path], *, arch_stage: int) -> dict[str, object]:
@@ -625,7 +846,7 @@ def main() -> int:
     }
 
     metrics = {
-        "arch_stage": 520,
+        "arch_stage": ARCH_STAGE,
         "paths": {
             "engine": "src/tet4d/engine",
             "engine_core": "src/tet4d/engine/core",
@@ -663,8 +884,9 @@ def main() -> int:
             for k, v in engine_side_effect_signals.items()
         },
         "folder_balance": _build_folder_balance(src_paths),
-        "stage_loc_logger": _build_stage_loc_logger(src_paths, arch_stage=520),
+        "stage_loc_logger": _build_stage_loc_logger(src_paths, arch_stage=ARCH_STAGE),
     }
+    metrics["tech_debt"] = _build_tech_debt(metrics)
     print(json.dumps(metrics, indent=2, sort_keys=True))
     return 0
 

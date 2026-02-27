@@ -1096,3 +1096,9 @@ incremental enforcement strategy used while refactoring.
 - Stage 520 (slice 155, runtime help split checkpoint and verify) records completion of
   Stage 511-519, advances `arch_stage` to `520`, refreshes docs/current-state, and
   verifies the checkpoint locally with `verify.sh`.
+- Stage 530 (slice 165, weighted tech-debt gate) adds a top-level `tech_debt` metric
+  in `scripts/arch_metrics.py` that blends prioritized backlog load, bug/regression
+  backlog load, CI gate overage signals, and fuzzy folder-balance pressure, then
+  enforces a strict stage-batch decrease policy via
+  `config/project/tech_debt_budgets.json` in
+  `scripts/check_architecture_metric_budgets.sh`.

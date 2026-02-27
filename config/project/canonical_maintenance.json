@@ -79,6 +79,7 @@
       "config/project/io_paths.json",
       "config/project/constants.json",
       "config/project/folder_balance_budgets.json",
+      "config/project/tech_debt_budgets.json",
       "config/project/secret_scan.json",
       "config/project/canonical_maintenance.json"
     ],
@@ -91,6 +92,9 @@
       "tools/governance/check_pygame_ce.py",
       "tools/governance/scan_secrets.py",
       "tools/governance/lint_menu_graph.py",
+      "tools/governance/architecture_metric_budget.py",
+      "tools/governance/tech_debt_budget.py",
+      "tools/governance/update_tech_debt_budgets.py",
       "tools/governance/validate_project_contracts.py",
       ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
@@ -319,6 +323,27 @@
         "\"tracked_leaf_folders\"",
         "\"score_epsilon\"",
         "\"status_order\""
+      ]
+    },
+    {
+      "file": "config/project/tech_debt_budgets.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"gate_mode\"",
+        "\"score_epsilon\"",
+        "\"baseline\"",
+        "\"scoring\"",
+        "\"component_weights\"",
+        "\"priority_weights\""
+      ]
+    },
+    {
+      "file": "scripts/check_architecture_metric_budgets.sh",
+      "must_contain": [
+        "evaluate_architecture_metric_budget_overages",
+        "evaluate_folder_balance_gate",
+        "evaluate_tech_debt_gate",
+        "config/project/tech_debt_budgets.json"
       ]
     },
     {
@@ -556,6 +581,18 @@
         "config/project/constants.json",
         "config/project/secret_scan.json",
         "tools/governance/scan_secrets.py"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Architecture debt budget gates",
+      "paths": [
+        "scripts/arch_metrics.py",
+        "scripts/check_architecture_metric_budgets.sh",
+        "config/project/folder_balance_budgets.json",
+        "config/project/tech_debt_budgets.json",
+        "tools/governance/folder_balance_budget.py",
+        "tools/governance/tech_debt_budget.py"
       ],
       "status": "connected"
     }

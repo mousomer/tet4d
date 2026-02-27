@@ -51,6 +51,8 @@ tet4d/
 │   │   ├── canonical_maintenance.json  # machine-checked maintenance contract
 │   │   ├── io_paths.json               # externalized repo-relative I/O path defaults
 │   │   ├── constants.json              # externalized shared runtime constants
+│   │   ├── folder_balance_budgets.json # leaf-folder fuzzy balance non-regression gate baselines
+│   │   ├── tech_debt_budgets.json      # weighted tech-debt metric baseline + strict stage-decrease gate
 │   │   └── secret_scan.json            # secret scanning policy and pattern set
 │   └── audio/
 │       └── sfx.json             # generated SFX event tone specs
@@ -189,6 +191,10 @@ tet4d/
 37. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
 38. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
 39. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+40. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
+    `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
+    non-increase (same stage) and strict decrease (new stage) through
+    `config/project/tech_debt_budgets.json`.
 
 ## Placement rubric
 
