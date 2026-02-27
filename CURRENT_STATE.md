@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `534` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `535` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,7 +23,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 5.61` (`low`)
+- `tech_debt.score = 5.37` (`low`)
   - weighted components:
     - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
     - backlog bug/regression pressure (keyword-classified open backlog issues)
@@ -59,9 +59,8 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `src/tet4d/ui/pygame/menu`: `10`
 - `src/tet4d/ui/pygame/launch`: `7`
 - `src/tet4d/ui/pygame/input`: `6`
-- `src/tet4d/ui/pygame/loop`: `3`
 - `src/tet4d/ui/pygame/render`: `9`
-- `src/tet4d/ui/pygame/runtime_ui`: `6`
+- `src/tet4d/ui/pygame/runtime_ui`: `8`
 - `src/tet4d/ai/playbot`: `9`
 
 ### Balance Assessment
@@ -72,12 +71,11 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `ui/pygame/menu` and `ui/pygame/launch` are now balanced leaf subpackages.
 - `ui/pygame/input` is now a balanced leaf package (`6` files, fuzzy `balanced`) after
   adding `keybindings_defaults`.
-- `ui/pygame/loop` is a small but coherent new leaf package (`3` files, fuzzy `watch`)
-  containing shared loop orchestration helpers (`game_loop_common`, `loop_runner_nd`).
 - `ui/pygame/render` is now a balanced leaf package (`9` files, fuzzy `balanced`) after
   panel/control/gfx/grid/font helper relocation.
-- `ui/pygame/runtime_ui` is now a balanced leaf package (`6` files, fuzzy `balanced`)
-  after moving shared pause/help overlays alongside audio/display/app bootstrap helpers.
+- `ui/pygame/runtime_ui` is now a balanced leaf package (`8` files, fuzzy `balanced`)
+  after consolidating shared loop orchestration helpers (`game_loop_common`,
+  `loop_runner_nd`) with pause/help/audio/display/app bootstrap runtime UI helpers.
 - `ui/pygame` top-level remains balanced and dropped further to `8` files after the
   `runtime_ui` help/pause move batch.
 
@@ -102,7 +100,7 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 531-534)
+## Recent Batch Status (Stages 531-535)
 
 Completed:
 - Added repo-managed pre-push local CI gate:
@@ -126,13 +124,19 @@ Completed:
   - moved Python suites from legacy `src/tet4d/engine/tests/`.
   - updated folder-balance tracked leaf + class overrides and metrics source roots.
   - synchronized docs/contracts/backlog references and closed `BKL-P2-012`.
+- Consolidated runtime loop helpers into `runtime_ui`:
+  - moved `ui/pygame/loop/game_loop_common.py` and `ui/pygame/loop/loop_runner_nd.py`
+    to `ui/pygame/runtime_ui/`.
+  - canonicalized `cli/front2d.py`, `front3d_game.py`, and `front4d_game.py` imports
+    to `tet4d.ui.pygame.runtime_ui.*`.
+  - removed the tiny `ui/pygame/loop` Python leaf from folder-balance reporting.
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `tests/unit/engine`: `1.0 / balanced`
 - Tech-debt dropped vs stage-530 baseline:
-  - `32.42 -> 5.61`
+  - `32.42 -> 5.37`
   - `moderate -> low`
 
 ## Open Issues / Operational Notes
@@ -150,7 +154,6 @@ Goal: reduce folder sprawl in `ui/pygame` by introducing a small number of coher
 Recommended subpackages (incremental, not all at once):
 - `src/tet4d/ui/pygame/menu/` (balanced)
 - `src/tet4d/ui/pygame/input/` (balanced)
-- `src/tet4d/ui/pygame/loop/` (small/coherent)
 - `src/tet4d/ui/pygame/render/` (balanced)
 - `src/tet4d/ui/pygame/runtime_ui/` (balanced)
 - `src/tet4d/ui/pygame/launch/` (balanced)
@@ -163,7 +166,6 @@ Recommended next family moves (same staged pattern):
   - `config/help/content/runtime_help_content.json` (content)
   - `config/help/layout/runtime_help_layout.json` (layout/media placement rules)
   - no new hardcoded topic prose/layout rules in Python
-- `loop/` and `runtime_ui/` optional follow-up consolidation only when a cohesive helper pair is ready (avoid tiny leaf churn)
 
 Pattern per family:
 1. move implementation to subpackage

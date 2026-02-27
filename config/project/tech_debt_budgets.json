@@ -9,8 +9,8 @@
     "critical": 3
   },
   "baseline": {
-    "arch_stage": 534,
-    "score": 5.61,
+    "arch_stage": 535,
+    "score": 5.37,
     "status": "low"
   },
   "scoring": {

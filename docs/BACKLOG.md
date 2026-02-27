@@ -94,6 +94,15 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - synchronized RDS/contract/project-structure/help index references so
   `tests/unit/engine/` is the documented canonical test path.
 
+`DONE` Arch Stage 535 runtime-loop leaf consolidation checkpoint:
+- moved `src/tet4d/ui/pygame/loop/game_loop_common.py` and
+  `src/tet4d/ui/pygame/loop/loop_runner_nd.py` into
+  `src/tet4d/ui/pygame/runtime_ui/`.
+- canonicalized runtime callers (`cli/front2d.py`, `front3d_game.py`,
+  `front4d_game.py`) to `tet4d.ui.pygame.runtime_ui.*` loop module paths.
+- removed the tiny `ui/pygame/loop` Python leaf and improved folder-balance
+  pressure for stage-level tech-debt scoring.
+
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
 3. `DONE` workspace baseline policy marker files are adopted (with repo-native policy checks preserved in `*_repo.sh` extension scripts).
@@ -603,7 +612,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 Current sub-batch (2026-02-27): debt-reduction governance + runtime overlay-transparency controls.
 
-Latest checkpoint additions (Stage 530-533):
+Latest checkpoint additions (Stage 530-535):
 - `scripts/arch_metrics.py` (`tech_debt` weighted score/status/components + `arch_stage=530`).
 - `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
 - `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
@@ -617,6 +626,9 @@ Latest checkpoint additions (Stage 530-533):
   (overlay-only alpha path + in-game camera-key controls + side-panel bar).
 - `tests/unit/engine/test_overlay_transparency_render_paths.py`
   (overlay-vs-active render-path flag coverage).
+- `src/tet4d/ui/pygame/runtime_ui/{game_loop_common.py,loop_runner_nd.py}` +
+  caller canonicalization in `cli/front2d.py`,`src/tet4d/ui/pygame/front3d_game.py`,
+  and `src/tet4d/ui/pygame/front4d_game.py` (Stage 535 loop-leaf consolidation).
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

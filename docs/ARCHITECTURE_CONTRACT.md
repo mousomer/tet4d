@@ -1112,6 +1112,14 @@ incremental enforcement strategy used while refactoring.
   `overlay_transparency` settings persistence (default `70%`), in-game camera-key
   adjustments with side-panel bar feedback, and render-path separation so alpha
   applies to active overlays only while active-piece cells remain opaque.
+- Stage 534 (slice 169, test-tree consolidation checkpoint) migrates canonical
+  engine regression suites from `src/tet4d/engine/tests/` to
+  `tests/unit/engine/`, updates architecture metrics/folder-balance tracked leaf
+  references, and syncs governance/docs contracts to the top-level tests tree.
+- Stage 535 (slice 170, loop-leaf consolidation checkpoint) moves
+  `ui/pygame/loop/{game_loop_common,loop_runner_nd}.py` into
+  `ui/pygame/runtime_ui/`, removes the tiny `ui/pygame/loop` Python leaf, and
+  canonicalizes all runtime callers to the `runtime_ui` path family.
 - Post-stage 533 gameplay RNG-mode extension adds config-driven setup fields for
   `random_mode_index` + `game_seed` (2D/3D/4D), routes them into gameplay configs as
   `rng_mode` + `rng_seed`, and keeps fixed-seed deterministic replay paths while

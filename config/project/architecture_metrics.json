@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "arch_stage": 534,
+  "arch_stage": 535,
   "source_roots": [
     "src/tet4d",
     "tests",
