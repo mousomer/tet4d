@@ -37,9 +37,96 @@ from tools.governance.architecture_metric_budget import (  # noqa: E402
 )
 from tools.governance.folder_balance_budget import evaluate_folder_balance_gate  # noqa: E402
 
-from architecture_metrics import classify_folder_path  # noqa: E402
-from architecture_metrics import fuzzy_band_score as shared_fuzzy_band_score  # noqa: E402
-from architecture_metrics import fuzzy_weighted_status as shared_fuzzy_weighted_status  # noqa: E402
+try:  # noqa: E402
+    from architecture_metrics import classify_folder_path  # type: ignore
+    from architecture_metrics import fuzzy_band_score as shared_fuzzy_band_score  # type: ignore
+    from architecture_metrics import (
+        fuzzy_weighted_status as shared_fuzzy_weighted_status,
+    )  # type: ignore
+except (
+    ModuleNotFoundError
+):  # pragma: no cover - exercised in CI without policy-kit optional module
+
+    def _normalized_rel_path(path: str) -> str:
+        return path.strip().replace("\\", "/").strip("/")
+
+    def _best_class_override(path: str, class_cfg: dict[str, Any]) -> str | None:
+        raw_overrides = class_cfg.get("class_overrides")
+        if not isinstance(raw_overrides, dict):
+            return None
+        normalized = _normalized_rel_path(path)
+        best_key = ""
+        best_class: str | None = None
+        for raw_key, raw_class in raw_overrides.items():
+            if not isinstance(raw_key, str) or not isinstance(raw_class, str):
+                continue
+            key = _normalized_rel_path(raw_key)
+            if not key:
+                continue
+            if normalized == key or normalized.startswith(key + "/"):
+                if len(key) > len(best_key):
+                    best_key = key
+                    best_class = raw_class.strip()
+        return best_class
+
+    def classify_folder_path(path: str, class_cfg: dict[str, Any]) -> str:
+        override = _best_class_override(path, class_cfg)
+        if override:
+            return override
+        normalized = _normalized_rel_path(path)
+        segments = [segment.lower() for segment in normalized.split("/") if segment]
+        test_segments = {
+            str(raw).strip().lower()
+            for raw in class_cfg.get("test_segments", [])
+            if isinstance(raw, str)
+        }
+        if test_segments and any(segment in test_segments for segment in segments):
+            return "tests_lenient"
+        non_code_segments = {
+            str(raw).strip().lower()
+            for raw in class_cfg.get("non_code_segments", [])
+            if isinstance(raw, str)
+        }
+        if non_code_segments and any(
+            segment in non_code_segments for segment in segments
+        ):
+            return "non_code_exempt"
+        return "code_default"
+
+    def shared_fuzzy_band_score(
+        *,
+        value: float,
+        target_min: float,
+        target_max: float,
+        soft_min: float,
+        soft_max: float,
+        target_margin: float = 0.0,
+    ) -> float:
+        plateau_min = target_min - target_margin
+        plateau_max = target_max + target_margin
+        if value <= soft_min or value >= soft_max:
+            return 0.0
+        if plateau_min <= value <= plateau_max:
+            return 1.0
+        if value < plateau_min:
+            span = plateau_min - soft_min
+            if span <= 0:
+                return 0.0
+            return max(0.0, min(1.0, (value - soft_min) / span))
+        span = soft_max - plateau_max
+        if span <= 0:
+            return 0.0
+        return max(0.0, min(1.0, (soft_max - value) / span))
+
+    def shared_fuzzy_weighted_status(score: float) -> str:
+        if score >= 0.85:
+            return "balanced"
+        if score >= 0.6:
+            return "watch"
+        if score >= 0.35:
+            return "skewed"
+        return "rebalance_signal"
+
 
 # Folder-balance heuristic mirrors the documented architecture-contract guidance.
 FOLDER_BALANCE_TARGET_FILES_MIN = 6
