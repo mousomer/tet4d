@@ -66,7 +66,7 @@ TECH_DEBT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
-ARCH_STAGE = 530
+ARCH_STAGE = 532
 
 
 def _py_files(root: Path) -> list[Path]:

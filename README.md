@@ -38,12 +38,16 @@ scripts/bootstrap_env.sh
 source .venv/bin/activate
 ```
 
+`scripts/bootstrap_env.sh` also installs the repo pre-push hook path
+(`.githooks/pre-push`) so pushes run the local CI gate by default.
+
 Alternative manual setup:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install ruff pytest
+scripts/install_git_hooks.sh
 ```
 
 `scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects the repo to be installed in editable mode (`pip install -e .[dev]`) in that same environment.

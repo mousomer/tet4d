@@ -1102,3 +1102,9 @@ incremental enforcement strategy used while refactoring.
   enforces a strict stage-batch decrease policy via
   `config/project/tech_debt_budgets.json` in
   `scripts/check_architecture_metric_budgets.sh`.
+- Stage 531 (slice 166, pre-push local gate) adds repo-managed pre-push CI
+  enforcement via `.githooks/pre-push` and `scripts/install_git_hooks.sh`, wired
+  through `scripts/bootstrap_env.sh`, to require `scripts/ci_check.sh` before push.
+- Stage 532 (slice 167, viewer-relative movement verification) expands rotated-view
+  routing regression coverage in `src/tet4d/engine/tests/test_nd_routing.py` for
+  3D/4D viewer-relative movement mapping and action-override precedence rules.

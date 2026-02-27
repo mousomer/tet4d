@@ -12,7 +12,7 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tet4d.engine import frontend_nd
 from tet4d.engine.gameplay.game_nd import GameConfigND
-from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, KEYS_4D, SYSTEM_KEYS
+from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
@@ -40,7 +40,72 @@ def _find_unbound_4d_key() -> int:
     raise AssertionError("could not find an unbound 4D key candidate")
 
 
+class _AxisCaptureState:
+    def __init__(self, cfg: GameConfigND) -> None:
+        self.config = cfg
+        self.game_over = False
+        self.moves: list[tuple[int, int]] = []
+
+    def try_move_axis(self, axis: int, delta: int) -> None:
+        self.moves.append((axis, delta))
+
+    def try_rotate(self, _axis_a: int, _axis_b: int, _direction: int) -> None:
+        return None
+
+    def hard_drop(self) -> None:
+        return None
+
+
 class TestNdRouting(unittest.TestCase):
+    def test_viewer_relative_routing_uses_yaw_for_3d(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_3D, "move_x_pos"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [(2, 1)])
+
+        state.moves.clear()
+        result_away = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_3D, "move_z_neg"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+        )
+        self.assertEqual(result_away, "continue")
+        self.assertEqual(state.moves, [(0, -1)])
+
+    def test_viewer_relative_mapping_does_not_override_w_axis_actions(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_4D, "move_w_pos"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [(3, 1)])
+
+    def test_axis_override_precedence_over_viewer_relative_mapping(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_4D, "move_x_pos"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+            axis_overrides_by_action={"move_x_pos": (0, -1)},
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [(0, -1)])
+
     def test_system_action_emits_sfx(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)

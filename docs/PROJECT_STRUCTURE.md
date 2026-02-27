@@ -123,6 +123,8 @@ tet4d/
 │   ├── ci.yml                   # push/PR CI matrix
 │   ├── stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
 │   └── release-packaging.yml    # desktop package build matrix + artifact upload
+├── .githooks/
+│   └── pre-push                 # local push gate -> scripts/ci_check.sh
 └── docs/
     ├── BACKLOG.md               # canonical open TODO / technical debt tracker
     ├── CHANGELOG.md             # consolidated change history notes
@@ -195,6 +197,8 @@ tet4d/
     `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
     non-increase (same stage) and strict decrease (new stage) through
     `config/project/tech_debt_budgets.json`.
+41. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
+    the pre-push local CI gate.
 
 ## Placement rubric
 

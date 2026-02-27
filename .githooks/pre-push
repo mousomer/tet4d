@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "${repo_root}"
+
+echo "[tet4d pre-push] Running local gate: CODEX_MODE=${CODEX_MODE:-1} ./scripts/ci_check.sh"
+CODEX_MODE="${CODEX_MODE:-1}" ./scripts/ci_check.sh
+

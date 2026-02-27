@@ -600,3 +600,5 @@ Authoritative open/deferred items are tracked in:
 - Stage 519 (slice 154, add stage-level overall LOC logger fields to `scripts/arch_metrics.py`).
 - Stage 520 (slice 155, complete runtime help split + stage-LOC logging checkpoint and verify).
 - Stage 530 (slice 165, add weighted `tech_debt` metric + strict stage-decrease budget gate in `scripts/check_architecture_metric_budgets.sh`).
+- Stage 531 (slice 166, add repo-managed pre-push local CI gate via `.githooks/pre-push` and `scripts/install_git_hooks.sh`).
+- Stage 532 (slice 167, add rotated-view viewer-relative routing regression coverage for 3D/4D in `test_nd_routing.py`).

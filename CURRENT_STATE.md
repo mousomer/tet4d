@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-02-26
+Last updated: 2026-02-27
 Branch: `codex/foldersrestructuring`
 Worktree expectation at handoff: dirty (local `AGENTS.md` edit)
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `530` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `532` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,7 +23,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 32.42` (`moderate`)
+- `tech_debt.score = 20.5` (`low`)
   - weighted components:
     - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
     - backlog bug/regression pressure (keyword-classified open backlog issues)
@@ -98,33 +98,27 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 521-530)
+## Recent Batch Status (Stages 531-532)
 
 Completed:
-- Added weighted top-level `tech_debt` metric in `scripts/arch_metrics.py` using:
-  - prioritized open backlog load (`docs/BACKLOG.md` active open items, weighted by `P1/P2/P3`)
-  - bug/regression backlog load (keyword-classified open items)
-  - CI gate pressure (architecture budget overages + folder-balance gate violations)
-  - folder-balance pressure (`leaf_fuzzy_weighted_balance_score_avg`)
-- Added strict stage-decrease debt gate in `scripts/check_architecture_metric_budgets.sh`:
-  - config: `config/project/tech_debt_budgets.json`
-  - same-stage policy: no score/status regression
-  - stage-advance policy: strict score decrease
-- Added governance helpers:
-  - `tools/governance/architecture_metric_budget.py`
-  - `tools/governance/tech_debt_budget.py`
-  - `tools/governance/update_tech_debt_budgets.py`
-- Added test coverage:
-  - `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`
-  - updated `src/tet4d/engine/tests/test_arch_metrics_folder_balance.py` to assert `tech_debt` output
+- Added repo-managed pre-push local CI gate:
+  - `.githooks/pre-push`
+  - `scripts/install_git_hooks.sh`
+  - `scripts/bootstrap_env.sh` now installs hooks path (`core.hooksPath=.githooks`)
+- Added rotated-view viewer-relative routing regression coverage in:
+  - `src/tet4d/engine/tests/test_nd_routing.py`
+  - coverage includes 3D yaw-based remapping, 4D `move_w_*` precedence, and axis-override precedence.
+- Closed backlog items:
+  - `BKL-P3-001` (pre-push local CI gate)
+  - `BKL-P1-003` (viewer-relative movement regression verification)
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
   - `src/tet4d/engine/tests`: `1.0 / balanced`
-- New tech-debt baseline captured at stage `530`:
-  - `score: 32.42`
-  - `status: moderate`
+- Tech-debt dropped vs stage-530 baseline:
+  - `32.42 -> 20.5`
+  - `moderate -> low`
 
 ## Open Issues / Operational Notes
 

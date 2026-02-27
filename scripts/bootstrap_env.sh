@@ -15,5 +15,7 @@ PIP_ARGS=(--disable-pip-version-check --no-input)
 "${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" --upgrade pip
 "${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" -e ".[dev]"
 
+./scripts/install_git_hooks.sh
+
 echo "Environment bootstrap complete: ${VENV_PATH}"
 echo "Use it with: source ${VENV_PATH}/bin/activate"

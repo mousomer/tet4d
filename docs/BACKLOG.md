@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-02-24  
+Updated: 2026-02-27  
 Scope: unified view of implemented change set + unresolved RDS/documentation/code gaps.
 
 ## 1. Priority Verification Rules
@@ -21,6 +21,21 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   `config/project/tech_debt_budgets.json`.
 - added manual baseline maintenance helper
   `tools/governance/update_tech_debt_budgets.py`.
+
+`DONE` Arch Stage 531 pre-push local CI gate checkpoint:
+- added repo-managed pre-push hook (`.githooks/pre-push`) that runs
+  `CODEX_MODE=1 ./scripts/ci_check.sh` before push.
+- added hook installer (`scripts/install_git_hooks.sh`) and wired it into
+  `scripts/bootstrap_env.sh`.
+- closed `[BKL-P3-001]` and removed it from active open backlog.
+
+`DONE` Arch Stage 532 viewer-relative movement verification checkpoint:
+- added rotated-view routing regression coverage in
+  `src/tet4d/engine/tests/test_nd_routing.py` for:
+  - 3D viewer-relative movement mapping at yaw rotations,
+  - 4D `move_w_*` routing precedence over viewer-relative mapping,
+  - axis-override precedence over viewer-relative mapping.
+- closed `[BKL-P1-003]` and removed it from active open backlog.
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
@@ -494,54 +509,46 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `[P3][BKL-P3-001] Pre-push local CI gate`
-2. `Cadence:` before every push/release.
-3. `Trigger:` any code/docs/config change on active branch.
-4. `Done criteria:` latest `scripts/ci_check.sh` run exits `0` with no unresolved failures.
-5. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
-6. `Cadence:` at least weekly and after workflow/config changes.
-7. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/stability/check_playbot_stability.py`, or `tools/benchmarks/analyze_playbot_policies.py` changes.
-8. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
-9. `[P3][BKL-P3-003] Runtime-config validation module split watch`
-10. `Cadence:` when adding new policy sections.
-11. `Trigger:` growth in `tetris_nd/runtime_config_validation_playbot.py` beyond current maintainable scope.
-12. `Done criteria:` split completed with unchanged behavior and passing lint/tests.
-13. `[P3][BKL-P3-004] 3D renderer decomposition watch`
-14. `Cadence:` when adding new rendering responsibilities.
-15. `Trigger:` major feature growth in `tetris_nd/front3d_render.py`.
-16. `Done criteria:` render responsibilities are split into focused modules with behavior parity and passing regression tests.
-17. `[P3][BKL-P3-005] Projection/cache profiling watch`
-18. `Cadence:` after projection/camera/cache changes and before release.
-19. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
-20. `Done criteria:` `tools/benchmarks/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
-21. `[P3][BKL-P3-006] Desktop release hardening watch`
-22. `Cadence:` before each public release.
-23. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
-24. `Done criteria:` package matrix artifacts are green and signing/notarization follow-up status is explicitly tracked in release notes.
-25. `[P3][BKL-P3-007] Repository hygiene watch (history + secret scan)`
-26. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
-27. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
-28. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
-29. `[P1][BKL-P1-002] 3D/4D active-piece transparency control`
-30. `Cadence:` when adjusting 3D/4D rendering UX or accessibility settings.
-31. `Trigger:` user feedback on occlusion/readability in 3D/4D boards.
-32. `Done criteria:` active-piece transparency is supported in 3D/4D renders and user-adjustable via settings/config UI with documented defaults.
-33. `[P1][BKL-P1-003] Viewer-relative movement regression verification (3D/4D)`
-34. `Cadence:` after changes to camera/view rotation, movement routing, or ND input mapping.
-35. `Trigger:` edits in 3D/4D key routing, camera transforms, or movement remapping logic.
-36. `Done criteria:` automated and/or manual verification confirms movement inputs remain viewer-relative after board/view rotations in 3D and 4D.
-37. `[P2][BKL-P2-010] True-random piece mode with configurable seed`
-38. `Cadence:` when expanding piece-generation options or setup-menu gameplay settings.
-39. `Trigger:` random piece-generator feature work (2D/3D/4D) or seed-handling changes.
-40. `Done criteria:` a true-random piece mode exists with explicit seed configuration exposed in setup/config UI, and fixed-seed runs remain deterministic.
-41. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
-42. `Cadence:` when extending 4D gameplay content and balancing.
-43. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
-44. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
-45. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
-46. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
-47. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
-48. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
+1. `[P3][BKL-P3-002] Scheduled stability + policy workflow watch`
+2. `Cadence:` at least weekly and after workflow/config changes.
+3. `Trigger:` `.github/workflows/ci.yml`, `.github/workflows/stability-watch.yml`, `tools/stability/check_playbot_stability.py`, or `tools/benchmarks/analyze_playbot_policies.py` changes.
+4. `Done criteria:` scheduled workflow runs are green and no unresolved stability/policy alerts remain.
+5. `[P3][BKL-P3-003] Runtime-config validation module split watch`
+6. `Cadence:` when adding new policy sections.
+7. `Trigger:` growth in `tetris_nd/runtime_config_validation_playbot.py` beyond current maintainable scope.
+8. `Done criteria:` split completed with unchanged behavior and passing lint/tests.
+9. `[P3][BKL-P3-004] 3D renderer decomposition watch`
+10. `Cadence:` when adding new rendering responsibilities.
+11. `Trigger:` major feature growth in `tetris_nd/front3d_render.py`.
+12. `Done criteria:` render responsibilities are split into focused modules with behavior parity and passing regression tests.
+13. `[P3][BKL-P3-005] Projection/cache profiling watch`
+14. `Cadence:` after projection/camera/cache changes and before release.
+15. `Trigger:` edits to projection/cache/zoom paths (3D/4D render stack).
+16. `Done criteria:` `tools/benchmarks/profile_4d_render.py` report recorded; deeper caching is only added when measured overhead justifies it.
+17. `[P3][BKL-P3-006] Desktop release hardening watch`
+18. `Cadence:` before each public release.
+19. `Trigger:` edits in `packaging/`, `.github/workflows/release-packaging.yml`, or `docs/RELEASE_INSTALLERS.md`.
+20. `Done criteria:` package matrix artifacts are green and signing/notarization follow-up status is explicitly tracked in release notes.
+21. `[P3][BKL-P3-007] Repository hygiene watch (history + secret scan)`
+22. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
+23. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
+24. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
+25. `[P1][BKL-P1-002] 3D/4D active-piece transparency control`
+26. `Cadence:` when adjusting 3D/4D rendering UX or accessibility settings.
+27. `Trigger:` user feedback on occlusion/readability in 3D/4D boards.
+28. `Done criteria:` active-piece transparency is supported in 3D/4D renders and user-adjustable via settings/config UI with documented defaults.
+29. `[P2][BKL-P2-010] True-random piece mode with configurable seed`
+30. `Cadence:` when expanding piece-generation options or setup-menu gameplay settings.
+31. `Trigger:` random piece-generator feature work (2D/3D/4D) or seed-handling changes.
+32. `Done criteria:` a true-random piece mode exists with explicit seed configuration exposed in setup/config UI, and fixed-seed runs remain deterministic.
+33. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
+34. `Cadence:` when extending 4D gameplay content and balancing.
+35. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
+36. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
+37. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
+38. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
+39. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
+40. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -553,14 +560,16 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 5. Change Footprint (Current Batch)
 
-Current sub-batch (2026-02-26): architecture metric governance hardening (no gameplay logic changes).
+Current sub-batch (2026-02-27): debt-reduction governance + verification hardening.
 
-Latest checkpoint additions (Stage 530):
+Latest checkpoint additions (Stage 530-532):
 - `scripts/arch_metrics.py` (`tech_debt` weighted score/status/components + `arch_stage=530`).
 - `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
 - `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
 - `config/project/tech_debt_budgets.json`.
 - `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`.
+- `.githooks/pre-push` + `scripts/install_git_hooks.sh` (repo-managed pre-push local CI gate wiring).
+- `src/tet4d/engine/tests/test_nd_routing.py` (viewer-relative rotated-view routing regression coverage).
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

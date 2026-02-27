@@ -85,6 +85,7 @@
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
+      "scripts/install_git_hooks.sh",
       "scripts/ci_check.sh",
       "scripts/verify.sh",
       "scripts/check_git_sanitation.sh",
@@ -106,7 +107,8 @@
     ],
     "governance": [
       "AGENTS.md",
-      "config/project/policy_manifest.json"
+      "config/project/policy_manifest.json",
+      ".githooks/pre-push"
     ],
     "packaging_scripts": [
       "packaging/pyinstaller/tet4d.spec",
@@ -224,6 +226,20 @@
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
         "echo \"verify: OK\""
+      ]
+    },
+    {
+      "file": "scripts/install_git_hooks.sh",
+      "must_contain": [
+        "git config --local core.hooksPath .githooks",
+        "chmod +x .githooks/pre-push"
+      ]
+    },
+    {
+      "file": ".githooks/pre-push",
+      "must_contain": [
+        "./scripts/ci_check.sh",
+        "CODEX_MODE"
       ]
     },
     {
