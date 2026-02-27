@@ -19,7 +19,7 @@ def _base_metrics() -> dict:
                     },
                 },
                 {
-                    "path": "src/tet4d/engine/tests",
+                    "path": "tests/unit/engine",
                     "leaf_folder": True,
                     "folder_profile": "tests_leaf",
                     "balancer": {

@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `533` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `534` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,7 +23,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 11.93` (`low`)
+- `tech_debt.score = 5.61` (`low`)
   - weighted components:
     - backlog priority pressure (`P1/P2/P3` weighted open backlog load)
     - backlog bug/regression pressure (keyword-classified open backlog issues)
@@ -102,7 +102,7 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 531-533)
+## Recent Batch Status (Stages 531-534)
 
 Completed:
 - Added repo-managed pre-push local CI gate:
@@ -110,7 +110,7 @@ Completed:
   - `scripts/install_git_hooks.sh`
   - `scripts/bootstrap_env.sh` now installs hooks path (`core.hooksPath=.githooks`)
 - Added rotated-view viewer-relative routing regression coverage in:
-  - `src/tet4d/engine/tests/test_nd_routing.py`
+  - `tests/unit/engine/test_nd_routing.py`
   - coverage includes 3D yaw-based remapping, 4D `move_w_*` precedence, and axis-override precedence.
 - Closed backlog items:
   - `BKL-P3-001` (pre-push local CI gate)
@@ -122,13 +122,17 @@ Completed:
   - in-game camera-key adjustment actions (`overlay_alpha_dec/inc`) in 3D/4D.
   - side-panel transparency bar + render-path split so alpha applies to active overlays
     only (active-piece cells remain opaque).
+- Consolidated canonical tests under top-level `tests/unit/engine/`:
+  - moved Python suites from legacy `src/tet4d/engine/tests/`.
+  - updated folder-balance tracked leaf + class overrides and metrics source roots.
+  - synchronized docs/contracts/backlog references and closed `BKL-P2-012`.
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
   - `src/tet4d/engine/runtime`: `0.71 / watch`
-  - `src/tet4d/engine/tests`: `1.0 / balanced`
+  - `tests/unit/engine`: `1.0 / balanced`
 - Tech-debt dropped vs stage-530 baseline:
-  - `32.42 -> 16.12`
+  - `32.42 -> 5.61`
   - `moderate -> low`
 
 ## Open Issues / Operational Notes
@@ -214,19 +218,20 @@ Do:
 - Next ~10 stages: roughly `-50` to `+50` LOC net (API prep adds, shim pruning removes)
 - Near-maximal completion: roughly `-200` to `-600` LOC net (shim retirement dominates)
 
-## Test Structure Preference (Planned Future Refactor)
+## Test Structure Preference
 
 Preference recorded:
 - move toward a single top-level test root `./tests/`
 - organize by sub-test tasks/domains (unit/integration/runtime/ui/etc.)
 
 Status:
-- not started (tests remain in `src/tet4d/engine/tests/` and other existing locations)
+- stage-534 checkpoint completed for canonical engine suites:
+  - engine unit/regression tests now live in `tests/unit/engine/`.
+  - replay fixtures remain in `tests/replay/`.
 
 Recommended approach:
-- dedicated staged migration (do not mix with architecture module moves)
-- migrate one test family/domain at a time
-- update pytest discovery and path-based tooling incrementally
+- keep future test-family additions in top-level `tests/` subfolders.
+- avoid reintroducing canonical Python tests under `src/tet4d/engine/tests/`.
 
 ## Restart Checklist (for a new Codex thread)
 

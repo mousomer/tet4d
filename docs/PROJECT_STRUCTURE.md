@@ -70,17 +70,19 @@ tet4d/
 │           └── transform/
 │               └── svg/         # external transform icon pack (16/64, dark/light)
 ├── tests/
-│   └── replay/
-│       ├── manifest.json        # canonical replay fixture manifest
-│       └── golden/
-│           └── .gitkeep         # anchor for golden replay fixtures
+│   ├── replay/
+│   │   ├── manifest.json        # canonical replay fixture manifest
+│   │   └── golden/
+│   │       └── .gitkeep         # anchor for golden replay fixtures
+│   └── unit/
+│       └── engine/              # canonical engine/unit regression suites
 ├── src/
 │   └── tet4d/
 │       ├── __init__.py          # installable package root (src layout)
 │       ├── ui/                  # UI adapters (incremental separation; pygame adapters live here)
 │       ├── ai/                  # AI facades (playbot boundary seam over engine.api)
 │       ├── replay/              # replay data schema + pure playback helpers (no file I/O)
-│       └── engine/              # shared engine + frontends + tests (source of truth)
+│       └── engine/              # shared engine + frontends (source of truth)
 │           ├── core/            # strict-purity deterministic logic extraction subtree
 │           ├── gameplay/        # non-core gameplay helpers/primitives (merged folder split sequence)
 │           ├── runtime/         # runtime/config/validation/analytics/assist-scoring/persistence helpers (merged folder split sequence)
@@ -106,7 +108,7 @@ tet4d/
 │       ├── projection3d.py      # shared projection/camera helpers
 │       ├── menu_model.py        # shared menu loop helpers (selection/confirm/clamp)
 │       ├── menu_persistence.py  # shared menu settings persistence facade
-│       └── tests/               # unit + replay/smoke tests
+│       └── ...                  # additional package modules (see src/tet4d/)
 ├── tools/
 │   ├── governance/
 │   │   ├── validate_project_contracts.py  # canonical maintenance validator
@@ -171,7 +173,7 @@ tet4d/
 15. Help/explanation pages (including rendered arrow-diagram guides) are in `runtime_ui/help_menu.py` and `menu/menu_control_guides.py`.
 16. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
 17. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
-18. Tests in `src/tet4d/engine/tests/` cover engine behavior and replay/smoke gameplay paths.
+18. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
 19. `config/menu/*` drives launcher/setup menu structure and default values.
 20. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
 21. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.

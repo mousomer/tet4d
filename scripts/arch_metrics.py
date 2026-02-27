@@ -79,7 +79,7 @@ TECH_DEBT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
-ARCH_STAGE = 533
+ARCH_STAGE = 534
 
 
 def _py_files(root: Path) -> list[Path]:
@@ -272,7 +272,7 @@ def _architecture_metrics_config() -> dict[str, Any]:
 
 def _metric_source_roots() -> list[Path]:
     cfg = _architecture_metrics_config()
-    raw = cfg.get("source_roots", ["src/tet4d", "tools", "scripts"])
+    raw = cfg.get("source_roots", ["src/tet4d", "tests", "tools", "scripts"])
     roots: list[Path] = []
     if isinstance(raw, list):
         for item in raw:
@@ -1339,7 +1339,7 @@ def main() -> int:
     tools_stability_paths = _py_files(REPO_ROOT / "tools/stability")
     tools_bench_paths = _py_files(REPO_ROOT / "tools/benchmarks")
     playbot_external_paths = _py_files(REPO_ROOT / "cli") + _py_files(REPO_ROOT / "tools") + _py_files(
-        REPO_ROOT / "src/tet4d/engine/tests"
+        REPO_ROOT / "tests/unit/engine"
     )
 
     ui_deep_engine = _match_engine_deep_import_lines(ui_paths)

@@ -63,6 +63,6 @@ When adding/removing a menu option or keybinding action, update:
 7. `config/help/layout/runtime_help_layout.json`,
 8. `docs/FEATURE_MAP.md`,
 9. `docs/BACKLOG.md`,
-10. `src/tet4d/engine/tests/test_help_topics.py`,
-11. `src/tet4d/engine/tests/test_help_menu.py`,
-12. `src/tet4d/engine/tests/test_help_text.py`.
+10. `tests/unit/engine/test_help_topics.py`,
+11. `tests/unit/engine/test_help_menu.py`,
+12. `tests/unit/engine/test_help_text.py`.

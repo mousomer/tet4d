@@ -261,7 +261,7 @@ incremental enforcement strategy used while refactoring.
   to canonical `engine/runtime/*` imports for analytics/help modules (`assist_scoring`,
   `help_topics`, `score_analyzer`) ahead of runtime shim pruning.
 - Stage 69 (slice 59, runtime canonicalization) migrates tests to canonical
-  `engine/runtime/*` imports while keeping tests in `src/tet4d/engine/tests/`,
+  `engine/runtime/*` imports while keeping tests in `tests/unit/engine/`,
   clearing remaining known callers to runtime compatibility shims.
 - Stage 70 (slice 60, runtime shim pruning) removes zero-caller engine-path
   compatibility shims for `assist_scoring`, `help_topics`, and `score_analyzer`
@@ -271,7 +271,7 @@ incremental enforcement strategy used while refactoring.
   shim pruning, keeping the change scoped to a single helper family.
 - Stage 72 (slice 62, UI shim canonicalization) migrates `camera_mouse` tests to
   the canonical `tet4d.ui.pygame.camera_mouse` module while keeping tests in
-  `src/tet4d/engine/tests/` prior to shim removal.
+  `tests/unit/engine/` prior to shim removal.
 - Stage 73 (slice 63, UI shim pruning) removes the zero-caller
   `engine/camera_mouse.py` compatibility shim after engine+test migration to the
   canonical `tet4d.ui.pygame.camera_mouse` module.
@@ -1062,7 +1062,7 @@ incremental enforcement strategy used while refactoring.
   index contracts to include content/layout help assets as required help
   contract input.
 - Stage 508 (slice 143, help-copy unit coverage) adds runtime help-copy loader tests in
-  `src/tet4d/engine/tests/test_help_text.py`.
+  `tests/unit/engine/test_help_text.py`.
 - Stage 509 (slice 144, docs/state handoff sync) refreshes structure docs and
   `CURRENT_STATE.md` with the doc-driven runtime help-copy architecture.
 - Stage 510 (slice 145, help-copy checkpoint and verify) records completion of the
@@ -1106,7 +1106,7 @@ incremental enforcement strategy used while refactoring.
   enforcement via `.githooks/pre-push` and `scripts/install_git_hooks.sh`, wired
   through `scripts/bootstrap_env.sh`, to require `scripts/ci_check.sh` before push.
 - Stage 532 (slice 167, viewer-relative movement verification) expands rotated-view
-  routing regression coverage in `src/tet4d/engine/tests/test_nd_routing.py` for
+  routing regression coverage in `tests/unit/engine/test_nd_routing.py` for
   3D/4D viewer-relative movement mapping and action-override precedence rules.
 - Stage 533 (slice 168, overlay-transparency controls) adds display-level
   `overlay_transparency` settings persistence (default `70%`), in-game camera-key

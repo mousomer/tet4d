@@ -1,8 +1,9 @@
 {
   "schema_version": 1,
-  "arch_stage": 533,
+  "arch_stage": 534,
   "source_roots": [
     "src/tet4d",
+    "tests",
     "tools",
     "scripts"
   ],
@@ -29,10 +30,10 @@
       "tests"
     ],
     "class_overrides": {
-      "src/tet4d/engine/tests": "tests_lenient"
+      "tests/unit/engine": "tests_lenient"
     },
     "gate_overrides": {
-      "src/tet4d/engine/tests": true
+      "tests/unit/engine": true
     }
   },
   "class_gate_eligibility": {

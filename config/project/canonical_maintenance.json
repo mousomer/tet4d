@@ -54,14 +54,14 @@
       "docs/RELEASE_INSTALLERS.md"
     ],
     "core_tests": [
-      "src/tet4d/engine/tests/test_playbot.py",
-      "src/tet4d/engine/tests/test_score_analyzer.py",
-      "src/tet4d/engine/tests/test_runtime_config.py",
-      "src/tet4d/engine/tests/test_menu_policy.py",
-      "src/tet4d/engine/tests/test_project_config.py",
-      "src/tet4d/engine/tests/test_help_topics.py",
-      "src/tet4d/engine/tests/test_help_menu.py",
-      "src/tet4d/engine/tests/test_help_text.py"
+      "tests/unit/engine/test_playbot.py",
+      "tests/unit/engine/test_score_analyzer.py",
+      "tests/unit/engine/test_runtime_config.py",
+      "tests/unit/engine/test_menu_policy.py",
+      "tests/unit/engine/test_project_config.py",
+      "tests/unit/engine/test_help_topics.py",
+      "tests/unit/engine/test_help_menu.py",
+      "tests/unit/engine/test_help_text.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",

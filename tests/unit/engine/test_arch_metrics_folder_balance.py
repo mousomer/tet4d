@@ -88,7 +88,7 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
 
     def test_profile_classification(self) -> None:
         self.assertEqual(
-            self.mod._folder_balance_profile_for_folder("src/tet4d/engine/tests", leaf_folder=True),
+            self.mod._folder_balance_profile_for_folder("tests/unit/engine", leaf_folder=True),
             "tests_leaf",
         )
         self.assertEqual(
@@ -148,7 +148,7 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
             row for row in folder_balance["folders"] if row["path"] == "src/tet4d/engine/runtime"
         )
         tests_row = next(
-            row for row in folder_balance["folders"] if row["path"] == "src/tet4d/engine/tests"
+            row for row in folder_balance["folders"] if row["path"] == "tests/unit/engine"
         )
         ui_parent_row = next(
             row for row in folder_balance["folders"] if row["path"] == "src/tet4d/ui/pygame"

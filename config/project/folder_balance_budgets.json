@@ -99,7 +99,7 @@
       "baseline_status": "watch"
     },
     {
-      "path": "src/tet4d/engine/tests",
+      "path": "tests/unit/engine",
       "profile": "tests_leaf",
       "baseline_score": 1.0,
       "baseline_status": "balanced"

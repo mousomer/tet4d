@@ -37,7 +37,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 `DONE` Arch Stage 532 viewer-relative movement verification checkpoint:
 - added rotated-view routing regression coverage in
-  `src/tet4d/engine/tests/test_nd_routing.py` for:
+  `tests/unit/engine/test_nd_routing.py` for:
   - 3D viewer-relative movement mapping at yaw rotations,
   - 4D `move_w_*` routing precedence over viewer-relative mapping,
   - axis-override precedence over viewer-relative mapping.
@@ -85,6 +85,14 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   factories and labels.
 - 4D setup selection now has explicit regression coverage for selecting the 6-cell
   set and validating emitted 4D piece shapes.
+
+`DONE` `[BKL-P2-012]` Consolidate tests under top-level `./tests` tree:
+- migrated canonical engine/unit regression suites from
+  `src/tet4d/engine/tests/` to `tests/unit/engine/`.
+- updated architecture metrics source roots, folder-balance tracked test leaf,
+  and canonical-maintenance required core test paths to the new location.
+- synchronized RDS/contract/project-structure/help index references so
+  `tests/unit/engine/` is the documented canonical test path.
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
@@ -582,10 +590,6 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 22. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
 23. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
 24. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
-25. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
-26. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
-27. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
-28. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -604,14 +608,14 @@ Latest checkpoint additions (Stage 530-533):
 - `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
 - `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
 - `config/project/tech_debt_budgets.json`.
-- `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`.
+- `tests/unit/engine/test_architecture_metric_budgets_tech_debt.py`.
 - `.githooks/pre-push` + `scripts/install_git_hooks.sh` (repo-managed pre-push local CI gate wiring).
-- `src/tet4d/engine/tests/test_nd_routing.py` (viewer-relative rotated-view routing regression coverage).
+- `tests/unit/engine/test_nd_routing.py` (viewer-relative rotated-view routing regression coverage).
 - `config/menu/{defaults.json,structure.json}` + `config/schema/menu_settings.schema.json`
   (overlay-transparency default + settings-hub row + schema contract).
 - `src/tet4d/{engine/front3d_render.py,engine/front4d_render.py,ui/pygame/front3d_game.py,ui/pygame/front4d_game.py}`
   (overlay-only alpha path + in-game camera-key controls + side-panel bar).
-- `src/tet4d/engine/tests/test_overlay_transparency_render_paths.py`
+- `tests/unit/engine/test_overlay_transparency_render_paths.py`
   (overlay-vs-active render-path flag coverage).
 
 1. Key implementation/doc files updated include:
@@ -1236,7 +1240,7 @@ Latest checkpoint additions (Stage 530-533):
 490. `DONE` Arch Stage 505 slice 140 migrated runtime help-menu topic-extension prose blocks to template-driven lines loaded from `config/help/content/runtime_help_content.json`.
 491. `DONE` Arch Stage 506 slice 141 migrated live-key/action-group headings to runtime help-copy document templates.
 492. `DONE` Arch Stage 507 slice 142 updated canonical maintenance and help-index contracts to include split runtime help content/layout assets.
-493. `DONE` Arch Stage 508 slice 143 added runtime help-copy loader coverage in `src/tet4d/engine/tests/test_help_text.py`.
+493. `DONE` Arch Stage 508 slice 143 added runtime help-copy loader coverage in `tests/unit/engine/test_help_text.py`.
 494. `DONE` Arch Stage 509 slice 144 refreshed structure docs and current-state handoff notes for the doc-driven runtime help-copy architecture.
 495. `DONE` Arch Stage 510 slice 145 recorded completion of the Stage 501-509 help-copy externalization batch, advanced `arch_stage` to `510`, and verified the checkpoint locally.
 496. `DONE` Arch Stage 511 slice 146 introduced split runtime help assets under `config/help/content/runtime_help_content.json` and `config/help/layout/runtime_help_layout.json`.
