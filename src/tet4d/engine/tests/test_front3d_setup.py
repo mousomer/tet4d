@@ -4,6 +4,11 @@ import unittest
 
 from tet4d.ui.pygame.launch import front3d_setup
 from tet4d.engine import frontend_nd
+from tet4d.engine.gameplay.pieces_nd import (
+    PIECE_SET_4D_SIX,
+    get_piece_shapes_nd,
+    piece_set_options_for_dimension,
+)
 
 
 class TestFront3DSetupDedup(unittest.TestCase):
@@ -50,6 +55,16 @@ class TestFront3DSetupDedup(unittest.TestCase):
             front3d_setup.gravity_interval_ms_from_config(cfg),
             frontend_nd.gravity_interval_ms_from_config(cfg),
         )
+
+    def test_4d_setup_can_select_six_cell_piece_set(self) -> None:
+        options_4d = piece_set_options_for_dimension(4)
+        six_cell_index = options_4d.index(PIECE_SET_4D_SIX)
+        settings = frontend_nd.GameSettingsND(piece_set_index=six_cell_index)
+        cfg = frontend_nd.build_config(settings, 4)
+        self.assertEqual(cfg.piece_set_id, PIECE_SET_4D_SIX)
+        shapes = get_piece_shapes_nd(4, piece_set_id=cfg.piece_set_id)
+        self.assertTrue(shapes)
+        self.assertTrue(all(len(shape.blocks) == 6 for shape in shapes))
 
 
 if __name__ == "__main__":

@@ -80,6 +80,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   deterministic, and true-random mode uses non-seeded runtime RNG.
 - regression coverage added for 2D/ND create-initial-state RNG mode routing.
 
+`DONE` `[BKL-P2-011]` Larger dedicated 4D piece sets:
+- 6-cell dedicated 4D set (`standard_4d_6`) is available in gameplay piece-set
+  factories and labels.
+- 4D setup selection now has explicit regression coverage for selecting the 6-cell
+  set and validating emitted 4D piece shapes.
+
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
 3. `DONE` workspace baseline policy marker files are adopted (with repo-native policy checks preserved in `*_repo.sh` extension scripts).
@@ -576,14 +582,10 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 22. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
 23. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
 24. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
-25. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
-26. `Cadence:` when extending 4D gameplay content and balancing.
-27. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
-28. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
-29. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
-30. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
-31. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
-32. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
+25. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
+26. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
+27. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
+28. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
