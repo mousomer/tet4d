@@ -15,9 +15,9 @@ SCOPE_ORDER = tuple(CATEGORY_DOCS.get("scope_order", ("all", "2d", "3d", "4d")))
 VALID_SCOPES = tuple(dict.fromkeys((*SCOPE_ORDER, "general", "all")))
 SECTION_MENU: tuple[tuple[str, str, str], ...] = (
     ("general", "General Keybindings", "System actions shared across 2D/3D/4D."),
-    ("2d", "2D Keybindings", "2D gameplay and shared system controls."),
-    ("3d", "3D Keybindings", "3D gameplay, camera/view, and system controls."),
-    ("4d", "4D Keybindings", "4D gameplay, camera/view, and system controls."),
+    ("2d", "2D Keybindings", "2D gameplay controls."),
+    ("3d", "3D Keybindings", "3D gameplay and camera/view controls."),
+    ("4d", "4D Keybindings", "4D gameplay and camera/view controls."),
 )
 
 
@@ -135,7 +135,7 @@ def _gameplay_sections_for_dimension(dimension: int) -> list[_SectionSpec]:
     return sections
 
 
-def _sections_for_dimension(scope: str, *, dimension: int) -> list[_SectionSpec]:
+def _sections_for_dimension(*, dimension: int) -> list[_SectionSpec]:
     groups = runtime_binding_groups_for_dimension(dimension)
     prefix = f"{dimension}D "
     sections: list[_SectionSpec] = []
@@ -147,14 +147,6 @@ def _sections_for_dimension(scope: str, *, dimension: int) -> list[_SectionSpec]
                 title=f"{prefix}{_doc_label('camera')}",
                 dimension=dimension,
                 group="camera",
-            )
-        )
-    if scope != "all" and groups.get("system"):
-        sections.append(
-            _SectionSpec(
-                title=f"{prefix}{_doc_label('system')}",
-                dimension=dimension,
-                group="system",
             )
         )
     return sections
@@ -178,10 +170,10 @@ def sections_for_scope(scope: str) -> list[_SectionSpec]:
             )
         ]
         for dimension in (2, 3, 4):
-            sections.extend(_sections_for_dimension(scope, dimension=dimension))
+            sections.extend(_sections_for_dimension(dimension=dimension))
         return sections
     dimension = int(scope[0])
-    return _sections_for_dimension(scope, dimension=dimension)
+    return _sections_for_dimension(dimension=dimension)
 
 
 def rows_for_scope(scope: str) -> tuple[list[RenderedRow], list[BindingRow]]:

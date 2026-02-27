@@ -36,8 +36,35 @@ if (
     )
 else:  # pragma: no cover - guarded by config validation
     DEFAULT_WINDOWED_SIZE = (1200, 760)
+_DEFAULT_OVERLAY_TRANSPARENCY_RAW = (
+    _DEFAULT_DISPLAY.get("overlay_transparency")
+    if isinstance(_DEFAULT_DISPLAY, dict)
+    else None
+)
+OVERLAY_TRANSPARENCY_MIN = 0.2
+OVERLAY_TRANSPARENCY_MAX = 1.0
+OVERLAY_TRANSPARENCY_STEP = 0.05
+if isinstance(_DEFAULT_OVERLAY_TRANSPARENCY_RAW, (int, float)) and not isinstance(
+    _DEFAULT_OVERLAY_TRANSPARENCY_RAW, bool
+):
+    DEFAULT_OVERLAY_TRANSPARENCY = max(
+        OVERLAY_TRANSPARENCY_MIN,
+        min(OVERLAY_TRANSPARENCY_MAX, float(_DEFAULT_OVERLAY_TRANSPARENCY_RAW)),
+    )
+else:  # pragma: no cover - guarded by config validation
+    DEFAULT_OVERLAY_TRANSPARENCY = 0.7
 _PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _MODE_KEYS = {"2d", "3d", "4d"}
+
+
+def clamp_overlay_transparency(
+    value: object, *, default: float = DEFAULT_OVERLAY_TRANSPARENCY
+) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        numeric = float(default)
+    else:
+        numeric = float(value)
+    return max(OVERLAY_TRANSPARENCY_MIN, min(OVERLAY_TRANSPARENCY_MAX, numeric))
 
 
 def _default_settings_payload() -> dict[str, Any]:
@@ -55,6 +82,9 @@ def _default_settings_payload() -> dict[str, Any]:
                 DEFAULT_WINDOWED_SIZE[0],
                 DEFAULT_WINDOWED_SIZE[1],
             ]
+        display["overlay_transparency"] = clamp_overlay_transparency(
+            display.get("overlay_transparency")
+        )
     payload.setdefault("analytics", {"score_logging_enabled": False})
     analytics = payload.get("analytics")
     if not isinstance(analytics, dict):
@@ -161,6 +191,7 @@ def _sanitize_display_section(
     default_display = default_payload.get("display", {})
     default_fullscreen = False
     default_windowed_size = [DEFAULT_WINDOWED_SIZE[0], DEFAULT_WINDOWED_SIZE[1]]
+    default_overlay_transparency = DEFAULT_OVERLAY_TRANSPARENCY
     if isinstance(default_display, dict):
         default_fullscreen = bool(default_display.get("fullscreen", False))
         raw_default_size = default_display.get("windowed_size")
@@ -172,6 +203,10 @@ def _sanitize_display_section(
             )
         ):
             default_windowed_size = raw_default_size
+        default_overlay_transparency = clamp_overlay_transparency(
+            default_display.get("overlay_transparency"),
+            default=DEFAULT_OVERLAY_TRANSPARENCY,
+        )
 
     fullscreen = bool(display.get("fullscreen", default_fullscreen))
     raw_size = display.get("windowed_size", default_windowed_size)
@@ -185,6 +220,10 @@ def _sanitize_display_section(
     height = max(480, raw_size[1])
     display["fullscreen"] = fullscreen
     display["windowed_size"] = [width, height]
+    display["overlay_transparency"] = clamp_overlay_transparency(
+        display.get("overlay_transparency", default_overlay_transparency),
+        default=default_overlay_transparency,
+    )
 
 
 def _sanitize_audio_section(
@@ -407,6 +446,12 @@ def get_display_settings() -> dict[str, Any]:
         return {
             "fullscreen": default_fullscreen,
             "windowed_size": default_windowed_size,
+            "overlay_transparency": clamp_overlay_transparency(
+                defaults.get("overlay_transparency"),
+                default=DEFAULT_OVERLAY_TRANSPARENCY,
+            )
+            if isinstance(defaults, dict)
+            else DEFAULT_OVERLAY_TRANSPARENCY,
         }
     defaults = _default_settings_payload().get("display", {})
     default_fullscreen = (
@@ -424,6 +469,17 @@ def get_display_settings() -> dict[str, Any]:
     return {
         "fullscreen": bool(display.get("fullscreen", default_fullscreen)),
         "windowed_size": list(display.get("windowed_size", default_windowed_size)),
+        "overlay_transparency": clamp_overlay_transparency(
+            display.get("overlay_transparency"),
+            default=(
+                clamp_overlay_transparency(
+                    defaults.get("overlay_transparency"),
+                    default=DEFAULT_OVERLAY_TRANSPARENCY,
+                )
+                if isinstance(defaults, dict)
+                else DEFAULT_OVERLAY_TRANSPARENCY
+            ),
+        ),
     }
 
 
@@ -455,6 +511,7 @@ def save_display_settings(
     *,
     fullscreen: bool | None = None,
     windowed_size: tuple[int, int] | None = None,
+    overlay_transparency: float | None = None,
 ) -> tuple[bool, str]:
     payload = _load_payload()
     display = payload.setdefault("display", {})
@@ -464,6 +521,10 @@ def save_display_settings(
         width = max(640, int(windowed_size[0]))
         height = max(480, int(windowed_size[1]))
         display["windowed_size"] = [width, height]
+    if overlay_transparency is not None:
+        display["overlay_transparency"] = clamp_overlay_transparency(
+            overlay_transparency
+        )
     _sanitize_payload(payload)
     return _save_payload(payload)
 

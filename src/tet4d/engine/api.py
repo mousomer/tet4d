@@ -559,7 +559,12 @@ def persist_audio_payload_runtime(*, master_volume: float, sfx_volume: float, mu
     )
 
 
-def persist_display_payload_runtime(*, fullscreen: bool, windowed_size: tuple[int, int]):
+def persist_display_payload_runtime(
+    *,
+    fullscreen: bool,
+    windowed_size: tuple[int, int],
+    overlay_transparency: float | None = None,
+):
     from .runtime.menu_persistence import (
         persist_display_payload as _persist_display_payload,
     )
@@ -567,6 +572,7 @@ def persist_display_payload_runtime(*, fullscreen: bool, windowed_size: tuple[in
     return _persist_display_payload(
         fullscreen=fullscreen,
         windowed_size=windowed_size,
+        overlay_transparency=overlay_transparency,
     )
 
 
@@ -582,6 +588,36 @@ def default_windowed_size_runtime() -> tuple[int, int]:
     from .runtime.menu_settings_state import DEFAULT_WINDOWED_SIZE as _DEFAULT_WINDOWED_SIZE
 
     return _DEFAULT_WINDOWED_SIZE
+
+
+def default_overlay_transparency_runtime() -> float:
+    from .runtime.menu_settings_state import (
+        DEFAULT_OVERLAY_TRANSPARENCY as _DEFAULT_OVERLAY_TRANSPARENCY,
+    )
+
+    return float(_DEFAULT_OVERLAY_TRANSPARENCY)
+
+
+def overlay_transparency_step_runtime() -> float:
+    from .runtime.menu_settings_state import (
+        OVERLAY_TRANSPARENCY_STEP as _OVERLAY_TRANSPARENCY_STEP,
+    )
+
+    return float(_OVERLAY_TRANSPARENCY_STEP)
+
+
+def clamp_overlay_transparency_runtime(
+    value: Any, *, default: float | None = None
+) -> float:
+    from .runtime.menu_settings_state import (
+        DEFAULT_OVERLAY_TRANSPARENCY as _DEFAULT_OVERLAY_TRANSPARENCY,
+        clamp_overlay_transparency as _clamp_overlay_transparency,
+    )
+
+    fallback = (
+        float(_DEFAULT_OVERLAY_TRANSPARENCY) if default is None else float(default)
+    )
+    return float(_clamp_overlay_transparency(value, default=fallback))
 
 
 def front3d_setup_game_settings_type() -> Any:

@@ -71,6 +71,9 @@ def draw_game_side_panel(
     low_priority_lines: tuple[str, ...] | list[str] = (),
     game_over: bool = False,
     min_controls_h: int = 140,
+    meter_label: str | None = None,
+    meter_value: float | None = None,
+    meter_hint: str | None = None,
 ) -> None:
     draw_translucent_panel(surface, panel_rect, alpha=140, radius=12)
 
@@ -82,6 +85,32 @@ def draw_game_side_panel(
         color=(230, 230, 230),
         line_gap=3,
     )
+    if meter_label and meter_value is not None:
+        meter_value = max(0.0, min(1.0, float(meter_value)))
+        label_text = f"{meter_label}: {int(round(meter_value * 100.0))}%"
+        label_surf = render_text_cached(
+            font=fonts.hint_font,
+            text=label_text,
+            color=(196, 208, 236),
+        )
+        y += 2
+        surface.blit(label_surf, (panel_rect.x + 12, y))
+        y += label_surf.get_height() + 4
+        bar_rect = pygame.Rect(panel_rect.x + 12, y, panel_rect.width - 24, 10)
+        pygame.draw.rect(surface, (30, 38, 62), bar_rect, border_radius=5)
+        fill_w = max(2, int(bar_rect.width * meter_value))
+        fill_rect = pygame.Rect(bar_rect.x, bar_rect.y, fill_w, bar_rect.height)
+        pygame.draw.rect(surface, (88, 168, 236), fill_rect, border_radius=5)
+        pygame.draw.rect(surface, (130, 148, 186), bar_rect, 1, border_radius=5)
+        y += bar_rect.height + 4
+        if meter_hint:
+            hint_surf = render_text_cached(
+                font=fonts.hint_font,
+                text=meter_hint,
+                color=(168, 180, 212),
+            )
+            surface.blit(hint_surf, (panel_rect.x + 12, y))
+            y += hint_surf.get_height() + 4
     controls_top = y + 4
     reserve_bottom = 26 if game_over else 0
     available_h = max(0, panel_rect.bottom - reserve_bottom - controls_top)

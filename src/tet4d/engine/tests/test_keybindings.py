@@ -109,6 +109,14 @@ class TestKeybindingProfiles(unittest.TestCase):
             keybindings.CAMERA_KEYS_3D.get("cycle_projection"), (pygame.K_9,)
         )
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("reset"), (pygame.K_0,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_3D.get("overlay_alpha_dec"),
+            (pygame.K_LEFTBRACKET,),
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_3D.get("overlay_alpha_inc"),
+            (pygame.K_RIGHTBRACKET,),
+        )
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_neg"), (pygame.K_1,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_pos"), (pygame.K_2,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_neg"), (pygame.K_3,))
@@ -119,6 +127,14 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_pos"), (pygame.K_8,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_out"), (pygame.K_9,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_in"), (pygame.K_0,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("overlay_alpha_dec"),
+            (pygame.K_LEFTBRACKET,),
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("overlay_alpha_inc"),
+            (pygame.K_RIGHTBRACKET,),
+        )
 
     def test_create_and_activate_custom_profile(self) -> None:
         ok, msg, profile = keybindings.create_auto_profile()
@@ -245,6 +261,12 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_EQUALS,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_p,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_BACKSPACE,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["overlay_alpha_dec"], (pygame.K_LEFTBRACKET,)
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["overlay_alpha_inc"], (pygame.K_RIGHTBRACKET,)
+        )
         self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_COMMA,))
         self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_PERIOD,))
         self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
@@ -268,6 +290,12 @@ class TestKeybindingProfiles(unittest.TestCase):
             keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_KP1,)
         )
         self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_KP3,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["overlay_alpha_dec"], (pygame.K_LEFTBRACKET,)
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["overlay_alpha_inc"], (pygame.K_RIGHTBRACKET,)
+        )
 
     def test_system_defaults_are_deconflicted_from_rotation_ladder(self) -> None:
         self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_y,))
@@ -397,6 +425,21 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(
             loaded["settings"]["4d"]["fourth"], defaults["settings"]["4d"]["fourth"]
         )
+        self.assertEqual(
+            loaded["display"]["overlay_transparency"],
+            defaults["display"]["overlay_transparency"],
+        )
+
+    def test_display_overlay_transparency_is_clamped_and_persisted(self) -> None:
+        ok, msg = menu_settings_state.save_display_settings(overlay_transparency=2.5)
+        self.assertTrue(ok, msg)
+        payload = menu_settings_state.get_display_settings()
+        self.assertEqual(payload["overlay_transparency"], 1.0)
+
+        ok, msg = menu_settings_state.save_display_settings(overlay_transparency=0.01)
+        self.assertTrue(ok, msg)
+        payload = menu_settings_state.get_display_settings()
+        self.assertEqual(payload["overlay_transparency"], 0.2)
 
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()

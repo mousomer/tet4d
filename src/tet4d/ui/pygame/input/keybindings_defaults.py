@@ -172,6 +172,8 @@ DEFAULT_CAMERA_KEYS_3D: KeyBindingMap = {
     "zoom_in": (pygame.K_8,),
     "cycle_projection": (pygame.K_9,),
     "reset": (pygame.K_0,),
+    "overlay_alpha_dec": (pygame.K_LEFTBRACKET,),
+    "overlay_alpha_inc": (pygame.K_RIGHTBRACKET,),
 }
 
 
@@ -190,6 +192,8 @@ DEFAULT_CAMERA_KEYS_4D: KeyBindingMap = {
     "yaw_fine_pos": (pygame.K_KP9,),
     "cycle_projection": (pygame.K_KP1,),
     "reset": (pygame.K_KP3,),
+    "overlay_alpha_dec": (pygame.K_LEFTBRACKET,),
+    "overlay_alpha_inc": (pygame.K_RIGHTBRACKET,),
 }
 
 
@@ -208,6 +212,8 @@ DEFAULT_CAMERA_KEYS_4D_MACBOOK: KeyBindingMap = {
     "yaw_fine_pos": (pygame.K_EQUALS,),
     "cycle_projection": (pygame.K_p,),
     "reset": (pygame.K_BACKSPACE,),
+    "overlay_alpha_dec": (pygame.K_LEFTBRACKET,),
+    "overlay_alpha_inc": (pygame.K_RIGHTBRACKET,),
 }
 
 

@@ -51,6 +51,9 @@ combined_score_multiplier = engine_api.runtime_assist_combined_score_multiplier
 PieceRotationAnimatorND = engine_api.rotation_anim_piece_rotation_animator_nd_type()
 GridMode = engine_api.GridMode
 cycle_grid_mode = engine_api.grid_mode_cycle_view
+clamp_overlay_transparency = engine_api.clamp_overlay_transparency_runtime
+overlay_transparency_step = engine_api.overlay_transparency_step_runtime
+default_overlay_transparency = engine_api.default_overlay_transparency_runtime
 
 
 @dataclass
@@ -61,6 +64,7 @@ class LoopContext4D:
     mouse_orbit: MouseOrbitState
     bot: PlayBotController
     rotation_anim: PieceRotationAnimatorND
+    overlay_transparency: float
     grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation4D] = None
     last_lines_cleared: int = 0
@@ -69,9 +73,14 @@ class LoopContext4D:
 
     @classmethod
     def create(
-        cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF
+        cls,
+        cfg: GameConfigND,
+        *,
+        bot_mode: BotMode = BotMode.OFF,
+        overlay_transparency: float | None = None,
     ) -> "LoopContext4D":
         state = create_initial_state(cfg)
+        overlay_default = default_overlay_transparency()
         return cls(
             cfg=cfg,
             state=state,
@@ -80,6 +89,10 @@ class LoopContext4D:
             bot=PlayBotController(mode=bot_mode),
             rotation_anim=PieceRotationAnimatorND(
                 ndim=4, gravity_axis=cfg.gravity_axis
+            ),
+            overlay_transparency=clamp_overlay_transparency(
+                overlay_transparency,
+                default=overlay_default,
             ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
@@ -102,9 +115,20 @@ class LoopContext4D:
             axis_overrides_by_action=movement_axis_overrides_for_view(
                 self.view, self.cfg.dims
             ),
-            view_key_handler=lambda key: handle_view_key(key, self.view),
+            view_key_handler=lambda key: handle_view_key(
+                key,
+                self.view,
+                on_overlay_alpha_dec=lambda: self.adjust_overlay_transparency(-1),
+                on_overlay_alpha_inc=lambda: self.adjust_overlay_transparency(1),
+            ),
             sfx_handler=play_sfx,
             allow_gameplay=self.bot.user_gameplay_enabled,
+        )
+
+    def adjust_overlay_transparency(self, direction: int) -> None:
+        self.overlay_transparency = clamp_overlay_transparency(
+            self.overlay_transparency + (overlay_transparency_step() * direction),
+            default=default_overlay_transparency(),
         )
 
     def on_restart(self) -> None:
@@ -178,7 +202,21 @@ def run_game_loop(
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    loop = LoopContext4D.create(cfg, bot_mode=bot_mode)
+    display_payload = engine_api.get_display_settings_runtime()
+    default_overlay = default_overlay_transparency()
+    overlay_transparency = (
+        clamp_overlay_transparency(
+            display_payload.get("overlay_transparency"),
+            default=default_overlay,
+        )
+        if isinstance(display_payload, dict)
+        else default_overlay
+    )
+    loop = LoopContext4D.create(
+        cfg,
+        bot_mode=bot_mode,
+        overlay_transparency=overlay_transparency,
+    )
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
         ndim=4,
@@ -212,6 +250,7 @@ def run_game_loop(
             bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
             active_overlay=active_overlay,
+            overlay_transparency=loop.overlay_transparency,
         ),
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),

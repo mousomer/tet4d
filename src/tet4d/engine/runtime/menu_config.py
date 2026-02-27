@@ -139,6 +139,14 @@ def _validate_defaults_display(payload: dict[str, Any]) -> dict[str, Any]:
         or any(isinstance(v, bool) or not isinstance(v, int) for v in windowed_size)
     ):
         raise RuntimeError("defaults.display.windowed_size must be [int, int]")
+    overlay_transparency = _require_number(
+        display.get("overlay_transparency"),
+        path="defaults.display.overlay_transparency",
+    )
+    if not (0.2 <= overlay_transparency <= 1.0):
+        raise RuntimeError(
+            "defaults.display.overlay_transparency must be within [0.2, 1.0]"
+        )
     return display
 
 

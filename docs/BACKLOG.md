@@ -22,6 +22,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - added manual baseline maintenance helper
   `tools/governance/update_tech_debt_budgets.py`.
 
+`DONE` Arch Stage 533 policy-aligned architecture metrics soft-gate checkpoint:
+- class-aware folder balancer telemetry added (`folder_class`, `gate_eligible`, `exclude_from_code_balance`).
+- code-balance pressure now uses gate-eligible folders only.
+- tests profile widened for lenient balancing; non-code paths default to telemetry-only unless explicitly overridden.
+- verification now runs `scripts/check_architecture_metrics_soft_gate.sh` (runtime/schema failures block; regressions warn).
+
 `DONE` Arch Stage 531 pre-push local CI gate checkpoint:
 - added repo-managed pre-push hook (`.githooks/pre-push`) that runs
   `CODEX_MODE=1 ./scripts/ci_check.sh` before push.
@@ -36,6 +42,36 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   - 4D `move_w_*` routing precedence over viewer-relative mapping,
   - axis-override precedence over viewer-relative mapping.
 - closed `[BKL-P1-003]` and removed it from active open backlog.
+
+`DONE` Arch Stage 533 overlay-transparency control checkpoint:
+- added display-level `overlay_transparency` setting (default `70%`) with unified
+  settings-hub control and persistence.
+- added in-game camera actions (`overlay_alpha_dec`,`overlay_alpha_inc`) plus side-panel
+  transparency bar feedback in 3D/4D game views.
+- changed render behavior to apply alpha to active overlays only while keeping active
+  piece cells opaque.
+- closed `[BKL-P1-002]` and removed it from active open backlog.
+
+`DONE` Keybindings menu scope-ownership drift fix:
+- aligned scope rendering with RDS policy: shared `system` controls are now rendered
+  in `General` (and once in `All`) instead of duplicated under `2D/3D/4D`.
+- added scope-to-runtime parity coverage to prevent missing-action drift in future
+  keybinding menu refactors.
+
+`DONE` Overlay transparency render semantics fix:
+- 3D/4D renderers now treat `overlay_transparency` as transparency (not opacity) by
+  applying `opacity = 1 - transparency` to overlay and clear-animation alpha paths.
+- side-panel wording now reflects transparency semantics and regression coverage was
+  added in `test_overlay_transparency_render_paths.py`.
+
+`DONE` Long-term metric expansion for planning governance:
+- added `tech_debt` weighted components for `keybinding_retention` and
+  `menu_simplification` in `scripts/arch_metrics.py`.
+- wired keybinding-retention measurement to runtime binding inventory vs keybindings
+  menu scope rendering and menu-simplification measurement to
+  `config/menu/structure.json` split-policy complexity.
+- weighted `keybinding_retention` significantly higher than
+  `menu_simplification` to prioritize key availability/correctness over menu streamlining.
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
@@ -533,22 +569,18 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 22. `Cadence:` before each push/release and after any cleanup of sensitive/non-source files.
 23. `Trigger:` accidental commit of local artifacts, suspected secret exposure, or path-sanitization policy changes.
 24. `Done criteria:` targeted paths are removed from tracked tree and git history when needed, `python3 tools/governance/scan_secrets.py` passes, and cleanup is documented in changelog/backlog.
-25. `[P1][BKL-P1-002] 3D/4D active-piece transparency control`
-26. `Cadence:` when adjusting 3D/4D rendering UX or accessibility settings.
-27. `Trigger:` user feedback on occlusion/readability in 3D/4D boards.
-28. `Done criteria:` active-piece transparency is supported in 3D/4D renders and user-adjustable via settings/config UI with documented defaults.
-29. `[P2][BKL-P2-010] True-random piece mode with configurable seed`
-30. `Cadence:` when expanding piece-generation options or setup-menu gameplay settings.
-31. `Trigger:` random piece-generator feature work (2D/3D/4D) or seed-handling changes.
-32. `Done criteria:` a true-random piece mode exists with explicit seed configuration exposed in setup/config UI, and fixed-seed runs remain deterministic.
-33. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
-34. `Cadence:` when extending 4D gameplay content and balancing.
-35. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
-36. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
-37. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
-38. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
-39. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
-40. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
+25. `[P2][BKL-P2-010] True-random piece mode with configurable seed`
+26. `Cadence:` when expanding piece-generation options or setup-menu gameplay settings.
+27. `Trigger:` random piece-generator feature work (2D/3D/4D) or seed-handling changes.
+28. `Done criteria:` a true-random piece mode exists with explicit seed configuration exposed in setup/config UI, and fixed-seed runs remain deterministic.
+29. `[P2][BKL-P2-011] Larger dedicated 4D piece sets`
+30. `Cadence:` when extending 4D gameplay content and balancing.
+31. `Trigger:` new 4D piece-bag design/implementation work in `src/tet4d/engine/pieces_nd.py` or 4D setup menus.
+32. `Done criteria:` one or more larger 4D piece sets are implemented, selectable in 4D setup, and covered by spawn/fit/rotation regression tests.
+33. `[P2][BKL-P2-012] Consolidate tests under top-level ./tests tree (task/domain split)`
+34. `Cadence:` when scheduling a dedicated test-structure refactor (do not mix with gameplay/UI module moves).
+35. `Trigger:` preference for a single test root and continued test-suite growth across architecture stages.
+36. `Done criteria:` canonical tests live under top-level \`tests/\` subfolders (unit/integration/domain-task splits), pytest/tooling references are updated, and legacy in-package test paths are removed after staged migration checkpoints.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up (`BKL-P2-007`) are closed.
@@ -560,9 +592,9 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 5. Change Footprint (Current Batch)
 
-Current sub-batch (2026-02-27): debt-reduction governance + verification hardening.
+Current sub-batch (2026-02-27): debt-reduction governance + runtime overlay-transparency controls.
 
-Latest checkpoint additions (Stage 530-532):
+Latest checkpoint additions (Stage 530-533):
 - `scripts/arch_metrics.py` (`tech_debt` weighted score/status/components + `arch_stage=530`).
 - `scripts/check_architecture_metric_budgets.sh` (strict stage-batch tech-debt decrease gate).
 - `tools/governance/{architecture_metric_budget.py,tech_debt_budget.py,update_tech_debt_budgets.py}`.
@@ -570,6 +602,12 @@ Latest checkpoint additions (Stage 530-532):
 - `src/tet4d/engine/tests/test_architecture_metric_budgets_tech_debt.py`.
 - `.githooks/pre-push` + `scripts/install_git_hooks.sh` (repo-managed pre-push local CI gate wiring).
 - `src/tet4d/engine/tests/test_nd_routing.py` (viewer-relative rotated-view routing regression coverage).
+- `config/menu/{defaults.json,structure.json}` + `config/schema/menu_settings.schema.json`
+  (overlay-transparency default + settings-hub row + schema contract).
+- `src/tet4d/{engine/front3d_render.py,engine/front4d_render.py,ui/pygame/front3d_game.py,ui/pygame/front4d_game.py}`
+  (overlay-only alpha path + in-game camera-key controls + side-panel bar).
+- `src/tet4d/engine/tests/test_overlay_transparency_render_paths.py`
+  (overlay-vs-active render-path flag coverage).
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

@@ -68,21 +68,23 @@ class TestControlGroups(unittest.TestCase):
         groups = control_groups_for_dimension(3)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 5, 6])
+        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 5, 7])
         camera_rows = groups[3][1]
         self.assertTrue(any("\tprojection\t" in row for row in camera_rows))
+        self.assertTrue(any("\toverlay alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
-        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 7])
+        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 8])
         translation_rows = groups[0][1]
         camera_rows = groups[-1][1]
         self.assertTrue(any("\tw layer prev/next\t" in row for row in translation_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
         self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
         self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))
+        self.assertTrue(any("\toverlay alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_hides_exploration_rows_when_disabled(self) -> None:
         groups = control_groups_for_dimension(4, include_exploration=False)

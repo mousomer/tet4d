@@ -64,6 +64,7 @@
     {"kind": "item", "label": "Fullscreen", "row_key": "display_fullscreen"},
     {"kind": "item", "label": "Window width", "row_key": "display_width"},
     {"kind": "item", "label": "Window height", "row_key": "display_height"},
+    {"kind": "item", "label": "Overlay transparency", "row_key": "display_overlay_transparency"},
     {"kind": "item", "label": "Apply display", "row_key": "display_apply"},
     {"kind": "header", "label": "Analytics"},
     {"kind": "item", "label": "Score logging", "row_key": "analytics_score_logging"},
@@ -166,7 +167,7 @@
     {
       "id": "display",
       "label": "Display",
-      "description": "Fullscreen/windowed mode, window size, and display apply/reset actions."
+      "description": "Fullscreen/windowed mode, window size, overlay transparency baseline, and display apply/reset actions."
     },
     {
       "id": "analytics",
@@ -202,7 +203,7 @@
       "top_level": true
     },
     "display": {
-      "field_count": 4,
+      "field_count": 5,
       "action_count": 2,
       "mode_specific": false,
       "top_level": true

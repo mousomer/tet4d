@@ -51,10 +51,12 @@ def persist_display_payload(
     *,
     fullscreen: bool | None = None,
     windowed_size: tuple[int, int] | None = None,
+    overlay_transparency: float | None = None,
 ) -> tuple[bool, str]:
     return save_display_settings(
         fullscreen=fullscreen,
         windowed_size=windowed_size,
+        overlay_transparency=overlay_transparency,
     )
 
 

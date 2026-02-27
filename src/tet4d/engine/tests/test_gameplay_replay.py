@@ -366,6 +366,16 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertTrue(camera.animating)
         camera.step_animation(1000)
         self.assertFalse(camera.animating)
+        overlay_dec = self._key_for(CAMERA_KEYS_3D, "overlay_alpha_dec")
+        overlay_dec_hits: list[int] = []
+        self.assertTrue(
+            front3d_game.handle_camera_key(
+                overlay_dec,
+                camera,
+                on_overlay_alpha_dec=lambda: overlay_dec_hits.append(1),
+            )
+        )
+        self.assertEqual(len(overlay_dec_hits), 1)
 
     def test_4d_controls_and_view_smoke(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
@@ -447,6 +457,16 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertTrue(front4d_game.handle_view_keydown(_keydown(reset), view))
         self.assertAlmostEqual(view.xw_deg, 0.0, places=3)
         self.assertAlmostEqual(view.zw_deg, 0.0, places=3)
+        overlay_inc = self._key_for(CAMERA_KEYS_4D, "overlay_alpha_inc")
+        overlay_inc_hits: list[int] = []
+        self.assertTrue(
+            front4d_game.handle_view_key(
+                overlay_inc,
+                view,
+                on_overlay_alpha_inc=lambda: overlay_inc_hits.append(1),
+            )
+        )
+        self.assertEqual(len(overlay_inc_hits), 1)
 
     def test_4d_replay_invariance_with_view_only_turns(self):
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)

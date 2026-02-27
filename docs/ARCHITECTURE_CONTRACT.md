@@ -1108,3 +1108,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 532 (slice 167, viewer-relative movement verification) expands rotated-view
   routing regression coverage in `src/tet4d/engine/tests/test_nd_routing.py` for
   3D/4D viewer-relative movement mapping and action-override precedence rules.
+- Stage 533 (slice 168, overlay-transparency controls) adds display-level
+  `overlay_transparency` settings persistence (default `70%`), in-game camera-key
+  adjustments with side-panel bar feedback, and render-path separation so alpha
+  applies to active overlays only while active-piece cells remain opaque.

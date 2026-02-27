@@ -65,6 +65,7 @@ COLOR_MAP_3D = {
 }
 
 ActiveOverlay3D = tuple[tuple[tuple[float, float, float], ...], int]
+VisibleCell3D = tuple[tuple[float, float, float], int, bool, bool]
 
 
 def init_fonts() -> GfxFonts:
@@ -231,14 +232,14 @@ def _build_cell_faces(
 def _collect_visible_cells(
     state: GameStateND,
     active_overlay: ActiveOverlay3D | None = None,
-) -> list[tuple[tuple[float, float, float], int, bool]]:
+) -> list[VisibleCell3D]:
     dims = state.config.dims
-    cells: list[tuple[tuple[float, float, float], int, bool]] = []
+    cells: list[VisibleCell3D] = []
 
     for coord, cell_id in state.board.cells.items():
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((float(x), float(y), float(z)), cell_id, False))
+            cells.append(((float(x), float(y), float(z)), cell_id, False, False))
 
     if active_overlay is not None:
         overlay_cells, overlay_color = active_overlay
@@ -249,7 +250,7 @@ def _collect_visible_cells(
         )
         for x, y, z in mapped_overlay:
             if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
-                cells.append(((x, y, z), overlay_color, True))
+                cells.append(((x, y, z), overlay_color, True, True))
         return cells
 
     if state.current_piece is None:
@@ -259,7 +260,7 @@ def _collect_visible_cells(
     for coord in state.current_piece_cells_mapped(include_above=False):
         x, y, z = coord
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((float(x), float(y), float(z)), piece_id, True))
+            cells.append(((float(x), float(y), float(z)), piece_id, True, False))
     return cells
 
 
@@ -279,25 +280,28 @@ def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[i
     return x_marks, y_marks, z_marks
 
 
-def _faces_for_cells(
-    cells: list[tuple[tuple[float, float, float], int, bool]],
+def _split_faces_for_cells(
+    cells: list[VisibleCell3D],
     camera: Camera3D,
     center_px: Point2,
     dims: Cell3,
-) -> list[Face]:
-    faces: list[Face] = []
-    for coord, cell_id, active in cells:
-        faces.extend(
-            _build_cell_faces(
-                cell=coord,
-                color=color_for_cell_3d(cell_id),
-                camera=camera,
-                center_px=center_px,
-                dims=dims,
-                active=active,
-            )
+) -> tuple[list[Face], list[Face]]:
+    solid_faces: list[Face] = []
+    overlay_faces: list[Face] = []
+    for coord, cell_id, active, is_overlay in cells:
+        cell_faces = _build_cell_faces(
+            cell=coord,
+            color=color_for_cell_3d(cell_id),
+            camera=camera,
+            center_px=center_px,
+            dims=dims,
+            active=active,
         )
-    return faces
+        if is_overlay:
+            overlay_faces.extend(cell_faces)
+        else:
+            solid_faces.extend(cell_faces)
+    return solid_faces, overlay_faces
 
 
 def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
@@ -308,12 +312,67 @@ def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
         pygame.draw.polygon(surface, border, poly, 2 if active else 1)
 
 
+def _draw_translucent_faces(
+    surface: pygame.Surface,
+    faces: list[Face],
+    *,
+    fill_alpha: int,
+    outline_alpha: int,
+) -> None:
+    if not faces:
+        return
+    faces.sort(key=lambda x: x[0], reverse=True)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    for _depth, poly, color, active in faces:
+        pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
+        border = (
+            (255, 255, 255, outline_alpha)
+            if active
+            else (25, 25, 35, max(24, outline_alpha - 40))
+        )
+        pygame.draw.polygon(overlay, border, poly, 2 if active else 1)
+    surface.blit(overlay, (0, 0))
+
+
+def _draw_cells(
+    surface: pygame.Surface,
+    *,
+    cells: list[VisibleCell3D],
+    camera: Camera3D,
+    center_px: Point2,
+    dims: Cell3,
+    overlay_transparency: float,
+) -> None:
+    solid_faces, overlay_faces = _split_faces_for_cells(cells, camera, center_px, dims)
+    _draw_sorted_faces(surface, solid_faces)
+    if overlay_faces:
+        overlay_alpha = _overlay_opacity_scale(overlay_transparency)
+        _draw_translucent_faces(
+            surface,
+            overlay_faces,
+            fill_alpha=int(round(255 * overlay_alpha)),
+            outline_alpha=max(70, int(round(255 * min(1.0, overlay_alpha + 0.12)))),
+        )
+
+
+def _overlay_alpha_label(overlay_transparency: float) -> str:
+    clamped = max(0.0, min(1.0, float(overlay_transparency)))
+    return f"{int(round(clamped * 100.0))}%"
+
+
+def _overlay_opacity_scale(overlay_transparency: float) -> float:
+    # Settings store transparency; renderer needs opacity.
+    clamped = max(0.0, min(1.0, float(overlay_transparency)))
+    return 1.0 - clamped
+
+
 def _draw_clear_animation(
     surface: pygame.Surface,
     clear_anim: Optional[ClearAnimation3D],
     camera: Camera3D,
     center_px: Point2,
     dims: Cell3,
+    overlay_transparency: float = 1.0,
 ) -> None:
     if clear_anim is None or not clear_anim.ghost_cells:
         return
@@ -344,8 +403,9 @@ def _draw_clear_animation(
 
     ghost_faces.sort(key=lambda x: x[0], reverse=True)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    fill_alpha = int(160 * fade)
-    outline_alpha = int(220 * fade)
+    alpha_scale = _overlay_opacity_scale(overlay_transparency)
+    fill_alpha = int(160 * fade * alpha_scale)
+    outline_alpha = int(220 * fade * alpha_scale)
     for _depth, poly, color, _active in ghost_faces:
         pygame.draw.polygon(overlay, (*color, fill_alpha), poly)
         pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), poly, 2)
@@ -360,6 +420,7 @@ def _draw_board_3d(
     grid_mode: GridMode = GridMode.FULL,
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
+    overlay_transparency: float = 0.7,
 ) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
@@ -394,13 +455,22 @@ def _draw_board_3d(
         edge_width=2,
     )
 
-    _draw_sorted_faces(
+    _draw_cells(
         surface,
-        _faces_for_cells(
-            _collect_visible_cells(state, active_overlay), camera, center_px, dims
-        ),
+        cells=_collect_visible_cells(state, active_overlay),
+        camera=camera,
+        center_px=center_px,
+        dims=dims,
+        overlay_transparency=overlay_transparency,
     )
-    _draw_clear_animation(surface, clear_anim, camera, center_px, dims)
+    _draw_clear_animation(
+        surface,
+        clear_anim,
+        camera,
+        center_px,
+        dims,
+        overlay_transparency=overlay_transparency,
+    )
 
 
 def _draw_side_panel(
@@ -411,6 +481,7 @@ def _draw_side_panel(
     fonts: GfxFonts,
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
+    overlay_transparency: float = 0.7,
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
@@ -435,6 +506,7 @@ def _draw_side_panel(
         f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Grid: {grid_mode_label(grid_mode)}",
+        f"Overlay transparency: {_overlay_alpha_label(overlay_transparency)}",
         "",
         f"Yaw: {camera.yaw_deg:.1f}",
         f"Pitch: {camera.pitch_deg:.1f}",
@@ -453,6 +525,9 @@ def _draw_side_panel(
         low_priority_lines=tuple(low_priority_lines),
         game_over=state.game_over,
         min_controls_h=138,
+        meter_label="Overlay transparency",
+        meter_value=max(0.0, min(1.0, float(overlay_transparency))),
+        meter_hint="Use [ and ] keys",
     )
 
 
@@ -493,6 +568,7 @@ def draw_game_frame(
     bot_lines: tuple[str, ...] = (),
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
+    overlay_transparency: float = 0.7,
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
@@ -521,6 +597,7 @@ def draw_game_frame(
         grid_mode=grid_mode,
         clear_anim=clear_anim,
         active_overlay=active_overlay,
+        overlay_transparency=overlay_transparency,
     )
     _draw_side_panel(
         screen,
@@ -530,6 +607,7 @@ def draw_game_frame(
         fonts,
         grid_mode=grid_mode,
         bot_lines=bot_lines,
+        overlay_transparency=overlay_transparency,
     )
 
 

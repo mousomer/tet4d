@@ -86,7 +86,8 @@
         "- OFF: board shadow only.",
         "- EDGE: only outer board edges.",
         "- FULL: full lattice grid.",
-        "- HELPER: only lines intersecting active piece cells."
+        "- HELPER: only lines intersecting active piece cells.",
+        "- Overlay transparency affects rotation overlays only; active piece stays opaque."
       ],
       "full_lines": [
         "",
@@ -95,6 +96,11 @@
         "- EDGE: only outer board edges.",
         "- FULL: full lattice grid.",
         "- HELPER: only lines intersecting active piece cells.",
+        "",
+        "## Overlay transparency",
+        "- Applies to active overlays only (not the active piece).",
+        "- Default is 70% from Settings > Display.",
+        "- In-game adjust uses camera overlay-alpha keybinds (shown in side panel controls).",
         "",
         "## 4D view note",
         "- 4D is shown as multiple 3D boards (one per W layer)."

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import pygame
 
@@ -51,9 +51,24 @@ collect_cleared_ghost_cells = engine_api.runtime_collect_cleared_ghost_cells
 PieceRotationAnimatorND = engine_api.rotation_anim_piece_rotation_animator_nd_type()
 GridMode = engine_api.GridMode
 cycle_grid_mode = engine_api.grid_mode_cycle_view
+clamp_overlay_transparency = engine_api.clamp_overlay_transparency_runtime
+overlay_transparency_step = engine_api.overlay_transparency_step_runtime
+default_overlay_transparency = engine_api.default_overlay_transparency_runtime
 
 
-def handle_camera_key(key: int, camera: Camera3D) -> bool:
+def handle_camera_key(
+    key: int,
+    camera: Camera3D,
+    *,
+    on_overlay_alpha_dec: Callable[[], None] | None = None,
+    on_overlay_alpha_inc: Callable[[], None] | None = None,
+) -> bool:
+    overlay_alpha_dec_handler = (
+        on_overlay_alpha_dec if on_overlay_alpha_dec is not None else (lambda: None)
+    )
+    overlay_alpha_inc_handler = (
+        on_overlay_alpha_inc if on_overlay_alpha_inc is not None else (lambda: None)
+    )
     return (
         dispatch_bound_action(
             key,
@@ -73,6 +88,8 @@ def handle_camera_key(key: int, camera: Camera3D) -> bool:
                 ),
                 "reset": camera.reset,
                 "cycle_projection": camera.cycle_projection,
+                "overlay_alpha_dec": overlay_alpha_dec_handler,
+                "overlay_alpha_inc": overlay_alpha_inc_handler,
             },
         )
         is not None
@@ -131,6 +148,7 @@ class LoopContext3D:
     rotation_anim: PieceRotationAnimatorND = field(
         default_factory=lambda: PieceRotationAnimatorND(ndim=3, gravity_axis=1)
     )
+    overlay_transparency: float = field(default_factory=default_overlay_transparency)
     grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation3D] = None
     last_lines_cleared: int = 0
@@ -139,13 +157,22 @@ class LoopContext3D:
 
     @classmethod
     def create(
-        cls, cfg: GameConfigND, *, bot_mode: BotMode = BotMode.OFF
+        cls,
+        cfg: GameConfigND,
+        *,
+        bot_mode: BotMode = BotMode.OFF,
+        overlay_transparency: float | None = None,
     ) -> "LoopContext3D":
         state = create_initial_state(cfg)
+        overlay_default = default_overlay_transparency()
         return cls(
             cfg=cfg,
             state=state,
             bot=PlayBotController(mode=bot_mode),
+            overlay_transparency=clamp_overlay_transparency(
+                overlay_transparency,
+                default=overlay_default,
+            ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
         )
@@ -164,9 +191,20 @@ class LoopContext3D:
             event.key,
             self.state,
             yaw_deg_for_view_movement=self.camera.yaw_deg,
-            view_key_handler=lambda key: handle_camera_key(key, self.camera),
+            view_key_handler=lambda key: handle_camera_key(
+                key,
+                self.camera,
+                on_overlay_alpha_dec=lambda: self.adjust_overlay_transparency(-1),
+                on_overlay_alpha_inc=lambda: self.adjust_overlay_transparency(1),
+            ),
             sfx_handler=play_sfx,
             allow_gameplay=self.bot.user_gameplay_enabled,
+        )
+
+    def adjust_overlay_transparency(self, direction: int) -> None:
+        self.overlay_transparency = clamp_overlay_transparency(
+            self.overlay_transparency + (overlay_transparency_step() * direction),
+            default=default_overlay_transparency(),
         )
 
     def on_restart(self) -> None:
@@ -237,7 +275,21 @@ def run_game_loop(
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    loop = LoopContext3D.create(cfg, bot_mode=bot_mode)
+    display_payload = engine_api.get_display_settings_runtime()
+    default_overlay = default_overlay_transparency()
+    overlay_transparency = (
+        clamp_overlay_transparency(
+            display_payload.get("overlay_transparency"),
+            default=default_overlay,
+        )
+        if isinstance(display_payload, dict)
+        else default_overlay
+    )
+    loop = LoopContext3D.create(
+        cfg,
+        bot_mode=bot_mode,
+        overlay_transparency=overlay_transparency,
+    )
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
         ndim=3,
@@ -271,6 +323,7 @@ def run_game_loop(
             bot_lines=tuple(loop.bot.status_lines()),
             clear_anim=loop.clear_anim,
             active_overlay=active_overlay,
+            overlay_transparency=loop.overlay_transparency,
         ),
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),

@@ -30,9 +30,11 @@ class SettingsHubResult:
 class _UnifiedSettingsState:
     audio_settings: AudioSettings
     display_settings: DisplaySettings
+    overlay_transparency: float
     score_logging_enabled: bool
     original_audio: AudioSettings
     original_display: DisplaySettings
+    original_overlay_transparency: float
     original_score_logging_enabled: bool
     selected: int = 0
     status: str = ""
@@ -117,6 +119,20 @@ def _analytics_defaults() -> bool:
     return False
 
 
+def _overlay_transparency_default() -> float:
+    return engine_api.default_overlay_transparency_runtime()
+
+
+def _load_overlay_transparency_setting() -> float:
+    payload = engine_api.get_display_settings_runtime()
+    if isinstance(payload, dict):
+        return engine_api.clamp_overlay_transparency_runtime(
+            payload.get("overlay_transparency"),
+            default=_overlay_transparency_default(),
+        )
+    return _overlay_transparency_default()
+
+
 def _load_score_logging_setting() -> bool:
     payload = engine_api.load_analytics_payload_runtime()
     if isinstance(payload, dict):
@@ -182,6 +198,7 @@ def _save_unified_settings(
     ok_display, msg_display = engine_api.persist_display_payload_runtime(
         fullscreen=state.display_settings.fullscreen,
         windowed_size=state.display_settings.windowed_size,
+        overlay_transparency=state.overlay_transparency,
     )
     ok_analytics, msg_analytics = engine_api.persist_analytics_payload_runtime(
         score_logging_enabled=state.score_logging_enabled,
@@ -189,9 +206,10 @@ def _save_unified_settings(
     if ok_audio and ok_display and ok_analytics:
         state.original_audio = _clone_audio_settings(state.audio_settings)
         state.original_display = _clone_display_settings(state.display_settings)
+        state.original_overlay_transparency = float(state.overlay_transparency)
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
         state.saved = True
-        _set_unified_status(state, "Saved audio/display/analytics settings")
+        _set_unified_status(state, "Saved audio/display/overlay/analytics settings")
         play_sfx("menu_confirm")
         return screen
 
@@ -207,6 +225,7 @@ def _reset_unified_settings(
 ) -> pygame.Surface:
     state.audio_settings = _audio_defaults()
     state.display_settings = _display_defaults()
+    state.overlay_transparency = _overlay_transparency_default()
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
@@ -254,6 +273,12 @@ def _adjust_unified_with_arrows(state: _UnifiedSettingsState, key: int) -> bool:
         state.display_settings = DisplaySettings(
             state.display_settings.fullscreen,
             (width, max(480, height + delta_sign * 40)),
+        )
+    elif row_key == "display_overlay_transparency":
+        state.overlay_transparency = engine_api.clamp_overlay_transparency_runtime(
+            state.overlay_transparency
+            + delta_sign * engine_api.overlay_transparency_step_runtime(),
+            default=_overlay_transparency_default(),
         )
     elif row_key == "analytics_score_logging":
         state.score_logging_enabled = not state.score_logging_enabled
@@ -313,6 +338,8 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         return str(state.display_settings.windowed_size[0])
     if row_key == "display_height":
         return str(state.display_settings.windowed_size[1])
+    if row_key == "display_overlay_transparency":
+        return f"{int(round(state.overlay_transparency * 100.0))}%"
     if row_key == "analytics_score_logging":
         return "ON" if state.score_logging_enabled else "OFF"
     return ""
@@ -495,12 +522,15 @@ def run_settings_hub_menu(
     display_settings: DisplaySettings,
 ) -> SettingsHubResult:
     score_logging_enabled = _load_score_logging_setting()
+    overlay_transparency = _load_overlay_transparency_setting()
     state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
+        overlay_transparency=overlay_transparency,
         score_logging_enabled=score_logging_enabled,
         original_audio=_clone_audio_settings(audio_settings),
         original_display=_clone_display_settings(display_settings),
+        original_overlay_transparency=overlay_transparency,
         original_score_logging_enabled=score_logging_enabled,
     )
     ok_layout, msg_layout = _validate_unified_layout_against_policy()

@@ -88,6 +88,8 @@ Cross-cutting requirements are defined in:
 8. Audio controls (master volume, SFX volume, mute) must be available in settings.
 9. Fullscreen/windowed toggle must be supported without layout corruption.
 10. Piece rotations must use a soft visual animation instead of a single-frame snap.
+11. 3D/4D overlay transparency must be user-adjustable from settings with default `70%`.
+12. Overlay transparency must affect active overlays only; active-piece cells remain opaque.
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -111,6 +113,7 @@ Cross-cutting requirements are defined in:
 6. 2D must ignore ND-only movement/rotation keys.
 7. Keybinding edit flow must support per-action rebind, conflict handling, and local save/load.
 8. Keybindings setup must be reachable from unified main menu and in-game pause menu.
+9. 3D/4D camera keybindings must include in-game overlay-transparency adjustment actions.
 
 ## 6. Technical Requirements
 
