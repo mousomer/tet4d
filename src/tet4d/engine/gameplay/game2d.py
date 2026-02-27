@@ -4,6 +4,7 @@ from typing import List, Optional
 import random
 
 from ..core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
+from ..core.rng import RNG_MODE_FIXED_SEED, normalize_rng_mode
 from .pieces2d import (
     ActivePiece2D,
     PieceShape2D,
@@ -47,6 +48,8 @@ class GameConfig:
     challenge_layers: int = 0
     lock_piece_points: int = 5
     exploration_mode: bool = False
+    rng_mode: str = RNG_MODE_FIXED_SEED
+    rng_seed: int = 1337
 
     def __post_init__(self):
         if self.width <= 0 or self.height <= 0:
@@ -64,6 +67,11 @@ class GameConfig:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
+        self.rng_mode = normalize_rng_mode(self.rng_mode)
+        if isinstance(self.rng_seed, bool) or not isinstance(self.rng_seed, int):
+            raise ValueError("rng_seed must be an integer")
+        if not (0 <= self.rng_seed <= 999_999_999):
+            raise ValueError("rng_seed must be within [0, 999999999]")
         self.topology_mode = normalize_topology_mode(self.topology_mode)
         self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
 

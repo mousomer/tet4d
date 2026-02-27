@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
+import random
 
 try:
     import pygame
@@ -113,6 +115,33 @@ class TestGameplayReplay(unittest.TestCase):
 
         self.assertEqual(run_once(), run_once())
 
+    def test_create_initial_state_2d_rng_mode_routing(self):
+        fixed_cfg = GameConfig(
+            width=10,
+            height=20,
+            gravity_axis=1,
+            speed_level=1,
+            rng_mode="fixed_seed",
+            rng_seed=4242,
+        )
+        with patch("cli.front2d.random.Random", side_effect=random.Random) as ctor:
+            state = front2d.create_initial_state(fixed_cfg)
+        self.assertIsNotNone(state.current_piece)
+        ctor.assert_called_once_with(4242)
+
+        true_random_cfg = GameConfig(
+            width=10,
+            height=20,
+            gravity_axis=1,
+            speed_level=1,
+            rng_mode="true_random",
+            rng_seed=4242,
+        )
+        with patch("cli.front2d.random.Random", side_effect=random.Random) as ctor:
+            state = front2d.create_initial_state(true_random_cfg)
+        self.assertIsNotNone(state.current_piece)
+        ctor.assert_called_once_with()
+
     def test_replay_determinism_3d(self):
         cfg = GameConfigND(dims=(6, 14, 6), gravity_axis=1, speed_level=1)
         script = [
@@ -140,6 +169,35 @@ class TestGameplayReplay(unittest.TestCase):
             return _state_signature_nd(state)
 
         self.assertEqual(run_once(), run_once())
+
+    def test_create_initial_state_nd_rng_mode_routing(self):
+        fixed_cfg = GameConfigND(
+            dims=(6, 14, 6),
+            gravity_axis=1,
+            speed_level=1,
+            rng_mode="fixed_seed",
+            rng_seed=2024,
+        )
+        with patch(
+            "tet4d.engine.frontend_nd.random.Random", side_effect=random.Random
+        ) as ctor:
+            state = frontend_nd.create_initial_state(fixed_cfg)
+        self.assertIsNotNone(state.current_piece)
+        ctor.assert_called_once_with(2024)
+
+        true_random_cfg = GameConfigND(
+            dims=(6, 14, 6),
+            gravity_axis=1,
+            speed_level=1,
+            rng_mode="true_random",
+            rng_seed=2024,
+        )
+        with patch(
+            "tet4d.engine.frontend_nd.random.Random", side_effect=random.Random
+        ) as ctor:
+            state = frontend_nd.create_initial_state(true_random_cfg)
+        self.assertIsNotNone(state.current_piece)
+        ctor.assert_called_once_with()
 
     def test_exploration_mode_disables_gravity_and_locking_2d(self) -> None:
         cfg = GameConfig(

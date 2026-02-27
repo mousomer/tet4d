@@ -54,6 +54,8 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertIn("topology_mode", attrs)
             self.assertIn("topology_advanced", attrs)
             self.assertIn("topology_profile_index", attrs)
+            self.assertIn("random_mode_index", attrs)
+            self.assertIn("game_seed", attrs)
 
     def test_launcher_pause_entrypoint_parity(self) -> None:
         launcher_actions = set(

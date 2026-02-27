@@ -38,6 +38,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.engine.runtime.assist_scoring import combined_score_multiplier
 from tet4d.engine.api import Action, BoardND, GameConfig, GameState
+from tet4d.engine.core.rng import RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM
 from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d
 from tet4d.ui.pygame.runtime_ui.display import DisplaySettings
 from tet4d.ui.pygame.loop.game_loop_common import process_game_events
@@ -97,7 +98,16 @@ from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 
-DEFAULT_GAME_SEED = 1337
+RANDOM_MODE_FIXED_INDEX = 0
+RANDOM_MODE_TRUE_RANDOM_INDEX = 1
+_RANDOM_MODE_CHOICES = (
+    RNG_MODE_FIXED_SEED,
+    RNG_MODE_TRUE_RANDOM,
+)
+_RANDOM_MODE_LABELS = (
+    "Fixed seed",
+    "True random",
+)
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 
 
@@ -108,6 +118,8 @@ _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 class GameSettings:
     width: int = _DEFAULT_MODE_2D["width"]
     height: int = _DEFAULT_MODE_2D["height"]
+    random_mode_index: int = _DEFAULT_MODE_2D["random_mode_index"]
+    game_seed: int = _DEFAULT_MODE_2D["game_seed"]
     piece_set_index: int = _DEFAULT_MODE_2D["piece_set_index"]
     topology_mode: int = _DEFAULT_MODE_2D["topology_mode"]
     topology_advanced: int = _DEFAULT_MODE_2D["topology_advanced"]
@@ -179,9 +191,23 @@ def _piece_set_index_to_id(index: int) -> str:
     return PIECE_SET_2D_OPTIONS[safe_index]
 
 
+def _random_mode_index_to_id(index: int) -> str:
+    safe_index = max(0, min(len(_RANDOM_MODE_CHOICES) - 1, int(index)))
+    return _RANDOM_MODE_CHOICES[safe_index]
+
+
+def _random_mode_label(index: int) -> str:
+    safe_index = max(0, min(len(_RANDOM_MODE_LABELS) - 1, int(index)))
+    return _RANDOM_MODE_LABELS[safe_index]
+
+
 def _menu_value_formatter(attr_name: str, value: object) -> str:
     if attr_name == "piece_set_index":
         return piece_set_2d_label(_piece_set_index_to_id(int(value)))
+    if attr_name == "random_mode_index":
+        return _random_mode_label(int(value))
+    if attr_name == "game_seed":
+        return str(max(0, int(value)))
     if attr_name == "topology_mode":
         return topology_mode_label(topology_mode_from_index(int(value)))
     if attr_name == "topology_advanced":
@@ -223,6 +249,8 @@ def _config_from_settings(settings: GameSettings) -> GameConfig:
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
         piece_set=piece_set_id,
+        rng_mode=_random_mode_index_to_id(settings.random_mode_index),
+        rng_seed=max(0, int(settings.game_seed)),
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,
     )
@@ -317,7 +345,11 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
 
 def create_initial_state(cfg: GameConfig) -> GameState:
     board = BoardND((cfg.width, cfg.height))
-    state = GameState(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    if cfg.rng_mode == RNG_MODE_TRUE_RANDOM:
+        rng = random.Random()
+    else:
+        rng = random.Random(cfg.rng_seed)
+    state = GameState(config=cfg, board=board, rng=rng)
     if not cfg.exploration_mode:
         apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     return state

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import random
 
+RNG_MODE_FIXED_SEED = "fixed_seed"
+RNG_MODE_TRUE_RANDOM = "true_random"
+RNG_MODE_OPTIONS = (RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM)
+
 
 class EngineRNG(random.Random):
     """Seedable RNG wrapper with a stable engine-facing type."""
@@ -29,4 +33,20 @@ def coerce_random(
     return EngineRNG(seed)
 
 
-__all__ = ["EngineRNG", "coerce_random"]
+def normalize_rng_mode(mode: str | None) -> str:
+    if mode is None:
+        return RNG_MODE_FIXED_SEED
+    value = mode.strip().lower()
+    if value in RNG_MODE_OPTIONS:
+        return value
+    raise ValueError(f"unsupported rng mode: {mode}")
+
+
+__all__ = [
+    "EngineRNG",
+    "coerce_random",
+    "RNG_MODE_FIXED_SEED",
+    "RNG_MODE_TRUE_RANDOM",
+    "RNG_MODE_OPTIONS",
+    "normalize_rng_mode",
+]

@@ -1112,3 +1112,7 @@ incremental enforcement strategy used while refactoring.
   `overlay_transparency` settings persistence (default `70%`), in-game camera-key
   adjustments with side-panel bar feedback, and render-path separation so alpha
   applies to active overlays only while active-piece cells remain opaque.
+- Post-stage 533 gameplay RNG-mode extension adds config-driven setup fields for
+  `random_mode_index` + `game_seed` (2D/3D/4D), routes them into gameplay configs as
+  `rng_mode` + `rng_seed`, and keeps fixed-seed deterministic replay paths while
+  enabling true-random runtime starts.

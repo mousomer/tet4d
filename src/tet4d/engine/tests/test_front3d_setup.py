@@ -15,6 +15,8 @@ class TestFront3DSetupDedup(unittest.TestCase):
             fourth=9,
             speed_level=3,
             piece_set_index=0,
+            random_mode_index=0,
+            game_seed=4242,
             topology_mode=0,
             topology_advanced=0,
             topology_profile_index=0,
@@ -34,6 +36,8 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(cfg_adapter.gravity_axis, cfg_shared.gravity_axis)
         self.assertEqual(cfg_adapter.speed_level, cfg_shared.speed_level)
         self.assertEqual(cfg_adapter.piece_set_id, cfg_shared.piece_set_id)
+        self.assertEqual(cfg_adapter.rng_mode, cfg_shared.rng_mode)
+        self.assertEqual(cfg_adapter.rng_seed, cfg_shared.rng_seed)
         self.assertEqual(cfg_adapter.topology_mode, cfg_shared.topology_mode)
         self.assertEqual(
             cfg_adapter.topology_edge_rules, cfg_shared.topology_edge_rules

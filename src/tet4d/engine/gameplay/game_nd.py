@@ -5,6 +5,7 @@ from typing import List, Optional, Sequence
 
 from ..core.model import GameConfigNDCoreView, GameStateNDCoreView
 from ..core.model import BoardND
+from ..core.rng import RNG_MODE_FIXED_SEED, normalize_rng_mode
 from .pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_STANDARD,
@@ -35,6 +36,28 @@ def _score_for_clear(cleared_planes: int) -> int:
     return score_for_clear(cleared_planes)
 
 
+def _coerce_rng_seed(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError("rng_seed must be an integer")
+    if not (0 <= value <= 999_999_999):
+        raise ValueError("rng_seed must be within [0, 999999999]")
+    return int(value)
+
+
+def _resolve_piece_set_id(
+    *,
+    ndim: int,
+    piece_set_id: str | None,
+    piece_set_4d: str,
+) -> str:
+    selected_piece_set = piece_set_id
+    if selected_piece_set is None and ndim >= 4:
+        selected_piece_set = normalize_piece_set_4d(piece_set_4d)
+    if selected_piece_set is None and ndim == 3:
+        selected_piece_set = PIECE_SET_3D_STANDARD
+    return normalize_piece_set_for_dimension(ndim, selected_piece_set)
+
+
 @dataclass
 class GameConfigND:
     dims: Coord = (10, 20, 6)
@@ -49,6 +72,8 @@ class GameConfigND:
     challenge_layers: int = 0
     lock_piece_points: int = 5
     exploration_mode: bool = False
+    rng_mode: str = RNG_MODE_FIXED_SEED
+    rng_seed: int = 1337
 
     def __post_init__(self) -> None:
         if len(self.dims) < 2:
@@ -66,16 +91,17 @@ class GameConfigND:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
+        self.rng_mode = normalize_rng_mode(self.rng_mode)
+        self.rng_seed = _coerce_rng_seed(self.rng_seed)
         self.topology_mode = normalize_topology_mode(self.topology_mode)
         self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
 
         ndim = len(self.dims)
-        selected_piece_set = self.piece_set_id
-        if selected_piece_set is None and ndim >= 4:
-            selected_piece_set = normalize_piece_set_4d(self.piece_set_4d)
-        if selected_piece_set is None and ndim == 3:
-            selected_piece_set = PIECE_SET_3D_STANDARD
-        self.piece_set_id = normalize_piece_set_for_dimension(ndim, selected_piece_set)
+        self.piece_set_id = _resolve_piece_set_id(
+            ndim=ndim,
+            piece_set_id=self.piece_set_id,
+            piece_set_4d=self.piece_set_4d,
+        )
         # Keep legacy field populated for existing callers/UI labels.
         self.piece_set_4d = self.piece_set_id
 

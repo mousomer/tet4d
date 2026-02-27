@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 import pygame
 
 from .core.model import BoardND
+from .core.rng import RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM
 from .gameplay.challenge_mode import apply_challenge_prefill_nd
 from tet4d.ui.pygame.render.font_profiles import GfxFonts, init_fonts as init_fonts_for_profile
 from .gameplay.game_nd import GameConfigND, GameStateND
@@ -48,7 +49,16 @@ from tet4d.ui.pygame.input.view_controls import viewer_relative_move_axis_delta
 
 TEXT_COLOR = (230, 230, 230)
 HIGHLIGHT_COLOR = (255, 215, 0)
-DEFAULT_GAME_SEED = 1337
+RANDOM_MODE_FIXED_INDEX = 0
+RANDOM_MODE_TRUE_RANDOM_INDEX = 1
+_RANDOM_MODE_CHOICES = (
+    RNG_MODE_FIXED_SEED,
+    RNG_MODE_TRUE_RANDOM,
+)
+_RANDOM_MODE_LABELS = (
+    "Fixed seed",
+    "True random",
+)
 _DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
 
 
@@ -71,6 +81,8 @@ class GameSettingsND:
     depth: int = _DEFAULT_MODE_4D["depth"]
     fourth: int = _DEFAULT_MODE_4D["fourth"]
     speed_level: int = _DEFAULT_MODE_4D["speed_level"]
+    random_mode_index: int = _DEFAULT_MODE_4D["random_mode_index"]
+    game_seed: int = _DEFAULT_MODE_4D["game_seed"]
     piece_set_index: int = _DEFAULT_MODE_4D["piece_set_index"]
     topology_mode: int = _DEFAULT_MODE_4D["topology_mode"]
     topology_advanced: int = _DEFAULT_MODE_4D["topology_advanced"]
@@ -104,6 +116,16 @@ def _piece_set_index_to_id(dimension: int, index: int) -> str:
     choices = _PIECE_SET_CHOICES.get(dimension, _PIECE_SET_CHOICES[4])
     safe_index = max(0, min(len(choices) - 1, int(index)))
     return choices[safe_index]
+
+
+def _random_mode_index_to_id(index: int) -> str:
+    safe_index = max(0, min(len(_RANDOM_MODE_CHOICES) - 1, int(index)))
+    return _RANDOM_MODE_CHOICES[safe_index]
+
+
+def _random_mode_label(index: int) -> str:
+    safe_index = max(0, min(len(_RANDOM_MODE_LABELS) - 1, int(index)))
+    return _RANDOM_MODE_LABELS[safe_index]
 
 
 def piece_set_4d_label(piece_set_4d: str) -> str:
@@ -165,6 +187,10 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
         labels = _PIECE_SET_LABELS.get(dimension, _PIECE_SET_LABELS[4])
         safe_index = max(0, min(len(labels) - 1, int(value)))
         return labels[safe_index]
+    if attr_name == "random_mode_index":
+        return _random_mode_label(int(value))
+    if attr_name == "game_seed":
+        return str(max(0, int(value)))
     if attr_name == "topology_mode":
         return topology_mode_label(topology_mode_from_index(int(value)))
     if attr_name == "topology_advanced":
@@ -369,6 +395,8 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
         piece_set_id=piece_set_id,
+        rng_mode=_random_mode_index_to_id(settings.random_mode_index),
+        rng_seed=max(0, int(settings.game_seed)),
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,
     )
@@ -380,7 +408,11 @@ def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
 
 def create_initial_state(cfg: GameConfigND) -> GameStateND:
     board = BoardND(cfg.dims)
-    state = GameStateND(config=cfg, board=board, rng=random.Random(DEFAULT_GAME_SEED))
+    if cfg.rng_mode == RNG_MODE_TRUE_RANDOM:
+        rng = random.Random()
+    else:
+        rng = random.Random(cfg.rng_seed)
+    state = GameStateND(config=cfg, board=board, rng=rng)
     if not cfg.exploration_mode:
         apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     return state
