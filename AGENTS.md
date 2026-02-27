@@ -15,6 +15,8 @@ For any restructuring/update:
 5. Do not introduce `tetris_nd` imports; use `tet4d.engine.*` only.
 6. `tetris_nd/` compatibility shim is removed; treat any new `tetris_nd` import as a policy violation.
 7. Repo uses `src/` layout with editable install for dev/CI (`pip install -e .[dev]`); do not add repo-root import shims.
+8. Do not reinvent the wheel: prefer existing repo helpers/functions/APIs before adding new implementation code.
+9. Do not hardcode magic numbers in Python code; prefer non-Python config-backed constants (for example `config/*` + runtime/config accessors) unless externalizing the value would add disproportionate complexity.
 
 ## Verification contract
 Run:
