@@ -79,6 +79,7 @@ Main Menu
 ├── Settings
 │   ├── Audio
 │   ├── Display
+│   ├── Gameplay
 │   └── Analytics
 ├── Controls
 │   ├── General
@@ -124,9 +125,9 @@ Pause Menu
 5. Setup screens must use the same layout skeleton and footer shortcuts.
 6. Setup screens must expose topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
-8. Topology remains a dimension-specific gameplay setting (not a global settings-hub toggle).
-9. Advanced topology designer controls stay hidden unless `Topology advanced` is enabled.
-10. Advanced controls include `Topology profile` selector sourced from `config/topology/designer_presets.json`.
+8. Setup screens keep dimension-specific topology mode and topology profile selection.
+9. Shared settings hub owns `Random type` and `Topology advanced` for all modes.
+10. `Topology profile` remains in setup and stays hidden unless shared `Topology advanced` is enabled.
 
 ## 5. Layout and Readability Requirements
 
@@ -225,6 +226,8 @@ Add persistent settings file:
 7. Keybinding save/load is local and profile-scoped under `keybindings/profiles`.
 8. Display and audio settings are persisted in the same settings state.
 9. Analytics settings are persisted in the same settings state.
+10. Runtime window resize events in windowed mode must persist `display.windowed_size` to `state/menu_settings.json` as user override state.
+11. Runtime resize persistence must never mutate `config/menu/defaults.json`.
 
 ### 7.5 Category depth/split rule
 
@@ -263,7 +266,7 @@ Add persistent settings file:
 4. `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
 5. Launcher and pause menus must consume graph items; no hardcoded tree/picker lists in runtime modules.
 6. Menu graph lint contract lives in:
-7. `tetris_nd/menu_graph_linter.py` + `tools/lint_menu_graph.py`.
+7. `tetris_nd/menu_graph_linter.py` + `tools/governance/lint_menu_graph.py`.
 
 ## 10. Testing Instructions
 
@@ -271,8 +274,8 @@ Required checks after implementation:
 ```bash
 ruff check .
 pytest -q
-python tools/lint_menu_graph.py
-python tools/validate_project_contracts.py
+python tools/governance/lint_menu_graph.py
+python tools/governance/validate_project_contracts.py
 ```
 Manual tests:
 1. Keyboard-only navigation across all menu screens.
@@ -283,6 +286,7 @@ Manual tests:
 6. Non-default profile create/rename/delete and profile-specific load/save.
 7. Edit keybindings in setup and pause menus; save and reload locally.
 8. Toggle fullscreen in setup, start game, return to menu, and verify layout size remains correct.
+9. Resize window during gameplay and verify the new `windowed_size` is persisted in `state/menu_settings.json` and used on next startup.
 9. Change audio settings, restart app, and verify persistence.
 
 ## 11. Implementation Additions (Completed)
@@ -298,7 +302,7 @@ Manual tests:
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
 2. Dedicated `Controls` screen is implemented (backed by `tetris_nd/keybindings_menu.py`).
-3. Unified settings hub (`audio/display/analytics`) is implemented.
+3. Unified settings hub (`audio/display/gameplay/analytics`) is implemented.
 4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
 6. Fullscreen return-to-menu shrinkage issue is resolved.
@@ -314,7 +318,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
-3. `Settings` submenu unifies audio, display, and analytics controls.
+3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced topology`), and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Controls setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -335,7 +339,7 @@ Stabilization details:
 7. Unified main menu controls 2D/3D/4D startup consistently.
 8. In-game pause menu is implemented in all modes with:
 9. resume/restart/back-to-main/quit actions
-10. settings routed to shared settings hub (audio/display/analytics + save/reset/back)
+10. settings routed to shared settings hub (audio/display/gameplay/analytics + save/reset/back)
 11. keybindings editor entry
 12. profile cycle and per-dimension keybinding load/save actions
 13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/view guidance.
@@ -351,8 +355,8 @@ Stabilization details:
 23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` are routed under `Play`.
 24. Menu graph lint contract is enforced via:
 25. `tetris_nd/menu_graph_linter.py`,
-26. `tools/lint_menu_graph.py`,
-27. `tools/validate_project_contracts.py`,
+26. `tools/governance/lint_menu_graph.py`,
+27. `tools/governance/validate_project_contracts.py`,
 28. `scripts/ci_check.sh`.
 
 ## 15. Follow-up Status
@@ -366,7 +370,7 @@ Stabilization details:
 7. `config/help/topics.json`, `config/help/action_map.json`,
 8. `config/schema/help_topics.schema.json`, `config/schema/help_action_map.schema.json`,
 9. runtime validator/loader in `tetris_nd/help_topics.py`,
-10. contract checks in `tools/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
+10. contract checks in `tools/governance/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
 11. Closed (`M2`): shared layout-zone renderer implemented to eliminate fixed-coordinate overlap risk:
 12. shared zone engine in `tetris_nd/menu_layout.py`,
 13. help renderer migrated to zone-based layout in `tetris_nd/help_menu.py`,
@@ -375,7 +379,7 @@ Stabilization details:
 16. context/dimension-filtered topic rendering in `tetris_nd/help_topics.py` + `tetris_nd/help_menu.py`,
 17. live action->key rows sourced from runtime bindings + `config/help/action_map.json`,
 18. explicit subpage controls (`[`/`]`, `PgUp`/`PgDn`) replacing silent truncation,
-19. contract lane checks in `tools/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
+19. contract lane checks in `tools/governance/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
 20. Closed (`M4`): launcher/pause parity + compact-window validation implemented via:
 21. config-driven pause action mapping in `config/menu/structure.json` (`pause_menu_actions`),
 22. parity enforcement in `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`),
@@ -390,7 +394,7 @@ Stabilization details:
 31. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
 32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
-34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Gameplay`,`Analytics`,`Save`,`Reset`,`Back`).
 35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `tetris_nd/launcher_settings.py`.
 36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
 

@@ -2,9 +2,10 @@
 
 ## Policy sources of truth
 - RDS + workflow: `docs/RDS_AND_CODEX.md`
+- Policy docs: `docs/policies/`
 - Canonical maintenance contract:
   - `config/project/canonical_maintenance.json`
-  - `tools/validate_project_contracts.py`
+  - `tools/governance/validate_project_contracts.py`
 
 ## Governance rules
 For any restructuring/update:
@@ -12,6 +13,12 @@ For any restructuring/update:
 2. Compare against relevant RDS sections and update RDS if required.
 3. Keep canonical maintenance artifacts synchronized.
 4. Update `docs/BACKLOG.md` when scope changes.
+5. Do not introduce `tetris_nd` imports; use `tet4d.engine.*` only.
+6. `tetris_nd/` compatibility shim is removed; treat any new `tetris_nd` import as a policy violation.
+7. Repo uses `src/` layout with editable install for dev/CI (`pip install -e .[dev]`); do not add repo-root import shims.
+8. Do not reinvent the wheel: prefer existing repo helpers/functions/APIs before adding new implementation code.
+9. Do not hardcode magic numbers in Python code; prefer non-Python config-backed constants (for example `config/*` + runtime/config accessors) unless externalizing the value would add disproportionate complexity.
+10. Sanitize external or user-controlled string inputs via runtime sanitization helpers before use.
 
 ## Verification contract
 Run:
@@ -38,6 +45,7 @@ Verification must pass:
 - planner benchmark assertions
 
 CI remains authoritative and runs `./scripts/ci_check.sh` via `.github/workflows/ci.yml`.
+CI and local verification assume the repo package is installed in editable mode.
 
 ## Safety & sanitation
 - No secrets in repo.

@@ -48,6 +48,8 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 16. `tetris_nd/help_topics.py` (context/dimension topic filtering)
 17. `tetris_nd/help_menu.py` (live key rows + subpage rendering)
 18. `config/help/topics.json` + `config/help/action_map.json`
+19. `config/help/content/runtime_help_content.json` (runtime help copy templates used by `runtime_ui/help_menu.py`)
+20. `config/help/layout/runtime_help_layout.json` (runtime help layout/placement rules used by `runtime_ui/help_menu.py`)
 
 ## Maintenance rule
 
@@ -57,7 +59,10 @@ When adding/removing a menu option or keybinding action, update:
 3. `config/help/icon_map.json`,
 4. `config/help/topics.json`,
 5. `config/help/action_map.json`,
-6. `docs/FEATURE_MAP.md`,
-7. `docs/BACKLOG.md`,
-8. `tetris_nd/tests/test_help_topics.py`,
-9. `tetris_nd/tests/test_help_menu.py`.
+6. `config/help/content/runtime_help_content.json`,
+7. `config/help/layout/runtime_help_layout.json`,
+8. `docs/FEATURE_MAP.md`,
+9. `docs/BACKLOG.md`,
+10. `tests/unit/engine/test_help_topics.py`,
+11. `tests/unit/engine/test_help_menu.py`,
+12. `tests/unit/engine/test_help_text.py`.

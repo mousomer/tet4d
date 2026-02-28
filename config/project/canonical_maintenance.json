@@ -25,15 +25,17 @@
       "docs/rds/RDS_PACKAGING.md"
     ],
     "help_assets": [
-      "tetris_nd/menu_control_guides.py",
-      "tetris_nd/control_icons.py",
+      "src/tet4d/ui/pygame/menu/menu_control_guides.py",
+      "src/tet4d/ui/pygame/render/control_icons.py",
       "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
     "canonical_schemas": [
       "config/schema/menu_settings.schema.json",
       "config/schema/save_state.schema.json",
       "config/schema/help_topics.schema.json",
-      "config/schema/help_action_map.schema.json"
+      "config/schema/help_action_map.schema.json",
+      "config/schema/help_runtime_content.schema.json",
+      "config/schema/help_runtime_layout.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -52,13 +54,14 @@
       "docs/RELEASE_INSTALLERS.md"
     ],
     "core_tests": [
-      "tetris_nd/tests/test_playbot.py",
-      "tetris_nd/tests/test_score_analyzer.py",
-      "tetris_nd/tests/test_runtime_config.py",
-      "tetris_nd/tests/test_menu_policy.py",
-      "tetris_nd/tests/test_project_config.py",
-      "tetris_nd/tests/test_help_topics.py",
-      "tetris_nd/tests/test_help_menu.py"
+      "tests/unit/engine/test_playbot.py",
+      "tests/unit/engine/test_score_analyzer.py",
+      "tests/unit/engine/test_runtime_config.py",
+      "tests/unit/engine/test_menu_policy.py",
+      "tests/unit/engine/test_project_config.py",
+      "tests/unit/engine/test_help_topics.py",
+      "tests/unit/engine/test_help_menu.py",
+      "tests/unit/engine/test_help_text.py"
     ],
     "canonical_configs": [
       "config/menu/defaults.json",
@@ -67,32 +70,52 @@
       "config/help/topics.json",
       "config/help/action_map.json",
       "config/help/icon_map.json",
+      "config/help/content/runtime_help_content.json",
+      "config/help/layout/runtime_help_layout.json",
       "config/gameplay/tuning.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
       "config/audio/sfx.json",
       "config/project/io_paths.json",
       "config/project/constants.json",
+      "config/project/folder_balance_budgets.json",
+      "config/project/tech_debt_budgets.json",
+      "config/project/backlog_debt.json",
       "config/project/secret_scan.json",
-      "config/project/canonical_maintenance.json"
+      "config/project/canonical_maintenance.json",
+      "config/project/architecture_metrics.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
+      "scripts/install_git_hooks.sh",
       "scripts/ci_check.sh",
       "scripts/verify.sh",
       "scripts/check_git_sanitation.sh",
       "scripts/check_policy_compliance.sh",
-      "tools/check_pygame_ce.py",
-      "tools/scan_secrets.py",
-      "tools/lint_menu_graph.py",
-      "tools/validate_project_contracts.py",
+      "tools/governance/check_pygame_ce.py",
+      "tools/governance/scan_secrets.py",
+      "tools/governance/lint_menu_graph.py",
+      "tools/governance/architecture_metric_budget.py",
+      "tools/governance/tech_debt_budget.py",
+      "tools/governance/update_tech_debt_budgets.py",
+      "tools/governance/validate_project_contracts.py",
       ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
-      ".github/workflows/release-packaging.yml"
+      ".github/workflows/release-packaging.yml",
+      "scripts/check_policy_template_drift.sh",
+      "scripts/update_policy_template_hashes.sh",
+      "scripts/check_git_sanitation_repo.sh",
+      "scripts/check_policy_compliance_repo.sh",
+      "scripts/check_architecture_metrics_soft_gate.sh"
     ],
     "governance": [
       "AGENTS.md",
-      "config/project/policy_manifest.json"
+      "CONTRIBUTING.md",
+      "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+      "docs/policies/POLICY_STRING_SANITATION.md",
+      "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
+      "config/project/policy_manifest.json",
+      ".githooks/pre-push"
     ],
     "packaging_scripts": [
       "packaging/pyinstaller/tet4d.spec",
@@ -111,8 +134,8 @@
         "menu_control_guides.py",
         "draw_translation_rotation_guides",
         "scripts/ci_check.sh",
-        "tools/check_pygame_ce.py",
-        "tools/scan_secrets.py",
+        "tools/governance/check_pygame_ce.py",
+        "tools/governance/scan_secrets.py",
         "config/project/io_paths.json",
         "config/project/constants.json",
         "config/project/secret_scan.json",
@@ -181,26 +204,35 @@
     {
       "file": "scripts/ci_check.sh",
       "must_contain": [
-        "require_module ruff ruff",
-        "require_module pytest pytest",
-        "run_module ruff check . --quiet",
-        "run_module ruff check --quiet --select C901 .",
-        "tools/lint_menu_graph.py",
-        "tools/scan_secrets.py",
-        "run_module pytest -q"
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "QUIET=\"${QUIET:-1}\"",
+        "CODEX_MODE=\"${CODEX_MODE:-0}\"",
+        "exec ./scripts/verify.sh"
       ],
       "must_not_contain": [
-        "run_module_or_command"
+        "run_module_or_command",
+        "require_module ruff ruff"
       ]
     },
     {
       "file": "AGENTS.md",
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
+        "docs/policies/",
         "config/project/canonical_maintenance.json",
-        "tools/validate_project_contracts.py",
+        "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
         "config/project/io_paths.json"
+      ]
+    },
+    {
+      "file": "CONTRIBUTING.md",
+      "must_contain": [
+        "## Policies",
+        "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+        "docs/policies/POLICY_STRING_SANITATION.md",
+        "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
       ]
     },
     {
@@ -210,27 +242,22 @@
         "set -euo pipefail",
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
-        "echo \"verify: OK\""
+        "echo \"verify: OK\"",
+        "check_architecture_metrics_soft_gate.sh"
       ]
     },
     {
-      "file": "scripts/check_policy_compliance.sh",
+      "file": "scripts/install_git_hooks.sh",
       "must_contain": [
-        "AGENTS.md",
-        "scripts/verify.sh",
-        "config/project/policy_manifest.json",
-        "python3 tools/validate_project_contracts.py",
-        "python3 tools/scan_secrets.py"
+        "git config --local core.hooksPath .githooks",
+        "chmod +x .githooks/pre-push"
       ]
     },
     {
-      "file": "scripts/check_git_sanitation.sh",
+      "file": ".githooks/pre-push",
       "must_contain": [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-        "Absolute filesystem paths detected.",
-        "Potential unsafe path traversal patterns detected in docs/ or config/.",
-        "Filenames with spaces detected:"
+        "./scripts/ci_check.sh",
+        "CODEX_MODE"
       ]
     },
     {
@@ -239,8 +266,19 @@
         "\"project_name\": \"tet4d\"",
         "\"verification_command\": \"./scripts/verify.sh\"",
         "\"ci_entrypoint\": \"./scripts/ci_check.sh\"",
-        "\"contract_validation\": \"python3 tools/validate_project_contracts.py\"",
-        "\"secret_scan\": \"python3 tools/scan_secrets.py\""
+        "\"contract_validation\": \"python3 tools/governance/validate_project_contracts.py\"",
+        "\"secret_scan\": \"python3 tools/governance/scan_secrets.py\"",
+        "\"policy_id\": \"workspace-github-sanitation-and-security\"",
+        "\"policy_source\": \"workspace/policy-kit\"",
+        "\"enforcement\"",
+        "\"scripts/check_policy_template_drift.sh\"",
+        "\"extended_enforcement\"",
+        "\"scripts/check_policy_compliance_repo.sh\"",
+        "\"scripts/check_git_sanitation_repo.sh\""
+      ],
+      "must_match_regex": [
+        "\\\"policy_version\\\"\\s*:\\s*\\\"1\\.1\\.\\d+\\\"",
+        "\\\"policy_source_path\\\"\\s*:\\s*\\\"(\\$\\{HOME\\}/workspace/policy-kit|/[^\\\"\\n]+)\\\""
       ]
     },
     {
@@ -250,7 +288,10 @@
         "SDL_AUDIODRIVER: dummy",
         "scripts/check_git_sanitation.sh",
         "scripts/check_policy_compliance.sh",
-        "./scripts/ci_check.sh"
+        "./scripts/ci_check.sh",
+        "scripts/check_policy_template_drift.sh",
+        "scripts/check_git_sanitation_repo.sh",
+        "scripts/check_policy_compliance_repo.sh"
       ]
     },
     {
@@ -258,7 +299,7 @@
       "must_contain": [
         "## 2. Secret scanning policy",
         "config/project/secret_scan.json",
-        "tools/scan_secrets.py",
+        "tools/governance/scan_secrets.py",
         "## 3. Path/config externalization policy",
         "config/project/io_paths.json",
         "config/project/constants.json"
@@ -304,6 +345,49 @@
         "\"cache_limits\"",
         "\"animation\"",
         "\"rendering\""
+      ]
+    },
+    {
+      "file": "config/project/folder_balance_budgets.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"gate_mode\"",
+        "\"scope\"",
+        "\"profiles\"",
+        "\"tracked_leaf_folders\"",
+        "\"score_epsilon\"",
+        "\"status_order\""
+      ]
+    },
+    {
+      "file": "config/project/tech_debt_budgets.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"gate_mode\"",
+        "\"score_epsilon\"",
+        "\"baseline\"",
+        "\"scoring\"",
+        "\"component_weights\"",
+        "\"priority_weights\"",
+        "\"delivery_size_pressure\"",
+        "\"delivery_size\""
+      ]
+    },
+    {
+      "file": "config/project/backlog_debt.json",
+      "must_contain": [
+        "\"schema_version\"",
+        "\"active_debt_items\"",
+        "\"operational_watch_items\""
+      ]
+    },
+    {
+      "file": "scripts/check_architecture_metric_budgets.sh",
+      "must_contain": [
+        "evaluate_architecture_metric_budget_overages",
+        "evaluate_folder_balance_gate",
+        "evaluate_tech_debt_gate",
+        "config/project/tech_debt_budgets.json"
       ]
     },
     {
@@ -403,6 +487,38 @@
       ]
     },
     {
+      "file": "config/help/content/runtime_help_content.json",
+      "must_contain": [
+        "\"version\": 1",
+        "\"topic_blocks\"",
+        "\"fallback_topic\""
+      ]
+    },
+    {
+      "file": "config/help/layout/runtime_help_layout.json",
+      "must_contain": [
+        "\"version\": 1",
+        "\"topic_media_placement\"",
+        "\"controls_topic_id\""
+      ]
+    },
+    {
+      "file": "config/schema/help_runtime_content.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d runtime help content\"",
+        "\"topic_blocks\""
+      ]
+    },
+    {
+      "file": "config/schema/help_runtime_layout.schema.json",
+      "must_contain": [
+        "\"$schema\"",
+        "\"title\": \"tet4d runtime help layout rules\"",
+        "\"topic_media_placement\""
+      ]
+    },
+    {
       "file": "assets/help/manifest.json",
       "must_contain": [
         "\"translation_keys\"",
@@ -415,6 +531,27 @@
         "## Code and tests",
         "## Documentation and RDS sync",
         "## Artifacts and config"
+      ]
+    },
+    {
+      "file": "scripts/check_policy_compliance_repo.sh",
+      "must_contain": [
+        "AGENTS.md",
+        "config/project/policy_manifest.json",
+        "python3 tools/governance/validate_project_contracts.py",
+        "python3 tools/governance/scan_secrets.py",
+        "scripts/check_engine_core_purity.sh",
+        "scripts/check_architecture_boundaries.sh",
+        "legacy 'tetris_nd' imports detected"
+      ]
+    },
+    {
+      "file": "scripts/check_git_sanitation_repo.sh",
+      "must_contain": [
+        "#!/usr/bin/env bash",
+        "Absolute filesystem paths detected.",
+        "Potential unsafe path traversal patterns detected in docs/ or config/.",
+        "Filenames with spaces detected:"
       ]
     }
   ],
@@ -447,6 +584,8 @@
       "name": "Help content index",
       "paths": [
         "docs/help/HELP_INDEX.md",
+        "config/help/content/runtime_help_content.json",
+        "config/help/layout/runtime_help_layout.json",
         "assets/help/manifest.json"
       ],
       "status": "connected"
@@ -458,6 +597,16 @@
         "config/help/action_map.json",
         "config/schema/help_topics.schema.json",
         "config/schema/help_action_map.schema.json"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Runtime help content/layout contracts",
+      "paths": [
+        "config/help/content/runtime_help_content.json",
+        "config/help/layout/runtime_help_layout.json",
+        "config/schema/help_runtime_content.schema.json",
+        "config/schema/help_runtime_layout.schema.json"
       ],
       "status": "connected"
     },
@@ -475,7 +624,19 @@
         "config/project/io_paths.json",
         "config/project/constants.json",
         "config/project/secret_scan.json",
-        "tools/scan_secrets.py"
+        "tools/governance/scan_secrets.py"
+      ],
+      "status": "connected"
+    },
+    {
+      "name": "Architecture debt budget gates",
+      "paths": [
+        "scripts/arch_metrics.py",
+        "scripts/check_architecture_metric_budgets.sh",
+        "config/project/folder_balance_budgets.json",
+        "config/project/tech_debt_budgets.json",
+        "tools/governance/folder_balance_budget.py",
+        "tools/governance/tech_debt_budget.py"
       ],
       "status": "connected"
     }

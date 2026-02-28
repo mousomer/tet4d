@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "active_debt_items": [
+    {
+      "id": "BKL-P1-008",
+      "priority": "P1",
+      "title": "Menu UX text and behavior are still partially hardcoded in Python instead of non-Python config"
+    },
+    {
+      "id": "BKL-P1-009",
+      "priority": "P1",
+      "title": "Launcher exposes Tutorials and Topology Lab routes that are not implemented"
+    },
+    {
+      "id": "BKL-P2-023",
+      "priority": "P2",
+      "title": "Topology designer remains preset-file/export only; no interactive Topology Lab editor workflow"
+    },
+    {
+      "id": "BKL-P2-024",
+      "priority": "P2",
+      "title": "Playbot lacks learning mode; current architecture supports heuristics/profiles but not adaptive learning loop"
+    },
+    {
+      "id": "BKL-P2-025",
+      "priority": "P2",
+      "title": "Menu schema duplication persists (legacy launcher_menu plus graph menus/menu_entrypoints)"
+    },
+    {
+      "id": "BKL-P2-026",
+      "priority": "P2",
+      "title": "Shared menu constants are duplicated across setup/settings modules (random-mode labels and related UX strings)"
+    },
+    {
+      "id": "BKL-P2-027",
+      "priority": "P2",
+      "title": "Large module decomposition debt remains in engine/runtime/ui hotspots, increasing regression risk and slowing staged refactors"
+    },
+    {
+      "id": "BKL-P2-028",
+      "priority": "P2",
+      "title": "RDS documentation still references removed tetris_nd paths instead of current src/tet4d canonical paths"
+    },
+    {
+      "id": "BKL-P2-029",
+      "priority": "P2",
+      "title": "Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous"
+    },
+    {
+      "id": "BKL-P3-008",
+      "priority": "P3",
+      "title": "Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in same cycle"
+    }
+  ],
+  "operational_watch_items": [
+    {
+      "id": "BKL-P3-002",
+      "priority": "P3",
+      "title": "Scheduled stability + policy workflow watch"
+    },
+    {
+      "id": "BKL-P3-003",
+      "priority": "P3",
+      "title": "Runtime-config validation module split watch"
+    },
+    {
+      "id": "BKL-P3-006",
+      "priority": "P3",
+      "title": "Desktop release hardening watch"
+    }
+  ]
+}

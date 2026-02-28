@@ -41,6 +41,8 @@
     "view_zw_pos": "camera_and_view",
     "zoom_in": "camera_and_view",
     "zoom_out": "camera_and_view",
+    "overlay_alpha_dec": "camera_and_view",
+    "overlay_alpha_inc": "camera_and_view",
     "cycle_projection": "camera_and_view",
     "reset": "camera_and_view"
   }

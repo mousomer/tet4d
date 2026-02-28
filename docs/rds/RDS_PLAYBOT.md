@@ -174,7 +174,7 @@ Unit and integration coverage is currently concentrated in:
 4. 4D greedy key prioritizes layer completion,
 5. hard-drop-after-soft-drop threshold behavior works,
 6. manual controls and keybinding-dependent gameplay remain unaffected.
-7. repeated dry-run stability check passes across seed sweep (`tools/check_playbot_stability.py`).
+7. repeated dry-run stability check passes across seed sweep (`tools/stability/check_playbot_stability.py`).
 
 ## 10. Dry-run Requirements
 
@@ -197,8 +197,8 @@ Unit and integration coverage is currently concentrated in:
 
 1. Periodic policy tuning is automated by scheduled workflow:
 2. `.github/workflows/stability-watch.yml`
-3. Offline analysis tooling remains available at `tools/analyze_playbot_policies.py` for cross-policy comparison across seeds and board sizes.
-4. Stability watch script (`tools/check_playbot_stability.py`) uses an extended 4D dry-run horizon (`max_pieces=40`) to reduce false negatives in broad seed sweeps.
+3. Offline analysis tooling remains available at `tools/benchmarks/analyze_playbot_policies.py` for cross-policy comparison across seeds and board sizes.
+4. Stability watch script (`tools/stability/check_playbot_stability.py`) uses an extended 4D dry-run horizon (`max_pieces=40`) to reduce false negatives in broad seed sweeps.
 
 ## 13. Anti-duplication Guardrails
 

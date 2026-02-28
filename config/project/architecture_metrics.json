@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "arch_stage": 715,
+  "source_roots": [
+    "src/tet4d",
+    "tests",
+    "tools",
+    "scripts"
+  ],
+  "classification": {
+    "non_code_segments": [
+      "docs",
+      "doc",
+      "assets",
+      "inputs",
+      "outputs",
+      "config",
+      "configs",
+      "notebooks",
+      "benchmarks",
+      "packaging",
+      "migrations",
+      "schema",
+      "scripts",
+      "tools",
+      "data"
+    ],
+    "test_segments": [
+      "test",
+      "tests"
+    ],
+    "class_overrides": {
+      "tests/unit/engine": "tests_lenient",
+      "src/tet4d/engine/core/rng": "micro_core_leaf",
+      "src/tet4d/engine/core/step": "micro_core_leaf",
+      "src/tet4d/replay": "micro_feature_leaf"
+    },
+    "gate_overrides": {
+      "tests/unit/engine": true
+    }
+  },
+  "class_gate_eligibility": {
+    "code_default": true,
+    "tests_lenient": true,
+    "non_code_exempt": false,
+    "micro_core_leaf": true,
+    "micro_feature_leaf": true
+  },
+  "class_to_profile": {
+    "code_default": "default_leaf",
+    "tests_lenient": "tests_leaf",
+    "non_code_exempt": "non_code_exempt",
+    "micro_core_leaf": "micro_leaf",
+    "micro_feature_leaf": "micro_leaf"
+  },
+  "backlog": {
+    "mode": "tet4d_bkl",
+    "default_priority": "P2"
+  },
+  "long_term_goals": {
+    "keybinding_retention": {
+      "required_scopes": [
+        "general",
+        "2d",
+        "3d",
+        "4d",
+        "all"
+      ],
+      "target_pressure_max": 0.0
+    },
+    "menu_simplification": {
+      "target_simplification_score_min": 0.65
+    }
+  }
+}

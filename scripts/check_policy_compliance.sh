@@ -1,27 +1,64 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+echo "Checking required files and directories..."
 
-required_files=(
-  "AGENTS.md"
-  "config/project/policy_manifest.json"
+REQUIRED_FILES=(
   "scripts/verify.sh"
+  "scripts/check_git_sanitation.sh"
+  "scripts/check_policy_compliance.sh"
+  "scripts/check_policy_template_drift.sh"
 )
 
-missing=0
+REQUIRED_DIRS=(
+  "docs"
+  "scripts"
+)
 
-for f in "${required_files[@]}"; do
-  if [[ ! -f "$f" ]]; then
-    echo "Missing required policy file: $f" >&2
-    missing=1
+FAILED=0
+
+for file in "${REQUIRED_FILES[@]}"; do
+  if [ ! -f "$file" ]; then
+    echo "Missing required file: $file"
+    FAILED=1
   fi
 done
 
-if [[ "$missing" -ne 0 ]]; then
-  exit 2
+# Optional workspace policy-kit markers may exist locally but are not required in
+# a fresh public-repo clone (for example GitHub CI checkout).
+OPTIONAL_WORKSPACE_FILES=(
+  ".workspace_policy_version.json"
+  ".policy/policy_template_hashes.json"
+)
+
+OPTIONAL_WORKSPACE_DIRS=(
+  ".policy"
+)
+
+for file in "${OPTIONAL_WORKSPACE_FILES[@]}"; do
+  if [ ! -f "$file" ]; then
+    continue
+  fi
+done
+
+for dir in "${REQUIRED_DIRS[@]}"; do
+  if [ ! -d "$dir" ]; then
+    echo "Missing required directory: $dir"
+    FAILED=1
+  fi
+done
+
+for dir in "${OPTIONAL_WORKSPACE_DIRS[@]}"; do
+  if [ ! -d "$dir" ]; then
+    continue
+  fi
+done
+
+if [ "$FAILED" -ne 0 ]; then
+  echo "Policy compliance check failed."
+  exit 1
 fi
 
-# Delegate to the repo's canonical policy/security checks.
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
+./scripts/check_text_formatting.sh
+
+echo "Policy compliance check complete."

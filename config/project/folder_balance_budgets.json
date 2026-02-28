@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "gate_mode": "non_regression_baseline",
+  "scope": "leaf_only",
+  "score_epsilon": 0.02,
+  "status_order": {
+    "balanced": 0,
+    "watch": 1,
+    "skewed": 2,
+    "rebalance_signal": 3
+  },
+  "profiles": {
+    "default_leaf": {
+      "py_files": {
+        "target_band": [
+          6,
+          15
+        ],
+        "soft_band": [
+          2,
+          28
+        ],
+        "target_margin": 1
+      },
+      "avg_loc_per_file": {
+        "target_band": [
+          40,
+          220
+        ],
+        "soft_band": [
+          10,
+          420
+        ],
+        "target_margin": 20
+      },
+      "py_loc_total": {
+        "target_band": [
+          250,
+          2500
+        ],
+        "soft_band": [
+          40,
+          8000
+        ],
+        "target_margin": 250
+      },
+      "weights": {
+        "py_files": 0.5,
+        "avg_loc_per_file": 0.3,
+        "py_loc_total": 0.2
+      }
+    },
+    "tests_leaf": {
+      "py_files": {
+        "target_band": [
+          12,
+          40
+        ],
+        "soft_band": [
+          4,
+          80
+        ],
+        "target_margin": 4
+      },
+      "avg_loc_per_file": {
+        "target_band": [
+          40,
+          220
+        ],
+        "soft_band": [
+          10,
+          420
+        ],
+        "target_margin": 20
+      },
+      "py_loc_total": {
+        "target_band": [
+          800,
+          7000
+        ],
+        "soft_band": [
+          150,
+          15000
+        ],
+        "target_margin": 500
+      },
+      "weights": {
+        "py_files": 0.5,
+        "avg_loc_per_file": 0.3,
+        "py_loc_total": 0.2
+      }
+    }
+  },
+  "tracked_leaf_folders": [
+    {
+      "path": "src/tet4d/engine/runtime",
+      "profile": "default_leaf",
+      "baseline_score": 0.71,
+      "baseline_status": "watch"
+    },
+    {
+      "path": "tests/unit/engine",
+      "profile": "tests_leaf",
+      "baseline_score": 1.0,
+      "baseline_status": "balanced"
+    }
+  ]
+}

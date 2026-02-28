@@ -42,6 +42,15 @@ require_module() {
 
 run_module() { "$PYTHON_BIN" -m "$@"; }
 
+require_repo_package() {
+  if "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Missing repo package 'tet4d' in ${PYTHON_BIN}." >&2
+  echo "Run: ${PYTHON_BIN} -m pip install -e '.[dev]'" >&2
+  exit 1
+}
+
 run_step() {
   local name="$1"; shift
   local tmp
@@ -64,21 +73,26 @@ run_step() {
 # Minimal output verification steps (same intent as ci_check.sh)
 require_module ruff ruff
 require_module pytest pytest
+require_repo_package
 
-run_step "contracts"      "$PYTHON_BIN" tools/validate_project_contracts.py
-run_step "secret_scan"    "$PYTHON_BIN" tools/scan_secrets.py
-run_step "pygame_ce"      "$PYTHON_BIN" tools/check_pygame_ce.py
+run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
+run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 
 run_step "ruff"           run_module ruff check .
+run_step "ruff_format"    run_module ruff format --check scripts tools
 run_step "ruff_c901"      run_module ruff check --select C901 .
+run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
+run_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
+run_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings
 
 run_step "playbot_stability" \
-  env PYTHONPATH=. "$PYTHON_BIN" tools/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+  env PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
-run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py front2d.py front3d.py front4d.py tetris_nd
-run_step "bench_playbot"  "$PYTHON_BIN" tools/bench_playbot.py --assert --record-trend
+run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
+run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend
 
 echo "verify: OK"

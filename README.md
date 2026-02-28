@@ -5,12 +5,12 @@ Usage guide for the 2D/3D/4D Tetris project.
 ## What this is
 
 This repository contains:
-- Unified launcher (`front.py`)
-- `2D Tetris` direct mode (`front2d.py`)
-- `3D Tetris` direct mode (`front3d.py`)
-- `4D Tetris` direct mode (`front4d.py`)
+- Unified launcher wrapper (`front.py`)
+- Direct mode launchers under `cli/` (`cli/front2d.py`, `cli/front3d.py`, `cli/front4d.py`)
 
-All modes share core logic under `tetris_nd/`.
+Primary Python entrypoints live under `cli/` (`cli/front*.py`).
+Root `front.py` is the compatibility wrapper entrypoint.
+All modes share core logic under `src/tet4d/engine/`.
 
 Boundary topology presets are available in setup menus:
 - `bounded` (default)
@@ -38,26 +38,54 @@ scripts/bootstrap_env.sh
 source .venv/bin/activate
 ```
 
+`scripts/bootstrap_env.sh` also installs the repo pre-push hook path
+(`.githooks/pre-push`) so pushes run the local CI gate by default.
+
 Alternative manual setup:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install ruff pytest
+scripts/install_git_hooks.sh
 ```
 
-`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects `ruff` + `pytest` to be installed in that same environment.
+`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects the repo to be installed in editable mode (`pip install -e .[dev]`) in that same environment.
+
+## Dev setup (editable install)
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -e ".[dev]"
+```
+
+## Development
+
+- Canonical runtime source path is `src/tet4d/engine/`.
+- `tet4d.engine.*` is the canonical import path for runtime/tests/tools.
+- The repo expects an editable install for development and verification (`pip install -e ".[dev]"`).
+- See `docs/MIGRATION_NOTES.md` for structure history and shim removal milestones.
 
 ## Run
 
 ```bash
-# Unified launcher (recommended)
+# Unified launcher via compatibility wrapper (kept stable)
 python front.py
 
-# Direct modes
-python front2d.py
-python front3d.py
-python front4d.py
+# Unified wrapper selector (routes to main/2d/3d/4d; default is "main")
+# `front` is an alias for `main` (same target)
+python front.py --frontend 4d
+python front.py --mode 2d
+
+# Canonical direct entrypoints (primary scripts)
+python cli/front.py
+
+# Direct modes (canonical cli forms; root wrapper supports --frontend/--mode)
+python cli/front2d.py
+python cli/front3d.py
+python cli/front4d.py
 ```
 
 ## Local desktop packaging (bundled runtime)
@@ -108,7 +136,7 @@ Keybindings:
 - `keybindings/4d.json`
 
 Control guide renderer (legacy contract reference):
-- `tetris_nd/menu_control_guides.py`
+- `src/tet4d/ui/pygame/menu/menu_control_guides.py`
 - `draw_translation_rotation_guides`
 
 ## Quality checks
@@ -116,12 +144,12 @@ Control guide renderer (legacy contract reference):
 ```bash
 ruff check .
 ruff check --select C901 .
-python3 tools/validate_project_contracts.py
-python3 tools/scan_secrets.py
-python3 tools/check_pygame_ce.py
+python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/scan_secrets.py
+python3 tools/governance/check_pygame_ce.py
 pytest -q
-PYTHONPATH=. python3 tools/check_playbot_stability.py --repeats 20 --seed-base 0
-python3 tools/bench_playbot.py --assert --record-trend
+PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
+python3 tools/benchmarks/bench_playbot.py --assert --record-trend
 scripts/ci_check.sh
 ```
 
@@ -143,8 +171,8 @@ scripts/ci_check.sh
 ## Canonical maintenance
 
 - Contract source: `config/project/canonical_maintenance.json`
-- Validator: `tools/validate_project_contracts.py`
-- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/scan_secrets.py`
+- Validator: `tools/governance/validate_project_contracts.py`
+- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/governance/scan_secrets.py`
 
 ## Local pytest warning
 

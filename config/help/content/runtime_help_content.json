@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "fallback_topic": {
+    "id": "overview",
+    "title": "Help Overview",
+    "summary": "No context-specific help topics were found.",
+    "sections": [
+      {
+        "id": "fallback",
+        "title": "What",
+        "lines": [
+          "Use Left/Right to switch topics.",
+          "Use Up/Down to switch dimensions."
+        ]
+      }
+    ]
+  },
+  "topic_blocks": {
+    "overview": {
+      "compact_lines": [
+        "",
+        "## Context: {context_label}",
+        "- Active profile: {active_key_profile}",
+        "- Help key: {help_key}",
+        "- Left/Right switches topic. Up/Down switches dimension.",
+        "- [ or ] (also PgUp/PgDn) switches subpage when needed.",
+        "",
+        "## Topics in this context"
+      ],
+      "full_lines": [
+        "",
+        "## Context: {context_label}",
+        "- Active profile: {active_key_profile}",
+        "- Help key: {help_key}",
+        "- Left/Right switches topic. Up/Down switches dimension.",
+        "- [ or ] (also PgUp/PgDn) switches subpage when needed.",
+        "",
+        "## Topics in this context"
+      ],
+      "compact_topic_limit": 5,
+      "compact_overflow_line": "- ... and {extra_count} more topics"
+    },
+    "game_types": {
+      "compact_lines": [
+        "",
+        "## Piece sets",
+        "- Use Full Key Map topic for complete live key coverage."
+      ],
+      "full_lines": [
+        "",
+        "## Piece sets",
+        "- 2D: {piece_sets_2d}",
+        "- 3D: {piece_sets_3d}",
+        "- 4D: {piece_sets_4d}"
+      ]
+    },
+    "gameplay_features": {
+      "compact_lines": [
+        "",
+        "## Practical notes",
+        "- Challenge mode pre-fills lower layers.",
+        "- Exploration mode disables gravity/lock/clear."
+      ],
+      "full_lines": [
+        "",
+        "## Practical notes",
+        "- Challenge mode prefills lower layers to raise early-game pressure.",
+        "- Exploration mode disables gravity/locking/clears for practice.",
+        "- Dry-run checks whether a selected setup can clear layers."
+      ]
+    },
+    "settings_profiles": {
+      "compact_lines": [
+        "",
+        "## Settings categories"
+      ],
+      "full_lines": [
+        "",
+        "## Settings categories"
+      ]
+    },
+    "camera_and_view": {
+      "compact_lines": [
+        "",
+        "## Grid modes",
+        "- OFF: board shadow only.",
+        "- EDGE: only outer board edges.",
+        "- FULL: full lattice grid.",
+        "- HELPER: only lines intersecting active piece cells.",
+        "- Locked-cell transparency affects board cells already on the board (including challenge layers and landed pieces).",
+        "- Range: 0%-85% (default 25%)."
+      ],
+      "full_lines": [
+        "",
+        "## Grid modes",
+        "- OFF: board shadow only.",
+        "- EDGE: only outer board edges.",
+        "- FULL: full lattice grid.",
+        "- HELPER: only lines intersecting active piece cells.",
+        "",
+        "## Locked-cell transparency",
+        "- Applies to locked board cells only (challenge layers + landed pieces).",
+        "- Active moving piece remains opaque.",
+        "- Range is 0%-85%; default is 25% from Settings > Display.",
+        "- In-game adjust uses camera transparency keybinds (shown in side panel controls).",
+        "",
+        "## 4D view note",
+        "- 4D is shown as multiple 3D boards (one per W layer)."
+      ]
+    },
+    "menu_workflows": {
+      "compact_lines": [
+        "",
+        "## Launcher sections",
+        "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
+        "- Pause menu keeps Help/Settings/Keybindings/Bot options parity."
+      ],
+      "full_lines": [
+        "",
+        "## Launcher sections",
+        "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
+        "",
+        "## Keybindings menu",
+        "- Sections: General, 2D, 3D, 4D.",
+        "- Rows show action, key(s), and action description.",
+        "",
+        "## Pause parity",
+        "- Pause includes Help, Settings, Keybindings, Bot Options, Restart, and Quit."
+      ]
+    },
+    "troubleshooting": {
+      "compact_lines": [
+        "",
+        "## Quick recovery",
+        "- Re-open Keybindings Setup if controls feel inconsistent.",
+        "- Use explicit Save when you want a durable checkpoint.",
+        "- Use Edge/OFF grid if visuals feel crowded."
+      ],
+      "full_lines": [
+        "",
+        "## Quick recovery",
+        "- Re-open Keybindings Setup if controls feel inconsistent.",
+        "- Use explicit Save when you want a durable checkpoint.",
+        "- Use Edge/OFF grid if visuals feel crowded.",
+        "",
+        "## Gameplay shortcuts",
+        "- Help: {help_key}",
+        "- Grid mode: {grid_key}",
+        "- Pause menu: {menu_key}"
+      ]
+    }
+  },
+  "value_templates": {
+    "settings_entry_template": "- {label}: {description}",
+    "settings_compact_overflow": "- Open full-size window to view all category descriptions.",
+    "live_keys_heading": "## Live keys (active profile)"
+  },
+  "action_group_headings": {
+    "game_translation": "Gameplay / Translation",
+    "game_rotation": "Gameplay / Rotation",
+    "game_other": "Gameplay / Other"
+  }
+}

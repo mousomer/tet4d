@@ -30,8 +30,8 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 7. `bounded` (default),
 8. `wrap_all` (`x`/`z`/`w` wrap; gravity `y` remains bounded),
 9. `invert_all` (`x`/`z`/`w` wrap with mirrored non-gravity axis mapping).
-10. Setup includes hidden-by-default advanced topology controls:
-11. `topology_advanced` toggle and `topology_profile_index` selector.
+10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
+11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 12. Advanced profiles may apply per-edge inversion/wrap behavior including `w` edges.
 
 ## 4. Piece Set
@@ -206,7 +206,7 @@ Minimum required coverage after 4D changes:
 11. projection cache-key separation when only total `W` size changes (same xyz/layer/view angles).
 12. zoom-fit regression checks for basis-derived layer boards under `xw`/`zw` turns.
 13. full local gate via `scripts/ci_check.sh` for renderer-affecting batches.
-14. profile report via `tools/profile_4d_render.py` after projection/cache/zoom changes, with mitigation required if sparse overhead exceeds `15%` or `2.0 ms/frame`.
+14. profile report via `tools/benchmarks/profile_4d_render.py` after projection/cache/zoom changes, with mitigation required if sparse overhead exceeds `15%` or `2.0 ms/frame`; record the latest report in `docs/benchmarks/`.
 15. basis decomposition regression under quarter-turn `xw` and `zw` view angles.
 16. dims `(5,4,3,2)` + `xw` regression asserting `layer_count=5` and board dims `(2,4,3)`.
 17. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
@@ -248,7 +248,7 @@ Implemented in code:
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
 12. 4D per-layer zoom fitting is basis-aware and computed from current per-layer board dims.
 13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tetris_nd/tests/test_front4d_render.py`).
-14. 4D render profiling tooling exists and is part of projection/cache change validation (`tools/profile_4d_render.py`).
+14. 4D render profiling tooling exists and is part of projection/cache change validation (`tools/benchmarks/profile_4d_render.py`), with latest recorded snapshot at `docs/benchmarks/4d_render_profile_2026-02-27.md`.
 15. `xw` / `zw` view turns now use basis-driven board decomposition in renderer:
 16. layer axis/count and per-layer board dims are derived from the active signed-axis basis, and all layer render paths share that mapping.
 17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tetris_nd/tests/test_front4d_render.py`).

@@ -28,8 +28,8 @@ Define requirements for the classic `(x, y)` mode implemented by:
 7. `bounded` (default),
 8. `wrap_all` (x wraps; gravity y remains bounded),
 9. `invert_all` (same as wrap in 2D when gravity wrap is off).
-10. Setup includes hidden-by-default advanced topology controls:
-11. `topology_advanced` toggle and `topology_profile_index` selector.
+10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
+11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 12. Advanced profile definitions are loaded from `config/topology/designer_presets.json`.
 
 ## 4. Piece Set

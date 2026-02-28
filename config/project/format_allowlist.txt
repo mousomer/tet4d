@@ -1,0 +1,6 @@
+# Tracked text files allowed to remain single-line or otherwise trip formatting heuristics.
+# Keep entries repo-relative, one path per line.
+POLICY_manifest.json
+keybindings/2d.json
+keybindings/3d.json
+keybindings/4d.json

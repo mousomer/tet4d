@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tet4d/help_runtime_layout.schema.json",
+  "title": "tet4d runtime help layout rules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "colors",
+    "thresholds",
+    "geometry",
+    "topic_rules",
+    "controls_helper_layout",
+    "header",
+    "labels",
+    "footer_hints",
+    "topic_media_placement"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bg_top", "bg_bottom", "text", "muted", "highlight"],
+      "properties": {
+        "bg_top": { "$ref": "#/$defs/rgb_triplet" },
+        "bg_bottom": { "$ref": "#/$defs/rgb_triplet" },
+        "text": { "$ref": "#/$defs/rgb_triplet" },
+        "muted": { "$ref": "#/$defs/rgb_triplet" },
+        "highlight": { "$ref": "#/$defs/rgb_triplet" }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compact_width_threshold", "compact_height_threshold"],
+      "properties": {
+        "compact_width_threshold": { "type": "integer", "minimum": 1 },
+        "compact_height_threshold": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outer_pad",
+        "header_extra",
+        "gap",
+        "footer_height",
+        "min_content_height",
+        "content_pad_x",
+        "content_pad_y",
+        "compact_adjustments"
+      ],
+      "properties": {
+        "outer_pad": { "type": "integer", "minimum": 0 },
+        "header_extra": { "type": "integer", "minimum": 0 },
+        "gap": { "type": "integer", "minimum": 0 },
+        "footer_height": { "type": "integer", "minimum": 0 },
+        "min_content_height": { "type": "integer", "minimum": 1 },
+        "content_pad_x": { "type": "integer", "minimum": 0 },
+        "content_pad_y": { "type": "integer", "minimum": 0 },
+        "compact_adjustments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "header_extra_min",
+            "header_extra_divisor",
+            "footer_height_min",
+            "footer_height_reduce",
+            "gap_min",
+            "gap_reduce",
+            "min_content_height_min",
+            "min_content_height_divisor"
+          ],
+          "properties": {
+            "header_extra_min": { "type": "integer", "minimum": 0 },
+            "header_extra_divisor": { "type": "integer", "minimum": 1 },
+            "footer_height_min": { "type": "integer", "minimum": 0 },
+            "footer_height_reduce": { "type": "integer", "minimum": 0 },
+            "gap_min": { "type": "integer", "minimum": 0 },
+            "gap_reduce": { "type": "integer", "minimum": 0 },
+            "min_content_height_min": { "type": "integer", "minimum": 1 },
+            "min_content_height_divisor": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "topic_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controls_topic_id", "key_reference_topic_id"],
+      "properties": {
+        "controls_topic_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "key_reference_topic_id": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+      }
+    },
+    "controls_helper_layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inset_x", "bottom_pad_y", "icon_placement", "image_placement"],
+      "properties": {
+        "inset_x": { "type": "integer", "minimum": 0 },
+        "bottom_pad_y": { "type": "integer", "minimum": 0 },
+        "icon_placement": { "type": "string", "minLength": 1 },
+        "image_placement": { "type": "string", "minLength": 1 }
+      }
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "subtitle_compact", "subtitle_full"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle_compact": { "type": "string", "minLength": 1 },
+        "subtitle_full": { "type": "string", "minLength": 1 }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topic", "part"],
+      "properties": {
+        "topic": { "type": "string", "minLength": 1 },
+        "part": { "type": "string", "minLength": 1 }
+      }
+    },
+    "footer_hints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compact", "full"],
+      "properties": {
+        "compact": { "type": "string", "minLength": 1 },
+        "full": { "type": "string", "minLength": 1 }
+      }
+    },
+    "topic_media_placement": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode", "icon_placement", "image_placement"],
+        "properties": {
+          "mode": { "type": "string", "enum": ["text", "controls"] },
+          "icon_placement": { "type": "string", "minLength": 1 },
+          "image_placement": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rgb_triplet": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  }
+}
