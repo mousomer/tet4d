@@ -144,13 +144,13 @@ Cross-cutting requirements are defined in:
 20. `config/audio/sfx.json`
 21. User runtime overrides remain in `state/menu_settings.json`.
 22. Canonical maintenance contract rules are defined in:
-23. `config/project/canonical_maintenance.json`
+23. `config/project/policy/manifests/canonical_maintenance.json`
 24. Contract validation script is:
 25. `tools/governance/validate_project_contracts.py`
 26. Repository path/constant/secret policy configs are source-controlled:
 27. `config/project/io_paths.json`
 28. `config/project/constants.json`
-29. `config/project/secret_scan.json`
+29. `config/project/policy/manifests/secret_scan.json`
 30. Secret scan command is:
 31. `python3 tools/governance/scan_secrets.py`
 32. Shared safe path/constants loader is:
@@ -165,9 +165,9 @@ Cross-cutting requirements are defined in:
 41. `config/schema/help_topics.schema.json`
 42. `config/schema/help_action_map.schema.json`
 43. `docs/migrations/*.md`
-44. `tests/replay/manifest.json`
+44. `config/project/policy/manifests/replay_manifest.json`
 45. `docs/help/HELP_INDEX.md`
-46. `assets/help/manifest.json`
+46. `config/project/policy/manifests/help_assets_manifest.json`
 47. `docs/RELEASE_CHECKLIST.md`
 48. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 49. Desktop packaging assets are source-controlled:
@@ -293,7 +293,7 @@ Remaining follow-up:
 11. Closed: remaining decomposition pass completed for 3D frontend runtime/render split and runtime-config validator section split.
 12. Closed: further runtime optimization pass completed (shared text-render cache, cached control-helper text, and 4D layer rendering pre-indexing by `w` layer).
 13. Closed: security/config hardening batch:
-14. CI-enforced repository secret scan policy added (`config/project/secret_scan.json`,`tools/governance/scan_secrets.py`,`scripts/ci_check.sh`),
+14. CI-enforced repository secret scan policy added (`config/project/policy/manifests/secret_scan.json`,`tools/governance/scan_secrets.py`,`scripts/ci_check.sh`),
 15. I/O path definitions centralized in `config/project/io_paths.json` with safe `Path` resolution helpers in `src/tet4d/engine/runtime/project_config.py`,
 16. selected runtime constants (cache/render limits and layout values) externalized to `config/project/constants.json`.
 17. Closed: projection-lattice caching pass implemented for static camera/view signatures in 3D/4D projection grid paths.

@@ -3,9 +3,13 @@
 ## Policy sources of truth
 - RDS + workflow: `docs/RDS_AND_CODEX.md`
 - Policy docs: `docs/policies/`
+- Policy pack root: `config/project/policy/pack.json`
+- Policy manifest: `config/project/policy/manifests/project_policy.json` (includes policy pack + index)
 - Canonical maintenance contract:
-  - `config/project/canonical_maintenance.json`
+  - `config/project/policy/manifests/canonical_maintenance.json`
   - `tools/governance/validate_project_contracts.py`
+- Context router:
+  - `config/project/policy/manifests/context_router_manifest.json`
 
 ## Governance rules
 For any restructuring/update:

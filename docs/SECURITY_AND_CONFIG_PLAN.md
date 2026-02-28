@@ -9,13 +9,13 @@ This plan defines:
 ## 2. Secret scanning policy
 
 Implemented controls:
-1. policy file: `config/project/secret_scan.json`,
+1. policy file: `config/project/policy/manifests/secret_scan.json`,
 2. scanner: `tools/governance/scan_secrets.py`,
 3. CI/local gate: `scripts/ci_check.sh` (runs the scanner before lint/tests).
 
 Rules:
 1. no credentials, API keys, private keys, or long-lived tokens are committed,
-2. scanner patterns are managed centrally in `config/project/secret_scan.json`,
+2. scanner patterns are managed centrally in `config/project/policy/manifests/secret_scan.json`,
 3. allowlist exceptions must be explicit and narrow (`path_glob` + optional `pattern_ids` + optional `contains`),
 4. scanner failures block CI until resolved.
 
@@ -56,5 +56,5 @@ Next batches:
 ## 5. Governance
 
 1. update `docs/BACKLOG.md` and relevant `docs/rds/*.md` for each policy/contract change,
-2. keep `config/project/canonical_maintenance.json` aligned with these artifacts,
+2. keep `config/project/policy/manifests/canonical_maintenance.json` aligned with these artifacts,
 3. run `scripts/ci_check.sh` before push and release.

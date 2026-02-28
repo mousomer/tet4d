@@ -12,6 +12,10 @@ Current restart handoff / progress snapshot:
 - `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`
 - `docs/policies/POLICY_STRING_SANITATION.md`
 - `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`
+- `docs/policies/INDEX.md`
+- `config/project/policy/pack.json` (policy pack root + constraints)
+- `config/project/policy/manifests/project_policy.json` (policy pack + enforcement map)
+- `config/project/policy/manifests/context_router_manifest.json` (Codex context routing config)
 
 ## RDS index
 
@@ -55,7 +59,7 @@ Read order:
    sanitization helpers before use.
 9. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 10. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
-11. Keep `config/project/tech_debt_budgets.json` synchronized with staged checkpoints:
+11. Keep `config/project/policy/manifests/tech_debt_budgets.json` synchronized with staged checkpoints:
     each stage-batch must lower top-level `tech_debt.score` versus the baseline stage,
     and baseline refresh is manual via `tools/governance/update_tech_debt_budgets.py`
     after a verified checkpoint. Tech-debt scoring includes weighted issue pressure
@@ -341,11 +345,11 @@ Minimum required coverage for gameplay-affecting changes:
 ## Canonical maintenance contract
 
 1. Canonical maintenance rules are machine-checked and source-controlled in:
-2. `config/project/canonical_maintenance.json`
+2. `config/project/policy/manifests/canonical_maintenance.json`
 3. Validation command:
 4. `python3 tools/governance/validate_project_contracts.py`
 5. Secret scan policy + command:
-6. `config/project/secret_scan.json`
+6. `config/project/policy/manifests/secret_scan.json`
 7. `python3 tools/governance/scan_secrets.py`
 5. Validation is part of CI via:
 6. `scripts/ci_check.sh`
@@ -359,13 +363,13 @@ Minimum required coverage for gameplay-affecting changes:
 13. Canonical connected artifacts now include:
 14. `config/schema/*.schema.json`,
 15. `docs/migrations/*.md`,
-16. `tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`,
-17. `docs/help/HELP_INDEX.md`+`config/help/content/runtime_help_content.json`+`config/help/layout/runtime_help_layout.json`+`assets/help/manifest.json`,
+16. `config/project/policy/manifests/replay_manifest.json`+`tests/replay/golden/.gitkeep`,
+17. `docs/help/HELP_INDEX.md`+`config/help/content/runtime_help_content.json`+`config/help/layout/runtime_help_layout.json`+`config/project/policy/manifests/help_assets_manifest.json`,
 18. `docs/RELEASE_CHECKLIST.md`.
 19. `docs/RELEASE_INSTALLERS.md`+`packaging/`+`.github/workflows/release-packaging.yml`.
 20. Repo governance enforcement files:
 21. `AGENTS.md`,
-22. `config/project/policy_manifest.json`,
+22. `config/project/policy/manifests/project_policy.json`,
 23. `scripts/verify.sh`,
 24. `scripts/check_git_sanitation.sh` (workspace baseline template),
 25. `scripts/check_policy_compliance.sh` (workspace baseline template),
@@ -636,7 +640,7 @@ Authoritative open/deferred items are tracked in:
 - Stage 676-695 (slice 178, wrapper-pruning + delivery-size recalibration)
   removes thin UI/runtime/replay wrapper leaves and canonicalizes callers to
   engine-api/runtime surfaces, updates delivery-size normalization units in
-  `config/project/tech_debt_budgets.json` (`loc_unit=10600`, `file_unit=64`),
+  `config/project/policy/manifests/tech_debt_budgets.json` (`loc_unit=10600`, `file_unit=64`),
   advances architecture stage metadata to `695`, and refreshes strict
   tech-debt baseline after verified decrease (`2.31 -> 2.19`).
 - Stage 696-715 (slice 179, runtime schema extraction + wrapper prune) extracts

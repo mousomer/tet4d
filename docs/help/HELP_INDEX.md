@@ -55,7 +55,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 
 When adding/removing a menu option or keybinding action, update:
 1. this index,
-2. `assets/help/manifest.json`,
+2. `config/project/policy/manifests/help_assets_manifest.json`,
 3. `config/help/icon_map.json`,
 4. `config/help/topics.json`,
 5. `config/help/action_map.json`,

@@ -180,7 +180,7 @@ Pattern per family:
 5. prune shim
 6. checkpoint docs + metrics + verification
 7. for each stage-batch checkpoint, ensure `tech_debt.score` decreases versus prior
-   baseline stage before refreshing `config/project/tech_debt_budgets.json`
+   baseline stage before refreshing `config/project/policy/manifests/tech_debt_budgets.json`
 
 ### Track B: Playbot relocation audit-only (deprioritized)
 
@@ -265,4 +265,4 @@ Recommended approach:
 - Architecture contract: `docs/ARCHITECTURE_CONTRACT.md`
 - RDS + Codex workflow: `docs/RDS_AND_CODEX.md`
 - Backlog: `docs/BACKLOG.md`
-- Canonical maintenance contract: `config/project/canonical_maintenance.json`
+- Canonical maintenance contract: `config/project/policy/manifests/canonical_maintenance.json`

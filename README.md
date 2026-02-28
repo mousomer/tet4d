@@ -124,7 +124,7 @@ Runtime tuning:
 Project-wide path/constants/security policy:
 - `config/project/io_paths.json`
 - `config/project/constants.json`
-- `config/project/secret_scan.json`
+- `config/project/policy/manifests/secret_scan.json`
 
 User state:
 - `state/menu_settings.json`
@@ -170,9 +170,9 @@ scripts/ci_check.sh
 
 ## Canonical maintenance
 
-- Contract source: `config/project/canonical_maintenance.json`
+- Contract source: `config/project/policy/manifests/canonical_maintenance.json`
 - Validator: `tools/governance/validate_project_contracts.py`
-- Secret scanning policy/runtime scanner: `config/project/secret_scan.json` + `tools/governance/scan_secrets.py`
+- Secret scanning policy/runtime scanner: `config/project/policy/manifests/secret_scan.json` + `tools/governance/scan_secrets.py`
 
 ## Local pytest warning
 

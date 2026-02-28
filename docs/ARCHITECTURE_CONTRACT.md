@@ -1101,7 +1101,7 @@ incremental enforcement strategy used while refactoring.
   backlog load, CI gate overage signals, fuzzy folder-balance pressure, and a
   low-weight positive delivery-size pressure signal (weighted LOC/file growth), then
   enforces a strict stage-batch decrease policy via
-  `config/project/tech_debt_budgets.json` in
+  `config/project/policy/manifests/tech_debt_budgets.json` in
   `scripts/check_architecture_metric_budgets.sh`.
 - Stage 531 (slice 166, pre-push local gate) adds repo-managed pre-push CI
   enforcement via `.githooks/pre-push` and `scripts/install_git_hooks.sh`, wired
@@ -1138,7 +1138,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 576-595 (slice 173, debt-driver reduction checkpoint) introduces a
   class-aware micro-leaf folder-balance profile for
   `src/tet4d/engine/core/{step,rng}` via
-  `config/project/architecture_metrics.json` class overrides/profile mapping,
+  `config/project/policy/manifests/architecture_metrics.json` class overrides/profile mapping,
   reduces code-balance pressure without touching gated runtime/test leaf
   baselines, moves recurring operations watches (`BKL-P3-002`, `BKL-P3-006`)
   to backlog operational watchlist (non-debt), and advances stage metadata to
@@ -1161,7 +1161,7 @@ incremental enforcement strategy used while refactoring.
 - Stage 636-655 (slice 176, replay leaf-profile debt reduction checkpoint) adds
   a class-aware folder-balance override for `src/tet4d/replay`
   (`micro_feature_leaf` -> `micro_leaf`) in
-  `config/project/architecture_metrics.json`, removes false-positive watch
+  `config/project/policy/manifests/architecture_metrics.json`, removes false-positive watch
   pressure for the intentionally small replay leaf, keeps tracked runtime/tests
   folder-balance gates non-regressed, advances stage metadata to `655`, and
   refreshes the strict tech-debt baseline after verified decrease.

@@ -153,7 +153,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - `config/audio/sfx.json`
 - `config/project/io_paths.json`
 - `config/project/constants.json`
-- `config/project/secret_scan.json`
+- `config/project/policy/manifests/secret_scan.json`
 - User state persisted in:
   - `state/menu_settings.json`
 - Missing/corrupt user state falls back to external defaults.
@@ -174,7 +174,7 @@ User-facing feature map for the shipped `tet4d` experience.
 ## 10. Canonical maintenance automation
 
 - Canonical maintenance contract file:
-  - `config/project/canonical_maintenance.json`
+  - `config/project/policy/manifests/canonical_maintenance.json`
 - Contract validator:
   - `tools/governance/validate_project_contracts.py`
 - Secret scanner:
@@ -187,8 +187,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - help guide renderer (`src/tet4d/ui/pygame/menu/menu_control_guides.py`) and help manifest,
   - core tests and canonical runtime config files,
   - schema + migration files (`config/schema`,`docs/migrations`),
-  - replay manifest contract (`tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`),
-  - help content contract (`docs/help/HELP_INDEX.md`,`assets/help/manifest.json`),
+  - replay manifest contract (`config/project/policy/manifests/replay_manifest.json`+`tests/replay/golden/.gitkeep`),
+  - help content contract (`docs/help/HELP_INDEX.md`,`config/project/policy/manifests/help_assets_manifest.json`),
   - release checklist (`docs/RELEASE_CHECKLIST.md`).
 
 ## 11. Desktop packaging

@@ -1,0 +1,195 @@
+{
+  "schema_version": "1.0.0",
+  "id": "tet4d-context-router",
+  "purpose": "Codex context routing: define context types, their repo scope, and retrieval ordering.",
+  "defaults": {
+    "max_files": 200,
+    "max_total_bytes": 2000000,
+    "prefer_tracked_files": true,
+    "ignore_generated": true,
+    "ignore_vendor": true
+  },
+  "contexts": [
+    {
+      "id": "code",
+      "title": "Code context",
+      "description": "Runtime/library source code only. Excludes tests, configs, docs.",
+      "include_globs": ["src/**", "cli/**", "tools/**"],
+      "exclude_globs": [
+        "**/__pycache__/**",
+        "**/*.pyc",
+        "**/.pytest_cache/**",
+        "**/.mypy_cache/**",
+        "**/.ruff_cache/**",
+        "**/.venv/**",
+        "**/dist/**",
+        "**/build/**"
+      ],
+      "priority": 10
+    },
+    {
+      "id": "tests",
+      "title": "Test context",
+      "description": "Unit/integration tests and replay harness code. Excludes large golden payloads.",
+      "include_globs": ["tests/**"],
+      "exclude_globs": [
+        "tests/**/golden/**",
+        "tests/**/goldens/**",
+        "tests/**/replays/**",
+        "**/__pycache__/**"
+      ],
+      "priority": 20
+    },
+    {
+      "id": "build_packaging",
+      "title": "Build & Packaging context",
+      "description": "Build system, packaging, entrypoints, CI build steps and specs.",
+      "include_globs": [
+        "pyproject.toml",
+        "requirements*.txt",
+        "packaging/**",
+        ".github/workflows/**",
+        "scripts/**",
+        "Makefile",
+        "setup.cfg",
+        "pytest.ini"
+      ],
+      "exclude_globs": [
+        "**/__pycache__/**",
+        "**/dist/**",
+        "**/build/**"
+      ],
+      "priority": 30
+    },
+    {
+      "id": "policy_contracts",
+      "title": "Policy & Contract context",
+      "description": "Governance JSON, schemas, manifests, maintenance contracts, secret-scan rules, architecture metrics, tech-debt budgets.",
+      "include_globs": [
+        "config/project/**",
+        "config/**/schemas/**",
+        "tools/governance/**",
+        "docs/policies/**",
+        "docs/ARCHITECTURE_CONTRACT.md"
+      ],
+      "exclude_globs": ["**/__pycache__/**"],
+      "priority": 40
+    },
+    {
+      "id": "docs_design",
+      "title": "Docs & Design context",
+      "description": "RDS, architecture, CURRENT_STATE, backlog/roadmap, ADR-style decision docs.",
+      "include_globs": [
+        "docs/**",
+        "CURRENT_STATE.md",
+        "README.md",
+        "docs/BACKLOG.md",
+        "docs/DECISIONS/**",
+        "docs/ARCHITECTURE_CONTRACT.md"
+      ],
+      "exclude_globs": ["docs/**/generated/**"],
+      "priority": 50
+    },
+    {
+      "id": "assets_fixtures",
+      "title": "Assets & Fixtures context",
+      "description": "Non-code payloads: icons/images, help assets, replay goldens, static resources used at runtime or tests.",
+      "include_globs": ["assets/**", "tests/**/golden/**", "tests/**/goldens/**", "tests/**/replays/**"],
+      "exclude_globs": ["**/.DS_Store"],
+      "priority": 60
+    },
+    {
+      "id": "environment",
+      "title": "Environment context",
+      "description": "Reproducibility constraints: Python versions, dependency constraints, SDL/headless notes, platform-specific setup.",
+      "include_globs": [
+        "runtime/**",
+        "scripts/bootstrap_env.sh",
+        "docs/**/setup*.md",
+        "docs/**/install*.md",
+        "docs/**/dev*.md",
+        "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "docs/RELEASE_INSTALLERS.md",
+        "docs/RELEASE_CHECKLIST.md"
+      ],
+      "exclude_globs": [],
+      "priority": 70
+    },
+    {
+      "id": "git_state",
+      "title": "Git state context",
+      "description": "Working tree status: staged/unstaged diffs, untracked files, conflicts. Not stored in repo; provided by tooling.",
+      "include_globs": [],
+      "exclude_globs": [],
+      "priority": 80,
+      "tool_required": true,
+      "tool_hints": ["git status --porcelain=v1", "git diff", "git diff --staged"]
+    },
+    {
+      "id": "git_history",
+      "title": "Git history context",
+      "description": "Commit provenance: blame, tags/releases, regression ranges. Not stored in repo; provided by tooling.",
+      "include_globs": [],
+      "exclude_globs": [],
+      "priority": 90,
+      "tool_required": true,
+      "tool_hints": ["git log --oneline --decorate -n 50", "git blame <file>", "git tag --list"]
+    },
+    {
+      "id": "runtime_evidence",
+      "title": "Runtime evidence context",
+      "description": "Command outputs, logs, stack traces, benchmark/profiling results, CI artifacts. Produced during execution.",
+      "include_globs": ["artifacts/**", "reports/**", "logs/**"],
+      "exclude_globs": ["**/__pycache__/**"],
+      "priority": 100
+    },
+    {
+      "id": "session_decisions",
+      "title": "Session decision context",
+      "description": "Durable constraints/decisions from the current thread: conventions, invariants, do-not-change items. Not stored in repo; stored by the router/agent session.",
+      "include_globs": [],
+      "exclude_globs": [],
+      "priority": 110,
+      "tool_required": true,
+      "tool_hints": ["session_decision_log"]
+    },
+    {
+      "id": "planning",
+      "title": "Planning context",
+      "description": "Stage plans, sequencing, acceptance criteria, stop conditions, risk controls. Produced during work; optionally persisted under docs/ or config/.",
+      "include_globs": ["docs/**/plans/**", "docs/**/adr/**", "docs/DECISIONS/**"],
+      "exclude_globs": [],
+      "priority": 120
+    }
+  ],
+  "routing_rules": [
+    {
+      "when_task_tags_any": ["refactor", "bugfix", "feature"],
+      "include_contexts_ordered": ["code", "policy_contracts", "build_packaging", "tests", "docs_design"]
+    },
+    {
+      "when_task_tags_any": ["ci", "lint", "governance", "contracts", "secrets"],
+      "include_contexts_ordered": ["policy_contracts", "build_packaging", "code", "docs_design"]
+    },
+    {
+      "when_task_tags_any": ["packaging", "release"],
+      "include_contexts_ordered": ["build_packaging", "environment", "policy_contracts", "code", "assets_fixtures"]
+    },
+    {
+      "when_task_tags_any": ["replay", "determinism", "tests"],
+      "include_contexts_ordered": ["tests", "code", "policy_contracts", "assets_fixtures", "runtime_evidence"]
+    },
+    {
+      "when_task_tags_any": ["ui_assets", "help", "icons"],
+      "include_contexts_ordered": ["assets_fixtures", "code", "policy_contracts", "docs_design"]
+    },
+    {
+      "when_task_tags_any": ["investigate", "debug"],
+      "include_contexts_ordered": ["runtime_evidence", "git_state", "code", "tests", "policy_contracts", "environment"]
+    },
+    {
+      "when_task_tags_any": ["architecture", "governance"],
+      "include_contexts_ordered": ["policy_contracts", "docs_design", "build_packaging", "code", "tests"]
+    }
+  ]
+}
