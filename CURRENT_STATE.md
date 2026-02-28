@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-02-27
+Last updated: 2026-02-28
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (local `AGENTS.md` edit)
+Worktree expectation at handoff: dirty (stage 696-715 batch edits)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `695` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `715` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,11 +23,11 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 2.19` (`low`)
+- `tech_debt.score = 2.18` (`low`)
   - weighted components (current dominant drivers):
     - backlog priority pressure (`+0.00`, no active open backlog debt items)
-    - code-balance pressure (`+0.12`, runtime leaf dropped to `0.87` fuzzy while still `balanced`)
-    - delivery-size pressure (`+2.07`; increases with weighted LOC/file growth)
+    - code-balance pressure (`+0.12`, runtime leaf is `0.86` fuzzy while still `balanced`)
+    - delivery-size pressure (`+2.06`; increases with weighted LOC/file growth)
   - delivery-size calibration:
     - `loc_unit = 10600`, `file_unit = 64` (keeps size pressure monotonic while
       preserving stronger weighting for correctness/CI/boundary signals)
@@ -43,7 +43,7 @@ Read this first in a new Codex thread before continuing staged refactors.
     - `src/tet4d/engine/frontend_nd.py`
 - `file_io_calls_non_test = 10`
   - concentrated in runtime storage helpers (acceptable placement debt):
-    - `src/tet4d/engine/runtime/json_storage.py`
+    - `src/tet4d/engine/runtime/settings_schema.py`
     - `src/tet4d/engine/runtime/keybindings_storage.py`
     - `src/tet4d/engine/runtime/score_analyzer.py`
 - `random_imports_non_test = 9`
@@ -73,7 +73,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 - `engine/core/step` and `engine/core/rng` now use a micro-leaf balance profile and
   score `balanced`, reducing technical debt pressure without changing gate scope.
 - `engine/ui_logic` and `engine/gameplay` are healthy.
-- `engine/runtime` remains gate-eligible and balanced (`0.87` fuzzy), but is now
+- `engine/runtime` remains gate-eligible and balanced (`0.86` fuzzy), but is now
   the primary code-balance watch hotspot after wrapper pruning.
 - `ui/pygame/menu` and `ui/pygame/launch` are balanced after launcher wrapper pruning.
 - `ui/pygame/input` is now a balanced leaf package (`6` files, fuzzy `balanced`) after
@@ -106,45 +106,59 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Recent Batch Status (Stages 676-695)
+## Recent Batch Status (Stages 696-715)
 
 Completed:
-- Completed help/menu/runtime wrapper pruning and canonicalized callers to
-  stable engine-api/runtime entry points.
-- Moved replay helpers into `src/tet4d/replay/__init__.py` and pruned
-  thin replay wrapper modules.
-- Consolidated runtime UI display and event-loop helpers into:
-  - `src/tet4d/ui/pygame/runtime_ui/app_runtime.py`
-  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
-- Removed obsolete wrapper modules:
-  - `src/tet4d/ui/pygame/front3d.py`
-  - `src/tet4d/ui/pygame/front4d.py`
-  - `src/tet4d/ui/pygame/launch/front3d_setup.py`
-  - `src/tet4d/ui/pygame/launch/profile_4d.py`
-  - `src/tet4d/ui/pygame/runtime_ui/display.py`
-  - `src/tet4d/ui/pygame/runtime_ui/game_loop_common.py`
-  - `src/tet4d/engine/runtime/assist_scoring.py`
-  - `src/tet4d/engine/runtime/runtime_helpers.py`
-  - `src/tet4d/engine/runtime/runtime_config_validation_audio.py`
-  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
-  - `src/tet4d/replay/playback.py`
-  - `src/tet4d/replay/record.py`
-- Advanced stage metadata to `arch_stage=695`.
-- Verified strict stage-advance debt decrease (`2.31 -> 2.19`) and refreshed strict
-  tech-debt baseline at stage `695`.
+- Added runtime schema/sanitization extraction modules:
+  - `src/tet4d/engine/runtime/settings_schema.py`
+  - `src/tet4d/engine/runtime/settings_sanitize.py`
+  - `src/tet4d/engine/runtime/menu_structure_schema.py`
+- Refactored runtime configuration and menu-state loading to use schema/sanitizer
+  helpers, reducing duplicated validation logic in:
+  - `src/tet4d/engine/runtime/menu_config.py`
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Pruned thin or duplicate helper files after caller canonicalization:
+  - `src/tet4d/engine/runtime/menu_persistence.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_shared.py`
+  - `src/tet4d/engine/runtime/json_storage.py`
+  - `src/tet4d/ui/pygame/menu/menu_model.py`
+  - `src/tet4d/engine/core/model/types.py`
+- Advanced stage metadata to `arch_stage=715`.
+- Verified stage debt decrease (`2.19 -> 2.18`) with tracked folder gates non-regressed.
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:
-  - `src/tet4d/engine/runtime`: `0.87 / balanced`
+  - `src/tet4d/engine/runtime`: `0.86 / balanced`
   - `tests/unit/engine`: `1.0 / balanced`
 - Replay leaf remains `1.0 / balanced` under the micro profile.
-- Tech debt decreased in this batch (`2.31 -> 2.19`) and baseline was refreshed at stage `695`.
+- Tech debt decreased in this batch (`2.19 -> 2.18`).
 
 ## Open Issues / Operational Notes
 
 - Some verification runs can fail transiently (historically score-snapshot determinism / benchmark spikes).
   - Policy: rerun once if failure matches known flaky pattern and no code changed.
 - GitHub CI should be checked if local green diverges again, but recent governance fixes addressed the prior CI drift.
+
+## Active Plan (Policy-Integrated)
+
+Batch objective:
+- continue staged architecture cleanup while preserving strict non-regression
+  gates and reducing `tech_debt.score` at each stage-advance checkpoint.
+
+Policy maintenance requirements in every batch:
+1. run policy guardrails at batch start and batch end for:
+   - no reinventing the wheel
+   - string sanitation
+   - no magic numbers
+2. run a policy checkpoint every 5 stages in long sequential runs.
+3. require documented exception notes + targeted tests for any policy exception.
+
+Placement in stage sequence:
+1. baseline metrics/policy check
+2. staged refactor implementation (move/canonicalize/prune)
+3. periodic policy checkpoint (every 5 stages)
+4. stage-advance checkpoint (`verify`, metrics, budget checks)
+5. final policy + contract sync before commit
 
 ## Short-Term Plan (Next 10-20 stages)
 

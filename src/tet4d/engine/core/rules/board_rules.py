@@ -4,7 +4,7 @@ from functools import reduce
 import operator
 from typing import Dict, List
 
-from ..model.types import Coord
+Coord = tuple[int, ...]
 
 
 def full_levels(dims: Coord, cells: Dict[Coord, int], gravity_axis: int) -> List[int]:

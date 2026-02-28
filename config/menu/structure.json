@@ -69,6 +69,8 @@
     {"kind": "item", "label": "Apply display", "row_key": "display_apply"},
     {"kind": "header", "label": "Gameplay"},
     {"kind": "item", "label": "Game seed (all modes)", "row_key": "game_seed"},
+    {"kind": "item", "label": "Random type (all modes)", "row_key": "game_random_mode"},
+    {"kind": "item", "label": "Advanced topology (all modes)", "row_key": "game_topology_advanced"},
     {"kind": "header", "label": "Analytics"},
     {"kind": "item", "label": "Score logging", "row_key": "analytics_score_logging"},
     {"kind": "item", "label": "Save", "row_key": "save"},
@@ -111,9 +113,7 @@
       {"label": "Board width", "attr": "width", "min": 6, "max": 16},
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
@@ -124,9 +124,7 @@
       {"label": "Board height", "attr": "height", "min": 12, "max": 30},
       {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
       {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
@@ -138,9 +136,7 @@
       {"label": "Board depth (z)", "attr": "depth", "min": 4, "max": 12},
       {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
       {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Random mode", "attr": "random_mode_index", "min": 0, "max": 1},
       {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology advanced", "attr": "topology_advanced", "min": 0, "max": 1},
       {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
       {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
       {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
@@ -178,7 +174,7 @@
     {
       "id": "gameplay",
       "label": "Gameplay",
-      "description": "Shared deterministic run controls (global game seed used by 2D/3D/4D setup runs)."
+      "description": "Shared run controls across 2D/3D/4D (game seed, random type, and advanced topology toggle)."
     },
     {
       "id": "analytics",
@@ -220,7 +216,7 @@
       "top_level": true
     },
     "gameplay": {
-      "field_count": 1,
+      "field_count": 3,
       "action_count": 0,
       "mode_specific": false,
       "top_level": true
@@ -244,7 +240,7 @@
       "top_level": false
     },
     "gameplay_setup": {
-      "field_count": 11,
+      "field_count": 9,
       "action_count": 2,
       "mode_specific": true,
       "top_level": false

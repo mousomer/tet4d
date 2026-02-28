@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List
 
-from .types import Coord
+Coord = tuple[int, ...]
 
 
 @dataclass

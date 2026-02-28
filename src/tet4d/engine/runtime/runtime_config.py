@@ -12,10 +12,10 @@ from .project_config import (
     resolve_state_relative_path,
 )
 from .runtime_config_validation_playbot import validate_playbot_policy_payload
-from .runtime_config_validation_shared import (
+from .settings_schema import (
     BOT_MODE_NAMES,
     GRID_MODE_NAMES,
-    read_json_payload,
+    read_json_object_or_raise,
     require_int,
     require_number,
     require_object,
@@ -27,6 +27,10 @@ GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
 PLAYBOT_POLICY_FILE = CONFIG_DIR / "playbot" / "policy.json"
 AUDIO_SFX_FILE = CONFIG_DIR / "audio" / "sfx.json"
 DEFAULT_PLAYBOT_HISTORY_FILE = playbot_history_file_default_relative()
+
+
+def _read_json_payload(path: Path) -> dict[str, Any]:
+    return read_json_object_or_raise(path)
 
 
 def _dimension_bucket_key(ndim: int) -> str:
@@ -229,19 +233,19 @@ def _validate_gameplay_tuning_payload(payload: dict[str, Any]) -> dict[str, Any]
 
 @lru_cache(maxsize=1)
 def _gameplay_tuning() -> dict[str, Any]:
-    payload = read_json_payload(GAMEPLAY_TUNING_FILE)
+    payload = _read_json_payload(GAMEPLAY_TUNING_FILE)
     return _validate_gameplay_tuning_payload(payload)
 
 
 @lru_cache(maxsize=1)
 def _playbot_policy() -> dict[str, Any]:
-    payload = read_json_payload(PLAYBOT_POLICY_FILE)
+    payload = _read_json_payload(PLAYBOT_POLICY_FILE)
     return validate_playbot_policy_payload(payload)
 
 
 @lru_cache(maxsize=1)
 def _audio_sfx() -> dict[str, Any]:
-    payload = read_json_payload(AUDIO_SFX_FILE)
+    payload = _read_json_payload(AUDIO_SFX_FILE)
     return _validate_audio_sfx_payload(payload)
 
 

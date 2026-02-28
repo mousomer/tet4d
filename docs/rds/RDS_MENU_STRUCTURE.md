@@ -79,6 +79,7 @@ Main Menu
 ├── Settings
 │   ├── Audio
 │   ├── Display
+│   ├── Gameplay
 │   └── Analytics
 ├── Controls
 │   ├── General
@@ -124,9 +125,9 @@ Pause Menu
 5. Setup screens must use the same layout skeleton and footer shortcuts.
 6. Setup screens must expose topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
-8. Topology remains a dimension-specific gameplay setting (not a global settings-hub toggle).
-9. Advanced topology designer controls stay hidden unless `Topology advanced` is enabled.
-10. Advanced controls include `Topology profile` selector sourced from `config/topology/designer_presets.json`.
+8. Setup screens keep dimension-specific topology mode and topology profile selection.
+9. Shared settings hub owns `Random type` and `Topology advanced` for all modes.
+10. `Topology profile` remains in setup and stays hidden unless shared `Topology advanced` is enabled.
 
 ## 5. Layout and Readability Requirements
 
@@ -317,7 +318,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
-3. `Settings` submenu unifies audio, display, gameplay seed, and analytics controls.
+3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced topology`), and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Controls setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.

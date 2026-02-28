@@ -106,8 +106,6 @@ tet4d/
 │       ├── front3d_game.py      # 3D gameplay frontend
 │       ├── front4d_game.py      # 4D gameplay frontend
 │       ├── projection3d.py      # shared projection/camera helpers
-│       ├── menu_model.py        # shared menu loop helpers (selection/confirm/clamp)
-│       ├── menu_persistence.py  # shared menu settings persistence facade
 │       └── ...                  # additional package modules (see src/tet4d/)
 ├── tools/
 │   ├── governance/
@@ -166,15 +164,19 @@ tet4d/
 9. Shared key-name formatting is centralized in `input/key_display.py`.
 10. Shared keybinding editor model/scope helpers are in `menu/keybindings_menu_model.py`.
 11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
-12. Audio/display/bootstrap runtime helpers are in `runtime_ui/audio.py`,
-    `runtime_ui/display.py`, and `runtime_ui/app_runtime.py`.
+12. Audio/display/bootstrap runtime helpers are in `runtime_ui/audio.py` and
+    `runtime_ui/app_runtime.py`.
 13. Shared in-game loop orchestration helpers are in
-    `runtime_ui/game_loop_common.py` and `runtime_ui/loop_runner_nd.py`.
+    `runtime_ui/loop_runner_nd.py`.
 14. Shared in-game pause flows (settings + keybindings + profiles + help) are in `runtime_ui/pause_menu.py`.
 15. Shared in-game key helper grouping is in `render/control_helper.py`.
 16. Help/explanation pages (including rendered arrow-diagram guides) are in `runtime_ui/help_menu.py` and `menu/menu_control_guides.py`.
-17. Shared menu/help layout-zone allocation logic is in `menu_layout.py`.
-18. Shared menu utilities and persistence facades are in `menu_model.py`and`menu_persistence.py`.
+17. Shared menu/help layout-zone allocation logic is in `engine/ui_logic/menu_layout.py`.
+18. Shared menu/default/settings persistence and schema validation are in
+    `engine/runtime/menu_settings_state.py`, `engine/runtime/menu_config.py`,
+    `engine/runtime/settings_schema.py`,
+    `engine/runtime/settings_sanitize.py`, and
+    `engine/runtime/menu_structure_schema.py`.
 19. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
 20. `config/menu/*` drives launcher/setup menu structure and default values.
 21. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.

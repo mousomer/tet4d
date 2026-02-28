@@ -2,6 +2,7 @@
 
 ## Policy sources of truth
 - RDS + workflow: `docs/RDS_AND_CODEX.md`
+- Policy docs: `docs/policies/`
 - Canonical maintenance contract:
   - `config/project/canonical_maintenance.json`
   - `tools/governance/validate_project_contracts.py`
@@ -17,6 +18,7 @@ For any restructuring/update:
 7. Repo uses `src/` layout with editable install for dev/CI (`pip install -e .[dev]`); do not add repo-root import shims.
 8. Do not reinvent the wheel: prefer existing repo helpers/functions/APIs before adding new implementation code.
 9. Do not hardcode magic numbers in Python code; prefer non-Python config-backed constants (for example `config/*` + runtime/config accessors) unless externalizing the value would add disproportionate complexity.
+10. Sanitize external or user-controlled string inputs via runtime sanitization helpers before use.
 
 ## Verification contract
 Run:

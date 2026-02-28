@@ -5,7 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .runtime.json_storage import read_json_value_or_raise
+from .runtime.settings_schema import read_json_value_or_raise
 from .runtime.project_config import project_root_path
 
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"

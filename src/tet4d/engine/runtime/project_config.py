@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .json_storage import read_json_object_or_empty
+from .settings_schema import read_json_object_or_empty
 
 
 def _detect_project_root() -> Path:

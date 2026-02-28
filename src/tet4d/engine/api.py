@@ -440,19 +440,19 @@ def keybindings_profiles_dir_path_runtime() -> Path:
 
 
 def keybindings_load_json_file_runtime(path: Path) -> Any:
-    from .runtime.json_storage import read_json_value_or_raise as _load_json_file
+    from .runtime.settings_schema import read_json_value_or_raise as _load_json_file
 
     return _load_json_file(path)
 
 
 def keybindings_atomic_write_text_runtime(path: Path, payload: str) -> None:
-    from .runtime.json_storage import atomic_write_text as _atomic_write_text
+    from .runtime.settings_schema import atomic_write_text as _atomic_write_text
 
     _atomic_write_text(path, payload)
 
 
 def keybindings_copy_text_file_runtime(src_path: Path, dst_path: Path) -> None:
-    from .runtime.json_storage import copy_text_file as _copy_text_file
+    from .runtime.settings_schema import copy_text_file as _copy_text_file
 
     _copy_text_file(src_path, dst_path)
 
@@ -572,21 +572,21 @@ def default_settings_payload_runtime():
 
 
 def load_analytics_payload_runtime():
-    from .runtime.menu_persistence import (
-        load_analytics_payload as _load_analytics_payload,
+    from .runtime.menu_settings_state import (
+        get_analytics_settings as _get_analytics_settings,
     )
 
-    return _load_analytics_payload()
+    return _get_analytics_settings()
 
 
 def persist_audio_payload_runtime(
     *, master_volume: float, sfx_volume: float, mute: bool
 ):
-    from .runtime.menu_persistence import (
-        persist_audio_payload as _persist_audio_payload,
+    from .runtime.menu_settings_state import (
+        save_audio_settings as _save_audio_settings,
     )
 
-    return _persist_audio_payload(
+    return _save_audio_settings(
         master_volume=master_volume,
         sfx_volume=sfx_volume,
         mute=mute,
@@ -599,11 +599,11 @@ def persist_display_payload_runtime(
     windowed_size: tuple[int, int],
     overlay_transparency: float | None = None,
 ):
-    from .runtime.menu_persistence import (
-        persist_display_payload as _persist_display_payload,
+    from .runtime.menu_settings_state import (
+        save_display_settings as _save_display_settings,
     )
 
-    return _persist_display_payload(
+    return _save_display_settings(
         fullscreen=fullscreen,
         windowed_size=windowed_size,
         overlay_transparency=overlay_transparency,
@@ -611,11 +611,11 @@ def persist_display_payload_runtime(
 
 
 def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
-    from .runtime.menu_persistence import (
-        persist_analytics_payload as _persist_analytics_payload,
+    from .runtime.menu_settings_state import (
+        save_analytics_settings as _save_analytics_settings,
     )
 
-    return _persist_analytics_payload(score_logging_enabled=score_logging_enabled)
+    return _save_analytics_settings(score_logging_enabled=score_logging_enabled)
 
 
 def default_windowed_size_runtime() -> tuple[int, int]:
@@ -1146,27 +1146,35 @@ def menu_items_runtime(menu_id: str):
 
 
 def load_menu_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_persistence import load_menu_payload as _load_menu_payload
+    from .runtime.menu_settings_state import (
+        load_app_settings_payload as _load_app_settings_payload,
+    )
 
-    return _load_menu_payload()
+    return _load_app_settings_payload()
 
 
 def save_menu_payload_runtime(payload: dict[str, Any]) -> tuple[bool, str]:
-    from .runtime.menu_persistence import save_menu_payload as _save_menu_payload
+    from .runtime.menu_settings_state import (
+        save_app_settings_payload as _save_app_settings_payload,
+    )
 
-    return _save_menu_payload(payload)
+    return _save_app_settings_payload(payload)
 
 
 def load_audio_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_persistence import load_audio_payload as _load_audio_payload
+    from .runtime.menu_settings_state import (
+        get_audio_settings as _get_audio_settings,
+    )
 
-    return _load_audio_payload()
+    return _get_audio_settings()
 
 
 def load_display_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_persistence import load_display_payload as _load_display_payload
+    from .runtime.menu_settings_state import (
+        get_display_settings as _get_display_settings,
+    )
 
-    return _load_display_payload()
+    return _get_display_settings()
 
 
 def help_action_topic_registry_runtime() -> dict[str, str]:

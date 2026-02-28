@@ -83,11 +83,19 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   parsing fallback from metrics computation.
 
 `DONE` `[BKL-P2-010]` True-random piece mode with configurable seed:
-- setup menus expose `Random mode` (`Fixed seed` / `True random`) in 2D/3D/4D;
-  shared `Game seed` control is centralized in the unified settings hub.
+- shared settings hub now owns `Random type` (`Fixed seed` / `True random`) for
+  all 2D/3D/4D setup runs; setup menus keep mode-specific gameplay fields only.
+- shared `Game seed` control remains centralized in the unified settings hub.
 - gameplay configs now carry `rng_mode` + `rng_seed`; fixed-seed mode remains
   deterministic, and true-random mode uses non-seeded runtime RNG.
 - regression coverage added for 2D/ND create-initial-state RNG mode routing.
+
+`DONE` Menu simplification follow-up (shared settings ownership):
+- moved `Random type` and `Advanced topology` controls from 2D/3D/4D setup menus
+  to the shared General Settings gameplay section.
+- setup menus now include a reference hint directing users to Settings for those
+  shared controls.
+- shared settings persistence now saves these controls across all modes.
 
 `DONE` `[BKL-P2-011]` Larger dedicated 4D piece sets:
 - 6-cell dedicated 4D set (`standard_4d_6`) is available in gameplay piece-set
@@ -255,6 +263,27 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   architecture/current-state/backlog docs.
 - Stage 695: refreshed strict tech-debt baseline after confirmed decrease
   (`2.31 -> 2.19`).
+
+`DONE` Arch Stage 696-715 runtime schema extraction + wrapper-prune checkpoint:
+- Stage 696-700: extracted runtime schema/sanitization/layout parsing helpers into
+  `src/tet4d/engine/runtime/settings_schema.py`,
+  `src/tet4d/engine/runtime/settings_sanitize.py`, and
+  `src/tet4d/engine/runtime/menu_structure_schema.py`.
+- Stage 701-707: refactored `menu_settings_state.py` and `menu_config.py` to use
+  extracted helpers and reduced duplicate fallback/validation logic.
+- Stage 708-711: canonicalized runtime and CLI callers to direct settings-state
+  functions and removed obsolete wrapper modules:
+  `runtime/menu_persistence.py`,
+  `runtime/runtime_config_validation_shared.py`,
+  `runtime/json_storage.py`,
+  `ui/pygame/menu/menu_model.py`,
+  `engine/core/model/types.py`.
+- Stage 712: reran architecture metrics and confirmed debt decrease after pruning.
+- Stage 713: synchronized architecture/current-state/backlog/RDS docs for stage 715.
+- Stage 714: updated strict debt-gate epsilon to `0.0` and refreshed baseline
+  workflow expectations for explicit absolute decreases on stage advancement.
+- Stage 715: advanced stage metadata to `715`, reran strict budget checks and
+  verification, and confirmed score decrease (`2.19 -> 2.18`).
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
 2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
@@ -728,18 +757,24 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. None currently open.
-2. `Cadence:` re-evaluate when a new architecture debt signal appears.
-3. `Trigger:` new hotspot, regression trend, or reopened debt watch item.
-4. `Done criteria:` active-open section remains empty or contains explicitly
-   bounded/decomposable debt items with owner + closure criteria.
-5. `BKL-P3-004` was completed in Stage `596-615` by extracting 3D projection
-   and face/cell render responsibilities into focused helper modules with
-   behavior parity preserved.
-6. Canonical machine-readable debt source:
+1. `[BKL-P1-008]` Menu UX text and behavior are still partially hardcoded in Python instead of non-Python config.
+2. `[BKL-P1-009]` Launcher exposes `Tutorials` and `Topology Lab` routes that are not implemented.
+3. `[BKL-P2-023]` Topology designer remains preset-file/export only; no interactive Topology Lab editor workflow.
+4. `[BKL-P2-024]` Playbot lacks learning mode; current architecture supports heuristics/profiles but not an adaptive learning loop.
+5. `[BKL-P2-025]` Menu schema duplication persists (legacy `launcher_menu` plus graph `menus/menu_entrypoints`).
+6. `[BKL-P2-026]` Shared menu constants are duplicated across setup/settings modules (random-mode labels and related UX strings).
+7. `[BKL-P2-027]` Large module decomposition debt remains in engine/runtime/ui hotspots, increasing regression risk and slowing staged refactors.
+8. `[BKL-P2-028]` RDS documentation still references removed `tetris_nd` paths instead of current `src/tet4d` canonical paths.
+9. `[BKL-P2-029]` Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous.
+10. `[BKL-P3-008]` Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in the same cycle.
+11. Canonical machine-readable debt source:
    `config/project/backlog_debt.json` (`active_debt_items`).
 
 ### Operational Watchlist (Non-debt; recurring controls)
+
+Cadence: weekly and after workflow/config changes.
+Trigger: any governance, CI-workflow, runtime-validation, or release-process drift.
+Done criteria: controls run cleanly and docs/contracts remain synchronized.
 
 1. `WATCH` `[BKL-P3-002]` Scheduled stability + policy workflow watch:
    cadence remains weekly and after workflow/config changes for
@@ -765,24 +800,42 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 
 ## 5. Change Footprint (Current Batch)
 
-Current sub-batch (2026-02-27): wrapper-pruning + delivery-size recalibration checkpoint.
+Current sub-batch (2026-02-27): runtime schema extraction + wrapper-prune checkpoint.
 
-Latest checkpoint additions (Stage 676-695):
-- wrapper-prune canonicalization across runtime/UI/replay:
-  - `src/tet4d/ui/pygame/runtime_ui/app_runtime.py`
-  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
-  - `src/tet4d/replay/__init__.py`
+Policy-governance hardening (2026-02-27):
+- added formal policy docs for:
+  - no reinventing the wheel
+  - string sanitization
+  - no magic numbers
+- linked policy docs from `CONTRIBUTING.md` via a required `Policies` section.
+- updated canonical contract + repo policy check to require policy docs and the
+  contributing policy links.
+
+Latest checkpoint additions (Stage 696-715):
+- runtime schema/sanitization extraction and caller canonicalization:
+  - `src/tet4d/engine/runtime/settings_schema.py`
+  - `src/tet4d/engine/runtime/settings_sanitize.py`
+  - `src/tet4d/engine/runtime/menu_structure_schema.py`
+  - `src/tet4d/engine/runtime/menu_config.py`
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
   - `src/tet4d/engine/runtime/runtime_config.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_playbot.py`
   - `src/tet4d/engine/api.py`
-- `config/project/architecture_metrics.json`
-  (advanced `arch_stage=695`).
-- `scripts/arch_metrics.py`
-  (advanced `ARCH_STAGE=695`; stage-level debt snapshot updated).
-- `config/project/tech_debt_budgets.json`
-  (delivery-size normalization updated to `loc_unit=10600`,`file_unit=64`; baseline refreshed after confirmed stage-695 debt decrease `2.31 -> 2.19`).
-- `docs/BACKLOG.md`, `docs/RDS_AND_CODEX.md`,
-  `docs/ARCHITECTURE_CONTRACT.md`, `CURRENT_STATE.md`
-  (stage-676-695 governance sync + checkpoint documentation).
+  - `cli/front.py`
+- runtime/core cleanup removals:
+  - `src/tet4d/engine/runtime/menu_persistence.py`
+  - `src/tet4d/engine/runtime/runtime_config_validation_shared.py`
+  - `src/tet4d/engine/runtime/json_storage.py`
+  - `src/tet4d/ui/pygame/menu/menu_model.py`
+  - `src/tet4d/engine/core/model/types.py`
+- stage/budget metadata:
+  - `config/project/architecture_metrics.json` (advanced `arch_stage=715`)
+  - `scripts/arch_metrics.py` (advanced `ARCH_STAGE=715`)
+  - `config/project/tech_debt_budgets.json` (`score_epsilon=0.0`; baseline refreshed to stage `715`, score `2.18`)
+- governance/doc synchronization:
+  - `docs/BACKLOG.md`, `docs/RDS_AND_CODEX.md`,
+    `docs/ARCHITECTURE_CONTRACT.md`, `docs/PROJECT_STRUCTURE.md`,
+    `CURRENT_STATE.md`.
 
 1. Key implementation/doc files updated include:
 `front2d.py`,

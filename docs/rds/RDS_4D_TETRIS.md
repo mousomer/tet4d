@@ -30,8 +30,8 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 7. `bounded` (default),
 8. `wrap_all` (`x`/`z`/`w` wrap; gravity `y` remains bounded),
 9. `invert_all` (`x`/`z`/`w` wrap with mirrored non-gravity axis mapping).
-10. Setup includes hidden-by-default advanced topology controls:
-11. `topology_advanced` toggle and `topology_profile_index` selector.
+10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
+11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 12. Advanced profiles may apply per-edge inversion/wrap behavior including `w` edges.
 
 ## 4. Piece Set

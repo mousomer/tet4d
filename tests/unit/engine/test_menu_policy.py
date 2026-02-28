@@ -43,6 +43,20 @@ class TestMenuPolicy(unittest.TestCase):
                 if kind == "item"
             )
         )
+        self.assertTrue(
+            any(
+                row_key == "game_random_mode"
+                for kind, _label, row_key in rows
+                if kind == "item"
+            )
+        )
+        self.assertTrue(
+            any(
+                row_key == "game_topology_advanced"
+                for kind, _label, row_key in rows
+                if kind == "item"
+            )
+        )
 
     def test_settings_hub_headers_align_with_top_level_categories(self) -> None:
         top_level = menu_config.settings_top_level_categories()
@@ -59,9 +73,9 @@ class TestMenuPolicy(unittest.TestCase):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
             attrs = {attr for _label, attr, _min_val, _max_val in fields}
             self.assertIn("topology_mode", attrs)
-            self.assertIn("topology_advanced", attrs)
             self.assertIn("topology_profile_index", attrs)
-            self.assertIn("random_mode_index", attrs)
+            self.assertNotIn("topology_advanced", attrs)
+            self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)
 
     def test_launcher_pause_entrypoint_parity(self) -> None:

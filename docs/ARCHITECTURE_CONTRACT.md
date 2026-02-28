@@ -1182,6 +1182,16 @@ incremental enforcement strategy used while refactoring.
   (`loc_unit=10600`, `file_unit=64`) while keeping monotonic LOC/file pressure,
   advances stage metadata to `695`, and refreshes the strict tech-debt baseline
   after verified decrease (`2.31 -> 2.19`).
+- Stage 696-715 (slice 179, runtime schema extraction + wrapper prune)
+  extracts shared runtime schema/sanitization/layout parsing helpers into
+  `src/tet4d/engine/runtime/{settings_schema,settings_sanitize,menu_structure_schema}.py`,
+  refactors `menu_config.py` and `menu_settings_state.py` to use those helpers,
+  removes now-redundant runtime/menu wrappers
+  (`menu_persistence.py`, `runtime_config_validation_shared.py`,
+  `json_storage.py`, `ui/pygame/menu/menu_model.py`,
+  `engine/core/model/types.py`), advances stage metadata to `715`, and verifies
+  tech-debt decrease (`2.19 -> 2.18`) with tracked folder-balance gates
+  non-regressed.
 - Post-stage 533 gameplay RNG-mode extension keeps config-driven setup fields for
   `random_mode_index` (2D/3D/4D), centralizes `game_seed` in the shared settings
   hub, routes values into gameplay configs as `rng_mode` + `rng_seed`, and keeps

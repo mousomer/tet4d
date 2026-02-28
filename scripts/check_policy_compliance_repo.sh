@@ -18,6 +18,10 @@ fi
 
 required_files=(
   "AGENTS.md"
+  "CONTRIBUTING.md"
+  "docs/policies/POLICY_NO_REINVENTING_WHEEL.md"
+  "docs/policies/POLICY_STRING_SANITATION.md"
+  "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
   "config/project/policy_manifest.json"
   "scripts/verify.sh"
 )

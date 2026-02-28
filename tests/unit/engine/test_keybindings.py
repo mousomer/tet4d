@@ -467,3 +467,23 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertTrue(ok, msg)
         self.assertEqual(state.active_profile, keybindings.PROFILE_SMALL)
         self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
+
+    def test_settings_schema_mode_key_mapping(self) -> None:
+        from tet4d.engine.runtime.settings_schema import mode_key_for_dimension
+
+        self.assertEqual(mode_key_for_dimension(2), "2d")
+        self.assertEqual(mode_key_for_dimension(3), "3d")
+        self.assertEqual(mode_key_for_dimension(4), "4d")
+        with self.assertRaises(ValueError):
+            mode_key_for_dimension(5)
+
+    def test_settings_schema_clamp_helpers(self) -> None:
+        from tet4d.engine.runtime.settings_schema import (
+            clamp_game_seed,
+            clamp_overlay_transparency,
+        )
+
+        self.assertEqual(clamp_overlay_transparency(-1.0, default=0.25), 0.0)
+        self.assertEqual(clamp_overlay_transparency(1.0, default=0.25), 0.85)
+        self.assertEqual(clamp_game_seed(-1, default=1337), 0)
+        self.assertEqual(clamp_game_seed(2_000_000_000, default=1337), 999_999_999)

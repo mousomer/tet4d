@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "gate_mode": "strict_stage_decrease",
-  "score_epsilon": 0.1,
+  "score_epsilon": 0.0,
   "status_order": {
     "low": 0,
     "moderate": 1,
@@ -9,8 +9,8 @@
     "critical": 3
   },
   "baseline": {
-    "arch_stage": 695,
-    "score": 2.19,
+    "arch_stage": 715,
+    "score": 2.18,
     "status": "low"
   },
   "scoring": {

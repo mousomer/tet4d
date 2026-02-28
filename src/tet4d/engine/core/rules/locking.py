@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..model.board import BoardND
-from ..model.types import Coord
 from .scoring import score_for_clear
+
+Coord = tuple[int, ...]
 
 
 @dataclass(frozen=True)

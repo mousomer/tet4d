@@ -314,6 +314,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             bindings_file_hint=None,
             extra_hint_lines=(
                 "F7 dry-run verify (bot, no graphics)",
+                "Use Main Menu -> Settings for Random type and Advanced topology.",
                 "Use Main Menu -> Bot Options / Keybindings for shared controls.",
             ),
             bindings_status=state.bindings_status,

@@ -215,7 +215,7 @@ def draw_menu(
     title_text = f"{dimension}D Tetris - Setup"
     subtitle_text = fit_text(
         fonts.hint_font,
-        "Use Up/Down to select, Left/Right to change, Enter to start.",
+        "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
         width - 28,
     )
 
@@ -288,6 +288,7 @@ def draw_menu(
     hint_lines = [
         "Esc = quit",
         "F7 dry-run verify (bot, no graphics)",
+        "Use Main Menu -> Settings for Random type and Advanced topology.",
         "Use Main Menu -> Bot Options / Keybindings for shared controls.",
         "Controls are shown in-game on the side panel.",
     ]

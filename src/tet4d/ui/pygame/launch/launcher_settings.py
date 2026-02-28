@@ -20,6 +20,7 @@ BG_BOTTOM = (4, 7, 20)
 TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
+_RANDOM_MODE_LABELS = ("Fixed seed", "True random")
 
 
 @dataclass
@@ -36,11 +37,15 @@ class _UnifiedSettingsState:
     display_settings: DisplaySettings
     overlay_transparency: float
     game_seed: int
+    random_mode_index: int
+    topology_advanced: int
     score_logging_enabled: bool
     original_audio: AudioSettings
     original_display: DisplaySettings
     original_overlay_transparency: float
     original_game_seed: int
+    original_random_mode_index: int
+    original_topology_advanced: int
     original_score_logging_enabled: bool
     selected: int = 0
     status: str = ""
@@ -133,6 +138,30 @@ def _game_seed_default() -> int:
     return int(engine_api.default_game_seed_runtime())
 
 
+def _random_mode_default() -> int:
+    defaults = engine_api.default_settings_payload_runtime().get("settings", {})
+    if isinstance(defaults, dict):
+        mode_2d = defaults.get("2d")
+        if isinstance(mode_2d, dict):
+            return _clamp_toggle_index(mode_2d.get("random_mode_index"), default=0)
+    return 0
+
+
+def _topology_advanced_default() -> int:
+    defaults = engine_api.default_settings_payload_runtime().get("settings", {})
+    if isinstance(defaults, dict):
+        mode_2d = defaults.get("2d")
+        if isinstance(mode_2d, dict):
+            return _clamp_toggle_index(mode_2d.get("topology_advanced"), default=0)
+    return 0
+
+
+def _clamp_toggle_index(value: object, *, default: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return default
+    return 0 if int(value) <= 0 else 1
+
+
 def _load_overlay_transparency_setting() -> float:
     payload = engine_api.get_display_settings_runtime()
     if isinstance(payload, dict):
@@ -150,6 +179,57 @@ def _load_game_seed_setting() -> int:
             default=_game_seed_default(),
         )
     )
+
+
+def _load_random_mode_setting() -> int:
+    payload = engine_api.load_menu_payload_runtime()
+    settings = payload.get("settings", {}) if isinstance(payload, dict) else {}
+    mode_2d = settings.get("2d") if isinstance(settings, dict) else None
+    if isinstance(mode_2d, dict):
+        return _clamp_toggle_index(
+            mode_2d.get("random_mode_index"),
+            default=_random_mode_default(),
+        )
+    return _random_mode_default()
+
+
+def _load_topology_advanced_setting() -> int:
+    payload = engine_api.load_menu_payload_runtime()
+    settings = payload.get("settings", {}) if isinstance(payload, dict) else {}
+    mode_2d = settings.get("2d") if isinstance(settings, dict) else None
+    if isinstance(mode_2d, dict):
+        return _clamp_toggle_index(
+            mode_2d.get("topology_advanced"),
+            default=_topology_advanced_default(),
+        )
+    return _topology_advanced_default()
+
+
+def _save_shared_gameplay_settings(
+    random_mode_index: int,
+    topology_advanced: int,
+) -> tuple[bool, str]:
+    payload = engine_api.load_menu_payload_runtime()
+    if not isinstance(payload, dict):
+        payload = {}
+    settings = payload.get("settings")
+    if not isinstance(settings, dict):
+        settings = {}
+        payload["settings"] = settings
+    for mode_key in ("2d", "3d", "4d"):
+        mode_settings = settings.get(mode_key)
+        if not isinstance(mode_settings, dict):
+            mode_settings = {}
+            settings[mode_key] = mode_settings
+        mode_settings["random_mode_index"] = _clamp_toggle_index(
+            random_mode_index,
+            default=_random_mode_default(),
+        )
+        mode_settings["topology_advanced"] = _clamp_toggle_index(
+            topology_advanced,
+            default=_topology_advanced_default(),
+        )
+    return engine_api.save_menu_payload_runtime(payload)
 
 
 def _load_score_logging_setting() -> bool:
@@ -225,11 +305,17 @@ def _save_unified_settings(
     ok_game_seed, msg_game_seed = engine_api.save_global_game_seed_runtime(
         int(state.game_seed)
     )
-    if ok_audio and ok_display and ok_analytics and ok_game_seed:
+    ok_gameplay_shared, msg_gameplay_shared = _save_shared_gameplay_settings(
+        int(state.random_mode_index),
+        int(state.topology_advanced),
+    )
+    if ok_audio and ok_display and ok_analytics and ok_game_seed and ok_gameplay_shared:
         state.original_audio = _clone_audio_settings(state.audio_settings)
         state.original_display = _clone_display_settings(state.display_settings)
         state.original_overlay_transparency = float(state.overlay_transparency)
         state.original_game_seed = int(state.game_seed)
+        state.original_random_mode_index = int(state.random_mode_index)
+        state.original_topology_advanced = int(state.topology_advanced)
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
         state.saved = True
         _set_unified_status(state, "Saved audio/display/gameplay/analytics settings")
@@ -243,6 +329,8 @@ def _save_unified_settings(
         error = msg_analytics
     if ok_audio and ok_display and ok_analytics:
         error = msg_game_seed
+    if ok_audio and ok_display and ok_analytics and ok_game_seed:
+        error = msg_gameplay_shared
     _set_unified_status(state, error, is_error=True)
     return screen
 
@@ -254,6 +342,8 @@ def _reset_unified_settings(
     state.display_settings = _display_defaults()
     state.overlay_transparency = _overlay_transparency_default()
     state.game_seed = _game_seed_default()
+    state.random_mode_index = _random_mode_default()
+    state.topology_advanced = _topology_advanced_default()
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
@@ -325,16 +415,24 @@ def _adjust_unified_display_row(
 def _adjust_unified_gameplay_row(
     state: _UnifiedSettingsState, row_key: str, delta_sign: int
 ) -> bool:
-    if row_key != "game_seed":
-        return False
-    state.game_seed = int(
-        engine_api.clamp_game_seed_runtime(
-            int(state.game_seed)
-            + delta_sign * int(engine_api.game_seed_step_runtime()),
-            default=_game_seed_default(),
+    if row_key == "game_seed":
+        state.game_seed = int(
+            engine_api.clamp_game_seed_runtime(
+                int(state.game_seed)
+                + delta_sign * int(engine_api.game_seed_step_runtime()),
+                default=_game_seed_default(),
+            )
         )
-    )
-    return True
+        return True
+    if row_key == "game_random_mode":
+        state.random_mode_index = (int(state.random_mode_index) + delta_sign) % len(
+            _RANDOM_MODE_LABELS
+        )
+        return True
+    if row_key == "game_topology_advanced":
+        state.topology_advanced = 0 if int(state.topology_advanced) else 1
+        return True
+    return False
 
 
 def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) -> bool:
@@ -368,7 +466,13 @@ def _handle_unified_enter(
     screen: pygame.Surface, state: _UnifiedSettingsState
 ) -> pygame.Surface:
     row_key = _unified_row_key(state)
-    if row_key in {"audio_mute", "display_fullscreen", "analytics_score_logging"}:
+    if row_key in {
+        "audio_mute",
+        "display_fullscreen",
+        "analytics_score_logging",
+        "game_random_mode",
+        "game_topology_advanced",
+    }:
         state.pending_reset_confirm = False
         _adjust_unified_with_arrows(state, pygame.K_RIGHT)
         return screen
@@ -399,24 +503,30 @@ def _handle_unified_enter(
 
 
 def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
-    if row_key == "audio_master":
-        return f"{int(state.audio_settings.master_volume * 100)}%"
-    if row_key == "audio_sfx":
-        return f"{int(state.audio_settings.sfx_volume * 100)}%"
-    if row_key == "audio_mute":
-        return "ON" if state.audio_settings.mute else "OFF"
-    if row_key == "display_fullscreen":
-        return "ON" if state.display_settings.fullscreen else "OFF"
-    if row_key == "display_width":
-        return str(state.display_settings.windowed_size[0])
-    if row_key == "display_height":
-        return str(state.display_settings.windowed_size[1])
-    if row_key == "display_overlay_transparency":
-        return f"{int(round(state.overlay_transparency * 100.0))}%"
-    if row_key == "game_seed":
-        return str(int(state.game_seed))
-    if row_key == "analytics_score_logging":
-        return "ON" if state.score_logging_enabled else "OFF"
+    static_values = {
+        "audio_master": f"{int(state.audio_settings.master_volume * 100)}%",
+        "audio_sfx": f"{int(state.audio_settings.sfx_volume * 100)}%",
+        "audio_mute": "ON" if state.audio_settings.mute else "OFF",
+        "display_fullscreen": "ON" if state.display_settings.fullscreen else "OFF",
+        "display_width": str(state.display_settings.windowed_size[0]),
+        "display_height": str(state.display_settings.windowed_size[1]),
+        "display_overlay_transparency": (
+            f"{int(round(state.overlay_transparency * 100.0))}%"
+        ),
+        "game_seed": str(int(state.game_seed)),
+        "analytics_score_logging": "ON" if state.score_logging_enabled else "OFF",
+    }
+    value = static_values.get(row_key)
+    if value is not None:
+        return value
+    if row_key == "game_random_mode":
+        safe_index = max(
+            0,
+            min(len(_RANDOM_MODE_LABELS) - 1, int(state.random_mode_index)),
+        )
+        return _RANDOM_MODE_LABELS[safe_index]
+    if row_key == "game_topology_advanced":
+        return "ON" if int(state.topology_advanced) else "OFF"
     return ""
 
 
@@ -599,16 +709,22 @@ def run_settings_hub_menu(
     score_logging_enabled = _load_score_logging_setting()
     overlay_transparency = _load_overlay_transparency_setting()
     game_seed = _load_game_seed_setting()
+    random_mode_index = _load_random_mode_setting()
+    topology_advanced = _load_topology_advanced_setting()
     state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
         overlay_transparency=overlay_transparency,
         game_seed=game_seed,
+        random_mode_index=random_mode_index,
+        topology_advanced=topology_advanced,
         score_logging_enabled=score_logging_enabled,
         original_audio=_clone_audio_settings(audio_settings),
         original_display=_clone_display_settings(display_settings),
         original_overlay_transparency=overlay_transparency,
         original_game_seed=game_seed,
+        original_random_mode_index=random_mode_index,
+        original_topology_advanced=topology_advanced,
         original_score_logging_enabled=score_logging_enabled,
     )
     ok_layout, msg_layout = _validate_unified_layout_against_policy()

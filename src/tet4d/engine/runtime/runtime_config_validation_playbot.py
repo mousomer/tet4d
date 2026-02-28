@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .runtime_config_validation_shared import (
+from .settings_schema import (
     BOT_PROFILE_NAMES,
     require_int,
     require_number,

@@ -110,6 +110,10 @@
     ],
     "governance": [
       "AGENTS.md",
+      "CONTRIBUTING.md",
+      "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+      "docs/policies/POLICY_STRING_SANITATION.md",
+      "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
       "config/project/policy_manifest.json",
       ".githooks/pre-push"
     ],
@@ -215,10 +219,20 @@
       "file": "AGENTS.md",
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
+        "docs/policies/",
         "config/project/canonical_maintenance.json",
         "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
         "config/project/io_paths.json"
+      ]
+    },
+    {
+      "file": "CONTRIBUTING.md",
+      "must_contain": [
+        "## Policies",
+        "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+        "docs/policies/POLICY_STRING_SANITATION.md",
+        "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
       ]
     },
     {

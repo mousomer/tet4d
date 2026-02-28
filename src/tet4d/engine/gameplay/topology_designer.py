@@ -10,7 +10,7 @@ from ..runtime.project_config import (
     project_root_path,
     topology_profile_export_file_default_path,
 )
-from ..runtime.json_storage import read_json_object_or_empty, write_json_object
+from ..runtime.settings_schema import read_json_object_or_empty, write_json_object
 from .topology import (
     EDGE_BOUNDED,
     AxisEdgeRule,

@@ -7,6 +7,12 @@ Architecture boundary contract:
 Current restart handoff / progress snapshot:
 - `CURRENT_STATE.md`
 
+## Policy index
+
+- `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`
+- `docs/policies/POLICY_STRING_SANITATION.md`
+- `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`
+
 ## RDS index
 
 All requirement/design specs are in:
@@ -45,16 +51,19 @@ Read order:
    existing adapters) before writing new implementation code.
 7. Avoid magic numbers in Python code; prefer config-backed constants and runtime/config
    accessors unless externalizing the value is clearly not worth the complexity.
-8. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
-9. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
-10. Keep `config/project/tech_debt_budgets.json` synchronized with staged checkpoints:
+8. Sanitize external/user-controlled string inputs with canonical runtime
+   sanitization helpers before use.
+9. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
+10. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
+11. Keep `config/project/tech_debt_budgets.json` synchronized with staged checkpoints:
     each stage-batch must lower top-level `tech_debt.score` versus the baseline stage,
     and baseline refresh is manual via `tools/governance/update_tech_debt_budgets.py`
     after a verified checkpoint. Tech-debt scoring includes weighted issue pressure
     components plus a low-weight positive delivery-size pressure signal from total
     Python LOC/file growth (weighted by source roots: `src/tet4d` highest;
-    `tests/tools/scripts` lower).
-11. Canonical debt backlog source is machine-readable:
+    `tests/tools/scripts` lower). Current strict gate uses `score_epsilon=0.0`
+    to require an explicit absolute score decrease for stage-advance batches.
+12. Canonical debt backlog source is machine-readable:
     `config/project/backlog_debt.json` (`active_debt_items`);
     metrics do not parse markdown backlog text as fallback.
 11. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
@@ -630,3 +639,12 @@ Authoritative open/deferred items are tracked in:
   `config/project/tech_debt_budgets.json` (`loc_unit=10600`, `file_unit=64`),
   advances architecture stage metadata to `695`, and refreshes strict
   tech-debt baseline after verified decrease (`2.31 -> 2.19`).
+- Stage 696-715 (slice 179, runtime schema extraction + wrapper prune) extracts
+  runtime settings/menu schema helpers into
+  `runtime/{settings_schema,settings_sanitize,menu_structure_schema}.py`,
+  refactors `menu_config.py` and `menu_settings_state.py` to use those helpers,
+  prunes redundant runtime/menu wrappers (`menu_persistence.py`,
+  `runtime_config_validation_shared.py`, `json_storage.py`,
+  `ui/pygame/menu/menu_model.py`, `engine/core/model/types.py`), advances
+  architecture stage metadata to `715`, and refreshes strict tech-debt baseline
+  after verified decrease (`2.19 -> 2.18`).
