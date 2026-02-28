@@ -12,7 +12,7 @@ User-facing feature map for the shipped `tet4d` experience.
   - Display: fullscreen toggle, windowed size capture, save/reset.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
-- 3D/4D setup flows now share the same ND setup/menu engine (`tetris_nd/frontend_nd.py`) to reduce drift.
+- 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/engine/frontend_nd.py`) to reduce drift.
 - Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.
 - Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
 - Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.
@@ -184,7 +184,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - `.github/workflows/stability-watch.yml`
 - Contract currently enforces synchronized maintenance of:
   - documentation set (`README`,`docs`,`RDS`,`BACKLOG`,`FEATURE_MAP`),
-  - help guide renderer (`tetris_nd/menu_control_guides.py`) and help manifest,
+  - help guide renderer (`src/tet4d/ui/pygame/menu/menu_control_guides.py`) and help manifest,
   - core tests and canonical runtime config files,
   - schema + migration files (`config/schema`,`docs/migrations`),
   - replay manifest contract (`tests/replay/manifest.json`+`tests/replay/golden/.gitkeep`),

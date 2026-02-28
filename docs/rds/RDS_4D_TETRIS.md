@@ -9,8 +9,8 @@ Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 - `front4d.py`
-- `tetris_nd/front4d_game.py`
-- `tetris_nd/game_nd.py`
+- `src/tet4d/ui/pygame/front4d_game.py`
+- `src/tet4d/engine/gameplay/game_nd.py`
 
 ## 2. Current Intentions
 
@@ -43,7 +43,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 5. Optional set: `random_cells_4d` (connected random cells).
 6. Optional set: `debug_rectangles_4d` (simple hyper-rectangles for progression testing).
 7. Current baseline 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
-8. Definitions are in `tetris_nd/pieces_nd.py`.
+8. Definitions are in `src/tet4d/engine/gameplay/pieces_nd.py`.
 9. Setup menu must expose piece set source selection (`native_4d`,`native_4d_6cell`,`embedded_3d`,`embedded_2d`,`random_cells_4d`,`debug_rectangles_4d`).
 10. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
@@ -213,9 +213,9 @@ Minimum required coverage after 4D changes:
 18. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
 
 Relevant tests:
-- `tetris_nd/tests/test_game_nd.py`
-- `tetris_nd/tests/test_pieces_nd.py`
-- `tetris_nd/tests/test_gameplay_replay.py`
+- `tests/unit/engine/test_game_nd.py`
+- `tests/unit/engine/test_pieces_nd.py`
+- `tests/unit/engine/test_gameplay_replay.py`
 
 ## 10. Acceptance Criteria
 
@@ -235,20 +235,20 @@ Relevant tests:
 ## 11. Implementation Status (2026-02-19)
 
 Implemented in code:
-1. 4D mode renders all `w`layers as multiple projected 3D boards in`tetris_nd/front4d_game.py`.
+1. 4D mode renders all `w`layers as multiple projected 3D boards in`src/tet4d/ui/pygame/front4d_game.py`.
 2. Grid toggle supports full projected lattice rendering per layer; grid-off draws board shadow silhouettes.
 3. 4D clear animation uses ghost-cell fade overlays across affected layers.
 4. `rotate_zw` (`V/B`) is conflict-safe with view/system defaults and protected from camera key override during rebinding.
-5. Random 4D spawn stability improved by spawn-fit filtering and centered spawn placement in `tetris_nd/game_nd.py`.
+5. Random 4D spawn stability improved by spawn-fit filtering and centered spawn placement in `src/tet4d/engine/gameplay/game_nd.py`.
 6. Debug 4D rectangle piece set is selectable and tested.
-7. Scoring matrix and random-piece stability checks are covered in `tetris_nd/tests/test_game_nd.py`.
-8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`tetris_nd/front4d_render.py`).
+7. Scoring matrix and random-piece stability checks are covered in `tests/unit/engine/test_game_nd.py`.
+8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`src/tet4d/engine/front4d_render.py`).
 9. Dedicated keybinding camera actions for these turns are implemented and conflict-safe by default:
 10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`.
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
 12. 4D per-layer zoom fitting is basis-aware and computed from current per-layer board dims.
-13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tetris_nd/tests/test_front4d_render.py`).
+13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tests/unit/engine/test_front4d_render.py`).
 14. 4D render profiling tooling exists and is part of projection/cache change validation (`tools/benchmarks/profile_4d_render.py`), with latest recorded snapshot at `docs/benchmarks/4d_render_profile_2026-02-27.md`.
 15. `xw` / `zw` view turns now use basis-driven board decomposition in renderer:
 16. layer axis/count and per-layer board dims are derived from the active signed-axis basis, and all layer render paths share that mapping.
-17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tetris_nd/tests/test_front4d_render.py`).
+17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tests/unit/engine/test_front4d_render.py`).

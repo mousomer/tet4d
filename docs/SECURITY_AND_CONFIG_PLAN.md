@@ -30,12 +30,12 @@ Remediation flow:
 Implemented controls:
 1. canonical path defaults in `config/project/io_paths.json`,
 2. canonical runtime constants in `config/project/constants.json`,
-3. safe loader/resolver in `tetris_nd/project_config.py`,
+3. safe loader/resolver in `src/tet4d/engine/runtime/project_config.py`,
 4. path consumers updated to use safe `Path` resolution:
-5. `tetris_nd/keybindings.py`,
-6. `tetris_nd/menu_settings_state.py`,
-7. `tetris_nd/runtime_config.py`,
-8. `tetris_nd/score_analyzer.py`.
+5. `src/tet4d/ui/pygame/keybindings.py`,
+6. `src/tet4d/engine/runtime/menu_settings_state.py`,
+7. `src/tet4d/engine/runtime/runtime_config.py`,
+8. `src/tet4d/engine/runtime/score_analyzer.py`.
 
 Rules:
 1. I/O paths must be repo-relative and sanitized (`..`, drive prefixes, absolute paths rejected),

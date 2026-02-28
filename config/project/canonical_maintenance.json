@@ -553,6 +553,84 @@
         "Potential unsafe path traversal patterns detected in docs/ or config/.",
         "Filenames with spaces detected:"
       ]
+    },
+    {
+      "file": "tests/replay/manifest.json",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "assets/help/manifest.json",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/help/HELP_INDEX.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/FEATURE_MAP.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/RDS_AND_CODEX.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_TETRIS_GENERAL.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_2D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_3D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_4D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_KEYBINDINGS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_MENU_STRUCTURE.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_PLAYBOT.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
     }
   ],
   "canonical_candidates": [

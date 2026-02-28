@@ -764,9 +764,8 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 5. `[BKL-P2-025]` Menu schema duplication persists (legacy `launcher_menu` plus graph `menus/menu_entrypoints`).
 6. `[BKL-P2-026]` Shared menu constants are duplicated across setup/settings modules (random-mode labels and related UX strings).
 7. `[BKL-P2-027]` Large module decomposition debt remains in engine/runtime/ui hotspots, increasing regression risk and slowing staged refactors.
-8. `[BKL-P2-028]` RDS documentation still references removed `tetris_nd` paths instead of current `src/tet4d` canonical paths.
-9. `[BKL-P2-029]` Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous.
-10. `[BKL-P3-008]` Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in the same cycle.
+8. `[BKL-P2-029]` Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous.
+9. `[BKL-P3-008]` Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in the same cycle.
 11. Canonical machine-readable debt source:
    `config/project/backlog_debt.json` (`active_debt_items`).
 
@@ -810,6 +809,7 @@ Policy-governance hardening (2026-02-27):
 - linked policy docs from `CONTRIBUTING.md` via a required `Policies` section.
 - updated canonical contract + repo policy check to require policy docs and the
   contributing policy links.
+- Closed `[BKL-P2-028]`: canonical RDS/help/replay contract paths updated to `src/tet4d/...` and `tests/unit/engine/...`; contract content rules now block legacy `tetris_nd` references in machine-checked docs/assets.
 
 Latest checkpoint additions (Stage 696-715):
 - runtime schema/sanitization extraction and caller canonicalization:

@@ -20,12 +20,12 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 
 Primary implementation and maintenance files:
 1. `front2d.py`
-2. `tetris_nd/front3d_game.py`
-3. `tetris_nd/frontend_nd.py`
-4. `tetris_nd/menu_controls.py`
-5. `tetris_nd/menu_keybinding_shortcuts.py`
-6. `tetris_nd/menu_config.py`
-7. `tetris_nd/help_topics.py`
+2. `src/tet4d/ui/pygame/front3d_game.py`
+3. `src/tet4d/engine/frontend_nd.py`
+4. `src/tet4d/ui/pygame/menu/menu_controls.py`
+5. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+6. `src/tet4d/engine/runtime/menu_config.py`
+7. `src/tet4d/engine/runtime/help_topics.py`
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
 10. `config/help/topics.json`
@@ -261,12 +261,12 @@ Add persistent settings file:
 ## 9. Implementation Notes (Current)
 
 1. Menu graph source-of-truth lives in `config/menu/structure.json` under `menus` and `menu_entrypoints`.
-2. Runtime graph parsing/validation lives in `tetris_nd/menu_config.py` with legacy fallback support for older payloads.
+2. Runtime graph parsing/validation lives in `src/tet4d/engine/runtime/menu_config.py` with legacy fallback support for older payloads.
 3. Generic runtime navigation and dispatch lives in:
-4. `tetris_nd/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
+4. `src/tet4d/ui/pygame/menu/menu_runner.py` (`MenuRunner`, `ActionRegistry`).
 5. Launcher and pause menus must consume graph items; no hardcoded tree/picker lists in runtime modules.
 6. Menu graph lint contract lives in:
-7. `tetris_nd/menu_graph_linter.py` + `tools/governance/lint_menu_graph.py`.
+7. `src/tet4d/engine/ui_logic/menu_graph_linter.py` + `tools/governance/lint_menu_graph.py`.
 
 ## 10. Testing Instructions
 
@@ -301,7 +301,7 @@ Manual tests:
 ## 12. Stabilization Additions (Completed)
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
-2. Dedicated `Controls` screen is implemented (backed by `tetris_nd/keybindings_menu.py`).
+2. Dedicated `Controls` screen is implemented (backed by `src/tet4d/ui/pygame/menu/keybindings_menu.py`).
 3. Unified settings hub (`audio/display/gameplay/analytics`) is implemented.
 4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
 5. Shared display-state manager handles layout refresh after display-mode changes.
@@ -321,11 +321,11 @@ Implemented in code:
 3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced topology`), and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
-6. Controls setup is a dedicated screen (`tetris_nd/keybindings_menu.py`) with grouped actions and conflict mode controls.
+6. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
 7. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
-10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `tetris_nd/launcher_settings.py`.
+10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/launcher_settings.py`.
 11. User overrides remain in `state/menu_settings.json`.
 12. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
@@ -344,17 +344,17 @@ Stabilization details:
 12. profile cycle and per-dimension keybinding load/save actions
 13. Help menu is implemented in launcher and pause flows, including controls/scoring/piece sets/bots/view guidance.
 14. Shared menu helpers were added in:
-15. `tetris_nd/menu_model.py`
-16. `tetris_nd/menu_persistence.py`
+15. `src/tet4d/ui/pygame/menu/keybindings_menu_model.py`
+16. `src/tet4d/engine/runtime/menu_settings_state.py`
 17. Keybindings menu supports `General/2D/3D/4D` scopes with explicit category descriptions loaded from menu structure config.
 18. Pause menu row execution is table-driven, reducing branching complexity and improving parity maintenance.
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
-21. Launcher and pause menu trees now run through one generic graph runtime (`tetris_nd/menu_runner.py`) with per-surface action registries.
+21. Launcher and pause menu trees now run through one generic graph runtime (`src/tet4d/ui/pygame/menu/menu_runner.py`) with per-surface action registries.
 22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
 23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` are routed under `Play`.
 24. Menu graph lint contract is enforced via:
-25. `tetris_nd/menu_graph_linter.py`,
+25. `src/tet4d/engine/ui_logic/menu_graph_linter.py`,
 26. `tools/governance/lint_menu_graph.py`,
 27. `tools/governance/validate_project_contracts.py`,
 28. `scripts/ci_check.sh`.
@@ -369,24 +369,24 @@ Stabilization details:
 6. Closed (`M1`): help-topic registry + action-topic mapping contract implemented via:
 7. `config/help/topics.json`, `config/help/action_map.json`,
 8. `config/schema/help_topics.schema.json`, `config/schema/help_action_map.schema.json`,
-9. runtime validator/loader in `tetris_nd/help_topics.py`,
-10. contract checks in `tools/governance/validate_project_contracts.py` and tests in `tetris_nd/tests/test_help_topics.py`.
+9. runtime validator/loader in `src/tet4d/engine/runtime/help_topics.py`,
+10. contract checks in `tools/governance/validate_project_contracts.py` and tests in `tests/unit/engine/test_help_topics.py`.
 11. Closed (`M2`): shared layout-zone renderer implemented to eliminate fixed-coordinate overlap risk:
-12. shared zone engine in `tetris_nd/menu_layout.py`,
-13. help renderer migrated to zone-based layout in `tetris_nd/help_menu.py`,
-14. layout regression coverage in `tetris_nd/tests/test_menu_layout.py`.
+12. shared zone engine in `src/tet4d/engine/ui_logic/menu_layout.py`,
+13. help renderer migrated to zone-based layout in `src/tet4d/ui/pygame/runtime_ui/help_menu.py`,
+14. layout regression coverage in `tests/unit/engine/test_menu_layout.py`.
 15. Closed (`M3`): full key/help synchronization + overflow paging behavior implemented via:
-16. context/dimension-filtered topic rendering in `tetris_nd/help_topics.py` + `tetris_nd/help_menu.py`,
+16. context/dimension-filtered topic rendering in `src/tet4d/engine/runtime/help_topics.py` + `src/tet4d/ui/pygame/runtime_ui/help_menu.py`,
 17. live action->key rows sourced from runtime bindings + `config/help/action_map.json`,
 18. explicit subpage controls (`[`/`]`, `PgUp`/`PgDn`) replacing silent truncation,
-19. contract lane checks in `tools/governance/validate_project_contracts.py` and regression tests in `tetris_nd/tests/test_help_menu.py`.
+19. contract lane checks in `tools/governance/validate_project_contracts.py` and regression tests in `tests/unit/engine/test_help_menu.py`.
 20. Closed (`M4`): launcher/pause parity + compact-window validation implemented via:
 21. config-driven pause action mapping in `config/menu/structure.json` (`pause_menu_actions`),
-22. parity enforcement in `tetris_nd/menu_config.py` (`_enforce_menu_entrypoint_parity`),
-23. pause runtime actions sourced from config in `tetris_nd/pause_menu.py`,
-24. compact-window help behavior in `tetris_nd/help_menu.py` (`is_compact_help_view` + compact layout/content policy),
+22. parity enforcement in `src/tet4d/engine/runtime/menu_config.py` (`_enforce_menu_entrypoint_parity`),
+23. pause runtime actions sourced from config in `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`,
+24. compact-window help behavior in `src/tet4d/ui/pygame/runtime_ui/help_menu.py` (`is_compact_help_view` + compact layout/content policy),
 25. compact thresholds in `config/project/constants.json` (`layout.help.compact_*_threshold`),
-26. M4 regression coverage in `tetris_nd/tests/test_menu_policy.py` and `tetris_nd/tests/test_help_menu.py`.
+26. M4 regression coverage in `tests/unit/engine/test_menu_policy.py` and `tests/unit/engine/test_help_menu.py`.
 27. Arrow-diagram control guidance is implemented across launcher/pause/settings/keybindings and in-game side panels.
 28. Very-small-window readability tuning for controls/help layouts is implemented.
 29. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
@@ -395,7 +395,7 @@ Stabilization details:
 32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
 34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Gameplay`,`Analytics`,`Save`,`Reset`,`Back`).
-35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `tetris_nd/launcher_settings.py`.
+35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `src/tet4d/ui/pygame/launch/launcher_settings.py`.
 36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
 
 ## 16. Menu Rehaul v2 (Core IA Implemented, `BKL-P1-006`)

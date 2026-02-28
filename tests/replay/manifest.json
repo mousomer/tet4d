@@ -4,7 +4,7 @@
   "suites": [
     {
       "id": "gameplay_replay_core",
-      "test_file": "tetris_nd/tests/test_gameplay_replay.py",
+      "test_file": "tests/unit/engine/test_gameplay_replay.py",
       "modes": ["2d", "3d", "4d"],
       "seed_policy": "deterministic_fixed",
       "required": true

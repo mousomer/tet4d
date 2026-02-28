@@ -401,23 +401,23 @@ Authoritative open/deferred items are tracked in:
 3. Shared ND movement dispatch pipeline extracted.
 4. Branching piece-set selector replaced with registry maps.
 5. App boot/display/audio persistence glue consolidated.
-6. Shared UI helpers extracted to `tetris_nd/ui_utils.py`.
+6. Shared UI helpers extracted to `src/tet4d/ui/pygame/ui_utils.py`.
 7. Pause/settings row definitions externalized to config and rendered by shared panel helpers.
 8. Keybindings menu split into dedicated view/input modules.
 9. Shared ND launcher runner extracted for 3D/4D setup-to-game flow.
 10. Shared playbot lookahead helper extracted and used by 2D + ND planners.
 11. Runtime playbot policy validation decomposed into section validators.
 12. Runtime help flow now uses decision-based shared event handling (no nested callbacks in loops).
-13. Shared 3D/4D projected grid-mode renderer extracted to `tetris_nd/grid_mode_render.py`.
-14. Keybinding defaults/catalog split extracted to `tetris_nd/keybindings_defaults.py` + `tetris_nd/keybindings_catalog.py`.
-15. Score-analyzer feature extraction split to `tetris_nd/score_analyzer_features.py`.
-16. 2D side-panel renderer extracted to `tetris_nd/gfx_panel_2d.py`.
+13. Shared 3D/4D projected grid-mode renderer extracted to `src/tet4d/ui/pygame/render/grid_mode_render.py`.
+14. Keybinding defaults/catalog split extracted to `src/tet4d/ui/pygame/input/keybindings_defaults.py` + `src/tet4d/engine/ui_logic/keybindings_catalog.py`.
+15. Score-analyzer feature extraction split to `src/tet4d/engine/runtime/score_analyzer_features.py`.
+16. 2D side-panel renderer extracted to `src/tet4d/ui/pygame/render/gfx_panel_2d.py`.
 17. Runtime config validation now split by concern (`shared`/`gameplay`/`playbot`/`audio`) with stable import surface.
 18. 3D frontend responsibilities now split between runtime/input orchestration (`front3d_game.py`) and render/view layer (`front3d_render.py`).
 19. Rendering caches added:
-20. gradient-surface cache in `tetris_nd/ui_utils.py`,
-21. bounded text-surface cache in `tetris_nd/panel_utils.py` (used by shared side-panel render paths).
-22. Shared text rendering cache extracted to `tetris_nd/text_render_cache.py` and reused by control-helper/panel paths.
+20. gradient-surface cache in `src/tet4d/ui/pygame/ui_utils.py`,
+21. bounded text-surface cache in `src/tet4d/ui/pygame/render/panel_utils.py` (used by shared side-panel render paths).
+22. Shared text rendering cache extracted to `src/tet4d/ui/pygame/render/text_render_cache.py` and reused by control-helper/panel paths.
 23. 4D render path now pre-indexes locked cells by `w` layer per frame to avoid repeated full-board scans.
 24. 4D layer-grid rectangle layout is memoized for stable window/layer-count combinations.
 

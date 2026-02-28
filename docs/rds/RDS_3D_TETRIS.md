@@ -9,8 +9,8 @@ Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 Define requirements for `(x, y, z)` gameplay mode implemented by:
 - `front3d.py`
-- `tetris_nd/front3d_game.py`
-- `tetris_nd/game_nd.py`
+- `src/tet4d/ui/pygame/front3d_game.py`
+- `src/tet4d/engine/gameplay/game_nd.py`
 
 ## 2. Current Intentions
 
@@ -39,7 +39,7 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 2. Optional set: embedded 2D pieces (`2D->3D` lift).
 3. Optional set: `random_cells_3d` (connected random cells).
 4. Optional set: `debug_rectangles_3d` (simple cuboids for rapid layer-fill checks).
-5. Piece definitions are in `tetris_nd/pieces_nd.py`.
+5. Piece definitions are in `src/tet4d/engine/gameplay/pieces_nd.py`.
 6. Setup menu must expose piece set source selection (`native_3d`,`embedded_2d`,`random_cells_3d`,`debug_rectangles_3d`).
 7. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
@@ -141,9 +141,9 @@ Minimum required coverage after 3D changes:
 6. random/debug piece spawn stability checks.
 
 Relevant tests:
-- `tetris_nd/tests/test_game_nd.py`
-- `tetris_nd/tests/test_pieces_nd.py`
-- `tetris_nd/tests/test_gameplay_replay.py`
+- `tests/unit/engine/test_game_nd.py`
+- `tests/unit/engine/test_pieces_nd.py`
+- `tests/unit/engine/test_gameplay_replay.py`
 
 ## 10. Acceptance Criteria
 
