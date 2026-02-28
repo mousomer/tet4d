@@ -19,7 +19,14 @@ from tools.governance.tech_debt_budget import refresh_tech_debt_budgets  # noqa:
 
 
 def main() -> int:
-    budgets_path = REPO_ROOT / "config" / "project" / "tech_debt_budgets.json"
+    budgets_path = (
+        REPO_ROOT
+        / "config"
+        / "project"
+        / "policy"
+        / "manifests"
+        / "tech_debt_budgets.json"
+    )
     if not budgets_path.exists():
         print(f"Missing config: {budgets_path}", file=sys.stderr)
         return 1

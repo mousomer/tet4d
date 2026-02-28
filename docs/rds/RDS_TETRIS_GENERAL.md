@@ -144,17 +144,17 @@ Cross-cutting requirements are defined in:
 20. `config/audio/sfx.json`
 21. User runtime overrides remain in `state/menu_settings.json`.
 22. Canonical maintenance contract rules are defined in:
-23. `config/project/canonical_maintenance.json`
+23. `config/project/policy/manifests/canonical_maintenance.json`
 24. Contract validation script is:
 25. `tools/governance/validate_project_contracts.py`
 26. Repository path/constant/secret policy configs are source-controlled:
 27. `config/project/io_paths.json`
 28. `config/project/constants.json`
-29. `config/project/secret_scan.json`
+29. `config/project/policy/manifests/secret_scan.json`
 30. Secret scan command is:
 31. `python3 tools/governance/scan_secrets.py`
 32. Shared safe path/constants loader is:
-33. `tetris_nd/project_config.py`
+33. `src/tet4d/engine/runtime/project_config.py`
 34. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
 35. keep them ignored in `.gitignore` and never ship them as runtime contracts.
 36. If such files are accidentally committed (or if sensitive data is introduced), cleanup must include history purge across refs before release.
@@ -165,9 +165,9 @@ Cross-cutting requirements are defined in:
 41. `config/schema/help_topics.schema.json`
 42. `config/schema/help_action_map.schema.json`
 43. `docs/migrations/*.md`
-44. `tests/replay/manifest.json`
+44. `config/project/policy/manifests/replay_manifest.json`
 45. `docs/help/HELP_INDEX.md`
-46. `assets/help/manifest.json`
+46. `config/project/policy/manifests/help_assets_manifest.json`
 47. `docs/RELEASE_CHECKLIST.md`
 48. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 49. Desktop packaging assets are source-controlled:
@@ -179,7 +179,7 @@ Cross-cutting requirements are defined in:
 55. Desktop packaging usage docs are source-controlled:
 56. `docs/RELEASE_INSTALLERS.md`
 57. Shared font model/factory is source-controlled:
-58. `tetris_nd/font_profiles.py`
+58. `src/tet4d/ui/pygame/render/font_profiles.py`
 59. Per-mode font profile values (2D vs ND) must remain explicit and stable.
 
 ## 7. Engineering Best Practices
@@ -206,7 +206,7 @@ python3 tools/governance/check_pygame_ce.py
 pytest -q
 PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
 python3 tools/benchmarks/bench_playbot.py --assert --record-trend
-python3.14 -m compileall -q  front2d.py  tetris_nd  src/tet4d
+python3.14 -m compileall -q front2d.py src/tet4d
 ./scripts/ci_check.sh
 ```
 
@@ -249,35 +249,35 @@ Completed in current implementation:
 9. Benchmark thresholds and policy defaults externalized in `config/playbot/policy.json`.
 10. Keybindings UX parity delivered across launcher/pause, with category docs sourced from `config/menu/structure.json`.
 11. 4D helper-grid guidance propagated across all rendered `w` layer boards.
-12. Shared ND runtime loop orchestration extracted for 3D/4D (`tetris_nd/loop_runner_nd.py`).
+12. Shared ND runtime loop orchestration extracted for 3D/4D (`src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`).
 13. Frontend split executed: launcher orchestration/settings and 3D/4D setup/render modules extracted for maintainability.
 14. Offline playbot policy analysis tool added (`tools/benchmarks/analyze_playbot_policies.py`).
 15. Playbot policy defaults retuned (budgets and benchmark thresholds) based on measured trend and benchmark data.
 16. Unreferenced helper cleanup pass completed; definition-only helpers were removed from frontend/menu/project-config/score-analyzer modules.
 17. Help/menu restructure `M1` contract completed with config-backed topic registry + action mapping and validator/test coverage.
 18. Low-risk simplification follow-up completed:
-19. menu-config validator helpers were consolidated in `tetris_nd/menu_config.py`,
-20. keybinding save/load path/profile resolution was deduplicated in `tetris_nd/keybindings.py`,
-21. test-only playbot wrappers were removed from `tetris_nd/playbot/planner_nd.py` (tests now import `planner_nd_core` directly),
-22. obsolete `menu_gif_guides.py` shim was removed; menu guide rendering now uses `tetris_nd/menu_control_guides.py` only.
+19. menu-config validator helpers were consolidated in `src/tet4d/engine/runtime/menu_config.py`,
+20. keybinding save/load path/profile resolution was deduplicated in `src/tet4d/ui/pygame/keybindings.py`,
+21. test-only playbot wrappers were removed from `src/tet4d/ai/playbot/planner_nd.py` (tests now import `planner_nd_core` directly),
+22. obsolete `menu_gif_guides.py` shim was removed; menu guide rendering now uses `src/tet4d/ui/pygame/menu/menu_control_guides.py` only.
 23. Stage-2 simplification follow-up completed:
-24. shared list/string validators are now reused across row/action/scope checks in `tetris_nd/menu_config.py`,
-25. keybinding profile clone/dimension handling now uses shared helpers/constants in `tetris_nd/keybindings.py`,
-26. playbot enum option/index boilerplate was reduced through shared typed helpers in `tetris_nd/playbot/types.py`.
+24. shared list/string validators are now reused across row/action/scope checks in `src/tet4d/engine/runtime/menu_config.py`,
+25. keybinding profile clone/dimension handling now uses shared helpers/constants in `src/tet4d/ui/pygame/keybindings.py`,
+26. playbot enum option/index boilerplate was reduced through shared typed helpers in `src/tet4d/ai/playbot/types.py`.
 27. keybinding `small` profile now resolves directly to root keybinding files (`keybindings/2d.json`,`3d.json`,`4d.json`), removing legacy dual-write/fallback paths.
 28. Stage-3 dead-code cleanup completed:
-29. removed unreferenced helper APIs in `tetris_nd/runtime_config.py`, `tetris_nd/topology.py`, and `tetris_nd/topology_designer.py`.
+29. removed unreferenced helper APIs in `src/tet4d/engine/runtime/runtime_config.py`, `src/tet4d/engine/gameplay/topology.py`, and `src/tet4d/engine/gameplay/topology_designer.py`.
 30. menu-config validation now consistently uses shared primitive guards for launcher/settings/setup validation branches.
 31. Stage-4 flow/tool simplification completed:
-32. duplicated launch orchestration across `2D/3D/4D` now uses one shared launch pipeline in `tetris_nd/launcher_play.py`.
-33. playbot benchmark wrapper helpers were removed from `tetris_nd/playbot/types.py`; tools now consume benchmark thresholds/history paths directly from runtime config.
+32. duplicated launch orchestration across `2D/3D/4D` now uses one shared launch pipeline in `src/tet4d/ui/pygame/launch/launcher_play.py`.
+33. playbot benchmark wrapper helpers were removed from `src/tet4d/ai/playbot/types.py`; tools now consume benchmark thresholds/history paths directly from runtime config.
 34. Stage-5 runtime-config simplification completed:
-35. removed unused runtime-config constants/imports and consolidated repeated dimension-bucket/name-normalization access paths in `tetris_nd/runtime_config.py`.
+35. removed unused runtime-config constants/imports and consolidated repeated dimension-bucket/name-normalization access paths in `src/tet4d/engine/runtime/runtime_config.py`.
 36. Stage-6 icon-pack integration completed:
 37. helper/menu/help action icons now source from external SVG transform assets under `assets/help/icons/transform/svg`, via mapping config `config/help/icon_map.json`.
 38. procedural icon rendering remains as deterministic fallback for unmapped/missing assets (for example `soft_drop` / `hard_drop`).
 39. Desktop packaging baseline completed with embedded-runtime bundle spec, local OS build scripts, and CI packaging matrix workflow.
-40. Font profile unification completed: duplicated frontend `GfxFonts`/`init_fonts` implementations are now routed through shared profile-driven factory in `tetris_nd/font_profiles.py` with preserved 2D/ND profile values.
+40. Font profile unification completed: duplicated frontend `GfxFonts`/`init_fonts` implementations are now routed through shared profile-driven factory in `src/tet4d/ui/pygame/render/font_profiles.py` with preserved 2D/ND profile values.
 
 Remaining follow-up:
 1. Closed: policy trend checks and dry-run stability checks are automated in CI + scheduled stability-watch workflow.
@@ -293,8 +293,8 @@ Remaining follow-up:
 11. Closed: remaining decomposition pass completed for 3D frontend runtime/render split and runtime-config validator section split.
 12. Closed: further runtime optimization pass completed (shared text-render cache, cached control-helper text, and 4D layer rendering pre-indexing by `w` layer).
 13. Closed: security/config hardening batch:
-14. CI-enforced repository secret scan policy added (`config/project/secret_scan.json`,`tools/governance/scan_secrets.py`,`scripts/ci_check.sh`),
-15. I/O path definitions centralized in `config/project/io_paths.json` with safe `Path` resolution helpers in `tetris_nd/project_config.py`,
+14. CI-enforced repository secret scan policy added (`config/project/policy/manifests/secret_scan.json`,`tools/governance/scan_secrets.py`,`scripts/ci_check.sh`),
+15. I/O path definitions centralized in `config/project/io_paths.json` with safe `Path` resolution helpers in `src/tet4d/engine/runtime/project_config.py`,
 16. selected runtime constants (cache/render limits and layout values) externalized to `config/project/constants.json`.
 17. Closed: projection-lattice caching pass implemented for static camera/view signatures in 3D/4D projection grid paths.
 18. Closed: low-risk LOC-reduction pass executed (pause-menu action dedupe, projected-grid dead-code removal, shared projection cache-key helpers, and score-analyzer validation consolidation).
@@ -304,9 +304,9 @@ Remaining follow-up:
 22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
 24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
-25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`tetris_nd/frontend_nd.py`) via thin adapter in `tetris_nd/front3d_setup.py`.
-26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `tetris_nd/menu_layout.py` and wired in `tetris_nd/help_menu.py`.
-27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `tetris_nd/help_menu.py` and `tetris_nd/help_topics.py`.
+25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`src/tet4d/engine/frontend_nd.py`) via thin adapter in `src/tet4d/ui/pygame/launch/front3d_setup.py`.
+26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `src/tet4d/engine/ui_logic/menu_layout.py` and wired in `src/tet4d/ui/pygame/runtime_ui/help_menu.py`.
+27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `src/tet4d/ui/pygame/runtime_ui/help_menu.py` and `src/tet4d/engine/runtime/help_topics.py`.
 28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/governance/validate_project_contracts.py`.
 29. Closed: help/menu restructure phase `M4` (launcher/pause parity + compact-window hardening) is implemented with config-enforced parity and compact help layout policy.
 

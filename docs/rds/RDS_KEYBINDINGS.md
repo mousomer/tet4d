@@ -15,8 +15,8 @@ Define keybinding requirements for all game dimensions and keyboard profiles:
 5. Dedicated keybindings setup menu and conflict-safe action routing
 
 Implementation references:
-1. `tetris_nd/keybindings.py`
-2. `tetris_nd/menu_keybinding_shortcuts.py`
+1. `src/tet4d/ui/pygame/keybindings.py`
+2. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
 3. `keybindings/2d.json`
 4. `keybindings/3d.json`
 5. `keybindings/4d.json`
@@ -349,7 +349,7 @@ pytest -q
 ## 11. Implementation Status (2026-02-18)
 
 Implemented in code:
-1. Dedicated keybinding setup screen added (`tetris_nd/keybindings_menu.py`).
+1. Dedicated keybinding setup screen added (`src/tet4d/ui/pygame/menu/keybindings_menu.py`).
 2. Runtime action groups now include `system`for rebinding visibility alongside`game/camera`.
 3. Keybinding editor/help presentation now splits gameplay actions into `Translation` + `Rotation` sections (no slice group).
 4. 3D/4D `z`movement defaults use`Up`for`z-`and`Down`for`z+`in small profile; full profile uses`Numpad8`/`Numpad2`.
@@ -359,7 +359,7 @@ Implemented in code:
 8. `3D`: `Q/W`,`A/S`,`Z/X`,
 9. `4D`: `Q/W`,`A/S`,`Z/X`,`R/T`,`F/G`,`V/B`.
 10. Rebind safety guard prevents camera actions from overriding gameplay/system keys.
-11. Keybinding conflict and camera override behavior are covered by tests in `tetris_nd/tests/test_keybindings.py`.
+11. Keybinding conflict and camera override behavior are covered by tests in `tests/unit/engine/test_keybindings.py`.
 12. In-game pause menus (2D/3D/4D) now include keybinding entry and profile actions:
 13. `Keybindings Setup`,`Profile Previous`,`Profile Next`,`Save Keybindings`,`Load Keybindings`.
 14. Main keybindings section menu separates `General`from`2D/3D/4D` scopes for clearer navigation.

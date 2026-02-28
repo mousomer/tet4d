@@ -8,15 +8,159 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = PROJECT_ROOT / "config/project/canonical_maintenance.json"
+SRC_ROOT = PROJECT_ROOT / "src"
+PACK_PATH = PROJECT_ROOT / "config/project/policy/pack.json"
+MANIFEST_PATH = (
+    PROJECT_ROOT / "config/project/policy/manifests/canonical_maintenance.json"
+)
+ALLOWED_CONTEXT_IDS = {
+    "code",
+    "tests",
+    "build_packaging",
+    "policy_contracts",
+    "docs_design",
+    "assets_fixtures",
+    "environment",
+    "git_state",
+    "git_history",
+    "runtime_evidence",
+    "session_decisions",
+    "planning",
+}
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 
 @dataclass(frozen=True)
 class ValidationIssue:
     kind: str
     message: str
+
+
+def _load_pack() -> dict[str, object]:
+    try:
+        payload = json.loads(PACK_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise SystemExit(f"Missing policy pack: {PACK_PATH}") from exc
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid JSON in {PACK_PATH}: {exc}") from exc
+    return payload
+
+
+def _validate_pack_components(pack: dict[str, object]) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    components = pack.get("components")
+    if not isinstance(components, list):
+        return [ValidationIssue("schema", "'components' must be a list")]
+
+    seen_ids: set[str] = set()
+    for idx, comp in enumerate(components):
+        if not isinstance(comp, dict):
+            issues.append(
+                ValidationIssue("schema", f"components[{idx}] must be an object")
+            )
+            continue
+        comp_id = comp.get("id")
+        comp_path = comp.get("path")
+        context_id = comp.get("context_id")
+        if not isinstance(comp_id, str) or not comp_id:
+            issues.append(
+                ValidationIssue(
+                    "schema", f"components[{idx}].id must be a non-empty string"
+                )
+            )
+        elif comp_id in seen_ids:
+            issues.append(
+                ValidationIssue("duplicate", f"duplicate component id: {comp_id}")
+            )
+        else:
+            seen_ids.add(comp_id)
+        if not isinstance(comp_path, str) or not comp_path:
+            issues.append(
+                ValidationIssue(
+                    "schema", f"components[{idx}].path must be a non-empty string"
+                )
+            )
+        if not isinstance(context_id, str) or context_id not in ALLOWED_CONTEXT_IDS:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"components[{idx}].context_id must be one of {sorted(ALLOWED_CONTEXT_IDS)}",
+                )
+            )
+    return issues
+
+
+def _load_component_payloads(
+    pack: dict[str, object], issues: list[ValidationIssue]
+) -> dict[str, object]:
+    payloads: dict[str, object] = {}
+    components = pack.get("components")
+    if not isinstance(components, list):
+        return payloads
+    for comp in components:
+        if not isinstance(comp, dict):
+            continue
+        rel = comp.get("path")
+        if not isinstance(rel, str):
+            continue
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            issues.append(
+                ValidationIssue("missing_component", f"missing component file: {rel}")
+            )
+            continue
+        payload = _load_json_payload(path, rel, issues)
+        if payload is None:
+            continue
+        payloads[rel] = payload
+    return payloads
+
+
+def _walk_strings(
+    obj: object, rel: str, issues: list[ValidationIssue], forbidden_tokens: list[str]
+) -> None:
+    stack: list[object] = [obj]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, dict):
+            stack.extend(current.values())
+        elif isinstance(current, list):
+            stack.extend(current)
+        elif isinstance(current, str):
+            for token in forbidden_tokens:
+                if token and token in current:
+                    issues.append(
+                        ValidationIssue(
+                            "forbidden",
+                            f"{rel} contains forbidden token: {token!r}",
+                        )
+                    )
+
+
+def _validate_pack_constraints(
+    pack: dict[str, object], payloads: dict[str, object]
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    constraints = pack.get("constraints", {})
+    if not isinstance(constraints, dict):
+        return [ValidationIssue("schema", "'constraints' must be an object")]
+
+    forbidden_tokens: list[str] = []
+    forbidden_tokens.extend(constraints.get("forbidden_module_prefixes", []) or [])
+    forbidden_tokens.extend(constraints.get("forbidden_paths", []) or [])
+    forbidden_tokens = [t for t in forbidden_tokens if isinstance(t, str) and t]
+
+    if not forbidden_tokens:
+        return issues
+
+    for rel, payload in payloads.items():
+        if rel.endswith("canonical_maintenance.json"):
+            continue
+        _walk_strings(payload, rel, issues, forbidden_tokens)
+    return issues
 
 
 def _load_manifest() -> dict[str, object]:
@@ -104,7 +248,7 @@ def _validate_schema_payload(
 def _validate_replay_manifest_payload(
     rel: str, payload: object, issues: list[ValidationIssue]
 ) -> None:
-    if rel != "tests/replay/manifest.json":
+    if rel != "config/project/policy/manifests/replay_manifest.json":
         return
     if not isinstance(payload, dict):
         issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
@@ -562,8 +706,13 @@ def _compile_pattern(
 
 
 def validate_manifest() -> list[ValidationIssue]:
-    manifest = _load_manifest()
     issues: list[ValidationIssue] = []
+    pack = _load_pack()
+    issues.extend(_validate_pack_components(pack))
+    component_payloads = _load_component_payloads(pack, issues)
+    issues.extend(_validate_pack_constraints(pack, component_payloads))
+
+    manifest = _load_manifest()
     issues.extend(_validate_required_paths(manifest))
     issues.extend(_validate_required_json_files(manifest))
     issues.extend(_validate_help_topic_contract(manifest))

@@ -37,11 +37,6 @@
       "title": "Large module decomposition debt remains in engine/runtime/ui hotspots, increasing regression risk and slowing staged refactors"
     },
     {
-      "id": "BKL-P2-028",
-      "priority": "P2",
-      "title": "RDS documentation still references removed tetris_nd paths instead of current src/tet4d canonical paths"
-    },
-    {
       "id": "BKL-P2-029",
       "priority": "P2",
       "title": "Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous"

@@ -42,12 +42,12 @@
       "docs/migrations/save_state.md"
     ],
     "replay_contract": [
-      "tests/replay/manifest.json",
+      "config/project/policy/manifests/replay_manifest.json",
       "tests/replay/golden/.gitkeep"
     ],
     "help_contract": [
       "docs/help/HELP_INDEX.md",
-      "assets/help/manifest.json"
+      "config/project/policy/manifests/help_assets_manifest.json"
     ],
     "release_contract": [
       "docs/RELEASE_CHECKLIST.md",
@@ -79,11 +79,11 @@
       "config/project/io_paths.json",
       "config/project/constants.json",
       "config/project/folder_balance_budgets.json",
-      "config/project/tech_debt_budgets.json",
+      "config/project/policy/manifests/tech_debt_budgets.json",
       "config/project/backlog_debt.json",
-      "config/project/secret_scan.json",
-      "config/project/canonical_maintenance.json",
-      "config/project/architecture_metrics.json"
+      "config/project/policy/manifests/secret_scan.json",
+      "config/project/policy/manifests/canonical_maintenance.json",
+      "config/project/policy/manifests/architecture_metrics.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
@@ -114,7 +114,9 @@
       "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
       "docs/policies/POLICY_STRING_SANITATION.md",
       "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
-      "config/project/policy_manifest.json",
+      "config/project/policy/pack.json",
+      "config/project/policy/manifests/project_policy.json",
+      "config/project/policy/manifests/context_router_manifest.json",
       ".githooks/pre-push"
     ],
     "packaging_scripts": [
@@ -138,7 +140,7 @@
         "tools/governance/scan_secrets.py",
         "config/project/io_paths.json",
         "config/project/constants.json",
-        "config/project/secret_scan.json",
+        "config/project/policy/manifests/secret_scan.json",
         "docs/RELEASE_INSTALLERS.md",
         "packaging/scripts/build_macos.sh"
       ]
@@ -220,7 +222,7 @@
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
         "docs/policies/",
-        "config/project/canonical_maintenance.json",
+        "config/project/policy/manifests/canonical_maintenance.json",
         "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
         "config/project/io_paths.json"
@@ -261,7 +263,7 @@
       ]
     },
     {
-      "file": "config/project/policy_manifest.json",
+      "file": "config/project/policy/manifests/project_policy.json",
       "must_contain": [
         "\"project_name\": \"tet4d\"",
         "\"verification_command\": \"./scripts/verify.sh\"",
@@ -298,7 +300,7 @@
       "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
       "must_contain": [
         "## 2. Secret scanning policy",
-        "config/project/secret_scan.json",
+        "config/project/policy/manifests/secret_scan.json",
         "tools/governance/scan_secrets.py",
         "## 3. Path/config externalization policy",
         "config/project/io_paths.json",
@@ -360,7 +362,7 @@
       ]
     },
     {
-      "file": "config/project/tech_debt_budgets.json",
+      "file": "config/project/policy/manifests/tech_debt_budgets.json",
       "must_contain": [
         "\"schema_version\"",
         "\"gate_mode\"",
@@ -387,11 +389,11 @@
         "evaluate_architecture_metric_budget_overages",
         "evaluate_folder_balance_gate",
         "evaluate_tech_debt_gate",
-        "config/project/tech_debt_budgets.json"
+        "config/project/policy/manifests/tech_debt_budgets.json"
       ]
     },
     {
-      "file": "config/project/secret_scan.json",
+      "file": "config/project/policy/manifests/secret_scan.json",
       "must_contain": [
         "\"patterns\"",
         "\"exclude_dirs\""
@@ -473,7 +475,7 @@
       ]
     },
     {
-      "file": "tests/replay/manifest.json",
+      "file": "config/project/policy/manifests/replay_manifest.json",
       "must_contain": [
         "\"version\": 1",
         "\"gameplay_replay_core\""
@@ -519,7 +521,7 @@
       ]
     },
     {
-      "file": "assets/help/manifest.json",
+      "file": "config/project/policy/manifests/help_assets_manifest.json",
       "must_contain": [
         "\"translation_keys\"",
         "\"rotation_keys\""
@@ -537,7 +539,7 @@
       "file": "scripts/check_policy_compliance_repo.sh",
       "must_contain": [
         "AGENTS.md",
-        "config/project/policy_manifest.json",
+        "config/project/policy/manifests/project_policy.json",
         "python3 tools/governance/validate_project_contracts.py",
         "python3 tools/governance/scan_secrets.py",
         "scripts/check_engine_core_purity.sh",
@@ -552,6 +554,84 @@
         "Absolute filesystem paths detected.",
         "Potential unsafe path traversal patterns detected in docs/ or config/.",
         "Filenames with spaces detected:"
+      ]
+    },
+    {
+      "file": "config/project/policy/manifests/replay_manifest.json",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "config/project/policy/manifests/help_assets_manifest.json",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/help/HELP_INDEX.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/FEATURE_MAP.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/RDS_AND_CODEX.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_TETRIS_GENERAL.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_2D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_3D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_4D_TETRIS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_KEYBINDINGS.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_MENU_STRUCTURE.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/rds/RDS_PLAYBOT.md",
+      "must_not_match_regex": [
+        "\\btetris_nd\\b"
       ]
     }
   ],
@@ -575,7 +655,7 @@
     {
       "name": "Replay golden fixtures manifest",
       "paths": [
-        "tests/replay/manifest.json",
+        "config/project/policy/manifests/replay_manifest.json",
         "tests/replay/golden/.gitkeep"
       ],
       "status": "connected"
@@ -586,7 +666,7 @@
         "docs/help/HELP_INDEX.md",
         "config/help/content/runtime_help_content.json",
         "config/help/layout/runtime_help_layout.json",
-        "assets/help/manifest.json"
+        "config/project/policy/manifests/help_assets_manifest.json"
       ],
       "status": "connected"
     },
@@ -623,7 +703,7 @@
         "docs/SECURITY_AND_CONFIG_PLAN.md",
         "config/project/io_paths.json",
         "config/project/constants.json",
-        "config/project/secret_scan.json",
+        "config/project/policy/manifests/secret_scan.json",
         "tools/governance/scan_secrets.py"
       ],
       "status": "connected"
@@ -634,7 +714,7 @@
         "scripts/arch_metrics.py",
         "scripts/check_architecture_metric_budgets.sh",
         "config/project/folder_balance_budgets.json",
-        "config/project/tech_debt_budgets.json",
+        "config/project/policy/manifests/tech_debt_budgets.json",
         "tools/governance/folder_balance_budget.py",
         "tools/governance/tech_debt_budget.py"
       ],

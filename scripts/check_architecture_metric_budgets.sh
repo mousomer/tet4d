@@ -43,7 +43,7 @@ if gate_cfg_path.exists():
     gate_cfg = json.loads(gate_cfg_path.read_text(encoding="utf-8"))
     violations.extend(evaluate_folder_balance_gate(metrics, gate_cfg))
 
-tech_debt_cfg_path = Path("config/project/tech_debt_budgets.json")
+tech_debt_cfg_path = Path("config/project/policy/manifests/tech_debt_budgets.json")
 if tech_debt_cfg_path.exists():
     tech_debt_cfg = json.loads(tech_debt_cfg_path.read_text(encoding="utf-8"))
     violations.extend(evaluate_tech_debt_gate(metrics, tech_debt_cfg))

@@ -9,13 +9,13 @@ This plan defines:
 ## 2. Secret scanning policy
 
 Implemented controls:
-1. policy file: `config/project/secret_scan.json`,
+1. policy file: `config/project/policy/manifests/secret_scan.json`,
 2. scanner: `tools/governance/scan_secrets.py`,
 3. CI/local gate: `scripts/ci_check.sh` (runs the scanner before lint/tests).
 
 Rules:
 1. no credentials, API keys, private keys, or long-lived tokens are committed,
-2. scanner patterns are managed centrally in `config/project/secret_scan.json`,
+2. scanner patterns are managed centrally in `config/project/policy/manifests/secret_scan.json`,
 3. allowlist exceptions must be explicit and narrow (`path_glob` + optional `pattern_ids` + optional `contains`),
 4. scanner failures block CI until resolved.
 
@@ -30,12 +30,12 @@ Remediation flow:
 Implemented controls:
 1. canonical path defaults in `config/project/io_paths.json`,
 2. canonical runtime constants in `config/project/constants.json`,
-3. safe loader/resolver in `tetris_nd/project_config.py`,
+3. safe loader/resolver in `src/tet4d/engine/runtime/project_config.py`,
 4. path consumers updated to use safe `Path` resolution:
-5. `tetris_nd/keybindings.py`,
-6. `tetris_nd/menu_settings_state.py`,
-7. `tetris_nd/runtime_config.py`,
-8. `tetris_nd/score_analyzer.py`.
+5. `src/tet4d/ui/pygame/keybindings.py`,
+6. `src/tet4d/engine/runtime/menu_settings_state.py`,
+7. `src/tet4d/engine/runtime/runtime_config.py`,
+8. `src/tet4d/engine/runtime/score_analyzer.py`.
 
 Rules:
 1. I/O paths must be repo-relative and sanitized (`..`, drive prefixes, absolute paths rejected),
@@ -56,5 +56,5 @@ Next batches:
 ## 5. Governance
 
 1. update `docs/BACKLOG.md` and relevant `docs/rds/*.md` for each policy/contract change,
-2. keep `config/project/canonical_maintenance.json` aligned with these artifacts,
+2. keep `config/project/policy/manifests/canonical_maintenance.json` aligned with these artifacts,
 3. run `scripts/ci_check.sh` before push and release.

@@ -1,8 +1,4 @@
 {
-  "project_name": "tet4d",
-  "owner": "mousomer",
-  "risk_level": "medium",
-  "verification_command": "scripts/ci_check.sh",
-  "lint_tool": "ruff",
-  "test_runner": "pytest"
+  "deprecated": true,
+  "replaced_by": "config/project/policy/pack.json"
 }

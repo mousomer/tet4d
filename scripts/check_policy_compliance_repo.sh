@@ -22,7 +22,8 @@ required_files=(
   "docs/policies/POLICY_NO_REINVENTING_WHEEL.md"
   "docs/policies/POLICY_STRING_SANITATION.md"
   "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
-  "config/project/policy_manifest.json"
+  "config/project/policy/pack.json"
+  "config/project/policy/manifests/project_policy.json"
   "scripts/verify.sh"
 )
 

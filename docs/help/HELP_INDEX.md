@@ -31,22 +31,22 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 ## Control diagrams
 
 1. Translation and rotation guidance is iconized per action row.
-2. Primary icon renderer: `tetris_nd/control_icons.py`.
+2. Primary icon renderer: `src/tet4d/ui/pygame/render/control_icons.py`.
 3. External SVG source pack:
 4. `assets/help/icons/transform/svg` (sizes `16`/`64`, themes `dark`/`light`)
 5. Action mapping config:
 6. `config/help/icon_map.json` (`rotate_*` actions mapped to `rot_*` icon names)
 7. `soft_drop` / `hard_drop` remain procedural fallback icons until dedicated SVGs are added.
 8. Legacy combined guide renderer remains available in:
-9. `tetris_nd/menu_control_guides.py`
+9. `src/tet4d/ui/pygame/menu/menu_control_guides.py`
 10. Entry point: `draw_translation_rotation_guides(...)`
 11. Surfaces that must expose control visuals:
 12. keybindings menus (row icons),
 13. help controls page,
 14. in-game helper panel.
 15. Help topic render path uses:
-16. `tetris_nd/help_topics.py` (context/dimension topic filtering)
-17. `tetris_nd/help_menu.py` (live key rows + subpage rendering)
+16. `src/tet4d/engine/runtime/help_topics.py` (context/dimension topic filtering)
+17. `src/tet4d/ui/pygame/runtime_ui/help_menu.py` (live key rows + subpage rendering)
 18. `config/help/topics.json` + `config/help/action_map.json`
 19. `config/help/content/runtime_help_content.json` (runtime help copy templates used by `runtime_ui/help_menu.py`)
 20. `config/help/layout/runtime_help_layout.json` (runtime help layout/placement rules used by `runtime_ui/help_menu.py`)
@@ -55,7 +55,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 
 When adding/removing a menu option or keybinding action, update:
 1. this index,
-2. `assets/help/manifest.json`,
+2. `config/project/policy/manifests/help_assets_manifest.json`,
 3. `config/help/icon_map.json`,
 4. `config/help/topics.json`,
 5. `config/help/action_map.json`,

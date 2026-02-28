@@ -1,0 +1,57 @@
+{
+  "pack_version": "0.1.0",
+  "project_name": "tet4d",
+  "policy_id": "tet4d-governance-pack",
+  "entrypoints": {
+    "verify": "./scripts/verify.sh",
+    "ci": "./scripts/ci_check.sh"
+  },
+  "context_router_manifest": "config/project/policy/manifests/context_router_manifest.json",
+  "constraints": {
+    "allowed_module_prefixes": ["tet4d."],
+    "forbidden_module_prefixes": ["tetris_nd."],
+    "forbidden_paths": ["tetris_nd/"]
+  },
+  "components": [
+    {
+      "id": "project_policy",
+      "path": "config/project/policy/manifests/project_policy.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "canonical_maintenance",
+      "path": "config/project/policy/manifests/canonical_maintenance.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "architecture_metrics",
+      "path": "config/project/policy/manifests/architecture_metrics.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "tech_debt_budgets",
+      "path": "config/project/policy/manifests/tech_debt_budgets.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "secret_scan",
+      "path": "config/project/policy/manifests/secret_scan.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "replay_manifest",
+      "path": "config/project/policy/manifests/replay_manifest.json",
+      "context_id": "tests"
+    },
+    {
+      "id": "help_assets_manifest",
+      "path": "config/project/policy/manifests/help_assets_manifest.json",
+      "context_id": "assets_fixtures"
+    },
+    {
+      "id": "context_router_manifest",
+      "path": "config/project/policy/manifests/context_router_manifest.json",
+      "context_id": "policy_contracts"
+    }
+  ]
+}

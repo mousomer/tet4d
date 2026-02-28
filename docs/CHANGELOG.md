@@ -22,7 +22,7 @@
 6. CI/contract hooks now include menu graph linting:
    - `scripts/ci_check.sh`
    - `tools/validate_project_contracts.py`
-   - `config/project/canonical_maintenance.json`
+   - `config/project/policy/manifests/canonical_maintenance.json`
 7. Menu policy tests now assert graph IA and play-route capacity:
    - `tetris_nd/tests/test_menu_policy.py`
 
@@ -66,7 +66,7 @@
     - added external action-icon mapping config: `config/help/icon_map.json`,
     - normalized SVG icon pack under `assets/help/icons/transform/svg`,
     - updated `tetris_nd/control_icons.py` to load SVG action icons first and keep procedural fallback for missing/unmapped actions,
-    - updated help asset contract/docs: `assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules.
+    - updated help asset contract/docs: `config/project/policy/manifests/help_assets_manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules.
 15. Desktop packaging baseline added for no-system-Python local installs:
     - canonical PyInstaller spec: `packaging/pyinstaller/tet4d.spec`,
     - local OS build scripts: `packaging/scripts/build_macos.sh`, `packaging/scripts/build_linux.sh`, `packaging/scripts/build_windows.ps1`,
@@ -76,7 +76,7 @@
     - added `docs/rds/RDS_PACKAGING.md`,
     - updated `README.md`, `docs/RELEASE_CHECKLIST.md`, `docs/PROJECT_STRUCTURE.md`, `docs/README.md`, and `docs/RDS_AND_CODEX.md`.
 17. Canonical maintenance contract expanded to include packaging artifacts and workflow:
-    - `config/project/canonical_maintenance.json`.
+    - `config/project/policy/manifests/canonical_maintenance.json`.
 18. Font initialization stack was unified with profile-driven values:
     - added shared font module `tetris_nd/font_profiles.py`,
     - removed duplicated `GfxFonts` + `init_fonts()` implementations from `tetris_nd/gfx_game.py`, `tetris_nd/frontend_nd.py`, and `tetris_nd/front3d_render.py`,
@@ -100,7 +100,7 @@
 3. Control UI helper parity/caching regression tests:
    - `tetris_nd/tests/test_control_ui_helpers.py`
 4. Repository secret scanning policy and scanner:
-   - `config/project/secret_scan.json`
+   - `config/project/policy/manifests/secret_scan.json`
    - `tools/scan_secrets.py`
 5. Shared project config/path loader for safe repo-relative resolution:
    - `tetris_nd/project_config.py`
@@ -340,7 +340,7 @@
     - `docs/BACKLOG.md`
 13. Updated keybinding/4D/general/menu RDS and feature/help docs for no-slice architecture (`game/camera/system` grouping and no manual layer slicing controls).
 13. Canonical maintenance contract now validates backlog structure markers/regex for active `P3` entries in:
-    - `config/project/canonical_maintenance.json`
+    - `config/project/policy/manifests/canonical_maintenance.json`
 14. Added active backlog/RDS follow-up for help and menu IA restructuring (`BKL-P2-006`) in:
     - `docs/BACKLOG.md`
     - `docs/rds/RDS_MENU_STRUCTURE.md`
@@ -421,7 +421,7 @@
 ### Added
 1. Main keybindings section menu now separates `General` bindings from dimension-specific sections (`2D`,`3D`,`4D`).
 2. Canonical maintenance contract file:
-   - `config/project/canonical_maintenance.json`
+   - `config/project/policy/manifests/canonical_maintenance.json`
 3. Contract validator script and regression test:
    - `tools/validate_project_contracts.py`
 - `tetris_nd/tests/test_project_contracts.py`
@@ -430,9 +430,9 @@
 - `config/schema/save_state.schema.json`
 - `docs/migrations/menu_settings.md`
 - `docs/migrations/save_state.md`
-- `tests/replay/manifest.json`
+- `config/project/policy/manifests/replay_manifest.json`
 - `docs/help/HELP_INDEX.md`
-- `assets/help/manifest.json`
+- `config/project/policy/manifests/help_assets_manifest.json`
 - `docs/RELEASE_CHECKLIST.md`
 5. Playbot repeated stability checker:
    - `tools/check_playbot_stability.py`

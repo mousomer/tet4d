@@ -18,7 +18,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   folder-balance pressure.
 - added strict stage-batch decrease gate in
   `scripts/check_architecture_metric_budgets.sh` via
-  `config/project/tech_debt_budgets.json`.
+  `config/project/policy/manifests/tech_debt_budgets.json`.
 - added manual baseline maintenance helper
   `tools/governance/update_tech_debt_budgets.py`.
 
@@ -211,7 +211,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - Stage 636-640: captured stage-635 debt baseline and identified residual
   code-balance pressure from intentionally tiny replay leaf sizing.
 - Stage 641-646: added class-aware replay override in
-  `config/project/architecture_metrics.json`:
+  `config/project/policy/manifests/architecture_metrics.json`:
   `src/tet4d/replay -> micro_feature_leaf -> micro_leaf`.
 - Stage 647-651: reran metrics and verified replay leaf moved from
   `0.83/watch` to `1.0/balanced` without changing runtime/tests gate scope.
@@ -255,7 +255,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 - Stage 688-691: reran targeted regression suites and full
   `CODEX_MODE=1 ./scripts/verify.sh` checkpoint; all gates remained green.
 - Stage 692: delivery-size normalization was recalibrated in
-  `config/project/tech_debt_budgets.json`
+  `config/project/policy/manifests/tech_debt_budgets.json`
   (`loc_unit: 10000 -> 10600`, `file_unit: 60 -> 64`) to keep LOC/file pressure
   monotonic while preserving stronger weighting for correctness/CI/boundary
   debt axes.
@@ -286,7 +286,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
   verification, and confirmed score decrease (`2.19 -> 2.18`).
 
 1. `DONE` Governance audit follow-up (public-repo hardening):
-2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy_manifest.json`),
+2. `DONE` repo-native policy files are CI-wired (`scripts/check_git_sanitation.sh`,`scripts/check_policy_compliance.sh`,`config/project/policy/manifests/project_policy.json`),
 3. `DONE` workspace baseline policy marker files are adopted (with repo-native policy checks preserved in `*_repo.sh` extension scripts).
 4. `DONE` Local/Codex verification wrapper now supports quiet success + fail-loud logs with `CODEX_MODE=1` reduced stability repeats while CI remains on `scripts/ci_check.sh`.
 5. `DONE` Arch Stage 9 baseline introduced `src/tet4d/engine/core/` purity split scaffolding, strict `engine/core` purity gate (`scripts/check_engine_core_purity.sh`), and CI-wired architecture debt metrics (`scripts/arch_metrics.py`).
@@ -475,7 +475,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 38. `DONE` HUD summary lines now render quality/board-health/trend in 2D/3D/4D side panels.
 39. `DONE`4D dry-run stability hardening applied (higher dry-run budget floor + deterministic greedy fallback in dry-run path).
 40. `DONE` Canonical maintenance contract added in:
-41. `config/project/canonical_maintenance.json`
+41. `config/project/policy/manifests/canonical_maintenance.json`
 42. `DONE` Machine validator added and CI-wired:
 43. `tools/governance/validate_project_contracts.py`+`scripts/ci_check.sh`
 44. `DONE` Contract coverage includes docs/help/tests/config synchronization checks.
@@ -502,7 +502,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 65. `scripts/bootstrap_env.sh` now creates/updates `.venv` and installs `pygame-ce`, `ruff`, and `pytest`.
 66. `DONE` Canonical docs freshness checks were strengthened:
 67. `tools/governance/validate_project_contracts.py` now supports regex content rules,
-68. stale fixed pass-count snapshots are blocked by `must_not_match_regex` rules in `config/project/canonical_maintenance.json`.
+68. stale fixed pass-count snapshots are blocked by `must_not_match_regex` rules in `config/project/policy/manifests/canonical_maintenance.json`.
 69. `DONE` Control-helper optimization batch completed:
 70. action icons are now cached by `(action,width,height)` in `tetris_nd/control_icons.py` to avoid repeated per-frame redraw.
 71. dimensional helper rows are assembled from shared row-spec builders in `tetris_nd/control_helper.py` to reduce duplication.
@@ -565,7 +565,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 128. `pytest -q` passed,
 129. `./scripts/ci_check.sh` passed.
 130. `DONE` Repository secret scanning policy + scanner added and CI/local CI enforced:
-131. `config/project/secret_scan.json`,
+131. `config/project/policy/manifests/secret_scan.json`,
 132. `tools/governance/scan_secrets.py`,
 133. `scripts/ci_check.sh`.
 134. `DONE` Path/constants externalization batch executed via:
@@ -720,7 +720,7 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 283. external SVG icon pack was normalized under `assets/help/icons/transform/svg`.
 284. runtime action-to-icon mapping config was added in `config/help/icon_map.json`.
 285. `tetris_nd/control_icons.py` now resolves icons from SVG assets first, with procedural fallback retained for missing actions (including drop actions).
-286. help asset contracts/docs were updated (`assets/help/manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules).
+286. help asset contracts/docs were updated (`config/project/policy/manifests/help_assets_manifest.json`, `docs/help/HELP_INDEX.md`, `docs/PROJECT_STRUCTURE.md`, and canonical-maintenance rules).
 287. `DONE` `[BKL-P2-018]` Desktop packaging baseline (embedded runtime):
 288. added canonical packaging spec `packaging/pyinstaller/tet4d.spec`,
 289. added OS build scripts `packaging/scripts/build_{macos,linux}.sh` and `packaging/scripts/build_windows.ps1`,
@@ -764,11 +764,12 @@ Scope: unified view of implemented change set + unresolved RDS/documentation/cod
 5. `[BKL-P2-025]` Menu schema duplication persists (legacy `launcher_menu` plus graph `menus/menu_entrypoints`).
 6. `[BKL-P2-026]` Shared menu constants are duplicated across setup/settings modules (random-mode labels and related UX strings).
 7. `[BKL-P2-027]` Large module decomposition debt remains in engine/runtime/ui hotspots, increasing regression risk and slowing staged refactors.
-8. `[BKL-P2-028]` RDS documentation still references removed `tetris_nd` paths instead of current `src/tet4d` canonical paths.
-9. `[BKL-P2-029]` Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous.
-10. `[BKL-P3-008]` Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in the same cycle.
+8. `[BKL-P2-029]` Backlog traceability debt: repeated historical BKL IDs make issue lineage ambiguous.
+9. `[BKL-P3-008]` Strict debt gate friction: legitimate scope additions can block verify unless baseline management is performed in the same cycle.
 11. Canonical machine-readable debt source:
    `config/project/backlog_debt.json` (`active_debt_items`).
+12. `TODO` Context router adoption: integrate `config/project/policy/manifests/context_router_manifest.json` into Codex tooling, surface in contributor docs, and add a verification hook if needed.
+13. `TODO` Policy pack consolidation: wire `config/project/policy/pack.json` (`policy_pack`) into governance checks, keep `docs/policies/INDEX.md` in sync, and add validation hook to verify.sh when stable.
 
 ### Operational Watchlist (Non-debt; recurring controls)
 
@@ -810,6 +811,7 @@ Policy-governance hardening (2026-02-27):
 - linked policy docs from `CONTRIBUTING.md` via a required `Policies` section.
 - updated canonical contract + repo policy check to require policy docs and the
   contributing policy links.
+- Closed `[BKL-P2-028]`: canonical RDS/help/replay contract paths updated to `src/tet4d/...` and `tests/unit/engine/...`; contract content rules now block legacy `tetris_nd` references in machine-checked docs/assets.
 
 Latest checkpoint additions (Stage 696-715):
 - runtime schema/sanitization extraction and caller canonicalization:
@@ -829,9 +831,9 @@ Latest checkpoint additions (Stage 696-715):
   - `src/tet4d/ui/pygame/menu/menu_model.py`
   - `src/tet4d/engine/core/model/types.py`
 - stage/budget metadata:
-  - `config/project/architecture_metrics.json` (advanced `arch_stage=715`)
+  - `config/project/policy/manifests/architecture_metrics.json` (advanced `arch_stage=715`)
   - `scripts/arch_metrics.py` (advanced `ARCH_STAGE=715`)
-  - `config/project/tech_debt_budgets.json` (`score_epsilon=0.0`; baseline refreshed to stage `715`, score `2.18`)
+  - `config/project/policy/manifests/tech_debt_budgets.json` (`score_epsilon=0.0`; baseline refreshed to stage `715`, score `2.18`)
 - governance/doc synchronization:
   - `docs/BACKLOG.md`, `docs/RDS_AND_CODEX.md`,
     `docs/ARCHITECTURE_CONTRACT.md`, `docs/PROJECT_STRUCTURE.md`,
@@ -855,16 +857,16 @@ Latest checkpoint additions (Stage 696-715):
 `docs/rds/RDS_SCORE_ANALYZER.md`,
 `docs/FEATURE_MAP.md`,
 `README.md`,
-`config/project/canonical_maintenance.json`,
+`config/project/policy/manifests/canonical_maintenance.json`,
 `tools/governance/validate_project_contracts.py`,
 `tetris_nd/tests/test_project_contracts.py`,
 `config/schema/menu_settings.schema.json`,
 `config/schema/save_state.schema.json`,
 `docs/migrations/menu_settings.md`,
 `docs/migrations/save_state.md`,
-`tests/replay/manifest.json`,
+`config/project/policy/manifests/replay_manifest.json`,
 `docs/help/HELP_INDEX.md`,
-`assets/help/manifest.json`,
+`config/project/policy/manifests/help_assets_manifest.json`,
 `docs/RELEASE_CHECKLIST.md`.
 `tetris_nd/help_menu.py`,
 `tetris_nd/control_helper.py`,
@@ -902,7 +904,7 @@ Latest checkpoint additions (Stage 696-715):
 `scripts/check_architecture_metric_budgets.sh`,
 `tools/governance/validate_project_contracts.py`,
 `tools/governance/update_folder_balance_budgets.py`,
-`config/project/canonical_maintenance.json`,
+`config/project/policy/manifests/canonical_maintenance.json`,
 `config/project/folder_balance_budgets.json`,
 `README.md`,
 `docs/GUIDELINES_RESEARCH.md`,
@@ -949,7 +951,7 @@ Latest checkpoint additions (Stage 696-715):
 `tetris_nd/project_config.py`,
 `config/project/io_paths.json`,
 `config/project/constants.json`,
-`config/project/secret_scan.json`,
+`config/project/policy/manifests/secret_scan.json`,
 `tools/governance/scan_secrets.py`,
 `scripts/ci_check.sh`,
 `tetris_nd/runtime_config.py`,
@@ -1008,7 +1010,7 @@ Latest checkpoint additions (Stage 696-715):
 `tetris_nd/pause_menu.py`,
 `tools/governance/validate_project_contracts.py`,
 `scripts/ci_check.sh`,
-`config/project/canonical_maintenance.json`,
+`config/project/policy/manifests/canonical_maintenance.json`,
 `tetris_nd/tests/test_menu_policy.py`,
 `tetris_nd/tests/test_menu_graph_linter.py`,
 `docs/rds/RDS_MENU_STRUCTURE.md`,
@@ -1017,9 +1019,9 @@ Latest checkpoint additions (Stage 696-715):
 19. Stage-6 icon-pack integration touched:
 `assets/help/icons/transform/svg/*`,
 `config/help/icon_map.json`,
-`assets/help/manifest.json`,
+`config/project/policy/manifests/help_assets_manifest.json`,
 `tetris_nd/control_icons.py`,
-`config/project/canonical_maintenance.json`,
+`config/project/policy/manifests/canonical_maintenance.json`,
 `docs/help/HELP_INDEX.md`,
 `docs/PROJECT_STRUCTURE.md`.
 20. Desktop packaging baseline touched:
@@ -1032,7 +1034,7 @@ Latest checkpoint additions (Stage 696-715):
 `docs/rds/RDS_PACKAGING.md`,
 `README.md`,
 `docs/RELEASE_CHECKLIST.md`,
-`config/project/canonical_maintenance.json`.
+`config/project/policy/manifests/canonical_maintenance.json`.
 21. Font profile unification touched:
 `tetris_nd/font_profiles.py`,
 `tetris_nd/gfx_game.py`,
@@ -1144,7 +1146,7 @@ Latest checkpoint additions (Stage 696-715):
 2. `docs/rds/RDS_PLAYBOT.md`
 3. `docs/rds/RDS_MENU_STRUCTURE.md`
 4. `docs/RDS_AND_CODEX.md`
-5. `config/project/canonical_maintenance.json`
+5. `config/project/policy/manifests/canonical_maintenance.json`
 6. Consolidated implementation diffs in current workspace batch.
 180. `DONE` Arch Stage 181 slice 171 added lazy `engine.api` wrappers for keybindings and keybindings-menu-model operations to prepare keybindings-menu UI relocation without deep `ui -> engine` imports.
 181. `DONE` Arch Stage 182 slice 172 moved `src/tet4d/engine/keybindings_menu_view.py` implementation into `src/tet4d/ui/pygame/keybindings_menu_view.py` and retained a temporary engine compatibility shim.

@@ -40,14 +40,14 @@ Default mode: `OFF`.
 
 ### 4.1 Implemented modules
 
-1. `tetris_nd/playbot/types.py`
-2. `tetris_nd/playbot/planner_2d.py`
-3. `tetris_nd/playbot/planner_nd_core.py`
-4. `tetris_nd/playbot/planner_nd.py`
-5. `tetris_nd/playbot/planner_nd_search.py`
-5. `tetris_nd/playbot/controller.py`
-6. `tetris_nd/playbot/dry_run.py`
-7. `tetris_nd/playbot/__init__.py`
+1. `src/tet4d/ai/playbot/types.py`
+2. `src/tet4d/ai/playbot/planner_2d.py`
+3. `src/tet4d/ai/playbot/planner_nd_core.py`
+4. `src/tet4d/ai/playbot/planner_nd.py`
+5. `src/tet4d/ai/playbot/planner_nd_search.py`
+5. `src/tet4d/ai/playbot/controller.py`
+6. `src/tet4d/ai/playbot/dry_run.py`
+7. `src/tet4d/ai/playbot/__init__.py`
 
 ### 4.2 Core data contracts
 
@@ -163,11 +163,11 @@ Default mode: `OFF`.
 ## 9. Testing Requirements (Current Mapping)
 
 Unit and integration coverage is currently concentrated in:
-1. `tetris_nd/tests/test_playbot.py`
-2. `tetris_nd/tests/test_gameplay_replay.py`
-3. `tetris_nd/tests/test_score_snapshots.py`
-4. `tetris_nd/tests/test_game2d.py`
-5. `tetris_nd/tests/test_game_nd.py` Required checks:
+1. `tests/unit/engine/test_playbot.py`
+2. `tests/unit/engine/test_gameplay_replay.py`
+3. `tests/unit/engine/test_score_snapshots.py`
+4. `tests/unit/engine/test_game2d.py`
+5. `tests/unit/engine/test_game_nd.py` Required checks:
 1. bot places pieces without invalid transitions (2D/ND),
 2. assist/auto behavior remains deterministic on replay scripts,
 3. dry-run reports successful clears for debug piece sets,

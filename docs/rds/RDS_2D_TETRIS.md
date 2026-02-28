@@ -9,7 +9,7 @@ Target Runtime: Python 3.11-3.14 + `pygame-ce`
 
 Define requirements for the classic `(x, y)` mode implemented by:
 - `front2d.py`
-- `tetris_nd/game2d.py`
+- `src/tet4d/engine/gameplay/game2d.py`
 
 ## 2. Current Intentions
 
@@ -93,9 +93,9 @@ Minimum required tests for 2D gameplay changes:
 6. random/debug piece spawn stability checks.
 
 Relevant test files:
-- `tetris_nd/tests/test_game2d.py`
-- `tetris_nd/tests/test_board.py`
-- `tetris_nd/tests/test_gameplay_replay.py`
+- `tests/unit/engine/test_game2d.py`
+- `tests/unit/engine/test_board.py`
+- `tests/unit/engine/test_gameplay_replay.py`
 
 ## 9. Acceptance Criteria
 

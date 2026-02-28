@@ -19,8 +19,8 @@
 ## Artifacts and config
 
 1. `config/schema/*.schema.json` validated as strict JSON.
-2. `tests/replay/manifest.json` updated if replay protocol changes.
-3. `assets/help/manifest.json` updated for help asset changes.
+2. `config/project/policy/manifests/replay_manifest.json` updated if replay protocol changes.
+3. `config/project/policy/manifests/help_assets_manifest.json` updated for help asset changes.
 4. Migration docs updated if payload structure changes:
    - `docs/migrations/menu_settings.md`
    - `docs/migrations/save_state.md`

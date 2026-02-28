@@ -11,10 +11,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 TARGET_SRC_ROOT = REPO_ROOT / "src/tet4d"
 SRC_LAYOUT_ROOT = REPO_ROOT / "src"
 FOLDER_BALANCE_BUDGETS_PATH = REPO_ROOT / "config/project/folder_balance_budgets.json"
-TECH_DEBT_BUDGETS_PATH = REPO_ROOT / "config/project/tech_debt_budgets.json"
+TECH_DEBT_BUDGETS_PATH = (
+    REPO_ROOT / "config/project/policy/manifests/tech_debt_budgets.json"
+)
 BACKLOG_DEBT_PATH = REPO_ROOT / "config/project/backlog_debt.json"
 MENU_STRUCTURE_PATH = REPO_ROOT / "config/menu/structure.json"
-ARCH_METRICS_CONFIG_PATH = REPO_ROOT / "config/project/architecture_metrics.json"
+ARCH_METRICS_CONFIG_PATH = (
+    REPO_ROOT / "config/project/policy/manifests/architecture_metrics.json"
+)
 POLICY_KIT_DIR = Path(
     __import__("os").environ.get(
         "POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit")

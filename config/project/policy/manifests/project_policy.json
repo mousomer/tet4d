@@ -1,0 +1,80 @@
+{
+  "project_name": "tet4d",
+  "verification_command": "./scripts/verify.sh",
+  "ci_entrypoint": "./scripts/ci_check.sh",
+  "design_sources": [
+    "docs/RDS_AND_CODEX.md",
+    "docs/rds/"
+  ],
+  "contract_validation": "python3 tools/governance/validate_project_contracts.py",
+  "secret_scan": "python3 tools/governance/scan_secrets.py",
+  "policy_version": "1.1.2",
+  "policy_id": "workspace-github-sanitation-and-security",
+  "policy_source": "workspace/policy-kit",
+  "policy_source_path": "${HOME}/workspace/policy-kit",
+  "menu_simplification_manifest_rule": {
+    "rule_id": "menu-simplification-common-settings",
+    "statement": "Menus must stay simple; any feature common to 2D/3D/4D menus must live in the shared settings menu unless a very strong mode-specific reason is documented.",
+    "default_action": "centralize_common_features_in_settings_hub",
+    "exception_bar": "very_strong_documented_reason_required"
+  },
+  "enforcement": [
+    "scripts/check_policy_compliance.sh",
+    "scripts/check_git_sanitation.sh",
+    "scripts/check_policy_template_drift.sh"
+  ],
+  "extended_enforcement": [
+    "scripts/check_policy_compliance_repo.sh",
+    "scripts/check_git_sanitation_repo.sh",
+    "scripts/check_architecture_metrics_soft_gate.sh"
+  ],
+  "policy_pack": {
+    "version": "2026-02-28",
+    "docs_index": "docs/policies/INDEX.md",
+    "policies": [
+      {
+        "id": "no_reinventing_wheel",
+        "source": "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+        "type": "governance",
+        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "owner": "governance"
+      },
+      {
+        "id": "string_sanitation",
+        "source": "docs/policies/POLICY_STRING_SANITATION.md",
+        "type": "safety",
+        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "owner": "governance"
+      },
+      {
+        "id": "no_magic_numbers",
+        "source": "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
+        "type": "governance",
+        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "owner": "governance"
+      }
+    ],
+    "contracts": [
+      {
+        "id": "canonical_maintenance",
+        "path": "config/project/policy/manifests/canonical_maintenance.json",
+        "validated_by": "tools/governance/validate_project_contracts.py"
+      },
+      {
+        "id": "tech_debt_budget",
+        "path": "config/project/policy/manifests/tech_debt_budgets.json",
+        "validated_by": "scripts/check_architecture_metrics_soft_gate.sh"
+      },
+      {
+        "id": "architecture_metrics",
+        "path": "config/project/policy/manifests/architecture_metrics.json",
+        "validated_by": "scripts/arch_metrics.py"
+      },
+      {
+        "id": "secret_scan",
+        "path": "config/project/policy/manifests/secret_scan.json",
+        "validated_by": "python3 tools/governance/scan_secrets.py"
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "renderer": "tetris_nd.control_icons.draw_action_icon",
+  "renderer": "tet4d.ui.pygame.render.control_icons.draw_action_icon",
   "source_pack": "assets/help/icons/transform/svg",
   "icon_map": "config/help/icon_map.json",
   "assets": [

@@ -45,7 +45,7 @@ try:
         folder_cfg = json.loads(folder_cfg_path.read_text(encoding="utf-8"))
         violations.extend(evaluate_folder_balance_gate(metrics, folder_cfg))
 
-    tech_cfg_path = Path("config/project/tech_debt_budgets.json")
+    tech_cfg_path = Path("config/project/policy/manifests/tech_debt_budgets.json")
     if tech_cfg_path.exists():
         tech_cfg = json.loads(tech_cfg_path.read_text(encoding="utf-8"))
         violations.extend(evaluate_tech_debt_gate(metrics, tech_cfg))

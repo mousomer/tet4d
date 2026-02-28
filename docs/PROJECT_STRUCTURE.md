@@ -110,7 +110,7 @@ tet4d/
 ├── tools/
 │   ├── governance/
 │   │   ├── validate_project_contracts.py  # canonical maintenance validator
-│   │   ├── scan_secrets.py                # secret scanner (policy from config/project/secret_scan.json)
+│   │   ├── scan_secrets.py                # secret scanner (policy from config/project/policy/manifests/secret_scan.json)
 │   │   ├── check_pygame_ce.py             # pygame-ce runtime compatibility check
 │   │   └── lint_menu_graph.py             # menu graph structural lint
 │   ├── stability/
@@ -185,13 +185,13 @@ tet4d/
 24. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
 25. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
 26. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
-27. `config/project/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
+27. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
 28. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-29. `tests/replay/manifest.json` tracks deterministic replay-contract expectations.
-30. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`assets/help/manifest.json` are canonical help-content/layout contracts.
+29. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
+30. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
 31. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
 32. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-33. `config/project/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+33. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
 34. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
 35. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
 36. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
@@ -203,7 +203,7 @@ tet4d/
     active debt backlog input is read from `config/project/backlog_debt.json`,
     and `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
     non-increase (same stage) and strict decrease (new stage) through
-    `config/project/tech_debt_budgets.json`.
+    `config/project/policy/manifests/tech_debt_budgets.json`.
 42. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
     the pre-push local CI gate.
 
