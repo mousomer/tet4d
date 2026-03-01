@@ -32,7 +32,18 @@ def new_analysis_session_id() -> str:
     return uuid.uuid4().hex[:16]
 
 
-def _default_config() -> dict[str, Any]:
+_DEFAULT_CONFIG_PATH = _CONFIG_PATH
+
+
+def _default_config_payload() -> dict[str, Any]:
+    try:
+        raw = _DEFAULT_CONFIG_PATH.read_text(encoding="utf-8")
+        loaded = json.loads(raw)
+        if isinstance(loaded, dict):
+            return loaded
+    except Exception:
+        pass
+    # Minimal fallback if config is unreadable/missing
     return {
         "version": 1,
         "enabled": True,
@@ -46,14 +57,8 @@ def _default_config() -> dict[str, Any]:
             "summary_file": "state/analytics/score_summary.json",
         },
         "scores": {
-            "board_health": {
-                "bias": 0.62,
-                "weights": {},
-            },
-            "placement_quality": {
-                "bias": 0.56,
-                "weights": {},
-            },
+            "board_health": {"bias": 0.62, "weights": {}},
+            "placement_quality": {"bias": 0.56, "weights": {}},
         },
     }
 
