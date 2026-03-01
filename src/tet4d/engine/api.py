@@ -622,6 +622,16 @@ def clamp_game_seed_runtime(value: Any, *, default: int | None = None) -> int:
     )
 
 
+def sanitize_text_runtime(value: Any, *, max_length: int = 256) -> str:
+    return str(
+        _call_runtime_settings_schema(
+            "sanitize_text",
+            value,
+            max_length=max_length,
+        )
+    )
+
+
 def get_global_game_seed_runtime() -> int:
     return int(_call_runtime_menu_settings_state("get_global_game_seed"))
 
@@ -1127,6 +1137,12 @@ def _call_gameplay_pieces_nd(name: str, *args: Any, **kwargs: Any) -> Any:
     return getattr(_pieces_nd, name)(*args, **kwargs)
 
 
+def _call_gameplay_leveling(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .gameplay import leveling as _leveling
+
+    return getattr(_leveling, name)(*args, **kwargs)
+
+
 def _call_front4d_render(name: str, *args: Any, **kwargs: Any) -> Any:
     from . import front4d_render as _front4d_render
 
@@ -1155,6 +1171,10 @@ def piece_set_label_gameplay(piece_set_id: str) -> str:
 
 def piece_set_options_for_dimension_gameplay(dimension: int):
     return _call_gameplay_pieces_nd("piece_set_options_for_dimension", dimension)
+
+
+def compute_speed_level_runtime(*args: Any, **kwargs: Any) -> int:
+    return int(_call_gameplay_leveling("compute_speed_level", *args, **kwargs))
 
 
 def run_front3d_ui() -> None:
@@ -1375,6 +1395,7 @@ __all__ = [
     "current_piece_cells",
     "capture_windowed_display_settings_runtime",
     "capture_windowed_display_settings_from_event_runtime",
+    "compute_speed_level_runtime",
     "apply_challenge_prefill_2d",
     "apply_challenge_prefill_nd",
     "config_view_2d",

@@ -77,6 +77,8 @@ class LoopContext4D:
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
     was_game_over: bool = False
+    base_speed_level: int = 1
+    bot_speed_level: int = 7
 
     @classmethod
     def create(
@@ -85,6 +87,7 @@ class LoopContext4D:
         *,
         bot_mode: BotMode = BotMode.OFF,
         overlay_transparency: float | None = None,
+        bot_speed_level: int = 7,
     ) -> "LoopContext4D":
         state = create_initial_state(cfg)
         overlay_default = default_overlay_transparency()
@@ -103,6 +106,8 @@ class LoopContext4D:
             ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
+            base_speed_level=int(cfg.speed_level),
+            bot_speed_level=int(bot_speed_level),
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
@@ -139,6 +144,7 @@ class LoopContext4D:
         )
 
     def on_restart(self) -> None:
+        self.cfg.speed_level = int(self.base_speed_level)
         self.state = create_initial_state(self.cfg)
         self.gravity_accumulator = 0
         self.clear_anim = None
@@ -232,6 +238,7 @@ def run_game_loop(
         cfg,
         bot_mode=bot_mode,
         overlay_transparency=overlay_transparency,
+        bot_speed_level=bot_speed_level,
     )
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
@@ -255,7 +262,7 @@ def run_game_loop(
         screen=screen,
         fonts=fonts,
         loop=loop,
-        gravity_interval_ms=gravity_interval_ms,
+        gravity_interval_from_config=gravity_interval_ms_from_config,
         pause_dimension=4,
         run_pause_menu=run_pause_menu,
         run_help_menu=lambda target, active_fonts, dim, ctx: run_help_menu(

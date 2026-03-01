@@ -85,6 +85,8 @@ from tet4d.engine.api import (
     bot_planner_algorithm_from_index,
     bot_mode_from_index,
     bot_planner_profile_from_index,
+    compute_speed_level_runtime,
+    load_menu_payload_runtime,
     runtime_assist_combined_score_multiplier,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
@@ -111,6 +113,12 @@ _RANDOM_MODE_CHOICES = (
 )
 _RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
+_AUTO_SPEEDUP_ENABLED_DEFAULT = 1 if int(
+    _DEFAULT_MODE_2D.get("auto_speedup_enabled", 1)
+) else 0
+_LINES_PER_LEVEL_DEFAULT = int(_DEFAULT_MODE_2D.get("lines_per_level", 10))
+_LINES_PER_LEVEL_MIN = 1
+_LINES_PER_LEVEL_MAX = 50
 
 
 # ---------- Menu state & actions (logic, not drawing) ----------
@@ -201,6 +209,34 @@ def _random_mode_index_to_id(index: int) -> str:
 def _random_mode_label(index: int) -> str:
     safe_index = max(0, min(len(_RANDOM_MODE_LABELS) - 1, int(index)))
     return _RANDOM_MODE_LABELS[safe_index]
+
+
+def _clamp_auto_speedup_enabled(value: object) -> int:
+    if isinstance(value, bool):
+        return 1 if value else 0
+    if isinstance(value, int):
+        return 1 if value > 0 else 0
+    return _AUTO_SPEEDUP_ENABLED_DEFAULT
+
+
+def _clamp_lines_per_level(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = _LINES_PER_LEVEL_DEFAULT
+    else:
+        numeric = int(value)
+    return max(_LINES_PER_LEVEL_MIN, min(_LINES_PER_LEVEL_MAX, numeric))
+
+
+def _load_speedup_settings_for_mode(mode_key: str) -> tuple[int, int]:
+    payload = load_menu_payload_runtime()
+    settings = payload.get("settings") if isinstance(payload, dict) else None
+    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
+    if not isinstance(mode_settings, dict):
+        return _AUTO_SPEEDUP_ENABLED_DEFAULT, _LINES_PER_LEVEL_DEFAULT
+    return (
+        _clamp_auto_speedup_enabled(mode_settings.get("auto_speedup_enabled")),
+        _clamp_lines_per_level(mode_settings.get("lines_per_level")),
+    )
 
 
 def _menu_value_formatter(attr_name: str, value: object) -> str:
@@ -500,10 +536,20 @@ class LoopContext2D:
     clear_anim_elapsed_ms: float = 0.0
     last_lines_cleared: int = 0
     was_game_over: bool = False
+    base_speed_level: int = 1
+    bot_speed_level: int = 7
+    auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT
+    lines_per_level: int = _LINES_PER_LEVEL_DEFAULT
 
     @classmethod
     def create(
-        cls, cfg: GameConfig, *, bot_mode: BotMode = BotMode.OFF
+        cls,
+        cfg: GameConfig,
+        *,
+        bot_mode: BotMode = BotMode.OFF,
+        bot_speed_level: int = 7,
+        auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT,
+        lines_per_level: int = _LINES_PER_LEVEL_DEFAULT,
     ) -> "LoopContext2D":
         state = create_initial_state(cfg)
         return cls(
@@ -512,6 +558,10 @@ class LoopContext2D:
             bot=PlayBotController(mode=bot_mode),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
+            base_speed_level=int(cfg.speed_level),
+            bot_speed_level=int(bot_speed_level),
+            auto_speedup_enabled=_clamp_auto_speedup_enabled(auto_speedup_enabled),
+            lines_per_level=_clamp_lines_per_level(lines_per_level),
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
@@ -532,6 +582,7 @@ class LoopContext2D:
         )
 
     def on_restart(self) -> None:
+        self.cfg.speed_level = int(self.base_speed_level)
         self.state = create_initial_state(self.cfg)
         self.gravity_accumulator = 0
         self.clear_anim_levels = ()
@@ -560,6 +611,23 @@ class LoopContext2D:
         self.state.analysis_grid_mode = self.grid_mode.value
 
 
+def _maybe_apply_auto_speedup(loop: LoopContext2D) -> int | None:
+    target_speed_level = compute_speed_level_runtime(
+        start_level=int(loop.base_speed_level),
+        lines_cleared=int(loop.state.lines_cleared),
+        enabled=bool(loop.auto_speedup_enabled),
+        lines_per_level=int(loop.lines_per_level),
+    )
+    if int(target_speed_level) == int(loop.cfg.speed_level):
+        return None
+    loop.cfg.speed_level = int(target_speed_level)
+    gravity_interval_ms = gravity_interval_ms_from_config(loop.cfg)
+    loop.bot.configure_speed(gravity_interval_ms, int(loop.bot_speed_level))
+    loop.gravity_accumulator = 0
+    loop.refresh_score_multiplier()
+    return gravity_interval_ms
+
+
 def _configure_game_loop(
     *,
     loop: LoopContext2D,
@@ -578,6 +646,12 @@ def _configure_game_loop(
         algorithm=bot_planner_algorithm_from_index(bot_algorithm_index),
     )
     loop.refresh_score_multiplier()
+    return gravity_interval_ms
+
+
+def _sync_runtime_speed(loop: LoopContext2D) -> int:
+    gravity_interval_ms = gravity_interval_ms_from_config(loop.cfg)
+    loop.bot.configure_speed(gravity_interval_ms, int(loop.bot_speed_level))
     return gravity_interval_ms
 
 
@@ -677,7 +751,14 @@ def run_game_loop(
     """
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
-    loop = LoopContext2D.create(cfg, bot_mode=bot_mode)
+    auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_mode("2d")
+    loop = LoopContext2D.create(
+        cfg,
+        bot_mode=bot_mode,
+        bot_speed_level=bot_speed_level,
+        auto_speedup_enabled=auto_speedup_enabled,
+        lines_per_level=lines_per_level,
+    )
     gravity_interval_ms = _configure_game_loop(
         loop=loop,
         bot_speed_level=bot_speed_level,
@@ -727,6 +808,7 @@ def run_game_loop(
         if status == "restart":
             continue
 
+        gravity_interval_ms = _sync_runtime_speed(loop)
         _advance_simulation(
             loop=loop,
             dt=dt,
@@ -737,6 +819,9 @@ def run_game_loop(
             dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
         )
+        updated_gravity = _maybe_apply_auto_speedup(loop)
+        if updated_gravity is not None:
+            gravity_interval_ms = updated_gravity
         clear_effect = _clear_effect(
             loop.clear_anim_levels,
             loop.clear_anim_elapsed_ms,

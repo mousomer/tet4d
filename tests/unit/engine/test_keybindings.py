@@ -306,6 +306,11 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertNotIn(keybindings.SYSTEM_KEYS["restart"][0], gameplay_keys_4d)
         self.assertNotIn(keybindings.SYSTEM_KEYS["toggle_grid"][0], gameplay_keys_4d)
 
+    def test_system_menu_default_includes_f10(self) -> None:
+        menu_keys = keybindings.SYSTEM_KEYS["menu"]
+        self.assertIn(pygame.K_m, menu_keys)
+        self.assertIn(pygame.K_F10, menu_keys)
+
 
 class TestMenuSettingsPersistence(unittest.TestCase):
     @classmethod
@@ -481,9 +486,14 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         from tet4d.engine.runtime.settings_schema import (
             clamp_game_seed,
             clamp_overlay_transparency,
+            sanitize_text,
         )
 
         self.assertEqual(clamp_overlay_transparency(-1.0, default=0.25), 0.0)
         self.assertEqual(clamp_overlay_transparency(1.0, default=0.25), 0.85)
         self.assertEqual(clamp_game_seed(-1, default=1337), 0)
         self.assertEqual(clamp_game_seed(2_000_000_000, default=1337), 999_999_999)
+        self.assertEqual(
+            sanitize_text("ok\x00bad\nsafe", max_length=32),
+            "okbadsafe",
+        )

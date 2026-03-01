@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 import unittest
 
 from tet4d.ui.pygame.launch import launcher_settings
 from tet4d.engine.runtime import menu_config
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 class TestMenuPolicy(unittest.TestCase):
@@ -53,6 +55,13 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertTrue(
             any(
                 row_key == "game_topology_advanced"
+                for kind, _label, row_key in rows
+                if kind == "item"
+            )
+        )
+        self.assertTrue(
+            any(
+                row_key == "gameplay_advanced"
                 for kind, _label, row_key in rows
                 if kind == "item"
             )
@@ -217,3 +226,21 @@ class TestMenuPolicy(unittest.TestCase):
         labels = menu_config.settings_option_labels()
         self.assertIn("game_random_mode", labels)
         self.assertGreaterEqual(len(labels["game_random_mode"]), 2)
+
+    def test_unified_settings_manual_numeric_edit_applies_large_values(self) -> None:
+        state = SimpleNamespace(
+            display_settings=DisplaySettings(
+                fullscreen=False,
+                windowed_size=(1200, 760),
+            ),
+            game_seed=1337,
+            text_mode_row_key="display_width",
+            text_mode_buffer="10000",
+            text_mode_replace_on_type=False,
+            saved=True,
+            status="",
+            status_error=False,
+            pending_reset_confirm=False,
+        )
+        self.assertTrue(launcher_settings._apply_unified_numeric_text_value(state))
+        self.assertEqual(state.display_settings.windowed_size[0], 10000)

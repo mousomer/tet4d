@@ -120,7 +120,7 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
                 screen=Mock(),
                 fonts=object(),
                 loop=loop,
-                gravity_interval_ms=500,
+                gravity_interval_from_config=lambda _cfg: 500,
                 pause_dimension=3,
                 run_pause_menu=lambda *_args, **_kwargs: ("continue", Mock()),
                 run_help_menu=lambda *_args, **_kwargs: Mock(),
@@ -176,6 +176,45 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
 
         self.assertFalse(result)
         capture_event_mock.assert_called_once()
+
+    def test_front2d_menu_restart_triggers_loop_restart(self) -> None:
+        loop = SimpleNamespace(on_restart=Mock())
+        screen = Mock()
+        next_screen = Mock()
+
+        with patch.object(
+            front2d,
+            "run_pause_menu",
+            return_value=("restart", next_screen),
+        ):
+            status, returned_screen = front2d._resolve_loop_decision(
+                decision="menu",
+                screen=screen,
+                fonts=object(),
+                loop=loop,
+            )
+
+        self.assertEqual(status, "restart")
+        self.assertIs(returned_screen, next_screen)
+        loop.on_restart.assert_called_once()
+
+    def test_nd_menu_restart_triggers_loop_restart(self) -> None:
+        loop = SimpleNamespace(on_restart=Mock())
+        screen = Mock()
+        next_screen = Mock()
+
+        status, returned_screen = loop_runner_nd._resolve_menu_decision(
+            decision="menu",
+            screen=screen,
+            fonts=object(),
+            loop=loop,
+            pause_dimension=4,
+            run_pause_menu=lambda *_args, **_kwargs: ("restart", next_screen),
+        )
+
+        self.assertEqual(status, "restart")
+        self.assertIs(returned_screen, next_screen)
+        loop.on_restart.assert_called_once()
 
 
 if __name__ == "__main__":

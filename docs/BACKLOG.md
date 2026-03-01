@@ -69,6 +69,33 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-01): pause hotkey parity + deterministic auto speed-up controls.
+
+- Added dedicated pause hotkey default (`F10`) alongside `m`:
+  - `config/keybindings/defaults.json`
+  - `keybindings/2d.json`
+  - `keybindings/3d.json`
+  - `keybindings/4d.json`
+- Added shared advanced gameplay defaults and settings row:
+  - `config/menu/defaults.json` (`auto_speedup_enabled`, `lines_per_level`)
+  - `config/menu/structure.json` (`gameplay_advanced` entry + category metrics update)
+- Implemented settings hub advanced gameplay submenu and persistence wiring:
+  - `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- Implemented deterministic speed-level helper:
+  - `src/tet4d/engine/gameplay/leveling.py`
+  - `tests/test_leveling.py`
+- Applied speed-level progression in runtime loops (2D/3D/4D), with restart reset
+  to session base speed and runtime gravity reconfiguration:
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+- Added engine API adapter for leveling helper to keep architecture boundary clean:
+  - `src/tet4d/engine/api.py`
+- Verification:
+  - targeted pytest suites passed (76 tests)
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
 Current sub-batch (2026-03-01): stage 801-812 API/runtime dedup + debt-signal cleanup.
 
 - Advanced stage metadata:

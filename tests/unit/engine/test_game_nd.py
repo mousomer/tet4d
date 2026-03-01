@@ -82,7 +82,7 @@ class TestGameND(unittest.TestCase):
 
     def test_lock_piece_can_clear_two_planes_and_score_100(self):
         cfg = GameConfigND(
-            dims=(2, 4, 1),
+            dims=(2, 5, 1),
             gravity_axis=1,
             piece_set_id=PIECE_SET_3D_EMBED_2D,
         )
@@ -91,16 +91,17 @@ class TestGameND(unittest.TestCase):
         state.score = 0
         state.lines_cleared = 0
 
-        state.board.cells[(0, 2, 0)] = 7
-        state.board.cells[(0, 3, 0)] = 8
+        state.board.cells[(0, 3, 0)] = 7
+        state.board.cells[(0, 4, 0)] = 8
+        state.board.cells[(0, 0, 0)] = 6
         two_blocks = PieceShapeND("double", ((0, 0, 0), (0, 1, 0)), color_id=5)
-        state.current_piece = ActivePieceND.from_shape(two_blocks, pos=(1, 2, 0))
+        state.current_piece = ActivePieceND.from_shape(two_blocks, pos=(1, 3, 0))
 
         cleared = state.lock_current_piece()
 
         self.assertEqual(cleared, 2)
         self.assertEqual(state.lines_cleared, 2)
-        self.assertEqual(state.score, 105)
+        self.assertEqual(state.score, 185)
 
     def test_score_multiplier_scales_awarded_points(self):
         cfg = GameConfigND(
@@ -109,6 +110,7 @@ class TestGameND(unittest.TestCase):
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
         state.board.cells.clear()
         state.board.cells[(0, 2, 0)] = 1
+        state.board.cells[(0, 1, 0)] = 9
         dot = PieceShapeND("dot", ((0, 0, 0),), color_id=2)
         state.current_piece = ActivePieceND.from_shape(dot, pos=(1, 2, 0))
         state.score_multiplier = 0.5
@@ -116,6 +118,23 @@ class TestGameND(unittest.TestCase):
         cleared = state.lock_current_piece()
         self.assertEqual(cleared, 1)
         self.assertEqual(state.score, 22)
+
+    def test_board_clear_applies_large_bonus(self):
+        cfg = GameConfigND(
+            dims=(2, 3, 1),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_3D_EMBED_2D,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        state.board.cells[(0, 2, 0)] = 1
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=2)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(1, 2, 0))
+
+        cleared = state.lock_current_piece()
+        self.assertEqual(cleared, 1)
+        self.assertEqual(state.board.cells, {})
+        self.assertEqual(state.score, 1545)
 
     def test_4d_config_can_use_six_cell_piece_set(self):
         cfg = GameConfigND(

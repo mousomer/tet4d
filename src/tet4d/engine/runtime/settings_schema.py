@@ -409,3 +409,17 @@ def require_state_relative_path(value: object, *, path: str) -> str:
     if not clean.startswith("state/"):
         raise RuntimeError(f"{path} must be under state/")
     return clean
+
+
+def sanitize_text(value: object, *, max_length: int = 256) -> str:
+    if not isinstance(value, str):
+        return ""
+    limit = max(1, int(max_length))
+    cleaned_chars: list[str] = []
+    for char in value:
+        if len(cleaned_chars) >= limit:
+            break
+        if not char.isprintable():
+            continue
+        cleaned_chars.append(char)
+    return "".join(cleaned_chars)

@@ -31,7 +31,9 @@
       "bot_speed_level": 7,
       "challenge_layers": 0,
       "exploration_mode": 0,
-      "speed_level": 1
+      "speed_level": 1,
+      "auto_speedup_enabled": 1,
+      "lines_per_level": 10
     },
     "3d": {
       "width": 6,
@@ -49,7 +51,9 @@
       "bot_speed_level": 7,
       "challenge_layers": 0,
       "exploration_mode": 0,
-      "speed_level": 1
+      "speed_level": 1,
+      "auto_speedup_enabled": 1,
+      "lines_per_level": 10
     },
     "4d": {
       "width": 10,
@@ -68,7 +72,9 @@
       "bot_speed_level": 7,
       "challenge_layers": 0,
       "exploration_mode": 0,
-      "speed_level": 1
+      "speed_level": 1,
+      "auto_speedup_enabled": 1,
+      "lines_per_level": 10
     }
   }
 }

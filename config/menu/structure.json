@@ -30,6 +30,8 @@
       "subtitle_categories_template": "Top-level categories: {categories}",
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
+        "Enter on width/height/seed to type large numeric values",
+        "Gameplay -> Advanced gameplay... controls auto speed-up and lines-per-level",
         "F5 save   F8 reset defaults   Esc back"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
@@ -263,6 +265,11 @@
       "kind": "item",
       "label": "Advanced topology (all modes)",
       "row_key": "game_topology_advanced"
+    },
+    {
+      "kind": "item",
+      "label": "Advanced gameplay...",
+      "row_key": "gameplay_advanced"
     },
     {
       "kind": "header",
@@ -540,7 +547,7 @@
     {
       "id": "gameplay",
       "label": "Gameplay",
-      "description": "Shared run controls across 2D/3D/4D (game seed, random type, and advanced topology toggle)."
+      "description": "Shared run controls across 2D/3D/4D (game seed, random type, advanced topology toggle, and advanced gameplay tuning)."
     },
     {
       "id": "analytics",
@@ -582,7 +589,7 @@
       "top_level": true
     },
     "gameplay": {
-      "field_count": 3,
+      "field_count": 4,
       "action_count": 0,
       "mode_specific": false,
       "top_level": true

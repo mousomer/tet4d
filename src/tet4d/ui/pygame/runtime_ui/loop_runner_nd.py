@@ -9,6 +9,66 @@ import tet4d.engine.api as engine_api
 
 GameLoopDecision = Literal["continue", "quit", "menu", "help"]
 GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
+_LINES_PER_LEVEL_MIN = 1
+_LINES_PER_LEVEL_MAX = 50
+
+
+def _mode_key_for_dimension(dimension: int) -> str:
+    if dimension == 2:
+        return "2d"
+    if dimension == 3:
+        return "3d"
+    if dimension == 4:
+        return "4d"
+    return "2d"
+
+
+def _default_speedup_settings(mode_key: str) -> tuple[int, int]:
+    payload = engine_api.default_settings_payload_runtime()
+    settings = payload.get("settings") if isinstance(payload, dict) else None
+    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
+    if not isinstance(mode_settings, dict):
+        return 1, 10
+    auto_speedup_enabled = mode_settings.get("auto_speedup_enabled", 1)
+    lines_per_level = mode_settings.get("lines_per_level", 10)
+    return (
+        _clamp_auto_speedup_enabled(auto_speedup_enabled, default=1),
+        _clamp_lines_per_level(lines_per_level, default=10),
+    )
+
+
+def _clamp_lines_per_level(value: object, *, default: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(_LINES_PER_LEVEL_MIN, min(_LINES_PER_LEVEL_MAX, numeric))
+
+
+def _clamp_auto_speedup_enabled(value: object, *, default: int) -> int:
+    if isinstance(value, bool):
+        return 1 if value else 0
+    if isinstance(value, int):
+        return 1 if value > 0 else 0
+    return 1 if int(default) > 0 else 0
+
+
+def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
+    mode_key = _mode_key_for_dimension(dimension)
+    default_enabled, default_lines = _default_speedup_settings(mode_key)
+    payload = engine_api.load_menu_payload_runtime()
+    settings = payload.get("settings") if isinstance(payload, dict) else None
+    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
+    if not isinstance(mode_settings, dict):
+        return default_enabled, default_lines
+    raw_enabled = mode_settings.get("auto_speedup_enabled", default_enabled)
+    raw_lines = mode_settings.get("lines_per_level", default_lines)
+    auto_speedup_enabled = _clamp_auto_speedup_enabled(
+        raw_enabled,
+        default=default_enabled,
+    )
+    lines_per_level = _clamp_lines_per_level(raw_lines, default=default_lines)
+    return auto_speedup_enabled, lines_per_level
 
 
 def process_game_events(
@@ -128,12 +188,34 @@ def _update_loop_effects(
     return loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
 
+def _maybe_apply_auto_speedup(
+    *,
+    loop: Any,
+    auto_speedup_enabled: int,
+    lines_per_level: int,
+    gravity_interval_from_config: Callable[[Any], int],
+) -> None:
+    target_speed_level = engine_api.compute_speed_level_runtime(
+        start_level=int(getattr(loop, "base_speed_level", 1)),
+        lines_cleared=int(loop.state.lines_cleared),
+        enabled=bool(auto_speedup_enabled),
+        lines_per_level=int(lines_per_level),
+    )
+    if int(target_speed_level) == int(loop.state.config.speed_level):
+        return
+    loop.state.config.speed_level = int(target_speed_level)
+    new_interval = int(gravity_interval_from_config(loop.state.config))
+    loop.bot.configure_speed(new_interval, int(getattr(loop, "bot_speed_level", 7)))
+    loop.gravity_accumulator = 0
+    loop.refresh_score_multiplier()
+
+
 def run_nd_loop(
     *,
     screen: pygame.Surface,
     fonts: Any,
     loop: Any,
-    gravity_interval_ms: int,
+    gravity_interval_from_config: Callable[[Any], int],
     pause_dimension: int,
     run_pause_menu: Callable[[pygame.Surface, Any, int], tuple[str, pygame.Surface]],
     run_help_menu: Callable[[pygame.Surface, Any, int, str], pygame.Surface],
@@ -151,6 +233,9 @@ def run_nd_loop(
     clear animation creation, and frame rendering.
     """
     clock = pygame.time.Clock()
+    auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_dimension(
+        pause_dimension
+    )
 
     while True:
         dt = clock.tick(60)
@@ -186,10 +271,21 @@ def run_nd_loop(
         if status == "restart":
             continue
 
+        gravity_interval_ms = int(gravity_interval_from_config(loop.state.config))
+        loop.bot.configure_speed(
+            gravity_interval_ms,
+            int(getattr(loop, "bot_speed_level", 7)),
+        )
         _advance_simulation_step(
             loop=loop,
             dt=dt,
             gravity_interval_ms=gravity_interval_ms,
+        )
+        _maybe_apply_auto_speedup(
+            loop=loop,
+            auto_speedup_enabled=auto_speedup_enabled,
+            lines_per_level=lines_per_level,
+            gravity_interval_from_config=gravity_interval_from_config,
         )
         active_overlay = _update_loop_effects(
             loop=loop,

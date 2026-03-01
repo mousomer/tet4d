@@ -59,6 +59,8 @@ class TestGame2D(unittest.TestCase):
         # Pre-fill bottom row y=3 with three blocks at x=1,2,3
         for x in (1, 2, 3):
             state.board.cells[(x, 3)] = 1
+        # Keep one remaining block so this is not a full-board clear.
+        state.board.cells[(0, 2)] = 9
 
         # Create a 1x1 piece to fill (0,3) and complete the row
         dot = PieceShape2D("dot", [(0, 0)], color_id=2)
@@ -74,35 +76,37 @@ class TestGame2D(unittest.TestCase):
         # lock_piece_points(5) + single-line clear(40)
         self.assertEqual(state.score, score_before + 45)
 
-        # Bottom row should now be empty
-        for x in range(cfg.width):
-            self.assertNotIn((x, 3), state.board.cells)
+        # The survivor block from y=2 drops into y=3 after clear.
+        self.assertEqual(state.board.cells, {(0, 3): 9})
 
     def test_lock_current_piece_and_clear_two_lines_scores_100(self):
-        cfg = GameConfig(width=2, height=2)
+        cfg = GameConfig(width=2, height=3)
         board = BoardND((cfg.width, cfg.height))
         state = GameState(config=cfg, board=board)
         state.board.cells.clear()
 
-        # Leave one gap in each row at x=1.
-        state.board.cells[(0, 0)] = 1
+        # Leave one gap in each target row at x=1.
         state.board.cells[(0, 1)] = 1
+        state.board.cells[(0, 2)] = 1
+        # Keep one survivor so this does not trigger board-clear bonus.
+        state.board.cells[(0, 0)] = 1
 
         domino = PieceShape2D("domino", [(0, 0), (0, 1)], color_id=2)
-        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 0), rotation=0)
+        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 1), rotation=0)
 
         cleared = state.lock_current_piece()
 
         self.assertEqual(cleared, 2)
         self.assertEqual(state.lines_cleared, 2)
-        self.assertEqual(state.score, 105)
-        self.assertEqual(state.board.cells, {})
+        self.assertEqual(state.score, 185)
+        self.assertEqual(state.board.cells, {(0, 2): 1})
 
     def test_score_multiplier_scales_awarded_points(self):
         cfg = GameConfig(width=2, height=2)
         state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
         state.board.cells.clear()
         state.board.cells[(0, 1)] = 1
+        state.board.cells[(0, 0)] = 9
         state.current_piece = ActivePiece2D(
             PieceShape2D("dot", [(0, 0)], color_id=2), pos=(1, 1), rotation=0
         )
@@ -111,6 +115,21 @@ class TestGame2D(unittest.TestCase):
         self.assertEqual(cleared, 1)
         # round((5 + 40) * 0.5) = 22
         self.assertEqual(state.score, 22)
+
+    def test_board_clear_applies_large_bonus(self):
+        cfg = GameConfig(width=2, height=2)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        state.board.cells[(0, 1)] = 1
+        state.current_piece = ActivePiece2D(
+            PieceShape2D("dot", [(0, 0)], color_id=2),
+            pos=(1, 1),
+            rotation=0,
+        )
+        cleared = state.lock_current_piece()
+        self.assertEqual(cleared, 1)
+        self.assertEqual(state.board.cells, {})
+        self.assertEqual(state.score, 1545)
 
     def test_hard_drop_places_piece_at_bottom(self):
         cfg = GameConfig(width=4, height=4)

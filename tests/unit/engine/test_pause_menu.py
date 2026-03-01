@@ -79,3 +79,21 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
     def test_pause_values_show_analytics_in_settings_summary(self) -> None:
         values = pause_menu._pause_menu_values(4)
         self.assertEqual(values[2], "Audio + Display + Analytics")
+
+    def test_restart_action_sets_restart_decision(self) -> None:
+        screen = pygame.Surface((640, 480))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("restart")
+        )
+
+        out_screen, keep_running = pause_menu._handle_pause_row(
+            screen,
+            object(),
+            state,
+            dimension=2,
+        )
+
+        self.assertTrue(keep_running)
+        self.assertIs(out_screen, screen)
+        self.assertEqual(state.decision, "restart")
+        self.assertFalse(state.running)

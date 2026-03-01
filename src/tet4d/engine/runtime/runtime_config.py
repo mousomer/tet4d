@@ -218,6 +218,51 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
     return {"cycle": tuple(cycle), "fallback": fallback_mode}
 
 
+def _validate_clear_scoring(raw_clear_scoring: object) -> dict[str, Any]:
+    clear_scoring = require_object(
+        raw_clear_scoring,
+        path="gameplay.clear_scoring",
+    )
+    multi_layer_bonus = require_object(
+        clear_scoring.get("multi_layer_bonus"),
+        path="gameplay.clear_scoring.multi_layer_bonus",
+    )
+    tier_two = require_int(
+        multi_layer_bonus.get("2"),
+        path="gameplay.clear_scoring.multi_layer_bonus.2",
+        min_value=0,
+    )
+    tier_three = require_int(
+        multi_layer_bonus.get("3"),
+        path="gameplay.clear_scoring.multi_layer_bonus.3",
+        min_value=0,
+    )
+    tier_four = require_int(
+        multi_layer_bonus.get("4"),
+        path="gameplay.clear_scoring.multi_layer_bonus.4",
+        min_value=0,
+    )
+    tier_five_plus = require_int(
+        multi_layer_bonus.get("5_plus"),
+        path="gameplay.clear_scoring.multi_layer_bonus.5_plus",
+        min_value=0,
+    )
+    board_clear_bonus = require_int(
+        clear_scoring.get("board_clear_bonus"),
+        path="gameplay.clear_scoring.board_clear_bonus",
+        min_value=0,
+    )
+    return {
+        "multi_layer_bonus": {
+            "2": tier_two,
+            "3": tier_three,
+            "4": tier_four,
+            "5_plus": tier_five_plus,
+        },
+        "board_clear_bonus": board_clear_bonus,
+    }
+
+
 def _validate_gameplay_tuning_payload(payload: dict[str, Any]) -> dict[str, Any]:
     require_int(payload.get("version"), path="gameplay.version", min_value=1)
     return {
@@ -227,6 +272,7 @@ def _validate_gameplay_tuning_payload(payload: dict[str, Any]) -> dict[str, Any]
             payload.get("challenge_prefill")
         ),
         "assist_scoring": _validate_assist_scoring(payload.get("assist_scoring")),
+        "clear_scoring": _validate_clear_scoring(payload.get("clear_scoring")),
         "grid_modes": _validate_grid_modes(payload.get("grid_modes")),
     }
 
@@ -299,6 +345,23 @@ def grid_mode_cycle_names() -> tuple[str, ...]:
 
 def grid_mode_fallback_name() -> str:
     return str(_gameplay_tuning()["grid_modes"]["fallback"])
+
+
+def clear_scoring_multi_layer_bonus(cleared_count: int) -> int:
+    if int(cleared_count) < 2:
+        return 0
+    tiers = _gameplay_tuning()["clear_scoring"]["multi_layer_bonus"]
+    if int(cleared_count) == 2:
+        return int(tiers["2"])
+    if int(cleared_count) == 3:
+        return int(tiers["3"])
+    if int(cleared_count) == 4:
+        return int(tiers["4"])
+    return int(tiers["5_plus"])
+
+
+def clear_scoring_board_clear_bonus() -> int:
+    return int(_gameplay_tuning()["clear_scoring"]["board_clear_bonus"])
 
 
 def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int, int]:
