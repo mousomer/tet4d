@@ -17,6 +17,7 @@ def _base_metrics() -> dict:
 
 def _base_gate_config() -> dict:
     return {
+        "gate_mode": "strict_stage_decrease",
         "score_epsilon": 0.1,
         "status_order": {
             "low": 0,
@@ -73,6 +74,29 @@ class TestArchitectureMetricBudgetsTechDebt(unittest.TestCase):
         self.assertEqual(len(violations), 2)
         self.assertIn("missing tech_debt.score", violations)
         self.assertIn("missing tech_debt.status", violations)
+
+    def test_non_regression_mode_allows_stage_advance_without_strict_drop(self) -> None:
+        metrics = _base_metrics()
+        metrics["tech_debt"]["score"] = 30.05
+        cfg = _base_gate_config()
+        cfg["gate_mode"] = "non_regression_baseline"
+        violations = evaluate_tech_debt_gate(metrics, cfg)
+        self.assertEqual(violations, [])
+
+    def test_non_regression_mode_fails_above_baseline_plus_epsilon(self) -> None:
+        metrics = _base_metrics()
+        metrics["tech_debt"]["score"] = 30.11
+        cfg = _base_gate_config()
+        cfg["gate_mode"] = "non_regression_baseline"
+        violations = evaluate_tech_debt_gate(metrics, cfg)
+        self.assertEqual(len(violations), 1)
+        self.assertIn("baseline ceiling", violations[0])
+
+    def test_rejects_unknown_gate_mode(self) -> None:
+        cfg = _base_gate_config()
+        cfg["gate_mode"] = "unsupported_mode"
+        with self.assertRaises(ValueError):
+            evaluate_tech_debt_gate(_base_metrics(), cfg)
 
 
 if __name__ == "__main__":

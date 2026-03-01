@@ -46,17 +46,23 @@ PROFILE_MACBOOK = "macbook"
 _PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 
-def _bindings_for(profile: str, section: str, dim_key: str | None = None) -> KeyBindingMap:
+def _bindings_for(
+    profile: str, section: str, dim_key: str | None = None
+) -> KeyBindingMap:
     profile_payload = _PROFILE_MAP.get(profile, {})
     section_payload = profile_payload.get(section, {})
     if dim_key is not None:
         section_payload = section_payload.get(dim_key, {})
     if not isinstance(section_payload, dict):
         return {}
-    return {action: tuple(int(k) for k in keys) for action, keys in section_payload.items()}
+    return {
+        action: tuple(int(k) for k in keys) for action, keys in section_payload.items()
+    }
 
 
-def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+def default_game_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
     return (
         _bindings_for(profile, "game", "d2"),
         _bindings_for(profile, "game", "d3"),
@@ -64,7 +70,9 @@ def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyB
     )
 
 
-def default_camera_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap]:
+def default_camera_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap]:
     return (
         _bindings_for(profile, "camera", "d3"),
         _bindings_for(profile, "camera", "d4"),
@@ -265,14 +273,10 @@ def _parse_key(raw_key: object) -> int | None:
 def _parse_key_list(raw_keys: object) -> KeyTuple | None:
     if not isinstance(raw_keys, list):
         return None
-    parsed: List[int] = []
-    for raw_key in raw_keys:
-        key = _parse_key(raw_key)
-        if key is not None:
-            parsed.append(key)
-    if not parsed:
-        return None
-    return tuple(parsed)
+    parsed = tuple(
+        key for raw_key in raw_keys if (key := _parse_key(raw_key)) is not None
+    )
+    return parsed or None
 
 
 def _apply_group_payload(
@@ -293,24 +297,26 @@ def _apply_group_payload(
 def _binding_groups_for_dimension(
     dimension: int,
 ) -> Dict[str, MutableMapping[str, KeyTuple]]:
-    if dimension == 2:
-        return {
+    group_map: dict[int, Dict[str, MutableMapping[str, KeyTuple]]] = {
+        2: {
             "game": KEYS_2D,
             "system": SYSTEM_KEYS,
-        }
-    if dimension == 3:
-        return {
+        },
+        3: {
             "game": KEYS_3D,
             "camera": CAMERA_KEYS_3D,
             "system": SYSTEM_KEYS,
-        }
-    if dimension == 4:
-        return {
+        },
+        4: {
             "game": KEYS_4D,
             "camera": CAMERA_KEYS_4D,
             "system": SYSTEM_KEYS,
-        }
-    raise ValueError("dimension must be one of: 2, 3, 4")
+        },
+    }
+    groups = group_map.get(dimension)
+    if groups is None:
+        raise ValueError("dimension must be one of: 2, 3, 4")
+    return groups
 
 
 def _resolve_keybindings_io_context(
@@ -318,15 +324,15 @@ def _resolve_keybindings_io_context(
     *,
     file_path: str | None,
     profile: str | None,
-) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str, bool]:
+) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str]:
     groups = _binding_groups_for_dimension(dimension)
     selected_profile = (
         _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
     )
     if file_path is not None:
-        return groups, _safe_resolve_path(Path(file_path)), selected_profile, True
+        return groups, _safe_resolve_path(Path(file_path)), selected_profile
     path = keybinding_file_path_for_profile(dimension, selected_profile)
-    return groups, path, selected_profile, False
+    return groups, path, selected_profile
 
 
 def runtime_binding_groups_for_dimension(
@@ -354,8 +360,7 @@ def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
 
 
 def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
-    filtered = tuple(candidate for candidate in keys if candidate != key)
-    return filtered
+    return tuple(candidate for candidate in keys if candidate != key)
 
 
 def _find_conflicts(
@@ -378,13 +383,15 @@ def _camera_blocked_conflicts(
     group: str,
     conflicts: list[tuple[str, str]],
 ) -> list[tuple[str, str]]:
-    if group != "camera":
-        return []
-    return [
-        (conflict_group, conflict_action)
-        for conflict_group, conflict_action in conflicts
-        if conflict_group in {"game", "system"}
-    ]
+    return (
+        [
+            (conflict_group, conflict_action)
+            for conflict_group, conflict_action in conflicts
+            if conflict_group in {"game", "system"}
+        ]
+        if group == "camera"
+        else []
+    )
 
 
 def _swap_conflicts(
@@ -425,8 +432,8 @@ def _apply_rebind_conflicts(
 ) -> None:
     if conflicts and conflict_mode == REBIND_CONFLICT_SWAP:
         _swap_conflicts(groups, binding_map, action, key, conflicts)
-        return
-    _replace_conflicts(groups, key, conflicts)
+    else:
+        _replace_conflicts(groups, key, conflicts)
 
 
 def _rebind_success_message(
@@ -541,11 +548,8 @@ def set_active_key_profile(profile: str) -> tuple[bool, str]:
 def create_auto_profile(
     base_profile: str | None = None,
 ) -> tuple[bool, str, str | None]:
-    source = (
-        _normalize_profile_name(base_profile) if base_profile else ACTIVE_KEY_PROFILE
-    )
     candidate = next_auto_profile_name("custom")
-    ok, msg = clone_key_profile(candidate, source)
+    ok, msg = clone_key_profile(candidate, base_profile)
     if not ok:
         return False, msg, None
     return True, msg, candidate
@@ -663,7 +667,7 @@ def save_keybindings_file(
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups, path, selected_profile, is_external = _resolve_keybindings_io_context(
+        groups, path, selected_profile = _resolve_keybindings_io_context(
             dimension,
             file_path=file_path,
             profile=profile,
@@ -695,7 +699,7 @@ def load_keybindings_file(
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups, path, _selected_profile, _is_external = _resolve_keybindings_io_context(
+        groups, path, _selected_profile = _resolve_keybindings_io_context(
             dimension,
             file_path=file_path,
             profile=profile,

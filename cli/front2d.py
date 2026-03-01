@@ -67,7 +67,12 @@ from tet4d.ui.pygame.menu.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from tet4d.engine.runtime.menu_config import default_settings_payload, setup_fields_for_dimension, setup_hints_for_dimension
+from tet4d.engine.runtime.menu_config import (
+    default_settings_payload,
+    settings_option_labels,
+    setup_fields_for_dimension,
+    setup_hints_for_dimension,
+)
 from tet4d.engine.runtime.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
@@ -104,10 +109,7 @@ _RANDOM_MODE_CHOICES = (
     RNG_MODE_FIXED_SEED,
     RNG_MODE_TRUE_RANDOM,
 )
-_RANDOM_MODE_LABELS = (
-    "Fixed seed",
-    "True random",
-)
+_RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 
 

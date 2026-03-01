@@ -21,9 +21,8 @@ TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
 _SETTINGS_OPTION_LABELS = engine_api.settings_option_labels_runtime()
-_RANDOM_MODE_LABELS = tuple(
-    _SETTINGS_OPTION_LABELS.get("game_random_mode") or ("Fixed seed", "True random")
-)
+_RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
+_SETTINGS_HUB_COPY = engine_api.ui_copy_section_runtime("settings_hub")
 
 
 @dataclass
@@ -546,11 +545,13 @@ def _draw_unified_settings_menu(
 ) -> None:
     _draw_gradient(screen)
     width, height = screen.get_size()
-    title = fonts.title_font.render("Settings", True, TEXT_COLOR)
+    title = fonts.title_font.render(_SETTINGS_HUB_COPY["title"], True, TEXT_COLOR)
     categories = ", ".join(_configured_top_level_labels())
     subtitle_text = fit_text(
         fonts.hint_font,
-        f"Top-level categories: {categories}",
+        _SETTINGS_HUB_COPY["subtitle_categories_template"].format(
+            categories=categories
+        ),
         width - 28,
     )
     subtitle = fonts.hint_font.render(
@@ -640,10 +641,7 @@ def _draw_unified_settings_menu(
             screen.blit(value_surf, (value_x, y))
         y += item_step
 
-    hints = (
-        "Up/Down select   Left/Right adjust   Enter activate",
-        "F5 save   F8 reset defaults   Esc back",
-    )
+    hints = tuple(_SETTINGS_HUB_COPY["hints"])
     hy = panel_y + panel_h + 8
     max_hint_lines = max(0, (height - hy - 6) // max(1, line_h))
     hint_budget = max(0, max_hint_lines - (1 if state.status else 0))
@@ -684,7 +682,7 @@ def _dispatch_unified_key(
     if key == pygame.K_F8:
         if not state.pending_reset_confirm:
             state.pending_reset_confirm = True
-            _set_unified_status(state, "Press F8 again to confirm reset defaults")
+            _set_unified_status(state, _SETTINGS_HUB_COPY["reset_confirm_f8"])
             return screen
         return _reset_unified_settings(screen, state)
     if _adjust_unified_with_arrows(state, key):

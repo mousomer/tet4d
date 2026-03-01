@@ -28,6 +28,10 @@ from tet4d.ui.pygame.runtime_ui.loop_runner_nd import run_nd_loop
 from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
+from tet4d.ui.pygame.launch.launcher_play import (
+    game_caption_for_dimension,
+    setup_caption_for_dimension,
+)
 
 GameConfigND = engine_api.GameConfigND
 GameStateND = engine_api.GameStateND
@@ -299,8 +303,8 @@ def run() -> None:
     run_nd_mode_launcher(
         display_settings=display_settings,
         fonts=fonts,
-        setup_caption="4D Tetris – Setup",
-        game_caption="4D Tetris",
+        setup_caption=setup_caption_for_dimension(4),
+        game_caption=game_caption_for_dimension(4),
         run_menu=lambda menu_screen, active_fonts: run_menu(
             menu_screen, active_fonts, 4
         ),

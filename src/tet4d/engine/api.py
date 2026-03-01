@@ -303,9 +303,7 @@ def apply_challenge_prefill_nd(state: GameStateND, *, layers: int) -> None:
 
 
 def playbot_dry_run_defaults() -> tuple[int, int]:
-    from .runtime.runtime_config import playbot_dry_run_defaults as _defaults
-
-    return _defaults()
+    return _call_runtime_runtime_config("playbot_dry_run_defaults")
 
 
 def run_dry_run_2d(
@@ -425,47 +423,31 @@ def project_constant_int(
 
 
 def project_root_path():
-    from .runtime.project_config import project_root_path as _project_root_path
-
-    return _project_root_path()
+    return _call_runtime_project_config("project_root_path")
 
 
 def keybindings_dir_path_runtime() -> Path:
-    from .runtime.project_config import keybindings_dir_path as _keybindings_dir_path
-
-    return _keybindings_dir_path()
+    return _call_runtime_project_config("keybindings_dir_path")
 
 
 def keybindings_profiles_dir_path_runtime() -> Path:
-    from .runtime.project_config import (
-        keybindings_profiles_dir_path as _keybindings_profiles_dir_path,
-    )
-
-    return _keybindings_profiles_dir_path()
+    return _call_runtime_project_config("keybindings_profiles_dir_path")
 
 
 def keybindings_defaults_path_runtime() -> Path:
-    from .runtime.project_config import keybindings_defaults_path as _defaults_path
-
-    return _defaults_path()
+    return _call_runtime_project_config("keybindings_defaults_path")
 
 
 def keybindings_load_json_file_runtime(path: Path) -> Any:
-    from .runtime.settings_schema import read_json_value_or_raise as _load_json_file
-
-    return _load_json_file(path)
+    return _call_runtime_settings_schema("read_json_value_or_raise", path)
 
 
 def keybindings_atomic_write_text_runtime(path: Path, payload: str) -> None:
-    from .runtime.settings_schema import atomic_write_text as _atomic_write_text
-
-    _atomic_write_text(path, payload)
+    _call_runtime_settings_schema("atomic_write_text", path, payload)
 
 
 def keybindings_copy_text_file_runtime(src_path: Path, dst_path: Path) -> None:
-    from .runtime.settings_schema import copy_text_file as _copy_text_file
-
-    _copy_text_file(src_path, dst_path)
+    _call_runtime_settings_schema("copy_text_file", src_path, dst_path)
 
 
 def open_display_runtime(*args: Any, **kwargs: Any) -> Any:
@@ -513,41 +495,25 @@ def tick_animation_runtime(animation: Any, dt_ms: int) -> Any:
 
 
 def initialize_keybinding_files_runtime() -> None:
-    from tet4d.ui.pygame.keybindings import (
-        initialize_keybinding_files as _initialize_keybinding_files,
-    )
-
-    _initialize_keybinding_files()
+    _call_ui_keybindings("initialize_keybinding_files")
 
 
 def get_audio_settings_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import get_audio_settings as _get_audio_settings
-
-    return _get_audio_settings()
+    return _call_runtime_menu_settings_state("get_audio_settings")
 
 
 def get_display_settings_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import (
-        get_display_settings as _get_display_settings,
-    )
-
-    return _get_display_settings()
+    return _call_runtime_menu_settings_state("get_display_settings")
 
 
 def get_analytics_settings_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import (
-        get_analytics_settings as _get_analytics_settings,
-    )
-
-    return _get_analytics_settings()
+    return _call_runtime_menu_settings_state("get_analytics_settings")
 
 
 def save_display_settings_runtime(*, windowed_size: tuple[int, int]) -> None:
-    from .runtime.menu_settings_state import (
-        save_display_settings as _save_display_settings,
+    _call_runtime_menu_settings_state(
+        "save_display_settings", windowed_size=windowed_size
     )
-
-    _save_display_settings(windowed_size=windowed_size)
 
 
 def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
@@ -559,51 +525,30 @@ def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
 
 
 def settings_hub_layout_rows_runtime():
-    from .runtime.menu_config import (
-        settings_hub_layout_rows as _settings_hub_layout_rows,
-    )
-
-    return _settings_hub_layout_rows()
+    return _call_runtime_menu_config("settings_hub_layout_rows")
 
 
 def settings_top_level_categories_runtime():
-    from .runtime.menu_config import (
-        settings_top_level_categories as _settings_top_level_categories,
-    )
-
-    return _settings_top_level_categories()
+    return _call_runtime_menu_config("settings_top_level_categories")
 
 
 def settings_option_labels_runtime():
-    from .runtime.menu_config import settings_option_labels as _settings_option_labels
-
-    return _settings_option_labels()
+    return _call_runtime_menu_config("settings_option_labels")
 
 
 def default_settings_payload_runtime():
-    from .runtime.menu_config import (
-        default_settings_payload as _default_settings_payload,
-    )
-
-    return _default_settings_payload()
+    return _call_runtime_menu_config("default_settings_payload")
 
 
 def load_analytics_payload_runtime():
-    from .runtime.menu_settings_state import (
-        get_analytics_settings as _get_analytics_settings,
-    )
-
-    return _get_analytics_settings()
+    return _call_runtime_menu_settings_state("get_analytics_settings")
 
 
 def persist_audio_payload_runtime(
     *, master_volume: float, sfx_volume: float, mute: bool
 ):
-    from .runtime.menu_settings_state import (
-        save_audio_settings as _save_audio_settings,
-    )
-
-    return _save_audio_settings(
+    return _call_runtime_menu_settings_state(
+        "save_audio_settings",
         master_volume=master_volume,
         sfx_volume=sfx_volume,
         mute=mute,
@@ -616,11 +561,8 @@ def persist_display_payload_runtime(
     windowed_size: tuple[int, int],
     overlay_transparency: float | None = None,
 ):
-    from .runtime.menu_settings_state import (
-        save_display_settings as _save_display_settings,
-    )
-
-    return _save_display_settings(
+    return _call_runtime_menu_settings_state(
+        "save_display_settings",
         fullscreen=fullscreen,
         windowed_size=windowed_size,
         overlay_transparency=overlay_transparency,
@@ -628,113 +570,114 @@ def persist_display_payload_runtime(
 
 
 def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
-    from .runtime.menu_settings_state import (
-        save_analytics_settings as _save_analytics_settings,
+    return _call_runtime_menu_settings_state(
+        "save_analytics_settings",
+        score_logging_enabled=score_logging_enabled,
     )
-
-    return _save_analytics_settings(score_logging_enabled=score_logging_enabled)
 
 
 def default_windowed_size_runtime() -> tuple[int, int]:
-    from .runtime.menu_settings_state import _runtime_defaults
-
-    return _runtime_defaults().windowed_size
+    return _call_runtime_menu_settings_state("_runtime_defaults").windowed_size
 
 
 def default_overlay_transparency_runtime() -> float:
-    from .runtime.menu_settings_state import _default_overlay_transparency
-
-    return float(_default_overlay_transparency())
+    return float(_call_runtime_menu_settings_state("_default_overlay_transparency"))
 
 
 def overlay_transparency_step_runtime() -> float:
-    from .runtime.menu_settings_state import (
-        OVERLAY_TRANSPARENCY_STEP as _OVERLAY_TRANSPARENCY_STEP,
-    )
-
-    return float(_OVERLAY_TRANSPARENCY_STEP)
+    return float(_call_runtime_menu_settings_state("OVERLAY_TRANSPARENCY_STEP"))
 
 
 def clamp_overlay_transparency_runtime(
     value: Any, *, default: float | None = None
 ) -> float:
-    from .runtime.menu_settings_state import _default_overlay_transparency
-    from .runtime.menu_settings_state import clamp_overlay_transparency as _clamp
-
     fallback = (
-        float(_default_overlay_transparency()) if default is None else float(default)
+        float(_call_runtime_menu_settings_state("_default_overlay_transparency"))
+        if default is None
+        else float(default)
     )
-    return float(_clamp(value, default=fallback))
+    return float(
+        _call_runtime_menu_settings_state(
+            "clamp_overlay_transparency", value, default=fallback
+        )
+    )
 
 
 def default_game_seed_runtime() -> int:
-    from .runtime.menu_settings_state import _default_game_seed
-
-    return int(_default_game_seed())
+    return int(_call_runtime_menu_settings_state("_default_game_seed"))
 
 
 def game_seed_step_runtime() -> int:
-    from .runtime.menu_settings_state import GAME_SEED_STEP as _GAME_SEED_STEP
-
-    return int(_GAME_SEED_STEP)
+    return int(_call_runtime_menu_settings_state("GAME_SEED_STEP"))
 
 
 def clamp_game_seed_runtime(value: Any, *, default: int | None = None) -> int:
-    from .runtime.menu_settings_state import (
-        DEFAULT_GAME_SEED as _DEFAULT_GAME_SEED,
-        clamp_game_seed as _clamp_game_seed,
+    fallback = (
+        int(_call_runtime_menu_settings_state("DEFAULT_GAME_SEED"))
+        if default is None
+        else int(default)
     )
-
-    fallback = int(_DEFAULT_GAME_SEED) if default is None else int(default)
-    return int(_clamp_game_seed(value, default=fallback))
+    return int(
+        _call_runtime_menu_settings_state("clamp_game_seed", value, default=fallback)
+    )
 
 
 def get_global_game_seed_runtime() -> int:
-    from .runtime.menu_settings_state import (
-        get_global_game_seed as _get_global_game_seed,
-    )
-
-    return int(_get_global_game_seed())
+    return int(_call_runtime_menu_settings_state("get_global_game_seed"))
 
 
 def save_global_game_seed_runtime(seed: int):
-    from .runtime.menu_settings_state import (
-        save_global_game_seed as _save_global_game_seed,
-    )
+    return _call_runtime_menu_settings_state("save_global_game_seed", seed)
 
-    return _save_global_game_seed(seed)
+
+def _call_frontend_nd(name: str, *args: Any, **kwargs: Any) -> Any:
+    from . import frontend_nd as _frontend_nd
+
+    return getattr(_frontend_nd, name)(*args, **kwargs)
+
+
+def _get_frontend_nd_attr(name: str) -> Any:
+    from . import frontend_nd as _frontend_nd
+
+    return getattr(_frontend_nd, name)
+
+
+def _call_ui_front3d_game(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame import front3d_game as _front3d_game
+
+    return getattr(_front3d_game, name)(*args, **kwargs)
+
+
+def _call_ui_front4d_game(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame import front4d_game as _front4d_game
+
+    return getattr(_front4d_game, name)(*args, **kwargs)
+
+
+def _get_ui_front4d_game_attr(name: str) -> Any:
+    from tet4d.ui.pygame import front4d_game as _front4d_game
+
+    return getattr(_front4d_game, name)
 
 
 def front3d_setup_game_settings_type() -> Any:
-    from .frontend_nd import GameSettingsND as _GameSettingsND
-
-    return _GameSettingsND
+    return _get_frontend_nd_attr("GameSettingsND")
 
 
 def front3d_setup_run_menu_nd(screen: Any, fonts: Any, dimension: int) -> Any:
-    from .frontend_nd import run_menu as _run_menu
-
-    return _run_menu(screen, fonts, max(2, min(4, int(dimension))))
+    return _call_frontend_nd("run_menu", screen, fonts, max(2, min(4, int(dimension))))
 
 
 def front3d_setup_build_config_nd(settings: Any, dimension: int) -> GameConfigND:
-    from .frontend_nd import build_config as _build_config
-
-    return _build_config(settings, max(2, min(4, int(dimension))))
+    return _call_frontend_nd("build_config", settings, max(2, min(4, int(dimension))))
 
 
 def front3d_setup_create_initial_state_nd(cfg: GameConfigND) -> GameStateND:
-    from .frontend_nd import create_initial_state as _create_initial_state
-
-    return _create_initial_state(cfg)
+    return _call_frontend_nd("create_initial_state", cfg)
 
 
 def front3d_setup_gravity_interval_ms_from_config_nd(cfg: GameConfigND) -> int:
-    from .frontend_nd import (
-        gravity_interval_ms_from_config as _gravity_interval_ms_from_config,
-    )
-
-    return _gravity_interval_ms_from_config(cfg)
+    return _call_frontend_nd("gravity_interval_ms_from_config", cfg)
 
 
 def launcher_play_run_menu_3d(screen: Any, fonts: Any) -> Any:
@@ -746,47 +689,31 @@ def launcher_play_build_config_3d(settings: Any) -> Any:
 
 
 def launcher_play_suggested_window_size_3d(cfg: Any) -> tuple[int, int]:
-    from tet4d.ui.pygame.front3d_game import (
-        suggested_window_size as _suggested_window_size,
-    )
-
-    return _suggested_window_size(cfg)
+    return _call_ui_front3d_game("suggested_window_size", cfg)
 
 
 def launcher_play_run_game_loop_3d(
     screen: Any, cfg: Any, fonts: Any, **kwargs: Any
 ) -> Any:
-    from tet4d.ui.pygame.front3d_game import run_game_loop as _run_game_loop
-
-    return _run_game_loop(screen, cfg, fonts, **kwargs)
+    return _call_ui_front3d_game("run_game_loop", screen, cfg, fonts, **kwargs)
 
 
 def launcher_play_run_game_loop_4d(
     screen: Any, cfg: Any, fonts: Any, **kwargs: Any
 ) -> Any:
-    from tet4d.ui.pygame.front4d_game import run_game_loop as _run_game_loop
-
-    return _run_game_loop(screen, cfg, fonts, **kwargs)
+    return _call_ui_front4d_game("run_game_loop", screen, cfg, fonts, **kwargs)
 
 
 def launcher_play_suggested_window_size_4d(cfg: Any) -> tuple[int, int]:
-    from tet4d.ui.pygame.front4d_game import (
-        suggested_window_size as _suggested_window_size,
-    )
-
-    return _suggested_window_size(cfg)
+    return _call_ui_front4d_game("suggested_window_size", cfg)
 
 
 def launcher_play_run_menu_nd(screen: Any, fonts: Any, dimension: int) -> Any:
-    from .frontend_nd import run_menu as _run_menu
-
-    return _run_menu(screen, fonts, dimension)
+    return _call_frontend_nd("run_menu", screen, fonts, dimension)
 
 
 def launcher_play_build_config_nd(settings: Any, dimension: int) -> Any:
-    from .frontend_nd import build_config as _build_config
-
-    return _build_config(settings, dimension)
+    return _call_frontend_nd("build_config", settings, dimension)
 
 
 def gravity_interval_ms_gameplay(speed_level: int, *, dimension: int) -> int:
@@ -801,126 +728,121 @@ def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
     return _map_overlay_cells(*args, **kwargs)
 
 
-def format_key_tuple(keys):
-    from tet4d.ui.pygame.input.key_display import format_key_tuple as _format_key_tuple
+def _call_ui_key_display(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame.input import key_display as _key_display
 
-    return _format_key_tuple(keys)
+    return getattr(_key_display, name)(*args, **kwargs)
+
+
+def _call_ui_logic_keybindings_catalog(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .ui_logic import keybindings_catalog as _keybindings_catalog
+
+    return getattr(_keybindings_catalog, name)(*args, **kwargs)
+
+
+def _call_runtime_runtime_config(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import runtime_config as _runtime_config
+
+    return getattr(_runtime_config, name)(*args, **kwargs)
+
+
+def format_key_tuple(keys):
+    return _call_ui_key_display("format_key_tuple", keys)
 
 
 def runtime_binding_groups_for_dimension(dimension: int):
-    from tet4d.ui.pygame.keybindings import (
-        runtime_binding_groups_for_dimension as _runtime_binding_groups_for_dimension,
-    )
-
-    return _runtime_binding_groups_for_dimension(dimension)
+    return _call_ui_keybindings("runtime_binding_groups_for_dimension", dimension)
 
 
 def audio_event_specs_runtime() -> dict[str, tuple[float, int, float]]:
-    from .runtime.runtime_config import audio_event_specs as _audio_event_specs
-
-    return _audio_event_specs()
+    return _call_runtime_runtime_config("audio_event_specs")
 
 
 def binding_action_description(action: str) -> str:
-    from .ui_logic.keybindings_catalog import (
-        binding_action_description as _binding_action_description,
-    )
-
-    return _binding_action_description(action)
+    return _call_ui_logic_keybindings_catalog("binding_action_description", action)
 
 
 def binding_group_label(group: str) -> str:
-    from .ui_logic.keybindings_catalog import (
-        binding_group_label as _binding_group_label,
-    )
-
-    return _binding_group_label(group)
+    return _call_ui_logic_keybindings_catalog("binding_group_label", group)
 
 
 def binding_group_description(group: str) -> str:
-    from .ui_logic.keybindings_catalog import (
-        binding_group_description as _binding_group_description,
-    )
+    return _call_ui_logic_keybindings_catalog("binding_group_description", group)
 
-    return _binding_group_description(group)
+
+def _call_ui_keybindings(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame import keybindings as _keybindings
+
+    return getattr(_keybindings, name)(*args, **kwargs)
+
+
+def _call_ui_keybindings_menu_model(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame.menu import keybindings_menu_model as _menu_model
+
+    attr = getattr(_menu_model, name)
+    if callable(attr):
+        return attr(*args, **kwargs)
+    if args or kwargs:
+        raise TypeError(f"{name} is not callable")
+    return attr
+
+
+def _call_ui_keybindings_menu_shortcuts(name: str, *args: Any, **kwargs: Any) -> Any:
+    from tet4d.ui.pygame.menu import menu_keybinding_shortcuts as _shortcuts
+
+    return getattr(_shortcuts, name)(*args, **kwargs)
 
 
 def keybindings_rebind_conflict_replace() -> str:
-    from tet4d.ui.pygame.keybindings import REBIND_CONFLICT_REPLACE as _REPLACE
+    from tet4d.ui.pygame import keybindings as _keybindings
 
-    return _REPLACE
+    return _keybindings.REBIND_CONFLICT_REPLACE
 
 
 def keybindings_active_key_profile() -> str:
-    from tet4d.ui.pygame.keybindings import active_key_profile as _active_key_profile
-
-    return _active_key_profile()
+    return _call_ui_keybindings("active_key_profile")
 
 
 def keybindings_clone_key_profile(
     profile_name: str, *, source_profile: str | None = None
 ) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import clone_key_profile as _clone_key_profile
-
-    return _clone_key_profile(profile_name, source_profile=source_profile)
+    return _call_ui_keybindings(
+        "clone_key_profile",
+        profile_name,
+        source_profile=source_profile,
+    )
 
 
 def keybindings_cycle_key_profile(step: int) -> tuple[bool, str, str]:
-    from tet4d.ui.pygame.keybindings import cycle_key_profile as _cycle_key_profile
-
-    return _cycle_key_profile(step)
+    return _call_ui_keybindings("cycle_key_profile", step)
 
 
 def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
-    from tet4d.ui.pygame.keybindings import (
-        cycle_rebind_conflict_mode as _cycle_rebind_conflict_mode,
-    )
-
-    return _cycle_rebind_conflict_mode(mode, step)
+    return _call_ui_keybindings("cycle_rebind_conflict_mode", mode, step)
 
 
 def keybindings_normalize_rebind_conflict_mode(mode: str | None) -> str:
-    from tet4d.ui.pygame.keybindings import (
-        normalize_rebind_conflict_mode as _normalize_rebind_conflict_mode,
-    )
-
-    return _normalize_rebind_conflict_mode(mode)
+    return _call_ui_keybindings("normalize_rebind_conflict_mode", mode)
 
 
 def keybindings_delete_key_profile(profile_name: str) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import delete_key_profile as _delete_key_profile
-
-    return _delete_key_profile(profile_name)
+    return _call_ui_keybindings("delete_key_profile", profile_name)
 
 
 def keybindings_create_auto_profile() -> tuple[bool, str, str | None]:
-    from tet4d.ui.pygame.keybindings import create_auto_profile as _create_auto_profile
-
-    return _create_auto_profile()
+    return _call_ui_keybindings("create_auto_profile")
 
 
 def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import (
-        load_active_profile_bindings as _load_active_profile_bindings,
-    )
-
-    return _load_active_profile_bindings()
+    return _call_ui_keybindings("load_active_profile_bindings")
 
 
 def keybindings_load_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import (
-        load_keybindings_file as _load_keybindings_file,
-    )
-
-    return _load_keybindings_file(dimension)
+    return _call_ui_keybindings("load_keybindings_file", dimension)
 
 
 def keybindings_next_auto_profile_name(prefix: str = "custom") -> str:
-    from tet4d.ui.pygame.keybindings import (
-        next_auto_profile_name as _next_auto_profile_name,
-    )
-
-    return _next_auto_profile_name(prefix)
+    return _call_ui_keybindings("next_auto_profile_name", prefix)
 
 
 def keybindings_rebind_action_key(
@@ -931,49 +853,29 @@ def keybindings_rebind_action_key(
     *,
     conflict_mode: str,
 ) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import rebind_action_key as _rebind_action_key
-
-    return _rebind_action_key(
-        dimension, group, action, key, conflict_mode=conflict_mode
+    return _call_ui_keybindings(
+        "rebind_action_key", dimension, group, action, key, conflict_mode=conflict_mode
     )
 
 
 def keybindings_rename_key_profile(old_name: str, new_name: str) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import rename_key_profile as _rename_key_profile
-
-    return _rename_key_profile(old_name, new_name)
+    return _call_ui_keybindings("rename_key_profile", old_name, new_name)
 
 
 def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import (
-        reset_active_profile_bindings as _reset_active_profile_bindings,
-    )
-
-    return _reset_active_profile_bindings(dimension)
+    return _call_ui_keybindings("reset_active_profile_bindings", dimension)
 
 
 def keybindings_save_keybindings_file(dimension: int) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import (
-        save_keybindings_file as _save_keybindings_file,
-    )
-
-    return _save_keybindings_file(dimension)
+    return _call_ui_keybindings("save_keybindings_file", dimension)
 
 
 def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
-    from tet4d.ui.pygame.keybindings import (
-        set_active_key_profile as _set_active_key_profile,
-    )
-
-    return _set_active_key_profile(profile_name)
+    return _call_ui_keybindings("set_active_key_profile", profile_name)
 
 
 def keybindings_binding_actions_for_dimension(dimension: int):
-    from tet4d.ui.pygame.keybindings import (
-        binding_actions_for_dimension as _binding_actions_for_dimension,
-    )
-
-    return _binding_actions_for_dimension(dimension)
+    return _call_ui_keybindings("binding_actions_for_dimension", dimension)
 
 
 def menu_settings_load(state: Any, dimension: int) -> tuple[bool, str]:
@@ -999,11 +901,12 @@ def menu_settings_reset_to_defaults(state: Any, dimension: int) -> tuple[bool, s
 def keybindings_menu_shortcut_action_for_key(
     key: int, load_action: Any, save_action: Any
 ) -> Any | None:
-    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
-        menu_binding_action_for_key as _menu_binding_action_for_key,
+    return _call_ui_keybindings_menu_shortcuts(
+        "menu_binding_action_for_key",
+        key,
+        load_action,
+        save_action,
     )
-
-    return _menu_binding_action_for_key(key, load_action, save_action)
 
 
 def keybindings_apply_menu_shortcut_action(
@@ -1013,29 +916,20 @@ def keybindings_apply_menu_shortcut_action(
     dimension: int,
     state: Any,
 ) -> bool:
-    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
-        apply_menu_binding_action as _apply_menu_binding_action,
-    )
-
-    return _apply_menu_binding_action(
-        action, load_action, save_action, dimension, state
+    return _call_ui_keybindings_menu_shortcuts(
+        "apply_menu_binding_action", action, load_action, save_action, dimension, state
     )
 
 
 def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
-    from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import (
-        menu_binding_status_color as _menu_binding_status_color,
-    )
-
-    return _menu_binding_status_color(is_error)
+    return _call_ui_keybindings_menu_shortcuts("menu_binding_status_color", is_error)
 
 
 def keybindings_partition_gameplay_actions_ui_logic(action_names):
-    from .ui_logic.keybindings_catalog import (
-        partition_gameplay_actions as _partition_gameplay_actions,
+    return _call_ui_logic_keybindings_catalog(
+        "partition_gameplay_actions",
+        action_names,
     )
-
-    return _partition_gameplay_actions(action_names)
 
 
 def keybinding_category_docs_runtime():
@@ -1047,73 +941,39 @@ def keybinding_category_docs_runtime():
 
 
 def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        SECTION_MENU as _SECTION_MENU,
-    )
-
-    return _SECTION_MENU
+    return _call_ui_keybindings_menu_model("SECTION_MENU")
 
 
 def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) -> str:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        resolve_initial_scope as _resolve_initial_scope,
-    )
-
-    return _resolve_initial_scope(dimension, scope)
+    return _call_ui_keybindings_menu_model("resolve_initial_scope", dimension, scope)
 
 
 def keybindings_menu_rows_for_scope(scope: str):
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        rows_for_scope as _rows_for_scope,
-    )
-
-    return _rows_for_scope(scope)
+    return _call_ui_keybindings_menu_model("rows_for_scope", scope)
 
 
 def keybindings_menu_scope_dimensions(scope: str) -> tuple[int, ...]:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        scope_dimensions as _scope_dimensions,
-    )
-
-    return _scope_dimensions(scope)
+    return _call_ui_keybindings_menu_model("scope_dimensions", scope)
 
 
 def keybindings_menu_scope_file_hint(scope: str) -> str:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        scope_file_hint as _scope_file_hint,
-    )
-
-    return _scope_file_hint(scope)
+    return _call_ui_keybindings_menu_model("scope_file_hint", scope)
 
 
 def keybindings_menu_scope_label(scope: str) -> str:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import scope_label as _scope_label
-
-    return _scope_label(scope)
+    return _call_ui_keybindings_menu_model("scope_label", scope)
 
 
 def keybindings_menu_binding_keys(row):
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        binding_keys as _binding_keys,
-    )
-
-    return _binding_keys(row)
+    return _call_ui_keybindings_menu_model("binding_keys", row)
 
 
 def keybindings_menu_binding_title(row, scope: str) -> str:
-    from tet4d.ui.pygame.menu.keybindings_menu_model import (
-        binding_title as _binding_title,
-    )
-
-    return _binding_title(row, scope)
+    return _call_ui_keybindings_menu_model("binding_title", row, scope)
 
 
 def gameplay_action_category_ui_logic(action: str) -> str:
-    from .ui_logic.keybindings_catalog import (
-        gameplay_action_category as _gameplay_action_category,
-    )
-
-    return _gameplay_action_category(action)
+    return _call_ui_logic_keybindings_catalog("gameplay_action_category", action)
 
 
 def compute_menu_layout_zones_ui_logic(*args: Any, **kwargs: Any) -> Any:
@@ -1122,190 +982,204 @@ def compute_menu_layout_zones_ui_logic(*args: Any, **kwargs: Any) -> Any:
     return _compute_zones(*args, **kwargs)
 
 
-def bot_options_rows_runtime() -> tuple[str, ...]:
-    from .runtime.menu_config import bot_options_rows as _bot_options_rows
+def _call_runtime_menu_config(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import menu_config as _menu_config
 
-    return _bot_options_rows()
+    return getattr(_menu_config, name)(*args, **kwargs)
+
+
+def _call_runtime_project_config(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import project_config as _project_config
+
+    return getattr(_project_config, name)(*args, **kwargs)
+
+
+def _call_runtime_settings_schema(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import settings_schema as _settings_schema
+
+    return getattr(_settings_schema, name)(*args, **kwargs)
+
+
+def _call_runtime_menu_settings_state(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import menu_settings_state as _menu_settings_state
+
+    attr = getattr(_menu_settings_state, name)
+    if callable(attr):
+        return attr(*args, **kwargs)
+    if args or kwargs:
+        raise TypeError(f"{name} is not callable")
+    return attr
+
+
+def _call_runtime_help_topics(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .runtime import help_topics as _help_topics
+
+    return getattr(_help_topics, name)(*args, **kwargs)
+
+
+def _call_help_text(name: str, *args: Any, **kwargs: Any) -> Any:
+    from . import help_text as _help_text
+
+    return getattr(_help_text, name)(*args, **kwargs)
+
+
+def bot_options_rows_runtime() -> tuple[str, ...]:
+    return _call_runtime_menu_config("bot_options_rows")
 
 
 def bot_defaults_by_mode_runtime() -> dict[str, dict[str, int]]:
-    from .runtime.menu_config import bot_defaults_by_mode as _bot_defaults_by_mode
-
-    return _bot_defaults_by_mode()
+    return _call_runtime_menu_config("bot_defaults_by_mode")
 
 
 def settings_category_docs_runtime():
-    from .runtime.menu_config import settings_category_docs as _settings_category_docs
-
-    return _settings_category_docs()
+    return _call_runtime_menu_config("settings_category_docs")
 
 
 def pause_menu_id_runtime() -> str:
-    from .runtime.menu_config import pause_menu_id as _pause_menu_id
-
-    return _pause_menu_id()
+    return _call_runtime_menu_config("pause_menu_id")
 
 
 def menu_items_runtime(menu_id: str):
-    from .runtime.menu_config import menu_items as _menu_items
+    return _call_runtime_menu_config("menu_items", menu_id)
 
-    return _menu_items(menu_id)
+
+def pause_copy_runtime() -> dict[str, Any]:
+    return _call_runtime_menu_config("pause_copy")
+
+
+def branding_copy_runtime() -> dict[str, str]:
+    return _call_runtime_menu_config("branding_copy")
+
+
+def ui_copy_payload_runtime() -> dict[str, Any]:
+    return _call_runtime_menu_config("ui_copy_payload")
+
+
+def ui_copy_section_runtime(section: str) -> dict[str, Any]:
+    return _call_runtime_menu_config("ui_copy_section", section)
 
 
 def load_menu_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import (
-        load_app_settings_payload as _load_app_settings_payload,
-    )
-
-    return _load_app_settings_payload()
+    return _call_runtime_menu_settings_state("load_app_settings_payload")
 
 
 def save_menu_payload_runtime(payload: dict[str, Any]) -> tuple[bool, str]:
-    from .runtime.menu_settings_state import (
-        save_app_settings_payload as _save_app_settings_payload,
-    )
-
-    return _save_app_settings_payload(payload)
+    return _call_runtime_menu_settings_state("save_app_settings_payload", payload)
 
 
 def load_audio_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import (
-        get_audio_settings as _get_audio_settings,
-    )
-
-    return _get_audio_settings()
+    return _call_runtime_menu_settings_state("get_audio_settings")
 
 
 def load_display_payload_runtime() -> dict[str, Any]:
-    from .runtime.menu_settings_state import (
-        get_display_settings as _get_display_settings,
-    )
-
-    return _get_display_settings()
+    return _call_runtime_menu_settings_state("get_display_settings")
 
 
 def help_action_topic_registry_runtime() -> dict[str, str]:
-    from .runtime.help_topics import help_action_topic_registry as _registry
-
-    return _registry()
+    return _call_runtime_help_topics("help_action_topic_registry")
 
 
 def help_topics_for_context_runtime(*args: Any, **kwargs: Any):
-    from .runtime.help_topics import help_topics_for_context as _help_topics_for_context
-
-    return _help_topics_for_context(*args, **kwargs)
+    return _call_runtime_help_topics("help_topics_for_context", *args, **kwargs)
 
 
 def help_topic_block_lines_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_topic_block_lines as _help_topic_block_lines
-
-    return _help_topic_block_lines(*args, **kwargs)
+    return _call_help_text("help_topic_block_lines", *args, **kwargs)
 
 
 def help_topic_compact_limit_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_topic_compact_limit as _help_topic_compact_limit
-
-    return _help_topic_compact_limit(*args, **kwargs)
+    return _call_help_text("help_topic_compact_limit", *args, **kwargs)
 
 
 def help_topic_compact_overflow_line_runtime(*args: Any, **kwargs: Any):
-    from .help_text import (
-        help_topic_compact_overflow_line as _help_topic_compact_overflow_line,
-    )
-
-    return _help_topic_compact_overflow_line(*args, **kwargs)
+    return _call_help_text("help_topic_compact_overflow_line", *args, **kwargs)
 
 
 def help_value_template_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_value_template as _help_value_template
-
-    return _help_value_template(*args, **kwargs)
+    return _call_help_text("help_value_template", *args, **kwargs)
 
 
 def help_action_group_heading_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_action_group_heading as _help_action_group_heading
-
-    return _help_action_group_heading(*args, **kwargs)
+    return _call_help_text("help_action_group_heading", *args, **kwargs)
 
 
 def help_fallback_topic_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_fallback_topic as _help_fallback_topic
-
-    return _help_fallback_topic(*args, **kwargs)
+    return _call_help_text("help_fallback_topic", *args, **kwargs)
 
 
 def help_layout_payload_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_layout_payload as _help_layout_payload
-
-    return _help_layout_payload(*args, **kwargs)
+    return _call_help_text("help_layout_payload", *args, **kwargs)
 
 
 def help_topic_media_rule_runtime(*args: Any, **kwargs: Any):
-    from .help_text import help_topic_media_rule as _help_topic_media_rule
+    return _call_help_text("help_topic_media_rule", *args, **kwargs)
 
-    return _help_topic_media_rule(*args, **kwargs)
+
+def _call_gameplay_pieces2d(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .gameplay import pieces2d as _pieces2d
+
+    return getattr(_pieces2d, name)(*args, **kwargs)
+
+
+def _call_gameplay_pieces_nd(name: str, *args: Any, **kwargs: Any) -> Any:
+    from .gameplay import pieces_nd as _pieces_nd
+
+    return getattr(_pieces_nd, name)(*args, **kwargs)
+
+
+def _call_front4d_render(name: str, *args: Any, **kwargs: Any) -> Any:
+    from . import front4d_render as _front4d_render
+
+    return getattr(_front4d_render, name)(*args, **kwargs)
+
+
+def _get_front4d_render_attr(name: str) -> Any:
+    from . import front4d_render as _front4d_render
+
+    return getattr(_front4d_render, name)
 
 
 def piece_set_2d_options_gameplay():
-    from .gameplay.pieces2d import PIECE_SET_2D_OPTIONS as _PIECE_SET_2D_OPTIONS
+    from .gameplay import pieces2d as _pieces2d
 
-    return _PIECE_SET_2D_OPTIONS
+    return _pieces2d.PIECE_SET_2D_OPTIONS
 
 
 def piece_set_2d_label_gameplay(piece_set_id: str) -> str:
-    from .gameplay.pieces2d import piece_set_2d_label as _piece_set_2d_label
-
-    return _piece_set_2d_label(piece_set_id)
+    return _call_gameplay_pieces2d("piece_set_2d_label", piece_set_id)
 
 
 def piece_set_label_gameplay(piece_set_id: str) -> str:
-    from .gameplay.pieces_nd import piece_set_label as _piece_set_label
-
-    return _piece_set_label(piece_set_id)
+    return _call_gameplay_pieces_nd("piece_set_label", piece_set_id)
 
 
 def piece_set_options_for_dimension_gameplay(dimension: int):
-    from .gameplay.pieces_nd import (
-        piece_set_options_for_dimension as _piece_set_options_for_dimension,
-    )
-
-    return _piece_set_options_for_dimension(dimension)
+    return _call_gameplay_pieces_nd("piece_set_options_for_dimension", dimension)
 
 
 def run_front3d_ui() -> None:
-    from tet4d.ui.pygame.front3d_game import run as _run_front3d
-
-    _run_front3d()
+    _call_ui_front3d_game("run")
 
 
 def run_front4d_ui() -> None:
-    from tet4d.ui.pygame.front4d_game import run as _run_front4d
-
-    _run_front4d()
+    _call_ui_front4d_game("run")
 
 
 def profile_4d_new_layer_view_3d(*, xw_deg: float = 0.0, zw_deg: float = 0.0) -> Any:
-    from tet4d.ui.pygame.front4d_game import LayerView3D as _LayerView3D
-
-    return _LayerView3D(xw_deg=xw_deg, zw_deg=zw_deg)
+    layer_view_3d = _get_ui_front4d_game_attr("LayerView3D")
+    return layer_view_3d(xw_deg=xw_deg, zw_deg=zw_deg)
 
 
 def profile_4d_draw_game_frame(*args: Any, **kwargs: Any) -> Any:
-    from .front4d_render import draw_game_frame as _draw_game_frame
-
-    return _draw_game_frame(*args, **kwargs)
+    return _call_front4d_render("draw_game_frame", *args, **kwargs)
 
 
 def profile_4d_create_initial_state(cfg: GameConfigND) -> GameStateND:
-    from .frontend_nd import create_initial_state as _create_initial_state
-
-    return _create_initial_state(cfg)
+    return _call_frontend_nd("create_initial_state", cfg)
 
 
 def profile_4d_init_fonts() -> Any:
-    from .frontend_nd import init_fonts as _init_fonts
-
-    return _init_fonts()
+    return _call_frontend_nd("init_fonts")
 
 
 def profile_4d_grid_mode_full() -> Any:
@@ -1358,103 +1232,87 @@ def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
 
 
 def frontend_nd_route_keydown(*args: Any, **kwargs: Any) -> Any:
-    from .frontend_nd import route_nd_keydown as _route_nd_keydown
+    return _call_frontend_nd("route_nd_keydown", *args, **kwargs)
 
-    return _route_nd_keydown(*args, **kwargs)
+
+def _call_front3d_render(name: str, *args: Any, **kwargs: Any) -> Any:
+    from . import front3d_render as _front3d_render
+
+    return getattr(_front3d_render, name)(*args, **kwargs)
+
+
+def _get_front3d_render_attr(name: str) -> Any:
+    from . import front3d_render as _front3d_render
+
+    return getattr(_front3d_render, name)
 
 
 def front3d_render_camera_type() -> Any:
-    from .front3d_render import Camera3D as _Camera3D
-
-    return _Camera3D
+    return _get_front3d_render_attr("Camera3D")
 
 
 def front3d_render_clear_animation_type() -> Any:
-    from .front3d_render import ClearAnimation3D as _ClearAnimation3D
-
-    return _ClearAnimation3D
+    return _get_front3d_render_attr("ClearAnimation3D")
 
 
 def front3d_render_color_for_cell_3d(*args: Any, **kwargs: Any) -> Any:
-    from .front3d_render import color_for_cell_3d as _color_for_cell_3d
-
-    return _color_for_cell_3d(*args, **kwargs)
+    return _call_front3d_render("color_for_cell_3d", *args, **kwargs)
 
 
 def front3d_render_draw_game_frame(*args: Any, **kwargs: Any) -> Any:
-    from .front3d_render import draw_game_frame as _draw_game_frame
-
-    return _draw_game_frame(*args, **kwargs)
+    return _call_front3d_render("draw_game_frame", *args, **kwargs)
 
 
 def front3d_render_init_fonts(*args: Any, **kwargs: Any) -> Any:
-    from .front3d_render import init_fonts as _init_fonts
-
-    return _init_fonts(*args, **kwargs)
+    return _call_front3d_render("init_fonts", *args, **kwargs)
 
 
 def front3d_render_suggested_window_size(*args: Any, **kwargs: Any) -> Any:
-    from .front3d_render import suggested_window_size as _suggested_window_size
-
-    return _suggested_window_size(*args, **kwargs)
+    return _call_front3d_render("suggested_window_size", *args, **kwargs)
 
 
 def front4d_render_margin() -> int:
-    from .front4d_render import MARGIN as _MARGIN
-
-    return _MARGIN
+    return _get_front4d_render_attr("MARGIN")
 
 
 def front4d_render_layer_gap() -> int:
-    from .front4d_render import LAYER_GAP as _LAYER_GAP
-
-    return _LAYER_GAP
+    return _get_front4d_render_attr("LAYER_GAP")
 
 
 def front4d_render_side_panel() -> int:
-    from .front4d_render import SIDE_PANEL as _SIDE_PANEL
-
-    return _SIDE_PANEL
+    return _get_front4d_render_attr("SIDE_PANEL")
 
 
 def front4d_render_layer_view3d_type() -> Any:
-    from .front4d_render import LayerView3D as _LayerView3D
-
-    return _LayerView3D
+    return _get_front4d_render_attr("LayerView3D")
 
 
 def front4d_render_clear_animation_type() -> Any:
-    from .front4d_render import ClearAnimation4D as _ClearAnimation4D
-
-    return _ClearAnimation4D
+    return _get_front4d_render_attr("ClearAnimation4D")
 
 
 def front4d_render_draw_game_frame_api(*args: Any, **kwargs: Any) -> Any:
-    from .front4d_render import draw_game_frame as _draw_game_frame
-
-    return _draw_game_frame(*args, **kwargs)
+    return _call_front4d_render("draw_game_frame", *args, **kwargs)
 
 
 def front4d_render_handle_view_key(*args: Any, **kwargs: Any) -> Any:
-    from .front4d_render import handle_view_key as _handle_view_key
-
-    return _handle_view_key(*args, **kwargs)
+    return _call_front4d_render("handle_view_key", *args, **kwargs)
 
 
 def front4d_render_movement_axis_overrides(*args: Any, **kwargs: Any) -> Any:
-    from .front4d_render import (
-        movement_axis_overrides_for_view as _movement_axis_overrides_for_view,
+    return _call_front4d_render(
+        "movement_axis_overrides_for_view",
+        *args,
+        **kwargs,
     )
-
-    return _movement_axis_overrides_for_view(*args, **kwargs)
 
 
 def front4d_render_spawn_clear_anim(*args: Any, **kwargs: Any) -> Any:
-    from .front4d_render import (
-        spawn_clear_animation_if_needed as _spawn_clear_animation_if_needed,
+    return _call_front4d_render(
+        "spawn_clear_animation_if_needed",
+        *args,
+        **kwargs,
     )
-
-    return _spawn_clear_animation_if_needed(*args, **kwargs)
 
 
 def rotation_anim_piece_rotation_animator_nd_type() -> Any:

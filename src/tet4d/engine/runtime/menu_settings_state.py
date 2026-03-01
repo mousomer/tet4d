@@ -85,6 +85,15 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     return True, f"Saved menu state to {STATE_FILE}"
 
 
+def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
+    sanitize_payload(
+        payload,
+        default_payload=_default_settings_payload(),
+        defaults=_RUNTIME_DEFAULTS,
+    )
+    return _save_payload(payload)
+
+
 def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
     profile = payload.get("active_profile")
     if not isinstance(profile, str):
@@ -189,12 +198,7 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
             if mode_key in merged["settings"] and isinstance(mode_settings, dict):
                 merged["settings"][mode_key].update(mode_settings)
 
-    sanitize_payload(
-        merged,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(merged)
+    return _sanitize_and_save_payload(merged)
 
 
 def get_display_settings() -> dict[str, Any]:
@@ -231,12 +235,7 @@ def save_display_settings(
             overlay_transparency,
             default=DEFAULT_OVERLAY_TRANSPARENCY,
         )
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def get_audio_settings() -> dict[str, Any]:
@@ -260,12 +259,7 @@ def save_audio_settings(
         audio["sfx_volume"] = float(sfx_volume)
     if mute is not None:
         audio["mute"] = bool(mute)
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def save_analytics_settings(
@@ -276,12 +270,7 @@ def save_analytics_settings(
     analytics = payload.setdefault("analytics", {})
     if score_logging_enabled is not None:
         analytics["score_logging_enabled"] = bool(score_logging_enabled)
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def get_global_game_seed() -> int:
@@ -308,12 +297,7 @@ def save_global_game_seed(seed: int) -> tuple[bool, str]:
             settings[mode_key] = mode_settings
         mode_settings["game_seed"] = clamped_seed
 
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 # Backward-compat helpers expected by engine.api overlay/seed accessors.

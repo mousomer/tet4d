@@ -593,6 +593,33 @@ def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue
     return issues
 
 
+def _validate_backlog_id_uniqueness() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    rel = "docs/BACKLOG.md"
+    path = PROJECT_ROOT / rel
+    if not path.exists():
+        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+        return issues
+
+    text = path.read_text(encoding="utf-8")
+    ids = re.findall(r"\[(BKL-[A-Z0-9-]+)\]", text)
+    seen: dict[str, int] = {}
+    duplicates: dict[str, int] = {}
+    for backlog_id in ids:
+        seen[backlog_id] = seen.get(backlog_id, 0) + 1
+        if seen[backlog_id] > 1:
+            duplicates[backlog_id] = seen[backlog_id]
+    for backlog_id in sorted(duplicates):
+        issues.append(
+            ValidationIssue(
+                "duplicate",
+                f"{rel} has duplicated backlog id {backlog_id} "
+                f"({duplicates[backlog_id]} occurrences)",
+            )
+        )
+    return issues
+
+
 def _as_string_list(value: object) -> list[str] | None:
     if not isinstance(value, list) or any(
         not isinstance(token, str) for token in value
@@ -719,6 +746,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_menu_graph_contract())
     issues.extend(_validate_canonical_candidates(manifest))
     issues.extend(_validate_content_rules(manifest))
+    issues.extend(_validate_backlog_id_uniqueness())
     return issues
 
 

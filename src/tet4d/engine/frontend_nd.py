@@ -31,7 +31,9 @@ from tet4d.ui.pygame.menu.menu_controls import (
 from .runtime.menu_config import (
     default_settings_payload,
     settings_option_labels,
+    setup_hints_for_dimension,
     setup_fields_for_dimension,
+    ui_copy_section,
 )
 from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
 from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
@@ -62,10 +64,9 @@ _RANDOM_MODE_CHOICES = (
     RNG_MODE_FIXED_SEED,
     RNG_MODE_TRUE_RANDOM,
 )
-_RANDOM_MODE_LABELS = tuple(
-    settings_option_labels().get("game_random_mode") or ("Fixed seed", "True random")
-)
+_RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
 _DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
+_SETUP_MENU_COPY = ui_copy_section("setup_menu")
 
 
 def init_fonts() -> GfxFonts:
@@ -215,10 +216,10 @@ def draw_menu(
     width, height = screen.get_size()
     fields = menu_fields_for_settings(state.settings, dimension)
 
-    title_text = f"{dimension}D Tetris - Setup"
+    title_text = _SETUP_MENU_COPY["title_template"].format(dimension=dimension)
     subtitle_text = fit_text(
         fonts.hint_font,
-        "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
+        _SETUP_MENU_COPY["subtitle_template"],
         width - 28,
     )
 
@@ -288,13 +289,7 @@ def draw_menu(
         screen.blit(text_surf, text_rect.topleft)
         y += row_h
 
-    hint_lines = [
-        "Esc = quit",
-        "F7 dry-run verify (bot, no graphics)",
-        "Use Main Menu -> Settings for Random type and Advanced topology.",
-        "Use Main Menu -> Bot Options / Keybindings for shared controls.",
-        "Controls are shown in-game on the side panel.",
-    ]
+    hint_lines = list(setup_hints_for_dimension(dimension))
     hint_y = panel_y + panel_h + 8
     max_hint_lines = max(1, (height - hint_y - 6) // max(1, hint_line_h))
     hint_budget = max(1, max_hint_lines - (1 if state.bindings_status else 0))

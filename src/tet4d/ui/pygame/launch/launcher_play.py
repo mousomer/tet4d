@@ -13,6 +13,17 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 )
 from tet4d.ai.playbot.types import bot_mode_from_index
 
+_BRANDING = engine_api.branding_copy_runtime()
+_GAME_TITLE = str(_BRANDING["game_title"])
+
+
+def setup_caption_for_dimension(dimension: int) -> str:
+    return f"{_GAME_TITLE} - {dimension}D setup"
+
+
+def game_caption_for_dimension(dimension: int) -> str:
+    return f"{_GAME_TITLE} - {dimension}D"
+
 
 @dataclass
 class LaunchResult:
@@ -100,8 +111,8 @@ def launch_2d(
         screen=screen,
         fonts=fonts_2d,
         display_settings=display_settings,
-        setup_caption="2D Tetris – Setup",
-        game_caption="2D Tetris",
+        setup_caption=setup_caption_for_dimension(2),
+        game_caption=game_caption_for_dimension(2),
         run_menu_fn=front2d.run_menu,
         build_cfg_fn=front2d._config_from_settings,
         suggested_size_fn=_suggested_window_size_2d,
@@ -127,8 +138,8 @@ def launch_3d(
         screen=screen,
         fonts=fonts_nd,
         display_settings=display_settings,
-        setup_caption="3D Tetris – Setup",
-        game_caption="3D Tetris",
+        setup_caption=setup_caption_for_dimension(3),
+        game_caption=game_caption_for_dimension(3),
         run_menu_fn=engine_api.launcher_play_run_menu_3d,
         build_cfg_fn=engine_api.launcher_play_build_config_3d,
         suggested_size_fn=engine_api.launcher_play_suggested_window_size_3d,
@@ -146,8 +157,8 @@ def launch_4d(
         screen=screen,
         fonts=fonts_nd,
         display_settings=display_settings,
-        setup_caption="4D Tetris – Setup",
-        game_caption="4D Tetris",
+        setup_caption=setup_caption_for_dimension(4),
+        game_caption=game_caption_for_dimension(4),
         run_menu_fn=lambda menu_screen,
         menu_fonts: engine_api.launcher_play_run_menu_nd(menu_screen, menu_fonts, 4),
         build_cfg_fn=lambda settings: engine_api.launcher_play_build_config_nd(
