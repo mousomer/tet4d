@@ -37,6 +37,7 @@ REBIND_CONFLICT_OPTIONS = (
     REBIND_CONFLICT_CANCEL,
 )
 
+
 def _load_defaults_payload() -> dict:
     path = engine_api.keybindings_defaults_path_runtime()
     raw = path.read_text(encoding="utf-8")
@@ -85,10 +86,6 @@ def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
 
 DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
 
-
-# Backward-compatible export for existing callers.
-DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
-
 KEYBINDINGS_DIR = engine_api.keybindings_dir_path_runtime()
 KEYBINDINGS_PROFILES_DIR = engine_api.keybindings_profiles_dir_path_runtime()
 KEYBINDING_FILES = {
@@ -96,7 +93,6 @@ KEYBINDING_FILES = {
     3: KEYBINDINGS_DIR / "3d.json",
     4: KEYBINDINGS_DIR / "4d.json",
 }
-_PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 
 def _normalize_profile(raw: str | None) -> str:
