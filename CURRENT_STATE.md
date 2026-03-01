@@ -111,6 +111,12 @@ Completed:
   - `src/tet4d/engine/core/model/types.py`
 - Advanced stage metadata to `arch_stage=715`.
 - Verified stage debt decrease (`2.19 -> 2.18`) with tracked folder gates non-regressed.
+- Post-stage incremental LOC cleanup on `codex/loc-slim-batch` (same stage baseline):
+  - externalized ND piece-set literals to `config/gameplay/piece_sets_nd.json`
+  - externalized keybinding defaults to `config/keybindings/defaults.json`
+  - centralized random-mode labels through `config/menu/structure.json` option labels
+  - deduplicated launcher settings/default-loader paths and keybinding declaration/header duplicates
+  - maintained strict same-stage gate (`tech_debt.score = 24.21`, `low`) under `CODEX_MODE=1 ./scripts/verify.sh`
 
 Balance note:
 - Folder-balance tracked leaf gates remain non-regressed:

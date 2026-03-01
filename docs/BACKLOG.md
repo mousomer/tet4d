@@ -809,6 +809,8 @@ Current sub-batch (2026-03-01): policy expansion + metrics refresh.
 - Metrics refresh: `tech_debt.score` now reported on strict 24.x scale; current score `24.21` (baseline 24.21) with delivery-size pressure as the leading non-backlog contributor.
 - Externalized 3D/4D piece-set definitions to `config/gameplay/piece_sets_nd.json` and load them in `pieces_nd.py` to cut Python LOC while keeping gameplay behavior unchanged.
 - Externalized keybinding defaults to `config/keybindings/defaults.json` and load via `keybindings.py`; added help action-group layout config `config/help/layout/runtime_help_action_layout.json`.
+- Centralized random-mode option labels in `config/menu/structure.json` (`settings_option_labels.game_random_mode`) and routed both `launcher_settings.py` and `frontend_nd.py` through runtime/config accessors to remove label drift/duplication.
+- Deduplicated launcher settings mode-default/loader extraction paths and removed duplicated keybinding module declarations/header text for small net LOC relief while keeping behavior unchanged.
 
 Prior sub-batch (2026-02-27): runtime schema extraction + wrapper-prune checkpoint.
 
