@@ -67,20 +67,28 @@ class TestControlGroups(unittest.TestCase):
     def test_dim3_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(3)
         names = [name for name, _ in groups]
-        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 5, 7])
-        camera_rows = groups[3][1]
+        self.assertEqual(names, ["Translation", "Rotation", "Camera/View", "System"])
+        self.assertEqual([len(rows) for _, rows in groups], [5, 3, 7, 5])
+        camera_rows = groups[2][1]
+        system_rows = groups[3][1]
+        self.assertTrue(any("\thelp\t" in row for row in system_rows))
+        self.assertTrue(any("\tpause menu\t" in row for row in system_rows))
+        self.assertTrue(any("\trestart\t" in row for row in system_rows))
         self.assertTrue(any("\tprojection\t" in row for row in camera_rows))
         self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
-        self.assertEqual(names, ["Translation", "Rotation", "System", "Camera/View"])
-        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 5, 8])
+        self.assertEqual(names, ["Translation", "Rotation", "Camera/View", "System"])
+        self.assertEqual([len(rows) for _, rows in groups], [6, 6, 8, 5])
         translation_rows = groups[0][1]
-        camera_rows = groups[-1][1]
+        camera_rows = groups[2][1]
+        system_rows = groups[3][1]
         self.assertTrue(any("\tw layer prev/next\t" in row for row in translation_rows))
+        self.assertTrue(any("\thelp\t" in row for row in system_rows))
+        self.assertTrue(any("\tpause menu\t" in row for row in system_rows))
+        self.assertTrue(any("\trestart\t" in row for row in system_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
         self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
         self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))

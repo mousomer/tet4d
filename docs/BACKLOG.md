@@ -28,12 +28,10 @@ Historical anchor references:
 
 ## 3. Active Open Backlog / TODO (Unified RDS Gaps + Technical Debt)
 
-1. `[BKL-P2-023]` Topology designer remains preset-file/export only; no interactive Topology Lab editor workflow.
-2. `[BKL-P2-024]` Playbot lacks learning mode; current architecture supports heuristics/profiles but not an adaptive learning loop.
-4. Canonical machine-readable debt source:
+1. Canonical machine-readable debt source:
    `config/project/backlog_debt.json` (`active_debt_items`).
-5. `TODO` Context router adoption: integrate `config/project/policy/manifests/context_router_manifest.json` into Codex tooling, surface in contributor docs, and add a verification hook if needed.
-6. `TODO` Policy pack consolidation: wire `config/project/policy/pack.json` (`policy_pack`) into governance checks, keep `docs/policies/INDEX.md` in sync, and add validation hook to verify.sh when stable.
+2. Policy-pack and context-router manifests are contract-validated via:
+   `tools/governance/validate_project_contracts.py`.
 
 ### Historical ID Lineage Policy
 
@@ -66,11 +64,117 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 ## 4. Gap Mapping to RDS
 
 1. `docs/rds/RDS_TETRIS_GENERAL.md`: CI/stability workflows and setup-menu dedup follow-up are closed; maintain drift watch only.
-2. `docs/rds/RDS_PLAYBOT.md`: periodic retuning is operationalized; remaining open gap is learning-mode architecture (`BKL-P2-024`).
-3. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization is closed; remaining open gap is topology-lab interactivity (`BKL-P2-023`).
+2. `docs/rds/RDS_PLAYBOT.md`: learning-mode architecture is implemented; maintain tuning/stability watch only.
+3. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization and interactive topology-lab workflow are closed; maintain drift watch only.
 4. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: lifecycle/adaptive-fetch design baseline exists; implementation remains future-scoped.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-01): leaderboard runtime + scoring-help documentation + helper-panel camera visibility.
+
+- Added persistent cross-mode leaderboard runtime storage and API adapters:
+  - `src/tet4d/engine/runtime/leaderboard.py`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `src/tet4d/engine/api.py`
+  - `config/project/io_paths.json`
+  - `config/project/constants.json`
+- Added leaderboard UI + launcher/pause routing:
+  - `src/tet4d/ui/pygame/launch/leaderboard_menu.py`
+  - `cli/front.py`
+  - `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`
+  - `config/menu/structure.json`
+  - `src/tet4d/engine/ui_logic/menu_action_contracts.py`
+- Added runtime session submission hooks in gameplay loops:
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+- Added scoring-rule explanations to non-Python help assets:
+  - `config/help/topics.json`
+  - `config/help/content/runtime_help_content.json`
+- Improved 3D/4D in-game helper panel prioritization so camera actions appear before lower-priority groups:
+  - `src/tet4d/ui/pygame/render/control_helper.py`
+- Added/updated regression coverage:
+  - `tests/unit/engine/test_leaderboard.py`
+  - `tests/unit/engine/test_menu_policy.py`
+  - `tests/unit/engine/test_pause_menu.py`
+  - `tests/unit/engine/test_front_launcher_routes.py`
+  - `tests/unit/engine/test_control_ui_helpers.py`
+  - `tests/unit/engine/test_project_config.py`
+- Verification:
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Hotfix (2026-03-01, same batch):
+- Leaderboard session capture now records restart outcomes (keyboard restart and pause-menu restart) for 2D/3D/4D loops.
+- 3D/4D helper panel ordering aligned to priority:
+  - score summary first, then Translation, Rotation, Camera/View, System(menu), then low-priority data.
+- Leaderboard entries now capture player names, and qualifying sessions prompt for player-name entry before commit.
+- 4D viewer-relative input mapping now preserves translation/rotation intent across camera yaw and hyper-view (XW/ZW) rotations via basis-aware axis routing; added regression coverage in `tests/unit/engine/test_nd_routing.py`.
+- Helper panel cleanup:
+  - removed duplicated locked-cell-transparency line from 3D/4D side-panel headers (meter remains canonical display).
+  - elevated System controls ahead of Camera/View in grouped helper ordering so `help`, `pause menu`, and `restart` remain visible under constrained panel height.
+- Leaderboard visual refresh:
+  - switched to a structured table layout with explicit column headers and cell demarcations.
+  - removed outcome/exit-type from displayed leaderboard columns.
+- Helper panel visibility/layout follow-up:
+  - improved narrow-panel key/action text fit by rebalancing key/value columns.
+  - split 3D/4D side-panel priority tiers so score + dimensions stay in the top section.
+  - moved camera and extended runtime state details to the low-priority section below controls.
+  - prioritized camera control group visibility while retaining system controls (`menu`, `help`, `restart`) in grouped helper rendering.
+
+Current sub-batch (2026-03-01): stage 836+ governance contract tightening (context-router manifest).
+
+- Added strict context-router manifest validation in project contracts:
+  - `tools/governance/validate_project_contracts.py`
+- Added regression coverage:
+  - `tests/unit/engine/test_validate_project_contracts.py`
+- Backlog TODO cleanup:
+  - converted context-router and policy-pack consolidation TODO entries into enforced contract checks.
+
+Current sub-batch (2026-03-01): stage 835+ playbot learning-mode baseline and debt closure.
+
+- Added deterministic adaptive learning mode (`LEARN`) for playbot profile tuning:
+  - `src/tet4d/ai/playbot/types.py`
+  - `src/tet4d/ai/playbot/controller.py`
+- Added runtime policy keys for learning thresholds/window and validation wiring:
+  - `config/playbot/policy.json`
+  - `src/tet4d/engine/runtime/runtime_config_validation_playbot.py`
+  - `src/tet4d/engine/runtime/runtime_config.py`
+  - `src/tet4d/engine/runtime/settings_schema.py`
+  - `config/gameplay/tuning.json` (`assist_scoring.bot_factors.learn`)
+- Added regression coverage:
+  - `tests/unit/engine/test_playbot.py`
+  - `tests/unit/engine/test_runtime_config.py`
+- Debt source reprioritization:
+  - closed `BKL-P2-024` in `config/project/backlog_debt.json`
+  - added operational tuning watch `BKL-P3-009`.
+
+Current sub-batch (2026-03-01): stage 827-834 topology-lab workflow completion + launcher/runtime wiring.
+
+- Added Topology Lab non-Python content/layout asset:
+  - `config/topology/lab_menu.json`
+- Added launcher-play Topology Lab interactive flow:
+  - `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
+  - `cli/front.py`
+- Simplified launcher routing by making `Topology Lab` a direct `Play` action:
+  - `config/menu/structure.json`
+  - `src/tet4d/engine/ui_logic/menu_action_contracts.py`
+  - `tests/unit/engine/test_menu_policy.py`
+- Added runtime API adapters used by topology-lab workflow:
+  - `src/tet4d/engine/api.py`
+- Added shared numeric text-input helper and reused it in settings/lab menus:
+  - `src/tet4d/ui/pygame/menu/numeric_text_input.py`
+  - `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- Added regression coverage:
+  - `tests/unit/engine/test_topology_lab_menu.py`
+  - `tests/unit/engine/test_front_launcher_routes.py`
+  - `tests/unit/engine/test_numeric_text_input.py`
+- Canonical maintenance sync:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+- Debt source sync:
+  - closed `BKL-P2-023` in `config/project/backlog_debt.json`
+- Verification:
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed
+  - targeted menu/front/topology suites passed.
 
 Current sub-batch (2026-03-01): stage 814+ shared gameplay-settings dedup + API dispatch cleanup.
 

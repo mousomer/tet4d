@@ -98,10 +98,10 @@ _ROTATION_PAIR_ROWS: dict[int, tuple[_PairIconSpec, ...]] = {
 }
 
 _SYSTEM_ROWS: tuple[_SingleLineSpec, ...] = (
-    ("toggle_grid", "grid mode"),
-    ("help", "help"),
     ("menu", "pause menu"),
+    ("help", "help"),
     ("restart", "restart"),
+    ("toggle_grid", "grid mode"),
     ("quit", "quit"),
 )
 
@@ -193,14 +193,13 @@ def control_groups_for_dimension(
     control_groups: list[ControlGroup] = [
         ("Translation", translation_rows),
         ("Rotation", rotation_rows),
-        ("System", _rows_with_actions(system_keys, _SYSTEM_ROWS)),
     ]
-
     if dim >= 3:
         camera_rows = _rows_with_pairs(
             camera_keys, _CAMERA_PAIR_ROWS[dim]
         ) + _rows_with_actions(camera_keys, _CAMERA_SINGLE_ROWS[dim])
         control_groups.append(("Camera/View", camera_rows))
+    control_groups.append(("System", _rows_with_actions(system_keys, _SYSTEM_ROWS)))
 
     return control_groups
 
@@ -239,8 +238,15 @@ def _row_columns(
     margin_x: int,
 ) -> tuple[int, int, int, int]:
     content_w = max(120, box_rect.width - (margin_x * 2))
-    key_col_w = min(220, max(96, int(content_w * 0.36)))
     icon_w = 22
+    if content_w < 260:
+        key_col_w = max(64, min(132, int(content_w * 0.27)))
+        min_value_w = 92
+    else:
+        key_col_w = max(84, min(220, int(content_w * 0.34)))
+        min_value_w = 80
+    max_key_w = max(64, content_w - icon_w - 10 - min_value_w)
+    key_col_w = min(key_col_w, max_key_w)
     value_x = box_rect.x + margin_x + key_col_w + icon_w + 10
     value_w = max(48, content_w - key_col_w - icon_w - 10)
     icon_x = box_rect.x + margin_x + key_col_w + 4
@@ -333,18 +339,18 @@ def draw_grouped_control_helper(
 ) -> int:
     y = rect.y
     margin_x = 10
+    title_h = hint_font.get_height()
+    row_h = panel_font.get_height() + 2
+    box_base_h = 10 + title_h + 6 + 8
     for group_name, rows in groups:
-        box_h = (
-            10
-            + hint_font.get_height()
-            + 6
-            + (len(rows) * (panel_font.get_height() + 2))
-            + 8
-        )
-        if y + box_h > rect.bottom:
+        available_h = rect.bottom - y
+        max_rows_fit = (available_h - box_base_h) // row_h
+        if max_rows_fit <= 0:
             return _draw_overflow_hint(
                 surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font
             )
+        visible_rows = rows[: max(1, min(len(rows), max_rows_fit))]
+        box_h = box_base_h + (len(visible_rows) * row_h)
 
         box_rect = pygame.Rect(rect.x + 2, y, rect.width - 4, box_h)
         _draw_group_box(surface, box_rect=box_rect)
@@ -358,13 +364,17 @@ def draw_grouped_control_helper(
         row_y = box_rect.y + 8 + title.get_height() + 6
         _draw_group_rows(
             surface,
-            rows=rows,
+            rows=visible_rows,
             box_rect=box_rect,
             row_y=row_y,
             margin_x=margin_x,
             panel_font=panel_font,
         )
         y += box_h + 6
+        if len(visible_rows) < len(rows):
+            return _draw_overflow_hint(
+                surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font
+            )
 
     if show_guides:
         y = _draw_optional_guides(surface, rect=rect, y=y, hint_font=hint_font)
