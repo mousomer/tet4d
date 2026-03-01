@@ -23,6 +23,7 @@ _MUTED_COLOR = (192, 200, 228)
 _BOT_DIMENSIONS = (2, 3, 4)
 _BOT_MENU_ROWS = engine_api.bot_options_rows_runtime()
 _BOT_DEFAULTS = engine_api.bot_defaults_by_mode_runtime()
+_BOT_COPY = engine_api.ui_copy_section_runtime("bot_options")
 
 
 @dataclass
@@ -94,10 +95,10 @@ def _set_bot_status(
 def _save_bot_menu(loop: _BotMenuState) -> tuple[bool, str]:
     ok, msg = engine_api.save_menu_payload_runtime(loop.payload)
     if ok:
-        _set_bot_status(loop, "Saved bot options")
+        _set_bot_status(loop, _BOT_COPY["saved_status"])
         loop.dirty = False
         play_sfx("menu_confirm")
-        return True, "Saved bot options"
+        return True, _BOT_COPY["saved_status"]
     _set_bot_status(loop, msg, is_error=True)
     return False, msg
 
@@ -108,16 +109,19 @@ def _reset_bot_defaults(loop: _BotMenuState) -> None:
     mode_settings.update(_BOT_DEFAULTS[mode_key])
     loop.pending_reset_confirm = False
     loop.dirty = True
-    _set_bot_status(loop, f"Reset {mode_key.upper()} bot settings (not saved yet)")
+    _set_bot_status(
+        loop,
+        _BOT_COPY["reset_done_template"].format(mode_key=mode_key.upper()),
+    )
     play_sfx("menu_move")
 
 
 def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -> None:
     _draw_gradient(screen)
     width, height = screen.get_size()
-    title = fonts.title_font.render("Bot Options", True, _TEXT_COLOR)
+    title = fonts.title_font.render(_BOT_COPY["title"], True, _TEXT_COLOR)
     subtitle = fonts.hint_font.render(
-        "Dimension-specific bot controls in one place", True, _MUTED_COLOR
+        _BOT_COPY["subtitle"], True, _MUTED_COLOR
     )
     screen.blit(title, ((width - title.get_width()) // 2, 40))
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 88))
@@ -148,10 +152,7 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
             screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
         y += 46
 
-    hint_lines = (
-        "Left/Right adjust values   Up/Down select",
-        "F5 save   F8 reset defaults   Esc back",
-    )
+    hint_lines = tuple(_BOT_COPY["hints"])
     hy = panel_y + panel_h + 12
     for line in hint_lines:
         surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
@@ -213,7 +214,7 @@ def _handle_bot_menu_confirm(loop: _BotMenuState) -> None:
     if loop.selected == 7:
         if not loop.pending_reset_confirm:
             loop.pending_reset_confirm = True
-            _set_bot_status(loop, "Press Enter on Reset defaults again to confirm")
+            _set_bot_status(loop, _BOT_COPY["reset_confirm_enter"])
             return
         _reset_bot_defaults(loop)
         return
@@ -245,7 +246,7 @@ def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
     if key == pygame.K_F8:
         if not loop.pending_reset_confirm:
             loop.pending_reset_confirm = True
-            _set_bot_status(loop, "Press F8 again to confirm reset defaults")
+            _set_bot_status(loop, _BOT_COPY["reset_confirm_f8"])
             return
         _reset_bot_defaults(loop)
         return

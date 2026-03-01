@@ -22,8 +22,10 @@ from .settings_schema import (
     MODE_KEYS,
     RuntimeSettingDefaults,
     atomic_write_json,
+    clamp_lines_per_level,
     clamp_game_seed,
     clamp_overlay_transparency,
+    clamp_toggle_index,
     derive_runtime_setting_defaults,
     mode_key_for_dimension,
     read_json_value_or_raise,
@@ -48,6 +50,42 @@ GAME_SEED_MAX = _settings_schema.GAME_SEED_MAX
 GAME_SEED_STEP = _settings_schema.GAME_SEED_STEP
 
 _MODE_KEYS = set(MODE_KEYS)
+
+_SHARED_GAMEPLAY_SPECS: tuple[
+    tuple[str, Any, int],
+    ...,
+] = (
+    ("random_mode_index", clamp_toggle_index, 0),
+    ("topology_advanced", clamp_toggle_index, 0),
+    ("auto_speedup_enabled", clamp_toggle_index, 1),
+    ("lines_per_level", clamp_lines_per_level, 10),
+)
+
+
+def _normalize_mode_key(mode_key: str) -> str:
+    normalized = str(mode_key).strip().lower()
+    if normalized not in _MODE_KEYS:
+        raise ValueError("mode_key must be one of: 2d, 3d, 4d")
+    return normalized
+
+
+def _coerce_shared_gameplay_settings(
+    raw: dict[str, Any],
+    *,
+    defaults: dict[str, int] | None = None,
+) -> dict[str, int]:
+    normalized: dict[str, int] = {}
+    for setting_name, clamp_fn, fallback in _SHARED_GAMEPLAY_SPECS:
+        default_value = (
+            defaults[setting_name] if defaults is not None else int(fallback)
+        )
+        normalized[setting_name] = int(
+            clamp_fn(
+                raw.get(setting_name),
+                default=default_value,
+            )
+        )
+    return normalized
 
 
 def _default_settings_payload() -> dict[str, Any]:
@@ -83,6 +121,15 @@ def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     except OSError as exc:
         return False, f"Failed saving menu state: {exc}"
     return True, f"Saved menu state to {STATE_FILE}"
+
+
+def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
+    sanitize_payload(
+        payload,
+        default_payload=_default_settings_payload(),
+        defaults=_RUNTIME_DEFAULTS,
+    )
+    return _save_payload(payload)
 
 
 def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
@@ -189,12 +236,7 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
             if mode_key in merged["settings"] and isinstance(mode_settings, dict):
                 merged["settings"][mode_key].update(mode_settings)
 
-    sanitize_payload(
-        merged,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(merged)
+    return _sanitize_and_save_payload(merged)
 
 
 def get_display_settings() -> dict[str, Any]:
@@ -231,12 +273,7 @@ def save_display_settings(
             overlay_transparency,
             default=DEFAULT_OVERLAY_TRANSPARENCY,
         )
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def get_audio_settings() -> dict[str, Any]:
@@ -260,12 +297,7 @@ def save_audio_settings(
         audio["sfx_volume"] = float(sfx_volume)
     if mute is not None:
         audio["mute"] = bool(mute)
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def save_analytics_settings(
@@ -276,12 +308,7 @@ def save_analytics_settings(
     analytics = payload.setdefault("analytics", {})
     if score_logging_enabled is not None:
         analytics["score_logging_enabled"] = bool(score_logging_enabled)
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def get_global_game_seed() -> int:
@@ -291,6 +318,69 @@ def get_global_game_seed() -> int:
         return DEFAULT_GAME_SEED
     raw_seed = settings.get("2d", {}).get("game_seed")
     return clamp_game_seed(raw_seed, default=DEFAULT_GAME_SEED)
+
+
+def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
+    normalized_mode = _normalize_mode_key(mode_key)
+    defaults = _default_settings_payload()
+    settings = defaults.get("settings")
+    mode_settings = (
+        settings.get(normalized_mode, {})
+        if isinstance(settings, dict)
+        else {}
+    )
+    return _coerce_shared_gameplay_settings(mode_settings)
+
+
+def mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
+    normalized_mode = _normalize_mode_key(mode_key)
+    payload = _load_payload()
+    defaults = default_mode_shared_gameplay_settings(normalized_mode)
+    settings = payload.get("settings")
+    mode_settings = (
+        settings.get(normalized_mode, {})
+        if isinstance(settings, dict)
+        else {}
+    )
+    return _coerce_shared_gameplay_settings(mode_settings, defaults=defaults)
+
+
+def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
+    settings = mode_shared_gameplay_settings(mode_key)
+    return (
+        int(settings["auto_speedup_enabled"]),
+        int(settings["lines_per_level"]),
+    )
+
+
+def save_shared_gameplay_settings(
+    *,
+    random_mode_index: int,
+    topology_advanced: int,
+    auto_speedup_enabled: int,
+    lines_per_level: int,
+) -> tuple[bool, str]:
+    payload = _load_payload()
+    settings = payload.get("settings")
+    if not isinstance(settings, dict):
+        settings = {}
+        payload["settings"] = settings
+    for mode_key in MODE_KEYS:
+        defaults = default_mode_shared_gameplay_settings(mode_key)
+        mode_settings = settings.get(mode_key)
+        if not isinstance(mode_settings, dict):
+            mode_settings = {}
+            settings[mode_key] = mode_settings
+        raw_values = {
+            "random_mode_index": int(random_mode_index),
+            "topology_advanced": int(topology_advanced),
+            "auto_speedup_enabled": int(auto_speedup_enabled),
+            "lines_per_level": int(lines_per_level),
+        }
+        mode_settings.update(
+            _coerce_shared_gameplay_settings(raw_values, defaults=defaults)
+        )
+    return _sanitize_and_save_payload(payload)
 
 
 def save_global_game_seed(seed: int) -> tuple[bool, str]:
@@ -308,12 +398,7 @@ def save_global_game_seed(seed: int) -> tuple[bool, str]:
             settings[mode_key] = mode_settings
         mode_settings["game_seed"] = clamped_seed
 
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 # Backward-compat helpers expected by engine.api overlay/seed accessors.

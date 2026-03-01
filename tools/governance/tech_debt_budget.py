@@ -10,6 +10,7 @@ DEFAULT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
+DEFAULT_GATE_MODE = "strict_stage_decrease"
 
 
 def _require_dict(value: Any, *, label: str) -> dict[str, Any]:
@@ -27,6 +28,16 @@ def _status_order(gate_config: dict[str, Any]) -> dict[str, int]:
             raise TypeError("status_order entries must be string->int")
         parsed[key] = value
     return parsed
+
+
+def _gate_mode(gate_config: dict[str, Any]) -> str:
+    mode = gate_config.get("gate_mode", DEFAULT_GATE_MODE)
+    if not isinstance(mode, str) or not mode.strip():
+        raise TypeError("gate_mode must be a non-empty string")
+    normalized = mode.strip()
+    if normalized not in {"strict_stage_decrease", "non_regression_baseline"}:
+        raise ValueError(f"unsupported gate_mode: {normalized}")
+    return normalized
 
 
 def _current_state(
@@ -98,12 +109,22 @@ def _status_violations(
 
 def _score_violations(
     *,
+    mode: str,
     stage: int,
     current_score: float,
     baseline_stage: int,
     baseline_score: float,
     epsilon: float,
 ) -> list[str]:
+    if mode == "non_regression_baseline":
+        ceiling = baseline_score + epsilon
+        if current_score > ceiling:
+            return [
+                "score regressed above baseline ceiling "
+                f"({current_score:.2f} > {baseline_score:.2f} + epsilon {epsilon:.2f})"
+            ]
+        return []
+
     if stage > baseline_stage:
         threshold = baseline_score - epsilon
         if current_score >= threshold:
@@ -127,6 +148,7 @@ def evaluate_tech_debt_gate(
     baseline_stage, baseline_score, baseline_status = _baseline_state(gate_config)
 
     stage, score, status = _current_state(metrics)
+    mode = _gate_mode(gate_config)
     epsilon = float(gate_config.get("score_epsilon", 0.0))
     order = _status_order(gate_config)
     violations = _missing_state_violations(stage, score, status)
@@ -154,6 +176,7 @@ def evaluate_tech_debt_gate(
 
     violations.extend(
         _score_violations(
+            mode=mode,
             stage=stage,
             current_score=score,
             baseline_stage=baseline_stage,

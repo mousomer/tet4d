@@ -38,7 +38,7 @@ _PROFILE_NAME_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 
 
 def _sanitize_profile_name(raw: str) -> str:
-    lowered = raw.strip().lower()
+    lowered = engine_api.sanitize_text_runtime(raw, max_length=128).strip().lower()
     filtered = "".join(ch for ch in lowered if ch in _PROFILE_NAME_CHARS)
     return filtered[:64]
 
@@ -162,7 +162,8 @@ def _cancel_text_mode(state: KeybindingsMenuState) -> None:
 def _handle_text_input_event(state: KeybindingsMenuState, text: str) -> None:
     if not state.text_mode:
         return
-    appended = "".join(ch for ch in text.lower() if ch in _PROFILE_NAME_CHARS)
+    sanitized = engine_api.sanitize_text_runtime(text, max_length=16).lower()
+    appended = "".join(ch for ch in sanitized if ch in _PROFILE_NAME_CHARS)
     if not appended:
         return
     state.text_buffer = (state.text_buffer + appended)[:64]

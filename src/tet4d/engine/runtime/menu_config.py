@@ -97,7 +97,44 @@ def reachable_action_ids(start_menu_id: str) -> tuple[str, ...]:
 
 
 def launcher_menu_items() -> tuple[tuple[str, str], ...]:
-    return tuple(_structure_payload()["launcher_menu"])
+    normalized: list[tuple[str, str]] = []
+    for item in menu_items(launcher_menu_id()):
+        label = str(item.get("label", ""))
+        item_type = str(item.get("type", ""))
+        if item_type == "action":
+            action = str(item.get("action_id", ""))
+        elif item_type == "submenu":
+            action = label.strip().lower().replace(" ", "_")
+        else:
+            continue
+        if action:
+            normalized.append((action, label))
+    return tuple(normalized)
+
+
+def launcher_subtitles() -> dict[str, str]:
+    return deepcopy(_structure_payload()["launcher_subtitles"])
+
+
+def launcher_route_actions() -> dict[str, str]:
+    return deepcopy(_structure_payload()["launcher_route_actions"])
+
+
+def branding_copy() -> dict[str, str]:
+    return deepcopy(_structure_payload()["branding"])
+
+
+def ui_copy_payload() -> dict[str, Any]:
+    return deepcopy(_structure_payload()["ui_copy"])
+
+
+def ui_copy_section(section: str) -> dict[str, Any]:
+    clean_section = as_non_empty_string(section, path="section").lower()
+    copy_payload = _structure_payload()["ui_copy"]
+    copy_section = copy_payload.get(clean_section)
+    if not isinstance(copy_section, dict):
+        raise KeyError(f"Unknown ui_copy section: {clean_section}")
+    return deepcopy(copy_section)
 
 
 def settings_hub_rows() -> tuple[str, ...]:
@@ -113,12 +150,24 @@ def settings_hub_layout_rows() -> tuple[tuple[str, str, str], ...]:
     return tuple((row["kind"], row["label"], row["row_key"]) for row in rows)
 
 
+def settings_option_labels() -> dict[str, tuple[str, ...]]:
+    return deepcopy(_structure_payload().get("settings_option_labels", {}))
+
+
 def pause_menu_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_rows"])
 
 
 def pause_menu_actions() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_actions"])
+
+
+def pause_copy() -> dict[str, Any]:
+    copy = _structure_payload()["pause_copy"]
+    return {
+        "subtitle_template": str(copy["subtitle_template"]),
+        "hints": tuple(copy["hints"]),
+    }
 
 
 def setup_fields_for_dimension(
@@ -183,13 +232,7 @@ def settings_top_level_categories() -> tuple[dict[str, str], ...]:
 
 def setup_hints_for_dimension(dimension: int) -> tuple[str, ...]:
     mode_key = mode_key_for_dimension(dimension)
-    payload = _structure_payload()
-    hints = payload.get("setup_hints", {})
-    if isinstance(hints, dict):
-        mode_hints = hints.get(mode_key)
-        if isinstance(mode_hints, list) and all(isinstance(h, str) for h in mode_hints):
-            return tuple(mode_hints)
-    return tuple()
+    return tuple(_structure_payload()["setup_hints"][mode_key])
 
 
 @lru_cache(maxsize=1)

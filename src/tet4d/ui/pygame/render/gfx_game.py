@@ -16,6 +16,7 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 GameConfig = engine_api.GameConfig
 GameState = engine_api.GameState
 GridMode = engine_api.GridMode
+_SETUP_MENU_COPY = engine_api.ui_copy_section_runtime("setup_menu")
 
 
 # ---------- Visual config & colors ----------
@@ -161,10 +162,10 @@ def _draw_menu_header(
     bindings_status_error: bool,
 ) -> int:
     width, height = screen.get_size()
-    title_surf = fonts.title_font.render("2D Tetris - Setup", True, TEXT_COLOR)
+    title_surf = fonts.title_font.render(_SETUP_MENU_COPY["title_2d"], True, TEXT_COLOR)
     subtitle_text = fit_text(
         fonts.hint_font,
-        "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
+        _SETUP_MENU_COPY["subtitle_2d"],
         width - 28,
     )
     subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
@@ -175,7 +176,12 @@ def _draw_menu_header(
     screen.blit(subtitle_surf, ((width - subtitle_surf.get_width()) // 2, subtitle_y))
 
     hint_lines = (
-        (f"L = load keys, S = save keys ({bindings_file_hint})", *extra_hint_lines)
+        (
+            _SETUP_MENU_COPY["bindings_hint_template"].format(
+                bindings_file_hint=bindings_file_hint
+            ),
+            *extra_hint_lines,
+        )
         if bindings_file_hint
         else extra_hint_lines
     )
@@ -297,7 +303,7 @@ def _draw_menu_dpad_and_commands(
     if full_block_bottom > height - 6:
         compact_text = fit_text(
             fonts.hint_font,
-            "Arrows navigate   Enter start   Esc quit",
+            _SETUP_MENU_COPY["compact_controls_hint"],
             width - 24,
         )
         compact_surf = fonts.hint_font.render(compact_text, True, (200, 200, 220))

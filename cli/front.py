@@ -41,7 +41,14 @@ from tet4d.ui.pygame.keybindings import (
 from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
-from tet4d.engine.runtime.menu_config import launcher_menu_id, menu_graph
+from tet4d.engine.runtime.menu_config import (
+    branding_copy,
+    launcher_menu_id,
+    launcher_route_actions,
+    launcher_subtitles,
+    menu_graph,
+    ui_copy_section,
+)
 from tet4d.engine.runtime.menu_settings_state import (
     load_app_settings_payload as load_menu_payload,
 )
@@ -60,6 +67,13 @@ MUTED_COLOR = (192, 200, 228)
 
 _MENU_GRAPH = menu_graph()
 _LAUNCHER_ROOT_MENU_ID = launcher_menu_id()
+_LAUNCHER_SUBTITLES = launcher_subtitles()
+_LAUNCHER_ROUTE_ACTIONS = launcher_route_actions()
+_BRANDING = branding_copy()
+_GAME_TITLE = _BRANDING["game_title"]
+_SIGNATURE_AUTHOR = _BRANDING["signature_author"]
+_SIGNATURE_MESSAGE = _BRANDING["signature_message"]
+_LAUNCHER_COPY = ui_copy_section("launcher")
 
 
 @dataclass
@@ -99,12 +113,10 @@ def _play_menu_id() -> str | None:
 
 def _menu_subtitle(menu_id: str) -> str:
     if menu_id == _LAUNCHER_ROOT_MENU_ID:
-        return (
-            "Play or continue, then adjust Settings, Controls, Help, and Bot options."
-        )
+        return _LAUNCHER_SUBTITLES["launcher_root"]
     if menu_id == _play_menu_id():
-        return "Select a dimension; Tutorials and Topology Lab are routed here without top-level growth."
-    return "Up/Down select and Enter open actions."
+        return _LAUNCHER_SUBTITLES["launcher_play"]
+    return _LAUNCHER_SUBTITLES["default"]
 
 
 def _draw_main_menu(
@@ -172,11 +184,19 @@ def _draw_main_menu(
         screen.blit(text, row_rect.topleft)
         y += row_step
 
-    escape_hint = "Esc back" if stack_depth > 1 else "Esc quit"
+    escape_hint = (
+        _LAUNCHER_COPY["escape_hint_back"]
+        if stack_depth > 1
+        else _LAUNCHER_COPY["escape_hint_quit"]
+    )
     info_lines = [
-        f"Active key profile: {active_key_profile()}",
-        f"Continue mode: {state.last_mode.upper()}",
-        f"Up/Down select   Enter open   {escape_hint}",
+        _LAUNCHER_COPY["info_active_profile_template"].format(
+            profile=active_key_profile()
+        ),
+        _LAUNCHER_COPY["info_continue_mode_template"].format(
+            mode=state.last_mode.upper()
+        ),
+        _LAUNCHER_COPY["controls_hint_template"].format(escape_hint=escape_hint),
     ]
     info_y = panel_y + panel_h + 10
     max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
@@ -194,6 +214,16 @@ def _draw_main_menu(
         screen.blit(
             status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2))
         )
+        info_y = min(height - 34, info_y + 2) + status.get_height() + 2
+
+    signature_lines = (_SIGNATURE_AUTHOR, _SIGNATURE_MESSAGE)
+    for signature_line in signature_lines:
+        if info_y + hint_line_h > height - 6:
+            break
+        line_draw = fit_text(fonts.hint_font, signature_line, width - 24)
+        text = fonts.hint_font.render(line_draw, True, MUTED_COLOR)
+        screen.blit(text, ((width - text.get_width()) // 2, info_y))
+        info_y += text.get_height() + 2
 
 
 def _persist_global_state(
@@ -455,15 +485,23 @@ def _build_action_registry(
     return registry
 
 
-def _handle_launcher_route(route_id: str, state: MainMenuState) -> bool:
-    route_labels = {
-        "tutorials": "Tutorials",
-        "topology_lab": "Topology Lab",
-    }
-    label = route_labels.get(route_id, route_id)
-    state.status = f"{label} route is not implemented yet"
-    state.status_error = False
-    return False
+def _handle_launcher_route(
+    route_id: str,
+    state: MainMenuState,
+    action_registry: ActionRegistry,
+) -> bool:
+    clean_route_id = route_id.strip().lower()
+    action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
+    if not action_id:
+        state.status = f"No action mapped for route '{clean_route_id}'"
+        state.status_error = True
+        return False
+    try:
+        return action_registry.dispatch(action_id)
+    except KeyError:
+        state.status = f"No handler registered for routed action '{action_id}'"
+        state.status_error = True
+        return False
 
 
 def _handle_missing_action(action_id: str, state: MainMenuState) -> bool:
@@ -494,7 +532,7 @@ def run() -> None:
                 fullscreen=runtime.display_settings.fullscreen,
                 windowed_size=runtime.display_settings.windowed_size,
             ),
-            caption="ND Tetris – Main Menu",
+            caption=_GAME_TITLE,
         ),
         display_settings=DisplaySettings(
             fullscreen=runtime.display_settings.fullscreen,
@@ -529,7 +567,7 @@ def run() -> None:
         selected: int,
         depth: int,
     ) -> None:
-        pygame.display.set_caption("ND Tetris – Main Menu")
+        pygame.display.set_caption(_GAME_TITLE)
         _draw_main_menu(
             session.screen,
             fonts_nd,
@@ -547,7 +585,7 @@ def run() -> None:
         start_menu_id=_LAUNCHER_ROOT_MENU_ID,
         action_registry=registry,
         render_menu=_render_launcher_menu,
-        handle_route=lambda route_id: _handle_launcher_route(route_id, state),
+        handle_route=lambda route_id: _handle_launcher_route(route_id, state, registry),
         handle_missing_action=lambda action_id: _handle_missing_action(
             action_id, state
         ),

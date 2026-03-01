@@ -9,6 +9,8 @@ from tet4d.ui.pygame.input.key_display import format_key_tuple
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
+_KEYBINDINGS_MENU_COPY = engine_api.ui_copy_section_runtime("keybindings_menu")
+
 
 def _draw_background(surface: pygame.Surface) -> None:
     draw_vertical_gradient(surface, (14, 18, 42), (4, 7, 20))
@@ -18,11 +20,11 @@ def _draw_menu_header(
     surface: pygame.Surface, fonts, state: Any, scope_label_fn
 ) -> None:
     width, _ = surface.get_size()
-    title = fonts.title_font.render("Keybindings Setup", True, (232, 232, 240))
+    title = fonts.title_font.render(_KEYBINDINGS_MENU_COPY["title"], True, (232, 232, 240))
     subtitle_text = (
-        "Up/Down select section, Enter open, Esc back"
+        _KEYBINDINGS_MENU_COPY["subtitle_section_mode"]
         if state.section_mode
-        else "Up/Down select, Enter rebind, Tab sections, Esc back"
+        else _KEYBINDINGS_MENU_COPY["subtitle_binding_mode"]
     )
     subtitle = fonts.hint_font.render(subtitle_text, True, (192, 200, 228))
     surface.blit(title, ((width - title.get_width()) // 2, 28))
@@ -204,12 +206,11 @@ def _draw_hints(
     scope_file_hint_fn,
 ) -> int:
     width, height = surface.get_size()
-    hints = [
-        "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
-        "[ / ] profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Tab section menu   Esc cancel/back",
-        scope_file_hint_fn(state.scope),
-    ]
+    scope_hint = scope_file_hint_fn(state.scope)
+    hints = tuple(
+        str(item).format(scope_file_hint=scope_hint)
+        for item in _KEYBINDINGS_MENU_COPY["hints"]
+    )
     hint_y = panel_y + panel_h + 12
     max_w = max(80, width - 36)
     line_h = fonts.hint_font.get_height() + 3
@@ -239,10 +240,10 @@ def _draw_capture_hint(
     max_w = max(80, width - 36)
     cap_text = fit_text(
         fonts.hint_font,
-        (
-            "Press a key for "
-            f"{engine_api.keybindings_menu_binding_title(selected, state.scope)} "
-            "(Esc cancels)"
+        _KEYBINDINGS_MENU_COPY["capture_template"].format(
+            binding_title=engine_api.keybindings_menu_binding_title(
+                selected, state.scope
+            )
         ),
         max_w,
     )
@@ -273,7 +274,11 @@ def _draw_text_mode_hint(
     surface.blit(cap, ((width - cap.get_width()) // 2, hint_y + 2))
     hint_y += cap.get_height() + 4
     tip = fonts.hint_font.render(
-        fit_text(fonts.hint_font, "Enter confirm   Esc cancel", max_w),
+        fit_text(
+            fonts.hint_font,
+            _KEYBINDINGS_MENU_COPY["text_mode_confirm_hint"],
+            max_w,
+        ),
         True,
         (188, 197, 228),
     )
@@ -344,10 +349,7 @@ def draw_section_menu(
         y += row_h
 
     width, height = surface.get_size()
-    hints = (
-        "Enter open section   Up/Down select section   Esc back",
-        "[ / ] profile prev/next   N new profile   F2 rename   F3 save as",
-    )
+    hints = tuple(_KEYBINDINGS_MENU_COPY["section_hints"])
     hy = panel_y + panel_h + 10
     line_h = fonts.hint_font.get_height() + 3
     max_lines = max(0, (height - hy - 6) // max(1, line_h))

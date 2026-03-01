@@ -17,6 +17,7 @@ from ..runtime.score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from .scoring_bonus import score_with_clear_bonuses
 from ..core.rules.scoring import score_for_clear
 from ..core.rules.locking import apply_lock_and_score
 from ..core.rules.state_queries import can_piece_exist_2d
@@ -263,8 +264,12 @@ class GameState:
         )
         cleared = lock_result.cleared
         self.lines_cleared += cleared
-        raw_points = lock_result.raw_points
-        awarded_points = lock_result.awarded_points
+        raw_points, awarded_points = score_with_clear_bonuses(
+            raw_base_points=lock_result.raw_points,
+            cleared_count=cleared,
+            board_cell_count_after_clear=len(self.board.cells),
+            score_multiplier=self.score_multiplier,
+        )
         self.score += awarded_points
 
         self.analysis_seq += 1

@@ -20,25 +20,56 @@ _DEFAULT_MENU_ENTRYPOINTS = {
     "launcher": "launcher_root",
     "pause": "pause_root",
 }
-
-
-def parse_launcher_menu(raw: object) -> tuple[tuple[str, str], ...]:
-    items = require_list(raw, path="structure.launcher_menu")
-    out: list[tuple[str, str]] = []
-    for idx, raw_item in enumerate(items):
-        item = require_object(raw_item, path=f"structure.launcher_menu[{idx}]")
-        action = as_non_empty_string(
-            item.get("action"),
-            path=f"structure.launcher_menu[{idx}].action",
-        ).lower()
-        label = as_non_empty_string(
-            item.get("label"),
-            path=f"structure.launcher_menu[{idx}].label",
-        )
-        out.append((action, label))
-    if not out:
-        raise RuntimeError("structure.launcher_menu must not be empty")
-    return tuple(out)
+_UI_COPY_SECTION_SPECS: dict[str, dict[str, tuple[str, ...]]] = {
+    "launcher": {
+        "string_fields": (
+            "info_active_profile_template",
+            "info_continue_mode_template",
+            "controls_hint_template",
+            "escape_hint_back",
+            "escape_hint_quit",
+        ),
+    },
+    "settings_hub": {
+        "string_fields": (
+            "title",
+            "subtitle_categories_template",
+            "reset_confirm_f8",
+        ),
+        "list_fields": ("hints",),
+    },
+    "keybindings_menu": {
+        "string_fields": (
+            "title",
+            "subtitle_section_mode",
+            "subtitle_binding_mode",
+            "capture_template",
+            "text_mode_confirm_hint",
+        ),
+        "list_fields": ("hints", "section_hints"),
+    },
+    "bot_options": {
+        "string_fields": (
+            "title",
+            "subtitle",
+            "saved_status",
+            "reset_confirm_enter",
+            "reset_confirm_f8",
+            "reset_done_template",
+        ),
+        "list_fields": ("hints",),
+    },
+    "setup_menu": {
+        "string_fields": (
+            "title_template",
+            "subtitle_template",
+            "title_2d",
+            "subtitle_2d",
+            "bindings_hint_template",
+            "compact_controls_hint",
+        ),
+    },
+}
 
 
 def parse_menu_item(raw: object, *, path: str) -> dict[str, str]:
@@ -129,6 +160,122 @@ def parse_menu_entrypoints(
     return entrypoints
 
 
+def parse_launcher_subtitles(payload: dict[str, Any]) -> dict[str, str]:
+    raw = require_object(
+        payload.get("launcher_subtitles"), path="structure.launcher_subtitles"
+    )
+    return _parse_copy_fields(
+        raw,
+        base_path="structure.launcher_subtitles",
+        string_fields=("launcher_root", "launcher_play", "default"),
+    )
+
+
+def parse_launcher_route_actions(payload: dict[str, Any]) -> dict[str, str]:
+    raw = require_object(
+        payload.get("launcher_route_actions"),
+        path="structure.launcher_route_actions",
+    )
+    route_actions: dict[str, str] = {}
+    for raw_route_id, raw_action_id in raw.items():
+        route_id = as_non_empty_string(
+            raw_route_id,
+            path="structure.launcher_route_actions keys",
+        ).lower()
+        action_id = as_non_empty_string(
+            raw_action_id,
+            path=f"structure.launcher_route_actions.{route_id}",
+        ).lower()
+        route_actions[route_id] = action_id
+    if not route_actions:
+        raise RuntimeError("structure.launcher_route_actions must not be empty")
+    return route_actions
+
+
+def parse_branding(payload: dict[str, Any]) -> dict[str, str]:
+    raw = require_object(payload.get("branding"), path="structure.branding")
+    return _parse_copy_fields(
+        raw,
+        base_path="structure.branding",
+        string_fields=("game_title", "signature_author", "signature_message"),
+    )
+
+
+def _parse_string_list(raw: object, *, path: str) -> tuple[str, ...]:
+    values = require_list(raw, path=path)
+    if not values:
+        raise RuntimeError(f"{path} must not be empty")
+    return tuple(
+        as_non_empty_string(value, path=f"{path}[{idx}]")
+        for idx, value in enumerate(values)
+    )
+
+
+def _parse_mode_string_lists(
+    raw_obj: dict[str, Any],
+    *,
+    base_path: str,
+) -> dict[str, tuple[str, ...]]:
+    parsed: dict[str, tuple[str, ...]] = {}
+    for mode_key in MODE_KEYS:
+        parsed[mode_key] = _parse_string_list(
+            raw_obj.get(mode_key),
+            path=f"{base_path}.{mode_key}",
+        )
+    return parsed
+
+
+def _parse_copy_fields(
+    raw: dict[str, Any],
+    *,
+    base_path: str,
+    string_fields: tuple[str, ...],
+    list_fields: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
+    for field in string_fields:
+        parsed[field] = as_non_empty_string(
+            raw.get(field),
+            path=f"{base_path}.{field}",
+        )
+    for field in list_fields:
+        parsed[field] = _parse_string_list(
+            raw.get(field),
+            path=f"{base_path}.{field}",
+        )
+    return parsed
+
+
+def _parse_ui_copy_section(
+    raw_ui_copy: dict[str, Any],
+    *,
+    section: str,
+    string_fields: tuple[str, ...],
+    list_fields: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    section_path = f"structure.ui_copy.{section}"
+    raw_section = require_object(raw_ui_copy.get(section), path=section_path)
+    return _parse_copy_fields(
+        raw_section,
+        base_path=section_path,
+        string_fields=string_fields,
+        list_fields=list_fields,
+    )
+
+
+def parse_ui_copy(payload: dict[str, Any]) -> dict[str, Any]:
+    raw = require_object(payload.get("ui_copy"), path="structure.ui_copy")
+    parsed: dict[str, Any] = {}
+    for section, spec in _UI_COPY_SECTION_SPECS.items():
+        parsed[section] = _parse_ui_copy_section(
+            raw,
+            section=section,
+            string_fields=spec["string_fields"],
+            list_fields=spec.get("list_fields", ()),
+        )
+    return parsed
+
+
 def parse_settings_hub_layout_rows(raw: object) -> tuple[dict[str, str], ...]:
     rows = require_list(raw, path="structure.settings_hub_layout_rows")
     if not rows:
@@ -166,6 +313,22 @@ def parse_settings_hub_layout_rows(raw: object) -> tuple[dict[str, str], ...]:
             "structure.settings_hub_layout_rows must include at least one item row"
         )
     return tuple(parsed)
+
+
+def parse_pause_copy(payload: dict[str, Any]) -> dict[str, Any]:
+    raw = require_object(payload.get("pause_copy"), path="structure.pause_copy")
+    subtitle_template = as_non_empty_string(
+        raw.get("subtitle_template"),
+        path="structure.pause_copy.subtitle_template",
+    )
+    hints = _parse_string_list(
+        raw.get("hints"),
+        path="structure.pause_copy.hints",
+    )
+    return {
+        "subtitle_template": subtitle_template,
+        "hints": hints,
+    }
 
 
 def parse_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
@@ -212,6 +375,42 @@ def parse_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]
             )
         setup_fields[mode_key] = fields
     return setup_fields
+
+
+def parse_setup_hints(payload: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    hints_obj = require_object(payload.get("setup_hints"), path="structure.setup_hints")
+    return _parse_mode_string_lists(hints_obj, base_path="structure.setup_hints")
+
+
+def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    labels_obj = require_object(
+        payload.get("settings_option_labels"),
+        path="structure.settings_option_labels",
+    )
+    parsed: dict[str, tuple[str, ...]] = {}
+    for raw_key, raw_labels in labels_obj.items():
+        row_key = as_non_empty_string(
+            raw_key,
+            path="structure.settings_option_labels keys",
+        ).lower()
+        values = require_list(
+            raw_labels,
+            path=f"structure.settings_option_labels.{row_key}",
+        )
+        parsed[row_key] = _parse_string_list(
+            values,
+            path=f"structure.settings_option_labels.{row_key}",
+        )
+    random_mode_labels = parsed.get("game_random_mode")
+    if random_mode_labels is None:
+        raise RuntimeError(
+            "structure.settings_option_labels must include game_random_mode labels"
+        )
+    if len(random_mode_labels) < 2:
+        raise RuntimeError(
+            "structure.settings_option_labels.game_random_mode must define at least two labels"
+        )
+    return parsed
 
 
 def parse_keybinding_category_docs(payload: dict[str, Any]) -> dict[str, Any]:
@@ -392,15 +591,43 @@ def collect_actions_for_menu_ids(
     *,
     menu_ids: set[str],
 ) -> set[str]:
-    actions: set[str] = set()
+    return _collect_item_values_for_menu_ids(
+        menus,
+        menu_ids=menu_ids,
+        item_type="action",
+        item_field="action_id",
+    )
+
+
+def collect_route_ids_for_menu_ids(
+    menus: dict[str, dict[str, Any]],
+    *,
+    menu_ids: set[str],
+) -> set[str]:
+    return _collect_item_values_for_menu_ids(
+        menus,
+        menu_ids=menu_ids,
+        item_type="route",
+        item_field="route_id",
+    )
+
+
+def _collect_item_values_for_menu_ids(
+    menus: dict[str, dict[str, Any]],
+    *,
+    menu_ids: set[str],
+    item_type: str,
+    item_field: str,
+) -> set[str]:
+    values: set[str] = set()
     for menu_id in menu_ids:
         menu = menus.get(menu_id)
         if menu is None:
             continue
         for item in menu["items"]:
-            if item["type"] == "action":
-                actions.add(item["action_id"])
-    return actions
+            if item["type"] == item_type:
+                values.add(item[item_field])
+    return values
 
 
 def enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
@@ -491,9 +718,49 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
 
 
 def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    launcher_menu = parse_launcher_menu(payload.get("launcher_menu"))
     menus = parse_menus(payload.get("menus"))
     entrypoints = parse_menu_entrypoints(payload, menus=menus)
+    launcher_subtitles = parse_launcher_subtitles(payload)
+    launcher_route_actions = parse_launcher_route_actions(payload)
+    branding = parse_branding(payload)
+    ui_copy = parse_ui_copy(payload)
+
+    launcher_reachable_menus = collect_reachable_menu_ids(
+        menus,
+        start_menu_id=entrypoints["launcher"],
+    )
+    launcher_actions = collect_actions_for_menu_ids(
+        menus,
+        menu_ids=launcher_reachable_menus,
+    )
+    launcher_route_ids = collect_route_ids_for_menu_ids(
+        menus,
+        menu_ids=launcher_reachable_menus,
+    )
+    unknown_route_mappings = sorted(set(launcher_route_actions) - launcher_route_ids)
+    if unknown_route_mappings:
+        raise RuntimeError(
+            "structure.launcher_route_actions maps unknown route ids: "
+            + ", ".join(unknown_route_mappings)
+        )
+    missing_route_mappings = sorted(launcher_route_ids - set(launcher_route_actions))
+    if missing_route_mappings:
+        raise RuntimeError(
+            "structure.launcher_route_actions missing route mappings for: "
+            + ", ".join(missing_route_mappings)
+        )
+    invalid_route_actions = sorted(
+        {
+            action_id
+            for action_id in launcher_route_actions.values()
+            if action_id not in launcher_actions
+        }
+    )
+    if invalid_route_actions:
+        raise RuntimeError(
+            "structure.launcher_route_actions references unknown launcher actions: "
+            + ", ".join(invalid_route_actions)
+        )
 
     pause_rows = string_tuple(
         payload.get("pause_menu_rows"), path="structure.pause_menu_rows"
@@ -510,9 +777,12 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
     settings_docs = parse_settings_category_docs(payload)
     validated = {
-        "launcher_menu": launcher_menu,
         "menus": menus,
         "menu_entrypoints": entrypoints,
+        "launcher_subtitles": launcher_subtitles,
+        "launcher_route_actions": launcher_route_actions,
+        "branding": branding,
+        "ui_copy": ui_copy,
         "settings_hub_rows": string_tuple(
             payload.get("settings_hub_rows"),
             path="structure.settings_hub_rows",
@@ -526,7 +796,10 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ),
         "pause_menu_rows": pause_rows,
         "pause_menu_actions": pause_actions,
+        "pause_copy": parse_pause_copy(payload),
         "setup_fields": parse_setup_fields(payload),
+        "setup_hints": parse_setup_hints(payload),
+        "settings_option_labels": parse_settings_option_labels(payload),
         "keybinding_category_docs": parse_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
         "settings_split_rules": parse_settings_split_rules(payload),

@@ -298,6 +298,18 @@ def movement_axis_overrides_for_view(
     }
 
 
+def viewer_axes_for_view(
+    view: LayerView3D,
+    dims4: tuple[int, int, int, int],
+) -> dict[str, tuple[int, int]]:
+    basis = _basis_for_view(view, dims4)
+    return {
+        "x": basis.axis_map[0],
+        "z": basis.axis_map[2],
+        "w": basis.axis_map[3],
+    }
+
+
 def _transform_raw_point(
     raw: tuple[float, float, float],
     dims3: Cell3,
@@ -853,6 +865,7 @@ def _layer_rects_by_layer(
 def _draw_side_panel(
     surface: pygame.Surface,
     state: GameStateND,
+    view: LayerView3D,
     basis: RenderBasis4D,
     panel_rect: pygame.Rect,
     fonts: GfxFonts,
@@ -863,30 +876,38 @@ def _draw_side_panel(
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    extra_state_lines = [
+        "View: basis-mapped 3D layer boards",
+        f"Board dims: {basis.dims3}",
+        f"Layer axis: {basis.layer_axis_label}",
+        f"Layer count: {basis.layer_count}",
+        f"Piece set: {piece_set_4d_label(state.config.piece_set_id)}",
+        f"Speed: {state.config.speed_level}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
+        f"Challenge layers: {state.config.challenge_layers}",
+        f"Fall: {rows_per_sec:.2f}/s",
+        f"Grid: {grid_mode_label(grid_mode)}",
+        f"Yaw: {view.yaw_deg:.1f}",
+        f"Pitch: {view.pitch_deg:.1f}",
+        f"XW: {view.xw_deg:.1f}",
+        f"ZW: {view.zw_deg:.1f}",
+        f"Zoom: {view.zoom_scale:.2f}",
+    ]
     low_priority_lines = [
+        *extra_state_lines,
+        "",
         *bot_lines,
-        *([""] if bot_lines and analysis_lines else []),
+        *([""] if (bot_lines or extra_state_lines) and analysis_lines else []),
         *analysis_lines,
     ]
 
     lines = (
         "4D Tetris",
-        "View: basis-mapped 3D layer boards",
         "",
-        f"Dims: {state.config.dims}",
-        f"Board dims: {basis.dims3}",
-        f"Layer axis: {basis.layer_axis_label}",
-        f"Layer count: {basis.layer_count}",
-        f"Piece set: {piece_set_4d_label(state.config.piece_set_id)}",
         f"Score: {state.score}",
         f"Cleared: {state.lines_cleared}",
-        f"Speed: {state.config.speed_level}",
-        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
-        f"Challenge layers: {state.config.challenge_layers}",
-        f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
-        f"Grid: {grid_mode_label(grid_mode)}",
-        f"Locked-cell transparency: {_overlay_alpha_label(overlay_transparency)}",
+        f"Dims: {state.config.dims}",
     )
 
     draw_game_side_panel(
@@ -970,6 +991,7 @@ def draw_game_frame(
     _draw_side_panel(
         screen,
         state,
+        view,
         basis,
         panel_rect,
         fonts,

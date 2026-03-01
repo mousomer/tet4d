@@ -52,7 +52,7 @@ tet4d/
 │   │   ├── io_paths.json               # externalized repo-relative I/O path defaults
 │   │   ├── constants.json              # externalized shared runtime constants
 │   │   ├── folder_balance_budgets.json # leaf-folder fuzzy balance non-regression gate baselines
-│   │   ├── tech_debt_budgets.json      # weighted tech-debt metric baseline + strict stage-decrease gate
+│   │   ├── tech_debt_budgets.json      # weighted tech-debt metric baseline + non-regression debt gate
 │   │   ├── backlog_debt.json           # canonical machine-readable active debt backlog source
 │   │   └── secret_scan.json            # secret scanning policy and pattern set
 │   └── audio/
@@ -127,6 +127,8 @@ tet4d/
 │   └── pre-push                 # local push gate -> scripts/ci_check.sh
 └── docs/
     ├── BACKLOG.md               # canonical open TODO / technical debt tracker
+    ├── history/
+    │   └── DONE_SUMMARIES.md    # canonical historical DONE summary ledger
     ├── CHANGELOG.md             # consolidated change history notes
     ├── FEATURE_MAP.md          # user-facing shipped feature map
     ├── PROJECT_STRUCTURE.md     # this file
@@ -178,31 +180,34 @@ tet4d/
     `engine/runtime/settings_sanitize.py`, and
     `engine/runtime/menu_structure_schema.py`.
 19. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
-20. `config/menu/*` drives launcher/setup menu structure and default values.
+20. `config/menu/*` drives launcher/setup/pause menu structure and copy,
+    launcher subtitles, launcher route-action mappings, setup hints, pause hints,
+    and default values.
 21. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
 22. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.
 23. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
-24. Default keybinding maps/profile templates live in `input/keybindings_defaults.py`.
+24. Default keybinding maps/profile templates are config-backed in `config/keybindings/defaults.json` and loaded via runtime keybinding helpers.
 25. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
 26. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
 27. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
 28. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
 29. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
 30. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
-31. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-32. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-33. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-34. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-35. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-36. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-37. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-38. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-39. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-40. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
-41. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
+31. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
+32. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+33. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+34. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+35. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+36. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+37. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+38. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+39. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+40. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+41. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+42. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
     active debt backlog input is read from `config/project/backlog_debt.json`,
-    and `scripts/check_architecture_metric_budgets.sh` enforces strict per-stage
-    non-increase (same stage) and strict decrease (new stage) through
+    and `scripts/check_architecture_metric_budgets.sh` enforces configurable
+    tech-debt gate modes (active default: `non_regression_baseline`) through
     `config/project/policy/manifests/tech_debt_budgets.json`.
 42. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
     the pre-push local CI gate.

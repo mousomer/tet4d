@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 import unittest
 
 from tet4d.ui.pygame.launch import launcher_settings
 from tet4d.engine.runtime import menu_config
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 class TestMenuPolicy(unittest.TestCase):
@@ -57,6 +59,13 @@ class TestMenuPolicy(unittest.TestCase):
                 if kind == "item"
             )
         )
+        self.assertTrue(
+            any(
+                row_key == "gameplay_advanced"
+                for kind, _label, row_key in rows
+                if kind == "item"
+            )
+        )
 
     def test_settings_hub_headers_align_with_top_level_categories(self) -> None:
         top_level = menu_config.settings_top_level_categories()
@@ -78,6 +87,12 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)
 
+    def test_setup_hints_defined_for_all_dimensions(self) -> None:
+        for dimension in (2, 3, 4):
+            hints = menu_config.setup_hints_for_dimension(dimension)
+            self.assertTrue(hints)
+            self.assertTrue(all(isinstance(line, str) and line for line in hints))
+
     def test_launcher_pause_entrypoint_parity(self) -> None:
         launcher_actions = set(
             menu_config.reachable_action_ids(menu_config.launcher_menu_id())
@@ -93,6 +108,15 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             len(menu_config.pause_menu_rows()),
             len(menu_config.pause_menu_actions()),
+        )
+
+    def test_pause_copy_is_config_driven(self) -> None:
+        pause_copy = menu_config.pause_copy()
+        self.assertIn("subtitle_template", pause_copy)
+        self.assertIn("{dimension}", pause_copy["subtitle_template"])
+        self.assertTrue(pause_copy["hints"])
+        self.assertTrue(
+            all(isinstance(line, str) and line for line in pause_copy["hints"])
         )
 
     def test_launcher_rehaul_actions_include_play_and_continue(self) -> None:
@@ -142,3 +166,81 @@ class TestMenuPolicy(unittest.TestCase):
         }
         self.assertTrue({"play_2d", "play_3d", "play_4d"}.issubset(play_actions))
         self.assertTrue({"tutorials", "topology_lab"}.issubset(play_routes))
+
+    def test_launcher_route_actions_cover_launcher_routes(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        play_links = [
+            item
+            for item in root_items
+            if item["type"] == "submenu" and item["label"] == "Play"
+        ]
+        self.assertEqual(len(play_links), 1)
+        play_menu_id = play_links[0]["menu_id"]
+        play_routes = {
+            item["route_id"]
+            for item in menu_config.menu_items(play_menu_id)
+            if item["type"] == "route"
+        }
+        route_actions = menu_config.launcher_route_actions()
+        self.assertEqual(play_routes, set(route_actions))
+        launcher_actions = set(
+            menu_config.reachable_action_ids(menu_config.launcher_menu_id())
+        )
+        self.assertTrue(set(route_actions.values()).issubset(launcher_actions))
+
+    def test_launcher_subtitles_are_config_driven(self) -> None:
+        subtitles = menu_config.launcher_subtitles()
+        self.assertIn("launcher_root", subtitles)
+        self.assertIn("launcher_play", subtitles)
+        self.assertIn("default", subtitles)
+        self.assertTrue(
+            all(isinstance(text, str) and text for text in subtitles.values())
+        )
+
+    def test_branding_copy_is_config_driven(self) -> None:
+        branding = menu_config.branding_copy()
+        self.assertIn("game_title", branding)
+        self.assertIn("signature_author", branding)
+        self.assertIn("signature_message", branding)
+        self.assertTrue(
+            all(isinstance(text, str) and text for text in branding.values())
+        )
+
+    def test_ui_copy_sections_are_config_driven(self) -> None:
+        ui_copy = menu_config.ui_copy_payload()
+        self.assertTrue(isinstance(ui_copy, dict))
+        required_sections = (
+            "launcher",
+            "settings_hub",
+            "keybindings_menu",
+            "bot_options",
+            "setup_menu",
+        )
+        for section in required_sections:
+            payload = menu_config.ui_copy_section(section)
+            self.assertIn(section, ui_copy)
+            self.assertTrue(isinstance(payload, dict))
+            self.assertTrue(payload)
+
+    def test_settings_option_labels_require_random_mode_labels(self) -> None:
+        labels = menu_config.settings_option_labels()
+        self.assertIn("game_random_mode", labels)
+        self.assertGreaterEqual(len(labels["game_random_mode"]), 2)
+
+    def test_unified_settings_manual_numeric_edit_applies_large_values(self) -> None:
+        state = SimpleNamespace(
+            display_settings=DisplaySettings(
+                fullscreen=False,
+                windowed_size=(1200, 760),
+            ),
+            game_seed=1337,
+            text_mode_row_key="display_width",
+            text_mode_buffer="10000",
+            text_mode_replace_on_type=False,
+            saved=True,
+            status="",
+            status_error=False,
+            pending_reset_confirm=False,
+        )
+        self.assertTrue(launcher_settings._apply_unified_numeric_text_value(state))
+        self.assertEqual(state.display_settings.windowed_size[0], 10000)

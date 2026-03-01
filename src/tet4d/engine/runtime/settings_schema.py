@@ -21,6 +21,8 @@ OVERLAY_TRANSPARENCY_STEP = 0.05
 GAME_SEED_MIN = 0
 GAME_SEED_MAX = 999_999_999
 GAME_SEED_STEP = 1
+LINES_PER_LEVEL_MIN = 1
+LINES_PER_LEVEL_MAX = 50
 
 MIN_WINDOW_WIDTH = 640
 MIN_WINDOW_HEIGHT = 480
@@ -142,6 +144,30 @@ def clamp_game_seed(
     else:
         numeric = int(value)
     return max(GAME_SEED_MIN, min(GAME_SEED_MAX, numeric))
+
+
+def clamp_toggle_index(
+    value: object,
+    *,
+    default: int = 0,
+) -> int:
+    if isinstance(value, bool):
+        return 1 if value else 0
+    if not isinstance(value, int):
+        return 1 if int(default) > 0 else 0
+    return 1 if int(value) > 0 else 0
+
+
+def clamp_lines_per_level(
+    value: object,
+    *,
+    default: int = 10,
+) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(LINES_PER_LEVEL_MIN, min(LINES_PER_LEVEL_MAX, numeric))
 
 
 def normalize_windowed_size(
@@ -409,3 +435,17 @@ def require_state_relative_path(value: object, *, path: str) -> str:
     if not clean.startswith("state/"):
         raise RuntimeError(f"{path} must be under state/")
     return clean
+
+
+def sanitize_text(value: object, *, max_length: int = 256) -> str:
+    if not isinstance(value, str):
+        return ""
+    limit = max(1, int(max_length))
+    cleaned_chars: list[str] = []
+    for char in value:
+        if len(cleaned_chars) >= limit:
+            break
+        if not char.isprintable():
+            continue
+        cleaned_chars.append(char)
+    return "".join(cleaned_chars)

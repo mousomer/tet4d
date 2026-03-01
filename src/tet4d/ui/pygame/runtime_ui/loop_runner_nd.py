@@ -11,6 +11,20 @@ GameLoopDecision = Literal["continue", "quit", "menu", "help"]
 GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
 
 
+def _mode_key_for_dimension(dimension: int) -> str:
+    if dimension == 2:
+        return "2d"
+    if dimension == 3:
+        return "3d"
+    if dimension == 4:
+        return "4d"
+    return "2d"
+
+def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
+    mode_key = _mode_key_for_dimension(dimension)
+    return engine_api.gameplay_mode_speedup_settings_runtime(mode_key)
+
+
 def process_game_events(
     keydown_handler: Callable[[pygame.event.Event], GameKeyResult],
     on_restart: Callable[[], None],
@@ -128,12 +142,34 @@ def _update_loop_effects(
     return loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
 
+def _maybe_apply_auto_speedup(
+    *,
+    loop: Any,
+    auto_speedup_enabled: int,
+    lines_per_level: int,
+    gravity_interval_from_config: Callable[[Any], int],
+) -> None:
+    target_speed_level = engine_api.compute_speed_level_runtime(
+        start_level=int(getattr(loop, "base_speed_level", 1)),
+        lines_cleared=int(loop.state.lines_cleared),
+        enabled=bool(auto_speedup_enabled),
+        lines_per_level=int(lines_per_level),
+    )
+    if int(target_speed_level) == int(loop.state.config.speed_level):
+        return
+    loop.state.config.speed_level = int(target_speed_level)
+    new_interval = int(gravity_interval_from_config(loop.state.config))
+    loop.bot.configure_speed(new_interval, int(getattr(loop, "bot_speed_level", 7)))
+    loop.gravity_accumulator = 0
+    loop.refresh_score_multiplier()
+
+
 def run_nd_loop(
     *,
     screen: pygame.Surface,
     fonts: Any,
     loop: Any,
-    gravity_interval_ms: int,
+    gravity_interval_from_config: Callable[[Any], int],
     pause_dimension: int,
     run_pause_menu: Callable[[pygame.Surface, Any, int], tuple[str, pygame.Surface]],
     run_help_menu: Callable[[pygame.Surface, Any, int, str], pygame.Surface],
@@ -151,6 +187,9 @@ def run_nd_loop(
     clear animation creation, and frame rendering.
     """
     clock = pygame.time.Clock()
+    auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_dimension(
+        pause_dimension
+    )
 
     while True:
         dt = clock.tick(60)
@@ -186,10 +225,21 @@ def run_nd_loop(
         if status == "restart":
             continue
 
+        gravity_interval_ms = int(gravity_interval_from_config(loop.state.config))
+        loop.bot.configure_speed(
+            gravity_interval_ms,
+            int(getattr(loop, "bot_speed_level", 7)),
+        )
         _advance_simulation_step(
             loop=loop,
             dt=dt,
             gravity_interval_ms=gravity_interval_ms,
+        )
+        _maybe_apply_auto_speedup(
+            loop=loop,
+            auto_speedup_enabled=auto_speedup_enabled,
+            lines_per_level=lines_per_level,
+            gravity_interval_from_config=gravity_interval_from_config,
         )
         active_overlay = _update_loop_effects(
             loop=loop,

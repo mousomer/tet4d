@@ -474,30 +474,32 @@ def _draw_side_panel(
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
 
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    extra_state_lines = [
+        f"Speed: {state.config.speed_level}",
+        f"Piece set: {piece_set_label(state.config.piece_set_id)}",
+        f"Projection: {projection_label(camera.projection)}",
+        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
+        f"Challenge layers: {state.config.challenge_layers}",
+        f"Fall: {rows_per_sec:.2f}/s",
+        f"Grid: {grid_mode_label(grid_mode)}",
+        f"Yaw: {camera.yaw_deg:.1f}",
+        f"Pitch: {camera.pitch_deg:.1f}",
+        f"Zoom: {camera.zoom:.1f}",
+    ]
     low_priority_lines = [
+        *extra_state_lines,
+        "",
         *bot_lines,
-        *([""] if bot_lines and analysis_lines else []),
+        *([""] if (bot_lines or extra_state_lines) and analysis_lines else []),
         *analysis_lines,
     ]
     lines = (
         "3D Tetris",
         "",
-        f"Dims: {state.config.dims}",
-        f"Piece set: {piece_set_label(state.config.piece_set_id)}",
-        f"Projection: {projection_label(camera.projection)}",
         f"Score: {state.score}",
         f"Layers: {state.lines_cleared}",
-        f"Speed: {state.config.speed_level}",
-        f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
-        f"Challenge layers: {state.config.challenge_layers}",
-        f"Fall: {rows_per_sec:.2f}/s",
         f"Score mod: x{state.score_multiplier:.2f}",
-        f"Grid: {grid_mode_label(grid_mode)}",
-        f"Locked-cell transparency: {_overlay_alpha_label(overlay_transparency)}",
-        "",
-        f"Yaw: {camera.yaw_deg:.1f}",
-        f"Pitch: {camera.pitch_deg:.1f}",
-        f"Zoom: {camera.zoom:.1f}",
+        f"Dims: {state.config.dims}",
     )
 
     draw_game_side_panel(

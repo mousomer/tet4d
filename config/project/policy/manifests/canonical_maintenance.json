@@ -9,6 +9,7 @@
       "docs/PROJECT_STRUCTURE.md",
       "docs/FEATURE_MAP.md",
       "docs/BACKLOG.md",
+      "docs/history/DONE_SUMMARIES.md",
       "docs/CHANGELOG.md",
       "docs/RDS_AND_CODEX.md",
       "docs/SECURITY_AND_CONFIG_PLAN.md"
@@ -72,6 +73,7 @@
       "config/help/icon_map.json",
       "config/help/content/runtime_help_content.json",
       "config/help/layout/runtime_help_layout.json",
+      "config/help/layout/runtime_help_action_layout.json",
       "config/gameplay/tuning.json",
       "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",

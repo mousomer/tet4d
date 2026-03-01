@@ -60,13 +60,14 @@ Read order:
 9. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 10. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
 11. Keep `config/project/policy/manifests/tech_debt_budgets.json` synchronized with staged checkpoints:
-    each stage-batch must lower top-level `tech_debt.score` versus the baseline stage,
-    and baseline refresh is manual via `tools/governance/update_tech_debt_budgets.py`
+    active gate mode is `non_regression_baseline`, so stage batches must keep
+    `tech_debt.score <= baseline + score_epsilon` and must not worsen debt status;
+    baseline refresh remains manual via `tools/governance/update_tech_debt_budgets.py`
     after a verified checkpoint. Tech-debt scoring includes weighted issue pressure
     components plus a low-weight positive delivery-size pressure signal from total
     Python LOC/file growth (weighted by source roots: `src/tet4d` highest;
-    `tests/tools/scripts` lower). Current strict gate uses `score_epsilon=0.0`
-    to require an explicit absolute score decrease for stage-advance batches.
+    `tests/tools/scripts` lower). Use `strict_stage_decrease` only for designated
+    refactor-only batches that explicitly target net debt reduction.
 12. Canonical debt backlog source is machine-readable:
     `config/project/backlog_debt.json` (`active_debt_items`);
     metrics do not parse markdown backlog text as fallback.
@@ -382,17 +383,20 @@ Minimum required coverage for gameplay-affecting changes:
 
 Authoritative open/deferred items are tracked in:
 1. `docs/BACKLOG.md`
+2. Historical DONE summaries are tracked in:
+3. `docs/history/DONE_SUMMARIES.md`
 
 ### Active open items (synced from `docs/BACKLOG.md`)
 
 1. Active open items are maintained in `docs/BACKLOG.md` (single source of truth).
-2. Current remaining active debt items: none.
-3. Recurring operations watches (`[BKL-P3-002]`, `[BKL-P3-003]`, `[BKL-P3-006]`) are tracked in
+2. Current remaining active debt items:
+3. `[BKL-P2-023]`, `[BKL-P2-024]`, `[BKL-P2-027]`.
+4. Recurring operations watches (`[BKL-P3-002]`, `[BKL-P3-003]`, `[BKL-P3-006]`) are tracked in
    the backlog operational watchlist and do not count as active debt backlog items.
-4. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
-5. Current `BKL-P2-006` execution report:
-6. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
-7. Current status: closed (`M1` + `M2` + `M3` + `M4` completed: help topic contract + schemas + shared layout-zone renderer + live key sync/paging + parity/compact hardening).
+5. Complexity budget (`C901`) remains enforced by `scripts/ci_check.sh` and CI workflows.
+6. Current `BKL-P2-006` execution report:
+7. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+8. Current status: closed (`M1` + `M2` + `M3` + `M4` completed: help topic contract + schemas + shared layout-zone renderer + live key sync/paging + parity/compact hardening).
 
 ### Current complexity hotspots (`ruff --select C901`)
 
@@ -652,3 +656,17 @@ Authoritative open/deferred items are tracked in:
   `ui/pygame/menu/menu_model.py`, `engine/core/model/types.py`), advances
   architecture stage metadata to `715`, and refreshes strict tech-debt baseline
   after verified decrease (`2.19 -> 2.18`).
+- Post-stage 715 tech-debt gate recalibration switches active mode to
+  `non_regression_baseline` with `score_epsilon=0.03` and lighter LOC/file
+  pressure (`delivery_size_pressure=0.005`, `loc_unit=12500`, `file_unit=78`)
+  so implementation batches are not blocked by normal delivery growth.
+- Post-stage 715 launcher menu cleanup removes duplicated `launcher_menu` rows,
+  externalizes launcher subtitles/route-action mapping into
+  `config/menu/structure.json`, and routes `tutorials`/`topology_lab` to
+  implemented launcher actions (`help`/`settings`).
+- Post-stage 715 menu-copy externalization extends to ND setup hints:
+  `frontend_nd.py` now reads `setup_hints` from `config/menu/structure.json`
+  with schema-enforced coverage for `2d/3d/4d`.
+- Post-stage 715 menu-copy externalization also covers pause-menu subtitle/hints:
+  `runtime_ui/pause_menu.py` now consumes `pause_copy` from
+  `config/menu/structure.json` via `engine.api`.

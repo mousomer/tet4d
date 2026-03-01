@@ -326,8 +326,17 @@ Implemented in code:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
 10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/launcher_settings.py`.
-11. User overrides remain in `state/menu_settings.json`.
-12. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
+11. gameplay option labels used across setup/settings (for example random mode) are sourced from `config/menu/structure.json` (`settings_option_labels`) without Python fallback literals.
+12. setup hint copy for `2D/3D/4D` is sourced from
+    `config/menu/structure.json` (`setup_hints`) and consumed by `frontend_nd.py`.
+13. pause subtitle/hint copy is sourced from `config/menu/structure.json`
+    (`pause_copy`) and consumed by `runtime_ui/pause_menu.py`.
+14. launcher/settings/keybindings/bot/setup UI copy is sourced from
+    `config/menu/structure.json` (`ui_copy`) and consumed via
+    `menu_structure_schema.py` + `menu_config.py` accessors (through
+    `engine.api` for UI adapters).
+15. User overrides remain in `state/menu_settings.json`.
+16. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
 Stabilization details:
 1. Returning from gameplay to menu now reapplies persisted display mode.
@@ -352,12 +361,17 @@ Stabilization details:
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 21. Launcher and pause menu trees now run through one generic graph runtime (`src/tet4d/ui/pygame/menu/menu_runner.py`) with per-surface action registries.
 22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
-23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` are routed under `Play`.
-24. Menu graph lint contract is enforced via:
-25. `src/tet4d/engine/ui_logic/menu_graph_linter.py`,
-26. `tools/governance/lint_menu_graph.py`,
-27. `tools/governance/validate_project_contracts.py`,
-28. `scripts/ci_check.sh`.
+23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` remain under `Play` as config-routed entries.
+24. Launcher subtitles and route-action mapping are config-driven in
+    `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
+    no launcher subtitle copy or route-label mapping remains hardcoded in `front.py`.
+25. Legacy duplicated `launcher_menu` rows were removed; launcher action rows are
+    now derived from graph root menu items (`menus.launcher_root.items`).
+26. Menu graph lint contract is enforced via:
+27. `src/tet4d/engine/ui_logic/menu_graph_linter.py`,
+28. `tools/governance/lint_menu_graph.py`,
+29. `tools/governance/validate_project_contracts.py`,
+30. `scripts/ci_check.sh`.
 
 ## 15. Follow-up Status
 

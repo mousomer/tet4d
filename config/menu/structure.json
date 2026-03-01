@@ -1,41 +1,82 @@
 {
-  "launcher_menu": [
-    {
-      "action": "play",
-      "label": "Play"
-    },
-    {
-      "action": "continue",
-      "label": "Continue"
-    },
-    {
-      "action": "settings",
-      "label": "Settings"
-    },
-    {
-      "action": "keybindings",
-      "label": "Controls"
-    },
-    {
-      "action": "help",
-      "label": "Help"
-    },
-    {
-      "action": "bot_options",
-      "label": "Bot"
-    },
-    {
-      "action": "quit",
-      "label": "Quit"
-    }
-  ],
   "menu_entrypoints": {
     "launcher": "launcher_root",
     "pause": "pause_root"
   },
+  "launcher_subtitles": {
+    "launcher_root": "Play or continue, then adjust Settings, Controls, Help, and Bot options.",
+    "launcher_play": "Select a dimension, open Tutorials, or jump to topology controls.",
+    "default": "Up/Down select and Enter open actions."
+  },
+  "launcher_route_actions": {
+    "tutorials": "help",
+    "topology_lab": "settings"
+  },
+  "branding": {
+    "game_title": "Multi dimensional tetris game (2d/3d/4d)",
+    "signature_author": "Omer M. Moussaffi (mousomer@gmail.com)",
+    "signature_message": "Enjoy! Please contact me for criticisms, suggestions, requests, partmnetships, and don't hesitate to vent off your frustration."
+  },
+  "ui_copy": {
+    "launcher": {
+      "info_active_profile_template": "Active key profile: {profile}",
+      "info_continue_mode_template": "Continue mode: {mode}",
+      "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
+      "escape_hint_back": "Esc back",
+      "escape_hint_quit": "Esc quit"
+    },
+    "settings_hub": {
+      "title": "Settings",
+      "subtitle_categories_template": "Top-level categories: {categories}",
+      "hints": [
+        "Up/Down select   Left/Right adjust   Enter activate",
+        "Enter on width/height/seed to type large numeric values",
+        "Gameplay -> Advanced gameplay... controls auto speed-up and lines-per-level",
+        "F5 save   F8 reset defaults   Esc back"
+      ],
+      "reset_confirm_f8": "Press F8 again to confirm reset defaults"
+    },
+    "keybindings_menu": {
+      "title": "Keybindings Setup",
+      "subtitle_section_mode": "Up/Down select section, Enter open, Esc back",
+      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc back",
+      "hints": [
+        "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
+        "[ / ] profile prev/next   N new profile   Backspace delete custom profile",
+        "C conflict mode cycle   Enter capture   Tab section menu   Esc cancel/back",
+        "{scope_file_hint}"
+      ],
+      "section_hints": [
+        "Enter open section   Up/Down select section   Esc back",
+        "[ / ] profile prev/next   N new profile   F2 rename   F3 save as"
+      ],
+      "capture_template": "Press a key for {binding_title} (Esc cancels)",
+      "text_mode_confirm_hint": "Enter confirm   Esc cancel"
+    },
+    "bot_options": {
+      "title": "Bot Options",
+      "subtitle": "Dimension-specific bot controls in one place",
+      "hints": [
+        "Left/Right adjust values   Up/Down select",
+        "F5 save   F8 reset defaults   Esc back"
+      ],
+      "saved_status": "Saved bot options",
+      "reset_confirm_enter": "Press Enter on Reset defaults again to confirm",
+      "reset_confirm_f8": "Press F8 again to confirm reset defaults",
+      "reset_done_template": "Reset {mode_key} bot settings (not saved yet)"
+    },
+    "setup_menu": {
+      "title_template": "{dimension}D setup",
+      "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
+      "title_2d": "2D setup",
+      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
+      "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
+      "compact_controls_hint": "Arrows navigate   Enter start   Esc quit"
+    }
+  },
   "menus": {
     "launcher_root": {
-      "title": "ND Tetris Launcher",
+      "title": "Multi dimensional tetris game (2d/3d/4d)",
       "items": [
         {
           "type": "submenu",
@@ -226,6 +267,11 @@
       "row_key": "game_topology_advanced"
     },
     {
+      "kind": "item",
+      "label": "Advanced gameplay...",
+      "row_key": "gameplay_advanced"
+    },
+    {
       "kind": "header",
       "label": "Analytics"
     },
@@ -250,6 +296,12 @@
       "row_key": "back"
     }
   ],
+  "settings_option_labels": {
+    "game_random_mode": [
+      "Fixed seed",
+      "True random"
+    ]
+  },
   "bot_options_rows": [
     "Dimension",
     "Playbot mode",
@@ -281,6 +333,13 @@
     "menu",
     "quit"
   ],
+  "pause_copy": {
+    "subtitle_template": "{dimension}D in-game controls and settings",
+    "hints": [
+      "Up/Down select   Enter apply",
+      "Esc resume"
+    ]
+  },
   "setup_fields": {
     "2d": [
       {
@@ -488,7 +547,7 @@
     {
       "id": "gameplay",
       "label": "Gameplay",
-      "description": "Shared run controls across 2D/3D/4D (game seed, random type, and advanced topology toggle)."
+      "description": "Shared run controls across 2D/3D/4D (game seed, random type, advanced topology toggle, and advanced gameplay tuning)."
     },
     {
       "id": "analytics",
@@ -530,7 +589,7 @@
       "top_level": true
     },
     "gameplay": {
-      "field_count": 3,
+      "field_count": 4,
       "action_count": 0,
       "mode_specific": false,
       "top_level": true
@@ -564,15 +623,22 @@
     "2d": [
       "Esc = quit",
       "F7 dry-run verify (bot, no graphics)",
-      "Use Settings for Random type and Advanced topology.",
-      "Use Bot Options / Keybindings for shared controls.",
+      "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
     "3d": [
       "Esc = quit",
       "F7 dry-run verify (bot, no graphics)",
-      "Use Settings for Random type and Advanced topology.",
-      "Use Bot Options / Keybindings for shared controls.",
+      "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Use Main Menu -> Bot Options / Keybindings for shared controls.",
+      "Controls are shown in-game on the side panel."
+    ],
+    "4d": [
+      "Esc = quit",
+      "F7 dry-run verify (bot, no graphics)",
+      "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ]
   }

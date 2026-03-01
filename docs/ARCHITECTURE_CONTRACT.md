@@ -17,6 +17,9 @@ incremental enforcement strategy used while refactoring.
   over inline magic numbers in Python modules.
 - Exception: small fixed values may remain inline when externalizing them would add
   disproportionate complexity and no meaningful tuning/behavior value.
+- Keep long historical DONE-stage narratives in
+  `docs/history/DONE_SUMMARIES.md`; keep this contract focused on boundaries and
+  active enforcement policy.
 
 ## Target Boundaries
 
@@ -1100,7 +1103,7 @@ incremental enforcement strategy used while refactoring.
   in `scripts/arch_metrics.py` that blends prioritized backlog load, bug/regression
   backlog load, CI gate overage signals, fuzzy folder-balance pressure, and a
   low-weight positive delivery-size pressure signal (weighted LOC/file growth), then
-  enforces a strict stage-batch decrease policy via
+  initially enforces a strict stage-batch decrease policy via
   `config/project/policy/manifests/tech_debt_budgets.json` in
   `scripts/check_architecture_metric_budgets.sh`.
 - Stage 531 (slice 166, pre-push local gate) adds repo-managed pre-push CI
@@ -1192,6 +1195,42 @@ incremental enforcement strategy used while refactoring.
   `engine/core/model/types.py`), advances stage metadata to `715`, and verifies
   tech-debt decrease (`2.19 -> 2.18`) with tracked folder-balance gates
   non-regressed.
+- Post-stage 715 gate recalibration sets active tech-debt gate mode to
+  `non_regression_baseline` with `score_epsilon=0.03`, and reduces LOC/file
+  pressure sensitivity (`delivery_size_pressure=0.005`,
+  `loc_unit=12500`, `file_unit=78`) so regular implementation batches are
+  budget-checked for non-regression instead of strict per-stage decrease.
+- Post-stage 715 launcher graph cleanup externalizes launcher subtitles and
+  route-action mappings to `config/menu/structure.json`, removes duplicated
+  `launcher_menu` rows, and enforces route->action coverage through
+  runtime menu-structure validation.
+- Post-stage 715 setup-menu copy cleanup externalizes ND setup hint text to
+  `config/menu/structure.json` (`setup_hints`) with schema enforcement for all
+  supported dimensions.
+- Post-stage 715 pause-menu copy cleanup externalizes pause subtitle/hint text to
+  `config/menu/structure.json` (`pause_copy`) and routes runtime consumption
+  through `engine.api`.
+- Stage 756-790 (slice 180, menu copy contract completion) adds
+  `config/menu/structure.json` (`ui_copy`) as the canonical source for
+  launcher/settings/keybindings/bot/setup UI copy, validates the new contract
+  in `menu_structure_schema.py`, routes runtime access through
+  `menu_config.py`/`engine.api`, removes remaining hardcoded menu/setup copy
+  literals from UI adapters (including standalone 3D/4D launcher captions and
+  compact 2D setup hints), closes `BKL-P1-008`, and advances stage metadata to
+  `790` with full `verify.sh` passing.
+- Stage 791-800 (slice 190, governance + wrapper/parser LOC cleanup) resolves
+  backlog-ID traceability drift (`BKL-P2-029`) with uniqueness enforcement in
+  project contracts, adds dedicated regression tests for backlog-ID duplicate
+  detection, reduces duplicate parsing/sanitize/wrapper boilerplate in
+  `menu_structure_schema.py`, `menu_settings_state.py`, `keybindings.py`, and
+  `engine/api.py`, and advances stage metadata to `800` with full `verify.sh`
+  passing.
+- Stage 801-812 (slice 202, API/runtime dedup + debt-signal hygiene) further
+  reduces repetitive runtime/UI dispatch wrappers in `engine/api.py`,
+  consolidates duplicate helper logic in `keybindings.py` and
+  `menu_structure_schema.py`, reclassifies `BKL-P2-027` wording to structural
+  maintenance debt semantics (removing bug-class keyword drift in debt metrics),
+  and advances stage metadata to `812` with targeted regression suites passing.
 - Post-stage 533 gameplay RNG-mode extension keeps config-driven setup fields for
   `random_mode_index` (2D/3D/4D), centralizes `game_seed` in the shared settings
   hub, routes values into gameplay configs as `rng_mode` + `rng_seed`, and keeps

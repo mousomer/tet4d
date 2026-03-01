@@ -21,6 +21,7 @@ load_keybindings_file = engine_api.keybindings_load_keybindings_file
 save_keybindings_file = engine_api.keybindings_save_keybindings_file
 menu_items = engine_api.menu_items_runtime
 pause_menu_id = engine_api.pause_menu_id_runtime
+pause_copy = engine_api.pause_copy_runtime
 load_audio_payload = engine_api.load_audio_payload_runtime
 load_display_payload = engine_api.load_display_payload_runtime
 
@@ -35,6 +36,9 @@ _BG_BOTTOM = (4, 7, 20)
 
 _PAUSE_MENU_ID = pause_menu_id()
 _PAUSE_MENU_ITEMS = menu_items(_PAUSE_MENU_ID)
+_PAUSE_COPY = pause_copy()
+_PAUSE_SUBTITLE_TEMPLATE = str(_PAUSE_COPY["subtitle_template"])
+_PAUSE_HINTS = tuple(str(hint) for hint in _PAUSE_COPY["hints"])
 if any(item.get("type") != "action" for item in _PAUSE_MENU_ITEMS):
     raise RuntimeError("pause menu graph currently supports action items only")
 
@@ -193,11 +197,11 @@ def _draw_pause_menu(
         screen,
         fonts,
         title=title,
-        subtitle=f"{dimension}D in-game controls and settings",
+        subtitle=_PAUSE_SUBTITLE_TEMPLATE.format(dimension=dimension),
         rows=_PAUSE_ROWS,
         selected_index=state.selected,
         values=_pause_menu_values(dimension),
-        hints=("Up/Down select   Enter apply", "Esc resume"),
+        hints=_PAUSE_HINTS,
         status=state.status,
         status_error=state.status_error,
     )
