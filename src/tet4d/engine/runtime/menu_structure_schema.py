@@ -214,6 +214,31 @@ def parse_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]
     return setup_fields
 
 
+def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    raw = payload.get("settings_option_labels")
+    if raw is None:
+        return {}
+    labels_obj = require_object(raw, path="structure.settings_option_labels")
+    parsed: dict[str, tuple[str, ...]] = {}
+    for raw_key, raw_labels in labels_obj.items():
+        row_key = as_non_empty_string(
+            raw_key,
+            path="structure.settings_option_labels keys",
+        ).lower()
+        values = require_list(
+            raw_labels,
+            path=f"structure.settings_option_labels.{row_key}",
+        )
+        parsed[row_key] = tuple(
+            as_non_empty_string(
+                value,
+                path=f"structure.settings_option_labels.{row_key}[{idx}]",
+            )
+            for idx, value in enumerate(values)
+        )
+    return parsed
+
+
 def parse_keybinding_category_docs(payload: dict[str, Any]) -> dict[str, Any]:
     raw_docs = payload.get("keybinding_category_docs")
     if raw_docs is None:
@@ -527,6 +552,7 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "pause_menu_rows": pause_rows,
         "pause_menu_actions": pause_actions,
         "setup_fields": parse_setup_fields(payload),
+        "settings_option_labels": parse_settings_option_labels(payload),
         "keybinding_category_docs": parse_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
         "settings_split_rules": parse_settings_split_rules(payload),

@@ -574,6 +574,12 @@ def settings_top_level_categories_runtime():
     return _settings_top_level_categories()
 
 
+def settings_option_labels_runtime():
+    from .runtime.menu_config import settings_option_labels as _settings_option_labels
+
+    return _settings_option_labels()
+
+
 def default_settings_payload_runtime():
     from .runtime.menu_config import (
         default_settings_payload as _default_settings_payload,

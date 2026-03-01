@@ -20,7 +20,10 @@ BG_BOTTOM = (4, 7, 20)
 TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
-_RANDOM_MODE_LABELS = ("Fixed seed", "True random")
+_SETTINGS_OPTION_LABELS = engine_api.settings_option_labels_runtime()
+_RANDOM_MODE_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS.get("game_random_mode") or ("Fixed seed", "True random")
+)
 
 
 @dataclass

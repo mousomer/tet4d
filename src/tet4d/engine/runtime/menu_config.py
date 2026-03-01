@@ -113,6 +113,10 @@ def settings_hub_layout_rows() -> tuple[tuple[str, str, str], ...]:
     return tuple((row["kind"], row["label"], row["row_key"]) for row in rows)
 
 
+def settings_option_labels() -> dict[str, tuple[str, ...]]:
+    return deepcopy(_structure_payload().get("settings_option_labels", {}))
+
+
 def pause_menu_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_rows"])
 

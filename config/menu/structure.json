@@ -250,6 +250,12 @@
       "row_key": "back"
     }
   ],
+  "settings_option_labels": {
+    "game_random_mode": [
+      "Fixed seed",
+      "True random"
+    ]
+  },
   "bot_options_rows": [
     "Dimension",
     "Playbot mode",
