@@ -1,13 +1,4 @@
-"""Shared keyboard bindings for 2D/3D/4D frontends.
-
-Bindings are persisted in external JSON files:
-    keybindings/2d.json
-    keybindings/3d.json
-    keybindings/4d.json
-
-Default bindings still derive from the active profile:
-    TETRIS_KEY_PROFILE=small|full|macbook
-"""
+"""Shared keyboard bindings for 2D/3D/4D frontends."""
 
 from __future__ import annotations
 
