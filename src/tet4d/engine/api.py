@@ -58,6 +58,11 @@ from .runtime.runtime_config import (
     playbot_benchmark_history_file,
     playbot_benchmark_p95_thresholds,
 )
+from .runtime.settings_schema import (
+    MIN_WINDOW_HEIGHT,  # noqa: F401 (re-exported for UI/runtime consumers)
+    MIN_WINDOW_WIDTH,  # noqa: F401 (re-exported for UI/runtime consumers)
+    normalize_windowed_size,  # noqa: F401 (re-exported for UI/runtime consumers)
+)
 from .runtime.project_config import project_constant_int as _project_constant_int
 from .ui_logic.view_modes import GridMode
 
@@ -619,19 +624,15 @@ def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
 
 
 def default_windowed_size_runtime() -> tuple[int, int]:
-    from .runtime.menu_settings_state import (
-        DEFAULT_WINDOWED_SIZE as _DEFAULT_WINDOWED_SIZE,
-    )
+    from .runtime.menu_settings_state import _runtime_defaults
 
-    return _DEFAULT_WINDOWED_SIZE
+    return _runtime_defaults().windowed_size
 
 
 def default_overlay_transparency_runtime() -> float:
-    from .runtime.menu_settings_state import (
-        DEFAULT_OVERLAY_TRANSPARENCY as _DEFAULT_OVERLAY_TRANSPARENCY,
-    )
+    from .runtime.menu_settings_state import _default_overlay_transparency
 
-    return float(_DEFAULT_OVERLAY_TRANSPARENCY)
+    return float(_default_overlay_transparency())
 
 
 def overlay_transparency_step_runtime() -> float:
@@ -645,21 +646,19 @@ def overlay_transparency_step_runtime() -> float:
 def clamp_overlay_transparency_runtime(
     value: Any, *, default: float | None = None
 ) -> float:
-    from .runtime.menu_settings_state import (
-        DEFAULT_OVERLAY_TRANSPARENCY as _DEFAULT_OVERLAY_TRANSPARENCY,
-        clamp_overlay_transparency as _clamp_overlay_transparency,
-    )
+    from .runtime.menu_settings_state import _default_overlay_transparency
+    from .runtime.menu_settings_state import clamp_overlay_transparency as _clamp
 
     fallback = (
-        float(_DEFAULT_OVERLAY_TRANSPARENCY) if default is None else float(default)
+        float(_default_overlay_transparency()) if default is None else float(default)
     )
-    return float(_clamp_overlay_transparency(value, default=fallback))
+    return float(_clamp(value, default=fallback))
 
 
 def default_game_seed_runtime() -> int:
-    from .runtime.menu_settings_state import DEFAULT_GAME_SEED as _DEFAULT_GAME_SEED
+    from .runtime.menu_settings_state import _default_game_seed
 
-    return int(_DEFAULT_GAME_SEED)
+    return int(_default_game_seed())
 
 
 def game_seed_step_runtime() -> int:
@@ -727,15 +726,11 @@ def front3d_setup_gravity_interval_ms_from_config_nd(cfg: GameConfigND) -> int:
 
 
 def launcher_play_run_menu_3d(screen: Any, fonts: Any) -> Any:
-    from tet4d.ui.pygame.front3d_game import run_menu as _run_menu
-
-    return _run_menu(screen, fonts)
+    return front3d_setup_run_menu_nd(screen, fonts, 3)
 
 
 def launcher_play_build_config_3d(settings: Any) -> Any:
-    from tet4d.ui.pygame.front3d_game import build_config as _build_config
-
-    return _build_config(settings)
+    return front3d_setup_build_config_nd(settings, 3)
 
 
 def launcher_play_suggested_window_size_3d(cfg: Any) -> tuple[int, int]:

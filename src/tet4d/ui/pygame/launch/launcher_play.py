@@ -105,7 +105,15 @@ def launch_2d(
         run_menu_fn=front2d.run_menu,
         build_cfg_fn=front2d._config_from_settings,
         suggested_size_fn=_suggested_window_size_2d,
-        run_game_loop_fn=front2d.run_game_loop,
+        run_game_loop_fn=lambda game_screen, cfg, active_fonts, **kwargs: (
+            front2d.run_game_loop(
+                game_screen,
+                cfg,
+                active_fonts,
+                display_settings,
+                **kwargs,
+            )
+        ),
         default_budget_ms=12,
     )
 
