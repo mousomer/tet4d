@@ -314,3 +314,16 @@ def save_global_game_seed(seed: int) -> tuple[bool, str]:
         defaults=_RUNTIME_DEFAULTS,
     )
     return _save_payload(payload)
+
+
+# Backward-compat helpers expected by engine.api overlay/seed accessors.
+def _runtime_defaults() -> RuntimeSettingDefaults:
+    return _RUNTIME_DEFAULTS
+
+
+def _default_overlay_transparency() -> float:
+    return float(DEFAULT_OVERLAY_TRANSPARENCY)
+
+
+def _default_game_seed() -> int:
+    return int(DEFAULT_GAME_SEED)

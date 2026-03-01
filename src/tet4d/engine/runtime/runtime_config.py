@@ -203,7 +203,7 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
         normalized = mode_name.strip().lower()
         if normalized not in GRID_MODE_NAMES:
             raise RuntimeError(
-                "gameplay.grid_modes.cycle[{idx}] must be one of: "
+                f"gameplay.grid_modes.cycle[{idx}] must be one of: "
                 + ", ".join(GRID_MODE_NAMES)
             )
         cycle.append(normalized)

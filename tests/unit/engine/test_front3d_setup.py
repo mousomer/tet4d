@@ -1,16 +1,86 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
+import tet4d.engine.api as engine_api
 from tet4d.engine import frontend_nd
 from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_SIX,
     get_piece_shapes_nd,
     piece_set_options_for_dimension,
 )
+from tet4d.ui.pygame.launch import launcher_play
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 class TestFront3DSetupDedup(unittest.TestCase):
+    def test_launcher_play_run_menu_3d_delegates_dimension_3(self) -> None:
+        sentinel = object()
+        with mock.patch.object(
+            engine_api,
+            "front3d_setup_run_menu_nd",
+            return_value=sentinel,
+        ) as patched:
+            result = engine_api.launcher_play_run_menu_3d("screen", "fonts")
+        self.assertIs(result, sentinel)
+        patched.assert_called_once_with("screen", "fonts", 3)
+
+    def test_launcher_play_build_config_3d_delegates_dimension_3(self) -> None:
+        sentinel = object()
+        settings = frontend_nd.GameSettingsND()
+        with mock.patch.object(
+            engine_api,
+            "front3d_setup_build_config_nd",
+            return_value=sentinel,
+        ) as patched:
+            result = engine_api.launcher_play_build_config_3d(settings)
+        self.assertIs(result, sentinel)
+        patched.assert_called_once_with(settings, 3)
+
+    def test_launcher_play_2d_passes_display_settings_to_game_loop(self) -> None:
+        setup_screen = object()
+        game_screen = object()
+        return_screen = object()
+        fonts_2d = object()
+        cfg = SimpleNamespace(width=10, height=20)
+        settings = SimpleNamespace(
+            bot_mode_index=0,
+            bot_speed_level=7,
+            bot_algorithm_index=0,
+            bot_profile_index=1,
+            bot_budget_ms=12,
+        )
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+
+        with mock.patch.object(
+            launcher_play,
+            "open_display",
+            side_effect=[setup_screen, game_screen, return_screen],
+        ), mock.patch.object(
+            launcher_play.front2d, "run_menu", return_value=settings
+        ), mock.patch.object(
+            launcher_play.front2d, "_config_from_settings", return_value=cfg
+        ), mock.patch.object(
+            launcher_play.front2d, "run_game_loop", return_value=True
+        ) as run_game_loop_mock, mock.patch.object(
+            launcher_play,
+            "capture_windowed_display_settings",
+            return_value=display_settings,
+        ):
+            result = launcher_play.launch_2d(
+                screen=setup_screen,
+                fonts_2d=fonts_2d,
+                display_settings=display_settings,
+            )
+
+        self.assertTrue(result.keep_running)
+        self.assertEqual(
+            run_game_loop_mock.call_args.args,
+            (game_screen, cfg, fonts_2d, display_settings),
+        )
+
     def test_build_config_matches_shared_nd_builder(self) -> None:
         settings = frontend_nd.GameSettingsND(
             width=6,

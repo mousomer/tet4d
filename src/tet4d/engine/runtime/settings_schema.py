@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 import json
+import logging
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -20,11 +22,16 @@ GAME_SEED_MIN = 0
 GAME_SEED_MAX = 999_999_999
 GAME_SEED_STEP = 1
 
+MIN_WINDOW_WIDTH = 640
+MIN_WINDOW_HEIGHT = 480
 FALLBACK_DEFAULT_WINDOWED_SIZE = (1200, 760)
 FALLBACK_DEFAULT_OVERLAY_TRANSPARENCY = 0.25
 FALLBACK_DEFAULT_GAME_SEED = 1337
 
 PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -137,15 +144,29 @@ def clamp_game_seed(
     return max(GAME_SEED_MIN, min(GAME_SEED_MAX, numeric))
 
 
-def _extract_windowed_size(display: dict[str, Any]) -> tuple[int, int]:
-    raw = display.get("windowed_size")
+def normalize_windowed_size(
+    raw: object,
+    *,
+    fallback: tuple[int, int] = FALLBACK_DEFAULT_WINDOWED_SIZE,
+    min_width: int = MIN_WINDOW_WIDTH,
+    min_height: int = MIN_WINDOW_HEIGHT,
+) -> tuple[int, int]:
+    width: int
+    height: int
     if (
-        isinstance(raw, list)
+        isinstance(raw, (list, tuple))
         and len(raw) == 2
         and all(isinstance(v, int) and not isinstance(v, bool) for v in raw)
     ):
-        return (raw[0], raw[1])
-    return FALLBACK_DEFAULT_WINDOWED_SIZE
+        width, height = int(raw[0]), int(raw[1])
+    else:
+        width, height = fallback
+    return (max(min_width, width), max(min_height, height))
+
+
+def _extract_windowed_size(display: dict[str, Any]) -> tuple[int, int]:
+    raw = display.get("windowed_size")
+    return normalize_windowed_size(raw)
 
 
 def derive_runtime_setting_defaults(
@@ -308,16 +329,24 @@ def read_json_object_or_raise(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _warn_config_issue(message: str) -> None:
+    warnings.warn(message, RuntimeWarning)
+    logger.warning(message)
+
+
 def read_json_object_or_empty(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")
-    except OSError:
+    except OSError as exc:
+        _warn_config_issue(f"Failed reading config file {path}: {exc}")
         return {}
     try:
         payload = json.loads(raw)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        _warn_config_issue(f"Invalid JSON in config file {path}: {exc}")
         return {}
     if not isinstance(payload, dict):
+        _warn_config_issue(f"Config file {path} must contain a JSON object")
         return {}
     return payload
 

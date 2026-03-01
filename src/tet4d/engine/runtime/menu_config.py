@@ -181,6 +181,17 @@ def settings_top_level_categories() -> tuple[dict[str, str], ...]:
     return tuple(entry for entry in docs if entry["id"] in top_level_ids)
 
 
+def setup_hints_for_dimension(dimension: int) -> tuple[str, ...]:
+    mode_key = mode_key_for_dimension(dimension)
+    payload = _structure_payload()
+    hints = payload.get("setup_hints", {})
+    if isinstance(hints, dict):
+        mode_hints = hints.get(mode_key)
+        if isinstance(mode_hints, list) and all(isinstance(h, str) for h in mode_hints):
+            return tuple(mode_hints)
+    return tuple()
+
+
 @lru_cache(maxsize=1)
 def _bot_defaults_by_mode() -> dict[str, dict[str, int]]:
     defaults = _defaults_payload()

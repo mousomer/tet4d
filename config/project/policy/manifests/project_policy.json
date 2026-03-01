@@ -52,6 +52,13 @@
         "type": "governance",
         "enforced_by": ["scripts/check_policy_compliance.sh"],
         "owner": "governance"
+      },
+      {
+        "id": "formatting",
+        "source": "docs/policies/POLICY_FORMATTING.md",
+        "type": "governance",
+        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "owner": "governance"
       }
     ],
     "contracts": [

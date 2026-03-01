@@ -1,9 +1,12 @@
 # tetris_nd/pieces_nd.py
 from __future__ import annotations
 
+import json
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Iterable, List, Sequence, Tuple
 
 from .pieces2d import get_standard_tetrominoes
@@ -11,6 +14,8 @@ from ..core.model import Coord
 
 
 RelCoordND = Coord
+_PROJECT_ROOT = Path(__file__).resolve().parents[4]
+_PIECE_CONFIG_PATH = _PROJECT_ROOT / "config" / "gameplay" / "piece_sets_nd.json"
 
 PIECE_SET_3D_STANDARD = "native_3d"
 PIECE_SET_3D_EMBED_2D = "embedded_2d"
@@ -198,6 +203,60 @@ def _axis_neighbors_nd(coord: RelCoordND) -> tuple[RelCoordND, ...]:
     return tuple(neighbors)
 
 
+@lru_cache(maxsize=1)
+def _piece_set_payload() -> dict[str, object]:
+    try:
+        raw = _PIECE_CONFIG_PATH.read_text(encoding="utf-8")
+        data = json.loads(raw)
+    except Exception as exc:  # pragma: no cover - treated as configuration error
+        raise RuntimeError(f"failed to load piece-set config: {_PIECE_CONFIG_PATH}") from exc
+    if not isinstance(data, dict):
+        raise RuntimeError(f"invalid piece-set config format: {_PIECE_CONFIG_PATH}")
+    return data
+
+
+def _load_piece_records(key: str) -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    payload = _piece_set_payload()
+    records = payload.get(key, [])
+    if not isinstance(records, list):
+        raise RuntimeError(f"invalid piece-set records for key: {key}")
+    parsed: list[tuple[str, tuple[RelCoordND, ...], int]] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        name = str(record.get("name", "")).strip()
+        blocks_raw = record.get("blocks", [])
+        if not name or not isinstance(blocks_raw, list):
+            continue
+        blocks: list[RelCoordND] = []
+        for block in blocks_raw:
+            if not isinstance(block, (list, tuple)):
+                continue
+            blocks.append(tuple(int(v) for v in block))
+        if not blocks:
+            continue
+        color_id = int(record.get("color_id", 0))
+        parsed.append((name, tuple(blocks), color_id))
+    if not parsed:
+        raise RuntimeError(f"no piece-set records found for key: {key}")
+    return tuple(parsed)
+
+
+@lru_cache(maxsize=1)
+def _pieces_3d_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    return _load_piece_records("pieces_3d")
+
+
+@lru_cache(maxsize=1)
+def _pieces_4d_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    return _load_piece_records("pieces_4d_5")
+
+
+@lru_cache(maxsize=1)
+def _pieces_4d_six_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    return _load_piece_records("pieces_4d_6")
+
+
 def _random_connected_blocks_nd(
     ndim: int,
     cell_count: int,
@@ -359,145 +418,13 @@ def get_debug_rectangles_nd(
     ]
 
 
-# True 3D polycube set (4 cells per piece).
-_PIECES_3D: Tuple[Tuple[str, Tuple[Tuple[int, int, int], ...], int], ...] = (
-    ("I3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (2, 0, 0)), 1),
-    ("O3", ((0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0)), 2),
-    ("L3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)), 3),
-    ("T3", ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (0, 1, 0)), 4),
-    ("S3", ((0, 0, 0), (1, 0, 0), (-1, 1, 0), (0, 1, 0)), 5),
-    ("J3D", ((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)), 6),
-    ("SCREW3", ((0, 0, 0), (1, 0, 0), (1, 1, 0), (1, 1, 1)), 7),
-)
+_PIECES_3D: Tuple[Tuple[str, Tuple[Tuple[int, int, int], ...], int], ...] = _pieces_3d_records()
+
+_PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_records()
+
+_PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_six_records()
 
 
-# Dedicated 4D set (5 cells per piece) where each shape spans x, y, z, and w.
-_PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
-    (
-        "CROSS4",
-        ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)),
-        1,
-    ),
-    (
-        "SKEW4_A",
-        ((0, 0, 0, 0), (-1, 0, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)),
-        2,
-    ),
-    (
-        "SKEW4_B",
-        ((0, 0, 0, 0), (1, 0, 0, 0), (1, -1, 0, 0), (1, -1, 1, 0), (1, -1, 1, 1)),
-        3,
-    ),
-    (
-        "TEE4",
-        ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 1, 0), (0, 1, 1, 1)),
-        4,
-    ),
-    (
-        "CORK4",
-        ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)),
-        5,
-    ),
-    (
-        "STAIR4",
-        ((0, 0, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)),
-        6,
-    ),
-    (
-        "FORK4",
-        ((0, 0, 0, 0), (-1, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 1), (0, 0, 1, 1)),
-        7,
-    ),
-)
-
-
-# Optional dedicated 4D set (6 cells per piece).
-_PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = (
-    (
-        "CROSS6",
-        (
-            (0, 0, 0, 0),
-            (-1, 0, 0, 0),
-            (1, 0, 0, 0),
-            (0, 1, 0, 0),
-            (0, 0, 1, 0),
-            (0, 0, 0, 1),
-        ),
-        1,
-    ),
-    (
-        "RIBBON6_A",
-        (
-            (0, 0, 0, 0),
-            (1, 0, 0, 0),
-            (1, 1, 0, 0),
-            (1, 1, 1, 0),
-            (1, 1, 1, 1),
-            (0, 1, 1, 1),
-        ),
-        2,
-    ),
-    (
-        "RIBBON6_B",
-        (
-            (0, 0, 0, 0),
-            (-1, 0, 0, 0),
-            (-1, 1, 0, 0),
-            (-1, 1, 1, 0),
-            (-1, 1, 1, 1),
-            (0, 1, 1, 1),
-        ),
-        3,
-    ),
-    (
-        "STAIR6",
-        (
-            (0, 0, 0, 0),
-            (0, 1, 0, 0),
-            (1, 1, 0, 0),
-            (1, 1, 1, 0),
-            (1, 1, 1, 1),
-            (2, 1, 1, 1),
-        ),
-        4,
-    ),
-    (
-        "FORK6",
-        (
-            (0, 0, 0, 0),
-            (-1, 0, 0, 0),
-            (1, 0, 0, 0),
-            (0, 1, 0, 0),
-            (0, 0, 1, 1),
-            (0, 1, 1, 1),
-        ),
-        5,
-    ),
-    (
-        "TWIST6",
-        (
-            (0, 0, 0, 0),
-            (0, 1, 0, 0),
-            (1, 1, 0, 0),
-            (1, 1, 1, 0),
-            (2, 1, 1, 0),
-            (2, 1, 1, 1),
-        ),
-        6,
-    ),
-    (
-        "PLANE6",
-        (
-            (0, 0, 0, 0),
-            (1, 0, 0, 0),
-            (0, 1, 0, 0),
-            (1, 1, 0, 0),
-            (1, 1, 1, 0),
-            (1, 1, 1, 1),
-        ),
-        7,
-    ),
-)
 
 
 @dataclass(frozen=True)

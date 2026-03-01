@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 Branch: `codex/foldersrestructuring`
-Worktree expectation at handoff: dirty (stage 696-715 batch edits)
+Worktree expectation at handoff: dirty (policy additions + doc refresh pending commit)
 
 ## Purpose
 
@@ -23,19 +23,16 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 2.18` (`low`)
+- `tech_debt.score = 24.21` (`low`, equal to strict baseline 24.21)
   - weighted components (current dominant drivers):
-    - backlog priority pressure (`+0.00`, no active open backlog debt items)
-    - code-balance pressure (`+0.12`, runtime leaf is `0.86` fuzzy while still `balanced`)
-    - delivery-size pressure (`+2.06`; increases with weighted LOC/file growth)
-  - delivery-size calibration:
-    - `loc_unit = 10600`, `file_unit = 64` (keeps size pressure monotonic while
-      preserving stronger weighting for correctness/CI/boundary signals)
-  - collection note:
-    - keybinding-retention now runs in headless environments via a metrics-only pygame stub fallback, preventing false `unavailable` pressure in CI/local non-graphics contexts
+    - backlog priority pressure: `19.38` (weights dominated by open P1/P2 items)
+    - backlog bug pressure: `2.64`
+    - delivery-size pressure: `2.07` (163 Python files, 30,210 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
+    - code-balance pressure: `0.12` (gate-eligible leaf avg 0.99, runtime leaf balanced)
+    - menu/keybinding retention pressures: `0.0` (goals met)
   - strict gate policy:
-    - same-stage commits: must not regress baseline score/status
-    - stage-advance batches: must strictly decrease score versus baseline stage
+    - same-stage commits must not exceed baseline score/status
+    - stage-advance batches must strictly decrease score versus baseline stage
 - `pygame_imports_non_test = 3`
   - currently concentrated in:
     - `src/tet4d/engine/front3d_render.py`
@@ -69,21 +66,10 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ### Balance Assessment
 
-- `engine` top-level is now healthy.
-- `engine/core/step` and `engine/core/rng` now use a micro-leaf balance profile and
-  score `balanced`, reducing technical debt pressure without changing gate scope.
-- `engine/ui_logic` and `engine/gameplay` are healthy.
-- `engine/runtime` remains gate-eligible and balanced (`0.86` fuzzy), but is now
-  the primary code-balance watch hotspot after wrapper pruning.
-- `ui/pygame/menu` and `ui/pygame/launch` are balanced after launcher wrapper pruning.
-- `ui/pygame/input` is now a balanced leaf package (`6` files, fuzzy `balanced`) after
-  adding `keybindings_defaults`.
-- `ui/pygame/render` is now a balanced leaf package (`11` files, fuzzy `balanced`) after
-  panel/control/gfx/grid/font helper relocation.
-- `ui/pygame/runtime_ui` remains balanced at `6` files after consolidating
-  `display` and shared event-loop logic into canonical runtime modules.
-- `ui/pygame` top-level remains balanced at `6` files after removing thin 3D/4D launch wrappers.
-- `replay` remains `micro_feature_leaf` and balanced at `2` files.
+- Gate-eligible leafs remain balanced (runtime leaf fuzzy 0.99, tests leaf 1.0).
+- `engine` top-level and subpackages are healthy; runtime is the primary code-balance watch area.
+- `ui/pygame` leaf packages stay balanced after prior relocations; remaining hotspot is logical size, not folder shape.
+- `replay` remains `micro_feature_leaf` and balanced.
 
 ## Major Completed Milestones (Condensed)
 
@@ -135,68 +121,60 @@ Balance note:
 
 ## Open Issues / Operational Notes
 
-- Some verification runs can fail transiently (historically score-snapshot determinism / benchmark spikes).
-  - Policy: rerun once if failure matches known flaky pattern and no code changed.
-- GitHub CI should be checked if local green diverges again, but recent governance fixes addressed the prior CI drift.
+- Tech-debt gate is tight (baseline 24.21); any LOC/file growth without relief risks failing the soft gate.
+- Verification flakiness (metrics determinism/benchmarks) remains rare; rerun once if failure occurs with no code change.
+- GitHub CI must stay aligned; local verify is authoritative pre-push.
 
 ## Active Plan (Policy-Integrated)
 
 Batch objective:
 - continue staged architecture cleanup while preserving strict non-regression
-  gates and reducing `tech_debt.score` at each stage-advance checkpoint.
+  gates and reducing `tech_debt.score` at each stage-advance checkpoint; stay net-LOC-neutral or negative unless shipping a feature.
 
 Policy maintenance requirements in every batch:
-1. run policy guardrails at batch start and batch end for:
+1. Run policy guardrails at batch start and batch end for:
    - no reinventing the wheel
    - string sanitation
    - no magic numbers
-2. run a policy checkpoint every 5 stages in long sequential runs.
-3. require documented exception notes + targeted tests for any policy exception.
+   - formatting/line-length
+2. Run a policy checkpoint every 5 stages in long sequential runs.
+3. Require documented exception notes + targeted tests for any policy exception.
+4. Default verification in quiet mode; use verbose only when debugging failures.
 
 Placement in stage sequence:
-1. baseline metrics/policy check
-2. staged refactor implementation (move/canonicalize/prune)
-3. periodic policy checkpoint (every 5 stages)
-4. stage-advance checkpoint (`verify`, metrics, budget checks)
-5. final policy + contract sync before commit
+1. Baseline metrics/policy check.
+2. Staged refactor implementation (move/canonicalize/prune).
+3. Periodic policy checkpoint (every 5 stages).
+4. Stage-advance checkpoint (`verify`, metrics, budget checks).
+5. Final policy + contract sync before commit.
 
 ## Short-Term Plan (Next 10-20 stages)
 
-### Track A (highest value): Continue Delivery-Size Pressure Reduction
+### Track A (highest value): Delivery-Size Pressure Reduction
 
-Goal: reduce Python LOC in large runtime/UI modules without changing behavior.
+Goal: shave LOC without behavior change in runtime/UI hotspots.
 
-Recommended next family moves:
-- split `src/tet4d/ui/pygame/keybindings.py` into profile/IO/rebind helpers.
-- split `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize slices.
-- trim duplicated runtime API wrapper boilerplate in `src/tet4d/engine/api.py` where safe.
-- preserve config/help/menu assets as source-of-truth; avoid reintroducing large Python literals.
+Planned moves:
+- Factor `src/tet4d/ui/pygame/keybindings.py` into smaller helpers (profile/IO/rebind) with shims and zero-caller prune.
+- Slice `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize helpers; keep storage layout stable.
+- Trim duplicated runtime API wrapper boilerplate in `src/tet4d/engine/api.py`.
+- Keep menu/help content in config assets; avoid large Python literals.
 
-Pattern per family:
-1. move implementation to subpackage
-2. add compatibility shim at old path
-3. canonicalize callers
-4. zero-caller checkpoint
-5. prune shim
-6. checkpoint docs + metrics + verification
-7. for each stage-batch checkpoint, ensure `tech_debt.score` decreases versus prior
-   baseline stage before refreshing `config/project/policy/manifests/tech_debt_budgets.json`
+Execution pattern:
+1. Extract to subpackage.
+2. Add compatibility shim.
+3. Canonicalize callers.
+4. Zero-caller audit.
+5. Prune shim.
+6. Update docs/metrics; ensure `tech_debt.score` ≤ baseline.
 
-### Track B: Playbot relocation audit-only (deprioritized)
+### Track B: Playbot relocation audit-only (low priority)
 
-Goal: confirm no real `engine/playbot` Python module stragglers remain.
-
-Current note:
-- latest audit found no `*.py` files under `src/tet4d/engine/playbot/` (only local
-  `__pycache__` artifacts), so no staged relocation work is currently queued.
+- Periodic audit for stray `engine/playbot/*.py` (none currently; no action staged).
 
 ### Track C: Runtime side-effect extraction (selective)
 
-Goal: ensure any remaining file I/O outside `engine/runtime` is routed to runtime helpers.
-
-Do:
-- grep for `read_text`, `write_text`, `open(` in `src/tet4d/engine/**/*.py`
-- only extract misplaced I/O (do not churn runtime-owned storage helpers)
+- Audit `read_text`/`write_text`/`open(` in `src/tet4d/engine/**` and reroute misplaced I/O into runtime helpers only when outside runtime-owned storage modules.
 
 ## Long-Term Plan (Maximal Clean Architecture)
 

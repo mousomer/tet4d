@@ -10,6 +10,28 @@ from tet4d.ui.pygame.runtime_ui.audio import (
     initialize_audio,
     set_audio_settings,
 )
+MIN_WINDOW_WIDTH = 640
+MIN_WINDOW_HEIGHT = 480
+FALLBACK_WINDOWED_SIZE = (1200, 760)
+
+
+def normalize_windowed_size(
+    raw_size: object,
+    *,
+    fallback: tuple[int, int] = FALLBACK_WINDOWED_SIZE,
+    min_width: int = MIN_WINDOW_WIDTH,
+    min_height: int = MIN_WINDOW_HEIGHT,
+) -> tuple[int, int]:
+    # Ensure window size stays within sane bounds and never drops below minimums.
+    if (
+        isinstance(raw_size, (list, tuple))
+        and len(raw_size) == 2
+        and all(isinstance(v, int) and not isinstance(v, bool) for v in raw_size)
+    ):
+        width, height = int(raw_size[0]), int(raw_size[1])
+    else:
+        width, height = fallback
+    return (max(min_width, width), max(min_height, height))
 
 _WINDOW_RESIZE_EVENTS = tuple(
     event_type
@@ -35,8 +57,7 @@ class DisplaySettings:
 
 
 def normalize_display_settings(settings: DisplaySettings) -> DisplaySettings:
-    width = max(640, int(settings.windowed_size[0]))
-    height = max(480, int(settings.windowed_size[1]))
+    width, height = normalize_windowed_size(settings.windowed_size)
     return DisplaySettings(
         fullscreen=bool(settings.fullscreen),
         windowed_size=(width, height),
@@ -56,8 +77,7 @@ def apply_display_mode(
         if preferred_windowed_size is not None
         else normalized.windowed_size
     )
-    width = max(640, int(size[0]))
-    height = max(480, int(size[1]))
+    width, height = normalize_windowed_size(size)
     return pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
 
@@ -120,16 +140,21 @@ def open_display(
 def capture_windowed_display_settings(
     display_settings: DisplaySettings,
     *,
-    min_width: int = 640,
-    min_height: int = 480,
+    min_width: int = MIN_WINDOW_WIDTH,
+    min_height: int = MIN_WINDOW_HEIGHT,
 ) -> DisplaySettings:
     if display_settings.fullscreen:
         return display_settings
     surface = pygame.display.get_surface()
     if surface is None:
         return display_settings
-    width, height = surface.get_size()
-    if width < min_width or height < min_height:
+    width, height = normalize_windowed_size(
+        surface.get_size(),
+        min_width=min_width,
+        min_height=min_height,
+        fallback=display_settings.windowed_size,
+    )
+    if (width, height) == display_settings.windowed_size:
         return display_settings
     updated = DisplaySettings(fullscreen=False, windowed_size=(width, height))
     engine_api.save_display_settings_runtime(windowed_size=updated.windowed_size)
@@ -140,8 +165,8 @@ def capture_windowed_display_settings_from_event(
     display_settings: DisplaySettings,
     *,
     event: pygame.event.Event,
-    min_width: int = 640,
-    min_height: int = 480,
+    min_width: int = MIN_WINDOW_WIDTH,
+    min_height: int = MIN_WINDOW_HEIGHT,
 ) -> DisplaySettings:
     if display_settings.fullscreen or event.type not in _WINDOW_RESIZE_EVENTS:
         return display_settings

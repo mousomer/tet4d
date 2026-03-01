@@ -1,12 +1,33 @@
 {
   "launcher_menu": [
-    {"action": "play", "label": "Play"},
-    {"action": "continue", "label": "Continue"},
-    {"action": "settings", "label": "Settings"},
-    {"action": "keybindings", "label": "Controls"},
-    {"action": "help", "label": "Help"},
-    {"action": "bot_options", "label": "Bot"},
-    {"action": "quit", "label": "Quit"}
+    {
+      "action": "play",
+      "label": "Play"
+    },
+    {
+      "action": "continue",
+      "label": "Continue"
+    },
+    {
+      "action": "settings",
+      "label": "Settings"
+    },
+    {
+      "action": "keybindings",
+      "label": "Controls"
+    },
+    {
+      "action": "help",
+      "label": "Help"
+    },
+    {
+      "action": "bot_options",
+      "label": "Bot"
+    },
+    {
+      "action": "quit",
+      "label": "Quit"
+    }
   ],
   "menu_entrypoints": {
     "launcher": "launcher_root",
@@ -16,36 +37,116 @@
     "launcher_root": {
       "title": "ND Tetris Launcher",
       "items": [
-        {"type": "submenu", "label": "Play", "menu_id": "launcher_play"},
-        {"type": "action", "label": "Continue", "action_id": "continue"},
-        {"type": "action", "label": "Settings", "action_id": "settings"},
-        {"type": "action", "label": "Controls", "action_id": "keybindings"},
-        {"type": "action", "label": "Help", "action_id": "help"},
-        {"type": "action", "label": "Bot", "action_id": "bot_options"},
-        {"type": "action", "label": "Quit", "action_id": "quit"}
+        {
+          "type": "submenu",
+          "label": "Play",
+          "menu_id": "launcher_play"
+        },
+        {
+          "type": "action",
+          "label": "Continue",
+          "action_id": "continue"
+        },
+        {
+          "type": "action",
+          "label": "Settings",
+          "action_id": "settings"
+        },
+        {
+          "type": "action",
+          "label": "Controls",
+          "action_id": "keybindings"
+        },
+        {
+          "type": "action",
+          "label": "Help",
+          "action_id": "help"
+        },
+        {
+          "type": "action",
+          "label": "Bot",
+          "action_id": "bot_options"
+        },
+        {
+          "type": "action",
+          "label": "Quit",
+          "action_id": "quit"
+        }
       ]
     },
     "launcher_play": {
       "title": "Choose Mode",
       "items": [
-        {"type": "action", "label": "Play 2D", "action_id": "play_2d"},
-        {"type": "action", "label": "Play 3D", "action_id": "play_3d"},
-        {"type": "action", "label": "Play 4D", "action_id": "play_4d"},
-        {"type": "route", "label": "Tutorials", "route_id": "tutorials"},
-        {"type": "route", "label": "Topology Lab", "route_id": "topology_lab"}
+        {
+          "type": "action",
+          "label": "Play 2D",
+          "action_id": "play_2d"
+        },
+        {
+          "type": "action",
+          "label": "Play 3D",
+          "action_id": "play_3d"
+        },
+        {
+          "type": "action",
+          "label": "Play 4D",
+          "action_id": "play_4d"
+        },
+        {
+          "type": "route",
+          "label": "Tutorials",
+          "route_id": "tutorials"
+        },
+        {
+          "type": "route",
+          "label": "Topology Lab",
+          "route_id": "topology_lab"
+        }
       ]
     },
     "pause_root": {
       "title": "Pause Menu",
       "items": [
-        {"type": "action", "label": "Resume", "action_id": "resume"},
-        {"type": "action", "label": "Restart Run", "action_id": "restart"},
-        {"type": "action", "label": "Settings", "action_id": "settings"},
-        {"type": "action", "label": "Controls", "action_id": "keybindings"},
-        {"type": "action", "label": "Help", "action_id": "help"},
-        {"type": "action", "label": "Bot", "action_id": "bot_options"},
-        {"type": "action", "label": "Back To Main Menu", "action_id": "menu"},
-        {"type": "action", "label": "Quit", "action_id": "quit"}
+        {
+          "type": "action",
+          "label": "Resume",
+          "action_id": "resume"
+        },
+        {
+          "type": "action",
+          "label": "Restart Run",
+          "action_id": "restart"
+        },
+        {
+          "type": "action",
+          "label": "Settings",
+          "action_id": "settings"
+        },
+        {
+          "type": "action",
+          "label": "Controls",
+          "action_id": "keybindings"
+        },
+        {
+          "type": "action",
+          "label": "Help",
+          "action_id": "help"
+        },
+        {
+          "type": "action",
+          "label": "Bot",
+          "action_id": "bot_options"
+        },
+        {
+          "type": "action",
+          "label": "Back To Main Menu",
+          "action_id": "menu"
+        },
+        {
+          "type": "action",
+          "label": "Quit",
+          "action_id": "quit"
+        }
       ]
     }
   },
@@ -57,25 +158,97 @@
     "Back"
   ],
   "settings_hub_layout_rows": [
-    {"kind": "header", "label": "Audio"},
-    {"kind": "item", "label": "Master volume", "row_key": "audio_master"},
-    {"kind": "item", "label": "SFX volume", "row_key": "audio_sfx"},
-    {"kind": "item", "label": "Mute", "row_key": "audio_mute"},
-    {"kind": "header", "label": "Display"},
-    {"kind": "item", "label": "Fullscreen", "row_key": "display_fullscreen"},
-    {"kind": "item", "label": "Window width", "row_key": "display_width"},
-    {"kind": "item", "label": "Window height", "row_key": "display_height"},
-    {"kind": "item", "label": "Locked-cell transparency", "row_key": "display_overlay_transparency"},
-    {"kind": "item", "label": "Apply display", "row_key": "display_apply"},
-    {"kind": "header", "label": "Gameplay"},
-    {"kind": "item", "label": "Game seed (all modes)", "row_key": "game_seed"},
-    {"kind": "item", "label": "Random type (all modes)", "row_key": "game_random_mode"},
-    {"kind": "item", "label": "Advanced topology (all modes)", "row_key": "game_topology_advanced"},
-    {"kind": "header", "label": "Analytics"},
-    {"kind": "item", "label": "Score logging", "row_key": "analytics_score_logging"},
-    {"kind": "item", "label": "Save", "row_key": "save"},
-    {"kind": "item", "label": "Reset defaults", "row_key": "reset"},
-    {"kind": "item", "label": "Back", "row_key": "back"}
+    {
+      "kind": "header",
+      "label": "Audio"
+    },
+    {
+      "kind": "item",
+      "label": "Master volume",
+      "row_key": "audio_master"
+    },
+    {
+      "kind": "item",
+      "label": "SFX volume",
+      "row_key": "audio_sfx"
+    },
+    {
+      "kind": "item",
+      "label": "Mute",
+      "row_key": "audio_mute"
+    },
+    {
+      "kind": "header",
+      "label": "Display"
+    },
+    {
+      "kind": "item",
+      "label": "Fullscreen",
+      "row_key": "display_fullscreen"
+    },
+    {
+      "kind": "item",
+      "label": "Window width",
+      "row_key": "display_width"
+    },
+    {
+      "kind": "item",
+      "label": "Window height",
+      "row_key": "display_height"
+    },
+    {
+      "kind": "item",
+      "label": "Locked-cell transparency",
+      "row_key": "display_overlay_transparency"
+    },
+    {
+      "kind": "item",
+      "label": "Apply display",
+      "row_key": "display_apply"
+    },
+    {
+      "kind": "header",
+      "label": "Gameplay"
+    },
+    {
+      "kind": "item",
+      "label": "Game seed (all modes)",
+      "row_key": "game_seed"
+    },
+    {
+      "kind": "item",
+      "label": "Random type (all modes)",
+      "row_key": "game_random_mode"
+    },
+    {
+      "kind": "item",
+      "label": "Advanced topology (all modes)",
+      "row_key": "game_topology_advanced"
+    },
+    {
+      "kind": "header",
+      "label": "Analytics"
+    },
+    {
+      "kind": "item",
+      "label": "Score logging",
+      "row_key": "analytics_score_logging"
+    },
+    {
+      "kind": "item",
+      "label": "Save",
+      "row_key": "save"
+    },
+    {
+      "kind": "item",
+      "label": "Reset defaults",
+      "row_key": "reset"
+    },
+    {
+      "kind": "item",
+      "label": "Back",
+      "row_key": "back"
+    }
   ],
   "bot_options_rows": [
     "Dimension",
@@ -110,41 +283,182 @@
   ],
   "setup_fields": {
     "2d": [
-      {"label": "Board width", "attr": "width", "min": 6, "max": 16},
-      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
-      {"label": "Piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
-      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
-      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
-      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+      {
+        "label": "Board width",
+        "attr": "width",
+        "min": 6,
+        "max": 16
+      },
+      {
+        "label": "Board height",
+        "attr": "height",
+        "min": 12,
+        "max": 30
+      },
+      {
+        "label": "Piece set",
+        "attr": "piece_set_index",
+        "min": 0,
+        "max": "piece_set_max"
+      },
+      {
+        "label": "Topology",
+        "attr": "topology_mode",
+        "min": 0,
+        "max": 2
+      },
+      {
+        "label": "Topology profile",
+        "attr": "topology_profile_index",
+        "min": 0,
+        "max": "topology_profile_max"
+      },
+      {
+        "label": "Challenge layers",
+        "attr": "challenge_layers",
+        "min": 0,
+        "max": 20
+      },
+      {
+        "label": "Exploration mode",
+        "attr": "exploration_mode",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "label": "Speed level",
+        "attr": "speed_level",
+        "min": 1,
+        "max": 10
+      }
     ],
     "3d": [
-      {"label": "Board width", "attr": "width", "min": 4, "max": 12},
-      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
-      {"label": "Board depth", "attr": "depth", "min": 4, "max": 12},
-      {"label": "3D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
-      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
-      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
-      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+      {
+        "label": "Board width",
+        "attr": "width",
+        "min": 4,
+        "max": 12
+      },
+      {
+        "label": "Board height",
+        "attr": "height",
+        "min": 12,
+        "max": 30
+      },
+      {
+        "label": "Board depth",
+        "attr": "depth",
+        "min": 4,
+        "max": 12
+      },
+      {
+        "label": "3D piece set",
+        "attr": "piece_set_index",
+        "min": 0,
+        "max": "piece_set_max"
+      },
+      {
+        "label": "Topology",
+        "attr": "topology_mode",
+        "min": 0,
+        "max": 2
+      },
+      {
+        "label": "Topology profile",
+        "attr": "topology_profile_index",
+        "min": 0,
+        "max": "topology_profile_max"
+      },
+      {
+        "label": "Challenge layers",
+        "attr": "challenge_layers",
+        "min": 0,
+        "max": 20
+      },
+      {
+        "label": "Exploration mode",
+        "attr": "exploration_mode",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "label": "Speed level",
+        "attr": "speed_level",
+        "min": 1,
+        "max": 10
+      }
     ],
     "4d": [
-      {"label": "Board width", "attr": "width", "min": 6, "max": 16},
-      {"label": "Board height", "attr": "height", "min": 12, "max": 30},
-      {"label": "Board depth (z)", "attr": "depth", "min": 4, "max": 12},
-      {"label": "Board axis w", "attr": "fourth", "min": 3, "max": 10},
-      {"label": "4D piece set", "attr": "piece_set_index", "min": 0, "max": "piece_set_max"},
-      {"label": "Topology", "attr": "topology_mode", "min": 0, "max": 2},
-      {"label": "Topology profile", "attr": "topology_profile_index", "min": 0, "max": "topology_profile_max"},
-      {"label": "Challenge layers", "attr": "challenge_layers", "min": 0, "max": 20},
-      {"label": "Exploration mode", "attr": "exploration_mode", "min": 0, "max": 1},
-      {"label": "Speed level", "attr": "speed_level", "min": 1, "max": 10}
+      {
+        "label": "Board width",
+        "attr": "width",
+        "min": 6,
+        "max": 16
+      },
+      {
+        "label": "Board height",
+        "attr": "height",
+        "min": 12,
+        "max": 30
+      },
+      {
+        "label": "Board depth (z)",
+        "attr": "depth",
+        "min": 4,
+        "max": 12
+      },
+      {
+        "label": "Board axis w",
+        "attr": "fourth",
+        "min": 3,
+        "max": 10
+      },
+      {
+        "label": "4D piece set",
+        "attr": "piece_set_index",
+        "min": 0,
+        "max": "piece_set_max"
+      },
+      {
+        "label": "Topology",
+        "attr": "topology_mode",
+        "min": 0,
+        "max": 2
+      },
+      {
+        "label": "Topology profile",
+        "attr": "topology_profile_index",
+        "min": 0,
+        "max": "topology_profile_max"
+      },
+      {
+        "label": "Challenge layers",
+        "attr": "challenge_layers",
+        "min": 0,
+        "max": 20
+      },
+      {
+        "label": "Exploration mode",
+        "attr": "exploration_mode",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "label": "Speed level",
+        "attr": "speed_level",
+        "min": 1,
+        "max": 10
+      }
     ]
   },
   "keybinding_category_docs": {
-    "scope_order": ["general", "2d", "3d", "4d", "all"],
+    "scope_order": [
+      "general",
+      "2d",
+      "3d",
+      "4d",
+      "all"
+    ],
     "groups": {
       "system": {
         "label": "General / System",
@@ -245,5 +559,21 @@
       "mode_specific": true,
       "top_level": false
     }
+  },
+  "setup_hints": {
+    "2d": [
+      "Esc = quit",
+      "F7 dry-run verify (bot, no graphics)",
+      "Use Settings for Random type and Advanced topology.",
+      "Use Bot Options / Keybindings for shared controls.",
+      "Controls are shown in-game on the side panel."
+    ],
+    "3d": [
+      "Esc = quit",
+      "F7 dry-run verify (bot, no graphics)",
+      "Use Settings for Random type and Advanced topology.",
+      "Use Bot Options / Keybindings for shared controls.",
+      "Controls are shown in-game on the side panel."
+    ]
   }
 }

@@ -37,16 +37,14 @@ piece_set_label = engine_api.piece_set_label_gameplay
 piece_set_options_for_dimension = engine_api.piece_set_options_for_dimension_gameplay
 
 
-_RUNTIME_GROUP_ORDER = ("system", "game", "camera")
-_LIVE_KEY_GROUP_ORDER = (
-    "system",
-    "game_translation",
-    "game_rotation",
-    "game_other",
-    "camera",
-)
-_SETTINGS_DOCS = settings_category_docs()
 _HELP_LAYOUT = help_layout_payload()
+_SETTINGS_DOCS = settings_category_docs()
+_ACTION_GROUPS = _HELP_LAYOUT.get("action_groups") or {}
+_RUNTIME_GROUP_ORDER = tuple(_ACTION_GROUPS.get("runtime_order") or ("system", "game", "camera"))
+_LIVE_KEY_GROUP_ORDER = tuple(
+    _ACTION_GROUPS.get("live_order")
+    or ("system", "game_translation", "game_rotation", "game_other", "camera")
+)
 _HELP_COLORS = _HELP_LAYOUT["colors"]
 _BG_TOP = tuple(_HELP_COLORS["bg_top"])
 _BG_BOTTOM = tuple(_HELP_COLORS["bg_bottom"])

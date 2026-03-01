@@ -67,10 +67,7 @@ from tet4d.ui.pygame.menu.menu_controls import (
     apply_menu_actions,
     gather_menu_actions,
 )
-from tet4d.engine.runtime.menu_config import (
-    default_settings_payload,
-    setup_fields_for_dimension,
-)
+from tet4d.engine.runtime.menu_config import default_settings_payload, setup_fields_for_dimension, setup_hints_for_dimension
 from tet4d.engine.runtime.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
@@ -312,7 +309,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             state.settings,
             state.selected_index,
             bindings_file_hint=None,
-            extra_hint_lines=(
+            extra_hint_lines=tuple(setup_hints_for_dimension(2)) or (
                 "F7 dry-run verify (bot, no graphics)",
                 "Use Main Menu -> Settings for Random type and Advanced topology.",
                 "Use Main Menu -> Bot Options / Keybindings for shared controls.",

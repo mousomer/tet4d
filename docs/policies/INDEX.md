@@ -5,6 +5,7 @@ This repo’s policy pack is anchored in `config/project/policy/pack.json` (comp
 - `no_reinventing_wheel` — governance; source: `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`; enforced by `scripts/check_policy_compliance.sh`.
 - `string_sanitation` — safety; source: `docs/policies/POLICY_STRING_SANITATION.md`; enforced by `scripts/check_policy_compliance.sh`.
 - `no_magic_numbers` — governance; source: `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`; enforced by `scripts/check_policy_compliance.sh`.
+- `formatting` — governance; source: `docs/policies/POLICY_FORMATTING.md`; enforced by `scripts/check_policy_compliance.sh`.
 
 Contracts referenced by the pack:
 - `config/project/policy/manifests/canonical_maintenance.json` (validated by `tools/governance/validate_project_contracts.py`)

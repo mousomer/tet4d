@@ -7,10 +7,10 @@ import pygame
 import tet4d.engine.api as engine_api
 from cli import front2d
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
     capture_windowed_display_settings,
     open_display,
 )
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ai.playbot.types import bot_mode_from_index
 
 
@@ -105,7 +105,15 @@ def launch_2d(
         run_menu_fn=front2d.run_menu,
         build_cfg_fn=front2d._config_from_settings,
         suggested_size_fn=_suggested_window_size_2d,
-        run_game_loop_fn=front2d.run_game_loop,
+        run_game_loop_fn=lambda game_screen, cfg, active_fonts, **kwargs: (
+            front2d.run_game_loop(
+                game_screen,
+                cfg,
+                active_fonts,
+                display_settings,
+                **kwargs,
+            )
+        ),
         default_budget_ms=12,
     )
 

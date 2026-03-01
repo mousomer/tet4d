@@ -20,22 +20,12 @@ from typing import Dict, List, Mapping, MutableMapping, Tuple
 import pygame
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.input.key_display import display_key_name
-from tet4d.ui.pygame.input.keybindings_defaults import (
-    DISABLED_KEYS_2D as _DISABLED_KEYS_2D,
-    PROFILE_MACBOOK,
-    PROFILE_SMALL,
-    PROFILE_FULL,
-    default_camera_bindings_for_profile,
-    default_game_bindings_for_profile,
-    default_system_bindings_for_profile,
-)
-
 
 KeyTuple = Tuple[int, ...]
 KeyBindingMap = Dict[str, KeyTuple]
 
 KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
-BUILTIN_PROFILES = (PROFILE_SMALL, PROFILE_FULL, PROFILE_MACBOOK)
+BUILTIN_PROFILES = ("small", "full", "macbook")
 SUPPORTED_DIMENSIONS = (2, 3, 4)
 
 REBIND_CONFLICT_REPLACE = "replace"
@@ -47,8 +37,57 @@ REBIND_CONFLICT_OPTIONS = (
     REBIND_CONFLICT_CANCEL,
 )
 
+def _load_defaults_payload() -> dict:
+    path = engine_api.keybindings_defaults_path_runtime()
+    raw = path.read_text(encoding="utf-8")
+    data = json.loads(raw)
+    if not isinstance(data, dict):
+        raise ValueError("keybindings defaults config must be a JSON object")
+    return data
+
+
+_DEFAULTS = _load_defaults_payload()
+_PROFILE_MAP = _DEFAULTS.get("profiles", {})
+PROFILE_SMALL = "small"
+PROFILE_FULL = "full"
+PROFILE_MACBOOK = "macbook"
+_PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+
+def _bindings_for(profile: str, section: str, dim_key: str | None = None) -> KeyBindingMap:
+    profile_payload = _PROFILE_MAP.get(profile, {})
+    section_payload = profile_payload.get(section, {})
+    if dim_key is not None:
+        section_payload = section_payload.get(dim_key, {})
+    if not isinstance(section_payload, dict):
+        return {}
+    return {action: tuple(int(k) for k in keys) for action, keys in section_payload.items()}
+
+
+def default_game_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+    return (
+        _bindings_for(profile, "game", "d2"),
+        _bindings_for(profile, "game", "d3"),
+        _bindings_for(profile, "game", "d4"),
+    )
+
+
+def default_camera_bindings_for_profile(profile: str) -> tuple[KeyBindingMap, KeyBindingMap]:
+    return (
+        _bindings_for(profile, "camera", "d3"),
+        _bindings_for(profile, "camera", "d4"),
+    )
+
+
+def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
+    return _bindings_for(profile, "system")
+
+
+DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
+
+
 # Backward-compatible export for existing callers.
-DISABLED_KEYS_2D = _DISABLED_KEYS_2D
+DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
 
 KEYBINDINGS_DIR = engine_api.keybindings_dir_path_runtime()
 KEYBINDINGS_PROFILES_DIR = engine_api.keybindings_profiles_dir_path_runtime()
