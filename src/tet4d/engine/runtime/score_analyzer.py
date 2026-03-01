@@ -35,7 +35,7 @@ def new_analysis_session_id() -> str:
 _DEFAULT_CONFIG_PATH = _CONFIG_PATH
 
 
-def _default_config_payload() -> dict[str, Any]:
+def _default_config() -> dict[str, Any]:
     try:
         raw = _DEFAULT_CONFIG_PATH.read_text(encoding="utf-8")
         loaded = json.loads(raw)

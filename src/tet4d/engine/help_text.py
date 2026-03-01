@@ -11,6 +11,7 @@ from .runtime.project_config import project_root_path
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"
 HELP_CONTENT_FILE = HELP_CONFIG_DIR / "content" / "runtime_help_content.json"
 HELP_LAYOUT_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_layout.json"
+HELP_ACTION_GROUPS_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_action_layout.json"
 
 
 class HelpTextValidationError(RuntimeError):
@@ -257,6 +258,14 @@ def _validate_layout_payload(payload: dict[str, Any]) -> dict[str, Any]:
         payload.get("footer_hints"),
         path="help_layout.footer_hints",
     )
+    action_groups_raw = payload.get("action_groups")
+    action_groups: dict[str, tuple[str, ...]] | None = None
+    if action_groups_raw is not None:
+        action_groups_obj = _require_object(action_groups_raw, path="help_layout.action_groups")
+        action_groups = {}
+        for key in ("runtime_order", "live_order"):
+            ids = _require_list(action_groups_obj.get(key), path=f"help_layout.action_groups.{key}")
+            action_groups[key] = tuple(_require_string(v, path=f"help_layout.action_groups.{key}") for v in ids)
 
     return {
         "version": _require_int(
@@ -433,6 +442,7 @@ def _validate_layout_payload(payload: dict[str, Any]) -> dict[str, Any]:
                 non_empty=True,
             ),
         },
+        "action_groups": action_groups,
         "topic_media_placement": _validate_media_placement(
             payload.get("topic_media_placement")
         ),
