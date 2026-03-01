@@ -73,6 +73,7 @@
       "config/help/content/runtime_help_content.json",
       "config/help/layout/runtime_help_layout.json",
       "config/gameplay/tuning.json",
+      "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",
       "config/playbot/policy.json",
       "config/audio/sfx.json",
