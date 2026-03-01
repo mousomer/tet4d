@@ -141,21 +141,26 @@ def _game_seed_default() -> int:
     return int(engine_api.default_game_seed_runtime())
 
 
-def _random_mode_default() -> int:
+def _default_mode_2d_settings() -> dict:
     defaults = engine_api.default_settings_payload_runtime().get("settings", {})
     if isinstance(defaults, dict):
         mode_2d = defaults.get("2d")
         if isinstance(mode_2d, dict):
-            return _clamp_toggle_index(mode_2d.get("random_mode_index"), default=0)
+            return mode_2d
+    return {}
+
+
+def _random_mode_default() -> int:
+    mode_2d = _default_mode_2d_settings()
+    if mode_2d:
+        return _clamp_toggle_index(mode_2d.get("random_mode_index"), default=0)
     return 0
 
 
 def _topology_advanced_default() -> int:
-    defaults = engine_api.default_settings_payload_runtime().get("settings", {})
-    if isinstance(defaults, dict):
-        mode_2d = defaults.get("2d")
-        if isinstance(mode_2d, dict):
-            return _clamp_toggle_index(mode_2d.get("topology_advanced"), default=0)
+    mode_2d = _default_mode_2d_settings()
+    if mode_2d:
+        return _clamp_toggle_index(mode_2d.get("topology_advanced"), default=0)
     return 0
 
 
@@ -184,11 +189,16 @@ def _load_game_seed_setting() -> int:
     )
 
 
-def _load_random_mode_setting() -> int:
+def _menu_mode_2d_settings() -> dict:
     payload = engine_api.load_menu_payload_runtime()
     settings = payload.get("settings", {}) if isinstance(payload, dict) else {}
     mode_2d = settings.get("2d") if isinstance(settings, dict) else None
-    if isinstance(mode_2d, dict):
+    return mode_2d if isinstance(mode_2d, dict) else {}
+
+
+def _load_random_mode_setting() -> int:
+    mode_2d = _menu_mode_2d_settings()
+    if mode_2d:
         return _clamp_toggle_index(
             mode_2d.get("random_mode_index"),
             default=_random_mode_default(),
@@ -197,10 +207,8 @@ def _load_random_mode_setting() -> int:
 
 
 def _load_topology_advanced_setting() -> int:
-    payload = engine_api.load_menu_payload_runtime()
-    settings = payload.get("settings", {}) if isinstance(payload, dict) else {}
-    mode_2d = settings.get("2d") if isinstance(settings, dict) else None
-    if isinstance(mode_2d, dict):
+    mode_2d = _menu_mode_2d_settings()
+    if mode_2d:
         return _clamp_toggle_index(
             mode_2d.get("topology_advanced"),
             default=_topology_advanced_default(),
