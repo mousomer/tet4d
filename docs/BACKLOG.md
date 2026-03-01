@@ -808,6 +808,7 @@ Current sub-batch (2026-03-01): policy expansion + metrics refresh.
 - Reinforced verification default to quiet mode (AGENTS.md governance rule).
 - Metrics refresh: `tech_debt.score` now reported on strict 24.x scale; current score `24.21` (baseline 24.21) with delivery-size pressure as the leading non-backlog contributor.
 - Externalized 3D/4D piece-set definitions to `config/gameplay/piece_sets_nd.json` and load them in `pieces_nd.py` to cut Python LOC while keeping gameplay behavior unchanged.
+- Externalized keybinding defaults to `config/keybindings/defaults.json` and load via `keybindings.py`; added help action-group layout config `config/help/layout/runtime_help_action_layout.json`.
 
 Prior sub-batch (2026-02-27): runtime schema extraction + wrapper-prune checkpoint.
 

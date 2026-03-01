@@ -1,17 +1,17 @@
 {
-  version: 1,
-  action_groups: {
-    runtime_order: [
-      system,
-      game,
-      camera
+  "version": 1,
+  "action_groups": {
+    "runtime_order": [
+      "system",
+      "game",
+      "camera"
     ],
-    live_order: [
-      system,
-      game_translation,
-      game_rotation,
-      game_other,
-      camera
+    "live_order": [
+      "system",
+      "game_translation",
+      "game_rotation",
+      "game_other",
+      "camera"
     ]
   }
 }
