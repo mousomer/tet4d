@@ -12,3 +12,4 @@ Rationale: keeping ownership and licensing simple during beta enables future com
 - [No Reinventing the Wheel](docs/policies/POLICY_NO_REINVENTING_WHEEL.md)
 - [String Sanitization](docs/policies/POLICY_STRING_SANITATION.md)
 - [No Magic Numbers](docs/policies/POLICY_NO_MAGIC_NUMBERS.md)
+- [Formatting and Line Length](docs/policies/POLICY_FORMATTING.md)

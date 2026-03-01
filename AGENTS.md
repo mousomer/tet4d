@@ -23,6 +23,8 @@ For any restructuring/update:
 8. Do not reinvent the wheel: prefer existing repo helpers/functions/APIs before adding new implementation code.
 9. Do not hardcode magic numbers in Python code; prefer non-Python config-backed constants (for example `config/*` + runtime/config accessors) unless externalizing the value would add disproportionate complexity.
 10. Sanitize external or user-controlled string inputs via runtime sanitization helpers before use.
+11. Track LOC delta for every change and, unless delivering a new feature, prefer changes that reduce LOC; follow the formatting/line-length policy across all scripts and text files.
+12. Default test/verify runs should use quiet mode; enable verbose output only when diagnosing errors or flakes.
 
 ## Verification contract
 Run:
