@@ -23,8 +23,19 @@ MUTED_COLOR = (192, 200, 228)
 _SETTINGS_OPTION_LABELS = engine_api.settings_option_labels_runtime()
 _RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
 _SETTINGS_HUB_COPY = engine_api.ui_copy_section_runtime("settings_hub")
-_LINES_PER_LEVEL_MIN = 1
-_LINES_PER_LEVEL_MAX = 50
+_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS = (
+    engine_api.gameplay_default_mode_shared_settings_runtime("2d")
+)
+_RANDOM_MODE_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["random_mode_index"])
+_TOPOLOGY_ADVANCED_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["topology_advanced"]
+)
+_AUTO_SPEEDUP_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["auto_speedup_enabled"]
+)
+_LINES_PER_LEVEL_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["lines_per_level"]
+)
 _NUMERIC_TEXT_EDIT_ROWS = {
     "display_width",
     "display_height",
@@ -155,55 +166,8 @@ def _game_seed_default() -> int:
     return int(engine_api.default_game_seed_runtime())
 
 
-def _default_mode_2d_settings() -> dict:
-    defaults = engine_api.default_settings_payload_runtime().get("settings", {})
-    if isinstance(defaults, dict):
-        mode_2d = defaults.get("2d")
-        if isinstance(mode_2d, dict):
-            return mode_2d
-    return {}
-
-
-def _random_mode_default() -> int:
-    mode_2d = _default_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(mode_2d.get("random_mode_index"), default=0)
-    return 0
-
-
-def _topology_advanced_default() -> int:
-    mode_2d = _default_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(mode_2d.get("topology_advanced"), default=0)
-    return 0
-
-
-def _auto_speedup_default() -> int:
-    mode_2d = _default_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(mode_2d.get("auto_speedup_enabled"), default=1)
-    return 1
-
-
-def _clamp_lines_per_level(value: object, *, default: int) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        numeric = int(default)
-    else:
-        numeric = int(value)
-    return max(_LINES_PER_LEVEL_MIN, min(_LINES_PER_LEVEL_MAX, numeric))
-
-
-def _lines_per_level_default() -> int:
-    mode_2d = _default_mode_2d_settings()
-    if mode_2d:
-        return _clamp_lines_per_level(mode_2d.get("lines_per_level"), default=10)
-    return 10
-
-
-def _clamp_toggle_index(value: object, *, default: int) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        return default
-    return 0 if int(value) <= 0 else 1
+def _runtime_mode_shared_gameplay_settings() -> dict[str, int]:
+    return engine_api.gameplay_mode_shared_settings_runtime("2d")
 
 
 def _load_overlay_transparency_setting() -> float:
@@ -225,51 +189,8 @@ def _load_game_seed_setting() -> int:
     )
 
 
-def _menu_mode_2d_settings() -> dict:
-    payload = engine_api.load_menu_payload_runtime()
-    settings = payload.get("settings", {}) if isinstance(payload, dict) else {}
-    mode_2d = settings.get("2d") if isinstance(settings, dict) else None
-    return mode_2d if isinstance(mode_2d, dict) else {}
-
-
-def _load_random_mode_setting() -> int:
-    mode_2d = _menu_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(
-            mode_2d.get("random_mode_index"),
-            default=_random_mode_default(),
-        )
-    return _random_mode_default()
-
-
-def _load_topology_advanced_setting() -> int:
-    mode_2d = _menu_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(
-            mode_2d.get("topology_advanced"),
-            default=_topology_advanced_default(),
-        )
-    return _topology_advanced_default()
-
-
-def _load_auto_speedup_setting() -> int:
-    mode_2d = _menu_mode_2d_settings()
-    if mode_2d:
-        return _clamp_toggle_index(
-            mode_2d.get("auto_speedup_enabled"),
-            default=_auto_speedup_default(),
-        )
-    return _auto_speedup_default()
-
-
-def _load_lines_per_level_setting() -> int:
-    mode_2d = _menu_mode_2d_settings()
-    if mode_2d:
-        return _clamp_lines_per_level(
-            mode_2d.get("lines_per_level"),
-            default=_lines_per_level_default(),
-        )
-    return _lines_per_level_default()
+def _load_mode_shared_gameplay_settings() -> dict[str, int]:
+    return _runtime_mode_shared_gameplay_settings()
 
 
 def _save_shared_gameplay_settings(
@@ -278,35 +199,12 @@ def _save_shared_gameplay_settings(
     auto_speedup_enabled: int,
     lines_per_level: int,
 ) -> tuple[bool, str]:
-    payload = engine_api.load_menu_payload_runtime()
-    if not isinstance(payload, dict):
-        payload = {}
-    settings = payload.get("settings")
-    if not isinstance(settings, dict):
-        settings = {}
-        payload["settings"] = settings
-    for mode_key in ("2d", "3d", "4d"):
-        mode_settings = settings.get(mode_key)
-        if not isinstance(mode_settings, dict):
-            mode_settings = {}
-            settings[mode_key] = mode_settings
-        mode_settings["random_mode_index"] = _clamp_toggle_index(
-            random_mode_index,
-            default=_random_mode_default(),
-        )
-        mode_settings["topology_advanced"] = _clamp_toggle_index(
-            topology_advanced,
-            default=_topology_advanced_default(),
-        )
-        mode_settings["auto_speedup_enabled"] = _clamp_toggle_index(
-            auto_speedup_enabled,
-            default=_auto_speedup_default(),
-        )
-        mode_settings["lines_per_level"] = _clamp_lines_per_level(
-            lines_per_level,
-            default=_lines_per_level_default(),
-        )
-    return engine_api.save_menu_payload_runtime(payload)
+    return engine_api.gameplay_save_shared_settings_runtime(
+        random_mode_index=int(random_mode_index),
+        topology_advanced=int(topology_advanced),
+        auto_speedup_enabled=int(auto_speedup_enabled),
+        lines_per_level=int(lines_per_level),
+    )
 
 
 def _load_score_logging_setting() -> bool:
@@ -522,10 +420,10 @@ def _reset_unified_settings(
     state.display_settings = _display_defaults()
     state.overlay_transparency = _overlay_transparency_default()
     state.game_seed = _game_seed_default()
-    state.random_mode_index = _random_mode_default()
-    state.topology_advanced = _topology_advanced_default()
-    state.auto_speedup_enabled = _auto_speedup_default()
-    state.lines_per_level = _lines_per_level_default()
+    state.random_mode_index = _RANDOM_MODE_DEFAULT
+    state.topology_advanced = _TOPOLOGY_ADVANCED_DEFAULT
+    state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
+    state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
@@ -707,9 +605,9 @@ def _adjust_advanced_gameplay_value(
     if row_key == "lines_per_level":
         if delta_sign == 0:
             return False
-        state.lines_per_level = _clamp_lines_per_level(
+        state.lines_per_level = engine_api.clamp_lines_per_level_runtime(
             int(state.lines_per_level) + int(delta_sign),
-            default=_lines_per_level_default(),
+            default=_LINES_PER_LEVEL_DEFAULT,
         )
         return True
     return False
@@ -1103,10 +1001,11 @@ def run_settings_hub_menu(
     score_logging_enabled = _load_score_logging_setting()
     overlay_transparency = _load_overlay_transparency_setting()
     game_seed = _load_game_seed_setting()
-    random_mode_index = _load_random_mode_setting()
-    topology_advanced = _load_topology_advanced_setting()
-    auto_speedup_enabled = _load_auto_speedup_setting()
-    lines_per_level = _load_lines_per_level_setting()
+    mode_gameplay = _load_mode_shared_gameplay_settings()
+    random_mode_index = int(mode_gameplay["random_mode_index"])
+    topology_advanced = int(mode_gameplay["topology_advanced"])
+    auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
+    lines_per_level = int(mode_gameplay["lines_per_level"])
     state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),

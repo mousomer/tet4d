@@ -460,6 +460,33 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertTrue(ok, msg)
         self.assertEqual(menu_settings_state.get_global_game_seed(), 999_999_999)
 
+    def test_mode_speedup_settings_are_loaded_with_defaults(self) -> None:
+        settings = menu_settings_state.mode_shared_gameplay_settings("2d")
+        self.assertIn("auto_speedup_enabled", settings)
+        self.assertIn("lines_per_level", settings)
+        self.assertIn("random_mode_index", settings)
+        self.assertIn("topology_advanced", settings)
+        self.assertIn(settings["auto_speedup_enabled"], (0, 1))
+        self.assertIn(settings["random_mode_index"], (0, 1))
+        self.assertIn(settings["topology_advanced"], (0, 1))
+        self.assertGreaterEqual(settings["lines_per_level"], 1)
+
+    def test_save_shared_gameplay_settings_updates_all_modes(self) -> None:
+        ok, msg = menu_settings_state.save_shared_gameplay_settings(
+            random_mode_index=1,
+            topology_advanced=1,
+            auto_speedup_enabled=0,
+            lines_per_level=17,
+        )
+        self.assertTrue(ok, msg)
+        payload = menu_settings_state.load_app_settings_payload()
+        for mode_key in ("2d", "3d", "4d"):
+            mode_settings = payload["settings"][mode_key]
+            self.assertEqual(mode_settings["random_mode_index"], 1)
+            self.assertEqual(mode_settings["topology_advanced"], 1)
+            self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
+            self.assertEqual(mode_settings["lines_per_level"], 17)
+
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()
         payload["active_profile"] = "../bad profile"
@@ -484,8 +511,10 @@ class TestMenuSettingsPersistence(unittest.TestCase):
 
     def test_settings_schema_clamp_helpers(self) -> None:
         from tet4d.engine.runtime.settings_schema import (
+            clamp_lines_per_level,
             clamp_game_seed,
             clamp_overlay_transparency,
+            clamp_toggle_index,
             sanitize_text,
         )
 
@@ -493,6 +522,10 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(clamp_overlay_transparency(1.0, default=0.25), 0.85)
         self.assertEqual(clamp_game_seed(-1, default=1337), 0)
         self.assertEqual(clamp_game_seed(2_000_000_000, default=1337), 999_999_999)
+        self.assertEqual(clamp_toggle_index(True, default=0), 1)
+        self.assertEqual(clamp_toggle_index(-1, default=1), 0)
+        self.assertEqual(clamp_lines_per_level(-9, default=10), 1)
+        self.assertEqual(clamp_lines_per_level(999, default=10), 50)
         self.assertEqual(
             sanitize_text("ok\x00bad\nsafe", max_length=32),
             "okbadsafe",

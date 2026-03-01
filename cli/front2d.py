@@ -85,8 +85,11 @@ from tet4d.engine.api import (
     bot_planner_algorithm_from_index,
     bot_mode_from_index,
     bot_planner_profile_from_index,
+    clamp_lines_per_level_runtime,
+    clamp_toggle_index_runtime,
     compute_speed_level_runtime,
-    load_menu_payload_runtime,
+    gameplay_default_mode_shared_settings_runtime,
+    gameplay_mode_speedup_settings_runtime,
     runtime_assist_combined_score_multiplier,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
@@ -113,12 +116,9 @@ _RANDOM_MODE_CHOICES = (
 )
 _RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
-_AUTO_SPEEDUP_ENABLED_DEFAULT = 1 if int(
-    _DEFAULT_MODE_2D.get("auto_speedup_enabled", 1)
-) else 0
-_LINES_PER_LEVEL_DEFAULT = int(_DEFAULT_MODE_2D.get("lines_per_level", 10))
-_LINES_PER_LEVEL_MIN = 1
-_LINES_PER_LEVEL_MAX = 50
+_MODE_GAMEPLAY_DEFAULTS = gameplay_default_mode_shared_settings_runtime("2d")
+_AUTO_SPEEDUP_ENABLED_DEFAULT = int(_MODE_GAMEPLAY_DEFAULTS["auto_speedup_enabled"])
+_LINES_PER_LEVEL_DEFAULT = int(_MODE_GAMEPLAY_DEFAULTS["lines_per_level"])
 
 
 # ---------- Menu state & actions (logic, not drawing) ----------
@@ -211,32 +211,8 @@ def _random_mode_label(index: int) -> str:
     return _RANDOM_MODE_LABELS[safe_index]
 
 
-def _clamp_auto_speedup_enabled(value: object) -> int:
-    if isinstance(value, bool):
-        return 1 if value else 0
-    if isinstance(value, int):
-        return 1 if value > 0 else 0
-    return _AUTO_SPEEDUP_ENABLED_DEFAULT
-
-
-def _clamp_lines_per_level(value: object) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        numeric = _LINES_PER_LEVEL_DEFAULT
-    else:
-        numeric = int(value)
-    return max(_LINES_PER_LEVEL_MIN, min(_LINES_PER_LEVEL_MAX, numeric))
-
-
 def _load_speedup_settings_for_mode(mode_key: str) -> tuple[int, int]:
-    payload = load_menu_payload_runtime()
-    settings = payload.get("settings") if isinstance(payload, dict) else None
-    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
-    if not isinstance(mode_settings, dict):
-        return _AUTO_SPEEDUP_ENABLED_DEFAULT, _LINES_PER_LEVEL_DEFAULT
-    return (
-        _clamp_auto_speedup_enabled(mode_settings.get("auto_speedup_enabled")),
-        _clamp_lines_per_level(mode_settings.get("lines_per_level")),
-    )
+    return gameplay_mode_speedup_settings_runtime(mode_key)
 
 
 def _menu_value_formatter(attr_name: str, value: object) -> str:
@@ -560,8 +536,14 @@ class LoopContext2D:
             was_game_over=state.game_over,
             base_speed_level=int(cfg.speed_level),
             bot_speed_level=int(bot_speed_level),
-            auto_speedup_enabled=_clamp_auto_speedup_enabled(auto_speedup_enabled),
-            lines_per_level=_clamp_lines_per_level(lines_per_level),
+            auto_speedup_enabled=clamp_toggle_index_runtime(
+                auto_speedup_enabled,
+                default=_AUTO_SPEEDUP_ENABLED_DEFAULT,
+            ),
+            lines_per_level=clamp_lines_per_level_runtime(
+                lines_per_level,
+                default=_LINES_PER_LEVEL_DEFAULT,
+            ),
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:

@@ -30,7 +30,6 @@ Historical anchor references:
 
 1. `[BKL-P2-023]` Topology designer remains preset-file/export only; no interactive Topology Lab editor workflow.
 2. `[BKL-P2-024]` Playbot lacks learning mode; current architecture supports heuristics/profiles but not an adaptive learning loop.
-3. `[BKL-P2-027]` Large module decomposition debt remains in engine/runtime/ui hotspots, increasing maintenance cost and slowing staged refactors.
 4. Canonical machine-readable debt source:
    `config/project/backlog_debt.json` (`active_debt_items`).
 5. `TODO` Context router adoption: integrate `config/project/policy/manifests/context_router_manifest.json` into Codex tooling, surface in contributor docs, and add a verification hook if needed.
@@ -59,6 +58,10 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 3. `WATCH` `[BKL-P3-006]` Desktop release hardening watch:
    cadence remains before each public release and is tracked through
    release-packaging workflow + release checklist/installers docs.
+4. `WATCH` `[BKL-P3-007]` Module decomposition watch:
+   large engine/runtime/ui module split pressure moved from active debt to watch
+   after shared-settings and API dedup passes; monitor hotspot growth and
+   continue staged LOC reduction.
 
 ## 4. Gap Mapping to RDS
 
@@ -68,6 +71,29 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 4. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: lifecycle/adaptive-fetch design baseline exists; implementation remains future-scoped.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-01): stage 814+ shared gameplay-settings dedup + API dispatch cleanup.
+
+- Consolidated shared gameplay settings load/save/clamp logic into runtime state layer:
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+  - `src/tet4d/engine/runtime/settings_schema.py`
+- Added engine API runtime adapters for shared gameplay settings access:
+  - `src/tet4d/engine/api.py`
+- Rewired runtime consumers to use shared helpers (removed duplicate speedup parsing/clamps):
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- Added regression coverage for shared gameplay settings persistence/clamp behavior:
+  - `tests/unit/engine/test_keybindings.py`
+- Backlog reprioritization:
+  - moved decomposition pressure from active debt (`BKL-P2-027`) to operational
+    watch (`BKL-P3-007`) in `config/project/backlog_debt.json` after this dedup
+    tranche.
+- Verification:
+  - targeted suites passed (`test_keybindings.py`, `test_menu_policy.py`,
+    `test_front3d_setup.py`, `test_pause_menu.py`,
+    `test_display_resize_persistence.py`, `tests/test_leveling.py`)
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 Current sub-batch (2026-03-01): pause hotkey parity + deterministic auto speed-up controls.
 

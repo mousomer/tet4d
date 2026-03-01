@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `812` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `826` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,11 +23,11 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 7.04` (`low`, below current baseline 15.06)
+- `tech_debt.score = 5.17` (`low`, below current baseline 15.06)
   - weighted components (current dominant drivers):
-    - backlog priority pressure: `6.04` (active backlog is currently P2-only: `BKL-P2-023/024/027`)
+    - backlog priority pressure: `4.03` (active backlog now `BKL-P2-023/024`; decomposition moved to watch)
     - backlog bug pressure: `0.0` (active backlog items currently contain no bug/regression-class issue titles)
-    - delivery-size pressure: `0.88` (164 Python files, 30,517 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
+    - delivery-size pressure: `0.90` (167 Python files, 31,331 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
     - code-balance pressure: `0.24` (gate-eligible leaf avg 0.98, runtime leaf watch)
     - menu/keybinding retention pressures: `0.0` (goals met)
   - active gate policy (`non_regression_baseline`, `score_epsilon=0.03`):
@@ -67,7 +67,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ### Balance Assessment
 
-- Gate-eligible leafs remain non-regressed (runtime leaf fuzzy `0.82 / watch`, tests leaf `1.0 / balanced`).
+- Gate-eligible leafs remain non-regressed (runtime leaf fuzzy `0.79 / watch`, tests leaf `1.0 / balanced`).
 - `engine` top-level and subpackages are healthy; runtime is the primary code-balance watch area.
 - `ui/pygame` leaf packages stay balanced after prior relocations; remaining hotspot is logical size, not folder shape.
 - `replay` remains `micro_feature_leaf` and balanced.
@@ -213,6 +213,38 @@ Verification checkpoint:
 - `python scripts/arch_metrics.py` reports non-regressed gates and
   lower debt score (`9.81 -> 7.04`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed for the post-stage-812 checkpoint.
+
+## Recent Batch Status (Stages 813-826)
+
+Completed:
+- Added deterministic gameplay speed-up and scoring support plus restart
+  stabilization coverage in the stage-813 commit/tag checkpoint.
+- Consolidated shared gameplay settings access (random mode, topology advanced,
+  auto speed-up, lines-per-level) into runtime state/config helpers:
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+  - `src/tet4d/engine/runtime/settings_schema.py`
+- Rewired runtime consumers to shared helpers and removed duplicated speedup
+  parsing/clamping paths:
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- Reduced dynamic dispatch duplication in `src/tet4d/engine/api.py` via generic
+  module call/get helpers and centralized partial dispatchers.
+- Extended regression coverage:
+  - `tests/unit/engine/test_keybindings.py`
+  - `tests/unit/engine/test_pause_menu.py`
+  - `tests/unit/engine/test_display_resize_persistence.py`
+- Reprioritized decomposition debt from active P2 backlog to operational watch:
+  - removed `BKL-P2-027` from active debt list
+  - added watch item `BKL-P3-007` in `config/project/backlog_debt.json`.
+- Advanced stage metadata:
+  - `scripts/arch_metrics.py` (`ARCH_STAGE=826`)
+  - `config/project/policy/manifests/architecture_metrics.json` (`arch_stage=826`)
+
+Verification checkpoint:
+- targeted suites passed (71 tests in focused batch).
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `python scripts/arch_metrics.py` passed with lower debt score (`7.18 -> 5.17`).
 
 ## Open Issues / Operational Notes
 

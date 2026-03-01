@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import random
+from functools import partial
+from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -622,6 +624,26 @@ def clamp_game_seed_runtime(value: Any, *, default: int | None = None) -> int:
     )
 
 
+def clamp_toggle_index_runtime(value: Any, *, default: int = 0) -> int:
+    return int(
+        _call_runtime_settings_schema(
+            "clamp_toggle_index",
+            value,
+            default=int(default),
+        )
+    )
+
+
+def clamp_lines_per_level_runtime(value: Any, *, default: int = 10) -> int:
+    return int(
+        _call_runtime_settings_schema(
+            "clamp_lines_per_level",
+            value,
+            default=int(default),
+        )
+    )
+
+
 def sanitize_text_runtime(value: Any, *, max_length: int = 256) -> str:
     return str(
         _call_runtime_settings_schema(
@@ -640,34 +662,115 @@ def save_global_game_seed_runtime(seed: int):
     return _call_runtime_menu_settings_state("save_global_game_seed", seed)
 
 
-def _call_frontend_nd(name: str, *args: Any, **kwargs: Any) -> Any:
-    from . import frontend_nd as _frontend_nd
-
-    return getattr(_frontend_nd, name)(*args, **kwargs)
-
-
-def _get_frontend_nd_attr(name: str) -> Any:
-    from . import frontend_nd as _frontend_nd
-
-    return getattr(_frontend_nd, name)
+def gameplay_default_mode_shared_settings_runtime(mode_key: str) -> dict[str, int]:
+    return _call_runtime_menu_settings_state(
+        "default_mode_shared_gameplay_settings",
+        mode_key,
+    )
 
 
-def _call_ui_front3d_game(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame import front3d_game as _front3d_game
-
-    return getattr(_front3d_game, name)(*args, **kwargs)
-
-
-def _call_ui_front4d_game(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame import front4d_game as _front4d_game
-
-    return getattr(_front4d_game, name)(*args, **kwargs)
+def gameplay_mode_shared_settings_runtime(mode_key: str) -> dict[str, int]:
+    return _call_runtime_menu_settings_state(
+        "mode_shared_gameplay_settings",
+        mode_key,
+    )
 
 
-def _get_ui_front4d_game_attr(name: str) -> Any:
-    from tet4d.ui.pygame import front4d_game as _front4d_game
+def gameplay_mode_speedup_settings_runtime(mode_key: str) -> tuple[int, int]:
+    return _call_runtime_menu_settings_state("mode_speedup_settings", mode_key)
 
-    return getattr(_front4d_game, name)
+
+def gameplay_save_shared_settings_runtime(
+    *,
+    random_mode_index: int,
+    topology_advanced: int,
+    auto_speedup_enabled: int,
+    lines_per_level: int,
+) -> tuple[bool, str]:
+    return _call_runtime_menu_settings_state(
+        "save_shared_gameplay_settings",
+        random_mode_index=int(random_mode_index),
+        topology_advanced=int(topology_advanced),
+        auto_speedup_enabled=int(auto_speedup_enabled),
+        lines_per_level=int(lines_per_level),
+    )
+
+
+def _call_module_attr(
+    module_path: str,
+    name: str,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    return getattr(import_module(module_path), name)(*args, **kwargs)
+
+
+def _get_module_attr(module_path: str, name: str) -> Any:
+    return getattr(import_module(module_path), name)
+
+
+def _call_or_get_module_attr(
+    module_path: str,
+    name: str,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    attr = _get_module_attr(module_path, name)
+    if callable(attr):
+        return attr(*args, **kwargs)
+    if args or kwargs:
+        raise TypeError(f"{name} is not callable")
+    return attr
+
+
+_call_frontend_nd = partial(_call_module_attr, "tet4d.engine.frontend_nd")
+_get_frontend_nd_attr = partial(_get_module_attr, "tet4d.engine.frontend_nd")
+_call_ui_front3d_game = partial(_call_module_attr, "tet4d.ui.pygame.front3d_game")
+_call_ui_front4d_game = partial(_call_module_attr, "tet4d.ui.pygame.front4d_game")
+_get_ui_front4d_game_attr = partial(_get_module_attr, "tet4d.ui.pygame.front4d_game")
+_call_ui_key_display = partial(_call_module_attr, "tet4d.ui.pygame.input.key_display")
+_call_ui_logic_keybindings_catalog = partial(
+    _call_module_attr,
+    "tet4d.engine.ui_logic.keybindings_catalog",
+)
+_call_runtime_runtime_config = partial(
+    _call_module_attr,
+    "tet4d.engine.runtime.runtime_config",
+)
+_call_ui_keybindings = partial(_call_module_attr, "tet4d.ui.pygame.keybindings")
+_call_ui_keybindings_menu_model = partial(
+    _call_or_get_module_attr,
+    "tet4d.ui.pygame.menu.keybindings_menu_model",
+)
+_call_ui_keybindings_menu_shortcuts = partial(
+    _call_module_attr,
+    "tet4d.ui.pygame.menu.menu_keybinding_shortcuts",
+)
+_call_runtime_menu_config = partial(_call_module_attr, "tet4d.engine.runtime.menu_config")
+_call_runtime_project_config = partial(
+    _call_module_attr,
+    "tet4d.engine.runtime.project_config",
+)
+_call_runtime_settings_schema = partial(
+    _call_module_attr,
+    "tet4d.engine.runtime.settings_schema",
+)
+_call_runtime_menu_settings_state = partial(
+    _call_or_get_module_attr,
+    "tet4d.engine.runtime.menu_settings_state",
+)
+_call_runtime_help_topics = partial(_call_module_attr, "tet4d.engine.runtime.help_topics")
+_call_help_text = partial(_call_module_attr, "tet4d.engine.help_text")
+_call_gameplay_pieces2d = partial(_call_module_attr, "tet4d.engine.gameplay.pieces2d")
+_call_gameplay_pieces_nd = partial(
+    _call_module_attr,
+    "tet4d.engine.gameplay.pieces_nd",
+)
+_call_gameplay_leveling = partial(_call_module_attr, "tet4d.engine.gameplay.leveling")
+_call_front4d_render = partial(_call_module_attr, "tet4d.engine.front4d_render")
+_get_front4d_render_attr = partial(_get_module_attr, "tet4d.engine.front4d_render")
+_call_front3d_render = partial(_call_module_attr, "tet4d.engine.front3d_render")
+_get_front3d_render_attr = partial(_get_module_attr, "tet4d.engine.front3d_render")
 
 
 def front3d_setup_game_settings_type() -> Any:
@@ -738,24 +841,6 @@ def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
     return _map_overlay_cells(*args, **kwargs)
 
 
-def _call_ui_key_display(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame.input import key_display as _key_display
-
-    return getattr(_key_display, name)(*args, **kwargs)
-
-
-def _call_ui_logic_keybindings_catalog(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .ui_logic import keybindings_catalog as _keybindings_catalog
-
-    return getattr(_keybindings_catalog, name)(*args, **kwargs)
-
-
-def _call_runtime_runtime_config(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import runtime_config as _runtime_config
-
-    return getattr(_runtime_config, name)(*args, **kwargs)
-
-
 def format_key_tuple(keys):
     return _call_ui_key_display("format_key_tuple", keys)
 
@@ -780,112 +865,47 @@ def binding_group_description(group: str) -> str:
     return _call_ui_logic_keybindings_catalog("binding_group_description", group)
 
 
-def _call_ui_keybindings(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame import keybindings as _keybindings
-
-    return getattr(_keybindings, name)(*args, **kwargs)
-
-
-def _call_ui_keybindings_menu_model(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame.menu import keybindings_menu_model as _menu_model
-
-    attr = getattr(_menu_model, name)
-    if callable(attr):
-        return attr(*args, **kwargs)
-    if args or kwargs:
-        raise TypeError(f"{name} is not callable")
-    return attr
-
-
-def _call_ui_keybindings_menu_shortcuts(name: str, *args: Any, **kwargs: Any) -> Any:
-    from tet4d.ui.pygame.menu import menu_keybinding_shortcuts as _shortcuts
-
-    return getattr(_shortcuts, name)(*args, **kwargs)
-
-
 def keybindings_rebind_conflict_replace() -> str:
     from tet4d.ui.pygame import keybindings as _keybindings
 
     return _keybindings.REBIND_CONFLICT_REPLACE
 
 
-def keybindings_active_key_profile() -> str:
-    return _call_ui_keybindings("active_key_profile")
+def _proxy_ui_keybindings(method_name: str):
+    def _dispatch(*args: Any, **kwargs: Any) -> Any:
+        return _call_ui_keybindings(method_name, *args, **kwargs)
+
+    return _dispatch
 
 
-def keybindings_clone_key_profile(
-    profile_name: str, *, source_profile: str | None = None
-) -> tuple[bool, str]:
-    return _call_ui_keybindings(
-        "clone_key_profile",
-        profile_name,
-        source_profile=source_profile,
-    )
-
-
-def keybindings_cycle_key_profile(step: int) -> tuple[bool, str, str]:
-    return _call_ui_keybindings("cycle_key_profile", step)
-
-
-def keybindings_cycle_rebind_conflict_mode(mode: str, step: int) -> str:
-    return _call_ui_keybindings("cycle_rebind_conflict_mode", mode, step)
-
-
-def keybindings_normalize_rebind_conflict_mode(mode: str | None) -> str:
-    return _call_ui_keybindings("normalize_rebind_conflict_mode", mode)
-
-
-def keybindings_delete_key_profile(profile_name: str) -> tuple[bool, str]:
-    return _call_ui_keybindings("delete_key_profile", profile_name)
-
-
-def keybindings_create_auto_profile() -> tuple[bool, str, str | None]:
-    return _call_ui_keybindings("create_auto_profile")
-
-
-def keybindings_load_active_profile_bindings() -> tuple[bool, str]:
-    return _call_ui_keybindings("load_active_profile_bindings")
-
-
-def keybindings_load_keybindings_file(dimension: int) -> tuple[bool, str]:
-    return _call_ui_keybindings("load_keybindings_file", dimension)
-
-
-def keybindings_next_auto_profile_name(prefix: str = "custom") -> str:
-    return _call_ui_keybindings("next_auto_profile_name", prefix)
-
-
-def keybindings_rebind_action_key(
-    dimension: int,
-    group: str,
-    action: str,
-    key: int,
-    *,
-    conflict_mode: str,
-) -> tuple[bool, str]:
-    return _call_ui_keybindings(
-        "rebind_action_key", dimension, group, action, key, conflict_mode=conflict_mode
-    )
-
-
-def keybindings_rename_key_profile(old_name: str, new_name: str) -> tuple[bool, str]:
-    return _call_ui_keybindings("rename_key_profile", old_name, new_name)
-
-
-def keybindings_reset_active_profile_bindings(dimension: int) -> tuple[bool, str]:
-    return _call_ui_keybindings("reset_active_profile_bindings", dimension)
-
-
-def keybindings_save_keybindings_file(dimension: int) -> tuple[bool, str]:
-    return _call_ui_keybindings("save_keybindings_file", dimension)
-
-
-def keybindings_set_active_key_profile(profile_name: str) -> tuple[bool, str]:
-    return _call_ui_keybindings("set_active_key_profile", profile_name)
-
-
-def keybindings_binding_actions_for_dimension(dimension: int):
-    return _call_ui_keybindings("binding_actions_for_dimension", dimension)
+keybindings_active_key_profile = _proxy_ui_keybindings("active_key_profile")
+keybindings_clone_key_profile = _proxy_ui_keybindings("clone_key_profile")
+keybindings_cycle_key_profile = _proxy_ui_keybindings("cycle_key_profile")
+keybindings_cycle_rebind_conflict_mode = _proxy_ui_keybindings(
+    "cycle_rebind_conflict_mode"
+)
+keybindings_normalize_rebind_conflict_mode = _proxy_ui_keybindings(
+    "normalize_rebind_conflict_mode"
+)
+keybindings_delete_key_profile = _proxy_ui_keybindings("delete_key_profile")
+keybindings_create_auto_profile = _proxy_ui_keybindings("create_auto_profile")
+keybindings_load_active_profile_bindings = _proxy_ui_keybindings(
+    "load_active_profile_bindings"
+)
+keybindings_load_keybindings_file = _proxy_ui_keybindings("load_keybindings_file")
+keybindings_next_auto_profile_name = _proxy_ui_keybindings("next_auto_profile_name")
+keybindings_rebind_action_key = _proxy_ui_keybindings("rebind_action_key")
+keybindings_rename_key_profile = _proxy_ui_keybindings("rename_key_profile")
+keybindings_reset_active_profile_bindings = _proxy_ui_keybindings(
+    "reset_active_profile_bindings"
+)
+keybindings_save_keybindings_file = _proxy_ui_keybindings("save_keybindings_file")
+keybindings_set_active_key_profile = _proxy_ui_keybindings(
+    "set_active_key_profile"
+)
+keybindings_binding_actions_for_dimension = _proxy_ui_keybindings(
+    "binding_actions_for_dimension"
+)
 
 
 def menu_settings_load(state: Any, dimension: int) -> tuple[bool, str]:
@@ -908,31 +928,22 @@ def menu_settings_reset_to_defaults(state: Any, dimension: int) -> tuple[bool, s
     return _reset_menu_settings_to_defaults(state, dimension)
 
 
-def keybindings_menu_shortcut_action_for_key(
-    key: int, load_action: Any, save_action: Any
-) -> Any | None:
-    return _call_ui_keybindings_menu_shortcuts(
-        "menu_binding_action_for_key",
-        key,
-        load_action,
-        save_action,
-    )
+def _proxy_ui_keybindings_menu_shortcuts(method_name: str):
+    def _dispatch(*args: Any, **kwargs: Any) -> Any:
+        return _call_ui_keybindings_menu_shortcuts(method_name, *args, **kwargs)
+
+    return _dispatch
 
 
-def keybindings_apply_menu_shortcut_action(
-    action: Any,
-    load_action: Any,
-    save_action: Any,
-    dimension: int,
-    state: Any,
-) -> bool:
-    return _call_ui_keybindings_menu_shortcuts(
-        "apply_menu_binding_action", action, load_action, save_action, dimension, state
-    )
-
-
-def keybindings_menu_status_color(is_error: bool) -> tuple[int, int, int]:
-    return _call_ui_keybindings_menu_shortcuts("menu_binding_status_color", is_error)
+keybindings_menu_shortcut_action_for_key = _proxy_ui_keybindings_menu_shortcuts(
+    "menu_binding_action_for_key"
+)
+keybindings_apply_menu_shortcut_action = _proxy_ui_keybindings_menu_shortcuts(
+    "apply_menu_binding_action"
+)
+keybindings_menu_status_color = _proxy_ui_keybindings_menu_shortcuts(
+    "menu_binding_status_color"
+)
 
 
 def keybindings_partition_gameplay_actions_ui_logic(action_names):
@@ -950,87 +961,43 @@ def keybinding_category_docs_runtime():
     return _keybinding_category_docs()
 
 
-def keybindings_menu_section_menu() -> tuple[tuple[str, str, str], ...]:
-    return _call_ui_keybindings_menu_model("SECTION_MENU")
+def _proxy_ui_keybindings_menu_model(method_name: str):
+    def _dispatch(*args: Any, **kwargs: Any) -> Any:
+        return _call_ui_keybindings_menu_model(method_name, *args, **kwargs)
+
+    return _dispatch
 
 
-def keybindings_menu_resolve_initial_scope(dimension: int, scope: str | None) -> str:
-    return _call_ui_keybindings_menu_model("resolve_initial_scope", dimension, scope)
+def _proxy_ui_logic_keybindings_catalog(method_name: str):
+    def _dispatch(*args: Any, **kwargs: Any) -> Any:
+        return _call_ui_logic_keybindings_catalog(method_name, *args, **kwargs)
+
+    return _dispatch
 
 
-def keybindings_menu_rows_for_scope(scope: str):
-    return _call_ui_keybindings_menu_model("rows_for_scope", scope)
-
-
-def keybindings_menu_scope_dimensions(scope: str) -> tuple[int, ...]:
-    return _call_ui_keybindings_menu_model("scope_dimensions", scope)
-
-
-def keybindings_menu_scope_file_hint(scope: str) -> str:
-    return _call_ui_keybindings_menu_model("scope_file_hint", scope)
-
-
-def keybindings_menu_scope_label(scope: str) -> str:
-    return _call_ui_keybindings_menu_model("scope_label", scope)
-
-
-def keybindings_menu_binding_keys(row):
-    return _call_ui_keybindings_menu_model("binding_keys", row)
-
-
-def keybindings_menu_binding_title(row, scope: str) -> str:
-    return _call_ui_keybindings_menu_model("binding_title", row, scope)
-
-
-def gameplay_action_category_ui_logic(action: str) -> str:
-    return _call_ui_logic_keybindings_catalog("gameplay_action_category", action)
+keybindings_menu_section_menu = _proxy_ui_keybindings_menu_model("SECTION_MENU")
+keybindings_menu_resolve_initial_scope = _proxy_ui_keybindings_menu_model(
+    "resolve_initial_scope"
+)
+keybindings_menu_rows_for_scope = _proxy_ui_keybindings_menu_model("rows_for_scope")
+keybindings_menu_scope_dimensions = _proxy_ui_keybindings_menu_model(
+    "scope_dimensions"
+)
+keybindings_menu_scope_file_hint = _proxy_ui_keybindings_menu_model(
+    "scope_file_hint"
+)
+keybindings_menu_scope_label = _proxy_ui_keybindings_menu_model("scope_label")
+keybindings_menu_binding_keys = _proxy_ui_keybindings_menu_model("binding_keys")
+keybindings_menu_binding_title = _proxy_ui_keybindings_menu_model("binding_title")
+gameplay_action_category_ui_logic = _proxy_ui_logic_keybindings_catalog(
+    "gameplay_action_category"
+)
 
 
 def compute_menu_layout_zones_ui_logic(*args: Any, **kwargs: Any) -> Any:
     from .ui_logic.menu_layout import compute_menu_layout_zones as _compute_zones
 
     return _compute_zones(*args, **kwargs)
-
-
-def _call_runtime_menu_config(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import menu_config as _menu_config
-
-    return getattr(_menu_config, name)(*args, **kwargs)
-
-
-def _call_runtime_project_config(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import project_config as _project_config
-
-    return getattr(_project_config, name)(*args, **kwargs)
-
-
-def _call_runtime_settings_schema(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import settings_schema as _settings_schema
-
-    return getattr(_settings_schema, name)(*args, **kwargs)
-
-
-def _call_runtime_menu_settings_state(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import menu_settings_state as _menu_settings_state
-
-    attr = getattr(_menu_settings_state, name)
-    if callable(attr):
-        return attr(*args, **kwargs)
-    if args or kwargs:
-        raise TypeError(f"{name} is not callable")
-    return attr
-
-
-def _call_runtime_help_topics(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .runtime import help_topics as _help_topics
-
-    return getattr(_help_topics, name)(*args, **kwargs)
-
-
-def _call_help_text(name: str, *args: Any, **kwargs: Any) -> Any:
-    from . import help_text as _help_text
-
-    return getattr(_help_text, name)(*args, **kwargs)
 
 
 def bot_options_rows_runtime() -> tuple[str, ...]:
@@ -1123,36 +1090,6 @@ def help_layout_payload_runtime(*args: Any, **kwargs: Any):
 
 def help_topic_media_rule_runtime(*args: Any, **kwargs: Any):
     return _call_help_text("help_topic_media_rule", *args, **kwargs)
-
-
-def _call_gameplay_pieces2d(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .gameplay import pieces2d as _pieces2d
-
-    return getattr(_pieces2d, name)(*args, **kwargs)
-
-
-def _call_gameplay_pieces_nd(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .gameplay import pieces_nd as _pieces_nd
-
-    return getattr(_pieces_nd, name)(*args, **kwargs)
-
-
-def _call_gameplay_leveling(name: str, *args: Any, **kwargs: Any) -> Any:
-    from .gameplay import leveling as _leveling
-
-    return getattr(_leveling, name)(*args, **kwargs)
-
-
-def _call_front4d_render(name: str, *args: Any, **kwargs: Any) -> Any:
-    from . import front4d_render as _front4d_render
-
-    return getattr(_front4d_render, name)(*args, **kwargs)
-
-
-def _get_front4d_render_attr(name: str) -> Any:
-    from . import front4d_render as _front4d_render
-
-    return getattr(_front4d_render, name)
 
 
 def piece_set_2d_options_gameplay():
@@ -1253,18 +1190,6 @@ def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
 
 def frontend_nd_route_keydown(*args: Any, **kwargs: Any) -> Any:
     return _call_frontend_nd("route_nd_keydown", *args, **kwargs)
-
-
-def _call_front3d_render(name: str, *args: Any, **kwargs: Any) -> Any:
-    from . import front3d_render as _front3d_render
-
-    return getattr(_front3d_render, name)(*args, **kwargs)
-
-
-def _get_front3d_render_attr(name: str) -> Any:
-    from . import front3d_render as _front3d_render
-
-    return getattr(_front3d_render, name)
 
 
 def front3d_render_camera_type() -> Any:

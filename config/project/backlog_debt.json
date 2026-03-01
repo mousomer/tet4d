@@ -10,11 +10,6 @@
       "id": "BKL-P2-024",
       "priority": "P2",
       "title": "Playbot lacks learning mode; current architecture supports heuristics/profiles but not adaptive learning loop"
-    },
-    {
-      "id": "BKL-P2-027",
-      "priority": "P2",
-      "title": "Large module decomposition debt remains in engine/runtime/ui hotspots, increasing maintenance cost and slowing staged refactors"
     }
   ],
   "operational_watch_items": [
@@ -32,6 +27,11 @@
       "id": "BKL-P3-006",
       "priority": "P3",
       "title": "Desktop release hardening watch"
+    },
+    {
+      "id": "BKL-P3-007",
+      "priority": "P3",
+      "title": "Large module decomposition watch for engine/runtime/ui hotspots after recent dedup passes"
     }
   ]
 }

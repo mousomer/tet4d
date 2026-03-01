@@ -9,8 +9,6 @@ import tet4d.engine.api as engine_api
 
 GameLoopDecision = Literal["continue", "quit", "menu", "help"]
 GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
-_LINES_PER_LEVEL_MIN = 1
-_LINES_PER_LEVEL_MAX = 50
 
 
 def _mode_key_for_dimension(dimension: int) -> str:
@@ -22,53 +20,9 @@ def _mode_key_for_dimension(dimension: int) -> str:
         return "4d"
     return "2d"
 
-
-def _default_speedup_settings(mode_key: str) -> tuple[int, int]:
-    payload = engine_api.default_settings_payload_runtime()
-    settings = payload.get("settings") if isinstance(payload, dict) else None
-    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
-    if not isinstance(mode_settings, dict):
-        return 1, 10
-    auto_speedup_enabled = mode_settings.get("auto_speedup_enabled", 1)
-    lines_per_level = mode_settings.get("lines_per_level", 10)
-    return (
-        _clamp_auto_speedup_enabled(auto_speedup_enabled, default=1),
-        _clamp_lines_per_level(lines_per_level, default=10),
-    )
-
-
-def _clamp_lines_per_level(value: object, *, default: int) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        numeric = int(default)
-    else:
-        numeric = int(value)
-    return max(_LINES_PER_LEVEL_MIN, min(_LINES_PER_LEVEL_MAX, numeric))
-
-
-def _clamp_auto_speedup_enabled(value: object, *, default: int) -> int:
-    if isinstance(value, bool):
-        return 1 if value else 0
-    if isinstance(value, int):
-        return 1 if value > 0 else 0
-    return 1 if int(default) > 0 else 0
-
-
 def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
     mode_key = _mode_key_for_dimension(dimension)
-    default_enabled, default_lines = _default_speedup_settings(mode_key)
-    payload = engine_api.load_menu_payload_runtime()
-    settings = payload.get("settings") if isinstance(payload, dict) else None
-    mode_settings = settings.get(mode_key) if isinstance(settings, dict) else None
-    if not isinstance(mode_settings, dict):
-        return default_enabled, default_lines
-    raw_enabled = mode_settings.get("auto_speedup_enabled", default_enabled)
-    raw_lines = mode_settings.get("lines_per_level", default_lines)
-    auto_speedup_enabled = _clamp_auto_speedup_enabled(
-        raw_enabled,
-        default=default_enabled,
-    )
-    lines_per_level = _clamp_lines_per_level(raw_lines, default=default_lines)
-    return auto_speedup_enabled, lines_per_level
+    return engine_api.gameplay_mode_speedup_settings_runtime(mode_key)
 
 
 def process_game_events(
