@@ -444,6 +444,12 @@ def keybindings_profiles_dir_path_runtime() -> Path:
     return _keybindings_profiles_dir_path()
 
 
+def keybindings_defaults_path_runtime() -> Path:
+    from .runtime.project_config import keybindings_defaults_path as _defaults_path
+
+    return _defaults_path()
+
+
 def keybindings_load_json_file_runtime(path: Path) -> Any:
     from .runtime.settings_schema import read_json_value_or_raise as _load_json_file
 

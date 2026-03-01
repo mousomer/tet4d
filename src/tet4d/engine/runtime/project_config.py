@@ -220,6 +220,16 @@ def keybindings_profiles_dir_path() -> Path:
     return _resolve_repo_relative(rel, default_rel)
 
 
+def keybindings_defaults_path() -> Path:
+    default_rel = "config/keybindings/defaults.json"
+    rel = _path_value(
+        "keybindings_defaults_file",
+        default_relative=default_rel,
+        required_prefix="config/keybindings",
+    )
+    return _resolve_repo_relative(rel, default_rel)
+
+
 def playbot_history_file_default_relative() -> str:
     return _path_value(
         "playbot_history_file_default",
