@@ -526,6 +526,113 @@ def set_score_analyzer_logging_enabled_runtime(enabled: bool | None) -> None:
     _set_score_analyzer_logging_enabled(enabled)
 
 
+def leaderboard_top_entries_runtime(
+    *,
+    limit: int = 20,
+) -> tuple[dict[str, object], ...]:
+    from .runtime.leaderboard import leaderboard_top_entries as _leaderboard_top_entries
+
+    return _leaderboard_top_entries(limit=int(limit))
+
+
+def leaderboard_entry_would_enter_runtime(
+    *,
+    dimension: int,
+    score: int,
+    lines_cleared: int,
+    start_speed_level: int,
+    end_speed_level: int,
+    duration_seconds: float,
+    outcome: str,
+    bot_mode: str,
+    grid_mode: str,
+    random_mode: str,
+    topology_mode: str,
+    exploration_mode: bool,
+) -> tuple[bool, int]:
+    from .runtime.leaderboard import (
+        leaderboard_entry_would_enter as _leaderboard_entry_would_enter,
+    )
+
+    return _leaderboard_entry_would_enter(
+        dimension=int(dimension),
+        score=int(score),
+        lines_cleared=int(lines_cleared),
+        start_speed_level=int(start_speed_level),
+        end_speed_level=int(end_speed_level),
+        duration_seconds=float(duration_seconds),
+        outcome=str(outcome),
+        bot_mode=str(bot_mode),
+        grid_mode=str(grid_mode),
+        random_mode=str(random_mode),
+        topology_mode=str(topology_mode),
+        exploration_mode=bool(exploration_mode),
+    )
+
+
+def record_leaderboard_entry_runtime(
+    *,
+    dimension: int,
+    score: int,
+    lines_cleared: int,
+    start_speed_level: int,
+    end_speed_level: int,
+    duration_seconds: float,
+    outcome: str,
+    bot_mode: str,
+    grid_mode: str,
+    random_mode: str,
+    topology_mode: str,
+    exploration_mode: bool,
+    player_name: str = "Player",
+) -> dict[str, object]:
+    from .runtime.leaderboard import (
+        record_leaderboard_entry as _record_leaderboard_entry,
+    )
+
+    return _record_leaderboard_entry(
+        dimension=int(dimension),
+        score=int(score),
+        lines_cleared=int(lines_cleared),
+        start_speed_level=int(start_speed_level),
+        end_speed_level=int(end_speed_level),
+        duration_seconds=float(duration_seconds),
+        outcome=str(outcome),
+        bot_mode=str(bot_mode),
+        grid_mode=str(grid_mode),
+        random_mode=str(random_mode),
+        topology_mode=str(topology_mode),
+        exploration_mode=bool(exploration_mode),
+        player_name=str(player_name),
+    )
+
+
+def leaderboard_page_rows_runtime() -> int:
+    from .runtime.project_config import project_constant_int as _project_constant_int
+
+    return int(
+        _project_constant_int(
+            ("analytics", "leaderboard_page_rows"),
+            12,
+            min_value=5,
+            max_value=40,
+        )
+    )
+
+
+def leaderboard_name_max_length_runtime() -> int:
+    from .runtime.project_config import project_constant_int as _project_constant_int
+
+    return int(
+        _project_constant_int(
+            ("analytics", "leaderboard_name_max_length"),
+            24,
+            min_value=3,
+            max_value=64,
+        )
+    )
+
+
 def settings_hub_layout_rows_runtime():
     return _call_runtime_menu_config("settings_hub_layout_rows")
 
@@ -767,6 +874,11 @@ _call_gameplay_pieces_nd = partial(
     "tet4d.engine.gameplay.pieces_nd",
 )
 _call_gameplay_leveling = partial(_call_module_attr, "tet4d.engine.gameplay.leveling")
+_call_gameplay_topology = partial(_call_module_attr, "tet4d.engine.gameplay.topology")
+_call_gameplay_topology_designer = partial(
+    _call_module_attr,
+    "tet4d.engine.gameplay.topology_designer",
+)
 _call_front4d_render = partial(_call_module_attr, "tet4d.engine.front4d_render")
 _get_front4d_render_attr = partial(_get_module_attr, "tet4d.engine.front4d_render")
 _call_front3d_render = partial(_call_module_attr, "tet4d.engine.front3d_render")
@@ -839,6 +951,75 @@ def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
     from .gameplay.topology import map_overlay_cells as _map_overlay_cells
 
     return _map_overlay_cells(*args, **kwargs)
+
+
+def topology_mode_from_index_runtime(index: int) -> str:
+    return str(_call_gameplay_topology("topology_mode_from_index", index))
+
+
+def topology_mode_label_runtime(mode: str | None) -> str:
+    return str(_call_gameplay_topology("topology_mode_label", mode))
+
+
+def topology_mode_options_runtime() -> tuple[str, ...]:
+    options = _get_module_attr("tet4d.engine.gameplay.topology", "TOPOLOGY_MODE_OPTIONS")
+    return tuple(str(option) for option in options)
+
+
+def topology_designer_profiles_runtime(dimension: int):
+    return _call_gameplay_topology_designer("designer_profiles_for_dimension", dimension)
+
+
+def topology_designer_profile_label_runtime(dimension: int, index: int) -> str:
+    return str(
+        _call_gameplay_topology_designer(
+            "designer_profile_label_for_index",
+            dimension,
+            index,
+        )
+    )
+
+
+def topology_designer_resolve_runtime(
+    *,
+    dimension: int,
+    gravity_axis: int,
+    topology_mode: str,
+    topology_advanced: bool,
+    profile_index: int,
+):
+    return _call_gameplay_topology_designer(
+        "resolve_topology_designer_selection",
+        dimension=dimension,
+        gravity_axis=gravity_axis,
+        topology_mode=topology_mode,
+        topology_advanced=topology_advanced,
+        profile_index=profile_index,
+    )
+
+
+def topology_designer_export_runtime(
+    *,
+    dimension: int,
+    gravity_axis: int,
+    topology_mode: str,
+    topology_advanced: bool,
+    profile_index: int,
+):
+    return _call_gameplay_topology_designer(
+        "export_resolved_topology_profile",
+        dimension=dimension,
+        gravity_axis=gravity_axis,
+        topology_mode=topology_mode,
+        topology_advanced=topology_advanced,
+        profile_index=profile_index,
+    )
+
+
+def topology_lab_menu_payload_runtime() -> dict[str, Any]:
+    path = project_root_path() / "config" / "topology" / "lab_menu.json"
+    payload = _call_runtime_settings_schema("read_json_object_or_raise", path)
+    return dict(payload)
 
 
 def format_key_tuple(keys):
@@ -1088,6 +1269,14 @@ def help_layout_payload_runtime(*args: Any, **kwargs: Any):
     return _call_help_text("help_layout_payload", *args, **kwargs)
 
 
+def help_action_layout_payload_runtime(*args: Any, **kwargs: Any):
+    return _call_help_text("help_action_layout_payload", *args, **kwargs)
+
+
+def help_action_panel_specs_runtime(*args: Any, **kwargs: Any):
+    return _call_help_text("help_action_panel_specs", *args, **kwargs)
+
+
 def help_topic_media_rule_runtime(*args: Any, **kwargs: Any):
     return _call_help_text("help_topic_media_rule", *args, **kwargs)
 
@@ -1247,6 +1436,14 @@ def front4d_render_handle_view_key(*args: Any, **kwargs: Any) -> Any:
 def front4d_render_movement_axis_overrides(*args: Any, **kwargs: Any) -> Any:
     return _call_front4d_render(
         "movement_axis_overrides_for_view",
+        *args,
+        **kwargs,
+    )
+
+
+def front4d_render_viewer_axes_for_view(*args: Any, **kwargs: Any) -> Any:
+    return _call_front4d_render(
+        "viewer_axes_for_view",
         *args,
         **kwargs,
     )

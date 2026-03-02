@@ -68,6 +68,7 @@
       "config/menu/defaults.json",
       "config/menu/structure.json",
       "config/topology/designer_presets.json",
+      "config/topology/lab_menu.json",
       "config/help/topics.json",
       "config/help/action_map.json",
       "config/help/icon_map.json",

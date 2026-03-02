@@ -72,8 +72,8 @@ Main Menu
 │   ├── 2D
 │   ├── 3D
 │   ├── 4D
-│   ├── Tutorials (future route)
-│   └── Topology Lab (future route)
+│   ├── Tutorials
+│   └── Topology Lab
 ├── Continue
 │   └── Launch last used mode setup
 ├── Settings
@@ -92,6 +92,8 @@ Main Menu
 │   ├── Piece Sets
 │   ├── Bots
 │   └── Views / Camera
+├── Leaderboard
+│   └── Top session scores (2D/3D/4D)
 ├── Bot
 │   ├── Dimension (2D/3D/4D)
 │   ├── Playbot mode
@@ -111,6 +113,7 @@ Pause Menu
 ├── Settings (same shared sections as launcher)
 ├── Controls
 ├── Help
+├── Leaderboard
 ├── Bot
 ├── Back To Main Menu
 └── Quit
@@ -295,8 +298,23 @@ Manual tests:
 2. Menu depth remains shallow (top-level -> setup/options -> edit actions).
 3. Profile file actions (`Load`,`Save`,`Save As`,`Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
-5. In-game key helper is grouped into `Translation`,`Rotation`,`Camera/View`,`System`.
-6. Help/Controls includes simple arrow-diagram previews for translation and rotation.
+5. In-game helper panel membership/order is data-driven from
+   `config/help/layout/runtime_help_action_layout.json` using stable
+   panel/line IDs, per-mode includes, and runtime `requires` predicates.
+6. Engine runtime decides helper-line feasibility (capabilities/settings),
+   while UI renderer only resolves key labels/tokens and draws the rows.
+7. Runtime side panel uses a unified hierarchy across 2D/3D/4D:
+8. Tier 1 `Main` panel includes title + score/lines/speed summary rows plus main controls.
+9. Tier 2 is `Translation`; Tier 3 is `Rotation`; Tier 4 is `Camera`.
+10. Tier 5 is a dedicated `Data` panel (runtime/bot/analysis lines).
+11. Overlay/projection helper actions are rendered inside `Camera` (not a separate panel).
+12. Rotation helper rows are complete per mode in runtime side panels:
+    2D: 1 pair, 3D: 3 pairs, 4D: 6 pairs.
+13. Side-panel content composition (summary + data) uses one shared helper path for
+    2D/3D/4D to avoid tier drift across dimensions.
+14. Runtime side-panel rendering should use shared adapter:
+15. `draw_unified_game_side_panel(...)` in `src/tet4d/ui/pygame/render/panel_utils.py`.
+16. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 
 ## 12. Stabilization Additions (Completed)
 
@@ -361,7 +379,7 @@ Stabilization details:
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 21. Launcher and pause menu trees now run through one generic graph runtime (`src/tet4d/ui/pygame/menu/menu_runner.py`) with per-surface action registries.
 22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
-23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` remain under `Play` as config-routed entries.
+23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` remain under `Play` as config-defined entries.
 24. Launcher subtitles and route-action mapping are config-driven in
     `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
     no launcher subtitle copy or route-label mapping remains hardcoded in `front.py`.
@@ -411,6 +429,7 @@ Stabilization details:
 34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Gameplay`,`Analytics`,`Save`,`Reset`,`Back`).
 35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `src/tet4d/ui/pygame/launch/launcher_settings.py`.
 36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
+37. Closed (`BKL-P2-023`): Topology Lab interactive workflow is implemented with config-backed copy/layout (`config/topology/lab_menu.json`) and runtime save/export actions (`src/tet4d/ui/pygame/launch/topology_lab_menu.py`).
 
 ## 16. Menu Rehaul v2 (Core IA Implemented, `BKL-P1-006`)
 
@@ -430,7 +449,7 @@ Guideline basis (re-validated 2026-02-20):
 Target IA delta:
 1. Replace broad top-level labels with intent labels:
 2. `Play`, `Continue`, `Settings`, `Controls`, `Help`, `Bot`, `Quit`.
-3. Move dimension selection under `Play` with graph-defined mode rows (`2D`,`3D`,`4D`) and route capacity for `Tutorials` + `Topology Lab` without adding top-level entries.
+3. Move dimension selection under `Play` with graph-defined mode rows (`2D`,`3D`,`4D`) plus `Tutorials` route + `Topology Lab` action without adding top-level entries.
 4. Keep `Audio` and `Display` as top-level settings categories while they remain small.
 5. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`) inside per-mode setup screens only.
 6. Keep `Controls` separate from `Settings`, with first-level scopes:

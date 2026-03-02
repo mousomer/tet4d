@@ -5,6 +5,10 @@ from dataclasses import dataclass
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.numeric_text_input import (
+    append_numeric_text,
+    parse_numeric_text,
+)
 from tet4d.ui.pygame.runtime_ui.app_runtime import capture_windowed_display_settings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx, set_audio_settings
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
@@ -42,6 +46,10 @@ _NUMERIC_TEXT_EDIT_ROWS = {
     "game_seed",
 }
 _NUMERIC_TEXT_MAX_LENGTH = 16
+
+
+def _sanitize_text(value: str, max_length: int) -> str:
+    return engine_api.sanitize_text_runtime(value, max_length=max_length)
 
 
 @dataclass
@@ -304,16 +312,14 @@ def _start_unified_numeric_text_mode(
 
 def _apply_unified_numeric_text_value(state: _UnifiedSettingsState) -> bool:
     row_key = state.text_mode_row_key
-    sanitized = engine_api.sanitize_text_runtime(
+    parsed = parse_numeric_text(
         state.text_mode_buffer,
         max_length=_NUMERIC_TEXT_MAX_LENGTH,
+        sanitize_text=_sanitize_text,
     )
-    digits_only = "".join(ch for ch in sanitized if ch.isdigit())
-    if not digits_only:
+    if parsed is None:
         _set_unified_status(state, "Invalid numeric input", is_error=True)
         return False
-
-    parsed = int(digits_only)
     if row_key == "display_width":
         width = max(640, parsed)
         _height = int(state.display_settings.windowed_size[1])
@@ -340,19 +346,13 @@ def _apply_unified_numeric_text_value(state: _UnifiedSettingsState) -> bool:
 def _handle_unified_text_input(state: _UnifiedSettingsState, text: str) -> None:
     if not _is_unified_text_mode(state):
         return
-    sanitized = engine_api.sanitize_text_runtime(
-        text,
+    state.text_mode_buffer, state.text_mode_replace_on_type = append_numeric_text(
+        current_buffer=state.text_mode_buffer,
+        incoming_text=text,
+        replace_on_type=state.text_mode_replace_on_type,
         max_length=_NUMERIC_TEXT_MAX_LENGTH,
+        sanitize_text=_sanitize_text,
     )
-    digits_only = "".join(ch for ch in sanitized if ch.isdigit())
-    if not digits_only:
-        return
-    if state.text_mode_replace_on_type:
-        state.text_mode_buffer = ""
-        state.text_mode_replace_on_type = False
-    state.text_mode_buffer = (
-        state.text_mode_buffer + digits_only
-    )[:_NUMERIC_TEXT_MAX_LENGTH]
 
 
 def _save_unified_settings(

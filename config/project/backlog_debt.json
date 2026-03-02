@@ -1,17 +1,6 @@
 {
   "schema_version": 1,
-  "active_debt_items": [
-    {
-      "id": "BKL-P2-023",
-      "priority": "P2",
-      "title": "Topology designer remains preset-file/export only; no interactive Topology Lab editor workflow"
-    },
-    {
-      "id": "BKL-P2-024",
-      "priority": "P2",
-      "title": "Playbot lacks learning mode; current architecture supports heuristics/profiles but not adaptive learning loop"
-    }
-  ],
+  "active_debt_items": [],
   "operational_watch_items": [
     {
       "id": "BKL-P3-002",
@@ -32,6 +21,11 @@
       "id": "BKL-P3-007",
       "priority": "P3",
       "title": "Large module decomposition watch for engine/runtime/ui hotspots after recent dedup passes"
+    },
+    {
+      "id": "BKL-P3-009",
+      "priority": "P3",
+      "title": "Playbot learning-mode tuning watch (threshold retuning and long-run stability)"
     }
   ]
 }

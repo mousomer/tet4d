@@ -45,6 +45,7 @@ ClearAnimation4D = engine_api.front4d_render_clear_animation_type()
 draw_game_frame = engine_api.front4d_render_draw_game_frame_api
 handle_view_key = engine_api.front4d_render_handle_view_key
 movement_axis_overrides_for_view = engine_api.front4d_render_movement_axis_overrides
+viewer_axes_for_view = engine_api.front4d_render_viewer_axes_for_view
 spawn_clear_animation_if_needed = engine_api.front4d_render_spawn_clear_anim
 build_config = engine_api.front3d_setup_build_config_nd
 create_initial_state = engine_api.front3d_setup_create_initial_state_nd
@@ -127,6 +128,7 @@ class LoopContext4D:
             axis_overrides_by_action=movement_axis_overrides_for_view(
                 self.view, self.cfg.dims
             ),
+            viewer_axes_by_label=viewer_axes_for_view(self.view, self.cfg.dims),
             view_key_handler=lambda key: handle_view_key(
                 key,
                 self.view,

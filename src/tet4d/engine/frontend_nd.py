@@ -460,6 +460,21 @@ _VIEWER_RELATIVE_INTENT_BY_ACTION = {
     "move_z_neg": "away",
     "move_z_pos": "closer",
 }
+_ROTATION_ACTION_TO_LOCAL_AXES = {
+    "rotate_xy_pos": ("x", "y", 1),
+    "rotate_xy_neg": ("x", "y", -1),
+    "rotate_xz_pos": ("x", "z", 1),
+    "rotate_xz_neg": ("x", "z", -1),
+    "rotate_yz_pos": ("y", "z", 1),
+    "rotate_yz_neg": ("y", "z", -1),
+    "rotate_xw_pos": ("x", "w", 1),
+    "rotate_xw_neg": ("x", "w", -1),
+    "rotate_yw_pos": ("y", "w", 1),
+    "rotate_yw_neg": ("y", "w", -1),
+    "rotate_zw_pos": ("z", "w", 1),
+    "rotate_zw_neg": ("z", "w", -1),
+}
+AxisOverride = tuple[int, int] | tuple[int, int, int]
 
 
 def system_key_action(key: int) -> str | None:
@@ -544,26 +559,135 @@ def _emit_sfx(sfx_handler: Callable[[str], None] | None, cue: str | None) -> Non
     sfx_handler(cue)
 
 
+def _viewer_axis_map_for_yaw(
+    yaw_deg: float,
+    *,
+    cfg: GameConfigND,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
+) -> dict[str, tuple[int, int]]:
+    quarter_turn = int(round(float(yaw_deg) / 90.0)) % 4
+    if quarter_turn == 0:
+        local_map = {"x": (0, 1), "z": (2, 1)}
+    elif quarter_turn == 1:
+        local_map = {"x": (2, 1), "z": (0, -1)}
+    elif quarter_turn == 2:
+        local_map = {"x": (0, -1), "z": (2, -1)}
+    else:
+        local_map = {"x": (2, -1), "z": (0, 1)}
+    resolved: dict[str, tuple[int, int]] = {}
+    for label in ("x", "z"):
+        local_axis, local_sign = local_map[label]
+        if viewer_axes_by_label is None:
+            resolved[label] = (local_axis, local_sign)
+            continue
+        source_label = "x" if int(local_axis) == 0 else "z"
+        target = viewer_axes_by_label.get(source_label)
+        if target is None:
+            resolved[label] = (local_axis, local_sign)
+            continue
+        world_axis, world_sign = target
+        if not (0 <= int(world_axis) < cfg.ndim):
+            continue
+        resolved[label] = (int(world_axis), int(local_sign) * int(world_sign))
+    return resolved
+
+
+def _rotation_override_from_view(
+    *,
+    action: str,
+    cfg: GameConfigND,
+    yaw_deg_for_view_movement: float | None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
+) -> tuple[int, int, int] | None:
+    rotation_spec = _ROTATION_ACTION_TO_LOCAL_AXES.get(action)
+    if rotation_spec is None or yaw_deg_for_view_movement is None:
+        return None
+    axis_a_label, axis_b_label, local_direction = rotation_spec
+    view_axis_map = _viewer_axis_map_for_yaw(
+        yaw_deg_for_view_movement,
+        cfg=cfg,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    w_axis = (
+        viewer_axes_by_label.get("w")
+        if viewer_axes_by_label is not None
+        else None
+    )
+    if w_axis is None:
+        w_axis = (3, 1)
+    w_world_axis, w_world_sign = int(w_axis[0]), int(w_axis[1])
+    if not (0 <= w_world_axis < cfg.ndim):
+        w_world_axis, w_world_sign = 3, 1
+    axis_options = {
+        "x": view_axis_map.get("x"),
+        "y": (cfg.gravity_axis, 1),
+        "z": view_axis_map.get("z"),
+        "w": (w_world_axis, w_world_sign),
+    }
+    a = axis_options.get(axis_a_label)
+    b = axis_options.get(axis_b_label)
+    if a is None or b is None:
+        return None
+    axis_a, sign_a = a
+    axis_b, sign_b = b
+    if axis_a == axis_b:
+        return None
+    direction = int(local_direction) * int(sign_a) * int(sign_b)
+    return int(axis_a), int(axis_b), int(direction)
+
+
+def _apply_action_override(
+    state: GameStateND,
+    *,
+    override: AxisOverride,
+) -> bool:
+    if len(override) == 2:
+        axis, delta = override
+        state.try_move_axis(int(axis), int(delta))
+        return True
+    axis_a, axis_b, delta = override
+    state.try_rotate(int(axis_a), int(axis_b), int(delta))
+    return True
+
+
 def apply_nd_gameplay_action_with_view(
     state: GameStateND,
     action: str,
     *,
     yaw_deg_for_view_movement: float | None = None,
-    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
 ) -> bool:
     if axis_overrides_by_action is not None:
         override = axis_overrides_by_action.get(action)
         if override is not None:
-            axis, delta = override
-            state.try_move_axis(axis, delta)
-            return True
+            return _apply_action_override(state, override=override)
+    rotation_override = _rotation_override_from_view(
+        action=action,
+        cfg=state.config,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    if rotation_override is not None:
+        return _apply_action_override(state, override=rotation_override)
     if yaw_deg_for_view_movement is not None:
         intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
         if intent is not None:
-            axis, delta = viewer_relative_move_axis_delta(
-                yaw_deg_for_view_movement, intent
+            local_axis, local_delta = viewer_relative_move_axis_delta(
+                yaw_deg_for_view_movement,
+                intent,
             )
-            state.try_move_axis(axis, delta)
+            if viewer_axes_by_label is not None:
+                key = "x" if int(local_axis) == 0 else "z"
+                target_axis = viewer_axes_by_label.get(key)
+                if target_axis is not None:
+                    mapped_axis, mapped_sign = target_axis
+                    state.try_move_axis(
+                        int(mapped_axis),
+                        int(local_delta) * int(mapped_sign),
+                    )
+                    return True
+            state.try_move_axis(int(local_axis), int(local_delta))
             return True
     return apply_nd_gameplay_action(state, action)
 
@@ -573,7 +697,8 @@ def dispatch_nd_gameplay_key(
     state: GameStateND,
     *,
     yaw_deg_for_view_movement: float | None = None,
-    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
 ) -> str | None:
     action = gameplay_action_for_key(key, state.config)
     if action is None:
@@ -583,6 +708,7 @@ def dispatch_nd_gameplay_key(
         action,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
         axis_overrides_by_action=axis_overrides_by_action,
+        viewer_axes_by_label=viewer_axes_by_label,
     )
     return action
 
@@ -592,7 +718,8 @@ def route_nd_keydown(
     state: GameStateND,
     *,
     yaw_deg_for_view_movement: float | None = None,
-    axis_overrides_by_action: Mapping[str, tuple[int, int]] | None = None,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
     view_key_handler: Callable[[int], bool] | None = None,
     sfx_handler: Callable[[str], None] | None = None,
     allow_gameplay: bool = True,
@@ -610,6 +737,7 @@ def route_nd_keydown(
             state,
             yaw_deg_for_view_movement=yaw_deg_for_view_movement,
             axis_overrides_by_action=axis_overrides_by_action,
+            viewer_axes_by_label=viewer_axes_by_label,
         )
         if gameplay_action is not None:
             _emit_sfx(sfx_handler, _playback_sfx_for_gameplay_action(gameplay_action))

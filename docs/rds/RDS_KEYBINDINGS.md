@@ -375,5 +375,5 @@ Implemented in code:
 7. profile actions now include `load/save/save as/reset/create/rename/delete` via keybindings setup + pause entrypoints.
 8. reset actions now require confirmation.
 9. In-game key helper layout is grouped into clear sections:
-10. `Translation`,`Rotation`,`Camera/View`,`System`.
+10. `Main`,`Translation`,`Rotation`,`Camera`,`View/Overlay` (mode/capability gated).
 11. arrow-diagram key guides are available in Help UI for translation and rotation.

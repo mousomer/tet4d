@@ -58,6 +58,12 @@
   "controller": {
     "hard_drop_after_soft_drops": 4
   },
+  "learning_mode": {
+    "enabled": true,
+    "review_pieces": 8,
+    "deepen_below_clear_rate": 0.1,
+    "relax_above_clear_rate": 0.45
+  },
   "dry_run": {
     "default_pieces": 160,
     "default_seed": 1337

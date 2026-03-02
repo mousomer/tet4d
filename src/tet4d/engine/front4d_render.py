@@ -7,7 +7,6 @@ from typing import Callable, Optional
 
 import pygame
 
-from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from .frontend_nd import (
     GfxFonts,
     gravity_interval_ms_from_config,
@@ -16,7 +15,9 @@ from .frontend_nd import (
 from .gameplay.game_nd import GameStateND
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
-from tet4d.ui.pygame.render.panel_utils import draw_game_side_panel
+from tet4d.ui.pygame.render.panel_utils import (
+    draw_unified_game_side_panel,
+)
 from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
@@ -682,11 +683,6 @@ def _draw_layer_cells(
         )
 
 
-def _overlay_alpha_label(overlay_transparency: float) -> str:
-    clamped = max(0.0, min(1.0, float(overlay_transparency)))
-    return f"{int(round(clamped * 100.0))}%"
-
-
 def _overlay_opacity_scale(overlay_transparency: float) -> float:
     # Settings store transparency; renderer needs opacity.
     clamped = max(0.0, min(1.0, float(overlay_transparency)))
@@ -877,12 +873,13 @@ def _draw_side_panel(
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
     extra_state_lines = [
+        f"Dims: {state.config.dims}",
+        f"Score mod: x{state.score_multiplier:.2f}",
         "View: basis-mapped 3D layer boards",
         f"Board dims: {basis.dims3}",
         f"Layer axis: {basis.layer_axis_label}",
         f"Layer count: {basis.layer_count}",
         f"Piece set: {piece_set_4d_label(state.config.piece_set_id)}",
-        f"Speed: {state.config.speed_level}",
         f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
@@ -893,38 +890,21 @@ def _draw_side_panel(
         f"ZW: {view.zw_deg:.1f}",
         f"Zoom: {view.zoom_scale:.2f}",
     ]
-    low_priority_lines = [
-        *extra_state_lines,
-        "",
-        *bot_lines,
-        *([""] if (bot_lines or extra_state_lines) and analysis_lines else []),
-        *analysis_lines,
-    ]
-
-    lines = (
-        "4D Tetris",
-        "",
-        f"Score: {state.score}",
-        f"Cleared: {state.lines_cleared}",
-        f"Score mod: x{state.score_multiplier:.2f}",
-        f"Dims: {state.config.dims}",
-    )
-
-    draw_game_side_panel(
+    draw_unified_game_side_panel(
         surface,
         panel_rect=panel_rect,
         fonts=fonts,
-        header_lines=lines,
-        control_groups=control_groups_for_dimension(
-            4,
-            include_exploration=bool(state.config.exploration_mode),
-        ),
-        low_priority_lines=tuple(low_priority_lines),
+        title="4D Tetris",
+        score=state.score,
+        lines_cleared=state.lines_cleared,
+        speed_level=state.config.speed_level,
+        dimension=4,
+        include_exploration=bool(state.config.exploration_mode),
+        data_lines=extra_state_lines,
+        bot_lines=bot_lines,
+        analysis_lines=analysis_lines,
         game_over=state.game_over,
         min_controls_h=150,
-        meter_label="Locked-cell transparency",
-        meter_value=max(0.0, min(1.0, float(overlay_transparency))),
-        meter_hint="Use [ and ] keys",
     )
 
 

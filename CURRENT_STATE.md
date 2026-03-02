@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `826` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `836` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -23,12 +23,12 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 5.17` (`low`, below current baseline 15.06)
+- `tech_debt.score = 1.28` (`low`, below current baseline 15.06)
   - weighted components (current dominant drivers):
-    - backlog priority pressure: `4.03` (active backlog now `BKL-P2-023/024`; decomposition moved to watch)
-    - backlog bug pressure: `0.0` (active backlog items currently contain no bug/regression-class issue titles)
-    - delivery-size pressure: `0.90` (167 Python files, 31,331 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
-    - code-balance pressure: `0.24` (gate-eligible leaf avg 0.98, runtime leaf watch)
+    - backlog priority pressure: `0.0` (no active P1/P2/P3 debt items in canonical debt source)
+    - backlog bug pressure: `0.0`
+    - delivery-size pressure: `0.92` (172 Python files, 32,243 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
+    - code-balance pressure: `0.36` (gate-eligible leaf avg 0.97, runtime leaf watch)
     - menu/keybinding retention pressures: `0.0` (goals met)
   - active gate policy (`non_regression_baseline`, `score_epsilon=0.03`):
     - commits must not exceed baseline score + epsilon
@@ -67,7 +67,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ### Balance Assessment
 
-- Gate-eligible leafs remain non-regressed (runtime leaf fuzzy `0.79 / watch`, tests leaf `1.0 / balanced`).
+- Gate-eligible leafs remain non-regressed (runtime leaf fuzzy `0.78 / watch`, tests leaf `1.0 / balanced`).
 - `engine` top-level and subpackages are healthy; runtime is the primary code-balance watch area.
 - `ui/pygame` leaf packages stay balanced after prior relocations; remaining hotspot is logical size, not folder shape.
 - `replay` remains `micro_feature_leaf` and balanced.
@@ -92,6 +92,22 @@ Read this first in a new Codex thread before continuing staged refactors.
 - Significant playbot physical relocation completed into `src/tet4d/ai/playbot`
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
+
+## Latest Local Batch (Unreleased)
+
+Completed:
+- Added leaderboard persistence and display flow:
+  - storage: `state/analytics/leaderboard.json`
+  - launcher + pause menu entrypoint action: `leaderboard`
+  - runtime submission on 2D/3D/4D session end.
+- Added restart-path leaderboard session capture so scores are persisted when runs are restarted.
+- Added scoring explanation blocks to runtime help content (base clear points,
+  multi-layer bonus, board-clear bonus, multiplier, leaderboard semantics).
+- Updated 3D/4D control helper group ordering so camera actions are prioritized
+  and panel priority remains: score summary -> Translation -> Rotation -> Camera/View -> System -> low-priority data.
+
+Verification:
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 ## Recent Batch Status (Stages 756-790)
 
@@ -246,6 +262,86 @@ Verification checkpoint:
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 - `python scripts/arch_metrics.py` passed with lower debt score (`7.18 -> 5.17`).
 
+## Recent Batch Status (Stages 827-834)
+
+Completed:
+- Added shared numeric text-input helpers for menu number entry:
+  - `src/tet4d/ui/pygame/menu/numeric_text_input.py`
+- Reused numeric text-input helpers in settings flow:
+  - `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- Implemented interactive Topology Lab workflow with config-backed layout/content:
+  - `config/topology/lab_menu.json`
+  - `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
+- Wired launcher Topology Lab action + runtime status integration:
+  - `cli/front.py`
+- Simplified launcher routing contract: Topology Lab is now a direct `Play` action
+  (no route-special-case dispatch path required):
+  - `config/menu/structure.json`
+  - `src/tet4d/engine/ui_logic/menu_action_contracts.py`
+  - `tests/unit/engine/test_menu_policy.py`
+- Added engine API adapters for topology mode/profile resolution and export:
+  - `src/tet4d/engine/api.py`
+- Added regression coverage for topology lab and launcher routing:
+  - `tests/unit/engine/test_topology_lab_menu.py`
+  - `tests/unit/engine/test_front_launcher_routes.py`
+  - `tests/unit/engine/test_numeric_text_input.py`
+- Synced canonical maintenance manifest for new topology config asset:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+- Closed active debt item `BKL-P2-023` (interactive topology-lab gap) in:
+  - `config/project/backlog_debt.json`
+- Advanced stage metadata:
+  - `scripts/arch_metrics.py` (`ARCH_STAGE=834`)
+  - `config/project/policy/manifests/architecture_metrics.json` (`arch_stage=834`)
+
+Verification checkpoint:
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- targeted menu/front/topology suites passed.
+- `python scripts/arch_metrics.py` passed with lower debt score (`5.17 -> 3.29`).
+
+## Recent Batch Status (Stage 835)
+
+Completed:
+- Added playbot `LEARN` mode with deterministic adaptive profile tuning:
+  - `src/tet4d/ai/playbot/types.py`
+  - `src/tet4d/ai/playbot/controller.py`
+- Added learning policy keys and runtime validation/accessors:
+  - `config/playbot/policy.json`
+  - `src/tet4d/engine/runtime/runtime_config_validation_playbot.py`
+  - `src/tet4d/engine/runtime/runtime_config.py`
+  - `src/tet4d/engine/runtime/settings_schema.py`
+  - `config/gameplay/tuning.json`
+- Added regression coverage for learning mode/profile adaptation and policy load:
+  - `tests/unit/engine/test_playbot.py`
+  - `tests/unit/engine/test_runtime_config.py`
+- Closed final active debt item in canonical source:
+  - removed `BKL-P2-024` from `config/project/backlog_debt.json`
+  - added watch item `BKL-P3-009` for post-launch learning tuning/stability.
+- Advanced stage metadata:
+  - `scripts/arch_metrics.py` (`ARCH_STAGE=835`)
+  - `config/project/policy/manifests/architecture_metrics.json` (`arch_stage=835`)
+
+Verification checkpoint:
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `python scripts/arch_metrics.py` passed with debt score decrease (`3.29 -> 1.28`).
+
+## Recent Batch Status (Stage 836)
+
+Completed:
+- Added context-router manifest contract validation:
+  - `tools/governance/validate_project_contracts.py`
+- Added regression coverage for context-router manifest validation:
+  - `tests/unit/engine/test_validate_project_contracts.py`
+- Closed stale backlog TODO entries by converting them to enforced contracts:
+  - context-router manifest validation
+  - policy-pack contract coverage already validated through project contracts.
+- Advanced stage metadata:
+  - `scripts/arch_metrics.py` (`ARCH_STAGE=836`)
+  - `config/project/policy/manifests/architecture_metrics.json` (`arch_stage=836`)
+
+Verification checkpoint:
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `python scripts/arch_metrics.py` passed (`tech_debt.score = 1.28`, non-regressed gates).
+
 ## Open Issues / Operational Notes
 
 - Tech-debt gate is now non-regression by baseline with epsilon (`15.06 + 0.03`);
@@ -257,8 +353,8 @@ Verification checkpoint:
 
 Batch objective:
 - continue staged architecture cleanup while preserving non-regression debt
-  gates; prioritize closing remaining P1/P2 backlog items before broad feature
-  expansion.
+  gates; with active debt closed, prioritize LOC/decomposition reduction and
+  stability/tuning watchlist execution.
 
 Policy maintenance requirements in every batch:
 1. Run policy guardrails at batch start and batch end for:

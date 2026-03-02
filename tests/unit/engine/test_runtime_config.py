@@ -18,6 +18,7 @@ from tet4d.engine.runtime.runtime_config import (
     playbot_budget_table_for_ndim,
     playbot_default_hard_drop_after_soft_drops,
     playbot_dry_run_defaults,
+    playbot_learning_mode_policy,
     speed_curve_for_dimension,
 )
 
@@ -45,6 +46,7 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertEqual(playbot_budget_table_for_ndim(3), (10, 20, 34, 48))
         self.assertEqual(playbot_budget_table_for_ndim(4), (16, 32, 50, 72))
         self.assertEqual(playbot_default_hard_drop_after_soft_drops(), 4)
+        self.assertEqual(playbot_learning_mode_policy(), (True, 8, 0.1, 0.45))
         self.assertEqual(playbot_dry_run_defaults(), (160, 1337))
         self.assertTrue(playbot_adaptive_fallback_enabled())
 

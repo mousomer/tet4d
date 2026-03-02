@@ -481,6 +481,16 @@ def playbot_default_hard_drop_after_soft_drops() -> int:
     return int(_playbot_policy()["controller"]["hard_drop_after_soft_drops"])
 
 
+def playbot_learning_mode_policy() -> tuple[bool, int, float, float]:
+    learning = _playbot_policy()["learning_mode"]
+    return (
+        bool(learning["enabled"]),
+        int(learning["review_pieces"]),
+        float(learning["deepen_below_clear_rate"]),
+        float(learning["relax_above_clear_rate"]),
+    )
+
+
 def playbot_dry_run_defaults() -> tuple[int, int]:
     dry_run = _playbot_policy()["dry_run"]
     return int(dry_run["default_pieces"]), int(dry_run["default_seed"])

@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "title": "Topology Lab",
+  "subtitle": "Interactive topology editor (preview + export)",
+  "rows": [
+    {
+      "key": "dimension",
+      "label": "Dimension"
+    },
+    {
+      "key": "topology_mode",
+      "label": "Topology mode"
+    },
+    {
+      "key": "topology_advanced",
+      "label": "Advanced topology"
+    },
+    {
+      "key": "topology_profile_index",
+      "label": "Designer profile"
+    },
+    {
+      "key": "save_mode",
+      "label": "Save to mode settings"
+    },
+    {
+      "key": "export",
+      "label": "Export resolved profile"
+    },
+    {
+      "key": "back",
+      "label": "Back"
+    }
+  ],
+  "hints": [
+    "Up/Down select row",
+    "Left/Right change values",
+    "Enter triggers Save/Export/Back",
+    "Press E to export quickly",
+    "Press S to save selected mode quickly"
+  ],
+  "status_copy": {
+    "saved": "Saved topology settings for {mode_key}",
+    "save_failed": "Failed saving topology settings: {message}",
+    "updated": "Topology setting updated (not saved yet)",
+    "text_mode": "Type profile index, Enter apply, Esc cancel",
+    "invalid_number": "Invalid profile index",
+    "export_ok": "{message}",
+    "export_error": "{message}"
+  }
+}

@@ -43,6 +43,43 @@ class TestHelpTextRuntime(unittest.TestCase):
         unknown = engine_api.help_topic_media_rule_runtime("unknown_topic")
         self.assertEqual(unknown["mode"], "text")
 
+    def test_action_layout_payload_has_unique_ids_and_integer_order(self) -> None:
+        payload = engine_api.help_action_layout_payload_runtime()
+        panels = tuple(payload["panels"])
+        self.assertTrue(panels)
+        ids: set[str] = set()
+        for panel in panels:
+            panel_id = str(panel["id"])
+            self.assertNotIn(panel_id, ids)
+            ids.add(panel_id)
+            self.assertIsInstance(panel["order"], int)
+            for line in panel["lines"]:
+                line_id = str(line["id"])
+                self.assertNotIn(line_id, ids)
+                ids.add(line_id)
+                self.assertIsInstance(line["order"], int)
+
+    def test_action_panel_specs_apply_runtime_capability_filters(self) -> None:
+        specs_without_explore = engine_api.help_action_panel_specs_runtime(
+            mode="4d",
+            capabilities={
+                "mode": "4d",
+                "camera.enabled": True,
+                "rotation.nd": 4,
+                "slice.w.enabled": True,
+                "exploration.enabled": False,
+                "controls.scheme": "keyboard",
+            },
+        )
+        row_ids = {
+            str(line["id"])
+            for panel in specs_without_explore
+            for line in panel.get("lines", ())
+        }
+        self.assertNotIn("move_y_explore", row_ids)
+        self.assertIn("move_w", row_ids)
+        self.assertIn("cam_view_xw", row_ids)
+
     def test_help_text_contract_validation_passes(self) -> None:
         ok, msg = validate_help_text_contract()
         self.assertTrue(ok, msg)

@@ -13,6 +13,9 @@ PACK_PATH = PROJECT_ROOT / "config/project/policy/pack.json"
 MANIFEST_PATH = (
     PROJECT_ROOT / "config/project/policy/manifests/canonical_maintenance.json"
 )
+CONTEXT_ROUTER_PATH = (
+    PROJECT_ROOT / "config/project/policy/manifests/context_router_manifest.json"
+)
 ALLOWED_CONTEXT_IDS = {
     "code",
     "tests",
@@ -620,6 +623,167 @@ def _validate_backlog_id_uniqueness() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_context_entry(
+    idx: int, raw_context: object, issues: list[ValidationIssue], seen_ids: set[str]
+) -> None:
+    if not isinstance(raw_context, dict):
+        issues.append(ValidationIssue("schema", f"contexts[{idx}] must be an object"))
+        return
+    context_id = raw_context.get("id")
+    if not isinstance(context_id, str) or context_id not in ALLOWED_CONTEXT_IDS:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"contexts[{idx}].id must be one of {sorted(ALLOWED_CONTEXT_IDS)}",
+            )
+        )
+        return
+    if context_id in seen_ids:
+        issues.append(
+            ValidationIssue("duplicate", f"duplicate context id: {context_id}")
+        )
+    seen_ids.add(context_id)
+
+    for field_name in ("include_globs", "exclude_globs"):
+        value = raw_context.get(field_name)
+        if not isinstance(value, list) or any(
+            not isinstance(token, str) for token in value
+        ):
+            issues.append(
+                ValidationIssue(
+                    "schema", f"contexts[{idx}].{field_name} must be a list[str]"
+                )
+            )
+    priority = raw_context.get("priority")
+    if isinstance(priority, bool) or not isinstance(priority, int) or priority < 1:
+        issues.append(
+            ValidationIssue(
+                "schema", f"contexts[{idx}].priority must be an integer >= 1"
+            )
+        )
+    tool_required = raw_context.get("tool_required", False)
+    if not isinstance(tool_required, bool):
+        issues.append(
+            ValidationIssue(
+                "schema", f"contexts[{idx}].tool_required must be a boolean"
+            )
+        )
+    tool_hints = raw_context.get("tool_hints", [])
+    if not isinstance(tool_hints, list) or any(
+        not isinstance(hint, str) for hint in tool_hints
+    ):
+        issues.append(
+            ValidationIssue("schema", f"contexts[{idx}].tool_hints must be list[str]")
+        )
+
+
+def _collect_context_router_ids(
+    payload: dict[str, object], issues: list[ValidationIssue]
+) -> set[str]:
+    contexts = payload.get("contexts")
+    if not isinstance(contexts, list) or not contexts:
+        issues.append(
+            ValidationIssue(
+                "schema", "context_router_manifest.contexts must be a non-empty list"
+            )
+        )
+        return set()
+    seen_ids: set[str] = set()
+    for idx, raw_context in enumerate(contexts, start=1):
+        _validate_context_entry(idx, raw_context, issues, seen_ids)
+    return seen_ids
+
+
+def _validate_context_router_rule(
+    idx: int,
+    raw_rule: object,
+    known_context_ids: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    if not isinstance(raw_rule, dict):
+        issues.append(
+            ValidationIssue("schema", f"routing_rules[{idx}] must be an object")
+        )
+        return
+    tags = raw_rule.get("when_task_tags_any")
+    if (
+        not isinstance(tags, list)
+        or not tags
+        or any(not isinstance(tag, str) for tag in tags)
+    ):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"routing_rules[{idx}].when_task_tags_any must be a non-empty list[str]",
+            )
+        )
+    include_contexts = raw_rule.get("include_contexts_ordered")
+    if (
+        not isinstance(include_contexts, list)
+        or not include_contexts
+        or any(not isinstance(context_id, str) for context_id in include_contexts)
+    ):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"routing_rules[{idx}].include_contexts_ordered must be a non-empty list[str]",
+            )
+        )
+        return
+    unknown = [
+        context_id
+        for context_id in include_contexts
+        if context_id not in known_context_ids
+    ]
+    if unknown:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"routing_rules[{idx}] references unknown contexts: {', '.join(sorted(set(unknown)))}",
+            )
+        )
+
+
+def _validate_context_router_rules(
+    payload: dict[str, object],
+    *,
+    known_context_ids: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    routing_rules = payload.get("routing_rules")
+    if not isinstance(routing_rules, list) or not routing_rules:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                "context_router_manifest.routing_rules must be a non-empty list",
+            )
+        )
+        return
+    for idx, raw_rule in enumerate(routing_rules, start=1):
+        _validate_context_router_rule(idx, raw_rule, known_context_ids, issues)
+
+
+def _validate_context_router_manifest() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    rel = "config/project/policy/manifests/context_router_manifest.json"
+    path = CONTEXT_ROUTER_PATH
+    if not path.exists():
+        return [ValidationIssue("missing", f"missing required path: {rel}")]
+    payload = _load_json_payload(path, rel, issues)
+    if not isinstance(payload, dict):
+        return issues
+    schema_version = payload.get("schema_version")
+    if not isinstance(schema_version, str) or not schema_version.strip():
+        issues.append(
+            ValidationIssue("schema", "context_router_manifest.schema_version required")
+        )
+    context_ids = _collect_context_router_ids(payload, issues)
+    _validate_context_router_rules(
+        payload, known_context_ids=context_ids, issues=issues
+    )
+    return issues
+
+
 def _as_string_list(value: object) -> list[str] | None:
     if not isinstance(value, list) or any(
         not isinstance(token, str) for token in value
@@ -747,6 +911,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_canonical_candidates(manifest))
     issues.extend(_validate_content_rules(manifest))
     issues.extend(_validate_backlog_id_uniqueness())
+    issues.extend(_validate_context_router_manifest())
     return issues
 
 

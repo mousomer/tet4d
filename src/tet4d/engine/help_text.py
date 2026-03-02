@@ -1,17 +1,39 @@
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from .runtime.settings_schema import read_json_value_or_raise
 from .runtime.project_config import project_root_path
+from .ui_logic.keybindings_catalog import binding_action_ids
 
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"
 HELP_CONTENT_FILE = HELP_CONFIG_DIR / "content" / "runtime_help_content.json"
 HELP_LAYOUT_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_layout.json"
-HELP_ACTION_GROUPS_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_action_layout.json"
+HELP_ACTION_LAYOUT_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_action_layout.json"
+
+HELP_PANEL_MODES = frozenset({"2d", "3d", "4d"})
+HELP_CAPABILITY_KEYS = frozenset(
+    {
+        "camera.enabled",
+        "rotation.nd",
+        "slice.w.enabled",
+        "piece.hold.enabled",
+        "ghost.enabled",
+        "controls.scheme",
+        "mode",
+        "exploration.enabled",
+    }
+)
+_REQUIRE_EXPR_RE = re.compile(
+    r"^\s*(?P<name>[a-z][a-z0-9_.]*)\s*"
+    r"(?:(?P<op>>=|<=|==|!=|>|<)\s*(?P<value>[A-Za-z0-9_.+\-]+))?\s*$"
+)
+_TEMPLATE_KEY_TOKEN_RE = re.compile(r"\{key:([a-z0-9_]+)\}")
 
 
 class HelpTextValidationError(RuntimeError):
@@ -98,6 +120,234 @@ def _string_map(raw: object, *, path: str) -> dict[str, str]:
             value, path=f"{path}.{clean_key}", non_empty=True
         )
     return out
+
+
+def _require_string_list(
+    value: object, *, path: str, allow_empty: bool
+) -> tuple[str, ...]:
+    values = _require_list(value, path=path)
+    out = tuple(
+        _require_string(item, path=f"{path}[{idx}]", non_empty=True)
+        for idx, item in enumerate(values)
+    )
+    if not allow_empty and not out:
+        raise HelpTextValidationError(f"{path} must be non-empty")
+    return out
+
+
+def _parse_requirement_expression(expr: str, *, path: str) -> tuple[str, str | None, object]:
+    raw_expr = _require_string(expr, path=path, non_empty=True)
+    match = _REQUIRE_EXPR_RE.fullmatch(raw_expr)
+    if match is None:
+        raise HelpTextValidationError(f"{path} has invalid requirement expression: {raw_expr}")
+    name = str(match.group("name"))
+    if name not in HELP_CAPABILITY_KEYS:
+        raise HelpTextValidationError(f"{path} references unknown capability: {name}")
+    op = match.group("op")
+    raw_value = match.group("value")
+    parsed_value: object = raw_value
+    if raw_value is not None:
+        lowered = raw_value.lower()
+        if lowered == "true":
+            parsed_value = True
+        elif lowered == "false":
+            parsed_value = False
+        else:
+            try:
+                parsed_value = int(raw_value)
+            except ValueError:
+                parsed_value = raw_value
+    return name, op, parsed_value
+
+
+def _validate_modes(raw: object, *, path: str) -> tuple[str, ...]:
+    modes = _require_string_list(raw, path=path, allow_empty=False)
+    invalid = tuple(mode for mode in modes if mode not in HELP_PANEL_MODES)
+    if invalid:
+        raise HelpTextValidationError(
+            f"{path} has unsupported modes: {', '.join(sorted(invalid))}"
+        )
+    return modes
+
+
+def _validate_requires(raw: object, *, path: str) -> tuple[str, ...]:
+    requires = _require_string_list(raw, path=path, allow_empty=True)
+    for idx, expr in enumerate(requires):
+        _parse_requirement_expression(expr, path=f"{path}[{idx}]")
+    return requires
+
+
+def _validate_template_tokens(
+    template: str,
+    *,
+    path: str,
+    known_actions: set[str],
+) -> None:
+    for token in _TEMPLATE_KEY_TOKEN_RE.findall(template):
+        if token not in known_actions:
+            raise HelpTextValidationError(
+                f"{path} references unknown key action token: {token}"
+            )
+
+
+def _as_number(value: object) -> float | None:
+    if isinstance(value, bool):
+        return float(int(value))
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _requirement_matches(requirement: str, capabilities: Mapping[str, object]) -> bool:
+    name, op, expected = _parse_requirement_expression(
+        requirement,
+        path="help_action_layout.requires",
+    )
+    actual = capabilities.get(name)
+    if op is None:
+        return bool(actual)
+    if op == "==":
+        return actual == expected
+    if op == "!=":
+        return actual != expected
+    left = _as_number(actual)
+    right = _as_number(expected)
+    if left is None or right is None:
+        return False
+    if op == ">=":
+        return left >= right
+    if op == "<=":
+        return left <= right
+    if op == ">":
+        return left > right
+    if op == "<":
+        return left < right
+    return False
+
+
+def _requirements_match_all(
+    requires: tuple[str, ...], capabilities: Mapping[str, object]
+) -> bool:
+    return all(_requirement_matches(expr, capabilities) for expr in requires)
+
+
+def _register_unique_id(raw_value: object, *, path: str, seen_ids: set[str]) -> str:
+    item_id = _require_string(raw_value, path=path, non_empty=True)
+    if item_id in seen_ids:
+        raise HelpTextValidationError(f"duplicate helper-layout id: {item_id}")
+    seen_ids.add(item_id)
+    return item_id
+
+
+def _validate_action_layout_line(
+    raw_line: object,
+    *,
+    panel_idx: int,
+    line_idx: int,
+    seen_ids: set[str],
+    known_actions: set[str],
+) -> dict[str, Any]:
+    path = f"help_action_layout.panels[{panel_idx}].lines[{line_idx}]"
+    line = _require_object(raw_line, path=path)
+    line_id = _register_unique_id(line.get("id"), path=f"{path}.id", seen_ids=seen_ids)
+    key_actions = _require_string_list(
+        line.get("key_actions", []),
+        path=f"{path}.key_actions",
+        allow_empty=True,
+    )
+    unknown_actions = tuple(action for action in key_actions if action not in known_actions)
+    if unknown_actions:
+        joined = ", ".join(unknown_actions)
+        raise HelpTextValidationError(f"{path}.key_actions has unknown actions: {joined}")
+    icon_action_raw = line.get("icon_action")
+    icon_action: str | None = None
+    if icon_action_raw is not None:
+        icon_action = _require_string(icon_action_raw, path=f"{path}.icon_action", non_empty=True)
+        if icon_action not in known_actions:
+            raise HelpTextValidationError(f"{path}.icon_action has unknown action: {icon_action}")
+    template = _require_string(line.get("template"), path=f"{path}.template", non_empty=True)
+    _validate_template_tokens(template, path=f"{path}.template", known_actions=known_actions)
+    return {
+        "id": line_id,
+        "order": _require_int(line.get("order"), path=f"{path}.order", minimum=0),
+        "modes": _validate_modes(line.get("modes"), path=f"{path}.modes"),
+        "requires": _validate_requires(line.get("requires", []), path=f"{path}.requires"),
+        "key_actions": key_actions,
+        "icon_action": icon_action,
+        "template": template,
+    }
+
+
+def _validate_action_layout_panel(
+    raw_panel: object,
+    *,
+    panel_idx: int,
+    seen_ids: set[str],
+    known_actions: set[str],
+) -> dict[str, Any]:
+    path = f"help_action_layout.panels[{panel_idx}]"
+    panel = _require_object(raw_panel, path=path)
+    panel_id = _register_unique_id(panel.get("id"), path=f"{path}.id", seen_ids=seen_ids)
+    lines_raw = _require_list(panel.get("lines"), path=f"{path}.lines")
+    if not lines_raw:
+        raise HelpTextValidationError(f"{path}.lines must be non-empty")
+    lines = tuple(
+        _validate_action_layout_line(
+            raw_line,
+            panel_idx=panel_idx,
+            line_idx=line_idx,
+            seen_ids=seen_ids,
+            known_actions=known_actions,
+        )
+        for line_idx, raw_line in enumerate(lines_raw)
+    )
+    return {
+        "id": panel_id,
+        "order": _require_int(panel.get("order"), path=f"{path}.order", minimum=0),
+        "title": _require_string(panel.get("title"), path=f"{path}.title", non_empty=True),
+        "modes": _validate_modes(panel.get("modes"), path=f"{path}.modes"),
+        "requires": _validate_requires(panel.get("requires", []), path=f"{path}.requires"),
+        "lines": lines,
+    }
+
+
+def _validate_action_layout_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    meta = _require_object(payload.get("meta"), path="help_action_layout.meta")
+    schema_version = _require_int(
+        meta.get("schema_version"),
+        path="help_action_layout.meta.schema_version",
+        minimum=1,
+    )
+    tokens_raw = payload.get("tokens", {})
+    tokens = (
+        {}
+        if tokens_raw is None
+        else _string_map(tokens_raw, path="help_action_layout.tokens")
+    )
+    panels_raw = _require_list(payload.get("panels"), path="help_action_layout.panels")
+    if not panels_raw:
+        raise HelpTextValidationError("help_action_layout.panels must be non-empty")
+    seen_ids: set[str] = set()
+    known_actions = set(binding_action_ids())
+    panels = tuple(
+        _validate_action_layout_panel(
+            raw_panel,
+            panel_idx=panel_idx,
+            seen_ids=seen_ids,
+            known_actions=known_actions,
+        )
+        for panel_idx, raw_panel in enumerate(panels_raw)
+    )
+    return {
+        "meta": {"schema_version": schema_version},
+        "tokens": dict(tokens),
+        "panels": panels,
+    }
 
 
 def _validate_fallback_topic(raw: object) -> dict[str, Any]:
@@ -473,6 +723,11 @@ def help_layout_registry() -> dict[str, Any]:
     return _validate_layout_payload(_read_json_object(HELP_LAYOUT_FILE))
 
 
+@lru_cache(maxsize=1)
+def help_action_layout_registry() -> dict[str, Any]:
+    return _validate_action_layout_payload(_read_json_object(HELP_ACTION_LAYOUT_FILE))
+
+
 def help_topic_block_lines(topic_id: str, *, compact: bool) -> tuple[str, ...]:
     blocks = help_content_registry()["topic_blocks"]
     raw_id = str(topic_id).strip()
@@ -556,6 +811,86 @@ def help_layout_payload() -> dict[str, Any]:
     }
 
 
+def help_action_layout_payload() -> dict[str, Any]:
+    layout = help_action_layout_registry()
+    panels = tuple(
+        {
+            "id": panel["id"],
+            "order": int(panel["order"]),
+            "title": panel["title"],
+            "modes": tuple(panel["modes"]),
+            "requires": tuple(panel["requires"]),
+            "lines": tuple(
+                {
+                    "id": line["id"],
+                    "order": int(line["order"]),
+                    "modes": tuple(line["modes"]),
+                    "requires": tuple(line["requires"]),
+                    "key_actions": tuple(line["key_actions"]),
+                    "icon_action": line["icon_action"],
+                    "template": line["template"],
+                }
+                for line in panel["lines"]
+            ),
+        }
+        for panel in layout["panels"]
+    )
+    return {
+        "meta": dict(layout["meta"]),
+        "tokens": dict(layout["tokens"]),
+        "panels": panels,
+    }
+
+
+def help_action_panel_specs(
+    *,
+    mode: str,
+    capabilities: Mapping[str, object] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    mode_key = _require_string(mode, path="mode", non_empty=True).lower()
+    if mode_key not in HELP_PANEL_MODES:
+        raise ValueError(f"unsupported helper mode: {mode_key}")
+    runtime_caps = dict(capabilities or {})
+    runtime_caps.setdefault("mode", mode_key)
+    out: list[dict[str, Any]] = []
+    layout = help_action_layout_registry()
+    for panel in sorted(
+        layout["panels"], key=lambda item: (int(item["order"]), str(item["id"]))
+    ):
+        if mode_key not in panel["modes"]:
+            continue
+        if not _requirements_match_all(panel["requires"], runtime_caps):
+            continue
+        lines: list[dict[str, Any]] = []
+        for line in sorted(
+            panel["lines"], key=lambda item: (int(item["order"]), str(item["id"]))
+        ):
+            if mode_key not in line["modes"]:
+                continue
+            if not _requirements_match_all(line["requires"], runtime_caps):
+                continue
+            lines.append(
+                {
+                    "id": line["id"],
+                    "order": int(line["order"]),
+                    "key_actions": tuple(line["key_actions"]),
+                    "icon_action": line["icon_action"],
+                    "template": line["template"],
+                }
+            )
+        if not lines:
+            continue
+        out.append(
+            {
+                "id": panel["id"],
+                "order": int(panel["order"]),
+                "title": panel["title"],
+                "lines": tuple(lines),
+            }
+        )
+    return tuple(out)
+
+
 def help_topic_media_rule(topic_id: str) -> dict[str, str]:
     placement = help_layout_registry()["topic_media_placement"]
     key = str(topic_id).strip()
@@ -568,6 +903,7 @@ def validate_help_text_contract() -> tuple[bool, str]:
     try:
         help_content_registry()
         help_layout_registry()
+        help_action_layout_registry()
     except HelpTextValidationError as exc:
         return False, str(exc)
     return True, "Help text/layout contract validated"
@@ -576,3 +912,4 @@ def validate_help_text_contract() -> tuple[bool, str]:
 def clear_help_text_cache() -> None:
     help_content_registry.cache_clear()
     help_layout_registry.cache_clear()
+    help_action_layout_registry.cache_clear()

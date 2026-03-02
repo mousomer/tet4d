@@ -1,17 +1,266 @@
 {
-  "version": 1,
-  "action_groups": {
-    "runtime_order": [
-      "system",
-      "game",
-      "camera"
-    ],
-    "live_order": [
-      "system",
-      "game_translation",
-      "game_rotation",
-      "game_other",
-      "camera"
-    ]
-  }
+  "meta": {
+    "schema_version": 1
+  },
+  "tokens": {
+    "notes": "Helper membership/order is data-driven; capability gating is engine-evaluated."
+  },
+  "panels": [
+    {
+      "id": "main",
+      "order": 10,
+      "title": "Main",
+      "modes": ["2d", "3d", "4d"],
+      "requires": [],
+      "lines": [
+        {
+          "id": "main_menu",
+          "order": 10,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["menu"],
+          "template": "pause menu"
+        },
+        {
+          "id": "main_help",
+          "order": 20,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["help"],
+          "template": "help"
+        },
+        {
+          "id": "main_restart",
+          "order": 30,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["restart"],
+          "template": "restart"
+        },
+        {
+          "id": "main_toggle_grid",
+          "order": 40,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["toggle_grid"],
+          "template": "grid mode"
+        },
+        {
+          "id": "main_quit",
+          "order": 50,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["quit"],
+          "template": "quit"
+        }
+      ]
+    },
+    {
+      "id": "translation",
+      "order": 20,
+      "title": "Translation",
+      "modes": ["2d", "3d", "4d"],
+      "requires": [],
+      "lines": [
+        {
+          "id": "move_x",
+          "order": 10,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["move_x_neg", "move_x_pos"],
+          "icon_action": "move_x_pos",
+          "template": "move x"
+        },
+        {
+          "id": "move_z",
+          "order": 20,
+          "modes": ["3d", "4d"],
+          "requires": ["camera.enabled"],
+          "key_actions": ["move_z_neg", "move_z_pos"],
+          "icon_action": "move_z_neg",
+          "template": "away/closer"
+        },
+        {
+          "id": "move_w",
+          "order": 30,
+          "modes": ["4d"],
+          "requires": ["slice.w.enabled"],
+          "key_actions": ["move_w_neg", "move_w_pos"],
+          "icon_action": "move_w_pos",
+          "template": "w layer prev/next"
+        },
+        {
+          "id": "move_y_explore",
+          "order": 40,
+          "modes": ["2d", "3d", "4d"],
+          "requires": ["exploration.enabled"],
+          "key_actions": ["move_y_neg", "move_y_pos"],
+          "icon_action": "move_y_neg",
+          "template": "up/down (explore)"
+        },
+        {
+          "id": "soft_drop",
+          "order": 50,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["soft_drop"],
+          "icon_action": "soft_drop",
+          "template": "soft drop"
+        },
+        {
+          "id": "hard_drop",
+          "order": 60,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["hard_drop"],
+          "icon_action": "hard_drop",
+          "template": "hard drop"
+        }
+      ]
+    },
+    {
+      "id": "rotation",
+      "order": 30,
+      "title": "Rotation",
+      "modes": ["2d", "3d", "4d"],
+      "requires": [],
+      "lines": [
+        {
+          "id": "rot_xy",
+          "order": 10,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["rotate_xy_neg", "rotate_xy_pos"],
+          "icon_action": "rotate_xy_pos",
+          "template": "plane x-y"
+        },
+        {
+          "id": "rot_xz",
+          "order": 20,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["rotate_xz_neg", "rotate_xz_pos"],
+          "icon_action": "rotate_xz_pos",
+          "template": "plane x-z"
+        },
+        {
+          "id": "rot_yz",
+          "order": 30,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["rotate_yz_neg", "rotate_yz_pos"],
+          "icon_action": "rotate_yz_pos",
+          "template": "plane y-z"
+        },
+        {
+          "id": "rot_xw",
+          "order": 40,
+          "modes": ["4d"],
+          "requires": ["rotation.nd>=4"],
+          "key_actions": ["rotate_xw_neg", "rotate_xw_pos"],
+          "icon_action": "rotate_xw_pos",
+          "template": "plane x-w"
+        },
+        {
+          "id": "rot_yw",
+          "order": 50,
+          "modes": ["4d"],
+          "requires": ["rotation.nd>=4"],
+          "key_actions": ["rotate_yw_neg", "rotate_yw_pos"],
+          "icon_action": "rotate_yw_pos",
+          "template": "plane y-w"
+        },
+        {
+          "id": "rot_zw",
+          "order": 60,
+          "modes": ["4d"],
+          "requires": ["rotation.nd>=4"],
+          "key_actions": ["rotate_zw_neg", "rotate_zw_pos"],
+          "icon_action": "rotate_zw_pos",
+          "template": "plane z-w"
+        }
+      ]
+    },
+    {
+      "id": "camera",
+      "order": 40,
+      "title": "Camera",
+      "modes": ["3d", "4d"],
+      "requires": ["camera.enabled"],
+      "lines": [
+        {
+          "id": "cam_yaw_fine",
+          "order": 10,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["yaw_fine_neg", "yaw_fine_pos"],
+          "template": "yaw +/-15"
+        },
+        {
+          "id": "cam_yaw",
+          "order": 20,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["yaw_neg", "yaw_pos"],
+          "template": "yaw +/-90"
+        },
+        {
+          "id": "cam_pitch",
+          "order": 30,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["pitch_neg", "pitch_pos"],
+          "template": "pitch +/-90"
+        },
+        {
+          "id": "cam_view_xw",
+          "order": 40,
+          "modes": ["4d"],
+          "requires": [],
+          "key_actions": ["view_xw_neg", "view_xw_pos"],
+          "template": "view x-w +/-90"
+        },
+        {
+          "id": "cam_view_zw",
+          "order": 50,
+          "modes": ["4d"],
+          "requires": [],
+          "key_actions": ["view_zw_neg", "view_zw_pos"],
+          "template": "view z-w +/-90"
+        },
+        {
+          "id": "cam_zoom",
+          "order": 60,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["zoom_out", "zoom_in"],
+          "template": "zoom"
+        },
+        {
+          "id": "cam_reset",
+          "order": 70,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["reset"],
+          "template": "reset view"
+        },
+        {
+          "id": "cam_overlay_alpha",
+          "order": 80,
+          "modes": ["3d", "4d"],
+          "requires": [],
+          "key_actions": ["overlay_alpha_dec", "overlay_alpha_inc"],
+          "template": "locked cells alpha [,]"
+        },
+        {
+          "id": "cam_projection",
+          "order": 90,
+          "modes": ["3d"],
+          "requires": [],
+          "key_actions": ["cycle_projection"],
+          "template": "projection"
+        }
+      ]
+    }
+  ]
 }

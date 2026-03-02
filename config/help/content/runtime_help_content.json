@@ -59,7 +59,8 @@
         "",
         "## Practical notes",
         "- Challenge mode pre-fills lower layers.",
-        "- Exploration mode disables gravity/lock/clear."
+        "- Exploration mode disables gravity/lock/clear.",
+        "- See Scoring topic for points and bonus rules."
       ],
       "full_lines": [
         "",
@@ -67,6 +68,38 @@
         "- Challenge mode prefills lower layers to raise early-game pressure.",
         "- Exploration mode disables gravity/locking/clears for practice.",
         "- Dry-run checks whether a selected setup can clear layers."
+      ]
+    },
+    "scoring_and_leaderboard": {
+      "compact_lines": [
+        "",
+        "## Clear points",
+        "- Base: 1=40, 2=100, 3=300, 4=1200, 5+=1200+(n-4)*400.",
+        "- Bonus: +80 (2), +240 (3), +600 (4), +900 (5+).",
+        "- Board clear bonus: +1500.",
+        "- Final points = round((base + bonuses) * score multiplier).",
+        "- Leaderboard ranks by score, then lines, then speed."
+      ],
+      "full_lines": [
+        "",
+        "## Base clear points",
+        "- 1 line/layer: +40",
+        "- 2 lines/layers: +100",
+        "- 3 lines/layers: +300",
+        "- 4 lines/layers: +1200",
+        "- 5+ lines/layers: +1200 + 400 * (n-4)",
+        "",
+        "## Bonus points",
+        "- Multi-layer clear bonus: +80 (2), +240 (3), +600 (4), +900 (5+)",
+        "- Entire board clear bonus: +1500",
+        "",
+        "## Final score per lock",
+        "- Awarded = round((base + bonuses) * score_multiplier)",
+        "- Multiplier reflects bot mode, grid mode, and speed level.",
+        "",
+        "## Leaderboard",
+        "- Leaderboard stores finished runs from 2D/3D/4D.",
+        "- Fields include score, cleared lines/layers, speed progression, and duration."
       ]
     },
     "settings_profiles": {
@@ -112,20 +145,20 @@
       "compact_lines": [
         "",
         "## Launcher sections",
-        "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
+        "- Play 2D / Play 3D / Play 4D / Help / Leaderboard / Settings / Keybindings / Bot Options / Quit",
         "- Pause menu keeps Help/Settings/Keybindings/Bot options parity."
       ],
       "full_lines": [
         "",
         "## Launcher sections",
-        "- Play 2D / Play 3D / Play 4D / Help / Settings / Keybindings / Bot Options / Quit",
+        "- Play 2D / Play 3D / Play 4D / Help / Leaderboard / Settings / Keybindings / Bot Options / Quit",
         "",
         "## Keybindings menu",
         "- Sections: General, 2D, 3D, 4D.",
         "- Rows show action, key(s), and action description.",
         "",
         "## Pause parity",
-        "- Pause includes Help, Settings, Keybindings, Bot Options, Restart, and Quit."
+        "- Pause includes Help, Leaderboard, Settings, Keybindings, Bot Options, Restart, and Quit."
       ]
     },
     "troubleshooting": {

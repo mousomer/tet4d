@@ -102,6 +102,25 @@
       ]
     },
     {
+      "id": "scoring_and_leaderboard",
+      "title": "Scoring and Leaderboard",
+      "lane": "full",
+      "priority": 55,
+      "dimensions": [2, 3, 4],
+      "contexts": ["launcher", "pause", "gameplay"],
+      "summary": "Point rules, bonuses, multiplier, and leaderboard ranking.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What",
+          "lines": [
+            "Base clear score + clear bonuses are multiplied by assist factors.",
+            "Leaderboard records finished sessions across dimensions."
+          ]
+        }
+      ]
+    },
+    {
       "id": "settings_profiles",
       "title": "Settings and Profiles",
       "lane": "full",

@@ -329,6 +329,41 @@ def _validate_controller(raw_controller: object) -> dict[str, int]:
     }
 
 
+def _validate_learning_mode(raw_learning: object) -> dict[str, Any]:
+    learning_obj = require_object(raw_learning, path="playbot.learning_mode")
+    enabled = learning_obj.get("enabled")
+    if not isinstance(enabled, bool):
+        raise RuntimeError("playbot.learning_mode.enabled must be a boolean")
+    review_pieces = require_int(
+        learning_obj.get("review_pieces"),
+        path="playbot.learning_mode.review_pieces",
+        min_value=1,
+    )
+    deepen_below_clear_rate = require_number(
+        learning_obj.get("deepen_below_clear_rate"),
+        path="playbot.learning_mode.deepen_below_clear_rate",
+        min_value=0.0,
+        max_value=1.0,
+    )
+    relax_above_clear_rate = require_number(
+        learning_obj.get("relax_above_clear_rate"),
+        path="playbot.learning_mode.relax_above_clear_rate",
+        min_value=0.0,
+        max_value=1.0,
+    )
+    if relax_above_clear_rate < deepen_below_clear_rate:
+        raise RuntimeError(
+            "playbot.learning_mode.relax_above_clear_rate must be >= "
+            "deepen_below_clear_rate"
+        )
+    return {
+        "enabled": enabled,
+        "review_pieces": review_pieces,
+        "deepen_below_clear_rate": deepen_below_clear_rate,
+        "relax_above_clear_rate": relax_above_clear_rate,
+    }
+
+
 def _validate_dry_run(raw_dry_run: object) -> dict[str, int]:
     dry_run_obj = require_object(raw_dry_run, path="playbot.dry_run")
     return {
@@ -354,6 +389,7 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
     auto_algorithm = _validate_auto_algorithm(payload.get("auto_algorithm"))
     benchmark = _validate_benchmark(payload.get("benchmark"))
     controller = _validate_controller(payload.get("controller"))
+    learning_mode = _validate_learning_mode(payload.get("learning_mode"))
     dry_run = _validate_dry_run(payload.get("dry_run"))
 
     return {
@@ -366,5 +402,6 @@ def validate_playbot_policy_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "auto_algorithm": auto_algorithm,
         "benchmark": benchmark,
         "controller": controller,
+        "learning_mode": learning_mode,
         "dry_run": dry_run,
     }
