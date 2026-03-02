@@ -70,6 +70,23 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-02): runtime parser/validation decomposition continuation.
+
+- Reduced duplicate menu-structure parsing logic by extracting shared helpers to:
+  - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
+- Simplified `menu_structure_schema` by removing duplicate local parsers and
+  consuming shared helpers for:
+  - mode string-list parsing
+  - copy-field parsing
+  - `ui_copy` section parsing
+- Reduced `runtime_config.py` validator concentration by extracting gameplay/audio
+  payload validation to:
+  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
+- Updated `runtime_config.py` to delegate to extracted gameplay/audio validators.
+- Verification:
+  - `.venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py tests/unit/engine/test_project_config.py`
+  - `CODEX_MODE=1 ./scripts/verify.sh`
+
 Current sub-batch (2026-03-02): helper-panel runtime stability + cross-mode structure unification.
 
 - Expanded release-packaging CI matrix to publish separate artifacts for:

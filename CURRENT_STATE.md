@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-01
-Branch: `codex/loc-slim-batch`
-Worktree expectation at handoff: dirty (policy additions + doc refresh pending commit)
+Last updated: 2026-03-02
+Branch: `master`
+Worktree expectation at handoff: clean (post-stage-840 runtime parser/validation dedup batch)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `836` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `840` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -96,17 +96,21 @@ Read this first in a new Codex thread before continuing staged refactors.
 ## Latest Local Batch (Unreleased)
 
 Completed:
-- Added leaderboard persistence and display flow:
-  - storage: `state/analytics/leaderboard.json`
-  - launcher + pause menu entrypoint action: `leaderboard`
-  - runtime submission on 2D/3D/4D session end.
-- Added restart-path leaderboard session capture so scores are persisted when runs are restarted.
-- Added scoring explanation blocks to runtime help content (base clear points,
-  multi-layer bonus, board-clear bonus, multiplier, leaderboard semantics).
-- Updated 3D/4D control helper group ordering so camera actions are prioritized
-  and panel priority remains: score summary -> Translation -> Rotation -> Camera/View -> System -> low-priority data.
+- Reduced runtime parser duplication by extracting shared menu-structure parsing
+  helpers into:
+  - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
+  - `src/tet4d/engine/runtime/menu_structure_schema.py` now consumes shared helpers
+    and no longer carries duplicate `ui_copy` parsing code paths.
+- Reduced runtime-config validator concentration by extracting gameplay/audio
+  payload validation into:
+  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
+  - `src/tet4d/engine/runtime/runtime_config.py` now delegates gameplay/audio
+    validation to the extracted module.
+- Rebuilt release packaging matrix successfully for:
+  - Linux, Windows, macOS x64, macOS ARM64.
 
 Verification:
+- `.venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py tests/unit/engine/test_project_config.py` passed (`33 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 ## Recent Batch Status (Stages 756-790)
