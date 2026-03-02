@@ -17,9 +17,9 @@ jobs:
             target: linux
           - runner: windows-latest
             target: windows
-          - runner: macos-13
+          - runner: macos-15-intel
             target: macos-x64
-          - runner: macos-14
+          - runner: macos-latest
             target: macos-arm64
     steps:
       - uses: actions/checkout@v4
