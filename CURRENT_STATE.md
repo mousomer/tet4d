@@ -2,7 +2,7 @@
 
 Last updated: 2026-03-02
 Branch: `master`
-Worktree expectation at handoff: clean (post-stage-840 runtime parser/validation dedup batch)
+Worktree expectation at handoff: dirty (stage-853-890 tutorial rollout batch pending commit)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `840` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `890` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -96,6 +96,56 @@ Read this first in a new Codex thread before continuing staged refactors.
 ## Latest Local Batch (Unreleased)
 
 Completed:
+- Integrated tutorial runtime execution end-to-end:
+  - launcher tutorial selector + mode launch routing
+  - deterministic per-step input gating
+  - in-loop step progression from event + clear predicates
+  - 2D/3D/4D tutorial overlay rendering with live key prompts
+  - started/completed tutorial progress persistence
+  - deterministic tutorial start conditions (2D/3D/4D):
+    - curated asymmetric starter piece IDs,
+    - starter piece fully visible with minimum gravity layer offset 2,
+    - deterministic 1-2 seeded bottom challenge layers.
+  - tutorial-step pause contract:
+    - gravity/bot progression is paused while tutorial session is running
+    - step progression waits on explicit required actions/predicates
+  - tutorial setup presets now applied at runtime:
+    - board presets (`2d_almost_line`, `3d_almost_layer`, `4d_almost_hyper_layer`)
+    - camera presets (`tutorial_3d_default`, `tutorial_4d_default`)
+  - pause menu now includes tutorial controls for active sessions:
+    - `tutorial_restart`
+    - `tutorial_skip`
+- Key files:
+  - `src/tet4d/engine/tutorial/runtime.py`
+  - `src/tet4d/engine/tutorial/persistence.py`
+  - `src/tet4d/ui/pygame/launch/tutorials_menu.py`
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+  - `cli/front.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `src/tet4d/engine/frontend_nd.py`
+- Seeded interactive tutorial core (M0/M1 scaffolding) with config-backed
+  lesson packs and deterministic runtime state machinery:
+  - `config/tutorial/lessons.json`
+  - `config/schema/tutorial_lessons.schema.json`
+  - `src/tet4d/engine/tutorial/schema.py`
+  - `src/tet4d/engine/tutorial/content.py`
+  - `src/tet4d/engine/tutorial/gating.py`
+  - `src/tet4d/engine/tutorial/conditions.py`
+  - `src/tet4d/engine/tutorial/events.py`
+  - `src/tet4d/engine/tutorial/manager.py`
+- Exposed tutorial payload/lesson-id runtime accessors in:
+  - `src/tet4d/engine/api.py`
+- Added tutorial coverage:
+  - `tests/unit/engine/test_tutorial_schema.py`
+  - `tests/unit/engine/test_tutorial_manager.py`
+  - `tests/unit/engine/test_tutorial_content.py`
+- Synced canonical/RDS/project-structure docs:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `docs/PROJECT_STRUCTURE.md`
 - Reduced runtime parser duplication by extracting shared menu-structure parsing
   helpers into:
   - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
@@ -112,6 +162,12 @@ Completed:
   - Linux, Windows, macOS x64, macOS ARM64.
 
 Verification:
+- `.venv/bin/ruff check cli/front.py cli/front2d.py src/tet4d/engine/tutorial src/tet4d/ui/pygame/front3d_game.py src/tet4d/ui/pygame/front4d_game.py src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_front_launcher_routes.py tests/unit/engine/test_nd_routing.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed (`30 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_game2d.py tests/unit/engine/test_game_nd.py tests/unit/engine/test_front3d_setup.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_pause_menu.py` passed (`95 passed`).
+- `.venv/bin/ruff check src/tet4d/engine/tutorial tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed (`10 passed`).
+- `.venv/bin/python tools/governance/validate_project_contracts.py` passed.
 - `.venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py tests/unit/engine/test_project_config.py` passed (`33 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
@@ -406,6 +462,43 @@ Execution pattern:
 ### Track C: Runtime side-effect extraction (selective)
 
 - Audit `read_text`/`write_text`/`open(` in `src/tet4d/engine/**` and reroute misplaced I/O into runtime helpers only when outside runtime-owned storage modules.
+
+### Track D: Interactive Tutorials (authoritative replacement plan)
+
+Objective:
+
+1. Ship a step-driven in-game tutorial system for 2D/3D/4D.
+2. Teach movement, rotation, camera, and line/layer/hyper-layer completion.
+3. Keep tutorials scriptable/data-driven and resilient to UI/input refactors.
+
+Core constraints:
+
+1. Deterministic progression on explicit conditions only.
+2. Lesson content/flow is data; code only implements generic engine/conditions.
+3. Per-step input gating (`allow`/`deny`) enforced at input dispatch.
+4. Always skippable/restartable; never softlock users.
+5. Mode-agnostic core: mode differences live in content packs.
+
+Milestone sequence:
+
+1. M0: schema + canonical action/clearing definitions.
+2. M1: tutorial engine (`TutorialManager`, conditions, gating, persistence).
+3. M2: overlay UI + highlights + progress + skip/restart controls.
+4. M3: Pack A (2D) end-to-end.
+5. M4: Pack B (3D) end-to-end.
+6. M5: Pack C (4D) end-to-end.
+7. M6: replay harness + static validation + tutorial event log export.
+
+Release gate:
+
+1. 2D/3D/4D packs pass deterministic replay tests.
+2. Every step has explicit completion conditions and gating.
+3. Skip/restart always recover to known state.
+
+Reference:
+
+1. Full canonical tutorial plan is in `docs/BACKLOG.md` section
+   `4.1 Interactive Tutorials Plan (BKL-P3-013)`.
 
 ## Long-Term Plan (Maximal Clean Architecture)
 

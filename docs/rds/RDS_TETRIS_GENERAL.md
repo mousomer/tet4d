@@ -48,6 +48,7 @@ Cross-cutting requirements are defined in:
 23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
 24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
+26. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -178,9 +179,13 @@ Cross-cutting requirements are defined in:
 54. `.github/workflows/release-packaging.yml`
 55. Desktop packaging usage docs are source-controlled:
 56. `docs/RELEASE_INSTALLERS.md`
-57. Shared font model/factory is source-controlled:
-58. `src/tet4d/ui/pygame/render/font_profiles.py`
-59. Per-mode font profile values (2D vs ND) must remain explicit and stable.
+57. Tutorial lesson packs are source-controlled:
+58. `config/tutorial/lessons.json`
+59. Tutorial lesson schema is source-controlled:
+60. `config/schema/tutorial_lessons.schema.json`
+61. Shared font model/factory is source-controlled:
+62. `src/tet4d/ui/pygame/render/font_profiles.py`
+63. Per-mode font profile values (2D vs ND) must remain explicit and stable.
 
 ## 7. Engineering Best Practices
 
@@ -259,7 +264,7 @@ Completed in current implementation:
 19. menu-config validator helpers were consolidated in `src/tet4d/engine/runtime/menu_config.py`,
 20. keybinding save/load path/profile resolution was deduplicated in `src/tet4d/ui/pygame/keybindings.py`,
 21. test-only playbot wrappers were removed from `src/tet4d/ai/playbot/planner_nd.py` (tests now import `planner_nd_core` directly),
-22. obsolete `menu_gif_guides.py` shim was removed; menu guide rendering now uses `src/tet4d/ui/pygame/menu/menu_control_guides.py` only.
+22. obsolete `menu_gif_guides.py` shim was removed; control visuals now use action-icon rendering via `src/tet4d/ui/pygame/render/control_icons.py`.
 23. Stage-2 simplification follow-up completed:
 24. shared list/string validators are now reused across row/action/scope checks in `src/tet4d/engine/runtime/menu_config.py`,
 25. keybinding profile clone/dimension handling now uses shared helpers/constants in `src/tet4d/ui/pygame/keybindings.py`,

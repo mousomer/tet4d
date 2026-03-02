@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-01  
+Updated: 2026-03-02  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 ## 1. Priority Verification Rules
@@ -60,6 +60,9 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
    large engine/runtime/ui module split pressure moved from active debt to watch
    after shared-settings and API dedup passes; monitor hotspot growth and
    continue staged LOC reduction.
+5. `WATCH` `[BKL-P3-013]` Interactive tutorials rollout watch:
+   track data-driven lesson packs, deterministic step progression, input gating,
+   and tutorial regression harness coverage across 2D/3D/4D.
 
 ## 4. Gap Mapping to RDS
 
@@ -68,7 +71,392 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 3. `docs/rds/RDS_MENU_STRUCTURE.md`: menu graph modularization and interactive topology-lab workflow are closed; maintain drift watch only.
 4. `docs/rds/RDS_FILE_FETCH_LIBRARY.md`: lifecycle/adaptive-fetch design baseline exists; implementation remains future-scoped.
 
+## 4.1 Interactive Tutorials Plan (BKL-P3-013)
+
+### Objective
+
+Ship an in-game, step-driven tutorial system that:
+
+1. Teaches movement in nD, rotation, camera control, and layer completion.
+2. Works consistently across 2D, 3D, and 4D modes.
+3. Is scriptable/data-driven, testable, and resilient to UI/input refactors.
+
+### Scope
+
+In-scope:
+
+1. A tutorial engine (state machine + triggers + gating).
+2. A data schema to define tutorial lessons (JSON/YAML).
+3. Overlay UI: instruction panel, key prompts, highlights, ghost targets,
+   progress indicator.
+4. Interactive lessons:
+   2D: move/rotate/drop + complete a line.
+   3D: move in 3 axes, rotate in 3D, camera orbit/pan, complete a layer/plane.
+   4D: move in 4 axes (or slice + axis select), rotate in 4D planes, camera +
+   slice navigation, complete a hyper-layer (per runtime clearing definition).
+
+Out-of-scope (this pack):
+
+1. Full campaign/story mode.
+2. Full localization framework implementation (leave hooks only).
+3. Analytics backend (local event logging hooks only).
+
+### Non-negotiable design constraints
+
+1. Deterministic progression: steps advance only on explicit conditions.
+2. No hard-coded lesson logic beyond generic triggers/conditions; lessons are data.
+3. Input gating per step: allowed actions constrained; disallowed actions ignored
+   (optional user feedback).
+4. Skippable and restartable at any time.
+5. Mode-agnostic core: 2D/3D/4D are content packs, not separate implementations.
+6. Deterministic tutorial start contract:
+   first step starts with a curated asymmetric piece, full visibility at least
+   two gravity layers below top, and deterministic 1-2 seeded bottom layers.
+
+### Context requirements (Codex router)
+
+1. Code context: input handling, game loop/update, UI rendering, camera controls,
+   piece transforms, line/layer clear logic.
+2. Docs context: control scheme documentation, gameplay definitions for layer in
+   3D/4D, UX conventions.
+3. Config context: keybind mappings, settings flags, UI theme tokens.
+4. Runtime context: tutorial event logs, step transitions, replay traces.
+5. Git context: diff scope + feature branch hygiene.
+6. Planning context: acceptance criteria + stop conditions.
+
+### Deliverables
+
+D1. Tutorial engine (core):
+
+1. Load lesson definitions (JSON/YAML).
+2. Maintain `(lesson_id, step_id)` state.
+3. Evaluate conditions and triggers.
+4. Enforce input gating.
+5. Emit events:
+   `step_started`, `hint_shown`, `condition_met`, `step_completed`,
+   `lesson_completed`, `lesson_skipped`.
+
+Implementation shape:
+
+1. `TutorialManager` service.
+2. `Step` definition with:
+   `instruction_text`, optional `hint_text`,
+   `allowed_actions`/`blocked_actions`,
+   `on_enter` hooks (spawn target, camera preset, fixed seed),
+   `completion_conditions`,
+   `timeout_hint_seconds` (optional).
+
+Condition system:
+
+1. Event predicates: action performed, rotation plane used, camera moved.
+2. World predicates: piece position/orientation, layer cleared, target cell filled.
+3. Composite predicates: AND/OR DSL.
+
+D2. Tutorial content schema (data-driven):
+
+Schema requirements:
+
+1. Versioned (`schema_version`).
+2. Validatable (unit tests + JSON schema where used).
+
+Minimum fields:
+
+1. `lesson_id`, `title`, `mode` (`2d|3d|4d`).
+2. `steps[]` with:
+   `id`,
+   `ui: {text, hint, highlights[], key_prompts[]}`,
+   `gating: {allow[], deny[]}`,
+   `setup: {camera_preset?, spawn_piece?, board_preset?, rng_seed?}`,
+   `complete_when: {events[], predicates[], logic}`,
+   optional `fail_when`.
+
+D3. Tutorial UI overlay:
+
+UI elements:
+
+1. Instruction panel (top/side).
+2. Contextual key prompts (from keybind config).
+3. Highlight system:
+   piece/axes gizmo/target cells/camera widget.
+4. Progress indicator (step X/Y).
+5. Skip/restart controls (also accessible from pause menu).
+
+Hard constraint:
+
+1. UI depends on tutorial state + highlight descriptors only, not renderer internals.
+
+### Tutorial curriculum (content packs)
+
+Pack A: 2D tutorial (short, canonical)
+
+Lesson A1 Movement:
+
+1. Move left/right to marked columns.
+2. Soft drop vs hard drop.
+3. Hold (if supported) + next-preview explanation (non-blocking).
+
+Lesson A2 Rotation:
+
+1. Rotate CW/CCW.
+2. Wall-kick demonstration (if supported).
+
+Lesson A3 Clear a line:
+
+1. Place piece to complete a nearly-finished line.
+2. Clear confirmation + brief scoring explanation.
+
+Definition of done (Pack A):
+
+1. New player can complete a line in under two minutes without external docs.
+
+Pack B: 3D tutorial
+
+Lesson B1 Camera control:
+
+1. Orbit.
+2. Pan.
+3. Zoom + reset view.
+
+Lesson B2 Movement in 3 axes:
+
+1. X/Y move (screen plane).
+2. Z move (depth).
+3. Layer/slice explanation if applicable.
+
+Lesson B3 3D rotations:
+
+1. Rotate around X/Y/Z (or equivalent mapping).
+2. Demonstrate supported reference frame (camera-relative or world-relative).
+
+Lesson B4 Clear a layer:
+
+1. Complete a plane with constrained placement.
+2. Show clear animation + resulting board state.
+
+Definition of done (Pack B):
+
+1. Player demonstrates camera orbit, depth move, one rotation, one plane clear.
+
+Pack C: 4D tutorial
+
+Lesson C1 Understanding slices:
+
+1. W-slice concept.
+2. Slice navigation (`W-`/`W+` or equivalent).
+3. Active-slice indicator behavior.
+
+Lesson C2 Movement in 4 axes:
+
+1. Move in visible plane.
+2. Move along W (or equivalent abstraction).
+3. Confirm cross-slice placement.
+
+Lesson C3 4D rotations (plane-based):
+
+1. Rotate in visible 3D subspace.
+2. Rotate involving W planes (`XW`/`YW`/`ZW` or equivalent).
+3. Teach rotation-plane selection UX.
+
+Lesson C4 Clear a hyper-layer:
+
+1. Start from near-complete deterministic preset.
+2. Complete with constrained placement.
+3. Show clear + scoring explanation.
+
+Definition of done (Pack C):
+
+1. Player demonstrates slice navigation, one W-plane rotation, one hyper-layer clear.
+
+### Sequencing plan (milestones)
+
+M0 Spec + interfaces (planning only):
+
+1. Formalize layer completion definitions in 3D and 4D.
+2. Formalize canonical action list (`MoveX+`, `RotatePlaneXY`, `SliceW+`, etc.).
+3. Define tutorial schema v1.
+
+Acceptance:
+
+1. One source of truth for actions + clearing definitions.
+
+Stop condition:
+
+1. Schema + action list reviewed once; no feature creep.
+
+M1 Tutorial core engine:
+
+1. Implement `TutorialManager`.
+2. Implement condition evaluation.
+3. Implement input gating at dispatch layer.
+4. Implement persistence (last completed lesson + resume flag).
+
+Acceptance:
+
+1. Dummy three-step lesson advances deterministically and gating works.
+
+Stop condition:
+
+1. No UI polish beyond minimal debug text.
+
+M2 Overlay UI + highlight system:
+
+1. Instruction panel + key prompts from keybind config.
+2. Render highlight descriptors.
+3. Implement skip/restart lesson controls.
+
+Acceptance:
+
+1. Any step can render text + highlight + prompts without game-logic changes.
+
+Stop condition:
+
+1. No animation polish beyond basic clarity.
+
+M3 Content Pack A (2D):
+
+1. Author lesson content files.
+2. Add deterministic line-clear presets.
+3. Add lesson-file validation tests.
+
+Acceptance:
+
+1. Pack A completes end-to-end with no dead steps.
+
+M4 Content Pack B (3D):
+
+1. Author measurable camera steps.
+2. Author movement + rotation steps with gating.
+3. Add 3D plane-clear preset.
+
+Acceptance:
+
+1. Pack B stable across different keybinds.
+
+M5 Content Pack C (4D):
+
+1. Author slice-navigation steps.
+2. Author rotation-plane selection steps with explicit events.
+3. Add hyper-layer clear preset.
+
+Acceptance:
+
+1. Pack C stable end-to-end without accidental-behavior dependency.
+
+M6 QA + regression harness:
+
+1. Add tutorial replay mode (scripted inputs -> assert transitions).
+2. Add static validation (schema, key prompt coverage, highlight coverage).
+3. Add runtime tutorial event log export (last 200 events).
+
+Acceptance:
+
+1. Tutorial packs pass automated replay for at least one canonical keymap.
+
+### File/module layout (recommended)
+
+1. `tutorial/`
+   `manager.py`
+   `schema.py`
+   `conditions.py`
+   `gating.py`
+   `events.py`
+2. `tutorial/content/`
+   `2d_pack.yaml`
+   `3d_pack.yaml`
+   `4d_pack.yaml`
+3. `ui/tutorial_overlay.*`
+4. `tests/tutorial/`
+   `test_schema_validation.py`
+   `test_step_transitions.py`
+
+### Global acceptance criteria (release gate)
+
+1. Tutorials work in 2D/3D/4D without per-pack code changes.
+2. Every step defines completion conditions, gating set, and visible instruction.
+3. No softlocks: skip and restart always recover to known state.
+4. Deterministic clear presets for line/plane/hyper-layer lessons.
+
+### Global stop conditions (anti-scope-creep)
+
+1. Do not expand into advanced strategy coaching.
+2. Do not add new control schemes; reflect existing actions only.
+3. Do not add cinematic tutorial sequences; keep interactive and fast.
+
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 baseline).
+
+- Added tutorial runtime state layer with deterministic progression hooks and
+  persistence of started/completed lessons:
+  - `src/tet4d/engine/tutorial/runtime.py`
+  - `src/tet4d/engine/tutorial/persistence.py`
+  - `config/project/io_paths.json` (`tutorial_progress_file_default`)
+  - `src/tet4d/engine/runtime/project_config.py`
+- Extended API surface to expose tutorial runtime session helpers to UI loops:
+  - `src/tet4d/engine/api.py`
+- Added launcher tutorial selector and wired Play -> Tutorials route to launch
+  guided runs for 2D/3D/4D:
+  - `src/tet4d/ui/pygame/launch/tutorials_menu.py`
+  - `cli/front.py`
+  - `src/tet4d/ui/pygame/launch/launcher_play.py`
+- Integrated tutorial gating/event observation/step progression into gameplay loops:
+  - `cli/front2d.py`
+  - `src/tet4d/engine/frontend_nd.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+- Added tutorial in-game overlay renderer (instruction + key prompts + progress):
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+- Tightened runtime tutorial behavior contract:
+  - step-pause enforcement now freezes gravity/bot tick while tutorial is running
+  - clear-step board presets (`2d_almost_line`, `3d_almost_layer`, `4d_almost_hyper_layer`)
+    are applied deterministically
+  - tutorial camera presets (`tutorial_3d_default`, `tutorial_4d_default`) are now
+    applied by loop adapters
+  - pause menu now exposes tutorial controls (`tutorial_restart`, `tutorial_skip`)
+  - lesson packs now require full movement/rotation/camera action completion per mode
+  - files:
+    - `config/tutorial/lessons.json`
+    - `config/menu/structure.json`
+    - `src/tet4d/engine/tutorial/setup_apply.py`
+    - `src/tet4d/engine/tutorial/runtime.py`
+    - `src/tet4d/ui/pygame/front3d_game.py`
+    - `src/tet4d/ui/pygame/front4d_game.py`
+    - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+    - `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`
+    - `cli/front2d.py`
+- Added regression coverage for tutorial runtime and new routing callbacks:
+  - `tests/unit/engine/test_tutorial_runtime.py`
+  - `tests/unit/engine/test_nd_routing.py`
+  - `tests/unit/engine/test_front_launcher_routes.py`
+
+Current sub-batch (2026-03-02): interactive tutorial core scaffolding (M0/M1 seed).
+
+- Added canonical tutorial lesson-pack data source:
+  - `config/tutorial/lessons.json`
+- Added tutorial data schema contract:
+  - `config/schema/tutorial_lessons.schema.json`
+- Added tutorial core package with deterministic schema parsing, gating, condition
+  evaluation, and step-state manager:
+  - `src/tet4d/engine/tutorial/schema.py`
+  - `src/tet4d/engine/tutorial/content.py`
+  - `src/tet4d/engine/tutorial/gating.py`
+  - `src/tet4d/engine/tutorial/conditions.py`
+  - `src/tet4d/engine/tutorial/events.py`
+  - `src/tet4d/engine/tutorial/manager.py`
+  - `src/tet4d/engine/tutorial/__init__.py`
+- Exposed tutorial content runtime accessors via engine API:
+  - `src/tet4d/engine/api.py`
+- Added unit coverage for schema validation, manager progression/gating, and
+  runtime content loading/API exposure:
+  - `tests/unit/engine/test_tutorial_schema.py`
+  - `tests/unit/engine/test_tutorial_manager.py`
+  - `tests/unit/engine/test_tutorial_content.py`
+- Canonical maintenance sync:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+- RDS/project-structure sync:
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `docs/PROJECT_STRUCTURE.md`
 
 Current sub-batch (2026-03-02): runtime parser/validation decomposition continuation.
 

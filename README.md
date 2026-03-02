@@ -135,9 +135,9 @@ Keybindings:
 - `keybindings/3d.json`
 - `keybindings/4d.json`
 
-Control guide renderer (legacy contract reference):
-- `src/tet4d/ui/pygame/menu/menu_control_guides.py`
-- `draw_translation_rotation_guides`
+Control/action icon renderer:
+- `src/tet4d/ui/pygame/render/control_icons.py`
+- `draw_action_icon`
 
 ## Quality checks
 

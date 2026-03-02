@@ -21,17 +21,12 @@ from tet4d.ui.pygame.render.font_profiles import (
 )
 from tet4d.ui.pygame.render.front3d_cell_render import (
     draw_cells as draw_cells_helper,
-    draw_sorted_faces as draw_sorted_faces_helper,
-    draw_translucent_faces as draw_translucent_faces_helper,
-    overlay_opacity_scale as overlay_opacity_scale_helper,
-    split_faces_for_cells as split_faces_for_cells_helper,
 )
 from tet4d.ui.pygame.render.front3d_projection_helpers import (
     ProjectionParams3D,
     build_cell_faces as build_cell_faces_helper,
     draw_board_grid as draw_board_grid_helper,
     fit_orthographic_zoom_for_rect,
-    project_point as project_point_helper,
     project_raw_point as project_raw_point_helper,
     transform_raw_point as transform_raw_point_helper,
 )
@@ -168,31 +163,6 @@ def _projection_params(camera: Camera3D) -> ProjectionParams3D:
     )
 
 
-def _transform_raw_point(
-    raw: Cell3 | tuple[float, float, float],
-    dims: Cell3,
-    camera: Camera3D,
-) -> tuple[float, float, float]:
-    return transform_raw_point_helper(raw, dims, _projection_params(camera))
-
-
-def _project_point(
-    trans: tuple[float, float, float],
-    camera: Camera3D,
-    center_px: Point2,
-) -> Point2 | None:
-    return project_point_helper(trans, _projection_params(camera), center_px)
-
-
-def _project_raw_point(
-    raw: tuple[float, float, float],
-    dims: Cell3,
-    camera: Camera3D,
-    center_px: Point2,
-) -> Point2 | None:
-    return project_raw_point_helper(raw, dims, _projection_params(camera), center_px)
-
-
 def _draw_board_grid(
     surface: pygame.Surface,
     dims: Cell3,
@@ -279,45 +249,6 @@ def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[i
     return x_marks, y_marks, z_marks
 
 
-def _split_faces_for_cells(
-    cells: list[VisibleCell3D],
-    camera: Camera3D,
-    center_px: Point2,
-    dims: Cell3,
-) -> tuple[list[Face], list[Face], list[Face]]:
-    return split_faces_for_cells_helper(
-        cells,
-        build_faces_fn=lambda coord, color, active: _build_cell_faces(
-            cell=coord,
-            color=color,
-            camera=camera,
-            center_px=center_px,
-            dims=dims,
-            active=active,
-        ),
-        color_for_cell_fn=color_for_cell_3d,
-    )
-
-
-def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
-    draw_sorted_faces_helper(surface, faces)
-
-
-def _draw_translucent_faces(
-    surface: pygame.Surface,
-    faces: list[Face],
-    *,
-    fill_alpha: int,
-    outline_alpha: int,
-) -> None:
-    draw_translucent_faces_helper(
-        surface,
-        faces,
-        fill_alpha=fill_alpha,
-        outline_alpha=outline_alpha,
-    )
-
-
 def _draw_cells(
     surface: pygame.Surface,
     *,
@@ -342,10 +273,6 @@ def _draw_cells(
         overlay_transparency=overlay_transparency,
         assist_overlay_opacity_scale=_ASSIST_OVERLAY_OPACITY_SCALE,
     )
-
-
-def _overlay_opacity_scale(overlay_transparency: float) -> float:
-    return overlay_opacity_scale_helper(overlay_transparency)
 
 
 def _draw_clear_animation(

@@ -20,7 +20,7 @@ from tet4d.ui.pygame.input.camera_mouse import (
 )
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
-from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
+from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action, match_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
 from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
 from tet4d.ui.pygame.launch.launcher_play import (
@@ -61,6 +61,57 @@ cycle_grid_mode = engine_api.grid_mode_cycle_view
 clamp_overlay_transparency = engine_api.clamp_overlay_transparency_runtime
 overlay_transparency_step = engine_api.overlay_transparency_step_runtime
 default_overlay_transparency = engine_api.default_overlay_transparency_runtime
+tutorial_runtime_create_session = engine_api.tutorial_runtime_create_session_runtime
+tutorial_runtime_action_allowed = engine_api.tutorial_runtime_action_allowed_runtime
+tutorial_runtime_observe_action = engine_api.tutorial_runtime_observe_action_runtime
+tutorial_runtime_sync_and_advance = engine_api.tutorial_runtime_sync_and_advance_runtime
+tutorial_runtime_consume_pending_setup = (
+    engine_api.tutorial_runtime_consume_pending_setup_runtime
+)
+tutorial_apply_step_setup_nd = engine_api.tutorial_apply_step_setup_nd_runtime
+tutorial_runtime_restart = engine_api.tutorial_runtime_restart_runtime
+tutorial_runtime_skip = engine_api.tutorial_runtime_skip_runtime
+
+_CAMERA_ACTIONS_3D = (
+    "yaw_fine_neg",
+    "yaw_neg",
+    "yaw_pos",
+    "yaw_fine_pos",
+    "pitch_pos",
+    "pitch_neg",
+    "zoom_in",
+    "zoom_out",
+    "reset",
+    "cycle_projection",
+    "overlay_alpha_dec",
+    "overlay_alpha_inc",
+)
+
+
+def _apply_tutorial_camera_preset(loop: "LoopContext3D", preset: str) -> None:
+    clean_preset = str(preset).strip().lower()
+    if not clean_preset:
+        return
+    if clean_preset != "tutorial_3d_default":
+        raise RuntimeError(f"Unsupported tutorial camera preset for 3D: {preset}")
+    loop.camera.reset()
+    loop.mouse_orbit.reset()
+
+
+def _apply_pending_tutorial_setup(loop: "LoopContext3D") -> None:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
+        return
+    payload = tutorial_runtime_consume_pending_setup(tutorial_session)
+    if not isinstance(payload, dict):
+        return
+    tutorial_apply_step_setup_nd(loop.state, loop.cfg, payload)
+    setup_payload = payload.get("setup")
+    if isinstance(setup_payload, dict):
+        _apply_tutorial_camera_preset(
+            loop,
+            str(setup_payload.get("camera_preset", "")),
+        )
 
 
 def handle_camera_key(
@@ -76,35 +127,33 @@ def handle_camera_key(
     overlay_alpha_inc_handler = (
         on_overlay_alpha_inc if on_overlay_alpha_inc is not None else (lambda: None)
     )
-    return (
-        dispatch_bound_action(
-            key,
-            CAMERA_KEYS_3D,
-            {
-                "yaw_fine_neg": lambda: camera.start_yaw_turn(-15.0),
-                "yaw_neg": lambda: camera.start_yaw_turn(-90.0),
-                "yaw_pos": lambda: camera.start_yaw_turn(90.0),
-                "yaw_fine_pos": lambda: camera.start_yaw_turn(15.0),
-                "pitch_pos": lambda: camera.start_pitch_turn(90.0),
-                "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
-                "zoom_in": lambda: setattr(
-                    camera, "zoom", min(140.0, camera.zoom + 3.0)
-                ),
-                "zoom_out": lambda: setattr(
-                    camera, "zoom", max(18.0, camera.zoom - 3.0)
-                ),
-                "reset": camera.reset,
-                "cycle_projection": camera.cycle_projection,
-                "overlay_alpha_dec": overlay_alpha_dec_handler,
-                "overlay_alpha_inc": overlay_alpha_inc_handler,
-            },
-        )
-        is not None
+    action = dispatch_bound_action(
+        key,
+        CAMERA_KEYS_3D,
+        {
+            "yaw_fine_neg": lambda: camera.start_yaw_turn(-15.0),
+            "yaw_neg": lambda: camera.start_yaw_turn(-90.0),
+            "yaw_pos": lambda: camera.start_yaw_turn(90.0),
+            "yaw_fine_pos": lambda: camera.start_yaw_turn(15.0),
+            "pitch_pos": lambda: camera.start_pitch_turn(90.0),
+            "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
+            "zoom_in": lambda: setattr(camera, "zoom", min(140.0, camera.zoom + 3.0)),
+            "zoom_out": lambda: setattr(camera, "zoom", max(18.0, camera.zoom - 3.0)),
+            "reset": camera.reset,
+            "cycle_projection": camera.cycle_projection,
+            "overlay_alpha_dec": overlay_alpha_dec_handler,
+            "overlay_alpha_inc": overlay_alpha_inc_handler,
+        },
     )
+    return action is not None
 
 
 def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
     return handle_camera_key(event.key, camera)
+
+
+def _camera_action_for_key(key: int) -> str | None:
+    return match_bound_action(key, CAMERA_KEYS_3D, _CAMERA_ACTIONS_3D)
 
 
 def handle_game_keydown(
@@ -163,6 +212,7 @@ class LoopContext3D:
     was_game_over: bool = False
     base_speed_level: int = 1
     bot_speed_level: int = 7
+    tutorial_session: Any | None = None
 
     @classmethod
     def create(
@@ -172,9 +222,16 @@ class LoopContext3D:
         bot_mode: BotMode = BotMode.OFF,
         overlay_transparency: float | None = None,
         bot_speed_level: int = 7,
+        tutorial_lesson_id: str | None = None,
     ) -> "LoopContext3D":
         state = create_initial_state(cfg)
         overlay_default = default_overlay_transparency()
+        tutorial_session = None
+        if tutorial_lesson_id:
+            tutorial_session = tutorial_runtime_create_session(
+                lesson_id=tutorial_lesson_id,
+                mode="3d",
+            )
         return cls(
             cfg=cfg,
             state=state,
@@ -187,16 +244,31 @@ class LoopContext3D:
             was_game_over=state.game_over,
             base_speed_level=int(cfg.speed_level),
             bot_speed_level=int(bot_speed_level),
+            tutorial_session=tutorial_session,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if event.key == pygame.K_F8 and self.tutorial_session is not None:
+            tutorial_runtime_skip(self.tutorial_session)
+            play_sfx("menu_move")
+            return "continue"
+        if event.key == pygame.K_F9 and self.tutorial_session is not None:
+            self.on_restart()
+            play_sfx("menu_confirm")
+            return "continue"
         if event.key == pygame.K_F2:
+            if not self._tutorial_action_allowed("bot_cycle_mode"):
+                return "continue"
             self.bot.cycle_mode()
             self.refresh_score_multiplier()
+            self._tutorial_observe_action("bot_cycle_mode")
             play_sfx("menu_move")
             return "continue"
         if event.key == pygame.K_F3:
+            if not self._tutorial_action_allowed("bot_step"):
+                return "continue"
             self.bot.request_step()
+            self._tutorial_observe_action("bot_step")
             play_sfx("menu_move")
             return "continue"
         return route_nd_keydown(
@@ -209,9 +281,22 @@ class LoopContext3D:
                 on_overlay_alpha_dec=lambda: self.adjust_overlay_transparency(-1),
                 on_overlay_alpha_inc=lambda: self.adjust_overlay_transparency(1),
             ),
+            view_action_lookup=_camera_action_for_key,
             sfx_handler=play_sfx,
             allow_gameplay=self.bot.user_gameplay_enabled,
+            action_filter=self._tutorial_action_allowed,
+            action_observer=self._tutorial_observe_action,
         )
+
+    def _tutorial_action_allowed(self, action_id: str) -> bool:
+        if self.tutorial_session is None:
+            return True
+        return tutorial_runtime_action_allowed(self.tutorial_session, action_id)
+
+    def _tutorial_observe_action(self, action_id: str) -> None:
+        if self.tutorial_session is None:
+            return
+        tutorial_runtime_observe_action(self.tutorial_session, action_id)
 
     def adjust_overlay_transparency(self, direction: int) -> None:
         self.overlay_transparency = clamp_overlay_transparency(
@@ -229,6 +314,9 @@ class LoopContext3D:
         self.mouse_orbit.reset()
         self.bot.reset_runtime()
         self.rotation_anim.reset()
+        if self.tutorial_session is not None:
+            tutorial_runtime_restart(self.tutorial_session)
+            _apply_pending_tutorial_setup(self)
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -284,6 +372,7 @@ def run_game_loop(
     bot_algorithm_index: int = 0,
     bot_profile_index: int = 1,
     bot_budget_ms: int = 24,
+    tutorial_lesson_id: str | None = None,
 ) -> bool:
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
@@ -312,7 +401,14 @@ def run_game_loop(
         bot_mode=bot_mode,
         overlay_transparency=overlay_transparency,
         bot_speed_level=bot_speed_level,
+        tutorial_lesson_id=tutorial_lesson_id,
     )
+    setattr(
+        loop,
+        "_apply_pending_tutorial_setup",
+        lambda: _apply_pending_tutorial_setup(loop),
+    )
+    _apply_pending_tutorial_setup(loop)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
         ndim=3,
@@ -330,6 +426,16 @@ def run_game_loop(
             event=event,
         )
         loop.pointer_event_handler(event)
+
+    def _tutorial_sync(lines_cleared: int) -> bool:
+        if loop.tutorial_session is None:
+            return False
+        progressed = tutorial_runtime_sync_and_advance(
+            loop.tutorial_session,
+            lines_cleared=lines_cleared,
+        )
+        _apply_pending_tutorial_setup(loop)
+        return bool(progressed)
 
     return run_nd_loop(
         screen=screen,
@@ -360,6 +466,7 @@ def run_game_loop(
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),
         event_handler=runtime_event_handler,
+        tutorial_sync=_tutorial_sync,
     )
 
 

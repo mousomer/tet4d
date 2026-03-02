@@ -70,6 +70,7 @@ def _launch_mode_flow(
     suggested_size_fn,
     run_game_loop_fn,
     default_budget_ms: int,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     screen = open_display(display_settings, caption=setup_caption)
     settings = run_menu_fn(screen, fonts)
@@ -89,6 +90,7 @@ def _launch_mode_flow(
         screen,
         cfg,
         fonts,
+        tutorial_lesson_id=tutorial_lesson_id,
         **_bot_kwargs(settings, default_budget_ms),
     )
     if not back_to_menu:
@@ -106,6 +108,8 @@ def launch_2d(
     screen: pygame.Surface,
     fonts_2d,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -126,6 +130,7 @@ def launch_2d(
             )
         ),
         default_budget_ms=12,
+        tutorial_lesson_id=tutorial_lesson_id,
     )
 
 
@@ -133,6 +138,8 @@ def launch_3d(
     screen: pygame.Surface,
     fonts_nd,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -145,6 +152,7 @@ def launch_3d(
         suggested_size_fn=engine_api.launcher_play_suggested_window_size_3d,
         run_game_loop_fn=engine_api.launcher_play_run_game_loop_3d,
         default_budget_ms=24,
+        tutorial_lesson_id=tutorial_lesson_id,
     )
 
 
@@ -152,6 +160,8 @@ def launch_4d(
     screen: pygame.Surface,
     fonts_nd,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -167,4 +177,5 @@ def launch_4d(
         suggested_size_fn=engine_api.launcher_play_suggested_window_size_4d,
         run_game_loop_fn=engine_api.launcher_play_run_game_loop_4d,
         default_budget_ms=36,
+        tutorial_lesson_id=tutorial_lesson_id,
     )

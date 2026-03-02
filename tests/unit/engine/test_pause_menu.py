@@ -35,7 +35,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
                 display_settings=DisplaySettings(),
                 keep_running=True,
             )
-            out_screen, keep_running = pause_menu._handle_pause_row(
+            action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+            out_screen, keep_running = pause_menu._handle_pause_action(
+                action,
                 screen,
                 object(),
                 state,
@@ -63,7 +65,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
                 display_settings=DisplaySettings(),
                 keep_running=False,
             )
-            out_screen, keep_running = pause_menu._handle_pause_row(
+            action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+            out_screen, keep_running = pause_menu._handle_pause_action(
+                action,
                 screen,
                 object(),
                 state,
@@ -78,7 +82,8 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
     def test_pause_values_show_analytics_in_settings_summary(self) -> None:
         values = pause_menu._pause_menu_values(4)
-        self.assertEqual(values[2], "Audio + Display + Analytics")
+        settings_index = pause_menu._PAUSE_ACTION_CODES.index("settings")
+        self.assertEqual(values[settings_index], "Audio + Display + Analytics")
 
     def test_restart_action_sets_restart_decision(self) -> None:
         screen = pygame.Surface((640, 480))
@@ -86,7 +91,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             selected=pause_menu._PAUSE_ACTION_CODES.index("restart")
         )
 
-        out_screen, keep_running = pause_menu._handle_pause_row(
+        action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+        out_screen, keep_running = pause_menu._handle_pause_action(
+            action,
             screen,
             object(),
             state,
@@ -108,7 +115,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             "tet4d.ui.pygame.runtime_ui.pause_menu.run_leaderboard_menu",
             return_value=screen,
         ) as run_lb:
-            out_screen, keep_running = pause_menu._handle_pause_row(
+            action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+            out_screen, keep_running = pause_menu._handle_pause_action(
+                action,
                 screen,
                 object(),
                 state,
@@ -120,3 +129,44 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         self.assertEqual(state.status, "Returned from leaderboard")
         self.assertFalse(state.status_error)
         run_lb.assert_called_once()
+
+    def test_tutorial_restart_action_uses_callback(self) -> None:
+        screen = pygame.Surface((640, 480))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("tutorial_restart")
+        )
+
+        action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+        out_screen, keep_running = pause_menu._handle_pause_action(
+            action,
+            screen,
+            object(),
+            state,
+            dimension=3,
+            on_tutorial_restart=lambda: True,
+        )
+
+        self.assertTrue(keep_running)
+        self.assertIs(out_screen, screen)
+        self.assertEqual(state.status, "Tutorial restarted")
+        self.assertFalse(state.status_error)
+
+    def test_tutorial_skip_action_without_callback_sets_status_error(self) -> None:
+        screen = pygame.Surface((640, 480))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("tutorial_skip")
+        )
+
+        action = pause_menu._PAUSE_ACTION_CODES[state.selected]
+        out_screen, keep_running = pause_menu._handle_pause_action(
+            action,
+            screen,
+            object(),
+            state,
+            dimension=4,
+        )
+
+        self.assertTrue(keep_running)
+        self.assertIs(out_screen, screen)
+        self.assertIn("unavailable", state.status.lower())
+        self.assertTrue(state.status_error)

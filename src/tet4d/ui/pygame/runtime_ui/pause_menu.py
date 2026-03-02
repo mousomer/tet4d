@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Callable, Literal
 
 import pygame
 
@@ -174,6 +174,8 @@ def _draw_list_menu_panel(
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     profile = active_key_profile()
     action_values = {
+        "tutorial_restart": "Current tutorial lesson",
+        "tutorial_skip": "Current tutorial lesson",
         "settings": "Audio + Display + Analytics",
         "bot_options": f"{dimension}D planner/options",
         "keybindings": "General + 2D/3D/4D scopes",
@@ -236,6 +238,8 @@ _PAUSE_ACTION_CODES: tuple[str, ...] = tuple(
 _SUPPORTED_PAUSE_ACTIONS = {
     "resume",
     "restart",
+    "tutorial_restart",
+    "tutorial_skip",
     "settings",
     "bot_options",
     "keybindings",
@@ -372,6 +376,8 @@ def _handle_pause_action(
     state: _PauseState,
     *,
     dimension: int,
+    on_tutorial_restart: Callable[[], bool] | None = None,
+    on_tutorial_skip: Callable[[], bool] | None = None,
 ) -> tuple[pygame.Surface, bool]:
     immediate = _PAUSE_IMMEDIATE_DECISIONS.get(action)
     if immediate is not None:
@@ -386,6 +392,28 @@ def _handle_pause_action(
     binding_save = _PAUSE_BINDINGS_IO.get(action)
     if binding_save is not None:
         _handle_pause_bindings_io(state, dimension, save=binding_save)
+        return screen, True
+    if action == "tutorial_restart":
+        if on_tutorial_restart is None:
+            _set_pause_status(state, False, "Tutorial restart unavailable in this run")
+            return screen, True
+        ok = bool(on_tutorial_restart())
+        _set_pause_status(
+            state,
+            ok,
+            "Tutorial restarted" if ok else "Tutorial restart unavailable",
+        )
+        return screen, True
+    if action == "tutorial_skip":
+        if on_tutorial_skip is None:
+            _set_pause_status(state, False, "Tutorial skip unavailable in this run")
+            return screen, True
+        ok = bool(on_tutorial_skip())
+        _set_pause_status(
+            state,
+            ok,
+            "Tutorial skipped" if ok else "Tutorial skip unavailable",
+        )
         return screen, True
 
     action_handlers = {
@@ -416,18 +444,6 @@ def _handle_pause_action(
     return screen, True
 
 
-def _handle_pause_row(
-    screen: pygame.Surface,
-    fonts,
-    state: _PauseState,
-    *,
-    dimension: int,
-) -> tuple[pygame.Surface, bool]:
-    safe_index = max(0, min(len(_PAUSE_ACTION_CODES) - 1, state.selected))
-    action = _PAUSE_ACTION_CODES[safe_index]
-    return _handle_pause_action(action, screen, fonts, state, dimension=dimension)
-
-
 def _pause_action_dispatcher(
     action: str,
     *,
@@ -435,6 +451,8 @@ def _pause_action_dispatcher(
     dimension: int,
     fonts,
     screen_ref: list[pygame.Surface],
+    on_tutorial_restart: Callable[[], bool] | None = None,
+    on_tutorial_skip: Callable[[], bool] | None = None,
 ) -> bool:
     new_screen, keep_running = _handle_pause_action(
         action,
@@ -442,6 +460,8 @@ def _pause_action_dispatcher(
         fonts,
         state,
         dimension=dimension,
+        on_tutorial_restart=on_tutorial_restart,
+        on_tutorial_skip=on_tutorial_skip,
     )
     screen_ref[0] = new_screen
     if not keep_running:
@@ -468,6 +488,8 @@ def run_pause_menu(
     fonts,
     *,
     dimension: int,
+    on_tutorial_restart: Callable[[], bool] | None = None,
+    on_tutorial_skip: Callable[[], bool] | None = None,
 ) -> tuple[PauseDecision, pygame.Surface]:
     state = _PauseState()
     screen_ref = [screen]
@@ -482,6 +504,8 @@ def run_pause_menu(
                 dimension=dimension,
                 fonts=fonts,
                 screen_ref=screen_ref,
+                on_tutorial_restart=on_tutorial_restart,
+                on_tutorial_skip=on_tutorial_skip,
             ),
         )
 

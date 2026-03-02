@@ -88,6 +88,34 @@ def _coerce_shared_gameplay_settings(
     return normalized
 
 
+def _settings_mapping(payload: dict[str, Any]) -> dict[str, Any]:
+    settings = payload.get("settings")
+    if isinstance(settings, dict):
+        return settings
+    settings = {}
+    payload["settings"] = settings
+    return settings
+
+
+def _mode_settings_mapping(
+    settings: dict[str, Any],
+    mode_key: str,
+) -> dict[str, Any]:
+    mode_settings = settings.get(mode_key)
+    if isinstance(mode_settings, dict):
+        return mode_settings
+    mode_settings = {}
+    settings[mode_key] = mode_settings
+    return mode_settings
+
+
+def _mode_settings_view(settings: Any, mode_key: str) -> dict[str, Any]:
+    if not isinstance(settings, dict):
+        return {}
+    mode_settings = settings.get(mode_key)
+    return mode_settings if isinstance(mode_settings, dict) else {}
+
+
 def _default_settings_payload() -> dict[str, Any]:
     return ensure_default_settings_payload(
         default_settings_payload(),
@@ -313,22 +341,14 @@ def save_analytics_settings(
 
 def get_global_game_seed() -> int:
     payload = _load_payload()
-    settings = payload.get("settings")
-    if not isinstance(settings, dict):
-        return DEFAULT_GAME_SEED
-    raw_seed = settings.get("2d", {}).get("game_seed")
+    raw_seed = _mode_settings_view(payload.get("settings"), "2d").get("game_seed")
     return clamp_game_seed(raw_seed, default=DEFAULT_GAME_SEED)
 
 
 def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
     normalized_mode = _normalize_mode_key(mode_key)
     defaults = _default_settings_payload()
-    settings = defaults.get("settings")
-    mode_settings = (
-        settings.get(normalized_mode, {})
-        if isinstance(settings, dict)
-        else {}
-    )
+    mode_settings = _mode_settings_view(defaults.get("settings"), normalized_mode)
     return _coerce_shared_gameplay_settings(mode_settings)
 
 
@@ -336,12 +356,7 @@ def mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
     normalized_mode = _normalize_mode_key(mode_key)
     payload = _load_payload()
     defaults = default_mode_shared_gameplay_settings(normalized_mode)
-    settings = payload.get("settings")
-    mode_settings = (
-        settings.get(normalized_mode, {})
-        if isinstance(settings, dict)
-        else {}
-    )
+    mode_settings = _mode_settings_view(payload.get("settings"), normalized_mode)
     return _coerce_shared_gameplay_settings(mode_settings, defaults=defaults)
 
 
@@ -361,22 +376,16 @@ def save_shared_gameplay_settings(
     lines_per_level: int,
 ) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = payload.get("settings")
-    if not isinstance(settings, dict):
-        settings = {}
-        payload["settings"] = settings
+    settings = _settings_mapping(payload)
+    raw_values = {
+        "random_mode_index": int(random_mode_index),
+        "topology_advanced": int(topology_advanced),
+        "auto_speedup_enabled": int(auto_speedup_enabled),
+        "lines_per_level": int(lines_per_level),
+    }
     for mode_key in MODE_KEYS:
         defaults = default_mode_shared_gameplay_settings(mode_key)
-        mode_settings = settings.get(mode_key)
-        if not isinstance(mode_settings, dict):
-            mode_settings = {}
-            settings[mode_key] = mode_settings
-        raw_values = {
-            "random_mode_index": int(random_mode_index),
-            "topology_advanced": int(topology_advanced),
-            "auto_speedup_enabled": int(auto_speedup_enabled),
-            "lines_per_level": int(lines_per_level),
-        }
+        mode_settings = _mode_settings_mapping(settings, mode_key)
         mode_settings.update(
             _coerce_shared_gameplay_settings(raw_values, defaults=defaults)
         )
@@ -385,30 +394,11 @@ def save_shared_gameplay_settings(
 
 def save_global_game_seed(seed: int) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = payload.setdefault("settings", {})
-    if not isinstance(settings, dict):
-        settings = {}
-        payload["settings"] = settings
+    settings = _settings_mapping(payload)
 
     clamped_seed = clamp_game_seed(seed, default=DEFAULT_GAME_SEED)
-    for mode_key in _MODE_KEYS:
-        mode_settings = settings.setdefault(mode_key, {})
-        if not isinstance(mode_settings, dict):
-            mode_settings = {}
-            settings[mode_key] = mode_settings
+    for mode_key in MODE_KEYS:
+        mode_settings = _mode_settings_mapping(settings, mode_key)
         mode_settings["game_seed"] = clamped_seed
 
     return _sanitize_and_save_payload(payload)
-
-
-# Backward-compat helpers expected by engine.api overlay/seed accessors.
-def _runtime_defaults() -> RuntimeSettingDefaults:
-    return _RUNTIME_DEFAULTS
-
-
-def _default_overlay_transparency() -> float:
-    return float(DEFAULT_OVERLAY_TRANSPARENCY)
-
-
-def _default_game_seed() -> int:
-    return int(DEFAULT_GAME_SEED)

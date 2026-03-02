@@ -3,20 +3,21 @@ import unittest
 import random
 
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.gameplay.game2d import GameConfig, GameState, _score_for_clear
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.pieces2d import PieceShape2D, ActivePiece2D
 from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.core.rules.scoring import score_for_clear
 
 
 class TestGame2D(unittest.TestCase):
     def test_score_table(self):
-        self.assertEqual(_score_for_clear(0), 0)
-        self.assertEqual(_score_for_clear(1), 40)
-        self.assertEqual(_score_for_clear(2), 100)
-        self.assertEqual(_score_for_clear(3), 300)
-        self.assertEqual(_score_for_clear(4), 1200)
-        self.assertEqual(_score_for_clear(5), 1600)
+        self.assertEqual(score_for_clear(0), 0)
+        self.assertEqual(score_for_clear(1), 40)
+        self.assertEqual(score_for_clear(2), 100)
+        self.assertEqual(score_for_clear(3), 300)
+        self.assertEqual(score_for_clear(4), 1200)
+        self.assertEqual(score_for_clear(5), 1600)
 
     def make_empty_state(self, width=10, height=20) -> GameState:
         cfg = GameConfig(width=width, height=height)

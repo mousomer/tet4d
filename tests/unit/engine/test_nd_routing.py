@@ -252,6 +252,34 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(state.current_piece.pos[0], start_pos[0] + 1)
         self.assertEqual(state.current_piece.pos[3], start_pos[3])
 
+    def test_action_filter_blocks_bound_gameplay_action(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+        blocked = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_3D, "move_x_neg"),
+            state,
+            action_filter=lambda action: action != "move_x_neg",
+        )
+        self.assertEqual(blocked, "continue")
+        self.assertEqual(state.moves, [])
+
+    def test_action_observer_receives_view_action_lookup(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        seen: list[str] = []
+        camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
+        result = frontend_nd.route_nd_keydown(
+            camera_key,
+            state,
+            view_key_handler=lambda _key: True,
+            view_action_lookup=lambda key: (
+                "view_xw_pos" if key == camera_key else None
+            ),
+            action_observer=seen.append,
+        )
+        self.assertEqual(result, "continue")
+        self.assertEqual(seen, ["view_xw_pos"])
+
 
 if __name__ == "__main__":
     unittest.main()

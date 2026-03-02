@@ -721,36 +721,118 @@ def route_nd_keydown(
     axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
     view_key_handler: Callable[[int], bool] | None = None,
+    view_action_lookup: Callable[[int], str | None] | None = None,
     sfx_handler: Callable[[str], None] | None = None,
     allow_gameplay: bool = True,
+    action_filter: Callable[[str], bool] | None = None,
+    action_observer: Callable[[str], None] | None = None,
 ) -> str:
-    cfg = state.config
-    system_action = system_key_action(key)
-    if system_action is not None:
-        _emit_sfx(sfx_handler, _SYSTEM_SFX.get(system_action))
-        return system_action
+    system_result = _route_nd_system_action(
+        key,
+        sfx_handler=sfx_handler,
+        action_filter=action_filter,
+        action_observer=action_observer,
+    )
+    if system_result is not None:
+        return system_result
 
-    gameplay_action = None
     if allow_gameplay and not state.game_over:
-        gameplay_action = dispatch_nd_gameplay_key(
+        if _route_nd_gameplay_action(
             key,
             state,
             yaw_deg_for_view_movement=yaw_deg_for_view_movement,
             axis_overrides_by_action=axis_overrides_by_action,
             viewer_axes_by_label=viewer_axes_by_label,
-        )
-        if gameplay_action is not None:
-            _emit_sfx(sfx_handler, _playback_sfx_for_gameplay_action(gameplay_action))
+            sfx_handler=sfx_handler,
+            action_filter=action_filter,
+            action_observer=action_observer,
+        ):
             return "continue"
 
-    if view_key_handler is None:
-        return "continue"
+    _route_nd_view_action(
+        key,
+        state=state,
+        view_key_handler=view_key_handler,
+        view_action_lookup=view_action_lookup,
+        sfx_handler=sfx_handler,
+        action_filter=action_filter,
+        action_observer=action_observer,
+    )
+    return "continue"
 
-    if _is_reserved_nd_key(key, cfg):
+
+def _route_nd_system_action(
+    key: int,
+    *,
+    sfx_handler: Callable[[str], None] | None,
+    action_filter: Callable[[str], bool] | None,
+    action_observer: Callable[[str], None] | None,
+) -> str | None:
+    system_action = system_key_action(key)
+    if system_action is None:
+        return None
+    if action_filter is not None and not action_filter(system_action):
         return "continue"
+    _emit_sfx(sfx_handler, _SYSTEM_SFX.get(system_action))
+    if action_observer is not None:
+        action_observer(system_action)
+    return system_action
+
+
+def _route_nd_gameplay_action(
+    key: int,
+    state: GameStateND,
+    *,
+    yaw_deg_for_view_movement: float | None,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
+    sfx_handler: Callable[[str], None] | None,
+    action_filter: Callable[[str], bool] | None,
+    action_observer: Callable[[str], None] | None,
+) -> bool:
+    gameplay_action = gameplay_action_for_key(key, state.config)
+    if gameplay_action is None:
+        return False
+    if action_filter is not None and not action_filter(gameplay_action):
+        return True
+    apply_nd_gameplay_action_with_view(
+        state,
+        gameplay_action,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        axis_overrides_by_action=axis_overrides_by_action,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    _emit_sfx(sfx_handler, _playback_sfx_for_gameplay_action(gameplay_action))
+    if action_observer is not None:
+        action_observer(gameplay_action)
+    return True
+
+
+def _route_nd_view_action(
+    key: int,
+    *,
+    state: GameStateND,
+    view_key_handler: Callable[[int], bool] | None,
+    view_action_lookup: Callable[[int], str | None] | None,
+    sfx_handler: Callable[[str], None] | None,
+    action_filter: Callable[[str], bool] | None,
+    action_observer: Callable[[str], None] | None,
+) -> None:
+    if view_key_handler is None:
+        return
+    if _is_reserved_nd_key(key, state.config):
+        return
+    view_action = None
+    if view_action_lookup is not None:
+        view_action = view_action_lookup(key)
+        if view_action is None:
+            return
+        if action_filter is not None and not action_filter(view_action):
+            return
     if view_key_handler(key):
         _emit_sfx(sfx_handler, "menu_move")
-    return "continue"
+        if action_observer is not None and view_action is not None:
+            action_observer(view_action)
 
 
 def handle_game_keydown(event: pygame.event.Event, state: GameStateND) -> str:

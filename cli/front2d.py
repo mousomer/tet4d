@@ -58,7 +58,6 @@ from tet4d.ui.pygame.keybindings import (
     load_active_profile_bindings,
 )
 from tet4d.ui.pygame.input.key_dispatch import (
-    dispatch_bound_action,
     match_bound_action,
 )
 from tet4d.ui.pygame.menu.menu_controls import (
@@ -91,6 +90,15 @@ from tet4d.engine.api import (
     gameplay_default_mode_shared_settings_runtime,
     gameplay_mode_speedup_settings_runtime,
     runtime_assist_combined_score_multiplier,
+    tutorial_runtime_action_allowed_runtime,
+    tutorial_runtime_create_session_runtime,
+    tutorial_runtime_is_running_runtime,
+    tutorial_runtime_observe_action_runtime,
+    tutorial_runtime_consume_pending_setup_runtime,
+    tutorial_apply_step_setup_2d_runtime,
+    tutorial_runtime_restart_runtime,
+    tutorial_runtime_skip_runtime,
+    tutorial_runtime_sync_and_advance_runtime,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
@@ -108,6 +116,7 @@ from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
 from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
+from tet4d.ui.pygame.runtime_ui.tutorial_overlay import draw_tutorial_overlay
 
 RANDOM_MODE_FIXED_INDEX = 0
 RANDOM_MODE_TRUE_RANDOM_INDEX = 1
@@ -395,24 +404,10 @@ def _system_decision_for_key(key: int) -> str | None:
 
 
 def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
-    handlers = {
-        "move_x_neg": lambda: state.try_move(-1, 0),
-        "move_x_pos": lambda: state.try_move(1, 0),
-        "rotate_xy_pos": lambda: state.try_rotate(+1),
-        "rotate_xy_neg": lambda: state.try_rotate(-1),
-        "hard_drop": state.hard_drop,
-        "soft_drop": lambda: state.try_move(0, 1),
-    }
-    if state.config.exploration_mode:
-        handlers.update(
-            {
-                "move_y_neg": lambda: state.try_move(0, -1),
-                "move_y_pos": lambda: state.try_move(0, 1),
-            }
-        )
-    action = dispatch_bound_action(key, KEYS_2D, handlers)
+    action = _gameplay_action_for_key_2d(state, key)
     if action is None:
         return None
+    _apply_2d_gameplay_action(state, action)
     if action.startswith("rotate_"):
         play_sfx("rotate")
     elif action == "hard_drop":
@@ -422,12 +417,44 @@ def _dispatch_2d_gameplay_action(state: GameState, key: int) -> str | None:
     return action
 
 
+def _gameplay_action_for_key_2d(state: GameState, key: int) -> str | None:
+    action_order = [
+        "move_x_neg",
+        "move_x_pos",
+        "rotate_xy_pos",
+        "rotate_xy_neg",
+        "hard_drop",
+        "soft_drop",
+    ]
+    if state.config.exploration_mode:
+        action_order.extend(["move_y_neg", "move_y_pos"])
+    return match_bound_action(key, KEYS_2D, tuple(action_order))
+
+
+def _apply_2d_gameplay_action(state: GameState, action: str) -> None:
+    handlers = {
+        "move_x_neg": lambda: state.try_move(-1, 0),
+        "move_x_pos": lambda: state.try_move(1, 0),
+        "rotate_xy_pos": lambda: state.try_rotate(+1),
+        "rotate_xy_neg": lambda: state.try_rotate(-1),
+        "hard_drop": state.hard_drop,
+        "soft_drop": lambda: state.try_move(0, 1),
+        "move_y_neg": lambda: state.try_move(0, -1),
+        "move_y_pos": lambda: state.try_move(0, 1),
+    }
+    handler = handlers.get(action)
+    if handler is not None:
+        handler()
+
+
 def handle_game_keydown(
     event: pygame.event.Event,
     state: GameState,
     _cfg: GameConfig,
     *,
     allow_gameplay: bool = True,
+    action_filter: Callable[[str], bool] | None = None,
+    action_observer: Callable[[str], None] | None = None,
 ) -> Optional[str]:
     """
     Handle a single KEYDOWN event during the game.
@@ -443,6 +470,10 @@ def handle_game_keydown(
 
     system_decision = _system_decision_for_key(key)
     if system_decision is not None:
+        if action_filter is not None and not action_filter(system_decision):
+            return "continue"
+        if action_observer is not None:
+            action_observer(system_decision)
         return system_decision
 
     if not allow_gameplay:
@@ -456,7 +487,14 @@ def handle_game_keydown(
     if key in DISABLED_KEYS_2D:
         return "continue"
 
+    gameplay_action = _gameplay_action_for_key_2d(state, key)
+    if gameplay_action is None:
+        return "continue"
+    if action_filter is not None and not action_filter(gameplay_action):
+        return "continue"
     _dispatch_2d_gameplay_action(state, key)
+    if action_observer is not None:
+        action_observer(gameplay_action)
     return "continue"
 
 
@@ -517,6 +555,7 @@ class LoopContext2D:
     bot_speed_level: int = 7
     auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT
     lines_per_level: int = _LINES_PER_LEVEL_DEFAULT
+    tutorial_session: object | None = None
 
     @classmethod
     def create(
@@ -527,8 +566,15 @@ class LoopContext2D:
         bot_speed_level: int = 7,
         auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT,
         lines_per_level: int = _LINES_PER_LEVEL_DEFAULT,
+        tutorial_lesson_id: str | None = None,
     ) -> "LoopContext2D":
         state = create_initial_state(cfg)
+        tutorial_session = None
+        if tutorial_lesson_id:
+            tutorial_session = tutorial_runtime_create_session_runtime(
+                lesson_id=tutorial_lesson_id,
+                mode="2d",
+            )
         return cls(
             cfg=cfg,
             state=state,
@@ -545,16 +591,31 @@ class LoopContext2D:
                 lines_per_level,
                 default=_LINES_PER_LEVEL_DEFAULT,
             ),
+            tutorial_session=tutorial_session,
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if event.key == pygame.K_F8 and self.tutorial_session is not None:
+            tutorial_runtime_skip_runtime(self.tutorial_session)
+            play_sfx("menu_move")
+            return "continue"
+        if event.key == pygame.K_F9 and self.tutorial_session is not None:
+            self.on_restart()
+            play_sfx("menu_confirm")
+            return "continue"
         if event.key == pygame.K_F2:
+            if not self._tutorial_action_allowed("bot_cycle_mode"):
+                return "continue"
             self.bot.cycle_mode()
             self.refresh_score_multiplier()
+            self._tutorial_observe_action("bot_cycle_mode")
             play_sfx("menu_move")
             return "continue"
         if event.key == pygame.K_F3:
+            if not self._tutorial_action_allowed("bot_step"):
+                return "continue"
             self.bot.request_step()
+            self._tutorial_observe_action("bot_step")
             play_sfx("menu_move")
             return "continue"
         return handle_game_keydown(
@@ -562,7 +623,19 @@ class LoopContext2D:
             self.state,
             self.cfg,
             allow_gameplay=self.bot.user_gameplay_enabled,
+            action_filter=self._tutorial_action_allowed,
+            action_observer=self._tutorial_observe_action,
         )
+
+    def _tutorial_action_allowed(self, action_id: str) -> bool:
+        if self.tutorial_session is None:
+            return True
+        return tutorial_runtime_action_allowed_runtime(self.tutorial_session, action_id)
+
+    def _tutorial_observe_action(self, action_id: str) -> None:
+        if self.tutorial_session is None:
+            return
+        tutorial_runtime_observe_action_runtime(self.tutorial_session, action_id)
 
     def on_restart(self) -> None:
         self.cfg.speed_level = int(self.base_speed_level)
@@ -574,6 +647,9 @@ class LoopContext2D:
         self.was_game_over = self.state.game_over
         self.bot.reset_runtime()
         self.rotation_anim.reset()
+        if self.tutorial_session is not None:
+            tutorial_runtime_restart_runtime(self.tutorial_session)
+            _apply_pending_tutorial_setup(self)
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -609,6 +685,16 @@ def _maybe_apply_auto_speedup(loop: LoopContext2D) -> int | None:
     loop.gravity_accumulator = 0
     loop.refresh_score_multiplier()
     return gravity_interval_ms
+
+
+def _apply_pending_tutorial_setup(loop: LoopContext2D) -> None:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
+        return
+    payload = tutorial_runtime_consume_pending_setup_runtime(tutorial_session)
+    if not isinstance(payload, dict):
+        return
+    tutorial_apply_step_setup_2d_runtime(loop.state, loop.cfg, payload)
 
 
 def _configure_game_loop(
@@ -647,6 +733,22 @@ def _open_help_screen(screen: pygame.Surface, fonts: GfxFonts) -> pygame.Surface
     )
 
 
+def _pause_tutorial_restart_2d(loop: LoopContext2D) -> bool:
+    if loop.tutorial_session is None:
+        return False
+    restarted = tutorial_runtime_restart_runtime(loop.tutorial_session)
+    if not restarted:
+        return False
+    _apply_pending_tutorial_setup(loop)
+    return True
+
+
+def _pause_tutorial_skip_2d(loop: LoopContext2D) -> bool:
+    if loop.tutorial_session is None:
+        return False
+    return bool(tutorial_runtime_skip_runtime(loop.tutorial_session))
+
+
 def _resolve_loop_decision(
     *,
     decision: str,
@@ -658,7 +760,13 @@ def _resolve_loop_decision(
         return "quit", screen
     if decision != "menu":
         return "continue", screen
-    pause_decision, next_screen = run_pause_menu(screen, fonts, dimension=2)
+    pause_decision, next_screen = run_pause_menu(
+        screen,
+        fonts,
+        dimension=2,
+        on_tutorial_restart=lambda: _pause_tutorial_restart_2d(loop),
+        on_tutorial_skip=lambda: _pause_tutorial_skip_2d(loop),
+    )
     if pause_decision == "quit":
         return "quit", next_screen
     if pause_decision == "menu":
@@ -674,7 +782,11 @@ def _advance_simulation(
     loop: LoopContext2D,
     dt: int,
     gravity_interval_ms: int,
+    tutorial_step_pause_active: bool = False,
 ) -> None:
+    if tutorial_step_pause_active:
+        loop.gravity_accumulator = 0
+        return
     if loop.cfg.exploration_mode:
         loop.gravity_accumulator = 0
         return
@@ -768,6 +880,64 @@ def _handle_loop_event_cycle(
     return next_screen, display_settings, None, False
 
 
+def _run_game_frame_2d(
+    *,
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    loop: LoopContext2D,
+    dt: int,
+    clear_anim_duration_ms: float,
+) -> None:
+    tutorial_step_pause_active = (
+        loop.tutorial_session is not None
+        and tutorial_runtime_is_running_runtime(loop.tutorial_session)
+    )
+    _gravity_interval_ms = _sync_runtime_speed(loop)
+    _advance_simulation(
+        loop=loop,
+        dt=dt,
+        gravity_interval_ms=_gravity_interval_ms,
+        tutorial_step_pause_active=tutorial_step_pause_active,
+    )
+    _update_feedback_and_animation(
+        loop=loop,
+        dt=dt,
+        clear_anim_duration_ms=clear_anim_duration_ms,
+    )
+    _maybe_apply_auto_speedup(loop)
+    if loop.tutorial_session is not None:
+        tutorial_runtime_sync_and_advance_runtime(
+            loop.tutorial_session,
+            lines_cleared=int(loop.state.lines_cleared),
+        )
+        _apply_pending_tutorial_setup(loop)
+    clear_effect = _clear_effect(
+        loop.clear_anim_levels,
+        loop.clear_anim_elapsed_ms,
+        clear_anim_duration_ms,
+    )
+    loop.rotation_anim.observe(loop.state.current_piece, dt)
+    active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
+    draw_game_frame(
+        screen,
+        loop.cfg,
+        loop.state,
+        fonts,
+        grid_mode=loop.grid_mode,
+        bot_lines=tuple(loop.bot.status_lines()),
+        clear_effect=clear_effect,
+        active_piece_overlay=active_overlay,
+    )
+    if loop.tutorial_session is not None:
+        draw_tutorial_overlay(
+            screen,
+            fonts,
+            dimension=2,
+            tutorial_session=loop.tutorial_session,
+        )
+    pygame.display.flip()
+
+
 def run_game_loop(
     screen: pygame.Surface,
     cfg: GameConfig,
@@ -779,6 +949,7 @@ def run_game_loop(
     bot_algorithm_index: int = 0,
     bot_profile_index: int = 1,
     bot_budget_ms: int = 12,
+    tutorial_lesson_id: str | None = None,
 ) -> bool:
     """
     Run a single game session.
@@ -823,8 +994,10 @@ def run_game_loop(
         bot_speed_level=bot_speed_level,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
+        tutorial_lesson_id=tutorial_lesson_id,
     )
-    gravity_interval_ms = _configure_game_loop(
+    _apply_pending_tutorial_setup(loop)
+    _configure_game_loop(
         loop=loop,
         bot_speed_level=bot_speed_level,
         bot_algorithm_index=bot_algorithm_index,
@@ -856,41 +1029,13 @@ def run_game_loop(
             return terminal
         if continue_loop:
             continue
-
-        gravity_interval_ms = _sync_runtime_speed(loop)
-        _advance_simulation(
-            loop=loop,
-            dt=dt,
-            gravity_interval_ms=gravity_interval_ms,
-        )
-        _update_feedback_and_animation(
+        _run_game_frame_2d(
+            screen=screen,
+            fonts=fonts,
             loop=loop,
             dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
         )
-        updated_gravity = _maybe_apply_auto_speedup(loop)
-        if updated_gravity is not None:
-            gravity_interval_ms = updated_gravity
-        clear_effect = _clear_effect(
-            loop.clear_anim_levels,
-            loop.clear_anim_elapsed_ms,
-            clear_anim_duration_ms,
-        )
-        loop.rotation_anim.observe(loop.state.current_piece, dt)
-        active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
-
-        # ----- Drawing -----
-        draw_game_frame(
-            screen,
-            cfg,
-            loop.state,
-            fonts,
-            grid_mode=loop.grid_mode,
-            bot_lines=tuple(loop.bot.status_lines()),
-            clear_effect=clear_effect,
-            active_piece_overlay=active_overlay,
-        )
-        pygame.display.flip()
 
     # Normally not reached
     return False

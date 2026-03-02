@@ -46,21 +46,24 @@ Read order:
 1. Read the relevant RDS files before editing gameplay logic.
 2. Keep keybindings external; do not hardcode mode keys in frontends.
 3. Preserve deterministic behavior where seeds are used.
-4. Apply the menu simplification manifest rule: features common to 2D/3D/4D
+4. Tutorial start/restart contract: enforce seeded startup state for each mode
+   (curated asymmetric starter piece, full visibility with min layer offset,
+   and deterministic 1-2 bottom layers).
+5. Apply the menu simplification manifest rule: features common to 2D/3D/4D
    setup menus should be centralized in the shared settings hub unless a very
    strong mode-specific reason is documented.
-4. When refactoring frontends, keep behavior parity with existing tests.
-5. Prefer small, composable helpers over large event/render functions.
-6. Prefer existing repo helpers/functions (`tet4d.engine.api`, shared runtime helpers,
+6. When refactoring frontends, keep behavior parity with existing tests.
+7. Prefer small, composable helpers over large event/render functions.
+8. Prefer existing repo helpers/functions (`tet4d.engine.api`, shared runtime helpers,
    existing adapters) before writing new implementation code.
-7. Avoid magic numbers in Python code; prefer config-backed constants and runtime/config
+9. Avoid magic numbers in Python code; prefer config-backed constants and runtime/config
    accessors unless externalizing the value is clearly not worth the complexity.
-8. Sanitize external/user-controlled string inputs with canonical runtime
+10. Sanitize external/user-controlled string inputs with canonical runtime
    sanitization helpers before use.
-9. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
-10. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
-11. Keep `config/project/policy/manifests/context_router_manifest.json` valid; contract checks now enforce context ids, routing rule integrity, and schema shape.
-11. Keep `config/project/policy/manifests/tech_debt_budgets.json` synchronized with staged checkpoints:
+11. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
+12. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
+13. Keep `config/project/policy/manifests/context_router_manifest.json` valid; contract checks now enforce context ids, routing rule integrity, and schema shape.
+14. Keep `config/project/policy/manifests/tech_debt_budgets.json` synchronized with staged checkpoints:
     active gate mode is `non_regression_baseline`, so stage batches must keep
     `tech_debt.score <= baseline + score_epsilon` and must not worsen debt status;
     baseline refresh remains manual via `tools/governance/update_tech_debt_budgets.py`
@@ -69,18 +72,18 @@ Read order:
     Python LOC/file growth (weighted by source roots: `src/tet4d` highest;
     `tests/tools/scripts` lower). Use `strict_stage_decrease` only for designated
     refactor-only batches that explicitly target net debt reduction.
-12. Canonical debt backlog source is machine-readable:
+15. Canonical debt backlog source is machine-readable:
     `config/project/backlog_debt.json` (`active_debt_items`);
     metrics do not parse markdown backlog text as fallback.
-11. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
-11. For long-running refactor threads, read `CURRENT_STATE.md` first to resume the latest architecture stage, metrics snapshot, and next-step plan before making changes.
-12. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
-13. Redundant compatibility facades may be removed when callers are migrated, but keep
+16. Current source layout: runtime code is under `src/tet4d/engine/`; local dev/CI should use editable install (`pip install -e .`) so `tet4d` imports resolve without shims.
+17. For long-running refactor threads, read `CURRENT_STATE.md` first to resume the latest architecture stage, metrics snapshot, and next-step plan before making changes.
+18. For architecture refactors, follow `docs/ARCHITECTURE_CONTRACT.md` and keep boundary checks green.
+19. Redundant compatibility facades may be removed when callers are migrated, but keep
     boundary-enforcing adapters (for example `engine -> ui` compatibility shims) until the
     corresponding modules are physically moved and boundary checks remain green.
-14. Public playbot APIs should now be imported from `tet4d.engine.api`; the
+20. Public playbot APIs should now be imported from `tet4d.engine.api`; the
     `tet4d.ai.playbot` package only retains shared internal helper logic during migration.
-15. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
+21. For engine folder cleanup, prefer merged buckets (`engine/gameplay`,
     `engine/ui_logic`, `engine/runtime`) over many tiny folders; keep moves prefix-based
     and compatibility-shimmed to minimize import churn.
 16. As merged-folder moves land, update imports inside moved modules to use the new

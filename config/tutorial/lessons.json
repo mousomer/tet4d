@@ -1,0 +1,582 @@
+{
+  "schema_version": 1,
+  "lessons": [
+    {
+      "lesson_id": "tutorial_2d_core",
+      "title": "2D Basics",
+      "mode": "2d",
+      "steps": [
+        {
+          "id": "move_xy",
+          "ui": {
+            "text": "Move left/right, then soft-drop and hard-drop once.",
+            "hint": "Complete all movement prompts before the step advances.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "move_x_neg",
+              "move_x_pos",
+              "soft_drop",
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "soft_drop",
+              "hard_drop",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 1001,
+            "starter_piece_id": "L",
+            "spawn_min_visible_layer": 2,
+            "bottom_layers_min": 1,
+            "bottom_layers_max": 2
+          },
+          "complete_when": {
+            "events": [
+              "move_x_neg",
+              "move_x_pos",
+              "soft_drop",
+              "hard_drop"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "rotate_xy",
+          "ui": {
+            "text": "Rotate both directions (CW and CCW).",
+            "hint": "Use both rotation keys before continuing.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "rotate_xy_pos",
+              "rotate_xy_neg"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 1002
+          },
+          "complete_when": {
+            "events": [
+              "rotate_xy_pos",
+              "rotate_xy_neg"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "clear_line",
+          "ui": {
+            "text": "Clear one line on the prepared board.",
+            "hint": "Place the piece to fill the gap in the target row.",
+            "highlights": [
+              "target_row"
+            ],
+            "key_prompts": [
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "board_preset": "2d_almost_line",
+            "rng_seed": 1003,
+            "starter_piece_id": "L",
+            "spawn_min_visible_layer": 2
+          },
+          "complete_when": {
+            "events": [],
+            "predicates": [
+              "line_cleared"
+            ],
+            "logic": "all"
+          }
+        }
+      ]
+    },
+    {
+      "lesson_id": "tutorial_3d_core",
+      "title": "3D Basics",
+      "mode": "3d",
+      "steps": [
+        {
+          "id": "camera_controls",
+          "ui": {
+            "text": "Use every camera control once, then reset.",
+            "hint": "Yaw, pitch, zoom, projection cycle, and reset are all required.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "yaw_neg",
+              "yaw_pos",
+              "pitch_pos",
+              "reset"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "yaw_fine_neg",
+              "yaw_neg",
+              "yaw_pos",
+              "yaw_fine_pos",
+              "pitch_neg",
+              "pitch_pos",
+              "zoom_in",
+              "zoom_out",
+              "cycle_projection",
+              "reset",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "camera_preset": "tutorial_3d_default",
+            "rng_seed": 2001,
+            "starter_piece_id": "SCREW3",
+            "spawn_min_visible_layer": 2,
+            "bottom_layers_min": 1,
+            "bottom_layers_max": 2
+          },
+          "complete_when": {
+            "events": [
+              "yaw_fine_neg",
+              "yaw_neg",
+              "yaw_pos",
+              "yaw_fine_pos",
+              "pitch_neg",
+              "pitch_pos",
+              "zoom_in",
+              "zoom_out",
+              "cycle_projection",
+              "reset"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "move_depth",
+          "ui": {
+            "text": "Perform all 3D translation controls.",
+            "hint": "Move on X and Z, then use soft and hard drop.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "soft_drop",
+              "hard_drop",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 2002
+          },
+          "complete_when": {
+            "events": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "soft_drop",
+              "hard_drop"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "rotate_3d",
+          "ui": {
+            "text": "Perform all 3D rotation pairs.",
+            "hint": "Complete XY, XZ, and YZ rotations in both directions.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "rotate_xy_pos",
+              "rotate_xz_pos",
+              "rotate_yz_pos"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 2003
+          },
+          "complete_when": {
+            "events": [
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "clear_layer",
+          "ui": {
+            "text": "Clear one 3D layer on the prepared board.",
+            "hint": "Fill the single gap on the target layer.",
+            "highlights": [
+              "target_layer"
+            ],
+            "key_prompts": [
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "board_preset": "3d_almost_layer",
+            "rng_seed": 2004,
+            "starter_piece_id": "SCREW3",
+            "spawn_min_visible_layer": 2
+          },
+          "complete_when": {
+            "events": [],
+            "predicates": [
+              "layer_cleared"
+            ],
+            "logic": "all"
+          }
+        }
+      ]
+    },
+    {
+      "lesson_id": "tutorial_4d_core",
+      "title": "4D Basics",
+      "mode": "4d",
+      "steps": [
+        {
+          "id": "slice_navigation",
+          "ui": {
+            "text": "Perform all 4D translation controls.",
+            "hint": "Move on X/Z/W, then soft-drop and hard-drop.",
+            "highlights": [
+              "slice_indicator"
+            ],
+            "key_prompts": [
+              "move_w_neg",
+              "move_w_pos",
+              "move_z_neg",
+              "move_z_pos"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "move_w_neg",
+              "move_w_pos",
+              "soft_drop",
+              "hard_drop",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 3001,
+            "starter_piece_id": "SKEW4_A",
+            "spawn_min_visible_layer": 2,
+            "bottom_layers_min": 1,
+            "bottom_layers_max": 2
+          },
+          "complete_when": {
+            "events": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "move_w_neg",
+              "move_w_pos",
+              "soft_drop",
+              "hard_drop"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "rotate_w_planes",
+          "ui": {
+            "text": "Perform all 4D rotation pairs.",
+            "hint": "Complete XY/XZ/YZ and XW/YW/ZW rotations in both directions.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "rotate_xw_pos",
+              "rotate_yw_pos",
+              "rotate_zw_pos"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "move_w_neg",
+              "move_w_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg",
+              "rotate_xw_pos",
+              "rotate_xw_neg",
+              "rotate_yw_pos",
+              "rotate_yw_neg",
+              "rotate_zw_pos",
+              "rotate_zw_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "rng_seed": 3002
+          },
+          "complete_when": {
+            "events": [
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg",
+              "rotate_xw_pos",
+              "rotate_xw_neg",
+              "rotate_yw_pos",
+              "rotate_yw_neg",
+              "rotate_zw_pos",
+              "rotate_zw_neg"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "view_turn",
+          "ui": {
+            "text": "Use every 4D camera/view control once, then reset.",
+            "hint": "Yaw, pitch, zoom, XW/ZW view turns, projection cycle, and reset are required.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "view_xw_pos",
+              "view_zw_pos",
+              "cycle_projection",
+              "reset"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "yaw_fine_neg",
+              "yaw_neg",
+              "yaw_pos",
+              "yaw_fine_pos",
+              "pitch_neg",
+              "pitch_pos",
+              "zoom_in",
+              "zoom_out",
+              "view_xw_neg",
+              "view_xw_pos",
+              "view_zw_neg",
+              "view_zw_pos",
+              "cycle_projection",
+              "reset",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "camera_preset": "tutorial_4d_default",
+            "rng_seed": 3003
+          },
+          "complete_when": {
+            "events": [
+              "yaw_fine_neg",
+              "yaw_neg",
+              "yaw_pos",
+              "yaw_fine_pos",
+              "pitch_neg",
+              "pitch_pos",
+              "zoom_in",
+              "zoom_out",
+              "view_xw_neg",
+              "view_xw_pos",
+              "view_zw_neg",
+              "view_zw_pos",
+              "cycle_projection",
+              "reset"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "clear_hyper_layer",
+          "ui": {
+            "text": "Complete one hyper-layer clear on the prepared board.",
+            "hint": "Fill the single gap in the target hyper-layer.",
+            "highlights": [
+              "target_hyper_layer"
+            ],
+            "key_prompts": [
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "move_x_neg",
+              "move_x_pos",
+              "move_z_neg",
+              "move_z_pos",
+              "move_w_neg",
+              "move_w_pos",
+              "soft_drop",
+              "hard_drop",
+              "rotate_xy_pos",
+              "rotate_xy_neg",
+              "rotate_xz_pos",
+              "rotate_xz_neg",
+              "rotate_yz_pos",
+              "rotate_yz_neg",
+              "rotate_xw_pos",
+              "rotate_xw_neg",
+              "rotate_yw_pos",
+              "rotate_yw_neg",
+              "rotate_zw_pos",
+              "rotate_zw_neg",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "board_preset": "4d_almost_hyper_layer",
+            "rng_seed": 3004,
+            "starter_piece_id": "SKEW4_A",
+            "spawn_min_visible_layer": 2
+          },
+          "complete_when": {
+            "events": [],
+            "predicates": [
+              "hyper_layer_cleared"
+            ],
+            "logic": "all"
+          }
+        }
+      ]
+    }
+  ]
+}

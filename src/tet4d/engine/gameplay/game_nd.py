@@ -21,7 +21,6 @@ from ..runtime.score_analyzer import (
     record_score_analysis_event,
 )
 from .scoring_bonus import score_with_clear_bonuses
-from ..core.rules.scoring import score_for_clear
 from ..core.rules.locking import apply_lock_and_score
 from ..core.step.reducer import step_nd as core_step_nd
 from .topology import (
@@ -31,10 +30,6 @@ from .topology import (
     normalize_topology_mode,
 )
 from ..core.model import Coord
-
-
-def _score_for_clear(cleared_planes: int) -> int:
-    return score_for_clear(cleared_planes)
 
 
 def _coerce_rng_seed(value: object) -> int:

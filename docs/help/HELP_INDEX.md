@@ -37,19 +37,16 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 5. Action mapping config:
 6. `config/help/icon_map.json` (`rotate_*` actions mapped to `rot_*` icon names)
 7. `soft_drop` / `hard_drop` remain procedural fallback icons until dedicated SVGs are added.
-8. Legacy combined guide renderer remains available in:
-9. `src/tet4d/ui/pygame/menu/menu_control_guides.py`
-10. Entry point: `draw_translation_rotation_guides(...)`
-11. Surfaces that must expose control visuals:
-12. keybindings menus (row icons),
-13. help controls page,
-14. in-game helper panel.
-15. Help topic render path uses:
-16. `src/tet4d/engine/runtime/help_topics.py` (context/dimension topic filtering)
-17. `src/tet4d/ui/pygame/runtime_ui/help_menu.py` (live key rows + subpage rendering)
-18. `config/help/topics.json` + `config/help/action_map.json`
-19. `config/help/content/runtime_help_content.json` (runtime help copy templates used by `runtime_ui/help_menu.py`)
-20. `config/help/layout/runtime_help_layout.json` (runtime help layout/placement rules used by `runtime_ui/help_menu.py`)
+8. Surfaces that must expose control visuals:
+9. keybindings menus (row icons),
+10. help controls page,
+11. in-game helper panel.
+12. Help topic render path uses:
+13. `src/tet4d/engine/runtime/help_topics.py` (context/dimension topic filtering)
+14. `src/tet4d/ui/pygame/runtime_ui/help_menu.py` (live key rows + subpage rendering)
+15. `config/help/topics.json` + `config/help/action_map.json`
+16. `config/help/content/runtime_help_content.json` (runtime help copy templates used by `runtime_ui/help_menu.py`)
+17. `config/help/layout/runtime_help_layout.json` (runtime help layout/placement rules used by `runtime_ui/help_menu.py`)
 
 ## Maintenance rule
 

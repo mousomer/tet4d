@@ -31,6 +31,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_disp
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_topology_lab_menu
+from tet4d.ui.pygame.launch.tutorials_menu import run_tutorials_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
@@ -333,11 +334,28 @@ def _launch_mode(
     session: _LauncherSession,
     fonts_nd,
     fonts_2d,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> None:
     launchers = {
-        "2d": lambda: launch_2d(session.screen, fonts_2d, session.display_settings),
-        "3d": lambda: launch_3d(session.screen, fonts_nd, session.display_settings),
-        "4d": lambda: launch_4d(session.screen, fonts_nd, session.display_settings),
+        "2d": lambda: launch_2d(
+            session.screen,
+            fonts_2d,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
+        "3d": lambda: launch_3d(
+            session.screen,
+            fonts_nd,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
+        "4d": lambda: launch_4d(
+            session.screen,
+            fonts_nd,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
     }
     launcher = launchers.get(mode)
     if launcher is None:
@@ -372,6 +390,32 @@ def _menu_action_play_dimension(
     fonts_2d,
 ) -> bool:
     _launch_mode(mode, state, session, fonts_nd, fonts_2d)
+    return not session.running
+
+
+def _menu_action_tutorials(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+    fonts_2d,
+) -> bool:
+    selection, next_screen = run_tutorials_menu(session.screen, fonts_nd)
+    session.screen = next_screen
+    if selection is None:
+        state.status = "Tutorial selection cancelled"
+        state.status_error = False
+        return False
+    _launch_mode(
+        selection.mode,
+        state,
+        session,
+        fonts_nd,
+        fonts_2d,
+        tutorial_lesson_id=selection.lesson_id,
+    )
+    if session.running:
+        state.status = f"Tutorial launched: {selection.mode.upper()}"
+        state.status_error = False
     return not session.running
 
 
@@ -519,6 +563,9 @@ def _build_action_registry(
     registry.register(
         "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd)
     )
+    registry.register(
+        "tutorials", lambda: _menu_action_tutorials(state, session, fonts_nd, fonts_2d)
+    )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry
 
@@ -529,9 +576,11 @@ def _handle_launcher_route(
     action_registry: ActionRegistry,
     session: _LauncherSession,
     fonts_nd,
+    fonts_2d,
 ) -> bool:
-    _ = session, fonts_nd
     clean_route_id = route_id.strip().lower()
+    if clean_route_id == "tutorials":
+        return _menu_action_tutorials(state, session, fonts_nd, fonts_2d)
     action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
     if not action_id:
         state.status = f"No action mapped for route '{clean_route_id}'"
@@ -632,6 +681,7 @@ def run() -> None:
             registry,
             session,
             fonts_nd,
+            fonts_2d,
         ),
         handle_missing_action=lambda action_id: _handle_missing_action(
             action_id, state

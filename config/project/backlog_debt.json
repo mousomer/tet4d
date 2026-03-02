@@ -26,6 +26,11 @@
       "id": "BKL-P3-009",
       "priority": "P3",
       "title": "Playbot learning-mode tuning watch (threshold retuning and long-run stability)"
+    },
+    {
+      "id": "BKL-P3-013",
+      "priority": "P3",
+      "title": "Interactive tutorials system rollout (data-driven lessons, gating, deterministic progression)"
     }
   ]
 }

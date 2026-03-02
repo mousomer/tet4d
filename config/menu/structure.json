@@ -164,6 +164,16 @@
         },
         {
           "type": "action",
+          "label": "Restart Tutorial",
+          "action_id": "tutorial_restart"
+        },
+        {
+          "type": "action",
+          "label": "Skip Tutorial",
+          "action_id": "tutorial_skip"
+        },
+        {
+          "type": "action",
           "label": "Settings",
           "action_id": "settings"
         },
@@ -325,6 +335,8 @@
   "pause_menu_rows": [
     "Resume",
     "Restart Run",
+    "Restart Tutorial",
+    "Skip Tutorial",
     "Settings",
     "Controls",
     "Help",
@@ -336,6 +348,8 @@
   "pause_menu_actions": [
     "resume",
     "restart",
+    "tutorial_restart",
+    "tutorial_skip",
     "settings",
     "keybindings",
     "help",

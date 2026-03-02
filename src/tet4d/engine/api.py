@@ -500,16 +500,24 @@ def initialize_keybinding_files_runtime() -> None:
     _call_ui_keybindings("initialize_keybinding_files")
 
 
+def _menu_settings_section(section: str) -> dict[str, Any]:
+    return _call_runtime_menu_settings_state(f"get_{section}_settings")
+
+
+def _menu_settings_constant(name: str) -> Any:
+    return _call_runtime_menu_settings_state(name)
+
+
 def get_audio_settings_runtime() -> dict[str, Any]:
-    return _call_runtime_menu_settings_state("get_audio_settings")
+    return _menu_settings_section("audio")
 
 
 def get_display_settings_runtime() -> dict[str, Any]:
-    return _call_runtime_menu_settings_state("get_display_settings")
+    return _menu_settings_section("display")
 
 
 def get_analytics_settings_runtime() -> dict[str, Any]:
-    return _call_runtime_menu_settings_state("get_analytics_settings")
+    return _menu_settings_section("analytics")
 
 
 def save_display_settings_runtime(*, windowed_size: tuple[int, int]) -> None:
@@ -650,7 +658,7 @@ def default_settings_payload_runtime():
 
 
 def load_analytics_payload_runtime():
-    return _call_runtime_menu_settings_state("get_analytics_settings")
+    return get_analytics_settings_runtime()
 
 
 def persist_audio_payload_runtime(
@@ -686,25 +694,24 @@ def persist_analytics_payload_runtime(*, score_logging_enabled: bool):
 
 
 def default_windowed_size_runtime() -> tuple[int, int]:
-    return _call_runtime_menu_settings_state("_runtime_defaults").windowed_size
+    return (
+        int(_menu_settings_constant("DEFAULT_WINDOW_WIDTH")),
+        int(_menu_settings_constant("DEFAULT_WINDOW_HEIGHT")),
+    )
 
 
 def default_overlay_transparency_runtime() -> float:
-    return float(_call_runtime_menu_settings_state("_default_overlay_transparency"))
+    return float(_menu_settings_constant("DEFAULT_OVERLAY_TRANSPARENCY"))
 
 
 def overlay_transparency_step_runtime() -> float:
-    return float(_call_runtime_menu_settings_state("OVERLAY_TRANSPARENCY_STEP"))
+    return float(_menu_settings_constant("OVERLAY_TRANSPARENCY_STEP"))
 
 
 def clamp_overlay_transparency_runtime(
     value: Any, *, default: float | None = None
 ) -> float:
-    fallback = (
-        float(_call_runtime_menu_settings_state("_default_overlay_transparency"))
-        if default is None
-        else float(default)
-    )
+    fallback = default_overlay_transparency_runtime() if default is None else float(default)
     return float(
         _call_runtime_menu_settings_state(
             "clamp_overlay_transparency", value, default=fallback
@@ -713,41 +720,37 @@ def clamp_overlay_transparency_runtime(
 
 
 def default_game_seed_runtime() -> int:
-    return int(_call_runtime_menu_settings_state("_default_game_seed"))
+    return int(_menu_settings_constant("DEFAULT_GAME_SEED"))
 
 
 def game_seed_step_runtime() -> int:
-    return int(_call_runtime_menu_settings_state("GAME_SEED_STEP"))
+    return int(_menu_settings_constant("GAME_SEED_STEP"))
 
 
 def clamp_game_seed_runtime(value: Any, *, default: int | None = None) -> int:
-    fallback = (
-        int(_call_runtime_menu_settings_state("DEFAULT_GAME_SEED"))
-        if default is None
-        else int(default)
-    )
+    fallback = default_game_seed_runtime() if default is None else int(default)
     return int(
         _call_runtime_menu_settings_state("clamp_game_seed", value, default=fallback)
     )
 
 
+def _clamp_int_with_settings_schema(name: str, value: Any, *, default: int) -> int:
+    return int(_call_runtime_settings_schema(name, value, default=int(default)))
+
+
 def clamp_toggle_index_runtime(value: Any, *, default: int = 0) -> int:
-    return int(
-        _call_runtime_settings_schema(
-            "clamp_toggle_index",
-            value,
-            default=int(default),
-        )
+    return _clamp_int_with_settings_schema(
+        "clamp_toggle_index",
+        value,
+        default=default,
     )
 
 
 def clamp_lines_per_level_runtime(value: Any, *, default: int = 10) -> int:
-    return int(
-        _call_runtime_settings_schema(
-            "clamp_lines_per_level",
-            value,
-            default=int(default),
-        )
+    return _clamp_int_with_settings_schema(
+        "clamp_lines_per_level",
+        value,
+        default=default,
     )
 
 
@@ -868,6 +871,8 @@ _call_runtime_menu_settings_state = partial(
 )
 _call_runtime_help_topics = partial(_call_module_attr, "tet4d.engine.runtime.help_topics")
 _call_help_text = partial(_call_module_attr, "tet4d.engine.help_text")
+_call_tutorial_content = partial(_call_module_attr, "tet4d.engine.tutorial.content")
+_call_tutorial_runtime = partial(_call_module_attr, "tet4d.engine.tutorial.runtime")
 _call_gameplay_pieces2d = partial(_call_module_attr, "tet4d.engine.gameplay.pieces2d")
 _call_gameplay_pieces_nd = partial(
     _call_module_attr,
@@ -1217,6 +1222,117 @@ def ui_copy_section_runtime(section: str) -> dict[str, Any]:
     return _call_runtime_menu_config("ui_copy_section", section)
 
 
+def tutorial_lessons_payload_runtime() -> dict[str, Any]:
+    return _call_tutorial_content("tutorial_payload_dict")
+
+
+def tutorial_lesson_ids_runtime() -> tuple[str, ...]:
+    lesson_ids = _call_tutorial_content("tutorial_lesson_ids")
+    return tuple(str(lesson_id) for lesson_id in lesson_ids)
+
+
+def tutorial_progress_snapshot_runtime() -> dict[str, Any]:
+    payload = _call_tutorial_runtime("tutorial_progress_snapshot")
+    return dict(payload)
+
+
+def tutorial_runtime_create_session_runtime(*, lesson_id: str, mode: str) -> Any:
+    return _call_tutorial_runtime(
+        "create_tutorial_runtime_session",
+        lesson_id=lesson_id,
+        mode=mode,
+    )
+
+
+def tutorial_runtime_action_allowed_runtime(session: Any, action_id: str) -> bool:
+    return bool(session.action_allowed(action_id))
+
+
+def tutorial_runtime_is_running_runtime(session: Any) -> bool:
+    return bool(session.is_running())
+
+
+def tutorial_runtime_observe_action_runtime(session: Any, action_id: str) -> None:
+    session.observe_action(action_id)
+
+
+def tutorial_runtime_sync_and_advance_runtime(
+    session: Any,
+    *,
+    lines_cleared: int,
+) -> bool:
+    return bool(session.sync_and_advance(lines_cleared=int(lines_cleared)))
+
+
+def tutorial_runtime_overlay_payload_runtime(session: Any) -> dict[str, Any]:
+    payload = session.overlay_payload()
+    return dict(payload)
+
+
+def tutorial_runtime_event_log_tail_runtime(
+    session: Any,
+    *,
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    payload = session.event_log_tail_payload(limit=int(limit))
+    return [dict(item) for item in payload]
+
+
+def tutorial_runtime_consume_pending_setup_runtime(
+    session: Any,
+) -> dict[str, Any] | None:
+    payload = session.consume_pending_setup()
+    if payload is None:
+        return None
+    return dict(payload)
+
+
+def tutorial_runtime_restart_runtime(session: Any) -> bool:
+    return bool(session.restart())
+
+
+def tutorial_runtime_skip_runtime(session: Any) -> bool:
+    return bool(session.skip())
+
+
+def tutorial_apply_step_setup_2d_runtime(
+    state: Any,
+    cfg: Any,
+    payload: dict[str, Any],
+) -> None:
+    from .tutorial.setup_apply import apply_tutorial_step_setup_2d as _apply
+
+    setup = payload.get("setup")
+    if not isinstance(setup, dict):
+        setup = {}
+    _apply(
+        state,
+        cfg,
+        setup,
+        lesson_id=str(payload.get("lesson_id", "")),
+        step_id=str(payload.get("step_id", "")),
+    )
+
+
+def tutorial_apply_step_setup_nd_runtime(
+    state: Any,
+    cfg: Any,
+    payload: dict[str, Any],
+) -> None:
+    from .tutorial.setup_apply import apply_tutorial_step_setup_nd as _apply
+
+    setup = payload.get("setup")
+    if not isinstance(setup, dict):
+        setup = {}
+    _apply(
+        state,
+        cfg,
+        setup,
+        lesson_id=str(payload.get("lesson_id", "")),
+        step_id=str(payload.get("step_id", "")),
+    )
+
+
 def load_menu_payload_runtime() -> dict[str, Any]:
     return _call_runtime_menu_settings_state("load_app_settings_payload")
 
@@ -1226,11 +1342,11 @@ def save_menu_payload_runtime(payload: dict[str, Any]) -> tuple[bool, str]:
 
 
 def load_audio_payload_runtime() -> dict[str, Any]:
-    return _call_runtime_menu_settings_state("get_audio_settings")
+    return get_audio_settings_runtime()
 
 
 def load_display_payload_runtime() -> dict[str, Any]:
-    return _call_runtime_menu_settings_state("get_display_settings")
+    return get_display_settings_runtime()
 
 
 def help_action_topic_registry_runtime() -> dict[str, str]:

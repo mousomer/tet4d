@@ -26,7 +26,6 @@
       "docs/rds/RDS_PACKAGING.md"
     ],
     "help_assets": [
-      "src/tet4d/ui/pygame/menu/menu_control_guides.py",
       "src/tet4d/ui/pygame/render/control_icons.py",
       "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
@@ -36,7 +35,8 @@
       "config/schema/help_topics.schema.json",
       "config/schema/help_action_map.schema.json",
       "config/schema/help_runtime_content.schema.json",
-      "config/schema/help_runtime_layout.schema.json"
+      "config/schema/help_runtime_layout.schema.json",
+      "config/schema/tutorial_lessons.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -75,6 +75,7 @@
       "config/help/content/runtime_help_content.json",
       "config/help/layout/runtime_help_layout.json",
       "config/help/layout/runtime_help_action_layout.json",
+      "config/tutorial/lessons.json",
       "config/gameplay/tuning.json",
       "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",
@@ -138,8 +139,6 @@
         "Documentation map",
         "scripts/bootstrap_env.sh",
         "config/gameplay/score_analyzer.json",
-        "menu_control_guides.py",
-        "draw_translation_rotation_guides",
         "scripts/ci_check.sh",
         "tools/governance/check_pygame_ce.py",
         "tools/governance/scan_secrets.py",

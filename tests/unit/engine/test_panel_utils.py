@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import unittest
 
+from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from tet4d.ui.pygame.render.panel_utils import (
+    _append_stats_group,
+    _stats_group_rows,
     _join_sections,
     _merge_summary_into_main_group,
 )
@@ -52,6 +55,39 @@ class TestPanelUtils(unittest.TestCase):
                 "Trend: stable",
             ),
         )
+
+    def test_stats_group_rows_use_group_row_shape(self) -> None:
+        rows = _stats_group_rows(("Dims: (10, 20)", "", "Score mod: x1.25"))
+        self.assertEqual(
+            rows,
+            (
+                "\tDims: (10, 20)\t",
+                "\t\t",
+                "\tScore mod: x1.25\t",
+            ),
+        )
+
+    def test_stats_group_rows_placeholder_when_empty(self) -> None:
+        self.assertEqual(_stats_group_rows(tuple()), ("\tno runtime stats\t",))
+
+    def test_append_stats_group_always_adds_stats_panel(self) -> None:
+        groups = [("Main", ("A\tpause menu\t",))]
+        with_stats = _append_stats_group(control_groups=groups, stats_lines=tuple())
+        self.assertEqual(with_stats[-1][0], "Stats")
+        self.assertEqual(with_stats[-1][1], ("\tno runtime stats\t",))
+
+    def test_all_modes_use_same_group_skeleton_with_stats(self) -> None:
+        for dim in (2, 3, 4):
+            groups = _append_stats_group(
+                control_groups=control_groups_for_dimension(
+                    dim, unified_structure=True
+                ),
+                stats_lines=tuple(),
+            )
+            self.assertEqual(
+                [name for name, _ in groups],
+                ["Main", "Translation", "Rotation", "Camera", "Stats"],
+            )
 
 
 if __name__ == "__main__":

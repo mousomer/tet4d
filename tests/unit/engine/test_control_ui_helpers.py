@@ -151,7 +151,7 @@ class TestControlGroups(unittest.TestCase):
             names = [name for name, _rows in planned]
             self.assertIn("Main", names)
 
-    def test_planning_keeps_camera_and_system_in_moderate_height(self) -> None:
+    def test_planning_drops_lower_priority_groups_first(self) -> None:
         groups = control_groups_for_dimension(4)
         if not pygame.font.get_init():
             pygame.font.init()
@@ -164,8 +164,9 @@ class TestControlGroups(unittest.TestCase):
             hint_font=hint_font,
         )
         names = [name for name, _rows in planned]
-        self.assertIn("Camera", names)
         self.assertIn("Main", names)
+        self.assertIn("Rotation", names)
+        self.assertNotIn("Camera", names)
 
     def test_planning_keeps_full_rotation_rows_before_camera_trimming(self) -> None:
         groups = control_groups_for_dimension(4)
