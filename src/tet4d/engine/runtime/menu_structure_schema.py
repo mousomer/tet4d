@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from ..ui_logic.menu_action_contracts import PARITY_ACTION_IDS
+from .menu_structure_parse_helpers import (
+    parse_copy_fields,
+    parse_mode_string_lists,
+    parse_string_list,
+    parse_ui_copy,
+)
 from .settings_schema import (
     MODE_KEYS,
     as_non_empty_string,
@@ -19,56 +25,6 @@ _MENU_ENTRYPOINT_KEYS = ("launcher", "pause")
 _DEFAULT_MENU_ENTRYPOINTS = {
     "launcher": "launcher_root",
     "pause": "pause_root",
-}
-_UI_COPY_SECTION_SPECS: dict[str, dict[str, tuple[str, ...]]] = {
-    "launcher": {
-        "string_fields": (
-            "info_active_profile_template",
-            "info_continue_mode_template",
-            "controls_hint_template",
-            "escape_hint_back",
-            "escape_hint_quit",
-        ),
-    },
-    "settings_hub": {
-        "string_fields": (
-            "title",
-            "subtitle_categories_template",
-            "reset_confirm_f8",
-        ),
-        "list_fields": ("hints",),
-    },
-    "keybindings_menu": {
-        "string_fields": (
-            "title",
-            "subtitle_section_mode",
-            "subtitle_binding_mode",
-            "capture_template",
-            "text_mode_confirm_hint",
-        ),
-        "list_fields": ("hints", "section_hints"),
-    },
-    "bot_options": {
-        "string_fields": (
-            "title",
-            "subtitle",
-            "saved_status",
-            "reset_confirm_enter",
-            "reset_confirm_f8",
-            "reset_done_template",
-        ),
-        "list_fields": ("hints",),
-    },
-    "setup_menu": {
-        "string_fields": (
-            "title_template",
-            "subtitle_template",
-            "title_2d",
-            "subtitle_2d",
-            "bindings_hint_template",
-            "compact_controls_hint",
-        ),
-    },
 }
 
 
@@ -164,7 +120,7 @@ def parse_launcher_subtitles(payload: dict[str, Any]) -> dict[str, str]:
     raw = require_object(
         payload.get("launcher_subtitles"), path="structure.launcher_subtitles"
     )
-    return _parse_copy_fields(
+    return parse_copy_fields(
         raw,
         base_path="structure.launcher_subtitles",
         string_fields=("launcher_root", "launcher_play", "default"),
@@ -194,86 +150,11 @@ def parse_launcher_route_actions(payload: dict[str, Any]) -> dict[str, str]:
 
 def parse_branding(payload: dict[str, Any]) -> dict[str, str]:
     raw = require_object(payload.get("branding"), path="structure.branding")
-    return _parse_copy_fields(
+    return parse_copy_fields(
         raw,
         base_path="structure.branding",
         string_fields=("game_title", "signature_author", "signature_message"),
     )
-
-
-def _parse_string_list(raw: object, *, path: str) -> tuple[str, ...]:
-    values = require_list(raw, path=path)
-    if not values:
-        raise RuntimeError(f"{path} must not be empty")
-    return tuple(
-        as_non_empty_string(value, path=f"{path}[{idx}]")
-        for idx, value in enumerate(values)
-    )
-
-
-def _parse_mode_string_lists(
-    raw_obj: dict[str, Any],
-    *,
-    base_path: str,
-) -> dict[str, tuple[str, ...]]:
-    parsed: dict[str, tuple[str, ...]] = {}
-    for mode_key in MODE_KEYS:
-        parsed[mode_key] = _parse_string_list(
-            raw_obj.get(mode_key),
-            path=f"{base_path}.{mode_key}",
-        )
-    return parsed
-
-
-def _parse_copy_fields(
-    raw: dict[str, Any],
-    *,
-    base_path: str,
-    string_fields: tuple[str, ...],
-    list_fields: tuple[str, ...] = (),
-) -> dict[str, Any]:
-    parsed: dict[str, Any] = {}
-    for field in string_fields:
-        parsed[field] = as_non_empty_string(
-            raw.get(field),
-            path=f"{base_path}.{field}",
-        )
-    for field in list_fields:
-        parsed[field] = _parse_string_list(
-            raw.get(field),
-            path=f"{base_path}.{field}",
-        )
-    return parsed
-
-
-def _parse_ui_copy_section(
-    raw_ui_copy: dict[str, Any],
-    *,
-    section: str,
-    string_fields: tuple[str, ...],
-    list_fields: tuple[str, ...] = (),
-) -> dict[str, Any]:
-    section_path = f"structure.ui_copy.{section}"
-    raw_section = require_object(raw_ui_copy.get(section), path=section_path)
-    return _parse_copy_fields(
-        raw_section,
-        base_path=section_path,
-        string_fields=string_fields,
-        list_fields=list_fields,
-    )
-
-
-def parse_ui_copy(payload: dict[str, Any]) -> dict[str, Any]:
-    raw = require_object(payload.get("ui_copy"), path="structure.ui_copy")
-    parsed: dict[str, Any] = {}
-    for section, spec in _UI_COPY_SECTION_SPECS.items():
-        parsed[section] = _parse_ui_copy_section(
-            raw,
-            section=section,
-            string_fields=spec["string_fields"],
-            list_fields=spec.get("list_fields", ()),
-        )
-    return parsed
 
 
 def parse_settings_hub_layout_rows(raw: object) -> tuple[dict[str, str], ...]:
@@ -321,7 +202,7 @@ def parse_pause_copy(payload: dict[str, Any]) -> dict[str, Any]:
         raw.get("subtitle_template"),
         path="structure.pause_copy.subtitle_template",
     )
-    hints = _parse_string_list(
+    hints = parse_string_list(
         raw.get("hints"),
         path="structure.pause_copy.hints",
     )
@@ -379,7 +260,7 @@ def parse_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]
 
 def parse_setup_hints(payload: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     hints_obj = require_object(payload.get("setup_hints"), path="structure.setup_hints")
-    return _parse_mode_string_lists(hints_obj, base_path="structure.setup_hints")
+    return parse_mode_string_lists(hints_obj, base_path="structure.setup_hints")
 
 
 def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str, ...]]:
@@ -397,7 +278,7 @@ def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str
             raw_labels,
             path=f"structure.settings_option_labels.{row_key}",
         )
-        parsed[row_key] = _parse_string_list(
+        parsed[row_key] = parse_string_list(
             values,
             path=f"structure.settings_option_labels.{row_key}",
         )
