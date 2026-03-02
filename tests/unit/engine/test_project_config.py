@@ -5,6 +5,7 @@ import unittest
 from tet4d.engine.runtime.project_config import (
     PROJECT_ROOT,
     keybindings_dir_relative,
+    leaderboard_file_default_relative,
     menu_settings_file_relative,
     project_constant_int,
     topology_profile_export_file_default_relative,
@@ -62,6 +63,9 @@ class TestProjectConfig(unittest.TestCase):
             topology_profile_export_file_default_relative().startswith(
                 state_dir_relative() + "/"
             )
+        )
+        self.assertTrue(
+            leaderboard_file_default_relative().startswith(state_dir_relative() + "/")
         )
 
 

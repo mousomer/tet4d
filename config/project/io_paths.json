@@ -8,6 +8,7 @@
     "playbot_history_file_default": "state/bench/playbot_latency_history.jsonl",
     "score_events_file_default": "state/analytics/score_events.jsonl",
     "score_summary_file_default": "state/analytics/score_summary.json",
+    "leaderboard_file_default": "state/analytics/leaderboard.json",
     "topology_profile_export_file_default": "state/topology/selected_profile.json"
   }
 }

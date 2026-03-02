@@ -15,7 +15,7 @@
     "2d": {
       "cell_size": 30,
       "margin": 20,
-      "side_panel": 200
+      "side_panel": 360
     },
     "3d": {
       "margin": 20,
@@ -39,5 +39,10 @@
       "compact_width_threshold": 760,
       "compact_height_threshold": 460
     }
+  },
+  "analytics": {
+    "leaderboard_max_entries": 200,
+    "leaderboard_page_rows": 12,
+    "leaderboard_name_max_length": 24
   }
 }

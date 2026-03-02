@@ -59,6 +59,7 @@ Read order:
    sanitization helpers before use.
 9. For repo restructuring/governance updates, produce a short plan + acceptance criteria first and update `docs/BACKLOG.md` when scope changes.
 10. Follow repo-root `AGENTS.md` verification contract (`./scripts/verify.sh`) after governance/CI/script changes.
+11. Keep `config/project/policy/manifests/context_router_manifest.json` valid; contract checks now enforce context ids, routing rule integrity, and schema shape.
 11. Keep `config/project/policy/manifests/tech_debt_budgets.json` synchronized with staged checkpoints:
     active gate mode is `non_regression_baseline`, so stage batches must keep
     `tech_debt.score <= baseline + score_epsilon` and must not worsen debt status;

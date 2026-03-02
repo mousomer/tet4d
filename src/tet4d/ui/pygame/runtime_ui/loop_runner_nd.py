@@ -6,6 +6,7 @@ from typing import Any, Literal
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
 
 GameLoopDecision = Literal["continue", "quit", "menu", "help"]
 GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
@@ -187,9 +188,36 @@ def run_nd_loop(
     clear animation creation, and frame rendering.
     """
     clock = pygame.time.Clock()
+    session_start_ms = pygame.time.get_ticks()
     auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_dimension(
         pause_dimension
     )
+
+    def _record_session(outcome: str) -> None:
+        elapsed_ms = max(0, pygame.time.get_ticks() - session_start_ms)
+        try:
+            maybe_record_leaderboard_session(
+                screen,
+                fonts,
+                dimension=int(pause_dimension),
+                score=int(loop.state.score),
+                lines_cleared=int(loop.state.lines_cleared),
+                start_speed_level=int(getattr(loop, "base_speed_level", 1)),
+                end_speed_level=int(loop.state.config.speed_level),
+                duration_seconds=float(elapsed_ms / 1000.0),
+                outcome=outcome,
+                bot_mode=str(getattr(loop.bot.mode, "value", "off")),
+                grid_mode=str(getattr(loop.grid_mode, "value", "full")),
+                random_mode=str(loop.state.config.rng_mode),
+                topology_mode=str(loop.state.config.topology_mode),
+                exploration_mode=bool(loop.state.config.exploration_mode),
+            )
+        except Exception:
+            return
+
+    def _restart_with_record() -> None:
+        _record_session("restart")
+        loop.on_restart()
 
     while True:
         dt = clock.tick(60)
@@ -198,7 +226,7 @@ def run_nd_loop(
 
         decision = process_game_events(
             keydown_handler=loop.keydown_handler,
-            on_restart=loop.on_restart,
+            on_restart=_restart_with_record,
             on_toggle_grid=loop.on_toggle_grid,
             event_handler=event_handler,
         )
@@ -219,10 +247,13 @@ def run_nd_loop(
             run_pause_menu=run_pause_menu,
         )
         if status == "quit":
+            _record_session("quit")
             return False
         if status == "menu":
+            _record_session("menu")
             return True
         if status == "restart":
+            _record_session("restart")
             continue
 
         gravity_interval_ms = int(gravity_interval_from_config(loop.state.config))

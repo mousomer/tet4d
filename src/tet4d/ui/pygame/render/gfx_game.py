@@ -28,7 +28,7 @@ MARGIN = engine_api.project_constant_int(
     ("rendering", "2d", "margin"), 20, min_value=0, max_value=240
 )
 SIDE_PANEL = engine_api.project_constant_int(
-    ("rendering", "2d", "side_panel"), 200, min_value=120, max_value=720
+    ("rendering", "2d", "side_panel"), 360, min_value=120, max_value=720
 )
 
 BG_COLOR = (10, 10, 30)

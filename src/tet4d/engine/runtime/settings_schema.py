@@ -11,7 +11,7 @@ from typing import Any, Callable
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = ("off", "edge", "full", "helper")
-BOT_MODE_NAMES = ("off", "assist", "auto", "step")
+BOT_MODE_NAMES = ("off", "assist", "auto", "learn", "step")
 BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
 
 OVERLAY_TRANSPARENCY_MIN = 0.0

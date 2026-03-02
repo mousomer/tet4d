@@ -12,6 +12,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
+from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -176,6 +177,7 @@ def _pause_menu_values(dimension: int) -> tuple[str, ...]:
         "settings": "Audio + Display + Analytics",
         "bot_options": f"{dimension}D planner/options",
         "keybindings": "General + 2D/3D/4D scopes",
+        "leaderboard": "Top session scores",
         "profile_prev": profile,
         "profile_next": profile,
         "save_bindings": profile,
@@ -237,6 +239,7 @@ _SUPPORTED_PAUSE_ACTIONS = {
     "settings",
     "bot_options",
     "keybindings",
+    "leaderboard",
     "profile_prev",
     "profile_next",
     "save_bindings",
@@ -244,6 +247,20 @@ _SUPPORTED_PAUSE_ACTIONS = {
     "help",
     "menu",
     "quit",
+}
+_PAUSE_IMMEDIATE_DECISIONS: dict[str, PauseDecision] = {
+    "resume": "resume",
+    "restart": "restart",
+    "menu": "menu",
+    "quit": "quit",
+}
+_PAUSE_PROFILE_STEPS: dict[str, int] = {
+    "profile_prev": -1,
+    "profile_next": 1,
+}
+_PAUSE_BINDINGS_IO: dict[str, bool] = {
+    "save_bindings": True,
+    "load_bindings": False,
 }
 
 if len(_PAUSE_ROWS) != len(_PAUSE_ACTION_CODES):
@@ -300,6 +317,54 @@ def _handle_pause_bindings_io(
     _set_pause_status(state, ok, msg)
 
 
+def _run_pause_bot_options(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+    *,
+    dimension: int,
+) -> tuple[pygame.Surface, bool]:
+    ok, msg = run_bot_options_menu(screen, fonts, start_dimension=dimension)
+    _set_pause_status(state, ok, msg)
+    return screen, True
+
+
+def _run_pause_keybindings(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+    *,
+    dimension: int,
+) -> tuple[pygame.Surface, bool]:
+    run_keybindings_menu(screen, fonts, dimension=dimension, scope="general")
+    _set_pause_status(state, True, "Returned from keybindings setup")
+    return screen, True
+
+
+def _run_pause_help(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+    *,
+    dimension: int,
+) -> tuple[pygame.Surface, bool]:
+    updated_screen = run_help_menu(
+        screen, fonts, dimension=dimension, context_label="Pause Menu"
+    )
+    _set_pause_status(state, True, "Returned from help")
+    return updated_screen, True
+
+
+def _run_pause_leaderboard(
+    screen: pygame.Surface,
+    fonts,
+    state: _PauseState,
+) -> tuple[pygame.Surface, bool]:
+    updated_screen = run_leaderboard_menu(screen, fonts)
+    _set_pause_status(state, True, "Returned from leaderboard")
+    return updated_screen, True
+
+
 def _handle_pause_action(
     action: str,
     screen: pygame.Surface,
@@ -308,37 +373,46 @@ def _handle_pause_action(
     *,
     dimension: int,
 ) -> tuple[pygame.Surface, bool]:
-    if action in {"resume", "restart", "menu", "quit"}:
-        _set_pause_decision(state, action)
+    immediate = _PAUSE_IMMEDIATE_DECISIONS.get(action)
+    if immediate is not None:
+        _set_pause_decision(state, immediate)
         return screen, True
-    if action == "settings":
-        return _run_pause_settings_hub(screen, fonts, state)
-    if action == "bot_options":
-        ok, msg = run_bot_options_menu(screen, fonts, start_dimension=dimension)
-        _set_pause_status(state, ok, msg)
+
+    profile_step = _PAUSE_PROFILE_STEPS.get(action)
+    if profile_step is not None:
+        _handle_pause_profile_cycle(state, profile_step)
         return screen, True
-    if action == "keybindings":
-        run_keybindings_menu(screen, fonts, dimension=dimension, scope="general")
-        _set_pause_status(state, True, "Returned from keybindings setup")
+
+    binding_save = _PAUSE_BINDINGS_IO.get(action)
+    if binding_save is not None:
+        _handle_pause_bindings_io(state, dimension, save=binding_save)
         return screen, True
-    if action == "profile_prev":
-        _handle_pause_profile_cycle(state, -1)
-        return screen, True
-    if action == "profile_next":
-        _handle_pause_profile_cycle(state, 1)
-        return screen, True
-    if action == "save_bindings":
-        _handle_pause_bindings_io(state, dimension, save=True)
-        return screen, True
-    if action == "load_bindings":
-        _handle_pause_bindings_io(state, dimension, save=False)
-        return screen, True
-    if action == "help":
-        screen = run_help_menu(
-            screen, fonts, dimension=dimension, context_label="Pause Menu"
-        )
-        _set_pause_status(state, True, "Returned from help")
-        return screen, True
+
+    action_handlers = {
+        "settings": lambda: _run_pause_settings_hub(screen, fonts, state),
+        "bot_options": lambda: _run_pause_bot_options(
+            screen,
+            fonts,
+            state,
+            dimension=dimension,
+        ),
+        "keybindings": lambda: _run_pause_keybindings(
+            screen,
+            fonts,
+            state,
+            dimension=dimension,
+        ),
+        "help": lambda: _run_pause_help(
+            screen,
+            fonts,
+            state,
+            dimension=dimension,
+        ),
+        "leaderboard": lambda: _run_pause_leaderboard(screen, fonts, state),
+    }
+    handler = action_handlers.get(action)
+    if handler is not None:
+        return handler()
     return screen, True
 
 

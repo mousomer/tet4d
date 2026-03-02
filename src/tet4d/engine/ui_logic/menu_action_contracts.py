@@ -5,6 +5,7 @@ PARITY_ACTION_IDS: frozenset[str] = frozenset(
         "settings",
         "keybindings",
         "help",
+        "leaderboard",
         "bot_options",
         "quit",
     }
@@ -20,7 +21,9 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "settings",
         "keybindings",
         "help",
+        "leaderboard",
         "bot_options",
+        "topology_lab",
         "quit",
     }
 )
@@ -32,6 +35,7 @@ PAUSE_ACTION_IDS: frozenset[str] = frozenset(
         "settings",
         "bot_options",
         "keybindings",
+        "leaderboard",
         "profile_prev",
         "profile_next",
         "save_bindings",

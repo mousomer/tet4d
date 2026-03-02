@@ -70,6 +70,87 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-02): helper-panel runtime stability + cross-mode structure unification.
+
+- Unified default side-panel width across gameplay dimensions by aligning
+  2D `rendering.2d.side_panel` with 3D/4D (`360`) via config-backed constants:
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `src/tet4d/ui/pygame/render/gfx_game.py`
+- Fixed side-panel structure drift after gameplay state changes by keeping control
+  panel sizing stable and clipping low-priority data separately in:
+  - `src/tet4d/ui/pygame/render/panel_utils.py`
+- Unified helper control-group skeleton for 2D/3D/4D side panels (same panel set
+  and order with mode placeholders where controls are unavailable) in:
+  - `src/tet4d/ui/pygame/render/control_helper.py`
+- Enforced canonical runtime panel priority order:
+  - `Main` > `Translation` > `Rotation` > `Camera` > `Data`
+- Merged former `View/Overlay` actions into `Camera` so control tiers are explicit.
+- Kept low-priority runtime lines inside the dedicated titled `Data` panel only.
+- Reserved minimum layout space for `Data` so runtime/bot/analysis lines render in
+  a boxed panel instead of collapsing under control-area pressure.
+- Enforced full rotation helper visibility before lower-priority camera trimming:
+  - 3D keeps all 3 rotation pairs.
+  - 4D keeps all 6 rotation pairs.
+- Canonical helper layout source updated:
+  - `config/help/layout/runtime_help_action_layout.json`
+- Added regression coverage for unified-structure guarantees:
+  - `tests/unit/engine/test_control_ui_helpers.py`
+
+Current sub-batch (2026-03-01): helper-panel unification and priority rendering fix.
+
+- Unified 2D side-panel rendering with the shared panel pipeline used by 3D/4D:
+  - `src/tet4d/ui/pygame/render/gfx_panel_2d.py`
+  - `src/tet4d/ui/pygame/render/panel_utils.py`
+- Unified summary/data composition via shared helper used by 2D/3D/4D:
+  - `draw_unified_game_side_panel(...)` in `src/tet4d/ui/pygame/render/panel_utils.py`
+  - `src/tet4d/engine/front3d_render.py`
+  - `src/tet4d/engine/front4d_render.py`
+- Simplified helper-panel utility internals by collapsing redundant text-row builders
+  and summary-row merge helpers in:
+  - `src/tet4d/ui/pygame/render/panel_utils.py`
+- Further simplified helper-panel rendering flow to one compact unified path
+  (`draw_unified_game_side_panel`) with reduced internal branch/adapter count.
+- Merged top summary rows into `Main` as a single panel (title/score/lines/speed + main controls).
+- Kept strict priority ordering under constrained height:
+  - `Main` > `Translation`/`Rotation` > `Camera` > `View/Overlay` > `Data`.
+- Added dedicated titled `Data` panel for tier-5 runtime/bot/analysis lines.
+- Updated helper layout tiers and group minima:
+  - `config/help/layout/runtime_help_action_layout.json`
+  - `src/tet4d/ui/pygame/render/control_helper.py`
+- Added regression coverage for summary-to-main merge behavior:
+  - `tests/unit/engine/test_panel_utils.py`
+
+Current sub-batch (2026-03-01): helper-panel tiering update for gameplay side panels.
+
+- Reordered helper tiers across modes so top panel is consistent:
+  - Tier 1: game title + score/lines/speed + `Main`
+  - Tier 2: `Translation` + `Rotation`
+  - Tier 3: `Camera`
+  - Tier 4: `View/Overlay` (`locked-cells alpha`, `projection` where supported)
+  - Tier 5: remaining runtime/bot/analysis data lines
+- Canonicalized helper section membership/order in:
+  - `config/help/layout/runtime_help_action_layout.json`
+- Updated side-panel summary labels to use `Lines` in all modes:
+  - `src/tet4d/engine/front3d_render.py`
+  - `src/tet4d/engine/front4d_render.py`
+- Updated helper-group coverage expectations:
+  - `tests/unit/engine/test_control_ui_helpers.py`
+
+Current sub-batch (2026-03-01): helper-panel contract unification (config intent + engine feasibility).
+
+- Replaced hardcoded helper-group membership logic with data-driven panels/lines from:
+  - `config/help/layout/runtime_help_action_layout.json`
+- Added engine contract validation + runtime panel filtering:
+  - `src/tet4d/engine/help_text.py`
+  - `src/tet4d/engine/api.py`
+- Rewired helper rendering to consume engine-provided panel specs while keeping shared rendering style:
+  - `src/tet4d/ui/pygame/render/control_helper.py`
+- Added coverage for helper-action layout constraints and capability-based line filtering:
+  - `tests/unit/engine/test_help_text.py`
+- Design sync:
+  - `docs/rds/RDS_MENU_STRUCTURE.md`
+
 Current sub-batch (2026-03-01): leaderboard runtime + scoring-help documentation + helper-panel camera visibility.
 
 - Added persistent cross-mode leaderboard runtime storage and API adapters:
@@ -111,7 +192,7 @@ Hotfix (2026-03-01, same batch):
 - 4D viewer-relative input mapping now preserves translation/rotation intent across camera yaw and hyper-view (XW/ZW) rotations via basis-aware axis routing; added regression coverage in `tests/unit/engine/test_nd_routing.py`.
 - Helper panel cleanup:
   - removed duplicated locked-cell-transparency line from 3D/4D side-panel headers (meter remains canonical display).
-  - elevated System controls ahead of Camera/View in grouped helper ordering so `help`, `pause menu`, and `restart` remain visible under constrained panel height.
+  - retained Camera/View ahead of System in grouped helper ordering while adding constrained-height row planning so System (`menu`, `help`, `restart`) remains visible.
 - Leaderboard visual refresh:
   - switched to a structured table layout with explicit column headers and cell demarcations.
   - removed outcome/exit-type from displayed leaderboard columns.
@@ -120,6 +201,17 @@ Hotfix (2026-03-01, same batch):
   - split 3D/4D side-panel priority tiers so score + dimensions stay in the top section.
   - moved camera and extended runtime state details to the low-priority section below controls.
   - prioritized camera control group visibility while retaining system controls (`menu`, `help`, `restart`) in grouped helper rendering.
+- Code-review hardening follow-up:
+  - fixed leaderboard table width scaling to prevent narrow-screen column overflow.
+  - removed dead `_overlay_alpha_label` helpers no longer referenced by 3D/4D panel rendering.
+  - added regression coverage for helper-group constrained-height planning and leaderboard column scaling:
+    - `tests/unit/engine/test_control_ui_helpers.py`
+    - `tests/unit/engine/test_leaderboard_menu.py`
+- Helper-panel policy follow-up:
+  - folded system controls into the top `Main` helper group (removed separate `System` group block).
+  - removed the overflow footer copy (`open Help for full key guide`).
+  - emphasized key-name rendering in helper rows.
+  - moved `Dims`, `Score mod`, and locked-cell transparency into low-priority data lines; kept `Speed level` in top panel.
 
 Current sub-batch (2026-03-01): stage 836+ governance contract tightening (context-router manifest).
 

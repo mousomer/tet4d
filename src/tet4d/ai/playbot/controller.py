@@ -16,6 +16,9 @@ from tet4d.ai.playbot.types import (
     bot_planner_profile_label,
     clamp_planning_budget_ms,
     default_planning_budget_ms,
+    playbot_learning_clear_rate_thresholds,
+    playbot_learning_mode_enabled,
+    playbot_learning_review_pieces,
 )
 
 GameState = engine_api.GameState
@@ -37,6 +40,28 @@ def _next_mode(mode: BotMode) -> BotMode:
     except ValueError:
         return BotMode.OFF
     return BOT_MODE_OPTIONS[(idx + 1) % len(BOT_MODE_OPTIONS)]
+
+
+_PROFILE_PROGRESS: tuple[BotPlannerProfile, ...] = (
+    BotPlannerProfile.FAST,
+    BotPlannerProfile.BALANCED,
+    BotPlannerProfile.DEEP,
+    BotPlannerProfile.ULTRA,
+)
+
+
+def _profile_shift(
+    profile: BotPlannerProfile,
+    *,
+    towards_deeper: bool,
+) -> BotPlannerProfile:
+    try:
+        index = _PROFILE_PROGRESS.index(profile)
+    except ValueError:
+        index = _PROFILE_PROGRESS.index(BotPlannerProfile.BALANCED)
+    if towards_deeper:
+        return _PROFILE_PROGRESS[min(len(_PROFILE_PROGRESS) - 1, index + 1)]
+    return _PROFILE_PROGRESS[max(0, index - 1)]
 
 
 RotationStep = tuple[int, int, int]
@@ -131,6 +156,9 @@ class PlayBotController:
     _rotation_plan_nd: list[RotationStep] = field(default_factory=list)
     _soft_drop_count_2d: int = 0
     _soft_drop_count_nd: int = 0
+    _learn_window_pieces: int = 0
+    _learn_window_clears: int = 0
+    _learn_last_lines_cleared: int | None = None
 
     @property
     def user_gameplay_enabled(self) -> bool:
@@ -138,7 +166,7 @@ class PlayBotController:
 
     @property
     def controls_descent(self) -> bool:
-        return self.mode in {BotMode.AUTO, BotMode.STEP}
+        return self.mode in {BotMode.AUTO, BotMode.LEARN, BotMode.STEP}
 
     @property
     def assist_preview_cells(self) -> tuple[tuple[int, ...], ...]:
@@ -193,6 +221,9 @@ class PlayBotController:
         self._rotation_plan_nd = []
         self._soft_drop_count_2d = 0
         self._soft_drop_count_nd = 0
+        self._learn_window_pieces = 0
+        self._learn_window_clears = 0
+        self._learn_last_lines_cleared = None
 
     def request_step(self) -> None:
         self._step_requested = True
@@ -214,8 +245,56 @@ class PlayBotController:
             lines.append(f"Bot plan: {self.last_stats.planning_ms:.1f} ms")
         if self.last_error:
             lines.append(f"Bot status: {self.last_error}")
+        if self.mode == BotMode.LEARN:
+            lines.append(
+                f"Bot learn window: {self._learn_window_clears}/"
+                f"{self._learn_window_pieces} clears/pieces"
+            )
         lines.append("F2 bot mode   F3 bot step")
         return lines
+
+    def _learn_on_piece_transition(
+        self,
+        *,
+        lines_cleared: int,
+        ndim: int,
+        dims: tuple[int, ...],
+    ) -> None:
+        if self.mode != BotMode.LEARN:
+            return
+        if not playbot_learning_mode_enabled():
+            return
+        safe_lines = max(0, int(lines_cleared))
+        if self._learn_last_lines_cleared is None:
+            self._learn_last_lines_cleared = safe_lines
+            return
+        delta_lines = max(0, safe_lines - self._learn_last_lines_cleared)
+        self._learn_last_lines_cleared = safe_lines
+        self._learn_window_pieces += 1
+        self._learn_window_clears += delta_lines
+
+        review_pieces = playbot_learning_review_pieces()
+        if self._learn_window_pieces < review_pieces:
+            return
+        clear_rate = self._learn_window_clears / max(1, self._learn_window_pieces)
+        deepen_rate, relax_rate = playbot_learning_clear_rate_thresholds()
+        next_profile = self.planner_profile
+        if clear_rate <= deepen_rate:
+            next_profile = _profile_shift(self.planner_profile, towards_deeper=True)
+        elif clear_rate >= relax_rate:
+            next_profile = _profile_shift(self.planner_profile, towards_deeper=False)
+
+        self._learn_window_pieces = 0
+        self._learn_window_clears = 0
+        if next_profile == self.planner_profile:
+            return
+        self.configure_planner(
+            ndim=ndim,
+            dims=dims,
+            profile=next_profile,
+            budget_ms=None,
+            algorithm=self.planner_algorithm,
+        )
 
     def _piece_token_2d(self, state: GameState) -> tuple[object, ...]:
         piece = state.current_piece
@@ -256,6 +335,11 @@ class PlayBotController:
         token = self._piece_token_2d(state)
         if token == self._piece_token:
             return
+        self._learn_on_piece_transition(
+            lines_cleared=state.lines_cleared,
+            ndim=2,
+            dims=(state.config.width, state.config.height),
+        )
         self._soft_drop_count_2d = 0
         self._piece_token = token
         plan = plan_best_2d_move(
@@ -282,6 +366,11 @@ class PlayBotController:
         token = self._piece_token_nd(state)
         if token == self._piece_token:
             return
+        self._learn_on_piece_transition(
+            lines_cleared=state.lines_cleared,
+            ndim=state.config.ndim,
+            dims=state.config.dims,
+        )
         self._soft_drop_count_nd = 0
         self._piece_token = token
         plan = plan_best_nd_move(

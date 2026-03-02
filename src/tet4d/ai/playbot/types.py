@@ -43,6 +43,10 @@ def playbot_deadline_safety_ms() -> float:
     return _runtime_config().playbot_deadline_safety_ms()
 
 
+def playbot_learning_mode_policy() -> tuple[bool, int, float, float]:
+    return _runtime_config().playbot_learning_mode_policy()
+
+
 def playbot_lookahead_depth(ndim: int, profile: str) -> int:
     return _runtime_config().playbot_lookahead_depth(ndim, profile)
 
@@ -55,6 +59,7 @@ class BotMode(str, Enum):
     OFF = "off"
     ASSIST = "assist"
     AUTO = "auto"
+    LEARN = "learn"
     STEP = "step"
 
 
@@ -62,6 +67,7 @@ BOT_MODE_OPTIONS: tuple[BotMode, ...] = (
     BotMode.OFF,
     BotMode.ASSIST,
     BotMode.AUTO,
+    BotMode.LEARN,
     BotMode.STEP,
 )
 
@@ -221,6 +227,21 @@ def adaptive_candidate_cap(
 
 def adaptive_deadline_safety_ms() -> float:
     return playbot_deadline_safety_ms()
+
+
+def playbot_learning_mode_enabled() -> bool:
+    enabled, _review_pieces, _deepen_rate, _relax_rate = playbot_learning_mode_policy()
+    return bool(enabled)
+
+
+def playbot_learning_review_pieces() -> int:
+    _enabled, review_pieces, _deepen_rate, _relax_rate = playbot_learning_mode_policy()
+    return max(1, int(review_pieces))
+
+
+def playbot_learning_clear_rate_thresholds() -> tuple[float, float]:
+    _enabled, _review_pieces, deepen_rate, relax_rate = playbot_learning_mode_policy()
+    return float(deepen_rate), float(relax_rate)
 
 
 def resolve_auto_planner_algorithm(

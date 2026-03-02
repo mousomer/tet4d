@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 import unittest
+from unittest import mock
 
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
@@ -121,6 +122,10 @@ class TestPlaybot(unittest.TestCase):
         fast = PlayBotController.action_interval_from_speed(gravity_ms, 10)
         self.assertGreater(slow, fast)
         self.assertGreaterEqual(fast, 20)
+
+    def test_cycle_mode_includes_learning_mode(self) -> None:
+        bot = PlayBotController(mode=BotMode.AUTO)
+        self.assertEqual(bot.cycle_mode(), BotMode.LEARN)
 
     def test_2d_planner_budget_fallback_still_returns_plan(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
@@ -353,6 +358,56 @@ class TestPlaybot(unittest.TestCase):
         self.assertEqual(len(state.board.cells), before_cells)
         bot._step_piece_nd(state)
         self.assertGreater(len(state.board.cells), before_cells)
+
+    def test_learning_mode_deepens_profile_on_low_clear_rate(self) -> None:
+        bot = PlayBotController(
+            mode=BotMode.LEARN,
+            planner_profile=BotPlannerProfile.BALANCED,
+            planning_budget_ms=16,
+        )
+        with (
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_mode_enabled",
+                return_value=True,
+            ),
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_review_pieces",
+                return_value=2,
+            ),
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_clear_rate_thresholds",
+                return_value=(0.2, 0.8),
+            ),
+        ):
+            bot._learn_on_piece_transition(lines_cleared=0, ndim=2, dims=(10, 20))
+            bot._learn_on_piece_transition(lines_cleared=0, ndim=2, dims=(10, 20))
+            bot._learn_on_piece_transition(lines_cleared=0, ndim=2, dims=(10, 20))
+        self.assertEqual(bot.planner_profile, BotPlannerProfile.DEEP)
+
+    def test_learning_mode_relaxes_profile_on_high_clear_rate(self) -> None:
+        bot = PlayBotController(
+            mode=BotMode.LEARN,
+            planner_profile=BotPlannerProfile.DEEP,
+            planning_budget_ms=24,
+        )
+        with (
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_mode_enabled",
+                return_value=True,
+            ),
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_review_pieces",
+                return_value=2,
+            ),
+            mock.patch(
+                "tet4d.ai.playbot.controller.playbot_learning_clear_rate_thresholds",
+                return_value=(0.2, 0.8),
+            ),
+        ):
+            bot._learn_on_piece_transition(lines_cleared=0, ndim=2, dims=(10, 20))
+            bot._learn_on_piece_transition(lines_cleared=1, ndim=2, dims=(10, 20))
+            bot._learn_on_piece_transition(lines_cleared=2, ndim=2, dims=(10, 20))
+        self.assertEqual(bot.planner_profile, BotPlannerProfile.BALANCED)
 
 
 if __name__ == "__main__":

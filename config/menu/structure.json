@@ -9,8 +9,7 @@
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {
-    "tutorials": "help",
-    "topology_lab": "settings"
+    "tutorials": "help"
   },
   "branding": {
     "game_title": "Multi dimensional tetris game (2d/3d/4d)",
@@ -105,6 +104,11 @@
         },
         {
           "type": "action",
+          "label": "Leaderboard",
+          "action_id": "leaderboard"
+        },
+        {
+          "type": "action",
           "label": "Bot",
           "action_id": "bot_options"
         },
@@ -139,9 +143,9 @@
           "route_id": "tutorials"
         },
         {
-          "type": "route",
+          "type": "action",
           "label": "Topology Lab",
-          "route_id": "topology_lab"
+          "action_id": "topology_lab"
         }
       ]
     },
@@ -172,6 +176,11 @@
           "type": "action",
           "label": "Help",
           "action_id": "help"
+        },
+        {
+          "type": "action",
+          "label": "Leaderboard",
+          "action_id": "leaderboard"
         },
         {
           "type": "action",
@@ -319,6 +328,7 @@
     "Settings",
     "Controls",
     "Help",
+    "Leaderboard",
     "Bot",
     "Back To Main Menu",
     "Quit"
@@ -329,6 +339,7 @@
     "settings",
     "keybindings",
     "help",
+    "leaderboard",
     "bot_options",
     "menu",
     "quit"

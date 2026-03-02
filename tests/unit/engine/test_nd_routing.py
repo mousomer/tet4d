@@ -45,12 +45,13 @@ class _AxisCaptureState:
         self.config = cfg
         self.game_over = False
         self.moves: list[tuple[int, int]] = []
+        self.rotations: list[tuple[int, int, int]] = []
 
     def try_move_axis(self, axis: int, delta: int) -> None:
         self.moves.append((axis, delta))
 
-    def try_rotate(self, _axis_a: int, _axis_b: int, _direction: int) -> None:
-        return None
+    def try_rotate(self, axis_a: int, axis_b: int, direction: int) -> None:
+        self.rotations.append((axis_a, axis_b, direction))
 
     def hard_drop(self) -> None:
         return None
@@ -105,6 +106,34 @@ class TestNdRouting(unittest.TestCase):
 
         self.assertEqual(result, "continue")
         self.assertEqual(state.moves, [(0, -1)])
+
+    def test_viewer_axes_mapping_tracks_yaw_local_axis(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_4D, "move_x_pos"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+            viewer_axes_by_label={"x": (3, 1), "z": (0, -1), "w": (2, 1)},
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [(0, -1)])
+
+    def test_rotation_with_w_axis_tracks_viewer_axes(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_4D, "rotate_xw_pos"),
+            state,
+            yaw_deg_for_view_movement=90.0,
+            viewer_axes_by_label={"x": (3, 1), "z": (0, -1), "w": (2, 1)},
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.rotations, [(0, 2, -1)])
 
     def test_system_action_emits_sfx(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)

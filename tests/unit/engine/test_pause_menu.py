@@ -97,3 +97,26 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         self.assertIs(out_screen, screen)
         self.assertEqual(state.decision, "restart")
         self.assertFalse(state.running)
+
+    def test_leaderboard_action_routes_to_leaderboard_menu(self) -> None:
+        screen = pygame.Surface((640, 480))
+        state = pause_menu._PauseState(
+            selected=pause_menu._PAUSE_ACTION_CODES.index("leaderboard")
+        )
+
+        with patch(
+            "tet4d.ui.pygame.runtime_ui.pause_menu.run_leaderboard_menu",
+            return_value=screen,
+        ) as run_lb:
+            out_screen, keep_running = pause_menu._handle_pause_row(
+                screen,
+                object(),
+                state,
+                dimension=3,
+            )
+
+        self.assertTrue(keep_running)
+        self.assertIs(out_screen, screen)
+        self.assertEqual(state.status, "Returned from leaderboard")
+        self.assertFalse(state.status_error)
+        run_lb.assert_called_once()

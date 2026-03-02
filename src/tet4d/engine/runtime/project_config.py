@@ -30,6 +30,7 @@ _DEFAULT_IO_PATHS = {
         "playbot_history_file_default": "state/bench/playbot_latency_history.jsonl",
         "score_events_file_default": "state/analytics/score_events.jsonl",
         "score_summary_file_default": "state/analytics/score_summary.json",
+        "leaderboard_file_default": "state/analytics/leaderboard.json",
         "topology_profile_export_file_default": "state/topology/selected_profile.json",
     },
 }
@@ -51,7 +52,7 @@ _DEFAULT_CONSTANTS = {
         "2d": {
             "cell_size": 30,
             "margin": 20,
-            "side_panel": 200,
+            "side_panel": 360,
         },
         "3d": {
             "margin": 20,
@@ -62,6 +63,11 @@ _DEFAULT_CONSTANTS = {
             "side_panel": 360,
             "layer_gap": 12,
         },
+    },
+    "analytics": {
+        "leaderboard_max_entries": 200,
+        "leaderboard_page_rows": 12,
+        "leaderboard_name_max_length": 24,
     },
 }
 
@@ -257,6 +263,19 @@ def score_summary_file_default_relative() -> str:
         default_relative="state/analytics/score_summary.json",
         required_prefix=state_dir_relative(),
     )
+
+
+def leaderboard_file_default_relative() -> str:
+    return _path_value(
+        "leaderboard_file_default",
+        default_relative="state/analytics/leaderboard.json",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def leaderboard_file_default_path() -> Path:
+    rel = leaderboard_file_default_relative()
+    return _resolve_repo_relative(rel, "state/analytics/leaderboard.json")
 
 
 def topology_profile_export_file_default_relative() -> str:

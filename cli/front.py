@@ -30,6 +30,8 @@ if str(_REPO_ROOT) not in sys.path:
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
+from tet4d.ui.pygame.launch.topology_lab_menu import run_topology_lab_menu
+from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
@@ -421,6 +423,16 @@ def _menu_action_help(
     return False
 
 
+def _menu_action_leaderboard(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+) -> bool:
+    _ = state
+    session.screen = run_leaderboard_menu(session.screen, fonts_nd)
+    return False
+
+
 def _menu_action_quit(
     _state: MainMenuState,
     session: _LauncherSession,
@@ -439,6 +451,25 @@ def _menu_action_bot_options(
     )
     ok, msg = run_bot_options_menu(
         session.screen, fonts_nd, start_dimension=start_dimension
+    )
+    _persist_session_status(state, session)
+    state.status = msg
+    state.status_error = not ok
+    return not session.running
+
+
+def _menu_action_topology_lab(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+) -> bool:
+    start_dimension = (
+        int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
+    )
+    ok, msg = run_topology_lab_menu(
+        session.screen,
+        fonts_nd,
+        start_dimension=start_dimension,
     )
     _persist_session_status(state, session)
     state.status = msg
@@ -473,6 +504,10 @@ def _build_action_registry(
     )
     registry.register("help", lambda: _menu_action_help(state, session, fonts_nd))
     registry.register(
+        "leaderboard",
+        lambda: _menu_action_leaderboard(state, session, fonts_nd),
+    )
+    registry.register(
         "settings", lambda: _menu_action_settings(state, session, fonts_nd)
     )
     registry.register(
@@ -480,6 +515,9 @@ def _build_action_registry(
     )
     registry.register(
         "bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd)
+    )
+    registry.register(
+        "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd)
     )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry
@@ -489,7 +527,10 @@ def _handle_launcher_route(
     route_id: str,
     state: MainMenuState,
     action_registry: ActionRegistry,
+    session: _LauncherSession,
+    fonts_nd,
 ) -> bool:
+    _ = session, fonts_nd
     clean_route_id = route_id.strip().lower()
     action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
     if not action_id:
@@ -585,7 +626,13 @@ def run() -> None:
         start_menu_id=_LAUNCHER_ROOT_MENU_ID,
         action_registry=registry,
         render_menu=_render_launcher_menu,
-        handle_route=lambda route_id: _handle_launcher_route(route_id, state, registry),
+        handle_route=lambda route_id: _handle_launcher_route(
+            route_id,
+            state,
+            registry,
+            session,
+            fonts_nd,
+        ),
         handle_missing_action=lambda action_id: _handle_missing_action(
             action_id, state
         ),

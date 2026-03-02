@@ -101,6 +101,7 @@ class TestMenuPolicy(unittest.TestCase):
             menu_config.reachable_action_ids(menu_config.pause_menu_id())
         )
         required = {"settings", "keybindings", "help", "bot_options", "quit"}
+        required.add("leaderboard")
         self.assertTrue(required.issubset(launcher_actions))
         self.assertTrue(required.issubset(pause_actions))
 
@@ -134,6 +135,7 @@ class TestMenuPolicy(unittest.TestCase):
             "settings",
             "keybindings",
             "help",
+            "leaderboard",
             "bot_options",
             "menu",
             "quit",
@@ -144,10 +146,20 @@ class TestMenuPolicy(unittest.TestCase):
         root_items = menu_config.menu_items(menu_config.launcher_menu_id())
         labels = [item["label"] for item in root_items]
         self.assertEqual(
-            labels, ["Play", "Continue", "Settings", "Controls", "Help", "Bot", "Quit"]
+            labels,
+            [
+                "Play",
+                "Continue",
+                "Settings",
+                "Controls",
+                "Help",
+                "Leaderboard",
+                "Bot",
+                "Quit",
+            ],
         )
 
-    def test_play_menu_is_graph_defined_and_includes_future_routes(self) -> None:
+    def test_play_menu_is_graph_defined_with_tutorial_route(self) -> None:
         root_items = menu_config.menu_items(menu_config.launcher_menu_id())
         play_links = [
             item
@@ -164,8 +176,10 @@ class TestMenuPolicy(unittest.TestCase):
         play_routes = {
             item["route_id"] for item in play_items if item["type"] == "route"
         }
-        self.assertTrue({"play_2d", "play_3d", "play_4d"}.issubset(play_actions))
-        self.assertTrue({"tutorials", "topology_lab"}.issubset(play_routes))
+        self.assertTrue(
+            {"play_2d", "play_3d", "play_4d", "topology_lab"}.issubset(play_actions)
+        )
+        self.assertEqual(play_routes, {"tutorials"})
 
     def test_launcher_route_actions_cover_launcher_routes(self) -> None:
         root_items = menu_config.menu_items(menu_config.launcher_menu_id())

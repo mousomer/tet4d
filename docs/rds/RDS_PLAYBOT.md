@@ -32,7 +32,8 @@ Out of scope (current release):
 1. `OFF`: human-only gameplay.
 2. `ASSIST`: bot computes best landing and shows preview/stats; player controls movement.
 3. `AUTO`: bot controls movement, rotation, and descent.
-4. `STEP`: debug mode; one bot action per step request.
+4. `LEARN`: bot controls movement like `AUTO` and adapts planner profile from rolling clear-rate windows.
+5. `STEP`: debug mode; one bot action per step request.
 
 Default mode: `OFF`.
 
@@ -143,6 +144,7 @@ Default mode: `OFF`.
 9. Bot behavior is independent from keyboard-binding files.
 10. Auto-mode step interval scales from speed level and gravity interval.
 11. In `ASSIST`, controller updates preview only and does not move the piece.
+12. In `LEARN`, profile tuning is deterministic and policy-driven from `config/playbot/policy.json` (`learning_mode` section).
 
 ## 7. UX Integration
 

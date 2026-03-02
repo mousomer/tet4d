@@ -6,7 +6,7 @@ import sys
 import random
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Callable, Optional
 
 
 def _parse_cli_args(argv=None):
@@ -105,6 +105,7 @@ from tet4d.engine.gameplay.topology_designer import (
     resolve_topology_designer_selection,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
+from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
 from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 
@@ -713,6 +714,60 @@ def _update_feedback_and_animation(
     )
 
 
+def _resolve_terminal_status(
+    status: str,
+    *,
+    record_session: Callable[[str], None],
+) -> bool | None:
+    if status == "quit":
+        record_session("quit")
+        return False
+    if status == "menu":
+        record_session("menu")
+        return True
+    return None
+
+
+def _handle_loop_event_cycle(
+    *,
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    loop: LoopContext2D,
+    display_settings: DisplaySettings,
+    restart_with_record: Callable[[], None],
+    record_session: Callable[[str], None],
+) -> tuple[pygame.Surface, DisplaySettings, bool | None, bool]:
+    def _runtime_event_handler(event: pygame.event.Event) -> None:
+        nonlocal display_settings
+        display_settings = capture_windowed_display_settings_from_event(
+            display_settings,
+            event=event,
+        )
+
+    decision = process_game_events(
+        keydown_handler=loop.keydown_handler,
+        on_restart=restart_with_record,
+        on_toggle_grid=loop.on_toggle_grid,
+        event_handler=_runtime_event_handler,
+    )
+    if decision == "help":
+        return _open_help_screen(screen, fonts), display_settings, None, True
+
+    status, next_screen = _resolve_loop_decision(
+        decision=decision,
+        screen=screen,
+        fonts=fonts,
+        loop=loop,
+    )
+    terminal = _resolve_terminal_status(status, record_session=record_session)
+    if terminal is not None:
+        return next_screen, display_settings, terminal, False
+    if status == "restart":
+        record_session("restart")
+        return next_screen, display_settings, None, True
+    return next_screen, display_settings, None, False
+
+
 def run_game_loop(
     screen: pygame.Surface,
     cfg: GameConfig,
@@ -733,6 +788,34 @@ def run_game_loop(
     """
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
+    session_start_ms = pygame.time.get_ticks()
+
+    def _record_session(outcome: str) -> None:
+        elapsed_ms = max(0, pygame.time.get_ticks() - session_start_ms)
+        try:
+            maybe_record_leaderboard_session(
+                screen,
+                fonts,
+                dimension=2,
+                score=int(loop.state.score),
+                lines_cleared=int(loop.state.lines_cleared),
+                start_speed_level=int(loop.base_speed_level),
+                end_speed_level=int(loop.cfg.speed_level),
+                duration_seconds=float(elapsed_ms / 1000.0),
+                outcome=outcome,
+                bot_mode=str(loop.bot.mode.value),
+                grid_mode=str(loop.grid_mode.value),
+                random_mode=str(loop.cfg.rng_mode),
+                topology_mode=str(loop.cfg.topology_mode),
+                exploration_mode=bool(loop.cfg.exploration_mode),
+            )
+        except Exception:
+            return
+
+    def _restart_with_record() -> None:
+        _record_session("restart")
+        loop.on_restart()
+
     auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_mode("2d")
     loop = LoopContext2D.create(
         cfg,
@@ -761,33 +844,17 @@ def run_game_loop(
         loop.gravity_accumulator += dt
         loop.refresh_score_multiplier()
 
-        def _runtime_event_handler(event: pygame.event.Event) -> None:
-            nonlocal display_settings
-            display_settings = capture_windowed_display_settings_from_event(
-                display_settings,
-                event=event,
-            )
-
-        decision = process_game_events(
-            keydown_handler=loop.keydown_handler,
-            on_restart=loop.on_restart,
-            on_toggle_grid=loop.on_toggle_grid,
-            event_handler=_runtime_event_handler,
-        )
-        if decision == "help":
-            screen = _open_help_screen(screen, fonts)
-            continue
-        status, screen = _resolve_loop_decision(
-            decision=decision,
+        screen, display_settings, terminal, continue_loop = _handle_loop_event_cycle(
             screen=screen,
             fonts=fonts,
             loop=loop,
+            display_settings=display_settings,
+            restart_with_record=_restart_with_record,
+            record_session=_record_session,
         )
-        if status == "quit":
-            return False
-        if status == "menu":
-            return True
-        if status == "restart":
+        if terminal is not None:
+            return terminal
+        if continue_loop:
             continue
 
         gravity_interval_ms = _sync_runtime_speed(loop)

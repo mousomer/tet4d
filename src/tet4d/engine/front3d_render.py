@@ -15,7 +15,6 @@ from tet4d.ui.pygame.projection3d import (
     draw_gradient_background,
     projection_helper_cache_key,
 )
-from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
@@ -24,7 +23,6 @@ from tet4d.ui.pygame.render.front3d_cell_render import (
     draw_cells as draw_cells_helper,
     draw_sorted_faces as draw_sorted_faces_helper,
     draw_translucent_faces as draw_translucent_faces_helper,
-    overlay_alpha_label as overlay_alpha_label_helper,
     overlay_opacity_scale as overlay_opacity_scale_helper,
     split_faces_for_cells as split_faces_for_cells_helper,
 )
@@ -38,7 +36,9 @@ from tet4d.ui.pygame.render.front3d_projection_helpers import (
     transform_raw_point as transform_raw_point_helper,
 )
 from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
-from tet4d.ui.pygame.render.panel_utils import draw_game_side_panel
+from tet4d.ui.pygame.render.panel_utils import (
+    draw_unified_game_side_panel,
+)
 
 from .gameplay.game_nd import GameConfigND, GameStateND
 from .frontend_nd import gravity_interval_ms_from_config
@@ -344,10 +344,6 @@ def _draw_cells(
     )
 
 
-def _overlay_alpha_label(overlay_transparency: float) -> str:
-    return overlay_alpha_label_helper(overlay_transparency)
-
-
 def _overlay_opacity_scale(overlay_transparency: float) -> float:
     return overlay_opacity_scale_helper(overlay_transparency)
 
@@ -472,12 +468,11 @@ def _draw_side_panel(
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
-
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
     extra_state_lines = [
-        f"Speed: {state.config.speed_level}",
+        f"Dims: {state.config.dims}",
+        f"Score mod: x{state.score_multiplier:.2f}",
         f"Piece set: {piece_set_label(state.config.piece_set_id)}",
-        f"Projection: {projection_label(camera.projection)}",
         f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
@@ -486,37 +481,21 @@ def _draw_side_panel(
         f"Pitch: {camera.pitch_deg:.1f}",
         f"Zoom: {camera.zoom:.1f}",
     ]
-    low_priority_lines = [
-        *extra_state_lines,
-        "",
-        *bot_lines,
-        *([""] if (bot_lines or extra_state_lines) and analysis_lines else []),
-        *analysis_lines,
-    ]
-    lines = (
-        "3D Tetris",
-        "",
-        f"Score: {state.score}",
-        f"Layers: {state.lines_cleared}",
-        f"Score mod: x{state.score_multiplier:.2f}",
-        f"Dims: {state.config.dims}",
-    )
-
-    draw_game_side_panel(
+    draw_unified_game_side_panel(
         surface,
         panel_rect=panel_rect,
         fonts=fonts,
-        header_lines=lines,
-        control_groups=control_groups_for_dimension(
-            3,
-            include_exploration=bool(state.config.exploration_mode),
-        ),
-        low_priority_lines=tuple(low_priority_lines),
+        title="3D Tetris",
+        score=state.score,
+        lines_cleared=state.lines_cleared,
+        speed_level=state.config.speed_level,
+        dimension=3,
+        include_exploration=bool(state.config.exploration_mode),
+        data_lines=extra_state_lines,
+        bot_lines=bot_lines,
+        analysis_lines=analysis_lines,
         game_over=state.game_over,
         min_controls_h=138,
-        meter_label="Locked-cell transparency",
-        meter_value=max(0.0, min(1.0, float(overlay_transparency))),
-        meter_hint="Use [ and ] keys",
     )
 
 
