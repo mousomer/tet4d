@@ -99,8 +99,10 @@ Completed:
 - Reduced runtime parser duplication by extracting shared menu-structure parsing
   helpers into:
   - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
+  - `src/tet4d/engine/runtime/menu_structure_graph.py`
   - `src/tet4d/engine/runtime/menu_structure_schema.py` now consumes shared helpers
-    and no longer carries duplicate `ui_copy` parsing code paths.
+    and no longer carries duplicate `ui_copy` parsing code paths or menu-graph
+    traversal helpers.
 - Reduced runtime-config validator concentration by extracting gameplay/audio
   payload validation into:
   - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`

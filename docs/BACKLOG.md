@@ -74,11 +74,14 @@ Current sub-batch (2026-03-02): runtime parser/validation decomposition continua
 
 - Reduced duplicate menu-structure parsing logic by extracting shared helpers to:
   - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
+- Extracted shared menu-graph traversal/collection helpers to:
+  - `src/tet4d/engine/runtime/menu_structure_graph.py`
 - Simplified `menu_structure_schema` by removing duplicate local parsers and
   consuming shared helpers for:
   - mode string-list parsing
   - copy-field parsing
   - `ui_copy` section parsing
+  - menu reachability/action/route collection
 - Reduced `runtime_config.py` validator concentration by extracting gameplay/audio
   payload validation to:
   - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
