@@ -72,6 +72,11 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 
 Current sub-batch (2026-03-02): helper-panel runtime stability + cross-mode structure unification.
 
+- Expanded release-packaging CI matrix to publish separate artifacts for:
+  Linux, Windows, macOS x64, and macOS ARM64:
+  - `.github/workflows/release-packaging.yml`
+- Synced packaging docs with the explicit CI target list:
+  - `docs/RELEASE_INSTALLERS.md`
 - Unified default side-panel width across gameplay dimensions by aligning
   2D `rendering.2d.side_panel` with 3D/4D (`360`) via config-backed constants:
   - `config/project/constants.json`

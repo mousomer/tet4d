@@ -57,6 +57,13 @@ Triggers:
 1. manual dispatch,
 2. tag push matching `v*`.
 
+Current CI package targets:
+
+1. Linux (`ubuntu-latest`)
+2. Windows (`windows-latest`)
+3. macOS x64 (`macos-13`)
+4. macOS ARM64 (`macos-14`)
+
 ## 5. Follow-up release hardening
 
 1. Add code-signing and notarization automation for macOS.

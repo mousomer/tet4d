@@ -8,11 +8,19 @@ on:
 
 jobs:
   package:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - runner: ubuntu-latest
+            target: linux
+          - runner: windows-latest
+            target: windows
+          - runner: macos-13
+            target: macos-x64
+          - runner: macos-14
+            target: macos-arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +49,6 @@ jobs:
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tet4d-${{ runner.os }}-package
+          name: tet4d-${{ matrix.target }}-package
           path: artifacts/installers/*
           if-no-files-found: error
