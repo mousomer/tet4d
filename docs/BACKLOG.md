@@ -384,6 +384,93 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-04): directive-manifest normalization.
+
+- Added canonical contributor directives manifest:
+  - `config/project/policy/manifests/contributor_directives.json`
+- Registered contributor directives in policy pack and policy contract map:
+  - `config/project/policy/pack.json`
+  - `config/project/policy/manifests/project_policy.json`
+- Added contributor directives manifest to canonical maintenance required governance files:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+- Added explicit validation for contributor directive manifest schema/IDs/content:
+  - `tools/governance/validate_project_contracts.py`
+- Synced instruction docs to reference the canonical contributor directives manifest:
+  - `AGENTS.md`
+  - `docs/RDS_AND_CODEX.md`
+- Follow-up LOC reduction pass:
+  - reduced duplicate governance bullets in `AGENTS.md` by deferring to manifest/policy sources
+  - reduced contributor-manifest overlap with policy docs (process-only directives retained)
+  - collapsed contributor-directive validation helpers into compact validation flow
+  - added risk-gates manifest + checker coverage for CI-enforced directives,
+    dependency policy (`pip check` + blocked dependency list), and sensitive-file
+    ownership thresholds:
+    - `config/project/policy/manifests/risk_gates.json`
+    - `tools/governance/check_risk_gates.py`
+    - `scripts/verify.sh`
+  - added policy-index drift enforcement so `docs/policies/INDEX.md` must stay in
+    sync with policy IDs and contract paths declared in
+    `config/project/policy/manifests/project_policy.json`:
+    - `tools/governance/validate_project_contracts.py`
+    - `config/project/policy/manifests/canonical_maintenance.json`
+    - `docs/policies/INDEX.md`
+  - added menu-simplification manifest enforcement:
+    - validates that shared gameplay controls (`game_seed`,
+      `game_random_mode`, `game_topology_advanced`, `gameplay_advanced`) are
+      present in `settings_hub_layout_rows` and not duplicated in
+      per-dimension `setup_fields`.
+    - `tools/governance/validate_project_contracts.py`
+  - hardened risk-gates security/dependency posture:
+    - blocked dependency denylist now includes `pycrypto` and `python-jose`
+    - security ownership scope is no longer no-op; it now requires a minimum
+      matched sensitive-file set (`min_sensitive_files`) before pass.
+    - `config/project/policy/manifests/risk_gates.json`
+    - `tools/governance/check_risk_gates.py`
+  - added runtime policy checker for two previously review-only policies:
+    - string sanitation checks on text-entrypoint modules
+    - no-magic-number checks for config-backed settings controls
+    - `config/project/policy/manifests/policy_runtime_rules.json`
+    - `tools/governance/check_policy_runtime_rules.py`
+    - `scripts/verify.sh`
+  - generalized no-reinventing-wheel enforcement:
+    - new manifest-driven reuse rules that detect ad-hoc replacement code for
+      stdlib/repo helpers and require explicit `Wheel Exception:` markers when
+      deviations are intentional.
+    - rules are now category-based (parsing/validation, normalization, path/config,
+      algorithm utilities) rather than a bool-parser-specific example.
+    - `config/project/policy/manifests/wheel_reuse_rules.json`
+    - `tools/governance/check_wheel_reuse_rules.py`
+  - converted LOC reduction into soft non-blocking guidance:
+    - warning-only per-bucket LOC pressure report (batch-type aware), wired into
+    verify for visibility without blocking important work.
+    - `config/project/policy/manifests/loc_guidance.json`
+    - `tools/governance/check_loc_guidance.py`
+  - added dedup/dead-code contract gate:
+    - legacy path reintroduction checks
+    - TODO/FIXME backlog-ID linkage checks
+    - duplicate governance helper-body detection in scoped paths
+    - `config/project/policy/manifests/dedup_dead_code_rules.json`
+    - `tools/governance/check_dedup_dead_code_rules.py`
+  - upgraded security ownership to phased strictness:
+    - keep blocking threshold at `min_distinct_authors_per_file`
+    - add non-blocking warning target (`target_min_distinct_authors_per_file`)
+      for gradual bus-factor improvement without CI breakage.
+    - `config/project/policy/manifests/risk_gates.json`
+    - `tools/governance/check_risk_gates.py`
+  - extended wheel-reuse checker with AST-assisted detectors (not regex-only)
+    for common reinvention patterns (`custom_bool_parser`,
+    `custom_numeric_text_parser`, `custom_clamp_helper`).
+
+Current sub-batch (2026-03-04): governance-doc cleanup and directive dedup.
+
+- Replaced oversized duplicated instruction content in `docs/RDS_AND_CODEX.md`
+  with a compact canonical workflow that references policy manifests, policy docs,
+  RDS specs, and checkpoint docs (`CURRENT_STATE.md`, `docs/BACKLOG.md`).
+- Removed historical stage-by-stage migration directives from `docs/RDS_AND_CODEX.md`
+  and set explicit scope boundary: stage history belongs in this backlog + current-state handoff.
+- Preserved required contract anchors (`RDS index`, `Testing instructions`,
+  `docs/BACKLOG.md`, `docs/rds/RDS_PACKAGING.md`) while reducing duplicate policy text.
+
 Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).
 
 - Added config-backed clear-size weighting so larger cleared layers award higher

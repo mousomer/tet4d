@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "manifest_id": "wheel_reuse_rules",
+  "exception_marker": "Wheel Exception:",
+  "rules": [
+    {
+      "id": "parsing_validation_reuse",
+      "description": "Prefer stdlib or existing repo helpers for parsing/validation rather than ad-hoc local variants.",
+      "scope_globs": [
+        "src/tet4d/ui/pygame/launch/*.py",
+        "src/tet4d/ui/pygame/menu/*.py",
+        "src/tet4d/engine/tutorial/*.py",
+        "tools/**/*.py",
+        "scripts/**/*.py"
+      ],
+      "forbidden_regex": [
+        "\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)",
+        "if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\(",
+        "if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("
+      ],
+      "ast_detectors": [
+        "custom_bool_parser",
+        "custom_numeric_text_parser"
+      ],
+      "prefer_symbols": [
+        "tet4d.engine.runtime.settings_schema",
+        "sanitize_text_runtime",
+        "append_numeric_text",
+        "parse_numeric_text",
+        "tet4d.engine.runtime.project_config"
+      ]
+    },
+    {
+      "id": "normalization_reuse",
+      "description": "Do not duplicate local sanitization/normalization pipelines where shared helpers exist.",
+      "scope_globs": [
+        "src/tet4d/**/*.py",
+        "tools/**/*.py"
+      ],
+      "forbidden_regex": [
+        "re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)",
+        "\\.replace\\([^\\n]*\\)\\.replace\\([^\\n]*\\)\\.strip\\(\\)"
+      ],
+      "ast_detectors": [],
+      "prefer_symbols": [
+        "sanitize_text",
+        "sanitize_text_runtime",
+        "sanitize_state_relative_path"
+      ]
+    },
+    {
+      "id": "path_and_config_reuse",
+      "description": "Use existing project config/path and JSON helper flows before introducing custom wrappers.",
+      "scope_globs": [
+        "src/tet4d/**/*.py",
+        "tools/**/*.py",
+        "scripts/**/*.py"
+      ],
+      "forbidden_regex": [
+        "Path\\(__file__\\)\\.parent\\.parent\\.parent",
+        "open\\([^\\n]*\\)\\.read\\(\\)\\s*\\n\\s*json\\.loads\\("
+      ],
+      "ast_detectors": [],
+      "prefer_symbols": [
+        "project_path",
+        "state_relative_path",
+        "read_json_object_or_empty",
+        "atomic_write_json"
+      ]
+    },
+    {
+      "id": "algorithm_utility_reuse",
+      "description": "Prefer stdlib functional utilities over ad-hoc rewrites for common collection transforms.",
+      "scope_globs": [
+        "src/tet4d/**/*.py",
+        "tools/**/*.py"
+      ],
+      "forbidden_regex": [
+        "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*if\\s+\\w+\\s+not\\s+in\\s+result:\\s*\\n\\s*result\\.append\\(",
+        "for\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*if\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*continue\\s*\\n\\s*\\w+\\.append\\("
+      ],
+      "ast_detectors": [],
+      "prefer_symbols": [
+        "set(",
+        "dict.fromkeys",
+        "collections"
+      ]
+    }
+  ]
+}

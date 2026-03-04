@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "manifest_id": "risk_gates",
+  "contributor_directives": {
+    "required_ci_enforced_ids": [
+      "verification_required",
+      "loc_delta_preference",
+      "quiet_test_default"
+    ]
+  },
+  "dependency_policy": {
+    "pyproject_path": "pyproject.toml",
+    "require_pip_check": true,
+    "blocked_dependencies": ["pycrypto", "python-jose"]
+  },
+  "security_ownership": {
+    "enabled": true,
+    "sensitive_globs": [
+      "tools/governance/scan_secrets.py",
+      "config/project/policy/manifests/secret_scan.json",
+      "scripts/check_policy_compliance.sh",
+      "scripts/check_git_sanitation.sh",
+      "tools/governance/validate_project_contracts.py"
+    ],
+    "min_sensitive_files": 5,
+    "min_distinct_authors_per_file": 1,
+    "max_files_below_min_authors": 0,
+    "target_min_distinct_authors_per_file": 2,
+    "max_files_below_target_authors_warn": 5
+  }
+}
