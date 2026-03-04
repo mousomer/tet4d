@@ -5,9 +5,12 @@
 - Policy docs: `docs/policies/`
 - Policy pack root: `config/project/policy/pack.json`
 - Policy manifest: `config/project/policy/manifests/project_policy.json` (includes policy pack + index)
+- Contributor directives manifest: `config/project/policy/manifests/contributor_directives.json`
+- Risk gates manifest: `config/project/policy/manifests/risk_gates.json`
 - Canonical maintenance contract:
   - `config/project/policy/manifests/canonical_maintenance.json`
   - `tools/governance/validate_project_contracts.py`
+  - `tools/governance/check_risk_gates.py`
 - Context router:
   - `config/project/policy/manifests/context_router_manifest.json`
 
@@ -17,14 +20,10 @@ For any restructuring/update:
 2. Compare against relevant RDS sections and update RDS if required.
 3. Keep canonical maintenance artifacts synchronized.
 4. Update `docs/BACKLOG.md` when scope changes.
-5. Do not introduce `tetris_nd` imports; use `tet4d.engine.*` only.
-6. `tetris_nd/` compatibility shim is removed; treat any new `tetris_nd` import as a policy violation.
+5. Follow contributor process directives in `config/project/policy/manifests/contributor_directives.json`.
+6. Do not introduce `tetris_nd` imports; use `tet4d.engine.*` only (`config/project/policy/pack.json` constraints).
 7. Repo uses `src/` layout with editable install for dev/CI (`pip install -e .[dev]`); do not add repo-root import shims.
-8. Do not reinvent the wheel: prefer existing repo helpers/functions/APIs before adding new implementation code.
-9. Do not hardcode magic numbers in Python code; prefer non-Python config-backed constants (for example `config/*` + runtime/config accessors) unless externalizing the value would add disproportionate complexity.
-10. Sanitize external or user-controlled string inputs via runtime sanitization helpers before use.
-11. Track LOC delta for every change and, unless delivering a new feature, prefer changes that reduce LOC; follow the formatting/line-length policy across all scripts and text files.
-12. Default test/verify runs should use quiet mode; enable verbose output only when diagnosing errors or flakes.
+8. Follow policy docs in `docs/policies/` for string sanitization, magic numbers, formatting, and no-reinventing-wheel.
 
 ## Verification contract
 Run:
