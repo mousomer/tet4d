@@ -217,8 +217,8 @@
         {
           "id": "toggle_grid",
           "ui": {
-            "text": "Toggle Grid once.",
-            "hint": "Press Toggle Grid to show/hide the guide grid.",
+            "text": "Cycle through all grid modes.",
+            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
             "highlights": [
               "stats_panel"
             ],
@@ -242,14 +242,15 @@
               "toggle_grid"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 4
           }
         },
         {
           "id": "overlay_alpha_dec",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -268,7 +269,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_dec"
@@ -282,8 +285,8 @@
         {
           "id": "overlay_alpha_inc",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -302,7 +305,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_inc"
@@ -360,7 +365,7 @@
           "id": "line_fill",
           "ui": {
             "text": "Goal: remove one full line.",
-            "hint": "Turn on Grid if needed, then Hard Drop to clear exactly one line.",
+            "hint": "Move and rotate the piece into the hole, then Hard Drop to clear exactly one line.",
             "highlights": [
               "target_row"
             ],
@@ -384,9 +389,9 @@
             "deny": []
           },
           "setup": {
-            "board_preset": "2d_almost_line",
+            "board_preset": "2d_almost_line_i",
             "rng_seed": 1011,
-            "starter_piece_id": "L",
+            "starter_piece_id": "I",
             "spawn_min_visible_layer": 2
           },
           "complete_when": {
@@ -394,8 +399,7 @@
               "hard_drop"
             ],
             "predicates": [
-              "line_cleared",
-              "grid_enabled"
+              "line_cleared"
             ],
             "logic": "all"
           }
@@ -404,7 +408,7 @@
           "id": "full_clear_bonus",
           "ui": {
             "text": "Goal: clear the full prepared board.",
-            "hint": "This stage uses a 2-layer preset and a matching piece. Hard Drop to clear the board.",
+            "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board.",
             "highlights": [
               "target_row"
             ],
@@ -438,8 +442,6 @@
               "hard_drop"
             ],
             "predicates": [
-              "line_cleared",
-              "grid_enabled",
               "board_cleared"
             ],
             "logic": "all"
@@ -1096,8 +1098,8 @@
         {
           "id": "toggle_grid",
           "ui": {
-            "text": "Toggle Grid once.",
-            "hint": "Press Toggle Grid to show/hide the guide grid.",
+            "text": "Cycle through all grid modes.",
+            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
             "highlights": [
               "camera_axes"
             ],
@@ -1121,7 +1123,8 @@
               "toggle_grid"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 4
           }
         },
         {
@@ -1251,8 +1254,8 @@
         {
           "id": "overlay_alpha_dec",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -1271,7 +1274,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_dec"
@@ -1285,8 +1290,8 @@
         {
           "id": "overlay_alpha_inc",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -1305,7 +1310,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_inc"
@@ -1369,7 +1376,7 @@
           "id": "layer_fill",
           "ui": {
             "text": "Goal: remove one full layer.",
-            "hint": "Turn on Grid if needed, then Hard Drop to clear one full 3D layer.",
+            "hint": "Move and rotate into the prepared gap, then Hard Drop to clear one full 3D layer.",
             "highlights": [
               "target_layer"
             ],
@@ -1419,7 +1426,7 @@
           "id": "full_clear_bonus",
           "ui": {
             "text": "Goal: clear the full prepared board.",
-            "hint": "This stage uses a 2-layer preset and a matching piece. Hard Drop to clear the board.",
+            "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board.",
             "highlights": [
               "target_layer"
             ],
@@ -2549,8 +2556,8 @@
         {
           "id": "toggle_grid",
           "ui": {
-            "text": "Toggle Grid once.",
-            "hint": "Press Toggle Grid to show/hide the guide grid.",
+            "text": "Cycle through all grid modes.",
+            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
             "highlights": [
               "camera_axes"
             ],
@@ -2574,7 +2581,8 @@
               "toggle_grid"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 4
           }
         },
         {
@@ -2704,8 +2712,8 @@
         {
           "id": "overlay_alpha_dec",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -2724,7 +2732,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_dec"
@@ -2738,8 +2748,8 @@
         {
           "id": "overlay_alpha_inc",
           "ui": {
-            "text": "Set locked-cell transparency to the target range (20%-80%).",
-            "hint": "Use transparency keys to hit the target percentage.",
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
             "highlights": [
               "stats_panel"
             ],
@@ -2758,7 +2768,9 @@
             ],
             "deny": []
           },
-          "setup": {},
+          "setup": {
+            "overlay_start_percent": 50
+          },
           "complete_when": {
             "events": [
               "overlay_alpha_inc"
@@ -2830,7 +2842,7 @@
           "id": "hyper_layer_fill",
           "ui": {
             "text": "Goal: remove one full hyper-layer.",
-            "hint": "Turn on Grid if needed, then Hard Drop to clear one full 4D hyper-layer.",
+            "hint": "Move and rotate into the prepared gap, then Hard Drop to clear one full 4D hyper-layer.",
             "highlights": [
               "target_hyper_layer"
             ],
@@ -2888,7 +2900,7 @@
           "id": "full_clear_bonus",
           "ui": {
             "text": "Goal: clear the full prepared board.",
-            "hint": "This stage uses a 2-layer preset and a matching piece. Hard Drop to clear the board.",
+            "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board.",
             "highlights": [
               "target_hyper_layer"
             ],

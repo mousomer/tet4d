@@ -32,6 +32,8 @@ def _base_payload() -> dict[str, object]:
                             "spawn_min_visible_layer": 2,
                             "bottom_layers_min": 1,
                             "bottom_layers_max": 2,
+                            "overlay_start_percent": 50,
+                            "overlay_target_percent": 10,
                         },
                         "complete_when": {
                             "events": ["move_x_neg"],
@@ -59,6 +61,8 @@ class TutorialSchemaTests(unittest.TestCase):
         self.assertEqual(lesson.steps[0].setup.spawn_min_visible_layer, 2)
         self.assertEqual(lesson.steps[0].setup.bottom_layers_min, 1)
         self.assertEqual(lesson.steps[0].setup.bottom_layers_max, 2)
+        self.assertEqual(lesson.steps[0].setup.overlay_start_percent, 50)
+        self.assertEqual(lesson.steps[0].setup.overlay_target_percent, 10)
         self.assertEqual(lesson.steps[0].complete_when.event_count_required, 1)
 
     def test_duplicate_lesson_id_raises(self) -> None:
@@ -102,6 +106,13 @@ class TutorialSchemaTests(unittest.TestCase):
         payload = _base_payload()
         step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
         step["complete_when"]["event_count_required"] = 0  # type: ignore[index]
+        with self.assertRaises(RuntimeError):
+            parse_tutorial_payload(payload)
+
+    def test_overlay_percent_bounds_validation(self) -> None:
+        payload = _base_payload()
+        step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
+        step["setup"]["overlay_start_percent"] = 101  # type: ignore[index]
         with self.assertRaises(RuntimeError):
             parse_tutorial_payload(payload)
 

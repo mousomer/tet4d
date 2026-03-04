@@ -89,7 +89,7 @@ Cross-cutting requirements are defined in:
 8. Audio controls (master volume, SFX volume, mute) must be available in settings.
 9. Fullscreen/windowed toggle must be supported without layout corruption.
 10. Piece rotations must use a soft visual animation instead of a single-frame snap.
-11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..85%`.
+11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
 14. Tutorial overlay panel must be left-anchored, enlarged for readability, and clearly separate lesson, segment, task, and action hint lines.

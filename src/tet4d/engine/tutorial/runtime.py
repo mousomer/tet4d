@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import random
 import time
 from dataclasses import dataclass
 from typing import Any
 
 from tet4d.engine.runtime.project_config import project_constant_int
-from tet4d.engine.runtime.settings_schema import sanitize_text
+from tet4d.engine.runtime.settings_schema import (
+    OVERLAY_TRANSPARENCY_MAX,
+    OVERLAY_TRANSPARENCY_MIN,
+    sanitize_text,
+)
 
 from .content import tutorial_lesson_map
 from .manager import TutorialManager
@@ -20,6 +23,7 @@ _ALWAYS_ALLOWED_ACTIONS = {"quit", "soft_drop"}
 _MAX_MODE_LENGTH = 8
 _MOVE_PREFIX = "move_"
 _ROTATE_PREFIX = "rotate_"
+_DROP_STEP_IDS = frozenset({"soft_drop", "hard_drop"})
 _OVERLAY_ACTIONS = {"overlay_alpha_dec", "overlay_alpha_inc"}
 _OVERLAY_STEP_IDS = frozenset(_OVERLAY_ACTIONS)
 _GOAL_STEP_IDS = frozenset(
@@ -48,24 +52,6 @@ _TUTORIAL_STAGE_DELAY_MS = project_constant_int(
     min_value=0,
     max_value=5000,
 )
-_OVERLAY_TARGET_MIN_PERCENT = project_constant_int(
-    ("tutorial", "overlay_target_percent", "min"),
-    20,
-    min_value=0,
-    max_value=100,
-)
-_OVERLAY_TARGET_MAX_PERCENT = project_constant_int(
-    ("tutorial", "overlay_target_percent", "max"),
-    80,
-    min_value=0,
-    max_value=100,
-)
-_OVERLAY_TARGET_TOLERANCE_PERCENT = project_constant_int(
-    ("tutorial", "overlay_target_tolerance_percent"),
-    2,
-    min_value=0,
-    max_value=20,
-)
 
 
 def _normalize_mode(value: object) -> str:
@@ -93,6 +79,8 @@ def _step_setup_payload(step: Any) -> dict[str, Any]:
         ("spawn_min_visible_layer", step.setup.spawn_min_visible_layer),
         ("bottom_layers_min", step.setup.bottom_layers_min),
         ("bottom_layers_max", step.setup.bottom_layers_max),
+        ("overlay_start_percent", step.setup.overlay_start_percent),
+        ("overlay_target_percent", step.setup.overlay_target_percent),
     )
     payload: dict[str, Any] = {}
     for key, value in setup_items:
@@ -107,7 +95,23 @@ def _step_setup_payload(step: Any) -> dict[str, Any]:
 def _is_move_or_rotate_step(step_id: str | None) -> bool:
     if not step_id:
         return False
-    return step_id.startswith(_MOVE_PREFIX) or step_id.startswith(_ROTATE_PREFIX)
+    return (
+        step_id.startswith(_MOVE_PREFIX)
+        or step_id.startswith(_ROTATE_PREFIX)
+        or step_id in _DROP_STEP_IDS
+    )
+
+
+def _is_translation_step(step_id: str | None) -> bool:
+    if not step_id:
+        return False
+    return step_id.startswith(_MOVE_PREFIX) or step_id in _DROP_STEP_IDS
+
+
+def _is_rotation_step(step_id: str | None) -> bool:
+    if not step_id:
+        return False
+    return step_id.startswith(_ROTATE_PREFIX)
 
 
 def _suppress_board_piece_setup(payload: dict[str, Any]) -> dict[str, Any]:
@@ -133,11 +137,36 @@ def _overlay_percent(value: object) -> int | None:
 
 
 def _overlay_range() -> tuple[int, int]:
-    low = max(0, min(100, int(_OVERLAY_TARGET_MIN_PERCENT)))
-    high = max(0, min(100, int(_OVERLAY_TARGET_MAX_PERCENT)))
+    low = max(
+        0,
+        min(100, int(round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0))),
+    )
+    high = max(
+        0,
+        min(100, int(round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0))),
+    )
     if high < low:
         low, high = high, low
     return low, high
+
+
+def _overlay_target_percent_for_step(step: Any) -> int | None:
+    step_id = sanitize_text(
+        getattr(step, "step_id", ""),
+        max_length=96,
+    ).strip().lower()
+    clamp_min, clamp_max = _overlay_range()
+    if step_id == "overlay_alpha_dec":
+        return clamp_min
+    if step_id == "overlay_alpha_inc":
+        return clamp_max
+    setup = getattr(step, "setup", None)
+    if setup is None:
+        return None
+    raw_target = getattr(setup, "overlay_target_percent", None)
+    if isinstance(raw_target, bool) or not isinstance(raw_target, int):
+        return None
+    return max(0, min(100, int(raw_target)))
 
 
 def _segment_title_for_step(*, step_id: str | None, mode: str) -> str:
@@ -174,8 +203,6 @@ class TutorialRuntimeSession:
     _last_lines_cleared: int = 0
     _transition_from_step_id: str | None = None
     _pending_step_advance_at_ms: int | None = None
-    _overlay_target_percent: int | None = None
-    _overlay_target_nonce: int = 0
     _overlay_action_seen: bool = False
     _overlay_current_percent: int | None = None
 
@@ -212,6 +239,7 @@ class TutorialRuntimeSession:
         lines_cleared: int,
         overlay_transparency: float | None = None,
         grid_visible: bool | None = None,
+        grid_mode: str | None = None,
         board_cell_count: int | None = None,
     ) -> bool:
         if not self.manager.is_running():
@@ -222,6 +250,7 @@ class TutorialRuntimeSession:
             current_lines=current_lines,
             overlay_transparency=overlay_transparency,
             grid_visible=grid_visible,
+            grid_mode=grid_mode,
             board_cell_count=board_cell_count,
         )
         progressed = self._maybe_advance_step(target_met=target_met)
@@ -247,26 +276,38 @@ class TutorialRuntimeSession:
         current_lines: int,
         overlay_transparency: float | None,
         grid_visible: bool | None,
+        grid_mode: str | None,
         board_cell_count: int | None,
     ) -> bool:
         cleared_step = current_lines > int(self.step_start_lines_cleared)
         self.manager.set_predicate("line_cleared", cleared_step)
         self.manager.set_predicate("layer_cleared", cleared_step)
         self.manager.set_predicate("hyper_layer_cleared", cleared_step)
+        step = self.manager.current_step()
         overlay_pct = _overlay_percent(overlay_transparency)
         self._overlay_current_percent = overlay_pct
-        range_low, range_high = _overlay_range()
-        in_range = False
-        if overlay_pct is not None:
-            in_range = range_low <= int(overlay_pct) <= range_high
-        target_met = self._overlay_target_reached(overlay_pct)
-        self.manager.set_predicate("overlay_alpha_in_range", in_range)
+        target_percent = _overlay_target_percent_for_step(step)
+        target_met = False
+        if target_percent is None:
+            range_low, range_high = _overlay_range()
+            if overlay_pct is not None:
+                target_met = range_low <= int(overlay_pct) <= range_high
+        elif overlay_pct is not None:
+            target_met = int(overlay_pct) == int(target_percent)
+        self.manager.set_predicate("overlay_alpha_in_range", target_met)
         self.manager.set_predicate(
             "overlay_alpha_target_reached",
             bool(target_met and self._overlay_action_seen),
         )
         if grid_visible is not None:
             self.manager.set_predicate("grid_enabled", bool(grid_visible))
+        if grid_mode is not None:
+            mode_text = sanitize_text(grid_mode, max_length=24).strip().lower()
+            if mode_text:
+                self.manager.set_predicate("grid_mode_off", mode_text == "off")
+                self.manager.set_predicate("grid_mode_edge", mode_text == "edge")
+                self.manager.set_predicate("grid_mode_full", mode_text == "full")
+                self.manager.set_predicate("grid_mode_helper", mode_text == "helper")
         if board_cell_count is not None:
             self.manager.set_predicate("board_cleared", int(board_cell_count) <= 0)
         return bool(target_met)
@@ -362,10 +403,15 @@ class TutorialRuntimeSession:
         lesson = self.manager.current_lesson()
         step = self.manager.current_step()
         setup_payload = _step_setup_payload(step)
-        if _is_move_or_rotate_step(self._transition_from_step_id) and _is_move_or_rotate_step(
+        keep_stage_state = _is_move_or_rotate_step(
+            self._transition_from_step_id
+        ) and _is_move_or_rotate_step(snapshot.step_id)
+        if keep_stage_state:
+            setup_payload = _suppress_board_piece_setup(setup_payload)
+        if _is_overlay_target_step(self._transition_from_step_id) and not _is_overlay_target_step(
             snapshot.step_id
         ):
-            setup_payload = _suppress_board_piece_setup(setup_payload)
+            setup_payload["overlay_start_percent"] = 50
         self._pending_setup_step_id = None
         self._transition_from_step_id = None
         return {
@@ -404,19 +450,12 @@ class TutorialRuntimeSession:
             mode=self.mode,
         )
         hint_text = step.ui.hint or ""
-        if _is_overlay_target_step(step.step_id):
-            target = self._overlay_target_percent
-            current = self._overlay_current_percent
-            if target is not None and current is not None:
-                hint_text = (
-                    f"{hint_text} Target: {target}% (current: {current}%).".strip()
-                )
-            elif target is not None:
-                hint_text = f"{hint_text} Target: {target}%.".strip()
+        if _is_overlay_target_step(step.step_id) and self._overlay_current_percent is not None:
+            hint_text = f"{hint_text} Current transparency: {self._overlay_current_percent}%.".strip()
+            target_percent = _overlay_target_percent_for_step(step)
+            if target_percent is not None:
+                hint_text = f"{hint_text} Goal: {target_percent}%.".strip()
         payload["step_hint"] = hint_text
-        next_index = int(snapshot.step_index) + 1
-        if next_index < len(lesson.steps):
-            payload["next_step_text"] = lesson.steps[next_index].ui.text
         payload["key_prompts"] = list(step.ui.key_prompts)
         payload["highlights"] = list(step.ui.highlights)
         payload["progress_text"] = (
@@ -473,21 +512,7 @@ class TutorialRuntimeSession:
         self._refresh_overlay_target()
 
     def _refresh_overlay_target(self) -> None:
-        step_id = self._last_step_id
-        self._overlay_target_percent = None
-        if not _is_overlay_target_step(step_id):
-            return
-        low, high = _overlay_range()
-        seed = f"{self.lesson_id}:{step_id}:{self._overlay_target_nonce}"
-        target_rng = random.Random(seed)
-        self._overlay_target_percent = int(target_rng.randint(low, high))
-        self._overlay_target_nonce += 1
-
-    def _overlay_target_reached(self, overlay_percent: int | None) -> bool:
-        if overlay_percent is None or self._overlay_target_percent is None:
-            return False
-        tolerance = max(0, int(_OVERLAY_TARGET_TOLERANCE_PERCENT))
-        return abs(int(overlay_percent) - int(self._overlay_target_percent)) <= tolerance
+        return
 
 
 def create_tutorial_runtime_session(*, lesson_id: str, mode: str) -> TutorialRuntimeSession:

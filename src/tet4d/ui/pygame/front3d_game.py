@@ -106,6 +106,18 @@ _TUTORIAL_DROP_DELAY_MS = engine_api.project_constant_int(
     min_value=0,
     max_value=2000,
 )
+_TUTORIAL_SOFT_DROP_DELAY_MS = engine_api.project_constant_int(
+    ("tutorial", "action_delay_ms", "soft_drop"),
+    min(200, int(_TUTORIAL_DROP_DELAY_MS)),
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_HARD_DROP_DELAY_MS = engine_api.project_constant_int(
+    ("tutorial", "action_delay_ms", "hard_drop"),
+    int(_TUTORIAL_DROP_DELAY_MS),
+    min_value=0,
+    max_value=2000,
+)
 _TUTORIAL_DELAYED_ACTIONS_3D = {
     "move_x_neg",
     "move_x_pos",
@@ -160,12 +172,8 @@ _TUTORIAL_GAMEPLAY_ACTIONS_3D = (
     "rotate_yz_pos",
     "rotate_yz_neg",
 )
-_TUTORIAL_GRID_REQUIRED_STEPS_3D = frozenset(
-    {
-        "layer_fill",
-        "full_clear_bonus",
-    }
-)
+_TUTORIAL_GRID_OFF_STEPS_3D = frozenset({"toggle_grid"})
+_TUTORIAL_GRID_HELPER_STEPS_3D = frozenset({"layer_fill", "full_clear_bonus"})
 _TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
     ("tutorial", "min_visible_layer"),
     2,
@@ -195,8 +203,10 @@ _TUTORIAL_MIN_DIMS_3D = (
 
 
 def _tutorial_action_delay_ms_3d(action_id: str) -> int:
-    if action_id in {"soft_drop", "hard_drop"}:
-        return int(_TUTORIAL_DROP_DELAY_MS)
+    if action_id == "soft_drop":
+        return int(_TUTORIAL_SOFT_DROP_DELAY_MS)
+    if action_id == "hard_drop":
+        return int(_TUTORIAL_HARD_DROP_DELAY_MS)
     if action_id.startswith("rotate_"):
         return int(_TUTORIAL_ROTATE_DELAY_MS)
     if action_id.startswith("move_"):
@@ -343,14 +353,33 @@ def _apply_pending_tutorial_setup(loop: "LoopContext3D") -> None:
         return
     step_id = str(payload.get("step_id", "")).strip().lower()
     tutorial_apply_step_setup_nd(loop.state, loop.cfg, payload)
-    if step_id in _TUTORIAL_GRID_REQUIRED_STEPS_3D:
+    if step_id in _TUTORIAL_GRID_OFF_STEPS_3D:
         loop.grid_mode = GridMode.OFF
+    elif step_id in _TUTORIAL_GRID_HELPER_STEPS_3D:
+        loop.grid_mode = GridMode.HELPER
     setup_payload = payload.get("setup")
     if isinstance(setup_payload, dict):
         _apply_tutorial_camera_preset(
             loop,
             str(setup_payload.get("camera_preset", "")),
         )
+    start_overlay = _tutorial_overlay_start_from_setup(payload)
+    if start_overlay is not None:
+        loop.overlay_transparency = clamp_overlay_transparency(
+            start_overlay,
+            default=default_overlay_transparency(),
+        )
+
+
+def _tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
+    setup_payload = payload.get("setup")
+    if not isinstance(setup_payload, dict):
+        return None
+    raw_percent = setup_payload.get("overlay_start_percent")
+    if isinstance(raw_percent, bool) or not isinstance(raw_percent, int):
+        return None
+    bounded_percent = max(0, min(100, int(raw_percent)))
+    return float(bounded_percent) / 100.0
 
 
 def handle_camera_key(
@@ -718,6 +747,7 @@ def run_game_loop(
             lines_cleared=lines_cleared,
             overlay_transparency=float(loop.overlay_transparency),
             grid_visible=bool(loop.grid_mode != GridMode.OFF),
+            grid_mode=str(loop.grid_mode.value),
             board_cell_count=len(loop.state.board.cells),
         )
         _apply_pending_tutorial_setup(loop)

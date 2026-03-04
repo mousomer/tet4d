@@ -43,8 +43,10 @@ from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_2d
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.loop_runner_nd import process_game_events
 from tet4d.ui.pygame.render.gfx_game import (
+    CELL_SIZE,
     ClearEffect2D,
     GfxFonts,
+    compute_game_layout,
     init_fonts,
     draw_menu,
     draw_game_frame,
@@ -113,6 +115,7 @@ from tet4d.engine.api import (
     tutorial_runtime_next_stage_runtime,
     tutorial_runtime_skip_runtime,
     tutorial_runtime_sync_and_advance_runtime,
+    tutorial_runtime_overlay_payload_runtime,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
@@ -161,6 +164,18 @@ _TUTORIAL_DROP_DELAY_MS = project_constant_int(
     min_value=0,
     max_value=2000,
 )
+_TUTORIAL_SOFT_DROP_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "soft_drop"),
+    min(200, int(_TUTORIAL_DROP_DELAY_MS)),
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_HARD_DROP_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "hard_drop"),
+    int(_TUTORIAL_DROP_DELAY_MS),
+    min_value=0,
+    max_value=2000,
+)
 _TUTORIAL_DELAYED_ACTIONS_2D = {
     "move_x_neg",
     "move_x_pos",
@@ -182,12 +197,8 @@ _TUTORIAL_ROTATIONS_2D = {
     "rotate_xy_pos": 1,
     "rotate_xy_neg": -1,
 }
-_TUTORIAL_GRID_REQUIRED_STEPS_2D = frozenset(
-    {
-        "line_fill",
-        "full_clear_bonus",
-    }
-)
+_TUTORIAL_GRID_OFF_STEPS_2D = frozenset({"toggle_grid"})
+_TUTORIAL_GRID_HELPER_STEPS_2D = frozenset({"line_fill", "full_clear_bonus"})
 _TUTORIAL_GAMEPLAY_ACTIONS_2D = (
     "soft_drop",
     "hard_drop",
@@ -216,6 +227,8 @@ _TUTORIAL_MIN_HEIGHT_2D = project_constant_int(
     min_value=8,
     max_value=80,
 )
+_TUTORIAL_TARGET_FILL_RGBA = (255, 214, 80, 72)
+_TUTORIAL_TARGET_BORDER_RGBA = (255, 242, 168, 220)
 
 
 # ---------- Menu state & actions (logic, not drawing) ----------
@@ -617,8 +630,10 @@ def _step_gravity_tick(
 
 
 def _tutorial_action_delay_ms_2d(action_id: str) -> int:
-    if action_id in {"soft_drop", "hard_drop"}:
-        return int(_TUTORIAL_DROP_DELAY_MS)
+    if action_id == "soft_drop":
+        return int(_TUTORIAL_SOFT_DROP_DELAY_MS)
+    if action_id == "hard_drop":
+        return int(_TUTORIAL_HARD_DROP_DELAY_MS)
     if action_id.startswith("rotate_"):
         return int(_TUTORIAL_ROTATE_DELAY_MS)
     if action_id.startswith("move_"):
@@ -974,8 +989,27 @@ def _apply_pending_tutorial_setup(loop: LoopContext2D) -> None:
         return
     step_id = str(payload.get("step_id", "")).strip().lower()
     tutorial_apply_step_setup_2d_runtime(loop.state, loop.cfg, payload)
-    if step_id in _TUTORIAL_GRID_REQUIRED_STEPS_2D:
+    if step_id in _TUTORIAL_GRID_OFF_STEPS_2D:
         loop.grid_mode = GridMode.OFF
+    elif step_id in _TUTORIAL_GRID_HELPER_STEPS_2D:
+        loop.grid_mode = GridMode.HELPER
+    start_overlay = _tutorial_overlay_start_from_setup(payload)
+    if start_overlay is not None:
+        loop.overlay_transparency = clamp_overlay_transparency_runtime(
+            start_overlay,
+            default=default_overlay_transparency_runtime(),
+        )
+
+
+def _tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
+    setup_payload = payload.get("setup")
+    if not isinstance(setup_payload, dict):
+        return None
+    raw_percent = setup_payload.get("overlay_start_percent")
+    if isinstance(raw_percent, bool) or not isinstance(raw_percent, int):
+        return None
+    bounded_percent = max(0, min(100, int(raw_percent)))
+    return float(bounded_percent) / 100.0
 
 
 def _configure_game_loop(
@@ -1173,6 +1207,47 @@ def _handle_loop_event_cycle(
     return next_screen, display_settings, None, False
 
 
+def _tutorial_target_cells_2d(loop: LoopContext2D) -> tuple[tuple[int, int], ...]:
+    session = loop.tutorial_session
+    if session is None:
+        return ()
+    payload = tutorial_runtime_overlay_payload_runtime(session)
+    step_id = str(payload.get("step_id", "")).strip().lower()
+    if step_id not in {"target_drop", "line_fill", "full_clear_bonus"}:
+        return ()
+
+    if step_id == "full_clear_bonus":
+        candidate_rows = (loop.cfg.height - 2, loop.cfg.height - 1)
+    else:
+        candidate_rows = (loop.cfg.height - 1,)
+    target_cells: list[tuple[int, int]] = []
+    for y in candidate_rows:
+        for x in range(loop.cfg.width):
+            if (x, y) in loop.state.board.cells:
+                continue
+            target_cells.append((x, y))
+    return tuple(target_cells)
+
+
+def _draw_tutorial_targets_2d(screen: pygame.Surface, loop: LoopContext2D) -> None:
+    target_cells = _tutorial_target_cells_2d(loop)
+    if not target_cells:
+        return
+    board_offset, _panel_offset = compute_game_layout(screen, loop.cfg)
+    ox, oy = board_offset
+    for x, y in target_cells:
+        rect = pygame.Rect(
+            ox + x * CELL_SIZE + 2,
+            oy + y * CELL_SIZE + 2,
+            CELL_SIZE - 4,
+            CELL_SIZE - 4,
+        )
+        fill = pygame.Surface(rect.size, pygame.SRCALPHA)
+        fill.fill(_TUTORIAL_TARGET_FILL_RGBA)
+        screen.blit(fill, rect.topleft)
+        pygame.draw.rect(screen, _TUTORIAL_TARGET_BORDER_RGBA, rect, 2)
+
+
 def _run_game_frame_2d(
     *,
     screen: pygame.Surface,
@@ -1204,6 +1279,7 @@ def _run_game_frame_2d(
             lines_cleared=int(loop.state.lines_cleared),
             overlay_transparency=float(loop.overlay_transparency),
             grid_visible=bool(loop.grid_mode != GridMode.OFF),
+            grid_mode=str(loop.grid_mode.value),
             board_cell_count=len(loop.state.board.cells),
         )
         _apply_pending_tutorial_setup(loop)
@@ -1230,6 +1306,7 @@ def _run_game_frame_2d(
         active_piece_overlay=active_overlay,
     )
     if loop.tutorial_session is not None:
+        _draw_tutorial_targets_2d(screen, loop)
         draw_tutorial_overlay(
             screen,
             fonts,

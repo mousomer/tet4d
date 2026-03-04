@@ -19,6 +19,12 @@ def _base_payload(*, action_id: str) -> dict[str, object]:
 
 
 class TutorialOverlayKeyPromptTests(unittest.TestCase):
+    def test_overlay_does_not_render_next_step_text(self) -> None:
+        payload = _base_payload(action_id="move_x_neg")
+        payload["next_step_text"] = "Should not render"
+        lines = tutorial_overlay._overlay_lines_running(payload, dimension=2)
+        self.assertFalse(any(str(text).startswith("Next:") for text, *_ in lines))
+
     def test_overlay_prompt_uses_live_runtime_bindings(self) -> None:
         payload = _base_payload(action_id="move_x_neg")
         current_key = {"value": 97}

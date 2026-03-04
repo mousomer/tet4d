@@ -15,7 +15,7 @@ BOT_MODE_NAMES = ("off", "assist", "auto", "learn", "step")
 BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
 
 OVERLAY_TRANSPARENCY_MIN = 0.0
-OVERLAY_TRANSPARENCY_MAX = 0.85
+OVERLAY_TRANSPARENCY_MAX = 0.90
 OVERLAY_TRANSPARENCY_STEP = 0.05
 
 GAME_SEED_MIN = 0
@@ -280,7 +280,7 @@ def validate_defaults_payload(
         OVERLAY_TRANSPARENCY_MIN <= overlay_transparency <= OVERLAY_TRANSPARENCY_MAX
     ):
         raise RuntimeError(
-            "defaults.display.overlay_transparency must be within [0.0, 0.85]"
+            "defaults.display.overlay_transparency must be within [0.0, 0.90]"
         )
 
     audio = require_object(payload["audio"], path="defaults.audio")

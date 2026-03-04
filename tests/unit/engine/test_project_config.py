@@ -52,6 +52,16 @@ class TestProjectConfig(unittest.TestCase):
         self.assertGreater(
             project_constant_int(("rendering", "3d", "side_panel"), 0), 0
         )
+        soft_drop_delay = project_constant_int(
+            ("tutorial", "action_delay_ms", "soft_drop"),
+            0,
+        )
+        hard_drop_delay = project_constant_int(
+            ("tutorial", "action_delay_ms", "hard_drop"),
+            0,
+        )
+        self.assertGreater(soft_drop_delay, 0)
+        self.assertGreaterEqual(hard_drop_delay, soft_drop_delay)
         self.assertEqual(project_constant_int(("rendering", "missing"), 123), 123)
 
     def test_externalized_relative_paths_keep_expected_prefixes(self) -> None:

@@ -185,6 +185,22 @@ Completed:
       interactive stages)
     - tutorial full-board-clean stages now require actual empty board state
       (`board_cleared`) before progression
+    - tutorial grid-control stages now require a full grid-mode cycle:
+      `OFF -> EDGE -> FULL -> HELPER -> OFF`
+    - tutorial movement/rotation/drop transitions now preserve board/piece setup
+      across adjacent control stages (no redraw between those stages)
+    - transparency stages now reset overlay to `50%` when transitioning back to
+      non-transparency tutorial stages
+    - movement-stage piece placement now starts one cell off boundary and is
+      validated for repeated legal moves so required step counts are reachable
+    - ND translation starts are now forced near-corner but not hard-corner
+      (one-cell-off-boundary on lateral axes)
+    - tutorial ND minimum board clamp increased to keep 4-step translation
+      stages feasible with asymmetric pieces:
+      - 3D: `8x18x8`
+      - 4D: `10x20x8x8`
+    - line/layer/full-clear setup now nudges pieces laterally away from target
+      holes so completion requires movement/rotation before hard drop
 - Key files:
   - `src/tet4d/engine/tutorial/runtime.py`
   - `src/tet4d/engine/tutorial/persistence.py`
@@ -282,10 +298,21 @@ Completed locally:
 - Reduced profile/mode update duplication in:
   - `src/tet4d/ui/pygame/keybindings.py`
   - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Fixed tutorial soft-drop pacing to avoid sluggish drop stages while keeping
+  hard-drop tutorial pacing slower:
+  - added separate config-backed `soft_drop` and `hard_drop` action delays under
+    `tutorial.action_delay_ms`
+  - updated 2D/3D/4D tutorial action-delay dispatch to use split delays
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
 
 Verification (current working tree):
 - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed (`15 passed`).
 - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py` passed (`57 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_project_config.py` passed (`4 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 - `./scripts/ci_preflight.sh` passed (known non-blocking local warnings unchanged).
 - `.venv/bin/python scripts/arch_metrics.py` ran (`arch_stage=890`,

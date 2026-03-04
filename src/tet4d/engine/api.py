@@ -1259,6 +1259,7 @@ def tutorial_runtime_sync_and_advance_runtime(
     lines_cleared: int,
     overlay_transparency: float | None = None,
     grid_visible: bool | None = None,
+    grid_mode: str | None = None,
     board_cell_count: int | None = None,
 ) -> bool:
     return bool(
@@ -1266,6 +1267,7 @@ def tutorial_runtime_sync_and_advance_runtime(
             lines_cleared=int(lines_cleared),
             overlay_transparency=overlay_transparency,
             grid_visible=grid_visible,
+            grid_mode=grid_mode,
             board_cell_count=board_cell_count,
         )
     )

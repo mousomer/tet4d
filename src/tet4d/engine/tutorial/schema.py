@@ -43,6 +43,8 @@ class TutorialStepSetup:
     spawn_min_visible_layer: int | None
     bottom_layers_min: int | None
     bottom_layers_max: int | None
+    overlay_start_percent: int | None
+    overlay_target_percent: int | None
 
 
 @dataclass(frozen=True)
@@ -177,6 +179,8 @@ def _parse_setup(raw: object, *, path: str) -> TutorialStepSetup:
             spawn_min_visible_layer=None,
             bottom_layers_min=None,
             bottom_layers_max=None,
+            overlay_start_percent=None,
+            overlay_target_percent=None,
         )
     setup_obj = require_object(raw, path=path)
     camera_preset = _clean_optional_text(
@@ -235,6 +239,24 @@ def _parse_setup(raw: object, *, path: str) -> TutorialStepSetup:
         raise RuntimeError(
             f"{path}.bottom_layers_max must be >= {path}.bottom_layers_min"
         )
+    overlay_start_percent_raw = setup_obj.get("overlay_start_percent")
+    overlay_start_percent = None
+    if overlay_start_percent_raw is not None:
+        overlay_start_percent = require_int(
+            overlay_start_percent_raw,
+            path=f"{path}.overlay_start_percent",
+            min_value=0,
+            max_value=100,
+        )
+    overlay_target_percent_raw = setup_obj.get("overlay_target_percent")
+    overlay_target_percent = None
+    if overlay_target_percent_raw is not None:
+        overlay_target_percent = require_int(
+            overlay_target_percent_raw,
+            path=f"{path}.overlay_target_percent",
+            min_value=0,
+            max_value=100,
+        )
     return TutorialStepSetup(
         camera_preset=camera_preset,
         spawn_piece=spawn_piece,
@@ -244,6 +266,8 @@ def _parse_setup(raw: object, *, path: str) -> TutorialStepSetup:
         spawn_min_visible_layer=spawn_min_visible_layer,
         bottom_layers_min=bottom_layers_min,
         bottom_layers_max=bottom_layers_max,
+        overlay_start_percent=overlay_start_percent,
+        overlay_target_percent=overlay_target_percent,
     )
 
 
@@ -385,6 +409,8 @@ def _setup_payload_for_step(step: TutorialStep) -> dict[str, Any]:
         ("spawn_min_visible_layer", step.setup.spawn_min_visible_layer),
         ("bottom_layers_min", step.setup.bottom_layers_min),
         ("bottom_layers_max", step.setup.bottom_layers_max),
+        ("overlay_start_percent", step.setup.overlay_start_percent),
+        ("overlay_target_percent", step.setup.overlay_target_percent),
     )
     payload: dict[str, Any] = {}
     for key, value in setup_fields:

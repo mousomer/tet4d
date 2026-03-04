@@ -532,11 +532,60 @@ Current sub-batch (2026-03-04): tutorial control sequencing hardening.
 - Reduced duplicate profile and per-mode update plumbing in:
   - `src/tet4d/ui/pygame/keybindings.py`
   - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Fixed tutorial soft-drop responsiveness by splitting drop pacing into
+  separate config-backed delays (fast soft-drop, slower hard-drop):
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
 - Verification:
   - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed.
   - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py` passed.
+  - `.venv/bin/pytest -q tests/unit/engine/test_project_config.py` passed.
+  - `.venv/bin/ruff check cli/front2d.py src/tet4d/ui/pygame/front3d_game.py src/tet4d/ui/pygame/front4d_game.py src/tet4d/engine/runtime/project_config.py tests/unit/engine/test_project_config.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
   - `./scripts/ci_preflight.sh` passed (known non-blocking local warnings unchanged).
+
+Current sub-batch (2026-03-04): tutorial stage solvability + grid/transparency alignment.
+
+- Aligned grid tutorial steps to explicitly cover all display modes with required
+  full cycle progression:
+  - `OFF -> EDGE -> FULL -> HELPER -> OFF`
+  - `event_count_required = 4` on `toggle_grid` steps (2D/3D/4D).
+- Hardened step transition setup rules in tutorial runtime:
+  - board/piece setup is preserved between translation/rotation/drop stages
+    (no redraw/reset between those stages),
+  - leaving transparency stages now resets overlay transparency to `50%`.
+- Improved deterministic tutorial piece placement for movement-stage completion:
+  - translation starts one cell off boundary and validates repeated legal moves
+    for required event counts,
+  - ND spawn bias updated so sequential axis movement can reach edge targets
+    reliably.
+- Tightened goal-stage setup for line/layer/full-clear tasks:
+  - goal piece now starts laterally away from target holes and at configured
+    gravity distance so move/rotate is required before hard drop.
+- Verification:
+  - `.venv/bin/python -m ruff check src/tet4d/engine/tutorial/setup_apply.py` passed.
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_content.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-04): ND translation feasibility near-corner enforcement.
+
+- Tutorial ND translation spawn now prefers one-cell-off-boundary for non-active
+  lateral axes too (near corner, not hard-boundary corner) so stage starts are
+  spatially consistent.
+- Increased tutorial minimum board clamps for ND lessons to preserve feasibility
+  of four-step translation stages with asymmetric pieces:
+  - 3D min dims: `x=8`, `y=18`, `z=8`
+  - 4D min dims: `x=10`, `y=20`, `z=8`, `w=8`
+- Added regression assertions for sequential translation feasibility under real
+  lesson setup values and continuity to rotation stages:
+  - `tests/unit/engine/test_tutorial_setup_apply.py`
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Verification:
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_project_config.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).
 
@@ -1100,6 +1149,39 @@ Current sub-batch (2026-03-03): tutorial camera/transparency UX alignment + stag
   - `tests/unit/engine/test_pause_menu.py`
 - Verification:
   - `PYTHONPATH=src pytest -q tests/unit/engine/test_control_ui_helpers.py tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_pause_menu.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-04): transparency-goal clamp binding + tutorial stage solvability hardening.
+
+- Transparency tutorial goals are now derived from global overlay transparency
+  clamps (schema/runtime), not hardcoded lesson percentages:
+  - `overlay_alpha_dec` resolves to clamp-min
+  - `overlay_alpha_inc` resolves to clamp-max
+  - files:
+    - `src/tet4d/engine/tutorial/runtime.py`
+    - `config/tutorial/lessons.json`
+- Raised global locked-cell transparency max clamp from `85%` to `90%` and
+  synchronized schema/help copy:
+  - `src/tet4d/engine/runtime/settings_schema.py`
+  - `config/schema/menu_settings.schema.json`
+  - `config/help/content/runtime_help_content.json`
+  - `tests/unit/engine/test_keybindings.py`
+- Goal-stage spawn behavior tightened for line/layer/full-clear lessons:
+  piece spawn now targets approximately 3 gravity layers above prepared goal
+  regions; helper grid is forced for fill/full-clear stages:
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+- ND (3D/4D) movement-stage setup continuity fixed by restoring per-step setup
+  application across translation/rotation steps to prevent unsolvable 4-action
+  movement stages:
+  - `src/tet4d/engine/tutorial/runtime.py`
+  - `tests/unit/engine/test_tutorial_runtime.py`
+  - `tests/unit/engine/test_tutorial_setup_apply.py`
+- Verification:
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_overlay.py` passed.
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_keybindings.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 ## 6. Source Inputs

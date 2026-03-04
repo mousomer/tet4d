@@ -215,6 +215,52 @@ class TutorialContentTests(unittest.TestCase):
             )
             self.assertIn("board_cleared", full_clear_step.complete_when.predicates)
 
+    def test_2d_line_and_full_clear_goals_do_not_require_grid_toggle(self) -> None:
+        payload = content.load_tutorial_payload()
+        lesson_2d = next(
+            lesson for lesson in payload.lessons if lesson.lesson_id == "tutorial_2d_core"
+        )
+        line_fill = next(step for step in lesson_2d.steps if step.step_id == "line_fill")
+        full_clear = next(
+            step for step in lesson_2d.steps if step.step_id == "full_clear_bonus"
+        )
+        self.assertNotIn("grid_enabled", line_fill.complete_when.predicates)
+        self.assertNotIn("grid_enabled", full_clear.complete_when.predicates)
+
+    def test_2d_line_fill_uses_i_piece_target_preset(self) -> None:
+        payload = content.load_tutorial_payload()
+        lesson_2d = next(
+            lesson for lesson in payload.lessons if lesson.lesson_id == "tutorial_2d_core"
+        )
+        line_fill = next(step for step in lesson_2d.steps if step.step_id == "line_fill")
+        self.assertEqual(line_fill.setup.starter_piece_id, "I")
+        self.assertEqual(line_fill.setup.board_preset, "2d_almost_line_i")
+
+    def test_overlay_transparency_stages_have_declared_start_and_targets(self) -> None:
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            dec_step = next(
+                step for step in lesson.steps if step.step_id == "overlay_alpha_dec"
+            )
+            inc_step = next(
+                step for step in lesson.steps if step.step_id == "overlay_alpha_inc"
+            )
+            self.assertEqual(dec_step.setup.overlay_start_percent, 50)
+            self.assertIsNone(dec_step.setup.overlay_target_percent)
+            self.assertEqual(inc_step.setup.overlay_start_percent, 50)
+            self.assertIsNone(inc_step.setup.overlay_target_percent)
+
+    def test_grid_tutorial_step_cycles_all_grid_types(self) -> None:
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            grid_step = next(step for step in lesson.steps if step.step_id == "toggle_grid")
+            self.assertEqual(grid_step.complete_when.event_count_required, 4)
+            hint = (grid_step.ui.hint or "").lower()
+            self.assertIn("edge", hint)
+            self.assertIn("full", hint)
+            self.assertIn("helper", hint)
+            self.assertIn("off", hint)
+
     def test_starter_piece_ids_match_lesson_dimension(self) -> None:
         piece_ids_by_mode = {
             "2d": {

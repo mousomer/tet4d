@@ -451,15 +451,6 @@ def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None
             shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1
         )
 
-    for x in range(0, board_rect.width, step * 2):
-        pygame.draw.line(
-            shadow,
-            (170, 190, 220, 16),
-            (x, 0),
-            (min(board_rect.width, x + board_rect.height), board_rect.height),
-            1,
-        )
-
     surface.blit(shadow, board_rect.topleft)
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 

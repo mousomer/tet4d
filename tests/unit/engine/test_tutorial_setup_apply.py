@@ -178,6 +178,120 @@ class TutorialSetupApplyTests(unittest.TestCase):
             tuple(state_b.current_piece_cells_mapped(include_above=True)),
         )
 
+    def test_2d_move_stage_spawn_supports_back_and_forth(self) -> None:
+        cfg, state = _new_state_2d()
+        apply_tutorial_step_setup_2d(
+            state,
+            cfg,
+            {
+                "rng_seed": 1001,
+                "starter_piece_id": "L",
+                "spawn_min_visible_layer": 2,
+                "bottom_layers_min": 1,
+                "bottom_layers_max": 2,
+                "required_event_count": 4,
+            },
+            lesson_id="tutorial_2d_core",
+            step_id="move_x_neg",
+        )
+        self.assertIsNotNone(state.current_piece)
+        assert state.current_piece is not None
+        probe = state.current_piece
+        for _ in range(4):
+            probe = probe.moved(-1, 0)
+            self.assertTrue(state._can_exist(probe))
+        for _ in range(4):
+            probe = probe.moved(1, 0)
+            self.assertTrue(state._can_exist(probe))
+
+    def test_nd_move_stage_spawn_supports_sequential_axis_translations(self) -> None:
+        cfg3 = GameConfigND(
+            dims=(10, 20, 10),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_3D_STANDARD,
+            challenge_layers=0,
+            rng_seed=1337,
+        )
+        state3 = GameStateND(
+            config=cfg3,
+            board=BoardND(cfg3.dims),
+            rng=random.Random(cfg3.rng_seed),
+        )
+        apply_tutorial_step_setup_nd(
+            state3,
+            cfg3,
+            {
+                "rng_seed": 2100,
+                "starter_piece_id": "SCREW3",
+                "spawn_min_visible_layer": 2,
+                "bottom_layers_min": 1,
+                "bottom_layers_max": 2,
+                "required_event_count": 4,
+            },
+            lesson_id="tutorial_3d_core",
+            step_id="move_x_neg",
+        )
+        self.assertIsNotNone(state3.current_piece)
+        assert state3.current_piece is not None
+        mapped3 = state3.current_piece_cells_mapped(include_above=True)
+        max_x3 = max(coord[0] for coord in mapped3)
+        max_z3 = max(coord[2] for coord in mapped3)
+        self.assertEqual(max_x3, cfg3.dims[0] - 2)
+        self.assertEqual(max_z3, cfg3.dims[2] - 2)
+        probe3 = state3.current_piece
+        for delta in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+            for _ in range(4):
+                probe3 = probe3.moved(delta)
+                self.assertTrue(state3._can_exist(probe3))
+
+        cfg4 = GameConfigND(
+            dims=(10, 20, 8, 8),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_4D_STANDARD,
+            challenge_layers=0,
+            rng_seed=1337,
+        )
+        state4 = GameStateND(
+            config=cfg4,
+            board=BoardND(cfg4.dims),
+            rng=random.Random(cfg4.rng_seed),
+        )
+        apply_tutorial_step_setup_nd(
+            state4,
+            cfg4,
+            {
+                "rng_seed": 3100,
+                "starter_piece_id": "SKEW4_A",
+                "spawn_min_visible_layer": 2,
+                "bottom_layers_min": 1,
+                "bottom_layers_max": 2,
+                "required_event_count": 4,
+            },
+            lesson_id="tutorial_4d_core",
+            step_id="move_x_neg",
+        )
+        self.assertIsNotNone(state4.current_piece)
+        assert state4.current_piece is not None
+        mapped4 = state4.current_piece_cells_mapped(include_above=True)
+        max_x4 = max(coord[0] for coord in mapped4)
+        max_z4 = max(coord[2] for coord in mapped4)
+        max_w4 = max(coord[3] for coord in mapped4)
+        self.assertEqual(max_x4, cfg4.dims[0] - 2)
+        self.assertEqual(max_z4, cfg4.dims[2] - 2)
+        self.assertEqual(max_w4, cfg4.dims[3] - 2)
+        probe4 = state4.current_piece
+        for delta in (
+            (-1, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 0, -1, 0),
+            (0, 0, 1, 0),
+            (0, 0, 0, -1),
+            (0, 0, 0, 1),
+        ):
+            for _ in range(4):
+                probe4 = probe4.moved(delta)
+                self.assertTrue(state4._can_exist(probe4))
+
     def test_apply_setup_2d_falls_back_when_piece_set_lacks_starter(self) -> None:
         cfg = GameConfig(
             width=10,
@@ -227,6 +341,60 @@ class TutorialSetupApplyTests(unittest.TestCase):
         y = cfg.height - 1
         occupied = [coord for coord in state.board.cells if coord[1] == y]
         self.assertEqual(len(occupied), cfg.width - 1)
+
+    def test_apply_setup_2d_line_i_preset_creates_four_gap_target(self) -> None:
+        cfg, state = _new_state_2d()
+        apply_tutorial_step_setup_2d(
+            state,
+            cfg,
+            {
+                "rng_seed": 1011,
+                "starter_piece_id": "I",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "2d_almost_line_i",
+            },
+            lesson_id="tutorial_2d_core",
+            step_id="line_fill",
+        )
+        y = cfg.height - 1
+        empty = [x for x in range(cfg.width) if (x, y) not in state.board.cells]
+        self.assertEqual(len(empty), 4)
+        self.assertEqual(empty, list(range(empty[0], empty[0] + 4)))
+
+    def test_goal_stages_spawn_piece_three_layers_above_target_2d(self) -> None:
+        cfg, state = _new_state_2d()
+        apply_tutorial_step_setup_2d(
+            state,
+            cfg,
+            {
+                "rng_seed": 1011,
+                "starter_piece_id": "I",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "2d_almost_line_i",
+            },
+            lesson_id="tutorial_2d_core",
+            step_id="line_fill",
+        )
+        assert state.current_piece is not None
+        mapped_line = state.current_piece_cells_mapped(include_above=True)
+        self.assertEqual(min(y for _, y in mapped_line), cfg.height - 4)
+
+        cfg2, state2 = _new_state_2d()
+        apply_tutorial_step_setup_2d(
+            state2,
+            cfg2,
+            {
+                "rng_seed": 1012,
+                "starter_piece_id": "O",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "2d_almost_full_clear_o",
+            },
+            lesson_id="tutorial_2d_core",
+            step_id="full_clear_bonus",
+        )
+        assert state2.current_piece is not None
+        mapped_full = state2.current_piece_cells_mapped(include_above=True)
+        self.assertEqual(min(y for _, y in mapped_full), cfg2.height - 5)
 
     def test_full_clear_bonus_presets_assign_expected_starter_piece(self) -> None:
         cfg2, state2 = _new_state_2d()
@@ -283,10 +451,47 @@ class TutorialSetupApplyTests(unittest.TestCase):
         )
         assert state4.current_piece is not None
         self.assertEqual(state4.current_piece.shape.name, "CROSS4")
-        filled_levels_4d = {coord[cfg4.gravity_axis] for coord in state4.board.cells}
-        self.assertEqual(filled_levels_4d, {cfg4.dims[1] - 2, cfg4.dims[1] - 1})
-        layer_cell_count_4d = cfg4.dims[0] * cfg4.dims[2] * cfg4.dims[3]
-        self.assertEqual(len(state4.board.cells), (2 * layer_cell_count_4d) - 5)
+
+    def test_goal_stages_spawn_piece_three_layers_above_target_nd(self) -> None:
+        cfg3, state3 = _new_state_3d()
+        apply_tutorial_step_setup_nd(
+            state3,
+            cfg3,
+            {
+                "rng_seed": 2201,
+                "starter_piece_id": "SCREW3",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "3d_almost_layer_screw3",
+            },
+            lesson_id="tutorial_3d_core",
+            step_id="layer_fill",
+        )
+        assert state3.current_piece is not None
+        mapped3 = state3.current_piece_cells_mapped(include_above=True)
+        self.assertEqual(
+            min(coord[cfg3.gravity_axis] for coord in mapped3),
+            cfg3.dims[cfg3.gravity_axis] - 4,
+        )
+
+        cfg4, state4 = _new_state_4d()
+        apply_tutorial_step_setup_nd(
+            state4,
+            cfg4,
+            {
+                "rng_seed": 3301,
+                "starter_piece_id": "SKEW4_A",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "4d_almost_hyper_layer_skew4",
+            },
+            lesson_id="tutorial_4d_core",
+            step_id="hyper_layer_fill",
+        )
+        assert state4.current_piece is not None
+        mapped4 = state4.current_piece_cells_mapped(include_above=True)
+        self.assertEqual(
+            min(coord[cfg4.gravity_axis] for coord in mapped4),
+            cfg4.dims[cfg4.gravity_axis] - 4,
+        )
 
     def test_camera_only_setup_keeps_board_and_forces_visible_piece_nd(self) -> None:
         cfg, state = _new_state_3d()

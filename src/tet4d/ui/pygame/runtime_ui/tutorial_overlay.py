@@ -109,9 +109,6 @@ def _overlay_intro_lines(
     step_hint = str(payload.get("step_hint", "")).strip()
     if step_hint:
         lines.append((f"How: {step_hint}", _TEXT_SECONDARY, False))
-    next_step_text = str(payload.get("next_step_text", "")).strip()
-    if next_step_text:
-        lines.append((f"Next: {next_step_text}", _TEXT_SECONDARY, False))
     return lines
 
 

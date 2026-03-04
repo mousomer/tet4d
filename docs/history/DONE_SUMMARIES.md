@@ -54,7 +54,7 @@ Canonical policy:
 
 `DONE` Arch Stage 533 overlay-transparency control checkpoint:
 - added display-level `overlay_transparency` setting (current default `25%`,
-  range `0%..85%`) with unified settings-hub control and persistence.
+  range `0%..90%`) with unified settings-hub control and persistence.
 - added in-game camera actions (`overlay_alpha_dec`,`overlay_alpha_inc`) plus side-panel
   transparency bar feedback in 3D/4D game views.
 - changed render behavior to apply transparency to locked board cells only while

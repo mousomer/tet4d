@@ -142,6 +142,110 @@ def _axis_candidate_values(
     return sorted(candidates, key=lambda value: (abs(value - preferred), value))
 
 
+def _one_away_from_boundary(
+    *,
+    min_value: int,
+    max_value: int,
+    prefer_min_boundary: bool,
+) -> int:
+    if prefer_min_boundary:
+        candidate = min_value + 1
+        if candidate <= max_value:
+            return candidate
+        return min_value
+    candidate = max_value - 1
+    if candidate >= min_value:
+        return candidate
+    return max_value
+
+
+def _preferred_spawn_x_2d(
+    *,
+    state: GameState,
+    min_block_x: int,
+    max_block_x: int,
+    required_move_delta: tuple[int, int] | None,
+) -> int:
+    span_x = max_block_x - min_block_x + 1
+    default_x = ((state.config.width - span_x) // 2) - min_block_x
+    if required_move_delta is None:
+        return default_x
+    delta_x = int(required_move_delta[0])
+    min_x = -min_block_x
+    max_x = (state.config.width - 1) - max_block_x
+    if delta_x < 0:
+        return _one_away_from_boundary(
+            min_value=min_x,
+            max_value=max_x,
+            prefer_min_boundary=False,
+        )
+    if delta_x > 0:
+        return _one_away_from_boundary(
+            min_value=min_x,
+            max_value=max_x,
+            prefer_min_boundary=True,
+        )
+    return _one_away_from_boundary(
+        min_value=min_x,
+        max_value=max_x,
+        prefer_min_boundary=False,
+    )
+
+
+def _spawn_y_candidates_2d(
+    *,
+    min_spawn_y: int,
+    max_spawn_y: int,
+    required_move_delta: tuple[int, int] | None,
+    preferred_spawn_y: int | None = None,
+) -> list[int]:
+    if required_move_delta is None:
+        if preferred_spawn_y is None:
+            return list(range(min_spawn_y, max_spawn_y + 1))
+        return sorted(
+            range(min_spawn_y, max_spawn_y + 1),
+            key=lambda value: (abs(value - preferred_spawn_y), value),
+        )
+    delta_y = int(required_move_delta[1])
+    if delta_y < 0:
+        preferred_y = max_spawn_y
+    elif delta_y > 0:
+        preferred_y = min_spawn_y
+    else:
+        preferred_y = min_spawn_y
+    return sorted(
+        range(min_spawn_y, max_spawn_y + 1),
+        key=lambda value: (abs(value - preferred_y), value),
+    )
+
+
+def _candidate_piece_placeable_2d(
+    *,
+    state: GameState,
+    candidate: ActivePiece2D,
+    min_visible_layer: int,
+    required_move_delta: tuple[int, int] | None,
+    required_move_repetitions: int,
+) -> bool:
+    if not _piece_is_visible_2d(state, candidate):
+        return False
+    if _piece_min_gravity_2d(state, candidate) < min_visible_layer:
+        return False
+    if not state._can_exist(candidate):
+        return False
+    if required_move_delta is None:
+        return True
+    probe = candidate
+    repeats = max(1, int(required_move_repetitions))
+    delta_x = int(required_move_delta[0])
+    delta_y = int(required_move_delta[1])
+    for _ in range(repeats):
+        probe = probe.moved(delta_x, delta_y)
+        if not state._can_exist(probe):
+            return False
+    return True
+
+
 def _force_piece_placement_2d(
     *,
     state: GameState,
@@ -149,14 +253,21 @@ def _force_piece_placement_2d(
     rotation: int,
     min_visible_layer: int,
     scope_tag: str,
+    required_move_delta: tuple[int, int] | None = None,
+    required_move_repetitions: int = 1,
+    preferred_min_gravity: int | None = None,
 ) -> None:
     oriented_blocks = _oriented_blocks_2d(shape, rotation=rotation)
     min_block_x = min(block[0] for block in oriented_blocks)
     max_block_x = max(block[0] for block in oriented_blocks)
     min_block_y = min(block[1] for block in oriented_blocks)
     max_block_y = max(block[1] for block in oriented_blocks)
-    span_x = max_block_x - min_block_x + 1
-    target_x = ((state.config.width - span_x) // 2) - min_block_x
+    target_x = _preferred_spawn_x_2d(
+        state=state,
+        min_block_x=min_block_x,
+        max_block_x=max_block_x,
+        required_move_delta=required_move_delta,
+    )
     x_candidates = _axis_candidate_values(
         axis_size=state.config.width,
         min_block=min_block_x,
@@ -169,20 +280,100 @@ def _force_piece_placement_2d(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): min visible layer cannot fit 2D starter piece"
         )
-
-    for y in range(min_spawn_y, max_spawn_y + 1):
+    y_candidates = _spawn_y_candidates_2d(
+        min_spawn_y=min_spawn_y,
+        max_spawn_y=max_spawn_y,
+        required_move_delta=required_move_delta,
+        preferred_spawn_y=(
+            int(preferred_min_gravity) - min_block_y
+            if preferred_min_gravity is not None
+            else None
+        ),
+    )
+    for y in y_candidates:
         for x in x_candidates:
             candidate = ActivePiece2D(shape, (x, y), rotation=rotation)
-            if not _piece_is_visible_2d(state, candidate):
-                continue
-            if _piece_min_gravity_2d(state, candidate) < min_visible_layer:
-                continue
-            if state._can_exist(candidate):
+            if _candidate_piece_placeable_2d(
+                state=state,
+                candidate=candidate,
+                min_visible_layer=min_visible_layer,
+                required_move_delta=required_move_delta,
+                required_move_repetitions=required_move_repetitions,
+            ):
                 state.current_piece = candidate
                 return
     raise RuntimeError(
         f"tutorial setup failed ({scope_tag}): could not place 2D starter piece without collision"
     )
+
+
+def _preferred_lateral_axis_spawn_nd(
+    *,
+    axis: int,
+    dims: tuple[int, ...],
+    mins: list[int],
+    maxs: list[int],
+    initial_pos: list[int],
+    required_move_delta: tuple[int, ...] | None,
+) -> int:
+    preferred = initial_pos[axis]
+    if required_move_delta is None or axis >= len(required_move_delta):
+        return preferred
+    delta_axis = int(required_move_delta[axis])
+    min_axis = -mins[axis]
+    max_axis = (dims[axis] - 1) - maxs[axis]
+    if delta_axis < 0:
+        return _one_away_from_boundary(
+            min_value=min_axis,
+            max_value=max_axis,
+            prefer_min_boundary=False,
+        )
+    if delta_axis > 0:
+        return _one_away_from_boundary(
+            min_value=min_axis,
+            max_value=max_axis,
+            prefer_min_boundary=True,
+        )
+    return _one_away_from_boundary(
+        min_value=min_axis,
+        max_value=max_axis,
+        prefer_min_boundary=False,
+    )
+
+
+def _lateral_spawn_candidates_nd(
+    *,
+    dims: tuple[int, ...],
+    mins: list[int],
+    maxs: list[int],
+    initial_pos: list[int],
+    gravity_axis: int,
+    required_move_delta: tuple[int, ...] | None,
+    scope_tag: str,
+) -> tuple[list[int], list[list[int]]]:
+    lateral_axes = [axis for axis in range(len(dims)) if axis != gravity_axis]
+    lateral_candidates: list[list[int]] = []
+    for axis in lateral_axes:
+        preferred = _preferred_lateral_axis_spawn_nd(
+            axis=axis,
+            dims=dims,
+            mins=mins,
+            maxs=maxs,
+            initial_pos=initial_pos,
+            required_move_delta=required_move_delta,
+        )
+        candidates = _axis_candidate_values(
+            axis_size=dims[axis],
+            min_block=mins[axis],
+            max_block=maxs[axis],
+            preferred=preferred,
+        )
+        if not candidates:
+            raise RuntimeError(
+                f"tutorial setup failed ({scope_tag}): no legal ND spawn positions for starter piece"
+            )
+        lateral_candidates.append(candidates)
+    return lateral_axes, lateral_candidates
 
 
 def _force_piece_placement_nd(
@@ -194,6 +385,7 @@ def _force_piece_placement_nd(
     scope_tag: str,
     required_move_delta: tuple[int, ...] | None = None,
     required_move_repetitions: int = 1,
+    preferred_min_gravity: int | None = None,
 ) -> None:
     dims = state.config.dims
     ndim = state.config.ndim
@@ -208,23 +400,25 @@ def _force_piece_placement_nd(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): min visible layer cannot fit ND starter piece"
         )
-
-    lateral_axes = [axis for axis in range(ndim) if axis != gravity_axis]
-    lateral_candidates: list[list[int]] = []
-    for axis in lateral_axes:
-        candidates = _axis_candidate_values(
-            axis_size=dims[axis],
-            min_block=mins[axis],
-            max_block=maxs[axis],
-            preferred=initial_pos[axis],
-        )
-        if not candidates:
-            raise RuntimeError(
-                f"tutorial setup failed ({scope_tag}): no legal ND spawn positions for starter piece"
-            )
-        lateral_candidates.append(candidates)
-
-    for gravity_value in range(min_spawn_g, max_spawn_g + 1):
+    lateral_axes, lateral_candidates = _lateral_spawn_candidates_nd(
+        dims=dims,
+        mins=mins,
+        maxs=maxs,
+        initial_pos=initial_pos,
+        gravity_axis=gravity_axis,
+        required_move_delta=required_move_delta,
+        scope_tag=scope_tag,
+    )
+    gravity_values = _gravity_candidate_values(
+        min_spawn=min_spawn_g,
+        max_spawn=max_spawn_g,
+        preferred_spawn=(
+            int(preferred_min_gravity) - mins[gravity_axis]
+            if preferred_min_gravity is not None
+            else None
+        ),
+    )
+    for gravity_value in gravity_values:
         for lateral_values in product(*lateral_candidates):
             candidate_pos = list(initial_pos)
             candidate_pos[gravity_axis] = gravity_value
@@ -247,6 +441,210 @@ def _force_piece_placement_nd(
     raise RuntimeError(
         f"tutorial setup failed ({scope_tag}): could not place ND starter piece without collision"
     )
+
+
+def _gravity_candidate_values(
+    *,
+    min_spawn: int,
+    max_spawn: int,
+    preferred_spawn: int | None,
+) -> list[int]:
+    values = list(range(min_spawn, max_spawn + 1))
+    if preferred_spawn is None:
+        return values
+    return sorted(values, key=lambda value: (abs(value - preferred_spawn), value))
+
+
+def _goal_spawn_distance_layers_for_step(*, step_id: str, ndim: int) -> int | None:
+    if ndim == 2 and step_id in {"line_fill", "full_clear_bonus"}:
+        return 3
+    if ndim == 3 and step_id in {"layer_fill", "full_clear_bonus"}:
+        return 3
+    if ndim == 4 and step_id in {"hyper_layer_fill", "full_clear_bonus"}:
+        return 3
+    return None
+
+
+def _goal_step_requires_lateral_offset(*, step_id: str, ndim: int) -> bool:
+    if ndim == 2:
+        return step_id in {"line_fill", "full_clear_bonus"}
+    if ndim == 3:
+        return step_id in {"layer_fill", "full_clear_bonus"}
+    if ndim >= 4:
+        return step_id in {"hyper_layer_fill", "full_clear_bonus"}
+    return False
+
+
+def _goal_target_level_2d(state: GameState) -> int | None:
+    if not state.board.cells:
+        return None
+    return min(int(coord[1]) for coord in state.board.cells)
+
+
+def _goal_target_level_nd(state: GameStateND, *, gravity_axis: int) -> int | None:
+    if not state.board.cells:
+        return None
+    return min(int(coord[gravity_axis]) for coord in state.board.cells)
+
+
+def _preferred_goal_min_gravity(
+    *,
+    target_level: int | None,
+    min_visible_layer: int,
+    distance_layers: int | None,
+) -> int | None:
+    if target_level is None or distance_layers is None:
+        return None
+    return max(int(min_visible_layer), int(target_level) - int(distance_layers))
+
+
+def _nudge_goal_piece_away_from_holes_2d(*, state: GameState) -> None:
+    piece = state.current_piece
+    if piece is None:
+        return
+    target_level = _goal_target_level_2d(state)
+    if target_level is None:
+        return
+    empty_x = [
+        x
+        for x in range(state.config.width)
+        if (x, int(target_level)) not in state.board.cells
+    ]
+    if not empty_x:
+        return
+    hole_center = float(sum(empty_x)) / float(len(empty_x))
+    mapped = state.mapped_piece_cells_for_piece(piece, include_above=True)
+    if not mapped:
+        return
+    current_center = float(sum(coord[0] for coord in mapped)) / float(len(mapped))
+    current_distance = abs(current_center - hole_center)
+    best_piece = piece
+    best_distance = current_distance
+    max_shift = max(1, min(3, int(state.config.width) - 1))
+    for dx in range(-max_shift, max_shift + 1):
+        if dx == 0:
+            continue
+        candidate = piece.moved(int(dx), 0)
+        if not state._can_exist(candidate):
+            continue
+        candidate_cells = state.mapped_piece_cells_for_piece(candidate, include_above=True)
+        if not candidate_cells:
+            continue
+        candidate_center = float(sum(coord[0] for coord in candidate_cells)) / float(
+            len(candidate_cells)
+        )
+        candidate_distance = abs(candidate_center - hole_center)
+        if candidate_distance > best_distance:
+            best_piece = candidate
+            best_distance = candidate_distance
+    state.current_piece = best_piece
+
+
+def _nudge_goal_piece_away_from_holes_nd(*, state: GameStateND) -> None:
+    piece = state.current_piece
+    if piece is None:
+        return
+    gravity_axis = int(state.config.gravity_axis)
+    target_level = _goal_target_level_nd(state, gravity_axis=gravity_axis)
+    if target_level is None:
+        return
+    lateral_axes = _lateral_axes_nd(state=state, gravity_axis=gravity_axis)
+    if not lateral_axes:
+        return
+    primary_axis = int(lateral_axes[0])
+    empty_primary_axis_values = _empty_primary_axis_values_for_goal_nd(
+        state=state,
+        target_level=int(target_level),
+        gravity_axis=gravity_axis,
+        lateral_axes=lateral_axes,
+        primary_axis=primary_axis,
+    )
+    if not empty_primary_axis_values:
+        return
+    hole_center = float(sum(empty_primary_axis_values)) / float(
+        len(empty_primary_axis_values)
+    )
+    current_center = _piece_center_axis_nd(state=state, piece=piece, axis=primary_axis)
+    if current_center is None:
+        return
+    direction = 1 if current_center <= hole_center else -1
+    state.current_piece = _best_nudged_piece_nd(
+        state=state,
+        piece=piece,
+        primary_axis=primary_axis,
+        direction=direction,
+        hole_center=hole_center,
+    )
+
+
+def _lateral_axes_nd(*, state: GameStateND, gravity_axis: int) -> list[int]:
+    return [axis for axis in range(state.config.ndim) if axis != gravity_axis]
+
+
+def _empty_primary_axis_values_for_goal_nd(
+    *,
+    state: GameStateND,
+    target_level: int,
+    gravity_axis: int,
+    lateral_axes: list[int],
+    primary_axis: int,
+) -> list[int]:
+    empty_primary_axis_values: list[int] = []
+    axis_ranges = [range(state.config.dims[axis]) for axis in lateral_axes]
+    for lateral_values in product(*axis_ranges):
+        coord = [0] * state.config.ndim
+        coord[gravity_axis] = int(target_level)
+        for idx, axis in enumerate(lateral_axes):
+            coord[axis] = int(lateral_values[idx])
+        if tuple(coord) not in state.board.cells:
+            empty_primary_axis_values.append(coord[primary_axis])
+    return empty_primary_axis_values
+
+
+def _piece_center_axis_nd(
+    *,
+    state: GameStateND,
+    piece: ActivePieceND,
+    axis: int,
+) -> float | None:
+    mapped = state._mapped_piece_cells(piece)
+    if not mapped:
+        return None
+    return float(sum(coord[axis] for coord in mapped)) / float(len(mapped))
+
+
+def _best_nudged_piece_nd(
+    *,
+    state: GameStateND,
+    piece: ActivePieceND,
+    primary_axis: int,
+    direction: int,
+    hole_center: float,
+) -> ActivePieceND:
+    current_center = _piece_center_axis_nd(state=state, piece=piece, axis=primary_axis)
+    if current_center is None:
+        return piece
+    best_piece = piece
+    best_distance = abs(current_center - hole_center)
+    max_shift = max(1, min(3, int(state.config.dims[primary_axis]) - 1))
+    for step in range(1, max_shift + 1):
+        delta = [0] * state.config.ndim
+        delta[primary_axis] = int(direction) * int(step)
+        candidate = piece.moved(tuple(delta))
+        if not state._can_exist(candidate):
+            continue
+        candidate_center = _piece_center_axis_nd(
+            state=state,
+            piece=candidate,
+            axis=primary_axis,
+        )
+        if candidate_center is None:
+            continue
+        candidate_distance = abs(candidate_center - hole_center)
+        if candidate_distance > best_distance:
+            best_piece = candidate
+            best_distance = candidate_distance
+    return best_piece
 
 
 def _candidate_piece_placeable_nd(
@@ -314,37 +712,82 @@ def _apply_board_preset_2d(
     setup_rng: random.Random,
     scope_tag: str,
 ) -> None:
-    if preset == "2d_almost_line":
-        target_y = cfg.height - 1
-        gap_x = int(setup_rng.randrange(max(1, cfg.width)))
+    handlers = {
+        "2d_almost_line": _apply_board_preset_2d_almost_line,
+        "2d_almost_line_i": _apply_board_preset_2d_almost_line_i,
+        "2d_almost_full_clear_o": _apply_board_preset_2d_almost_full_clear_o,
+    }
+    handler = handlers.get(preset)
+    if handler is None:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): unknown 2D board preset '{preset}'"
+        )
+    handler(state=state, cfg=cfg, setup_rng=setup_rng, scope_tag=scope_tag)
+
+
+def _apply_board_preset_2d_almost_line(
+    *,
+    state: GameState,
+    cfg: GameConfig,
+    setup_rng: random.Random,
+    scope_tag: str,
+) -> None:
+    _ = scope_tag
+    target_y = cfg.height - 1
+    gap_x = int(setup_rng.randrange(max(1, cfg.width)))
+    for x in range(cfg.width):
+        if x == gap_x:
+            continue
+        state.board.cells[(x, target_y)] = (x % 7) + 1
+
+
+def _apply_board_preset_2d_almost_line_i(
+    *,
+    state: GameState,
+    cfg: GameConfig,
+    setup_rng: random.Random,
+    scope_tag: str,
+) -> None:
+    _ = setup_rng
+    if cfg.width < 4:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 2D line-I preset requires board width >= 4"
+        )
+    target_y = cfg.height - 1
+    base_x = max(0, min(cfg.width - 4, (cfg.width // 2) - 2))
+    gap_cells = {base_x, base_x + 1, base_x + 2, base_x + 3}
+    for x in range(cfg.width):
+        if x in gap_cells:
+            continue
+        state.board.cells[(x, target_y)] = (x % 7) + 1
+
+
+def _apply_board_preset_2d_almost_full_clear_o(
+    *,
+    state: GameState,
+    cfg: GameConfig,
+    setup_rng: random.Random,
+    scope_tag: str,
+) -> None:
+    _ = setup_rng
+    if cfg.width < 2 or cfg.height < 2:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 2D full-clear preset requires board >= 2x2"
+        )
+    target_top = cfg.height - 2
+    target_bottom = cfg.height - 1
+    base_x = max(0, min(cfg.width - 2, (cfg.width // 2) - 1))
+    holes = {
+        (base_x, target_top),
+        (base_x + 1, target_top),
+        (base_x, target_bottom),
+        (base_x + 1, target_bottom),
+    }
+    for y in (target_top, target_bottom):
         for x in range(cfg.width):
-            if x == gap_x:
+            if (x, y) in holes:
                 continue
-            state.board.cells[(x, target_y)] = (x % 7) + 1
-        return
-    if preset == "2d_almost_full_clear_o":
-        if cfg.width < 2 or cfg.height < 2:
-            raise RuntimeError(
-                f"tutorial setup failed ({scope_tag}): 2D full-clear preset requires board >= 2x2"
-            )
-        target_top = cfg.height - 2
-        target_bottom = cfg.height - 1
-        base_x = max(0, min(cfg.width - 2, (cfg.width // 2) - 1))
-        holes = {
-            (base_x, target_top),
-            (base_x + 1, target_top),
-            (base_x, target_bottom),
-            (base_x + 1, target_bottom),
-        }
-        for y in (target_top, target_bottom):
-            for x in range(cfg.width):
-                if (x, y) in holes:
-                    continue
-                state.board.cells[(x, y)] = ((x + y) % 7) + 1
-        return
-    raise RuntimeError(
-        f"tutorial setup failed ({scope_tag}): unknown 2D board preset '{preset}'"
-    )
+            state.board.cells[(x, y)] = ((x + y) % 7) + 1
 
 
 def _apply_board_preset_3d_full_clear_o3(
@@ -711,6 +1154,8 @@ def _required_move_delta_for_step(
     delta_4d = deltas.get(step_id)
     if delta_4d is None:
         return None
+    if ndim == 2:
+        return tuple(delta_4d[:2])
     if ndim == 3:
         return tuple(delta_4d[:3])
     if ndim >= 4:
@@ -792,13 +1237,43 @@ def apply_tutorial_step_setup_2d(
     state.next_bag = []
     state._refill_bag()
     _remove_first_shape_by_name(state.next_bag, starter_piece)
+    clean_step_id = _normalize_text(step_id, max_length=96).lower()
+    goal_distance = _goal_spawn_distance_layers_for_step(step_id=clean_step_id, ndim=2)
+    preferred_min_gravity = _preferred_goal_min_gravity(
+        target_level=_goal_target_level_2d(state),
+        min_visible_layer=min_visible_layer,
+        distance_layers=goal_distance,
+    )
+    required_move_delta_raw = _required_move_delta_for_step(
+        step_id=clean_step_id,
+        ndim=2,
+    )
+    required_move_delta_2d = (
+        (
+            int(required_move_delta_raw[0]),
+            int(required_move_delta_raw[1]),
+        )
+        if required_move_delta_raw is not None
+        else None
+    )
+    required_event_count = max(
+        1,
+        _normalize_setup_int(setup.get("required_event_count"), default=1),
+    )
     _force_piece_placement_2d(
         state=state,
         shape=selected_shape,
         rotation=0,
         min_visible_layer=min_visible_layer,
         scope_tag=scope_tag,
+        required_move_delta=required_move_delta_2d,
+        required_move_repetitions=(
+            required_event_count if required_move_delta_2d is not None else 1
+        ),
+        preferred_min_gravity=preferred_min_gravity,
     )
+    if _goal_step_requires_lateral_offset(step_id=clean_step_id, ndim=2):
+        _nudge_goal_piece_away_from_holes_2d(state=state)
 
 
 def apply_tutorial_step_setup_nd(
@@ -877,6 +1352,15 @@ def apply_tutorial_step_setup_nd(
     state._refill_bag()
     _remove_first_shape_by_name(state.next_bag, starter_piece)
     clean_step_id = _normalize_text(step_id, max_length=96).lower()
+    goal_distance = _goal_spawn_distance_layers_for_step(
+        step_id=clean_step_id,
+        ndim=cfg.ndim,
+    )
+    preferred_min_gravity = _preferred_goal_min_gravity(
+        target_level=_goal_target_level_nd(state, gravity_axis=cfg.gravity_axis),
+        min_visible_layer=min_visible_layer,
+        distance_layers=goal_distance,
+    )
     required_move_delta = _required_move_delta_for_step(
         step_id=clean_step_id,
         ndim=cfg.ndim,
@@ -895,7 +1379,10 @@ def apply_tutorial_step_setup_nd(
         required_move_repetitions=(
             required_event_count if required_move_delta is not None else 1
         ),
+        preferred_min_gravity=preferred_min_gravity,
     )
+    if _goal_step_requires_lateral_offset(step_id=clean_step_id, ndim=cfg.ndim):
+        _nudge_goal_piece_away_from_holes_nd(state=state)
 
 
 def ensure_tutorial_piece_visibility_2d(

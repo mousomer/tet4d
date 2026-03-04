@@ -54,7 +54,7 @@ _DEFAULT_CONSTANTS = {
         "step_transition_delay_ms": 1000,
         "overlay_target_percent": {
             "min": 20,
-            "max": 80,
+            "max": 90,
         },
         "overlay_target_tolerance_percent": 2,
         "min_board_dims": {
@@ -63,21 +63,23 @@ _DEFAULT_CONSTANTS = {
                 "height": 20,
             },
             "3d": {
-                "x": 6,
+                "x": 8,
                 "y": 18,
-                "z": 6,
+                "z": 8,
             },
             "4d": {
                 "x": 10,
                 "y": 20,
-                "z": 6,
-                "w": 4,
+                "z": 8,
+                "w": 8,
             },
         },
         "action_delay_ms": {
             "movement": 170,
             "rotation": 190,
             "drop": 1000,
+            "soft_drop": 180,
+            "hard_drop": 900,
         }
     },
     "rendering": {

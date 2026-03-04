@@ -439,7 +439,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         ok, msg = menu_settings_state.save_display_settings(overlay_transparency=2.5)
         self.assertTrue(ok, msg)
         payload = menu_settings_state.get_display_settings()
-        self.assertEqual(payload["overlay_transparency"], 0.85)
+        self.assertEqual(payload["overlay_transparency"], 0.9)
 
         ok, msg = menu_settings_state.save_display_settings(overlay_transparency=0.01)
         self.assertTrue(ok, msg)
@@ -519,7 +519,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         )
 
         self.assertEqual(clamp_overlay_transparency(-1.0, default=0.25), 0.0)
-        self.assertEqual(clamp_overlay_transparency(1.0, default=0.25), 0.85)
+        self.assertEqual(clamp_overlay_transparency(1.0, default=0.25), 0.9)
         self.assertEqual(clamp_game_seed(-1, default=1337), 0)
         self.assertEqual(clamp_game_seed(2_000_000_000, default=1337), 999_999_999)
         self.assertEqual(clamp_toggle_index(True, default=0), 1)
