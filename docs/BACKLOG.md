@@ -516,6 +516,28 @@ Current sub-batch (2026-03-04): tutorial timing regression coverage + runtime de
   - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_engine_api_determinism.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
+Current sub-batch (2026-03-04): tutorial control sequencing hardening.
+
+- Added deterministic tutorial sequencing coverage for restart/redo/previous/next
+  controls across all lesson modes (2D/3D/4D):
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Added repeated 4D W-axis progression smoke across lesson restarts to guard
+  against recurrence of W-stage stalls:
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Added nonzero stage-delay regression coverage (`1500ms`) to ensure no
+  premature transitions:
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Added live system-control keybinding prompt sync coverage in tutorial overlay:
+  - `tests/unit/engine/test_tutorial_overlay.py`
+- Reduced duplicate profile and per-mode update plumbing in:
+  - `src/tet4d/ui/pygame/keybindings.py`
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Verification:
+  - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed.
+  - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+  - `./scripts/ci_preflight.sh` passed (known non-blocking local warnings unchanged).
+
 Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).
 
 - Added config-backed clear-size weighting so larger cleared layers award higher

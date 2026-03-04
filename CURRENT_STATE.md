@@ -268,20 +268,26 @@ Verification:
 
 ## Current Working Batch (Uncommitted)
 
+Latest committed baseline:
+- `90275cd` (`Add tutorial runtime regressions and deduplicate settings wrappers`).
+
 Completed locally:
-- Added tutorial runtime regression coverage for stage-delay progression and
-  ordered 4D W-axis movement stages:
+- Added deterministic tutorial control-sequencing coverage across all modes:
+  - restart/redo/previous/next invariants in 2D/3D/4D
+  - repeated 4D W-axis progression smoke across lesson restarts
+  - nonzero stage-delay (`1500ms`) transition guard
   - `tests/unit/engine/test_tutorial_runtime.py`
-- Reduced duplicated section persistence in runtime menu settings state:
-  - `src/tet4d/engine/runtime/menu_settings_state.py`
-- Reduced wrapper duplication in runtime API and keybindings:
-  - `src/tet4d/engine/api.py`
+- Added live keybinding-sync coverage for tutorial system-control prompt rows:
+  - `tests/unit/engine/test_tutorial_overlay.py`
+- Reduced profile/mode update duplication in:
   - `src/tet4d/ui/pygame/keybindings.py`
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
 
 Verification (current working tree):
-- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_content.py` passed (`32 passed`).
-- `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_engine_api_determinism.py` passed (`31 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed (`15 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py` passed (`57 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `./scripts/ci_preflight.sh` passed (known non-blocking local warnings unchanged).
 - `.venv/bin/python scripts/arch_metrics.py` ran (`arch_stage=890`,
   `tech_debt.score=1.35`, status `low`).
 

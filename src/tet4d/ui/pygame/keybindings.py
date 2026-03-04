@@ -121,6 +121,12 @@ def active_key_profile() -> str:
     return ACTIVE_KEY_PROFILE
 
 
+def _selected_profile(profile: str | None = None) -> str:
+    if not profile:
+        return ACTIVE_KEY_PROFILE
+    return _normalize_profile_name(profile)
+
+
 def normalize_rebind_conflict_mode(mode: str | None) -> str:
     if mode is None:
         return REBIND_CONFLICT_REPLACE
@@ -162,7 +168,7 @@ def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
 def keybinding_file_path_for_profile(
     dimension: int, profile: str | None = None
 ) -> Path:
-    selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
+    selected = _selected_profile(profile)
     return profile_keybinding_file_path(dimension, selected)
 
 
@@ -195,7 +201,7 @@ CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
 
 
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
-    selected = _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
+    selected = _selected_profile(profile)
     keys_2d, keys_3d, keys_4d = default_game_bindings_for_profile(selected)
     camera_3d, camera_4d = default_camera_bindings_for_profile(selected)
     system_keys = default_system_bindings_for_profile(selected)
@@ -326,9 +332,7 @@ def _resolve_keybindings_io_context(
     profile: str | None,
 ) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str]:
     groups = _binding_groups_for_dimension(dimension)
-    selected_profile = (
-        _normalize_profile_name(profile) if profile else ACTIVE_KEY_PROFILE
-    )
+    selected_profile = _selected_profile(profile)
     if file_path is not None:
         return groups, _safe_resolve_path(Path(file_path)), selected_profile
     path = keybinding_file_path_for_profile(dimension, selected_profile)

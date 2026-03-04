@@ -97,6 +97,56 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
                 )
             )
 
+    def test_overlay_system_controls_use_live_bindings(self) -> None:
+        payload = _base_payload(action_id="move_x_neg")
+        current_help_key = {"value": 104}
+
+        def _runtime_groups(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
+            if dimension == 2:
+                return {
+                    "game": {"move_x_neg": (97,)},
+                    "system": {"help": (current_help_key["value"],)},
+                }
+            return {"camera": {}, "system": {}}
+
+        def _format_key_tuple(keys: tuple[int, ...]) -> str:
+            return f"K{keys[0]}"
+
+        def _label(action_id: str) -> str:
+            labels = {
+                "move_x_neg": "Move left",
+                "help": "Help",
+            }
+            return labels.get(action_id, action_id)
+
+        with (
+            patch.object(
+                tutorial_overlay.engine_api,
+                "runtime_binding_groups_for_dimension",
+                side_effect=_runtime_groups,
+            ),
+            patch.object(
+                tutorial_overlay.engine_api,
+                "format_key_tuple",
+                side_effect=_format_key_tuple,
+            ),
+            patch.object(
+                tutorial_overlay.engine_api,
+                "binding_action_description",
+                side_effect=_label,
+            ),
+        ):
+            lines_a = tutorial_overlay._overlay_lines_running(payload, dimension=2)
+            self.assertTrue(
+                any("System (not staged): Help: K104" in text for text, *_ in lines_a)
+            )
+
+            current_help_key["value"] = 105
+            lines_b = tutorial_overlay._overlay_lines_running(payload, dimension=2)
+            self.assertTrue(
+                any("System (not staged): Help: K105" in text for text, *_ in lines_b)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

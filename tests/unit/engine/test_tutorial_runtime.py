@@ -7,6 +7,12 @@ from tet4d.engine.tutorial.runtime import create_tutorial_runtime_session
 
 
 class TutorialRuntimeTests(unittest.TestCase):
+    _LESSON_CASES = (
+        ("tutorial_2d_core", "2d"),
+        ("tutorial_3d_core", "3d"),
+        ("tutorial_4d_core", "4d"),
+    )
+
     @staticmethod
     def _complete_step_with_repeats(session: object, action_id: str, repeats: int = 4) -> bool:
         for _ in range(max(1, repeats)):
@@ -210,6 +216,95 @@ class TutorialRuntimeTests(unittest.TestCase):
                 session.observe_action("move_w_pos")
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload()["step_id"], "soft_drop")
+
+    def test_restart_redo_prev_next_sequencing_is_deterministic_all_modes(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            for lesson_id, mode in self._LESSON_CASES:
+                session = create_tutorial_runtime_session(
+                    lesson_id=lesson_id,
+                    mode=mode,
+                )
+                self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+                self.assertEqual(session.required_action(), "move_x_neg")
+                self.assertIsNotNone(session.consume_pending_setup())
+                self.assertIsNone(session.consume_pending_setup())
+
+                self.assertTrue(session.next_stage())
+                self.assertEqual(session.overlay_payload()["step_id"], "move_x_pos")
+                self.assertEqual(session.required_action(), "move_x_pos")
+                self.assertIsNotNone(session.consume_pending_setup())
+
+                self.assertTrue(session.previous_stage())
+                self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+                self.assertEqual(session.required_action(), "move_x_neg")
+                self.assertIsNotNone(session.consume_pending_setup())
+
+                self.assertTrue(session.redo_stage())
+                self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+                self.assertEqual(session.required_action(), "move_x_neg")
+                self.assertIsNotNone(session.consume_pending_setup())
+
+                self.assertTrue(session.restart())
+                self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+                self.assertEqual(session.required_action(), "move_x_neg")
+                self.assertIsNotNone(session.consume_pending_setup())
+
+    def test_4d_w_axis_progression_is_stable_across_restarts(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_4d_core",
+                mode="4d",
+            )
+            for _ in range(3):
+                self.assertTrue(session.restart())
+                guard = 0
+                while session.overlay_payload().get("step_id") != "move_w_neg":
+                    self.assertTrue(session.next_stage())
+                    guard += 1
+                    self.assertLess(guard, 200)
+                self.assertIsNotNone(session.consume_pending_setup())
+
+                for _ in range(4):
+                    session.observe_action("move_w_neg")
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+                self.assertEqual(session.overlay_payload()["step_id"], "move_w_pos")
+
+                for _ in range(4):
+                    session.observe_action("move_w_pos")
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+                self.assertEqual(session.overlay_payload()["step_id"], "soft_drop")
+
+    def test_step_transition_delay_respects_nonzero_duration(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 1500),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            for _ in range(4):
+                session.observe_action("move_x_neg")
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=100):
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1599):
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1600):
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_pos")
 
 
 if __name__ == "__main__":

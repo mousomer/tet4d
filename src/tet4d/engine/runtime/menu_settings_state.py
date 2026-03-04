@@ -109,6 +109,16 @@ def _mode_settings_mapping(
     return mode_settings
 
 
+def _iter_all_mode_settings(
+    payload: dict[str, Any],
+) -> tuple[tuple[str, dict[str, Any]], ...]:
+    settings = _settings_mapping(payload)
+    mode_settings: list[tuple[str, dict[str, Any]]] = []
+    for mode_key in MODE_KEYS:
+        mode_settings.append((mode_key, _mode_settings_mapping(settings, mode_key)))
+    return tuple(mode_settings)
+
+
 def _mode_settings_view(settings: Any, mode_key: str) -> dict[str, Any]:
     if not isinstance(settings, dict):
         return {}
@@ -391,16 +401,14 @@ def save_shared_gameplay_settings(
     lines_per_level: int,
 ) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = _settings_mapping(payload)
     raw_values = {
         "random_mode_index": int(random_mode_index),
         "topology_advanced": int(topology_advanced),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
     }
-    for mode_key in MODE_KEYS:
+    for mode_key, mode_settings in _iter_all_mode_settings(payload):
         defaults = default_mode_shared_gameplay_settings(mode_key)
-        mode_settings = _mode_settings_mapping(settings, mode_key)
         mode_settings.update(
             _coerce_shared_gameplay_settings(raw_values, defaults=defaults)
         )
@@ -409,11 +417,8 @@ def save_shared_gameplay_settings(
 
 def save_global_game_seed(seed: int) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = _settings_mapping(payload)
-
     clamped_seed = clamp_game_seed(seed, default=DEFAULT_GAME_SEED)
-    for mode_key in MODE_KEYS:
-        mode_settings = _mode_settings_mapping(settings, mode_key)
+    for _mode_key, mode_settings in _iter_all_mode_settings(payload):
         mode_settings["game_seed"] = clamped_seed
 
     return _sanitize_and_save_payload(payload)
