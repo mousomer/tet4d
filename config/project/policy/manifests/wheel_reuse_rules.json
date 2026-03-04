@@ -76,8 +76,8 @@
         "tools/**/*.py"
       ],
       "forbidden_regex": [
-        "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*if\\s+\\w+\\s+not\\s+in\\s+result:\\s*\\n\\s*result\\.append\\(",
-        "for\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*if\\s+\\w+\\s+in\\s+\\w+:\\s*\\n\\s*continue\\s*\\n\\s*\\w+\\.append\\("
+        "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(",
+        "for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*continue\\s*\\n[ \\t]*\\w+\\.append\\("
       ],
       "ast_detectors": [],
       "prefer_symbols": [
