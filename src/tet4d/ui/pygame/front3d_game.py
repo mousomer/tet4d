@@ -152,12 +152,6 @@ _TUTORIAL_ALWAYS_LEGAL_ACTIONS_3D = {
     "overlay_alpha_dec",
     "overlay_alpha_inc",
 }
-_TUTORIAL_MOVE_DELTAS_3D = {
-    "move_x_neg": (-1, 0, 0),
-    "move_x_pos": (1, 0, 0),
-    "move_z_neg": (0, 0, -1),
-    "move_z_pos": (0, 0, 1),
-}
 _TUTORIAL_GAMEPLAY_ACTIONS_3D = (
     "soft_drop",
     "hard_drop",
@@ -183,7 +177,7 @@ _TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
 _TUTORIAL_MIN_DIMS_3D = (
     engine_api.project_constant_int(
         ("tutorial", "min_board_dims", "3d", "x"),
-        6,
+        8,
         min_value=4,
         max_value=40,
     ),
@@ -195,7 +189,7 @@ _TUTORIAL_MIN_DIMS_3D = (
     ),
     engine_api.project_constant_int(
         ("tutorial", "min_board_dims", "3d", "z"),
-        6,
+        8,
         min_value=4,
         max_value=40,
     ),
@@ -220,46 +214,17 @@ def _tutorial_required_action_legal_3d(loop: "LoopContext3D", action_id: str) ->
     return _tutorial_can_apply_piece_action_3d(loop, action_id)
 
 
-def _tutorial_rotation_axes_3d(
-    action_id: str,
-    gravity_axis: int,
-) -> tuple[int, int, int] | None:
-    if action_id == "rotate_xy_pos":
-        return (0, gravity_axis, 1)
-    if action_id == "rotate_xy_neg":
-        return (0, gravity_axis, -1)
-    if action_id == "rotate_xz_pos":
-        return (0, 2, 1)
-    if action_id == "rotate_xz_neg":
-        return (0, 2, -1)
-    if action_id == "rotate_yz_pos":
-        return (gravity_axis, 2, 1)
-    if action_id == "rotate_yz_neg":
-        return (gravity_axis, 2, -1)
-    return None
-
-
 def _tutorial_can_apply_piece_action_3d(
     loop: "LoopContext3D",
     action_id: str,
 ) -> bool:
-    piece = loop.state.current_piece
-    if piece is None or loop.state.game_over:
-        return False
-    if action_id == "hard_drop":
-        return True
-    if action_id == "soft_drop":
-        delta = [0, 0, 0]
-        delta[loop.cfg.gravity_axis] = 1
-        return bool(loop.state._can_exist(piece.moved(tuple(delta))))
-    move_delta = _TUTORIAL_MOVE_DELTAS_3D.get(action_id)
-    if move_delta is not None:
-        return bool(loop.state._can_exist(piece.moved(move_delta)))
-    rotation_axes = _tutorial_rotation_axes_3d(action_id, loop.cfg.gravity_axis)
-    if rotation_axes is not None:
-        axis_a, axis_b, rotation_step = rotation_axes
-        return bool(loop.state._can_exist(piece.rotated(axis_a, axis_b, rotation_step)))
-    return True
+    return bool(
+        engine_api.frontend_nd_can_apply_gameplay_action_with_view(
+            loop.state,
+            action_id,
+            yaw_deg_for_view_movement=loop.camera.yaw_deg,
+        )
+    )
 
 
 def _tutorial_has_legal_action_3d(
@@ -314,6 +279,10 @@ def _tutorial_allowed_actions_blocked(
 def _maintain_tutorial_runtime_safety(loop: "LoopContext3D") -> None:
     session = _running_tutorial_session(loop)
     if session is None:
+        return
+    if engine_api.tutorial_runtime_completion_ready_runtime(session):
+        return
+    if engine_api.tutorial_runtime_transition_pending_runtime(session):
         return
     if loop.state.game_over:
         _redo_tutorial_stage(loop, session)

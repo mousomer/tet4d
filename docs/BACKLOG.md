@@ -516,6 +516,31 @@ Current sub-batch (2026-03-04): tutorial timing regression coverage + runtime de
   - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_engine_api_determinism.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
+Current sub-batch (2026-03-04): ND control-stage continuity sequence lock.
+
+- Reordered 3D/4D tutorial lesson packs so the control stage sequence is:
+  translations -> piece rotations -> camera rotations -> transparency -> grid.
+- Extended runtime setup suppression to treat camera rotations/controls and
+  transparency as continuous control steps, preserving board/piece state across
+  those transitions and preventing redraw between control stages.
+- Added regression coverage for 3D/4D sequence continuity through `toggle_grid`
+  with no board-reset setup payloads injected between adjacent stages:
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Hardened runtime test helper behavior to derive overlay targets and required
+  action repeat counts from lesson step definitions (no stale hardcoded values).
+- Fixed opening 3D/4D translation-stage anchor drift that could trigger
+  early safety-redo redraws after stages 1-2:
+  - opening setup now repositions to a deterministic near-corner candidate that
+    satisfies the full translation chain before rotations/camera stages
+    (`x-/x+`, `z away/closer`, plus `w-/w+` in 4D).
+  - regression assertions now match canonical viewer-relative semantics for the
+    translation order and axis direction.
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+  - `tests/unit/engine/test_tutorial_setup_apply.py`
+- Verification:
+  - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_nd_routing.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
 Current sub-batch (2026-03-04): tutorial control sequencing hardening.
 
 - Added deterministic tutorial sequencing coverage for restart/redo/previous/next
@@ -585,6 +610,47 @@ Current sub-batch (2026-03-04): ND translation feasibility near-corner enforceme
   - `tests/unit/engine/test_tutorial_runtime.py`
 - Verification:
   - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_project_config.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-04): ND tutorial translation continuity redraw fix.
+
+- Fixed mid-stage tutorial redraw/regression trigger in 3D/4D loops:
+  tutorial safety checks now skip auto-redo when a stage is already complete and
+  waiting for configured transition delay.
+- Added explicit runtime API/session support for transition-pending checks:
+  - `transition_pending()` on tutorial runtime session
+  - `tutorial_runtime_transition_pending_runtime(...)` API wrapper.
+- Aligned 3D/4D tutorial required-action feasibility checks with actual
+  viewer-relative input routing and view-axis override logic:
+  - added `can_apply_nd_gameplay_action_with_view(...)` in
+    `src/tet4d/engine/frontend_nd.py`
+  - tutorial safety in `front3d_game.py` / `front4d_game.py` now uses this
+    canonical legality path.
+- Synced ND tutorial min-board fallback defaults in gameplay loops with updated
+  constants for translation feasibility:
+  - 3D default clamp fallback `x/z`: `8`
+  - 4D default clamp fallback `z/w`: `8`
+- Verification:
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_nd_routing.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-04): ND tutorial Step-3 feasibility alignment.
+
+- Fixed setup-positioning drift for ND translation steps by aligning tutorial
+  required move deltas with default viewer-relative control semantics:
+  - `move_z_neg` => away (`+z`)
+  - `move_z_pos` => closer (`-z`)
+  - implemented in `src/tet4d/engine/tutorial/setup_apply.py`.
+- Hardened tutorial safety skip condition to avoid pre-sync stage redo:
+  - skip safety redo while current step is already completion-ready
+    (`completion_ready`) or transition-pending.
+- Added regression coverage:
+  - runtime completion-ready signal behavior during stage-delay windows
+  - ND `move_z_neg` setup feasibility for 3D/4D (four away moves possible)
+  - `tests/unit/engine/test_tutorial_runtime.py`
+  - `tests/unit/engine/test_tutorial_setup_apply.py`
+- Verification:
+  - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_nd_routing.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).

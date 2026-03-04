@@ -102,6 +102,20 @@ def _is_move_or_rotate_step(step_id: str | None) -> bool:
     )
 
 
+def _is_continuous_control_step(step_id: str | None) -> bool:
+    if not step_id:
+        return False
+    if _is_move_or_rotate_step(step_id):
+        return True
+    if step_id in _CAMERA_ROTATION_STEP_IDS:
+        return True
+    if step_id in _CAMERA_CONTROL_STEP_IDS:
+        return True
+    if step_id in _OVERLAY_STEP_IDS:
+        return True
+    return False
+
+
 def _is_translation_step(step_id: str | None) -> bool:
     if not step_id:
         return False
@@ -121,6 +135,12 @@ def _suppress_board_piece_setup(payload: dict[str, Any]) -> dict[str, Any]:
     camera_preset = payload.get("camera_preset")
     if camera_preset is not None:
         kept["camera_preset"] = camera_preset
+    overlay_start_percent = payload.get("overlay_start_percent")
+    if overlay_start_percent is not None:
+        kept["overlay_start_percent"] = overlay_start_percent
+    overlay_target_percent = payload.get("overlay_target_percent")
+    if overlay_target_percent is not None:
+        kept["overlay_target_percent"] = overlay_target_percent
     return kept
 
 
@@ -392,6 +412,19 @@ class TutorialRuntimeSession:
             self._pending_step_advance_at_ms = None
         return skipped
 
+    def transition_pending(self) -> bool:
+        if not self.manager.is_running():
+            return False
+        pending_at = self._pending_step_advance_at_ms
+        if pending_at is None:
+            return False
+        return bool(self.manager.completion_ready())
+
+    def completion_ready(self) -> bool:
+        if not self.manager.is_running():
+            return False
+        return bool(self.manager.completion_ready())
+
     def consume_pending_setup(self) -> dict[str, Any] | None:
         if not self.manager.is_running():
             return None
@@ -403,9 +436,9 @@ class TutorialRuntimeSession:
         lesson = self.manager.current_lesson()
         step = self.manager.current_step()
         setup_payload = _step_setup_payload(step)
-        keep_stage_state = _is_move_or_rotate_step(
+        keep_stage_state = _is_continuous_control_step(
             self._transition_from_step_id
-        ) and _is_move_or_rotate_step(snapshot.step_id)
+        ) and _is_continuous_control_step(snapshot.step_id)
         if keep_stage_state:
             setup_payload = _suppress_board_piece_setup(setup_payload)
         if _is_overlay_target_step(self._transition_from_step_id) and not _is_overlay_target_step(

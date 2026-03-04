@@ -261,6 +261,108 @@ class TutorialContentTests(unittest.TestCase):
             self.assertIn("helper", hint)
             self.assertIn("off", hint)
 
+    def test_nd_control_sequence_order_is_continuous(self) -> None:
+        payload = content.load_tutorial_payload()
+        lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
+
+        lesson_3d = lessons["tutorial_3d_core"]
+        order_3d = [step.step_id for step in lesson_3d.steps]
+        translations_3d = (
+            "move_x_neg",
+            "move_x_pos",
+            "move_z_neg",
+            "move_z_pos",
+            "soft_drop",
+            "hard_drop",
+        )
+        piece_rotations_3d = (
+            "rotate_xy_pos",
+            "rotate_xy_neg",
+            "rotate_xz_pos",
+            "rotate_xz_neg",
+            "rotate_yz_pos",
+            "rotate_yz_neg",
+        )
+        camera_rotations_3d = (
+            "yaw_fine_neg",
+            "yaw_neg",
+            "yaw_pos",
+            "yaw_fine_pos",
+            "pitch_neg",
+            "pitch_pos",
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in translations_3d),
+            min(order_3d.index(step_id) for step_id in piece_rotations_3d),
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in piece_rotations_3d),
+            min(order_3d.index(step_id) for step_id in camera_rotations_3d),
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in camera_rotations_3d),
+            order_3d.index("overlay_alpha_dec"),
+        )
+        self.assertLess(
+            order_3d.index("overlay_alpha_inc"),
+            order_3d.index("toggle_grid"),
+        )
+
+        lesson_4d = lessons["tutorial_4d_core"]
+        order_4d = [step.step_id for step in lesson_4d.steps]
+        translations_4d = (
+            "move_x_neg",
+            "move_x_pos",
+            "move_z_neg",
+            "move_z_pos",
+            "move_w_neg",
+            "move_w_pos",
+            "soft_drop",
+            "hard_drop",
+        )
+        piece_rotations_4d = (
+            "rotate_xy_pos",
+            "rotate_xy_neg",
+            "rotate_xz_pos",
+            "rotate_xz_neg",
+            "rotate_yz_pos",
+            "rotate_yz_neg",
+            "rotate_xw_pos",
+            "rotate_xw_neg",
+            "rotate_yw_pos",
+            "rotate_yw_neg",
+            "rotate_zw_pos",
+            "rotate_zw_neg",
+        )
+        camera_rotations_4d = (
+            "yaw_fine_neg",
+            "yaw_neg",
+            "yaw_pos",
+            "yaw_fine_pos",
+            "pitch_neg",
+            "pitch_pos",
+            "view_xw_neg",
+            "view_xw_pos",
+            "view_zw_neg",
+            "view_zw_pos",
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in translations_4d),
+            min(order_4d.index(step_id) for step_id in piece_rotations_4d),
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in piece_rotations_4d),
+            min(order_4d.index(step_id) for step_id in camera_rotations_4d),
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in camera_rotations_4d),
+            order_4d.index("overlay_alpha_dec"),
+        )
+        self.assertLess(
+            order_4d.index("overlay_alpha_inc"),
+            order_4d.index("toggle_grid"),
+        )
+
     def test_starter_piece_ids_match_lesson_dimension(self) -> None:
         piece_ids_by_mode = {
             "2d": {

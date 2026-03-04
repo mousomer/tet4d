@@ -3,6 +3,10 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+from tet4d.engine.runtime.settings_schema import (
+    OVERLAY_TRANSPARENCY_MAX,
+    OVERLAY_TRANSPARENCY_MIN,
+)
 from tet4d.engine.tutorial.runtime import create_tutorial_runtime_session
 
 
@@ -18,6 +22,83 @@ class TutorialRuntimeTests(unittest.TestCase):
         for _ in range(max(1, repeats)):
             session.observe_action(action_id)
         return bool(session.sync_and_advance(lines_cleared=0))
+
+    @staticmethod
+    def _assert_no_board_reset_fields(setup: dict[str, object]) -> None:
+        forbidden = {
+            "spawn_piece",
+            "starter_piece_id",
+            "board_preset",
+            "rng_seed",
+            "spawn_min_visible_layer",
+            "bottom_layers_min",
+            "bottom_layers_max",
+        }
+        for key in forbidden:
+            if key in setup:
+                raise AssertionError(f"unexpected board reset field in setup: {key}")
+
+    @staticmethod
+    def _complete_control_step(session: object, step_id: str) -> bool:
+        step = session.manager.current_step()
+        repeats = max(1, int(step.complete_when.event_count_required))
+        action_id = "reset" if step_id == "camera_reset" else step_id
+        if step_id == "overlay_alpha_dec":
+            session.observe_action(action_id)
+            target_percent = step.setup.overlay_target_percent
+            if not isinstance(target_percent, int):
+                target_percent = int(round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0))
+            target_percent = max(0, min(100, int(target_percent)))
+            return bool(
+                session.sync_and_advance(
+                    lines_cleared=0,
+                    overlay_transparency=float(target_percent) / 100.0,
+                )
+            )
+        if step_id == "overlay_alpha_inc":
+            session.observe_action(action_id)
+            target_percent = step.setup.overlay_target_percent
+            if not isinstance(target_percent, int):
+                target_percent = int(round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0))
+            target_percent = max(0, min(100, int(target_percent)))
+            return bool(
+                session.sync_and_advance(
+                    lines_cleared=0,
+                    overlay_transparency=float(target_percent) / 100.0,
+                )
+            )
+        for _ in range(repeats):
+            session.observe_action(action_id)
+        return bool(session.sync_and_advance(lines_cleared=0))
+
+    def _assert_nd_control_sequence_has_no_board_reset(
+        self,
+        *,
+        lesson_id: str,
+        mode: str,
+        step_sequence: tuple[str, ...],
+    ) -> None:
+        session = create_tutorial_runtime_session(
+            lesson_id=lesson_id,
+            mode=mode,
+        )
+        first_setup = session.consume_pending_setup()
+        self.assertIsNotNone(first_setup)
+        assert first_setup is not None
+        self.assertIn("starter_piece_id", first_setup.get("setup", {}))
+        for index in range(len(step_sequence) - 1):
+            current_step = step_sequence[index]
+            expected_next = step_sequence[index + 1]
+            self.assertEqual(session.overlay_payload().get("step_id"), current_step)
+            self.assertTrue(self._complete_control_step(session, current_step))
+            next_setup = session.consume_pending_setup()
+            self.assertIsNotNone(next_setup)
+            assert next_setup is not None
+            self.assertEqual(next_setup.get("step_id"), expected_next)
+            setup = next_setup.get("setup")
+            self.assertIsInstance(setup, dict)
+            assert isinstance(setup, dict)
+            self._assert_no_board_reset_fields(setup)
 
     def test_runtime_session_progression_2d(self) -> None:
         with (
@@ -172,17 +253,21 @@ class TutorialRuntimeTests(unittest.TestCase):
             )
             for _ in range(4):
                 session.observe_action("move_x_neg")
+            self.assertTrue(session.completion_ready())
             with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=100):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertTrue(session.transition_pending())
             self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
             self.assertIn("Next stage in 1s", session.overlay_payload()["status_message"])
 
             with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1099):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertTrue(session.transition_pending())
             self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
 
             with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1100):
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertFalse(session.transition_pending())
             self.assertEqual(session.overlay_payload()["step_id"], "move_x_pos")
 
     def test_4d_w_axis_stages_progress_in_order(self) -> None:
@@ -382,6 +467,86 @@ class TutorialRuntimeTests(unittest.TestCase):
                 assert stage_setup is not None
                 self.assertEqual(stage_setup.get("setup"), {})
             self.assertEqual(session.overlay_payload().get("step_id"), "rotate_xy_pos")
+
+    def test_3d_control_sequence_has_no_board_reset_until_grid(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            self._assert_nd_control_sequence_has_no_board_reset(
+                lesson_id="tutorial_3d_core",
+                mode="3d",
+                step_sequence=(
+                    "move_x_neg",
+                    "move_x_pos",
+                    "move_z_neg",
+                    "move_z_pos",
+                    "soft_drop",
+                    "hard_drop",
+                    "rotate_xy_pos",
+                    "rotate_xy_neg",
+                    "rotate_xz_pos",
+                    "rotate_xz_neg",
+                    "rotate_yz_pos",
+                    "rotate_yz_neg",
+                    "yaw_fine_neg",
+                    "yaw_neg",
+                    "yaw_pos",
+                    "yaw_fine_pos",
+                    "pitch_neg",
+                    "pitch_pos",
+                    "overlay_alpha_dec",
+                    "overlay_alpha_inc",
+                    "toggle_grid",
+                ),
+            )
+
+    def test_4d_control_sequence_has_no_board_reset_until_grid(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            self._assert_nd_control_sequence_has_no_board_reset(
+                lesson_id="tutorial_4d_core",
+                mode="4d",
+                step_sequence=(
+                    "move_x_neg",
+                    "move_x_pos",
+                    "move_z_neg",
+                    "move_z_pos",
+                    "move_w_neg",
+                    "move_w_pos",
+                    "soft_drop",
+                    "hard_drop",
+                    "rotate_xy_pos",
+                    "rotate_xy_neg",
+                    "rotate_xz_pos",
+                    "rotate_xz_neg",
+                    "rotate_yz_pos",
+                    "rotate_yz_neg",
+                    "rotate_xw_pos",
+                    "rotate_xw_neg",
+                    "rotate_yw_pos",
+                    "rotate_yw_neg",
+                    "rotate_zw_pos",
+                    "rotate_zw_neg",
+                    "yaw_fine_neg",
+                    "yaw_neg",
+                    "yaw_pos",
+                    "yaw_fine_pos",
+                    "pitch_neg",
+                    "pitch_pos",
+                    "view_xw_neg",
+                    "view_xw_pos",
+                    "view_zw_neg",
+                    "view_zw_pos",
+                    "overlay_alpha_dec",
+                    "overlay_alpha_inc",
+                    "toggle_grid",
+                ),
+            )
 
     def test_overlay_stage_completion_uses_declared_exact_target(self) -> None:
         with (

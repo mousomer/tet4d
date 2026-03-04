@@ -180,7 +180,7 @@ Completed:
     - tutorial stage pacing increased via config-backed delay constants
     - tutorial stage flow is now segmented and ordered as:
       - translations -> piece rotations -> camera rotations (3D/4D) ->
-        camera controls (`toggle_grid`, transparency) -> goals
+        transparency -> toggle-grid -> other camera controls -> goals
     - tutorial system controls are guidance-only (no dedicated menu/help/restart
       interactive stages)
     - tutorial full-board-clean stages now require actual empty board state
@@ -199,8 +199,29 @@ Completed:
       stages feasible with asymmetric pieces:
       - 3D: `8x18x8`
       - 4D: `10x20x8x8`
+    - 3D/4D tutorial safety now skips auto-redo while a stage is complete and
+      waiting for transition delay (prevents mid-translation redraw/reset)
+    - safety now also skips auto-redo when the current step is already
+      completion-ready before sync/advance finalization (prevents pre-sync
+      redraw loops)
+    - 3D/4D tutorial required-action feasibility now uses the same
+      viewer-relative + axis-override routing semantics as gameplay key handling
+      (no safety/routing drift)
+    - ND setup-placement deltas for translation stages are now aligned with
+      viewer-relative semantics so `move_z_neg` (away) and `move_z_pos`
+      (closer) remain feasible in staged progression
+    - loop-level tutorial min-board fallback defaults were synced to feasibility
+      clamps (`3D x/z=8`, `4D z/w=8`)
     - line/layer/full-clear setup now nudges pieces laterally away from target
       holes so completion requires movement/rotation before hard drop
+    - 3D/4D control-stage setup suppression now stays active through
+      `toggle_grid`, so there is no board/piece redraw from translations through
+      rotations, camera rotations, transparency, and grid-cycle stages
+    - opening 3D/4D translation setup now enforces full-sequence feasibility
+      without redraw:
+      - start near-corner anchor aligns with sequence order
+        (`x-`, `x+`, `z away`, `z closer`, and `w-/w+` in 4D)
+      - prevents early-stage safety redo loops that previously reset board/piece
 - Key files:
   - `src/tet4d/engine/tutorial/runtime.py`
   - `src/tet4d/engine/tutorial/persistence.py`

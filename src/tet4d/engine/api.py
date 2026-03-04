@@ -1328,6 +1328,14 @@ def tutorial_runtime_skip_runtime(session: Any) -> bool:
     return bool(session.skip())
 
 
+def tutorial_runtime_transition_pending_runtime(session: Any) -> bool:
+    return bool(session.transition_pending())
+
+
+def tutorial_runtime_completion_ready_runtime(session: Any) -> bool:
+    return bool(session.completion_ready())
+
+
 def tutorial_apply_step_setup_2d_runtime(
     state: Any,
     cfg: Any,
@@ -1570,6 +1578,10 @@ def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
 
 def frontend_nd_route_keydown(*args: Any, **kwargs: Any) -> Any:
     return _call_frontend_nd("route_nd_keydown", *args, **kwargs)
+
+
+def frontend_nd_can_apply_gameplay_action_with_view(*args: Any, **kwargs: Any) -> Any:
+    return _call_frontend_nd("can_apply_nd_gameplay_action_with_view", *args, **kwargs)
 
 
 def front3d_render_camera_type() -> Any:

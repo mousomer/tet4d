@@ -1096,6 +1096,78 @@
           }
         },
         {
+          "id": "overlay_alpha_dec",
+          "ui": {
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_dec"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_dec",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_inc"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_dec"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "overlay_alpha_inc",
+          "ui": {
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_inc"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_inc",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_dec"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_inc"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
@@ -1248,78 +1320,6 @@
               "reset"
             ],
             "predicates": [],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_dec",
-          "ui": {
-            "text": "Set locked-cell transparency to minimum allowed.",
-            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_dec"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_dec",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_inc"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_dec"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_inc",
-          "ui": {
-            "text": "Set locked-cell transparency to maximum allowed.",
-            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_inc"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_inc",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_dec"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_inc"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
             "logic": "all"
           }
         },
@@ -2554,6 +2554,78 @@
           }
         },
         {
+          "id": "overlay_alpha_dec",
+          "ui": {
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_dec"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_dec",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_inc"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_dec"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "overlay_alpha_inc",
+          "ui": {
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_inc"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_inc",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_dec"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_inc"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
@@ -2706,78 +2778,6 @@
               "reset"
             ],
             "predicates": [],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_dec",
-          "ui": {
-            "text": "Set locked-cell transparency to minimum allowed.",
-            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_dec"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_dec",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_inc"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_dec"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_inc",
-          "ui": {
-            "text": "Set locked-cell transparency to maximum allowed.",
-            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_inc"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_inc",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_dec"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_inc"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
             "logic": "all"
           }
         },

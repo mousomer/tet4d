@@ -650,6 +650,195 @@ def _apply_action_override(
     return True
 
 
+def _candidate_from_axis_override(
+    piece: object,
+    *,
+    override: AxisOverride,
+    ndim: int,
+) -> object:
+    if len(override) == 2:
+        axis, delta = int(override[0]), int(override[1])
+        vector = [0] * int(ndim)
+        vector[axis] = delta
+        return piece.moved(tuple(vector))
+    axis_a, axis_b, direction = (
+        int(override[0]),
+        int(override[1]),
+        int(override[2]),
+    )
+    return piece.rotated(axis_a, axis_b, direction)
+
+
+def _candidate_for_base_nd_action(
+    state: GameStateND,
+    action: str,
+) -> object | None:
+    piece = state.current_piece
+    if piece is None:
+        return None
+    gravity_axis = int(state.config.gravity_axis)
+    if action == "soft_drop":
+        vector = [0] * int(state.config.ndim)
+        vector[gravity_axis] = 1
+        return piece.moved(tuple(vector))
+    move_vectors = {
+        "move_x_neg": (0, -1),
+        "move_x_pos": (0, 1),
+        "move_y_neg": (gravity_axis, -1),
+        "move_y_pos": (gravity_axis, 1),
+        "move_z_neg": (2, -1),
+        "move_z_pos": (2, 1),
+        "move_w_neg": (3, -1),
+        "move_w_pos": (3, 1),
+    }
+    move_spec = move_vectors.get(action)
+    if move_spec is not None:
+        axis, delta = move_spec
+        if not (0 <= int(axis) < int(state.config.ndim)):
+            return None
+        vector = [0] * int(state.config.ndim)
+        vector[int(axis)] = int(delta)
+        return piece.moved(tuple(vector))
+    rotation_specs = {
+        "rotate_xy_pos": (0, gravity_axis, 1),
+        "rotate_xy_neg": (0, gravity_axis, -1),
+        "rotate_xz_pos": (0, 2, 1),
+        "rotate_xz_neg": (0, 2, -1),
+        "rotate_yz_pos": (gravity_axis, 2, 1),
+        "rotate_yz_neg": (gravity_axis, 2, -1),
+        "rotate_xw_pos": (0, 3, 1),
+        "rotate_xw_neg": (0, 3, -1),
+        "rotate_yw_pos": (gravity_axis, 3, 1),
+        "rotate_yw_neg": (gravity_axis, 3, -1),
+        "rotate_zw_pos": (2, 3, 1),
+        "rotate_zw_neg": (2, 3, -1),
+    }
+    rotation_spec = rotation_specs.get(action)
+    if rotation_spec is None:
+        return None
+    axis_a, axis_b, direction = rotation_spec
+    if not (
+        0 <= int(axis_a) < int(state.config.ndim)
+        and 0 <= int(axis_b) < int(state.config.ndim)
+    ):
+        return None
+    return piece.rotated(int(axis_a), int(axis_b), int(direction))
+
+
+def _candidate_from_action_override(
+    *,
+    piece: object,
+    action: str,
+    ndim: int,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None,
+) -> object | None:
+    if axis_overrides_by_action is None:
+        return None
+    override = axis_overrides_by_action.get(action)
+    if override is None:
+        return None
+    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+
+
+def _candidate_from_rotation_override(
+    *,
+    piece: object,
+    action: str,
+    cfg: GameConfigND,
+    ndim: int,
+    yaw_deg_for_view_movement: float | None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
+) -> object | None:
+    override = _rotation_override_from_view(
+        action=action,
+        cfg=cfg,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    if override is None:
+        return None
+    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+
+
+def _viewer_relative_move_candidate(
+    *,
+    piece: object,
+    action: str,
+    ndim: int,
+    yaw_deg_for_view_movement: float | None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
+) -> tuple[object | None, bool]:
+    if yaw_deg_for_view_movement is None:
+        return None, False
+    intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
+    if intent is None:
+        return None, False
+    local_axis, local_delta = viewer_relative_move_axis_delta(
+        yaw_deg_for_view_movement,
+        intent,
+    )
+    mapped_axis = int(local_axis)
+    mapped_delta = int(local_delta)
+    if viewer_axes_by_label is not None:
+        key = "x" if int(local_axis) == 0 else "z"
+        target_axis = viewer_axes_by_label.get(key)
+        if target_axis is not None:
+            mapped_axis = int(target_axis[0])
+            mapped_delta = int(local_delta) * int(target_axis[1])
+    if not (0 <= mapped_axis < int(ndim)):
+        return None, True
+    vector = [0] * int(ndim)
+    vector[mapped_axis] = mapped_delta
+    return piece.moved(tuple(vector)), True
+
+
+def can_apply_nd_gameplay_action_with_view(
+    state: GameStateND,
+    action: str,
+    *,
+    yaw_deg_for_view_movement: float | None = None,
+    axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
+    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
+) -> bool:
+    piece = state.current_piece
+    if piece is None or state.game_over:
+        return False
+    if action == "hard_drop":
+        return True
+    ndim = int(state.config.ndim)
+    candidate = _candidate_from_action_override(
+        piece=piece,
+        action=action,
+        ndim=ndim,
+        axis_overrides_by_action=axis_overrides_by_action,
+    )
+    if candidate is not None:
+        return bool(state._can_exist(candidate))
+    candidate = _candidate_from_rotation_override(
+        piece=piece,
+        action=action,
+        cfg=state.config,
+        ndim=ndim,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    if candidate is not None:
+        return bool(state._can_exist(candidate))
+    candidate, is_view_relative = _viewer_relative_move_candidate(
+        piece=piece,
+        action=action,
+        ndim=ndim,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        viewer_axes_by_label=viewer_axes_by_label,
+    )
+    if is_view_relative:
+        return bool(candidate is not None and state._can_exist(candidate))
+    candidate = _candidate_for_base_nd_action(state, action)
+    if candidate is None:
+        return True
+    return bool(state._can_exist(candidate))
+
+
 def apply_nd_gameplay_action_with_view(
     state: GameStateND,
     action: str,

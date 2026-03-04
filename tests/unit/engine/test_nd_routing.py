@@ -297,6 +297,58 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result, "continue")
         self.assertEqual(seen, ["view_xw_pos"])
 
+    def test_can_apply_nd_action_matches_viewer_relative_move_constraints(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 10, 6),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            rng_seed=1234,
+        )
+        state = frontend_nd.create_initial_state(cfg)
+        while state.try_move_axis(0, -1):
+            pass
+        self.assertFalse(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_z_neg",
+                yaw_deg_for_view_movement=90.0,
+            )
+        )
+        self.assertTrue(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_z_pos",
+                yaw_deg_for_view_movement=90.0,
+            )
+        )
+
+    def test_can_apply_nd_action_respects_axis_overrides(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            rng_seed=1234,
+        )
+        state = frontend_nd.create_initial_state(cfg)
+        while state.try_move_axis(0, 1):
+            pass
+        self.assertFalse(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_w_pos",
+                axis_overrides_by_action={"move_w_pos": (0, 1)},
+            )
+        )
+        self.assertTrue(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_w_neg",
+                axis_overrides_by_action={"move_w_neg": (0, -1)},
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

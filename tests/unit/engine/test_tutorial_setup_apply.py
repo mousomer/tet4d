@@ -235,11 +235,11 @@ class TutorialSetupApplyTests(unittest.TestCase):
         assert state3.current_piece is not None
         mapped3 = state3.current_piece_cells_mapped(include_above=True)
         max_x3 = max(coord[0] for coord in mapped3)
-        max_z3 = max(coord[2] for coord in mapped3)
+        min_z3 = min(coord[2] for coord in mapped3)
         self.assertEqual(max_x3, cfg3.dims[0] - 2)
-        self.assertEqual(max_z3, cfg3.dims[2] - 2)
+        self.assertEqual(min_z3, 1)
         probe3 = state3.current_piece
-        for delta in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+        for delta in ((-1, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1)):
             for _ in range(4):
                 probe3 = probe3.moved(delta)
                 self.assertTrue(state3._can_exist(probe3))
@@ -274,23 +274,84 @@ class TutorialSetupApplyTests(unittest.TestCase):
         assert state4.current_piece is not None
         mapped4 = state4.current_piece_cells_mapped(include_above=True)
         max_x4 = max(coord[0] for coord in mapped4)
-        max_z4 = max(coord[2] for coord in mapped4)
+        min_z4 = min(coord[2] for coord in mapped4)
         max_w4 = max(coord[3] for coord in mapped4)
         self.assertEqual(max_x4, cfg4.dims[0] - 2)
-        self.assertEqual(max_z4, cfg4.dims[2] - 2)
+        self.assertEqual(min_z4, 1)
         self.assertEqual(max_w4, cfg4.dims[3] - 2)
         probe4 = state4.current_piece
         for delta in (
             (-1, 0, 0, 0),
             (1, 0, 0, 0),
-            (0, 0, -1, 0),
             (0, 0, 1, 0),
+            (0, 0, -1, 0),
             (0, 0, 0, -1),
             (0, 0, 0, 1),
         ):
             for _ in range(4):
                 probe4 = probe4.moved(delta)
                 self.assertTrue(state4._can_exist(probe4))
+
+    def test_nd_move_z_neg_spawn_is_feasible_for_four_away_moves(self) -> None:
+        cfg3 = GameConfigND(
+            dims=(10, 20, 10),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_3D_STANDARD,
+            challenge_layers=0,
+            rng_seed=1337,
+        )
+        state3 = GameStateND(
+            config=cfg3,
+            board=BoardND(cfg3.dims),
+            rng=random.Random(cfg3.rng_seed),
+        )
+        apply_tutorial_step_setup_nd(
+            state3,
+            cfg3,
+            {
+                "rng_seed": 2102,
+                "starter_piece_id": "SCREW3",
+                "spawn_min_visible_layer": 2,
+                "required_event_count": 4,
+            },
+            lesson_id="tutorial_3d_core",
+            step_id="move_z_neg",
+        )
+        assert state3.current_piece is not None
+        probe3 = state3.current_piece
+        for _ in range(4):
+            probe3 = probe3.moved((0, 0, 1))
+            self.assertTrue(state3._can_exist(probe3))
+
+        cfg4 = GameConfigND(
+            dims=(10, 20, 8, 8),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_4D_STANDARD,
+            challenge_layers=0,
+            rng_seed=1337,
+        )
+        state4 = GameStateND(
+            config=cfg4,
+            board=BoardND(cfg4.dims),
+            rng=random.Random(cfg4.rng_seed),
+        )
+        apply_tutorial_step_setup_nd(
+            state4,
+            cfg4,
+            {
+                "rng_seed": 3102,
+                "starter_piece_id": "SKEW4_A",
+                "spawn_min_visible_layer": 2,
+                "required_event_count": 4,
+            },
+            lesson_id="tutorial_4d_core",
+            step_id="move_z_neg",
+        )
+        assert state4.current_piece is not None
+        probe4 = state4.current_piece
+        for _ in range(4):
+            probe4 = probe4.moved((0, 0, 1, 0))
+            self.assertTrue(state4._can_exist(probe4))
 
     def test_apply_setup_2d_falls_back_when_piece_set_lacks_starter(self) -> None:
         cfg = GameConfig(

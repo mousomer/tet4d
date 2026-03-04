@@ -216,13 +216,13 @@ _TUTORIAL_MIN_DIMS_4D = (
     ),
     engine_api.project_constant_int(
         ("tutorial", "min_board_dims", "4d", "z"),
-        6,
+        8,
         min_value=4,
         max_value=40,
     ),
     engine_api.project_constant_int(
         ("tutorial", "min_board_dims", "4d", "w"),
-        4,
+        8,
         min_value=3,
         max_value=20,
     ),
@@ -244,43 +244,18 @@ def _tutorial_action_delay_ms_4d(action_id: str) -> int:
 def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) -> bool:
     if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_4D:
         return True
-    piece = loop.state.current_piece
-    if piece is None or loop.state.game_over:
-        return False
-    if action_id == "hard_drop":
-        return True
-    if action_id == "soft_drop":
-        delta = [0, 0, 0, 0]
-        delta[loop.cfg.gravity_axis] = 1
-        return bool(loop.state._can_exist(piece.moved(tuple(delta))))
-    move_deltas = {
-        "move_x_neg": (-1, 0, 0, 0),
-        "move_x_pos": (1, 0, 0, 0),
-        "move_z_neg": (0, 0, -1, 0),
-        "move_z_pos": (0, 0, 1, 0),
-        "move_w_neg": (0, 0, 0, -1),
-        "move_w_pos": (0, 0, 0, 1),
-    }
-    if action_id in move_deltas:
-        return bool(loop.state._can_exist(piece.moved(move_deltas[action_id])))
-    rotate_axes = {
-        "rotate_xy_pos": (0, loop.cfg.gravity_axis, 1),
-        "rotate_xy_neg": (0, loop.cfg.gravity_axis, -1),
-        "rotate_xz_pos": (0, 2, 1),
-        "rotate_xz_neg": (0, 2, -1),
-        "rotate_yz_pos": (loop.cfg.gravity_axis, 2, 1),
-        "rotate_yz_neg": (loop.cfg.gravity_axis, 2, -1),
-        "rotate_xw_pos": (0, 3, 1),
-        "rotate_xw_neg": (0, 3, -1),
-        "rotate_yw_pos": (loop.cfg.gravity_axis, 3, 1),
-        "rotate_yw_neg": (loop.cfg.gravity_axis, 3, -1),
-        "rotate_zw_pos": (2, 3, 1),
-        "rotate_zw_neg": (2, 3, -1),
-    }
-    if action_id in rotate_axes:
-        axis_a, axis_b, step = rotate_axes[action_id]
-        return bool(loop.state._can_exist(piece.rotated(axis_a, axis_b, step)))
-    return True
+    return bool(
+        engine_api.frontend_nd_can_apply_gameplay_action_with_view(
+            loop.state,
+            action_id,
+            yaw_deg_for_view_movement=loop.view.yaw_deg,
+            axis_overrides_by_action=movement_axis_overrides_for_view(
+                loop.view,
+                loop.cfg.dims,
+            ),
+            viewer_axes_by_label=viewer_axes_for_view(loop.view, loop.cfg.dims),
+        )
+    )
 
 
 def _tutorial_has_legal_action_4d(
@@ -335,6 +310,10 @@ def _tutorial_allowed_actions_blocked(
 def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
     session = _running_tutorial_session(loop)
     if session is None:
+        return
+    if engine_api.tutorial_runtime_completion_ready_runtime(session):
+        return
+    if engine_api.tutorial_runtime_transition_pending_runtime(session):
         return
     if loop.state.game_over:
         _redo_tutorial_stage(loop, session)

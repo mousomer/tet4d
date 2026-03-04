@@ -672,6 +672,215 @@ def _candidate_piece_placeable_nd(
     return True
 
 
+def _candidate_supports_repeated_move_nd(
+    *,
+    state: GameStateND,
+    candidate: ActivePieceND,
+    delta: tuple[int, ...],
+    repeats: int,
+) -> bool:
+    probe = candidate
+    for _ in range(max(1, int(repeats))):
+        probe = probe.moved(delta)
+        if not state._can_exist(probe):
+            return False
+    return True
+
+
+def _target_axis_score_nd(
+    *,
+    state: GameStateND,
+    candidate: ActivePieceND,
+    axis: int,
+    delta: int,
+) -> int:
+    mapped = state._mapped_piece_cells(candidate)
+    if not mapped:
+        return 1_000_000
+    if int(delta) > 0:
+        target_min = 1
+        actual_min = min(int(coord[axis]) for coord in mapped)
+        return abs(actual_min - target_min)
+    target_max = int(state.config.dims[axis]) - 2
+    actual_max = max(int(coord[axis]) for coord in mapped)
+    return abs(actual_max - target_max)
+
+
+def _opening_translation_move_requirements_nd(*, ndim: int) -> tuple[tuple[int, ...], ...]:
+    requirements: list[tuple[int, ...]] = []
+    def _delta(values: tuple[int, ...]) -> tuple[int, ...]:
+        if len(values) == ndim:
+            return tuple(int(value) for value in values)
+        padded = [0] * int(ndim)
+        for index, value in enumerate(values):
+            if index >= ndim:
+                break
+            padded[index] = int(value)
+        return tuple(padded)
+    if ndim >= 3:
+        requirements.extend((_delta((-1, 0, 0)), _delta((0, 0, 1))))
+    if ndim >= 4:
+        requirements.append(_delta((0, 0, 0, -1)))
+    return tuple(requirements)
+
+
+def _opening_translation_pos_ranges_nd(
+    *,
+    state: GameStateND,
+    piece: ActivePieceND,
+    min_visible_layer: int,
+    scope_tag: str,
+) -> list[range]:
+    ndim = int(state.config.ndim)
+    gravity_axis = int(state.config.gravity_axis)
+    rel_blocks = tuple(piece.rel_blocks)
+    mins = [min(int(block[axis]) for block in rel_blocks) for axis in range(ndim)]
+    maxs = [max(int(block[axis]) for block in rel_blocks) for axis in range(ndim)]
+    pos_ranges: list[range] = []
+    for axis in range(ndim):
+        min_pos = -int(mins[axis])
+        if axis == gravity_axis:
+            min_pos = max(min_pos, int(min_visible_layer) - int(mins[axis]))
+        max_pos = int(state.config.dims[axis]) - 1 - int(maxs[axis])
+        if min_pos > max_pos:
+            raise RuntimeError(
+                f"tutorial setup failed ({scope_tag}): cannot reposition opening ND piece for axis {axis}"
+            )
+        pos_ranges.append(range(min_pos, max_pos + 1))
+    return pos_ranges
+
+
+def _opening_translation_candidate_positions_nd(
+    *,
+    pos_ranges: list[range],
+    gravity_axis: int,
+    current_pos: tuple[int, ...],
+) -> list[tuple[int, ...]]:
+    ndim = len(pos_ranges)
+    gravity_values = (
+        [current_pos[gravity_axis]]
+        if current_pos[gravity_axis] in pos_ranges[gravity_axis]
+        else list(pos_ranges[gravity_axis])
+    )
+    lateral_axes = [axis for axis in range(ndim) if axis != gravity_axis]
+    lateral_ranges = [pos_ranges[axis] for axis in lateral_axes]
+    positions: list[tuple[int, ...]] = []
+    for gravity_value in gravity_values:
+        for lateral_values in product(*lateral_ranges):
+            candidate_pos = [0] * ndim
+            candidate_pos[gravity_axis] = int(gravity_value)
+            for index, axis in enumerate(lateral_axes):
+                candidate_pos[axis] = int(lateral_values[index])
+            positions.append(tuple(candidate_pos))
+    return positions
+
+
+def _opening_translation_candidate_valid_nd(
+    *,
+    state: GameStateND,
+    candidate: ActivePieceND,
+    min_visible_layer: int,
+    requirements: tuple[tuple[int, ...], ...],
+    required_move_repetitions: int,
+) -> bool:
+    if not _piece_is_visible_nd(state, candidate):
+        return False
+    if _piece_min_gravity_nd(state, candidate) < int(min_visible_layer):
+        return False
+    if not state._can_exist(candidate):
+        return False
+    return all(
+        _candidate_supports_repeated_move_nd(
+            state=state,
+            candidate=candidate,
+            delta=delta,
+            repeats=required_move_repetitions,
+        )
+        for delta in requirements
+    )
+
+
+def _opening_translation_candidate_score_nd(
+    *,
+    state: GameStateND,
+    candidate: ActivePieceND,
+    current_pos: tuple[int, ...],
+) -> tuple[int, ...]:
+    ndim = int(state.config.ndim)
+    gravity_axis = int(state.config.gravity_axis)
+    lateral_axes = [axis for axis in range(ndim) if axis != gravity_axis]
+    return (
+        _target_axis_score_nd(state=state, candidate=candidate, axis=0, delta=-1),
+        _target_axis_score_nd(state=state, candidate=candidate, axis=2, delta=1),
+        _target_axis_score_nd(
+            state=state,
+            candidate=candidate,
+            axis=3,
+            delta=-1,
+        )
+        if ndim >= 4
+        else 0,
+        sum(abs(int(candidate.pos[axis]) - int(current_pos[axis])) for axis in lateral_axes),
+    )
+
+
+def _reposition_opening_translation_piece_nd(
+    *,
+    state: GameStateND,
+    min_visible_layer: int,
+    required_move_repetitions: int,
+    scope_tag: str,
+) -> None:
+    piece = state.current_piece
+    if piece is None:
+        return
+    ndim = int(state.config.ndim)
+    gravity_axis = int(state.config.gravity_axis)
+    rel_blocks = tuple(piece.rel_blocks)
+    requirements = _opening_translation_move_requirements_nd(ndim=ndim)
+    pos_ranges = _opening_translation_pos_ranges_nd(
+        state=state,
+        piece=piece,
+        min_visible_layer=min_visible_layer,
+        scope_tag=scope_tag,
+    )
+    current_pos = tuple(int(value) for value in piece.pos)
+
+    best_piece: ActivePieceND | None = None
+    best_score: tuple[int, ...] | None = None
+    for candidate_pos in _opening_translation_candidate_positions_nd(
+        pos_ranges=pos_ranges,
+        gravity_axis=gravity_axis,
+        current_pos=current_pos,
+    ):
+        candidate = ActivePieceND(
+            shape=piece.shape,
+            pos=candidate_pos,
+            rel_blocks=rel_blocks,
+        )
+        if not _opening_translation_candidate_valid_nd(
+            state=state,
+            candidate=candidate,
+            min_visible_layer=min_visible_layer,
+            requirements=requirements,
+            required_move_repetitions=required_move_repetitions,
+        ):
+            continue
+        score = _opening_translation_candidate_score_nd(
+            state=state,
+            candidate=candidate,
+            current_pos=current_pos,
+        )
+        if best_score is None or score < best_score:
+            best_score = score
+            best_piece = candidate
+    if best_piece is None:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): opening ND translation spawn is not feasible"
+        )
+    state.current_piece = best_piece
+
+
 def _set_seeded_runtime_rng(
     state: GameState | GameStateND,
     *,
@@ -1143,11 +1352,14 @@ def _required_move_delta_for_step(
     step_id: str,
     ndim: int,
 ) -> tuple[int, ...] | None:
+    # Align with default viewer-relative routing used in ND gameplay loops:
+    # move_z_neg means "away" (positive z at default yaw), move_z_pos means
+    # "closer" (negative z at default yaw).
     deltas = {
         "move_x_neg": (-1, 0, 0, 0),
         "move_x_pos": (1, 0, 0, 0),
-        "move_z_neg": (0, 0, -1, 0),
-        "move_z_pos": (0, 0, 1, 0),
+        "move_z_neg": (0, 0, 1, 0),
+        "move_z_pos": (0, 0, -1, 0),
         "move_w_neg": (0, 0, 0, -1),
         "move_w_pos": (0, 0, 0, 1),
     }
@@ -1381,6 +1593,13 @@ def apply_tutorial_step_setup_nd(
         ),
         preferred_min_gravity=preferred_min_gravity,
     )
+    if clean_step_id == "move_x_neg" and cfg.ndim >= 3:
+        _reposition_opening_translation_piece_nd(
+            state=state,
+            min_visible_layer=min_visible_layer,
+            required_move_repetitions=required_event_count,
+            scope_tag=scope_tag,
+        )
     if _goal_step_requires_lateral_offset(step_id=clean_step_id, ndim=cfg.ndim):
         _nudge_goal_piece_away_from_holes_nd(state=state)
 
