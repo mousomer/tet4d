@@ -2,7 +2,7 @@
 
 Last updated: 2026-03-04
 Branch: `codex/tutorials1`
-Worktree expectation at handoff: dirty (CI compliance hardening batch ready to commit)
+Worktree expectation at handoff: clean (latest CI-compliance hardening batch committed + pushed)
 
 ## Purpose
 
@@ -93,7 +93,7 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Latest Local Batch (Unreleased)
+## Latest Batch (Committed)
 
 Completed:
 - CI compliance hardening and reproducibility controls:
@@ -108,7 +108,7 @@ Completed:
     `config/project/policy/manifests/wheel_reuse_rules.json` to lower
     false-positive pressure while retaining high-risk coverage
   - added governance test coverage:
-    - `tests/unit/governance/test_validate_project_contracts.py`
+    - `tests/unit/governance/test_governance_validate_project_contracts.py`
   - documented CI compliance runbook:
     - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
     - references synced in `docs/RDS_AND_CODEX.md` and `docs/policies/INDEX.md`
@@ -135,9 +135,12 @@ Completed:
     - camera presets (`tutorial_3d_default`, `tutorial_4d_default`)
   - pause menu tutorial-specific restart action was removed; tutorial control uses
     hotkeys (`F5/F6/F7/F8/F9`) while pause keeps generic run actions.
-  - launcher IA now exposes `Tutorials` at root-level; tutorial launch skips setup
-    menus and uses persisted/default per-mode settings + deterministic lesson
-    presets.
+- launcher IA now exposes `Tutorials` at root-level; tutorial launch skips setup
+  menus and uses persisted/default per-mode settings + deterministic lesson
+  presets.
+- CI status for latest hardening batch:
+  - commit: `7631e36`
+  - GitHub Actions run: `22676269281` (`CI`) passed on Python 3.11/3.12/3.13/3.14.
   - tutorial UX hardening:
     - menu/help steps now require Esc-return (`menu_back`) before progression
     - per-stage redo is available (`F7`) without resetting full lesson
@@ -529,33 +532,59 @@ Placement in stage sequence:
 
 ## Short-Term Plan (Next 10-20 stages)
 
-### Track A (highest value): Delivery-Size Pressure Reduction
+### Track A (highest value): CI Compliance Maintenance
 
-Goal: shave LOC without behavior change in runtime/UI hotspots.
+Goal: keep CI deterministic and fast to triage.
+
+Planned moves:
+- Keep `scripts/ci_preflight.sh` as required pre-push local gate in daily flow.
+- Keep policy manifests/doc indices synchronized (`project_policy.json`, `policy_registry.json`, `docs/policies/INDEX.md`).
+- Keep sanitation-safe policy literals and avoid committing local context artifacts.
+- If CI fails, triage in runbook order (`docs/policies/CI_COMPLIANCE_RUNBOOK.md`) and patch minimally.
+
+Execution pattern:
+1. Reproduce with `./scripts/ci_preflight.sh`.
+2. Fix root cause in smallest scope possible.
+3. Re-run `CODEX_MODE=1 ./scripts/verify.sh`.
+4. Push and confirm matrix green.
+
+### Track B: Tutorial Stability Closure
+
+Goal: eliminate remaining tutorial flow edge-cases without changing core game rules.
+
+Planned moves:
+- Harden 4D W-axis progression reliability and stage-completion predicates.
+- Ensure transparent, deterministic stage transition pacing across 2D/3D/4D.
+- Keep keybinding-driven prompts always consistent with live bindings.
+
+Acceptance:
+1. Tutorial runs complete in 2D/3D/4D without deadlocks across replayed smoke runs.
+2. Restart/redo/previous/next controls remain deterministic.
+3. No tutorial-specific regressions in `verify` test suite.
+
+### Track C: Delivery-Size Pressure Reduction
+
+Goal: reduce LOC and simplify structure with no behavior change.
 
 Planned moves:
 - Factor `src/tet4d/ui/pygame/keybindings.py` into smaller helpers (profile/IO/rebind) with shims and zero-caller prune.
-- Slice `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize helpers; keep storage layout stable.
-- Trim duplicated runtime API wrapper boilerplate in `src/tet4d/engine/api.py`.
-- Keep menu/help content in config assets; avoid large Python literals.
+- Slice `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize helpers while keeping storage stable.
+- Trim duplicate runtime API wrapper boilerplate in `src/tet4d/engine/api.py`.
+- Keep menu/help/tutorial content in config assets instead of Python literals.
 
 Execution pattern:
-1. Extract to subpackage.
+1. Extract.
 2. Add compatibility shim.
 3. Canonicalize callers.
 4. Zero-caller audit.
 5. Prune shim.
-6. Update docs/metrics; ensure `tech_debt.score` ≤ baseline.
+6. Re-check tech-debt score trend.
 
-### Track B: Playbot relocation audit-only (low priority)
-
-- Periodic audit for stray `engine/playbot/*.py` (none currently; no action staged).
-
-### Track C: Runtime side-effect extraction (selective)
+### Track D: Runtime side-effect extraction (selective)
 
 - Audit `read_text`/`write_text`/`open(` in `src/tet4d/engine/**` and reroute misplaced I/O into runtime helpers only when outside runtime-owned storage modules.
 
-### Track D: Interactive Tutorials (authoritative replacement plan)
+### Track E: Interactive Tutorials (authoritative replacement plan)
 
 Objective:
 

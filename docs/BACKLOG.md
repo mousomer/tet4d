@@ -395,7 +395,7 @@ Current sub-batch (2026-03-04): CI compliance hardening + governance preflight.
 - Added policy-manifest literal safety validation to catch string literals that
   can accidentally trigger absolute-path sanitation gates:
   - `tools/governance/validate_project_contracts.py`
-  - `tests/unit/governance/test_validate_project_contracts.py`
+  - `tests/unit/governance/test_governance_validate_project_contracts.py`
 - Tuned wheel-reuse rule scopes to reduce low-signal noise while keeping
   high-risk runtime/UI/governance coverage:
   - `config/project/policy/manifests/wheel_reuse_rules.json`
@@ -406,6 +406,11 @@ Current sub-batch (2026-03-04): CI compliance hardening + governance preflight.
   - `CONTRIBUTING.md`
 - Synced canonical maintenance contract for new script/doc tokens:
   - `config/project/policy/manifests/canonical_maintenance.json`
+
+Tuned next-batch priorities:
+1. CI compliance maintenance first (preflight + runbook triage discipline).
+2. Tutorial stability closure for 4D/W-axis and step-transition edge-cases.
+3. LOC-focused non-behavioral dedup in runtime/UI hotspots.
 
 Current sub-batch (2026-03-04): directive-manifest normalization.
 
