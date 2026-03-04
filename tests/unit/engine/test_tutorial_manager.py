@@ -18,18 +18,18 @@ def _manager_payload() -> dict[str, object]:
                     {
                         "id": "step_one",
                         "ui": {
-                            "text": "Move both directions",
+                            "text": "Move once",
                             "hint": None,
                             "highlights": [],
-                            "key_prompts": [],
+                            "key_prompts": ["move_x_neg"],
                         },
                         "gating": {
-                            "allow": ["move_x_neg", "move_x_pos", "menu"],
+                            "allow": ["move_x_neg", "menu"],
                             "deny": ["rotate_xy_pos"],
                         },
                         "setup": {},
                         "complete_when": {
-                            "events": ["move_x_neg", "move_x_pos"],
+                            "events": ["move_x_neg"],
                             "predicates": [],
                             "logic": "all",
                         },
@@ -40,12 +40,12 @@ def _manager_payload() -> dict[str, object]:
                             "text": "Clear a line",
                             "hint": None,
                             "highlights": [],
-                            "key_prompts": [],
+                            "key_prompts": ["hard_drop"],
                         },
-                        "gating": {"allow": [], "deny": []},
+                        "gating": {"allow": ["hard_drop"], "deny": []},
                         "setup": {},
                         "complete_when": {
-                            "events": [],
+                            "events": ["hard_drop"],
                             "predicates": ["line_cleared"],
                             "logic": "all",
                         },
@@ -66,10 +66,10 @@ class TutorialManagerTests(unittest.TestCase):
         manager.start("lesson_2d")
         self.assertEqual(manager.snapshot().step_id, "step_one")
         manager.record_event("move_x_neg")
-        self.assertFalse(manager.advance_if_complete())
-        manager.record_event("move_x_pos")
         self.assertTrue(manager.advance_if_complete())
         self.assertEqual(manager.snapshot().step_id, "step_two")
+        manager.record_event("hard_drop")
+        self.assertFalse(manager.advance_if_complete())
         manager.set_predicate("line_cleared", True)
         self.assertTrue(manager.advance_if_complete())
         snapshot = manager.snapshot()
@@ -87,7 +87,6 @@ class TutorialManagerTests(unittest.TestCase):
         manager = self._manager()
         manager.start("lesson_2d")
         manager.record_event("move_x_neg")
-        manager.record_event("move_x_pos")
         self.assertTrue(manager.advance_if_complete())
         self.assertEqual(manager.snapshot().step_id, "step_two")
         self.assertTrue(manager.restart())

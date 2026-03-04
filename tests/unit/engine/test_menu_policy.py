@@ -150,6 +150,7 @@ class TestMenuPolicy(unittest.TestCase):
             [
                 "Play",
                 "Continue",
+                "Tutorials",
                 "Settings",
                 "Controls",
                 "Help",
@@ -159,7 +160,7 @@ class TestMenuPolicy(unittest.TestCase):
             ],
         )
 
-    def test_play_menu_is_graph_defined_with_tutorial_route(self) -> None:
+    def test_play_menu_is_graph_defined(self) -> None:
         root_items = menu_config.menu_items(menu_config.launcher_menu_id())
         play_links = [
             item
@@ -173,30 +174,26 @@ class TestMenuPolicy(unittest.TestCase):
         play_actions = {
             item["action_id"] for item in play_items if item["type"] == "action"
         }
-        play_routes = {
-            item["route_id"] for item in play_items if item["type"] == "route"
-        }
         self.assertTrue(
             {"play_2d", "play_3d", "play_4d", "topology_lab"}.issubset(play_actions)
         )
-        self.assertEqual(play_routes, {"tutorials"})
 
     def test_launcher_route_actions_cover_launcher_routes(self) -> None:
-        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
-        play_links = [
-            item
-            for item in root_items
-            if item["type"] == "submenu" and item["label"] == "Play"
-        ]
-        self.assertEqual(len(play_links), 1)
-        play_menu_id = play_links[0]["menu_id"]
-        play_routes = {
-            item["route_id"]
-            for item in menu_config.menu_items(play_menu_id)
-            if item["type"] == "route"
-        }
+        pending = [menu_config.launcher_menu_id()]
+        seen: set[str] = set()
+        route_ids: set[str] = set()
+        while pending:
+            menu_id = pending.pop()
+            if menu_id in seen:
+                continue
+            seen.add(menu_id)
+            for item in menu_config.menu_items(menu_id):
+                if item["type"] == "route":
+                    route_ids.add(item["route_id"])
+                if item["type"] == "submenu":
+                    pending.append(item["menu_id"])
         route_actions = menu_config.launcher_route_actions()
-        self.assertEqual(play_routes, set(route_actions))
+        self.assertEqual(route_ids, set(route_actions))
         launcher_actions = set(
             menu_config.reachable_action_ids(menu_config.launcher_menu_id())
         )

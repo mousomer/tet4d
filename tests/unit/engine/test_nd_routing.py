@@ -158,6 +158,23 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result_help, "help")
         self.assertEqual(sfx, ["menu_move"])
 
+    def test_escape_quit_binding_routes_to_menu(self) -> None:
+        quit_key = _key_for(SYSTEM_KEYS, "quit")
+        if int(quit_key) != int(pygame.K_ESCAPE):
+            self.skipTest("system quit key is not bound to escape in this profile")
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        sfx: list[str] = []
+
+        result = frontend_nd.route_nd_keydown(
+            quit_key,
+            state,
+            sfx_handler=sfx.append,
+        )
+
+        self.assertEqual(result, "menu")
+        self.assertEqual(sfx, ["menu_confirm"])
+
     def test_bound_gameplay_key_takes_priority_over_view(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)

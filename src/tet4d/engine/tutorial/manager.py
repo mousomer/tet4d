@@ -77,18 +77,35 @@ class TutorialManager:
         self._active_lesson_id = target
         self._step_index = 0
         self._status = "running"
-        self._events_seen.clear()
-        self._predicate_values.clear()
-        step = self.current_step()
-        self._emit(
-            EVENT_STEP_STARTED,
-            {"lesson_id": target, "step_id": step.step_id, "step_index": 0},
-        )
+        self._enter_current_step()
 
     def restart(self) -> bool:
         if self._active_lesson_id is None:
             return False
         self.start(self._active_lesson_id)
+        return True
+
+    def redo_current_step(self) -> bool:
+        if not self.is_running():
+            return False
+        self._enter_current_step()
+        return True
+
+    def previous_step(self) -> bool:
+        if not self.is_running() or self._step_index <= 0:
+            return False
+        self._step_index -= 1
+        self._enter_current_step()
+        return True
+
+    def next_step(self) -> bool:
+        if not self.is_running():
+            return False
+        lesson = self.current_lesson()
+        if self._step_index + 1 >= len(lesson.steps):
+            return False
+        self._step_index += 1
+        self._enter_current_step()
         return True
 
     def skip(self) -> bool:
@@ -139,17 +156,25 @@ class TutorialManager:
     def clear_predicates(self) -> None:
         self._predicate_values.clear()
 
+    def completion_ready(self) -> bool:
+        if not self.is_running():
+            return False
+        step = self.current_step()
+        return bool(
+            evaluate_completion(
+                step.complete_when,
+                events_seen=self._events_seen,
+                predicate_values=self._predicate_values,
+            )
+        )
+
     def advance_if_complete(self) -> bool:
         if not self.is_running():
             return False
+        if not self.completion_ready():
+            return False
         lesson = self.current_lesson()
         step = self.current_step()
-        if not evaluate_completion(
-            step.complete_when,
-            events_seen=self._events_seen,
-            predicate_values=self._predicate_values,
-        ):
-            return False
         self._emit(
             EVENT_CONDITION_MET,
             {
@@ -175,17 +200,7 @@ class TutorialManager:
             self._predicate_values.clear()
             return True
         self._step_index += 1
-        next_step = self.current_step()
-        self._events_seen.clear()
-        self._predicate_values.clear()
-        self._emit(
-            EVENT_STEP_STARTED,
-            {
-                "lesson_id": lesson.lesson_id,
-                "step_id": next_step.step_id,
-                "step_index": self._step_index,
-            },
-        )
+        self._enter_current_step()
         return True
 
     def snapshot(self) -> TutorialSnapshot:
@@ -214,3 +229,17 @@ class TutorialManager:
     def _next_sequence(self) -> int:
         self._sequence += 1
         return self._sequence
+
+    def _enter_current_step(self) -> None:
+        lesson = self.current_lesson()
+        step = self.current_step()
+        self._events_seen.clear()
+        self._predicate_values.clear()
+        self._emit(
+            EVENT_STEP_STARTED,
+            {
+                "lesson_id": lesson.lesson_id,
+                "step_id": step.step_id,
+                "step_index": self._step_index,
+            },
+        )

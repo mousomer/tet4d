@@ -17,6 +17,7 @@ from ..gameplay.pieces2d import (
     ActivePiece2D,
     PieceShape2D,
     get_piece_bag_2d,
+    rotate_point_2d,
 )
 from ..gameplay.pieces_nd import (
     PIECE_SET_3D_STANDARD,
@@ -81,17 +82,6 @@ def _starter_piece_name(setup: dict[str, Any]) -> str:
     return _normalize_text(setup.get("spawn_piece"))
 
 
-def _setup_enabled(setup: dict[str, Any]) -> bool:
-    return bool(
-        _starter_piece_name(setup)
-        or _normalize_text(setup.get("camera_preset"))
-        or _normalize_text(setup.get("board_preset"))
-        or setup.get("spawn_min_visible_layer") is not None
-        or setup.get("bottom_layers_min") is not None
-        or setup.get("bottom_layers_max") is not None
-    )
-
-
 def _clear_runtime_board_state(state: GameState | GameStateND) -> None:
     state.board.cells.clear()
     state.board.last_cleared_levels = []
@@ -129,6 +119,14 @@ def _piece_min_gravity_nd(state: GameStateND, piece: ActivePieceND) -> int:
     return min(coord[gravity_axis] for coord in mapped)
 
 
+def _oriented_blocks_2d(
+    shape: PieceShape2D,
+    *,
+    rotation: int,
+) -> tuple[tuple[int, int], ...]:
+    return tuple(rotate_point_2d(block[0], block[1], int(rotation)) for block in shape.blocks)
+
+
 def _axis_candidate_values(
     *,
     axis_size: int,
@@ -148,13 +146,15 @@ def _force_piece_placement_2d(
     *,
     state: GameState,
     shape: PieceShape2D,
+    rotation: int,
     min_visible_layer: int,
     scope_tag: str,
 ) -> None:
-    min_block_x = min(block[0] for block in shape.blocks)
-    max_block_x = max(block[0] for block in shape.blocks)
-    min_block_y = min(block[1] for block in shape.blocks)
-    max_block_y = max(block[1] for block in shape.blocks)
+    oriented_blocks = _oriented_blocks_2d(shape, rotation=rotation)
+    min_block_x = min(block[0] for block in oriented_blocks)
+    max_block_x = max(block[0] for block in oriented_blocks)
+    min_block_y = min(block[1] for block in oriented_blocks)
+    max_block_y = max(block[1] for block in oriented_blocks)
     span_x = max_block_x - min_block_x + 1
     target_x = ((state.config.width - span_x) // 2) - min_block_x
     x_candidates = _axis_candidate_values(
@@ -172,7 +172,7 @@ def _force_piece_placement_2d(
 
     for y in range(min_spawn_y, max_spawn_y + 1):
         for x in x_candidates:
-            candidate = ActivePiece2D(shape, (x, y), rotation=0)
+            candidate = ActivePiece2D(shape, (x, y), rotation=rotation)
             if not _piece_is_visible_2d(state, candidate):
                 continue
             if _piece_min_gravity_2d(state, candidate) < min_visible_layer:
@@ -189,13 +189,16 @@ def _force_piece_placement_nd(
     *,
     state: GameStateND,
     shape: PieceShapeND,
+    rel_blocks: tuple[tuple[int, ...], ...] | None,
     min_visible_layer: int,
     scope_tag: str,
+    required_move_delta: tuple[int, ...] | None = None,
+    required_move_repetitions: int = 1,
 ) -> None:
     dims = state.config.dims
     ndim = state.config.ndim
     gravity_axis = state.config.gravity_axis
-    blocks = shape.blocks
+    blocks = tuple(rel_blocks) if rel_blocks is not None else shape.blocks
     mins = [min(block[axis] for block in blocks) for axis in range(ndim)]
     maxs = [max(block[axis] for block in blocks) for axis in range(ndim)]
     initial_pos = list(state._spawn_pos_for_shape(shape))
@@ -227,17 +230,48 @@ def _force_piece_placement_nd(
             candidate_pos[gravity_axis] = gravity_value
             for axis_index, axis in enumerate(lateral_axes):
                 candidate_pos[axis] = lateral_values[axis_index]
-            candidate = ActivePieceND.from_shape(shape, tuple(candidate_pos))
-            if not _piece_is_visible_nd(state, candidate):
-                continue
-            if _piece_min_gravity_nd(state, candidate) < min_visible_layer:
-                continue
-            if state._can_exist(candidate):
+            candidate = ActivePieceND(
+                shape=shape,
+                pos=tuple(candidate_pos),
+                rel_blocks=tuple(blocks),
+            )
+            if _candidate_piece_placeable_nd(
+                state=state,
+                candidate=candidate,
+                min_visible_layer=min_visible_layer,
+                required_move_delta=required_move_delta,
+                required_move_repetitions=required_move_repetitions,
+            ):
                 state.current_piece = candidate
                 return
     raise RuntimeError(
         f"tutorial setup failed ({scope_tag}): could not place ND starter piece without collision"
     )
+
+
+def _candidate_piece_placeable_nd(
+    *,
+    state: GameStateND,
+    candidate: ActivePieceND,
+    min_visible_layer: int,
+    required_move_delta: tuple[int, ...] | None,
+    required_move_repetitions: int,
+) -> bool:
+    if not _piece_is_visible_nd(state, candidate):
+        return False
+    if _piece_min_gravity_nd(state, candidate) < min_visible_layer:
+        return False
+    if not state._can_exist(candidate):
+        return False
+    if required_move_delta is None:
+        return True
+    probe = candidate
+    repeats = max(1, int(required_move_repetitions))
+    for _ in range(repeats):
+        probe = probe.moved(required_move_delta)
+        if not state._can_exist(probe):
+            return False
+    return True
 
 
 def _set_seeded_runtime_rng(
@@ -280,16 +314,108 @@ def _apply_board_preset_2d(
     setup_rng: random.Random,
     scope_tag: str,
 ) -> None:
-    if preset != "2d_almost_line":
+    if preset == "2d_almost_line":
+        target_y = cfg.height - 1
+        gap_x = int(setup_rng.randrange(max(1, cfg.width)))
+        for x in range(cfg.width):
+            if x == gap_x:
+                continue
+            state.board.cells[(x, target_y)] = (x % 7) + 1
+        return
+    if preset == "2d_almost_full_clear_o":
+        if cfg.width < 2 or cfg.height < 2:
+            raise RuntimeError(
+                f"tutorial setup failed ({scope_tag}): 2D full-clear preset requires board >= 2x2"
+            )
+        target_top = cfg.height - 2
+        target_bottom = cfg.height - 1
+        base_x = max(0, min(cfg.width - 2, (cfg.width // 2) - 1))
+        holes = {
+            (base_x, target_top),
+            (base_x + 1, target_top),
+            (base_x, target_bottom),
+            (base_x + 1, target_bottom),
+        }
+        for y in (target_top, target_bottom):
+            for x in range(cfg.width):
+                if (x, y) in holes:
+                    continue
+                state.board.cells[(x, y)] = ((x + y) % 7) + 1
+        return
+    raise RuntimeError(
+        f"tutorial setup failed ({scope_tag}): unknown 2D board preset '{preset}'"
+    )
+
+
+def _apply_board_preset_3d_full_clear_o3(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    scope_tag: str,
+) -> None:
+    if cfg.gravity_axis != 1:
         raise RuntimeError(
-            f"tutorial setup failed ({scope_tag}): unknown 2D board preset '{preset}'"
+            f"tutorial setup failed ({scope_tag}): 3D full-clear preset requires gravity axis 1"
         )
-    target_y = cfg.height - 1
-    gap_x = int(setup_rng.randrange(max(1, cfg.width)))
-    for x in range(cfg.width):
-        if x == gap_x:
-            continue
-        state.board.cells[(x, target_y)] = (x % 7) + 1
+    dim_x, dim_y, dim_z = cfg.dims
+    if dim_x < 2 or dim_y < 2 or dim_z < 1:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 3D full-clear preset requires dims >= (2,2,1)"
+        )
+    target_low = dim_y - 2
+    target_high = dim_y - 1
+    base_x = max(0, min(dim_x - 2, (dim_x // 2) - 1))
+    base_z = max(0, min(dim_z - 1, dim_z // 2))
+    holes = {
+        (base_x, target_low, base_z),
+        (base_x + 1, target_low, base_z),
+        (base_x, target_high, base_z),
+        (base_x + 1, target_high, base_z),
+    }
+    for y in (target_low, target_high):
+        for x in range(dim_x):
+            for z in range(dim_z):
+                coord = (x, y, z)
+                if coord in holes:
+                    continue
+                state.board.cells[coord] = ((x + y + z) % 7) + 1
+
+
+def _apply_board_preset_4d_full_clear_cross4(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    scope_tag: str,
+) -> None:
+    if cfg.gravity_axis != 1:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 4D full-clear preset requires gravity axis 1"
+        )
+    dim_x, dim_y, dim_z, dim_w = cfg.dims
+    if dim_x < 2 or dim_y < 2 or dim_z < 2 or dim_w < 2:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 4D full-clear preset requires dims >= (2,2,2,2)"
+        )
+    target_low = dim_y - 2
+    target_high = dim_y - 1
+    base_x = max(0, min(dim_x - 2, (dim_x // 2) - 1))
+    base_z = max(0, min(dim_z - 2, (dim_z // 2) - 1))
+    base_w = max(0, min(dim_w - 2, (dim_w // 2) - 1))
+    holes = {
+        (base_x, target_low, base_z, base_w),
+        (base_x + 1, target_low, base_z, base_w),
+        (base_x, target_low, base_z + 1, base_w),
+        (base_x, target_low, base_z, base_w + 1),
+        (base_x, target_high, base_z, base_w),
+    }
+    for y in (target_low, target_high):
+        for x in range(dim_x):
+            for z in range(dim_z):
+                for w in range(dim_w):
+                    coord = (x, y, z, w)
+                    if coord in holes:
+                        continue
+                    state.board.cells[coord] = ((x + y + z + w) % 7) + 1
 
 
 def _apply_board_preset_nd(
@@ -300,11 +426,44 @@ def _apply_board_preset_nd(
     setup_rng: random.Random,
     scope_tag: str,
 ) -> None:
-    valid_presets = {"3d_almost_layer", "4d_almost_hyper_layer"}
-    if preset not in valid_presets:
-        raise RuntimeError(
-            f"tutorial setup failed ({scope_tag}): unknown ND board preset '{preset}'"
+    if preset == "3d_almost_layer_screw3":
+        _apply_board_preset_3d_layer_screw3(state=state, cfg=cfg, scope_tag=scope_tag)
+        return
+    if preset == "4d_almost_hyper_layer_skew4":
+        _apply_board_preset_4d_layer_skew4(state=state, cfg=cfg, scope_tag=scope_tag)
+        return
+    if preset in {"3d_almost_layer", "4d_almost_hyper_layer"}:
+        _apply_board_preset_nd_single_gap(
+            state=state,
+            cfg=cfg,
+            setup_rng=setup_rng,
         )
+        return
+    if preset == "3d_almost_full_clear_o3":
+        _apply_board_preset_3d_full_clear_o3(
+            state=state,
+            cfg=cfg,
+            scope_tag=scope_tag,
+        )
+        return
+    if preset == "4d_almost_full_clear_cross4":
+        _apply_board_preset_4d_full_clear_cross4(
+            state=state,
+            cfg=cfg,
+            scope_tag=scope_tag,
+        )
+        return
+    raise RuntimeError(
+        f"tutorial setup failed ({scope_tag}): unknown ND board preset '{preset}'"
+    )
+
+
+def _apply_board_preset_nd_single_gap(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    setup_rng: random.Random,
+) -> None:
     gravity_axis = cfg.gravity_axis
     target_level = cfg.dims[gravity_axis] - 1
     lateral_axes = [axis for axis in range(cfg.ndim) if axis != gravity_axis]
@@ -321,6 +480,150 @@ def _apply_board_preset_nd(
         for index, axis in enumerate(lateral_axes):
             coord[axis] = int(lateral_values[index])
         state.board.cells[tuple(coord)] = (sum(coord) % 7) + 1
+
+
+def _apply_board_preset_3d_layer_screw3(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    scope_tag: str,
+) -> None:
+    if cfg.ndim != 3 or cfg.gravity_axis != 1:
+        raise RuntimeError(
+            "tutorial setup failed "
+            f"({scope_tag}): 3D screw-layer preset requires ndim=3 and gravity axis 1"
+        )
+    dim_x, dim_y, dim_z = cfg.dims
+    if dim_x < 2 or dim_y < 2 or dim_z < 2:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): 3D screw-layer preset requires dims >= (2,2,2)"
+        )
+    target_level = dim_y - 1
+    base_x = max(0, min(dim_x - 2, (dim_x // 2) - 1))
+    base_z = max(0, min(dim_z - 2, (dim_z // 2) - 1))
+    holes = {
+        (base_x + 1, target_level, base_z),
+        (base_x + 1, target_level, base_z + 1),
+    }
+    for x in range(dim_x):
+        for z in range(dim_z):
+            coord = (x, target_level, z)
+            if coord in holes:
+                continue
+            state.board.cells[coord] = (sum(coord) % 7) + 1
+
+
+def _apply_board_preset_4d_layer_skew4(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    scope_tag: str,
+) -> None:
+    if cfg.ndim != 4 or cfg.gravity_axis != 1:
+        raise RuntimeError(
+            "tutorial setup failed "
+            f"({scope_tag}): 4D skew-layer preset requires ndim=4 and gravity axis 1"
+        )
+    dim_x, dim_y, dim_z, dim_w = cfg.dims
+    if dim_x < 2 or dim_y < 2 or dim_z < 2 or dim_w < 2:
+        raise RuntimeError(
+            "tutorial setup failed "
+            f"({scope_tag}): 4D skew-layer preset requires dims >= (2,2,2,2)"
+        )
+    target_level = dim_y - 1
+    base_x = max(1, min(dim_x - 1, dim_x // 2))
+    base_z = max(0, min(dim_z - 2, (dim_z // 2) - 1))
+    base_w = max(0, min(dim_w - 2, (dim_w // 2) - 1))
+    holes = {
+        (base_x, target_level, base_z, base_w),
+        (base_x, target_level, base_z + 1, base_w),
+        (base_x, target_level, base_z + 1, base_w + 1),
+    }
+    for x in range(dim_x):
+        for z in range(dim_z):
+            for w in range(dim_w):
+                coord = (x, target_level, z, w)
+                if coord in holes:
+                    continue
+                state.board.cells[coord] = (sum(coord) % 7) + 1
+
+
+def _ensure_current_piece_visible_2d(
+    *,
+    state: GameState,
+    min_visible_layer: int,
+    scope_tag: str,
+) -> None:
+    if state.current_piece is None:
+        state.spawn_new_piece()
+    piece = state.current_piece
+    if piece is None:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): missing active 2D piece"
+        )
+    if (
+        _piece_is_visible_2d(state, piece)
+        and _piece_min_gravity_2d(state, piece) >= min_visible_layer
+        and state._can_exist(piece)
+    ):
+        return
+    required_drop = max(0, min_visible_layer - _piece_min_gravity_2d(state, piece))
+    if required_drop > 0:
+        candidate = piece.moved(0, required_drop)
+        if (
+            _piece_is_visible_2d(state, candidate)
+            and _piece_min_gravity_2d(state, candidate) >= min_visible_layer
+            and state._can_exist(candidate)
+        ):
+            state.current_piece = candidate
+            return
+    _force_piece_placement_2d(
+        state=state,
+        shape=piece.shape,
+        rotation=int(piece.rotation),
+        min_visible_layer=min_visible_layer,
+        scope_tag=scope_tag,
+    )
+
+
+def _ensure_current_piece_visible_nd(
+    *,
+    state: GameStateND,
+    min_visible_layer: int,
+    scope_tag: str,
+) -> None:
+    if state.current_piece is None:
+        state.spawn_new_piece()
+    piece = state.current_piece
+    if piece is None:
+        raise RuntimeError(
+            f"tutorial setup failed ({scope_tag}): missing active ND piece"
+        )
+    if (
+        _piece_is_visible_nd(state, piece)
+        and _piece_min_gravity_nd(state, piece) >= min_visible_layer
+        and state._can_exist(piece)
+    ):
+        return
+    required_drop = max(0, min_visible_layer - _piece_min_gravity_nd(state, piece))
+    if required_drop > 0:
+        delta = [0] * state.config.ndim
+        delta[state.config.gravity_axis] = required_drop
+        candidate = piece.moved(tuple(delta))
+        if (
+            _piece_is_visible_nd(state, candidate)
+            and _piece_min_gravity_nd(state, candidate) >= min_visible_layer
+            and state._can_exist(candidate)
+        ):
+            state.current_piece = candidate
+            return
+    _force_piece_placement_nd(
+        state=state,
+        shape=piece.shape,
+        rel_blocks=piece.rel_blocks,
+        min_visible_layer=min_visible_layer,
+        scope_tag=scope_tag,
+    )
 
 
 def _find_starter_shape_2d(
@@ -392,6 +695,29 @@ def _find_starter_shape_nd(
     return fallback_shape, fallback_piece_set
 
 
+def _required_move_delta_for_step(
+    *,
+    step_id: str,
+    ndim: int,
+) -> tuple[int, ...] | None:
+    deltas = {
+        "move_x_neg": (-1, 0, 0, 0),
+        "move_x_pos": (1, 0, 0, 0),
+        "move_z_neg": (0, 0, -1, 0),
+        "move_z_pos": (0, 0, 1, 0),
+        "move_w_neg": (0, 0, 0, -1),
+        "move_w_pos": (0, 0, 0, 1),
+    }
+    delta_4d = deltas.get(step_id)
+    if delta_4d is None:
+        return None
+    if ndim == 3:
+        return tuple(delta_4d[:3])
+    if ndim >= 4:
+        return tuple(delta_4d[:4])
+    return None
+
+
 def apply_tutorial_step_setup_2d(
     state: GameState,
     cfg: GameConfig,
@@ -400,8 +726,6 @@ def apply_tutorial_step_setup_2d(
     lesson_id: str,
     step_id: str,
 ) -> None:
-    if not _setup_enabled(setup):
-        return
     scope_tag = _setup_scope_tag(lesson_id=lesson_id, step_id=step_id)
     board_preset = _board_preset_name(setup)
     min_visible_layer = max(
@@ -420,6 +744,11 @@ def apply_tutorial_step_setup_2d(
         or setup.get("bottom_layers_max") is not None
     )
     if not board_mutation_requested:
+        _ensure_current_piece_visible_2d(
+            state=state,
+            min_visible_layer=min_visible_layer,
+            scope_tag=scope_tag,
+        )
         return
     if not starter_piece:
         raise RuntimeError(
@@ -466,6 +795,7 @@ def apply_tutorial_step_setup_2d(
     _force_piece_placement_2d(
         state=state,
         shape=selected_shape,
+        rotation=0,
         min_visible_layer=min_visible_layer,
         scope_tag=scope_tag,
     )
@@ -479,8 +809,6 @@ def apply_tutorial_step_setup_nd(
     lesson_id: str,
     step_id: str,
 ) -> None:
-    if not _setup_enabled(setup):
-        return
     scope_tag = _setup_scope_tag(lesson_id=lesson_id, step_id=step_id)
     board_preset = _board_preset_name(setup)
     min_visible_layer = max(
@@ -499,6 +827,11 @@ def apply_tutorial_step_setup_nd(
         or setup.get("bottom_layers_max") is not None
     )
     if not board_mutation_requested:
+        _ensure_current_piece_visible_nd(
+            state=state,
+            min_visible_layer=min_visible_layer,
+            scope_tag=scope_tag,
+        )
         return
     if not starter_piece:
         raise RuntimeError(
@@ -543,9 +876,51 @@ def apply_tutorial_step_setup_nd(
     state.next_bag = []
     state._refill_bag()
     _remove_first_shape_by_name(state.next_bag, starter_piece)
+    clean_step_id = _normalize_text(step_id, max_length=96).lower()
+    required_move_delta = _required_move_delta_for_step(
+        step_id=clean_step_id,
+        ndim=cfg.ndim,
+    )
+    required_event_count = max(
+        1,
+        _normalize_setup_int(setup.get("required_event_count"), default=1),
+    )
     _force_piece_placement_nd(
         state=state,
         shape=selected_shape,
+        rel_blocks=None,
         min_visible_layer=min_visible_layer,
         scope_tag=scope_tag,
+        required_move_delta=required_move_delta,
+        required_move_repetitions=(
+            required_event_count if required_move_delta is not None else 1
+        ),
+    )
+
+
+def ensure_tutorial_piece_visibility_2d(
+    state: GameState,
+    cfg: GameConfig,
+    *,
+    min_visible_layer: int = _MIN_VISIBLE_LAYER_DEFAULT,
+) -> None:
+    del cfg
+    _ensure_current_piece_visible_2d(
+        state=state,
+        min_visible_layer=max(0, int(min_visible_layer)),
+        scope_tag="runtime_visibility_2d",
+    )
+
+
+def ensure_tutorial_piece_visibility_nd(
+    state: GameStateND,
+    cfg: GameConfigND,
+    *,
+    min_visible_layer: int = _MIN_VISIBLE_LAYER_DEFAULT,
+) -> None:
+    del cfg
+    _ensure_current_piece_visible_nd(
+        state=state,
+        min_visible_layer=max(0, int(min_visible_layer)),
+        scope_tag="runtime_visibility_nd",
     )

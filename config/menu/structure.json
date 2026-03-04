@@ -4,8 +4,8 @@
     "pause": "pause_root"
   },
   "launcher_subtitles": {
-    "launcher_root": "Play or continue, then adjust Settings, Controls, Help, and Bot options.",
-    "launcher_play": "Select a dimension, open Tutorials, or jump to topology controls.",
+    "launcher_root": "Play, continue, or launch Tutorials; then adjust Settings, Controls, Help, and Bot options.",
+    "launcher_play": "Select a dimension or jump to topology controls.",
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {
@@ -88,6 +88,11 @@
           "action_id": "continue"
         },
         {
+          "type": "route",
+          "label": "Tutorials",
+          "route_id": "tutorials"
+        },
+        {
           "type": "action",
           "label": "Settings",
           "action_id": "settings"
@@ -138,11 +143,6 @@
           "action_id": "play_4d"
         },
         {
-          "type": "route",
-          "label": "Tutorials",
-          "route_id": "tutorials"
-        },
-        {
           "type": "action",
           "label": "Topology Lab",
           "action_id": "topology_lab"
@@ -161,16 +161,6 @@
           "type": "action",
           "label": "Restart Run",
           "action_id": "restart"
-        },
-        {
-          "type": "action",
-          "label": "Restart Tutorial",
-          "action_id": "tutorial_restart"
-        },
-        {
-          "type": "action",
-          "label": "Skip Tutorial",
-          "action_id": "tutorial_skip"
         },
         {
           "type": "action",
@@ -335,8 +325,6 @@
   "pause_menu_rows": [
     "Resume",
     "Restart Run",
-    "Restart Tutorial",
-    "Skip Tutorial",
     "Settings",
     "Controls",
     "Help",
@@ -348,8 +336,6 @@
   "pause_menu_actions": [
     "resume",
     "restart",
-    "tutorial_restart",
-    "tutorial_skip",
     "settings",
     "keybindings",
     "help",

@@ -20,7 +20,7 @@ def _base_payload() -> dict[str, object]:
                             "text": "Move once",
                             "hint": "Use move keys",
                             "highlights": ["piece"],
-                            "key_prompts": ["move_x_neg", "move_x_pos"],
+                            "key_prompts": ["move_x_neg"],
                         },
                         "gating": {
                             "allow": ["move_x_neg", "move_x_pos"],
@@ -37,6 +37,7 @@ def _base_payload() -> dict[str, object]:
                             "events": ["move_x_neg"],
                             "predicates": [],
                             "logic": "all",
+                            "event_count_required": 1,
                         },
                     }
                 ],
@@ -58,6 +59,7 @@ class TutorialSchemaTests(unittest.TestCase):
         self.assertEqual(lesson.steps[0].setup.spawn_min_visible_layer, 2)
         self.assertEqual(lesson.steps[0].setup.bottom_layers_min, 1)
         self.assertEqual(lesson.steps[0].setup.bottom_layers_max, 2)
+        self.assertEqual(lesson.steps[0].complete_when.event_count_required, 1)
 
     def test_duplicate_lesson_id_raises(self) -> None:
         payload = _base_payload()
@@ -81,11 +83,25 @@ class TutorialSchemaTests(unittest.TestCase):
         parsed = parse_tutorial_payload(payload)
         self.assertEqual(parsed.lessons[0].steps[0].ui.text, "Move now")
 
+    def test_multiple_key_prompts_rejected(self) -> None:
+        payload = _base_payload()
+        step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
+        step["ui"]["key_prompts"] = ["move_x_neg", "move_x_pos"]  # type: ignore[index]
+        with self.assertRaises(RuntimeError):
+            parse_tutorial_payload(payload)
+
     def test_setup_bottom_layer_bounds_validation(self) -> None:
         payload = _base_payload()
         step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
         step["setup"]["bottom_layers_min"] = 2  # type: ignore[index]
         step["setup"]["bottom_layers_max"] = 1  # type: ignore[index]
+        with self.assertRaises(RuntimeError):
+            parse_tutorial_payload(payload)
+
+    def test_event_count_required_validation(self) -> None:
+        payload = _base_payload()
+        step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
+        step["complete_when"]["event_count_required"] = 0  # type: ignore[index]
         with self.assertRaises(RuntimeError):
             parse_tutorial_payload(payload)
 

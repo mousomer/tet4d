@@ -1226,6 +1226,11 @@ def tutorial_lessons_payload_runtime() -> dict[str, Any]:
     return _call_tutorial_content("tutorial_payload_dict")
 
 
+def tutorial_plan_payload_runtime() -> dict[str, Any]:
+    payload = _call_tutorial_content("tutorial_plan_payload_dict")
+    return dict(payload)
+
+
 def tutorial_lesson_ids_runtime() -> tuple[str, ...]:
     lesson_ids = _call_tutorial_content("tutorial_lesson_ids")
     return tuple(str(lesson_id) for lesson_id in lesson_ids)
@@ -1260,13 +1265,35 @@ def tutorial_runtime_sync_and_advance_runtime(
     session: Any,
     *,
     lines_cleared: int,
+    overlay_transparency: float | None = None,
+    grid_visible: bool | None = None,
+    board_cell_count: int | None = None,
 ) -> bool:
-    return bool(session.sync_and_advance(lines_cleared=int(lines_cleared)))
+    return bool(
+        session.sync_and_advance(
+            lines_cleared=int(lines_cleared),
+            overlay_transparency=overlay_transparency,
+            grid_visible=grid_visible,
+            board_cell_count=board_cell_count,
+        )
+    )
 
 
 def tutorial_runtime_overlay_payload_runtime(session: Any) -> dict[str, Any]:
     payload = session.overlay_payload()
     return dict(payload)
+
+
+def tutorial_runtime_required_action_runtime(session: Any) -> str | None:
+    action = session.required_action()
+    if action is None:
+        return None
+    return str(action)
+
+
+def tutorial_runtime_allowed_actions_runtime(session: Any) -> tuple[str, ...]:
+    actions = session.allowed_actions()
+    return tuple(str(action) for action in actions)
 
 
 def tutorial_runtime_event_log_tail_runtime(
@@ -1289,6 +1316,18 @@ def tutorial_runtime_consume_pending_setup_runtime(
 
 def tutorial_runtime_restart_runtime(session: Any) -> bool:
     return bool(session.restart())
+
+
+def tutorial_runtime_redo_stage_runtime(session: Any) -> bool:
+    return bool(session.redo_stage())
+
+
+def tutorial_runtime_previous_stage_runtime(session: Any) -> bool:
+    return bool(session.previous_stage())
+
+
+def tutorial_runtime_next_stage_runtime(session: Any) -> bool:
+    return bool(session.next_stage())
 
 
 def tutorial_runtime_skip_runtime(session: Any) -> bool:
@@ -1331,6 +1370,44 @@ def tutorial_apply_step_setup_nd_runtime(
         lesson_id=str(payload.get("lesson_id", "")),
         step_id=str(payload.get("step_id", "")),
     )
+
+
+def tutorial_ensure_piece_visibility_2d_runtime(
+    state: Any,
+    cfg: Any,
+    *,
+    min_visible_layer: int = 2,
+) -> bool:
+    from .tutorial.setup_apply import ensure_tutorial_piece_visibility_2d as _ensure
+
+    try:
+        _ensure(
+            state,
+            cfg,
+            min_visible_layer=int(min_visible_layer),
+        )
+        return True
+    except RuntimeError:
+        return False
+
+
+def tutorial_ensure_piece_visibility_nd_runtime(
+    state: Any,
+    cfg: Any,
+    *,
+    min_visible_layer: int = 2,
+) -> bool:
+    from .tutorial.setup_apply import ensure_tutorial_piece_visibility_nd as _ensure
+
+    try:
+        _ensure(
+            state,
+            cfg,
+            min_visible_layer=int(min_visible_layer),
+        )
+        return True
+    except RuntimeError:
+        return False
 
 
 def load_menu_payload_runtime() -> dict[str, Any]:
@@ -1482,9 +1559,13 @@ def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
 
 
 def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
-    state = kwargs.get("state") if kwargs else args[0]
-    expected_coord_len = kwargs.get("expected_coord_len") if kwargs else args[1]
-    color_for_cell = kwargs.get("color_for_cell") if kwargs else args[2]
+    state = kwargs.get("state", args[0] if len(args) > 0 else None)
+    expected_coord_len = kwargs.get("expected_coord_len", args[1] if len(args) > 1 else 0)
+    color_for_cell = kwargs.get("color_for_cell", args[2] if len(args) > 2 else None)
+    if state is None or getattr(state, "board", None) is None:
+        return ()
+    if color_for_cell is None:
+        return ()
     ghost_cells: list[tuple[tuple[int, ...], tuple[int, int, int]]] = []
     for coord, cell_id in state.board.last_cleared_cells:
         if len(coord) != int(expected_coord_len):

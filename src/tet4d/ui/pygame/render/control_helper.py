@@ -118,6 +118,19 @@ def _helper_capabilities(
     }
 
 
+def _apply_2d_camera_fallback_bindings(
+    action_bindings: dict[str, tuple[int, ...]],
+) -> None:
+    camera_groups = runtime_binding_groups_for_dimension(3)
+    camera_map = camera_groups.get("camera", {})
+    for action in ("overlay_alpha_dec", "overlay_alpha_inc"):
+        if action in action_bindings:
+            continue
+        fallback = tuple(camera_map.get(action, ()))
+        if fallback:
+            action_bindings[action] = fallback
+
+
 def control_groups_for_dimension(
     dimension: int,
     *,
@@ -136,6 +149,8 @@ def control_groups_for_dimension(
     )
     groups = runtime_binding_groups_for_dimension(dim)
     action_bindings = _binding_map_for_groups(groups)
+    if dim == 2:
+        _apply_2d_camera_fallback_bindings(action_bindings)
     control_groups: list[ControlGroup] = []
     for panel in panel_specs:
         title = str(panel.get("title", "")).strip()

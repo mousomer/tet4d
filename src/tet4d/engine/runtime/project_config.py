@@ -49,6 +49,37 @@ _DEFAULT_CONSTANTS = {
         "clear_effect_duration_ms_3d": 360.0,
         "clear_effect_duration_ms_4d": 380.0,
     },
+    "tutorial": {
+        "min_visible_layer": 2,
+        "step_transition_delay_ms": 1000,
+        "overlay_target_percent": {
+            "min": 20,
+            "max": 80,
+        },
+        "overlay_target_tolerance_percent": 2,
+        "min_board_dims": {
+            "2d": {
+                "width": 10,
+                "height": 20,
+            },
+            "3d": {
+                "x": 6,
+                "y": 18,
+                "z": 6,
+            },
+            "4d": {
+                "x": 10,
+                "y": 20,
+                "z": 6,
+                "w": 4,
+            },
+        },
+        "action_delay_ms": {
+            "movement": 170,
+            "rotation": 190,
+            "drop": 1000,
+        }
+    },
     "rendering": {
         "2d": {
             "cell_size": 30,

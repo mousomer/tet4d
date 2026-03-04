@@ -48,6 +48,7 @@ class MenuAction(Enum):
 
 _MENU_KEY_ACTIONS = {
     pygame.K_ESCAPE: MenuAction.QUIT,
+    pygame.K_BACKSPACE: MenuAction.QUIT,
     pygame.K_RETURN: MenuAction.START_GAME,
     pygame.K_KP_ENTER: MenuAction.START_GAME,
     pygame.K_UP: MenuAction.SELECT_UP,
@@ -60,7 +61,7 @@ _MENU_KEY_ACTIONS = {
     pygame.K_LEFTBRACKET: MenuAction.PROFILE_PREV,
     pygame.K_RIGHTBRACKET: MenuAction.PROFILE_NEXT,
     pygame.K_n: MenuAction.PROFILE_NEW,
-    pygame.K_BACKSPACE: MenuAction.PROFILE_DELETE,
+    pygame.K_DELETE: MenuAction.PROFILE_DELETE,
     pygame.K_b: MenuAction.REBIND_TOGGLE,
     pygame.K_TAB: MenuAction.REBIND_TARGET_NEXT,
     pygame.K_BACKQUOTE: MenuAction.REBIND_TARGET_PREV,

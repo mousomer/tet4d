@@ -384,6 +384,23 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).
+
+- Added config-backed clear-size weighting so larger cleared layers award higher
+  clear points with square-root scaling (`sqrt(layer_size/reference)`, floor `1.0`):
+  - `config/gameplay/tuning.json` (`clear_scoring.layer_size_weighting`)
+  - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
+  - `src/tet4d/engine/runtime/runtime_config.py`
+  - `src/tet4d/engine/gameplay/scoring_bonus.py`
+  - `src/tet4d/engine/gameplay/game2d.py`
+  - `src/tet4d/engine/gameplay/game_nd.py`
+- Added regression coverage and runtime-config assertions:
+  - `tests/unit/engine/test_scoring_bonus.py`
+  - `tests/unit/engine/test_runtime_config.py`
+- Updated scoring help text to reflect clear-size weighting:
+  - `config/help/content/runtime_help_content.json`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+
 Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 baseline).
 
 - Added tutorial runtime state layer with deterministic progression hooks and
@@ -407,19 +424,67 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
   - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
 - Added tutorial in-game overlay renderer (instruction + key prompts + progress):
   - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+- Added canonical non-Python tutorial plan config:
+  - `config/tutorial/plan.json`
+  - `config/schema/tutorial_plan.schema.json`
+  - `src/tet4d/engine/tutorial/content.py` loader/validator + cache
+  - `src/tet4d/engine/api.py` runtime accessor (`tutorial_plan_payload_runtime`)
 - Tightened runtime tutorial behavior contract:
   - step-pause enforcement now freezes gravity/bot tick while tutorial is running
+  - tutorial stages now auto-redo if no currently legal stage action exists
+    (prevents dead-end game-over states during gated steps)
+  - active tutorial piece visibility is re-enforced at runtime; if visibility
+    cannot be restored deterministically, tutorial session restarts
+  - tutorial mode clamps board dimensions to configured minimums (2D/3D/4D)
+    before session start to avoid invalid spawn/setup states
+  - full-clear bonus stages now use deterministic one-piece board-clear presets:
+    - `2d_almost_full_clear_o` + starter `O`
+    - `3d_almost_full_clear_o3` + starter `O3`
+    - `4d_almost_full_clear_cross4` + starter `CROSS4`
+  - gameplay Esc now routes to menu/pause flow instead of instant quit
+  - gameplay restart action no longer resets tutorial lesson to step 1
+  - leaderboard registration is disabled during tutorial sessions
   - clear-step board presets (`2d_almost_line`, `3d_almost_layer`, `4d_almost_hyper_layer`)
     are applied deterministically
   - tutorial camera presets (`tutorial_3d_default`, `tutorial_4d_default`) are now
     applied by loop adapters
-  - pause menu now exposes tutorial controls (`tutorial_restart`, `tutorial_skip`)
+  - pause menu tutorial control is now hotkey-driven (no dedicated
+    `tutorial_restart` row in pause menu)
+  - tutorial pause/menu copy now exposes explicit tutorial exit wording
+    (`Exit Tutorial`)
+  - tutorial restart stability hardened:
+    - pause-menu restart now emits tutorial `restart` action
+    - tutorial `F9` now restarts the tutorial lesson session deterministically
+      and reapplies step setup
+    - visibility recovery now redoes the current step (instead of restarting the
+      full lesson), reducing cross-step instability
+  - 3D/4D move+rotate stages now force asymmetric starters (`SCREW3`/`SKEW4_A`)
+  - 3D/4D layer-clear presets now use deterministic solvable hole patterns:
+    - `3d_almost_layer_screw3`
+    - `4d_almost_hyper_layer_skew4`
+  - tutorial stage pacing increased (movement/rotation/drop delays) via
+    config-backed constants
   - lesson packs now require full movement/rotation/camera action completion per mode
+  - tutorial lesson segmentation and ordering were clarified and canonicalized:
+    - translations
+    - piece rotations
+    - camera rotations (3D/4D)
+    - camera controls (`toggle_grid`, transparency)
+    - goals (target clear, line/layer clear, full board clear)
+  - interactive system-control tutorial stages (`menu_button`, `help_button`,
+    `restart_button`) were removed; controls are now guidance-only in overlay copy
+  - movement and rotation stages now require 4 successful actions per direction
+  - full-board clean stages now require `board_cleared` predicate in addition to
+    clear-event predicates
+  - tutorial overlay panel moved to enlarged left-side layout with clearer
+    `Segment` + `Task` + `KEY/ACTION` formatting
   - files:
     - `config/tutorial/lessons.json`
+    - `config/project/constants.json`
     - `config/menu/structure.json`
     - `src/tet4d/engine/tutorial/setup_apply.py`
     - `src/tet4d/engine/tutorial/runtime.py`
+    - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
     - `src/tet4d/ui/pygame/front3d_game.py`
     - `src/tet4d/ui/pygame/front4d_game.py`
     - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
@@ -780,6 +845,108 @@ Current sub-batch (2026-03-01): stage 791-800 governance + LOC cleanup.
   - targeted policy/menu/keybinding/front4d/project-contract test suites passed
   - `CODEX_MODE=1 ./scripts/verify.sh` passed
   - `python scripts/arch_metrics.py` passed.
+
+Current sub-batch (2026-03-03): tutorial control-flow hardening (Esc-back, stage redo, paced input).
+
+- Added stage-local redo control (`F7`) without full lesson reset:
+  - `src/tet4d/engine/tutorial/manager.py`
+  - `src/tet4d/engine/tutorial/runtime.py`
+  - `src/tet4d/engine/api.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+- Enforced menu/help back semantics via Esc-only return event (`menu_back`) for tutorial progression:
+  - `src/tet4d/ui/pygame/runtime_ui/help_menu.py`
+  - `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `cli/front2d.py`
+  - `config/tutorial/lessons.json`
+- Tightened stage success criteria for board-goal steps:
+  - `config/tutorial/lessons.json` (`target_drop` now requires clear predicates)
+- Enforced visible active-piece placement at every tutorial step setup apply:
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+- Added config-backed tutorial action pacing (movement/rotation/drop delays):
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+- Verification:
+  - targeted tutorial suites passed
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-03): tutorial/menu flow consolidation (root Tutorials route, stage navigation, free-play handoff).
+
+- Moved tutorial entrypoint to launcher root and removed pause-menu tutorial exit action:
+  - `config/menu/structure.json`
+  - `tests/unit/engine/test_menu_policy.py`
+  - `tests/unit/engine/test_pause_menu.py`
+- Tutorial launch now bypasses per-mode setup menus and starts from deterministic lesson presets:
+  - `src/tet4d/ui/pygame/launch/launcher_play.py`
+- Added tutorial stage navigation controls (`F5` previous, `F6` next) and
+  preserved existing `F7` redo, `F8` main-menu exit, `F9` lesson restart:
+  - `src/tet4d/engine/api.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+- Tutorial end now transitions cleanly into free play by dropping completed
+  tutorial session state in active loops:
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+- Hardened 4D W-move tutorial setup solvability and added regression coverage:
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+  - `tests/unit/engine/test_tutorial_setup_apply.py`
+- Clarified 2D drop-phase instruction wording (precision drop vs line clear):
+  - `config/tutorial/lessons.json`
+- Enforced menu back parity for `Backspace` with `Esc`:
+  - `src/tet4d/ui/pygame/menu/menu_runner.py`
+  - `src/tet4d/ui/pygame/menu/menu_controls.py`
+  - `src/tet4d/ui/pygame/menu/keybindings_menu.py`
+- Verification:
+  - `PYTHONPATH=src .venv/bin/pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_pause_menu.py tests/unit/engine/test_front_launcher_routes.py tests/unit/engine/test_nd_routing.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-03): tutorial camera/transparency UX alignment + stage-stability hardening.
+
+- Unified helper-panel control taxonomy with camera/transparency parity:
+  - moved `grid mode` into camera panel and exposed camera panel in 2D
+  - added transparency meter bar (`Locked-cell transparency`) to 2D/3D/4D side panels
+  - files:
+    - `config/help/layout/runtime_help_action_layout.json`
+    - `src/tet4d/ui/pygame/render/control_helper.py`
+    - `src/tet4d/ui/pygame/render/gfx_panel_2d.py`
+    - `src/tet4d/ui/pygame/render/gfx_game.py`
+    - `src/tet4d/engine/front3d_render.py`
+    - `src/tet4d/engine/front4d_render.py`
+    - `tests/unit/engine/test_control_ui_helpers.py`
+- Tutorial runtime pacing/stability updates:
+  - added config-backed `>=1s` step transition hold
+  - added transparency target-range progression predicate with per-step randomized target in `20%-80%`
+  - enabled `soft_drop` as always-allowed tutorial action
+  - passed overlay/grid runtime predicates into tutorial progression for 2D/3D/4D loops
+  - files:
+    - `config/project/constants.json`
+    - `src/tet4d/engine/runtime/project_config.py`
+    - `src/tet4d/engine/tutorial/manager.py`
+    - `src/tet4d/engine/tutorial/runtime.py`
+    - `src/tet4d/engine/api.py`
+    - `cli/front2d.py`
+    - `src/tet4d/ui/pygame/front3d_game.py`
+    - `src/tet4d/ui/pygame/front4d_game.py`
+- Tutorial content updates:
+  - 4D movement stages now require double action count (`event_count_required=2`)
+  - layer-fill and full-clear goal steps now accept `toggle_grid` and require `grid_enabled`
+  - transparency stages now require target-range predicate completion
+  - file:
+    - `config/tutorial/lessons.json`
+- Removed `Restart Tutorial` from pause menu action graph:
+  - `config/menu/structure.json`
+  - `src/tet4d/engine/ui_logic/menu_action_contracts.py`
+  - `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`
+  - `tests/unit/engine/test_pause_menu.py`
+- Verification:
+  - `PYTHONPATH=src pytest -q tests/unit/engine/test_control_ui_helpers.py tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_pause_menu.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
 ## 6. Source Inputs
 

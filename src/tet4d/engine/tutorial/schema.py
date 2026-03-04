@@ -50,6 +50,7 @@ class TutorialCompletionCondition:
     events: tuple[str, ...]
     predicates: tuple[str, ...]
     logic: str
+    event_count_required: int
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,8 @@ def _parse_ui(raw: object, *, path: str) -> TutorialStepUI:
         path=f"{path}.key_prompts",
         normalize_lower=True,
     )
+    if len(key_prompts) != 1:
+        raise RuntimeError(f"{path}.key_prompts must contain exactly one action")
     return TutorialStepUI(
         text=text,
         hint=hint,
@@ -262,8 +265,16 @@ def _parse_complete_when(raw: object, *, path: str) -> TutorialCompletionConditi
         max_length=16,
         normalize_lower=True,
     )
+    event_count_required = require_int(
+        completion_obj.get("event_count_required", 1),
+        path=f"{path}.event_count_required",
+        min_value=1,
+        max_value=9,
+    )
     if logic not in _VALID_LOGIC:
         raise RuntimeError(f"{path}.logic must be one of: all, any")
+    if len(events) != 1:
+        raise RuntimeError(f"{path}.events must contain exactly one action")
     if not events and not predicates:
         raise RuntimeError(
             f"{path} must define at least one event or predicate requirement"
@@ -272,6 +283,7 @@ def _parse_complete_when(raw: object, *, path: str) -> TutorialCompletionConditi
         events=events,
         predicates=predicates,
         logic=logic,
+        event_count_required=event_count_required,
     )
 
 
@@ -399,6 +411,7 @@ def _step_payload(step: TutorialStep) -> dict[str, Any]:
             "events": list(step.complete_when.events),
             "predicates": list(step.complete_when.predicates),
             "logic": step.complete_when.logic,
+            "event_count_required": int(step.complete_when.event_count_required),
         },
     }
 

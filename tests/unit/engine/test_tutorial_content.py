@@ -3,6 +3,12 @@ from __future__ import annotations
 import unittest
 
 from tet4d.engine import api as engine_api
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_CLASSIC, get_piece_bag_2d
+from tet4d.engine.gameplay.pieces_nd import (
+    PIECE_SET_3D_STANDARD,
+    PIECE_SET_4D_STANDARD,
+    get_piece_shapes_nd,
+)
 from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 from tet4d.engine.tutorial import content
 
@@ -30,6 +36,18 @@ class TutorialContentTests(unittest.TestCase):
         self.assertTrue(any(lesson_id == "tutorial_3d_core" for lesson_id in lesson_ids))
         self.assertTrue(any(lesson_id == "tutorial_4d_core" for lesson_id in lesson_ids))
 
+    def test_tutorial_plan_file_loads(self) -> None:
+        payload = content.load_tutorial_plan_payload()
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["plan_id"], "interactive_tutorials_v1")
+        self.assertGreaterEqual(len(payload["stages"]), 1)
+
+    def test_api_exposes_tutorial_plan_payload(self) -> None:
+        payload = engine_api.tutorial_plan_payload_runtime()
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["plan_id"], "interactive_tutorials_v1")
+        self.assertGreaterEqual(len(payload["stages"]), 1)
+
     def test_lessons_cover_expected_movement_rotation_and_camera_actions(self) -> None:
         payload = content.load_tutorial_payload()
         lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
@@ -49,6 +67,7 @@ class TutorialContentTests(unittest.TestCase):
             "hard_drop",
             "rotate_xy_pos",
             "rotate_xy_neg",
+            "toggle_grid",
         }
         expected_3d = expected_2d | {
             "move_z_neg",
@@ -98,6 +117,145 @@ class TutorialContentTests(unittest.TestCase):
                     self.assertIn(action, known)
                 for action in step.gating.deny:
                     self.assertIn(action, known)
+
+    def test_plan_actions_and_order_are_valid(self) -> None:
+        known = set(binding_action_ids()) | {"menu", "help", "restart", "quit"}
+        payload = content.load_tutorial_plan_payload()
+        stages = payload["stages"]
+        self.assertGreaterEqual(len(stages), 1)
+        last_order = 0
+        for stage in stages:
+            order = int(stage["order"])
+            self.assertGreater(order, last_order)
+            last_order = order
+            action = stage.get("action_id")
+            if action:
+                self.assertIn(action, known)
+
+    def test_board_goal_steps_require_clear_predicates(self) -> None:
+        payload = content.load_tutorial_payload()
+        lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
+        expected_predicates = {
+            "tutorial_2d_core": ("line_cleared",),
+            "tutorial_3d_core": ("layer_cleared",),
+            "tutorial_4d_core": ("hyper_layer_cleared",),
+        }
+        for lesson_id, expected in expected_predicates.items():
+            lesson = lessons[lesson_id]
+            target_step = next(
+                step for step in lesson.steps if step.step_id == "target_drop"
+            )
+            self.assertEqual(target_step.complete_when.predicates, expected)
+
+    def test_system_control_stages_are_non_interactive_guidance_only(self) -> None:
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            step_ids = {step.step_id for step in lesson.steps}
+            self.assertNotIn("menu_button", step_ids)
+            self.assertNotIn("help_button", step_ids)
+            self.assertNotIn("restart_button", step_ids)
+
+    def test_move_and_rotation_stages_require_four_actions(self) -> None:
+        camera_rotation_ids = {
+            "yaw_fine_neg",
+            "yaw_neg",
+            "yaw_pos",
+            "yaw_fine_pos",
+            "pitch_neg",
+            "pitch_pos",
+            "view_xw_neg",
+            "view_xw_pos",
+            "view_zw_neg",
+            "view_zw_pos",
+        }
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            for step in lesson.steps:
+                if (
+                    step.step_id.startswith("move_")
+                    or step.step_id.startswith("rotate_")
+                    or step.step_id in camera_rotation_ids
+                ):
+                    self.assertEqual(step.complete_when.event_count_required, 4)
+
+    def test_nd_move_and_rotation_steps_use_asymmetric_starters(self) -> None:
+        payload = content.load_tutorial_payload()
+        lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
+        expected = {
+            "tutorial_3d_core": "SCREW3",
+            "tutorial_4d_core": "SKEW4_A",
+        }
+        for lesson_id, starter_piece in expected.items():
+            lesson = lessons[lesson_id]
+            for step in lesson.steps:
+                if not (
+                    step.step_id.startswith("move_")
+                    or step.step_id.startswith("rotate_")
+                ):
+                    continue
+                self.assertEqual(step.setup.starter_piece_id, starter_piece)
+
+    def test_layer_clear_steps_use_solvable_board_presets(self) -> None:
+        payload = content.load_tutorial_payload()
+        lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
+        lesson_3d = lessons["tutorial_3d_core"]
+        lesson_4d = lessons["tutorial_4d_core"]
+        for step_id in ("target_drop", "layer_fill"):
+            step = next(step for step in lesson_3d.steps if step.step_id == step_id)
+            self.assertEqual(step.setup.board_preset, "3d_almost_layer_screw3")
+        for step_id in ("target_drop", "hyper_layer_fill"):
+            step = next(step for step in lesson_4d.steps if step.step_id == step_id)
+            self.assertEqual(step.setup.board_preset, "4d_almost_hyper_layer_skew4")
+
+    def test_full_clear_goal_requires_board_cleared_predicate(self) -> None:
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            full_clear_step = next(
+                step for step in lesson.steps if step.step_id == "full_clear_bonus"
+            )
+            self.assertIn("board_cleared", full_clear_step.complete_when.predicates)
+
+    def test_starter_piece_ids_match_lesson_dimension(self) -> None:
+        piece_ids_by_mode = {
+            "2d": {
+                shape.name
+                for shape in get_piece_bag_2d(
+                    PIECE_SET_2D_CLASSIC,
+                    board_dims=(10, 20),
+                )
+            },
+            "3d": {
+                shape.name
+                for shape in get_piece_shapes_nd(
+                    3,
+                    piece_set_id=PIECE_SET_3D_STANDARD,
+                    board_dims=(6, 18, 6),
+                )
+            },
+            "4d": {
+                shape.name
+                for shape in get_piece_shapes_nd(
+                    4,
+                    piece_set_id=PIECE_SET_4D_STANDARD,
+                    board_dims=(10, 20, 6, 4),
+                )
+            },
+        }
+        payload = content.load_tutorial_payload()
+        for lesson in payload.lessons:
+            allowed_ids = piece_ids_by_mode[lesson.mode]
+            for step in lesson.steps:
+                starter_piece_id = step.setup.starter_piece_id
+                if starter_piece_id is None:
+                    continue
+                self.assertIn(
+                    starter_piece_id,
+                    allowed_ids,
+                    (
+                        "invalid starter piece for lesson mode: "
+                        f"{lesson.lesson_id}:{step.step_id} -> {starter_piece_id}"
+                    ),
+                )
 
 
 if __name__ == "__main__":

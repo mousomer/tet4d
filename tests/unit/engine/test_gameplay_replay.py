@@ -340,11 +340,13 @@ class TestGameplayReplay(unittest.TestCase):
         )
         self.assertGreater(len(state.board.cells), 0)
 
+        quit_key = self._key_for(SYSTEM_KEYS, "quit")
+        expected_quit_result = (
+            "menu" if int(quit_key) == int(pygame.K_ESCAPE) else "quit"
+        )
         self.assertEqual(
-            front2d.handle_game_keydown(
-                _keydown(self._key_for(SYSTEM_KEYS, "quit")), state, cfg
-            ),
-            "quit",
+            front2d.handle_game_keydown(_keydown(quit_key), state, cfg),
+            expected_quit_result,
         )
         self.assertEqual(
             front2d.handle_game_keydown(

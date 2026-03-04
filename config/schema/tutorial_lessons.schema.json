@@ -50,7 +50,15 @@
           "$ref": "#/$defs/stringList"
         },
         "key_prompts": {
-          "$ref": "#/$defs/stringList"
+          "allOf": [
+            {
+              "$ref": "#/$defs/stringList"
+            },
+            {
+              "minItems": 1,
+              "maxItems": 1
+            }
+          ]
         }
       }
     },
@@ -114,7 +122,15 @@
       ],
       "properties": {
         "events": {
-          "$ref": "#/$defs/stringList"
+          "allOf": [
+            {
+              "$ref": "#/$defs/stringList"
+            },
+            {
+              "minItems": 1,
+              "maxItems": 1
+            }
+          ]
         },
         "predicates": {
           "$ref": "#/$defs/stringList"
@@ -125,6 +141,11 @@
             "all",
             "any"
           ]
+        },
+        "event_count_required": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
         }
       }
     },

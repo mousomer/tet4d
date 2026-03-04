@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-02
-Branch: `master`
-Worktree expectation at handoff: dirty (stage-853-890 tutorial rollout batch pending commit)
+Last updated: 2026-03-04
+Branch: `codex/tutorials1`
+Worktree expectation at handoff: dirty (tutorial rollout + UI/runtime sync batch ready to commit)
 
 ## Purpose
 
@@ -106,15 +106,64 @@ Completed:
     - curated asymmetric starter piece IDs,
     - starter piece fully visible with minimum gravity layer offset 2,
     - deterministic 1-2 seeded bottom challenge layers.
+  - tutorial planning/structure are config-backed (non-Python):
+    - `config/tutorial/lessons.json` (runtime structure)
+    - `config/tutorial/plan.json` (ordered stage plan)
   - tutorial-step pause contract:
     - gravity/bot progression is paused while tutorial session is running
     - step progression waits on explicit required actions/predicates
   - tutorial setup presets now applied at runtime:
     - board presets (`2d_almost_line`, `3d_almost_layer`, `4d_almost_hyper_layer`)
     - camera presets (`tutorial_3d_default`, `tutorial_4d_default`)
-  - pause menu now includes tutorial controls for active sessions:
-    - `tutorial_restart`
-    - `tutorial_skip`
+  - pause menu tutorial-specific restart action was removed; tutorial control uses
+    hotkeys (`F5/F6/F7/F8/F9`) while pause keeps generic run actions.
+  - launcher IA now exposes `Tutorials` at root-level; tutorial launch skips setup
+    menus and uses persisted/default per-mode settings + deterministic lesson
+    presets.
+  - tutorial UX hardening:
+    - menu/help steps now require Esc-return (`menu_back`) before progression
+    - per-stage redo is available (`F7`) without resetting full lesson
+    - target-drop stages now require clear predicates (no event-only pass)
+    - tutorial overlay key-action rows are unified and bolded for clarity
+    - tutorial step setup now enforces visible active-piece placement on every stage
+    - tutorial movement/rotation/drop pacing is rate-limited by config-backed delays
+    - runtime safety guard auto-redoes stage if no legal tutorial action remains
+    - tutorial runtime re-enforces visible active-piece placement; impossible
+      placement triggers tutorial restart
+    - tutorial sessions clamp board dims to configured 2D/3D/4D minimums at launch
+    - full-clear bonus stages now use deterministic single-piece board-clear presets:
+      - 2D: `O` + `2d_almost_full_clear_o`
+      - 3D: `O3` + `3d_almost_full_clear_o3`
+      - 4D: `CROSS4` + `4d_almost_full_clear_cross4`
+    - gameplay Esc key now routes to pause/menu return (not instant quit)
+    - gameplay restart no longer restarts tutorial lesson progression
+    - leaderboard session registration is disabled for tutorial runs
+    - pause-menu restart now emits tutorial `restart` action (unblocks restart step)
+    - tutorial hotkeys are unified across 2D/3D/4D:
+      - `F5`: previous stage
+      - `F6`: next stage
+      - `F7`: redo stage
+      - `F8`: exit tutorial to main menu
+      - `F9`: restart tutorial lesson
+    - tutorial `F9` restarts lesson session and reapplies deterministic step setup
+    - tutorial completion now transitions cleanly to free-play by clearing tutorial
+      session state in-loop (no forced menu return)
+    - `Backspace` now mirrors `Esc` for menu-back navigation
+    - visibility safety now redoes current step instead of full lesson restart
+    - 3D/4D move+rotate stages now force asymmetric starters:
+      - 3D: `SCREW3`
+      - 4D: `SKEW4_A`
+    - 3D/4D layer-clear target presets now use solvable deterministic hole patterns:
+      - `3d_almost_layer_screw3`
+      - `4d_almost_hyper_layer_skew4`
+    - tutorial stage pacing increased via config-backed delay constants
+    - tutorial stage flow is now segmented and ordered as:
+      - translations -> piece rotations -> camera rotations (3D/4D) ->
+        camera controls (`toggle_grid`, transparency) -> goals
+    - tutorial system controls are guidance-only (no dedicated menu/help/restart
+      interactive stages)
+    - tutorial full-board-clean stages now require actual empty board state
+      (`board_cleared`) before progression
 - Key files:
   - `src/tet4d/engine/tutorial/runtime.py`
   - `src/tet4d/engine/tutorial/persistence.py`
@@ -158,8 +207,33 @@ Completed:
   - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
   - `src/tet4d/engine/runtime/runtime_config.py` now delegates gameplay/audio
     validation to the extracted module.
+- Updated clear scoring to include config-backed layer-size weighting:
+  - larger cleared layers now award higher base clear points via
+    `sqrt(layer_size/reference_plane_cells)` with floor `1.0`
+  - reference plane size is configured at
+    `config/gameplay/tuning.json` (`clear_scoring.layer_size_weighting.reference_plane_cells`)
+  - scoring integration points:
+    - `src/tet4d/engine/gameplay/scoring_bonus.py`
+    - `src/tet4d/engine/gameplay/game2d.py`
+    - `src/tet4d/engine/gameplay/game_nd.py`
+  - scoring coverage/docs updated:
+    - `tests/unit/engine/test_scoring_bonus.py`
+    - `config/help/content/runtime_help_content.json`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
 - Rebuilt release packaging matrix successfully for:
   - Linux, Windows, macOS x64, macOS ARM64.
+- Tutorial/runtime control UX alignment pass (2026-03-03):
+  - helper panel taxonomy enforced as `Main > Translation > Rotation > Camera > Stats`
+    with 2D camera panel now exposing grid + transparency controls
+  - side panel now renders locked-cell transparency percentage meter bar in
+    2D/3D/4D
+  - tutorial runtime now enforces config-backed step transition delay (`>=1s`),
+    transparency target-range progression (`20%-80%`, per-step randomized target),
+    and global soft-drop allowance
+  - 4D movement steps now require double action count; ND tutorial setup now
+    validates repeated move feasibility before spawning starter piece
+  - pause menu `Restart Tutorial` action removed from menu graph (stage redo/restart
+    remains available via tutorial hotkeys)
 
 Verification:
 - `.venv/bin/ruff check cli/front.py cli/front2d.py src/tet4d/engine/tutorial src/tet4d/ui/pygame/front3d_game.py src/tet4d/ui/pygame/front4d_game.py src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py` passed.

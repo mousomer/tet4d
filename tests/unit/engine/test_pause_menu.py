@@ -130,43 +130,8 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         self.assertFalse(state.status_error)
         run_lb.assert_called_once()
 
-    def test_tutorial_restart_action_uses_callback(self) -> None:
-        screen = pygame.Surface((640, 480))
-        state = pause_menu._PauseState(
-            selected=pause_menu._PAUSE_ACTION_CODES.index("tutorial_restart")
-        )
+    def test_pause_menu_does_not_expose_tutorial_skip_action(self) -> None:
+        self.assertNotIn("tutorial_skip", pause_menu._PAUSE_ACTION_CODES)
 
-        action = pause_menu._PAUSE_ACTION_CODES[state.selected]
-        out_screen, keep_running = pause_menu._handle_pause_action(
-            action,
-            screen,
-            object(),
-            state,
-            dimension=3,
-            on_tutorial_restart=lambda: True,
-        )
-
-        self.assertTrue(keep_running)
-        self.assertIs(out_screen, screen)
-        self.assertEqual(state.status, "Tutorial restarted")
-        self.assertFalse(state.status_error)
-
-    def test_tutorial_skip_action_without_callback_sets_status_error(self) -> None:
-        screen = pygame.Surface((640, 480))
-        state = pause_menu._PauseState(
-            selected=pause_menu._PAUSE_ACTION_CODES.index("tutorial_skip")
-        )
-
-        action = pause_menu._PAUSE_ACTION_CODES[state.selected]
-        out_screen, keep_running = pause_menu._handle_pause_action(
-            action,
-            screen,
-            object(),
-            state,
-            dimension=4,
-        )
-
-        self.assertTrue(keep_running)
-        self.assertIs(out_screen, screen)
-        self.assertIn("unavailable", state.status.lower())
-        self.assertTrue(state.status_error)
+    def test_pause_menu_does_not_expose_tutorial_restart_action(self) -> None:
+        self.assertNotIn("tutorial_restart", pause_menu._PAUSE_ACTION_CODES)

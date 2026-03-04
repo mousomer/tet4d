@@ -771,12 +771,17 @@ def _route_nd_system_action(
     system_action = system_key_action(key)
     if system_action is None:
         return None
-    if action_filter is not None and not action_filter(system_action):
+    resolved_action = (
+        "menu"
+        if system_action == "quit" and int(key) == int(pygame.K_ESCAPE)
+        else system_action
+    )
+    if action_filter is not None and not action_filter(resolved_action):
         return "continue"
-    _emit_sfx(sfx_handler, _SYSTEM_SFX.get(system_action))
+    _emit_sfx(sfx_handler, _SYSTEM_SFX.get(resolved_action))
     if action_observer is not None:
-        action_observer(system_action)
-    return system_action
+        action_observer(resolved_action)
+    return resolved_action
 
 
 def _route_nd_gameplay_action(

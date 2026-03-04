@@ -73,6 +73,8 @@ tutorial_runtime_consume_pending_setup = (
 )
 tutorial_apply_step_setup_nd = engine_api.tutorial_apply_step_setup_nd_runtime
 tutorial_runtime_restart = engine_api.tutorial_runtime_restart_runtime
+tutorial_runtime_previous_stage = engine_api.tutorial_runtime_previous_stage_runtime
+tutorial_runtime_next_stage = engine_api.tutorial_runtime_next_stage_runtime
 tutorial_runtime_skip = engine_api.tutorial_runtime_skip_runtime
 
 _VIEW_ACTIONS_4D = (
@@ -93,6 +95,254 @@ _VIEW_ACTIONS_4D = (
     "overlay_alpha_dec",
     "overlay_alpha_inc",
 )
+_TUTORIAL_MOVE_DELAY_MS = engine_api.project_constant_int(
+    ("tutorial", "action_delay_ms", "movement"),
+    170,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_ROTATE_DELAY_MS = engine_api.project_constant_int(
+    ("tutorial", "action_delay_ms", "rotation"),
+    190,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_DROP_DELAY_MS = engine_api.project_constant_int(
+    ("tutorial", "action_delay_ms", "drop"),
+    260,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_DELAYED_ACTIONS_4D = {
+    "move_x_neg",
+    "move_x_pos",
+    "move_y_neg",
+    "move_y_pos",
+    "move_z_neg",
+    "move_z_pos",
+    "move_w_neg",
+    "move_w_pos",
+    "rotate_xy_pos",
+    "rotate_xy_neg",
+    "rotate_xz_pos",
+    "rotate_xz_neg",
+    "rotate_yz_pos",
+    "rotate_yz_neg",
+    "rotate_xw_pos",
+    "rotate_xw_neg",
+    "rotate_yw_pos",
+    "rotate_yw_neg",
+    "rotate_zw_pos",
+    "rotate_zw_neg",
+    "soft_drop",
+    "hard_drop",
+}
+_TUTORIAL_ALWAYS_LEGAL_ACTIONS_4D = {
+    "menu",
+    "help",
+    "restart",
+    "menu_back",
+    "yaw_fine_neg",
+    "yaw_neg",
+    "yaw_pos",
+    "yaw_fine_pos",
+    "pitch_neg",
+    "pitch_pos",
+    "zoom_in",
+    "zoom_out",
+    "cycle_projection",
+    "reset",
+    "view_xw_neg",
+    "view_xw_pos",
+    "view_zw_neg",
+    "view_zw_pos",
+    "overlay_alpha_dec",
+    "overlay_alpha_inc",
+}
+_TUTORIAL_GAMEPLAY_ACTIONS_4D = (
+    "soft_drop",
+    "hard_drop",
+    "move_x_neg",
+    "move_x_pos",
+    "move_z_neg",
+    "move_z_pos",
+    "move_w_neg",
+    "move_w_pos",
+    "rotate_xy_pos",
+    "rotate_xy_neg",
+    "rotate_xz_pos",
+    "rotate_xz_neg",
+    "rotate_yz_pos",
+    "rotate_yz_neg",
+    "rotate_xw_pos",
+    "rotate_xw_neg",
+    "rotate_yw_pos",
+    "rotate_yw_neg",
+    "rotate_zw_pos",
+    "rotate_zw_neg",
+)
+_TUTORIAL_GRID_REQUIRED_STEPS_4D = frozenset(
+    {
+        "hyper_layer_fill",
+        "full_clear_bonus",
+    }
+)
+_TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
+    ("tutorial", "min_visible_layer"),
+    2,
+    min_value=0,
+    max_value=10,
+)
+_TUTORIAL_MIN_DIMS_4D = (
+    engine_api.project_constant_int(
+        ("tutorial", "min_board_dims", "4d", "x"),
+        10,
+        min_value=4,
+        max_value=60,
+    ),
+    engine_api.project_constant_int(
+        ("tutorial", "min_board_dims", "4d", "y"),
+        20,
+        min_value=8,
+        max_value=100,
+    ),
+    engine_api.project_constant_int(
+        ("tutorial", "min_board_dims", "4d", "z"),
+        6,
+        min_value=4,
+        max_value=40,
+    ),
+    engine_api.project_constant_int(
+        ("tutorial", "min_board_dims", "4d", "w"),
+        4,
+        min_value=3,
+        max_value=20,
+    ),
+)
+
+
+def _tutorial_action_delay_ms_4d(action_id: str) -> int:
+    if action_id in {"soft_drop", "hard_drop"}:
+        return int(_TUTORIAL_DROP_DELAY_MS)
+    if action_id.startswith("rotate_"):
+        return int(_TUTORIAL_ROTATE_DELAY_MS)
+    if action_id.startswith("move_"):
+        return int(_TUTORIAL_MOVE_DELAY_MS)
+    return 0
+
+
+def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) -> bool:
+    if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_4D:
+        return True
+    piece = loop.state.current_piece
+    if piece is None or loop.state.game_over:
+        return False
+    if action_id == "hard_drop":
+        return True
+    if action_id == "soft_drop":
+        delta = [0, 0, 0, 0]
+        delta[loop.cfg.gravity_axis] = 1
+        return bool(loop.state._can_exist(piece.moved(tuple(delta))))
+    move_deltas = {
+        "move_x_neg": (-1, 0, 0, 0),
+        "move_x_pos": (1, 0, 0, 0),
+        "move_z_neg": (0, 0, -1, 0),
+        "move_z_pos": (0, 0, 1, 0),
+        "move_w_neg": (0, 0, 0, -1),
+        "move_w_pos": (0, 0, 0, 1),
+    }
+    if action_id in move_deltas:
+        return bool(loop.state._can_exist(piece.moved(move_deltas[action_id])))
+    rotate_axes = {
+        "rotate_xy_pos": (0, loop.cfg.gravity_axis, 1),
+        "rotate_xy_neg": (0, loop.cfg.gravity_axis, -1),
+        "rotate_xz_pos": (0, 2, 1),
+        "rotate_xz_neg": (0, 2, -1),
+        "rotate_yz_pos": (loop.cfg.gravity_axis, 2, 1),
+        "rotate_yz_neg": (loop.cfg.gravity_axis, 2, -1),
+        "rotate_xw_pos": (0, 3, 1),
+        "rotate_xw_neg": (0, 3, -1),
+        "rotate_yw_pos": (loop.cfg.gravity_axis, 3, 1),
+        "rotate_yw_neg": (loop.cfg.gravity_axis, 3, -1),
+        "rotate_zw_pos": (2, 3, 1),
+        "rotate_zw_neg": (2, 3, -1),
+    }
+    if action_id in rotate_axes:
+        axis_a, axis_b, step = rotate_axes[action_id]
+        return bool(loop.state._can_exist(piece.rotated(axis_a, axis_b, step)))
+    return True
+
+
+def _tutorial_has_legal_action_4d(
+    loop: "LoopContext4D",
+    action_ids: tuple[str, ...],
+) -> bool:
+    for action_id in action_ids:
+        if _tutorial_required_action_legal_4d(loop, action_id):
+            return True
+    return False
+
+
+def _running_tutorial_session(loop: "LoopContext4D") -> object | None:
+    session = loop.tutorial_session
+    if session is None:
+        return None
+    if not engine_api.tutorial_runtime_is_running_runtime(session):
+        return None
+    return session
+
+
+def _redo_tutorial_stage(loop: "LoopContext4D", session: object) -> None:
+    if engine_api.tutorial_runtime_redo_stage_runtime(session):
+        _apply_pending_tutorial_setup(loop)
+
+
+def _restart_tutorial_session(loop: "LoopContext4D", session: object) -> None:
+    if tutorial_runtime_restart(session):
+        _apply_pending_tutorial_setup(loop)
+
+
+def _tutorial_required_action_blocked(
+    loop: "LoopContext4D",
+    session: object,
+) -> bool:
+    required = engine_api.tutorial_runtime_required_action_runtime(session)
+    if not required:
+        return False
+    return not _tutorial_required_action_legal_4d(loop, required)
+
+
+def _tutorial_allowed_actions_blocked(
+    loop: "LoopContext4D",
+    session: object,
+) -> bool:
+    allowed_actions = engine_api.tutorial_runtime_allowed_actions_runtime(session)
+    if not allowed_actions:
+        return False
+    return not _tutorial_has_legal_action_4d(loop, allowed_actions)
+
+
+def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
+    session = _running_tutorial_session(loop)
+    if session is None:
+        return
+    if loop.state.game_over:
+        _redo_tutorial_stage(loop, session)
+        return
+    visible = engine_api.tutorial_ensure_piece_visibility_nd_runtime(
+        loop.state,
+        loop.cfg,
+        min_visible_layer=int(_TUTORIAL_MIN_VISIBLE_LAYER),
+    )
+    if not visible:
+        _redo_tutorial_stage(loop, session)
+        return
+    if _tutorial_allowed_actions_blocked(loop, session):
+        _redo_tutorial_stage(loop, session)
+        return
+    if _tutorial_required_action_blocked(loop, session):
+        _redo_tutorial_stage(loop, session)
+        return
 
 
 def _apply_tutorial_camera_preset(loop: "LoopContext4D", preset: str) -> None:
@@ -117,7 +367,10 @@ def _apply_pending_tutorial_setup(loop: "LoopContext4D") -> None:
     payload = tutorial_runtime_consume_pending_setup(tutorial_session)
     if not isinstance(payload, dict):
         return
+    step_id = str(payload.get("step_id", "")).strip().lower()
     tutorial_apply_step_setup_nd(loop.state, loop.cfg, payload)
+    if step_id in _TUTORIAL_GRID_REQUIRED_STEPS_4D:
+        loop.grid_mode = GridMode.OFF
     setup_payload = payload.get("setup")
     if isinstance(setup_payload, dict):
         _apply_tutorial_camera_preset(
@@ -143,6 +396,7 @@ class LoopContext4D:
     base_speed_level: int = 1
     bot_speed_level: int = 7
     tutorial_session: Any | None = None
+    tutorial_action_cooldown_ms: int = 0
 
     @classmethod
     def create(
@@ -183,14 +437,9 @@ class LoopContext4D:
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
-        if event.key == pygame.K_F8 and self.tutorial_session is not None:
-            tutorial_runtime_skip(self.tutorial_session)
-            play_sfx("menu_move")
-            return "continue"
-        if event.key == pygame.K_F9 and self.tutorial_session is not None:
-            self.on_restart()
-            play_sfx("menu_confirm")
-            return "continue"
+        tutorial_action = self._handle_tutorial_hotkey(event.key)
+        if tutorial_action is not None:
+            return tutorial_action
         if event.key == pygame.K_F2:
             if not self._tutorial_action_allowed("bot_cycle_mode"):
                 return "continue"
@@ -231,15 +480,51 @@ class LoopContext4D:
             action_observer=self._tutorial_observe_action,
         )
 
+    def _handle_tutorial_hotkey(self, key: int) -> str | None:
+        session = self.tutorial_session
+        if session is None:
+            return None
+        stage_nav = {
+            pygame.K_F5: tutorial_runtime_previous_stage,
+            pygame.K_F6: tutorial_runtime_next_stage,
+            pygame.K_F7: engine_api.tutorial_runtime_redo_stage_runtime,
+        }
+        step_action = stage_nav.get(key)
+        if step_action is not None:
+            if step_action(session):
+                _apply_pending_tutorial_setup(self)
+                self.tutorial_action_cooldown_ms = 0
+                play_sfx("menu_confirm" if key == pygame.K_F7 else "menu_move")
+            return "continue"
+        if key == pygame.K_F8:
+            tutorial_runtime_skip(session)
+            play_sfx("menu_move")
+            return "menu"
+        if key == pygame.K_F9:
+            if tutorial_runtime_restart(session):
+                _apply_pending_tutorial_setup(self)
+                self.tutorial_action_cooldown_ms = 0
+            else:
+                self.on_restart()
+            play_sfx("menu_confirm")
+            return "continue"
+        return None
+
     def _tutorial_action_allowed(self, action_id: str) -> bool:
         if self.tutorial_session is None:
             return True
+        if (
+            int(self.tutorial_action_cooldown_ms) > 0
+            and action_id in _TUTORIAL_DELAYED_ACTIONS_4D
+        ):
+            return False
         return tutorial_runtime_action_allowed(self.tutorial_session, action_id)
 
     def _tutorial_observe_action(self, action_id: str) -> None:
         if self.tutorial_session is None:
             return
         tutorial_runtime_observe_action(self.tutorial_session, action_id)
+        self.tutorial_action_cooldown_ms = _tutorial_action_delay_ms_4d(action_id)
 
     def adjust_overlay_transparency(self, direction: int) -> None:
         self.overlay_transparency = clamp_overlay_transparency(
@@ -257,9 +542,7 @@ class LoopContext4D:
         self.mouse_orbit.reset()
         self.bot.reset_runtime()
         self.rotation_anim.reset()
-        if self.tutorial_session is not None:
-            tutorial_runtime_restart(self.tutorial_session)
-            _apply_pending_tutorial_setup(self)
+        self.tutorial_action_cooldown_ms = 0
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:
@@ -320,6 +603,14 @@ def run_game_loop(
     bot_budget_ms: int = 36,
     tutorial_lesson_id: str | None = None,
 ) -> bool:
+    if tutorial_lesson_id:
+        dims = cfg.dims
+        cfg.dims = (
+            max(int(dims[0]), int(_TUTORIAL_MIN_DIMS_4D[0])),
+            max(int(dims[1]), int(_TUTORIAL_MIN_DIMS_4D[1])),
+            max(int(dims[2]), int(_TUTORIAL_MIN_DIMS_4D[2])),
+            max(int(dims[3]), int(_TUTORIAL_MIN_DIMS_4D[3])),
+        )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
@@ -354,6 +645,11 @@ def run_game_loop(
         "_apply_pending_tutorial_setup",
         lambda: _apply_pending_tutorial_setup(loop),
     )
+    setattr(
+        loop,
+        "_maintain_tutorial_safety",
+        lambda: _maintain_tutorial_runtime_safety(loop),
+    )
     _apply_pending_tutorial_setup(loop)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
@@ -379,8 +675,14 @@ def run_game_loop(
         progressed = tutorial_runtime_sync_and_advance(
             loop.tutorial_session,
             lines_cleared=lines_cleared,
+            overlay_transparency=float(loop.overlay_transparency),
+            grid_visible=bool(loop.grid_mode != GridMode.OFF),
+            board_cell_count=len(loop.state.board.cells),
         )
         _apply_pending_tutorial_setup(loop)
+        if not engine_api.tutorial_runtime_is_running_runtime(loop.tutorial_session):
+            loop.tutorial_session = None
+            loop.tutorial_action_cooldown_ms = 0
         return bool(progressed)
 
     return run_nd_loop(
@@ -390,11 +692,12 @@ def run_game_loop(
         gravity_interval_from_config=gravity_interval_ms_from_config,
         pause_dimension=4,
         run_pause_menu=run_pause_menu,
-        run_help_menu=lambda target, active_fonts, dim, ctx: run_help_menu(
+        run_help_menu=lambda target, active_fonts, dim, ctx, on_escape_back=None: run_help_menu(
             target,
             active_fonts,
             dimension=dim,
             context_label=ctx,
+            on_escape_back=on_escape_back,
         ),
         spawn_clear_animation=spawn_clear_animation_if_needed,
         step_view=loop.view.step_animation,

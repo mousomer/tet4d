@@ -228,10 +228,69 @@ class TutorialSetupApplyTests(unittest.TestCase):
         occupied = [coord for coord in state.board.cells if coord[1] == y]
         self.assertEqual(len(occupied), cfg.width - 1)
 
-    def test_camera_only_setup_does_not_mutate_board_or_piece_nd(self) -> None:
+    def test_full_clear_bonus_presets_assign_expected_starter_piece(self) -> None:
+        cfg2, state2 = _new_state_2d()
+        apply_tutorial_step_setup_2d(
+            state2,
+            cfg2,
+            {
+                "rng_seed": 1012,
+                "starter_piece_id": "O",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "2d_almost_full_clear_o",
+            },
+            lesson_id="tutorial_2d_core",
+            step_id="full_clear_bonus",
+        )
+        assert state2.current_piece is not None
+        self.assertEqual(state2.current_piece.shape.name, "O")
+        filled_levels_2d = {coord[1] for coord in state2.board.cells}
+        self.assertEqual(filled_levels_2d, {cfg2.height - 2, cfg2.height - 1})
+        self.assertEqual(len(state2.board.cells), (cfg2.width * 2) - 4)
+
+        cfg3, state3 = _new_state_3d()
+        apply_tutorial_step_setup_nd(
+            state3,
+            cfg3,
+            {
+                "rng_seed": 2012,
+                "starter_piece_id": "O3",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "3d_almost_full_clear_o3",
+            },
+            lesson_id="tutorial_3d_core",
+            step_id="full_clear_bonus",
+        )
+        assert state3.current_piece is not None
+        self.assertEqual(state3.current_piece.shape.name, "O3")
+        filled_levels_3d = {coord[cfg3.gravity_axis] for coord in state3.board.cells}
+        self.assertEqual(filled_levels_3d, {cfg3.dims[1] - 2, cfg3.dims[1] - 1})
+        layer_cell_count_3d = cfg3.dims[0] * cfg3.dims[2]
+        self.assertEqual(len(state3.board.cells), (2 * layer_cell_count_3d) - 4)
+
+        cfg4, state4 = _new_state_4d()
+        apply_tutorial_step_setup_nd(
+            state4,
+            cfg4,
+            {
+                "rng_seed": 3012,
+                "starter_piece_id": "CROSS4",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "4d_almost_full_clear_cross4",
+            },
+            lesson_id="tutorial_4d_core",
+            step_id="full_clear_bonus",
+        )
+        assert state4.current_piece is not None
+        self.assertEqual(state4.current_piece.shape.name, "CROSS4")
+        filled_levels_4d = {coord[cfg4.gravity_axis] for coord in state4.board.cells}
+        self.assertEqual(filled_levels_4d, {cfg4.dims[1] - 2, cfg4.dims[1] - 1})
+        layer_cell_count_4d = cfg4.dims[0] * cfg4.dims[2] * cfg4.dims[3]
+        self.assertEqual(len(state4.board.cells), (2 * layer_cell_count_4d) - 5)
+
+    def test_camera_only_setup_keeps_board_and_forces_visible_piece_nd(self) -> None:
         cfg, state = _new_state_3d()
         before_cells = dict(state.board.cells)
-        before_piece = tuple(state.current_piece_cells_mapped(include_above=True))
         apply_tutorial_step_setup_nd(
             state,
             cfg,
@@ -240,10 +299,76 @@ class TutorialSetupApplyTests(unittest.TestCase):
             step_id="camera_controls",
         )
         self.assertEqual(before_cells, state.board.cells)
-        self.assertEqual(
-            before_piece,
-            tuple(state.current_piece_cells_mapped(include_above=True)),
+        mapped = state.current_piece_cells_mapped(include_above=True)
+        self.assertTrue(mapped)
+        self.assertTrue(all(coord[cfg.gravity_axis] >= 0 for coord in mapped))
+        self.assertGreaterEqual(min(coord[cfg.gravity_axis] for coord in mapped), 2)
+
+    def test_layer_clear_presets_leave_expected_hole_counts(self) -> None:
+        cfg3, state3 = _new_state_3d()
+        apply_tutorial_step_setup_nd(
+            state3,
+            cfg3,
+            {
+                "rng_seed": 2010,
+                "starter_piece_id": "SCREW3",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "3d_almost_layer_screw3",
+            },
+            lesson_id="tutorial_3d_core",
+            step_id="target_drop",
         )
+        target_level_3d = cfg3.dims[cfg3.gravity_axis] - 1
+        filled_top_3d = [
+            coord
+            for coord in state3.board.cells
+            if coord[cfg3.gravity_axis] == target_level_3d
+        ]
+        layer_size_3d = cfg3.dims[0] * cfg3.dims[2]
+        self.assertEqual(len(filled_top_3d), layer_size_3d - 2)
+
+        cfg4, state4 = _new_state_4d()
+        apply_tutorial_step_setup_nd(
+            state4,
+            cfg4,
+            {
+                "rng_seed": 3010,
+                "starter_piece_id": "SKEW4_A",
+                "spawn_min_visible_layer": 2,
+                "board_preset": "4d_almost_hyper_layer_skew4",
+            },
+            lesson_id="tutorial_4d_core",
+            step_id="target_drop",
+        )
+        target_level_4d = cfg4.dims[cfg4.gravity_axis] - 1
+        filled_top_4d = [
+            coord
+            for coord in state4.board.cells
+            if coord[cfg4.gravity_axis] == target_level_4d
+        ]
+        layer_size_4d = cfg4.dims[0] * cfg4.dims[2] * cfg4.dims[3]
+        self.assertEqual(len(filled_top_4d), layer_size_4d - 3)
+
+    def test_4d_move_w_steps_spawn_piece_with_legal_w_move(self) -> None:
+        for step_id, expected_delta in (("move_w_neg", -1), ("move_w_pos", 1)):
+            cfg, state = _new_state_4d()
+            apply_tutorial_step_setup_nd(
+                state,
+                cfg,
+                {
+                    "rng_seed": 3104 if expected_delta < 0 else 3105,
+                    "starter_piece_id": "SKEW4_A",
+                    "spawn_min_visible_layer": 2,
+                    "bottom_layers_min": 1,
+                    "bottom_layers_max": 2,
+                },
+                lesson_id="tutorial_4d_core",
+                step_id=step_id,
+            )
+            self.assertIsNotNone(state.current_piece)
+            assert state.current_piece is not None
+            moved = state.current_piece.moved((0, 0, 0, expected_delta))
+            self.assertTrue(state._can_exist(moved), msg=f"{step_id} not legal from spawn")
 
 
 if __name__ == "__main__":

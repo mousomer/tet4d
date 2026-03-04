@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -771,8 +771,16 @@ def _draw_help(
     surface.blit(footer_msg, (footer_x, footer_y))
 
 
-def _handle_help_keydown(state: _HelpState, *, context_label: str, key: int) -> bool:
+def _handle_help_keydown(
+    state: _HelpState,
+    *,
+    context_label: str,
+    key: int,
+    on_escape_back: Callable[[], None] | None = None,
+) -> bool:
     if key == pygame.K_ESCAPE:
+        if callable(on_escape_back):
+            on_escape_back()
         state.running = False
         return True
     if key == pygame.K_LEFT:
@@ -802,6 +810,7 @@ def run_help_menu(
     *,
     dimension: int = 2,
     context_label: str = "Launcher",
+    on_escape_back: Callable[[], None] | None = None,
 ) -> pygame.Surface:
     state = _HelpState(dimension=max(2, min(4, int(dimension))))
     clock = pygame.time.Clock()
@@ -813,7 +822,12 @@ def run_help_menu(
                 return screen
             if event.type != pygame.KEYDOWN:
                 continue
-            _handle_help_keydown(state, context_label=context_label, key=event.key)
+            _handle_help_keydown(
+                state,
+                context_label=context_label,
+                key=event.key,
+                on_escape_back=on_escape_back,
+            )
 
         _draw_help(screen, fonts, state, context_label)
         pygame.display.flip()

@@ -36,7 +36,8 @@
       "config/schema/help_action_map.schema.json",
       "config/schema/help_runtime_content.schema.json",
       "config/schema/help_runtime_layout.schema.json",
-      "config/schema/tutorial_lessons.schema.json"
+      "config/schema/tutorial_lessons.schema.json",
+      "config/schema/tutorial_plan.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -76,6 +77,7 @@
       "config/help/layout/runtime_help_layout.json",
       "config/help/layout/runtime_help_action_layout.json",
       "config/tutorial/lessons.json",
+      "config/tutorial/plan.json",
       "config/gameplay/tuning.json",
       "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",

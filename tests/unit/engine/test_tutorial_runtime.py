@@ -7,8 +7,15 @@ from tet4d.engine.tutorial.runtime import create_tutorial_runtime_session
 
 
 class TutorialRuntimeTests(unittest.TestCase):
+    @staticmethod
+    def _complete_step_with_repeats(session: object, action_id: str, repeats: int = 4) -> bool:
+        for _ in range(max(1, repeats)):
+            session.observe_action(action_id)
+        return bool(session.sync_and_advance(lines_cleared=0))
+
     def test_runtime_session_progression_2d(self) -> None:
         with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
         ):
@@ -19,36 +26,23 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertTrue(session.is_running())
             self.assertTrue(session.action_allowed("move_x_neg"))
             self.assertFalse(session.action_allowed("rotate_xy_pos"))
+            payload = session.overlay_payload()
+            self.assertEqual(payload.get("segment_title"), "Translations")
+            self.assertIn("System controls", str(payload.get("system_controls_text", "")))
 
-            session.observe_action("move_x_neg")
-            self.assertFalse(session.sync_and_advance(lines_cleared=0))
-            session.observe_action("move_x_pos")
-            self.assertFalse(session.sync_and_advance(lines_cleared=0))
-            session.observe_action("soft_drop")
-            self.assertFalse(session.sync_and_advance(lines_cleared=0))
-            session.observe_action("hard_drop")
-            self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
+            payload = session.overlay_payload()
+            self.assertEqual(payload["step_id"], "move_x_pos")
 
+            self.assertTrue(self._complete_step_with_repeats(session, "move_x_pos"))
             payload = session.overlay_payload()
             self.assertTrue(payload["running"])
-            self.assertEqual(payload["step_id"], "rotate_xy")
+            self.assertEqual(payload["step_id"], "soft_drop")
             self.assertIsInstance(payload.get("highlights"), list)
-
-            session.observe_action("rotate_xy_pos")
-            self.assertFalse(session.sync_and_advance(lines_cleared=0))
-            session.observe_action("rotate_xy_neg")
-            self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            payload = session.overlay_payload()
-            self.assertEqual(payload["step_id"], "clear_line")
-
-            self.assertTrue(session.sync_and_advance(lines_cleared=1))
-            payload = session.overlay_payload()
-            self.assertFalse(payload["running"])
-            self.assertEqual(payload["status"], "completed")
-            self.assertFalse(session.is_running())
 
     def test_runtime_restart_and_skip(self) -> None:
         with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
         ):
@@ -65,10 +59,11 @@ class TutorialRuntimeTests(unittest.TestCase):
                 mode="3d",
             )
             self.assertTrue(session.restart())
-            self.assertEqual(session.overlay_payload()["step_id"], "camera_controls")
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
 
     def test_pending_setup_lifecycle(self) -> None:
         with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
         ):
@@ -79,26 +74,84 @@ class TutorialRuntimeTests(unittest.TestCase):
             initial_setup = session.consume_pending_setup()
             self.assertIsNotNone(initial_setup)
             assert initial_setup is not None
-            self.assertEqual(initial_setup.get("step_id"), "move_xy")
+            self.assertEqual(initial_setup.get("step_id"), "move_x_neg")
             self.assertIsNone(session.consume_pending_setup())
 
-            session.observe_action("move_x_neg")
-            session.observe_action("move_x_pos")
-            session.observe_action("soft_drop")
-            session.observe_action("hard_drop")
-            self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
 
             next_setup = session.consume_pending_setup()
             self.assertIsNotNone(next_setup)
             assert next_setup is not None
-            self.assertEqual(next_setup.get("step_id"), "rotate_xy")
+            self.assertEqual(next_setup.get("step_id"), "move_x_pos")
             self.assertIsNone(session.consume_pending_setup())
 
             self.assertTrue(session.restart())
             restarted_setup = session.consume_pending_setup()
             self.assertIsNotNone(restarted_setup)
             assert restarted_setup is not None
-            self.assertEqual(restarted_setup.get("step_id"), "move_xy")
+            self.assertEqual(restarted_setup.get("step_id"), "move_x_neg")
+
+    def test_redo_stage_restarts_current_step(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            session.consume_pending_setup()
+            self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_pos")
+
+            self.assertTrue(session.redo_stage())
+            redo_setup = session.consume_pending_setup()
+            self.assertIsNotNone(redo_setup)
+            assert redo_setup is not None
+            self.assertEqual(redo_setup.get("step_id"), "move_x_pos")
+
+    def test_allowed_actions_reflect_current_step_gate(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            self.assertIn("move_x_neg", session.allowed_actions())
+            self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
+            self.assertIn("move_x_pos", session.allowed_actions())
+
+    def test_soft_drop_is_always_allowed(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            self.assertTrue(session.action_allowed("soft_drop"))
+
+    def test_sync_supports_board_cell_count_predicate_input(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            progressed = session.sync_and_advance(
+                lines_cleared=0,
+                board_cell_count=0,
+            )
+            self.assertFalse(progressed)
 
 
 if __name__ == "__main__":

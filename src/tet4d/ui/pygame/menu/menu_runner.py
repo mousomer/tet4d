@@ -107,7 +107,7 @@ class MenuRunner:
                     continue
                 if event.type != pygame.KEYDOWN:
                     continue
-                if event.key == pygame.K_ESCAPE:
+                if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     if len(state.stack) > 1:
                         state.stack.pop()
                         if self._on_move is not None:

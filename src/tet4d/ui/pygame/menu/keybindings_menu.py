@@ -324,6 +324,7 @@ def _action_profile_delete(
 
 _MENU_KEY_HANDLERS = {
     pygame.K_ESCAPE: _action_exit,
+    pygame.K_BACKSPACE: _action_exit,
     pygame.K_UP: _action_row_up,
     pygame.K_DOWN: _action_row_down,
     pygame.K_RETURN: _action_capture_start,
@@ -337,7 +338,7 @@ _MENU_KEY_HANDLERS = {
     pygame.K_LEFTBRACKET: _action_profile_prev,
     pygame.K_RIGHTBRACKET: _action_profile_next,
     pygame.K_n: _action_profile_new,
-    pygame.K_BACKSPACE: _action_profile_delete,
+    pygame.K_DELETE: _action_profile_delete,
 }
 
 

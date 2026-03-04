@@ -18,6 +18,7 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "play_3d",
         "play_4d",
         "continue",
+        "tutorials",
         "settings",
         "keybindings",
         "help",
@@ -32,8 +33,6 @@ PAUSE_ACTION_IDS: frozenset[str] = frozenset(
     {
         "resume",
         "restart",
-        "tutorial_restart",
-        "tutorial_skip",
         "settings",
         "bot_options",
         "keybindings",

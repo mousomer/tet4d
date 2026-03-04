@@ -38,14 +38,6 @@
           "template": "restart"
         },
         {
-          "id": "main_toggle_grid",
-          "order": 40,
-          "modes": ["2d", "3d", "4d"],
-          "requires": [],
-          "key_actions": ["toggle_grid"],
-          "template": "grid mode"
-        },
-        {
           "id": "main_quit",
           "order": 50,
           "modes": ["2d", "3d", "4d"],
@@ -185,9 +177,17 @@
       "id": "camera",
       "order": 40,
       "title": "Camera",
-      "modes": ["3d", "4d"],
-      "requires": ["camera.enabled"],
+      "modes": ["2d", "3d", "4d"],
+      "requires": [],
       "lines": [
+        {
+          "id": "cam_grid_mode",
+          "order": 5,
+          "modes": ["2d", "3d", "4d"],
+          "requires": [],
+          "key_actions": ["toggle_grid"],
+          "template": "grid mode"
+        },
         {
           "id": "cam_yaw_fine",
           "order": 10,
@@ -247,7 +247,7 @@
         {
           "id": "cam_overlay_alpha",
           "order": 80,
-          "modes": ["3d", "4d"],
+          "modes": ["2d", "3d", "4d"],
           "requires": [],
           "key_actions": ["overlay_alpha_dec", "overlay_alpha_inc"],
           "template": "locked cells alpha [,]"

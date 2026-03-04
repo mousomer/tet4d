@@ -174,7 +174,6 @@ def _draw_list_menu_panel(
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
     profile = active_key_profile()
     action_values = {
-        "tutorial_restart": "Current tutorial lesson",
         "tutorial_skip": "Current tutorial lesson",
         "settings": "Audio + Display + Analytics",
         "bot_options": f"{dimension}D planner/options",
@@ -238,7 +237,6 @@ _PAUSE_ACTION_CODES: tuple[str, ...] = tuple(
 _SUPPORTED_PAUSE_ACTIONS = {
     "resume",
     "restart",
-    "tutorial_restart",
     "tutorial_skip",
     "settings",
     "bot_options",
@@ -406,13 +404,13 @@ def _handle_pause_action(
         return screen, True
     if action == "tutorial_skip":
         if on_tutorial_skip is None:
-            _set_pause_status(state, False, "Tutorial skip unavailable in this run")
+            _set_pause_status(state, False, "Tutorial exit unavailable in this run")
             return screen, True
         ok = bool(on_tutorial_skip())
         _set_pause_status(
             state,
             ok,
-            "Tutorial skipped" if ok else "Tutorial skip unavailable",
+            "Tutorial exited" if ok else "Tutorial exit unavailable",
         )
         return screen, True
 
@@ -473,7 +471,13 @@ def _pause_action_dispatcher(
     return False
 
 
-def _pause_root_escape(state: _PauseState) -> bool:
+def _pause_root_escape(
+    state: _PauseState,
+    *,
+    on_escape_back: Callable[[], None] | None = None,
+) -> bool:
+    if callable(on_escape_back):
+        on_escape_back()
     _set_pause_decision(state, "resume")
     return True
 
@@ -490,6 +494,7 @@ def run_pause_menu(
     dimension: int,
     on_tutorial_restart: Callable[[], bool] | None = None,
     on_tutorial_skip: Callable[[], bool] | None = None,
+    on_escape_back: Callable[[], None] | None = None,
 ) -> tuple[PauseDecision, pygame.Surface]:
     state = _PauseState()
     screen_ref = [screen]
@@ -536,7 +541,10 @@ def run_pause_menu(
         start_menu_id=_PAUSE_MENU_ID,
         action_registry=registry,
         render_menu=_render_pause_menu,
-        on_root_escape=lambda: _pause_root_escape(state),
+        on_root_escape=lambda: _pause_root_escape(
+            state,
+            on_escape_back=on_escape_back,
+        ),
         on_quit_event=lambda: _pause_quit_event(state),
         initial_selected={_PAUSE_MENU_ID: 0},
     )

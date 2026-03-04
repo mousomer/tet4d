@@ -92,6 +92,11 @@ Cross-cutting requirements are defined in:
 11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..85%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
+14. Tutorial overlay panel must be left-anchored, enlarged for readability, and clearly separate lesson, segment, task, and action hint lines.
+15. Tutorial progression must expose explicit segment order:
+16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
+17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
+18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -219,7 +224,7 @@ Expected test categories:
 1. Unit tests for board, pieces, and game state transitions.
 2. Replay determinism tests for 2D/3D/4D.
 3. Smoke tests for key routing and system controls per mode.
-4. Scoring matrix tests for 1/2/3/4+ clears across modes.
+4. Scoring matrix tests for 1/2/3/4+ clears across modes, including layer-size weighting (`sqrt(layer_size/reference)`, floor `1.0`) so larger cleared layers award higher base clear points.
 5. Random/debug piece stress tests for spawn validity and non-premature game-over.
 6. Menu/settings/display-mode integration tests (windowed <-> fullscreen).
 7. Rotation-animation state machine tests (start, progress, finish, interruption/retrigger).
@@ -235,7 +240,7 @@ Expected test categories:
 5. Keybindings can be edited in-app and saved/loaded locally by profile.
 6. Random-cell piece sets are selectable and playable in each dimension.
 7. Lower-dimensional piece sets are selectable and playable on higher-dimensional boards.
-8. Scoring behavior is verified by automated tests and matches defined tables.
+8. Scoring behavior is verified by automated tests, matches defined tables, and scales clear rewards by cleared layer size using square-root weighting.
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
 11. Topology presets are selectable in setup menus and persisted in menu settings.

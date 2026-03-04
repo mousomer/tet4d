@@ -32,9 +32,11 @@ tet4d/
 │   │   ├── save_state.schema.json     # canonical saved-state schema (planned runtime file)
 │   │   ├── help_runtime_content.schema.json # runtime help content contract
 │   │   ├── help_runtime_layout.schema.json  # runtime help layout contract
-│   │   └── tutorial_lessons.schema.json     # tutorial lesson data contract
+│   │   ├── tutorial_lessons.schema.json     # tutorial lesson data contract
+│   │   └── tutorial_plan.schema.json        # tutorial stage-plan data contract
 │   ├── tutorial/
-│   │   └── lessons.json         # tutorial packs/steps/gating definitions
+│   │   ├── lessons.json         # tutorial packs/steps/gating definitions
+│   │   └── plan.json            # canonical tutorial stage order/coverage plan
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
@@ -200,25 +202,26 @@ tet4d/
 29. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
 30. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
 31. `config/tutorial/lessons.json` is the canonical data source for tutorial lesson packs and deterministic step contracts.
-32. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
-33. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
-34. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
-35. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-36. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-37. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-38. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-39. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-40. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-41. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-42. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-43. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-44. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
-45. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
+32. `config/tutorial/plan.json` is the canonical data source for ordered tutorial stage coverage (single-button progression plan).
+33. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
+34. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
+35. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
+36. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+37. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+38. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+39. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+40. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+41. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+42. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+43. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+44. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+45. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+46. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
     active debt backlog input is read from `config/project/backlog_debt.json`,
     and `scripts/check_architecture_metric_budgets.sh` enforces configurable
     tech-debt gate modes (active default: `non_regression_baseline`) through
     `config/project/policy/manifests/tech_debt_budgets.json`.
-46. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
+47. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
     the pre-push local CI gate.
 
 ## Placement rubric

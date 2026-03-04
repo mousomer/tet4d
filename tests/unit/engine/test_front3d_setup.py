@@ -135,6 +135,22 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertTrue(shapes)
         self.assertTrue(all(len(shape.blocks) == 6 for shape in shapes))
 
+    def test_runtime_collect_cleared_ghost_cells_accepts_mixed_args_kwargs(self) -> None:
+        state = SimpleNamespace(
+            board=SimpleNamespace(
+                last_cleared_cells=[
+                    ((1, 2, 3), 6),
+                    ((0, 1), 4),
+                ]
+            )
+        )
+        ghost_cells = engine_api.runtime_collect_cleared_ghost_cells(
+            state,
+            expected_coord_len=3,
+            color_for_cell=lambda cell_id: (cell_id, cell_id, cell_id),
+        )
+        self.assertEqual(ghost_cells, (((1, 2, 3), (6, 6, 6)),))
+
 
 if __name__ == "__main__":
     unittest.main()
