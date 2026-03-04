@@ -2,7 +2,7 @@
 
 Last updated: 2026-03-04
 Branch: `codex/tutorials1`
-Worktree expectation at handoff: dirty (tutorial rollout + UI/runtime sync batch ready to commit)
+Worktree expectation at handoff: dirty (CI compliance hardening batch ready to commit)
 
 ## Purpose
 
@@ -96,6 +96,24 @@ Read this first in a new Codex thread before continuing staged refactors.
 ## Latest Local Batch (Unreleased)
 
 Completed:
+- CI compliance hardening and reproducibility controls:
+  - added `scripts/ci_preflight.sh` to run sanitation/policy gates + canonical CI pipeline locally
+  - stabilized sanitation input handling for local context artifacts:
+    - `.gitignore` excludes `context-*.instructions.md`
+    - `scripts/check_git_sanitation_repo.sh` excludes `context-*.instructions.md`
+  - added policy-manifest literal safety validation in
+    `tools/governance/validate_project_contracts.py` to catch path-like string
+    literals that can trip sanitation checks
+  - tuned wheel-reuse rule scopes in
+    `config/project/policy/manifests/wheel_reuse_rules.json` to lower
+    false-positive pressure while retaining high-risk coverage
+  - added governance test coverage:
+    - `tests/unit/governance/test_validate_project_contracts.py`
+  - documented CI compliance runbook:
+    - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
+    - references synced in `docs/RDS_AND_CODEX.md` and `docs/policies/INDEX.md`
+  - synced canonical maintenance contract for new script/doc paths:
+    - `config/project/policy/manifests/canonical_maintenance.json`
 - Integrated tutorial runtime execution end-to-end:
   - launcher tutorial selector + mode launch routing
   - deterministic per-step input gating

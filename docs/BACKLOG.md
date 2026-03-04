@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-02  
+Updated: 2026-03-04  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 ## 1. Priority Verification Rules
@@ -383,6 +383,29 @@ Acceptance:
 3. Do not add cinematic tutorial sequences; keep interactive and fast.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-04): CI compliance hardening + governance preflight.
+
+- Stabilized sanitation inputs for local/context artifacts:
+  - `.gitignore` now ignores `context-*.instructions.md`
+  - `scripts/check_git_sanitation_repo.sh` now excludes `context-*.instructions.md`
+- Added single-command CI preflight:
+  - `scripts/ci_preflight.sh`
+  - runs sanitation/policy checks + canonical `ci_check` pipeline.
+- Added policy-manifest literal safety validation to catch string literals that
+  can accidentally trigger absolute-path sanitation gates:
+  - `tools/governance/validate_project_contracts.py`
+  - `tests/unit/governance/test_validate_project_contracts.py`
+- Tuned wheel-reuse rule scopes to reduce low-signal noise while keeping
+  high-risk runtime/UI/governance coverage:
+  - `config/project/policy/manifests/wheel_reuse_rules.json`
+- Added CI compliance runbook and wired it into canonical governance docs:
+  - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
+  - `docs/policies/INDEX.md`
+  - `docs/RDS_AND_CODEX.md`
+  - `CONTRIBUTING.md`
+- Synced canonical maintenance contract for new script/doc tokens:
+  - `config/project/policy/manifests/canonical_maintenance.json`
 
 Current sub-batch (2026-03-04): directive-manifest normalization.
 

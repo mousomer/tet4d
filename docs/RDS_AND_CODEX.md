@@ -20,6 +20,7 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 - `docs/policies/POLICY_STRING_SANITATION.md`
 - `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`
 - `docs/policies/POLICY_FORMATTING.md`
+- `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
 - `config/project/policy/pack.json`
 - `config/project/policy/manifests/project_policy.json`
 - `config/project/policy/manifests/contributor_directives.json`
@@ -78,6 +79,12 @@ python3 tools/governance/validate_project_contracts.py
 python3 tools/governance/check_risk_gates.py
 ./scripts/check_policy_compliance.sh
 ./scripts/check_git_sanitation.sh
+```
+
+CI preflight (recommended before push):
+
+```bash
+./scripts/ci_preflight.sh
 ```
 
 ## Notes on scope

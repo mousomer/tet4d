@@ -7,6 +7,7 @@ Canonical inventory source is `config/project/policy/manifests/policy_registry.j
 - `string_sanitation` — safety; source: `docs/policies/POLICY_STRING_SANITATION.md`; enforced by `scripts/check_policy_compliance.sh`.
 - `no_magic_numbers` — governance; source: `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`; enforced by `scripts/check_policy_compliance.sh`.
 - `formatting` — governance; source: `docs/policies/POLICY_FORMATTING.md`; enforced by `scripts/check_policy_compliance.sh`.
+- CI operations runbook: `docs/policies/CI_COMPLIANCE_RUNBOOK.md`.
 
 Contracts referenced by the pack:
 - `config/project/policy/manifests/canonical_maintenance.json` (validated by `tools/governance/validate_project_contracts.py`)

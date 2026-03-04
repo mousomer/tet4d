@@ -118,6 +118,7 @@
       "scripts/update_policy_template_hashes.sh",
       "scripts/check_git_sanitation_repo.sh",
       "scripts/check_policy_compliance_repo.sh",
+      "scripts/ci_preflight.sh",
       "scripts/check_architecture_metrics_soft_gate.sh"
     ],
     "governance": [
@@ -128,6 +129,7 @@
       "docs/policies/POLICY_STRING_SANITATION.md",
       "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
       "docs/policies/POLICY_FORMATTING.md",
+      "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
       "config/project/policy/pack.json",
       "config/project/policy/manifests/project_policy.json",
       "config/project/policy/manifests/policy_registry.json",
@@ -158,7 +160,8 @@
         "config/project/policy/manifests/loc_guidance.json",
         "config/project/policy/manifests/dedup_dead_code_rules.json",
         "config/project/policy/manifests/policy_registry.json",
-        "config/project/policy/manifests/project_policy.json"
+        "config/project/policy/manifests/project_policy.json",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
       ]
     },
     {
@@ -227,6 +230,7 @@
       "must_contain": [
         "RDS index",
         "Testing instructions",
+        "scripts/ci_preflight.sh",
         "config/project/policy/manifests/contributor_directives.json",
         "docs/BACKLOG.md",
         "docs/rds/RDS_PACKAGING.md"

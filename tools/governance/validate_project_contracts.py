@@ -26,7 +26,13 @@ POLICY_REGISTRY_PATH = (
     PROJECT_ROOT / "config/project/policy/manifests/policy_registry.json"
 )
 POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
+POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
+POLICY_LITERAL_SAFETY_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"/" + r"Users/"), "unix_users_path"),
+    (re.compile(r"/" + r"home/"), "unix_home_path"),
+    (re.compile(r"[A-Za-z]:" + r"\\"), "windows_drive_prefix"),
+)
 ALLOWED_CONTEXT_IDS = {
     "code",
     "tests",
@@ -948,6 +954,64 @@ def _validate_policy_registry_sync() -> list[ValidationIssue]:
     return issues
 
 
+def _iter_string_nodes(
+    value: object, *, path_prefix: str = ""
+) -> list[tuple[str, str]]:
+    nodes: list[tuple[str, str]] = []
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            key_text = str(key)
+            nested_prefix = f"{path_prefix}.{key_text}" if path_prefix else key_text
+            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
+        return nodes
+    if isinstance(value, list):
+        for idx, nested in enumerate(value):
+            nested_prefix = f"{path_prefix}[{idx}]"
+            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
+        return nodes
+    if isinstance(value, str):
+        nodes.append((path_prefix or "$", value))
+    return nodes
+
+
+def _policy_manifest_rel_paths() -> list[str]:
+    rels = ["config/project/policy/pack.json"]
+    if POLICY_MANIFEST_DIR.exists():
+        rels.extend(
+            sorted(
+                f"config/project/policy/manifests/{path.name}"
+                for path in POLICY_MANIFEST_DIR.glob("*.json")
+            )
+        )
+    return rels
+
+
+def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _policy_manifest_rel_paths():
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            continue
+        payload = _load_json_payload(path, rel, issues)
+        if payload is None:
+            continue
+        for key_path, text in _iter_string_nodes(payload):
+            for pattern, label in POLICY_LITERAL_SAFETY_PATTERNS:
+                if pattern.search(text) is None:
+                    continue
+                issues.append(
+                    ValidationIssue(
+                        "safety",
+                        (
+                            f"{rel}:{key_path} includes path-like literal "
+                            f"'{label}' that can break sanitation gates"
+                        ),
+                    )
+                )
+                break
+    return issues
+
+
 def _settings_hub_row_keys(menu_payload: dict[str, object]) -> set[str]:
     keys: set[str] = set()
     layout = menu_payload.get("settings_hub_layout_rows")
@@ -1239,6 +1303,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_contributor_directives_manifest())
     issues.extend(_validate_policy_index_sync())
     issues.extend(_validate_policy_registry_sync())
+    issues.extend(_validate_policy_manifest_string_safety())
     issues.extend(_validate_menu_simplification_rule())
     return issues
 

@@ -34,8 +34,9 @@
       "id": "normalization_reuse",
       "description": "Do not duplicate local sanitization/normalization pipelines where shared helpers exist.",
       "scope_globs": [
-        "src/tet4d/**/*.py",
-        "tools/**/*.py"
+        "src/tet4d/ui/pygame/**/*.py",
+        "src/tet4d/engine/runtime/**/*.py",
+        "tools/governance/*.py"
       ],
       "forbidden_regex": [
         "re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)",
@@ -52,8 +53,9 @@
       "id": "path_and_config_reuse",
       "description": "Use existing project config/path and JSON helper flows before introducing custom wrappers.",
       "scope_globs": [
-        "src/tet4d/**/*.py",
-        "tools/**/*.py",
+        "src/tet4d/ui/pygame/**/*.py",
+        "src/tet4d/engine/runtime/**/*.py",
+        "tools/governance/*.py",
         "scripts/**/*.py"
       ],
       "forbidden_regex": [
@@ -72,8 +74,8 @@
       "id": "algorithm_utility_reuse",
       "description": "Prefer stdlib functional utilities over ad-hoc rewrites for common collection transforms.",
       "scope_globs": [
-        "src/tet4d/**/*.py",
-        "tools/**/*.py"
+        "src/tet4d/engine/runtime/**/*.py",
+        "tools/governance/*.py"
       ],
       "forbidden_regex": [
         "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(",

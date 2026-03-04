@@ -1,0 +1,44 @@
+# CI Compliance Runbook
+
+## Goal
+
+Keep GitHub CI (`.github/workflows/ci.yml`) green and deterministic across all
+supported Python versions.
+
+## Pre-push command
+
+Run this from repo root before pushing:
+
+```bash
+./scripts/ci_preflight.sh
+```
+
+`ci_preflight.sh` runs sanitation/policy checks and then the canonical CI entrypoint:
+`./scripts/ci_check.sh`.
+
+## Triage order when CI fails
+
+1. Governance/sanitation gates:
+   - `scripts/check_git_sanitation.sh`
+   - `scripts/check_policy_compliance.sh`
+   - `scripts/check_policy_template_drift.sh`
+   - `scripts/check_git_sanitation_repo.sh`
+   - `scripts/check_policy_compliance_repo.sh`
+2. Main pipeline:
+   - `./scripts/ci_check.sh` (delegates to `./scripts/verify.sh`)
+3. If needed, isolate failing unit/module checks with `pytest -q` and fix root cause.
+
+## Hygiene rules for CI stability
+
+1. Do not commit local context artifacts (for example `context-*.instructions.md`).
+2. Do not commit absolute filesystem paths in docs/config/manifests.
+3. Keep policy manifests synchronized:
+   - `config/project/policy/manifests/project_policy.json`
+   - `config/project/policy/manifests/policy_registry.json`
+4. Treat policy warnings as debt to reduce in follow-up batches.
+
+## Merge policy
+
+1. Merge only when the full CI matrix is green.
+2. If an urgent follow-up commit is needed, rerun `./scripts/ci_preflight.sh`
+   before push.
