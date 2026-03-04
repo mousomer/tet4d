@@ -160,6 +160,18 @@ def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
     return _save_payload(payload)
 
 
+def _save_payload_section(
+    section_name: str,
+    updates: dict[str, Any],
+) -> tuple[bool, str]:
+    payload = _load_payload()
+    section = payload.setdefault(section_name, {})
+    for key, value in updates.items():
+        if value is not None:
+            section[key] = value
+    return _sanitize_and_save_payload(payload)
+
+
 def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
     profile = payload.get("active_profile")
     if not isinstance(profile, str):
@@ -288,20 +300,19 @@ def save_display_settings(
     windowed_size: tuple[int, int] | None = None,
     overlay_transparency: float | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    display = payload.setdefault("display", {})
+    updates: dict[str, Any] = {}
     if fullscreen is not None:
-        display["fullscreen"] = bool(fullscreen)
+        updates["fullscreen"] = bool(fullscreen)
     if windowed_size is not None:
         width = max(640, int(windowed_size[0]))
         height = max(480, int(windowed_size[1]))
-        display["windowed_size"] = [width, height]
+        updates["windowed_size"] = [width, height]
     if overlay_transparency is not None:
-        display["overlay_transparency"] = clamp_overlay_transparency(
+        updates["overlay_transparency"] = clamp_overlay_transparency(
             overlay_transparency,
             default=DEFAULT_OVERLAY_TRANSPARENCY,
         )
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section("display", updates)
 
 
 def get_audio_settings() -> dict[str, Any]:
@@ -317,26 +328,30 @@ def save_audio_settings(
     sfx_volume: float | None = None,
     mute: bool | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    audio = payload.setdefault("audio", {})
-    if master_volume is not None:
-        audio["master_volume"] = float(master_volume)
-    if sfx_volume is not None:
-        audio["sfx_volume"] = float(sfx_volume)
-    if mute is not None:
-        audio["mute"] = bool(mute)
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section(
+        "audio",
+        {
+            "master_volume": (
+                None if master_volume is None else float(master_volume)
+            ),
+            "sfx_volume": None if sfx_volume is None else float(sfx_volume),
+            "mute": None if mute is None else bool(mute),
+        },
+    )
 
 
 def save_analytics_settings(
     *,
     score_logging_enabled: bool | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    analytics = payload.setdefault("analytics", {})
-    if score_logging_enabled is not None:
-        analytics["score_logging_enabled"] = bool(score_logging_enabled)
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section(
+        "analytics",
+        {
+            "score_logging_enabled": (
+                None if score_logging_enabled is None else bool(score_logging_enabled)
+            )
+        },
+    )
 
 
 def get_global_game_seed() -> int:

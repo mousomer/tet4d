@@ -342,16 +342,9 @@ def runtime_binding_groups_for_dimension(
     return {group: dict(bindings) for group, bindings in groups.items()}
 
 
-def binding_group_label(group: str) -> str:
-    return engine_api.binding_group_label(group)
-
-
-def binding_group_description(group: str) -> str:
-    return engine_api.binding_group_description(group)
-
-
-def binding_action_description(action: str) -> str:
-    return engine_api.binding_action_description(action)
+binding_group_label = engine_api.binding_group_label
+binding_group_description = engine_api.binding_group_description
+binding_action_description = engine_api.binding_action_description
 
 
 def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:

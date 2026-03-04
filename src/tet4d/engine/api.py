@@ -1064,6 +1064,13 @@ def _proxy_ui_keybindings(method_name: str):
     return _dispatch
 
 
+def _proxy_runtime_menu_settings_state(method_name: str):
+    def _dispatch(*args: Any, **kwargs: Any) -> Any:
+        return _call_runtime_menu_settings_state(method_name, *args, **kwargs)
+
+    return _dispatch
+
+
 keybindings_active_key_profile = _proxy_ui_keybindings("active_key_profile")
 keybindings_clone_key_profile = _proxy_ui_keybindings("clone_key_profile")
 keybindings_cycle_key_profile = _proxy_ui_keybindings("cycle_key_profile")
@@ -1092,26 +1099,11 @@ keybindings_set_active_key_profile = _proxy_ui_keybindings(
 keybindings_binding_actions_for_dimension = _proxy_ui_keybindings(
     "binding_actions_for_dimension"
 )
-
-
-def menu_settings_load(state: Any, dimension: int) -> tuple[bool, str]:
-    from .runtime.menu_settings_state import load_menu_settings as _load_menu_settings
-
-    return _load_menu_settings(state, dimension)
-
-
-def menu_settings_save(state: Any, dimension: int) -> tuple[bool, str]:
-    from .runtime.menu_settings_state import save_menu_settings as _save_menu_settings
-
-    return _save_menu_settings(state, dimension)
-
-
-def menu_settings_reset_to_defaults(state: Any, dimension: int) -> tuple[bool, str]:
-    from .runtime.menu_settings_state import (
-        reset_menu_settings_to_defaults as _reset_menu_settings_to_defaults,
-    )
-
-    return _reset_menu_settings_to_defaults(state, dimension)
+menu_settings_load = _proxy_runtime_menu_settings_state("load_menu_settings")
+menu_settings_save = _proxy_runtime_menu_settings_state("save_menu_settings")
+menu_settings_reset_to_defaults = _proxy_runtime_menu_settings_state(
+    "reset_menu_settings_to_defaults"
+)
 
 
 def _proxy_ui_keybindings_menu_shortcuts(method_name: str):

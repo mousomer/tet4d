@@ -153,6 +153,64 @@ class TutorialRuntimeTests(unittest.TestCase):
             )
             self.assertFalse(progressed)
 
+    def test_step_transition_waits_for_configured_delay(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 1000),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_2d_core",
+                mode="2d",
+            )
+            for _ in range(4):
+                session.observe_action("move_x_neg")
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=100):
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+            self.assertIn("Next stage in 1s", session.overlay_payload()["status_message"])
+
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1099):
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
+
+            with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1100):
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_x_pos")
+
+    def test_4d_w_axis_stages_progress_in_order(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            session = create_tutorial_runtime_session(
+                lesson_id="tutorial_4d_core",
+                mode="4d",
+            )
+            guard = 0
+            while session.overlay_payload().get("step_id") != "move_w_neg":
+                moved = session.next_stage()
+                self.assertTrue(moved)
+                guard += 1
+                self.assertLess(guard, 200)
+
+            self.assertEqual(session.required_action(), "move_w_neg")
+            self.assertTrue(session.action_allowed("move_w_neg"))
+            self.assertFalse(session.action_allowed("move_w_pos"))
+            for _ in range(4):
+                session.observe_action("move_w_neg")
+            self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "move_w_pos")
+
+            self.assertEqual(session.required_action(), "move_w_pos")
+            self.assertTrue(session.action_allowed("move_w_pos"))
+            self.assertFalse(session.action_allowed("move_w_neg"))
+            for _ in range(4):
+                session.observe_action("move_w_pos")
+            self.assertTrue(session.sync_and_advance(lines_cleared=0))
+            self.assertEqual(session.overlay_payload()["step_id"], "soft_drop")
+
 
 if __name__ == "__main__":
     unittest.main()

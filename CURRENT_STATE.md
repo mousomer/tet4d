@@ -266,6 +266,25 @@ Verification:
 - `.venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py tests/unit/engine/test_project_config.py` passed (`33 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
 
+## Current Working Batch (Uncommitted)
+
+Completed locally:
+- Added tutorial runtime regression coverage for stage-delay progression and
+  ordered 4D W-axis movement stages:
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Reduced duplicated section persistence in runtime menu settings state:
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Reduced wrapper duplication in runtime API and keybindings:
+  - `src/tet4d/engine/api.py`
+  - `src/tet4d/ui/pygame/keybindings.py`
+
+Verification (current working tree):
+- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_content.py` passed (`32 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_engine_api_determinism.py` passed (`31 passed`).
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `.venv/bin/python scripts/arch_metrics.py` ran (`arch_stage=890`,
+  `tech_debt.score=1.35`, status `low`).
+
 ## Recent Batch Status (Stages 756-790)
 
 Completed:

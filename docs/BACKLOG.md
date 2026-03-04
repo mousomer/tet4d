@@ -499,6 +499,23 @@ Current sub-batch (2026-03-04): governance-doc cleanup and directive dedup.
 - Preserved required contract anchors (`RDS index`, `Testing instructions`,
   `docs/BACKLOG.md`, `docs/rds/RDS_PACKAGING.md`) while reducing duplicate policy text.
 
+Current sub-batch (2026-03-04): tutorial timing regression coverage + runtime dedup.
+
+- Added tutorial runtime regression coverage for two active risks:
+  - configured stage-delay gating enforcement before transition
+  - ordered 4D W-axis stage progression (`move_w_neg` -> `move_w_pos`)
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Reduced duplicated runtime settings persistence/update plumbing by introducing
+  a shared section saver in:
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Reduced API/keybindings wrapper duplication with proxy/alias consolidation in:
+  - `src/tet4d/engine/api.py`
+  - `src/tet4d/ui/pygame/keybindings.py`
+- Verification:
+  - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_tutorial_content.py` passed.
+  - `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_engine_api_determinism.py` passed.
+  - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
 Current sub-batch (2026-03-03): scoring clear-size weighting (square-root).
 
 - Added config-backed clear-size weighting so larger cleared layers award higher
