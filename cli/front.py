@@ -20,13 +20,6 @@ if __name__ == "__main__":
 
 import pygame
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_SRC_ROOT = _REPO_ROOT / "src"
-if str(_SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(_SRC_ROOT))
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(1, str(_REPO_ROOT))
-
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
@@ -38,6 +31,7 @@ from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_pr
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,
+    cycle_key_profile,
     load_active_profile_bindings,
     set_active_key_profile,
 )
@@ -201,6 +195,8 @@ def _draw_main_menu(
         ),
         _LAUNCHER_COPY["controls_hint_template"].format(escape_hint=escape_hint),
     ]
+    if active_key_profile() == "tiny":
+        info_lines[0] = f"{info_lines[0]}  Tiny menu: I/K up/down, Enter open"
     info_y = panel_y + panel_h + 10
     max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
     info_budget = max(1, max_bottom_lines - (1 if state.status else 0))
@@ -610,6 +606,48 @@ def _play_confirm_sfx() -> bool:
     return False
 
 
+def _is_profile_prev_key(key: int) -> bool:
+    return key in (
+        pygame.K_LEFTBRACKET,
+        pygame.K_MINUS,
+        pygame.K_PAGEUP,
+    )
+
+
+def _is_profile_next_key(key: int) -> bool:
+    return key in (
+        pygame.K_RIGHTBRACKET,
+        pygame.K_EQUALS,
+        pygame.K_PAGEDOWN,
+    )
+
+
+def _handle_launcher_keydown(
+    menu_id: str,
+    key: int,
+    _stack_depth: int,
+    state: MainMenuState,
+    session: _LauncherSession,
+) -> bool:
+    if menu_id not in _MENU_GRAPH:
+        return False
+    if not (_is_profile_prev_key(key) or _is_profile_next_key(key)):
+        return False
+
+    step = -1 if _is_profile_prev_key(key) else 1
+    ok, msg, profile = cycle_key_profile(step)
+    if not ok:
+        state.status = msg
+        state.status_error = True
+        return True
+
+    _persist_session_status(state, session)
+    state.status = f"Active key profile: {profile}"
+    state.status_error = False
+    play_sfx("menu_move")
+    return True
+
+
 def run() -> None:
     runtime = initialize_runtime(sync_audio_state=True)
 
@@ -690,6 +728,13 @@ def run() -> None:
         on_quit_event=lambda: _menu_action_quit(state, session),
         on_move=_play_move_sfx,
         on_confirm=_play_confirm_sfx,
+        on_keydown=lambda menu_id, key, stack_depth: _handle_launcher_keydown(
+            menu_id,
+            key,
+            stack_depth,
+            state,
+            session,
+        ),
         initial_selected=initial_selected,
     )
     runner.run()

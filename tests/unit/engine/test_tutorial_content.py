@@ -82,6 +82,8 @@ class TutorialContentTests(unittest.TestCase):
             "yaw_fine_pos",
             "pitch_neg",
             "pitch_pos",
+            "mouse_orbit",
+            "mouse_zoom",
             "zoom_in",
             "zoom_out",
             "cycle_projection",
@@ -168,6 +170,14 @@ class TutorialContentTests(unittest.TestCase):
             "view_zw_neg",
             "view_zw_pos",
         }
+        camera_zoom_ids = {
+            "zoom_in",
+            "zoom_out",
+        }
+        camera_mouse_ids = {
+            "mouse_orbit",
+            "mouse_zoom",
+        }
         payload = content.load_tutorial_payload()
         for lesson in payload.lessons:
             for step in lesson.steps:
@@ -175,8 +185,30 @@ class TutorialContentTests(unittest.TestCase):
                     step.step_id.startswith("move_")
                     or step.step_id.startswith("rotate_")
                     or step.step_id in camera_rotation_ids
+                    or step.step_id in camera_zoom_ids
+                    or step.step_id in camera_mouse_ids
                 ):
                     self.assertEqual(step.complete_when.event_count_required, 4)
+
+    def test_mouse_camera_steps_allow_keyboard_fallback(self) -> None:
+        payload = content.load_tutorial_payload()
+        lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
+        for lesson_id in ("tutorial_3d_core", "tutorial_4d_core"):
+            lesson = lessons[lesson_id]
+            orbit = next(step for step in lesson.steps if step.step_id == "mouse_orbit")
+            zoom = next(step for step in lesson.steps if step.step_id == "mouse_zoom")
+
+            self.assertEqual(orbit.complete_when.logic, "any")
+            self.assertIn("mouse_orbit", orbit.complete_when.events)
+            self.assertIn("yaw_pos", orbit.complete_when.events)
+            self.assertIn("pitch_pos", orbit.complete_when.events)
+            self.assertEqual(orbit.complete_when.event_count_required, 4)
+
+            self.assertEqual(zoom.complete_when.logic, "any")
+            self.assertIn("mouse_zoom", zoom.complete_when.events)
+            self.assertIn("zoom_in", zoom.complete_when.events)
+            self.assertIn("zoom_out", zoom.complete_when.events)
+            self.assertEqual(zoom.complete_when.event_count_required, 4)
 
     def test_nd_move_and_rotation_steps_use_asymmetric_starters(self) -> None:
         payload = content.load_tutorial_payload()
@@ -291,6 +323,10 @@ class TutorialContentTests(unittest.TestCase):
             "pitch_neg",
             "pitch_pos",
         )
+        camera_mouse_3d = (
+            "mouse_orbit",
+            "mouse_zoom",
+        )
         self.assertLess(
             max(order_3d.index(step_id) for step_id in translations_3d),
             min(order_3d.index(step_id) for step_id in piece_rotations_3d),
@@ -301,6 +337,10 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_3d.index(step_id) for step_id in camera_rotations_3d),
+            min(order_3d.index(step_id) for step_id in camera_mouse_3d),
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in camera_mouse_3d),
             order_3d.index("overlay_alpha_dec"),
         )
         self.assertLess(
@@ -346,6 +386,10 @@ class TutorialContentTests(unittest.TestCase):
             "view_zw_neg",
             "view_zw_pos",
         )
+        camera_mouse_4d = (
+            "mouse_orbit",
+            "mouse_zoom",
+        )
         self.assertLess(
             max(order_4d.index(step_id) for step_id in translations_4d),
             min(order_4d.index(step_id) for step_id in piece_rotations_4d),
@@ -356,6 +400,10 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_4d.index(step_id) for step_id in camera_rotations_4d),
+            min(order_4d.index(step_id) for step_id in camera_mouse_4d),
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in camera_mouse_4d),
             order_4d.index("overlay_alpha_dec"),
         )
         self.assertLess(
@@ -408,3 +456,4 @@ class TutorialContentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -5,6 +5,8 @@ import random
 from dataclasses import dataclass
 from typing import Iterable, List, Tuple
 
+from tet4d.engine.gameplay.pieces_shared import scaled_span
+
 # Simple 2D relative coordinate
 RelCoord2D = Tuple[int, int]
 
@@ -146,16 +148,6 @@ def _rect_blocks_2d(width: int, height: int) -> list[RelCoord2D]:
     return list(normalized)
 
 
-def _scaled_span(
-    axis_size: int, ratio: float, min_size: int, max_cap: int | None = None
-) -> int:
-    clamped_axis = max(1, int(axis_size))
-    scaled = max(min_size, int(round(clamped_axis * ratio)))
-    scaled = min(scaled, clamped_axis)
-    if max_cap is not None:
-        scaled = min(scaled, max_cap)
-    return max(1, scaled)
-
 
 def get_debug_rectangles_2d(
     board_dims: tuple[int, int] | None = None,
@@ -167,11 +159,11 @@ def get_debug_rectangles_2d(
     long_1d = width
     half_w = max(2, width // 2)
     long_2d_w = half_w
-    long_2d_h = _scaled_span(height, 0.08, min_size=2, max_cap=2)
+    long_2d_h = scaled_span(height, 0.08, min_size=2, max_cap=2)
     flat_w = width
-    flat_h = _scaled_span(height, 0.12, min_size=2, max_cap=3)
+    flat_h = scaled_span(height, 0.12, min_size=2, max_cap=3)
     thick_w = half_w
-    thick_h = _scaled_span(height, 0.2, min_size=3, max_cap=5)
+    thick_h = scaled_span(height, 0.2, min_size=3, max_cap=5)
 
     return [
         PieceShape2D("DBG_LONG_1D", _rect_blocks_2d(long_1d, 1), 1),
@@ -246,3 +238,4 @@ class ActivePiece2D:
 
     def rotated(self, delta_steps: int) -> "ActivePiece2D":
         return ActivePiece2D(self.shape, self.pos, (self.rotation + delta_steps) % 4)
+

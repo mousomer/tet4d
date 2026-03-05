@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from typing import Callable
 
 import pygame
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 
 
 ActionHandler = Callable[[], bool]
 RouteHandler = Callable[[str], bool]
 RenderHandler = Callable[[str, str, tuple[dict[str, str], ...], int, int], None]
 SimpleHandler = Callable[[], bool]
+KeydownHandler = Callable[[str, int, int], bool]
 
 
 class ActionRegistry:
@@ -40,6 +42,7 @@ class _RunnerState:
     running: bool = True
 
 
+
 class MenuRunner:
     def __init__(
         self,
@@ -54,6 +57,7 @@ class MenuRunner:
         on_quit_event: SimpleHandler | None = None,
         on_move: SimpleHandler | None = None,
         on_confirm: SimpleHandler | None = None,
+        on_keydown: KeydownHandler | None = None,
         initial_selected: dict[str, int] | None = None,
         fps: int = 60,
     ) -> None:
@@ -70,6 +74,7 @@ class MenuRunner:
         self._on_quit_event = on_quit_event
         self._on_move = on_move
         self._on_confirm = on_confirm
+        self._on_keydown = on_keydown
         self._initial_selected = dict(initial_selected or {})
         self._fps = max(1, int(fps))
 
@@ -107,7 +112,14 @@ class MenuRunner:
                     continue
                 if event.type != pygame.KEYDOWN:
                     continue
-                if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
+                key = normalize_menu_navigation_key(int(event.key))
+                if self._on_keydown is not None and self._on_keydown(
+                    current_menu_id,
+                    key,
+                    len(state.stack),
+                ):
+                    continue
+                if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     if len(state.stack) > 1:
                         state.stack.pop()
                         if self._on_move is not None:
@@ -120,19 +132,19 @@ class MenuRunner:
                         state.running = False
                         break
                     continue
-                if event.key == pygame.K_UP:
+                if key == pygame.K_UP:
                     selected = (selected - 1) % len(items)
                     state.selected_by_menu[current_menu_id] = selected
                     if self._on_move is not None:
                         self._on_move()
                     continue
-                if event.key == pygame.K_DOWN:
+                if key == pygame.K_DOWN:
                     selected = (selected + 1) % len(items)
                     state.selected_by_menu[current_menu_id] = selected
                     if self._on_move is not None:
                         self._on_move()
                     continue
-                if event.key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     continue
 
                 if self._on_confirm is not None:

@@ -1,11 +1,31 @@
 {
   "version": 1,
   "colors": {
-    "bg_top": [14, 18, 44],
-    "bg_bottom": [4, 7, 20],
-    "text": [232, 232, 240],
-    "muted": [192, 200, 228],
-    "highlight": [255, 224, 128]
+    "bg_top": [
+      14,
+      18,
+      44
+    ],
+    "bg_bottom": [
+      4,
+      7,
+      20
+    ],
+    "text": [
+      232,
+      232,
+      240
+    ],
+    "muted": [
+      192,
+      200,
+      228
+    ],
+    "highlight": [
+      255,
+      224,
+      128
+    ]
   },
   "thresholds": {
     "compact_width_threshold": 760,
@@ -50,8 +70,8 @@
     "part": "Part {part_index}/{part_total}"
   },
   "footer_hints": {
-    "compact": "Esc | <- -> topic | [ ] part",
-    "full": "Esc back | Left/Right topic | Up/Down dimension | [ ] subpage"
+    "compact": "Esc/Q | <- -> topic | [ ] part",
+    "full": "Esc/Q back | Left/Right topic | Up/Down dimension | [ ] subpage"
   },
   "topic_media_placement": {
     "default": {

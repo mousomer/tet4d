@@ -92,7 +92,12 @@ run_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_a
 run_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
-run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings
+PYTEST_ARGS=(-q --maxfail=1 --disable-warnings)
+if [[ "$CODEX_MODE" == "1" ]]; then
+  PYTEST_ARGS+=(--basetemp=state/pytest_basetemp -p no:cacheprovider -p no:tmpdir)
+fi
+
+run_step "pytest"         run_module pytest "${PYTEST_ARGS[@]}"
 
 run_step "playbot_stability" \
   env PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
@@ -101,3 +106,4 @@ run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.p
 run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend
 
 echo "verify: OK"
+

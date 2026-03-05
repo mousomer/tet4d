@@ -12,6 +12,16 @@ _PANEL_BORDER = (110, 136, 210, 220)
 _TEXT_PRIMARY = (236, 240, 252)
 _TEXT_SECONDARY = (198, 208, 236)
 _TEXT_HIGHLIGHT = (255, 224, 128)
+_LAST_PANEL_RECT_BY_DIMENSION: dict[int, pygame.Rect] = {}
+
+
+def _normalized_dimension(dimension: int) -> int:
+    return max(2, min(4, int(dimension)))
+
+
+def tutorial_panel_last_rect(dimension: int) -> pygame.Rect | None:
+    rect = _LAST_PANEL_RECT_BY_DIMENSION.get(_normalized_dimension(dimension))
+    return rect.copy() if rect is not None else None
 
 
 def _binding_lookup_for_dimension(dimension: int) -> dict[str, tuple[int, ...]]:
@@ -172,34 +182,159 @@ def _overlay_lines_terminal(
     return []
 
 
+def _panel_base_geometry(
+    *,
+    width: int,
+    dimension: int,
+) -> tuple[int, int, int]:
+    if dimension in (3, 4):
+        if dimension == 3:
+            margin = int(engine_api.front3d_render_margin())
+            side_panel = int(engine_api.front3d_render_side_panel())
+        else:
+            margin = int(engine_api.front4d_render_margin())
+            side_panel = int(engine_api.front4d_render_side_panel())
+        hud_x = width - side_panel - margin
+        panel_x = max(12, hud_x + 8)
+        panel_w = max(240, side_panel - 16)
+        panel_w = min(panel_w, max(240, width - panel_x - 12))
+        panel_y = max(12, margin + 8)
+        return panel_x, panel_y, panel_w
+    panel_w = min(760, max(420, int(width * 0.52)))
+    return 12, 12, panel_w
+
+
+def _panel_rect_for_dimension(
+    *,
+    width: int,
+    height: int,
+    dimension: int,
+    panel_h: int,
+    panel_offset: tuple[int, int] = (0, 0),
+) -> pygame.Rect:
+    panel_x, panel_y, panel_w = _panel_base_geometry(
+        width=width,
+        dimension=dimension,
+    )
+    offset_x = int(panel_offset[0]) if panel_offset else 0
+    offset_y = int(panel_offset[1]) if panel_offset else 0
+    panel_x += offset_x
+    panel_y += offset_y
+
+    max_x = max(0, width - panel_w)
+    max_y = max(0, height - panel_h)
+    panel_x = max(0, min(max_x, panel_x))
+    panel_y = max(0, min(max_y, panel_y))
+    return pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+
+def _split_long_token(
+    font: pygame.font.Font,
+    token: str,
+    *,
+    max_width: int,
+) -> tuple[str, ...]:
+    if not token:
+        return ()
+    chunks: list[str] = []
+    current = ""
+    for char in token:
+        candidate = f"{current}{char}"
+        if current and font.size(candidate)[0] > max_width:
+            chunks.append(current)
+            current = char
+        else:
+            current = candidate
+    if current:
+        chunks.append(current)
+    return tuple(chunks)
+
+
+def _wrap_text_line(
+    font: pygame.font.Font,
+    text: str,
+    *,
+    max_width: int,
+) -> tuple[str, ...]:
+    clean = " ".join(str(text).split())
+    if not clean:
+        return ()
+    if font.size(clean)[0] <= max_width:
+        return (clean,)
+
+    wrapped: list[str] = []
+    current = ""
+    for token in clean.split(" "):
+        if not token:
+            continue
+        candidate = token if not current else f"{current} {token}"
+        if current and font.size(candidate)[0] > max_width:
+            wrapped.append(current)
+            current = token
+        else:
+            current = candidate
+        if font.size(current)[0] <= max_width:
+            continue
+        token_chunks = _split_long_token(font, current, max_width=max_width)
+        if not token_chunks:
+            current = ""
+            continue
+        wrapped.extend(token_chunks[:-1])
+        current = token_chunks[-1]
+
+    if current:
+        wrapped.append(current)
+    return tuple(line for line in wrapped if line)
+
+
 def draw_tutorial_overlay(
     screen: pygame.Surface,
     fonts: Any,
     *,
     dimension: int,
     tutorial_session: Any,
+    panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     payload = engine_api.tutorial_runtime_overlay_payload_runtime(tutorial_session)
-    lines = _overlay_lines(payload, dimension=dimension)
-    if not lines:
+    base_lines = _overlay_lines(payload, dimension=dimension)
+    if not base_lines:
         return
-    width, _height = screen.get_size()
-    panel_w = min(760, max(420, int(width * 0.52)))
-    line_h = max(fonts.hint_font.get_height() + 4, 18)
-    panel_h = 16 + line_h * len(lines)
-    panel_x = 12
-    panel_y = 12
-    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+    width, height = screen.get_size()
+    dim = _normalized_dimension(dimension)
+    _base_x, _base_y, panel_w = _panel_base_geometry(width=width, dimension=dim)
+    text_w = max(120, panel_w - 18)
+
+    drawn_rows: list[tuple[pygame.font.Font, str, tuple[int, int, int], bool, int]] = []
+    for idx, (line, color, bold) in enumerate(base_lines):
+        font = fonts.menu_font if idx == 0 else fonts.hint_font
+        wrapped = _wrap_text_line(font, line, max_width=text_w)
+        if not wrapped:
+            continue
+        row_h = max(16, font.get_height() + 4)
+        for wrapped_line in wrapped:
+            drawn_rows.append((font, wrapped_line, color, bold, row_h))
+    if not drawn_rows:
+        return
+
+    panel_h = 12 + sum(row_h for *_rest, row_h in drawn_rows)
+    panel_rect = _panel_rect_for_dimension(
+        width=width,
+        height=height,
+        dimension=dim,
+        panel_h=panel_h,
+        panel_offset=panel_offset,
+    )
+    _LAST_PANEL_RECT_BY_DIMENSION[dim] = panel_rect.copy()
+
     panel = pygame.Surface(panel_rect.size, pygame.SRCALPHA)
     pygame.draw.rect(panel, _PANEL_BG, panel.get_rect(), border_radius=10)
     pygame.draw.rect(panel, _PANEL_BORDER, panel.get_rect(), width=1, border_radius=10)
     screen.blit(panel, panel_rect.topleft)
 
-    y = panel_y + 8
-    text_w = panel_w - 18
-    for idx, (line, color, bold) in enumerate(lines):
-        font = fonts.menu_font if idx == 0 else fonts.hint_font
+    y = panel_rect.y + 6
+    for font, line, color, bold, row_h in drawn_rows:
         draw_text = fit_text(font, line, text_w)
         line_surf = _render_line(font, draw_text, color, bold=bold)
-        screen.blit(line_surf, (panel_x + 9, y))
-        y += line_h
+        screen.blit(line_surf, (panel_rect.x + 9, y))
+        y += row_h

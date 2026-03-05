@@ -330,6 +330,7 @@ def _draw_board_3d(
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
@@ -467,6 +468,7 @@ def draw_game_frame(
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
@@ -477,6 +479,9 @@ def draw_game_frame(
         SIDE_PANEL,
         window_h - 2 * MARGIN,
     )
+    panel_rect.move_ip(int(side_panel_offset[0]), int(side_panel_offset[1]))
+    panel_rect.x = max(0, min(window_w - panel_rect.width, panel_rect.x))
+    panel_rect.y = max(0, min(window_h - panel_rect.height, panel_rect.y))
     board_rect = pygame.Rect(
         MARGIN,
         MARGIN,
@@ -513,3 +518,5 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
     board_w = int(max(560, cfg.dims[0] * 68))
     board_h = int(max(620, cfg.dims[1] * 30))
     return board_w + SIDE_PANEL + 3 * MARGIN, board_h + 2 * MARGIN
+
+

@@ -12,6 +12,7 @@ from tet4d.ui.pygame.render.control_helper import (
     draw_grouped_control_helper,
 )
 from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 help_action_topic_registry = engine_api.help_action_topic_registry_runtime
@@ -778,21 +779,22 @@ def _handle_help_keydown(
     key: int,
     on_escape_back: Callable[[], None] | None = None,
 ) -> bool:
-    if key == pygame.K_ESCAPE:
+    nav_key = normalize_menu_navigation_key(key)
+    if nav_key == pygame.K_ESCAPE:
         if callable(on_escape_back):
             on_escape_back()
         state.running = False
         return True
-    if key == pygame.K_LEFT:
+    if nav_key == pygame.K_LEFT:
         _cycle_page(state, context_label, -1)
         return True
-    if key == pygame.K_RIGHT:
+    if nav_key == pygame.K_RIGHT:
         _cycle_page(state, context_label, 1)
         return True
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_UP:
         _cycle_dimension(state, context_label, -1)
         return True
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         _cycle_dimension(state, context_label, 1)
         return True
     if key in (pygame.K_LEFTBRACKET, pygame.K_PAGEUP, pygame.K_COMMA):

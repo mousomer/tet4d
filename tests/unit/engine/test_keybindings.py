@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-import tempfile
+import shutil
 import unittest
 from dataclasses import dataclass, field
 from pathlib import Path
+from uuid import uuid4
 from unittest.mock import patch
 
 try:
@@ -35,10 +36,17 @@ class _MenuState2D:
     active_profile: str = keybindings.PROFILE_SMALL
 
 
+def _new_workspace_temp_dir(prefix: str) -> Path:
+    root = Path.cwd() / "state" / "pytest_temp"
+    root.mkdir(parents=True, exist_ok=True)
+    candidate = root / f"{prefix}_{uuid4().hex}"
+    candidate.mkdir(parents=True, exist_ok=False)
+    return candidate
+
+
 class _TempKeybindingRoot:
     def __init__(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self._tmp.name)
+        self.root = _new_workspace_temp_dir("keybindings")
         self.keybindings_dir = self.root / "keybindings"
         self.state_dir = self.root / "state"
         self.files = {
@@ -70,8 +78,7 @@ class _TempKeybindingRoot:
     def stop(self) -> None:
         for p in reversed(self.patches):
             p.stop()
-        self._tmp.cleanup()
-
+        shutil.rmtree(self.root, ignore_errors=True)
 
 class TestKeybindingProfiles(unittest.TestCase):
     @classmethod
@@ -269,6 +276,40 @@ class TestKeybindingProfiles(unittest.TestCase):
         )
         self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_COMMA,))
         self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_PERIOD,))
+        self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
+
+    def test_tiny_profile_uses_no_arrow_gameplay_defaults(self) -> None:
+        ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_TINY)
+        self.assertTrue(ok, msg)
+        ok, msg = keybindings.load_active_profile_bindings()
+        self.assertTrue(ok, msg)
+
+        self.assertEqual(keybindings.KEYS_2D["move_x_neg"], (pygame.K_j,))
+        self.assertEqual(keybindings.KEYS_2D["move_x_pos"], (pygame.K_l,))
+        self.assertEqual(keybindings.KEYS_2D["move_y_neg"], (pygame.K_i,))
+        self.assertEqual(keybindings.KEYS_2D["move_y_pos"], (pygame.K_k,))
+        self.assertEqual(
+            keybindings.KEYS_2D["soft_drop"],
+            (pygame.K_LSHIFT, pygame.K_RSHIFT),
+        )
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_w,))
+
+        self.assertEqual(keybindings.KEYS_3D["move_z_neg"], (pygame.K_u,))
+        self.assertEqual(keybindings.KEYS_3D["move_z_pos"], (pygame.K_o,))
+        self.assertEqual(keybindings.KEYS_3D["move_y_neg"], (pygame.K_i,))
+        self.assertEqual(keybindings.KEYS_3D["move_y_pos"], (pygame.K_k,))
+
+        self.assertEqual(keybindings.KEYS_4D["move_z_neg"], (pygame.K_u,))
+        self.assertEqual(keybindings.KEYS_4D["move_z_pos"], (pygame.K_o,))
+        self.assertEqual(keybindings.KEYS_4D["move_y_neg"], (pygame.K_i,))
+        self.assertEqual(keybindings.KEYS_4D["move_y_pos"], (pygame.K_k,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_COMMA,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_PERIOD,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_MINUS,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_EQUALS,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_p,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_BACKSPACE,))
         self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
 
     def test_full_profile_uses_keypad_style_w_and_numeric_camera(self) -> None:

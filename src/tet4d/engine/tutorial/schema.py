@@ -297,8 +297,8 @@ def _parse_complete_when(raw: object, *, path: str) -> TutorialCompletionConditi
     )
     if logic not in _VALID_LOGIC:
         raise RuntimeError(f"{path}.logic must be one of: all, any")
-    if len(events) != 1:
-        raise RuntimeError(f"{path}.events must contain exactly one action")
+    if len(events) > 9:
+        raise RuntimeError(f"{path}.events must contain at most 9 actions")
     if not events and not predicates:
         raise RuntimeError(
             f"{path} must define at least one event or predicate requirement"

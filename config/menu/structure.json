@@ -18,11 +18,11 @@
   },
   "ui_copy": {
     "launcher": {
-      "info_active_profile_template": "Active key profile: {profile}",
+      "info_active_profile_template": "Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)",
       "info_continue_mode_template": "Continue mode: {mode}",
       "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
-      "escape_hint_back": "Esc back",
-      "escape_hint_quit": "Esc quit"
+      "escape_hint_back": "Esc/Q back",
+      "escape_hint_quit": "Esc/Q quit"
     },
     "settings_hub": {
       "title": "Settings",
@@ -31,23 +31,23 @@
         "Up/Down select   Left/Right adjust   Enter activate",
         "Enter on width/height/seed to type large numeric values",
         "Gameplay -> Advanced gameplay... controls auto speed-up and lines-per-level",
-        "F5 save   F8 reset defaults   Esc back"
+        "F5 save   F8 reset defaults   Esc/Q back"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
     },
     "keybindings_menu": {
       "title": "Keybindings Setup",
-      "subtitle_section_mode": "Up/Down select section, Enter open, Esc back",
-      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc back",
+      "subtitle_section_mode": "Up/Down select section, Enter open, Esc/Q back",
+      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc/Q back",
       "hints": [
         "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
-        "[ / ] profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Tab section menu   Esc cancel/back",
+        "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspace delete custom profile",
+        "C conflict mode cycle   Enter capture   Tab section menu   Esc/Q back",
         "{scope_file_hint}"
       ],
       "section_hints": [
-        "Enter open section   Up/Down select section   Esc back",
-        "[ / ] profile prev/next   N new profile   F2 rename   F3 save as"
+        "Enter open section   Up/Down select section   Esc/Q back",
+        "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   F2 rename   F3 save as"
       ],
       "capture_template": "Press a key for {binding_title} (Esc cancels)",
       "text_mode_confirm_hint": "Enter confirm   Esc cancel"
@@ -57,7 +57,7 @@
       "subtitle": "Dimension-specific bot controls in one place",
       "hints": [
         "Left/Right adjust values   Up/Down select",
-        "F5 save   F8 reset defaults   Esc back"
+        "F5 save   F8 reset defaults   Esc/Q back"
       ],
       "saved_status": "Saved bot options",
       "reset_confirm_enter": "Press Enter on Reset defaults again to confirm",
@@ -68,9 +68,9 @@
       "title_template": "{dimension}D setup",
       "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
       "title_2d": "2D setup",
-      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
+      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc/Q to quit.",
       "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
-      "compact_controls_hint": "Arrows navigate   Enter start   Esc quit"
+      "compact_controls_hint": "Arrows navigate   Enter start   Esc/Q quit"
     }
   },
   "menus": {
@@ -348,7 +348,7 @@
     "subtitle_template": "{dimension}D in-game controls and settings",
     "hints": [
       "Up/Down select   Enter apply",
-      "Esc resume"
+      "Esc/Q resume"
     ]
   },
   "setup_fields": {
@@ -632,21 +632,21 @@
   },
   "setup_hints": {
     "2d": [
-      "Esc = quit",
+      "Esc/Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
     "3d": [
-      "Esc = quit",
+      "Esc/Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
     "4d": [
-      "Esc = quit",
+      "Esc/Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",

@@ -40,10 +40,10 @@ Last verified: 2026-02-20
 
 ## 3. Current issues (open backlog)
 
-1. `BKL-P1-005` is closed: default macbook 4D camera bindings now have no keypad dependency.
-2. `BKL-P1-006` is closed for core IA pass: launcher/pause menu flows were simplified and relabeled for user-friendly navigation.
-3. Continuous watch items remain in `P3` (`BKL-P3-001`..`BKL-P3-005`).
-4. Canonical source of active status is `docs/BACKLOG.md`.
+1. Active open items are tracked in `config/project/backlog_debt.json` (`active_debt_items`).
+2. Current active open items: `BKL-P1-010` (tutorial panel obstruction risk), `BKL-P1-011` (zoom tutorial step-count parity).
+3. Current operational watch IDs: `BKL-P3-002`, `BKL-P3-003`, `BKL-P3-006`, `BKL-P3-007`, `BKL-P3-009`, `BKL-P3-013`.
+4. Canonical source of active status is `docs/BACKLOG.md` + `config/project/backlog_debt.json`.
 
 ## 4. Active plan artifacts
 

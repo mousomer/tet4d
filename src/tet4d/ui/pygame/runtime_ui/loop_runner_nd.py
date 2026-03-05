@@ -268,6 +268,7 @@ def _draw_runtime_frame(
             fonts,
             dimension=pause_dimension,
             tutorial_session=tutorial_session,
+            panel_offset=tuple(getattr(loop, "tutorial_panel_offset", (0, 0))),
         )
     pygame.display.flip()
 
@@ -426,3 +427,5 @@ def run_nd_loop(
             active_overlay=active_overlay,
             loop=loop,
         )
+
+

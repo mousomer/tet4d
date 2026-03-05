@@ -1443,7 +1443,9 @@ def apply_tutorial_step_setup_2d(
     )[0]
     if selected_shape is None:
         raise RuntimeError(
-            f"tutorial setup failed ({scope_tag}): starter piece '{starter_piece}' not found in 2D piece set '{cfg.piece_set}' or fallback '{PIECE_SET_2D_CLASSIC}'"
+            f"tutorial setup failed ({scope_tag}): starter piece "
+            f"'{starter_piece}' not found in 2D piece set '{cfg.piece_set}' "
+            f"or fallback '{PIECE_SET_2D_CLASSIC}'"
         )
 
     state.next_bag = []
@@ -1555,9 +1557,13 @@ def apply_tutorial_step_setup_nd(
         setup_rng=setup_rng,
     )[0]
     if selected_shape is None:
-        fallback_piece_set = PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+        fallback_piece_set = (
+            PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+        )
         raise RuntimeError(
-            f"tutorial setup failed ({scope_tag}): starter piece '{starter_piece}' not found in {cfg.ndim}D piece set '{cfg.piece_set_id}' or fallback '{fallback_piece_set}'"
+            f"tutorial setup failed ({scope_tag}): starter piece "
+            f"'{starter_piece}' not found in {cfg.ndim}D piece set "
+            f"'{cfg.piece_set_id}' or fallback '{fallback_piece_set}'"
         )
 
     state.next_bag = []
@@ -1630,3 +1636,4 @@ def ensure_tutorial_piece_visibility_nd(
         min_visible_layer=max(0, int(min_visible_layer)),
         scope_tag="runtime_visibility_nd",
     )
+

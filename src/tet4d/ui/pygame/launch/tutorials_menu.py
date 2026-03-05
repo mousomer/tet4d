@@ -6,6 +6,7 @@ from typing import Any
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 _BG_TOP = (16, 22, 54)
@@ -89,7 +90,7 @@ def _draw_menu(
 
     hints = [
         "Enter: Start tutorial",
-        "Esc: Back to launcher",
+        "Esc/Q: Back to launcher",
     ]
     hint_y = panel_y + panel_h + 10
     for hint in hints:
@@ -141,11 +142,12 @@ def _handle_menu_event(
         return selected, status, True, None
     if event.type != pygame.KEYDOWN:
         return selected, status, False, None
-    if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
+    nav_key = normalize_menu_navigation_key(int(event.key))
+    if nav_key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
         return selected, status, True, None
-    if event.key in (pygame.K_UP, pygame.K_w):
+    if nav_key == pygame.K_UP or event.key == pygame.K_w:
         return (selected - 1) % len(rows), status, False, None
-    if event.key in (pygame.K_DOWN, pygame.K_s):
+    if nav_key == pygame.K_DOWN or event.key == pygame.K_s:
         return (selected + 1) % len(rows), status, False, None
     if event.key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
         return selected, status, False, None

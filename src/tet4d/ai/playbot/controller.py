@@ -296,15 +296,29 @@ class PlayBotController:
             algorithm=self.planner_algorithm,
         )
 
-    def _piece_token_2d(self, state: GameState) -> tuple[object, ...]:
-        piece = state.current_piece
+    @staticmethod
+    def _piece_token_common(
+        *,
+        piece: object | None,
+        lines_cleared: int,
+        board_cell_count: int,
+        next_bag_size: int,
+    ) -> tuple[object, ...]:
         if piece is None:
-            return ("none", state.lines_cleared, len(state.board.cells))
+            return ("none", lines_cleared, board_cell_count)
         return (
             piece.shape.name,
-            state.lines_cleared,
-            len(state.board.cells),
-            len(state.next_bag),
+            lines_cleared,
+            board_cell_count,
+            next_bag_size,
+        )
+
+    def _piece_token_2d(self, state: GameState) -> tuple[object, ...]:
+        return self._piece_token_common(
+            piece=state.current_piece,
+            lines_cleared=state.lines_cleared,
+            board_cell_count=len(state.board.cells),
+            next_bag_size=len(state.next_bag),
         )
 
     def _piece_fully_visible_2d(self, state: GameState) -> bool:
@@ -314,14 +328,11 @@ class PlayBotController:
         return all(y >= 0 for _x, y in piece.cells())
 
     def _piece_token_nd(self, state: GameStateND) -> tuple[object, ...]:
-        piece = state.current_piece
-        if piece is None:
-            return ("none", state.lines_cleared, len(state.board.cells))
-        return (
-            piece.shape.name,
-            state.lines_cleared,
-            len(state.board.cells),
-            len(state.next_bag),
+        return self._piece_token_common(
+            piece=state.current_piece,
+            lines_cleared=state.lines_cleared,
+            board_cell_count=len(state.board.cells),
+            next_bag_size=len(state.next_bag),
         )
 
     def _piece_fully_visible_nd(self, state: GameStateND) -> bool:
@@ -650,3 +661,4 @@ class PlayBotController:
             return
         if self._should_auto_step(dt_ms):
             self._step_piece_nd(state)
+

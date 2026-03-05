@@ -496,6 +496,8 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "yaw_fine_pos",
                     "pitch_neg",
                     "pitch_pos",
+                    "mouse_orbit",
+                    "mouse_zoom",
                     "overlay_alpha_dec",
                     "overlay_alpha_inc",
                     "toggle_grid",
@@ -542,11 +544,39 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "view_xw_pos",
                     "view_zw_neg",
                     "view_zw_pos",
+                    "mouse_orbit",
+                    "mouse_zoom",
                     "overlay_alpha_dec",
                     "overlay_alpha_inc",
                     "toggle_grid",
                 ),
             )
+
+    def test_mouse_camera_steps_accept_keyboard_fallback_when_mouse_unavailable(self) -> None:
+        with (
+            patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
+            patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+        ):
+            for lesson_id, mode in (("tutorial_3d_core", "3d"), ("tutorial_4d_core", "4d")):
+                session = create_tutorial_runtime_session(
+                    lesson_id=lesson_id,
+                    mode=mode,
+                )
+                while session.overlay_payload().get("step_id") != "mouse_orbit":
+                    self.assertTrue(session.next_stage())
+                self.assertIsNotNone(session.consume_pending_setup())
+
+                for _ in range(4):
+                    session.observe_action("yaw_pos")
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+                self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
+
+                self.assertIsNotNone(session.consume_pending_setup())
+                for _ in range(4):
+                    session.observe_action("zoom_in")
+                self.assertTrue(session.sync_and_advance(lines_cleared=0))
+                self.assertEqual(session.overlay_payload().get("step_id"), "overlay_alpha_dec")
 
     def test_overlay_stage_completion_uses_declared_exact_target(self) -> None:
         with (

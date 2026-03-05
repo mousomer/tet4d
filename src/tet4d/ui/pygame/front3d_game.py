@@ -29,6 +29,25 @@ from tet4d.ui.pygame.launch.launcher_play import (
 )
 from tet4d.ui.pygame.runtime_ui.loop_runner_nd import run_nd_loop
 from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
+from tet4d.ui.pygame.runtime_ui.tutorial_overlay import tutorial_panel_last_rect
+from tet4d.ui.pygame.runtime_ui.panel_drag import (
+    PanelDragMixin,
+    helper_panel_rect_for_surface,
+)
+from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
+    handle_tutorial_hotkey,
+    maintain_tutorial_runtime_safety,
+    redo_tutorial_stage,
+    refresh_score_multiplier_state,
+    restart_loop_runtime_state,
+    running_tutorial_session,
+    tutorial_allowed_actions_blocked,
+    tutorial_action_delay_ms,
+    tutorial_overlay_start_from_setup,
+    tutorial_required_action_blocked,
+    tutorial_sync,
+)
+
 from tet4d.ai.playbot.types import (
     BotMode,
     bot_mode_from_index,
@@ -46,6 +65,8 @@ color_for_cell_3d = engine_api.front3d_render_color_for_cell_3d
 draw_game_frame = engine_api.front3d_render_draw_game_frame
 init_fonts = engine_api.front3d_render_init_fonts
 suggested_window_size = engine_api.front3d_render_suggested_window_size
+MARGIN = engine_api.front3d_render_margin()
+SIDE_PANEL = engine_api.front3d_render_side_panel()
 route_nd_keydown = engine_api.frontend_nd_route_keydown
 build_config = engine_api.front3d_setup_build_config_nd
 create_initial_state = engine_api.front3d_setup_create_initial_state_nd
@@ -196,18 +217,6 @@ _TUTORIAL_MIN_DIMS_3D = (
 )
 
 
-def _tutorial_action_delay_ms_3d(action_id: str) -> int:
-    if action_id == "soft_drop":
-        return int(_TUTORIAL_SOFT_DROP_DELAY_MS)
-    if action_id == "hard_drop":
-        return int(_TUTORIAL_HARD_DROP_DELAY_MS)
-    if action_id.startswith("rotate_"):
-        return int(_TUTORIAL_ROTATE_DELAY_MS)
-    if action_id.startswith("move_"):
-        return int(_TUTORIAL_MOVE_DELAY_MS)
-    return 0
-
-
 def _tutorial_required_action_legal_3d(loop: "LoopContext3D", action_id: str) -> bool:
     if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_3D:
         return True
@@ -237,70 +246,46 @@ def _tutorial_has_legal_action_3d(
     return False
 
 
-def _running_tutorial_session(loop: "LoopContext3D") -> object | None:
-    session = loop.tutorial_session
-    if session is None:
-        return None
-    if not engine_api.tutorial_runtime_is_running_runtime(session):
-        return None
-    return session
-
-
-def _redo_tutorial_stage(loop: "LoopContext3D", session: object) -> None:
-    if engine_api.tutorial_runtime_redo_stage_runtime(session):
-        _apply_pending_tutorial_setup(loop)
-
-
-def _restart_tutorial_session(loop: "LoopContext3D", session: object) -> None:
-    if tutorial_runtime_restart(session):
-        _apply_pending_tutorial_setup(loop)
-
-
-def _tutorial_required_action_blocked(
-    loop: "LoopContext3D",
-    session: object,
-) -> bool:
-    required = engine_api.tutorial_runtime_required_action_runtime(session)
-    if not required:
-        return False
-    return not _tutorial_required_action_legal_3d(loop, required)
-
-
-def _tutorial_allowed_actions_blocked(
-    loop: "LoopContext3D",
-    session: object,
-) -> bool:
-    allowed_actions = engine_api.tutorial_runtime_allowed_actions_runtime(session)
-    if not allowed_actions:
-        return False
-    return not _tutorial_has_legal_action_3d(loop, allowed_actions)
-
-
 def _maintain_tutorial_runtime_safety(loop: "LoopContext3D") -> None:
-    session = _running_tutorial_session(loop)
-    if session is None:
-        return
-    if engine_api.tutorial_runtime_completion_ready_runtime(session):
-        return
-    if engine_api.tutorial_runtime_transition_pending_runtime(session):
-        return
-    if loop.state.game_over:
-        _redo_tutorial_stage(loop, session)
-        return
-    visible = engine_api.tutorial_ensure_piece_visibility_nd_runtime(
-        loop.state,
-        loop.cfg,
+    maintain_tutorial_runtime_safety(
+        loop,
         min_visible_layer=int(_TUTORIAL_MIN_VISIBLE_LAYER),
+        running_tutorial_session=lambda curr_loop: running_tutorial_session(
+            curr_loop,
+            tutorial_is_running=engine_api.tutorial_runtime_is_running_runtime,
+        ),
+        completion_ready=engine_api.tutorial_runtime_completion_ready_runtime,
+        transition_pending=engine_api.tutorial_runtime_transition_pending_runtime,
+        redo_tutorial_stage=lambda curr_loop, session: redo_tutorial_stage(
+            curr_loop,
+            session,
+            redo_stage=engine_api.tutorial_runtime_redo_stage_runtime,
+            apply_pending_setup=_apply_pending_tutorial_setup,
+        ),
+        tutorial_ensure_piece_visibility=lambda curr_loop, min_visible_layer: bool(
+            engine_api.tutorial_ensure_piece_visibility_nd_runtime(
+                curr_loop.state,
+                curr_loop.cfg,
+                min_visible_layer=min_visible_layer,
+            )
+        ),
+        tutorial_allowed_actions_blocked=lambda curr_loop, session: tutorial_allowed_actions_blocked(
+            session,
+            allowed_actions_runtime=engine_api.tutorial_runtime_allowed_actions_runtime,
+            has_legal_action=lambda action_ids: _tutorial_has_legal_action_3d(
+                curr_loop,
+                action_ids,
+            ),
+        ),
+        tutorial_required_action_blocked=lambda curr_loop, session: tutorial_required_action_blocked(
+            session,
+            required_action_runtime=engine_api.tutorial_runtime_required_action_runtime,
+            required_action_legal=lambda action_id: _tutorial_required_action_legal_3d(
+                curr_loop,
+                action_id,
+            ),
+        ),
     )
-    if not visible:
-        _redo_tutorial_stage(loop, session)
-        return
-    if _tutorial_allowed_actions_blocked(loop, session):
-        _redo_tutorial_stage(loop, session)
-        return
-    if _tutorial_required_action_blocked(loop, session):
-        _redo_tutorial_stage(loop, session)
-        return
 
 
 def _apply_tutorial_camera_preset(loop: "LoopContext3D", preset: str) -> None:
@@ -332,23 +317,13 @@ def _apply_pending_tutorial_setup(loop: "LoopContext3D") -> None:
             loop,
             str(setup_payload.get("camera_preset", "")),
         )
-    start_overlay = _tutorial_overlay_start_from_setup(payload)
+    start_overlay = tutorial_overlay_start_from_setup(payload)
     if start_overlay is not None:
         loop.overlay_transparency = clamp_overlay_transparency(
             start_overlay,
             default=default_overlay_transparency(),
         )
 
-
-def _tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
-    setup_payload = payload.get("setup")
-    if not isinstance(setup_payload, dict):
-        return None
-    raw_percent = setup_payload.get("overlay_start_percent")
-    if isinstance(raw_percent, bool) or not isinstance(raw_percent, int):
-        return None
-    bounded_percent = max(0, min(100, int(raw_percent)))
-    return float(bounded_percent) / 100.0
 
 
 def handle_camera_key(
@@ -433,8 +408,9 @@ def _spawn_clear_animation_if_needed(
     return ClearAnimation3D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
 
 
+
 @dataclass
-class LoopContext3D:
+class LoopContext3D(PanelDragMixin):
     cfg: GameConfigND
     state: GameStateND
     camera: Camera3D = field(default_factory=Camera3D)
@@ -453,6 +429,11 @@ class LoopContext3D:
     bot_speed_level: int = 7
     tutorial_session: Any | None = None
     tutorial_action_cooldown_ms: int = 0
+    helper_panel_offset: tuple[int, int] = (0, 0)
+    tutorial_panel_offset: tuple[int, int] = (0, 0)
+    panel_drag_target: str | None = None
+    panel_drag_origin_mouse: tuple[int, int] | None = None
+    panel_drag_origin_offset: tuple[int, int] | None = None
 
     @classmethod
     def create(
@@ -524,35 +505,19 @@ class LoopContext3D:
         )
 
     def _handle_tutorial_hotkey(self, key: int) -> str | None:
-        session = self.tutorial_session
-        if session is None:
-            return None
-        stage_nav = {
-            pygame.K_F5: tutorial_runtime_previous_stage,
-            pygame.K_F6: tutorial_runtime_next_stage,
-            pygame.K_F7: engine_api.tutorial_runtime_redo_stage_runtime,
-        }
-        step_action = stage_nav.get(key)
-        if step_action is not None:
-            if step_action(session):
-                _apply_pending_tutorial_setup(self)
-                self.tutorial_action_cooldown_ms = 0
-                play_sfx("menu_confirm" if key == pygame.K_F7 else "menu_move")
-            return "continue"
-        if key == pygame.K_F8:
-            tutorial_runtime_skip(session)
-            play_sfx("menu_move")
-            return "menu"
-        if key == pygame.K_F9:
-            if tutorial_runtime_restart(session):
-                _apply_pending_tutorial_setup(self)
-                self.tutorial_action_cooldown_ms = 0
-            else:
-                self.on_restart()
-            play_sfx("menu_confirm")
-            return "continue"
-        return None
-
+        return handle_tutorial_hotkey(
+            key=key,
+            session=self.tutorial_session,
+            previous_stage=tutorial_runtime_previous_stage,
+            next_stage=tutorial_runtime_next_stage,
+            redo_stage=engine_api.tutorial_runtime_redo_stage_runtime,
+            skip_tutorial=tutorial_runtime_skip,
+            restart_tutorial=tutorial_runtime_restart,
+            apply_pending_setup=lambda: _apply_pending_tutorial_setup(self),
+            on_restart_loop=self.on_restart,
+            reset_cooldown=lambda: setattr(self, "tutorial_action_cooldown_ms", 0),
+            play_sfx=play_sfx,
+        )
     def _tutorial_action_allowed(self, action_id: str) -> bool:
         if self.tutorial_session is None:
             return True
@@ -567,7 +532,13 @@ class LoopContext3D:
         if self.tutorial_session is None:
             return
         tutorial_runtime_observe_action(self.tutorial_session, action_id)
-        self.tutorial_action_cooldown_ms = _tutorial_action_delay_ms_3d(action_id)
+        self.tutorial_action_cooldown_ms = tutorial_action_delay_ms(
+            action_id,
+            soft_drop_delay_ms=int(_TUTORIAL_SOFT_DROP_DELAY_MS),
+            hard_drop_delay_ms=int(_TUTORIAL_HARD_DROP_DELAY_MS),
+            rotate_delay_ms=int(_TUTORIAL_ROTATE_DELAY_MS),
+            move_delay_ms=int(_TUTORIAL_MOVE_DELAY_MS),
+         )
 
     def adjust_overlay_transparency(self, direction: int) -> None:
         self.overlay_transparency = clamp_overlay_transparency(
@@ -576,36 +547,38 @@ class LoopContext3D:
         )
 
     def on_restart(self) -> None:
-        self.cfg.speed_level = int(self.base_speed_level)
-        self.state = create_initial_state(self.cfg)
-        self.gravity_accumulator = 0
-        self.clear_anim = None
-        self.last_lines_cleared = self.state.lines_cleared
-        self.was_game_over = self.state.game_over
-        self.mouse_orbit.reset()
-        self.bot.reset_runtime()
-        self.rotation_anim.reset()
-        self.tutorial_action_cooldown_ms = 0
-        self.refresh_score_multiplier()
+        restart_loop_runtime_state(
+            self,
+            create_initial_state=create_initial_state,
+            refresh_score_multiplier=self.refresh_score_multiplier,
+         )
 
     def on_toggle_grid(self) -> None:
         self.grid_mode = cycle_grid_mode(self.grid_mode)
         self.refresh_score_multiplier()
 
     def refresh_score_multiplier(self) -> None:
-        self.state.score_multiplier = combined_score_multiplier(
-            bot_mode=self.bot.mode,
-            grid_mode=self.grid_mode,
-            speed_level=self.cfg.speed_level,
+        refresh_score_multiplier_state(
+            self,
+            off_mode=BotMode.OFF,
+            combined_score_multiplier=combined_score_multiplier,
+         )
+
+    def _panel_rects(self) -> tuple[pygame.Rect | None, pygame.Rect | None]:
+        surface = pygame.display.get_surface()
+        if surface is None:
+            return None, None
+        helper_rect = helper_panel_rect_for_surface(
+            surface_size=surface.get_size(),
+            offset=self.helper_panel_offset,
+            side_panel=SIDE_PANEL,
+            margin=MARGIN,
         )
-        mode_name = self.bot.mode.value
-        self.state.analysis_actor_mode = (
-            "human" if self.bot.mode == BotMode.OFF else mode_name
-        )
-        self.state.analysis_bot_mode = mode_name
-        self.state.analysis_grid_mode = self.grid_mode.value
+        return helper_rect, tutorial_panel_last_rect(3)
 
     def pointer_event_handler(self, event: pygame.event.Event) -> None:
+        if self._handle_panel_drag_event(event):
+            return
         wheel = mouse_wheel_delta(event)
         if wheel != 0:
             self.camera.stop_animation()
@@ -615,6 +588,7 @@ class LoopContext3D:
                 self.camera.zoom = min(140.0, self.camera.zoom + step)
             else:
                 self.camera.zoom = max(18.0, self.camera.zoom - step)
+            self._tutorial_observe_action("mouse_zoom")
             return
 
         yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
@@ -629,6 +603,7 @@ class LoopContext3D:
         self.camera.auto_fit_once = False
         self.camera.yaw_deg = yaw_deg
         self.camera.pitch_deg = pitch_deg
+        self._tutorial_observe_action("mouse_orbit")
 
 
 def run_game_loop(
@@ -709,22 +684,14 @@ def run_game_loop(
         loop.pointer_event_handler(event)
 
     def _tutorial_sync(lines_cleared: int) -> bool:
-        if loop.tutorial_session is None:
-            return False
-        progressed = tutorial_runtime_sync_and_advance(
-            loop.tutorial_session,
+        return tutorial_sync(
+            loop,
             lines_cleared=lines_cleared,
-            overlay_transparency=float(loop.overlay_transparency),
-            grid_visible=bool(loop.grid_mode != GridMode.OFF),
-            grid_mode=str(loop.grid_mode.value),
-            board_cell_count=len(loop.state.board.cells),
+            grid_mode_off=GridMode.OFF,
+            sync_and_advance=tutorial_runtime_sync_and_advance,
+            apply_pending_setup=_apply_pending_tutorial_setup,
+            tutorial_is_running=engine_api.tutorial_runtime_is_running_runtime,
         )
-        _apply_pending_tutorial_setup(loop)
-        if not engine_api.tutorial_runtime_is_running_runtime(loop.tutorial_session):
-            loop.tutorial_session = None
-            loop.tutorial_action_cooldown_ms = 0
-        return bool(progressed)
-
     return run_nd_loop(
         screen=screen,
         fonts=fonts,
@@ -751,6 +718,7 @@ def run_game_loop(
             clear_anim=loop.clear_anim,
             active_overlay=active_overlay,
             overlay_transparency=loop.overlay_transparency,
+            side_panel_offset=tuple(loop.helper_panel_offset),
         ),
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),
@@ -789,3 +757,13 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
+
+
+
+
+
+
+
+
+
+

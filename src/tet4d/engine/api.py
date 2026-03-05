@@ -1608,6 +1608,13 @@ def front3d_render_suggested_window_size(*args: Any, **kwargs: Any) -> Any:
     return _call_front3d_render("suggested_window_size", *args, **kwargs)
 
 
+def front3d_render_margin() -> int:
+    return _get_front3d_render_attr("MARGIN")
+
+
+def front3d_render_side_panel() -> int:
+    return _get_front3d_render_attr("SIDE_PANEL")
+
 def front4d_render_margin() -> int:
     return _get_front4d_render_attr("MARGIN")
 

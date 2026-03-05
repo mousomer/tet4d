@@ -29,8 +29,9 @@ Implementation references:
 2. `small` (default, compact keyboards)
 3. `full` (numpad-first mappings)
 4. `macbook` (no function-key dependency; no keypad dependency in planned defaults)
-5. Selection mechanism: env var `TETRIS_KEY_PROFILE=small|full|macbook`
-5. No automatic keyboard hardware detection is currently implemented.
+5. `tiny` (no-arrow gameplay defaults; no-keypad 4D camera fallback)
+6. Selection mechanism: env var `TETRIS_KEY_PROFILE=small|full|macbook|tiny`
+7. No automatic keyboard hardware detection is currently implemented.
 
 ### 2.2 Precedence and defaults
 
@@ -46,7 +47,7 @@ Implementation references:
 2. `M`-> menu
 3. `Y`-> restart
 4. `C`-> toggle grid
-5. `F1`(or `Tab` on macbook profile)-> help
+5. `F1`(or `Tab` on macbook/tiny profiles)-> help
 
 ## 4. Key Sets By Dimension And Keyboard Type
 

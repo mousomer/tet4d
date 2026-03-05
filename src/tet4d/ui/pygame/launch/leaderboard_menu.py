@@ -6,6 +6,7 @@ from typing import Any
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 _BG_TOP = (14, 18, 44)
@@ -269,7 +270,7 @@ def _draw_leaderboard(
 
     hints = (
         "Left/Right (or [ / ]) change page",
-        "Esc or Enter returns to previous menu",
+        "Esc/Q or Enter returns to previous menu",
     )
     hint_y = panel_y + panel_h + 10
     for hint in hints:
@@ -285,14 +286,15 @@ def _handle_keydown(
     key: int,
     total_pages: int,
 ) -> None:
-    if key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_KP_ENTER):
+    nav_key = normalize_menu_navigation_key(key)
+    if nav_key == pygame.K_ESCAPE or key in (pygame.K_RETURN, pygame.K_KP_ENTER):
         state.running = False
         return
     if total_pages <= 1:
         return
-    if key in (pygame.K_RIGHT, pygame.K_PAGEDOWN, pygame.K_RIGHTBRACKET):
+    if nav_key == pygame.K_RIGHT or key in (pygame.K_PAGEDOWN, pygame.K_RIGHTBRACKET):
         state.page_index = (state.page_index + 1) % total_pages
-    elif key in (pygame.K_LEFT, pygame.K_PAGEUP, pygame.K_LEFTBRACKET):
+    elif nav_key == pygame.K_LEFT or key in (pygame.K_PAGEUP, pygame.K_LEFTBRACKET):
         state.page_index = (state.page_index - 1) % total_pages
 
 

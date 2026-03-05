@@ -16,7 +16,7 @@ KeyTuple = Tuple[int, ...]
 KeyBindingMap = Dict[str, KeyTuple]
 
 KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
-BUILTIN_PROFILES = ("small", "full", "macbook")
+BUILTIN_PROFILES = ("small", "full", "macbook", "tiny")
 SUPPORTED_DIMENSIONS = (2, 3, 4)
 
 REBIND_CONFLICT_REPLACE = "replace"
@@ -43,6 +43,7 @@ _PROFILE_MAP = _DEFAULTS.get("profiles", {})
 PROFILE_SMALL = "small"
 PROFILE_FULL = "full"
 PROFILE_MACBOOK = "macbook"
+PROFILE_TINY = "tiny"
 _PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 

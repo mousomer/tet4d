@@ -759,6 +759,7 @@ def _draw_layer_board(
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
@@ -921,6 +922,7 @@ def draw_game_frame(
     clear_anim: Optional[ClearAnimation4D] = None,
     active_overlay: ActiveOverlay4D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
@@ -931,6 +933,9 @@ def draw_game_frame(
         SIDE_PANEL,
         win_h - 2 * MARGIN,
     )
+    panel_rect.move_ip(int(side_panel_offset[0]), int(side_panel_offset[1]))
+    panel_rect.x = max(0, min(win_w - panel_rect.width, panel_rect.x))
+    panel_rect.y = max(0, min(win_h - panel_rect.height, panel_rect.y))
     layers_rect = pygame.Rect(
         MARGIN,
         MARGIN,
@@ -1036,11 +1041,6 @@ def handle_view_key(
         is not None
     )
 
-
-def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
-    return handle_view_key(event.key, view)
-
-
 def _collect_cleared_ghost_cells(
     state: GameStateND,
 ) -> tuple[tuple[tuple[int, ...], tuple[int, int, int]], ...]:
@@ -1063,3 +1063,4 @@ def spawn_clear_animation_if_needed(
     if not ghost_cells:
         return None, state.lines_cleared
     return ClearAnimation4D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
+

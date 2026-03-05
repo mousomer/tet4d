@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-04  
+Updated: 2026-03-05  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 ## 1. Priority Verification Rules
@@ -33,6 +33,11 @@ Historical anchor references:
 2. Policy-pack and context-router manifests are contract-validated via:
    `tools/governance/validate_project_contracts.py`.
 
+### Active Open Items (Canonical)
+
+1. [BKL-P1-010] Tutorial overlay panel can obstruct gameplay board visibility in some window/layout combinations.
+2. [BKL-P1-011] Tutorial zoom_in / zoom_out stages should require four actions and stay config-defined via lesson payloads.
+
 ### Historical ID Lineage Policy
 
 1. Backlog IDs must be unique in this file for unambiguous audit/search.
@@ -56,11 +61,14 @@ Done criteria: controls run cleanly and docs/contracts remain synchronized.
 3. `WATCH` `[BKL-P3-006]` Desktop release hardening watch:
    cadence remains before each public release and is tracked through
    release-packaging workflow + release checklist/installers docs.
-4. `WATCH` `[BKL-P3-007]` Module decomposition watch:
+4. WATCH [BKL-P3-007] Module decomposition watch:
    large engine/runtime/ui module split pressure moved from active debt to watch
    after shared-settings and API dedup passes; monitor hotspot growth and
    continue staged LOC reduction.
-5. `WATCH` `[BKL-P3-013]` Interactive tutorials rollout watch:
+5. WATCH [BKL-P3-009] Playbot learning-mode tuning watch:
+   monitor threshold retuning and long-run stability behavior after adaptive
+   learning-mode rollout.
+6. WATCH [BKL-P3-013] Interactive tutorials rollout watch:
    track data-driven lesson packs, deterministic step progression, input gating,
    and tutorial regression harness coverage across 2D/3D/4D.
 
@@ -384,6 +392,18 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-04): tiny keyboard profile (no-arrow defaults).
+
+- Added built-in `tiny` keybinding profile for compact keyboards without arrow keys:
+  - movement cluster on letter keys (`J/L`, `I/K`, `U/O`) with shift-based soft drop
+  - 4D W-axis movement on `,`/`.`
+  - no-keypad advanced 4D camera fallback (`-`, `=`, `P`, `Backspace`)
+  - files:
+    - `config/keybindings/defaults.json`
+    - `src/tet4d/ui/pygame/keybindings.py`
+    - `tests/unit/engine/test_keybindings.py`
+- Updated keybinding RDS profile model docs:
+  - `docs/rds/RDS_KEYBINDINGS.md`
 Current sub-batch (2026-03-04): CI compliance hardening + governance preflight.
 
 - Stabilized sanitation inputs for local/context artifacts:
