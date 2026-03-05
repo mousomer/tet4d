@@ -20,6 +20,10 @@ _KEY_CHIP_PAD_Y = 2
 _KEY_CHIP_GAP = 6
 _KEY_ROW_GAP = 3
 _LAST_PANEL_RECT_BY_DIMENSION: dict[int, pygame.Rect] = {}
+_MOUSE_ACTION_KEY_LABELS = {
+    "mouse_orbit": "RMB Drag",
+    "mouse_zoom": "Mouse Wheel",
+}
 
 
 def _normalized_dimension(dimension: int) -> int:
@@ -54,7 +58,8 @@ def _key_label_for_action(
 ) -> str:
     keys = binding_map.get(action_id, ())
     if not keys:
-        return "-"
+        normalized = str(action_id).strip().lower()
+        return _MOUSE_ACTION_KEY_LABELS.get(normalized, "-")
     return engine_api.format_key_tuple(keys)
 
 
@@ -158,6 +163,10 @@ def _overlay_action_label(action_id: str) -> str:
         return "pause MENU"
     if normalized == "restart":
         return "restart"
+    if normalized == "mouse_orbit":
+        return "rotate board"
+    if normalized == "mouse_zoom":
+        return "zoom board"
     if normalized in {"quit", "menu_back"}:
         return "main menu"
     return engine_api.binding_action_description(normalized).strip()

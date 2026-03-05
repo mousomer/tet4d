@@ -108,7 +108,14 @@ class TutorialContentTests(unittest.TestCase):
         self.assertTrue(expected_4d.issubset(_event_set("tutorial_4d_core")))
 
     def test_key_prompt_and_gating_actions_are_known(self) -> None:
-        known = set(binding_action_ids()) | {"menu", "help", "restart", "quit"}
+        known = set(binding_action_ids()) | {
+            "menu",
+            "help",
+            "restart",
+            "quit",
+            "mouse_orbit",
+            "mouse_zoom",
+        }
         payload = content.load_tutorial_payload()
         for lesson in payload.lessons:
             for step in lesson.steps:
@@ -202,6 +209,7 @@ class TutorialContentTests(unittest.TestCase):
             self.assertEqual(orbit.complete_when.logic, "all")
             self.assertEqual(orbit.complete_when.events, ("mouse_orbit",))
             self.assertEqual(orbit.complete_when.event_count_required, 1)
+            self.assertIn("mouse_orbit", orbit.gating.allow)
             self.assertNotIn("yaw_pos", orbit.gating.allow)
             self.assertNotIn("pitch_pos", orbit.gating.allow)
             self.assertNotIn("yaw_neg", orbit.gating.allow)
@@ -210,6 +218,7 @@ class TutorialContentTests(unittest.TestCase):
             self.assertEqual(zoom.complete_when.logic, "all")
             self.assertEqual(zoom.complete_when.events, ("mouse_zoom",))
             self.assertEqual(zoom.complete_when.event_count_required, 1)
+            self.assertIn("mouse_zoom", zoom.gating.allow)
             self.assertNotIn("zoom_in", zoom.gating.allow)
             self.assertNotIn("zoom_out", zoom.gating.allow)
             self.assertNotIn("cycle_projection", zoom.gating.allow)

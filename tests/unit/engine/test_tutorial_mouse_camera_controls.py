@@ -63,7 +63,7 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
                     pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1})
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            self.assertEqual(session.overlay_payload().get("step_id"), "toggle_grid")
+            self.assertEqual(session.overlay_payload().get("step_id"), "zoom_in")
 
     def test_4d_mouse_orbit_and_zoom_steps_progress_from_pointer_events(self) -> None:
         with (

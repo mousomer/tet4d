@@ -1098,17 +1098,18 @@
         {
           "id": "mouse_orbit",
           "ui": {
-            "text": "Orbit camera with mouse drag four times.",
-            "hint": "Hold Right Mouse Button and drag to orbit the camera.",
+            "text": "Rotate the board with mouse drag.",
+            "hint": "Hold Right Mouse Button and drag once to rotate the board.",
             "highlights": [
               "camera_axes"
             ],
             "key_prompts": [
-              "yaw_pos"
+              "mouse_orbit"
             ]
           },
           "gating": {
             "allow": [
+              "mouse_orbit",
               "menu",
               "help",
               "restart",
@@ -1122,23 +1123,25 @@
               "mouse_orbit"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 1
           }
         },
         {
           "id": "mouse_zoom",
           "ui": {
-            "text": "Zoom camera with mouse wheel four ticks.",
-            "hint": "Scroll the mouse wheel to zoom the camera.",
+            "text": "Zoom the board with the mouse wheel.",
+            "hint": "Scroll Mouse Wheel once to zoom the board.",
             "highlights": [
               "camera_axes"
             ],
             "key_prompts": [
-              "zoom_in"
+              "mouse_zoom"
             ]
           },
           "gating": {
             "allow": [
+              "mouse_zoom",
               "menu",
               "help",
               "restart",
@@ -1152,7 +1155,8 @@
               "mouse_zoom"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 1
           }
         },
         {
@@ -2587,17 +2591,18 @@
         {
           "id": "mouse_orbit",
           "ui": {
-            "text": "Orbit camera with mouse drag four times.",
-            "hint": "Hold Right Mouse Button and drag to orbit the camera.",
+            "text": "Rotate the board with mouse drag.",
+            "hint": "Hold Right Mouse Button and drag once to rotate the board.",
             "highlights": [
               "camera_axes"
             ],
             "key_prompts": [
-              "yaw_pos"
+              "mouse_orbit"
             ]
           },
           "gating": {
             "allow": [
+              "mouse_orbit",
               "menu",
               "help",
               "restart",
@@ -2611,23 +2616,25 @@
               "mouse_orbit"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 1
           }
         },
         {
           "id": "mouse_zoom",
           "ui": {
-            "text": "Zoom camera with mouse wheel four ticks.",
-            "hint": "Scroll the mouse wheel to zoom the camera.",
+            "text": "Zoom the board with the mouse wheel.",
+            "hint": "Scroll Mouse Wheel once to zoom the board.",
             "highlights": [
               "camera_axes"
             ],
             "key_prompts": [
-              "zoom_in"
+              "mouse_zoom"
             ]
           },
           "gating": {
             "allow": [
+              "mouse_zoom",
               "menu",
               "help",
               "restart",
@@ -2641,7 +2648,8 @@
               "mouse_zoom"
             ],
             "predicates": [],
-            "logic": "all"
+            "logic": "all",
+            "event_count_required": 1
           }
         },
         {

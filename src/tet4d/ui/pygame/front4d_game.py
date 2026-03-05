@@ -544,6 +544,8 @@ class LoopContext4D(PanelDragMixin):
             return
         wheel = mouse_wheel_delta(event)
         if wheel != 0:
+            if not self._tutorial_action_allowed("mouse_zoom"):
+                return
             self.view.stop_animation()
             if wheel > 0:
                 self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08**wheel))
@@ -561,6 +563,8 @@ class LoopContext4D(PanelDragMixin):
             pitch_deg=self.view.pitch_deg,
         )
         if not changed:
+            return
+        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.view.stop_animation()
         self.view.yaw_deg = yaw_deg

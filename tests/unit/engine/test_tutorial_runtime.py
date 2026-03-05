@@ -587,6 +587,7 @@ class TutorialRuntimeTests(unittest.TestCase):
                     self.assertTrue(session.next_stage())
                 self.assertIsNotNone(session.consume_pending_setup())
 
+                self.assertTrue(session.action_allowed("mouse_orbit"))
                 self.assertFalse(session.action_allowed("yaw_pos"))
                 self.assertFalse(session.action_allowed("pitch_pos"))
                 session.observe_action("yaw_pos")
@@ -598,6 +599,7 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
 
                 self.assertIsNotNone(session.consume_pending_setup())
+                self.assertTrue(session.action_allowed("mouse_zoom"))
                 self.assertFalse(session.action_allowed("zoom_in"))
                 self.assertFalse(session.action_allowed("zoom_out"))
                 session.observe_action("zoom_in")

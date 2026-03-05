@@ -1045,13 +1045,24 @@ def _open_help_screen(
     )
 
 
-def _pause_tutorial_restart_2d(loop: LoopContext2D) -> bool:
-    if loop.tutorial_session is None:
+def _restart_tutorial_if_running_2d(loop: LoopContext2D) -> bool:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
         return False
-    restarted = tutorial_runtime_restart_runtime(loop.tutorial_session)
+    if not tutorial_runtime_is_running_runtime(tutorial_session):
+        return False
+    loop._tutorial_observe_action("restart")
+    restarted = tutorial_runtime_restart_runtime(tutorial_session)
     if not restarted:
         return False
     _apply_pending_tutorial_setup(loop)
+    loop.tutorial_action_cooldown_ms = 0
+    return True
+
+
+def _pause_tutorial_restart_2d(loop: LoopContext2D) -> bool:
+    if not _restart_tutorial_if_running_2d(loop):
+        return False
     return True
 
 
@@ -1085,11 +1096,7 @@ def _resolve_loop_decision(
     if pause_decision == "menu":
         return "menu", next_screen
     if pause_decision == "restart":
-        tutorial_session = getattr(loop, "tutorial_session", None)
-        if tutorial_session is not None and tutorial_runtime_is_running_runtime(
-            tutorial_session
-        ):
-            loop._tutorial_observe_action("restart")
+        if _restart_tutorial_if_running_2d(loop):
             return "continue", next_screen
         loop.on_restart()
         return "restart", next_screen
@@ -1390,11 +1397,7 @@ def run_game_loop(
         )
 
     def _restart_with_record() -> None:
-        tutorial_session = getattr(loop, "tutorial_session", None)
-        if tutorial_session is not None and tutorial_runtime_is_running_runtime(
-            tutorial_session
-        ):
-            loop._tutorial_observe_action("restart")
+        if _restart_tutorial_if_running_2d(loop):
             return
         _record_session("restart")
         loop.on_restart()

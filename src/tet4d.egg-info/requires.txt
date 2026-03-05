@@ -1,0 +1,5 @@
+pygame-ce
+
+[dev]
+pytest
+ruff

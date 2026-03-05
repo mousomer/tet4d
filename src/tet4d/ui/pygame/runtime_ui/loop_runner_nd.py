@@ -74,16 +74,28 @@ def _open_help(
     )
 
 
-def _pause_tutorial_restart_nd(loop: Any) -> bool:
+def _restart_tutorial_if_running_nd(loop: Any) -> bool:
     tutorial_session = getattr(loop, "tutorial_session", None)
     if tutorial_session is None:
         return False
+    if not engine_api.tutorial_runtime_is_running_runtime(tutorial_session):
+        return False
+    if hasattr(loop, "_tutorial_observe_action"):
+        loop._tutorial_observe_action("restart")
     restarted = engine_api.tutorial_runtime_restart_runtime(tutorial_session)
     if not restarted:
         return False
     on_restart = getattr(loop, "_apply_pending_tutorial_setup", None)
     if callable(on_restart):
         on_restart()
+    if hasattr(loop, "tutorial_action_cooldown_ms"):
+        loop.tutorial_action_cooldown_ms = 0
+    return True
+
+
+def _pause_tutorial_restart_nd(loop: Any) -> bool:
+    if not _restart_tutorial_if_running_nd(loop):
+        return False
     return True
 
 
@@ -120,11 +132,8 @@ def _resolve_menu_decision(
     if pause_decision == "menu":
         return "menu", next_screen
     if pause_decision == "restart":
-        tutorial_session = getattr(loop, "tutorial_session", None)
-        if tutorial_session is not None and hasattr(loop, "_tutorial_observe_action"):
-            loop._tutorial_observe_action("restart")
-            if engine_api.tutorial_runtime_is_running_runtime(tutorial_session):
-                return "continue", next_screen
+        if _restart_tutorial_if_running_nd(loop):
+            return "continue", next_screen
         loop.on_restart()
         return "restart", next_screen
     return "continue", next_screen
@@ -354,12 +363,7 @@ def run_nd_loop(
             return
 
     def _restart_with_record() -> None:
-        tutorial_session = getattr(loop, "tutorial_session", None)
-        if tutorial_session is not None and engine_api.tutorial_runtime_is_running_runtime(
-            tutorial_session
-        ):
-            if hasattr(loop, "_tutorial_observe_action"):
-                loop._tutorial_observe_action("restart")
+        if _restart_tutorial_if_running_nd(loop):
             return
         _record_session("restart")
         loop.on_restart()

@@ -581,6 +581,8 @@ class LoopContext3D(PanelDragMixin):
             return
         wheel = mouse_wheel_delta(event)
         if wheel != 0:
+            if not self._tutorial_action_allowed("mouse_zoom"):
+                return
             self.camera.stop_animation()
             self.camera.auto_fit_once = False
             step = 3.0 * abs(wheel)
@@ -598,6 +600,8 @@ class LoopContext3D(PanelDragMixin):
             pitch_deg=self.camera.pitch_deg,
         )
         if not changed:
+            return
+        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.camera.stop_animation()
         self.camera.auto_fit_once = False
