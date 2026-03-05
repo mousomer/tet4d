@@ -180,7 +180,7 @@ Completed:
     - tutorial stage pacing increased via config-backed delay constants
     - tutorial stage flow is now segmented and ordered as:
       - translations -> piece rotations -> camera rotations (3D/4D) ->
-        transparency -> toggle-grid -> other camera controls -> goals
+        other camera controls -> transparency -> goals
     - tutorial system controls are guidance-only (no dedicated menu/help/restart
       interactive stages)
     - tutorial full-board-clean stages now require actual empty board state

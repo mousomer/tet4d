@@ -83,6 +83,70 @@
           }
         },
         {
+          "id": "rotate_xy_pos",
+          "ui": {
+            "text": "Rotate piece in XY positive direction four times.",
+            "hint": "Press Rotate XY + 4 times.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "rotate_xy_pos"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "rotate_xy_pos",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "rotate_xy_pos"
+            ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "rotate_xy_neg",
+          "ui": {
+            "text": "Rotate piece in XY negative direction four times.",
+            "hint": "Press Rotate XY - 4 times.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "rotate_xy_neg"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "rotate_xy_neg",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "rotate_xy_neg"
+            ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
           "id": "soft_drop",
           "ui": {
             "text": "Soft-drop four times.",
@@ -151,70 +215,6 @@
           }
         },
         {
-          "id": "rotate_xy_pos",
-          "ui": {
-            "text": "Rotate piece in XY positive direction four times.",
-            "hint": "Press Rotate XY + 4 times.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "rotate_xy_pos"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "rotate_xy_pos",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "rotate_xy_pos"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "rotate_xy_neg",
-          "ui": {
-            "text": "Rotate piece in XY negative direction four times.",
-            "hint": "Press Rotate XY - 4 times.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "rotate_xy_neg"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "rotate_xy_neg",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "rotate_xy_neg"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
@@ -244,6 +244,78 @@
             "predicates": [],
             "logic": "all",
             "event_count_required": 4
+          }
+        },
+        {
+          "id": "overlay_alpha_dec",
+          "ui": {
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_dec"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_dec",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_inc"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_dec"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "overlay_alpha_inc",
+          "ui": {
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_inc"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_inc",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_dec"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_inc"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
           }
         },
         {
@@ -328,78 +400,6 @@
             ],
             "predicates": [
               "board_cleared"
-            ],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_dec",
-          "ui": {
-            "text": "Set locked-cell transparency to minimum allowed.",
-            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_dec"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_dec",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_inc"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_dec"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "overlay_alpha_inc",
-          "ui": {
-            "text": "Set locked-cell transparency to maximum allowed.",
-            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_inc"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_inc",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_dec"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_inc"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
             ],
             "logic": "all"
           }
@@ -604,68 +604,6 @@
             "predicates": [],
             "logic": "all",
             "event_count_required": 4
-          }
-        },
-        {
-          "id": "soft_drop",
-          "ui": {
-            "text": "Soft-drop four times.",
-            "hint": "Press Soft Drop 4 times for controlled descent.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "soft_drop"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "soft_drop",
-              "menu",
-              "help",
-              "restart"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "soft_drop"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "hard_drop",
-          "ui": {
-            "text": "Hard-drop once.",
-            "hint": "Press Hard Drop once to lock quickly.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "hard_drop"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "hard_drop",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "hard_drop"
-            ],
-            "predicates": [],
-            "logic": "all"
           }
         },
         {
@@ -897,6 +835,68 @@
           }
         },
         {
+          "id": "soft_drop",
+          "ui": {
+            "text": "Soft-drop four times.",
+            "hint": "Press Soft Drop 4 times for controlled descent.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "soft_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "soft_drop",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "soft_drop"
+            ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "hard_drop",
+          "ui": {
+            "text": "Hard-drop once.",
+            "hint": "Press Hard Drop once to lock quickly.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "hard_drop",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "hard_drop"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
           "id": "yaw_fine_neg",
           "ui": {
             "text": "Rotate camera yaw fine negative four times.",
@@ -1099,7 +1099,7 @@
           "id": "mouse_orbit",
           "ui": {
             "text": "Orbit camera with mouse drag four times.",
-            "hint": "Hold Right Mouse Button and drag 4 times to orbit the camera (or use yaw/pitch keys 4 times).",
+            "hint": "Hold Right Mouse Button and drag to orbit the camera.",
             "highlights": [
               "camera_axes"
             ],
@@ -1109,48 +1109,6 @@
           },
           "gating": {
             "allow": [
-              "yaw_pos",
-              "pitch_pos",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "yaw_neg",
-              "pitch_neg"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "mouse_orbit",
-              "yaw_pos",
-              "yaw_neg",
-              "pitch_pos",
-              "pitch_neg"
-            ],
-            "predicates": [],
-            "logic": "any",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "mouse_zoom",
-          "ui": {
-            "text": "Zoom camera with mouse wheel four ticks.",
-            "hint": "Scroll the mouse wheel 4 ticks (up or down), or use zoom keys 4 times.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "zoom_in"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "zoom_in",
-              "zoom_out",
-              "cycle_projection",
               "menu",
               "help",
               "restart",
@@ -1161,14 +1119,135 @@
           "setup": {},
           "complete_when": {
             "events": [
-              "mouse_zoom",
-              "zoom_in",
-              "zoom_out",
-              "cycle_projection"
+              "mouse_orbit"
             ],
             "predicates": [],
-            "logic": "any",
+            "logic": "all"
+          }
+        },
+        {
+          "id": "mouse_zoom",
+          "ui": {
+            "text": "Zoom camera with mouse wheel four ticks.",
+            "hint": "Scroll the mouse wheel to zoom the camera.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "zoom_in"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "mouse_zoom"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "zoom_in",
+          "ui": {
+            "text": "Zoom in four times.",
+            "hint": "Press Zoom In 4 times.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "zoom_in"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "zoom_in",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "zoom_in"
+            ],
+            "predicates": [],
+            "logic": "all",
             "event_count_required": 4
+          }
+        },
+        {
+          "id": "zoom_out",
+          "ui": {
+            "text": "Zoom out four times.",
+            "hint": "Press Zoom Out 4 times.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "zoom_out"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "zoom_out",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "zoom_out"
+            ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "camera_reset",
+          "ui": {
+            "text": "Reset camera once.",
+            "hint": "Press Reset View once.",
+            "highlights": [
+              "camera_axes"
+            ],
+            "key_prompts": [
+              "reset"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "reset",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "reset"
+            ],
+            "predicates": [],
+            "logic": "all"
           }
         },
         {
@@ -1269,101 +1348,6 @@
           "complete_when": {
             "events": [
               "toggle_grid"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "camera_reset",
-          "ui": {
-            "text": "Reset camera once.",
-            "hint": "Press Reset View once.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "reset"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "reset",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "reset"
-            ],
-            "predicates": [],
-            "logic": "all"
-          }
-        },
-        {
-          "id": "zoom_in",
-          "ui": {
-            "text": "Zoom in four times.",
-            "hint": "Press Zoom In 4 times.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "zoom_in"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "zoom_in",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "zoom_in"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "zoom_out",
-          "ui": {
-            "text": "Zoom out four times.",
-            "hint": "Press Zoom Out 4 times.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "zoom_out"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "zoom_out",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "zoom_out"
             ],
             "predicates": [],
             "logic": "all",
@@ -1753,68 +1737,6 @@
             "predicates": [],
             "logic": "all",
             "event_count_required": 4
-          }
-        },
-        {
-          "id": "soft_drop",
-          "ui": {
-            "text": "Soft-drop four times.",
-            "hint": "Press Soft Drop 4 times for controlled descent.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "soft_drop"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "soft_drop",
-              "menu",
-              "help",
-              "restart"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "soft_drop"
-            ],
-            "predicates": [],
-            "logic": "all",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "hard_drop",
-          "ui": {
-            "text": "Hard-drop once.",
-            "hint": "Press Hard Drop once to lock quickly.",
-            "highlights": [
-              "active_piece"
-            ],
-            "key_prompts": [
-              "hard_drop"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "hard_drop",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "hard_drop"
-            ],
-            "predicates": [],
-            "logic": "all"
           }
         },
         {
@@ -2274,6 +2196,68 @@
           }
         },
         {
+          "id": "soft_drop",
+          "ui": {
+            "text": "Soft-drop four times.",
+            "hint": "Press Soft Drop 4 times for controlled descent.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "soft_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "soft_drop",
+              "menu",
+              "help",
+              "restart"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "soft_drop"
+            ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "hard_drop",
+          "ui": {
+            "text": "Hard-drop once.",
+            "hint": "Press Hard Drop once to lock quickly.",
+            "highlights": [
+              "active_piece"
+            ],
+            "key_prompts": [
+              "hard_drop"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "hard_drop",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop"
+            ],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": [
+              "hard_drop"
+            ],
+            "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
           "id": "yaw_fine_neg",
           "ui": {
             "text": "Rotate camera yaw fine negative four times.",
@@ -2604,7 +2588,7 @@
           "id": "mouse_orbit",
           "ui": {
             "text": "Orbit camera with mouse drag four times.",
-            "hint": "Hold Right Mouse Button and drag 4 times to orbit the camera (or use yaw/pitch keys 4 times).",
+            "hint": "Hold Right Mouse Button and drag to orbit the camera.",
             "highlights": [
               "camera_axes"
             ],
@@ -2614,48 +2598,6 @@
           },
           "gating": {
             "allow": [
-              "yaw_pos",
-              "pitch_pos",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "yaw_neg",
-              "pitch_neg"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "mouse_orbit",
-              "yaw_pos",
-              "yaw_neg",
-              "pitch_pos",
-              "pitch_neg"
-            ],
-            "predicates": [],
-            "logic": "any",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "mouse_zoom",
-          "ui": {
-            "text": "Zoom camera with mouse wheel four ticks.",
-            "hint": "Scroll the mouse wheel 4 ticks (up or down), or use zoom keys 4 times.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "zoom_in"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "zoom_in",
-              "zoom_out",
-              "cycle_projection",
               "menu",
               "help",
               "restart",
@@ -2666,85 +2608,39 @@
           "setup": {},
           "complete_when": {
             "events": [
-              "mouse_zoom",
-              "zoom_in",
-              "zoom_out",
-              "cycle_projection"
+              "mouse_orbit"
             ],
             "predicates": [],
-            "logic": "any",
-            "event_count_required": 4
-          }
-        },
-        {
-          "id": "overlay_alpha_dec",
-          "ui": {
-            "text": "Set locked-cell transparency to minimum allowed.",
-            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
-            "highlights": [
-              "stats_panel"
-            ],
-            "key_prompts": [
-              "overlay_alpha_dec"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "overlay_alpha_dec",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop",
-              "overlay_alpha_inc"
-            ],
-            "deny": []
-          },
-          "setup": {
-            "overlay_start_percent": 50
-          },
-          "complete_when": {
-            "events": [
-              "overlay_alpha_dec"
-            ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
             "logic": "all"
           }
         },
         {
-          "id": "overlay_alpha_inc",
+          "id": "mouse_zoom",
           "ui": {
-            "text": "Set locked-cell transparency to maximum allowed.",
-            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
+            "text": "Zoom camera with mouse wheel four ticks.",
+            "hint": "Scroll the mouse wheel to zoom the camera.",
             "highlights": [
-              "stats_panel"
+              "camera_axes"
             ],
             "key_prompts": [
-              "overlay_alpha_inc"
+              "zoom_in"
             ]
           },
           "gating": {
             "allow": [
-              "overlay_alpha_inc",
               "menu",
               "help",
               "restart",
-              "soft_drop",
-              "overlay_alpha_dec"
+              "soft_drop"
             ],
             "deny": []
           },
-          "setup": {
-            "overlay_start_percent": 50
-          },
+          "setup": {},
           "complete_when": {
             "events": [
-              "overlay_alpha_inc"
+              "mouse_zoom"
             ],
-            "predicates": [
-              "overlay_alpha_target_reached"
-            ],
+            "predicates": [],
             "logic": "all"
           }
         },
@@ -2845,37 +2741,6 @@
           }
         },
         {
-          "id": "cycle_projection",
-          "ui": {
-            "text": "Cycle projection once.",
-            "hint": "Press Cycle Projection once.",
-            "highlights": [
-              "camera_axes"
-            ],
-            "key_prompts": [
-              "cycle_projection"
-            ]
-          },
-          "gating": {
-            "allow": [
-              "cycle_projection",
-              "menu",
-              "help",
-              "restart",
-              "soft_drop"
-            ],
-            "deny": []
-          },
-          "setup": {},
-          "complete_when": {
-            "events": [
-              "cycle_projection"
-            ],
-            "predicates": [],
-            "logic": "all"
-          }
-        },
-        {
           "id": "camera_reset",
           "ui": {
             "text": "Reset camera once.",
@@ -2903,6 +2768,78 @@
               "reset"
             ],
             "predicates": [],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "overlay_alpha_dec",
+          "ui": {
+            "text": "Set locked-cell transparency to minimum allowed.",
+            "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_dec"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_dec",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_inc"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_dec"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
+            "logic": "all"
+          }
+        },
+        {
+          "id": "overlay_alpha_inc",
+          "ui": {
+            "text": "Set locked-cell transparency to maximum allowed.",
+            "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
+            "highlights": [
+              "stats_panel"
+            ],
+            "key_prompts": [
+              "overlay_alpha_inc"
+            ]
+          },
+          "gating": {
+            "allow": [
+              "overlay_alpha_inc",
+              "menu",
+              "help",
+              "restart",
+              "soft_drop",
+              "overlay_alpha_dec"
+            ],
+            "deny": []
+          },
+          "setup": {
+            "overlay_start_percent": 50
+          },
+          "complete_when": {
+            "events": [
+              "overlay_alpha_inc"
+            ],
+            "predicates": [
+              "overlay_alpha_target_reached"
+            ],
             "logic": "all"
           }
         },
@@ -3084,12 +3021,3 @@
     }
   ]
 }
-
-
-
-
-
-
-
-
-

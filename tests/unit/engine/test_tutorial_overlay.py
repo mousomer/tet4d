@@ -19,11 +19,34 @@ def _base_payload(*, action_id: str) -> dict[str, object]:
 
 
 class TutorialOverlayKeyPromptTests(unittest.TestCase):
+    def test_parse_key_action_line_extracts_tokens_and_action(self) -> None:
+        parsed = tutorial_overlay._parse_key_action_line("KEY: Left/Right  Move x")
+        self.assertEqual(parsed, (("Left", "Right"), "Move x"))
+
+    def test_parse_key_action_line_supports_single_token(self) -> None:
+        parsed = tutorial_overlay._parse_key_action_line("KEY: F10  ACTION: pause menu")
+        self.assertEqual(parsed, (("F10",), "pause menu"))
+
+    def test_overlay_action_label_uses_short_system_labels(self) -> None:
+        with patch.object(
+            tutorial_overlay.engine_api,
+            "binding_action_description",
+            return_value="unused",
+        ):
+            self.assertEqual(tutorial_overlay._overlay_action_label("help"), "HELP")
+            self.assertEqual(tutorial_overlay._overlay_action_label("menu"), "pause MENU")
+            self.assertEqual(tutorial_overlay._overlay_action_label("restart"), "restart")
+            self.assertEqual(tutorial_overlay._overlay_action_label("quit"), "main menu")
+
     def test_overlay_does_not_render_next_step_text(self) -> None:
         payload = _base_payload(action_id="move_x_neg")
         payload["next_step_text"] = "Should not render"
         lines = tutorial_overlay._overlay_lines_running(payload, dimension=2)
         self.assertFalse(any(str(text).startswith("Next:") for text, *_ in lines))
+        self.assertTrue(any(str(text).startswith("Goal: ") for text, *_ in lines))
+        self.assertFalse(any(str(text).startswith("Task: ") for text, *_ in lines))
+        self.assertFalse(any(str(text).startswith("How: ") for text, *_ in lines))
+        self.assertFalse(any(str(text).startswith("Focus: ") for text, *_ in lines))
 
     def test_overlay_prompt_uses_live_runtime_bindings(self) -> None:
         payload = _base_payload(action_id="move_x_neg")
@@ -59,13 +82,13 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
         ):
             lines_a = tutorial_overlay._overlay_lines_running(payload, dimension=2)
             self.assertTrue(
-                any("KEY: K97  ACTION: Move left" in text for text, *_ in lines_a)
+                any("KEY: K97  Move left" in text for text, *_ in lines_a)
             )
 
             current_key["value"] = 98
             lines_b = tutorial_overlay._overlay_lines_running(payload, dimension=2)
             self.assertTrue(
-                any("KEY: K98  ACTION: Move left" in text for text, *_ in lines_b)
+                any("KEY: K98  Move left" in text for text, *_ in lines_b)
             )
 
     def test_2d_overlay_transparency_prompt_uses_camera_fallback_binding(self) -> None:
@@ -99,19 +122,19 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
             self.assertTrue(
                 any(
                     "KEY: [,  ACTION: Lower locked-cell transparency" in text
+                    or "KEY: [,  Lower locked-cell transparency" in text
                     for text, *_ in lines
                 )
             )
 
-    def test_overlay_system_controls_use_live_bindings(self) -> None:
+    def test_overlay_system_controls_line_is_not_rendered(self) -> None:
         payload = _base_payload(action_id="move_x_neg")
-        current_help_key = {"value": 104}
 
         def _runtime_groups(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
             if dimension == 2:
                 return {
                     "game": {"move_x_neg": (97,)},
-                    "system": {"help": (current_help_key["value"],)},
+                    "system": {"help": (104,)},
                 }
             return {"camera": {}, "system": {}}
 
@@ -142,15 +165,9 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
                 side_effect=_label,
             ),
         ):
-            lines_a = tutorial_overlay._overlay_lines_running(payload, dimension=2)
-            self.assertTrue(
-                any("System (not staged): Help: K104" in text for text, *_ in lines_a)
-            )
-
-            current_help_key["value"] = 105
-            lines_b = tutorial_overlay._overlay_lines_running(payload, dimension=2)
-            self.assertTrue(
-                any("System (not staged): Help: K105" in text for text, *_ in lines_b)
+            lines = tutorial_overlay._overlay_lines_running(payload, dimension=2)
+            self.assertFalse(
+                any(str(text).startswith("System (not staged):") for text, *_ in lines)
             )
 
 

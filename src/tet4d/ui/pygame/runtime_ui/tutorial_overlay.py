@@ -12,6 +12,13 @@ _PANEL_BORDER = (110, 136, 210, 220)
 _TEXT_PRIMARY = (236, 240, 252)
 _TEXT_SECONDARY = (198, 208, 236)
 _TEXT_HIGHLIGHT = (255, 224, 128)
+_KEY_CHIP_BG = (58, 118, 218, 220)
+_KEY_CHIP_BORDER = (138, 186, 252, 230)
+_KEY_CHIP_TEXT = (248, 251, 255)
+_KEY_CHIP_PAD_X = 6
+_KEY_CHIP_PAD_Y = 2
+_KEY_CHIP_GAP = 6
+_KEY_ROW_GAP = 3
 _LAST_PANEL_RECT_BY_DIMENSION: dict[int, pygame.Rect] = {}
 
 
@@ -97,7 +104,6 @@ def _overlay_lines_running(
     dimension: int,
 ) -> list[tuple[str, tuple[int, int, int], bool]]:
     lines = _overlay_intro_lines(payload)
-    _append_focus_lines(lines, payload)
     _append_key_prompt_lines(lines, payload, dimension=dimension)
     return lines
 
@@ -114,23 +120,15 @@ def _overlay_intro_lines(
     if segment_title:
         lines.append((f"Segment: {segment_title}", _TEXT_PRIMARY, True))
     step_text = str(payload.get("step_text", "")).strip()
-    if step_text:
-        lines.append((f"Task: {step_text}", _TEXT_PRIMARY, False))
     step_hint = str(payload.get("step_hint", "")).strip()
-    if step_hint:
-        lines.append((f"How: {step_hint}", _TEXT_SECONDARY, False))
+    if step_text or step_hint:
+        if step_text and step_hint:
+            lines.append((f"Goal: {step_text} ({step_hint})", _TEXT_PRIMARY, False))
+        elif step_text:
+            lines.append((f"Goal: {step_text}", _TEXT_PRIMARY, False))
+        else:
+            lines.append((f"Goal: {step_hint}", _TEXT_PRIMARY, False))
     return lines
-
-
-def _append_focus_lines(
-    lines: list[tuple[str, tuple[int, int, int], bool]],
-    payload: dict[str, Any],
-) -> None:
-    highlights = payload.get("highlights")
-    if isinstance(highlights, list) and highlights:
-        focus = ", ".join(str(item).strip() for item in highlights[:3] if str(item).strip())
-        if focus:
-            lines.append((f"Focus: {focus}", _TEXT_SECONDARY, False))
 
 
 def _append_key_prompt_lines(
@@ -148,25 +146,152 @@ def _append_key_prompt_lines(
         if not action_id:
             continue
         key_label = _key_label_for_action(action_id, binding_map=binding_map)
-        action_label = engine_api.binding_action_description(action_id)
-        lines.append((f"KEY: {key_label}  ACTION: {action_label}", _TEXT_HIGHLIGHT, True))
-    controls = _system_controls_line(binding_map=binding_map)
-    if controls:
-        lines.append((controls, _TEXT_SECONDARY, False))
+        action_label = _overlay_action_label(action_id)
+        lines.append((f"KEY: {key_label}  {action_label}", _TEXT_HIGHLIGHT, True))
 
 
-def _system_controls_line(*, binding_map: dict[str, tuple[int, ...]]) -> str:
-    action_order = ("help", "menu", "restart", "quit")
-    parts: list[str] = []
-    for action_id in action_order:
-        key_label = _key_label_for_action(action_id, binding_map=binding_map)
-        if key_label == "-":
+def _overlay_action_label(action_id: str) -> str:
+    normalized = str(action_id).strip().lower()
+    if normalized == "help":
+        return "HELP"
+    if normalized == "menu":
+        return "pause MENU"
+    if normalized == "restart":
+        return "restart"
+    if normalized in {"quit", "menu_back"}:
+        return "main menu"
+    return engine_api.binding_action_description(normalized).strip()
+
+
+def _parse_key_action_line(line: str) -> tuple[tuple[str, ...], str] | None:
+    text = str(line).strip()
+    if not text.lower().startswith("key:"):
+        return None
+    body = text[4:].strip()
+    key_raw, sep, action_raw = body.partition("  ")
+    if not sep:
+        # Backward-compatible parse path for older serialized rows.
+        key_raw, sep, action_raw = body.partition("ACTION:")
+    if not sep:
+        return None
+    key_text = str(key_raw).strip()
+    action_text = str(action_raw).strip()
+    if action_text.lower().startswith("action:"):
+        action_text = action_text[7:].strip()
+    if not key_text or not action_text:
+        return None
+    tokens = tuple(part.strip() for part in key_text.split("/") if part.strip())
+    if not tokens:
+        return None
+    return (tokens, action_text)
+
+
+def _key_chip_width(font: pygame.font.Font, token: str, *, max_width: int) -> int:
+    label = fit_text(font, token, max_width)
+    text_w = font.size(label)[0]
+    return text_w + (_KEY_CHIP_PAD_X * 2)
+
+
+def _wrap_key_tokens(
+    font: pygame.font.Font,
+    tokens: tuple[str, ...],
+    *,
+    max_width: int,
+    first_row_prefix_w: int,
+) -> tuple[tuple[str, ...], ...]:
+    rows: list[list[str]] = []
+    current: list[str] = []
+    current_w = 0
+    available_w = max(16, max_width - first_row_prefix_w)
+    for token in tokens:
+        token_w = _key_chip_width(font, token, max_width=max_width) + _KEY_CHIP_GAP
+        if current and current_w + token_w > available_w:
+            rows.append(current)
+            current = [token]
+            current_w = token_w
+            available_w = max_width
             continue
-        label = engine_api.binding_action_description(action_id)
-        parts.append(f"{label}: {key_label}")
-    if not parts:
-        return ""
-    return "System (not staged): " + " | ".join(parts)
+        current.append(token)
+        current_w += token_w
+    if current:
+        rows.append(current)
+    return tuple(tuple(row) for row in rows)
+
+
+def _build_key_prompt_rows(
+    font: pygame.font.Font,
+    *,
+    key_tokens: tuple[str, ...],
+    action_label: str,
+    max_width: int,
+) -> list[dict[str, object]]:
+    key_label = "KEY:"
+    key_label_w = font.size(key_label)[0] + _KEY_CHIP_GAP
+    token_rows = _wrap_key_tokens(
+        font,
+        key_tokens,
+        max_width=max_width,
+        first_row_prefix_w=key_label_w,
+    )
+    chip_h = font.get_height() + (_KEY_CHIP_PAD_Y * 2)
+    key_row_h = max(chip_h, font.get_height()) + _KEY_ROW_GAP
+    rows: list[dict[str, object]] = []
+    for idx, token_row in enumerate(token_rows):
+        rows.append(
+            {
+                "kind": "key_tokens",
+                "font": font,
+                "tokens": token_row,
+                "show_key_label": idx == 0,
+                "row_h": key_row_h,
+            }
+        )
+    action_lines = _wrap_text_line(font, f"ACTION: {action_label}", max_width=max_width)
+    text_row_h = max(16, font.get_height() + 4)
+    for action_line in action_lines:
+        rows.append(
+            {
+                "kind": "text",
+                "font": font,
+                "text": action_line,
+                "color": _TEXT_PRIMARY,
+                "bold": False,
+                "row_h": text_row_h,
+            }
+        )
+    return rows
+
+
+def _draw_key_prompt_row(
+    screen: pygame.Surface,
+    *,
+    panel_rect: pygame.Rect,
+    font: pygame.font.Font,
+    tokens: tuple[str, ...],
+    show_key_label: bool,
+    y: int,
+    text_w: int,
+) -> None:
+    x = panel_rect.x + 9
+    chip_h = font.get_height() + (_KEY_CHIP_PAD_Y * 2)
+    base_y = y + 1
+    if show_key_label:
+        key_label = _render_line(font, "KEY:", _TEXT_SECONDARY, bold=True)
+        screen.blit(key_label, (x, y))
+        x += key_label.get_width() + _KEY_CHIP_GAP
+    max_chip_text_w = max(16, text_w - (_KEY_CHIP_PAD_X * 2))
+    for token in tokens:
+        token_text = fit_text(font, token, max_chip_text_w)
+        token_surf = _render_line(font, token_text, _KEY_CHIP_TEXT, bold=True)
+        chip_w = token_surf.get_width() + (_KEY_CHIP_PAD_X * 2)
+        chip_rect = pygame.Rect(x, base_y, chip_w, chip_h)
+        pygame.draw.rect(screen, _KEY_CHIP_BG, chip_rect, border_radius=8)
+        pygame.draw.rect(screen, _KEY_CHIP_BORDER, chip_rect, width=1, border_radius=8)
+        screen.blit(
+            token_surf,
+            (chip_rect.x + _KEY_CHIP_PAD_X, chip_rect.y + _KEY_CHIP_PAD_Y),
+        )
+        x += chip_w + _KEY_CHIP_GAP
 
 
 def _overlay_lines_terminal(
@@ -194,8 +319,7 @@ def _panel_base_geometry(
         else:
             margin = int(engine_api.front4d_render_margin())
             side_panel = int(engine_api.front4d_render_side_panel())
-        hud_x = width - side_panel - margin
-        panel_x = max(12, hud_x + 8)
+        panel_x = 12
         panel_w = max(240, side_panel - 16)
         panel_w = min(panel_w, max(240, width - panel_x - 12))
         panel_y = max(12, margin + 8)
@@ -305,19 +429,40 @@ def draw_tutorial_overlay(
     _base_x, _base_y, panel_w = _panel_base_geometry(width=width, dimension=dim)
     text_w = max(120, panel_w - 18)
 
-    drawn_rows: list[tuple[pygame.font.Font, str, tuple[int, int, int], bool, int]] = []
+    drawn_rows: list[dict[str, object]] = []
     for idx, (line, color, bold) in enumerate(base_lines):
         font = fonts.menu_font if idx == 0 else fonts.hint_font
+        key_action = _parse_key_action_line(line)
+        if key_action is not None:
+            key_tokens, action_label = key_action
+            drawn_rows.extend(
+                _build_key_prompt_rows(
+                    font,
+                    key_tokens=key_tokens,
+                    action_label=action_label,
+                    max_width=text_w,
+                )
+            )
+            continue
         wrapped = _wrap_text_line(font, line, max_width=text_w)
         if not wrapped:
             continue
         row_h = max(16, font.get_height() + 4)
         for wrapped_line in wrapped:
-            drawn_rows.append((font, wrapped_line, color, bold, row_h))
+            drawn_rows.append(
+                {
+                    "kind": "text",
+                    "font": font,
+                    "text": wrapped_line,
+                    "color": color,
+                    "bold": bold,
+                    "row_h": row_h,
+                }
+            )
     if not drawn_rows:
         return
 
-    panel_h = 12 + sum(row_h for *_rest, row_h in drawn_rows)
+    panel_h = 12 + sum(int(row["row_h"]) for row in drawn_rows)
     panel_rect = _panel_rect_for_dimension(
         width=width,
         height=height,
@@ -333,8 +478,25 @@ def draw_tutorial_overlay(
     screen.blit(panel, panel_rect.topleft)
 
     y = panel_rect.y + 6
-    for font, line, color, bold, row_h in drawn_rows:
+    for row in drawn_rows:
+        kind = str(row["kind"])
+        if kind == "key_tokens":
+            _draw_key_prompt_row(
+                screen,
+                panel_rect=panel_rect,
+                font=row["font"],
+                tokens=tuple(row["tokens"]),
+                show_key_label=bool(row["show_key_label"]),
+                y=y,
+                text_w=text_w,
+            )
+            y += int(row["row_h"])
+            continue
+        font = row["font"]
+        line = str(row["text"])
+        color = tuple(row["color"])
+        bold = bool(row["bold"])
         draw_text = fit_text(font, line, text_w)
         line_surf = _render_line(font, draw_text, color, bold=bold)
         screen.blit(line_surf, (panel_rect.x + 9, y))
-        y += row_h
+        y += int(row["row_h"])

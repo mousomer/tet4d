@@ -225,6 +225,16 @@ def _handle_bot_menu_confirm(loop: _BotMenuState) -> None:
         loop.running = False
 
 
+def _handle_bot_menu_exit_key(loop: _BotMenuState, *, key: int, nav_key: int) -> bool:
+    if key == pygame.K_q:
+        loop.running = False
+        return True
+    if nav_key == pygame.K_ESCAPE:
+        loop.running = False
+        return True
+    return False
+
+
 def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
     nav_key = normalize_menu_navigation_key(key)
     reset_trigger = key == pygame.K_F8 or (
@@ -233,8 +243,7 @@ def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
     if not reset_trigger:
         loop.pending_reset_confirm = False
 
-    if nav_key == pygame.K_ESCAPE:
-        loop.running = False
+    if _handle_bot_menu_exit_key(loop, key=key, nav_key=nav_key):
         return
     if nav_key == pygame.K_UP:
         loop.selected = (loop.selected - 1) % len(_BOT_MENU_ROWS)

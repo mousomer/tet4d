@@ -371,6 +371,9 @@ def _dispatch_text_mode_key(state: _TopologyLabState, key: int) -> bool:
 
 def _handle_navigation_key(state: _TopologyLabState, key: int) -> bool:
     nav_key = normalize_menu_navigation_key(key)
+    if key == pygame.K_q:
+        state.running = False
+        return True
     if nav_key == pygame.K_ESCAPE:
         state.running = False
         return True

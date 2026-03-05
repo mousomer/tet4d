@@ -77,32 +77,6 @@
       "order": 60
     },
     {
-      "stage_id": "soft_drop",
-      "title": "Soft Drop",
-      "objective": "Soft-drop 4 times.",
-      "applies_to": [
-        "2d",
-        "3d",
-        "4d"
-      ],
-      "kind": "action",
-      "action_id": "soft_drop",
-      "order": 70
-    },
-    {
-      "stage_id": "hard_drop",
-      "title": "Hard Drop",
-      "objective": "Hard-drop once.",
-      "applies_to": [
-        "2d",
-        "3d",
-        "4d"
-      ],
-      "kind": "action",
-      "action_id": "hard_drop",
-      "order": 80
-    },
-    {
       "stage_id": "rotate_xy_pos",
       "title": "Rotate XY +",
       "objective": "Rotate XY positive 4 times.",
@@ -243,6 +217,32 @@
       "order": 200
     },
     {
+      "stage_id": "soft_drop",
+      "title": "Soft Drop",
+      "objective": "Soft-drop 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "soft_drop",
+      "order": 205
+    },
+    {
+      "stage_id": "hard_drop",
+      "title": "Hard Drop",
+      "objective": "Hard-drop once.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "hard_drop",
+      "order": 206
+    },
+    {
       "stage_id": "yaw_fine_neg",
       "title": "Yaw Fine -",
       "objective": "Yaw fine negative 4 times.",
@@ -359,6 +359,30 @@
       "order": 300
     },
     {
+      "stage_id": "mouse_orbit",
+      "title": "Mouse Orbit",
+      "objective": "Orbit camera with mouse drag 4 times (or keyboard fallback).",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "mouse_orbit",
+      "order": 301
+    },
+    {
+      "stage_id": "mouse_zoom",
+      "title": "Mouse Zoom",
+      "objective": "Zoom camera with mouse wheel 4 ticks (or keyboard fallback).",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "mouse_zoom",
+      "order": 302
+    },
+    {
       "stage_id": "toggle_grid",
       "title": "Toggle Grid",
       "objective": "Toggle the guide grid once.",
@@ -400,7 +424,6 @@
       "title": "Projection",
       "objective": "Cycle projection mode once.",
       "applies_to": [
-        "3d",
         "4d"
       ],
       "kind": "action",
@@ -446,11 +469,10 @@
       "order": 370
     },
     {
-      "stage_id": "target_placement",
+      "stage_id": "target_placement_nd",
       "title": "Target Placement",
       "objective": "Place the piece into the highlighted target.",
       "applies_to": [
-        "2d",
         "3d",
         "4d"
       ],
@@ -503,6 +525,17 @@
       "kind": "board_goal",
       "action_id": "hard_drop",
       "order": 420
+    },
+    {
+      "stage_id": "target_placement_2d",
+      "title": "Target Placement",
+      "objective": "Place the piece into the highlighted target.",
+      "applies_to": [
+        "2d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 430
     }
   ]
 }

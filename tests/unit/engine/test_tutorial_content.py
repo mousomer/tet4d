@@ -86,7 +86,6 @@ class TutorialContentTests(unittest.TestCase):
             "mouse_zoom",
             "zoom_in",
             "zoom_out",
-            "cycle_projection",
             "reset",
         }
         expected_4d = expected_3d | {
@@ -121,7 +120,14 @@ class TutorialContentTests(unittest.TestCase):
                     self.assertIn(action, known)
 
     def test_plan_actions_and_order_are_valid(self) -> None:
-        known = set(binding_action_ids()) | {"menu", "help", "restart", "quit"}
+        known = set(binding_action_ids()) | {
+            "menu",
+            "help",
+            "restart",
+            "quit",
+            "mouse_orbit",
+            "mouse_zoom",
+        }
         payload = content.load_tutorial_plan_payload()
         stages = payload["stages"]
         self.assertGreaterEqual(len(stages), 1)
@@ -174,10 +180,6 @@ class TutorialContentTests(unittest.TestCase):
             "zoom_in",
             "zoom_out",
         }
-        camera_mouse_ids = {
-            "mouse_orbit",
-            "mouse_zoom",
-        }
         payload = content.load_tutorial_payload()
         for lesson in payload.lessons:
             for step in lesson.steps:
@@ -186,11 +188,10 @@ class TutorialContentTests(unittest.TestCase):
                     or step.step_id.startswith("rotate_")
                     or step.step_id in camera_rotation_ids
                     or step.step_id in camera_zoom_ids
-                    or step.step_id in camera_mouse_ids
                 ):
                     self.assertEqual(step.complete_when.event_count_required, 4)
 
-    def test_mouse_camera_steps_allow_keyboard_fallback(self) -> None:
+    def test_mouse_camera_steps_are_mouse_only(self) -> None:
         payload = content.load_tutorial_payload()
         lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
         for lesson_id in ("tutorial_3d_core", "tutorial_4d_core"):
@@ -198,17 +199,20 @@ class TutorialContentTests(unittest.TestCase):
             orbit = next(step for step in lesson.steps if step.step_id == "mouse_orbit")
             zoom = next(step for step in lesson.steps if step.step_id == "mouse_zoom")
 
-            self.assertEqual(orbit.complete_when.logic, "any")
-            self.assertIn("mouse_orbit", orbit.complete_when.events)
-            self.assertIn("yaw_pos", orbit.complete_when.events)
-            self.assertIn("pitch_pos", orbit.complete_when.events)
-            self.assertEqual(orbit.complete_when.event_count_required, 4)
+            self.assertEqual(orbit.complete_when.logic, "all")
+            self.assertEqual(orbit.complete_when.events, ("mouse_orbit",))
+            self.assertEqual(orbit.complete_when.event_count_required, 1)
+            self.assertNotIn("yaw_pos", orbit.gating.allow)
+            self.assertNotIn("pitch_pos", orbit.gating.allow)
+            self.assertNotIn("yaw_neg", orbit.gating.allow)
+            self.assertNotIn("pitch_neg", orbit.gating.allow)
 
-            self.assertEqual(zoom.complete_when.logic, "any")
-            self.assertIn("mouse_zoom", zoom.complete_when.events)
-            self.assertIn("zoom_in", zoom.complete_when.events)
-            self.assertIn("zoom_out", zoom.complete_when.events)
-            self.assertEqual(zoom.complete_when.event_count_required, 4)
+            self.assertEqual(zoom.complete_when.logic, "all")
+            self.assertEqual(zoom.complete_when.events, ("mouse_zoom",))
+            self.assertEqual(zoom.complete_when.event_count_required, 1)
+            self.assertNotIn("zoom_in", zoom.gating.allow)
+            self.assertNotIn("zoom_out", zoom.gating.allow)
+            self.assertNotIn("cycle_projection", zoom.gating.allow)
 
     def test_nd_move_and_rotation_steps_use_asymmetric_starters(self) -> None:
         payload = content.load_tutorial_payload()
@@ -297,6 +301,20 @@ class TutorialContentTests(unittest.TestCase):
         payload = content.load_tutorial_payload()
         lessons = {lesson.lesson_id: lesson for lesson in payload.lessons}
 
+        lesson_2d = lessons["tutorial_2d_core"]
+        order_2d = [step.step_id for step in lesson_2d.steps]
+        self.assertLess(order_2d.index("move_x_pos"), order_2d.index("rotate_xy_pos"))
+        self.assertLess(order_2d.index("rotate_xy_neg"), order_2d.index("soft_drop"))
+        self.assertLess(order_2d.index("soft_drop"), order_2d.index("hard_drop"))
+        self.assertLess(order_2d.index("toggle_grid"), order_2d.index("overlay_alpha_dec"))
+        self.assertLess(
+            order_2d.index("overlay_alpha_dec"),
+            order_2d.index("overlay_alpha_inc"),
+        )
+        self.assertLess(order_2d.index("overlay_alpha_inc"), order_2d.index("line_fill"))
+        self.assertLess(order_2d.index("line_fill"), order_2d.index("full_clear_bonus"))
+        self.assertLess(order_2d.index("full_clear_bonus"), order_2d.index("target_drop"))
+
         lesson_3d = lessons["tutorial_3d_core"]
         order_3d = [step.step_id for step in lesson_3d.steps]
         translations_3d = (
@@ -304,8 +322,6 @@ class TutorialContentTests(unittest.TestCase):
             "move_x_pos",
             "move_z_neg",
             "move_z_pos",
-            "soft_drop",
-            "hard_drop",
         )
         piece_rotations_3d = (
             "rotate_xy_pos",
@@ -315,6 +331,7 @@ class TutorialContentTests(unittest.TestCase):
             "rotate_yz_pos",
             "rotate_yz_neg",
         )
+        drop_controls_3d = ("soft_drop", "hard_drop")
         camera_rotations_3d = (
             "yaw_fine_neg",
             "yaw_neg",
@@ -333,6 +350,10 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_3d.index(step_id) for step_id in piece_rotations_3d),
+            min(order_3d.index(step_id) for step_id in drop_controls_3d),
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in drop_controls_3d),
             min(order_3d.index(step_id) for step_id in camera_rotations_3d),
         )
         self.assertLess(
@@ -341,12 +362,26 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_3d.index(step_id) for step_id in camera_mouse_3d),
+            order_3d.index("toggle_grid"),
+        )
+        camera_controls_3d = (
+            "zoom_in",
+            "zoom_out",
+            "camera_reset",
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in camera_controls_3d),
+            order_3d.index("toggle_grid"),
+        )
+        self.assertLess(
+            max(order_3d.index(step_id) for step_id in camera_controls_3d),
             order_3d.index("overlay_alpha_dec"),
         )
         self.assertLess(
+            order_3d.index("overlay_alpha_dec"),
             order_3d.index("overlay_alpha_inc"),
-            order_3d.index("toggle_grid"),
         )
+        self.assertLess(order_3d.index("overlay_alpha_inc"), order_3d.index("toggle_grid"))
 
         lesson_4d = lessons["tutorial_4d_core"]
         order_4d = [step.step_id for step in lesson_4d.steps]
@@ -357,8 +392,6 @@ class TutorialContentTests(unittest.TestCase):
             "move_z_pos",
             "move_w_neg",
             "move_w_pos",
-            "soft_drop",
-            "hard_drop",
         )
         piece_rotations_4d = (
             "rotate_xy_pos",
@@ -374,6 +407,7 @@ class TutorialContentTests(unittest.TestCase):
             "rotate_zw_pos",
             "rotate_zw_neg",
         )
+        drop_controls_4d = ("soft_drop", "hard_drop")
         camera_rotations_4d = (
             "yaw_fine_neg",
             "yaw_neg",
@@ -396,6 +430,10 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_4d.index(step_id) for step_id in piece_rotations_4d),
+            min(order_4d.index(step_id) for step_id in drop_controls_4d),
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in drop_controls_4d),
             min(order_4d.index(step_id) for step_id in camera_rotations_4d),
         )
         self.assertLess(
@@ -404,11 +442,21 @@ class TutorialContentTests(unittest.TestCase):
         )
         self.assertLess(
             max(order_4d.index(step_id) for step_id in camera_mouse_4d),
+            order_4d.index("toggle_grid"),
+        )
+        camera_controls_4d = (
+            "toggle_grid",
+            "zoom_in",
+            "zoom_out",
+            "camera_reset",
+        )
+        self.assertLess(
+            max(order_4d.index(step_id) for step_id in camera_controls_4d),
             order_4d.index("overlay_alpha_dec"),
         )
         self.assertLess(
+            order_4d.index("overlay_alpha_dec"),
             order_4d.index("overlay_alpha_inc"),
-            order_4d.index("toggle_grid"),
         )
 
     def test_starter_piece_ids_match_lesson_dimension(self) -> None:
@@ -456,4 +504,3 @@ class TutorialContentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

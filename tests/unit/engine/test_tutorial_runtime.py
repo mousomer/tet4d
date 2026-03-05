@@ -124,7 +124,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertTrue(self._complete_step_with_repeats(session, "move_x_pos"))
             payload = session.overlay_payload()
             self.assertTrue(payload["running"])
-            self.assertEqual(payload["step_id"], "soft_drop")
+            self.assertEqual(payload["step_id"], "rotate_xy_pos")
             self.assertIsInstance(payload.get("highlights"), list)
 
     def test_runtime_restart_and_skip(self) -> None:
@@ -301,7 +301,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             for _ in range(4):
                 session.observe_action("move_w_pos")
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            self.assertEqual(session.overlay_payload()["step_id"], "soft_drop")
+            self.assertEqual(session.overlay_payload()["step_id"], "rotate_xy_pos")
 
     def test_restart_redo_prev_next_sequencing_is_deterministic_all_modes(self) -> None:
         with (
@@ -366,9 +366,9 @@ class TutorialRuntimeTests(unittest.TestCase):
                 for _ in range(4):
                     session.observe_action("move_w_pos")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
-                self.assertEqual(session.overlay_payload()["step_id"], "soft_drop")
+                self.assertEqual(session.overlay_payload()["step_id"], "rotate_xy_pos")
 
-    def test_translation_stage_soft_drop_uses_continuous_setup_state(self) -> None:
+    def test_translation_stage_transition_keeps_continuous_setup_state(self) -> None:
         with (
             patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
@@ -390,11 +390,11 @@ class TutorialRuntimeTests(unittest.TestCase):
             for _ in range(4):
                 session.observe_action("move_x_pos")
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            setup_soft_drop = session.consume_pending_setup()
-            self.assertIsNotNone(setup_soft_drop)
-            assert setup_soft_drop is not None
-            self.assertEqual(setup_soft_drop.get("step_id"), "soft_drop")
-            self.assertEqual(setup_soft_drop.get("setup"), {})
+            setup_rotate = session.consume_pending_setup()
+            self.assertIsNotNone(setup_rotate)
+            assert setup_rotate is not None
+            self.assertEqual(setup_rotate.get("step_id"), "rotate_xy_pos")
+            self.assertEqual(setup_rotate.get("setup"), {})
 
     def test_nd_translation_and_rotation_stages_keep_continuous_setup_state(self) -> None:
         with (
@@ -422,8 +422,12 @@ class TutorialRuntimeTests(unittest.TestCase):
                 ("move_x_pos", 4),
                 ("move_z_neg", 4),
                 ("move_z_pos", 4),
-                ("soft_drop", 4),
-                ("hard_drop", 1),
+                ("rotate_xy_pos", 4),
+                ("rotate_xy_neg", 4),
+                ("rotate_xz_pos", 4),
+                ("rotate_xz_neg", 4),
+                ("rotate_yz_pos", 4),
+                ("rotate_yz_neg", 4),
             ):
                 for _ in range(repeats):
                     session.observe_action(action_id)
@@ -432,7 +436,7 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertIsNotNone(stage_setup)
                 assert stage_setup is not None
                 self.assertEqual(stage_setup.get("setup"), {})
-            self.assertEqual(session.overlay_payload().get("step_id"), "rotate_xy_pos")
+            self.assertEqual(session.overlay_payload().get("step_id"), "soft_drop")
 
     def test_4d_translation_to_rotation_keeps_continuous_setup_state(self) -> None:
         with (
@@ -456,8 +460,18 @@ class TutorialRuntimeTests(unittest.TestCase):
                 ("move_z_pos", 4),
                 ("move_w_neg", 4),
                 ("move_w_pos", 4),
-                ("soft_drop", 4),
-                ("hard_drop", 1),
+                ("rotate_xy_pos", 4),
+                ("rotate_xy_neg", 4),
+                ("rotate_xz_pos", 4),
+                ("rotate_xz_neg", 4),
+                ("rotate_yz_pos", 4),
+                ("rotate_yz_neg", 4),
+                ("rotate_xw_pos", 4),
+                ("rotate_xw_neg", 4),
+                ("rotate_yw_pos", 4),
+                ("rotate_yw_neg", 4),
+                ("rotate_zw_pos", 4),
+                ("rotate_zw_neg", 4),
             ):
                 for _ in range(repeats):
                     session.observe_action(action_id)
@@ -466,7 +480,7 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertIsNotNone(stage_setup)
                 assert stage_setup is not None
                 self.assertEqual(stage_setup.get("setup"), {})
-            self.assertEqual(session.overlay_payload().get("step_id"), "rotate_xy_pos")
+            self.assertEqual(session.overlay_payload().get("step_id"), "soft_drop")
 
     def test_3d_control_sequence_has_no_board_reset_until_grid(self) -> None:
         with (
@@ -482,14 +496,14 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "move_x_pos",
                     "move_z_neg",
                     "move_z_pos",
-                    "soft_drop",
-                    "hard_drop",
                     "rotate_xy_pos",
                     "rotate_xy_neg",
                     "rotate_xz_pos",
                     "rotate_xz_neg",
                     "rotate_yz_pos",
                     "rotate_yz_neg",
+                    "soft_drop",
+                    "hard_drop",
                     "yaw_fine_neg",
                     "yaw_neg",
                     "yaw_pos",
@@ -498,6 +512,9 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "pitch_pos",
                     "mouse_orbit",
                     "mouse_zoom",
+                    "zoom_in",
+                    "zoom_out",
+                    "camera_reset",
                     "overlay_alpha_dec",
                     "overlay_alpha_inc",
                     "toggle_grid",
@@ -520,8 +537,6 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "move_z_pos",
                     "move_w_neg",
                     "move_w_pos",
-                    "soft_drop",
-                    "hard_drop",
                     "rotate_xy_pos",
                     "rotate_xy_neg",
                     "rotate_xz_pos",
@@ -534,6 +549,8 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "rotate_yw_neg",
                     "rotate_zw_pos",
                     "rotate_zw_neg",
+                    "soft_drop",
+                    "hard_drop",
                     "yaw_fine_neg",
                     "yaw_neg",
                     "yaw_pos",
@@ -546,13 +563,16 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "view_zw_pos",
                     "mouse_orbit",
                     "mouse_zoom",
+                    "toggle_grid",
+                    "zoom_in",
+                    "zoom_out",
+                    "camera_reset",
                     "overlay_alpha_dec",
                     "overlay_alpha_inc",
-                    "toggle_grid",
                 ),
             )
 
-    def test_mouse_camera_steps_accept_keyboard_fallback_when_mouse_unavailable(self) -> None:
+    def test_mouse_camera_steps_require_mouse_events(self) -> None:
         with (
             patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
@@ -567,16 +587,27 @@ class TutorialRuntimeTests(unittest.TestCase):
                     self.assertTrue(session.next_stage())
                 self.assertIsNotNone(session.consume_pending_setup())
 
-                for _ in range(4):
-                    session.observe_action("yaw_pos")
+                self.assertFalse(session.action_allowed("yaw_pos"))
+                self.assertFalse(session.action_allowed("pitch_pos"))
+                session.observe_action("yaw_pos")
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                session.observe_action("pitch_pos")
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                session.observe_action("mouse_orbit")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
                 self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
 
                 self.assertIsNotNone(session.consume_pending_setup())
-                for _ in range(4):
-                    session.observe_action("zoom_in")
+                self.assertFalse(session.action_allowed("zoom_in"))
+                self.assertFalse(session.action_allowed("zoom_out"))
+                session.observe_action("zoom_in")
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                session.observe_action("zoom_out")
+                self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                session.observe_action("mouse_zoom")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
-                self.assertEqual(session.overlay_payload().get("step_id"), "overlay_alpha_dec")
+                expected_next = "zoom_in" if mode == "3d" else "toggle_grid"
+                self.assertEqual(session.overlay_payload().get("step_id"), expected_next)
 
     def test_overlay_stage_completion_uses_declared_exact_target(self) -> None:
         with (
@@ -630,7 +661,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertTrue(
                 session.sync_and_advance(lines_cleared=0, overlay_transparency=0.90)
             )
-            self.assertEqual(session.overlay_payload().get("step_id"), "target_drop")
+            self.assertEqual(session.overlay_payload().get("step_id"), "line_fill")
             next_setup = session.consume_pending_setup()
             self.assertIsNotNone(next_setup)
             assert next_setup is not None

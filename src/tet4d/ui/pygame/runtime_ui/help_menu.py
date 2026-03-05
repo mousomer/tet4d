@@ -779,6 +779,9 @@ def _handle_help_keydown(
     key: int,
     on_escape_back: Callable[[], None] | None = None,
 ) -> bool:
+    if key == pygame.K_q:
+        state.running = False
+        return True
     nav_key = normalize_menu_navigation_key(key)
     if nav_key == pygame.K_ESCAPE:
         if callable(on_escape_back):

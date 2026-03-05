@@ -48,6 +48,7 @@ class MenuAction(Enum):
 
 
 _MENU_KEY_ACTIONS = {
+    pygame.K_q: MenuAction.QUIT,
     pygame.K_ESCAPE: MenuAction.QUIT,
     pygame.K_BACKSPACE: MenuAction.QUIT,
     pygame.K_RETURN: MenuAction.START_GAME,

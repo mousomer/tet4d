@@ -10,6 +10,7 @@ UI_COPY_SECTION_SPECS: dict[str, dict[str, tuple[str, ...]]] = {
             "info_active_profile_template",
             "info_continue_mode_template",
             "controls_hint_template",
+            "controls_hint_template_tiny",
             "escape_hint_back",
             "escape_hint_quit",
         ),

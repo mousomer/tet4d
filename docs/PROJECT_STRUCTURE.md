@@ -108,7 +108,6 @@ tet4d/
 │       ├── render/              # rendering/panel/icon/font helper UI subpackage
 │       ├── runtime_ui/          # runtime audio/display/bootstrap + loop + pause/help UI helper subpackage
 │       │   └── tutorial_overlay.py # in-game tutorial instruction overlay renderer
-│       ├── launch/tutorials_menu.py # launcher tutorial pack selector
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── runtime_config_validation.py # runtime-config schema validation helpers
 │       ├── front3d_game.py      # 3D gameplay frontend
@@ -179,7 +178,7 @@ tet4d/
 13. Shared in-game loop orchestration helpers are in
     `runtime_ui/loop_runner_nd.py`.
 14. Shared in-game pause flows (settings + keybindings + profiles + help) are in `runtime_ui/pause_menu.py`.
-15. Launcher tutorial-pack selection flow is in `launch/tutorials_menu.py`.
+15. Launcher tutorial-pack selection is in the shared menu graph (`config/menu/structure.json`) and launched from `cli/front.py` action handlers.
 16. In-game tutorial instruction overlay rendering is in `runtime_ui/tutorial_overlay.py`.
 17. Shared in-game key helper grouping is in `render/control_helper.py`.
 18. Help/explanation pages are in `runtime_ui/help_menu.py`; action icons for control visuals are rendered by `render/control_icons.py`.

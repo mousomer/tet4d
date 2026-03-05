@@ -10,14 +10,14 @@ from tet4d.ui.pygame.menu import keybindings_menu, menu_navigation_keys
 
 
 class TestMenuNavigationKeys(unittest.TestCase):
-    def test_q_maps_to_escape_for_non_tiny_profiles(self) -> None:
+    def test_q_does_not_map_to_escape_for_non_tiny_profiles(self) -> None:
         with patch.object(menu_navigation_keys, "active_key_profile", return_value="small"):
             self.assertEqual(
                 menu_navigation_keys.normalize_menu_navigation_key(pygame.K_q),
-                pygame.K_ESCAPE,
+                pygame.K_q,
             )
 
-    def test_q_maps_to_escape_for_tiny_profile(self) -> None:
+    def test_q_does_not_map_to_escape_for_tiny_profile(self) -> None:
         with patch.object(
             menu_navigation_keys,
             "active_key_profile",
@@ -25,7 +25,7 @@ class TestMenuNavigationKeys(unittest.TestCase):
         ):
             self.assertEqual(
                 menu_navigation_keys.normalize_menu_navigation_key(pygame.K_q),
-                pygame.K_ESCAPE,
+                pygame.K_q,
             )
 
     def test_tiny_profile_still_maps_ikjl_navigation(self) -> None:
@@ -58,7 +58,7 @@ class TestMenuNavigationKeys(unittest.TestCase):
 
         self.assertFalse(state.running)
 
-    def test_q_returns_to_keybinding_sections_before_exit(self) -> None:
+    def test_q_exits_keybindings_binding_menu(self) -> None:
         state = keybindings_menu.KeybindingsMenuState(
             section_mode=False,
             allow_scope_sections=True,
@@ -71,8 +71,8 @@ class TestMenuNavigationKeys(unittest.TestCase):
             rows=[],
         )
 
-        self.assertFalse(should_exit)
-        self.assertTrue(state.section_mode)
+        self.assertTrue(should_exit)
+        self.assertFalse(state.section_mode)
 
     def test_q_exits_keybindings_section_menu(self) -> None:
         state = keybindings_menu.KeybindingsMenuState(section_mode=True)

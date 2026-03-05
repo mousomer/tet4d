@@ -135,3 +135,83 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
     def test_pause_menu_does_not_expose_tutorial_restart_action(self) -> None:
         self.assertNotIn("tutorial_restart", pause_menu._PAUSE_ACTION_CODES)
+
+    def test_pause_menu_keydown_escape_returns_resume(self) -> None:
+        state = pause_menu._PauseState()
+        callback_hits = {"count": 0}
+
+        def _on_escape_back() -> None:
+            callback_hits["count"] += 1
+
+        consumed = pause_menu._pause_menu_keydown(
+            state,
+            key=pygame.K_ESCAPE,
+            stack_depth=1,
+            on_escape_back=_on_escape_back,
+        )
+
+        self.assertTrue(consumed)
+        self.assertEqual(state.decision, "resume")
+        self.assertFalse(state.running)
+        self.assertEqual(callback_hits["count"], 1)
+
+    def test_pause_menu_keydown_q_exits(self) -> None:
+        state = pause_menu._PauseState()
+        callback_hits = {"count": 0}
+
+        def _on_escape_back() -> None:
+            callback_hits["count"] += 1
+
+        consumed = pause_menu._pause_menu_keydown(
+            state,
+            key=pygame.K_q,
+            stack_depth=1,
+            on_escape_back=_on_escape_back,
+        )
+
+        self.assertTrue(consumed)
+        self.assertEqual(state.decision, "quit")
+        self.assertFalse(state.running)
+        self.assertEqual(callback_hits["count"], 0)
+
+    def test_run_pause_menu_escape_closes_as_resume(self) -> None:
+        class _Fonts:
+            title_font = pygame.font.Font(None, 32)
+            menu_font = pygame.font.Font(None, 26)
+            hint_font = pygame.font.Font(None, 20)
+
+        screen = pygame.Surface((640, 480))
+        esc_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
+
+        with (
+            patch.object(pygame.event, "get", return_value=[esc_event]),
+            patch.object(pygame.display, "flip", return_value=None),
+        ):
+            decision, _next_screen = pause_menu.run_pause_menu(
+                screen,
+                _Fonts(),
+                dimension=2,
+            )
+
+        self.assertEqual(decision, "resume")
+
+    def test_run_pause_menu_q_closes_as_quit(self) -> None:
+        class _Fonts:
+            title_font = pygame.font.Font(None, 32)
+            menu_font = pygame.font.Font(None, 26)
+            hint_font = pygame.font.Font(None, 20)
+
+        screen = pygame.Surface((640, 480))
+        quit_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_q})
+
+        with (
+            patch.object(pygame.event, "get", return_value=[quit_event]),
+            patch.object(pygame.display, "flip", return_value=None),
+        ):
+            decision, _next_screen = pause_menu.run_pause_menu(
+                screen,
+                _Fonts(),
+                dimension=2,
+            )
+
+        self.assertEqual(decision, "quit")

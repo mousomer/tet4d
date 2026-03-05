@@ -392,6 +392,67 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-05): menu navigation key policy split (`Esc` vs `Q`).
+
+- Menu navigation normalization no longer aliases `Q` to `Esc`; tiny-profile
+  `I/K/J/L` aliases remain unchanged.
+- Shared menu graph runner now treats:
+  - `Esc/Backspace` as return/back within menu stack
+  - `Q` as exit from the current menu flow
+- Updated custom menu handlers (settings, bot options, keybindings, help,
+  leaderboard, topology lab, setup controls) to enforce `Q` exit explicitly.
+- Updated launcher/settings/menu copy strings from `Esc/Q` coupling to explicit
+  `Esc back` + `Q quit` wording.
+- Updated menu-navigation regression tests:
+  - `tests/unit/engine/test_menu_navigation_keys.py`
+- Fixed tutorial pause-menu regression where `Esc` stopped resuming and `Q`
+  resumed instead; now:
+  - `Esc` resumes/returns from pause (including tutorial `menu_back` callback)
+  - `Q` exits pause flow (`quit`)
+- Added runner-level regression guard so `Q` dispatches quit-handler semantics
+  (not root-escape fallback):
+  - `tests/unit/engine/test_menu_runner.py`
+
+Current sub-batch (2026-03-05): tutorial overlay readability/placement polish.
+
+- Tutorial key prompts now render staged keys as blue keycap chips while
+  keeping action text separate for scanability:
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+- Removed tutorial overlay `ACTION:` label and removed `System (not staged)`
+  helper line from tutorial panel output.
+- Added tutorial-overlay short labels for system actions in key prompts:
+  - `help -> HELP`
+  - `menu -> pause MENU`
+  - `restart -> restart`
+  - `quit/menu_back -> main menu`
+- Moved default 3D/4D tutorial overlay placement to the left side of the board
+  column (clamped to viewport bounds).
+- Added/updated overlay tests for:
+  - key prompt parsing and short-label behavior
+  - 2D/3D/4D render-bounds/layout stability after keychip rendering
+  - files:
+    - `tests/unit/engine/test_tutorial_overlay.py`
+    - `tests/unit/engine/test_tutorial_overlay_layout.py`
+
+Current sub-batch (2026-03-05): tutorials launcher parity with shared main-menu renderer.
+
+- Replaced launcher root `Tutorials` route with a real submenu in menu graph:
+  - `launcher_tutorials` now contains `Play 2D Tutorial`, `Play 3D Tutorial`,
+    `Play 4D Tutorial` actions.
+  - file: `config/menu/structure.json`
+- Removed launcher special-case tutorials route flow and moved tutorial launching
+  to standard action handlers (`tutorial_2d/3d/4d`) in shared `MenuRunner` flow:
+  - file: `cli/front.py`
+- Relaxed menu structure parser contract so `launcher_route_actions` may be empty
+  when no launcher routes exist:
+  - file: `src/tet4d/engine/runtime/menu_structure_schema.py`
+- Updated launcher route tests for direct tutorial action launch path:
+  - file: `tests/unit/engine/test_front_launcher_routes.py`
+- Removed obsolete standalone launcher tutorial screen (dead code after submenu unification):
+  - file removed: `src/tet4d/ui/pygame/launch/tutorials_menu.py`
+- Synced structure docs to remove stale standalone tutorial-menu references:
+  - `docs/PROJECT_STRUCTURE.md`
+
 Current sub-batch (2026-03-04): tiny keyboard profile (no-arrow defaults).
 
 - Added built-in `tiny` keybinding profile for compact keyboards without arrow keys:
@@ -539,7 +600,8 @@ Current sub-batch (2026-03-04): tutorial timing regression coverage + runtime de
 Current sub-batch (2026-03-04): ND control-stage continuity sequence lock.
 
 - Reordered 3D/4D tutorial lesson packs so the control stage sequence is:
-  translations -> piece rotations -> camera rotations -> transparency -> grid.
+  translations -> piece rotations -> camera rotations -> grid/zoom/reset ->
+  transparency.
 - Extended runtime setup suppression to treat camera rotations/controls and
   transparency as continuous control steps, preserving board/piece state across
   those transitions and preventing redraw between control stages.
@@ -702,7 +764,7 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
   - `src/tet4d/engine/api.py`
 - Added launcher tutorial selector and wired Play -> Tutorials route to launch
   guided runs for 2D/3D/4D:
-  - `src/tet4d/ui/pygame/launch/tutorials_menu.py`
+  - `src/tet4d/ui/pygame/launch/tutorials_menu.py` (historical; removed in 2026-03-05 after launcher submenu unification)
   - `cli/front.py`
   - `src/tet4d/ui/pygame/launch/launcher_play.py`
 - Integrated tutorial gating/event observation/step progression into gameplay loops:
@@ -1269,6 +1331,61 @@ Current sub-batch (2026-03-04): transparency-goal clamp binding + tutorial stage
   - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_overlay.py` passed.
   - `.venv/bin/python -m pytest -q tests/unit/engine/test_tutorial_setup_apply.py tests/unit/engine/test_keybindings.py` passed.
   - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+Current sub-batch (2026-03-05): tutorial step-set realignment (2D/3D/4D) + plan parity updates.
+
+- Tutorial lesson order updated to canonical sets:
+  - 2D: move X, rotate XY, drop controls, grid/transparency, then goals (`line_fill`, `full_clear_bonus`, `target_drop`)
+  - 3D: adds `move_z_*`, `rotate_xz_*`, `rotate_yz_*`, keeps camera yaw/pitch then mouse orbit/zoom, then zoom/camera reset and goals
+  - 4D: adds `move_w_*`, `rotate_xw/yw/zw_*`, keeps keyboard `view_xw/zw_*` before mouse camera steps, then goals
+- Tutorial plan updates in `config/tutorial/plan.json`:
+  - moved shared drop stages (`soft_drop`, `hard_drop`) after piece-rotation stages
+  - scoped `cycle_projection` to `4d` only
+  - split target-placement plan stage into:
+    - `target_placement_nd` (`3d`, `4d`)
+    - `target_placement_2d` (`2d`, final goal stage)
+- Tests updated to enforce new ordering and prevent drift:
+  - `tests/unit/engine/test_tutorial_content.py`
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Verification:
+  - `pytest -q tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
+
+Current sub-batch (2026-03-05): tutorial pause-key routing fix (`Esc`/`Q`).
+
+- Fixed tutorial pause-menu key handling so both keys now close the pause loop correctly:
+  - root `Esc` now routes via `MenuRunner.on_root_escape`
+  - `Q` routes via `on_quit_event`
+- Removed pause-menu local keydown interception that consumed keys without
+  terminating the shared menu runner.
+- Added regression tests:
+  - integration tests for `run_pause_menu(...): Esc -> resume`, `Q -> quit`
+  - `MenuRunner` root-escape test to prevent `Esc`-at-root drift
+- Files:
+  - `src/tet4d/ui/pygame/menu/menu_runner.py`
+  - `src/tet4d/ui/pygame/runtime_ui/pause_menu.py`
+  - `tests/unit/engine/test_pause_menu.py`
+  - `tests/unit/engine/test_menu_runner.py`
+- Verification:
+  - `pytest -q tests/unit/engine/test_pause_menu.py tests/unit/engine/test_menu_runner.py tests/unit/engine/test_menu_navigation_keys.py` passed.
+  - `ruff check src/tet4d/ui/pygame/menu/menu_runner.py src/tet4d/ui/pygame/runtime_ui/pause_menu.py tests/unit/engine/test_pause_menu.py tests/unit/engine/test_menu_runner.py` passed.
+
+Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboard completion mapping).
+
+- Removed keyboard fallback completion from tutorial mouse stages in 3D/4D:
+  - `mouse_orbit` now completes only on `mouse_orbit` event.
+  - `mouse_zoom` now completes only on `mouse_zoom` event.
+- Removed `event_count_required` from mouse stages (default single successful mouse action).
+- Tightened mouse-stage input gating to remove keyboard camera actions from allowed lists.
+- Updated content/runtime tests to enforce:
+  - no keyboard fallback completion
+  - mouse-stage progression requires mouse events
+- Files:
+  - `config/tutorial/lessons.json`
+  - `tests/unit/engine/test_tutorial_content.py`
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Verification:
+  - `pytest -q tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
+  - `ruff check config/tutorial/lessons.json tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
 
 ## 6. Source Inputs
 

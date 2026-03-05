@@ -63,7 +63,7 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
                     pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1})
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            self.assertEqual(session.overlay_payload().get("step_id"), "overlay_alpha_dec")
+            self.assertEqual(session.overlay_payload().get("step_id"), "toggle_grid")
 
     def test_4d_mouse_orbit_and_zoom_steps_progress_from_pointer_events(self) -> None:
         with (
@@ -99,7 +99,7 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
                     pygame.event.Event(pygame.MOUSEWHEEL, {"y": -1})
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
-            self.assertEqual(session.overlay_payload().get("step_id"), "overlay_alpha_dec")
+            self.assertEqual(session.overlay_payload().get("step_id"), "toggle_grid")
 
 
 if __name__ == "__main__":

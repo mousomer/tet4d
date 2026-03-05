@@ -4,10 +4,6 @@ import pygame
 from tet4d.ui.pygame.keybindings import PROFILE_TINY, active_key_profile
 
 
-_GLOBAL_MENU_ALIASES: dict[int, int] = {
-    pygame.K_q: pygame.K_ESCAPE,
-}
-
 _TINY_NAV_ALIASES: dict[int, int] = {
     pygame.K_i: pygame.K_UP,
     pygame.K_k: pygame.K_DOWN,
@@ -18,7 +14,6 @@ _TINY_NAV_ALIASES: dict[int, int] = {
 
 def normalize_menu_navigation_key(key: int) -> int:
     key_code = int(key)
-    key_code = _GLOBAL_MENU_ALIASES.get(key_code, key_code)
     if active_key_profile() != PROFILE_TINY:
         return key_code
     return _TINY_NAV_ALIASES.get(key_code, key_code)

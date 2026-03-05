@@ -62,7 +62,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertFalse(close)
         handler.assert_called_once()
 
-    def test_tutorial_route_runs_tutorial_flow(self) -> None:
+    def test_tutorial_action_launches_lesson(self) -> None:
         state = front.MainMenuState(last_mode="3d")
         session = SimpleNamespace(
             screen=object(),
@@ -70,17 +70,23 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             audio_settings=object(),
             running=True,
         )
-        registry = ActionRegistry()
-        selection = SimpleNamespace(mode="2d", lesson_id="tutorial_2d_core")
 
         with (
-            patch.object(front, "run_tutorials_menu", return_value=(selection, session.screen)),
+            patch.object(
+                front,
+                "engine_api",
+                wraps=front.engine_api,
+            ) as engine_api_mock,
             patch.object(front, "_launch_mode") as launch_mode,
         ):
-            close = front._handle_launcher_route(
-                "tutorials",
+            engine_api_mock.tutorial_lesson_ids_runtime.return_value = (
+                "tutorial_2d_core",
+                "tutorial_3d_core",
+                "tutorial_4d_core",
+            )
+            close = front._menu_action_tutorial_dimension(
+                "2d",
                 state,
-                registry,
                 session,
                 fonts_nd=object(),
                 fonts_2d=object(),

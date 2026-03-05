@@ -650,6 +650,9 @@ def _handle_advanced_gameplay_event(
         return selected, False
     if event.type != pygame.KEYDOWN:
         return selected, True
+    if event.key == pygame.K_q:
+        state.running = False
+        return selected, False
     nav_key = normalize_menu_navigation_key(int(event.key))
     if nav_key == pygame.K_ESCAPE:
         return selected, False
@@ -687,7 +690,9 @@ def _draw_advanced_gameplay_menu(
     _draw_gradient(screen)
     width, _height = screen.get_size()
     title_text = "Advanced gameplay"
-    subtitle_text = "Up/Down select   Left/Right adjust   Enter toggle   Esc/Q back"
+    subtitle_text = (
+        "Up/Down select   Left/Right adjust   Enter toggle   Esc back   Q quit"
+    )
     title = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
     screen.blit(title, ((width - title.get_width()) // 2, 60))
@@ -922,7 +927,7 @@ def _dispatch_unified_key(
     if text_mode_screen is not None:
         return text_mode_screen
     nav_key = normalize_menu_navigation_key(key)
-    if nav_key == pygame.K_ESCAPE:
+    if _handle_unified_exit_key(state, key=key, nav_key=nav_key):
         state.running = False
         return screen
     if nav_key == pygame.K_UP:
@@ -949,6 +954,21 @@ def _dispatch_unified_key(
     if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
         return _handle_unified_enter(screen, fonts, state)
     return screen
+
+
+def _handle_unified_exit_key(
+    state: _UnifiedSettingsState,
+    *,
+    key: int,
+    nav_key: int,
+) -> bool:
+    if key == pygame.K_q:
+        state.running = False
+        return True
+    if nav_key == pygame.K_ESCAPE:
+        state.running = False
+        return True
+    return False
 
 
 def _dispatch_unified_text_mode_key(

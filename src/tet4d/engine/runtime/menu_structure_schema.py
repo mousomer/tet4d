@@ -148,8 +148,6 @@ def parse_launcher_route_actions(payload: dict[str, Any]) -> dict[str, str]:
             path=f"structure.launcher_route_actions.{route_id}",
         ).lower()
         route_actions[route_id] = action_id
-    if not route_actions:
-        raise RuntimeError("structure.launcher_route_actions must not be empty")
     return route_actions
 
 

@@ -270,7 +270,7 @@ def _draw_leaderboard(
 
     hints = (
         "Left/Right (or [ / ]) change page",
-        "Esc/Q or Enter returns to previous menu",
+        "Esc returns, Q exits, Enter returns",
     )
     hint_y = panel_y + panel_h + 10
     for hint in hints:
@@ -287,6 +287,9 @@ def _handle_keydown(
     total_pages: int,
 ) -> None:
     nav_key = normalize_menu_navigation_key(key)
+    if key == pygame.K_q:
+        state.running = False
+        return
     if nav_key == pygame.K_ESCAPE or key in (pygame.K_RETURN, pygame.K_KP_ENTER):
         state.running = False
         return

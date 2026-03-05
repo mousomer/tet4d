@@ -119,13 +119,23 @@ class MenuRunner:
                     len(state.stack),
                 ):
                     continue
+                if event.key == pygame.K_q:
+                    close = True
+                    if self._on_quit_event is not None:
+                        close = bool(self._on_quit_event())
+                    elif self._on_root_escape is not None:
+                        close = bool(self._on_root_escape())
+                    if close:
+                        state.running = False
+                        break
+                    continue
                 if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     if len(state.stack) > 1:
                         state.stack.pop()
                         if self._on_move is not None:
                             self._on_move()
                         break
-                    close = True
+                    close = False
                     if self._on_root_escape is not None:
                         close = bool(self._on_root_escape())
                     if close:

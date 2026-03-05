@@ -20,11 +20,11 @@ if __name__ == "__main__":
 
 import pygame
 
+import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_topology_lab_menu
-from tet4d.ui.pygame.launch.tutorials_menu import run_tutorials_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
@@ -71,6 +71,11 @@ _GAME_TITLE = _BRANDING["game_title"]
 _SIGNATURE_AUTHOR = _BRANDING["signature_author"]
 _SIGNATURE_MESSAGE = _BRANDING["signature_message"]
 _LAUNCHER_COPY = ui_copy_section("launcher")
+_TUTORIAL_LESSON_BY_MODE = {
+    "2d": "tutorial_2d_core",
+    "3d": "tutorial_3d_core",
+    "4d": "tutorial_4d_core",
+}
 
 
 @dataclass
@@ -110,9 +115,14 @@ def _play_menu_id() -> str | None:
 
 def _menu_subtitle(menu_id: str) -> str:
     if menu_id == _LAUNCHER_ROOT_MENU_ID:
-        return _LAUNCHER_SUBTITLES["launcher_root"]
-    if menu_id == _play_menu_id():
-        return _LAUNCHER_SUBTITLES["launcher_play"]
+        subtitle_key = "launcher_root"
+    elif menu_id == _play_menu_id():
+        subtitle_key = "launcher_play"
+    else:
+        subtitle_key = f"launcher_{menu_id.removeprefix('launcher_')}"
+    subtitle = str(_LAUNCHER_SUBTITLES.get(subtitle_key, "")).strip()
+    if subtitle:
+        return subtitle
     return _LAUNCHER_SUBTITLES["default"]
 
 
@@ -193,10 +203,12 @@ def _draw_main_menu(
         _LAUNCHER_COPY["info_continue_mode_template"].format(
             mode=state.last_mode.upper()
         ),
-        _LAUNCHER_COPY["controls_hint_template"].format(escape_hint=escape_hint),
+        _LAUNCHER_COPY[
+            "controls_hint_template_tiny"
+            if active_key_profile() == "tiny"
+            else "controls_hint_template"
+        ].format(escape_hint=escape_hint),
     ]
-    if active_key_profile() == "tiny":
-        info_lines[0] = f"{info_lines[0]}  Tiny menu: I/K up/down, Enter open"
     info_y = panel_y + panel_h + 10
     max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
     info_budget = max(1, max_bottom_lines - (1 if state.status else 0))
@@ -389,28 +401,33 @@ def _menu_action_play_dimension(
     return not session.running
 
 
-def _menu_action_tutorials(
+def _menu_action_tutorial_dimension(
+    mode: str,
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
     fonts_2d,
 ) -> bool:
-    selection, next_screen = run_tutorials_menu(session.screen, fonts_nd)
-    session.screen = next_screen
-    if selection is None:
-        state.status = "Tutorial selection cancelled"
-        state.status_error = False
+    lesson_id = _TUTORIAL_LESSON_BY_MODE.get(mode)
+    if not lesson_id:
+        state.status = f"Unsupported tutorial mode: {mode}"
+        state.status_error = True
+        return False
+    available_lessons = set(engine_api.tutorial_lesson_ids_runtime())
+    if lesson_id not in available_lessons:
+        state.status = f"Lesson unavailable: {lesson_id}"
+        state.status_error = True
         return False
     _launch_mode(
-        selection.mode,
+        mode,
         state,
         session,
         fonts_nd,
         fonts_2d,
-        tutorial_lesson_id=selection.lesson_id,
+        tutorial_lesson_id=lesson_id,
     )
     if session.running:
-        state.status = f"Tutorial launched: {selection.mode.upper()}"
+        state.status = f"Tutorial launched: {mode.upper()}"
         state.status_error = False
     return not session.running
 
@@ -560,7 +577,16 @@ def _build_action_registry(
         "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd)
     )
     registry.register(
-        "tutorials", lambda: _menu_action_tutorials(state, session, fonts_nd, fonts_2d)
+        "tutorial_2d",
+        lambda: _menu_action_tutorial_dimension("2d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "tutorial_3d",
+        lambda: _menu_action_tutorial_dimension("3d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "tutorial_4d",
+        lambda: _menu_action_tutorial_dimension("4d", state, session, fonts_nd, fonts_2d),
     )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry
@@ -575,8 +601,6 @@ def _handle_launcher_route(
     fonts_2d,
 ) -> bool:
     clean_route_id = route_id.strip().lower()
-    if clean_route_id == "tutorials":
-        return _menu_action_tutorials(state, session, fonts_nd, fonts_2d)
     action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
     if not action_id:
         state.status = f"No action mapped for route '{clean_route_id}'"
