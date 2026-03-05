@@ -148,8 +148,6 @@ def parse_launcher_route_actions(payload: dict[str, Any]) -> dict[str, str]:
             path=f"structure.launcher_route_actions.{route_id}",
         ).lower()
         route_actions[route_id] = action_id
-    if not route_actions:
-        raise RuntimeError("structure.launcher_route_actions must not be empty")
     return route_actions
 
 
@@ -451,23 +449,56 @@ def parse_settings_category_metrics(
     return metrics
 
 
+def _entrypoint_reachability(
+    menus: dict[str, dict[str, Any]],
+    *,
+    start_menu_id: str,
+) -> tuple[set[str], set[str], set[str]]:
+    reachable_menu_ids = collect_reachable_menu_ids(menus, start_menu_id=start_menu_id)
+    actions = collect_actions_for_menu_ids(menus, menu_ids=reachable_menu_ids)
+    route_ids = collect_route_ids_for_menu_ids(menus, menu_ids=reachable_menu_ids)
+    return reachable_menu_ids, actions, route_ids
+
+
+def _validate_launcher_route_actions(
+    *,
+    launcher_route_actions: dict[str, str],
+    launcher_route_ids: set[str],
+    launcher_actions: set[str],
+) -> None:
+    unknown_route_mappings = sorted(set(launcher_route_actions) - launcher_route_ids)
+    if unknown_route_mappings:
+        raise RuntimeError(
+            "structure.launcher_route_actions maps unknown route ids: "
+            + ", ".join(unknown_route_mappings)
+        )
+    missing_route_mappings = sorted(launcher_route_ids - set(launcher_route_actions))
+    if missing_route_mappings:
+        raise RuntimeError(
+            "structure.launcher_route_actions missing route mappings for: "
+            + ", ".join(missing_route_mappings)
+        )
+    invalid_route_actions = sorted(
+        {
+            action_id
+            for action_id in launcher_route_actions.values()
+            if action_id not in launcher_actions
+        }
+    )
+    if invalid_route_actions:
+        raise RuntimeError(
+            "structure.launcher_route_actions references unknown launcher actions: "
+            + ", ".join(invalid_route_actions)
+        )
+
+
 def enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
     menus: dict[str, dict[str, Any]] = validated["menus"]
     entrypoints: dict[str, str] = validated["menu_entrypoints"]
-    launcher_actions = collect_actions_for_menu_ids(
-        menus,
-        menu_ids=collect_reachable_menu_ids(
-            menus,
-            start_menu_id=entrypoints["launcher"],
-        ),
-    )
-    pause_actions = collect_actions_for_menu_ids(
-        menus,
-        menu_ids=collect_reachable_menu_ids(
-            menus,
-            start_menu_id=entrypoints["pause"],
-        ),
-    )
+    launcher_actions = _entrypoint_reachability(
+        menus, start_menu_id=entrypoints["launcher"]
+    )[1]
+    pause_actions = _entrypoint_reachability(menus, start_menu_id=entrypoints["pause"])[1]
     required = set(PARITY_ACTION_IDS)
     launcher_missing = sorted(required - launcher_actions)
     pause_missing = sorted(required - pause_actions)
@@ -546,42 +577,14 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     branding = parse_branding(payload)
     ui_copy = parse_ui_copy(payload)
 
-    launcher_reachable_menus = collect_reachable_menu_ids(
-        menus,
-        start_menu_id=entrypoints["launcher"],
+    _, launcher_actions, launcher_route_ids = _entrypoint_reachability(
+        menus, start_menu_id=entrypoints["launcher"]
     )
-    launcher_actions = collect_actions_for_menu_ids(
-        menus,
-        menu_ids=launcher_reachable_menus,
+    _validate_launcher_route_actions(
+        launcher_route_actions=launcher_route_actions,
+        launcher_route_ids=launcher_route_ids,
+        launcher_actions=launcher_actions,
     )
-    launcher_route_ids = collect_route_ids_for_menu_ids(
-        menus,
-        menu_ids=launcher_reachable_menus,
-    )
-    unknown_route_mappings = sorted(set(launcher_route_actions) - launcher_route_ids)
-    if unknown_route_mappings:
-        raise RuntimeError(
-            "structure.launcher_route_actions maps unknown route ids: "
-            + ", ".join(unknown_route_mappings)
-        )
-    missing_route_mappings = sorted(launcher_route_ids - set(launcher_route_actions))
-    if missing_route_mappings:
-        raise RuntimeError(
-            "structure.launcher_route_actions missing route mappings for: "
-            + ", ".join(missing_route_mappings)
-        )
-    invalid_route_actions = sorted(
-        {
-            action_id
-            for action_id in launcher_route_actions.values()
-            if action_id not in launcher_actions
-        }
-    )
-    if invalid_route_actions:
-        raise RuntimeError(
-            "structure.launcher_route_actions references unknown launcher actions: "
-            + ", ".join(invalid_route_actions)
-        )
 
     pause_rows = string_tuple(
         payload.get("pause_menu_rows"), path="structure.pause_menu_rows"

@@ -31,7 +31,12 @@ tet4d/
 │   │   ├── menu_settings.schema.json  # canonical menu-settings schema
 │   │   ├── save_state.schema.json     # canonical saved-state schema (planned runtime file)
 │   │   ├── help_runtime_content.schema.json # runtime help content contract
-│   │   └── help_runtime_layout.schema.json  # runtime help layout contract
+│   │   ├── help_runtime_layout.schema.json  # runtime help layout contract
+│   │   ├── tutorial_lessons.schema.json     # tutorial lesson data contract
+│   │   └── tutorial_plan.schema.json        # tutorial stage-plan data contract
+│   ├── tutorial/
+│   │   ├── lessons.json         # tutorial packs/steps/gating definitions
+│   │   └── plan.json            # canonical tutorial stage order/coverage plan
 │   ├── gameplay/
 │   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
@@ -87,6 +92,7 @@ tet4d/
 │           ├── core/            # strict-purity deterministic logic extraction subtree
 │           ├── gameplay/        # non-core gameplay helpers/primitives (merged folder split sequence)
 │           ├── runtime/         # runtime/config/validation/analytics/assist-scoring/persistence helpers (merged folder split sequence)
+│           ├── tutorial/        # tutorial schema/content loader/state machine/gating logic
 │           ├── ui_logic/        # non-rendering menu/input helpers (merged folder split sequence)
 │           ├── board.py         # sparse ND board + plane clear logic
 │           ├── game2d.py        # 2D game rules/state
@@ -101,6 +107,7 @@ tet4d/
 │       ├── menu/                # menu + keybindings-menu UI subpackage
 │       ├── render/              # rendering/panel/icon/font helper UI subpackage
 │       ├── runtime_ui/          # runtime audio/display/bootstrap + loop + pause/help UI helper subpackage
+│       │   └── tutorial_overlay.py # in-game tutorial instruction overlay renderer
 │       ├── score_analyzer.py    # board-health and placement-quality analyzer
 │       ├── runtime_config_validation.py # runtime-config schema validation helpers
 │       ├── front3d_game.py      # 3D gameplay frontend
@@ -171,45 +178,49 @@ tet4d/
 13. Shared in-game loop orchestration helpers are in
     `runtime_ui/loop_runner_nd.py`.
 14. Shared in-game pause flows (settings + keybindings + profiles + help) are in `runtime_ui/pause_menu.py`.
-15. Shared in-game key helper grouping is in `render/control_helper.py`.
-16. Help/explanation pages (including rendered arrow-diagram guides) are in `runtime_ui/help_menu.py` and `menu/menu_control_guides.py`.
-17. Shared menu/help layout-zone allocation logic is in `engine/ui_logic/menu_layout.py`.
-18. Shared menu/default/settings persistence and schema validation are in
+15. Launcher tutorial-pack selection is in the shared menu graph (`config/menu/structure.json`) and launched from `cli/front.py` action handlers.
+16. In-game tutorial instruction overlay rendering is in `runtime_ui/tutorial_overlay.py`.
+17. Shared in-game key helper grouping is in `render/control_helper.py`.
+18. Help/explanation pages are in `runtime_ui/help_menu.py`; action icons for control visuals are rendered by `render/control_icons.py`.
+19. Shared menu/help layout-zone allocation logic is in `engine/ui_logic/menu_layout.py`.
+20. Shared menu/default/settings persistence and schema validation are in
     `engine/runtime/menu_settings_state.py`, `engine/runtime/menu_config.py`,
     `engine/runtime/settings_schema.py`,
     `engine/runtime/settings_sanitize.py`, and
     `engine/runtime/menu_structure_schema.py`.
-19. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
-20. `config/menu/*` drives launcher/setup/pause menu structure and copy,
+21. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
+22. `config/menu/*` drives launcher/setup/pause menu structure and copy,
     launcher subtitles, launcher route-action mappings, setup hints, pause hints,
     and default values.
-21. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
-22. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.
-23. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
-24. Default keybinding maps/profile templates are config-backed in `config/keybindings/defaults.json` and loaded via runtime keybinding helpers.
-25. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-26. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
-27. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
-28. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-29. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
-30. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
-31. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
-32. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-33. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-34. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-35. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-36. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-37. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-38. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-39. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-40. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-41. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
-42. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
+23. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
+24. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.
+25. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
+26. Default keybinding maps/profile templates are config-backed in `config/keybindings/defaults.json` and loaded via runtime keybinding helpers.
+27. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
+28. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
+29. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
+30. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
+31. `config/tutorial/lessons.json` is the canonical data source for tutorial lesson packs and deterministic step contracts.
+32. `config/tutorial/plan.json` is the canonical data source for ordered tutorial stage coverage (single-button progression plan).
+33. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
+34. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
+35. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
+36. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
+37. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
+38. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
+39. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
+40. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
+41. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
+42. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
+43. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
+44. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
+45. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
+46. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
     active debt backlog input is read from `config/project/backlog_debt.json`,
     and `scripts/check_architecture_metric_budgets.sh` enforces configurable
     tech-debt gate modes (active default: `non_regression_baseline`) through
     `config/project/policy/manifests/tech_debt_budgets.json`.
-42. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
+47. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
     the pre-push local CI gate.
 
 ## Placement rubric

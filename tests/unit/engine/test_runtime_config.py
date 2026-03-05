@@ -8,6 +8,7 @@ from tet4d.engine.runtime import runtime_config
 from tet4d.engine.runtime.runtime_config import (
     audio_event_specs,
     clear_scoring_board_clear_bonus,
+    clear_scoring_layer_size_weighting,
     clear_scoring_multi_layer_bonus,
     gameplay_tuning_payload,
     grid_mode_cycle_names,
@@ -40,6 +41,7 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertEqual(clear_scoring_multi_layer_bonus(4), 600)
         self.assertEqual(clear_scoring_multi_layer_bonus(8), 900)
         self.assertEqual(clear_scoring_board_clear_bonus(), 1500)
+        self.assertEqual(clear_scoring_layer_size_weighting(), (True, 10))
 
     def test_playbot_defaults_are_loaded_from_policy(self) -> None:
         self.assertEqual(playbot_budget_table_for_ndim(2), (5, 10, 18, 24))

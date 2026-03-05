@@ -7,6 +7,7 @@ import pygame
 
 import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
+from tet4d.ui.pygame.runtime_ui.tutorial_overlay import draw_tutorial_overlay
 
 GameLoopDecision = Literal["continue", "quit", "menu", "help"]
 GameKeyResult = Literal["continue", "quit", "menu", "restart", "toggle_grid", "help"]
@@ -20,6 +21,7 @@ def _mode_key_for_dimension(dimension: int) -> str:
     if dimension == 4:
         return "4d"
     return "2d"
+
 
 def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
     mode_key = _mode_key_for_dimension(dimension)
@@ -59,15 +61,49 @@ def _open_help(
     *,
     screen: pygame.Surface,
     fonts: Any,
+    loop: Any,
     pause_dimension: int,
-    run_help_menu: Callable[[pygame.Surface, Any, int, str], pygame.Surface],
+    run_help_menu: Callable[..., pygame.Surface],
 ) -> pygame.Surface:
     return run_help_menu(
         screen,
         fonts,
         pause_dimension,
         f"{pause_dimension}D Gameplay",
+        on_escape_back=lambda: loop._tutorial_observe_action("menu_back"),
     )
+
+
+def _restart_tutorial_if_running_nd(loop: Any) -> bool:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
+        return False
+    if not engine_api.tutorial_runtime_is_running_runtime(tutorial_session):
+        return False
+    if hasattr(loop, "_tutorial_observe_action"):
+        loop._tutorial_observe_action("restart")
+    restarted = engine_api.tutorial_runtime_restart_runtime(tutorial_session)
+    if not restarted:
+        return False
+    on_restart = getattr(loop, "_apply_pending_tutorial_setup", None)
+    if callable(on_restart):
+        on_restart()
+    if hasattr(loop, "tutorial_action_cooldown_ms"):
+        loop.tutorial_action_cooldown_ms = 0
+    return True
+
+
+def _pause_tutorial_restart_nd(loop: Any) -> bool:
+    if not _restart_tutorial_if_running_nd(loop):
+        return False
+    return True
+
+
+def _pause_tutorial_skip_nd(loop: Any) -> bool:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
+        return False
+    return bool(engine_api.tutorial_runtime_skip_runtime(tutorial_session))
 
 
 def _resolve_menu_decision(
@@ -77,20 +113,27 @@ def _resolve_menu_decision(
     fonts: Any,
     loop: Any,
     pause_dimension: int,
-    run_pause_menu: Callable[[pygame.Surface, Any, int], tuple[str, pygame.Surface]],
+    run_pause_menu: Callable[..., tuple[str, pygame.Surface]],
 ) -> tuple[str, pygame.Surface]:
     if decision == "quit":
         return "quit", screen
     if decision != "menu":
         return "continue", screen
     pause_decision, next_screen = run_pause_menu(
-        screen, fonts, dimension=pause_dimension
+        screen,
+        fonts,
+        dimension=pause_dimension,
+        on_tutorial_restart=lambda: _pause_tutorial_restart_nd(loop),
+        on_tutorial_skip=lambda: _pause_tutorial_skip_nd(loop),
+        on_escape_back=lambda: loop._tutorial_observe_action("menu_back"),
     )
     if pause_decision == "quit":
         return "quit", next_screen
     if pause_decision == "menu":
         return "menu", next_screen
     if pause_decision == "restart":
+        if _restart_tutorial_if_running_nd(loop):
+            return "continue", next_screen
         loop.on_restart()
         return "restart", next_screen
     return "continue", next_screen
@@ -101,7 +144,11 @@ def _advance_simulation_step(
     loop: Any,
     dt: int,
     gravity_interval_ms: int,
+    tutorial_step_pause_active: bool = False,
 ) -> None:
+    if tutorial_step_pause_active:
+        loop.gravity_accumulator = 0
+        return
     if loop.state.config.exploration_mode:
         loop.gravity_accumulator = 0
         return
@@ -165,6 +212,103 @@ def _maybe_apply_auto_speedup(
     loop.refresh_score_multiplier()
 
 
+def _handle_runtime_decision(
+    *,
+    decision: str,
+    screen: pygame.Surface,
+    fonts: Any,
+    loop: Any,
+    pause_dimension: int,
+    run_pause_menu: Callable[..., tuple[str, pygame.Surface]],
+    run_help_menu: Callable[..., pygame.Surface],
+) -> tuple[str, pygame.Surface]:
+    if decision == "help":
+        return (
+            "continue",
+            _open_help(
+                screen=screen,
+                fonts=fonts,
+                loop=loop,
+                pause_dimension=pause_dimension,
+                run_help_menu=run_help_menu,
+            ),
+        )
+    return _resolve_menu_decision(
+        decision=decision,
+        screen=screen,
+        fonts=fonts,
+        loop=loop,
+        pause_dimension=pause_dimension,
+        run_pause_menu=run_pause_menu,
+    )
+
+
+def _terminal_from_status(
+    status: str,
+    *,
+    record_session: Callable[[str], None],
+) -> bool | None:
+    if status == "quit":
+        record_session("quit")
+        return False
+    if status == "menu":
+        record_session("menu")
+        return True
+    if status == "restart":
+        record_session("restart")
+        return None
+    return None
+
+
+def _draw_runtime_frame(
+    *,
+    screen: pygame.Surface,
+    fonts: Any,
+    pause_dimension: int,
+    draw_frame: Callable[[pygame.Surface, Any], None],
+    active_overlay: Any,
+    loop: Any,
+) -> None:
+    draw_frame(screen, active_overlay)
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is not None:
+        draw_tutorial_overlay(
+            screen,
+            fonts,
+            dimension=pause_dimension,
+            tutorial_session=tutorial_session,
+            panel_offset=tuple(getattr(loop, "tutorial_panel_offset", (0, 0))),
+        )
+    pygame.display.flip()
+
+
+def _update_tutorial_action_cooldown(loop: Any, dt: int) -> None:
+    if not hasattr(loop, "tutorial_action_cooldown_ms"):
+        return
+    loop.tutorial_action_cooldown_ms = max(
+        0,
+        int(getattr(loop, "tutorial_action_cooldown_ms", 0)) - int(dt),
+    )
+
+
+def _tutorial_step_pause_active(loop: Any) -> bool:
+    tutorial_session = getattr(loop, "tutorial_session", None)
+    if tutorial_session is None:
+        return False
+    return bool(engine_api.tutorial_runtime_is_running_runtime(tutorial_session))
+
+
+def _run_optional_tutorial_safety(loop: Any) -> None:
+    maintain_tutorial_safety = getattr(loop, "_maintain_tutorial_safety", None)
+    if callable(maintain_tutorial_safety):
+        maintain_tutorial_safety()
+
+
+def _maybe_sync_tutorial(tutorial_sync: Callable[[int], bool] | None, loop: Any) -> None:
+    if tutorial_sync is not None:
+        tutorial_sync(int(loop.state.lines_cleared))
+
+
 def run_nd_loop(
     *,
     screen: pygame.Surface,
@@ -172,14 +316,15 @@ def run_nd_loop(
     loop: Any,
     gravity_interval_from_config: Callable[[Any], int],
     pause_dimension: int,
-    run_pause_menu: Callable[[pygame.Surface, Any, int], tuple[str, pygame.Surface]],
-    run_help_menu: Callable[[pygame.Surface, Any, int, str], pygame.Surface],
+    run_pause_menu: Callable[..., tuple[str, pygame.Surface]],
+    run_help_menu: Callable[..., pygame.Surface],
     spawn_clear_animation: Callable[[Any, int], tuple[Any, int]],
     step_view: Callable[[float], None],
     draw_frame: Callable[[pygame.Surface, Any], None],
     play_clear_sfx: Callable[[], None],
     play_game_over_sfx: Callable[[], None],
     event_handler: Callable[[pygame.event.Event], None] | None = None,
+    tutorial_sync: Callable[[int], bool] | None = None,
 ) -> bool:
     """
     Shared game-loop orchestration for 3D and 4D runtime contexts.
@@ -194,6 +339,8 @@ def run_nd_loop(
     )
 
     def _record_session(outcome: str) -> None:
+        if getattr(loop, "tutorial_session", None) is not None:
+            return
         elapsed_ms = max(0, pygame.time.get_ticks() - session_start_ms)
         try:
             maybe_record_leaderboard_session(
@@ -216,12 +363,15 @@ def run_nd_loop(
             return
 
     def _restart_with_record() -> None:
+        if _restart_tutorial_if_running_nd(loop):
+            return
         _record_session("restart")
         loop.on_restart()
 
     while True:
         dt = clock.tick(60)
         loop.gravity_accumulator += dt
+        _update_tutorial_action_cooldown(loop, dt)
         loop.refresh_score_multiplier()
 
         decision = process_game_events(
@@ -230,30 +380,19 @@ def run_nd_loop(
             on_toggle_grid=loop.on_toggle_grid,
             event_handler=event_handler,
         )
-        if decision == "help":
-            screen = _open_help(
-                screen=screen,
-                fonts=fonts,
-                pause_dimension=pause_dimension,
-                run_help_menu=run_help_menu,
-            )
-            continue
-        status, screen = _resolve_menu_decision(
+        status, screen = _handle_runtime_decision(
             decision=decision,
             screen=screen,
             fonts=fonts,
             loop=loop,
             pause_dimension=pause_dimension,
             run_pause_menu=run_pause_menu,
+            run_help_menu=run_help_menu,
         )
-        if status == "quit":
-            _record_session("quit")
-            return False
-        if status == "menu":
-            _record_session("menu")
-            return True
+        terminal = _terminal_from_status(status, record_session=_record_session)
+        if terminal is not None:
+            return terminal
         if status == "restart":
-            _record_session("restart")
             continue
 
         gravity_interval_ms = int(gravity_interval_from_config(loop.state.config))
@@ -265,13 +404,16 @@ def run_nd_loop(
             loop=loop,
             dt=dt,
             gravity_interval_ms=gravity_interval_ms,
+            tutorial_step_pause_active=_tutorial_step_pause_active(loop),
         )
+        _run_optional_tutorial_safety(loop)
         _maybe_apply_auto_speedup(
             loop=loop,
             auto_speedup_enabled=auto_speedup_enabled,
             lines_per_level=lines_per_level,
             gravity_interval_from_config=gravity_interval_from_config,
         )
+        _maybe_sync_tutorial(tutorial_sync, loop)
         active_overlay = _update_loop_effects(
             loop=loop,
             dt=dt,
@@ -281,5 +423,13 @@ def run_nd_loop(
             step_view=step_view,
         )
 
-        draw_frame(screen, active_overlay)
-        pygame.display.flip()
+        _draw_runtime_frame(
+            screen=screen,
+            fonts=fonts,
+            pause_dimension=pause_dimension,
+            draw_frame=draw_frame,
+            active_overlay=active_overlay,
+            loop=loop,
+        )
+
+

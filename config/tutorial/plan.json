@@ -1,0 +1,541 @@
+{
+  "schema_version": 1,
+  "plan_id": "interactive_tutorials_v1",
+  "title": "Interactive Tutorial Stage Plan",
+  "description": "Canonical segmented stage order for tutorial progression: translations, piece rotations, camera rotations, camera controls, and goals.",
+  "stages": [
+    {
+      "stage_id": "move_left",
+      "title": "Move Left",
+      "objective": "Move left 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_x_neg",
+      "order": 10
+    },
+    {
+      "stage_id": "move_right",
+      "title": "Move Right",
+      "objective": "Move right 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_x_pos",
+      "order": 20
+    },
+    {
+      "stage_id": "move_depth_away",
+      "title": "Move Depth Away",
+      "objective": "Move depth-away 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_z_neg",
+      "order": 30
+    },
+    {
+      "stage_id": "move_depth_closer",
+      "title": "Move Depth Closer",
+      "objective": "Move depth-closer 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_z_pos",
+      "order": 40
+    },
+    {
+      "stage_id": "move_w_prev",
+      "title": "Move W-",
+      "objective": "Move to previous W slice 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_w_neg",
+      "order": 50
+    },
+    {
+      "stage_id": "move_w_next",
+      "title": "Move W+",
+      "objective": "Move to next W slice 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "move_w_pos",
+      "order": 60
+    },
+    {
+      "stage_id": "rotate_xy_pos",
+      "title": "Rotate XY +",
+      "objective": "Rotate XY positive 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xy_pos",
+      "order": 90
+    },
+    {
+      "stage_id": "rotate_xy_neg",
+      "title": "Rotate XY -",
+      "objective": "Rotate XY negative 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xy_neg",
+      "order": 100
+    },
+    {
+      "stage_id": "rotate_xz_pos",
+      "title": "Rotate XZ +",
+      "objective": "Rotate XZ positive 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xz_pos",
+      "order": 110
+    },
+    {
+      "stage_id": "rotate_xz_neg",
+      "title": "Rotate XZ -",
+      "objective": "Rotate XZ negative 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xz_neg",
+      "order": 120
+    },
+    {
+      "stage_id": "rotate_yz_pos",
+      "title": "Rotate YZ +",
+      "objective": "Rotate YZ positive 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_yz_pos",
+      "order": 130
+    },
+    {
+      "stage_id": "rotate_yz_neg",
+      "title": "Rotate YZ -",
+      "objective": "Rotate YZ negative 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_yz_neg",
+      "order": 140
+    },
+    {
+      "stage_id": "rotate_xw_pos",
+      "title": "Rotate XW +",
+      "objective": "Rotate XW positive 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xw_pos",
+      "order": 150
+    },
+    {
+      "stage_id": "rotate_xw_neg",
+      "title": "Rotate XW -",
+      "objective": "Rotate XW negative 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_xw_neg",
+      "order": 160
+    },
+    {
+      "stage_id": "rotate_yw_pos",
+      "title": "Rotate YW +",
+      "objective": "Rotate YW positive 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_yw_pos",
+      "order": 170
+    },
+    {
+      "stage_id": "rotate_yw_neg",
+      "title": "Rotate YW -",
+      "objective": "Rotate YW negative 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_yw_neg",
+      "order": 180
+    },
+    {
+      "stage_id": "rotate_zw_pos",
+      "title": "Rotate ZW +",
+      "objective": "Rotate ZW positive 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_zw_pos",
+      "order": 190
+    },
+    {
+      "stage_id": "rotate_zw_neg",
+      "title": "Rotate ZW -",
+      "objective": "Rotate ZW negative 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "rotate_zw_neg",
+      "order": 200
+    },
+    {
+      "stage_id": "soft_drop",
+      "title": "Soft Drop",
+      "objective": "Soft-drop 4 times.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "soft_drop",
+      "order": 205
+    },
+    {
+      "stage_id": "hard_drop",
+      "title": "Hard Drop",
+      "objective": "Hard-drop once.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "hard_drop",
+      "order": 206
+    },
+    {
+      "stage_id": "yaw_fine_neg",
+      "title": "Yaw Fine -",
+      "objective": "Yaw fine negative 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "yaw_fine_neg",
+      "order": 210
+    },
+    {
+      "stage_id": "yaw_neg",
+      "title": "Yaw -",
+      "objective": "Yaw negative 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "yaw_neg",
+      "order": 220
+    },
+    {
+      "stage_id": "yaw_pos",
+      "title": "Yaw +",
+      "objective": "Yaw positive 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "yaw_pos",
+      "order": 230
+    },
+    {
+      "stage_id": "yaw_fine_pos",
+      "title": "Yaw Fine +",
+      "objective": "Yaw fine positive 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "yaw_fine_pos",
+      "order": 240
+    },
+    {
+      "stage_id": "pitch_neg",
+      "title": "Pitch -",
+      "objective": "Pitch negative 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "pitch_neg",
+      "order": 250
+    },
+    {
+      "stage_id": "pitch_pos",
+      "title": "Pitch +",
+      "objective": "Pitch positive 4 times.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "pitch_pos",
+      "order": 260
+    },
+    {
+      "stage_id": "view_xw_neg",
+      "title": "View XW -",
+      "objective": "Rotate view XW negative 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "view_xw_neg",
+      "order": 270
+    },
+    {
+      "stage_id": "view_xw_pos",
+      "title": "View XW +",
+      "objective": "Rotate view XW positive 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "view_xw_pos",
+      "order": 280
+    },
+    {
+      "stage_id": "view_zw_neg",
+      "title": "View ZW -",
+      "objective": "Rotate view ZW negative 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "view_zw_neg",
+      "order": 290
+    },
+    {
+      "stage_id": "view_zw_pos",
+      "title": "View ZW +",
+      "objective": "Rotate view ZW positive 4 times.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "view_zw_pos",
+      "order": 300
+    },
+    {
+      "stage_id": "mouse_orbit",
+      "title": "Mouse Orbit",
+      "objective": "Orbit camera with mouse drag 4 times (or keyboard fallback).",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "mouse_orbit",
+      "order": 301
+    },
+    {
+      "stage_id": "mouse_zoom",
+      "title": "Mouse Zoom",
+      "objective": "Zoom camera with mouse wheel 4 ticks (or keyboard fallback).",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "mouse_zoom",
+      "order": 302
+    },
+    {
+      "stage_id": "toggle_grid",
+      "title": "Toggle Grid",
+      "objective": "Toggle the guide grid once.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "toggle_grid",
+      "order": 310
+    },
+    {
+      "stage_id": "zoom_in",
+      "title": "Zoom In",
+      "objective": "Zoom in once.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "zoom_in",
+      "order": 320
+    },
+    {
+      "stage_id": "zoom_out",
+      "title": "Zoom Out",
+      "objective": "Zoom out once.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "zoom_out",
+      "order": 330
+    },
+    {
+      "stage_id": "cycle_projection",
+      "title": "Projection",
+      "objective": "Cycle projection mode once.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "cycle_projection",
+      "order": 340
+    },
+    {
+      "stage_id": "camera_reset",
+      "title": "Reset View",
+      "objective": "Reset camera/view once.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "reset",
+      "order": 350
+    },
+    {
+      "stage_id": "overlay_alpha_dec",
+      "title": "Transparency -",
+      "objective": "Adjust locked-cell transparency toward target.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "overlay_alpha_dec",
+      "order": 360
+    },
+    {
+      "stage_id": "overlay_alpha_inc",
+      "title": "Transparency +",
+      "objective": "Adjust locked-cell transparency toward target.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "action",
+      "action_id": "overlay_alpha_inc",
+      "order": 370
+    },
+    {
+      "stage_id": "target_placement_nd",
+      "title": "Target Placement",
+      "objective": "Place the piece into the highlighted target.",
+      "applies_to": [
+        "3d",
+        "4d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 380
+    },
+    {
+      "stage_id": "line_fill",
+      "title": "Line Fill",
+      "objective": "Clear one line.",
+      "applies_to": [
+        "2d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 390
+    },
+    {
+      "stage_id": "layer_fill",
+      "title": "Layer Fill",
+      "objective": "Clear one 3D layer.",
+      "applies_to": [
+        "3d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 400
+    },
+    {
+      "stage_id": "hyper_layer_fill",
+      "title": "Hyper-Layer Fill",
+      "objective": "Clear one 4D hyper-layer.",
+      "applies_to": [
+        "4d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 410
+    },
+    {
+      "stage_id": "full_clear_bonus",
+      "title": "Full Board Clear",
+      "objective": "Clear the prepared 2-layer board with one piece.",
+      "applies_to": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 420
+    },
+    {
+      "stage_id": "target_placement_2d",
+      "title": "Target Placement",
+      "objective": "Place the piece into the highlighted target.",
+      "applies_to": [
+        "2d"
+      ],
+      "kind": "board_goal",
+      "action_id": "hard_drop",
+      "order": 430
+    }
+  ]
+}

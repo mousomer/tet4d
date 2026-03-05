@@ -88,6 +88,20 @@ python cli/front3d.py
 python cli/front4d.py
 ```
 
+## Menu and tutorial controls
+
+- Global menu navigation:
+  - `Esc` / `Backspace`: go back (or exit current root menu)
+  - `q`: normalized as menu-back / escape in menu flows
+  - Tiny profile aliases: `i/k/j/l` -> up/down/left/right
+- Tutorials are launched from the main launcher menu.
+- Tutorial in-run hotkeys:
+  - `F5`: previous stage
+  - `F6`: next stage
+  - `F7`: redo current stage
+  - `F8`: exit tutorial to menu
+  - `F9`: restart tutorial lesson
+
 ## Local desktop packaging (bundled runtime)
 
 ```bash
@@ -129,15 +143,20 @@ Project-wide path/constants/security policy:
 User state:
 - `state/menu_settings.json`
 - `state/topology/selected_profile.json` (advanced topology export)
+- `state/analytics/leaderboard.json`
+- `state/tutorial/progress.json`
+- `state/analytics/score_events.jsonl`
+- `state/analytics/score_summary.json`
 
 Keybindings:
+- `config/keybindings/defaults.json`
 - `keybindings/2d.json`
 - `keybindings/3d.json`
 - `keybindings/4d.json`
 
-Control guide renderer (legacy contract reference):
-- `src/tet4d/ui/pygame/menu/menu_control_guides.py`
-- `draw_translation_rotation_guides`
+Control/action icon renderer:
+- `src/tet4d/ui/pygame/render/control_icons.py`
+- `draw_action_icon`
 
 ## Quality checks
 
@@ -151,6 +170,9 @@ pytest -q
 PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
 python3 tools/benchmarks/bench_playbot.py --assert --record-trend
 scripts/ci_check.sh
+
+# Local quick parity run (quiet by default)
+CODEX_MODE=1 ./scripts/verify.sh
 ```
 
 ## Documentation map

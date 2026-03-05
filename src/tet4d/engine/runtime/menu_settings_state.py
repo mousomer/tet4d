@@ -88,6 +88,44 @@ def _coerce_shared_gameplay_settings(
     return normalized
 
 
+def _settings_mapping(payload: dict[str, Any]) -> dict[str, Any]:
+    settings = payload.get("settings")
+    if isinstance(settings, dict):
+        return settings
+    settings = {}
+    payload["settings"] = settings
+    return settings
+
+
+def _mode_settings_mapping(
+    settings: dict[str, Any],
+    mode_key: str,
+) -> dict[str, Any]:
+    mode_settings = settings.get(mode_key)
+    if isinstance(mode_settings, dict):
+        return mode_settings
+    mode_settings = {}
+    settings[mode_key] = mode_settings
+    return mode_settings
+
+
+def _iter_all_mode_settings(
+    payload: dict[str, Any],
+) -> tuple[tuple[str, dict[str, Any]], ...]:
+    settings = _settings_mapping(payload)
+    mode_settings: list[tuple[str, dict[str, Any]]] = []
+    for mode_key in MODE_KEYS:
+        mode_settings.append((mode_key, _mode_settings_mapping(settings, mode_key)))
+    return tuple(mode_settings)
+
+
+def _mode_settings_view(settings: Any, mode_key: str) -> dict[str, Any]:
+    if not isinstance(settings, dict):
+        return {}
+    mode_settings = settings.get(mode_key)
+    return mode_settings if isinstance(mode_settings, dict) else {}
+
+
 def _default_settings_payload() -> dict[str, Any]:
     return ensure_default_settings_payload(
         default_settings_payload(),
@@ -130,6 +168,18 @@ def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
         defaults=_RUNTIME_DEFAULTS,
     )
     return _save_payload(payload)
+
+
+def _save_payload_section(
+    section_name: str,
+    updates: dict[str, Any],
+) -> tuple[bool, str]:
+    payload = _load_payload()
+    section = payload.setdefault(section_name, {})
+    for key, value in updates.items():
+        if value is not None:
+            section[key] = value
+    return _sanitize_and_save_payload(payload)
 
 
 def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
@@ -260,20 +310,19 @@ def save_display_settings(
     windowed_size: tuple[int, int] | None = None,
     overlay_transparency: float | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    display = payload.setdefault("display", {})
+    updates: dict[str, Any] = {}
     if fullscreen is not None:
-        display["fullscreen"] = bool(fullscreen)
+        updates["fullscreen"] = bool(fullscreen)
     if windowed_size is not None:
         width = max(640, int(windowed_size[0]))
         height = max(480, int(windowed_size[1]))
-        display["windowed_size"] = [width, height]
+        updates["windowed_size"] = [width, height]
     if overlay_transparency is not None:
-        display["overlay_transparency"] = clamp_overlay_transparency(
+        updates["overlay_transparency"] = clamp_overlay_transparency(
             overlay_transparency,
             default=DEFAULT_OVERLAY_TRANSPARENCY,
         )
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section("display", updates)
 
 
 def get_audio_settings() -> dict[str, Any]:
@@ -289,46 +338,42 @@ def save_audio_settings(
     sfx_volume: float | None = None,
     mute: bool | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    audio = payload.setdefault("audio", {})
-    if master_volume is not None:
-        audio["master_volume"] = float(master_volume)
-    if sfx_volume is not None:
-        audio["sfx_volume"] = float(sfx_volume)
-    if mute is not None:
-        audio["mute"] = bool(mute)
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section(
+        "audio",
+        {
+            "master_volume": (
+                None if master_volume is None else float(master_volume)
+            ),
+            "sfx_volume": None if sfx_volume is None else float(sfx_volume),
+            "mute": None if mute is None else bool(mute),
+        },
+    )
 
 
 def save_analytics_settings(
     *,
     score_logging_enabled: bool | None = None,
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    analytics = payload.setdefault("analytics", {})
-    if score_logging_enabled is not None:
-        analytics["score_logging_enabled"] = bool(score_logging_enabled)
-    return _sanitize_and_save_payload(payload)
+    return _save_payload_section(
+        "analytics",
+        {
+            "score_logging_enabled": (
+                None if score_logging_enabled is None else bool(score_logging_enabled)
+            )
+        },
+    )
 
 
 def get_global_game_seed() -> int:
     payload = _load_payload()
-    settings = payload.get("settings")
-    if not isinstance(settings, dict):
-        return DEFAULT_GAME_SEED
-    raw_seed = settings.get("2d", {}).get("game_seed")
+    raw_seed = _mode_settings_view(payload.get("settings"), "2d").get("game_seed")
     return clamp_game_seed(raw_seed, default=DEFAULT_GAME_SEED)
 
 
 def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
     normalized_mode = _normalize_mode_key(mode_key)
     defaults = _default_settings_payload()
-    settings = defaults.get("settings")
-    mode_settings = (
-        settings.get(normalized_mode, {})
-        if isinstance(settings, dict)
-        else {}
-    )
+    mode_settings = _mode_settings_view(defaults.get("settings"), normalized_mode)
     return _coerce_shared_gameplay_settings(mode_settings)
 
 
@@ -336,12 +381,7 @@ def mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
     normalized_mode = _normalize_mode_key(mode_key)
     payload = _load_payload()
     defaults = default_mode_shared_gameplay_settings(normalized_mode)
-    settings = payload.get("settings")
-    mode_settings = (
-        settings.get(normalized_mode, {})
-        if isinstance(settings, dict)
-        else {}
-    )
+    mode_settings = _mode_settings_view(payload.get("settings"), normalized_mode)
     return _coerce_shared_gameplay_settings(mode_settings, defaults=defaults)
 
 
@@ -361,22 +401,14 @@ def save_shared_gameplay_settings(
     lines_per_level: int,
 ) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = payload.get("settings")
-    if not isinstance(settings, dict):
-        settings = {}
-        payload["settings"] = settings
-    for mode_key in MODE_KEYS:
+    raw_values = {
+        "random_mode_index": int(random_mode_index),
+        "topology_advanced": int(topology_advanced),
+        "auto_speedup_enabled": int(auto_speedup_enabled),
+        "lines_per_level": int(lines_per_level),
+    }
+    for mode_key, mode_settings in _iter_all_mode_settings(payload):
         defaults = default_mode_shared_gameplay_settings(mode_key)
-        mode_settings = settings.get(mode_key)
-        if not isinstance(mode_settings, dict):
-            mode_settings = {}
-            settings[mode_key] = mode_settings
-        raw_values = {
-            "random_mode_index": int(random_mode_index),
-            "topology_advanced": int(topology_advanced),
-            "auto_speedup_enabled": int(auto_speedup_enabled),
-            "lines_per_level": int(lines_per_level),
-        }
         mode_settings.update(
             _coerce_shared_gameplay_settings(raw_values, defaults=defaults)
         )
@@ -385,30 +417,8 @@ def save_shared_gameplay_settings(
 
 def save_global_game_seed(seed: int) -> tuple[bool, str]:
     payload = _load_payload()
-    settings = payload.setdefault("settings", {})
-    if not isinstance(settings, dict):
-        settings = {}
-        payload["settings"] = settings
-
     clamped_seed = clamp_game_seed(seed, default=DEFAULT_GAME_SEED)
-    for mode_key in _MODE_KEYS:
-        mode_settings = settings.setdefault(mode_key, {})
-        if not isinstance(mode_settings, dict):
-            mode_settings = {}
-            settings[mode_key] = mode_settings
+    for _mode_key, mode_settings in _iter_all_mode_settings(payload):
         mode_settings["game_seed"] = clamped_seed
 
     return _sanitize_and_save_payload(payload)
-
-
-# Backward-compat helpers expected by engine.api overlay/seed accessors.
-def _runtime_defaults() -> RuntimeSettingDefaults:
-    return _RUNTIME_DEFAULTS
-
-
-def _default_overlay_transparency() -> float:
-    return float(DEFAULT_OVERLAY_TRANSPARENCY)
-
-
-def _default_game_seed() -> int:
-    return int(DEFAULT_GAME_SEED)

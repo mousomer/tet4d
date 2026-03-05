@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -12,6 +12,7 @@ from tet4d.ui.pygame.render.control_helper import (
     draw_grouped_control_helper,
 )
 from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 help_action_topic_registry = engine_api.help_action_topic_registry_runtime
@@ -771,20 +772,32 @@ def _draw_help(
     surface.blit(footer_msg, (footer_x, footer_y))
 
 
-def _handle_help_keydown(state: _HelpState, *, context_label: str, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
+def _handle_help_keydown(
+    state: _HelpState,
+    *,
+    context_label: str,
+    key: int,
+    on_escape_back: Callable[[], None] | None = None,
+) -> bool:
+    if key == pygame.K_q:
         state.running = False
         return True
-    if key == pygame.K_LEFT:
+    nav_key = normalize_menu_navigation_key(key)
+    if nav_key == pygame.K_ESCAPE:
+        if callable(on_escape_back):
+            on_escape_back()
+        state.running = False
+        return True
+    if nav_key == pygame.K_LEFT:
         _cycle_page(state, context_label, -1)
         return True
-    if key == pygame.K_RIGHT:
+    if nav_key == pygame.K_RIGHT:
         _cycle_page(state, context_label, 1)
         return True
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_UP:
         _cycle_dimension(state, context_label, -1)
         return True
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         _cycle_dimension(state, context_label, 1)
         return True
     if key in (pygame.K_LEFTBRACKET, pygame.K_PAGEUP, pygame.K_COMMA):
@@ -802,6 +815,7 @@ def run_help_menu(
     *,
     dimension: int = 2,
     context_label: str = "Launcher",
+    on_escape_back: Callable[[], None] | None = None,
 ) -> pygame.Surface:
     state = _HelpState(dimension=max(2, min(4, int(dimension))))
     clock = pygame.time.Clock()
@@ -813,7 +827,12 @@ def run_help_menu(
                 return screen
             if event.type != pygame.KEYDOWN:
                 continue
-            _handle_help_keydown(state, context_label=context_label, key=event.key)
+            _handle_help_keydown(
+                state,
+                context_label=context_label,
+                key=event.key,
+                on_escape_back=on_escape_back,
+            )
 
         _draw_help(screen, fonts, state, context_label)
         pygame.display.flip()

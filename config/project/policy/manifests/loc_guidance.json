@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "manifest_id": "loc_guidance",
+  "mode": "soft_warning",
+  "default_batch_type": "mixed",
+  "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
+  "include_extensions": [".py"],
+  "buckets": {
+    "src": "src/",
+    "tests": "tests/",
+    "tools_scripts": "tools/|scripts/"
+  },
+  "thresholds": {
+    "feature": {
+      "src": 500,
+      "tests": 250,
+      "tools_scripts": 150
+    },
+    "bugfix": {
+      "src": 250,
+      "tests": 150,
+      "tools_scripts": 120
+    },
+    "refactor_only": {
+      "src": 0,
+      "tests": 0,
+      "tools_scripts": 0
+    },
+    "mixed": {
+      "src": 300,
+      "tests": 180,
+      "tools_scripts": 120
+    },
+    "governance": {
+      "src": 0,
+      "tests": 80,
+      "tools_scripts": 200
+    }
+  }
+}

@@ -11,6 +11,7 @@ from tet4d.ui.pygame.menu.numeric_text_input import (
     parse_numeric_text,
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 _BG_TOP = (14, 18, 44)
@@ -369,19 +370,23 @@ def _dispatch_text_mode_key(state: _TopologyLabState, key: int) -> bool:
 
 
 def _handle_navigation_key(state: _TopologyLabState, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
+    nav_key = normalize_menu_navigation_key(key)
+    if key == pygame.K_q:
         state.running = False
         return True
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_ESCAPE:
+        state.running = False
+        return True
+    if nav_key == pygame.K_UP:
         state.selected = (state.selected - 1) % len(_LAB_SELECTABLE_ROWS)
         play_sfx("menu_move")
         return True
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         state.selected = (state.selected + 1) % len(_LAB_SELECTABLE_ROWS)
         play_sfx("menu_move")
         return True
-    if key in (pygame.K_LEFT, pygame.K_RIGHT):
-        delta_sign = -1 if key == pygame.K_LEFT else 1
+    if nav_key in (pygame.K_LEFT, pygame.K_RIGHT):
+        delta_sign = -1 if nav_key == pygame.K_LEFT else 1
         if _adjust_active_row(state, delta_sign):
             play_sfx("menu_move")
         return True

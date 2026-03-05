@@ -1114,7 +1114,7 @@ incremental enforcement strategy used while refactoring.
   3D/4D viewer-relative movement mapping and action-override precedence rules.
 - Stage 533 (slice 168, overlay-transparency controls) adds display-level
   `overlay_transparency` settings persistence (current default `25%`, range
-  `0%..85%`), in-game camera-key adjustments with side-panel bar feedback, and
+  `0%..90%`), in-game camera-key adjustments with side-panel bar feedback, and
   render-path separation so transparency applies to locked board cells only
   while active-piece cells remain opaque.
 - Stage 534 (slice 169, test-tree consolidation checkpoint) migrates canonical

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
-import tempfile
+import shutil
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
+from uuid import uuid4
 from unittest import mock
 
 from tet4d.engine.runtime import score_analyzer
@@ -17,6 +19,18 @@ from tet4d.engine.runtime.score_analyzer import (
     validate_score_analysis_event,
     validate_score_analysis_summary,
 )
+
+
+@contextmanager
+def _workspace_temp_dir(prefix: str):
+    root = Path.cwd() / "state" / "pytest_temp"
+    root.mkdir(parents=True, exist_ok=True)
+    tmp_path = root / f"{prefix}_{uuid4().hex}"
+    tmp_path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield tmp_path
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
 
 
 class TestScoreAnalyzer(unittest.TestCase):
@@ -85,8 +99,7 @@ class TestScoreAnalyzer(unittest.TestCase):
         self.assertTrue(ok, msg)
 
     def test_record_event_writes_event_and_summary(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
+        with _workspace_temp_dir("score_analyzer") as tmp_path:
             config_path = tmp_path / "score_analyzer.json"
             events_path = tmp_path / "state" / "events.jsonl"
             summary_path = tmp_path / "state" / "summary.json"
@@ -131,8 +144,7 @@ class TestScoreAnalyzer(unittest.TestCase):
             reset_score_analyzer_runtime_state()
 
     def test_record_event_sanitizes_output_paths_to_state_dir(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
+        with _workspace_temp_dir("score_analyzer") as tmp_path:
             config_path = tmp_path / "score_analyzer.json"
             config_path.write_text(
                 json.dumps(

@@ -37,7 +37,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertFalse(state.status_error)
         run_lab.assert_called_once()
 
-    def test_non_topology_route_uses_registry_dispatch(self) -> None:
+    def test_non_tutorial_route_uses_registry_dispatch(self) -> None:
         state = front.MainMenuState(last_mode="2d")
         session = SimpleNamespace(
             screen=object(),
@@ -49,16 +49,51 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         handler = Mock(return_value=False)
         registry.register("help", handler)
 
-        close = front._handle_launcher_route(
-            "tutorials",
-            state,
-            registry,
-            session,
-            fonts_nd=object(),
-        )
+        with patch.dict(front._LAUNCHER_ROUTE_ACTIONS, {"custom_route": "help"}, clear=False):
+            close = front._handle_launcher_route(
+                "custom_route",
+                state,
+                registry,
+                session,
+                fonts_nd=object(),
+                fonts_2d=object(),
+            )
 
         self.assertFalse(close)
         handler.assert_called_once()
+
+    def test_tutorial_action_launches_lesson(self) -> None:
+        state = front.MainMenuState(last_mode="3d")
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+
+        with (
+            patch.object(
+                front,
+                "engine_api",
+                wraps=front.engine_api,
+            ) as engine_api_mock,
+            patch.object(front, "_launch_mode") as launch_mode,
+        ):
+            engine_api_mock.tutorial_lesson_ids_runtime.return_value = (
+                "tutorial_2d_core",
+                "tutorial_3d_core",
+                "tutorial_4d_core",
+            )
+            close = front._menu_action_tutorial_dimension(
+                "2d",
+                state,
+                session,
+                fonts_nd=object(),
+                fonts_2d=object(),
+            )
+
+        self.assertFalse(close)
+        launch_mode.assert_called_once()
 
     def test_unknown_route_sets_error_status(self) -> None:
         state = front.MainMenuState(last_mode="2d")
@@ -76,6 +111,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             registry,
             session,
             fonts_nd=object(),
+            fonts_2d=object(),
         )
 
         self.assertFalse(close)

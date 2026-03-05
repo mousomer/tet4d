@@ -1,6 +1,17 @@
 {
   "schema_version": 1,
-  "active_debt_items": [],
+  "active_debt_items": [
+    {
+      "id": "BKL-P1-010",
+      "priority": "P1",
+      "title": "Tutorial overlay panel can obstruct gameplay board visibility in some window/layout combinations"
+    },
+    {
+      "id": "BKL-P1-011",
+      "priority": "P1",
+      "title": "Tutorial zoom-in/zoom-out stages should require four actions and stay config-defined via lessons payload"
+    }
+  ],
   "operational_watch_items": [
     {
       "id": "BKL-P3-002",
@@ -26,6 +37,11 @@
       "id": "BKL-P3-009",
       "priority": "P3",
       "title": "Playbot learning-mode tuning watch (threshold retuning and long-run stability)"
+    },
+    {
+      "id": "BKL-P3-013",
+      "priority": "P3",
+      "title": "Interactive tutorials system rollout (data-driven lessons, gating, deterministic progression)"
     }
   ]
 }

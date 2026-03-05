@@ -9,6 +9,9 @@ from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.ui.pygame import front3d_game, front4d_game
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D, CAMERA_KEYS_4D
+from tet4d.ui.pygame.render.front3d_cell_render import (
+    overlay_opacity_scale as overlay_opacity_scale_3d,
+)
 
 
 class TestOverlayTransparencyRenderPaths(unittest.TestCase):
@@ -32,9 +35,9 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         return sum(rgba[3::4])
 
     def test_overlay_transparency_maps_to_inverse_opacity_scale(self) -> None:
-        self.assertAlmostEqual(front3d_render._overlay_opacity_scale(0.2), 0.8)
-        self.assertAlmostEqual(front3d_render._overlay_opacity_scale(0.7), 0.3)
-        self.assertAlmostEqual(front3d_render._overlay_opacity_scale(1.0), 0.0)
+        self.assertAlmostEqual(overlay_opacity_scale_3d(0.2), 0.8)
+        self.assertAlmostEqual(overlay_opacity_scale_3d(0.7), 0.3)
+        self.assertAlmostEqual(overlay_opacity_scale_3d(1.0), 0.0)
         self.assertAlmostEqual(front4d_render._overlay_opacity_scale(0.2), 0.8)
         self.assertAlmostEqual(front4d_render._overlay_opacity_scale(0.7), 0.3)
         self.assertAlmostEqual(front4d_render._overlay_opacity_scale(1.0), 0.0)

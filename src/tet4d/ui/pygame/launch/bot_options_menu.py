@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ai.playbot.types import (
     bot_mode_from_index,
@@ -166,10 +167,11 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
 
 
 def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
+    nav_key = normalize_menu_navigation_key(key)
+    if nav_key not in (pygame.K_LEFT, pygame.K_RIGHT):
         return False
 
-    delta = -1 if key == pygame.K_LEFT else 1
+    delta = -1 if nav_key == pygame.K_LEFT else 1
     if loop.selected == 0:
         idx = _BOT_DIMENSIONS.index(loop.dimension)
         loop.dimension = _BOT_DIMENSIONS[(idx + delta) % len(_BOT_DIMENSIONS)]
@@ -223,21 +225,31 @@ def _handle_bot_menu_confirm(loop: _BotMenuState) -> None:
         loop.running = False
 
 
+def _handle_bot_menu_exit_key(loop: _BotMenuState, *, key: int, nav_key: int) -> bool:
+    if key == pygame.K_q:
+        loop.running = False
+        return True
+    if nav_key == pygame.K_ESCAPE:
+        loop.running = False
+        return True
+    return False
+
+
 def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
+    nav_key = normalize_menu_navigation_key(key)
     reset_trigger = key == pygame.K_F8 or (
         key in (pygame.K_RETURN, pygame.K_KP_ENTER) and loop.selected == 7
     )
     if not reset_trigger:
         loop.pending_reset_confirm = False
 
-    if key == pygame.K_ESCAPE:
-        loop.running = False
+    if _handle_bot_menu_exit_key(loop, key=key, nav_key=nav_key):
         return
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_UP:
         loop.selected = (loop.selected - 1) % len(_BOT_MENU_ROWS)
         play_sfx("menu_move")
         return
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         loop.selected = (loop.selected + 1) % len(_BOT_MENU_ROWS)
         play_sfx("menu_move")
         return

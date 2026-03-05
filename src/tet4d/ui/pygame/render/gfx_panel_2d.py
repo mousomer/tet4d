@@ -20,6 +20,7 @@ def draw_side_panel_2d(
     side_panel_width: int = 200,
     text_color: tuple[int, int, int] = (230, 230, 230),
     gravity_interval_from_config: Callable[[Any], int],
+    overlay_transparency: float = 0.25,
 ) -> None:
     _ = text_color
     px, py = panel_offset
@@ -54,4 +55,7 @@ def draw_side_panel_2d(
         analysis_lines=analysis_lines,
         game_over=state.game_over,
         min_controls_h=116,
+        meter_label="Locked-cell transparency",
+        meter_value=float(overlay_transparency),
+        meter_hint="Camera control",
     )

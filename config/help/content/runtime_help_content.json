@@ -75,6 +75,7 @@
         "",
         "## Clear points",
         "- Base: 1=40, 2=100, 3=300, 4=1200, 5+=1200+(n-4)*400.",
+        "- Clear points scale with sqrt(layer_size/reference), floor=1.0 (reference: 10 cells).",
         "- Bonus: +80 (2), +240 (3), +600 (4), +900 (5+).",
         "- Board clear bonus: +1500.",
         "- Final points = round((base + bonuses) * score multiplier).",
@@ -88,6 +89,7 @@
         "- 3 lines/layers: +300",
         "- 4 lines/layers: +1200",
         "- 5+ lines/layers: +1200 + 400 * (n-4)",
+        "- Larger layers award higher clear points using sqrt(layer_size/reference), floor=1.0.",
         "",
         "## Bonus points",
         "- Multi-layer clear bonus: +80 (2), +240 (3), +600 (4), +900 (5+)",
@@ -121,7 +123,7 @@
         "- FULL: full lattice grid.",
         "- HELPER: only lines intersecting active piece cells.",
         "- Locked-cell transparency affects board cells already on the board (including challenge layers and landed pieces).",
-        "- Range: 0%-85% (default 25%)."
+        "- Range: 0%-90% (default 25%)."
       ],
       "full_lines": [
         "",
@@ -134,7 +136,7 @@
         "## Locked-cell transparency",
         "- Applies to locked board cells only (challenge layers + landed pieces).",
         "- Active moving piece remains opaque.",
-        "- Range is 0%-85%; default is 25% from Settings > Display.",
+        "- Range is 0%-90%; default is 25% from Settings > Display.",
         "- In-game adjust uses camera transparency keybinds (shown in side panel controls).",
         "",
         "## 4D view note",

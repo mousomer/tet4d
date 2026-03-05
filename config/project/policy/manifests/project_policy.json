@@ -29,6 +29,7 @@
     "scripts/check_architecture_metrics_soft_gate.sh"
   ],
   "policy_pack": {
+    "registry_manifest": "config/project/policy/manifests/policy_registry.json",
     "version": "2026-02-28",
     "docs_index": "docs/policies/INDEX.md",
     "policies": [
@@ -81,6 +82,36 @@
         "id": "secret_scan",
         "path": "config/project/policy/manifests/secret_scan.json",
         "validated_by": "python3 tools/governance/scan_secrets.py"
+      },
+      {
+        "id": "contributor_directives",
+        "path": "config/project/policy/manifests/contributor_directives.json",
+        "validated_by": "tools/governance/validate_project_contracts.py"
+      },
+      {
+        "id": "risk_gates",
+        "path": "config/project/policy/manifests/risk_gates.json",
+        "validated_by": "tools/governance/check_risk_gates.py"
+      },
+      {
+        "id": "policy_runtime_rules",
+        "path": "config/project/policy/manifests/policy_runtime_rules.json",
+        "validated_by": "tools/governance/check_policy_runtime_rules.py"
+      },
+      {
+        "id": "wheel_reuse_rules",
+        "path": "config/project/policy/manifests/wheel_reuse_rules.json",
+        "validated_by": "tools/governance/check_wheel_reuse_rules.py"
+      },
+      {
+        "id": "loc_guidance",
+        "path": "config/project/policy/manifests/loc_guidance.json",
+        "validated_by": "tools/governance/check_loc_guidance.py"
+      },
+      {
+        "id": "dedup_dead_code_rules",
+        "path": "config/project/policy/manifests/dedup_dead_code_rules.json",
+        "validated_by": "tools/governance/check_dedup_dead_code_rules.py"
       }
     ]
   }

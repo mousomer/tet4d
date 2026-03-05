@@ -4,13 +4,12 @@
     "pause": "pause_root"
   },
   "launcher_subtitles": {
-    "launcher_root": "Play or continue, then adjust Settings, Controls, Help, and Bot options.",
-    "launcher_play": "Select a dimension, open Tutorials, or jump to topology controls.",
+    "launcher_root": "Play, continue, or launch Tutorials; then adjust Settings, Controls, Help, and Bot options.",
+    "launcher_play": "Select a dimension or jump to topology controls.",
+    "launcher_tutorials": "Select a guided tutorial pack.",
     "default": "Up/Down select and Enter open actions."
   },
-  "launcher_route_actions": {
-    "tutorials": "help"
-  },
+  "launcher_route_actions": {},
   "branding": {
     "game_title": "Multi dimensional tetris game (2d/3d/4d)",
     "signature_author": "Omer M. Moussaffi (mousomer@gmail.com)",
@@ -18,11 +17,12 @@
   },
   "ui_copy": {
     "launcher": {
-      "info_active_profile_template": "Active key profile: {profile}",
+      "info_active_profile_template": "Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)",
       "info_continue_mode_template": "Continue mode: {mode}",
       "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
+      "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
       "escape_hint_back": "Esc back",
-      "escape_hint_quit": "Esc quit"
+      "escape_hint_quit": "Q quit"
     },
     "settings_hub": {
       "title": "Settings",
@@ -31,23 +31,23 @@
         "Up/Down select   Left/Right adjust   Enter activate",
         "Enter on width/height/seed to type large numeric values",
         "Gameplay -> Advanced gameplay... controls auto speed-up and lines-per-level",
-        "F5 save   F8 reset defaults   Esc back"
+        "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
     },
     "keybindings_menu": {
       "title": "Keybindings Setup",
-      "subtitle_section_mode": "Up/Down select section, Enter open, Esc back",
-      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc back",
+      "subtitle_section_mode": "Up/Down select section, Enter open, Esc back, Q quit",
+      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc back, Q quit",
       "hints": [
         "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
-        "[ / ] profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Tab section menu   Esc cancel/back",
+        "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspace delete custom profile",
+        "C conflict mode cycle   Enter capture   Tab section menu   Esc back   Q quit",
         "{scope_file_hint}"
       ],
       "section_hints": [
-        "Enter open section   Up/Down select section   Esc back",
-        "[ / ] profile prev/next   N new profile   F2 rename   F3 save as"
+        "Enter open section   Up/Down select section   Esc back   Q quit",
+        "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   F2 rename   F3 save as"
       ],
       "capture_template": "Press a key for {binding_title} (Esc cancels)",
       "text_mode_confirm_hint": "Enter confirm   Esc cancel"
@@ -57,7 +57,7 @@
       "subtitle": "Dimension-specific bot controls in one place",
       "hints": [
         "Left/Right adjust values   Up/Down select",
-        "F5 save   F8 reset defaults   Esc back"
+        "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "saved_status": "Saved bot options",
       "reset_confirm_enter": "Press Enter on Reset defaults again to confirm",
@@ -68,9 +68,9 @@
       "title_template": "{dimension}D setup",
       "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
       "title_2d": "2D setup",
-      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc to quit.",
+      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc back, Q quit.",
       "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
-      "compact_controls_hint": "Arrows navigate   Enter start   Esc quit"
+      "compact_controls_hint": "Arrows navigate   Enter start   Esc back   Q quit"
     }
   },
   "menus": {
@@ -86,6 +86,11 @@
           "type": "action",
           "label": "Continue",
           "action_id": "continue"
+        },
+        {
+          "type": "submenu",
+          "label": "Tutorials",
+          "menu_id": "launcher_tutorials"
         },
         {
           "type": "action",
@@ -138,14 +143,29 @@
           "action_id": "play_4d"
         },
         {
-          "type": "route",
-          "label": "Tutorials",
-          "route_id": "tutorials"
-        },
-        {
           "type": "action",
           "label": "Topology Lab",
           "action_id": "topology_lab"
+        }
+      ]
+    },
+    "launcher_tutorials": {
+      "title": "Tutorials",
+      "items": [
+        {
+          "type": "action",
+          "label": "Play 2D Tutorial",
+          "action_id": "tutorial_2d"
+        },
+        {
+          "type": "action",
+          "label": "Play 3D Tutorial",
+          "action_id": "tutorial_3d"
+        },
+        {
+          "type": "action",
+          "label": "Play 4D Tutorial",
+          "action_id": "tutorial_4d"
         }
       ]
     },
@@ -348,7 +368,7 @@
     "subtitle_template": "{dimension}D in-game controls and settings",
     "hints": [
       "Up/Down select   Enter apply",
-      "Esc resume"
+      "Esc resume   Q quit"
     ]
   },
   "setup_fields": {
@@ -632,21 +652,21 @@
   },
   "setup_hints": {
     "2d": [
-      "Esc = quit",
+      "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
     "3d": [
-      "Esc = quit",
+      "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
     "4d": [
-      "Esc = quit",
+      "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",

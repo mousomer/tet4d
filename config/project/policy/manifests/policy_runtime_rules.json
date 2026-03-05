@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "manifest_id": "policy_runtime_rules",
+  "sanitation": {
+    "text_entrypoints": [
+      {
+        "path": "src/tet4d/ui/pygame/launch/launcher_settings.py",
+        "severity": "error",
+        "required_any_tokens": [
+          "sanitize_text_runtime",
+          "_sanitize_text("
+        ],
+        "required_all_tokens": [
+          "append_numeric_text",
+          "parse_numeric_text"
+        ]
+      },
+      {
+        "path": "src/tet4d/ui/pygame/launch/topology_lab_menu.py",
+        "severity": "error",
+        "required_any_tokens": [
+          "sanitize_text_runtime",
+          "_sanitize_text("
+        ],
+        "required_all_tokens": [
+          "append_numeric_text",
+          "parse_numeric_text"
+        ]
+      },
+      {
+        "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
+        "severity": "warning",
+        "required_any_tokens": [
+          "sanitize_text_runtime"
+        ],
+        "required_all_tokens": [
+          "_sanitize_profile_name"
+        ]
+      },
+      {
+        "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
+        "severity": "warning",
+        "required_any_tokens": [
+          "sanitize_text_runtime"
+        ],
+        "required_all_tokens": [
+          "_NAME_MAX_LENGTH"
+        ]
+      },
+      {
+        "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
+        "severity": "error",
+        "required_any_tokens": [
+          "sanitize_text("
+        ],
+        "required_all_tokens": [
+          "sanitize_text: SanitizeTextFn"
+        ]
+      }
+    ]
+  },
+  "magic_numbers": {
+    "config_backed_entrypoints": [
+      {
+        "path": "src/tet4d/ui/pygame/launch/launcher_settings.py",
+        "severity": "error",
+        "required_all_tokens": [
+          "clamp_game_seed_runtime",
+          "clamp_overlay_transparency_runtime",
+          "clamp_lines_per_level_runtime",
+          "game_seed_step_runtime"
+        ],
+        "forbidden_regex": [
+          "\\b999_?999_?999\\b",
+          "\\b0\\.85\\b"
+        ]
+      },
+      {
+        "path": "src/tet4d/engine/runtime/settings_schema.py",
+        "severity": "warning",
+        "required_all_tokens": [
+          "OVERLAY_TRANSPARENCY_MIN",
+          "OVERLAY_TRANSPARENCY_MAX",
+          "GAME_SEED_MIN",
+          "GAME_SEED_MAX",
+          "LINES_PER_LEVEL_MIN",
+          "LINES_PER_LEVEL_MAX"
+        ],
+        "forbidden_regex": []
+      }
+    ]
+  }
+}

@@ -214,6 +214,21 @@ def _validate_clear_scoring(raw_clear_scoring: object) -> dict[str, Any]:
         path="gameplay.clear_scoring.board_clear_bonus",
         min_value=0,
     )
+    layer_size_weighting = require_object(
+        clear_scoring.get("layer_size_weighting"),
+        path="gameplay.clear_scoring.layer_size_weighting",
+    )
+    layer_size_weighting_enabled = require_int(
+        layer_size_weighting.get("enabled"),
+        path="gameplay.clear_scoring.layer_size_weighting.enabled",
+        min_value=0,
+        max_value=1,
+    )
+    layer_size_weighting_reference_plane_cells = require_int(
+        layer_size_weighting.get("reference_plane_cells"),
+        path="gameplay.clear_scoring.layer_size_weighting.reference_plane_cells",
+        min_value=1,
+    )
     return {
         "multi_layer_bonus": {
             "2": tier_two,
@@ -222,6 +237,10 @@ def _validate_clear_scoring(raw_clear_scoring: object) -> dict[str, Any]:
             "5_plus": tier_five_plus,
         },
         "board_clear_bonus": board_clear_bonus,
+        "layer_size_weighting": {
+            "enabled": layer_size_weighting_enabled,
+            "reference_plane_cells": layer_size_weighting_reference_plane_cells,
+        },
     }
 
 

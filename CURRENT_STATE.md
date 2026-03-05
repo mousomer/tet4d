@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-02
-Branch: `master`
-Worktree expectation at handoff: clean (post-stage-840 runtime parser/validation dedup batch)
+Last updated: 2026-03-04
+Branch: `codex/tutorials1`
+Worktree expectation at handoff: clean (latest CI-compliance hardening batch committed + pushed)
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Architecture Snapshot
 
-- `arch_stage`: `840` (from `scripts/arch_metrics.py`)
+- `arch_stage`: `890` (from `scripts/arch_metrics.py`)
 - Verification pipeline:
   - canonical local/CI gate is `./scripts/verify.sh`
   - `./scripts/ci_check.sh` is a thin wrapper over `./scripts/verify.sh`
@@ -93,9 +93,166 @@ Read this first in a new Codex thread before continuing staged refactors.
   - ND planner stack migrated (`planner_nd`, `planner_nd_search`, `planner_nd_core`)
 - UI migration continues; many engine compatibility shims already pruned.
 
-## Latest Local Batch (Unreleased)
+## Latest Batch (Committed)
 
 Completed:
+- CI compliance hardening and reproducibility controls:
+  - added `scripts/ci_preflight.sh` to run sanitation/policy gates + canonical CI pipeline locally
+  - stabilized sanitation input handling for local context artifacts:
+    - `.gitignore` excludes `context-*.instructions.md`
+    - `scripts/check_git_sanitation_repo.sh` excludes `context-*.instructions.md`
+  - added policy-manifest literal safety validation in
+    `tools/governance/validate_project_contracts.py` to catch path-like string
+    literals that can trip sanitation checks
+  - tuned wheel-reuse rule scopes in
+    `config/project/policy/manifests/wheel_reuse_rules.json` to lower
+    false-positive pressure while retaining high-risk coverage
+  - added governance test coverage:
+    - `tests/unit/governance/test_governance_validate_project_contracts.py`
+  - documented CI compliance runbook:
+    - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
+    - references synced in `docs/RDS_AND_CODEX.md` and `docs/policies/INDEX.md`
+  - synced canonical maintenance contract for new script/doc paths:
+    - `config/project/policy/manifests/canonical_maintenance.json`
+- Integrated tutorial runtime execution end-to-end:
+  - launcher tutorial selector + mode launch routing
+  - deterministic per-step input gating
+  - in-loop step progression from event + clear predicates
+  - 2D/3D/4D tutorial overlay rendering with live key prompts
+  - started/completed tutorial progress persistence
+  - deterministic tutorial start conditions (2D/3D/4D):
+    - curated asymmetric starter piece IDs,
+    - starter piece fully visible with minimum gravity layer offset 2,
+    - deterministic 1-2 seeded bottom challenge layers.
+  - tutorial planning/structure are config-backed (non-Python):
+    - `config/tutorial/lessons.json` (runtime structure)
+    - `config/tutorial/plan.json` (ordered stage plan)
+  - tutorial-step pause contract:
+    - gravity/bot progression is paused while tutorial session is running
+    - step progression waits on explicit required actions/predicates
+  - tutorial setup presets now applied at runtime:
+    - board presets (`2d_almost_line`, `3d_almost_layer`, `4d_almost_hyper_layer`)
+    - camera presets (`tutorial_3d_default`, `tutorial_4d_default`)
+  - pause menu tutorial-specific restart action was removed; tutorial control uses
+    hotkeys (`F5/F6/F7/F8/F9`) while pause keeps generic run actions.
+- launcher IA now exposes `Tutorials` at root-level; tutorial launch skips setup
+  menus and uses persisted/default per-mode settings + deterministic lesson
+  presets.
+- CI status for latest hardening batch:
+  - commit: `7631e36`
+  - GitHub Actions run: `22676269281` (`CI`) passed on Python 3.11/3.12/3.13/3.14.
+  - tutorial UX hardening:
+    - menu/help steps now require Esc-return (`menu_back`) before progression
+    - per-stage redo is available (`F7`) without resetting full lesson
+    - target-drop stages now require clear predicates (no event-only pass)
+    - tutorial overlay key-action rows are unified and bolded for clarity
+    - tutorial step setup now enforces visible active-piece placement on every stage
+    - tutorial movement/rotation/drop pacing is rate-limited by config-backed delays
+    - runtime safety guard auto-redoes stage if no legal tutorial action remains
+    - tutorial runtime re-enforces visible active-piece placement; impossible
+      placement triggers tutorial restart
+    - tutorial sessions clamp board dims to configured 2D/3D/4D minimums at launch
+    - full-clear bonus stages now use deterministic single-piece board-clear presets:
+      - 2D: `O` + `2d_almost_full_clear_o`
+      - 3D: `O3` + `3d_almost_full_clear_o3`
+      - 4D: `CROSS4` + `4d_almost_full_clear_cross4`
+    - gameplay Esc key now routes to pause/menu return (not instant quit)
+    - gameplay restart no longer restarts tutorial lesson progression
+    - leaderboard session registration is disabled for tutorial runs
+    - pause-menu restart now emits tutorial `restart` action (unblocks restart step)
+    - tutorial hotkeys are unified across 2D/3D/4D:
+      - `F5`: previous stage
+      - `F6`: next stage
+      - `F7`: redo stage
+      - `F8`: exit tutorial to main menu
+      - `F9`: restart tutorial lesson
+    - tutorial `F9` restarts lesson session and reapplies deterministic step setup
+    - tutorial completion now transitions cleanly to free-play by clearing tutorial
+      session state in-loop (no forced menu return)
+    - `Backspace` now mirrors `Esc` for menu-back navigation
+    - visibility safety now redoes current step instead of full lesson restart
+    - 3D/4D move+rotate stages now force asymmetric starters:
+      - 3D: `SCREW3`
+      - 4D: `SKEW4_A`
+    - 3D/4D layer-clear target presets now use solvable deterministic hole patterns:
+      - `3d_almost_layer_screw3`
+      - `4d_almost_hyper_layer_skew4`
+    - tutorial stage pacing increased via config-backed delay constants
+    - tutorial stage flow is now segmented and ordered as:
+      - translations -> piece rotations -> camera rotations (3D/4D) ->
+        other camera controls -> transparency -> goals
+    - tutorial system controls are guidance-only (no dedicated menu/help/restart
+      interactive stages)
+    - tutorial full-board-clean stages now require actual empty board state
+      (`board_cleared`) before progression
+    - tutorial grid-control stages now require a full grid-mode cycle:
+      `OFF -> EDGE -> FULL -> HELPER -> OFF`
+    - tutorial movement/rotation/drop transitions now preserve board/piece setup
+      across adjacent control stages (no redraw between those stages)
+    - transparency stages now reset overlay to `50%` when transitioning back to
+      non-transparency tutorial stages
+    - movement-stage piece placement now starts one cell off boundary and is
+      validated for repeated legal moves so required step counts are reachable
+    - ND translation starts are now forced near-corner but not hard-corner
+      (one-cell-off-boundary on lateral axes)
+    - tutorial ND minimum board clamp increased to keep 4-step translation
+      stages feasible with asymmetric pieces:
+      - 3D: `8x18x8`
+      - 4D: `10x20x8x8`
+    - 3D/4D tutorial safety now skips auto-redo while a stage is complete and
+      waiting for transition delay (prevents mid-translation redraw/reset)
+    - safety now also skips auto-redo when the current step is already
+      completion-ready before sync/advance finalization (prevents pre-sync
+      redraw loops)
+    - 3D/4D tutorial required-action feasibility now uses the same
+      viewer-relative + axis-override routing semantics as gameplay key handling
+      (no safety/routing drift)
+    - ND setup-placement deltas for translation stages are now aligned with
+      viewer-relative semantics so `move_z_neg` (away) and `move_z_pos`
+      (closer) remain feasible in staged progression
+    - loop-level tutorial min-board fallback defaults were synced to feasibility
+      clamps (`3D x/z=8`, `4D z/w=8`)
+    - line/layer/full-clear setup now nudges pieces laterally away from target
+      holes so completion requires movement/rotation before hard drop
+    - 3D/4D control-stage setup suppression now stays active through
+      `toggle_grid`, so there is no board/piece redraw from translations through
+      rotations, camera rotations, transparency, and grid-cycle stages
+    - opening 3D/4D translation setup now enforces full-sequence feasibility
+      without redraw:
+      - start near-corner anchor aligns with sequence order
+        (`x-`, `x+`, `z away`, `z closer`, and `w-/w+` in 4D)
+      - prevents early-stage safety redo loops that previously reset board/piece
+- Key files:
+  - `src/tet4d/engine/tutorial/runtime.py`
+  - `src/tet4d/engine/tutorial/persistence.py`
+  - `src/tet4d/ui/pygame/launch/tutorials_menu.py`
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+  - `cli/front.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+  - `src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py`
+  - `src/tet4d/engine/frontend_nd.py`
+- Seeded interactive tutorial core (M0/M1 scaffolding) with config-backed
+  lesson packs and deterministic runtime state machinery:
+  - `config/tutorial/lessons.json`
+  - `config/schema/tutorial_lessons.schema.json`
+  - `src/tet4d/engine/tutorial/schema.py`
+  - `src/tet4d/engine/tutorial/content.py`
+  - `src/tet4d/engine/tutorial/gating.py`
+  - `src/tet4d/engine/tutorial/conditions.py`
+  - `src/tet4d/engine/tutorial/events.py`
+  - `src/tet4d/engine/tutorial/manager.py`
+- Exposed tutorial payload/lesson-id runtime accessors in:
+  - `src/tet4d/engine/api.py`
+- Added tutorial coverage:
+  - `tests/unit/engine/test_tutorial_schema.py`
+  - `tests/unit/engine/test_tutorial_manager.py`
+  - `tests/unit/engine/test_tutorial_content.py`
+- Synced canonical/RDS/project-structure docs:
+  - `config/project/policy/manifests/canonical_maintenance.json`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `docs/PROJECT_STRUCTURE.md`
 - Reduced runtime parser duplication by extracting shared menu-structure parsing
   helpers into:
   - `src/tet4d/engine/runtime/menu_structure_parse_helpers.py`
@@ -108,12 +265,79 @@ Completed:
   - `src/tet4d/engine/runtime/runtime_config_validation_gameplay.py`
   - `src/tet4d/engine/runtime/runtime_config.py` now delegates gameplay/audio
     validation to the extracted module.
+- Updated clear scoring to include config-backed layer-size weighting:
+  - larger cleared layers now award higher base clear points via
+    `sqrt(layer_size/reference_plane_cells)` with floor `1.0`
+  - reference plane size is configured at
+    `config/gameplay/tuning.json` (`clear_scoring.layer_size_weighting.reference_plane_cells`)
+  - scoring integration points:
+    - `src/tet4d/engine/gameplay/scoring_bonus.py`
+    - `src/tet4d/engine/gameplay/game2d.py`
+    - `src/tet4d/engine/gameplay/game_nd.py`
+  - scoring coverage/docs updated:
+    - `tests/unit/engine/test_scoring_bonus.py`
+    - `config/help/content/runtime_help_content.json`
+    - `docs/rds/RDS_TETRIS_GENERAL.md`
 - Rebuilt release packaging matrix successfully for:
   - Linux, Windows, macOS x64, macOS ARM64.
+- Tutorial/runtime control UX alignment pass (2026-03-03):
+  - helper panel taxonomy enforced as `Main > Translation > Rotation > Camera > Stats`
+    with 2D camera panel now exposing grid + transparency controls
+  - side panel now renders locked-cell transparency percentage meter bar in
+    2D/3D/4D
+  - tutorial runtime now enforces config-backed step transition delay (`>=1s`),
+    transparency target-range progression (`20%-80%`, per-step randomized target),
+    and global soft-drop allowance
+  - 4D movement steps now require double action count; ND tutorial setup now
+    validates repeated move feasibility before spawning starter piece
+  - pause menu `Restart Tutorial` action removed from menu graph (stage redo/restart
+    remains available via tutorial hotkeys)
 
 Verification:
+- `.venv/bin/ruff check cli/front.py cli/front2d.py src/tet4d/engine/tutorial src/tet4d/ui/pygame/front3d_game.py src/tet4d/ui/pygame/front4d_game.py src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_front_launcher_routes.py tests/unit/engine/test_nd_routing.py tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed (`30 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_game2d.py tests/unit/engine/test_game_nd.py tests/unit/engine/test_front3d_setup.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_pause_menu.py` passed (`95 passed`).
+- `.venv/bin/ruff check src/tet4d/engine/tutorial tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_schema.py tests/unit/engine/test_tutorial_manager.py tests/unit/engine/test_tutorial_content.py` passed (`10 passed`).
+- `.venv/bin/python tools/governance/validate_project_contracts.py` passed.
 - `.venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py tests/unit/engine/test_project_config.py` passed (`33 passed`).
 - `CODEX_MODE=1 ./scripts/verify.sh` passed.
+
+## Current Working Batch (Uncommitted)
+
+Latest committed baseline:
+- `90275cd` (`Add tutorial runtime regressions and deduplicate settings wrappers`).
+
+Completed locally:
+- Added deterministic tutorial control-sequencing coverage across all modes:
+  - restart/redo/previous/next invariants in 2D/3D/4D
+  - repeated 4D W-axis progression smoke across lesson restarts
+  - nonzero stage-delay (`1500ms`) transition guard
+  - `tests/unit/engine/test_tutorial_runtime.py`
+- Added live keybinding-sync coverage for tutorial system-control prompt rows:
+  - `tests/unit/engine/test_tutorial_overlay.py`
+- Reduced profile/mode update duplication in:
+  - `src/tet4d/ui/pygame/keybindings.py`
+  - `src/tet4d/engine/runtime/menu_settings_state.py`
+- Fixed tutorial soft-drop pacing to avoid sluggish drop stages while keeping
+  hard-drop tutorial pacing slower:
+  - added separate config-backed `soft_drop` and `hard_drop` action delays under
+    `tutorial.action_delay_ms`
+  - updated 2D/3D/4D tutorial action-delay dispatch to use split delays
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `cli/front2d.py`
+  - `src/tet4d/ui/pygame/front3d_game.py`
+  - `src/tet4d/ui/pygame/front4d_game.py`
+
+Verification (current working tree):
+- `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed (`15 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_keybindings.py tests/unit/engine/test_menu_policy.py tests/unit/engine/test_runtime_config.py` passed (`57 passed`).
+- `.venv/bin/pytest -q tests/unit/engine/test_project_config.py` passed (`4 passed`).
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `./scripts/ci_preflight.sh` passed (known non-blocking local warnings unchanged).
+- `.venv/bin/python scripts/arch_metrics.py` ran (`arch_stage=890`,
+  `tech_debt.score=1.35`, status `low`).
 
 ## Recent Batch Status (Stages 756-790)
 
@@ -381,31 +605,94 @@ Placement in stage sequence:
 
 ## Short-Term Plan (Next 10-20 stages)
 
-### Track A (highest value): Delivery-Size Pressure Reduction
+### Track A (highest value): CI Compliance Maintenance
 
-Goal: shave LOC without behavior change in runtime/UI hotspots.
+Goal: keep CI deterministic and fast to triage.
+
+Planned moves:
+- Keep `scripts/ci_preflight.sh` as required pre-push local gate in daily flow.
+- Keep policy manifests/doc indices synchronized (`project_policy.json`, `policy_registry.json`, `docs/policies/INDEX.md`).
+- Keep sanitation-safe policy literals and avoid committing local context artifacts.
+- If CI fails, triage in runbook order (`docs/policies/CI_COMPLIANCE_RUNBOOK.md`) and patch minimally.
+
+Execution pattern:
+1. Reproduce with `./scripts/ci_preflight.sh`.
+2. Fix root cause in smallest scope possible.
+3. Re-run `CODEX_MODE=1 ./scripts/verify.sh`.
+4. Push and confirm matrix green.
+
+### Track B: Tutorial Stability Closure
+
+Goal: eliminate remaining tutorial flow edge-cases without changing core game rules.
+
+Planned moves:
+- Harden 4D W-axis progression reliability and stage-completion predicates.
+- Ensure transparent, deterministic stage transition pacing across 2D/3D/4D.
+- Keep keybinding-driven prompts always consistent with live bindings.
+
+Acceptance:
+1. Tutorial runs complete in 2D/3D/4D without deadlocks across replayed smoke runs.
+2. Restart/redo/previous/next controls remain deterministic.
+3. No tutorial-specific regressions in `verify` test suite.
+
+### Track C: Delivery-Size Pressure Reduction
+
+Goal: reduce LOC and simplify structure with no behavior change.
 
 Planned moves:
 - Factor `src/tet4d/ui/pygame/keybindings.py` into smaller helpers (profile/IO/rebind) with shims and zero-caller prune.
-- Slice `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize helpers; keep storage layout stable.
-- Trim duplicated runtime API wrapper boilerplate in `src/tet4d/engine/api.py`.
-- Keep menu/help content in config assets; avoid large Python literals.
+- Slice `src/tet4d/engine/runtime/menu_settings_state.py` into read/write/sanitize helpers while keeping storage stable.
+- Trim duplicate runtime API wrapper boilerplate in `src/tet4d/engine/api.py`.
+- Keep menu/help/tutorial content in config assets instead of Python literals.
 
 Execution pattern:
-1. Extract to subpackage.
+1. Extract.
 2. Add compatibility shim.
 3. Canonicalize callers.
 4. Zero-caller audit.
 5. Prune shim.
-6. Update docs/metrics; ensure `tech_debt.score` ≤ baseline.
+6. Re-check tech-debt score trend.
 
-### Track B: Playbot relocation audit-only (low priority)
-
-- Periodic audit for stray `engine/playbot/*.py` (none currently; no action staged).
-
-### Track C: Runtime side-effect extraction (selective)
+### Track D: Runtime side-effect extraction (selective)
 
 - Audit `read_text`/`write_text`/`open(` in `src/tet4d/engine/**` and reroute misplaced I/O into runtime helpers only when outside runtime-owned storage modules.
+
+### Track E: Interactive Tutorials (authoritative replacement plan)
+
+Objective:
+
+1. Ship a step-driven in-game tutorial system for 2D/3D/4D.
+2. Teach movement, rotation, camera, and line/layer/hyper-layer completion.
+3. Keep tutorials scriptable/data-driven and resilient to UI/input refactors.
+
+Core constraints:
+
+1. Deterministic progression on explicit conditions only.
+2. Lesson content/flow is data; code only implements generic engine/conditions.
+3. Per-step input gating (`allow`/`deny`) enforced at input dispatch.
+4. Always skippable/restartable; never softlock users.
+5. Mode-agnostic core: mode differences live in content packs.
+
+Milestone sequence:
+
+1. M0: schema + canonical action/clearing definitions.
+2. M1: tutorial engine (`TutorialManager`, conditions, gating, persistence).
+3. M2: overlay UI + highlights + progress + skip/restart controls.
+4. M3: Pack A (2D) end-to-end.
+5. M4: Pack B (3D) end-to-end.
+6. M5: Pack C (4D) end-to-end.
+7. M6: replay harness + static validation + tutorial event log export.
+
+Release gate:
+
+1. 2D/3D/4D packs pass deterministic replay tests.
+2. Every step has explicit completion conditions and gating.
+3. Skip/restart always recover to known state.
+
+Reference:
+
+1. Full canonical tutorial plan is in `docs/BACKLOG.md` section
+   `4.1 Interactive Tutorials Plan (BKL-P3-013)`.
 
 ## Long-Term Plan (Maximal Clean Architecture)
 

@@ -19,6 +19,11 @@
       "context_id": "policy_contracts"
     },
     {
+      "id": "policy_registry",
+      "path": "config/project/policy/manifests/policy_registry.json",
+      "context_id": "policy_contracts"
+    },
+    {
       "id": "canonical_maintenance",
       "path": "config/project/policy/manifests/canonical_maintenance.json",
       "context_id": "policy_contracts"
@@ -51,6 +56,36 @@
     {
       "id": "context_router_manifest",
       "path": "config/project/policy/manifests/context_router_manifest.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "risk_gates_manifest",
+      "path": "config/project/policy/manifests/risk_gates.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "policy_runtime_rules_manifest",
+      "path": "config/project/policy/manifests/policy_runtime_rules.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "wheel_reuse_rules_manifest",
+      "path": "config/project/policy/manifests/wheel_reuse_rules.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "loc_guidance_manifest",
+      "path": "config/project/policy/manifests/loc_guidance.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "dedup_dead_code_rules_manifest",
+      "path": "config/project/policy/manifests/dedup_dead_code_rules.json",
+      "context_id": "policy_contracts"
+    },
+    {
+      "id": "contributor_directives",
+      "path": "config/project/policy/manifests/contributor_directives.json",
       "context_id": "policy_contracts"
     }
   ]

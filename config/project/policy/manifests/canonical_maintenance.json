@@ -26,7 +26,6 @@
       "docs/rds/RDS_PACKAGING.md"
     ],
     "help_assets": [
-      "src/tet4d/ui/pygame/menu/menu_control_guides.py",
       "src/tet4d/ui/pygame/render/control_icons.py",
       "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
     ],
@@ -36,7 +35,9 @@
       "config/schema/help_topics.schema.json",
       "config/schema/help_action_map.schema.json",
       "config/schema/help_runtime_content.schema.json",
-      "config/schema/help_runtime_layout.schema.json"
+      "config/schema/help_runtime_layout.schema.json",
+      "config/schema/tutorial_lessons.schema.json",
+      "config/schema/tutorial_plan.schema.json"
     ],
     "migration_ledgers": [
       "docs/migrations/menu_settings.md",
@@ -75,6 +76,8 @@
       "config/help/content/runtime_help_content.json",
       "config/help/layout/runtime_help_layout.json",
       "config/help/layout/runtime_help_action_layout.json",
+      "config/tutorial/lessons.json",
+      "config/tutorial/plan.json",
       "config/gameplay/tuning.json",
       "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",
@@ -103,6 +106,11 @@
       "tools/governance/tech_debt_budget.py",
       "tools/governance/update_tech_debt_budgets.py",
       "tools/governance/validate_project_contracts.py",
+      "tools/governance/check_risk_gates.py",
+      "tools/governance/check_policy_runtime_rules.py",
+      "tools/governance/check_wheel_reuse_rules.py",
+      "tools/governance/check_loc_guidance.py",
+      "tools/governance/check_dedup_dead_code_rules.py",
       ".github/workflows/ci.yml",
       ".github/workflows/stability-watch.yml",
       ".github/workflows/release-packaging.yml",
@@ -110,18 +118,28 @@
       "scripts/update_policy_template_hashes.sh",
       "scripts/check_git_sanitation_repo.sh",
       "scripts/check_policy_compliance_repo.sh",
+      "scripts/ci_preflight.sh",
       "scripts/check_architecture_metrics_soft_gate.sh"
     ],
     "governance": [
       "AGENTS.md",
       "CONTRIBUTING.md",
+      "docs/policies/INDEX.md",
       "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
       "docs/policies/POLICY_STRING_SANITATION.md",
       "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
       "docs/policies/POLICY_FORMATTING.md",
+      "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
       "config/project/policy/pack.json",
       "config/project/policy/manifests/project_policy.json",
+      "config/project/policy/manifests/policy_registry.json",
       "config/project/policy/manifests/context_router_manifest.json",
+      "config/project/policy/manifests/contributor_directives.json",
+      "config/project/policy/manifests/risk_gates.json",
+      "config/project/policy/manifests/policy_runtime_rules.json",
+      "config/project/policy/manifests/wheel_reuse_rules.json",
+      "config/project/policy/manifests/loc_guidance.json",
+      "config/project/policy/manifests/dedup_dead_code_rules.json",
       ".githooks/pre-push"
     ],
     "packaging_scripts": [
@@ -133,13 +151,25 @@
   },
   "content_rules": [
     {
+      "file": "docs/policies/INDEX.md",
+      "must_contain": [
+        "config/project/policy/manifests/contributor_directives.json",
+        "config/project/policy/manifests/risk_gates.json",
+        "config/project/policy/manifests/policy_runtime_rules.json",
+        "config/project/policy/manifests/wheel_reuse_rules.json",
+        "config/project/policy/manifests/loc_guidance.json",
+        "config/project/policy/manifests/dedup_dead_code_rules.json",
+        "config/project/policy/manifests/policy_registry.json",
+        "config/project/policy/manifests/project_policy.json",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
+      ]
+    },
+    {
       "file": "README.md",
       "must_contain": [
         "Documentation map",
         "scripts/bootstrap_env.sh",
         "config/gameplay/score_analyzer.json",
-        "menu_control_guides.py",
-        "draw_translation_rotation_guides",
         "scripts/ci_check.sh",
         "tools/governance/check_pygame_ce.py",
         "tools/governance/scan_secrets.py",
@@ -200,6 +230,8 @@
       "must_contain": [
         "RDS index",
         "Testing instructions",
+        "scripts/ci_preflight.sh",
+        "config/project/policy/manifests/contributor_directives.json",
         "docs/BACKLOG.md",
         "docs/rds/RDS_PACKAGING.md"
       ],
@@ -227,6 +259,7 @@
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
         "docs/policies/",
+        "config/project/policy/manifests/contributor_directives.json",
         "config/project/policy/manifests/canonical_maintenance.json",
         "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
@@ -249,6 +282,11 @@
         "set -euo pipefail",
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
+        "run_step \"risk_gates\"",
+        "run_step \"policy_runtime_rules\"",
+        "run_step \"wheel_reuse_rules\"",
+        "run_step \"loc_guidance\"",
+        "run_step \"dedup_dead_code_rules\"",
         "echo \"verify: OK\"",
         "check_architecture_metrics_soft_gate.sh"
       ]
@@ -281,7 +319,17 @@
         "\"scripts/check_policy_template_drift.sh\"",
         "\"extended_enforcement\"",
         "\"scripts/check_policy_compliance_repo.sh\"",
-        "\"scripts/check_git_sanitation_repo.sh\""
+        "\"scripts/check_git_sanitation_repo.sh\"",
+        "\"risk_gates\"",
+        "\"tools/governance/check_risk_gates.py\"",
+        "\"policy_runtime_rules\"",
+        "\"tools/governance/check_policy_runtime_rules.py\"",
+        "\"wheel_reuse_rules\"",
+        "\"tools/governance/check_wheel_reuse_rules.py\"",
+        "\"loc_guidance\"",
+        "\"tools/governance/check_loc_guidance.py\"",
+        "\"dedup_dead_code_rules\"",
+        "\"tools/governance/check_dedup_dead_code_rules.py\""
       ],
       "must_match_regex": [
         "\\\"policy_version\\\"\\s*:\\s*\\\"1\\.1\\.\\d+\\\"",

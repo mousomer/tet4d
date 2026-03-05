@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pygame
 
@@ -70,13 +71,34 @@ def _launch_mode_flow(
     suggested_size_fn,
     run_game_loop_fn,
     default_budget_ms: int,
+    mode_key: str,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
-    screen = open_display(display_settings, caption=setup_caption)
-    settings = run_menu_fn(screen, fonts)
-    if settings is None:
-        return LaunchResult(
-            screen=screen, display_settings=display_settings, keep_running=True
-        )
+    settings = None
+    if tutorial_lesson_id:
+        payload = engine_api.load_menu_payload_runtime()
+        defaults = engine_api.default_settings_payload_runtime()
+        merged_mode_settings = {}
+        if (
+            isinstance(defaults, dict)
+            and isinstance(defaults.get("settings"), dict)
+            and isinstance(defaults["settings"].get(mode_key), dict)
+        ):
+            merged_mode_settings.update(defaults["settings"][mode_key])
+        if (
+            isinstance(payload, dict)
+            and isinstance(payload.get("settings"), dict)
+            and isinstance(payload["settings"].get(mode_key), dict)
+        ):
+            merged_mode_settings.update(payload["settings"][mode_key])
+        settings = SimpleNamespace(**merged_mode_settings)
+    else:
+        screen = open_display(display_settings, caption=setup_caption)
+        settings = run_menu_fn(screen, fonts)
+        if settings is None:
+            return LaunchResult(
+                screen=screen, display_settings=display_settings, keep_running=True
+            )
 
     cfg = build_cfg_fn(settings)
     preferred_size = _preferred_windowed_size(display_settings, suggested_size_fn(cfg))
@@ -89,6 +111,7 @@ def _launch_mode_flow(
         screen,
         cfg,
         fonts,
+        tutorial_lesson_id=tutorial_lesson_id,
         **_bot_kwargs(settings, default_budget_ms),
     )
     if not back_to_menu:
@@ -106,6 +129,8 @@ def launch_2d(
     screen: pygame.Surface,
     fonts_2d,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -126,6 +151,8 @@ def launch_2d(
             )
         ),
         default_budget_ms=12,
+        mode_key="2d",
+        tutorial_lesson_id=tutorial_lesson_id,
     )
 
 
@@ -133,6 +160,8 @@ def launch_3d(
     screen: pygame.Surface,
     fonts_nd,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -145,6 +174,8 @@ def launch_3d(
         suggested_size_fn=engine_api.launcher_play_suggested_window_size_3d,
         run_game_loop_fn=engine_api.launcher_play_run_game_loop_3d,
         default_budget_ms=24,
+        mode_key="3d",
+        tutorial_lesson_id=tutorial_lesson_id,
     )
 
 
@@ -152,6 +183,8 @@ def launch_4d(
     screen: pygame.Surface,
     fonts_nd,
     display_settings: DisplaySettings,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     return _launch_mode_flow(
         screen=screen,
@@ -167,4 +200,6 @@ def launch_4d(
         suggested_size_fn=engine_api.launcher_play_suggested_window_size_4d,
         run_game_loop_fn=engine_api.launcher_play_run_game_loop_4d,
         default_budget_ms=36,
+        mode_key="4d",
+        tutorial_lesson_id=tutorial_lesson_id,
     )

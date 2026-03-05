@@ -76,6 +76,11 @@ require_module pytest pytest
 require_repo_package
 
 run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+run_step "risk_gates"     "$PYTHON_BIN" tools/governance/check_risk_gates.py
+run_step "policy_runtime_rules" "$PYTHON_BIN" tools/governance/check_policy_runtime_rules.py
+run_step "wheel_reuse_rules" "$PYTHON_BIN" tools/governance/check_wheel_reuse_rules.py
+run_step "loc_guidance"   "$PYTHON_BIN" tools/governance/check_loc_guidance.py
+run_step "dedup_dead_code_rules" "$PYTHON_BIN" tools/governance/check_dedup_dead_code_rules.py
 run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 
@@ -87,7 +92,12 @@ run_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_a
 run_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
-run_step "pytest"         run_module pytest -q --maxfail=1 --disable-warnings
+PYTEST_ARGS=(-q --maxfail=1 --disable-warnings)
+if [[ "$CODEX_MODE" == "1" ]]; then
+  PYTEST_ARGS+=(--basetemp=state/pytest_basetemp -p no:cacheprovider -p no:tmpdir)
+fi
+
+run_step "pytest"         run_module pytest "${PYTEST_ARGS[@]}"
 
 run_step "playbot_stability" \
   env PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
@@ -96,3 +106,4 @@ run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.p
 run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend
 
 echo "verify: OK"
+

@@ -20,13 +20,7 @@ if __name__ == "__main__":
 
 import pygame
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_SRC_ROOT = _REPO_ROOT / "src"
-if str(_SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(_SRC_ROOT))
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(1, str(_REPO_ROOT))
-
+import tet4d.engine.api as engine_api
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
@@ -37,6 +31,7 @@ from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_pr
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,
+    cycle_key_profile,
     load_active_profile_bindings,
     set_active_key_profile,
 )
@@ -76,6 +71,11 @@ _GAME_TITLE = _BRANDING["game_title"]
 _SIGNATURE_AUTHOR = _BRANDING["signature_author"]
 _SIGNATURE_MESSAGE = _BRANDING["signature_message"]
 _LAUNCHER_COPY = ui_copy_section("launcher")
+_TUTORIAL_LESSON_BY_MODE = {
+    "2d": "tutorial_2d_core",
+    "3d": "tutorial_3d_core",
+    "4d": "tutorial_4d_core",
+}
 
 
 @dataclass
@@ -115,9 +115,14 @@ def _play_menu_id() -> str | None:
 
 def _menu_subtitle(menu_id: str) -> str:
     if menu_id == _LAUNCHER_ROOT_MENU_ID:
-        return _LAUNCHER_SUBTITLES["launcher_root"]
-    if menu_id == _play_menu_id():
-        return _LAUNCHER_SUBTITLES["launcher_play"]
+        subtitle_key = "launcher_root"
+    elif menu_id == _play_menu_id():
+        subtitle_key = "launcher_play"
+    else:
+        subtitle_key = f"launcher_{menu_id.removeprefix('launcher_')}"
+    subtitle = str(_LAUNCHER_SUBTITLES.get(subtitle_key, "")).strip()
+    if subtitle:
+        return subtitle
     return _LAUNCHER_SUBTITLES["default"]
 
 
@@ -198,7 +203,11 @@ def _draw_main_menu(
         _LAUNCHER_COPY["info_continue_mode_template"].format(
             mode=state.last_mode.upper()
         ),
-        _LAUNCHER_COPY["controls_hint_template"].format(escape_hint=escape_hint),
+        _LAUNCHER_COPY[
+            "controls_hint_template_tiny"
+            if active_key_profile() == "tiny"
+            else "controls_hint_template"
+        ].format(escape_hint=escape_hint),
     ]
     info_y = panel_y + panel_h + 10
     max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
@@ -333,11 +342,28 @@ def _launch_mode(
     session: _LauncherSession,
     fonts_nd,
     fonts_2d,
+    *,
+    tutorial_lesson_id: str | None = None,
 ) -> None:
     launchers = {
-        "2d": lambda: launch_2d(session.screen, fonts_2d, session.display_settings),
-        "3d": lambda: launch_3d(session.screen, fonts_nd, session.display_settings),
-        "4d": lambda: launch_4d(session.screen, fonts_nd, session.display_settings),
+        "2d": lambda: launch_2d(
+            session.screen,
+            fonts_2d,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
+        "3d": lambda: launch_3d(
+            session.screen,
+            fonts_nd,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
+        "4d": lambda: launch_4d(
+            session.screen,
+            fonts_nd,
+            session.display_settings,
+            tutorial_lesson_id=tutorial_lesson_id,
+        ),
     }
     launcher = launchers.get(mode)
     if launcher is None:
@@ -372,6 +398,37 @@ def _menu_action_play_dimension(
     fonts_2d,
 ) -> bool:
     _launch_mode(mode, state, session, fonts_nd, fonts_2d)
+    return not session.running
+
+
+def _menu_action_tutorial_dimension(
+    mode: str,
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+    fonts_2d,
+) -> bool:
+    lesson_id = _TUTORIAL_LESSON_BY_MODE.get(mode)
+    if not lesson_id:
+        state.status = f"Unsupported tutorial mode: {mode}"
+        state.status_error = True
+        return False
+    available_lessons = set(engine_api.tutorial_lesson_ids_runtime())
+    if lesson_id not in available_lessons:
+        state.status = f"Lesson unavailable: {lesson_id}"
+        state.status_error = True
+        return False
+    _launch_mode(
+        mode,
+        state,
+        session,
+        fonts_nd,
+        fonts_2d,
+        tutorial_lesson_id=lesson_id,
+    )
+    if session.running:
+        state.status = f"Tutorial launched: {mode.upper()}"
+        state.status_error = False
     return not session.running
 
 
@@ -519,6 +576,18 @@ def _build_action_registry(
     registry.register(
         "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd)
     )
+    registry.register(
+        "tutorial_2d",
+        lambda: _menu_action_tutorial_dimension("2d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "tutorial_3d",
+        lambda: _menu_action_tutorial_dimension("3d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "tutorial_4d",
+        lambda: _menu_action_tutorial_dimension("4d", state, session, fonts_nd, fonts_2d),
+    )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry
 
@@ -529,8 +598,8 @@ def _handle_launcher_route(
     action_registry: ActionRegistry,
     session: _LauncherSession,
     fonts_nd,
+    fonts_2d,
 ) -> bool:
-    _ = session, fonts_nd
     clean_route_id = route_id.strip().lower()
     action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
     if not action_id:
@@ -559,6 +628,48 @@ def _play_move_sfx() -> bool:
 def _play_confirm_sfx() -> bool:
     play_sfx("menu_confirm")
     return False
+
+
+def _is_profile_prev_key(key: int) -> bool:
+    return key in (
+        pygame.K_LEFTBRACKET,
+        pygame.K_MINUS,
+        pygame.K_PAGEUP,
+    )
+
+
+def _is_profile_next_key(key: int) -> bool:
+    return key in (
+        pygame.K_RIGHTBRACKET,
+        pygame.K_EQUALS,
+        pygame.K_PAGEDOWN,
+    )
+
+
+def _handle_launcher_keydown(
+    menu_id: str,
+    key: int,
+    _stack_depth: int,
+    state: MainMenuState,
+    session: _LauncherSession,
+) -> bool:
+    if menu_id not in _MENU_GRAPH:
+        return False
+    if not (_is_profile_prev_key(key) or _is_profile_next_key(key)):
+        return False
+
+    step = -1 if _is_profile_prev_key(key) else 1
+    ok, msg, profile = cycle_key_profile(step)
+    if not ok:
+        state.status = msg
+        state.status_error = True
+        return True
+
+    _persist_session_status(state, session)
+    state.status = f"Active key profile: {profile}"
+    state.status_error = False
+    play_sfx("menu_move")
+    return True
 
 
 def run() -> None:
@@ -632,6 +743,7 @@ def run() -> None:
             registry,
             session,
             fonts_nd,
+            fonts_2d,
         ),
         handle_missing_action=lambda action_id: _handle_missing_action(
             action_id, state
@@ -640,6 +752,13 @@ def run() -> None:
         on_quit_event=lambda: _menu_action_quit(state, session),
         on_move=_play_move_sfx,
         on_confirm=_play_confirm_sfx,
+        on_keydown=lambda menu_id, key, stack_depth: _handle_launcher_keydown(
+            menu_id,
+            key,
+            stack_depth,
+            state,
+            session,
+        ),
         initial_selected=initial_selected,
     )
     runner.run()

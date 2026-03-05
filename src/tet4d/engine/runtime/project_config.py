@@ -32,6 +32,7 @@ _DEFAULT_IO_PATHS = {
         "score_summary_file_default": "state/analytics/score_summary.json",
         "leaderboard_file_default": "state/analytics/leaderboard.json",
         "topology_profile_export_file_default": "state/topology/selected_profile.json",
+        "tutorial_progress_file_default": "state/tutorial/progress.json",
     },
 }
 
@@ -47,6 +48,39 @@ _DEFAULT_CONSTANTS = {
         "clear_effect_duration_ms_2d": 320.0,
         "clear_effect_duration_ms_3d": 360.0,
         "clear_effect_duration_ms_4d": 380.0,
+    },
+    "tutorial": {
+        "min_visible_layer": 2,
+        "step_transition_delay_ms": 1000,
+        "overlay_target_percent": {
+            "min": 20,
+            "max": 90,
+        },
+        "overlay_target_tolerance_percent": 2,
+        "min_board_dims": {
+            "2d": {
+                "width": 10,
+                "height": 20,
+            },
+            "3d": {
+                "x": 8,
+                "y": 18,
+                "z": 8,
+            },
+            "4d": {
+                "x": 10,
+                "y": 20,
+                "z": 8,
+                "w": 8,
+            },
+        },
+        "action_delay_ms": {
+            "movement": 170,
+            "rotation": 190,
+            "drop": 1000,
+            "soft_drop": 180,
+            "hard_drop": 900,
+        }
     },
     "rendering": {
         "2d": {
@@ -289,6 +323,19 @@ def topology_profile_export_file_default_relative() -> str:
 def topology_profile_export_file_default_path() -> Path:
     rel = topology_profile_export_file_default_relative()
     return _resolve_repo_relative(rel, "state/topology/selected_profile.json")
+
+
+def tutorial_progress_file_default_relative() -> str:
+    return _path_value(
+        "tutorial_progress_file_default",
+        default_relative="state/tutorial/progress.json",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def tutorial_progress_file_default_path() -> Path:
+    rel = tutorial_progress_file_default_relative()
+    return _resolve_repo_relative(rel, "state/tutorial/progress.json")
 
 
 def project_constant_int(

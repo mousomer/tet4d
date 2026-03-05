@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterable, List, Sequence, Tuple
 
 from .pieces2d import get_standard_tetrominoes
+from .pieces_shared import scaled_span
 from ..core.model import Coord
 
 
@@ -339,16 +340,6 @@ def _rect_blocks_nd(size_by_axis: Sequence[int]) -> Tuple[RelCoordND, ...]:
     return _normalize_blocks_nd(coords)
 
 
-def _scaled_span(
-    axis_size: int, ratio: float, min_size: int, max_cap: int | None = None
-) -> int:
-    clamped_axis = max(1, int(axis_size))
-    scaled = max(min_size, int(round(clamped_axis * ratio)))
-    scaled = min(scaled, clamped_axis)
-    if max_cap is not None:
-        scaled = min(scaled, max_cap)
-    return max(1, scaled)
-
 
 def _debug_board_dims(ndim: int, board_dims: Sequence[int] | None) -> tuple[int, ...]:
     if board_dims is None:
@@ -376,21 +367,21 @@ def get_debug_rectangles_nd(
     z_size = dims[2] if ndim >= 3 else 1
     w_size = dims[3] if ndim >= 4 else 1
 
-    long_x = _scaled_span(x_size, 0.65, min_size=4, max_cap=10)
-    thin_y = _scaled_span(y_size, 0.08, min_size=2, max_cap=2)
-    thin_z = _scaled_span(z_size, 0.2, min_size=2, max_cap=2)
-    thin_w = _scaled_span(w_size, 0.25, min_size=2, max_cap=2)
+    long_x = scaled_span(x_size, 0.65, min_size=4, max_cap=10)
+    thin_y = scaled_span(y_size, 0.08, min_size=2, max_cap=2)
+    thin_z = scaled_span(z_size, 0.2, min_size=2, max_cap=2)
+    thin_w = scaled_span(w_size, 0.25, min_size=2, max_cap=2)
 
-    flat_x = _scaled_span(x_size, 0.6, min_size=3, max_cap=9)
-    flat_z = _scaled_span(z_size, 0.65, min_size=3, max_cap=5)
+    flat_x = scaled_span(x_size, 0.6, min_size=3, max_cap=9)
+    flat_z = scaled_span(z_size, 0.65, min_size=3, max_cap=5)
 
-    thick_x = _scaled_span(x_size, 0.5, min_size=3, max_cap=7)
-    thick_y = _scaled_span(y_size, 0.12, min_size=2, max_cap=3)
-    thick_z = _scaled_span(z_size, 0.5, min_size=2, max_cap=4)
+    thick_x = scaled_span(x_size, 0.5, min_size=3, max_cap=7)
+    thick_y = scaled_span(y_size, 0.12, min_size=2, max_cap=3)
+    thick_z = scaled_span(z_size, 0.5, min_size=2, max_cap=4)
 
-    layer_x = _scaled_span(x_size, 0.65, min_size=4, max_cap=10)
-    layer_z = _scaled_span(z_size, 0.65, min_size=3, max_cap=5)
-    layer_w = _scaled_span(w_size, 0.5, min_size=2, max_cap=3)
+    layer_x = scaled_span(x_size, 0.65, min_size=4, max_cap=10)
+    layer_z = scaled_span(z_size, 0.65, min_size=3, max_cap=5)
+    layer_w = scaled_span(w_size, 0.5, min_size=2, max_cap=3)
 
     specs: list[tuple[str, tuple[int, ...], int]] = [
         ("DBG_LONG_1D", _extend_sizes((long_x, 1), ndim), 1),
@@ -691,3 +682,4 @@ class ActivePieceND:
             for block in self.rel_blocks
         )
         return ActivePieceND(shape=self.shape, pos=self.pos, rel_blocks=new_blocks)
+

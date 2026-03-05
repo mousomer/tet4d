@@ -11,8 +11,6 @@ from .control_helper import (
 )
 from .text_render_cache import render_text_cached
 
-_MIN_CONTROLS_HEIGHT_STABLE = 520
-
 
 def _draw_panel(
     surface: pygame.Surface,
@@ -53,30 +51,6 @@ def _join_sections(*sections: Sequence[str]) -> tuple[str, ...]:
             lines.append("")
         lines.extend(section_lines)
     return tuple(lines)
-
-
-def _truncate_lines_to_height(
-    lines: Sequence[str],
-    *,
-    font: pygame.font.Font,
-    available_height: int,
-    line_gap: int = 3,
-) -> tuple[str, ...]:
-    if available_height <= 0:
-        return tuple()
-    row_h = font.get_height() + line_gap
-    if row_h <= 0:
-        return tuple(lines)
-    max_rows = available_height // row_h
-    if max_rows <= 0:
-        return tuple()
-    if len(lines) <= max_rows:
-        return tuple(lines)
-    if max_rows < 2:
-        return tuple()
-    clipped = list(lines[: max_rows - 1])
-    clipped.append("...")
-    return tuple(clipped)
 
 
 def _draw_meter(
@@ -122,42 +96,15 @@ def _draw_meter(
     return y
 
 
-def _plan_data_panel(
-    *,
-    lines: Sequence[str],
-    available_h: int,
-    hint_font: pygame.font.Font,
-) -> tuple[tuple[str, ...], int]:
-    if not lines:
-        return tuple(), 0
-    title_h = hint_font.get_height() + 6
-    min_data_h = title_h + hint_font.get_height() + 8
-    max_data_h = max(0, int(available_h))
-    if max_data_h < min_data_h:
-        return tuple(), 0
-    clipped = _truncate_lines_to_height(
-        lines,
-        font=hint_font,
-        available_height=max(0, max_data_h - 8 - title_h),
-    )
-    if not clipped:
-        clipped = ("...",)
-    total_h = len(clipped) * (hint_font.get_height() + 3) + 10 + title_h
-    return clipped, total_h
-
-
 def _compute_controls_rect(
     *,
     panel_rect: pygame.Rect,
     controls_top: int,
     reserve_bottom: int,
-    min_controls_h: int,
-    reserve_data_h: int,
 ) -> pygame.Rect:
     controls_bottom_limit = panel_rect.bottom - reserve_bottom - 8
-    available_h = max(0, controls_bottom_limit - controls_top - max(0, reserve_data_h))
-    target_h = max(44, int(min_controls_h))
-    controls_h = max(44, min(available_h, target_h))
+    available_h = max(0, controls_bottom_limit - controls_top)
+    controls_h = max(0, int(available_h))
     return pygame.Rect(
         panel_rect.x + 6,
         controls_top,
@@ -166,38 +113,27 @@ def _compute_controls_rect(
     )
 
 
-def _draw_data_panel(
-    surface: pygame.Surface,
-    *,
-    panel_rect: pygame.Rect,
-    controls_rect: pygame.Rect,
-    reserve_bottom: int,
-    fonts,
-    lines: Sequence[str],
-) -> None:
+def _stats_group_rows(lines: Sequence[str]) -> tuple[str, ...]:
+    rows: list[str] = []
     if not lines:
-        return
-    low_h = panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 8)
-    if low_h <= 10:
-        return
-    low_rect = pygame.Rect(
-        panel_rect.x + 8,
-        controls_rect.bottom + 6,
-        panel_rect.width - 16,
-        low_h,
-    )
-    _draw_panel(surface, low_rect, alpha=100, radius=8, color=(8, 12, 26))
-    title = render_text_cached(
-        font=fonts.hint_font,
-        text="Data",
-        color=(198, 208, 236),
-    )
-    surface.blit(title, (low_rect.x + 6, low_rect.y + 4))
-    y = low_rect.y + 6 + title.get_height() + 2
+        return ("\tno runtime stats\t",)
     for line in lines:
-        surf = render_text_cached(font=fonts.hint_font, text=line, color=(176, 188, 222))
-        surface.blit(surf, (low_rect.x + 6, y))
-        y += surf.get_height() + 3
+        text = str(line)
+        if not text.strip():
+            rows.append("\t\t")
+            continue
+        rows.append(f"\t{text}\t")
+    return tuple(rows)
+
+
+def _append_stats_group(
+    *,
+    control_groups: Sequence[ControlGroup],
+    stats_lines: Sequence[str],
+) -> list[ControlGroup]:
+    groups = list(control_groups)
+    groups.append(("Stats", _stats_group_rows(stats_lines)))
+    return groups
 
 
 def draw_unified_game_side_panel(
@@ -236,6 +172,10 @@ def draw_unified_game_side_panel(
             unified_structure=True,
         ),
     )
+    groups = _append_stats_group(
+        control_groups=groups,
+        stats_lines=low_priority_lines,
+    )
     y = _draw_meter(
         surface,
         panel_rect=panel_rect,
@@ -247,38 +187,17 @@ def draw_unified_game_side_panel(
     )
     controls_top = y + 4
     reserve_bottom = 26 if game_over else 0
-    data_panel_min_h = (
-        fonts.hint_font.get_height() * 2 + 16 if low_priority_lines else 0
-    )
     controls_rect = _compute_controls_rect(
         panel_rect=panel_rect,
         controls_top=controls_top,
         reserve_bottom=reserve_bottom,
-        min_controls_h=max(int(min_controls_h), _MIN_CONTROLS_HEIGHT_STABLE),
-        reserve_data_h=data_panel_min_h,
     )
-    remaining_h = max(0, panel_rect.bottom - reserve_bottom - (controls_rect.bottom + 6))
-    data_lines_clipped, data_h = _plan_data_panel(
-        lines=low_priority_lines,
-        available_h=remaining_h,
-        hint_font=fonts.hint_font,
-    )
-    if data_h <= 0:
-        data_lines_clipped = tuple()
     draw_grouped_control_helper(
         surface,
         groups=groups,
         rect=controls_rect,
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
-    )
-    _draw_data_panel(
-        surface,
-        panel_rect=panel_rect,
-        controls_rect=controls_rect,
-        reserve_bottom=reserve_bottom,
-        fonts=fonts,
-        lines=data_lines_clipped,
     )
     if game_over:
         over = render_text_cached(

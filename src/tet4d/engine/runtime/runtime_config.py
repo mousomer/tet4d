@@ -133,6 +133,14 @@ def clear_scoring_board_clear_bonus() -> int:
     return int(_gameplay_tuning()["clear_scoring"]["board_clear_bonus"])
 
 
+def clear_scoring_layer_size_weighting() -> tuple[bool, int]:
+    layer_size_weighting = _gameplay_tuning()["clear_scoring"]["layer_size_weighting"]
+    return (
+        bool(int(layer_size_weighting["enabled"])),
+        int(layer_size_weighting["reference_plane_cells"]),
+    )
+
+
 def playbot_budget_table_for_ndim(ndim: int) -> tuple[int, int, int, int]:
     bucket = _bucket_lookup(_playbot_policy()["budget_ms"], ndim)
     return bucket["fast"], bucket["balanced"], bucket["deep"], bucket["ultra"]

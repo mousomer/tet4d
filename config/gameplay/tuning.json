@@ -41,7 +41,11 @@
       "4": 600,
       "5_plus": 900
     },
-    "board_clear_bonus": 1500
+    "board_clear_bonus": 1500,
+    "layer_size_weighting": {
+      "enabled": 1,
+      "reference_plane_cells": 10
+    }
   },
   "grid_modes": {
     "cycle": ["off", "edge", "full", "helper"],

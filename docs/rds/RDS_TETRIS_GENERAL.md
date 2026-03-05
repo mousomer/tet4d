@@ -48,6 +48,7 @@ Cross-cutting requirements are defined in:
 23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
 24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
+26. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -88,9 +89,14 @@ Cross-cutting requirements are defined in:
 8. Audio controls (master volume, SFX volume, mute) must be available in settings.
 9. Fullscreen/windowed toggle must be supported without layout corruption.
 10. Piece rotations must use a soft visual animation instead of a single-frame snap.
-11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..85%`.
+11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
+14. Tutorial overlay panel must be left-anchored, enlarged for readability, and clearly separate lesson, segment, task, and action hint lines.
+15. Tutorial progression must expose explicit segment order:
+16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
+17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
+18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -178,9 +184,13 @@ Cross-cutting requirements are defined in:
 54. `.github/workflows/release-packaging.yml`
 55. Desktop packaging usage docs are source-controlled:
 56. `docs/RELEASE_INSTALLERS.md`
-57. Shared font model/factory is source-controlled:
-58. `src/tet4d/ui/pygame/render/font_profiles.py`
-59. Per-mode font profile values (2D vs ND) must remain explicit and stable.
+57. Tutorial lesson packs are source-controlled:
+58. `config/tutorial/lessons.json`
+59. Tutorial lesson schema is source-controlled:
+60. `config/schema/tutorial_lessons.schema.json`
+61. Shared font model/factory is source-controlled:
+62. `src/tet4d/ui/pygame/render/font_profiles.py`
+63. Per-mode font profile values (2D vs ND) must remain explicit and stable.
 
 ## 7. Engineering Best Practices
 
@@ -214,7 +224,7 @@ Expected test categories:
 1. Unit tests for board, pieces, and game state transitions.
 2. Replay determinism tests for 2D/3D/4D.
 3. Smoke tests for key routing and system controls per mode.
-4. Scoring matrix tests for 1/2/3/4+ clears across modes.
+4. Scoring matrix tests for 1/2/3/4+ clears across modes, including layer-size weighting (`sqrt(layer_size/reference)`, floor `1.0`) so larger cleared layers award higher base clear points.
 5. Random/debug piece stress tests for spawn validity and non-premature game-over.
 6. Menu/settings/display-mode integration tests (windowed <-> fullscreen).
 7. Rotation-animation state machine tests (start, progress, finish, interruption/retrigger).
@@ -230,7 +240,7 @@ Expected test categories:
 5. Keybindings can be edited in-app and saved/loaded locally by profile.
 6. Random-cell piece sets are selectable and playable in each dimension.
 7. Lower-dimensional piece sets are selectable and playable on higher-dimensional boards.
-8. Scoring behavior is verified by automated tests and matches defined tables.
+8. Scoring behavior is verified by automated tests, matches defined tables, and scales clear rewards by cleared layer size using square-root weighting.
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
 11. Topology presets are selectable in setup menus and persisted in menu settings.
@@ -259,7 +269,7 @@ Completed in current implementation:
 19. menu-config validator helpers were consolidated in `src/tet4d/engine/runtime/menu_config.py`,
 20. keybinding save/load path/profile resolution was deduplicated in `src/tet4d/ui/pygame/keybindings.py`,
 21. test-only playbot wrappers were removed from `src/tet4d/ai/playbot/planner_nd.py` (tests now import `planner_nd_core` directly),
-22. obsolete `menu_gif_guides.py` shim was removed; menu guide rendering now uses `src/tet4d/ui/pygame/menu/menu_control_guides.py` only.
+22. obsolete `menu_gif_guides.py` shim was removed; control visuals now use action-icon rendering via `src/tet4d/ui/pygame/render/control_icons.py`.
 23. Stage-2 simplification follow-up completed:
 24. shared list/string validators are now reused across row/action/scope checks in `src/tet4d/engine/runtime/menu_config.py`,
 25. keybinding profile clone/dimension handling now uses shared helpers/constants in `src/tet4d/ui/pygame/keybindings.py`,

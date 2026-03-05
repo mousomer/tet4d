@@ -2,7 +2,7 @@ import unittest
 import random
 
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND, _score_for_clear
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
@@ -15,16 +15,17 @@ from tet4d.engine.gameplay.pieces_nd import (
     PieceShapeND,
 )
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.core.rules.scoring import score_for_clear
 
 
 class TestGameND(unittest.TestCase):
     def test_score_table(self):
-        self.assertEqual(_score_for_clear(0), 0)
-        self.assertEqual(_score_for_clear(1), 40)
-        self.assertEqual(_score_for_clear(2), 100)
-        self.assertEqual(_score_for_clear(3), 300)
-        self.assertEqual(_score_for_clear(4), 1200)
-        self.assertEqual(_score_for_clear(5), 1600)
+        self.assertEqual(score_for_clear(0), 0)
+        self.assertEqual(score_for_clear(1), 40)
+        self.assertEqual(score_for_clear(2), 100)
+        self.assertEqual(score_for_clear(3), 300)
+        self.assertEqual(score_for_clear(4), 1200)
+        self.assertEqual(score_for_clear(5), 1600)
 
     def test_spawn_piece_matches_config_dimension(self):
         cfg = GameConfigND(dims=(6, 12, 4), gravity_axis=1)

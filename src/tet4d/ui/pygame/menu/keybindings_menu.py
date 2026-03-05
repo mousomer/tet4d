@@ -6,6 +6,7 @@ from typing import Any, Callable
 import pygame
 
 import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 
 BindingRow = Any
 RenderedRow = Any
@@ -93,6 +94,22 @@ def _cycle_profile(state: KeybindingsMenuState, step: int) -> None:
     ok, msg, profile = cycle_key_profile(step)
     state.active_profile = profile
     _set_status(state, ok, msg)
+
+
+def _is_profile_prev_key(key: int) -> bool:
+    return key in (
+        pygame.K_LEFTBRACKET,
+        pygame.K_MINUS,
+        pygame.K_PAGEUP,
+    )
+
+
+def _is_profile_next_key(key: int) -> bool:
+    return key in (
+        pygame.K_RIGHTBRACKET,
+        pygame.K_EQUALS,
+        pygame.K_PAGEDOWN,
+    )
 
 
 def _activate_profile(state: KeybindingsMenuState, profile: str) -> tuple[bool, str]:
@@ -323,7 +340,9 @@ def _action_profile_delete(
 
 
 _MENU_KEY_HANDLERS = {
+    pygame.K_q: _action_exit,
     pygame.K_ESCAPE: _action_exit,
+    pygame.K_BACKSPACE: _action_exit,
     pygame.K_UP: _action_row_up,
     pygame.K_DOWN: _action_row_down,
     pygame.K_RETURN: _action_capture_start,
@@ -337,16 +356,17 @@ _MENU_KEY_HANDLERS = {
     pygame.K_LEFTBRACKET: _action_profile_prev,
     pygame.K_RIGHTBRACKET: _action_profile_next,
     pygame.K_n: _action_profile_new,
-    pygame.K_BACKSPACE: _action_profile_delete,
+    pygame.K_DELETE: _action_profile_delete,
 }
 
 
 def _run_menu_action(
     state: KeybindingsMenuState, key: int, rows: list[BindingRow]
 ) -> bool:
+    nav_key = normalize_menu_navigation_key(key)
     if state.section_mode:
-        return _run_section_mode_action(state, key)
-    return _run_binding_mode_action(state, key, rows)
+        return _run_section_mode_action(state, key, nav_key)
+    return _run_binding_mode_action(state, key, nav_key, rows)
 
 
 def _handle_text_mode_key(state: KeybindingsMenuState, key: int) -> None:
@@ -358,15 +378,17 @@ def _handle_text_mode_key(state: KeybindingsMenuState, key: int) -> None:
         state.text_buffer = state.text_buffer[:-1]
 
 
-def _run_section_mode_action(state: KeybindingsMenuState, key: int) -> bool:
+def _run_section_mode_action(
+    state: KeybindingsMenuState, key: int, nav_key: int
+) -> bool:
     if state.text_mode:
         _handle_text_mode_key(state, key)
         return False
-    return _handle_section_key(state, key)
+    return _handle_section_key(state, key, nav_key)
 
 
 def _run_binding_mode_action(
-    state: KeybindingsMenuState, key: int, rows: list[BindingRow]
+    state: KeybindingsMenuState, key: int, nav_key: int, rows: list[BindingRow]
 ) -> bool:
     if state.capture_mode:
         _clear_reset_confirmation(state)
@@ -376,7 +398,14 @@ def _run_binding_mode_action(
         _handle_text_mode_key(state, key)
         return False
 
-    if key == pygame.K_ESCAPE and state.allow_scope_sections:
+    if _is_profile_prev_key(key):
+        _cycle_profile(state, -1)
+        return False
+    if _is_profile_next_key(key):
+        _cycle_profile(state, 1)
+        return False
+
+    if nav_key == pygame.K_ESCAPE and state.allow_scope_sections:
         state.section_mode = True
         state.capture_mode = False
         _set_status(state, True, "Returned to keybinding sections")
@@ -390,7 +419,9 @@ def _run_binding_mode_action(
     if key != pygame.K_F6:
         _clear_reset_confirmation(state)
 
-    handler = _MENU_KEY_HANDLERS.get(key)
+    handler = _MENU_KEY_HANDLERS.get(nav_key)
+    if handler is None:
+        handler = _MENU_KEY_HANDLERS.get(key)
     if handler is None:
         return False
     return handler(state, rows)
@@ -411,17 +442,21 @@ def _draw_section_menu(
     )
 
 
-def _handle_section_key(state: KeybindingsMenuState, key: int) -> bool:
-    if key == pygame.K_ESCAPE:
+def _handle_section_key(
+    state: KeybindingsMenuState, key: int, nav_key: int
+) -> bool:
+    if key == pygame.K_q:
         return True
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_ESCAPE:
+        return True
+    if nav_key == pygame.K_UP:
         state.selected_section = (state.selected_section - 1) % len(SECTION_MENU)
         return False
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         state.selected_section = (state.selected_section + 1) % len(SECTION_MENU)
         return False
-    if key in (pygame.K_LEFTBRACKET, pygame.K_RIGHTBRACKET):
-        step = -1 if key == pygame.K_LEFTBRACKET else 1
+    if _is_profile_prev_key(key) or _is_profile_next_key(key):
+        step = -1 if _is_profile_prev_key(key) else 1
         _cycle_profile(state, step)
         return False
     if key == pygame.K_n:

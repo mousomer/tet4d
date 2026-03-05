@@ -451,15 +451,6 @@ def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None
             shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1
         )
 
-    for x in range(0, board_rect.width, step * 2):
-        pygame.draw.line(
-            shadow,
-            (170, 190, 220, 16),
-            (x, 0),
-            (min(board_rect.width, x + board_rect.height), board_rect.height),
-            1,
-        )
-
     surface.blit(shadow, board_rect.topleft)
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 
@@ -587,11 +578,36 @@ def _draw_locked_cells(
     width_cells: int,
     height_cells: int,
     *,
+    overlay_transparency: float,
     outline: bool,
 ) -> None:
+    locked_opacity = 1.0 - max(0.0, min(1.0, float(overlay_transparency)))
+    locked_alpha = max(0, min(255, int(round(255.0 * locked_opacity))))
+    if locked_alpha >= 255:
+        for (x, y), cell_id in state.board.cells.items():
+            if 0 <= x < width_cells and 0 <= y < height_cells:
+                _draw_cell(surface, x, y, cell_id, board_offset, outline=outline)
+        return
+    if locked_alpha <= 0:
+        return
+    ox, oy = board_offset
+    overlay = pygame.Surface(
+        (width_cells * CELL_SIZE, height_cells * CELL_SIZE),
+        pygame.SRCALPHA,
+    )
     for (x, y), cell_id in state.board.cells.items():
         if 0 <= x < width_cells and 0 <= y < height_cells:
-            _draw_cell(surface, x, y, cell_id, board_offset, outline=outline)
+            local_rect = pygame.Rect(
+                x * CELL_SIZE + 1,
+                y * CELL_SIZE + 1,
+                CELL_SIZE - 2,
+                CELL_SIZE - 2,
+            )
+            color = color_for_cell(cell_id)
+            pygame.draw.rect(overlay, (*color, locked_alpha), local_rect)
+            if outline:
+                pygame.draw.rect(overlay, (255, 255, 255, locked_alpha), local_rect, 2)
+    surface.blit(overlay, (ox, oy))
 
 
 def _draw_cell_float(
@@ -657,6 +673,7 @@ def draw_board(
     state: GameState,
     board_offset: Tuple[int, int],
     grid_mode: GridMode = GridMode.FULL,
+    overlay_transparency: float = 0.25,
     clear_effect: Optional[ClearEffect2D] = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
 ) -> None:
@@ -674,6 +691,7 @@ def draw_board(
         board_offset,
         w,
         h,
+        overlay_transparency=overlay_transparency,
         outline=(grid_mode == GridMode.EDGE),
     )
     _draw_active_piece_cells(
@@ -716,6 +734,7 @@ def draw_side_panel(
     fonts: GfxFonts,
     grid_mode: GridMode = GridMode.FULL,
     bot_lines: Sequence[str] = (),
+    overlay_transparency: float = 0.25,
 ) -> None:
     draw_side_panel_2d(
         surface,
@@ -727,6 +746,7 @@ def draw_side_panel(
         side_panel_width=SIDE_PANEL,
         text_color=TEXT_COLOR,
         gravity_interval_from_config=gravity_interval_ms_from_config,
+        overlay_transparency=overlay_transparency,
     )
 
 
@@ -741,6 +761,7 @@ def draw_game_frame(
     fonts: GfxFonts,
     grid_mode: GridMode = GridMode.FULL,
     bot_lines: Sequence[str] = (),
+    overlay_transparency: float = 0.25,
     clear_effect: Optional[ClearEffect2D] = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
 ) -> None:
@@ -752,9 +773,16 @@ def draw_game_frame(
         state,
         board_offset,
         grid_mode=grid_mode,
+        overlay_transparency=overlay_transparency,
         clear_effect=clear_effect,
         active_piece_overlay=active_piece_overlay,
     )
     draw_side_panel(
-        screen, state, panel_offset, fonts, grid_mode=grid_mode, bot_lines=bot_lines
+        screen,
+        state,
+        panel_offset,
+        fonts,
+        grid_mode=grid_mode,
+        bot_lines=bot_lines,
+        overlay_transparency=overlay_transparency,
     )

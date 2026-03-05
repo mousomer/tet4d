@@ -184,7 +184,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - `.github/workflows/stability-watch.yml`
 - Contract currently enforces synchronized maintenance of:
   - documentation set (`README`,`docs`,`RDS`,`BACKLOG`,`FEATURE_MAP`),
-  - help guide renderer (`src/tet4d/ui/pygame/menu/menu_control_guides.py`) and help manifest,
+  - help action-icon renderer (`src/tet4d/ui/pygame/render/control_icons.py`) and help manifest,
   - core tests and canonical runtime config files,
   - schema + migration files (`config/schema`,`docs/migrations`),
   - replay manifest contract (`config/project/policy/manifests/replay_manifest.json`+`tests/replay/golden/.gitkeep`),

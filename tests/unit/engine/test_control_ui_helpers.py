@@ -61,21 +61,26 @@ class TestControlGroups(unittest.TestCase):
     def test_dim2_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(2)
         names = [name for name, _ in groups]
-        self.assertEqual(names, ["Main", "Translation", "Rotation"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 4, 1])
+        self.assertEqual(names, ["Main", "Translation", "Rotation", "Camera"])
+        self.assertEqual([len(rows) for _, rows in groups], [4, 4, 1, 2])
         main_rows = groups[0][1]
         translation_rows = groups[1][1]
+        camera_rows = groups[3][1]
         self.assertIn("\tpause menu\t", main_rows[0])
         self.assertIn("\thelp\t", main_rows[1])
         self.assertIn("\trestart\t", main_rows[2])
         self.assertTrue(any("\tmove x\t" in row for row in translation_rows))
         self.assertTrue(any("\thard drop\t" in row for row in translation_rows))
+        self.assertTrue(any("\tgrid mode\t" in row for row in camera_rows))
+        self.assertTrue(
+            any("\tlocked cells alpha [,]\t" in row for row in camera_rows)
+        )
 
     def test_dim3_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(3)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Main", "Translation", "Rotation", "Camera"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 5, 3, 7])
+        self.assertEqual([len(rows) for _, rows in groups], [4, 5, 3, 8])
         main_rows = groups[0][1]
         camera_rows = groups[3][1]
         self.assertTrue(any("\thelp\t" in row for row in main_rows))
@@ -90,7 +95,7 @@ class TestControlGroups(unittest.TestCase):
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Main", "Translation", "Rotation", "Camera"])
-        self.assertEqual([len(rows) for _, rows in groups], [5, 6, 6, 8])
+        self.assertEqual([len(rows) for _, rows in groups], [4, 6, 6, 9])
         main_rows = groups[0][1]
         translation_rows = groups[1][1]
         camera_rows = groups[3][1]
@@ -131,7 +136,8 @@ class TestControlGroups(unittest.TestCase):
         groups_2d = control_groups_for_dimension(2, unified_structure=True)
         by_name = {name: rows for name, rows in groups_2d}
         self.assertIn("Camera", by_name)
-        self.assertTrue(any("not available in 2D" in row for row in by_name["Camera"]))
+        self.assertFalse(any("not available in 2D" in row for row in by_name["Camera"]))
+        self.assertTrue(any("\tgrid mode\t" in row for row in by_name["Camera"]))
 
     def test_planning_keeps_system_group_visible_in_tight_layouts(self) -> None:
         groups = control_groups_for_dimension(4)
@@ -151,7 +157,7 @@ class TestControlGroups(unittest.TestCase):
             names = [name for name, _rows in planned]
             self.assertIn("Main", names)
 
-    def test_planning_keeps_camera_and_system_in_moderate_height(self) -> None:
+    def test_planning_drops_lower_priority_groups_first(self) -> None:
         groups = control_groups_for_dimension(4)
         if not pygame.font.get_init():
             pygame.font.init()
@@ -159,13 +165,14 @@ class TestControlGroups(unittest.TestCase):
         hint_font = pygame.font.Font(None, 18)
         planned, _overflow = _planned_group_rows(
             groups=groups,
-            available_height=420,
+            available_height=320,
             panel_font=panel_font,
             hint_font=hint_font,
         )
         names = [name for name, _rows in planned]
-        self.assertIn("Camera", names)
         self.assertIn("Main", names)
+        self.assertIn("Rotation", names)
+        self.assertNotIn("Camera", names)
 
     def test_planning_keeps_full_rotation_rows_before_camera_trimming(self) -> None:
         groups = control_groups_for_dimension(4)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from dataclasses import dataclass
 from collections.abc import Sequence
 from typing import Mapping
 import re
@@ -22,11 +21,6 @@ from tet4d.ui.pygame.ui_utils import fit_text
 
 ControlGroup = tuple[str, tuple[str, ...]]
 PlannedGroupRows = tuple[str, tuple[str, ...]]
-
-
-@dataclass(frozen=True)
-class _GuideFonts:
-    hint_font: pygame.font.Font
 
 
 def _format_action(bindings: Mapping[str, tuple[int, ...]], action: str) -> str:
@@ -50,6 +44,7 @@ _MIN_ROWS_BY_GROUP: dict[str, int] = {
     "Translation": 2,
     "Rotation": 1,
     "Camera": 3,
+    "Stats": 1,
 }
 
 
@@ -123,6 +118,19 @@ def _helper_capabilities(
     }
 
 
+def _apply_2d_camera_fallback_bindings(
+    action_bindings: dict[str, tuple[int, ...]],
+) -> None:
+    camera_groups = runtime_binding_groups_for_dimension(3)
+    camera_map = camera_groups.get("camera", {})
+    for action in ("overlay_alpha_dec", "overlay_alpha_inc"):
+        if action in action_bindings:
+            continue
+        fallback = tuple(camera_map.get(action, ()))
+        if fallback:
+            action_bindings[action] = fallback
+
+
 def control_groups_for_dimension(
     dimension: int,
     *,
@@ -141,6 +149,8 @@ def control_groups_for_dimension(
     )
     groups = runtime_binding_groups_for_dimension(dim)
     action_bindings = _binding_map_for_groups(groups)
+    if dim == 2:
+        _apply_2d_camera_fallback_bindings(action_bindings)
     control_groups: list[ControlGroup] = []
     for panel in panel_specs:
         title = str(panel.get("title", "")).strip()
@@ -171,17 +181,6 @@ def control_groups_for_dimension(
         rows = by_title.get(title)
         unified.append((title, rows if rows else (unavailable_row,)))
     return unified if unified else control_groups
-
-
-def _draw_overflow_hint(
-    surface: pygame.Surface,
-    *,
-    rect: pygame.Rect,
-    y: int,
-    margin_x: int,
-    hint_font: pygame.font.Font,
-) -> int:
-    return y
 
 
 def _draw_group_box(
@@ -279,37 +278,6 @@ def _draw_group_rows(
         row_y += panel_font.get_height() + 2
 
 
-def _draw_optional_guides(
-    surface: pygame.Surface,
-    *,
-    rect: pygame.Rect,
-    y: int,
-    hint_font: pygame.font.Font,
-) -> int:
-    remaining_h = rect.bottom - y
-    if remaining_h < 88:
-        return y
-    guide_rect = pygame.Rect(
-        rect.x + 2,
-        y,
-        rect.width - 4,
-        min(118, remaining_h - 2),
-    )
-    if guide_rect.height < 88 or guide_rect.width < 140:
-        return y
-    try:
-        from .menu.menu_control_guides import draw_translation_rotation_guides
-    except Exception:  # pragma: no cover - import/runtime optional path
-        return y
-    draw_translation_rotation_guides(
-        surface,
-        _GuideFonts(hint_font=hint_font),
-        rect=guide_rect,
-        title="Move / Rotate",
-    )
-    return guide_rect.bottom + 4
-
-
 def _minimum_rows_for_group(group_name: str, rows: tuple[str, ...]) -> int:
     if not rows:
         return 0
@@ -332,38 +300,24 @@ def _planned_group_rows(
     consumed_h = 0
     overflow = False
     planned: list[PlannedGroupRows] = []
-    for idx, (group_name, rows) in enumerate(groups):
+    for group_name, rows in groups:
         if not rows:
             continue
-        remaining_groups = tuple(groups[idx + 1 :])
-        reserved_h = 0
-        for remaining_name, remaining_rows in remaining_groups:
-            min_rows = _minimum_rows_for_group(remaining_name, remaining_rows)
-            if min_rows <= 0:
-                continue
-            reserved_h += box_base_h + (min_rows * row_h) + gap
-
-        max_rows_fit = (
-            available_height - consumed_h - reserved_h - box_base_h
-        ) // row_h
+        max_rows_fit = (available_height - consumed_h - box_base_h) // row_h
         minimum_rows = _minimum_rows_for_group(group_name, rows)
         if max_rows_fit < minimum_rows:
-            max_rows_without_reserve = (
-                available_height - consumed_h - box_base_h
-            ) // row_h
-            if max_rows_without_reserve <= 0:
+            if max_rows_fit <= 0:
                 overflow = True
-                continue
-            max_rows_fit = max_rows_without_reserve
+                break
             overflow = True
         if max_rows_fit <= 0:
             overflow = True
-            continue
+            break
 
         visible_count = min(len(rows), int(max_rows_fit))
         if visible_count <= 0:
             overflow = True
-            continue
+            break
         if visible_count < len(rows):
             overflow = True
         visible_rows = rows[:visible_count]
@@ -379,7 +333,6 @@ def draw_grouped_control_helper(
     rect: pygame.Rect,
     panel_font: pygame.font.Font,
     hint_font: pygame.font.Font,
-    show_guides: bool = False,
 ) -> int:
     y = rect.y
     margin_x = 10
@@ -392,9 +345,7 @@ def draw_grouped_control_helper(
         hint_font=hint_font,
     )
     if not planned_groups:
-        return _draw_overflow_hint(
-            surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font
-        )
+        return y
 
     for group_name, rows in planned_groups:
         visible_rows = tuple(rows)
@@ -427,17 +378,6 @@ def draw_grouped_control_helper(
 
     if overflow:
         if y >= rect.bottom:
-            return _draw_overflow_hint(
-                surface,
-                rect=rect,
-                y=rect.bottom - (hint_font.get_height() + 6),
-                margin_x=margin_x,
-                hint_font=hint_font,
-            )
-        y = _draw_overflow_hint(
-            surface, rect=rect, y=y, margin_x=margin_x, hint_font=hint_font
-        )
+            return rect.bottom - (hint_font.get_height() + 6)
 
-    if show_guides:
-        y = _draw_optional_guides(surface, rect=rect, y=y, hint_font=hint_font)
     return y

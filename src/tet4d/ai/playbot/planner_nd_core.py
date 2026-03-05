@@ -7,6 +7,7 @@ from itertools import product
 from typing import Iterable
 
 from tet4d.engine import api as engine_api
+from tet4d.shared.nd_coords import coord_from_column
 
 BoardND = engine_api.BoardND
 GameStateND = engine_api.GameStateND
@@ -134,20 +135,6 @@ def iter_lateral_columns(
         return
     for values in product(*(range(size) for size in axis_sizes)):
         yield tuple(values)
-
-
-def coord_from_column(
-    column: tuple[int, ...],
-    lateral_axes: tuple[int, ...],
-    gravity_axis: int,
-    gravity_value: int,
-    ndim: int,
-) -> tuple[int, ...]:
-    coord = [0] * ndim
-    coord[gravity_axis] = gravity_value
-    for idx, axis in enumerate(lateral_axes):
-        coord[axis] = column[idx]
-    return tuple(coord)
 
 
 def top_by_column(
@@ -424,3 +411,6 @@ def iter_settled_candidates(
                 lateral_axes=lateral_axes,
                 column_levels=column_levels,
             )
+
+
+

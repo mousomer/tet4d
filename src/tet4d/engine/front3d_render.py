@@ -21,17 +21,12 @@ from tet4d.ui.pygame.render.font_profiles import (
 )
 from tet4d.ui.pygame.render.front3d_cell_render import (
     draw_cells as draw_cells_helper,
-    draw_sorted_faces as draw_sorted_faces_helper,
-    draw_translucent_faces as draw_translucent_faces_helper,
-    overlay_opacity_scale as overlay_opacity_scale_helper,
-    split_faces_for_cells as split_faces_for_cells_helper,
 )
 from tet4d.ui.pygame.render.front3d_projection_helpers import (
     ProjectionParams3D,
     build_cell_faces as build_cell_faces_helper,
     draw_board_grid as draw_board_grid_helper,
     fit_orthographic_zoom_for_rect,
-    project_point as project_point_helper,
     project_raw_point as project_raw_point_helper,
     transform_raw_point as transform_raw_point_helper,
 )
@@ -168,31 +163,6 @@ def _projection_params(camera: Camera3D) -> ProjectionParams3D:
     )
 
 
-def _transform_raw_point(
-    raw: Cell3 | tuple[float, float, float],
-    dims: Cell3,
-    camera: Camera3D,
-) -> tuple[float, float, float]:
-    return transform_raw_point_helper(raw, dims, _projection_params(camera))
-
-
-def _project_point(
-    trans: tuple[float, float, float],
-    camera: Camera3D,
-    center_px: Point2,
-) -> Point2 | None:
-    return project_point_helper(trans, _projection_params(camera), center_px)
-
-
-def _project_raw_point(
-    raw: tuple[float, float, float],
-    dims: Cell3,
-    camera: Camera3D,
-    center_px: Point2,
-) -> Point2 | None:
-    return project_raw_point_helper(raw, dims, _projection_params(camera), center_px)
-
-
 def _draw_board_grid(
     surface: pygame.Surface,
     dims: Cell3,
@@ -279,45 +249,6 @@ def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[i
     return x_marks, y_marks, z_marks
 
 
-def _split_faces_for_cells(
-    cells: list[VisibleCell3D],
-    camera: Camera3D,
-    center_px: Point2,
-    dims: Cell3,
-) -> tuple[list[Face], list[Face], list[Face]]:
-    return split_faces_for_cells_helper(
-        cells,
-        build_faces_fn=lambda coord, color, active: _build_cell_faces(
-            cell=coord,
-            color=color,
-            camera=camera,
-            center_px=center_px,
-            dims=dims,
-            active=active,
-        ),
-        color_for_cell_fn=color_for_cell_3d,
-    )
-
-
-def _draw_sorted_faces(surface: pygame.Surface, faces: list[Face]) -> None:
-    draw_sorted_faces_helper(surface, faces)
-
-
-def _draw_translucent_faces(
-    surface: pygame.Surface,
-    faces: list[Face],
-    *,
-    fill_alpha: int,
-    outline_alpha: int,
-) -> None:
-    draw_translucent_faces_helper(
-        surface,
-        faces,
-        fill_alpha=fill_alpha,
-        outline_alpha=outline_alpha,
-    )
-
-
 def _draw_cells(
     surface: pygame.Surface,
     *,
@@ -342,10 +273,6 @@ def _draw_cells(
         overlay_transparency=overlay_transparency,
         assist_overlay_opacity_scale=_ASSIST_OVERLAY_OPACITY_SCALE,
     )
-
-
-def _overlay_opacity_scale(overlay_transparency: float) -> float:
-    return overlay_opacity_scale_helper(overlay_transparency)
 
 
 def _draw_clear_animation(
@@ -403,6 +330,7 @@ def _draw_board_3d(
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     dims = state.config.dims
     center_px = (board_rect.centerx, board_rect.centery)
@@ -496,6 +424,9 @@ def _draw_side_panel(
         analysis_lines=analysis_lines,
         game_over=state.game_over,
         min_controls_h=138,
+        meter_label="Locked-cell transparency",
+        meter_value=float(overlay_transparency),
+        meter_hint="Camera control",
     )
 
 
@@ -537,6 +468,7 @@ def draw_game_frame(
     clear_anim: Optional[ClearAnimation3D] = None,
     active_overlay: ActiveOverlay3D | None = None,
     overlay_transparency: float = 0.25,
+    side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
@@ -547,6 +479,9 @@ def draw_game_frame(
         SIDE_PANEL,
         window_h - 2 * MARGIN,
     )
+    panel_rect.move_ip(int(side_panel_offset[0]), int(side_panel_offset[1]))
+    panel_rect.x = max(0, min(window_w - panel_rect.width, panel_rect.x))
+    panel_rect.y = max(0, min(window_h - panel_rect.height, panel_rect.y))
     board_rect = pygame.Rect(
         MARGIN,
         MARGIN,
@@ -583,3 +518,5 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
     board_w = int(max(560, cfg.dims[0] * 68))
     board_h = int(max(620, cfg.dims[1] * 30))
     return board_w + SIDE_PANEL + 3 * MARGIN, board_h + 2 * MARGIN
+
+

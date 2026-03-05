@@ -5,6 +5,8 @@ from itertools import product
 from statistics import pstdev
 from typing import Any
 
+from tet4d.shared.nd_coords import coord_from_column
+
 
 def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
@@ -32,20 +34,6 @@ def _iter_columns(dims: tuple[int, ...], gravity_axis: int):
     for values in product(*ranges):
         yield tuple(values)
 
-
-def _coord_from_column(
-    column: tuple[int, ...],
-    *,
-    lateral_axes: tuple[int, ...],
-    gravity_axis: int,
-    gravity_value: int,
-    ndim: int,
-) -> tuple[int, ...]:
-    coord = [0] * ndim
-    coord[gravity_axis] = gravity_value
-    for idx, axis in enumerate(lateral_axes):
-        coord[axis] = column[idx]
-    return tuple(coord)
 
 
 def _neighbor_coords(coord: tuple[int, ...]) -> tuple[tuple[int, ...], ...]:
@@ -116,7 +104,7 @@ def _height_hole_features(
         heights[column] = height
         seen_block = False
         for g_val in range(top, gravity_size):
-            coord = _coord_from_column(
+            coord = coord_from_column(
                 column,
                 lateral_axes=lateral_axes,
                 gravity_axis=gravity_axis,
@@ -407,3 +395,7 @@ def weighted_score(features: dict[str, float], score_obj: dict[str, Any]) -> flo
         weight = float(weights.get(key, 0.0))
         value += weight * float(feature_value)
     return round(_clamp01(value), 6)
+
+
+
+

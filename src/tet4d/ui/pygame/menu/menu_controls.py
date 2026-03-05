@@ -8,6 +8,7 @@ from typing import Any
 import pygame
 
 from tet4d.engine import api
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from .menu_keybinding_shortcuts import (
     apply_menu_binding_action,
     menu_binding_action_for_key,
@@ -47,7 +48,9 @@ class MenuAction(Enum):
 
 
 _MENU_KEY_ACTIONS = {
+    pygame.K_q: MenuAction.QUIT,
     pygame.K_ESCAPE: MenuAction.QUIT,
+    pygame.K_BACKSPACE: MenuAction.QUIT,
     pygame.K_RETURN: MenuAction.START_GAME,
     pygame.K_KP_ENTER: MenuAction.START_GAME,
     pygame.K_UP: MenuAction.SELECT_UP,
@@ -60,7 +63,7 @@ _MENU_KEY_ACTIONS = {
     pygame.K_LEFTBRACKET: MenuAction.PROFILE_PREV,
     pygame.K_RIGHTBRACKET: MenuAction.PROFILE_NEXT,
     pygame.K_n: MenuAction.PROFILE_NEW,
-    pygame.K_BACKSPACE: MenuAction.PROFILE_DELETE,
+    pygame.K_DELETE: MenuAction.PROFILE_DELETE,
     pygame.K_b: MenuAction.REBIND_TOGGLE,
     pygame.K_TAB: MenuAction.REBIND_TARGET_NEXT,
     pygame.K_BACKQUOTE: MenuAction.REBIND_TARGET_PREV,
@@ -110,6 +113,10 @@ def _action_for_rebind_key(key: int) -> MenuInput:
 
 
 def _action_for_menu_key(key: int) -> MenuAction | None:
+    nav_key = normalize_menu_navigation_key(key)
+    mapped = _MENU_KEY_ACTIONS.get(nav_key)
+    if mapped is not None:
+        return mapped
     mapped = _MENU_KEY_ACTIONS.get(key)
     if mapped is not None:
         return mapped

@@ -757,6 +757,259 @@
           9
         ]
       }
+    },
+    "tiny": {
+      "game": {
+        "d2": {
+          "move_x_neg": [
+            106
+          ],
+          "move_x_pos": [
+            108
+          ],
+          "move_y_neg": [
+            105
+          ],
+          "move_y_pos": [
+            107
+          ],
+          "soft_drop": [
+            1073742049,
+            1073742053
+          ],
+          "hard_drop": [
+            32
+          ],
+          "rotate_xy_pos": [
+            113
+          ],
+          "rotate_xy_neg": [
+            119
+          ]
+        },
+        "d3": {
+          "move_x_neg": [
+            106
+          ],
+          "move_x_pos": [
+            108
+          ],
+          "move_z_neg": [
+            117
+          ],
+          "move_z_pos": [
+            111
+          ],
+          "move_y_neg": [
+            105
+          ],
+          "move_y_pos": [
+            107
+          ],
+          "soft_drop": [
+            1073742049,
+            1073742053
+          ],
+          "hard_drop": [
+            32
+          ],
+          "rotate_xy_pos": [
+            113
+          ],
+          "rotate_xy_neg": [
+            119
+          ],
+          "rotate_xz_pos": [
+            97
+          ],
+          "rotate_xz_neg": [
+            115
+          ],
+          "rotate_yz_pos": [
+            122
+          ],
+          "rotate_yz_neg": [
+            120
+          ]
+        },
+        "d4": {
+          "move_x_neg": [
+            106
+          ],
+          "move_x_pos": [
+            108
+          ],
+          "move_z_neg": [
+            117
+          ],
+          "move_z_pos": [
+            111
+          ],
+          "move_w_neg": [
+            44
+          ],
+          "move_w_pos": [
+            46
+          ],
+          "move_y_neg": [
+            105
+          ],
+          "move_y_pos": [
+            107
+          ],
+          "soft_drop": [
+            1073742049,
+            1073742053
+          ],
+          "hard_drop": [
+            32
+          ],
+          "rotate_xy_pos": [
+            113
+          ],
+          "rotate_xy_neg": [
+            119
+          ],
+          "rotate_xz_pos": [
+            97
+          ],
+          "rotate_xz_neg": [
+            115
+          ],
+          "rotate_yz_pos": [
+            122
+          ],
+          "rotate_yz_neg": [
+            120
+          ],
+          "rotate_xw_pos": [
+            114
+          ],
+          "rotate_xw_neg": [
+            116
+          ],
+          "rotate_yw_pos": [
+            102
+          ],
+          "rotate_yw_neg": [
+            103
+          ],
+          "rotate_zw_pos": [
+            118
+          ],
+          "rotate_zw_neg": [
+            98
+          ]
+        }
+      },
+      "camera": {
+        "d3": {
+          "yaw_fine_neg": [
+            49
+          ],
+          "yaw_neg": [
+            50
+          ],
+          "yaw_pos": [
+            51
+          ],
+          "yaw_fine_pos": [
+            52
+          ],
+          "pitch_neg": [
+            53
+          ],
+          "pitch_pos": [
+            54
+          ],
+          "zoom_out": [
+            55
+          ],
+          "zoom_in": [
+            56
+          ],
+          "cycle_projection": [
+            57
+          ],
+          "reset": [
+            48
+          ],
+          "overlay_alpha_dec": [
+            91
+          ],
+          "overlay_alpha_inc": [
+            93
+          ]
+        },
+        "d4": {
+          "view_xw_neg": [
+            49
+          ],
+          "view_xw_pos": [
+            50
+          ],
+          "view_zw_neg": [
+            51
+          ],
+          "view_zw_pos": [
+            52
+          ],
+          "yaw_neg": [
+            53
+          ],
+          "yaw_pos": [
+            54
+          ],
+          "pitch_neg": [
+            55
+          ],
+          "pitch_pos": [
+            56
+          ],
+          "zoom_out": [
+            57
+          ],
+          "zoom_in": [
+            48
+          ],
+          "yaw_fine_neg": [
+            45
+          ],
+          "yaw_fine_pos": [
+            61
+          ],
+          "cycle_projection": [
+            112
+          ],
+          "reset": [
+            8
+          ],
+          "overlay_alpha_dec": [
+            91
+          ],
+          "overlay_alpha_inc": [
+            93
+          ]
+        }
+      },
+      "system": {
+        "quit": [
+          27
+        ],
+        "menu": [
+          109,
+          1073741891
+        ],
+        "restart": [
+          121
+        ],
+        "toggle_grid": [
+          99
+        ],
+        "help": [
+          9
+        ]
+      }
     }
   },
   "disabled_keys_2d": [

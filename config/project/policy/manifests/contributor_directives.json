@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "manifest_id": "contributor_directives",
+  "directives": [
+    {
+      "id": "plan_with_acceptance",
+      "category": "process",
+      "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
+      "source_docs": ["AGENTS.md", "docs/RDS_AND_CODEX.md"],
+      "enforced_by": ["code_review"]
+    },
+    {
+      "id": "rds_backlog_state_sync",
+      "category": "process",
+      "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
+      "source_docs": ["AGENTS.md", "docs/RDS_AND_CODEX.md"],
+      "enforced_by": ["code_review"]
+    },
+    {
+      "id": "verification_required",
+      "category": "verification",
+      "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
+      "source_docs": ["AGENTS.md", "config/project/policy/manifests/project_policy.json"],
+      "enforced_by": ["scripts/verify.sh", "scripts/ci_check.sh"]
+    },
+    {
+      "id": "loc_delta_preference",
+      "category": "process",
+      "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
+      "source_docs": ["AGENTS.md"],
+      "enforced_by": ["code_review", "tools/governance/check_risk_gates.py"]
+    },
+    {
+      "id": "quiet_test_default",
+      "category": "process",
+      "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
+      "source_docs": ["AGENTS.md"],
+      "enforced_by": ["code_review", "scripts/verify.sh", "tools/governance/check_risk_gates.py"]
+    }
+  ]
+}

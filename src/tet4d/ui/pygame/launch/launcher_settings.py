@@ -9,6 +9,7 @@ from tet4d.ui.pygame.menu.numeric_text_input import (
     append_numeric_text,
     parse_numeric_text,
 )
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.app_runtime import capture_windowed_display_settings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx, set_audio_settings
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
@@ -524,9 +525,10 @@ def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) ->
 
 
 def _adjust_unified_with_arrows(state: _UnifiedSettingsState, key: int) -> bool:
-    if key not in (pygame.K_LEFT, pygame.K_RIGHT):
+    nav_key = normalize_menu_navigation_key(key)
+    if nav_key not in (pygame.K_LEFT, pygame.K_RIGHT):
         return False
-    delta_sign = -1 if key == pygame.K_LEFT else 1
+    delta_sign = -1 if nav_key == pygame.K_LEFT else 1
     row_key = _unified_row_key(state)
     handled = (
         _adjust_unified_audio_row(state, row_key, delta_sign)
@@ -648,16 +650,20 @@ def _handle_advanced_gameplay_event(
         return selected, False
     if event.type != pygame.KEYDOWN:
         return selected, True
-    if event.key == pygame.K_ESCAPE:
+    if event.key == pygame.K_q:
+        state.running = False
         return selected, False
-    if event.key == pygame.K_UP:
+    nav_key = normalize_menu_navigation_key(int(event.key))
+    if nav_key == pygame.K_ESCAPE:
+        return selected, False
+    if nav_key == pygame.K_UP:
         play_sfx("menu_move")
         return (selected - 1) % len(row_keys), True
-    if event.key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         play_sfx("menu_move")
         return (selected + 1) % len(row_keys), True
-    if event.key in (pygame.K_LEFT, pygame.K_RIGHT):
-        delta_sign = -1 if event.key == pygame.K_LEFT else 1
+    if nav_key in (pygame.K_LEFT, pygame.K_RIGHT):
+        delta_sign = -1 if nav_key == pygame.K_LEFT else 1
         _apply_advanced_gameplay_adjustment(
             state,
             row_key=row_keys[selected],
@@ -684,7 +690,9 @@ def _draw_advanced_gameplay_menu(
     _draw_gradient(screen)
     width, _height = screen.get_size()
     title_text = "Advanced gameplay"
-    subtitle_text = "Up/Down select   Left/Right adjust   Enter toggle   Esc back"
+    subtitle_text = (
+        "Up/Down select   Left/Right adjust   Enter toggle   Esc back   Q quit"
+    )
     title = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
     screen.blit(title, ((width - title.get_width()) // 2, 60))
@@ -918,15 +926,16 @@ def _dispatch_unified_key(
     text_mode_screen = _dispatch_unified_text_mode_key(screen, state, key)
     if text_mode_screen is not None:
         return text_mode_screen
-    if key == pygame.K_ESCAPE:
+    nav_key = normalize_menu_navigation_key(key)
+    if _handle_unified_exit_key(state, key=key, nav_key=nav_key):
         state.running = False
         return screen
-    if key == pygame.K_UP:
+    if nav_key == pygame.K_UP:
         state.pending_reset_confirm = False
         state.selected = (state.selected - 1) % len(_UNIFIED_SELECTABLE)
         play_sfx("menu_move")
         return screen
-    if key == pygame.K_DOWN:
+    if nav_key == pygame.K_DOWN:
         state.pending_reset_confirm = False
         state.selected = (state.selected + 1) % len(_UNIFIED_SELECTABLE)
         play_sfx("menu_move")
@@ -945,6 +954,21 @@ def _dispatch_unified_key(
     if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
         return _handle_unified_enter(screen, fonts, state)
     return screen
+
+
+def _handle_unified_exit_key(
+    state: _UnifiedSettingsState,
+    *,
+    key: int,
+    nav_key: int,
+) -> bool:
+    if key == pygame.K_q:
+        state.running = False
+        return True
+    if nav_key == pygame.K_ESCAPE:
+        state.running = False
+        return True
+    return False
 
 
 def _dispatch_unified_text_mode_key(

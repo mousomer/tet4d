@@ -158,6 +158,23 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result_help, "help")
         self.assertEqual(sfx, ["menu_move"])
 
+    def test_escape_quit_binding_routes_to_menu(self) -> None:
+        quit_key = _key_for(SYSTEM_KEYS, "quit")
+        if int(quit_key) != int(pygame.K_ESCAPE):
+            self.skipTest("system quit key is not bound to escape in this profile")
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        sfx: list[str] = []
+
+        result = frontend_nd.route_nd_keydown(
+            quit_key,
+            state,
+            sfx_handler=sfx.append,
+        )
+
+        self.assertEqual(result, "menu")
+        self.assertEqual(sfx, ["menu_confirm"])
+
     def test_bound_gameplay_key_takes_priority_over_view(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd.create_initial_state(cfg)
@@ -251,6 +268,86 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result, "continue")
         self.assertEqual(state.current_piece.pos[0], start_pos[0] + 1)
         self.assertEqual(state.current_piece.pos[3], start_pos[3])
+
+    def test_action_filter_blocks_bound_gameplay_action(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+        blocked = frontend_nd.route_nd_keydown(
+            _key_for(KEYS_3D, "move_x_neg"),
+            state,
+            action_filter=lambda action: action != "move_x_neg",
+        )
+        self.assertEqual(blocked, "continue")
+        self.assertEqual(state.moves, [])
+
+    def test_action_observer_receives_view_action_lookup(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd.create_initial_state(cfg)
+        seen: list[str] = []
+        camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
+        result = frontend_nd.route_nd_keydown(
+            camera_key,
+            state,
+            view_key_handler=lambda _key: True,
+            view_action_lookup=lambda key: (
+                "view_xw_pos" if key == camera_key else None
+            ),
+            action_observer=seen.append,
+        )
+        self.assertEqual(result, "continue")
+        self.assertEqual(seen, ["view_xw_pos"])
+
+    def test_can_apply_nd_action_matches_viewer_relative_move_constraints(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 10, 6),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            rng_seed=1234,
+        )
+        state = frontend_nd.create_initial_state(cfg)
+        while state.try_move_axis(0, -1):
+            pass
+        self.assertFalse(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_z_neg",
+                yaw_deg_for_view_movement=90.0,
+            )
+        )
+        self.assertTrue(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_z_pos",
+                yaw_deg_for_view_movement=90.0,
+            )
+        )
+
+    def test_can_apply_nd_action_respects_axis_overrides(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            rng_seed=1234,
+        )
+        state = frontend_nd.create_initial_state(cfg)
+        while state.try_move_axis(0, 1):
+            pass
+        self.assertFalse(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_w_pos",
+                axis_overrides_by_action={"move_w_pos": (0, 1)},
+            )
+        )
+        self.assertTrue(
+            frontend_nd.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_w_neg",
+                axis_overrides_by_action={"move_w_neg": (0, -1)},
+            )
+        )
 
 
 if __name__ == "__main__":

@@ -259,6 +259,9 @@ src/tet4d/ui/pygame/keybindings.py
 src/tet4d/ui/pygame/launch/launcher_nd_runner.py
 src/tet4d/ui/pygame/launch/launcher_play.py
 src/tet4d/ui/pygame/launch/launcher_settings.py
+src/tet4d/ui/pygame/launch/leaderboard_menu.py
+src/tet4d/ui/pygame/launch/topology_lab_menu.py
+src/tet4d/ui/pygame/launch/tutorials_menu.py
 src/tet4d/ui/pygame/menu/keybindings_menu.py
 src/tet4d/ui/pygame/menu/keybindings_menu_view.py
 src/tet4d/ui/pygame/menu/keybindings_menu_model.py
@@ -270,6 +273,16 @@ src/tet4d/ui/pygame/launch/profile_4d.py
 src/tet4d/ui/pygame/projection3d.py
 src/tet4d/ui/pygame/text_render_cache.py
 src/tet4d/ui/pygame/ui_utils.py
+src/tet4d/ui/pygame/__init__.py
+src/tet4d/ui/pygame/render/control_helper.py
+src/tet4d/ui/pygame/render/control_icons.py
+src/tet4d/ui/pygame/render/gfx_game.py
+src/tet4d/ui/pygame/render/gfx_panel_2d.py
+src/tet4d/ui/pygame/render/grid_mode_render.py
+src/tet4d/ui/pygame/render/text_render_cache.py
+src/tet4d/ui/pygame/runtime_ui/app_runtime.py
+src/tet4d/ui/pygame/runtime_ui/audio.py
+src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py
 EOF
 )
   unexpected_ui_engine_imports=()

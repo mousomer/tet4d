@@ -17,11 +17,9 @@ from ..runtime.score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
-from .scoring_bonus import score_with_clear_bonuses
-from ..core.rules.scoring import score_for_clear
+from .scoring_bonus import plane_cell_count_for_dims, score_with_clear_bonuses
 from ..core.rules.locking import apply_lock_and_score
 from ..core.rules.state_queries import can_piece_exist_2d
-from ..core.step.reducer import apply_action_2d as core_apply_action_2d
 from ..core.step.reducer import step_2d as core_step_2d
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -29,10 +27,6 @@ from .topology import (
     map_piece_cells,
     normalize_topology_mode,
 )
-
-
-def _score_for_clear(cleared_lines: int) -> int:
-    return score_for_clear(cleared_lines)
 
 
 @dataclass
@@ -267,6 +261,10 @@ class GameState:
         raw_points, awarded_points = score_with_clear_bonuses(
             raw_base_points=lock_result.raw_points,
             cleared_count=cleared,
+            plane_cell_count=plane_cell_count_for_dims(
+                (self.config.width, self.config.height),
+                gravity_axis=self.config.gravity_axis,
+            ),
             board_cell_count_after_clear=len(self.board.cells),
             score_multiplier=self.score_multiplier,
         )
@@ -327,9 +325,6 @@ class GameState:
         self.lock_current_piece()
         if not self.game_over:
             self.spawn_new_piece()
-
-    def _apply_action(self, action: Action) -> bool:
-        return core_apply_action_2d(self, action)
 
     # --- Main step function ---
 
