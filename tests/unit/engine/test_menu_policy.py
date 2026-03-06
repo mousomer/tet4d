@@ -237,6 +237,8 @@ class TestMenuPolicy(unittest.TestCase):
         labels = menu_config.settings_option_labels()
         self.assertIn("game_random_mode", labels)
         self.assertGreaterEqual(len(labels["game_random_mode"]), 2)
+        self.assertIn("game_kick_level", labels)
+        self.assertGreaterEqual(len(labels["game_kick_level"]), 2)
 
     def test_unified_settings_manual_numeric_edit_applies_large_values(self) -> None:
         state = SimpleNamespace(

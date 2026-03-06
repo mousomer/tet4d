@@ -93,6 +93,39 @@ def assist_grid_factor(mode_name: str) -> float:
     return float(factors.get(normalized, factors["off"]))
 
 
+def kick_level_names() -> tuple[str, ...]:
+    return tuple(_gameplay_tuning()["rotation_kicks"]["level_order"])
+
+
+def kick_default_level() -> str:
+    return str(_gameplay_tuning()["rotation_kicks"]["default_level"])
+
+
+def normalize_kick_level_name(level_name: object) -> str:
+    if isinstance(level_name, str):
+        normalized = _normalized_name(level_name)
+    else:
+        normalized = ""
+    if normalized in kick_level_names():
+        return normalized
+    return kick_default_level()
+
+
+def assist_kick_factor(level_name: str) -> float:
+    factors = _gameplay_tuning()["assist_scoring"]["kick_factors"]
+    normalized = normalize_kick_level_name(level_name)
+    return float(factors.get(normalized, factors[kick_default_level()]))
+
+
+@lru_cache(maxsize=None)
+def rotation_kick_candidate_offsets(level_name: object) -> tuple[tuple[int, int], ...]:
+    kicks = _gameplay_tuning()["rotation_kicks"]
+    normalized = normalize_kick_level_name(level_name)
+    count = int(kicks["level_candidates"][normalized])
+    offsets = kicks["candidate_offsets"]
+    return tuple(offsets[:count])
+
+
 def assist_speed_formula() -> tuple[float, float, int, int]:
     speed = _gameplay_tuning()["assist_scoring"]["speed"]
     return (

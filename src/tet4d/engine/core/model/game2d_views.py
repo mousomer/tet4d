@@ -12,6 +12,7 @@ class GameConfig2DCoreView:
     topology_mode: str
     wrap_gravity_axis: bool
     piece_set: str
+    kick_level: str
     random_cell_count: int
     challenge_layers: int
     lock_piece_points: int

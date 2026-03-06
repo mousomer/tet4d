@@ -44,6 +44,7 @@ from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
     tutorial_allowed_actions_blocked,
     tutorial_action_delay_ms,
     tutorial_overlay_start_from_setup,
+    tutorial_gated_mouse_orbit_event,
     tutorial_required_action_blocked,
     tutorial_sync,
 )
@@ -583,25 +584,30 @@ class LoopContext3D(PanelDragMixin):
         if wheel != 0:
             if not self._tutorial_action_allowed("mouse_zoom"):
                 return
+            current_zoom = float(self.camera.zoom)
+            step = 3.0 * abs(wheel)
+            next_zoom = (
+                min(140.0, current_zoom + step)
+                if wheel > 0
+                else max(18.0, current_zoom - step)
+            )
+            if next_zoom == current_zoom:
+                return
             self.camera.stop_animation()
             self.camera.auto_fit_once = False
-            step = 3.0 * abs(wheel)
-            if wheel > 0:
-                self.camera.zoom = min(140.0, self.camera.zoom + step)
-            else:
-                self.camera.zoom = max(18.0, self.camera.zoom - step)
+            self.camera.zoom = next_zoom
             self._tutorial_observe_action("mouse_zoom")
             return
 
-        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+        yaw_deg, pitch_deg, changed = tutorial_gated_mouse_orbit_event(
             event,
-            self.mouse_orbit,
+            mouse_orbit=self.mouse_orbit,
             yaw_deg=self.camera.yaw_deg,
             pitch_deg=self.camera.pitch_deg,
+            action_allowed=self._tutorial_action_allowed("mouse_orbit"),
+            apply_mouse_orbit_event=apply_mouse_orbit_event,
         )
         if not changed:
-            return
-        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.camera.stop_animation()
         self.camera.auto_fit_once = False

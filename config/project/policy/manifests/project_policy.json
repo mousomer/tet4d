@@ -8,7 +8,7 @@
   ],
   "contract_validation": "python3 tools/governance/validate_project_contracts.py",
   "secret_scan": "python3 tools/governance/scan_secrets.py",
-  "policy_version": "1.1.2",
+  "policy_version": "1.1.3",
   "policy_id": "workspace-github-sanitation-and-security",
   "policy_source": "workspace/policy-kit",
   "policy_source_path": "${HOME}/workspace/policy-kit",
@@ -37,28 +37,46 @@
         "id": "no_reinventing_wheel",
         "source": "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
         "type": "governance",
-        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "enforced_by": [
+          "scripts/check_policy_compliance.sh"
+        ],
         "owner": "governance"
       },
       {
         "id": "string_sanitation",
         "source": "docs/policies/POLICY_STRING_SANITATION.md",
         "type": "safety",
-        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "enforced_by": [
+          "scripts/check_policy_compliance.sh"
+        ],
         "owner": "governance"
       },
       {
         "id": "no_magic_numbers",
         "source": "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
         "type": "governance",
-        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "enforced_by": [
+          "scripts/check_policy_compliance.sh"
+        ],
         "owner": "governance"
       },
       {
         "id": "formatting",
         "source": "docs/policies/POLICY_FORMATTING.md",
         "type": "governance",
-        "enforced_by": ["scripts/check_policy_compliance.sh"],
+        "enforced_by": [
+          "scripts/check_policy_compliance.sh"
+        ],
+        "owner": "governance"
+      },
+      {
+        "id": "configuration_documentation",
+        "source": "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
+        "type": "governance",
+        "enforced_by": [
+          "scripts/verify.sh",
+          "tools/governance/generate_configuration_reference.py --check"
+        ],
         "owner": "governance"
       }
     ],

@@ -38,7 +38,7 @@ tet4d/
 │   │   ├── lessons.json         # tutorial packs/steps/gating definitions
 │   │   └── plan.json            # canonical tutorial stage order/coverage plan
 │   ├── gameplay/
-│   │   ├── tuning.json          # speed/challenge/scoring/grid tuning
+│   │   ├── tuning.json          # speed/challenge/scoring/grid/rotation-kick tuning
 │   │   └── score_analyzer.json  # score-analyzer feature map and weights
 │   ├── help/
 │   │   ├── topics.json          # help topic registry
@@ -139,6 +139,7 @@ tet4d/
     ├── CHANGELOG.md             # consolidated change history notes
     ├── FEATURE_MAP.md          # user-facing shipped feature map
     ├── PROJECT_STRUCTURE.md     # this file
+    ????????? USER_SETTINGS_REFERENCE.md  # generated compact view of user-tunable settings
     ├── RELEASE_CHECKLIST.md     # pre-release required verification list
     ├── RELEASE_INSTALLERS.md    # local/CI desktop packaging guide
     ├── RDS_AND_CODEX.md         # RDS index + Codex contributor instructions
@@ -220,8 +221,20 @@ tet4d/
     and `scripts/check_architecture_metric_budgets.sh` enforces configurable
     tech-debt gate modes (active default: `non_regression_baseline`) through
     `config/project/policy/manifests/tech_debt_budgets.json`.
-47. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
+47. Canonical piece-local transform math lives in
+    `src/tet4d/engine/core/piece_transform.py` and is reused by gameplay,
+    AI planning, tutorial setup, and rotation animation.
+48. Canonical rotation-kick candidate generation and first-fit resolution live in
+    `src/tet4d/engine/core/rotation_kicks.py` and are reused by gameplay via
+    topology-aware legality checks.
+49. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
     the pre-push local CI gate.
+50. `docs/CONFIGURATION_REFERENCE.md` is the generated human-readable index of
+    source-controlled config assets under `config/` (excluding schemas).
+51. `docs/USER_SETTINGS_REFERENCE.md` is the generated compact view of
+    persisted user-facing settings defaults and built-in keybinding profiles.
+52. `tools/governance/generate_configuration_reference.py` regenerates and
+    verifies both generated configuration docs during local verification and CI.
 
 ## Placement rubric
 
@@ -242,6 +255,8 @@ tet4d/
 1. Project structure and documentation:
    - `docs/PROJECT_STRUCTURE.md`
    - `docs/FEATURE_MAP.md`
+   - `docs/CONFIGURATION_REFERENCE.md`
+   - `docs/USER_SETTINGS_REFERENCE.md`
    - `docs/GUIDELINES_RESEARCH.md`
    - `docs/RELEASE_INSTALLERS.md`
 2. Usage README:

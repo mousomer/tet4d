@@ -25,12 +25,21 @@ def _record(path: Path, *, score: int, lines: int, dimension: int = 2) -> None:
         grid_mode="full",
         random_mode="fixed_seed",
         topology_mode="bounded",
+        kick_level="off",
         exploration_mode=False,
     )
 
 
-def test_leaderboard_records_and_sorts_scores(tmp_path) -> None:
-    path = tmp_path / "leaderboard.json"
+def _leaderboard_path(name: str) -> Path:
+    path = Path.cwd() / 'state' / 'analytics' / 'test_outputs' / f'{name}.json'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        path.unlink()
+    return path
+
+
+def test_leaderboard_records_and_sorts_scores() -> None:
+    path = _leaderboard_path('leaderboard_sort')
     _record(path, score=100, lines=5)
     _record(path, score=220, lines=2)
     _record(path, score=160, lines=8)
@@ -41,8 +50,8 @@ def test_leaderboard_records_and_sorts_scores(tmp_path) -> None:
     assert str(entries[0]["player_name"]) == "Tester"
 
 
-def test_leaderboard_clamps_invalid_values(tmp_path) -> None:
-    path = tmp_path / "leaderboard.json"
+def test_leaderboard_clamps_invalid_values() -> None:
+    path = _leaderboard_path('leaderboard_clamps')
     record_leaderboard_entry(
         path=path,
         dimension=9,
@@ -57,6 +66,7 @@ def test_leaderboard_clamps_invalid_values(tmp_path) -> None:
         grid_mode="full",
         random_mode="fixed_seed",
         topology_mode="bounded",
+        kick_level="light",
         exploration_mode=True,
     )
     entry = leaderboard_top_entries(path=path, limit=1)[0]
@@ -67,12 +77,13 @@ def test_leaderboard_clamps_invalid_values(tmp_path) -> None:
     assert int(entry["end_speed_level"]) == 10
     assert float(entry["duration_seconds"]) == 0.0
     assert str(entry["outcome"]) == "session_end"
+    assert str(entry["kick_level"]) == "light"
     assert bool(entry["exploration_mode"]) is True
     assert str(entry["player_name"]) == "Player"
 
 
-def test_leaderboard_keeps_restart_outcome(tmp_path) -> None:
-    path = tmp_path / "leaderboard.json"
+def test_leaderboard_keeps_restart_outcome() -> None:
+    path = _leaderboard_path('leaderboard_restart')
     record_leaderboard_entry(
         path=path,
         dimension=3,
@@ -87,15 +98,17 @@ def test_leaderboard_keeps_restart_outcome(tmp_path) -> None:
         grid_mode="full",
         random_mode="fixed_seed",
         topology_mode="bounded",
+        kick_level="standard",
         exploration_mode=False,
     )
     entry = leaderboard_top_entries(path=path, limit=1)[0]
     assert str(entry["outcome"]) == "restart"
+    assert str(entry["kick_level"]) == "standard"
     assert str(entry["player_name"]) == "Alpha"
 
 
-def test_leaderboard_entry_would_enter_reports_rank(tmp_path) -> None:
-    path = tmp_path / "leaderboard.json"
+def test_leaderboard_entry_would_enter_reports_rank() -> None:
+    path = _leaderboard_path('leaderboard_rank')
     _record(path, score=200, lines=3)
     _record(path, score=120, lines=4)
 
@@ -112,6 +125,7 @@ def test_leaderboard_entry_would_enter_reports_rank(tmp_path) -> None:
         grid_mode="full",
         random_mode="fixed_seed",
         topology_mode="bounded",
+        kick_level="off",
         exploration_mode=False,
     )
 
@@ -119,12 +133,10 @@ def test_leaderboard_entry_would_enter_reports_rank(tmp_path) -> None:
     assert rank == 2
 
 
-def test_leaderboard_payload_falls_back_on_invalid_json(tmp_path) -> None:
-    path = tmp_path / "leaderboard.json"
-    path.write_text("{invalid", encoding="utf-8")
-
+def test_leaderboard_payload_falls_back_on_invalid_json() -> None:
+    path = _leaderboard_path('leaderboard_invalid_json')
+    path.write_text('{invalid', encoding='utf-8')
     payload = leaderboard_payload(path=path)
-
     assert int(payload["schema_version"]) >= 1
     assert isinstance(payload["updated_at_utc"], str)
     assert payload["entries"] == []

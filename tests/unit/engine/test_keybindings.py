@@ -507,15 +507,18 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn("lines_per_level", settings)
         self.assertIn("random_mode_index", settings)
         self.assertIn("topology_advanced", settings)
+        self.assertIn("kick_level_index", settings)
         self.assertIn(settings["auto_speedup_enabled"], (0, 1))
         self.assertIn(settings["random_mode_index"], (0, 1))
         self.assertIn(settings["topology_advanced"], (0, 1))
+        self.assertGreaterEqual(settings["kick_level_index"], 0)
         self.assertGreaterEqual(settings["lines_per_level"], 1)
 
     def test_save_shared_gameplay_settings_updates_all_modes(self) -> None:
         ok, msg = menu_settings_state.save_shared_gameplay_settings(
             random_mode_index=1,
             topology_advanced=1,
+            kick_level_index=2,
             auto_speedup_enabled=0,
             lines_per_level=17,
         )
@@ -525,6 +528,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             mode_settings = payload["settings"][mode_key]
             self.assertEqual(mode_settings["random_mode_index"], 1)
             self.assertEqual(mode_settings["topology_advanced"], 1)
+            self.assertEqual(mode_settings["kick_level_index"], 2)
             self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
             self.assertEqual(mode_settings["lines_per_level"], 17)
 

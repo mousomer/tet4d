@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 
 from tet4d.engine.gameplay.pieces_shared import scaled_span
+
+from ..core.piece_transform import normalize_blocks_2d, rotate_blocks_2d
+from ..core.piece_transform import rotate_point_2d  # noqa: F401
 
 # Simple 2D relative coordinate
 RelCoord2D = Tuple[int, int]
@@ -25,15 +28,15 @@ DEFAULT_RANDOM_BAG_SIZE_2D = 7
 @dataclass(frozen=True)
 class PieceShape2D:
     name: str
-    blocks: List[RelCoord2D]  # relative to pivot at (0,0)
+    blocks: List[RelCoord2D]  # local occupied-cell offsets from the piece origin
     color_id: int  # just an int; front-end will map to colors
 
 
 def get_standard_tetrominoes() -> List[PieceShape2D]:
     """
-    Classic 7 tetrominoes. Coordinates are relative to pivot at (0,0).
-    We'll allow some negative relative coords; the game logic allows
-    pieces to exist partly above the top of the board.
+    Classic 7 tetrominoes using local occupied-cell offsets.
+    We'll allow some negative relative coords; the game logic allows pieces
+    to exist partly above the top of the board.
     """
     return [
         PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], 1),
@@ -60,20 +63,6 @@ def piece_set_2d_label(piece_set: str) -> str:
     if piece_set == PIECE_SET_2D_DEBUG:
         return "Debug Rectangles"
     return "Classic Tetrominoes"
-
-
-def _normalize_offsets(blocks: Iterable[RelCoord2D]) -> Tuple[RelCoord2D, ...]:
-    points = list(blocks)
-    if not points:
-        raise ValueError("piece must contain at least one block")
-    min_x = min(p[0] for p in points)
-    max_x = max(p[0] for p in points)
-    min_y = min(p[1] for p in points)
-    max_y = max(p[1] for p in points)
-    center_x = (min_x + max_x) // 2
-    center_y = (min_y + max_y) // 2
-    normalized = sorted((x - center_x, y - center_y) for x, y in points)
-    return tuple(normalized)
 
 
 def _neighbors_2d(
@@ -109,7 +98,7 @@ def _random_connected_blocks_2d(
         while len(cells) < cell_count:
             cells.add((x, 0))
             x += 1
-    return _normalize_offsets(cells)
+    return normalize_blocks_2d(cells)
 
 
 def get_random_pieces_2d(
@@ -144,9 +133,8 @@ def get_random_pieces_2d(
 
 def _rect_blocks_2d(width: int, height: int) -> list[RelCoord2D]:
     cells = [(x, y) for y in range(height) for x in range(width)]
-    normalized = _normalize_offsets(cells)
+    normalized = normalize_blocks_2d(cells)
     return list(normalized)
-
 
 
 def get_debug_rectangles_2d(
@@ -194,30 +182,14 @@ def get_piece_bag_2d(
     )
 
 
-def rotate_point_2d(x: int, y: int, steps_cw: int) -> RelCoord2D:
-    """
-    Rotate (x, y) around origin by 90° * steps_cw clockwise.
-    steps_cw can be any integer; we mod 4.
-    """
-    steps = steps_cw % 4
-    if steps == 0:
-        return x, y
-    elif steps == 1:  # 90° CW: (x, y) -> (y, -x)
-        return y, -x
-    elif steps == 2:  # 180°
-        return -x, -y
-    else:  # 270° CW == 90° CCW
-        return -y, x
-
-
 @dataclass
 class ActivePiece2D:
     """
-    A falling tetromino in 2D. Position is the pivot's location on the board.
+    A falling tetromino in 2D. Position is the piece origin on the board.
     """
 
     shape: PieceShape2D
-    pos: Tuple[int, int]  # (x, y) of pivot on board
+    pos: Tuple[int, int]  # (x, y) of the piece origin on board
     rotation: int = 0  # 0,1,2,3 -> 0°,90°,180°,270° CW
 
     def cells(self) -> List[Tuple[int, int]]:
@@ -226,8 +198,7 @@ class ActivePiece2D:
         """
         px, py = self.pos
         result: List[Tuple[int, int]] = []
-        for bx, by in self.shape.blocks:
-            rx, ry = rotate_point_2d(bx, by, self.rotation)
+        for rx, ry in rotate_blocks_2d(self.shape.blocks, self.rotation):
             result.append((px + rx, py + ry))
         return result
 
@@ -238,4 +209,3 @@ class ActivePiece2D:
 
     def rotated(self, delta_steps: int) -> "ActivePiece2D":
         return ActivePiece2D(self.shape, self.pos, (self.rotation + delta_steps) % 4)
-

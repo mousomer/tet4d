@@ -45,7 +45,7 @@ def _sig_nd(state: api.GameStateND) -> tuple[object, ...]:
 
 
 def test_replay_2d_record_and_payload_roundtrip() -> None:
-    cfg = api.GameConfig(width=8, height=16, speed_level=2)
+    cfg = api.GameConfig(width=8, height=16, speed_level=2, kick_level="light")
     actions = (
         api.Action.MOVE_LEFT,
         api.Action.ROTATE_CW,
@@ -59,6 +59,7 @@ def test_replay_2d_record_and_payload_roundtrip() -> None:
 
     assert restored.seed == 55
     assert restored.config.width == cfg.width
+    assert restored.config.kick_level == cfg.kick_level
     assert tuple(event.action for event in restored.events) == tuple(
         a.name for a in actions
     )
@@ -85,12 +86,15 @@ def test_replay_2d_playback_matches_direct_api_execution() -> None:
 
 
 def test_replay_nd_tick_playback_matches_direct_api_execution() -> None:
-    cfg = api.GameConfigND(dims=(6, 14, 4), gravity_axis=1, speed_level=1)
+    cfg = api.GameConfigND(
+        dims=(6, 14, 4), gravity_axis=1, speed_level=1, kick_level="standard"
+    )
     script = record_replay_nd_ticks(config=cfg, seed=202, ticks=6)
 
     payload = script.to_dict()
     restored = ReplayTickScriptND.from_dict(payload)
     replayed = play_replay_nd_ticks(restored)
+    assert restored.config.kick_level == cfg.kick_level
 
     direct = api.new_game_state_nd(cfg, seed=202)
     for _ in range(6):

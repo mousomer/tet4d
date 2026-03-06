@@ -32,6 +32,38 @@ def tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | Non
     return float(max(0, min(100, int(raw_percent)))) / 100.0
 
 
+def tutorial_gated_mouse_orbit_event(
+    event: pygame.event.Event,
+    *,
+    mouse_orbit,
+    yaw_deg: float,
+    pitch_deg: float,
+    action_allowed: bool,
+    apply_mouse_orbit_event,
+) -> tuple[float, float, bool]:
+    is_orbit_event = (
+        (event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", None) == 3)
+        or (event.type == pygame.MOUSEBUTTONUP and getattr(event, "button", None) == 3)
+        or event.type == pygame.MOUSEMOTION
+    )
+    if not is_orbit_event:
+        return yaw_deg, pitch_deg, False
+    if not action_allowed:
+        mouse_orbit.reset()
+        return yaw_deg, pitch_deg, False
+    next_yaw, next_pitch, changed = apply_mouse_orbit_event(
+        event,
+        mouse_orbit,
+        yaw_deg=yaw_deg,
+        pitch_deg=pitch_deg,
+    )
+    if not changed:
+        return yaw_deg, pitch_deg, False
+    if next_yaw == yaw_deg and next_pitch == pitch_deg:
+        return yaw_deg, pitch_deg, False
+    return next_yaw, next_pitch, True
+
+
 def running_tutorial_session(loop, *, tutorial_is_running):
     session = loop.tutorial_session
     if session is None or not tutorial_is_running(session):
@@ -164,6 +196,7 @@ def refresh_score_multiplier_state(
         bot_mode=loop.bot.mode,
         grid_mode=loop.grid_mode,
         speed_level=loop.cfg.speed_level,
+        kick_level=loop.cfg.kick_level,
     )
     mode_name = loop.bot.mode.value
     loop.state.analysis_actor_mode = "human" if loop.bot.mode == off_mode else mode_name

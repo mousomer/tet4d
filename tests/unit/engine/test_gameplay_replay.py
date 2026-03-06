@@ -447,7 +447,7 @@ class TestGameplayReplay(unittest.TestCase):
                 ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
                 color_id=8,
             ),
-            pos=(3, 2, 3, 2),
+            pos=(2, 2, 3, 1),
         )
 
         move_z_neg = self._key_for(KEYS_4D, "move_z_neg")
@@ -459,13 +459,13 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(
             frontend_nd.handle_game_keydown(_keydown(move_z_neg), state), "continue"
         )
-        self.assertEqual(state.current_piece.pos, (3, 2, 2, 2))
+        self.assertEqual(state.current_piece.pos, (2, 2, 2, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
         self.assertEqual(
             frontend_nd.handle_game_keydown(_keydown(move_w_pos), state), "continue"
         )
-        self.assertEqual(state.current_piece.pos, (3, 2, 2, 3))
+        self.assertEqual(state.current_piece.pos, (2, 2, 2, 2))
 
         self.assertEqual(
             frontend_nd.handle_game_keydown(_keydown(rotate_xw), state), "continue"

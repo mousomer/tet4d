@@ -24,12 +24,20 @@
     },
     "last_mode": {
       "type": "string",
-      "enum": ["2d", "3d", "4d"]
+      "enum": [
+        "2d",
+        "3d",
+        "4d"
+      ]
     },
     "audio": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["master_volume", "sfx_volume", "mute"],
+      "required": [
+        "master_volume",
+        "sfx_volume",
+        "mute"
+      ],
       "properties": {
         "master_volume": {
           "type": "number",
@@ -49,7 +57,11 @@
     "display": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["fullscreen", "windowed_size", "overlay_transparency"],
+      "required": [
+        "fullscreen",
+        "windowed_size",
+        "overlay_transparency"
+      ],
       "properties": {
         "fullscreen": {
           "type": "boolean"
@@ -59,8 +71,14 @@
           "minItems": 2,
           "maxItems": 2,
           "items": [
-            { "type": "integer", "minimum": 320 },
-            { "type": "integer", "minimum": 240 }
+            {
+              "type": "integer",
+              "minimum": 320
+            },
+            {
+              "type": "integer",
+              "minimum": 240
+            }
           ]
         },
         "overlay_transparency": {
@@ -73,7 +91,9 @@
     "analytics": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["score_logging_enabled"],
+      "required": [
+        "score_logging_enabled"
+      ],
       "properties": {
         "score_logging_enabled": {
           "type": "boolean"
@@ -83,11 +103,21 @@
     "settings": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["2d", "3d", "4d"],
+      "required": [
+        "2d",
+        "3d",
+        "4d"
+      ],
       "properties": {
-        "2d": { "$ref": "#/$defs/settings2d" },
-        "3d": { "$ref": "#/$defs/settings3d" },
-        "4d": { "$ref": "#/$defs/settings4d" }
+        "2d": {
+          "$ref": "#/$defs/settings2d"
+        },
+        "3d": {
+          "$ref": "#/$defs/settings3d"
+        },
+        "4d": {
+          "$ref": "#/$defs/settings4d"
+        }
       }
     }
   },
@@ -102,17 +132,35 @@
         "bot_budget_ms"
       ],
       "properties": {
-        "bot_mode_index": { "type": "integer", "minimum": 0 },
-        "bot_speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
-        "bot_algorithm_index": { "type": "integer", "minimum": 0 },
-        "bot_profile_index": { "type": "integer", "minimum": 0 },
-        "bot_budget_ms": { "type": "integer", "minimum": 1 }
+        "bot_mode_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bot_speed_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "bot_algorithm_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bot_profile_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bot_budget_ms": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "settings2d": {
       "type": "object",
       "allOf": [
-        { "$ref": "#/$defs/sharedBot" },
+        {
+          "$ref": "#/$defs/sharedBot"
+        },
         {
           "required": [
             "width",
@@ -124,21 +172,65 @@
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
+            "kick_level_index",
             "challenge_layers",
             "exploration_mode"
           ],
           "properties": {
-            "width": { "type": "integer", "minimum": 4 },
-            "height": { "type": "integer", "minimum": 8 },
-            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
-            "piece_set_index": { "type": "integer", "minimum": 0 },
-            "random_mode_index": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "game_seed": { "type": "integer", "minimum": 0, "maximum": 999999999 },
-            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
-            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "topology_profile_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 },
-            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
+            "width": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "speed_level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "piece_set_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "random_mode_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "game_seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            },
+            "topology_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "topology_advanced": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "topology_profile_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "challenge_layers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "exploration_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "kick_level_index": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       ],
@@ -147,7 +239,9 @@
     "settings3d": {
       "type": "object",
       "allOf": [
-        { "$ref": "#/$defs/sharedBot" },
+        {
+          "$ref": "#/$defs/sharedBot"
+        },
         {
           "required": [
             "width",
@@ -160,22 +254,69 @@
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
+            "kick_level_index",
             "challenge_layers",
             "exploration_mode"
           ],
           "properties": {
-            "width": { "type": "integer", "minimum": 4 },
-            "height": { "type": "integer", "minimum": 8 },
-            "depth": { "type": "integer", "minimum": 2 },
-            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
-            "piece_set_index": { "type": "integer", "minimum": 0 },
-            "random_mode_index": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "game_seed": { "type": "integer", "minimum": 0, "maximum": 999999999 },
-            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
-            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "topology_profile_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 },
-            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
+            "width": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "speed_level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "piece_set_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "random_mode_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "game_seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            },
+            "topology_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "topology_advanced": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "topology_profile_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "challenge_layers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "exploration_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "kick_level_index": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       ],
@@ -184,7 +325,9 @@
     "settings4d": {
       "type": "object",
       "allOf": [
-        { "$ref": "#/$defs/sharedBot" },
+        {
+          "$ref": "#/$defs/sharedBot"
+        },
         {
           "required": [
             "width",
@@ -198,23 +341,73 @@
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
+            "kick_level_index",
             "challenge_layers",
             "exploration_mode"
           ],
           "properties": {
-            "width": { "type": "integer", "minimum": 4 },
-            "height": { "type": "integer", "minimum": 8 },
-            "depth": { "type": "integer", "minimum": 2 },
-            "fourth": { "type": "integer", "minimum": 1 },
-            "speed_level": { "type": "integer", "minimum": 1, "maximum": 10 },
-            "piece_set_index": { "type": "integer", "minimum": 0 },
-            "random_mode_index": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "game_seed": { "type": "integer", "minimum": 0, "maximum": 999999999 },
-            "topology_mode": { "type": "integer", "minimum": 0, "maximum": 2 },
-            "topology_advanced": { "type": "integer", "minimum": 0, "maximum": 1 },
-            "topology_profile_index": { "type": "integer", "minimum": 0 },
-            "challenge_layers": { "type": "integer", "minimum": 0 },
-            "exploration_mode": { "type": "integer", "minimum": 0, "maximum": 1 }
+            "width": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "fourth": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "speed_level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "piece_set_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "random_mode_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "game_seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            },
+            "topology_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "topology_advanced": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "topology_profile_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "challenge_layers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "exploration_mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "kick_level_index": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       ],

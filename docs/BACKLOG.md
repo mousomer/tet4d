@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-05  
+Updated: 2026-03-06  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 ## 1. Priority Verification Rules
@@ -391,6 +391,52 @@ Acceptance:
 3. Do not add cinematic tutorial sequences; keep interactive and fast.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-05): center-of-piece rotation semantic swap.
+
+- Switched canonical block rotation semantics in `src/tet4d/engine/core/piece_transform.py` from origin-style pivot turns to active-bounding-box center rotation for occupied cells.
+- Odd active-plane spans rotate around the center cell; even spans rotate around the between-cells axis/plane with deterministic local re-anchoring.
+- Rewired remaining gameplay state holders to use block-rotation helpers instead of pointwise pivot-style math:
+  - `src/tet4d/engine/gameplay/pieces2d.py`
+  - `src/tet4d/engine/gameplay/pieces_nd.py`
+- Updated transform, piece, and RDS coverage to describe the new local occupied-cell semantics and even-span rotation behavior.
+
+Current sub-batch (2026-03-06): topology-aware kick-system implementation.
+
+- Implemented canonical rotation-kick candidate generation and first-fit resolution in `src/tet4d/engine/core/rotation_kicks.py`.
+- Rewired 2D/ND gameplay rotation to consume the shared resolver while keeping topology-aware legality checks authoritative for acceptance.
+- Added shared `kick_level` runtime/config support:
+  - persisted in shared advanced gameplay settings
+  - exposed in launcher advanced gameplay menu
+  - folded into assist score multiplier
+  - serialized in replay and leaderboard metadata while leaving leaderboard ordering unchanged
+- Added topology-aware regression coverage for bounded, wrap, and invert rotation acceptance paths in 2D/4D plus replay, leaderboard, settings, and assist-scoring coverage.
+- Synced help/RDS/project-structure/current-state docs to the implemented kick system.
+- Stabilized the playbot benchmark gate after the kick batch by:
+  - applying deadline-safety margin during ND candidate enumeration
+  - warming benchmark runs and disabling cyclic GC during timed samples
+  - switching benchmark p95 to nearest-rank percentile for 40-sample stability
+- Fixed GitHub scheduled stability-watch bootstrap drift by switching `.github/workflows/stability-watch.yml` to editable install (`pip install -e .[dev]`) for both the dry-run matrix and policy-analysis jobs so the `src/` layout imports resolve consistently with `ci.yml` and local `verify.sh`.
+
+Current sub-batch (2026-03-05): canonical piece-transform extraction (no behavior change).
+
+- Added pure canonical piece-local transform owner:
+  - `src/tet4d/engine/core/piece_transform.py`
+- Moved current local rotation, normalization, block-bounds, canonicalization,
+  and ND orientation-enumeration math into engine core without changing
+  current integer/floor-centered semantics.
+- Rewired gameplay, AI, tutorial setup, rotation animation, and `engine.api`
+  wrappers to consume the shared core owner instead of duplicating transform math:
+  - `src/tet4d/engine/gameplay/pieces2d.py`
+  - `src/tet4d/engine/gameplay/pieces_nd.py`
+  - `src/tet4d/engine/gameplay/rotation_anim.py`
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+  - `src/tet4d/ai/playbot/planner_2d.py`
+  - `src/tet4d/ai/playbot/planner_nd_core.py`
+  - `src/tet4d/ai/playbot/controller.py`
+  - `src/tet4d/engine/api.py`
+- Added transform-equivalence regression coverage:
+  - `tests/unit/engine/test_piece_transform.py`
 
 Current sub-batch (2026-03-05): menu navigation key policy split (`Esc` vs `Q`).
 
@@ -1376,6 +1422,7 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
   - `mouse_zoom` now completes only on `mouse_zoom` event.
 - Removed `event_count_required` from mouse stages (default single successful mouse action).
 - Tightened mouse-stage input gating to remove keyboard camera actions from allowed lists.
+- Strengthened tutorial pointer gating in 3D/4D loops so blocked RMB drags cannot arm stale orbit state and mouse-wheel completion requires a real zoom delta.
 - Updated content/runtime tests to enforce:
   - no keyboard fallback completion
   - mouse-stage progression requires mouse events
@@ -1387,6 +1434,45 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
   - `pytest -q tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
   - `ruff check config/tutorial/lessons.json tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
 
+Current sub-batch (2026-03-06): tutorial action-delay reduction + generated configuration reference governance.
+
+- Halved tutorial intra-step action delays in canonical project constants and runtime fallback values:
+  - `movement`: `140 ms`
+  - `rotation`: `170 ms`
+  - `drop`: `500 ms`
+  - `soft_drop`: `90 ms`
+  - `hard_drop`: `450 ms`
+  - files:
+    - `config/project/constants.json`
+    - `src/tet4d/engine/runtime/project_config.py`
+- Added generated configuration references:
+  - full config inventory: `docs/CONFIGURATION_REFERENCE.md`
+  - compact user-facing settings view: `docs/USER_SETTINGS_REFERENCE.md`
+  - generator/check: `tools/governance/generate_configuration_reference.py`
+  - tests: `tests/unit/governance/test_generate_configuration_reference.py`
+- Refined the compact user settings reference to:
+  - group settings into stable buckets (`Profiles`, `Display`, `Audio`, `Analytics`, per-mode `Gameplay Setup` / `Gameplay` / `Bot Options`)
+  - resolve dynamic option labels for piece-set and topology-profile indices
+  - fail generation when a persisted setting is not assigned to a bucket
+- Extended the compact keybinding profile summary to use canonical category docs and scope ordering (`General / System`, `Gameplay`, `Camera / View`) with hard failures for unknown profile groups/scopes.
+- Added policy/contract enforcement so config changes must keep the reference synchronized:
+  - `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`
+  - `config/project/policy/manifests/policy_registry.json`
+  - `config/project/policy/manifests/project_policy.json`
+  - `config/project/policy/manifests/canonical_maintenance.json`
+  - `scripts/verify.sh`
+- Docs updated to link the generated reference and document the governance rule:
+  - `README.md`
+  - `docs/README.md`
+  - `docs/RDS_AND_CODEX.md`
+  - `docs/FEATURE_MAP.md`
+  - `docs/PROJECT_STRUCTURE.md`
+  - `docs/SECURITY_AND_CONFIG_PLAN.md`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+- Verification:
+  - `tools/governance/generate_configuration_reference.py --check` will now fail on drift.
+  - Full verification pending after this batch.
+
 ## 6. Source Inputs
 
 1. `config/project/backlog_debt.json`
@@ -1396,3 +1482,5 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
 5. `docs/ARCHITECTURE_CONTRACT.md`
 6. `CURRENT_STATE.md`
 7. `docs/history/DONE_SUMMARIES.md`
+
+

@@ -20,11 +20,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff pytest
+          pip install -e .[dev]
       - name: Dry-run stability sweep
         run: |
-          PYTHONPATH=. python tools/stability/check_playbot_stability.py --repeats 24 --seed-base 0
+          python tools/stability/check_playbot_stability.py --repeats 24 --seed-base 0
       - name: Planner benchmark trend sample
         run: |
           python tools/benchmarks/bench_playbot.py --assert --record-trend
@@ -46,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e .[dev]
       - name: Analyze policy snapshots
         run: |
           python tools/benchmarks/analyze_playbot_policies.py \
@@ -64,3 +63,4 @@ jobs:
             state/bench/policy_analysis.json
             state/bench/policy_analysis.csv
           if-no-files-found: error
+

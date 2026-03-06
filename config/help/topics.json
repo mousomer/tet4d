@@ -6,8 +6,17 @@
       "title": "Help Overview",
       "lane": "quick",
       "priority": 10,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay",
+        "keybindings"
+      ],
       "summary": "Entry point and navigation for help content.",
       "sections": [
         {
@@ -32,8 +41,16 @@
       "title": "Game Types",
       "lane": "full",
       "priority": 20,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay"
+      ],
       "summary": "Differences between 2D, 3D, and 4D modes.",
       "sections": [
         {
@@ -51,8 +68,17 @@
       "title": "Movement and Rotation",
       "lane": "quick",
       "priority": 30,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay",
+        "keybindings"
+      ],
       "summary": "Translation, drop, and rotation controls.",
       "sections": [
         {
@@ -70,8 +96,17 @@
       "title": "Key Reference",
       "lane": "reference",
       "priority": 40,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay",
+        "keybindings"
+      ],
       "summary": "Complete key list grouped by system/game/camera.",
       "sections": [
         {
@@ -88,8 +123,16 @@
       "title": "Gameplay Features",
       "lane": "full",
       "priority": 50,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay"
+      ],
       "summary": "Bots, challenge mode, exploration mode, and dry-run.",
       "sections": [
         {
@@ -106,15 +149,23 @@
       "title": "Scoring and Leaderboard",
       "lane": "full",
       "priority": 55,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay"],
-      "summary": "Point rules, bonuses, multiplier, and leaderboard ranking.",
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay"
+      ],
+      "summary": "Point rules, bonuses, assist multiplier, and leaderboard ranking.",
       "sections": [
         {
           "id": "what",
           "title": "What",
           "lines": [
-            "Base clear score + clear bonuses are multiplied by assist factors.",
+            "Base clear score + clear bonuses are multiplied by assist factors, including kick permissiveness.",
             "Leaderboard records finished sessions across dimensions."
           ]
         }
@@ -125,15 +176,24 @@
       "title": "Settings and Profiles",
       "lane": "full",
       "priority": 60,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "keybindings"],
-      "summary": "Audio/display/analytics settings and keybinding profiles.",
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "keybindings"
+      ],
+      "summary": "Audio/display/gameplay settings and keybinding profiles.",
       "sections": [
         {
           "id": "what",
           "title": "What",
           "lines": [
             "Save, load, autosave, and reset behavior.",
+            "Gameplay settings include kick permissiveness and topology controls.",
             "Profile creation and editing rules."
           ]
         }
@@ -144,8 +204,16 @@
       "title": "Camera and Grid",
       "lane": "quick",
       "priority": 70,
-      "dimensions": [3, 4],
-      "contexts": ["launcher", "pause", "gameplay", "keybindings"],
+      "dimensions": [
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay",
+        "keybindings"
+      ],
       "summary": "View rotation, zoom, projection, and grid modes.",
       "sections": [
         {
@@ -162,8 +230,15 @@
       "title": "Menu Workflows",
       "lane": "full",
       "priority": 80,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause"
+      ],
       "summary": "Launcher and pause flow parity and action structure.",
       "sections": [
         {
@@ -181,8 +256,16 @@
       "title": "Troubleshooting",
       "lane": "reference",
       "priority": 90,
-      "dimensions": [2, 3, 4],
-      "contexts": ["launcher", "pause", "gameplay"],
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause",
+        "gameplay"
+      ],
       "summary": "Common issues and recovery paths.",
       "sections": [
         {

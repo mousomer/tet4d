@@ -37,11 +37,11 @@
       }
     },
     "action_delay_ms": {
-      "movement": 280,
-      "rotation": 340,
-      "drop": 1000,
-      "soft_drop": 180,
-      "hard_drop": 900
+      "movement": 140,
+      "rotation": 170,
+      "drop": 500,
+      "soft_drop": 90,
+      "hard_drop": 450
     }
   },
   "rendering": {
@@ -79,3 +79,4 @@
     "leaderboard_name_max_length": 24
   }
 }
+

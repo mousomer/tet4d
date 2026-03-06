@@ -75,11 +75,11 @@ _DEFAULT_CONSTANTS = {
             },
         },
         "action_delay_ms": {
-            "movement": 170,
-            "rotation": 190,
-            "drop": 1000,
-            "soft_drop": 180,
-            "hard_drop": 900,
+            "movement": 140,
+            "rotation": 170,
+            "drop": 500,
+            "soft_drop": 90,
+            "hard_drop": 450,
         }
     },
     "rendering": {
@@ -379,3 +379,4 @@ def project_constant_float(
     if max_value is not None and fval > max_value:
         return default
     return fval
+

@@ -17,8 +17,8 @@ from ..gameplay.pieces2d import (
     ActivePiece2D,
     PieceShape2D,
     get_piece_bag_2d,
-    rotate_point_2d,
 )
+from ..core.piece_transform import block_axis_bounds, rotate_blocks_2d
 from ..gameplay.pieces_nd import (
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_STANDARD,
@@ -124,7 +124,7 @@ def _oriented_blocks_2d(
     *,
     rotation: int,
 ) -> tuple[tuple[int, int], ...]:
-    return tuple(rotate_point_2d(block[0], block[1], int(rotation)) for block in shape.blocks)
+    return rotate_blocks_2d(shape.blocks, int(rotation))
 
 
 def _axis_candidate_values(
@@ -258,10 +258,11 @@ def _force_piece_placement_2d(
     preferred_min_gravity: int | None = None,
 ) -> None:
     oriented_blocks = _oriented_blocks_2d(shape, rotation=rotation)
-    min_block_x = min(block[0] for block in oriented_blocks)
-    max_block_x = max(block[0] for block in oriented_blocks)
-    min_block_y = min(block[1] for block in oriented_blocks)
-    max_block_y = max(block[1] for block in oriented_blocks)
+    mins, maxs = block_axis_bounds(oriented_blocks)
+    min_block_x = mins[0]
+    max_block_x = maxs[0]
+    min_block_y = mins[1]
+    max_block_y = maxs[1]
     target_x = _preferred_spawn_x_2d(
         state=state,
         min_block_x=min_block_x,
@@ -388,11 +389,11 @@ def _force_piece_placement_nd(
     preferred_min_gravity: int | None = None,
 ) -> None:
     dims = state.config.dims
-    ndim = state.config.ndim
     gravity_axis = state.config.gravity_axis
     blocks = tuple(rel_blocks) if rel_blocks is not None else shape.blocks
-    mins = [min(block[axis] for block in blocks) for axis in range(ndim)]
-    maxs = [max(block[axis] for block in blocks) for axis in range(ndim)]
+    mins_raw, maxs_raw = block_axis_bounds(blocks)
+    mins = [int(value) for value in mins_raw]
+    maxs = [int(value) for value in maxs_raw]
     initial_pos = list(state._spawn_pos_for_shape(shape))
     min_spawn_g = max(min_visible_layer - mins[gravity_axis], -mins[gravity_axis])
     max_spawn_g = (dims[gravity_axis] - 1) - maxs[gravity_axis]
@@ -734,8 +735,9 @@ def _opening_translation_pos_ranges_nd(
     ndim = int(state.config.ndim)
     gravity_axis = int(state.config.gravity_axis)
     rel_blocks = tuple(piece.rel_blocks)
-    mins = [min(int(block[axis]) for block in rel_blocks) for axis in range(ndim)]
-    maxs = [max(int(block[axis]) for block in rel_blocks) for axis in range(ndim)]
+    mins_raw, maxs_raw = block_axis_bounds(rel_blocks)
+    mins = [int(value) for value in mins_raw]
+    maxs = [int(value) for value in maxs_raw]
     pos_ranges: list[range] = []
     for axis in range(ndim):
         min_pos = -int(mins[axis])
@@ -1636,4 +1638,3 @@ def ensure_tutorial_piece_visibility_nd(
         min_visible_layer=max(0, int(min_visible_layer)),
         scope_tag="runtime_visibility_nd",
     )
-

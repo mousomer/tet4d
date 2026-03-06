@@ -31,6 +31,7 @@ Define requirements for the classic `(x, y)` mode implemented by:
 10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
 11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 12. Advanced profile definitions are loaded from `config/topology/designer_presets.json`.
+13. Rotated candidate acceptance must be decided by topology-aware legality after mapping, not by raw board-edge checks.
 
 ## 4. Piece Set
 
@@ -38,7 +39,7 @@ Define requirements for the classic `(x, y)` mode implemented by:
 2. Optional set: `random_cells_2d` (connected random cells).
 3. Optional set: `debug_rectangles_2d` (simple large rectangular blocks for progression checks).
 4. `random_cells_2d`defaults to`4`cells per piece and supports configurable range`3..6`.
-5. Piece blocks are relative to pivot coordinates.
+5. Piece blocks are local occupied-cell offsets from a deterministic piece origin.
 6. Setup menu must expose piece set selection (`classic`,`random_cells_2d`,`debug_rectangles_2d`).
 
 ## 4.1 Random-cell generator requirements (2D)
@@ -91,6 +92,7 @@ Minimum required tests for 2D gameplay changes:
 4. key routing smoke tests,
 5. scoring matrix checks,
 6. random/debug piece spawn stability checks.
+7. Bounded/wrap/invert kick-legality parity checks.
 
 Relevant test files:
 - `tests/unit/engine/test_game2d.py`

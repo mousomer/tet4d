@@ -42,6 +42,7 @@ from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
     tutorial_allowed_actions_blocked,
     tutorial_action_delay_ms,
     tutorial_overlay_start_from_setup,
+    tutorial_gated_mouse_orbit_event,
     tutorial_required_action_blocked,
     tutorial_sync,
 )
@@ -546,25 +547,28 @@ class LoopContext4D(PanelDragMixin):
         if wheel != 0:
             if not self._tutorial_action_allowed("mouse_zoom"):
                 return
+            current_zoom = float(self.view.zoom_scale)
+            next_zoom = (
+                min(2.6, current_zoom * (1.08**wheel))
+                if wheel > 0
+                else max(0.45, current_zoom / (1.08 ** abs(wheel)))
+            )
+            if next_zoom == current_zoom:
+                return
             self.view.stop_animation()
-            if wheel > 0:
-                self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08**wheel))
-            else:
-                self.view.zoom_scale = max(
-                    0.45, self.view.zoom_scale / (1.08 ** abs(wheel))
-                )
+            self.view.zoom_scale = next_zoom
             self._tutorial_observe_action("mouse_zoom")
             return
 
-        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+        yaw_deg, pitch_deg, changed = tutorial_gated_mouse_orbit_event(
             event,
-            self.mouse_orbit,
+            mouse_orbit=self.mouse_orbit,
             yaw_deg=self.view.yaw_deg,
             pitch_deg=self.view.pitch_deg,
+            action_allowed=self._tutorial_action_allowed("mouse_orbit"),
+            apply_mouse_orbit_event=apply_mouse_orbit_event,
         )
         if not changed:
-            return
-        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.view.stop_animation()
         self.view.yaw_deg = yaw_deg

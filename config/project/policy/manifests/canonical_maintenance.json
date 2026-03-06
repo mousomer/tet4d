@@ -8,6 +8,8 @@
       "docs/README.md",
       "docs/PROJECT_STRUCTURE.md",
       "docs/FEATURE_MAP.md",
+      "docs/CONFIGURATION_REFERENCE.md",
+      "docs/USER_SETTINGS_REFERENCE.md",
       "docs/BACKLOG.md",
       "docs/history/DONE_SUMMARIES.md",
       "docs/CHANGELOG.md",
@@ -106,6 +108,7 @@
       "tools/governance/tech_debt_budget.py",
       "tools/governance/update_tech_debt_budgets.py",
       "tools/governance/validate_project_contracts.py",
+      "tools/governance/generate_configuration_reference.py",
       "tools/governance/check_risk_gates.py",
       "tools/governance/check_policy_runtime_rules.py",
       "tools/governance/check_wheel_reuse_rules.py",
@@ -129,6 +132,7 @@
       "docs/policies/POLICY_STRING_SANITATION.md",
       "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
       "docs/policies/POLICY_FORMATTING.md",
+      "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
       "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
       "config/project/policy/pack.json",
       "config/project/policy/manifests/project_policy.json",
@@ -161,7 +165,8 @@
         "config/project/policy/manifests/dedup_dead_code_rules.json",
         "config/project/policy/manifests/policy_registry.json",
         "config/project/policy/manifests/project_policy.json",
-        "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
       ]
     },
     {
@@ -177,7 +182,9 @@
         "config/project/constants.json",
         "config/project/policy/manifests/secret_scan.json",
         "docs/RELEASE_INSTALLERS.md",
-        "packaging/scripts/build_macos.sh"
+        "packaging/scripts/build_macos.sh",
+        "docs/CONFIGURATION_REFERENCE.md",
+        "docs/USER_SETTINGS_REFERENCE.md"
       ]
     },
     {
@@ -233,7 +240,9 @@
         "scripts/ci_preflight.sh",
         "config/project/policy/manifests/contributor_directives.json",
         "docs/BACKLOG.md",
-        "docs/rds/RDS_PACKAGING.md"
+        "docs/rds/RDS_PACKAGING.md",
+        "docs/CONFIGURATION_REFERENCE.md",
+        "docs/USER_SETTINGS_REFERENCE.md"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",
@@ -637,6 +646,10 @@
       "file": "docs/RDS_AND_CODEX.md",
       "must_not_match_regex": [
         "\\btetris_nd\\b"
+      ],
+      "must_contain": [
+        "docs/CONFIGURATION_REFERENCE.md",
+        "docs/USER_SETTINGS_REFERENCE.md"
       ]
     },
     {
@@ -685,6 +698,24 @@
       "file": "docs/rds/RDS_PLAYBOT.md",
       "must_not_match_regex": [
         "\\btetris_nd\\b"
+      ]
+    },
+    {
+      "file": "docs/CONFIGURATION_REFERENCE.md",
+      "must_contain": [
+        "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
+        "config/project/constants.json",
+        "config/keybindings/defaults.json",
+        "config/project/format_allowlist.txt"
+      ]
+    },
+    {
+      "file": "docs/USER_SETTINGS_REFERENCE.md",
+      "must_contain": [
+        "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
+        "tet4d.engine.runtime.menu_config.default_settings_payload()",
+        "config/schema/menu_settings.schema.json",
+        "config/keybindings/defaults.json"
       ]
     }
   ],

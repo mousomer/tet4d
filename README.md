@@ -180,6 +180,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 1. Project structure and documentation:
 - `docs/PROJECT_STRUCTURE.md`
 - `docs/FEATURE_MAP.md`
+- `docs/CONFIGURATION_REFERENCE.md`
+- `docs/USER_SETTINGS_REFERENCE.md`
 - `docs/GUIDELINES_RESEARCH.md`
 - `docs/RELEASE_INSTALLERS.md`
 
@@ -194,6 +196,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 - Contract source: `config/project/policy/manifests/canonical_maintenance.json`
 - Validator: `tools/governance/validate_project_contracts.py`
+- Generated config references: `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md` (`tools/governance/generate_configuration_reference.py`)
 - Secret scanning policy/runtime scanner: `config/project/policy/manifests/secret_scan.json` + `tools/governance/scan_secrets.py`
 
 ## Local pytest warning

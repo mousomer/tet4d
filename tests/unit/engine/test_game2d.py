@@ -232,6 +232,90 @@ class TestGame2D(unittest.TestCase):
             state.current_piece_cells_mapped(include_above=False), ((0, 3),)
         )
 
+    def test_square_rotation_stays_in_place_under_center_rotation(self):
+        cfg = GameConfig(width=4, height=6)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        square = PieceShape2D("square", [(0, 0), (1, 0), (0, 1), (1, 1)], color_id=2)
+        state.current_piece = ActivePiece2D(shape=square, pos=(2, 3), rotation=0)
+
+        before = tuple(sorted(state.current_piece.cells()))
+        state.try_rotate(1)
+
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), before)
+
+    def test_even_span_line_rotation_can_kick_at_edge(self):
+        cfg = GameConfig(width=4, height=6, kick_level="light")
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=line, pos=(2, 2), rotation=1)
+
+        before_pos = tuple(state.current_piece.pos)
+        before_rotation = state.current_piece.rotation
+        state.try_rotate(1)
+
+        self.assertNotEqual(state.current_piece.rotation, before_rotation)
+        self.assertNotEqual(tuple(state.current_piece.pos), before_pos)
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(len(mapped), 4)
+        self.assertEqual(len(set(mapped)), 4)
+
+    def test_wrap_topology_rotation_uses_topology_mapping_with_kicks(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            topology_mode=TOPOLOGY_WRAP_ALL,
+            kick_level="standard",
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=line, pos=(-2, 4), rotation=0)
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        state.try_rotate(1)
+
+        self.assertEqual(state.current_piece.pos, (-2, 3))
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
+        self.assertEqual(len(mapped), len(set(mapped)))
+
+    def test_invert_topology_rotation_uses_topology_mapping_with_kicks(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            topology_mode=TOPOLOGY_INVERT_ALL,
+            kick_level="standard",
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=line, pos=(-2, 4), rotation=0)
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        state.try_rotate(1)
+
+        self.assertEqual(state.current_piece.pos, (-2, 3))
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
+        self.assertEqual(len(mapped), len(set(mapped)))
+
+    def test_even_span_line_rotation_fails_cleanly_at_edge(self):
+        cfg = GameConfig(width=4, height=6)
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape=line, pos=(2, 2), rotation=1)
+
+        before_rotation = state.current_piece.rotation
+        before_cells = tuple(sorted(state.current_piece.cells()))
+        state.try_rotate(1)
+
+        self.assertEqual(state.current_piece.rotation, before_rotation)
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), before_cells)
+
+
 
 if __name__ == "__main__":
     unittest.main()

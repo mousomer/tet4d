@@ -27,6 +27,7 @@ HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
 _SETTINGS_OPTION_LABELS = engine_api.settings_option_labels_runtime()
 _RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
+_KICK_LEVEL_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_kick_level"])
 _SETTINGS_HUB_COPY = engine_api.ui_copy_section_runtime("settings_hub")
 _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS = (
     engine_api.gameplay_default_mode_shared_settings_runtime("2d")
@@ -35,6 +36,7 @@ _RANDOM_MODE_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["random_mode_i
 _TOPOLOGY_ADVANCED_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["topology_advanced"]
 )
+_KICK_LEVEL_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["kick_level_index"])
 _AUTO_SPEEDUP_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["auto_speedup_enabled"]
 )
@@ -69,6 +71,7 @@ class _UnifiedSettingsState:
     game_seed: int
     random_mode_index: int
     topology_advanced: int
+    kick_level_index: int
     auto_speedup_enabled: int
     lines_per_level: int
     score_logging_enabled: bool
@@ -78,6 +81,7 @@ class _UnifiedSettingsState:
     original_game_seed: int
     original_random_mode_index: int
     original_topology_advanced: int
+    original_kick_level_index: int
     original_auto_speedup_enabled: int
     original_lines_per_level: int
     original_score_logging_enabled: bool
@@ -205,12 +209,14 @@ def _load_mode_shared_gameplay_settings() -> dict[str, int]:
 def _save_shared_gameplay_settings(
     random_mode_index: int,
     topology_advanced: int,
+    kick_level_index: int,
     auto_speedup_enabled: int,
     lines_per_level: int,
 ) -> tuple[bool, str]:
     return engine_api.gameplay_save_shared_settings_runtime(
         random_mode_index=int(random_mode_index),
         topology_advanced=int(topology_advanced),
+        kick_level_index=int(kick_level_index),
         auto_speedup_enabled=int(auto_speedup_enabled),
         lines_per_level=int(lines_per_level),
     )
@@ -383,6 +389,7 @@ def _save_unified_settings(
     ok_gameplay_shared, msg_gameplay_shared = _save_shared_gameplay_settings(
         int(state.random_mode_index),
         int(state.topology_advanced),
+        int(state.kick_level_index),
         int(state.auto_speedup_enabled),
         int(state.lines_per_level),
     )
@@ -393,6 +400,7 @@ def _save_unified_settings(
         state.original_game_seed = int(state.game_seed)
         state.original_random_mode_index = int(state.random_mode_index)
         state.original_topology_advanced = int(state.topology_advanced)
+        state.original_kick_level_index = int(state.kick_level_index)
         state.original_auto_speedup_enabled = int(state.auto_speedup_enabled)
         state.original_lines_per_level = int(state.lines_per_level)
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
@@ -423,6 +431,7 @@ def _reset_unified_settings(
     state.game_seed = _game_seed_default()
     state.random_mode_index = _RANDOM_MODE_DEFAULT
     state.topology_advanced = _TOPOLOGY_ADVANCED_DEFAULT
+    state.kick_level_index = _KICK_LEVEL_DEFAULT
     state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
     state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
     state.score_logging_enabled = _analytics_defaults()
@@ -599,6 +608,18 @@ def _adjust_advanced_gameplay_value(
     *,
     enter_pressed: bool = False,
 ) -> bool:
+    if row_key == "kick_level_index":
+        max_index = max(0, len(_KICK_LEVEL_LABELS) - 1)
+        if max_index == 0:
+            return False
+        if delta_sign == 0:
+            if not enter_pressed:
+                return False
+            next_index = int(state.kick_level_index) + 1
+        else:
+            next_index = int(state.kick_level_index) + int(delta_sign)
+        state.kick_level_index = max(0, min(max_index, next_index))
+        return True
     if row_key == "auto_speedup_enabled":
         if delta_sign == 0 and not enter_pressed:
             return False
@@ -691,7 +712,7 @@ def _draw_advanced_gameplay_menu(
     width, _height = screen.get_size()
     title_text = "Advanced gameplay"
     subtitle_text = (
-        "Up/Down select   Left/Right adjust   Enter toggle   Esc back   Q quit"
+        "Up/Down select   Left/Right adjust   Enter toggle/cycle   Esc back   Q quit"
     )
     title = fonts.title_font.render(title_text, True, TEXT_COLOR)
     subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
@@ -699,11 +720,12 @@ def _draw_advanced_gameplay_menu(
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
 
     rows = (
+        ("kick_level_index", "Kick permissiveness"),
         ("auto_speedup_enabled", "Auto speed-up by clears"),
         ("lines_per_level", "Lines per level"),
     )
     panel_w = min(760, max(380, width - 40))
-    panel_h = 210
+    panel_h = 268
     panel_x = (width - panel_w) // 2
     panel_y = 170
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
@@ -718,14 +740,13 @@ def _draw_advanced_gameplay_menu(
             hi = pygame.Surface((panel_w - 28, 44), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, line_y - 5))
-        value = (
-            "ON"
-            if row_key == "auto_speedup_enabled"
-            and int(state.auto_speedup_enabled)
-            else "OFF"
-            if row_key == "auto_speedup_enabled"
-            else str(int(state.lines_per_level))
-        )
+        if row_key == "kick_level_index":
+            safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
+            value = _KICK_LEVEL_LABELS[safe_index]
+        elif row_key == "auto_speedup_enabled":
+            value = "ON" if int(state.auto_speedup_enabled) else "OFF"
+        else:
+            value = str(int(state.lines_per_level))
         label_surf = fonts.menu_font.render(label, True, color)
         value_surf = fonts.menu_font.render(value, True, color)
         screen.blit(label_surf, (panel_x + 22, line_y))
@@ -745,7 +766,7 @@ def run_advanced_gameplay_menu(
     state: _UnifiedSettingsState,
 ) -> pygame.Surface:
     selected = 0
-    row_keys = ("auto_speedup_enabled", "lines_per_level")
+    row_keys = ("kick_level_index", "auto_speedup_enabled", "lines_per_level")
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -794,8 +815,9 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
     if row_key == "game_topology_advanced":
         return "ON" if int(state.topology_advanced) else "OFF"
     if row_key == "gameplay_advanced":
+        kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
         mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        return f"{mode_text} / {int(state.lines_per_level)}"
+        return f"{_KICK_LEVEL_LABELS[kick_index]} / {mode_text} / {int(state.lines_per_level)}"
     return ""
 
 
@@ -1028,6 +1050,7 @@ def run_settings_hub_menu(
     mode_gameplay = _load_mode_shared_gameplay_settings()
     random_mode_index = int(mode_gameplay["random_mode_index"])
     topology_advanced = int(mode_gameplay["topology_advanced"])
+    kick_level_index = int(mode_gameplay["kick_level_index"])
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
     state = _UnifiedSettingsState(
@@ -1037,6 +1060,7 @@ def run_settings_hub_menu(
         game_seed=game_seed,
         random_mode_index=random_mode_index,
         topology_advanced=topology_advanced,
+        kick_level_index=kick_level_index,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
         score_logging_enabled=score_logging_enabled,
@@ -1046,6 +1070,7 @@ def run_settings_hub_menu(
         original_game_seed=game_seed,
         original_random_mode_index=random_mode_index,
         original_topology_advanced=topology_advanced,
+        original_kick_level_index=kick_level_index,
         original_auto_speedup_enabled=auto_speedup_enabled,
         original_lines_per_level=lines_per_level,
         original_score_logging_enabled=score_logging_enabled,

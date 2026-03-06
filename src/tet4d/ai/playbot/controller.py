@@ -24,7 +24,7 @@ from tet4d.ai.playbot.types import (
 GameState = engine_api.GameState
 GameStateND = engine_api.GameStateND
 ActivePieceND = engine_api.ActivePieceND
-rotate_point_nd = engine_api.rotate_point_nd
+rotate_blocks_nd = engine_api.rotate_blocks_nd
 plan_best_2d_move = engine_api.plan_best_2d_move
 plan_best_nd_move = engine_api.plan_best_nd_move
 _canonical_blocks = engine_api.playbot_canonical_blocks_nd
@@ -111,7 +111,12 @@ def _rotation_neighbors(
     for axis_a, axis_b in planes:
         for delta in (1, -1):
             rotated = _canonical_blocks(
-                rotate_point_nd(block, axis_a, axis_b, delta) for block in blocks
+                rotate_blocks_nd(
+                    blocks,
+                    axis_a=axis_a,
+                    axis_b=axis_b,
+                    steps_cw=delta,
+                )
             )
             yield rotated, (axis_a, axis_b, delta)
 
@@ -661,4 +666,3 @@ class PlayBotController:
             return
         if self._should_auto_step(dt_ms):
             self._step_piece_nd(state)
-

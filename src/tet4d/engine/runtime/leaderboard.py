@@ -144,6 +144,11 @@ def _normalize_entry(raw: object) -> dict[str, object]:
             max_length=32,
             fallback="bounded",
         ),
+        "kick_level": _safe_text(
+            raw.get("kick_level"),
+            max_length=24,
+            fallback="off",
+        ),
         "exploration_mode": bool(raw.get("exploration_mode", False)),
     }
 
@@ -223,6 +228,7 @@ def leaderboard_entry_rank(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
     path: Path | None = None,
 ) -> int:
@@ -248,6 +254,7 @@ def leaderboard_entry_rank(
             "grid_mode": grid_mode,
             "random_mode": random_mode,
             "topology_mode": topology_mode,
+            "kick_level": kick_level,
             "exploration_mode": exploration_mode,
         }
     )
@@ -271,6 +278,7 @@ def leaderboard_entry_would_enter(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
     path: Path | None = None,
 ) -> tuple[bool, int]:
@@ -286,6 +294,7 @@ def leaderboard_entry_would_enter(
         grid_mode=grid_mode,
         random_mode=random_mode,
         topology_mode=topology_mode,
+        kick_level=kick_level,
         exploration_mode=exploration_mode,
         path=path,
     )
@@ -305,6 +314,7 @@ def record_leaderboard_entry(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
     player_name: str = "Player",
     path: Path | None = None,
@@ -331,6 +341,7 @@ def record_leaderboard_entry(
             "grid_mode": grid_mode,
             "random_mode": random_mode,
             "topology_mode": topology_mode,
+            "kick_level": kick_level,
             "exploration_mode": exploration_mode,
         }
     )

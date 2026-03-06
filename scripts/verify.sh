@@ -76,6 +76,7 @@ require_module pytest pytest
 require_repo_package
 
 run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+run_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
 run_step "risk_gates"     "$PYTHON_BIN" tools/governance/check_risk_gates.py
 run_step "policy_runtime_rules" "$PYTHON_BIN" tools/governance/check_policy_runtime_rules.py
 run_step "wheel_reuse_rules" "$PYTHON_BIN" tools/governance/check_wheel_reuse_rules.py

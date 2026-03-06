@@ -33,6 +33,7 @@ class ReplayScript2D:
                 "height": self.config.height,
                 "gravity_axis": self.config.gravity_axis,
                 "speed_level": self.config.speed_level,
+                "kick_level": self.config.kick_level,
             },
             "events": [event.to_dict() for event in self.events],
         }
@@ -45,6 +46,7 @@ class ReplayScript2D:
             height=int(cfg_payload["height"]),
             gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
             speed_level=int(cfg_payload.get("speed_level", 1)),
+            kick_level=str(cfg_payload.get("kick_level", "off")),
         )
         events = tuple(
             ReplayEvent2D.from_dict(item) for item in payload.get("events", ())
@@ -67,6 +69,7 @@ class ReplayTickScriptND:
                 "dims": tuple(int(v) for v in self.config.dims),
                 "gravity_axis": int(self.config.gravity_axis),
                 "speed_level": int(self.config.speed_level),
+                "kick_level": str(self.config.kick_level),
             },
         }
 
@@ -77,6 +80,7 @@ class ReplayTickScriptND:
             dims=tuple(int(v) for v in cfg_payload["dims"]),
             gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
             speed_level=int(cfg_payload.get("speed_level", 1)),
+            kick_level=str(cfg_payload.get("kick_level", "off")),
         )
         return cls(
             seed=int(payload.get("seed", 0)),

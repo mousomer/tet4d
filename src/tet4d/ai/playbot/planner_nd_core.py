@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from bisect import bisect_right
-from collections import deque
-from functools import lru_cache
 from itertools import product
 from typing import Iterable
 
@@ -13,66 +11,9 @@ BoardND = engine_api.BoardND
 GameStateND = engine_api.GameStateND
 ActivePieceND = engine_api.ActivePieceND
 PieceShapeND = engine_api.PieceShapeND
-rotate_point_nd = engine_api.rotate_point_nd
-
+block_axis_bounds = engine_api.block_axis_bounds
 
 RelBlocks = tuple[tuple[int, ...], ...]
-
-
-def canonical_blocks(blocks: Iterable[tuple[int, ...]]) -> RelBlocks:
-    return tuple(sorted(tuple(block) for block in blocks))
-
-
-def rotation_planes(ndim: int, gravity_axis: int) -> tuple[tuple[int, int], ...]:
-    if ndim == 3:
-        extra = [axis for axis in range(ndim) if axis != 0 and axis != gravity_axis]
-        z_axis = extra[0] if extra else 2
-        return (
-            (0, gravity_axis),
-            (0, z_axis),
-            (gravity_axis, z_axis),
-        )
-    pairs: list[tuple[int, int]] = []
-    for axis_a in range(ndim):
-        for axis_b in range(axis_a + 1, ndim):
-            pairs.append((axis_a, axis_b))
-    return tuple(pairs)
-
-
-@lru_cache(maxsize=512)
-def enumerate_orientations(
-    start_blocks: RelBlocks,
-    ndim: int,
-    gravity_axis: int,
-) -> tuple[RelBlocks, ...]:
-    planes = rotation_planes(ndim, gravity_axis)
-    max_depth = 7 if ndim == 3 else 6
-    max_orientations = 96 if ndim == 3 else 180
-
-    queue: deque[tuple[RelBlocks, int]] = deque([(start_blocks, 0)])
-    seen: set[RelBlocks] = {start_blocks}
-    ordered: list[RelBlocks] = [start_blocks]
-
-    while queue and len(seen) < max_orientations:
-        blocks, depth = queue.popleft()
-        if depth >= max_depth:
-            continue
-        for axis_a, axis_b in planes:
-            for step in (1, -1):
-                rotated = canonical_blocks(
-                    rotate_point_nd(block, axis_a, axis_b, step) for block in blocks
-                )
-                if rotated in seen:
-                    continue
-                seen.add(rotated)
-                ordered.append(rotated)
-                queue.append((rotated, depth + 1))
-                if len(seen) >= max_orientations:
-                    break
-            if len(seen) >= max_orientations:
-                break
-    return tuple(ordered)
-
 
 def build_column_levels(
     cells: dict[tuple[int, ...], int],
@@ -338,8 +279,9 @@ def lateral_ranges_for_blocks(
     dims: tuple[int, ...],
     lateral_axes: tuple[int, ...],
 ) -> tuple[list[range], list[int]]:
-    mins = [min(block[axis] for block in blocks) for axis in range(ndim)]
-    maxs = [max(block[axis] for block in blocks) for axis in range(ndim)]
+    mins_raw, maxs_raw = block_axis_bounds(blocks)
+    mins = [int(value) for value in mins_raw]
+    maxs = [int(value) for value in maxs_raw]
     ranges: list[range] = []
     for axis in lateral_axes:
         start = -mins[axis]
@@ -411,6 +353,3 @@ def iter_settled_candidates(
                 lateral_axes=lateral_axes,
                 column_levels=column_levels,
             )
-
-
-

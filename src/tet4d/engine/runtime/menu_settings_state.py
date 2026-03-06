@@ -30,6 +30,7 @@ from .settings_schema import (
     mode_key_for_dimension,
     read_json_value_or_raise,
 )
+from .runtime_config import kick_level_names
 from . import settings_schema as _settings_schema
 
 STATE_DIR = state_dir_path()
@@ -50,6 +51,17 @@ GAME_SEED_MAX = _settings_schema.GAME_SEED_MAX
 GAME_SEED_STEP = _settings_schema.GAME_SEED_STEP
 
 _MODE_KEYS = set(MODE_KEYS)
+_KICK_LEVEL_NAMES = kick_level_names()
+
+
+def _clamp_kick_level_index(value: Any, *, default: int = 0) -> int:
+    max_index = max(0, len(_KICK_LEVEL_NAMES) - 1)
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(0, min(max_index, numeric))
+
 
 _SHARED_GAMEPLAY_SPECS: tuple[
     tuple[str, Any, int],
@@ -57,6 +69,7 @@ _SHARED_GAMEPLAY_SPECS: tuple[
 ] = (
     ("random_mode_index", clamp_toggle_index, 0),
     ("topology_advanced", clamp_toggle_index, 0),
+    ("kick_level_index", _clamp_kick_level_index, 0),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
     ("lines_per_level", clamp_lines_per_level, 10),
 )
@@ -397,6 +410,7 @@ def save_shared_gameplay_settings(
     *,
     random_mode_index: int,
     topology_advanced: int,
+    kick_level_index: int,
     auto_speedup_enabled: int,
     lines_per_level: int,
 ) -> tuple[bool, str]:
@@ -404,6 +418,7 @@ def save_shared_gameplay_settings(
     raw_values = {
         "random_mode_index": int(random_mode_index),
         "topology_advanced": int(topology_advanced),
+        "kick_level_index": int(kick_level_index),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
     }

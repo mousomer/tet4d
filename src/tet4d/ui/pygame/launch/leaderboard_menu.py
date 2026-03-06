@@ -451,6 +451,7 @@ def maybe_record_leaderboard_session(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
 ) -> bool:
     qualifies, rank = engine_api.leaderboard_entry_would_enter_runtime(
@@ -465,6 +466,7 @@ def maybe_record_leaderboard_session(
         grid_mode=grid_mode,
         random_mode=random_mode,
         topology_mode=topology_mode,
+        kick_level=kick_level,
         exploration_mode=exploration_mode,
     )
     if not qualifies:
@@ -484,6 +486,7 @@ def maybe_record_leaderboard_session(
         grid_mode=grid_mode,
         random_mode=random_mode,
         topology_mode=topology_mode,
+        kick_level=kick_level,
         exploration_mode=exploration_mode,
         player_name=player_name,
     )

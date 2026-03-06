@@ -32,6 +32,7 @@ Define requirements for `(x, y, z)` gameplay mode implemented by:
 9. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
 10. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 11. Advanced profiles may apply per-edge inversion/wrap behavior by axis.
+12. Rotated candidate acceptance must be decided by topology-aware legality after mapping, not by raw board-edge checks.
 
 ## 4. Piece Set
 
@@ -77,9 +78,9 @@ Gameplay (default small profile):
 7. Rotate `y-z`: Z/X
 
 Camera/view:
-1. Yaw fine turn (animated 15°): `1`/`4`
-2. Yaw turn (animated 90°): `2`/`3`
-3. Pitch turn (animated 90°): `5`/`6`
+1. Yaw fine turn (animated 15-degree): `1`/`4`
+2. Yaw turn (animated 90-degree): `2`/`3`
+3. Pitch turn (animated 90-degree): `5`/`6`
 4. Zoom: `7`/`8`
 5. Cycle projection: `9`
 6. Reset camera: `0`
@@ -139,6 +140,7 @@ Minimum required coverage after 3D changes:
 4. layer clear logic,
 5. scoring matrix checks,
 6. random/debug piece spawn stability checks.
+7. Bounded/wrap/invert kick-legality parity checks.
 
 Relevant tests:
 - `tests/unit/engine/test_game_nd.py`

@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-04
+Last updated: 2026-03-06
 Branch: `codex/tutorials1`
-Worktree expectation at handoff: clean (latest CI-compliance hardening batch committed + pushed)
+Worktree expectation at handoff: dirty (kick-system integration batch in progress)
 
 ## Purpose
 
@@ -329,6 +329,41 @@ Completed locally:
   - `cli/front2d.py`
   - `src/tet4d/ui/pygame/front3d_game.py`
   - `src/tet4d/ui/pygame/front4d_game.py`
+- Extracted canonical piece-local transform math into
+  `src/tet4d/engine/core/piece_transform.py` and repointed gameplay, AI,
+  tutorial setup, rotation animation, and `engine.api` consumers.
+- Follow-up semantic swap completed in the same canonical owner:
+  - piece-local block rotation now uses active-bounding-box center rotation
+    instead of origin/pivot-style turns
+  - odd active-plane spans rotate around the center cell
+  - even active-plane spans rotate around the between-cells axis/plane with
+    deterministic local re-anchoring
+- Implemented the topology-aware kick system end-to-end:
+  - canonical kick candidate generation and first-fit resolution now live in
+    `src/tet4d/engine/core/rotation_kicks.py`
+  - gameplay 2D/ND rotation paths consume the shared resolver while keeping
+    topology-aware legality checks authoritative for acceptance
+  - `kick_level` is now a shared advanced-gameplay setting, replay/leaderboard
+    metadata field, and score-multiplier factor while leaderboard ordering
+    remains unchanged
+- Stabilized post-kick verification gates:
+  - ND planning now applies deadline-safety margin during candidate enumeration
+  - `tools/benchmarks/bench_playbot.py` now warms caches, disables cyclic GC
+    during timed samples, and computes p95 with nearest-rank percentile to
+    avoid small-sample interpolation spikes
+  - `config/playbot/policy.json` deadline safety increased to `3.0 ms`
+- Removed duplicate transform owners from gameplay and playbot modules by
+  making them consume the shared core owner for:
+  - local rotation
+  - normalization
+  - block-bounds/canonicalization
+  - ND orientation enumeration
+- Added focused transform/rotation-semantic coverage in:
+  - `tests/unit/engine/test_piece_transform.py`
+- `.venv/bin/ruff check src/tet4d/engine/core/piece_transform.py src/tet4d/engine/gameplay/pieces2d.py src/tet4d/engine/gameplay/pieces_nd.py src/tet4d/engine/gameplay/rotation_anim.py src/tet4d/engine/tutorial/setup_apply.py src/tet4d/engine/api.py src/tet4d/ai/playbot/planner_2d.py src/tet4d/ai/playbot/planner_nd_core.py src/tet4d/ai/playbot/controller.py tests/unit/engine/test_piece_transform.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_piece_transform.py tests/unit/engine/test_peces_2d.py tests/unit/engine/test_pieces_nd.py tests/unit/engine/test_rotation_anim.py tests/unit/engine/test_playbot.py tests/unit/engine/test_tutorial_setup_apply.py` passed (`68 passed`, local `.pytest_cache` permission warning unchanged).
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `CODEX_MODE=1 ./scripts/ci_check.sh` passed.
 
 Verification (current working tree):
 - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed (`15 passed`).
@@ -669,7 +704,7 @@ Core constraints:
 
 1. Deterministic progression on explicit conditions only.
 2. Lesson content/flow is data; code only implements generic engine/conditions.
-3. Per-step input gating (`allow`/`deny`) enforced at input dispatch.
+3. Per-step input gating (`allow`/`deny`) enforced at input dispatch, including tutorial mouse orbit/zoom handlers.
 4. Always skippable/restartable; never softlock users.
 5. Mode-agnostic core: mode differences live in content packs.
 
@@ -756,9 +791,21 @@ Recommended approach:
    - `CODEX_MODE=1 ./scripts/verify.sh`
    - `./scripts/ci_check.sh`
 
+## Current checkpoint
+
+- Tutorial intra-step action delays are now halved in `config/project/constants.json` with matching fallback defaults in `src/tet4d/engine/runtime/project_config.py`.
+- Source-controlled config documentation is now generated into `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md`, and verified by `tools/governance/generate_configuration_reference.py --check` through `./scripts/verify.sh`.
+- `docs/USER_SETTINGS_REFERENCE.md` is now bucketed by canonical user-facing categories and resolves dynamic piece-set/topology-profile defaults to labels; generation fails on unbucketed persisted settings.
+- Keybinding profile summaries in `docs/USER_SETTINGS_REFERENCE.md` now use canonical keybinding category docs + scope ordering and fail on unknown profile groups/scopes.
+- GitHub scheduled stability-watch bootstrap is now aligned with CI/local verification: `.github/workflows/stability-watch.yml` installs the repo with `pip install -e .[dev]` in both jobs so scheduled dry-run and policy-analysis steps can import the `src/` layout package reliably.
+
 ## Current Source of Truth References
 
 - Architecture contract: `docs/ARCHITECTURE_CONTRACT.md`
 - RDS + Codex workflow: `docs/RDS_AND_CODEX.md`
 - Backlog: `docs/BACKLOG.md`
+- Configuration reference: `docs/CONFIGURATION_REFERENCE.md`
+- User settings reference: `docs/USER_SETTINGS_REFERENCE.md`
 - Canonical maintenance contract: `config/project/policy/manifests/canonical_maintenance.json`
+
+

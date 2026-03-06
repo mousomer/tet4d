@@ -22,7 +22,8 @@ BoardND = engine_api.BoardND
 GameState = engine_api.GameState
 ActivePiece2D = engine_api.ActivePiece2D
 PieceShape2D = engine_api.PieceShape2D
-rotate_point_2d = engine_api.rotate_point_2d
+rotate_blocks_2d = engine_api.rotate_blocks_2d
+canonicalize_blocks_2d = engine_api.canonicalize_blocks_2d
 
 
 @dataclass(frozen=True)
@@ -174,7 +175,7 @@ def _enumerate_candidates_2d(
     orientation_seen: set[tuple[tuple[int, int], ...]] = set()
 
     for rotation in range(4):
-        orient = tuple(sorted(rotate_point_2d(x, y, rotation) for x, y in shape.blocks))
+        orient = canonicalize_blocks_2d(rotate_blocks_2d(shape.blocks, rotation))
         if orient in orientation_seen:
             continue
         orientation_seen.add(orient)
