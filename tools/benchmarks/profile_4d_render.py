@@ -26,7 +26,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dep
 
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.ui_logic.view_modes import GridMode
-from tet4d.ui.pygame import front4d_render, frontend_nd
+from tet4d.ui.pygame import front4d_render, frontend_nd_setup, frontend_nd_state
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ def _run_scenario(
     dims4: tuple[int, int, int, int],
 ) -> dict[str, float | int | str | bool]:
     cfg = GameConfigND(dims=dims4, gravity_axis=1, speed_level=1)
-    state = frontend_nd.create_initial_state(cfg)
+    state = frontend_nd_state.create_initial_state(cfg)
     if scenario.dense:
         _fill_dense_board(state)
     view = front4d_render.LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
@@ -153,7 +153,7 @@ def main() -> int:
 
     pygame.init()
     try:
-        fonts = frontend_nd.init_fonts()
+        fonts = frontend_nd_setup.init_fonts()
         surface = pygame.Surface((args.width, args.height), pygame.SRCALPHA)
         scenarios = (
             Scenario(name="default_sparse", xw_deg=0.0, zw_deg=0.0, dense=False),

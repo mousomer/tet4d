@@ -21,6 +21,16 @@ Canonical policy:
 
 ## 2. Unified Change Set (Implemented Baseline)
 
+`DONE` Arch Stage 900 restructure-complete checkpoint:
+- sealed the in-progress architecture baseline in a dedicated checkpoint commit before final cleanup stages.
+- finished 2D runtime decomposition by splitting ownership across `front2d_loop.py`, `front2d_session.py`, `front2d_frame.py`, and `front2d_results.py`, then deleted `front2d_runtime.py`.
+- finished ND frontend decomposition by splitting ownership across `frontend_nd_setup.py`, `frontend_nd_state.py`, and `frontend_nd_input.py`, then deleted `frontend_nd.py`.
+- finished settings-hub decomposition by splitting ownership across `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`, then deleted `settings_hub_state.py`.
+- split oversized engine-runtime helpers into stable facades plus smaller subpackage owners under `runtime/menu_settings/`, `runtime/menu_structure/`, and `runtime/score_analysis/`.
+- synchronized architecture contracts, backlog/current-state docs, RDS menu docs, runtime policy manifests, generated config references, and package metadata to the new owner graph.
+- preserved the one-way contract and purity gates throughout the batch: `engine_to_ui_non_api=0`, `engine_to_ai_non_api=0`, `engine_core_purity.violation_count=0`, `pygame_imports_non_test=0`.
+
+
 `DONE` Arch Stage 530 metric-governance checkpoint:
 - added weighted top-level `tech_debt` metric in `scripts/arch_metrics.py` blending
   prioritized open backlog load, bug/regression backlog load, CI gate pressure, and

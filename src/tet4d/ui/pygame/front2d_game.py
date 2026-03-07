@@ -16,13 +16,10 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.loop_runner_nd import process_game_events
 
 from .front2d_input import handle_game_keydown
-from .front2d_loop import (
-    LoopContext2D,
-    _configure_game_loop,
-    _resolve_loop_decision,
-    create_initial_state,
-    run_game_loop,
-)
+from .front2d_frame import _configure_game_loop
+from .front2d_loop import run_game_loop
+from .front2d_results import _resolve_loop_decision
+from .front2d_session import LoopContext2D, create_initial_state
 from .front2d_setup import (
     GameSettings,
     MenuState,

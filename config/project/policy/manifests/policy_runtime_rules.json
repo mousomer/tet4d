@@ -4,7 +4,7 @@
   "sanitation": {
     "text_entrypoints": [
       {
-        "path": "src/tet4d/ui/pygame/launch/settings_hub_state.py",
+        "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
         "severity": "error",
         "required_any_tokens": [
           "sanitize_text_runtime",
@@ -62,7 +62,7 @@
   "magic_numbers": {
     "config_backed_entrypoints": [
       {
-        "path": "src/tet4d/ui/pygame/launch/settings_hub_state.py",
+        "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
         "severity": "error",
         "required_all_tokens": [
           "clamp_game_seed",
@@ -91,3 +91,4 @@
     ]
   }
 }
+

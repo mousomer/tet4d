@@ -6,12 +6,11 @@ from pathlib import Path
 from typing import Any
 
 from ..core.rng import RNG_MODE_OPTIONS
-from .menu_structure_schema import (
+from .menu_structure.graph import (
     collect_actions_for_menu_ids,
     collect_reachable_menu_ids,
-    resolve_field_max,
-    validate_structure_payload,
 )
+from .menu_structure_schema import resolve_field_max, validate_structure_payload
 from .project_config import project_root_path
 from .runtime_config import kick_level_names, playbot_budget_table_for_ndim
 from .settings_schema import (

@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised without pygame-ce
 if pygame is None:  # pragma: no cover - exercised without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for ND routing tests")
 
-from tet4d.ui.pygame import frontend_nd
+from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
 
@@ -62,7 +62,7 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_3D, "move_x_pos"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -72,7 +72,7 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(state.moves, [(2, 1)])
 
         state.moves.clear()
-        result_away = frontend_nd.route_nd_keydown(
+        result_away = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_3D, "move_z_neg"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -84,7 +84,7 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "move_w_pos"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -97,7 +97,7 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "move_x_pos"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -111,7 +111,7 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "move_x_pos"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -125,7 +125,7 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "rotate_xw_pos"),
             state,
             yaw_deg_for_view_movement=90.0,
@@ -137,10 +137,10 @@ class TestNdRouting(unittest.TestCase):
 
     def test_system_action_emits_sfx(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         sfx: list[str] = []
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(SYSTEM_KEYS, "menu"),
             state,
             sfx_handler=sfx.append,
@@ -150,7 +150,7 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(sfx, ["menu_confirm"])
 
         sfx.clear()
-        result_help = frontend_nd.route_nd_keydown(
+        result_help = frontend_nd_input.route_nd_keydown(
             _key_for(SYSTEM_KEYS, "help"),
             state,
             sfx_handler=sfx.append,
@@ -163,10 +163,10 @@ class TestNdRouting(unittest.TestCase):
         if int(quit_key) != int(pygame.K_ESCAPE):
             self.skipTest("system quit key is not bound to escape in this profile")
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         sfx: list[str] = []
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             quit_key,
             state,
             sfx_handler=sfx.append,
@@ -177,11 +177,11 @@ class TestNdRouting(unittest.TestCase):
 
     def test_bound_gameplay_key_takes_priority_over_view(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         sfx: list[str] = []
         view_calls: list[int] = []
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "move_x_neg"),
             state,
             view_key_handler=lambda key: view_calls.append(key) or True,
@@ -194,11 +194,11 @@ class TestNdRouting(unittest.TestCase):
 
     def test_reserved_key_does_not_reach_view_when_game_over(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         state.game_over = True
         view_calls: list[int] = []
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_4D, "move_x_neg"),
             state,
             view_key_handler=lambda key: view_calls.append(key) or True,
@@ -209,12 +209,12 @@ class TestNdRouting(unittest.TestCase):
 
     def test_unbound_key_can_drive_view_handler(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         sfx: list[str] = []
         view_calls: list[int] = []
         unbound_key = _find_unbound_4d_key()
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             unbound_key,
             state,
             view_key_handler=lambda key: view_calls.append(key) or True,
@@ -227,7 +227,7 @@ class TestNdRouting(unittest.TestCase):
 
     def test_bound_camera_key_routes_to_view_handler(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         view_calls: list[int] = []
         sfx: list[str] = []
         camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
@@ -235,7 +235,7 @@ class TestNdRouting(unittest.TestCase):
             state.current_piece.pos if state.current_piece is not None else None
         )
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             camera_key,
             state,
             view_key_handler=lambda key: view_calls.append(key) or True,
@@ -252,14 +252,14 @@ class TestNdRouting(unittest.TestCase):
         cfg = GameConfigND(
             dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=True
         )
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         piece = state.current_piece
         if piece is None:
             self.fail("expected active piece")
         start_pos = tuple(piece.pos)
         key = _key_for(KEYS_4D, "move_w_pos")
 
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             key,
             state,
             axis_overrides_by_action={"move_w_pos": (0, 1), "move_w_neg": (0, -1)},
@@ -272,7 +272,7 @@ class TestNdRouting(unittest.TestCase):
     def test_action_filter_blocks_bound_gameplay_action(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
-        blocked = frontend_nd.route_nd_keydown(
+        blocked = frontend_nd_input.route_nd_keydown(
             _key_for(KEYS_3D, "move_x_neg"),
             state,
             action_filter=lambda action: action != "move_x_neg",
@@ -282,10 +282,10 @@ class TestNdRouting(unittest.TestCase):
 
     def test_action_observer_receives_view_action_lookup(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         seen: list[str] = []
         camera_key = _key_for(CAMERA_KEYS_4D, "view_xw_pos")
-        result = frontend_nd.route_nd_keydown(
+        result = frontend_nd_input.route_nd_keydown(
             camera_key,
             state,
             view_key_handler=lambda _key: True,
@@ -305,18 +305,18 @@ class TestNdRouting(unittest.TestCase):
             exploration_mode=True,
             rng_seed=1234,
         )
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         while state.try_move_axis(0, -1):
             pass
         self.assertFalse(
-            frontend_nd.can_apply_nd_gameplay_action_with_view(
+            frontend_nd_input.can_apply_nd_gameplay_action_with_view(
                 state,
                 "move_z_neg",
                 yaw_deg_for_view_movement=90.0,
             )
         )
         self.assertTrue(
-            frontend_nd.can_apply_nd_gameplay_action_with_view(
+            frontend_nd_input.can_apply_nd_gameplay_action_with_view(
                 state,
                 "move_z_pos",
                 yaw_deg_for_view_movement=90.0,
@@ -331,18 +331,18 @@ class TestNdRouting(unittest.TestCase):
             exploration_mode=True,
             rng_seed=1234,
         )
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         while state.try_move_axis(0, 1):
             pass
         self.assertFalse(
-            frontend_nd.can_apply_nd_gameplay_action_with_view(
+            frontend_nd_input.can_apply_nd_gameplay_action_with_view(
                 state,
                 "move_w_pos",
                 axis_overrides_by_action={"move_w_pos": (0, 1)},
             )
         )
         self.assertTrue(
-            frontend_nd.can_apply_nd_gameplay_action_with_view(
+            frontend_nd_input.can_apply_nd_gameplay_action_with_view(
                 state,
                 "move_w_neg",
                 axis_overrides_by_action={"move_w_neg": (0, -1)},
@@ -352,4 +352,5 @@ class TestNdRouting(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

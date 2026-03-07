@@ -7,7 +7,7 @@ import pygame
 
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
-from tet4d.ui.pygame.launch.launcher_settings import SettingsHubResult
+from tet4d.ui.pygame.launch.settings_hub_model import SettingsHubResult
 from tet4d.ui.pygame.runtime_ui import pause_menu
 
 
@@ -215,3 +215,4 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             )
 
         self.assertEqual(decision, "quit")
+

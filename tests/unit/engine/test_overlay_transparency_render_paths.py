@@ -4,7 +4,7 @@ import unittest
 
 import pygame
 
-from tet4d.ui.pygame import front3d_render, front4d_render, frontend_nd
+from tet4d.ui.pygame import front3d_render, front4d_render, frontend_nd_state
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.ui.pygame import front3d_game, front4d_game
@@ -44,7 +44,7 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
     def test_front3d_active_piece_cells_are_not_overlay_cells(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         state.current_piece = ActivePieceND.from_shape(
             PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=6),
             pos=(2, 3, 2),
@@ -56,7 +56,7 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
     def test_front3d_overlay_cells_are_marked_for_alpha_path(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         state.current_piece = ActivePieceND.from_shape(
             PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=7),
             pos=(2, 3, 2),
@@ -73,7 +73,7 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
     def test_front4d_overlay_and_piece_paths_have_distinct_overlay_flags(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         state.current_piece = ActivePieceND.from_shape(
             PieceShapeND(
                 "tri4",
@@ -211,4 +211,5 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

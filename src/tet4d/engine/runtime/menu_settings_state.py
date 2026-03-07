@@ -1,33 +1,44 @@
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from .menu_config import default_settings_payload
 from .project_config import menu_settings_file_path, state_dir_path
-from .settings_sanitize import (
-    analytics_settings_from_payload,
-    audio_settings_from_payload,
-    display_settings_from_payload,
-    ensure_default_settings_payload,
-    merge_loaded_payload,
-    sanitize_payload,
-)
 from .settings_schema import (
-    MODE_KEYS,
-    PROFILE_NAME_RE,
     RuntimeSettingDefaults,
-    atomic_write_json,
-    clamp_lines_per_level,
     clamp_game_seed,
+    clamp_lines_per_level,
     clamp_overlay_transparency,
     clamp_toggle_index,
     derive_runtime_setting_defaults,
     mode_key_for_dimension,
-    read_json_value_or_raise,
 )
-from .runtime_config import kick_level_names
-from . import settings_schema as _settings_schema
+from .menu_settings.sections import (
+    GAME_SEED_MAX,
+    GAME_SEED_MIN,
+    GAME_SEED_STEP,
+    OVERLAY_TRANSPARENCY_MAX,
+    OVERLAY_TRANSPARENCY_MIN,
+    OVERLAY_TRANSPARENCY_STEP,
+    analytics_settings_for_payload,
+    audio_settings_for_payload,
+    coerce_shared_gameplay_settings,
+    display_settings_for_payload,
+    global_game_seed_from_payload,
+    mode_shared_gameplay_settings_from_payload,
+    normalize_mode_key,
+)
+from .menu_settings.store import (
+    apply_mode_settings_to_state,
+    default_settings_payload_for_runtime,
+    iter_all_mode_settings,
+    load_payload,
+    mode_settings_view,
+    normalize_active_profile_name,
+    sanitize_and_save_payload,
+    save_payload,
+    save_payload_section,
+)
 
 STATE_DIR = state_dir_path()
 STATE_FILE = menu_settings_file_path()
@@ -39,177 +50,44 @@ _RUNTIME_DEFAULTS: RuntimeSettingDefaults = derive_runtime_setting_defaults(
 DEFAULT_WINDOWED_SIZE = _RUNTIME_DEFAULTS.windowed_size
 DEFAULT_OVERLAY_TRANSPARENCY = _RUNTIME_DEFAULTS.overlay_transparency
 DEFAULT_GAME_SEED = _RUNTIME_DEFAULTS.game_seed
-OVERLAY_TRANSPARENCY_MIN = _settings_schema.OVERLAY_TRANSPARENCY_MIN
-OVERLAY_TRANSPARENCY_MAX = _settings_schema.OVERLAY_TRANSPARENCY_MAX
-OVERLAY_TRANSPARENCY_STEP = _settings_schema.OVERLAY_TRANSPARENCY_STEP
-GAME_SEED_MIN = _settings_schema.GAME_SEED_MIN
-GAME_SEED_MAX = _settings_schema.GAME_SEED_MAX
-GAME_SEED_STEP = _settings_schema.GAME_SEED_STEP
-
-_MODE_KEYS = set(MODE_KEYS)
-_KICK_LEVEL_NAMES = kick_level_names()
-
-
-def _clamp_kick_level_index(value: Any, *, default: int = 0) -> int:
-    max_index = max(0, len(_KICK_LEVEL_NAMES) - 1)
-    if isinstance(value, bool) or not isinstance(value, int):
-        numeric = int(default)
-    else:
-        numeric = int(value)
-    return max(0, min(max_index, numeric))
-
-
-_SHARED_GAMEPLAY_SPECS: tuple[
-    tuple[str, Any, int],
-    ...,
-] = (
-    ("random_mode_index", clamp_toggle_index, 0),
-    ("topology_advanced", clamp_toggle_index, 0),
-    ("kick_level_index", _clamp_kick_level_index, 0),
-    ("auto_speedup_enabled", clamp_toggle_index, 1),
-    ("lines_per_level", clamp_lines_per_level, 10),
-)
-
-
-def _normalize_mode_key(mode_key: str) -> str:
-    normalized = str(mode_key).strip().lower()
-    if normalized not in _MODE_KEYS:
-        raise ValueError("mode_key must be one of: 2d, 3d, 4d")
-    return normalized
-
-
-def _coerce_shared_gameplay_settings(
-    raw: dict[str, Any],
-    *,
-    defaults: dict[str, int] | None = None,
-) -> dict[str, int]:
-    normalized: dict[str, int] = {}
-    for setting_name, clamp_fn, fallback in _SHARED_GAMEPLAY_SPECS:
-        default_value = (
-            defaults[setting_name] if defaults is not None else int(fallback)
-        )
-        normalized[setting_name] = int(
-            clamp_fn(
-                raw.get(setting_name),
-                default=default_value,
-            )
-        )
-    return normalized
-
-
-def _normalize_active_profile_name(raw: Any, *, default: str) -> str:
-    if isinstance(raw, str):
-        value = raw.strip().lower()
-        if PROFILE_NAME_RE.match(value):
-            return value
-    return default
-
-
-def _settings_mapping(payload: dict[str, Any]) -> dict[str, Any]:
-    settings = payload.get("settings")
-    if isinstance(settings, dict):
-        return settings
-    settings = {}
-    payload["settings"] = settings
-    return settings
-
-
-def _mode_settings_mapping(
-    settings: dict[str, Any],
-    mode_key: str,
-) -> dict[str, Any]:
-    mode_settings = settings.get(mode_key)
-    if isinstance(mode_settings, dict):
-        return mode_settings
-    mode_settings = {}
-    settings[mode_key] = mode_settings
-    return mode_settings
-
-
-def _iter_all_mode_settings(
-    payload: dict[str, Any],
-) -> tuple[tuple[str, dict[str, Any]], ...]:
-    settings = _settings_mapping(payload)
-    mode_settings: list[tuple[str, dict[str, Any]]] = []
-    for mode_key in MODE_KEYS:
-        mode_settings.append((mode_key, _mode_settings_mapping(settings, mode_key)))
-    return tuple(mode_settings)
-
-
-def _mode_settings_view(settings: Any, mode_key: str) -> dict[str, Any]:
-    if not isinstance(settings, dict):
-        return {}
-    mode_settings = settings.get(mode_key)
-    return mode_settings if isinstance(mode_settings, dict) else {}
 
 
 def _default_settings_payload() -> dict[str, Any]:
-    return ensure_default_settings_payload(
-        default_settings_payload(),
-        defaults=_RUNTIME_DEFAULTS,
-    )
+    return default_settings_payload_for_runtime(_BASE_DEFAULTS, defaults=_RUNTIME_DEFAULTS)
 
 
 def _load_payload() -> dict[str, Any]:
-    payload = _default_settings_payload()
-    if not STATE_FILE.exists():
-        return payload
-    try:
-        loaded = read_json_value_or_raise(STATE_FILE)
-    except (OSError, json.JSONDecodeError):
-        return payload
-    if not isinstance(loaded, dict):
-        return payload
-
-    merge_loaded_payload(payload, loaded)
-    sanitize_payload(
-        payload,
-        default_payload=_default_settings_payload(),
+    return load_payload(
+        STATE_FILE,
+        base_default_payload=_BASE_DEFAULTS,
         defaults=_RUNTIME_DEFAULTS,
     )
-    return payload
 
 
 def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
-    try:
-        atomic_write_json(STATE_FILE, payload, trailing_newline=False)
-    except OSError as exc:
-        return False, f"Failed saving menu state: {exc}"
-    return True, f"Saved menu state to {STATE_FILE}"
+    return save_payload(STATE_FILE, payload)
 
 
 def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
-    sanitize_payload(
+    return sanitize_and_save_payload(
+        STATE_FILE,
         payload,
-        default_payload=_default_settings_payload(),
+        base_default_payload=_BASE_DEFAULTS,
         defaults=_RUNTIME_DEFAULTS,
     )
-    return _save_payload(payload)
 
 
 def _save_payload_section(
     section_name: str,
     updates: dict[str, Any],
 ) -> tuple[bool, str]:
-    payload = _load_payload()
-    section = payload.setdefault(section_name, {})
-    for key, value in updates.items():
-        if value is not None:
-            section[key] = value
-    return _sanitize_and_save_payload(payload)
-
-
-def _apply_mode_settings_to_state(state: Any, mode_settings: dict[str, Any]) -> None:
-    for attr_name, value in mode_settings.items():
-        if not hasattr(state.settings, attr_name):
-            continue
-        current = getattr(state.settings, attr_name)
-        if isinstance(current, int):
-            if isinstance(value, bool) or not isinstance(value, int):
-                continue
-        elif not isinstance(value, type(current)):
-            continue
-        setattr(state.settings, attr_name, value)
+    return save_payload_section(
+        STATE_FILE,
+        section_name,
+        updates,
+        base_default_payload=_BASE_DEFAULTS,
+        defaults=_RUNTIME_DEFAULTS,
+    )
 
 
 def apply_saved_menu_settings(
@@ -218,16 +96,16 @@ def apply_saved_menu_settings(
     include_profile: bool = True,
 ) -> tuple[bool, str]:
     payload = _load_payload()
-    default_profile = _normalize_active_profile_name(
+    default_profile = normalize_active_profile_name(
         _default_settings_payload().get("active_profile"),
         default="small",
     )
     mode_key = mode_key_for_dimension(dimension)
     mode_settings = payload.get("settings", {}).get(mode_key, {})
     if isinstance(mode_settings, dict):
-        _apply_mode_settings_to_state(state, mode_settings)
+        apply_mode_settings_to_state(state, mode_settings)
     if include_profile:
-        state.active_profile = _normalize_active_profile_name(
+        state.active_profile = normalize_active_profile_name(
             payload.get("active_profile"),
             default=default_profile,
         )
@@ -238,9 +116,9 @@ def save_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
     payload = _load_payload()
     mode_key = mode_key_for_dimension(dimension)
     payload["last_mode"] = mode_key
-    payload["active_profile"] = _normalize_active_profile_name(
+    payload["active_profile"] = normalize_active_profile_name(
         getattr(state, "active_profile", payload.get("active_profile")),
-        default=_normalize_active_profile_name(
+        default=normalize_active_profile_name(
             _default_settings_payload().get("active_profile"),
             default="small",
         ),
@@ -267,7 +145,7 @@ def reset_menu_settings_to_defaults(state: Any, dimension: int) -> tuple[bool, s
         if hasattr(state.settings, attr_name):
             setattr(state.settings, attr_name, value)
 
-    state.active_profile = _normalize_active_profile_name(
+    state.active_profile = normalize_active_profile_name(
         defaults.get("active_profile"),
         default="small",
     )
@@ -299,7 +177,7 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
 
 
 def get_display_settings() -> dict[str, Any]:
-    return display_settings_from_payload(
+    return display_settings_for_payload(
         _load_payload(),
         default_payload=_default_settings_payload(),
         defaults=_RUNTIME_DEFAULTS,
@@ -307,7 +185,7 @@ def get_display_settings() -> dict[str, Any]:
 
 
 def default_display_settings() -> dict[str, Any]:
-    return display_settings_from_payload(
+    return display_settings_for_payload(
         _default_settings_payload(),
         default_payload=_default_settings_payload(),
         defaults=_RUNTIME_DEFAULTS,
@@ -319,14 +197,14 @@ def get_overlay_transparency() -> float:
 
 
 def get_analytics_settings() -> dict[str, Any]:
-    return analytics_settings_from_payload(
+    return analytics_settings_for_payload(
         _load_payload(),
         default_payload=_default_settings_payload(),
     )
 
 
 def default_analytics_settings() -> dict[str, Any]:
-    return analytics_settings_from_payload(
+    return analytics_settings_for_payload(
         _default_settings_payload(),
         default_payload=_default_settings_payload(),
     )
@@ -354,14 +232,14 @@ def save_display_settings(
 
 
 def get_audio_settings() -> dict[str, Any]:
-    return audio_settings_from_payload(
+    return audio_settings_for_payload(
         _load_payload(),
         default_payload=_default_settings_payload(),
     )
 
 
 def default_audio_settings() -> dict[str, Any]:
-    return audio_settings_from_payload(
+    return audio_settings_for_payload(
         _default_settings_payload(),
         default_payload=_default_settings_payload(),
     )
@@ -376,9 +254,7 @@ def save_audio_settings(
     return _save_payload_section(
         "audio",
         {
-            "master_volume": (
-                None if master_volume is None else float(master_volume)
-            ),
+            "master_volume": None if master_volume is None else float(master_volume),
             "sfx_volume": None if sfx_volume is None else float(sfx_volume),
             "mute": None if mute is None else bool(mute),
         },
@@ -400,24 +276,25 @@ def save_analytics_settings(
 
 
 def get_global_game_seed() -> int:
-    payload = _load_payload()
-    raw_seed = _mode_settings_view(payload.get("settings"), "2d").get("game_seed")
-    return clamp_game_seed(raw_seed, default=DEFAULT_GAME_SEED)
+    return global_game_seed_from_payload(_load_payload(), default=DEFAULT_GAME_SEED)
 
 
 def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
-    normalized_mode = _normalize_mode_key(mode_key)
+    normalized_mode = normalize_mode_key(mode_key)
     defaults = _default_settings_payload()
-    mode_settings = _mode_settings_view(defaults.get("settings"), normalized_mode)
-    return _coerce_shared_gameplay_settings(mode_settings)
+    mode_settings = mode_settings_view(defaults.get("settings"), normalized_mode)
+    return coerce_shared_gameplay_settings(mode_settings)
 
 
 def mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
-    normalized_mode = _normalize_mode_key(mode_key)
+    normalized_mode = normalize_mode_key(mode_key)
     payload = _load_payload()
     defaults = default_mode_shared_gameplay_settings(normalized_mode)
-    mode_settings = _mode_settings_view(payload.get("settings"), normalized_mode)
-    return _coerce_shared_gameplay_settings(mode_settings, defaults=defaults)
+    return mode_shared_gameplay_settings_from_payload(
+        payload,
+        mode_key=normalized_mode,
+        defaults=defaults,
+    )
 
 
 def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
@@ -429,7 +306,6 @@ def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
 
 
 def save_shared_gameplay_settings(
-    *,
     random_mode_index: int,
     topology_advanced: int,
     kick_level_index: int,
@@ -444,10 +320,10 @@ def save_shared_gameplay_settings(
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
     }
-    for mode_key, mode_settings in _iter_all_mode_settings(payload):
+    for mode_key, mode_settings in iter_all_mode_settings(payload):
         defaults = default_mode_shared_gameplay_settings(mode_key)
         mode_settings.update(
-            _coerce_shared_gameplay_settings(raw_values, defaults=defaults)
+            coerce_shared_gameplay_settings(raw_values, defaults=defaults)
         )
     return _sanitize_and_save_payload(payload)
 
@@ -455,11 +331,47 @@ def save_shared_gameplay_settings(
 def save_global_game_seed(seed: int) -> tuple[bool, str]:
     payload = _load_payload()
     clamped_seed = clamp_game_seed(seed, default=DEFAULT_GAME_SEED)
-    for _mode_key, mode_settings in _iter_all_mode_settings(payload):
+    for _mode_key, mode_settings in iter_all_mode_settings(payload):
         mode_settings["game_seed"] = clamped_seed
-
     return _sanitize_and_save_payload(payload)
 
 
-
-
+__all__ = [
+    "DEFAULT_GAME_SEED",
+    "DEFAULT_OVERLAY_TRANSPARENCY",
+    "DEFAULT_WINDOWED_SIZE",
+    "GAME_SEED_MAX",
+    "GAME_SEED_MIN",
+    "GAME_SEED_STEP",
+    "OVERLAY_TRANSPARENCY_MAX",
+    "OVERLAY_TRANSPARENCY_MIN",
+    "OVERLAY_TRANSPARENCY_STEP",
+    "STATE_DIR",
+    "STATE_FILE",
+    "apply_saved_menu_settings",
+    "clamp_game_seed",
+    "clamp_lines_per_level",
+    "clamp_overlay_transparency",
+    "clamp_toggle_index",
+    "default_analytics_settings",
+    "default_audio_settings",
+    "default_display_settings",
+    "default_mode_shared_gameplay_settings",
+    "get_analytics_settings",
+    "get_audio_settings",
+    "get_display_settings",
+    "get_global_game_seed",
+    "get_overlay_transparency",
+    "load_app_settings_payload",
+    "load_menu_settings",
+    "mode_shared_gameplay_settings",
+    "mode_speedup_settings",
+    "reset_menu_settings_to_defaults",
+    "save_analytics_settings",
+    "save_app_settings_payload",
+    "save_audio_settings",
+    "save_display_settings",
+    "save_global_game_seed",
+    "save_menu_settings",
+    "save_shared_gameplay_settings",
+]

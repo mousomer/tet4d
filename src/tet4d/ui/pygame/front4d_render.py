@@ -7,7 +7,7 @@ from typing import Callable, Optional
 
 import pygame
 
-from .frontend_nd import (
+from .frontend_nd_setup import (
     GfxFonts,
     gravity_interval_ms_from_config,
     piece_set_4d_label,
@@ -1066,5 +1066,6 @@ def spawn_clear_animation_if_needed(
     if not ghost_cells:
         return None, state.lines_cleared
     return ClearAnimation4D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
+
 
 

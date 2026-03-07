@@ -1,44 +1,13 @@
 from __future__ import annotations
 
-import random
 from collections.abc import Callable, Mapping
 
 import pygame
 
-from tet4d.engine.core.model import BoardND
-from tet4d.engine.core.rng import RNG_MODE_TRUE_RANDOM
-from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_nd
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.input.view_controls import viewer_relative_move_axis_delta
 from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D, SYSTEM_KEYS
-
-from . import frontend_nd_setup as _setup
-
-GfxFonts = _setup.GfxFonts
-GameSettingsND = _setup.GameSettingsND
-MenuState = _setup.MenuState
-build_config = _setup.build_config
-draw_gradient_background = _setup.draw_gradient_background
-draw_menu = _setup.draw_menu
-gravity_interval_ms_from_config = _setup.gravity_interval_ms_from_config
-init_fonts = _setup.init_fonts
-menu_fields_for_settings = _setup.menu_fields_for_settings
-piece_set_4d_label = _setup.piece_set_4d_label
-run_menu = _setup.run_menu
-
-
-def create_initial_state(cfg: GameConfigND) -> GameStateND:
-    board = BoardND(cfg.dims)
-    if cfg.rng_mode == RNG_MODE_TRUE_RANDOM:
-        rng = random.Random()
-    else:
-        rng = random.Random(cfg.rng_seed)
-    state = GameStateND(config=cfg, board=board, rng=rng)
-    if not cfg.exploration_mode:
-        apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
-    return state
-
 
 _SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid", "help")
 _GAMEPLAY_ACTIONS_3D = (
@@ -654,5 +623,3 @@ def handle_game_keydown(event: pygame.event.Event, state: GameStateND) -> str:
         event.key,
         state,
     )
-
-

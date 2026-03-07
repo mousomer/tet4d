@@ -2,7 +2,7 @@
 
 Last updated: 2026-03-07  
 Branch: `master`  
-Worktree expectation: dirty until this architecture batch is committed
+Worktree expectation: dirty until the final Stage 5 sync is committed
 
 ## Purpose
 
@@ -30,12 +30,12 @@ From `python scripts/arch_metrics.py` on 2026-03-07:
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.34` (`low`)
+- `tech_debt.score = 2.03` (`low`)
 
 Dominant remaining pressure:
 
-1. `code_balance = 1.07`
-2. `delivery_size_pressure = 1.26`
+1. `code_balance = 0.72`
+2. `delivery_size_pressure = 1.31`
 
 ## Canonical Ownership After This Batch
 
@@ -56,16 +56,19 @@ Dominant remaining pressure:
 - `src/tet4d/ui/pygame/front2d_game.py`
 - `src/tet4d/ui/pygame/front2d_setup.py`
 - `src/tet4d/ui/pygame/front2d_loop.py`
-- `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade)
+- `src/tet4d/ui/pygame/front2d_session.py`
+- `src/tet4d/ui/pygame/front2d_frame.py`
+- `src/tet4d/ui/pygame/front2d_results.py`
 - `src/tet4d/ui/pygame/frontend_nd_setup.py`
-- `src/tet4d/ui/pygame/frontend_nd.py`
+- `src/tet4d/ui/pygame/frontend_nd_state.py`
+- `src/tet4d/ui/pygame/frontend_nd_input.py`
 - `src/tet4d/ui/pygame/front3d_game.py`
 - `src/tet4d/ui/pygame/front4d_game.py`
 - `src/tet4d/ui/pygame/front3d_render.py`
 - `src/tet4d/ui/pygame/front4d_render.py`
 - `src/tet4d/ui/pygame/runtime_ui/*`
 - `src/tet4d/ui/pygame/menu/*`
-- `src/tet4d/ui/pygame/launch/*` (with `settings_hub_state.py` owning settings state/actions and `launcher_settings.py` owning orchestration/view)
+- `src/tet4d/ui/pygame/launch/*` (with `settings_hub_model.py` owning settings model/layout, `settings_hub_actions.py` owning settings mutations/text-entry, and `launcher_settings.py` owning orchestration/view)
 - `src/tet4d/ui/pygame/render/*`
 
 ### AI
@@ -76,8 +79,9 @@ Dominant remaining pressure:
 
 1. Folded 2D into the shared `src/tet4d/ui/pygame/` frontend structure and split
    ownership into `front2d_game.py` (orchestration), `front2d_setup.py`
-   (setup/menu), `front2d_loop.py` (runtime loop), and `front2d_runtime.py`
-   (compatibility facade for legacy imports/tests).
+   (setup/menu), `front2d_loop.py` (runtime orchestration), `front2d_session.py`
+   (session/state), `front2d_frame.py` (per-frame/update), and
+   `front2d_results.py` (results/leaderboard flow).
 2. Moved engine-owned render/frontend adapters out of `src/tet4d/engine/` into
    UI ownership.
 3. Removed all remaining reverse imports from `engine` into `ui` and `ai`.
@@ -99,9 +103,9 @@ Dominant remaining pressure:
 10. Moved remaining governance and render-benchmark callers off `engine.api` onto
     direct engine/UI owners, then reduced `src/tet4d/engine/api.py` to a small
     compatibility facade used mainly by replay and explicit compatibility tests.
-11. Split the 2D runtime loop into `src/tet4d/ui/pygame/front2d_loop.py`, kept
-    `front2d_runtime.py` as a compatibility surface only, and moved affected
-    tests to patch the real owner module.
+11. Finished the 2D runtime decomposition by splitting `front2d_loop.py` into
+    orchestration, session/state, frame/update, and results owners, then
+    deleted `front2d_runtime.py` after migrating affected callers/tests.
 12. Extracted the duplicated setup-menu event/save loop into
     `src/tet4d/ui/pygame/menu/setup_menu_runner.py` and rewired both 2D and ND
     setup flows to use it.
@@ -109,14 +113,20 @@ Dominant remaining pressure:
     `src/tet4d/ui/pygame/launch/launcher_settings.py` by extending
     `src/tet4d/engine/runtime/menu_settings_state.py` and reusing
     `src/tet4d/engine/runtime/settings_schema.py` window-size helpers.
-14. Split ND setup/menu/config ownership into
-    `src/tet4d/ui/pygame/frontend_nd_setup.py` and kept
-    `src/tet4d/ui/pygame/frontend_nd.py` focused on gameplay/input routing and
-    state creation.
-15. Split the shared settings hub into
-    `src/tet4d/ui/pygame/launch/settings_hub_state.py` (state/actions/defaults)
-    and `src/tet4d/ui/pygame/launch/launcher_settings.py`
-    (orchestration/view/entrypoints).
+14. Finished ND frontend decomposition by splitting shared ND ownership into
+    `frontend_nd_setup.py` (setup/menu/config), `frontend_nd_state.py`
+    (state creation), and `frontend_nd_input.py` (gameplay/input routing), then
+    deleted `frontend_nd.py`.
+15. Finished settings-hub decomposition by splitting shared settings ownership
+    into `settings_hub_model.py` (model/layout/defaults),
+    `settings_hub_actions.py` (mutation/text-entry/save/reset), and
+    `launcher_settings.py` (orchestration/view), then deleted
+    `settings_hub_state.py`.
+16. Split oversized engine-runtime helpers into stable facades plus smaller
+    internal owners:
+    - `menu_settings_state.py` over `runtime/menu_settings/`
+    - `menu_structure_schema.py` over `runtime/menu_structure/`
+    - `score_analyzer.py` over `runtime/score_analysis/`
 
 ## Validation Status
 
@@ -133,22 +143,20 @@ Validation completed during this batch:
 These are not current correctness bugs; they are watch areas for future LOC and
 ownership reduction.
 
-1. `src/tet4d/ui/pygame/launch/settings_hub_state.py`
-2. `src/tet4d/ui/pygame/frontend_nd.py`
-3. `src/tet4d/ui/pygame/front2d_loop.py`
-4. `src/tet4d/engine/runtime/`
-5. `src/tet4d/ui/pygame/launch/`
+1. `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+2. `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
+3. `src/tet4d/engine/runtime/menu_structure_schema.py`
+4. `src/tet4d/engine/runtime/score_analyzer.py`
+5. `src/tet4d/engine/runtime/menu_settings_state.py`
 
 ## Next High-Value Follow-Ups
 
-1. Keep shrinking `src/tet4d/ui/pygame/front2d_loop.py`; the loop owner is now
-   isolated, but it is still one of the larger 2D-specific modules.
-2. Keep shrinking `src/tet4d/ui/pygame/frontend_nd.py` and
-   `src/tet4d/ui/pygame/launch/settings_hub_state.py` now that setup/config state
-   and settings-hub actions are separated from orchestration.
-3. Keep trimming oversized UI/runtime owners in `src/tet4d/ui/pygame/launch/` and
-   `src/tet4d/engine/runtime/` without reintroducing wrapper layers.
-4. Keep docs, budgets, and package manifests synchronized whenever ownership changes.
+1. Keep trimming the runtime-engine facades (`menu_structure_schema.py`,
+   `score_analyzer.py`, `menu_settings_state.py`) only if hotspot growth returns.
+2. Watch `settings_hub_model.py` and `settings_hub_actions.py` for another split
+   only if new feature work pushes them back into mixed responsibility.
+3. Keep docs, budgets, generated references, and package manifests synchronized
+   whenever ownership changes.
 
 ## Restart Checklist
 
@@ -171,3 +179,5 @@ python scripts/arch_metrics.py
 CODEX_MODE=1 ./scripts/verify.sh
 ./scripts/ci_check.sh
 ```
+
+

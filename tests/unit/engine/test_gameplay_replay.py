@@ -15,7 +15,7 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
 from tet4d.ui.pygame import front2d_game as front2d
-from tet4d.ui.pygame import frontend_nd
+from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
 from tet4d.ui.pygame import front3d_game
 from tet4d.ui.pygame import front4d_game
 from tet4d.engine.gameplay.game2d import Action, GameConfig
@@ -124,7 +124,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="fixed_seed",
             rng_seed=4242,
         )
-        with patch("tet4d.ui.pygame.front2d_loop.random.Random", side_effect=random.Random) as ctor:
+        with patch("tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random) as ctor:
             state = front2d.create_initial_state(fixed_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with(4242)
@@ -137,7 +137,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="true_random",
             rng_seed=4242,
         )
-        with patch("tet4d.ui.pygame.front2d_loop.random.Random", side_effect=random.Random) as ctor:
+        with patch("tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random) as ctor:
             state = front2d.create_initial_state(true_random_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with()
@@ -179,9 +179,9 @@ class TestGameplayReplay(unittest.TestCase):
             rng_seed=2024,
         )
         with patch(
-            "tet4d.ui.pygame.frontend_nd.random.Random", side_effect=random.Random
+            "tet4d.ui.pygame.frontend_nd_state.random.Random", side_effect=random.Random
         ) as ctor:
-            state = frontend_nd.create_initial_state(fixed_cfg)
+            state = frontend_nd_state.create_initial_state(fixed_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with(2024)
 
@@ -193,9 +193,9 @@ class TestGameplayReplay(unittest.TestCase):
             rng_seed=2024,
         )
         with patch(
-            "tet4d.ui.pygame.frontend_nd.random.Random", side_effect=random.Random
+            "tet4d.ui.pygame.frontend_nd_state.random.Random", side_effect=random.Random
         ) as ctor:
-            state = frontend_nd.create_initial_state(true_random_cfg)
+            state = frontend_nd_state.create_initial_state(true_random_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with()
 
@@ -244,7 +244,7 @@ class TestGameplayReplay(unittest.TestCase):
         cfg = GameConfigND(
             dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True
         )
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         self.assertFalse(state.game_over)
         piece_before = state.current_piece
         pos_before = (
@@ -260,21 +260,21 @@ class TestGameplayReplay(unittest.TestCase):
 
         move_up = self._key_for(KEYS_4D, "move_y_neg")
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(move_up), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_up), state), "continue"
         )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
 
         move_down = self._key_for(KEYS_4D, "move_y_pos")
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(move_down), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_down), state), "continue"
         )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1])
 
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state), "continue"
         )
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
@@ -301,9 +301,9 @@ class TestGameplayReplay(unittest.TestCase):
         ] * 4
 
         def run_once() -> tuple:
-            state = frontend_nd.create_initial_state(cfg)
+            state = frontend_nd_state.create_initial_state(cfg)
             for key in script:
-                result = frontend_nd.handle_game_keydown(_keydown(key), state)
+                result = frontend_nd_input.handle_game_keydown(_keydown(key), state)
                 self.assertEqual(result, "continue")
                 state.step_gravity()
             return _state_signature_nd(state)
@@ -439,7 +439,7 @@ class TestGameplayReplay(unittest.TestCase):
 
     def test_4d_controls_and_view_smoke(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         state.board.cells.clear()
         state.current_piece = ActivePieceND.from_shape(
             PieceShapeND(
@@ -457,36 +457,36 @@ class TestGameplayReplay(unittest.TestCase):
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(move_z_neg), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_z_neg), state), "continue"
         )
         self.assertEqual(state.current_piece.pos, (2, 2, 2, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(move_w_pos), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_w_pos), state), "continue"
         )
         self.assertEqual(state.current_piece.pos, (2, 2, 2, 2))
 
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(rotate_xw), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(rotate_xw), state), "continue"
         )
         self.assertNotEqual(
             tuple(sorted(state.current_piece.rel_blocks)), before_blocks
         )
 
         self.assertEqual(
-            frontend_nd.handle_game_keydown(_keydown(hard_drop), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state), "continue"
         )
         self.assertGreater(len(state.board.cells), 0)
 
         self.assertEqual(
-            frontend_nd.handle_game_keydown(
+            frontend_nd_input.handle_game_keydown(
                 _keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state
             ),
             "toggle_grid",
         )
         self.assertEqual(
-            frontend_nd.handle_game_keydown(
+            frontend_nd_input.handle_game_keydown(
                 _keydown(self._key_for(SYSTEM_KEYS, "help")), state
             ),
             "help",
@@ -553,14 +553,14 @@ class TestGameplayReplay(unittest.TestCase):
         ]
 
         def run_once(*, with_view_turns: bool) -> tuple:
-            state = frontend_nd.create_initial_state(cfg)
+            state = frontend_nd_state.create_initial_state(cfg)
             view = front4d_game.LayerView3D()
             for idx, key in enumerate(game_script):
-                result = frontend_nd.handle_game_keydown(_keydown(key), state)
+                result = frontend_nd_input.handle_game_keydown(_keydown(key), state)
                 self.assertEqual(result, "continue")
                 if with_view_turns:
                     view_key = view_script[idx % len(view_script)]
-                    frontend_nd.route_nd_keydown(
+                    frontend_nd_input.route_nd_keydown(
                         view_key,
                         state,
                         view_key_handler=lambda raw_key: front4d_game.handle_view_key(
@@ -578,4 +578,5 @@ class TestGameplayReplay(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

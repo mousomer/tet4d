@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 import unittest
 
-from tet4d.ui.pygame.launch import launcher_settings
+from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -23,7 +23,7 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertIn(entry["label"], hub_rows)
 
     def test_launcher_settings_layout_matches_policy(self) -> None:
-        ok, message = launcher_settings._validate_unified_layout_against_policy()
+        ok, message = settings_hub_model._validate_unified_layout_against_policy()
         self.assertTrue(ok, message)
 
     def test_settings_hub_layout_rows_include_item_and_headers(self) -> None:
@@ -255,5 +255,6 @@ class TestMenuPolicy(unittest.TestCase):
             status_error=False,
             pending_reset_confirm=False,
         )
-        self.assertTrue(launcher_settings._apply_unified_numeric_text_value(state))
+        self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
+

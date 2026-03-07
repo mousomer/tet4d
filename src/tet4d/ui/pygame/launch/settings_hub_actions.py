@@ -1,28 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pygame
 
-from tet4d.engine.runtime.menu_config import (
-    settings_hub_layout_rows,
-    settings_option_labels,
-    settings_top_level_categories,
-    ui_copy_section,
-)
 from tet4d.engine.runtime.menu_settings_state import (
     DEFAULT_GAME_SEED,
     GAME_SEED_STEP,
     OVERLAY_TRANSPARENCY_STEP,
     clamp_game_seed,
     clamp_overlay_transparency,
-    default_analytics_settings,
-    default_audio_settings,
     default_display_settings,
-    default_mode_shared_gameplay_settings,
-    get_global_game_seed,
-    get_overlay_transparency,
-    mode_shared_gameplay_settings,
     save_analytics_settings,
     save_audio_settings,
     save_display_settings,
@@ -31,169 +17,46 @@ from tet4d.engine.runtime.menu_settings_state import (
 )
 from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
 from tet4d.engine.runtime.settings_schema import clamp_lines_per_level, sanitize_text
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.menu.numeric_text_input import (
     append_numeric_text,
     parse_numeric_text,
 )
-from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx, set_audio_settings
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
     apply_display_mode,
     normalize_display_settings,
 )
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx, set_audio_settings
 
-
-BG_TOP = (14, 18, 44)
-BG_BOTTOM = (4, 7, 20)
-TEXT_COLOR = (232, 232, 240)
-HIGHLIGHT_COLOR = (255, 224, 128)
-MUTED_COLOR = (192, 200, 228)
-_SETTINGS_OPTION_LABELS = settings_option_labels()
-_RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
-_KICK_LEVEL_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_kick_level"])
-_SETTINGS_HUB_COPY = ui_copy_section("settings_hub")
-_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS = (
-    default_mode_shared_gameplay_settings("2d")
+from .settings_hub_model import (
+    _AUTO_SPEEDUP_DEFAULT,
+    _KICK_LEVEL_DEFAULT,
+    _KICK_LEVEL_LABELS,
+    _LINES_PER_LEVEL_DEFAULT,
+    _NUMERIC_TEXT_MAX_LENGTH,
+    _RANDOM_MODE_DEFAULT,
+    _RANDOM_MODE_LABELS,
+    _TOPOLOGY_ADVANCED_DEFAULT,
+    _UnifiedSettingsState,
+    _analytics_defaults,
+    _audio_defaults,
+    _clone_audio_settings,
+    _clone_display_settings,
+    _display_defaults,
+    _is_unified_text_mode,
+    _mark_unified_dirty,
+    _set_unified_status,
+    _text_mode_numeric_value,
+    _unified_row_key,
 )
-_RANDOM_MODE_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["random_mode_index"])
-_TOPOLOGY_ADVANCED_DEFAULT = int(
-    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["topology_advanced"]
-)
-_KICK_LEVEL_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["kick_level_index"])
-_AUTO_SPEEDUP_DEFAULT = int(
-    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["auto_speedup_enabled"]
-)
-_LINES_PER_LEVEL_DEFAULT = int(
-    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["lines_per_level"]
-)
-_NUMERIC_TEXT_EDIT_ROWS = {
-    "display_width",
-    "display_height",
-    "game_seed",
-}
-_NUMERIC_TEXT_MAX_LENGTH = 16
 
 
 def _sanitize_text(value: str, max_length: int) -> str:
     return sanitize_text(value, max_length=max_length)
 
 
-@dataclass
-class SettingsHubResult:
-    screen: pygame.Surface
-    audio_settings: AudioSettings
-    display_settings: DisplaySettings
-    keep_running: bool
-
-
-@dataclass
-class _UnifiedSettingsState:
-    audio_settings: AudioSettings
-    display_settings: DisplaySettings
-    overlay_transparency: float
-    game_seed: int
-    random_mode_index: int
-    topology_advanced: int
-    kick_level_index: int
-    auto_speedup_enabled: int
-    lines_per_level: int
-    score_logging_enabled: bool
-    original_audio: AudioSettings
-    original_display: DisplaySettings
-    original_overlay_transparency: float
-    original_game_seed: int
-    original_random_mode_index: int
-    original_topology_advanced: int
-    original_kick_level_index: int
-    original_auto_speedup_enabled: int
-    original_lines_per_level: int
-    original_score_logging_enabled: bool
-    selected: int = 0
-    status: str = ""
-    status_error: bool = False
-    pending_reset_confirm: bool = False
-    text_mode_row_key: str = ""
-    text_mode_buffer: str = ""
-    text_mode_replace_on_type: bool = False
-    saved: bool = False
-    running: bool = True
-
-
-_UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = (
-    settings_hub_layout_rows()
-)
-_UNIFIED_SELECTABLE = tuple(
-    idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item"
-)
-
-
-def _configured_top_level_labels() -> tuple[str, ...]:
-    entries = settings_top_level_categories()
-    return tuple(entry["label"] for entry in entries)
-
-
-def _layout_top_level_labels() -> tuple[str, ...]:
-    return tuple(
-        label
-        for row_kind, label, _row_key in _UNIFIED_SETTINGS_ROWS
-        if row_kind == "header"
-    )
-
-
-def _validate_unified_layout_against_policy() -> tuple[bool, str]:
-    expected = _configured_top_level_labels()
-    actual = _layout_top_level_labels()
-    if expected == actual:
-        return True, "Settings layout policy verified"
-    return False, (
-        "Settings layout mismatch: expected top-level categories "
-        f"{', '.join(expected)} but UI renders {', '.join(actual)}"
-    )
-
-
-def _draw_gradient(surface: pygame.Surface) -> None:
-    draw_vertical_gradient(surface, BG_TOP, BG_BOTTOM)
-
-
-def _audio_defaults() -> AudioSettings:
-    defaults = default_audio_settings()
-    return AudioSettings(
-        master_volume=float(defaults["master_volume"]),
-        sfx_volume=float(defaults["sfx_volume"]),
-        mute=bool(defaults["mute"]),
-    )
-
-
-def _display_defaults() -> DisplaySettings:
-    defaults = default_display_settings()
-    return DisplaySettings(
-        fullscreen=bool(defaults["fullscreen"]),
-        windowed_size=tuple(defaults["windowed_size"]),
-    )
-
-
-def _analytics_defaults() -> bool:
-    defaults = default_analytics_settings()
-    return bool(defaults["score_logging_enabled"])
-
-
-def _clone_audio_settings(settings: AudioSettings) -> AudioSettings:
-    return AudioSettings(
-        master_volume=settings.master_volume,
-        sfx_volume=settings.sfx_volume,
-        mute=settings.mute,
-    )
-
-
-def _clone_display_settings(settings: DisplaySettings) -> DisplaySettings:
-    return DisplaySettings(
-        fullscreen=settings.fullscreen, windowed_size=settings.windowed_size
-    )
-
-
-def _sync_audio_preview(settings: AudioSettings) -> None:
+def _sync_audio_preview(settings) -> None:
     set_audio_settings(
         master_volume=settings.master_volume,
         sfx_volume=settings.sfx_volume,
@@ -203,36 +66,6 @@ def _sync_audio_preview(settings: AudioSettings) -> None:
 
 def _sync_analytics_preview(score_logging_enabled: bool) -> None:
     set_score_analyzer_logging_enabled(bool(score_logging_enabled))
-
-
-def _unified_row_key(state: _UnifiedSettingsState) -> str:
-    row_idx = _UNIFIED_SELECTABLE[state.selected]
-    return _UNIFIED_SETTINGS_ROWS[row_idx][2]
-
-
-def _set_unified_status(
-    state: _UnifiedSettingsState, message: str, *, is_error: bool = False
-) -> None:
-    state.status = message
-    state.status_error = is_error
-
-
-def _mark_unified_dirty(state: _UnifiedSettingsState) -> None:
-    state.saved = False
-
-
-def _is_unified_text_mode(state: _UnifiedSettingsState) -> bool:
-    return bool(state.text_mode_row_key)
-
-
-def _text_mode_numeric_value(state: _UnifiedSettingsState, row_key: str) -> int | None:
-    if row_key == "display_width":
-        return int(state.display_settings.windowed_size[0])
-    if row_key == "display_height":
-        return int(state.display_settings.windowed_size[1])
-    if row_key == "game_seed":
-        return int(state.game_seed)
-    return None
 
 
 def _stop_unified_text_mode(
@@ -279,12 +112,18 @@ def _apply_unified_numeric_text_value(state: _UnifiedSettingsState) -> bool:
         return False
     if row_key == "display_width":
         width = max(640, parsed)
-        _height = int(state.display_settings.windowed_size[1])
-        state.display_settings = DisplaySettings(state.display_settings.fullscreen, (width, _height))
+        height = int(state.display_settings.windowed_size[1])
+        state.display_settings = DisplaySettings(
+            state.display_settings.fullscreen,
+            (width, height),
+        )
     elif row_key == "display_height":
-        _width = int(state.display_settings.windowed_size[0])
+        width = int(state.display_settings.windowed_size[0])
         height = max(480, parsed)
-        state.display_settings = DisplaySettings(state.display_settings.fullscreen, (_width, height))
+        state.display_settings = DisplaySettings(
+            state.display_settings.fullscreen,
+            (width, height),
+        )
     elif row_key == "game_seed":
         state.game_seed = int(
             clamp_game_seed(
@@ -333,9 +172,7 @@ def _save_unified_settings(
     ok_analytics, msg_analytics = save_analytics_settings(
         score_logging_enabled=state.score_logging_enabled,
     )
-    ok_game_seed, msg_game_seed = save_global_game_seed(
-        int(state.game_seed)
-    )
+    ok_game_seed, msg_game_seed = save_global_game_seed(int(state.game_seed))
     ok_gameplay_shared, msg_gameplay_shared = save_shared_gameplay_settings(
         int(state.random_mode_index),
         int(state.topology_advanced),
@@ -426,7 +263,8 @@ def _adjust_unified_display_row(
 ) -> bool:
     if row_key == "display_fullscreen":
         state.display_settings = DisplaySettings(
-            not state.display_settings.fullscreen, state.display_settings.windowed_size
+            not state.display_settings.fullscreen,
+            state.display_settings.windowed_size,
         )
         return True
     if row_key == "display_width":
@@ -460,8 +298,7 @@ def _adjust_unified_gameplay_row(
     if row_key == "game_seed":
         state.game_seed = int(
             clamp_game_seed(
-                int(state.game_seed)
-                + delta_sign * int(GAME_SEED_STEP),
+                int(state.game_seed) + delta_sign * int(GAME_SEED_STEP),
                 default=int(DEFAULT_GAME_SEED),
             )
         )
@@ -603,82 +440,3 @@ def _handle_advanced_gameplay_event(
             enter_pressed=True,
         )
     return selected, True
-
-
-def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
-    if _is_unified_text_mode(state) and row_key == state.text_mode_row_key:
-        return f"{state.text_mode_buffer}_"
-    static_values = {
-        "audio_master": f"{int(state.audio_settings.master_volume * 100)}%",
-        "audio_sfx": f"{int(state.audio_settings.sfx_volume * 100)}%",
-        "audio_mute": "ON" if state.audio_settings.mute else "OFF",
-        "display_fullscreen": "ON" if state.display_settings.fullscreen else "OFF",
-        "display_width": str(state.display_settings.windowed_size[0]),
-        "display_height": str(state.display_settings.windowed_size[1]),
-        "display_overlay_transparency": (
-            f"{int(round(state.overlay_transparency * 100.0))}%"
-        ),
-        "game_seed": str(int(state.game_seed)),
-        "analytics_score_logging": "ON" if state.score_logging_enabled else "OFF",
-    }
-    value = static_values.get(row_key)
-    if value is not None:
-        return value
-    if row_key == "game_random_mode":
-        safe_index = max(
-            0,
-            min(len(_RANDOM_MODE_LABELS) - 1, int(state.random_mode_index)),
-        )
-        return _RANDOM_MODE_LABELS[safe_index]
-    if row_key == "game_topology_advanced":
-        return "ON" if int(state.topology_advanced) else "OFF"
-    if row_key == "gameplay_advanced":
-        kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-        mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        return f"{_KICK_LEVEL_LABELS[kick_index]} / {mode_text} / {int(state.lines_per_level)}"
-    return ""
-
-
-
-
-def build_unified_settings_state(
-    *,
-    audio_settings: AudioSettings,
-    display_settings: DisplaySettings,
-) -> _UnifiedSettingsState:
-    score_logging_enabled = bool(default_analytics_settings()["score_logging_enabled"])
-    overlay_transparency = get_overlay_transparency()
-    game_seed = int(
-        clamp_game_seed(
-            get_global_game_seed(),
-            default=int(DEFAULT_GAME_SEED),
-        )
-    )
-    mode_gameplay = mode_shared_gameplay_settings("2d")
-    random_mode_index = int(mode_gameplay["random_mode_index"])
-    topology_advanced = int(mode_gameplay["topology_advanced"])
-    kick_level_index = int(mode_gameplay["kick_level_index"])
-    auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
-    lines_per_level = int(mode_gameplay["lines_per_level"])
-    return _UnifiedSettingsState(
-        audio_settings=_clone_audio_settings(audio_settings),
-        display_settings=_clone_display_settings(display_settings),
-        overlay_transparency=overlay_transparency,
-        game_seed=game_seed,
-        random_mode_index=random_mode_index,
-        topology_advanced=topology_advanced,
-        kick_level_index=kick_level_index,
-        auto_speedup_enabled=auto_speedup_enabled,
-        lines_per_level=lines_per_level,
-        score_logging_enabled=score_logging_enabled,
-        original_audio=_clone_audio_settings(audio_settings),
-        original_display=_clone_display_settings(display_settings),
-        original_overlay_transparency=overlay_transparency,
-        original_game_seed=game_seed,
-        original_random_mode_index=random_mode_index,
-        original_topology_advanced=topology_advanced,
-        original_kick_level_index=kick_level_index,
-        original_auto_speedup_enabled=auto_speedup_enabled,
-        original_lines_per_level=lines_per_level,
-        original_score_logging_enabled=score_logging_enabled,
-    )

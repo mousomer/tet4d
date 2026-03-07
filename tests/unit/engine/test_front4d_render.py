@@ -13,7 +13,7 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
-from tet4d.ui.pygame import front4d_render, frontend_nd
+from tet4d.ui.pygame import front4d_render, frontend_nd_setup, frontend_nd_state
 from tet4d.ui.pygame import front4d_game
 from tet4d.ui.pygame import projection3d
 from tet4d.engine.gameplay.game_nd import GameConfigND
@@ -62,9 +62,9 @@ class TestFront4DRender(unittest.TestCase):
 
     def test_draw_helper_grid_with_hyper_turns_does_not_mutate_state(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
+        state = frontend_nd_state.create_initial_state(cfg)
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
-        fonts = frontend_nd.init_fonts()
+        fonts = frontend_nd_setup.init_fonts()
         screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
 
         before_board = dict(state.board.cells)
@@ -238,12 +238,12 @@ class TestFront4DRender(unittest.TestCase):
     ) -> None:
         projection3d.clear_projection_lattice_cache()
         try:
-            fonts = frontend_nd.init_fonts()
+            fonts = frontend_nd_setup.init_fonts()
             screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
             view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
 
             cfg_w3 = GameConfigND(dims=(6, 12, 6, 3), gravity_axis=1, speed_level=1)
-            state_w3 = frontend_nd.create_initial_state(cfg_w3)
+            state_w3 = frontend_nd_state.create_initial_state(cfg_w3)
             front4d_render.draw_game_frame(
                 screen, state_w3, view, fonts, grid_mode=GridMode.FULL
             )
@@ -260,7 +260,7 @@ class TestFront4DRender(unittest.TestCase):
             )
 
             cfg_w4 = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
-            state_w4 = frontend_nd.create_initial_state(cfg_w4)
+            state_w4 = frontend_nd_state.create_initial_state(cfg_w4)
             front4d_render.draw_game_frame(
                 screen, state_w4, view, fonts, grid_mode=GridMode.FULL
             )
@@ -293,8 +293,8 @@ class TestFront4DRender(unittest.TestCase):
 
     def test_layer_region_is_cleared_when_layer_count_shrinks(self) -> None:
         cfg = GameConfigND(dims=(5, 4, 3, 2), gravity_axis=1, speed_level=1)
-        state = frontend_nd.create_initial_state(cfg)
-        fonts = frontend_nd.init_fonts()
+        state = frontend_nd_state.create_initial_state(cfg)
+        fonts = frontend_nd_setup.init_fonts()
         screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
 
         view_many = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=0.0)
@@ -329,4 +329,5 @@ class TestFront4DRender(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

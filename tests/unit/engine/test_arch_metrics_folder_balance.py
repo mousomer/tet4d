@@ -263,6 +263,21 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
             for row in folder_balance["folders"]
             if row["path"] == "src/tet4d/engine/runtime"
         )
+        runtime_menu_settings_row = next(
+            row
+            for row in folder_balance["folders"]
+            if row["path"] == "src/tet4d/engine/runtime/menu_settings"
+        )
+        runtime_menu_structure_row = next(
+            row
+            for row in folder_balance["folders"]
+            if row["path"] == "src/tet4d/engine/runtime/menu_structure"
+        )
+        runtime_score_analysis_row = next(
+            row
+            for row in folder_balance["folders"]
+            if row["path"] == "src/tet4d/engine/runtime/score_analysis"
+        )
         core_step_row = next(
             row
             for row in folder_balance["folders"]
@@ -283,16 +298,26 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
             for row in folder_balance["folders"]
             if row["path"] == "src/tet4d/ui/pygame"
         )
-        self.assertEqual(runtime_row["folder_profile"], "default_leaf")
+        self.assertIsNone(runtime_row["folder_profile"])
         self.assertEqual(core_step_row["folder_profile"], "micro_leaf")
         self.assertEqual(core_rng_row["folder_profile"], "micro_leaf")
+        self.assertEqual(runtime_menu_settings_row["folder_profile"], "micro_leaf")
+        self.assertEqual(runtime_menu_structure_row["folder_profile"], "micro_leaf")
+        self.assertEqual(runtime_score_analysis_row["folder_profile"], "micro_leaf")
         self.assertEqual(tests_row["folder_profile"], "tests_leaf")
         self.assertEqual(core_step_row["folder_class"], "micro_core_leaf")
         self.assertEqual(core_rng_row["folder_class"], "micro_core_leaf")
         self.assertEqual(runtime_row["folder_class"], "code_default")
+        self.assertEqual(runtime_menu_settings_row["folder_class"], "micro_feature_leaf")
+        self.assertEqual(runtime_menu_structure_row["folder_class"], "micro_feature_leaf")
+        self.assertEqual(runtime_score_analysis_row["folder_class"], "micro_feature_leaf")
         self.assertEqual(tests_row["folder_class"], "tests_lenient")
         self.assertTrue(runtime_row["gate_eligible"])
         self.assertFalse(runtime_row["exclude_from_code_balance"])
+        self.assertFalse(runtime_row["leaf_folder"])
+        self.assertTrue(runtime_menu_settings_row["gate_eligible"])
+        self.assertTrue(runtime_menu_structure_row["gate_eligible"])
+        self.assertTrue(runtime_score_analysis_row["gate_eligible"])
         self.assertTrue(isinstance(runtime_row["gate_candidate"], bool))
         self.assertIn(
             "gate_eligible_leaf_fuzzy_weighted_balance_score_avg",

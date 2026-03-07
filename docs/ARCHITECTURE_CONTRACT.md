@@ -126,16 +126,20 @@ creating reverse dependencies.
 5. Engine tutorial convenience exports: `src/tet4d/engine/tutorial/api.py`
 6. 2D orchestration frontend: `src/tet4d/ui/pygame/front2d_game.py`
 7. 2D setup/menu owner: `src/tet4d/ui/pygame/front2d_setup.py`
-8. 2D runtime loop owner: `src/tet4d/ui/pygame/front2d_loop.py`
-9. 2D runtime compatibility facade: `src/tet4d/ui/pygame/front2d_runtime.py`
-10. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-11. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
-12. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd.py`
-13. Settings-hub state/actions owner: `src/tet4d/ui/pygame/launch/settings_hub_state.py`
-14. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
-15. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
-16. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
-17. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
+8. 2D runtime loop orchestration owner: `src/tet4d/ui/pygame/front2d_loop.py`
+9. 2D runtime session/state owner: `src/tet4d/ui/pygame/front2d_session.py`
+10. 2D per-frame/update owner: `src/tet4d/ui/pygame/front2d_frame.py`
+11. 2D results/leaderboard owner: `src/tet4d/ui/pygame/front2d_results.py`
+12. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+13. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
+14. ND state-construction owner: `src/tet4d/ui/pygame/frontend_nd_state.py`
+15. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd_input.py`
+16. Settings-hub model owner: `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+17. Settings-hub actions owner: `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
+18. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
+19. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
+20. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
+21. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
 
 ## Enforcement
 

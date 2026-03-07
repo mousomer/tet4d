@@ -44,7 +44,7 @@ from tet4d.engine.tutorial.api import (
     tutorial_runtime_transition_pending_runtime,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
-from tet4d.ui.pygame import front4d_render, frontend_nd
+from tet4d.ui.pygame import front4d_render, frontend_nd_input, frontend_nd_setup, frontend_nd_state
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
@@ -97,12 +97,12 @@ handle_view_key = front4d_render.handle_view_key
 movement_axis_overrides_for_view = front4d_render.movement_axis_overrides_for_view
 viewer_axes_for_view = front4d_render.viewer_axes_for_view
 spawn_clear_animation_if_needed = front4d_render.spawn_clear_animation_if_needed
-build_config = frontend_nd.build_config
-create_initial_state = frontend_nd.create_initial_state
-gravity_interval_ms_from_config = frontend_nd.gravity_interval_ms_from_config
-route_nd_keydown = frontend_nd.route_nd_keydown
-run_menu = frontend_nd.run_menu
-init_fonts = frontend_nd.init_fonts
+build_config = frontend_nd_setup.build_config
+create_initial_state = frontend_nd_state.create_initial_state
+gravity_interval_ms_from_config = frontend_nd_setup.gravity_interval_ms_from_config
+route_nd_keydown = frontend_nd_input.route_nd_keydown
+run_menu = frontend_nd_setup.run_menu
+init_fonts = frontend_nd_setup.init_fonts
 combined_score_multiplier = runtime_assist_combined_score_multiplier
 tutorial_runtime_create_session = tutorial_runtime_create_session_runtime
 tutorial_runtime_action_allowed = tutorial_runtime_action_allowed_runtime
@@ -230,7 +230,7 @@ def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) ->
     if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_4D:
         return True
     return bool(
-        frontend_nd.can_apply_nd_gameplay_action_with_view(
+        frontend_nd_input.can_apply_nd_gameplay_action_with_view(
             loop.state,
             action_id,
             yaw_deg_for_view_movement=loop.view.yaw_deg,
@@ -710,6 +710,7 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
+
 
 
 

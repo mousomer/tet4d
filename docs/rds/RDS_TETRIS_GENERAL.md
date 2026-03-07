@@ -347,7 +347,7 @@ Remaining follow-up:
 22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
 24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
-25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`src/tet4d/ui/pygame/frontend_nd.py`) via thin adapter in `src/tet4d/ui/pygame/launch/front3d_setup.py`.
+25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through the shared ND setup module (`src/tet4d/ui/pygame/frontend_nd_setup.py`) with ND state creation and gameplay/input routing owned separately by `frontend_nd_state.py` and `frontend_nd_input.py`.
 26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `src/tet4d/engine/ui_logic/menu_layout.py` and wired in `src/tet4d/ui/pygame/runtime_ui/help_menu.py`.
 27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `src/tet4d/ui/pygame/runtime_ui/help_menu.py` and `src/tet4d/engine/runtime/help_topics.py`.
 28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/governance/validate_project_contracts.py`.
@@ -405,3 +405,5 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 3. Clear-rule tests: region clears are deterministic and invariant to iteration order.
 4. Replay tests: same input stream yields same final state per geometry profile.
 5. Bot dry-run tests: no geometry profile may generate invalid/zero-sized placements.
+
+

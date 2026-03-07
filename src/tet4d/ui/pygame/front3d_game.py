@@ -48,7 +48,7 @@ from tet4d.engine.tutorial.api import (
     tutorial_runtime_transition_pending_runtime,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
-from tet4d.ui.pygame import front3d_render, frontend_nd
+from tet4d.ui.pygame import front3d_render, frontend_nd_input, frontend_nd_setup, frontend_nd_state
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
@@ -99,11 +99,11 @@ init_fonts = front3d_render.init_fonts
 suggested_window_size = front3d_render.suggested_window_size
 MARGIN = front3d_render.MARGIN
 SIDE_PANEL = front3d_render.SIDE_PANEL
-route_nd_keydown = frontend_nd.route_nd_keydown
-build_config = frontend_nd.build_config
-create_initial_state = frontend_nd.create_initial_state
-gravity_interval_ms_from_config = frontend_nd.gravity_interval_ms_from_config
-run_menu = frontend_nd.run_menu
+route_nd_keydown = frontend_nd_input.route_nd_keydown
+build_config = frontend_nd_setup.build_config
+create_initial_state = frontend_nd_state.create_initial_state
+gravity_interval_ms_from_config = frontend_nd_setup.gravity_interval_ms_from_config
+run_menu = frontend_nd_setup.run_menu
 combined_score_multiplier = runtime_assist_combined_score_multiplier
 collect_cleared_ghost_cells = runtime_collect_cleared_ghost_cells
 tutorial_runtime_create_session = tutorial_runtime_create_session_runtime
@@ -215,7 +215,7 @@ def _tutorial_can_apply_piece_action_3d(
     action_id: str,
 ) -> bool:
     return bool(
-        frontend_nd.can_apply_nd_gameplay_action_with_view(
+        frontend_nd_input.can_apply_nd_gameplay_action_with_view(
             loop.state,
             action_id,
             yaw_deg_for_view_movement=loop.camera.yaw_deg,
@@ -744,6 +744,7 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
+
 
 
 

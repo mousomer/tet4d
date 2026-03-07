@@ -33,7 +33,10 @@
       "tests/unit/engine": "tests_lenient",
       "src/tet4d/engine/core/rng": "micro_core_leaf",
       "src/tet4d/engine/core/step": "micro_core_leaf",
-      "src/tet4d/replay": "micro_feature_leaf"
+      "src/tet4d/replay": "micro_feature_leaf",
+      "src/tet4d/engine/runtime/menu_settings": "micro_feature_leaf",
+      "src/tet4d/engine/runtime/menu_structure": "micro_feature_leaf",
+      "src/tet4d/engine/runtime/score_analysis": "micro_feature_leaf"
     },
     "gate_overrides": {
       "tests/unit/engine": true
@@ -73,4 +76,3 @@
     }
   }
 }
-

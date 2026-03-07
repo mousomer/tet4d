@@ -56,26 +56,31 @@ The current rule is one-way:
 7. [game2d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/gameplay/game2d.py): 2D gameplay state/rules
 8. [game_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/gameplay/game_nd.py): 3D/4D gameplay state/rules
 9. [menu_config.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_config.py): menu/runtime config loading
-10. [menu_settings_state.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_settings_state.py): persisted settings state
-11. [content.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/content.py): tutorial content loader
-12. [runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/runtime.py): tutorial runtime session logic
+10. [menu_settings_state.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_settings_state.py): stable persisted-settings facade over `runtime/menu_settings/`
+11. [menu_structure_schema.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_structure_schema.py): stable menu-structure parsing facade over `runtime/menu_structure/`
+12. [score_analyzer.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/score_analyzer.py): stable score-analysis facade over `runtime/score_analysis/`
+13. [content.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/content.py): tutorial content loader
+14. [runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/runtime.py): tutorial runtime session logic
 
 ### UI
 
 1. [front2d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_game.py): 2D orchestration entry
 2. [front2d_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_setup.py): 2D setup/menu owner
-3. [front2d_loop.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_loop.py): 2D runtime loop owner
-4. [front2d_runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_runtime.py): 2D runtime compatibility facade for legacy imports/tests
-5. [frontend_nd_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd_setup.py): shared ND setup/menu/config owner
-6. [frontend_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd.py): shared ND gameplay/input owner
-7. [front3d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_game.py): 3D frontend
-8. [front4d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_game.py): 4D frontend
-9. [front3d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_render.py): 3D render adapter
-10. [front4d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_render.py): 4D render adapter
-11. [runtime_ui/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/runtime_ui): bootstrap, pause/help, tutorial overlay, shared loop helpers
-12. [launch/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/launch): launcher, settings, bot, leaderboard flows, including `settings_hub_state.py` + `launcher_settings.py`
-13. [menu/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/menu): shared menu/keybinding adapters, including `setup_menu_runner.py`
-14. [render/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/render): render/layout/helper adapters
+3. [front2d_loop.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_loop.py): 2D runtime orchestration entrypoint
+4. [front2d_session.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_session.py): 2D session/state owner
+5. [front2d_frame.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_frame.py): 2D per-frame/update owner
+6. [front2d_results.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_results.py): 2D results/leaderboard owner
+7. [frontend_nd_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd_setup.py): shared ND setup/menu/config owner
+8. [frontend_nd_state.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd_state.py): shared ND state-construction owner
+9. [frontend_nd_input.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd_input.py): shared ND gameplay/input routing owner
+10. [front3d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_game.py): 3D frontend
+11. [front4d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_game.py): 4D frontend
+12. [front3d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_render.py): 3D render adapter
+13. [front4d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_render.py): 4D render adapter
+14. [runtime_ui/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/runtime_ui): bootstrap, pause/help, tutorial overlay, shared loop helpers
+15. [launch/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/launch): launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`
+16. [menu/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/menu): shared menu/keybinding adapters, including `setup_menu_runner.py`
+17. [render/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/render): render/layout/helper adapters
 
 ### AI
 

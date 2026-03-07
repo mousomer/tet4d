@@ -11,7 +11,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     get_piece_shapes_nd,
     piece_set_options_for_dimension,
 )
-from tet4d.ui.pygame import front3d_game, frontend_nd
+from tet4d.ui.pygame import front3d_game, frontend_nd_setup
 from tet4d.ui.pygame.launch import launcher_play
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -40,11 +40,11 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertIs(kwargs["suggested_size_fn"], front3d_game.suggested_window_size)
         self.assertIs(kwargs["run_game_loop_fn"], front3d_game.run_game_loop)
 
-        with mock.patch.object(frontend_nd, "run_menu", return_value="menu") as run_menu:
+        with mock.patch.object(frontend_nd_setup, "run_menu", return_value="menu") as run_menu:
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 3)
 
-        with mock.patch.object(frontend_nd, "build_config", return_value="cfg") as build_config:
+        with mock.patch.object(frontend_nd_setup, "build_config", return_value="cfg") as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 3)
 
@@ -67,11 +67,11 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(kwargs["default_budget_ms"], 36)
         self.assertEqual(kwargs["mode_key"], "4d")
 
-        with mock.patch.object(frontend_nd, "run_menu", return_value="menu") as run_menu:
+        with mock.patch.object(frontend_nd_setup, "run_menu", return_value="menu") as run_menu:
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 4)
 
-        with mock.patch.object(frontend_nd, "build_config", return_value="cfg") as build_config:
+        with mock.patch.object(frontend_nd_setup, "build_config", return_value="cfg") as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 4)
 
@@ -132,7 +132,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(loop.state.board.dims, (6, 18, 6))
 
     def test_build_config_matches_shared_nd_builder(self) -> None:
-        settings = frontend_nd.GameSettingsND(
+        settings = frontend_nd_setup.GameSettingsND(
             width=6,
             height=14,
             depth=5,
@@ -153,8 +153,8 @@ class TestFront3DSetupDedup(unittest.TestCase):
             exploration_mode=0,
         )
 
-        cfg_adapter = frontend_nd.build_config(settings, 3)
-        cfg_shared = frontend_nd.build_config(settings, 3)
+        cfg_adapter = frontend_nd_setup.build_config(settings, 3)
+        cfg_shared = frontend_nd_setup.build_config(settings, 3)
 
         self.assertEqual(cfg_adapter.dims, cfg_shared.dims)
         self.assertEqual(cfg_adapter.gravity_axis, cfg_shared.gravity_axis)
@@ -168,18 +168,18 @@ class TestFront3DSetupDedup(unittest.TestCase):
         )
 
     def test_gravity_interval_matches_shared_nd_builder(self) -> None:
-        settings = frontend_nd.GameSettingsND(speed_level=4)
-        cfg = frontend_nd.build_config(settings, 3)
+        settings = frontend_nd_setup.GameSettingsND(speed_level=4)
+        cfg = frontend_nd_setup.build_config(settings, 3)
         self.assertEqual(
-            frontend_nd.gravity_interval_ms_from_config(cfg),
-            frontend_nd.gravity_interval_ms_from_config(cfg),
+            frontend_nd_setup.gravity_interval_ms_from_config(cfg),
+            frontend_nd_setup.gravity_interval_ms_from_config(cfg),
         )
 
     def test_4d_setup_can_select_six_cell_piece_set(self) -> None:
         options_4d = piece_set_options_for_dimension(4)
         six_cell_index = options_4d.index(PIECE_SET_4D_SIX)
-        settings = frontend_nd.GameSettingsND(piece_set_index=six_cell_index)
-        cfg = frontend_nd.build_config(settings, 4)
+        settings = frontend_nd_setup.GameSettingsND(piece_set_index=six_cell_index)
+        cfg = frontend_nd_setup.build_config(settings, 4)
         self.assertEqual(cfg.piece_set_id, PIECE_SET_4D_SIX)
         shapes = get_piece_shapes_nd(4, piece_set_id=cfg.piece_set_id)
         self.assertTrue(shapes)
@@ -204,3 +204,5 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+

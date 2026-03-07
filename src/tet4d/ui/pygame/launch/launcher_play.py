@@ -166,7 +166,7 @@ def launch_3d(
     *,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
-    from tet4d.ui.pygame import front3d_game, frontend_nd
+    from tet4d.ui.pygame import front3d_game, frontend_nd_setup
 
     return _launch_mode_flow(
         screen=screen,
@@ -174,12 +174,12 @@ def launch_3d(
         display_settings=display_settings,
         setup_caption=setup_caption_for_dimension(3),
         game_caption=game_caption_for_dimension(3),
-        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd.run_menu(
+        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd_setup.run_menu(
             menu_screen,
             active_fonts,
             3,
         ),
-        build_cfg_fn=lambda settings: frontend_nd.build_config(settings, 3),
+        build_cfg_fn=lambda settings: frontend_nd_setup.build_config(settings, 3),
         suggested_size_fn=front3d_game.suggested_window_size,
         run_game_loop_fn=front3d_game.run_game_loop,
         default_budget_ms=24,
@@ -195,7 +195,7 @@ def launch_4d(
     *,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
-    from tet4d.ui.pygame import front4d_game, frontend_nd
+    from tet4d.ui.pygame import front4d_game, frontend_nd_setup
 
     return _launch_mode_flow(
         screen=screen,
@@ -203,15 +203,16 @@ def launch_4d(
         display_settings=display_settings,
         setup_caption=setup_caption_for_dimension(4),
         game_caption=game_caption_for_dimension(4),
-        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd.run_menu(
+        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd_setup.run_menu(
             menu_screen,
             active_fonts,
             4,
         ),
-        build_cfg_fn=lambda settings: frontend_nd.build_config(settings, 4),
+        build_cfg_fn=lambda settings: frontend_nd_setup.build_config(settings, 4),
         suggested_size_fn=front4d_game.suggested_window_size,
         run_game_loop_fn=front4d_game.run_game_loop,
         default_budget_ms=36,
         mode_key="4d",
         tutorial_lesson_id=tutorial_lesson_id,
     )
+

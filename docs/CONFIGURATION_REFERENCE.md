@@ -1043,6 +1043,18 @@ Parameters:
 - `profiles.default_leaf.weights.avg_loc_per_file`: `0.3` (`float`)
 - `profiles.default_leaf.weights.py_files`: `0.5` (`float`)
 - `profiles.default_leaf.weights.py_loc_total`: `0.2` (`float`)
+- `profiles.micro_leaf.avg_loc_per_file.soft_band[]`: array[`int`]; examples: `5`, `320`
+- `profiles.micro_leaf.avg_loc_per_file.target_band[]`: array[`int`]; examples: `12`, `180`
+- `profiles.micro_leaf.avg_loc_per_file.target_margin`: `15` (`int`)
+- `profiles.micro_leaf.py_files.soft_band[]`: array[`int`]; examples: `1`, `8`
+- `profiles.micro_leaf.py_files.target_band[]`: array[`int`]; examples: `2`, `5`
+- `profiles.micro_leaf.py_files.target_margin`: `1` (`int`)
+- `profiles.micro_leaf.py_loc_total.soft_band[]`: array[`int`]; examples: `10`, `1800`
+- `profiles.micro_leaf.py_loc_total.target_band[]`: array[`int`]; examples: `30`, `650`
+- `profiles.micro_leaf.py_loc_total.target_margin`: `80` (`int`)
+- `profiles.micro_leaf.weights.avg_loc_per_file`: `0.3` (`float`)
+- `profiles.micro_leaf.weights.py_files`: `0.5` (`float`)
+- `profiles.micro_leaf.weights.py_loc_total`: `0.2` (`float`)
 - `profiles.tests_leaf.avg_loc_per_file.soft_band[]`: array[`int`]; examples: `10`, `420`
 - `profiles.tests_leaf.avg_loc_per_file.target_band[]`: array[`int`]; examples: `40`, `220`
 - `profiles.tests_leaf.avg_loc_per_file.target_margin`: `20` (`int`)
@@ -1063,10 +1075,10 @@ Parameters:
 - `status_order.skewed`: `2` (`int`)
 - `status_order.watch`: `1` (`int`)
 - `tracked_leaf_folders[]`: array[`object`]
-- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `0.71`, `1.0`
-- `tracked_leaf_folders[].baseline_status`: varies (`string`); examples: `"watch"`, `"balanced"`
-- `tracked_leaf_folders[].path`: varies (`string`); examples: `"src/tet4d/engine/runtime"`, `"tests/unit/engine"`
-- `tracked_leaf_folders[].profile`: varies (`string`); examples: `"default_leaf"`, `"tests_leaf"`
+- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`
+- `tracked_leaf_folders[].baseline_status`: varies (`string`); examples: `"balanced"`
+- `tracked_leaf_folders[].path`: varies (`string`); examples: `"src/tet4d/engine/runtime/menu_settings"`, `"src/tet4d/engine/runtime/menu_structure"`, `"src/tet4d/engine/runtime/score_analysis"`
+- `tracked_leaf_folders[].profile`: varies (`string`); examples: `"micro_leaf"`, `"tests_leaf"`
 
 ### `config/project/format_allowlist.txt`
 Entries:
@@ -1110,6 +1122,9 @@ Parameters:
 - `class_to_profile.tests_lenient`: `"tests_leaf"` (`string`)
 - `classification.class_overrides.src/tet4d/engine/core/rng`: `"micro_core_leaf"` (`string`)
 - `classification.class_overrides.src/tet4d/engine/core/step`: `"micro_core_leaf"` (`string`)
+- `classification.class_overrides.src/tet4d/engine/runtime/menu_settings`: `"micro_feature_leaf"` (`string`)
+- `classification.class_overrides.src/tet4d/engine/runtime/menu_structure`: `"micro_feature_leaf"` (`string`)
+- `classification.class_overrides.src/tet4d/engine/runtime/score_analysis`: `"micro_feature_leaf"` (`string`)
 - `classification.class_overrides.src/tet4d/replay`: `"micro_feature_leaf"` (`string`)
 - `classification.class_overrides.tests/unit/engine`: `"tests_lenient"` (`string`)
 - `classification.gate_overrides.tests/unit/engine`: `true` (`bool`)
@@ -1267,12 +1282,12 @@ Top-level keys: `magic_numbers`, `manifest_id`, `sanitation`, `schema_version`
 Parameters:
 - `magic_numbers.config_backed_entrypoints[]`: array[`object`]
 - `magic_numbers.config_backed_entrypoints[].forbidden_regex[]`: array[`empty, string`]; examples: `"\\b999_?999_?999\\b"`, `"\\b0\\.85\\b"`
-- `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_state.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
+- `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
 - `magic_numbers.config_backed_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed"`, `"clamp_overlay_transparency"`, `"clamp_lines_per_level"`
 - `magic_numbers.config_backed_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `manifest_id`: `"policy_runtime_rules"` (`string`)
 - `sanitation.text_entrypoints[]`: array[`object`]
-- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_state.py"`, `"src/tet4d/ui/pygame/launch/topology_lab_menu.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`
+- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/ui/pygame/launch/topology_lab_menu.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`
 - `sanitation.text_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"append_numeric_text"`, `"parse_numeric_text"`, `"_sanitize_profile_name"`
 - `sanitation.text_entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
 - `sanitation.text_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`

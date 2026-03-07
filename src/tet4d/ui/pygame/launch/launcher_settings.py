@@ -10,23 +10,11 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     normalize_display_settings,
 )
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
-from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
-from .settings_hub_state import (
-    HIGHLIGHT_COLOR,
-    MUTED_COLOR,
-    TEXT_COLOR,
-    SettingsHubResult,
-    _KICK_LEVEL_LABELS,
-    _NUMERIC_TEXT_EDIT_ROWS,
-    _SETTINGS_HUB_COPY,
-    _UNIFIED_SELECTABLE,
-    _UNIFIED_SETTINGS_ROWS,
-    _UnifiedSettingsState,
+from .settings_hub_actions import (
     _adjust_unified_with_arrows,
     _apply_unified_numeric_text_value,
-    _configured_top_level_labels,
-    _draw_gradient,
     _handle_advanced_gameplay_event,
     _handle_unified_text_input,
     _is_unified_text_mode,
@@ -38,12 +26,30 @@ from .settings_hub_state import (
     _stop_unified_text_mode,
     _sync_analytics_preview,
     _sync_audio_preview,
+)
+from .settings_hub_model import (
+    BG_BOTTOM,
+    BG_TOP,
+    HIGHLIGHT_COLOR,
+    MUTED_COLOR,
+    TEXT_COLOR,
+    SettingsHubResult,
+    _KICK_LEVEL_LABELS,
+    _NUMERIC_TEXT_EDIT_ROWS,
+    _SETTINGS_HUB_COPY,
+    _UNIFIED_SELECTABLE,
+    _UNIFIED_SETTINGS_ROWS,
+    _UnifiedSettingsState,
+    _configured_top_level_labels,
     _unified_row_key,
     _unified_value_text,
     _validate_unified_layout_against_policy,
     build_unified_settings_state,
 )
 
+
+def _draw_gradient(surface: pygame.Surface) -> None:
+    draw_vertical_gradient(surface, BG_TOP, BG_BOTTOM)
 def _handle_unified_enter(
     screen: pygame.Surface,
     fonts,
@@ -448,3 +454,4 @@ def run_settings_hub_menu(
         display_settings=final_display,
         keep_running=keep_running,
     )
+

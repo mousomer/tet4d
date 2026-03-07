@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .settings_schema import MODE_KEYS, as_non_empty_string, require_list, require_object
+from ..settings_schema import MODE_KEYS, as_non_empty_string, require_list, require_object
 
 UI_COPY_SECTION_SPECS: dict[str, dict[str, tuple[str, ...]]] = {
     "launcher": {

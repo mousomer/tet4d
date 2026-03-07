@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -19,6 +18,19 @@ from .score_analyzer_features import (
     placement_features,
     weighted_score,
 )
+from .score_analysis.store import (
+    append_json_line as _append_json_line,
+    atomic_write_summary_json as _atomic_write_summary_json,
+    default_config as _default_config_from_store,
+    load_json_object_or_default as _load_json_object_or_default,
+    load_summary as _load_summary_from_store,
+    resolve_output_path as _resolve_output_path_from_store,
+    state_root as _state_root_from_store,
+)
+from .score_analysis.validate import (
+    validate_score_analysis_event,
+    validate_score_analysis_summary,
+)
 
 _ROOT_DIR = PROJECT_ROOT
 _CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
@@ -36,58 +48,7 @@ _DEFAULT_CONFIG_PATH = _CONFIG_PATH
 
 
 def _default_config() -> dict[str, Any]:
-    try:
-        raw = _DEFAULT_CONFIG_PATH.read_text(encoding="utf-8")
-        loaded = json.loads(raw)
-        if isinstance(loaded, dict):
-            return loaded
-    except Exception:
-        pass
-    # Minimal fallback if config is unreadable/missing
-    return {
-        "version": 1,
-        "enabled": True,
-        "board": {
-            "near_complete_threshold": 0.8,
-            "top_zone_layers": 3,
-        },
-        "logging": {
-            "enabled": False,
-            "events_file": "state/analytics/score_events.jsonl",
-            "summary_file": "state/analytics/score_summary.json",
-        },
-        "scores": {
-            "board_health": {"bias": 0.62, "weights": {}},
-            "placement_quality": {"bias": 0.56, "weights": {}},
-        },
-    }
-
-
-def _load_json_object_or_default(path: Path, default: dict[str, Any]) -> dict[str, Any]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-        loaded = json.loads(raw)
-    except (OSError, json.JSONDecodeError):
-        return default
-    if not isinstance(loaded, dict):
-        return default
-    return loaded
-
-
-def _atomic_write_summary_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_suffix(path.suffix + ".tmp")
-    temp_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    temp_path.replace(path)
-
-
-def _append_json_line(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    return _default_config_from_store(_DEFAULT_CONFIG_PATH)
 
 
 @lru_cache(maxsize=1)
@@ -112,7 +73,7 @@ def reset_score_analyzer_runtime_state() -> None:
 
 
 def _state_root() -> Path:
-    return (_ROOT_DIR / state_dir_relative()).resolve()
+    return _state_root_from_store(_ROOT_DIR, state_dir_relative())
 
 
 def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> str:
@@ -120,12 +81,13 @@ def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> st
 
 
 def _resolve_output_path(raw_path: object, default_relative: str) -> Path:
-    relative = _sanitize_state_relative_path(raw_path, default_relative)
-    resolved = (_ROOT_DIR / relative).resolve()
-    state_root = _state_root()
-    if resolved != state_root and state_root not in resolved.parents:
-        return (_ROOT_DIR / default_relative).resolve()
-    return resolved
+    return _resolve_output_path_from_store(
+        root_dir=_ROOT_DIR,
+        state_root_path=_state_root(),
+        sanitize_state_relative_path_fn=sanitize_state_relative_path,
+        raw_path=raw_path,
+        default_relative=default_relative,
+    )
 
 
 def _logging_config() -> dict[str, object]:
@@ -263,151 +225,6 @@ def analyze_lock_event(
     }
 
 
-_EVENT_REQUIRED_FIELDS = (
-    "schema_version",
-    "session_id",
-    "seq",
-    "timestamp_utc",
-    "dimension",
-    "board_dims",
-    "piece_id",
-    "actor_mode",
-    "bot_mode",
-    "grid_mode",
-    "speed_level",
-    "cleared",
-    "raw_points",
-    "final_points",
-    "board_pre",
-    "placement",
-    "board_post",
-    "delta",
-    "board_health_score",
-    "placement_quality_score",
-)
-_SUMMARY_REQUIRED_FIELDS = (
-    "schema_version",
-    "updated_at_utc",
-    "totals",
-    "score_means",
-    "dimensions",
-    "actor_modes",
-    "bot_modes",
-    "grid_modes",
-    "sessions",
-)
-
-
-def _is_number(value: object) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
-def _require_fields(
-    payload: dict[str, object], fields: tuple[str, ...], *, label: str
-) -> tuple[bool, str]:
-    for key in fields:
-        if key not in payload:
-            return False, f"missing {label} field: {key}"
-    return True, ""
-
-
-def _require_non_empty_string_fields(
-    payload: dict[str, object],
-    fields: tuple[str, ...],
-    *,
-    label: str,
-) -> tuple[bool, str]:
-    for field in fields:
-        value = payload.get(field)
-        if not isinstance(value, str) or not value.strip():
-            return False, f"{label}.{field} must be a non-empty string"
-    return True, ""
-
-
-def _require_integer_fields(
-    payload: dict[str, object],
-    fields: tuple[str, ...],
-    *,
-    label: str,
-) -> tuple[bool, str]:
-    for field in fields:
-        value = payload.get(field)
-        if isinstance(value, bool) or not isinstance(value, int):
-            return False, f"{label}.{field} must be an integer"
-    return True, ""
-
-
-def _require_object_fields(
-    payload: dict[str, object],
-    fields: tuple[str, ...],
-    *,
-    label: str,
-) -> tuple[bool, str]:
-    for field in fields:
-        value = payload.get(field)
-        if not isinstance(value, dict):
-            return False, f"{label}.{field} must be an object"
-    return True, ""
-
-
-def _require_numeric_fields(
-    payload: dict[str, object],
-    fields: tuple[str, ...],
-    *,
-    label: str,
-    min_value: float | None = None,
-    max_value: float | None = None,
-) -> tuple[bool, str]:
-    for field in fields:
-        value = payload.get(field)
-        if not _is_number(value):
-            return False, f"{label}.{field} must be numeric"
-        number = float(value)
-        if min_value is not None and number < min_value:
-            return False, f"{label}.{field} must be >= {min_value}"
-        if max_value is not None and number > max_value:
-            return False, f"{label}.{field} must be <= {max_value}"
-    return True, ""
-
-
-def validate_score_analysis_event(event: dict[str, object]) -> tuple[bool, str]:
-    if not isinstance(event, dict):
-        return False, "event must be an object"
-    ok, msg = _require_fields(event, _EVENT_REQUIRED_FIELDS, label="event")
-    if not ok:
-        return ok, msg
-    ok, msg = _require_non_empty_string_fields(
-        event, ("session_id", "piece_id"), label="event"
-    )
-    if not ok:
-        return ok, msg
-    ok, msg = _require_integer_fields(
-        event,
-        ("seq", "dimension", "speed_level", "cleared", "raw_points", "final_points"),
-        label="event",
-    )
-    if not ok:
-        return ok, msg
-    board_dims = event.get("board_dims")
-    if not isinstance(board_dims, list) or not board_dims:
-        return False, "event.board_dims must be a non-empty list"
-    ok, msg = _require_object_fields(
-        event, ("board_pre", "placement", "board_post", "delta"), label="event"
-    )
-    if not ok:
-        return ok, msg
-    ok, msg = _require_numeric_fields(
-        event,
-        ("board_health_score", "placement_quality_score"),
-        label="event",
-        min_value=0.0,
-        max_value=1.0,
-    )
-    if not ok:
-        return ok, msg
-    return True, ""
-
-
 def _new_summary() -> dict[str, object]:
     return {
         "schema_version": int(_score_analyzer_config().get("version", 1)),
@@ -431,11 +248,11 @@ def _new_summary() -> dict[str, object]:
 
 
 def _load_summary(path: Path) -> dict[str, object]:
-    loaded = _load_json_object_or_default(path, _new_summary())
-    ok, _msg = validate_score_analysis_summary(loaded)
-    if not ok:
-        return _new_summary()
-    return loaded
+    return _load_summary_from_store(
+        path,
+        new_summary_fn=_new_summary,
+        validate_summary_fn=validate_score_analysis_summary,
+    )
 
 
 def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
@@ -517,42 +334,6 @@ def _update_summary(
     return summary
 
 
-def validate_score_analysis_summary(summary: dict[str, object]) -> tuple[bool, str]:
-    if not isinstance(summary, dict):
-        return False, "summary must be an object"
-    ok, msg = _require_fields(summary, _SUMMARY_REQUIRED_FIELDS, label="summary")
-    if not ok:
-        return ok, msg
-    totals = summary.get("totals")
-    if not isinstance(totals, dict):
-        return False, "summary.totals must be an object"
-    ok, msg = _require_integer_fields(
-        totals,
-        ("events", "cleared_total", "raw_points_total", "final_points_total"),
-        label="summary.totals",
-    )
-    if not ok:
-        return ok, msg
-    score_means = summary.get("score_means")
-    if not isinstance(score_means, dict):
-        return False, "summary.score_means must be an object"
-    ok, msg = _require_numeric_fields(
-        score_means,
-        ("board_health", "placement_quality"),
-        label="summary.score_means",
-    )
-    if not ok:
-        return ok, msg
-    ok, msg = _require_object_fields(
-        summary,
-        ("dimensions", "actor_modes", "bot_modes", "grid_modes", "sessions"),
-        label="summary",
-    )
-    if not ok:
-        return ok, msg
-    return True, ""
-
-
 def score_analysis_summary_snapshot() -> dict[str, object]:
     logging_cfg = _logging_config()
     raw_summary = str(logging_cfg.get("summary_file", _DEFAULT_SUMMARY_PATH))
@@ -625,3 +406,5 @@ def hud_analysis_lines(event: dict[str, object] | None) -> tuple[str, ...]:
         f"Board health: {health:.2f}",
         f"Trend: {trend}",
     )
+
+

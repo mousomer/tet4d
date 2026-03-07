@@ -22,22 +22,26 @@ Primary implementation and maintenance files:
 1. `src/tet4d/ui/pygame/front2d_game.py`
 2. `src/tet4d/ui/pygame/front2d_setup.py`
 3. `src/tet4d/ui/pygame/front2d_loop.py`
-4. `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade)
-5. `src/tet4d/ui/pygame/front3d_game.py`
-6. `src/tet4d/ui/pygame/front4d_game.py`
-7. `src/tet4d/ui/pygame/frontend_nd_setup.py`
-8. `src/tet4d/ui/pygame/frontend_nd.py`
-9. `src/tet4d/ui/pygame/launch/settings_hub_state.py`
-10. `src/tet4d/ui/pygame/launch/launcher_settings.py`
-11. `src/tet4d/ui/pygame/menu/menu_controls.py`
-12. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
-13. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-14. `src/tet4d/engine/runtime/menu_config.py`
-15. `src/tet4d/engine/runtime/help_topics.py`
-13. `config/menu/defaults.json`
-14. `config/menu/structure.json`
-15. `config/help/topics.json`
-16. `config/help/action_map.json`
+4. `src/tet4d/ui/pygame/front2d_session.py`
+5. `src/tet4d/ui/pygame/front2d_frame.py`
+6. `src/tet4d/ui/pygame/front2d_results.py`
+7. `src/tet4d/ui/pygame/front3d_game.py`
+8. `src/tet4d/ui/pygame/front4d_game.py`
+9. `src/tet4d/ui/pygame/frontend_nd_setup.py`
+10. `src/tet4d/ui/pygame/frontend_nd_state.py`
+11. `src/tet4d/ui/pygame/frontend_nd_input.py`
+12. `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+13. `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
+14. `src/tet4d/ui/pygame/launch/launcher_settings.py`
+15. `src/tet4d/ui/pygame/menu/menu_controls.py`
+16. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+17. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+18. `src/tet4d/engine/runtime/menu_config.py`
+19. `src/tet4d/engine/runtime/help_topics.py`
+20. `config/menu/defaults.json`
+21. `config/menu/structure.json`
+22. `config/help/topics.json`
+23. `config/help/action_map.json`
 
 ## 2. Design Goals
 
@@ -352,7 +356,7 @@ Implemented in code:
 7. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
-10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/settings_hub_state.py` + `src/tet4d/ui/pygame/launch/launcher_settings.py`.
+10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/settings_hub_model.py` + `src/tet4d/ui/pygame/launch/launcher_settings.py`.
 11. gameplay option labels used across setup/settings (for example random mode) are sourced from `config/menu/structure.json` (`settings_option_labels`) without Python fallback literals.
 12. setup hint copy for `2D/3D/4D` is sourced from
     `config/menu/structure.json` (`setup_hints`) and consumed by `frontend_nd_setup.py`.
@@ -479,3 +483,4 @@ Execution status:
 
 Execution artifact:
 1. Detailed execution plan lives in `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
+
