@@ -76,6 +76,15 @@ Dominant remaining pressure:
 
 - `src/tet4d/ai/playbot/*`
 
+## Transform Ownership Note
+
+- The requested piece-transform extraction plan is already complete in code.
+- Canonical owner: `src/tet4d/engine/core/piece_transform.py`.
+- Retrospective plan/inventory docs now exist at:
+  - `docs/plans/piece_transform_extraction.md`
+  - `docs/plans/piece_transform_inventory.md`
+- Current `HEAD` has already progressed beyond the original extraction-stage non-goal and now uses center-of-piece block rotation semantics.
+
 ## What This Batch Changed
 
 1. Folded 2D into the shared `src/tet4d/ui/pygame/` frontend structure and split

@@ -492,6 +492,9 @@ Current sub-batch (2026-03-05): canonical piece-transform extraction (no behavio
   - `src/tet4d/engine/api.py`
 - Added transform-equivalence regression coverage:
   - `tests/unit/engine/test_piece_transform.py`
+- Added retrospective extraction/inventory docs for the completed canonical transform migration:
+  - `docs/plans/piece_transform_extraction.md`
+  - `docs/plans/piece_transform_inventory.md`
 
 Current sub-batch (2026-03-05): menu navigation key policy split (`Esc` vs `Q`).
 
