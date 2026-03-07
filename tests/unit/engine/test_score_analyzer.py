@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import unittest
 from contextlib import contextmanager
-from pathlib import Path
 from uuid import uuid4
 from unittest import mock
 
 from tet4d.engine.runtime import score_analyzer
+from tet4d.engine.runtime.project_config import state_dir_path
 from tet4d.engine.runtime.score_analyzer import (
     analyze_lock_event,
     hud_analysis_lines,
@@ -23,7 +24,7 @@ from tet4d.engine.runtime.score_analyzer import (
 
 @contextmanager
 def _workspace_temp_dir(prefix: str):
-    root = Path.cwd() / "state" / "pytest_temp"
+    root = state_dir_path() / "pytest_temp"
     root.mkdir(parents=True, exist_ok=True)
     tmp_path = root / f"{prefix}_{uuid4().hex}"
     tmp_path.mkdir(parents=True, exist_ok=False)
@@ -99,87 +100,103 @@ class TestScoreAnalyzer(unittest.TestCase):
         self.assertTrue(ok, msg)
 
     def test_record_event_writes_event_and_summary(self) -> None:
-        with _workspace_temp_dir("score_analyzer") as tmp_path:
-            config_path = tmp_path / "score_analyzer.json"
-            events_path = tmp_path / "state" / "events.jsonl"
-            summary_path = tmp_path / "state" / "summary.json"
-            config_path.write_text(
-                json.dumps(
-                    {
-                        "version": 1,
-                        "enabled": True,
-                        "logging": {
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with _workspace_temp_dir("score_analyzer") as tmp_path:
+                config_path = tmp_path / "score_analyzer.json"
+                events_path = tmp_path / "state" / "events.jsonl"
+                summary_path = tmp_path / "state" / "summary.json"
+                config_path.write_text(
+                    json.dumps(
+                        {
+                            "version": 1,
                             "enabled": True,
-                            "events_file": "state/events.jsonl",
-                            "summary_file": "state/summary.json",
-                        },
-                    }
-                ),
-                encoding="utf-8",
-            )
+                            "logging": {
+                                "enabled": True,
+                                "events_file": "state/events.jsonl",
+                                "summary_file": "state/summary.json",
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
 
-            with (
-                mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
-                mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
-            ):
+                with (
+                    mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
+                    mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
+                ):
+                    reset_score_analyzer_runtime_state()
+                    self.assertTrue(score_analyzer_logging_enabled())
+
+                    first = self._sample_event(seq=1, session_id="session-a")
+                    second = self._sample_event(seq=2, session_id="session-a")
+                    record_score_analysis_event(first)
+                    record_score_analysis_event(second)
+
+                    lines = events_path.read_text(encoding="utf-8").strip().splitlines()
+                    self.assertEqual(len(lines), 2)
+                    first_logged = json.loads(lines[0])
+                    self.assertEqual(first_logged["session_id"], "session-a")
+                    self.assertEqual(first_logged["seq"], 1)
+
+                    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+                    ok, msg = validate_score_analysis_summary(summary)
+                    self.assertTrue(ok, msg)
+                    self.assertEqual(summary["totals"]["events"], 2)
+                    self.assertEqual(summary["sessions"]["session-a"]["events"], 2)
                 reset_score_analyzer_runtime_state()
-                self.assertTrue(score_analyzer_logging_enabled())
-
-                first = self._sample_event(seq=1, session_id="session-a")
-                second = self._sample_event(seq=2, session_id="session-a")
-                record_score_analysis_event(first)
-                record_score_analysis_event(second)
-
-                lines = events_path.read_text(encoding="utf-8").strip().splitlines()
-                self.assertEqual(len(lines), 2)
-                first_logged = json.loads(lines[0])
-                self.assertEqual(first_logged["session_id"], "session-a")
-                self.assertEqual(first_logged["seq"], 1)
-
-                summary = json.loads(summary_path.read_text(encoding="utf-8"))
-                ok, msg = validate_score_analysis_summary(summary)
-                self.assertTrue(ok, msg)
-                self.assertEqual(summary["totals"]["events"], 2)
-                self.assertEqual(summary["sessions"]["session-a"]["events"], 2)
-            reset_score_analyzer_runtime_state()
 
     def test_record_event_sanitizes_output_paths_to_state_dir(self) -> None:
-        with _workspace_temp_dir("score_analyzer") as tmp_path:
-            config_path = tmp_path / "score_analyzer.json"
-            config_path.write_text(
-                json.dumps(
-                    {
-                        "version": 1,
-                        "enabled": True,
-                        "logging": {
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with _workspace_temp_dir("score_analyzer") as tmp_path:
+                config_path = tmp_path / "score_analyzer.json"
+                config_path.write_text(
+                    json.dumps(
+                        {
+                            "version": 1,
                             "enabled": True,
-                            "events_file": "../../outside/events.jsonl",
-                            "summary_file": "/tmp/outside/summary.json",
-                        },
-                    }
-                ),
-                encoding="utf-8",
-            )
+                            "logging": {
+                                "enabled": True,
+                                "events_file": "../../outside/events.jsonl",
+                                "summary_file": "/tmp/outside/summary.json",
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
 
-            with (
-                mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
-                mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
-            ):
+                with (
+                    mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
+                    mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
+                ):
+                    reset_score_analyzer_runtime_state()
+                    record_score_analysis_event(
+                        self._sample_event(seq=1, session_id="sanitized")
+                    )
+
+                    safe_events = tmp_path / "state" / "analytics" / "score_events.jsonl"
+                    safe_summary = tmp_path / "state" / "analytics" / "score_summary.json"
+                    self.assertTrue(safe_events.exists())
+                    self.assertTrue(safe_summary.exists())
+                    self.assertFalse(
+                        (tmp_path.parent / "outside" / "events.jsonl").exists()
+                    )
+
                 reset_score_analyzer_runtime_state()
-                record_score_analysis_event(
-                    self._sample_event(seq=1, session_id="sanitized")
-                )
 
-                safe_events = tmp_path / "state" / "analytics" / "score_events.jsonl"
-                safe_summary = tmp_path / "state" / "analytics" / "score_summary.json"
-                self.assertTrue(safe_events.exists())
-                self.assertTrue(safe_summary.exists())
-                self.assertFalse(
-                    (tmp_path.parent / "outside" / "events.jsonl").exists()
-                )
+    def test_summary_snapshot_isolated_from_nested_totals_mutation(self) -> None:
+        reset_score_analyzer_runtime_state()
+        summary = score_analysis_summary_snapshot()
+        summary["totals"]["events"] = 999
 
-            reset_score_analyzer_runtime_state()
+        fresh = score_analysis_summary_snapshot()
+        self.assertNotEqual(fresh["totals"]["events"], 999)
 
+    def test_summary_snapshot_isolated_from_nested_sessions_mutation(self) -> None:
+        reset_score_analyzer_runtime_state()
+        summary = score_analysis_summary_snapshot()
+        summary["sessions"]["mutated"] = {"events": 7, "last_seq": 7, "last_timestamp_utc": "x"}
 
+        fresh = score_analysis_summary_snapshot()
+        self.assertNotIn("mutated", fresh["sessions"])
 if __name__ == "__main__":
     unittest.main()

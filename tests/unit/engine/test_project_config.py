@@ -1,17 +1,25 @@
 from __future__ import annotations
 
+import os
 import unittest
+from unittest import mock
 
 from tet4d.engine.runtime.project_config import (
     PROJECT_ROOT,
     keybindings_dir_relative,
+    leaderboard_file_default_path,
     leaderboard_file_default_relative,
+    menu_settings_file_path,
     menu_settings_file_relative,
     project_constant_int,
-    topology_profile_export_file_default_relative,
     resolve_state_relative_path,
     sanitize_state_relative_path,
+    score_events_file_default_path,
+    score_summary_file_default_path,
+    state_dir_path,
     state_dir_relative,
+    topology_profile_export_file_default_relative,
+    tutorial_progress_file_default_path,
 )
 
 
@@ -38,12 +46,53 @@ class TestProjectConfig(unittest.TestCase):
         )
 
     def test_state_path_resolution_stays_in_repo_state_root(self) -> None:
-        resolved = resolve_state_relative_path(
-            "../../outside.jsonl",
-            default_relative="state/menu_settings.json",
-        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            resolved = resolve_state_relative_path(
+                "../../outside.jsonl",
+                default_relative="state/menu_settings.json",
+            )
         expected = (PROJECT_ROOT / "state/menu_settings.json").resolve()
         self.assertEqual(resolved, expected)
+
+    def test_state_root_override_repoints_state_backed_paths(self) -> None:
+        override_root = "state/test_runs/project_config_override"
+        expected_root = (PROJECT_ROOT / override_root).resolve()
+        with mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}):
+            self.assertEqual(state_dir_path(), expected_root)
+            self.assertEqual(
+                menu_settings_file_path(),
+                expected_root / "menu_settings.json",
+            )
+            self.assertEqual(
+                tutorial_progress_file_default_path(),
+                expected_root / "tutorial/progress.json",
+            )
+            self.assertEqual(
+                leaderboard_file_default_path(),
+                expected_root / "analytics/leaderboard.json",
+            )
+            self.assertEqual(
+                score_events_file_default_path(),
+                expected_root / "analytics/score_events.jsonl",
+            )
+            self.assertEqual(
+                score_summary_file_default_path(),
+                expected_root / "analytics/score_summary.json",
+            )
+            self.assertEqual(
+                resolve_state_relative_path(
+                    "state/analytics/custom.jsonl",
+                    default_relative="state/analytics/score_events.jsonl",
+                ),
+                expected_root / "analytics/custom.jsonl",
+            )
+
+    def test_state_root_override_ignores_out_of_repo_paths(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {"TET4D_STATE_ROOT": "../../outside_state_root"},
+        ):
+            self.assertEqual(state_dir_path(), (PROJECT_ROOT / "state").resolve())
 
     def test_project_constant_int_uses_externalized_values(self) -> None:
         self.assertGreater(

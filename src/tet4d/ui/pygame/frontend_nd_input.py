@@ -470,27 +470,6 @@ def apply_nd_gameplay_action_with_view(
     return apply_nd_gameplay_action(state, action)
 
 
-def dispatch_nd_gameplay_key(
-    key: int,
-    state: GameStateND,
-    *,
-    yaw_deg_for_view_movement: float | None = None,
-    axis_overrides_by_action: Mapping[str, AxisOverride] | None = None,
-    viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
-) -> str | None:
-    action = gameplay_action_for_key(key, state.config)
-    if action is None:
-        return None
-    apply_nd_gameplay_action_with_view(
-        state,
-        action,
-        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
-        axis_overrides_by_action=axis_overrides_by_action,
-        viewer_axes_by_label=viewer_axes_by_label,
-    )
-    return action
-
-
 def route_nd_keydown(
     key: int,
     state: GameStateND,

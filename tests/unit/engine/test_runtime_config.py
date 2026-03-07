@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -77,34 +78,51 @@ class TestRuntimeConfig(unittest.TestCase):
         valid_policy = {
             "benchmark": {"history_file": "state/bench/custom_history.jsonl"}
         }
-        with mock.patch.object(
-            runtime_config, "_playbot_policy", return_value=valid_policy
-        ):
-            resolved = playbot_benchmark_history_file()
-        expected = (
-            runtime_config.CONFIG_DIR.parent / "state/bench/custom_history.jsonl"
-        ).resolve()
-        self.assertEqual(resolved, expected)
-
         invalid_policy = {"benchmark": {"history_file": "../../outside/history.jsonl"}}
-        with mock.patch.object(
-            runtime_config, "_playbot_policy", return_value=invalid_policy
-        ):
-            fallback = playbot_benchmark_history_file()
-        fallback_expected = (
-            runtime_config.CONFIG_DIR.parent
-            / runtime_config.DEFAULT_PLAYBOT_HISTORY_FILE
-        ).resolve()
-        self.assertEqual(fallback, fallback_expected)
-
         absolute_policy = {
             "benchmark": {"history_file": str(Path("/tmp/unsafe.jsonl"))}
         }
-        with mock.patch.object(
-            runtime_config, "_playbot_policy", return_value=absolute_policy
-        ):
-            absolute_fallback = playbot_benchmark_history_file()
-        self.assertEqual(absolute_fallback, fallback_expected)
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with mock.patch.object(
+                runtime_config, "_playbot_policy", return_value=valid_policy
+            ):
+                resolved = playbot_benchmark_history_file()
+            expected = (
+                runtime_config.CONFIG_DIR.parent / "state/bench/custom_history.jsonl"
+            ).resolve()
+            self.assertEqual(resolved, expected)
+
+            with mock.patch.object(
+                runtime_config, "_playbot_policy", return_value=invalid_policy
+            ):
+                fallback = playbot_benchmark_history_file()
+            fallback_expected = (
+                runtime_config.CONFIG_DIR.parent
+                / runtime_config.DEFAULT_PLAYBOT_HISTORY_FILE
+            ).resolve()
+            self.assertEqual(fallback, fallback_expected)
+
+            with mock.patch.object(
+                runtime_config, "_playbot_policy", return_value=absolute_policy
+            ):
+                absolute_fallback = playbot_benchmark_history_file()
+            self.assertEqual(absolute_fallback, fallback_expected)
+
+    def test_playbot_benchmark_history_file_respects_state_root_override(self) -> None:
+        override_root = "state/test_runs/runtime_config_override"
+        expected_root = (runtime_config.CONFIG_DIR.parent / override_root).resolve()
+        valid_policy = {
+            "benchmark": {"history_file": "state/bench/custom_history.jsonl"}
+        }
+        with mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}):
+            with mock.patch.object(
+                runtime_config, "_playbot_policy", return_value=valid_policy
+            ):
+                resolved = playbot_benchmark_history_file()
+        self.assertEqual(
+            resolved,
+            expected_root / "bench/custom_history.jsonl",
+        )
 
     def test_audio_event_specs_are_non_empty(self) -> None:
         specs = audio_event_specs()

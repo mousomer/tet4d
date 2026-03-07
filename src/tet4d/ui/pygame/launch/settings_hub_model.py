@@ -17,6 +17,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     default_audio_settings,
     default_display_settings,
     default_mode_shared_gameplay_settings,
+    get_analytics_settings,
     get_global_game_seed,
     get_overlay_transparency,
     mode_shared_gameplay_settings,
@@ -230,7 +231,7 @@ def build_unified_settings_state(
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
 ) -> _UnifiedSettingsState:
-    score_logging_enabled = bool(default_analytics_settings()["score_logging_enabled"])
+    score_logging_enabled = bool(get_analytics_settings()["score_logging_enabled"])
     overlay_transparency = get_overlay_transparency()
     game_seed = int(
         clamp_game_seed(

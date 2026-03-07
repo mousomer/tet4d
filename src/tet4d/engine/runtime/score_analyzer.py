@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -8,10 +9,10 @@ from typing import Any
 
 from .project_config import (
     PROJECT_ROOT,
+    resolve_state_relative_path,
     sanitize_state_relative_path,
     score_events_file_default_relative,
     score_summary_file_default_relative,
-    state_dir_relative,
 )
 from .score_analyzer_features import (
     board_health_features,
@@ -24,8 +25,6 @@ from .score_analysis.store import (
     default_config as _default_config_from_store,
     load_json_object_or_default as _load_json_object_or_default,
     load_summary as _load_summary_from_store,
-    resolve_output_path as _resolve_output_path_from_store,
-    state_root as _state_root_from_store,
 )
 from .score_analysis.validate import (
     validate_score_analysis_event,
@@ -72,21 +71,15 @@ def reset_score_analyzer_runtime_state() -> None:
     reload_score_analyzer_config()
 
 
-def _state_root() -> Path:
-    return _state_root_from_store(_ROOT_DIR, state_dir_relative())
-
-
 def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> str:
     return sanitize_state_relative_path(raw_path, default_relative=default_relative)
 
 
 def _resolve_output_path(raw_path: object, default_relative: str) -> Path:
-    return _resolve_output_path_from_store(
-        root_dir=_ROOT_DIR,
-        state_root_path=_state_root(),
-        sanitize_state_relative_path_fn=sanitize_state_relative_path,
-        raw_path=raw_path,
+    return resolve_state_relative_path(
+        raw_path,
         default_relative=default_relative,
+        root_dir=_ROOT_DIR,
     )
 
 
@@ -341,10 +334,10 @@ def score_analysis_summary_snapshot() -> dict[str, object]:
     cache_key = str(summary_path)
     summary = _SUMMARY_CACHE.get(cache_key)
     if summary is not None:
-        return dict(summary)
+        return deepcopy(summary)
     loaded = _load_summary(summary_path)
     _SUMMARY_CACHE[cache_key] = loaded
-    return dict(loaded)
+    return deepcopy(loaded)
 
 
 def record_score_analysis_event(event: dict[str, object]) -> None:
@@ -406,5 +399,3 @@ def hud_analysis_lines(event: dict[str, object] | None) -> tuple[str, ...]:
         f"Board health: {health:.2f}",
         f"Trend: {trend}",
     )
-
-

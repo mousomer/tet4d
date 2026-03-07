@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
@@ -240,6 +242,65 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertIn("game_kick_level", labels)
         self.assertGreaterEqual(len(labels["game_kick_level"]), 2)
 
+    def test_build_unified_settings_state_uses_persisted_analytics_state(self) -> None:
+        with (
+            mock.patch.object(
+                settings_hub_model,
+                "get_analytics_settings",
+                return_value={"score_logging_enabled": True},
+            ),
+            mock.patch.object(
+                settings_hub_model,
+                "default_analytics_settings",
+                return_value={"score_logging_enabled": False},
+            ),
+        ):
+            state = settings_hub_model.build_unified_settings_state(
+                audio_settings=AudioSettings(),
+                display_settings=DisplaySettings(),
+            )
+
+        self.assertTrue(state.score_logging_enabled)
+        self.assertTrue(state.original_score_logging_enabled)
+
+    def test_reset_unified_settings_restores_analytics_defaults(self) -> None:
+        with (
+            mock.patch.object(
+                settings_hub_model,
+                "get_analytics_settings",
+                return_value={"score_logging_enabled": True},
+            ),
+            mock.patch.object(
+                settings_hub_model,
+                "default_analytics_settings",
+                return_value={"score_logging_enabled": False},
+            ),
+        ):
+            state = settings_hub_model.build_unified_settings_state(
+                audio_settings=AudioSettings(),
+                display_settings=DisplaySettings(),
+            )
+
+        screen = object()
+        with (
+            mock.patch.object(settings_hub_actions, "_audio_defaults", return_value=AudioSettings()),
+            mock.patch.object(settings_hub_actions, "_display_defaults", return_value=DisplaySettings()),
+            mock.patch.object(
+                settings_hub_actions,
+                "default_display_settings",
+                return_value={"overlay_transparency": 0.25},
+            ),
+            mock.patch.object(settings_hub_actions, "_analytics_defaults", return_value=False),
+            mock.patch.object(settings_hub_actions, "_sync_audio_preview"),
+            mock.patch.object(settings_hub_actions, "_sync_analytics_preview"),
+            mock.patch.object(settings_hub_actions, "apply_display_mode", return_value=screen),
+            mock.patch.object(settings_hub_actions, "play_sfx"),
+        ):
+            returned = settings_hub_actions._reset_unified_settings(screen, state)
+
+        self.assertIs(returned, screen)
+        self.assertFalse(state.score_logging_enabled)
+
     def test_unified_settings_manual_numeric_edit_applies_large_values(self) -> None:
         state = SimpleNamespace(
             display_settings=DisplaySettings(
@@ -257,4 +318,3 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
-

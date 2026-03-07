@@ -187,27 +187,28 @@ Cross-cutting requirements are defined in:
 31. `python3 tools/governance/scan_secrets.py`
 32. Shared safe path/constants loader is:
 33. `src/tet4d/engine/runtime/project_config.py`
-34. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
-35. keep them ignored in `.gitignore` and never ship them as runtime contracts.
-36. If such files are accidentally committed (or if sensitive data is introduced), cleanup must include history purge across refs before release.
-37. Local environment bootstrap script is:
-38. `scripts/bootstrap_env.sh`
-39. Canonical schema/migration/help/replay/release artifacts are source-controlled:
-40. `config/schema/*.schema.json`
-41. `config/schema/help_topics.schema.json`
-42. `config/schema/help_action_map.schema.json`
-43. `docs/migrations/*.md`
-44. `config/project/policy/manifests/replay_manifest.json`
-45. `docs/help/HELP_INDEX.md`
-46. `config/project/policy/manifests/help_assets_manifest.json`
-47. `docs/RELEASE_CHECKLIST.md`
-48. Profiler/benchmark tool outputs must be constrained to paths under the project root.
-49. Desktop packaging assets are source-controlled:
-50. `packaging/pyinstaller/tet4d.spec`
-51. `packaging/scripts/build_macos.sh`
-52. `packaging/scripts/build_linux.sh`
-53. `packaging/scripts/build_windows.ps1`
-54. `.github/workflows/release-packaging.yml`
+34. Local verification and test harnesses may override the runtime state root through `TET4D_STATE_ROOT`, but resolved override paths must remain under the project root.
+35. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
+36. keep them ignored in `.gitignore` and never ship them as runtime contracts.
+37. If such files are accidentally committed (or if sensitive data is introduced), cleanup must include history purge across refs before release.
+38. Local environment bootstrap script is:
+39. `scripts/bootstrap_env.sh`
+40. Canonical schema/migration/help/replay/release artifacts are source-controlled:
+41. `config/schema/*.schema.json`
+42. `config/schema/help_topics.schema.json`
+43. `config/schema/help_action_map.schema.json`
+44. `docs/migrations/*.md`
+45. `config/project/policy/manifests/replay_manifest.json`
+46. `docs/help/HELP_INDEX.md`
+47. `config/project/policy/manifests/help_assets_manifest.json`
+48. `docs/RELEASE_CHECKLIST.md`
+49. Profiler/benchmark tool outputs must be constrained to paths under the project root.
+50. Desktop packaging assets are source-controlled:
+51. `packaging/pyinstaller/tet4d.spec`
+52. `packaging/scripts/build_macos.sh`
+53. `packaging/scripts/build_linux.sh`
+54. `packaging/scripts/build_windows.ps1`
+55. `.github/workflows/release-packaging.yml`
 55. Desktop packaging usage docs are source-controlled:
 56. `docs/RELEASE_INSTALLERS.md`
 57. Tutorial lesson packs are source-controlled:

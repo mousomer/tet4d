@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import os
 from pathlib import Path
 from typing import Any
 
@@ -148,12 +149,70 @@ def _normalize_relative_path(
 
 
 def _resolve_repo_relative(relative_path: str, default_relative: str) -> Path:
-    default_path = (PROJECT_ROOT / default_relative).resolve()
-    resolved = (PROJECT_ROOT / relative_path).resolve()
-    root = PROJECT_ROOT.resolve()
+    return _resolve_repo_relative_for_root(
+        relative_path,
+        default_relative,
+        root_dir=PROJECT_ROOT,
+    )
+
+
+def _resolve_repo_relative_for_root(
+    relative_path: str,
+    default_relative: str,
+    *,
+    root_dir: Path,
+) -> Path:
+    default_path = (root_dir / default_relative).resolve()
+    resolved = (root_dir / relative_path).resolve()
+    root = root_dir.resolve()
     if resolved == root or root in resolved.parents:
         return resolved
     return default_path
+
+
+def _state_root_override_path(*, root_dir: Path) -> Path | None:
+    raw = os.environ.get("TET4D_STATE_ROOT")
+    if not isinstance(raw, str):
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    candidate = Path(text)
+    if not candidate.is_absolute():
+        candidate = (root_dir / candidate).resolve()
+    else:
+        candidate = candidate.resolve()
+    root = root_dir.resolve()
+    if candidate == root or root in candidate.parents:
+        return candidate
+    return None
+
+
+def _state_relative_suffix(relative_path: str, *, state_root_relative: str) -> Path:
+    prefix = state_root_relative.rstrip("/")
+    if relative_path == prefix:
+        return Path()
+    return Path(relative_path[len(prefix) + 1 :])
+
+
+def _resolve_state_path_for_root(
+    relative_path: str,
+    *,
+    default_relative: str,
+    root_dir: Path,
+) -> Path:
+    override_root = _state_root_override_path(root_dir=root_dir)
+    if override_root is None:
+        return _resolve_repo_relative_for_root(
+            relative_path,
+            default_relative,
+            root_dir=root_dir,
+        )
+    suffix = _state_relative_suffix(
+        relative_path,
+        state_root_relative=state_dir_relative(),
+    )
+    return (override_root / suffix).resolve()
 
 
 def project_root_path() -> Path:
@@ -170,9 +229,13 @@ def state_dir_relative() -> str:
     )
 
 
-def state_dir_path() -> Path:
+def state_dir_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    override_root = _state_root_override_path(root_dir=root)
+    if override_root is not None:
+        return override_root
     rel = state_dir_relative()
-    return _resolve_repo_relative(rel, "state")
+    return _resolve_repo_relative_for_root(rel, "state", root_dir=root)
 
 
 def sanitize_state_relative_path(raw: object, *, default_relative: str) -> str:
@@ -183,9 +246,19 @@ def sanitize_state_relative_path(raw: object, *, default_relative: str) -> str:
     )
 
 
-def resolve_state_relative_path(raw: object, *, default_relative: str) -> Path:
+def resolve_state_relative_path(
+    raw: object,
+    *,
+    default_relative: str,
+    root_dir: Path | None = None,
+) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = sanitize_state_relative_path(raw, default_relative=default_relative)
-    return _resolve_repo_relative(rel, default_relative)
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative=default_relative,
+        root_dir=root,
+    )
 
 
 def _path_value(
@@ -209,9 +282,14 @@ def menu_settings_file_relative() -> str:
     )
 
 
-def menu_settings_file_path() -> Path:
+def menu_settings_file_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = menu_settings_file_relative()
-    return _resolve_repo_relative(rel, "state/menu_settings.json")
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/menu_settings.json",
+        root_dir=root,
+    )
 
 
 def keybindings_dir_relative() -> str:
@@ -261,9 +339,14 @@ def playbot_history_file_default_relative() -> str:
     )
 
 
-def playbot_history_file_default_path() -> Path:
+def playbot_history_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = playbot_history_file_default_relative()
-    return _resolve_repo_relative(rel, "state/bench/playbot_latency_history.jsonl")
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/bench/playbot_latency_history.jsonl",
+        root_dir=root,
+    )
 
 
 def score_events_file_default_relative() -> str:
@@ -282,6 +365,26 @@ def score_summary_file_default_relative() -> str:
     )
 
 
+def score_events_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = score_events_file_default_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/analytics/score_events.jsonl",
+        root_dir=root,
+    )
+
+
+def score_summary_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = score_summary_file_default_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/analytics/score_summary.json",
+        root_dir=root,
+    )
+
+
 def leaderboard_file_default_relative() -> str:
     return _path_value(
         "leaderboard_file_default",
@@ -290,9 +393,14 @@ def leaderboard_file_default_relative() -> str:
     )
 
 
-def leaderboard_file_default_path() -> Path:
+def leaderboard_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = leaderboard_file_default_relative()
-    return _resolve_repo_relative(rel, "state/analytics/leaderboard.json")
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/analytics/leaderboard.json",
+        root_dir=root,
+    )
 
 
 def topology_profile_export_file_default_relative() -> str:
@@ -303,9 +411,16 @@ def topology_profile_export_file_default_relative() -> str:
     )
 
 
-def topology_profile_export_file_default_path() -> Path:
+def topology_profile_export_file_default_path(
+    *, root_dir: Path | None = None
+) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = topology_profile_export_file_default_relative()
-    return _resolve_repo_relative(rel, "state/topology/selected_profile.json")
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/topology/selected_profile.json",
+        root_dir=root,
+    )
 
 
 def tutorial_progress_file_default_relative() -> str:
@@ -316,9 +431,14 @@ def tutorial_progress_file_default_relative() -> str:
     )
 
 
-def tutorial_progress_file_default_path() -> Path:
+def tutorial_progress_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
     rel = tutorial_progress_file_default_relative()
-    return _resolve_repo_relative(rel, "state/tutorial/progress.json")
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/tutorial/progress.json",
+        root_dir=root,
+    )
 
 
 def project_constant_int(

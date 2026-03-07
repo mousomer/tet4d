@@ -21,6 +21,7 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
 from tet4d.ui.pygame import keybindings
 from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime import menu_config
+from tet4d.engine.runtime.project_config import state_dir_path
 
 
 @dataclass
@@ -37,7 +38,7 @@ class _MenuState2D:
 
 
 def _new_workspace_temp_dir(prefix: str) -> Path:
-    root = Path.cwd() / "state" / "pytest_temp"
+    root = state_dir_path() / "pytest_temp"
     root.mkdir(parents=True, exist_ok=True)
     candidate = root / f"{prefix}_{uuid4().hex}"
     candidate.mkdir(parents=True, exist_ok=False)

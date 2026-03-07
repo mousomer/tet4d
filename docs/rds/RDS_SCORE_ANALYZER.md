@@ -141,6 +141,7 @@ Canonical files:
 4. Runtime logging is controlled by both config and user settings:
 5. config default: `config/gameplay/score_analyzer.json -> logging.enabled`,
 6. user override: `state/menu_settings.json -> analytics.score_logging_enabled`.
+7. Runtime summary snapshot helpers must return detached copies so callers cannot mutate cached analyzer state.
 
 ## 11. Retuning workflow
 

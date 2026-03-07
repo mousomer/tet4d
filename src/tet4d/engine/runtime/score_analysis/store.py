@@ -59,25 +59,6 @@ def append_json_line(path: Path, payload: dict[str, Any]) -> None:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
-def state_root(root_dir: Path, state_dir_relative_value: str) -> Path:
-    return (root_dir / state_dir_relative_value).resolve()
-
-
-def resolve_output_path(
-    *,
-    root_dir: Path,
-    state_root_path: Path,
-    sanitize_state_relative_path_fn,
-    raw_path: object,
-    default_relative: str,
-) -> Path:
-    relative = sanitize_state_relative_path_fn(raw_path, default_relative=default_relative)
-    resolved = (root_dir / relative).resolve()
-    if resolved != state_root_path and state_root_path not in resolved.parents:
-        return (root_dir / default_relative).resolve()
-    return resolved
-
-
 def load_summary(
     path: Path,
     *,

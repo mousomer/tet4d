@@ -391,6 +391,20 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-07): settings/analytics correctness hotfix.
+
+- Fixed the shared settings hub to seed `analytics.score_logging_enabled` from persisted runtime settings instead of source-controlled defaults, so preview and unsaved restore reflect the actual saved value.
+- Hardened `score_analysis_summary_snapshot()` to return detached copies instead of shallow top-level copies that leaked nested cached state.
+- Deleted the unused `dispatch_nd_gameplay_key()` helper from `src/tet4d/ui/pygame/frontend_nd_input.py` to keep the ND input surface aligned with the post-split ownership model.
+- Added focused regression coverage for persisted analytics initialization/reset-default behavior and score-summary snapshot isolation.
+
+Current sub-batch (2026-03-07): verification/state isolation hardening.
+
+- Added a canonical `TET4D_STATE_ROOT` override path in `src/tet4d/engine/runtime/project_config.py` so runtime state helpers can resolve menu settings, tutorial progress, analytics, and leaderboard outputs under an isolated project-local state root.
+- Hardened `scripts/verify.sh` with a serialized full-gate lock, per-run isolated state root, repo-local step logs, and a local `check_policy_compliance.sh` step so local verification matches CI formatting/policy checks and avoids GNU/BSD `mktemp` drift.
+- Repointed pytest temp handling and repo-local unittest helpers to the canonical state root instead of hardcoded `Path.cwd()/state/pytest_temp` paths.
+- Ignored the recurring `.tmp_pytest_contracts/` local artifact to reduce git-status noise from inaccessible temp directories.
+
 Current sub-batch (2026-03-07): Stage 0-5 architecture completion and lower-layer cleanup.
 
 - Sealed the restructuring baseline in a dedicated checkpoint commit before the final deletion-heavy stages.

@@ -2,7 +2,7 @@
 
 Last updated: 2026-03-07  
 Branch: `master`  
-Worktree expectation: dirty until the final Stage 5 sync is committed
+Worktree expectation: dirty only when an active batch is in progress
 
 ## Purpose
 
@@ -15,6 +15,7 @@ not a historical ledger. Long historical migration detail belongs in
 - `arch_stage`: `900`
 - Canonical local gate: `CODEX_MODE=1 ./scripts/verify.sh`
 - CI wrapper: `./scripts/ci_check.sh`
+- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and now include `scripts/check_policy_compliance.sh` so local verification matches the CI formatting policy.
 - Dependency direction:
   - `ui`, `ai`, `replay`, and `tools` may import engine modules directly
   - `engine` must not import `ui`, `ai`, `replay`, or `tools`
@@ -127,6 +128,8 @@ Dominant remaining pressure:
     - `menu_settings_state.py` over `runtime/menu_settings/`
     - `menu_structure_schema.py` over `runtime/menu_structure/`
     - `score_analyzer.py` over `runtime/score_analysis/`
+17. Applied a correctness hotfix batch after the restructure: the settings hub now seeds analytics from persisted runtime state, `score_analysis_summary_snapshot()` returns detached copies, and the unused `dispatch_nd_gameplay_key()` helper was deleted from `frontend_nd_input.py`.
+18. Hardened local verification against recurring Windows state collisions by adding a serialized `verify.sh` lock, a per-run `TET4D_STATE_ROOT` sandbox for full-gate runs, and env-aware pytest temp roots for Codex/local test helpers.
 
 ## Validation Status
 
