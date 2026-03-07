@@ -1,21 +1,25 @@
 from __future__ import annotations
 
-from tet4d.engine import api as engine_api
+from tet4d.ai.playbot.planner_2d import plan_best_2d_move
+from tet4d.ai.playbot.planner_nd import plan_best_nd_move
 from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
     DryRunReport,
     default_planning_budget_ms,
 )
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.rng import coerce_random
+from tet4d.engine.gameplay.challenge_mode import (
+    apply_challenge_prefill_2d,
+    apply_challenge_prefill_nd,
+)
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces_nd import PIECE_SET_4D_DEBUG
+from tet4d.engine.runtime.runtime_config import playbot_dry_run_defaults
 
-
-GameConfig = engine_api.GameConfig
-GameState = engine_api.GameState
-GameConfigND = engine_api.GameConfigND
-GameStateND = engine_api.GameStateND
-PIECE_SET_4D_DEBUG = engine_api.PIECE_SET_4D_DEBUG
-
-DEFAULT_DRY_RUN_PIECES, DEFAULT_DRY_RUN_SEED = engine_api.playbot_dry_run_defaults()
+DEFAULT_DRY_RUN_PIECES, DEFAULT_DRY_RUN_SEED = playbot_dry_run_defaults()
 
 
 def _is_4d_debug_dry_run(cfg: GameConfigND) -> bool:
@@ -79,8 +83,8 @@ def _run_dry_run_nd_once(
     budget: int,
     algorithm: BotPlannerAlgorithm,
 ) -> DryRunReport:
-    state = engine_api.new_game_state_nd(cfg, seed=seed)
-    engine_api.apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
+    state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=coerce_random(seed=seed))
+    apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
 
@@ -88,7 +92,7 @@ def _run_dry_run_nd_once(
         if state.game_over:
             break
         before_clears = state.lines_cleared
-        plan = engine_api.plan_best_nd_move(
+        plan = plan_best_nd_move(
             state,
             profile=planner_profile,
             budget_ms=budget,
@@ -134,8 +138,8 @@ def run_dry_run_2d(
     planning_budget_ms: int | None = None,
     planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
-    state = engine_api.new_game_state_2d(cfg, seed=seed)
-    engine_api.apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
+    state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=coerce_random(seed=seed))
+    apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
     budget = (
@@ -150,7 +154,7 @@ def run_dry_run_2d(
         if state.game_over:
             break
         before_clears = state.lines_cleared
-        plan = engine_api.plan_best_2d_move(
+        plan = plan_best_2d_move(
             state,
             profile=planner_profile,
             budget_ms=budget,
@@ -222,3 +226,4 @@ def run_dry_run_nd(
     if fallback.passed:
         return fallback
     return fallback if fallback.pieces_dropped > primary.pieces_dropped else primary
+

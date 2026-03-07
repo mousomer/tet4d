@@ -4,8 +4,15 @@ import random
 import time
 from dataclasses import dataclass
 
-from tet4d.engine import api as engine_api
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
+from tet4d.ai.playbot.planner_nd_core import (
+    build_column_levels,
+    evaluate_nd_board,
+    greedy_key_4d,
+    greedy_score_4d,
+    iter_settled_candidates,
+    simulate_lock_board,
+)
 from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
@@ -16,20 +23,13 @@ from tet4d.ai.playbot.types import (
     planning_lookahead_top_k,
     resolve_auto_planner_algorithm,
 )
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.piece_transform import canonicalize_blocks_nd, enumerate_orientations_nd
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 
-BoardND = engine_api.BoardND
-GameConfigND = engine_api.GameConfigND
-GameStateND = engine_api.GameStateND
-ActivePieceND = engine_api.ActivePieceND
-PieceShapeND = engine_api.PieceShapeND
-build_column_levels = engine_api.playbot_build_column_levels_nd
-canonical_blocks = engine_api.playbot_canonical_blocks_nd
-enumerate_orientations = engine_api.playbot_enumerate_orientations_nd
-evaluate_nd_board = engine_api.playbot_evaluate_nd_board
-greedy_key_4d = engine_api.greedy_key_4d
-greedy_score_4d = engine_api.playbot_greedy_score_4d
-iter_settled_candidates = engine_api.playbot_iter_settled_candidates_nd
-simulate_lock_board = engine_api.simulate_lock_board
+canonical_blocks = canonicalize_blocks_nd
+enumerate_orientations = enumerate_orientations_nd
 
 
 @dataclass(frozen=True)
@@ -331,3 +331,4 @@ def plan_best_nd_with_budget(
         algorithm=algorithm,
         planning_budget_ms=planning_budget_ms,
     )
+

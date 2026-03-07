@@ -1,4 +1,4 @@
-# 4D Tetris RDS
+﻿# 4D Tetris RDS
 
 Status: Active v0.7 (Verified 2026-02-19)  
 Author: Omer + Codex  
@@ -244,7 +244,7 @@ Implemented in code:
 5. Random 4D spawn stability improved by spawn-fit filtering and centered spawn placement in `src/tet4d/engine/gameplay/game_nd.py`.
 6. Debug 4D rectangle piece set is selectable and tested.
 7. Scoring matrix and random-piece stability checks are covered in `tests/unit/engine/test_game_nd.py`.
-8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`src/tet4d/engine/front4d_render.py`).
+8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`src/tet4d/ui/pygame/front4d_render.py`).
 9. Dedicated keybinding camera actions for these turns are implemented and conflict-safe by default:
 10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`.
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
@@ -254,3 +254,4 @@ Implemented in code:
 15. `xw` / `zw` view turns now use basis-driven board decomposition in renderer:
 16. layer axis/count and per-layer board dims are derived from the active signed-axis basis, and all layer render paths share that mapping.
 17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tests/unit/engine/test_front4d_render.py`).
+

@@ -22,7 +22,7 @@ from ..runtime.runtime_config import (
     rotation_kick_candidate_offsets,
 )
 from .scoring_bonus import plane_cell_count_for_dims, score_with_clear_bonuses
-from ..core.rotation_kicks import kick_candidate_vectors, resolve_kicked_piece_2d
+from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.locking import apply_lock_and_score
 from ..core.rules.state_queries import can_piece_exist_2d
 from ..core.step.reducer import step_2d as core_step_2d
@@ -313,21 +313,15 @@ class GameState:
         if self.current_piece is None:
             return
         rotated = self.current_piece.rotated(delta_steps)
-        plane_offsets = rotation_kick_candidate_offsets(self.config.kick_level)
-        if not plane_offsets:
-            if self._can_exist(rotated):
-                self.current_piece = rotated
-            return
-        resolved = resolve_kicked_piece_2d(
+        resolved = resolve_rotated_piece(
             rotated,
-            candidate_vectors=kick_candidate_vectors(
-                ndim=2,
-                axis_a=0,
-                axis_b=self.config.gravity_axis,
-                gravity_axis=self.config.gravity_axis,
-                plane_offsets=plane_offsets,
-            ),
-            move_piece=lambda piece, dx, dy: piece.moved(dx, dy),
+            ndim=2,
+            axis_a=0,
+            axis_b=self.config.gravity_axis,
+            gravity_axis=self.config.gravity_axis,
+            kick_level=self.config.kick_level,
+            plane_offsets_for_level=rotation_kick_candidate_offsets,
+            move_piece=lambda piece, vector: piece.moved(int(vector[0]), int(vector[1])),
             can_place=self._can_exist,
         )
         if resolved is not None:

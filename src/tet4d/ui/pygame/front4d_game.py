@@ -1,4 +1,4 @@
-# tetris_nd/front4d_game.py
+# tet4d/ui/pygame/front4d_game.py
 import math
 import sys
 from dataclasses import dataclass
@@ -6,47 +6,50 @@ from typing import Any, Optional, Tuple
 
 import pygame
 
-import tet4d.engine.api as engine_api
-from tet4d.ui.pygame.runtime_ui.app_runtime import (
-    capture_windowed_display_settings_from_event,
-    initialize_runtime,
-)
-from tet4d.ui.pygame.runtime_ui.audio import play_sfx
-from tet4d.ui.pygame.input.camera_mouse import (
-    MouseOrbitState,
-    apply_mouse_orbit_event,
-    mouse_wheel_delta,
-)
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ai.playbot import PlayBotController
 from tet4d.ai.playbot.types import (
     BotMode,
     bot_planner_algorithm_from_index,
     bot_mode_from_index,
     bot_planner_profile_from_index,
 )
-from tet4d.ui.pygame.runtime_ui.loop_runner_nd import run_nd_loop
-from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
-from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
-from tet4d.ui.pygame.runtime_ui.tutorial_overlay import tutorial_panel_last_rect
-from tet4d.ui.pygame.runtime_ui.panel_drag import (
-    PanelDragMixin,
-    helper_panel_rect_for_surface,
+from tet4d.engine.gameplay.api import runtime_assist_combined_score_multiplier
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
+from tet4d.engine.runtime.menu_settings_state import (
+    DEFAULT_OVERLAY_TRANSPARENCY,
+    OVERLAY_TRANSPARENCY_STEP,
+    clamp_overlay_transparency,
+    get_display_settings,
 )
-from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
-    handle_tutorial_hotkey,
-    maintain_tutorial_runtime_safety,
-    redo_tutorial_stage,
-    refresh_score_multiplier_state,
-    restart_loop_runtime_state,
-    running_tutorial_session,
-    tutorial_allowed_actions_blocked,
-    tutorial_action_delay_ms,
-    tutorial_overlay_start_from_setup,
-    tutorial_gated_mouse_orbit_event,
-    tutorial_required_action_blocked,
-    tutorial_sync,
+from tet4d.engine.runtime.project_config import project_constant_int
+from tet4d.engine.tutorial.api import (
+    tutorial_apply_step_setup_nd_runtime,
+    tutorial_board_dims_runtime,
+    tutorial_ensure_piece_visibility_nd_runtime,
+    tutorial_runtime_action_allowed_runtime,
+    tutorial_runtime_allowed_actions_runtime,
+    tutorial_runtime_completion_ready_runtime,
+    tutorial_runtime_consume_pending_setup_runtime,
+    tutorial_runtime_create_session_runtime,
+    tutorial_runtime_is_running_runtime,
+    tutorial_runtime_next_stage_runtime,
+    tutorial_runtime_observe_action_runtime,
+    tutorial_runtime_previous_stage_runtime,
+    tutorial_runtime_redo_stage_runtime,
+    tutorial_runtime_required_action_runtime,
+    tutorial_runtime_restart_runtime,
+    tutorial_runtime_skip_runtime,
+    tutorial_runtime_sync_and_advance_runtime,
+    tutorial_runtime_transition_pending_runtime,
 )
-
+from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
+from tet4d.ui.pygame import front4d_render, frontend_nd
+from tet4d.ui.pygame.input.camera_mouse import (
+    MouseOrbitState,
+    apply_mouse_orbit_event,
+    mouse_wheel_delta,
+)
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
@@ -54,49 +57,65 @@ from tet4d.ui.pygame.launch.launcher_play import (
     game_caption_for_dimension,
     setup_caption_for_dimension,
 )
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
+    capture_windowed_display_settings_from_event,
+    initialize_runtime,
+)
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx
+from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
+from tet4d.ui.pygame.runtime_ui.loop_runner_nd import run_nd_loop
+from tet4d.ui.pygame.runtime_ui.panel_drag import (
+    PanelDragMixin,
+    helper_panel_rect_for_surface,
+)
+from tet4d.ui.pygame.runtime_ui.pause_menu import run_pause_menu
+from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
+    handle_tutorial_hotkey,
+    maintain_tutorial_runtime_safety,
+    redo_tutorial_stage,
+    refresh_score_multiplier_state,
+    restart_loop_runtime_state,
+    running_tutorial_session,
+    tutorial_action_delay_ms,
+    tutorial_allowed_actions_blocked,
+    tutorial_gated_mouse_orbit_event,
+    tutorial_overlay_start_from_setup,
+    tutorial_required_action_blocked,
+    tutorial_sync,
+)
+from tet4d.ui.pygame.runtime_ui.tutorial_overlay import tutorial_panel_last_rect
 
-GameConfigND = engine_api.GameConfigND
-GameStateND = engine_api.GameStateND
-PlayBotController = engine_api.PlayBotController
 GfxFonts = Any
-LAYER_GAP = engine_api.front4d_render_layer_gap()
-MARGIN = engine_api.front4d_render_margin()
-SIDE_PANEL = engine_api.front4d_render_side_panel()
-LayerView3D = engine_api.front4d_render_layer_view3d_type()
-ClearAnimation4D = engine_api.front4d_render_clear_animation_type()
-draw_game_frame = engine_api.front4d_render_draw_game_frame_api
-handle_view_key = engine_api.front4d_render_handle_view_key
-movement_axis_overrides_for_view = engine_api.front4d_render_movement_axis_overrides
-viewer_axes_for_view = engine_api.front4d_render_viewer_axes_for_view
-spawn_clear_animation_if_needed = engine_api.front4d_render_spawn_clear_anim
-build_config = engine_api.front3d_setup_build_config_nd
-create_initial_state = engine_api.front3d_setup_create_initial_state_nd
-gravity_interval_ms_from_config = (
-    engine_api.front3d_setup_gravity_interval_ms_from_config_nd
-)
-route_nd_keydown = engine_api.frontend_nd_route_keydown
-run_menu = engine_api.front3d_setup_run_menu_nd
-init_fonts = engine_api.profile_4d_init_fonts
-combined_score_multiplier = engine_api.runtime_assist_combined_score_multiplier
-PieceRotationAnimatorND = engine_api.rotation_anim_piece_rotation_animator_nd_type()
-GridMode = engine_api.GridMode
-cycle_grid_mode = engine_api.grid_mode_cycle_view
-clamp_overlay_transparency = engine_api.clamp_overlay_transparency_runtime
-overlay_transparency_step = engine_api.overlay_transparency_step_runtime
-default_overlay_transparency = engine_api.default_overlay_transparency_runtime
-tutorial_runtime_create_session = engine_api.tutorial_runtime_create_session_runtime
-tutorial_runtime_action_allowed = engine_api.tutorial_runtime_action_allowed_runtime
-tutorial_runtime_observe_action = engine_api.tutorial_runtime_observe_action_runtime
-tutorial_runtime_sync_and_advance = engine_api.tutorial_runtime_sync_and_advance_runtime
+LAYER_GAP = front4d_render.LAYER_GAP
+MARGIN = front4d_render.MARGIN
+SIDE_PANEL = front4d_render.SIDE_PANEL
+LayerView3D = front4d_render.LayerView3D
+ClearAnimation4D = front4d_render.ClearAnimation4D
+draw_game_frame = front4d_render.draw_game_frame
+handle_view_key = front4d_render.handle_view_key
+movement_axis_overrides_for_view = front4d_render.movement_axis_overrides_for_view
+viewer_axes_for_view = front4d_render.viewer_axes_for_view
+spawn_clear_animation_if_needed = front4d_render.spawn_clear_animation_if_needed
+build_config = frontend_nd.build_config
+create_initial_state = frontend_nd.create_initial_state
+gravity_interval_ms_from_config = frontend_nd.gravity_interval_ms_from_config
+route_nd_keydown = frontend_nd.route_nd_keydown
+run_menu = frontend_nd.run_menu
+init_fonts = frontend_nd.init_fonts
+combined_score_multiplier = runtime_assist_combined_score_multiplier
+tutorial_runtime_create_session = tutorial_runtime_create_session_runtime
+tutorial_runtime_action_allowed = tutorial_runtime_action_allowed_runtime
+tutorial_runtime_observe_action = tutorial_runtime_observe_action_runtime
+tutorial_runtime_sync_and_advance = tutorial_runtime_sync_and_advance_runtime
 tutorial_runtime_consume_pending_setup = (
-    engine_api.tutorial_runtime_consume_pending_setup_runtime
+    tutorial_runtime_consume_pending_setup_runtime
 )
-tutorial_apply_step_setup_nd = engine_api.tutorial_apply_step_setup_nd_runtime
-tutorial_runtime_restart = engine_api.tutorial_runtime_restart_runtime
-tutorial_runtime_previous_stage = engine_api.tutorial_runtime_previous_stage_runtime
-tutorial_runtime_next_stage = engine_api.tutorial_runtime_next_stage_runtime
-tutorial_runtime_skip = engine_api.tutorial_runtime_skip_runtime
-
+tutorial_runtime_restart = tutorial_runtime_restart_runtime
+tutorial_runtime_previous_stage = tutorial_runtime_previous_stage_runtime
+tutorial_runtime_next_stage = tutorial_runtime_next_stage_runtime
+tutorial_runtime_skip = tutorial_runtime_skip_runtime
+tutorial_apply_step_setup_nd = tutorial_apply_step_setup_nd_runtime
 _VIEW_ACTIONS_4D = (
     "yaw_fine_neg",
     "yaw_neg",
@@ -114,36 +133,6 @@ _VIEW_ACTIONS_4D = (
     "view_zw_pos",
     "overlay_alpha_dec",
     "overlay_alpha_inc",
-)
-_TUTORIAL_MOVE_DELAY_MS = engine_api.project_constant_int(
-    ("tutorial", "action_delay_ms", "movement"),
-    170,
-    min_value=0,
-    max_value=2000,
-)
-_TUTORIAL_ROTATE_DELAY_MS = engine_api.project_constant_int(
-    ("tutorial", "action_delay_ms", "rotation"),
-    190,
-    min_value=0,
-    max_value=2000,
-)
-_TUTORIAL_DROP_DELAY_MS = engine_api.project_constant_int(
-    ("tutorial", "action_delay_ms", "drop"),
-    260,
-    min_value=0,
-    max_value=2000,
-)
-_TUTORIAL_SOFT_DROP_DELAY_MS = engine_api.project_constant_int(
-    ("tutorial", "action_delay_ms", "soft_drop"),
-    min(200, int(_TUTORIAL_DROP_DELAY_MS)),
-    min_value=0,
-    max_value=2000,
-)
-_TUTORIAL_HARD_DROP_DELAY_MS = engine_api.project_constant_int(
-    ("tutorial", "action_delay_ms", "hard_drop"),
-    int(_TUTORIAL_DROP_DELAY_MS),
-    min_value=0,
-    max_value=2000,
 )
 _TUTORIAL_DELAYED_ACTIONS_4D = {
     "move_x_neg",
@@ -215,14 +204,14 @@ _TUTORIAL_GAMEPLAY_ACTIONS_4D = (
 )
 _TUTORIAL_GRID_OFF_STEPS_4D = frozenset({"toggle_grid"})
 _TUTORIAL_GRID_HELPER_STEPS_4D = frozenset({"hyper_layer_fill", "full_clear_bonus"})
-_TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
+_TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
     ("tutorial", "min_visible_layer"),
     2,
     min_value=0,
     max_value=10,
 )
 def _tutorial_board_dims_4d() -> tuple[int, int, int, int]:
-    dims = engine_api.tutorial_board_dims_runtime("4d")
+    dims = tutorial_board_dims_runtime("4d")
     return (int(dims[0]), int(dims[1]), int(dims[2]), int(dims[3]))
 
 
@@ -241,7 +230,7 @@ def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) ->
     if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_4D:
         return True
     return bool(
-        engine_api.frontend_nd_can_apply_gameplay_action_with_view(
+        frontend_nd.can_apply_nd_gameplay_action_with_view(
             loop.state,
             action_id,
             yaw_deg_for_view_movement=loop.view.yaw_deg,
@@ -270,18 +259,18 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
         min_visible_layer=int(_TUTORIAL_MIN_VISIBLE_LAYER),
         running_tutorial_session=lambda curr_loop: running_tutorial_session(
             curr_loop,
-            tutorial_is_running=engine_api.tutorial_runtime_is_running_runtime,
+            tutorial_is_running=tutorial_runtime_is_running_runtime,
         ),
-        completion_ready=engine_api.tutorial_runtime_completion_ready_runtime,
-        transition_pending=engine_api.tutorial_runtime_transition_pending_runtime,
+        completion_ready=tutorial_runtime_completion_ready_runtime,
+        transition_pending=tutorial_runtime_transition_pending_runtime,
         redo_tutorial_stage=lambda curr_loop, session: redo_tutorial_stage(
             curr_loop,
             session,
-            redo_stage=engine_api.tutorial_runtime_redo_stage_runtime,
+            redo_stage=tutorial_runtime_redo_stage_runtime,
             apply_pending_setup=_apply_pending_tutorial_setup,
         ),
         tutorial_ensure_piece_visibility=lambda curr_loop, min_visible_layer: bool(
-            engine_api.tutorial_ensure_piece_visibility_nd_runtime(
+            tutorial_ensure_piece_visibility_nd_runtime(
                 curr_loop.state,
                 curr_loop.cfg,
                 min_visible_layer=min_visible_layer,
@@ -289,7 +278,7 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
         ),
         tutorial_allowed_actions_blocked=lambda curr_loop, session: tutorial_allowed_actions_blocked(
             session,
-            allowed_actions_runtime=engine_api.tutorial_runtime_allowed_actions_runtime,
+            allowed_actions_runtime=tutorial_runtime_allowed_actions_runtime,
             has_legal_action=lambda action_ids: _tutorial_has_legal_action_4d(
                 curr_loop,
                 action_ids,
@@ -297,7 +286,7 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
         ),
         tutorial_required_action_blocked=lambda curr_loop, session: tutorial_required_action_blocked(
             session,
-            required_action_runtime=engine_api.tutorial_runtime_required_action_runtime,
+            required_action_runtime=tutorial_runtime_required_action_runtime,
             required_action_legal=lambda action_id: _tutorial_required_action_legal_4d(
                 curr_loop,
                 action_id,
@@ -344,7 +333,7 @@ def _apply_pending_tutorial_setup(loop: "LoopContext4D") -> None:
     if start_overlay is not None:
         loop.overlay_transparency = clamp_overlay_transparency(
             start_overlay,
-            default=default_overlay_transparency(),
+            default=float(DEFAULT_OVERLAY_TRANSPARENCY),
         )
 
 
@@ -389,7 +378,7 @@ class LoopContext4D(PanelDragMixin):
             tutorial_lesson_id=tutorial_lesson_id,
         )
         state = create_initial_state(cfg)
-        overlay_default = default_overlay_transparency()
+        overlay_default = float(DEFAULT_OVERLAY_TRANSPARENCY)
         tutorial_session = None
         if tutorial_lesson_id:
             tutorial_session = tutorial_runtime_create_session(
@@ -466,7 +455,7 @@ class LoopContext4D(PanelDragMixin):
             session=self.tutorial_session,
             previous_stage=tutorial_runtime_previous_stage,
             next_stage=tutorial_runtime_next_stage,
-            redo_stage=engine_api.tutorial_runtime_redo_stage_runtime,
+            redo_stage=tutorial_runtime_redo_stage_runtime,
             skip_tutorial=tutorial_runtime_skip,
             restart_tutorial=tutorial_runtime_restart,
             apply_pending_setup=lambda: _apply_pending_tutorial_setup(self),
@@ -488,18 +477,12 @@ class LoopContext4D(PanelDragMixin):
         if self.tutorial_session is None:
             return
         tutorial_runtime_observe_action(self.tutorial_session, action_id)
-        self.tutorial_action_cooldown_ms = tutorial_action_delay_ms(
-            action_id,
-            soft_drop_delay_ms=int(_TUTORIAL_SOFT_DROP_DELAY_MS),
-            hard_drop_delay_ms=int(_TUTORIAL_HARD_DROP_DELAY_MS),
-            rotate_delay_ms=int(_TUTORIAL_ROTATE_DELAY_MS),
-            move_delay_ms=int(_TUTORIAL_MOVE_DELAY_MS),
-         )
+        self.tutorial_action_cooldown_ms = tutorial_action_delay_ms(action_id)
 
     def adjust_overlay_transparency(self, direction: int) -> None:
         self.overlay_transparency = clamp_overlay_transparency(
-            self.overlay_transparency + (overlay_transparency_step() * direction),
-            default=default_overlay_transparency(),
+            self.overlay_transparency + (float(OVERLAY_TRANSPARENCY_STEP) * direction),
+            default=float(DEFAULT_OVERLAY_TRANSPARENCY),
         )
 
     def on_restart(self) -> None:
@@ -587,7 +570,7 @@ def run_game_loop(
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
-    display_payload = engine_api.get_display_settings_runtime()
+    display_payload = get_display_settings()
     fullscreen = (
         bool(display_payload.get("fullscreen", False))
         if isinstance(display_payload, dict)
@@ -597,7 +580,7 @@ def run_game_loop(
         fullscreen=fullscreen,
         windowed_size=screen.get_size(),
     )
-    default_overlay = default_overlay_transparency()
+    default_overlay = float(DEFAULT_OVERLAY_TRANSPARENCY)
     overlay_transparency = (
         clamp_overlay_transparency(
             display_payload.get("overlay_transparency"),
@@ -649,7 +632,7 @@ def run_game_loop(
             grid_mode_off=GridMode.OFF,
             sync_and_advance=tutorial_runtime_sync_and_advance,
             apply_pending_setup=_apply_pending_tutorial_setup,
-            tutorial_is_running=engine_api.tutorial_runtime_is_running_runtime,
+            tutorial_is_running=tutorial_runtime_is_running_runtime,
         )
     return run_nd_loop(
         screen=screen,
@@ -727,3 +710,10 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
+
+
+
+
+
+
+

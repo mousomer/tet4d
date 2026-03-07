@@ -5,7 +5,8 @@ from typing import Any
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.gameplay.api import hud_analysis_lines_runtime
+from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
 from tet4d.ui.pygame.render.panel_utils import draw_unified_game_side_panel
 
 
@@ -15,7 +16,7 @@ def draw_side_panel_2d(
     panel_offset: tuple[int, int],
     fonts: Any,
     *,
-    grid_mode: engine_api.GridMode = engine_api.GridMode.FULL,
+    grid_mode: GridMode = GridMode.FULL,
     bot_lines: Sequence[str] = (),
     side_panel_width: int = 200,
     text_color: tuple[int, int, int] = (230, 230, 230),
@@ -26,13 +27,13 @@ def draw_side_panel_2d(
     px, py = panel_offset
     gravity_ms = gravity_interval_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
-    analysis_lines = engine_api.hud_analysis_lines_runtime(state.last_score_analysis)
+    analysis_lines = hud_analysis_lines_runtime(state.last_score_analysis)
     data_lines = [
         f"Dims: ({state.config.width}, {state.config.height})",
         f"Score mod: x{state.score_multiplier:.2f}",
         f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Fall: {rows_per_sec:.2f} rows/s",
-        f"Grid: {engine_api.grid_mode_label_view(grid_mode)}",
+        f"Grid: {grid_mode_label(grid_mode)}",
     ]
     panel_rect = pygame.Rect(
         px,

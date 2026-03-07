@@ -13,11 +13,8 @@ class TestArchitectureMetricBudgetCore(unittest.TestCase):
             "engine_core_purity": {"violation_count": 1},
             "deep_imports": {
                 "engine_core_to_engine_non_core_imports": {"count": 0},
-                "ui_to_engine_non_api": {"count": 0},
-                "replay_to_engine_non_api": {"count": 0},
-                "ai_to_engine_non_api": {"count": 0},
-                "tools_stability_to_engine_non_api": {"count": 0},
-                "tools_benchmarks_to_engine_non_api": {"count": 0},
+                "engine_to_ui_non_api": {"count": 0},
+                "engine_to_ai_non_api": {"count": 0},
                 "external_callers_to_engine_playbot": {"count": 0},
             },
             "migration_debt_signals": {

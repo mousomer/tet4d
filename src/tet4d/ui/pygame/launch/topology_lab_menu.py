@@ -5,7 +5,21 @@ from typing import Any
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.gameplay.api import (
+    topology_designer_export_runtime,
+    topology_designer_profile_label_runtime,
+    topology_designer_profiles_runtime,
+    topology_designer_resolve_runtime,
+    topology_mode_from_index_runtime,
+    topology_mode_label_runtime,
+    topology_mode_options_runtime,
+)
+from tet4d.engine.runtime.api import topology_lab_menu_payload_runtime
+from tet4d.engine.runtime.menu_settings_state import (
+    load_app_settings_payload,
+    save_app_settings_payload,
+)
+from tet4d.engine.runtime.settings_schema import clamp_toggle_index, sanitize_text
 from tet4d.ui.pygame.menu.numeric_text_input import (
     append_numeric_text,
     parse_numeric_text,
@@ -24,7 +38,7 @@ _TOPOLOGY_DIMENSIONS = (2, 3, 4)
 
 
 def _sanitize_text(value: str, max_length: int) -> str:
-    return engine_api.sanitize_text_runtime(value, max_length=max_length)
+    return sanitize_text(value, max_length=max_length)
 
 
 def _safe_lab_payload() -> dict[str, Any]:
@@ -56,7 +70,7 @@ def _safe_lab_payload() -> dict[str, Any]:
         },
     }
     try:
-        payload = engine_api.topology_lab_menu_payload_runtime()
+        payload = topology_lab_menu_payload_runtime()
     except (OSError, ValueError, RuntimeError):
         return fallback
     if not isinstance(payload, dict):
@@ -86,7 +100,7 @@ _LAB_STATUS_COPY = dict(_LAB_COPY["status_copy"])
 _LAB_SELECTABLE_ROWS = tuple(
     idx for idx, (row_key, _label) in enumerate(_LAB_ROWS) if bool(row_key)
 )
-_TOPOLOGY_MODE_OPTIONS = tuple(engine_api.topology_mode_options_runtime())
+_TOPOLOGY_MODE_OPTIONS = tuple(topology_mode_options_runtime())
 
 
 @dataclass
@@ -150,7 +164,7 @@ def _safe_mode_settings(payload: dict[str, Any], mode_key: str) -> dict[str, Any
 
 
 def _profile_count_for_dimension(dimension: int) -> int:
-    profiles = engine_api.topology_designer_profiles_runtime(dimension)
+    profiles = topology_designer_profiles_runtime(dimension)
     return max(1, len(profiles))
 
 
@@ -173,7 +187,7 @@ def _load_dimension_settings(state: _TopologyLabState) -> None:
         0,
         min(len(_TOPOLOGY_MODE_OPTIONS) - 1, int(mode_index)),
     )
-    state.topology_advanced = engine_api.clamp_toggle_index_runtime(
+    state.topology_advanced = clamp_toggle_index(
         mode_settings.get("topology_advanced", 0),
         default=0,
     )
@@ -187,7 +201,7 @@ def _save_dimension_settings(state: _TopologyLabState) -> tuple[bool, str]:
     mode_key = _mode_key_for_dimension(state.dimension)
     mode_settings = _safe_mode_settings(state.payload, mode_key)
     mode_settings["topology_mode"] = int(state.topology_mode_index)
-    mode_settings["topology_advanced"] = engine_api.clamp_toggle_index_runtime(
+    mode_settings["topology_advanced"] = clamp_toggle_index(
         state.topology_advanced,
         default=0,
     )
@@ -195,7 +209,7 @@ def _save_dimension_settings(state: _TopologyLabState) -> tuple[bool, str]:
         state.dimension,
         state.topology_profile_index,
     )
-    ok, msg = engine_api.save_menu_payload_runtime(state.payload)
+    ok, msg = save_app_settings_payload(state.payload)
     if ok:
         state.dirty = False
         _set_status(state, str(_LAB_STATUS_COPY["saved"]).format(mode_key=mode_key))
@@ -209,12 +223,12 @@ def _save_dimension_settings(state: _TopologyLabState) -> tuple[bool, str]:
 
 
 def _mode_value_text(state: _TopologyLabState) -> str:
-    mode = engine_api.topology_mode_from_index_runtime(state.topology_mode_index)
-    return engine_api.topology_mode_label_runtime(mode)
+    mode = topology_mode_from_index_runtime(state.topology_mode_index)
+    return topology_mode_label_runtime(mode)
 
 
 def _profile_value_text(state: _TopologyLabState) -> str:
-    label = engine_api.topology_designer_profile_label_runtime(
+    label = topology_designer_profile_label_runtime(
         state.dimension,
         state.topology_profile_index,
     )
@@ -222,15 +236,15 @@ def _profile_value_text(state: _TopologyLabState) -> str:
 
 
 def _resolve_preview_text(state: _TopologyLabState) -> str:
-    mode = engine_api.topology_mode_from_index_runtime(state.topology_mode_index)
-    resolved_mode, _rules, _profile = engine_api.topology_designer_resolve_runtime(
+    mode = topology_mode_from_index_runtime(state.topology_mode_index)
+    resolved_mode, _rules, _profile = topology_designer_resolve_runtime(
         dimension=state.dimension,
         gravity_axis=1,
         topology_mode=mode,
         topology_advanced=bool(state.topology_advanced),
         profile_index=state.topology_profile_index,
     )
-    return engine_api.topology_mode_label_runtime(resolved_mode)
+    return topology_mode_label_runtime(resolved_mode)
 
 
 def _row_value_text(state: _TopologyLabState, row_key: str) -> str:
@@ -433,8 +447,8 @@ def _dispatch_key(state: _TopologyLabState, key: int) -> None:
 
 
 def _run_export(state: _TopologyLabState) -> None:
-    mode = engine_api.topology_mode_from_index_runtime(state.topology_mode_index)
-    ok, msg, _path = engine_api.topology_designer_export_runtime(
+    mode = topology_mode_from_index_runtime(state.topology_mode_index)
+    ok, msg, _path = topology_designer_export_runtime(
         dimension=state.dimension,
         gravity_axis=1,
         topology_mode=mode,
@@ -458,7 +472,7 @@ def run_topology_lab_menu(
     *,
     start_dimension: int,
 ) -> tuple[bool, str]:
-    payload = engine_api.load_menu_payload_runtime()
+    payload = load_app_settings_payload()
     initial_dimension = (
         start_dimension if start_dimension in _TOPOLOGY_DIMENSIONS else 2
     )

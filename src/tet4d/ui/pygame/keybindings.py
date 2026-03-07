@@ -9,7 +9,21 @@ from pathlib import Path
 from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.project_config import (
+    keybindings_defaults_path,
+    keybindings_dir_path,
+    keybindings_profiles_dir_path,
+)
+from tet4d.engine.runtime.settings_schema import (
+    atomic_write_text,
+    copy_text_file,
+    read_json_value_or_raise,
+)
+from tet4d.engine.ui_logic.keybindings_catalog import (
+    binding_action_description,  # noqa: F401 - re-exported for UI callers
+    binding_group_description,  # noqa: F401 - re-exported for UI callers
+    binding_group_label,  # noqa: F401 - re-exported for UI callers
+)
 from tet4d.ui.pygame.input.key_display import display_key_name
 
 KeyTuple = Tuple[int, ...]
@@ -30,7 +44,7 @@ REBIND_CONFLICT_OPTIONS = (
 
 
 def _load_defaults_payload() -> dict:
-    path = engine_api.keybindings_defaults_path_runtime()
+    path = keybindings_defaults_path()
     raw = path.read_text(encoding="utf-8")
     data = json.loads(raw)
     if not isinstance(data, dict):
@@ -86,8 +100,8 @@ def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
 
 DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
 
-KEYBINDINGS_DIR = engine_api.keybindings_dir_path_runtime()
-KEYBINDINGS_PROFILES_DIR = engine_api.keybindings_profiles_dir_path_runtime()
+KEYBINDINGS_DIR = keybindings_dir_path()
+KEYBINDINGS_PROFILES_DIR = keybindings_profiles_dir_path()
 KEYBINDING_FILES = {
     2: KEYBINDINGS_DIR / "2d.json",
     3: KEYBINDINGS_DIR / "3d.json",
@@ -346,10 +360,6 @@ def runtime_binding_groups_for_dimension(
     groups = _binding_groups_for_dimension(dimension)
     return {group: dict(bindings) for group, bindings in groups.items()}
 
-
-binding_group_label = engine_api.binding_group_label
-binding_group_description = engine_api.binding_group_description
-binding_action_description = engine_api.binding_action_description
 
 
 def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
@@ -643,7 +653,7 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
 
 
 def _atomic_write(path: Path, payload: str) -> None:
-    engine_api.keybindings_atomic_write_text_runtime(path, payload)
+    atomic_write_text(path, payload)
 
 
 def _clone_keybinding_dimension(
@@ -656,7 +666,7 @@ def _clone_keybinding_dimension(
         save_keybindings_file(dimension, profile=source_profile)
         src_path = keybinding_file_path_for_profile(dimension, source_profile)
     dst_path = keybinding_file_path_for_profile(dimension, target_profile)
-    engine_api.keybindings_copy_text_file_runtime(src_path, dst_path)
+    copy_text_file(src_path, dst_path)
 
 
 def save_keybindings_file(
@@ -706,7 +716,7 @@ def load_keybindings_file(
         return False, str(exc)
 
     try:
-        payload = engine_api.keybindings_load_json_file_runtime(path)
+        payload = read_json_value_or_raise(path)
     except OSError as exc:
         return False, f"Failed loading keybindings: {exc}"
     except json.JSONDecodeError as exc:

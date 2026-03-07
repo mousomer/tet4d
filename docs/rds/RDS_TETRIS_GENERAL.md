@@ -24,33 +24,34 @@ Cross-cutting requirements are defined in:
 ## 2. Current Project Intentions
 
 1. Keep one shared deterministic gameplay core with mode-specific frontends.
-2. Keep controls configurable via external JSON files (`keybindings/2d.json`,`3d.json`,`4d.json`).
-3. Maintain playable and testable 2D, 3D, and 4D experiences with the same quality bar.
-4. Preserve Python 3.14 compatibility while staying runnable on local Python 3.11+.
-5. Add a dedicated in-app keybinding edit menu with local save/load workflow.
-6. Add random-cell piece sets for 2D, 3D, and 4D as selectable options.
-7. Allow lower-dimensional piece sets to be used on higher-dimensional boards through defined embedding rules.
-8. Verify and harden scoring behavior with explicit automated scoring tests.
-9. Add debug piece sets (simple large rectangular blocks) for 2D/3D/4D validation workflows.
-10. Add non-intrusive sound effects with volume controls and mute toggles.
-11. Remove manual slicing controls; keep gameplay independent from view-layer selection concepts.
-12. Unify frontend entry into one main menu for 2D/3D/4D.
-13. Make settings persistence and display mode transitions reliable (including fullscreen).
-14. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
-15. Keep menu structure and default settings in external config files (not hardcoded in frontend modules).
-16. Define a long-term path for non-euclidean geometry gameplay extensions without breaking deterministic core behavior.
-17. Add setup-selectable boundary topology presets:
-18. `bounded`,
-19. `wrap_all`,
-20. `invert_all`.
-21. Keep gravity-axis wrapping disabled by default in all presets.
-22. Add advanced topology-designer mode (hidden by default) with per-axis/per-edge behavior profiles and deterministic export.
-23. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
-24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
-25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
-26. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
-27. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
-28. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
+2. Keep `tet4d.engine` reusable as a lower layer; UI, AI, replay, and tools may depend on engine, but engine must not depend back on those upper layers.
+3. Keep controls configurable via external JSON files (`keybindings/2d.json`,`3d.json`,`4d.json`).
+4. Maintain playable and testable 2D, 3D, and 4D experiences with the same quality bar.
+5. Preserve Python 3.14 compatibility while staying runnable on local Python 3.11+.
+6. Add a dedicated in-app keybinding edit menu with local save/load workflow.
+7. Add random-cell piece sets for 2D, 3D, and 4D as selectable options.
+8. Allow lower-dimensional piece sets to be used on higher-dimensional boards through defined embedding rules.
+9. Verify and harden scoring behavior with explicit automated scoring tests.
+10. Add debug piece sets (simple large rectangular blocks) for 2D/3D/4D validation workflows.
+11. Add non-intrusive sound effects with volume controls and mute toggles.
+12. Remove manual slicing controls; keep gameplay independent from view-layer selection concepts.
+13. Unify frontend entry into one main menu for 2D/3D/4D.
+14. Make settings persistence and display mode transitions reliable (including fullscreen).
+15. Add a deterministic automatic playbot framework for 2D/3D/4D with safe execution and performance budgets.
+16. Keep menu structure and default settings in external config files (not hardcoded in frontend modules).
+17. Define a long-term path for non-euclidean geometry gameplay extensions without breaking deterministic core behavior.
+18. Add setup-selectable boundary topology presets:
+19. `bounded`,
+20. `wrap_all`,
+21. `invert_all`.
+22. Keep gravity-axis wrapping disabled by default in all presets.
+23. Add advanced topology-designer mode (hidden by default) with per-axis/per-edge behavior profiles and deterministic export.
+24. Support 4D camera/view hyperplane turns (`xw`/`zw`) as render-only controls (no gameplay-state mutation).
+25. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
+26. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
+27. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
+28. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
+29. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -96,7 +97,7 @@ Cross-cutting requirements are defined in:
 4. Kick acceptance must reuse the same topology-aware legality path as normal placement and existence checks.
 5. Kick code must not duplicate bounded/wrap/invert edge math, topology crossing rules, or invert uniqueness handling from `src/tet4d/engine/gameplay/topology.py`.
 6. `TopologyPolicy` remains authoritative for whether a rotated or kicked candidate is legal after mapping.
-7. Gameplay and AI must consume the same canonical kick resolver; AI access should route through `src/tet4d/engine/api.py`.
+7. Gameplay and AI must consume the same canonical kick resolver; AI may import the engine-owned resolver or engine-owned convenience exports directly, but engine must not import AI.
 8. `kick_level` is a gameplay-affecting advanced setting that must be persisted with menu settings and recorded in replay and save metadata.
 9. Score multiplier may include a permissiveness factor keyed by configured `kick_level`, while leaderboard ordering remains score-first and is not bucketed by kick level.
 10. Deterministic replay rule applies to `(seed, topology selection, kick_level, input stream)`.
@@ -346,7 +347,7 @@ Remaining follow-up:
 22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
 24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
-25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`src/tet4d/engine/frontend_nd.py`) via thin adapter in `src/tet4d/ui/pygame/launch/front3d_setup.py`.
+25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through shared ND setup module (`src/tet4d/ui/pygame/frontend_nd.py`) via thin adapter in `src/tet4d/ui/pygame/launch/front3d_setup.py`.
 26. Closed: help/menu restructure `M2` shared layout-zone renderer is implemented in `src/tet4d/engine/ui_logic/menu_layout.py` and wired in `src/tet4d/ui/pygame/runtime_ui/help_menu.py`.
 27. Closed: help/menu restructure `M3` full key/help synchronization + explicit paging implemented in `src/tet4d/ui/pygame/runtime_ui/help_menu.py` and `src/tet4d/engine/runtime/help_topics.py`.
 28. Closed: help contract validation now enforces quick/full lane coverage for action mappings in `tools/governance/validate_project_contracts.py`.

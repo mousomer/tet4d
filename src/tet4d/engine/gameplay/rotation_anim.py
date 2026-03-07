@@ -9,7 +9,6 @@ from ..core.piece_transform import (
     rotate_blocks_2d,
 )
 from ..runtime.project_config import project_constant_float
-from tet4d.ui.pygame.projection3d import smoothstep01
 
 if TYPE_CHECKING:
     from .pieces2d import ActivePiece2D
@@ -24,6 +23,11 @@ _DEFAULT_ROTATION_DURATION_MS = project_constant_float(
     min_value=60.0,
     max_value=400.0,
 )
+
+
+def _smoothstep01(t: float) -> float:
+    clamped = max(0.0, min(1.0, float(t)))
+    return clamped * clamped * (3.0 - (2.0 * clamped))
 
 
 def _distance_sq(a: CoordF, b: CoordF) -> float:
@@ -73,14 +77,14 @@ class _RotationTween:
         self.elapsed_ms += max(0.0, dt_ms)
 
     def interpolated_rel(self) -> tuple[CoordF, ...]:
-        eased = smoothstep01(self.progress)
+        eased = _smoothstep01(self.progress)
         return tuple(
             _lerp_coord(start, end, eased)
             for start, end in zip(self.start_rel, self.end_rel)
         )
 
     def interpolated_pos(self) -> CoordF:
-        eased = smoothstep01(self.progress)
+        eased = _smoothstep01(self.progress)
         return _lerp_coord(self.start_pos, self.end_pos, eased)
 
 
@@ -322,3 +326,4 @@ class PieceRotationAnimatorND:
         for block in rel:
             cells.append(tuple(pos[idx] + block[idx] for idx in range(self.ndim)))
         return tuple(cells), int(piece.shape.color_id)
+

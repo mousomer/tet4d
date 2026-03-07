@@ -2,25 +2,51 @@ from __future__ import annotations
 
 import pygame
 
+from tet4d.engine.runtime.project_config import project_constant_int
 
-def tutorial_action_delay_ms(
-    action_id: str,
-    *,
-    soft_drop_delay_ms: int,
-    hard_drop_delay_ms: int,
-    rotate_delay_ms: int,
-    move_delay_ms: int,
-) -> int:
+
+_TUTORIAL_MOVE_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "movement"),
+    170,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_ROTATE_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "rotation"),
+    190,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_DROP_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "drop"),
+    260,
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_SOFT_DROP_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "soft_drop"),
+    min(200, int(_TUTORIAL_DROP_DELAY_MS)),
+    min_value=0,
+    max_value=2000,
+)
+_TUTORIAL_HARD_DROP_DELAY_MS = project_constant_int(
+    ("tutorial", "action_delay_ms", "hard_drop"),
+    int(_TUTORIAL_DROP_DELAY_MS),
+    min_value=0,
+    max_value=2000,
+)
+
+
+def tutorial_action_delay_ms(action_id: str) -> int:
     if action_id == "soft_drop":
-        return int(soft_drop_delay_ms)
+        return int(_TUTORIAL_SOFT_DROP_DELAY_MS)
     if action_id == "hard_drop":
-        return int(hard_drop_delay_ms)
+        return int(_TUTORIAL_HARD_DROP_DELAY_MS)
     if action_id.startswith("rotate_"):
-        return int(rotate_delay_ms)
+        return int(_TUTORIAL_ROTATE_DELAY_MS)
     if action_id.startswith("move_"):
-        return int(move_delay_ms)
+        return int(_TUTORIAL_MOVE_DELAY_MS)
     return 0
-
 
 def tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
     setup_payload = payload.get("setup")
@@ -229,3 +255,5 @@ def tutorial_sync(
         loop.tutorial_session = None
         loop.tutorial_action_cooldown_ms = 0
     return bool(progressed)
+
+

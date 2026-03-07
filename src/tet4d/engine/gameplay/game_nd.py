@@ -25,7 +25,7 @@ from ..runtime.runtime_config import (
     rotation_kick_candidate_offsets,
 )
 from .scoring_bonus import plane_cell_count_for_dims, score_with_clear_bonuses
-from ..core.rotation_kicks import kick_candidate_vectors, resolve_kicked_piece_nd
+from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.locking import apply_lock_and_score
 from ..core.step.reducer import step_nd as core_step_nd
 from .topology import (
@@ -365,21 +365,14 @@ class GameStateND:
         if self.current_piece is None:
             return False
         rotated = self.current_piece.rotated(axis_a, axis_b, delta_steps)
-        plane_offsets = rotation_kick_candidate_offsets(self.config.kick_level)
-        if not plane_offsets:
-            if self._can_exist(rotated):
-                self.current_piece = rotated
-                return True
-            return False
-        resolved = resolve_kicked_piece_nd(
+        resolved = resolve_rotated_piece(
             rotated,
-            candidate_vectors=kick_candidate_vectors(
-                ndim=self.config.ndim,
-                axis_a=axis_a,
-                axis_b=axis_b,
-                gravity_axis=self.config.gravity_axis,
-                plane_offsets=plane_offsets,
-            ),
+            ndim=self.config.ndim,
+            axis_a=axis_a,
+            axis_b=axis_b,
+            gravity_axis=self.config.gravity_axis,
+            kick_level=self.config.kick_level,
+            plane_offsets_for_level=rotation_kick_candidate_offsets,
             move_piece=lambda piece, delta: piece.moved(delta),
             can_place=self._can_exist,
         )

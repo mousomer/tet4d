@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.menu_config import keybinding_category_docs
+from tet4d.engine.ui_logic.keybindings_catalog import partition_gameplay_actions
 from tet4d.ui.pygame.keybindings import (
     binding_group_description,
     binding_group_label,
@@ -10,7 +11,7 @@ from tet4d.ui.pygame.keybindings import (
     runtime_binding_groups_for_dimension,
 )
 
-CATEGORY_DOCS = engine_api.keybinding_category_docs_runtime()
+CATEGORY_DOCS = keybinding_category_docs()
 SCOPE_ORDER = tuple(CATEGORY_DOCS.get("scope_order", ("all", "2d", "3d", "4d")))
 VALID_SCOPES = tuple(dict.fromkeys((*SCOPE_ORDER, "general", "all")))
 SECTION_MENU: tuple[tuple[str, str, str], ...] = (
@@ -106,7 +107,7 @@ def _bucket_actions(
     if bucket == _BUCKET_ALL:
         return tuple(sorted(action_names))
     translation, rotation, other = (
-        engine_api.keybindings_partition_gameplay_actions_ui_logic(action_names)
+        partition_gameplay_actions(action_names)
     )
     if bucket == _BUCKET_TRANSLATION:
         return translation

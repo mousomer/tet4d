@@ -61,8 +61,8 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         side_panel = 360
 
         with (
-            patch.object(tutorial_overlay.engine_api, "front3d_render_margin", return_value=margin),
-            patch.object(tutorial_overlay.engine_api, "front3d_render_side_panel", return_value=side_panel),
+            patch.object(tutorial_overlay.front3d_render, "MARGIN", margin),
+            patch.object(tutorial_overlay.front3d_render, "SIDE_PANEL", side_panel),
         ):
             rect = tutorial_overlay._panel_rect_for_dimension(
                 width=width,
@@ -83,8 +83,8 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         side_panel = 360
 
         with (
-            patch.object(tutorial_overlay.engine_api, "front4d_render_margin", return_value=margin),
-            patch.object(tutorial_overlay.engine_api, "front4d_render_side_panel", return_value=side_panel),
+            patch.object(tutorial_overlay.front4d_render, "MARGIN", margin),
+            patch.object(tutorial_overlay.front4d_render, "SIDE_PANEL", side_panel),
         ):
             rect = tutorial_overlay._panel_rect_for_dimension(
                 width=width,
@@ -103,24 +103,19 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         width, height = 1200, 700
         panel_h = 240
         cases = (
-            (
-                3,
-                self._board_rect_3d,
-                "front3d_render_margin",
-                "front3d_render_side_panel",
-            ),
-            (
-                4,
-                self._layers_rect_4d,
-                "front4d_render_margin",
-                "front4d_render_side_panel",
-            ),
+            (3, self._board_rect_3d),
+            (4, self._layers_rect_4d),
         )
-        for dimension, area_factory, margin_name, side_panel_name in cases:
+        for dimension, area_factory in cases:
+            target_module = (
+                tutorial_overlay.front3d_render
+                if dimension == 3
+                else tutorial_overlay.front4d_render
+            )
             with self.subTest(dimension=dimension):
                 with (
-                    patch.object(tutorial_overlay.engine_api, margin_name, return_value=20),
-                    patch.object(tutorial_overlay.engine_api, side_panel_name, return_value=360),
+                    patch.object(target_module, "MARGIN", 20),
+                    patch.object(target_module, "SIDE_PANEL", 360),
                 ):
                     rect = tutorial_overlay._panel_rect_for_dimension(
                         width=width,
@@ -178,45 +173,29 @@ class TestTutorialOverlayLayout(unittest.TestCase):
 
         with (
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "tutorial_runtime_overlay_payload_runtime",
                 return_value=payload,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "runtime_binding_groups_for_dimension",
                 side_effect=_runtime_groups,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "format_key_tuple",
                 return_value="Page Up/Page Down",
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "binding_action_description",
                 return_value="Move left",
             ),
-            patch.object(
-                tutorial_overlay.engine_api,
-                "front3d_render_margin",
-                return_value=20,
-            ),
-            patch.object(
-                tutorial_overlay.engine_api,
-                "front3d_render_side_panel",
-                return_value=360,
-            ),
-            patch.object(
-                tutorial_overlay.engine_api,
-                "front4d_render_margin",
-                return_value=20,
-            ),
-            patch.object(
-                tutorial_overlay.engine_api,
-                "front4d_render_side_panel",
-                return_value=360,
-            ),
+            patch.object(tutorial_overlay.front3d_render, "MARGIN", 20),
+            patch.object(tutorial_overlay.front3d_render, "SIDE_PANEL", 360),
+            patch.object(tutorial_overlay.front4d_render, "MARGIN", 20),
+            patch.object(tutorial_overlay.front4d_render, "SIDE_PANEL", 360),
         ):
             for dimension in (2, 3, 4):
                 tutorial_overlay.draw_tutorial_overlay(

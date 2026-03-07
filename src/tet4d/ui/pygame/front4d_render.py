@@ -12,7 +12,7 @@ from .frontend_nd import (
     gravity_interval_ms_from_config,
     piece_set_4d_label,
 )
-from .gameplay.game_nd import GameStateND
+from tet4d.engine.gameplay.game_nd import GameStateND
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.render.panel_utils import (
@@ -36,13 +36,16 @@ from tet4d.ui.pygame.projection3d import (
     smoothstep01,
     transform_point,
 )
-from .runtime.project_config import project_constant_float, project_constant_int
-from .runtime.score_analyzer import hud_analysis_lines
+from tet4d.engine.runtime.project_config import (
+    project_constant_float,
+    project_constant_int,
+)
+from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
 from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
-from .gameplay.topology import map_overlay_cells
+from tet4d.engine.gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
-from .ui_logic.view_modes import GridMode, grid_mode_label
+from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
 
 
 MARGIN = project_constant_int(
@@ -1063,4 +1066,5 @@ def spawn_clear_animation_if_needed(
     if not ghost_cells:
         return None, state.lines_cleared
     return ClearAnimation4D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
+
 

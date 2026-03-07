@@ -5,7 +5,13 @@ from typing import Any
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.leaderboard import (
+    leaderboard_entry_would_enter,
+    leaderboard_top_entries,
+    record_leaderboard_entry,
+)
+from tet4d.engine.runtime.project_config import project_constant_int
+from tet4d.engine.runtime.settings_schema import sanitize_text
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -15,8 +21,8 @@ _TEXT_COLOR = (232, 232, 240)
 _HIGHLIGHT_COLOR = (255, 224, 128)
 _MUTED_COLOR = (192, 200, 228)
 
-_ROWS_PER_PAGE = int(engine_api.leaderboard_page_rows_runtime())
-_NAME_MAX_LENGTH = int(engine_api.leaderboard_name_max_length_runtime())
+_ROWS_PER_PAGE = int(project_constant_int(("analytics", "leaderboard_page_rows"), 12, min_value=5, max_value=40))
+_NAME_MAX_LENGTH = int(project_constant_int(("analytics", "leaderboard_name_max_length"), 24, min_value=3, max_value=64))
 
 
 @dataclass
@@ -46,7 +52,7 @@ def _format_duration(seconds: float) -> str:
 
 def _format_date(timestamp_utc: str) -> str:
     text = (
-        engine_api.sanitize_text_runtime(timestamp_utc, max_length=64).strip()
+        sanitize_text(timestamp_utc, max_length=64).strip()
         if timestamp_utc is not None
         else ""
     )
@@ -57,7 +63,7 @@ def _format_date(timestamp_utc: str) -> str:
 
 def _entry_cells(rank: int, entry: dict[str, object]) -> tuple[str, ...]:
     name = (
-        engine_api.sanitize_text_runtime(entry.get("player_name"), max_length=64).strip()
+        sanitize_text(entry.get("player_name"), max_length=64).strip()
         or "Player"
     )
     score = _safe_int(entry.get("score"))
@@ -306,7 +312,7 @@ def run_leaderboard_menu(
     fonts: Any,
 ) -> pygame.Surface:
     state = _LeaderboardState()
-    entries = engine_api.leaderboard_top_entries_runtime(limit=200)
+    entries = leaderboard_top_entries(limit=200)
     clock = pygame.time.Clock()
 
     while state.running:
@@ -386,7 +392,7 @@ def _handle_name_prompt_event(event: pygame.event.Event, state: _NamePromptState
         return False
     if event.type == pygame.TEXTINPUT:
         combined = state.name + event.text
-        state.name = engine_api.sanitize_text_runtime(
+        state.name = sanitize_text(
             combined,
             max_length=_NAME_MAX_LENGTH,
         )
@@ -429,7 +435,7 @@ def prompt_leaderboard_player_name(
 
     if not state.accepted:
         return None
-    sanitized = engine_api.sanitize_text_runtime(state.name, max_length=_NAME_MAX_LENGTH)
+    sanitized = sanitize_text(state.name, max_length=_NAME_MAX_LENGTH)
     final_name = sanitized.strip()
     if not final_name:
         return "Player"
@@ -454,7 +460,7 @@ def maybe_record_leaderboard_session(
     kick_level: str,
     exploration_mode: bool,
 ) -> bool:
-    qualifies, rank = engine_api.leaderboard_entry_would_enter_runtime(
+    qualifies, rank = leaderboard_entry_would_enter(
         dimension=dimension,
         score=score,
         lines_cleared=lines_cleared,
@@ -474,7 +480,7 @@ def maybe_record_leaderboard_session(
     player_name = prompt_leaderboard_player_name(screen, fonts, rank=rank)
     if player_name is None:
         return False
-    engine_api.record_leaderboard_entry_runtime(
+    record_leaderboard_entry(
         dimension=dimension,
         score=score,
         lines_cleared=lines_cleared,

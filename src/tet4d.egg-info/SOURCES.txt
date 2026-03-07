@@ -20,9 +20,6 @@ src/tet4d/ai/playbot/planner_nd_search.py
 src/tet4d/ai/playbot/types.py
 src/tet4d/engine/__init__.py
 src/tet4d/engine/api.py
-src/tet4d/engine/front3d_render.py
-src/tet4d/engine/front4d_render.py
-src/tet4d/engine/frontend_nd.py
 src/tet4d/engine/help_text.py
 src/tet4d/engine/core/__init__.py
 src/tet4d/engine/core/piece_transform.py
@@ -43,6 +40,7 @@ src/tet4d/engine/core/rules/state_queries.py
 src/tet4d/engine/core/step/__init__.py
 src/tet4d/engine/core/step/reducer.py
 src/tet4d/engine/gameplay/__init__.py
+src/tet4d/engine/gameplay/api.py
 src/tet4d/engine/gameplay/challenge_mode.py
 src/tet4d/engine/gameplay/exploration_mode.py
 src/tet4d/engine/gameplay/game2d.py
@@ -57,6 +55,7 @@ src/tet4d/engine/gameplay/speed_curve.py
 src/tet4d/engine/gameplay/topology.py
 src/tet4d/engine/gameplay/topology_designer.py
 src/tet4d/engine/runtime/__init__.py
+src/tet4d/engine/runtime/api.py
 src/tet4d/engine/runtime/help_topics.py
 src/tet4d/engine/runtime/leaderboard.py
 src/tet4d/engine/runtime/menu_config.py
@@ -73,6 +72,7 @@ src/tet4d/engine/runtime/score_analyzer_features.py
 src/tet4d/engine/runtime/settings_sanitize.py
 src/tet4d/engine/runtime/settings_schema.py
 src/tet4d/engine/tutorial/__init__.py
+src/tet4d/engine/tutorial/api.py
 src/tet4d/engine/tutorial/conditions.py
 src/tet4d/engine/tutorial/content.py
 src/tet4d/engine/tutorial/events.py
@@ -94,6 +94,13 @@ src/tet4d/shared/__init__.py
 src/tet4d/shared/nd_coords.py
 src/tet4d/ui/__init__.py
 src/tet4d/ui/pygame/__init__.py
+src/tet4d/ui/pygame/front2d_game.py
+src/tet4d/ui/pygame/front2d_loop.py
+src/tet4d/ui/pygame/front2d_runtime.py
+src/tet4d/ui/pygame/front2d_setup.py
+src/tet4d/ui/pygame/front3d_render.py
+src/tet4d/ui/pygame/front4d_render.py
+src/tet4d/ui/pygame/frontend_nd.py
 src/tet4d/ui/pygame/front3d_game.py
 src/tet4d/ui/pygame/front4d_game.py
 src/tet4d/ui/pygame/keybindings.py
@@ -122,6 +129,7 @@ src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py
 src/tet4d/ui/pygame/menu/menu_navigation_keys.py
 src/tet4d/ui/pygame/menu/menu_runner.py
 src/tet4d/ui/pygame/menu/numeric_text_input.py
+src/tet4d/ui/pygame/menu/setup_menu_runner.py
 src/tet4d/ui/pygame/render/__init__.py
 src/tet4d/ui/pygame/render/control_helper.py
 src/tet4d/ui/pygame/render/control_icons.py

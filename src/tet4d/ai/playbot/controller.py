@@ -4,7 +4,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Iterable
 
-from tet4d.engine import api as engine_api
+from tet4d.ai.playbot.planner_2d import plan_best_2d_move
+from tet4d.ai.playbot.planner_nd import plan_best_nd_move
 from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
     BotMode,
@@ -20,18 +21,20 @@ from tet4d.ai.playbot.types import (
     playbot_learning_mode_enabled,
     playbot_learning_review_pieces,
 )
-
-GameState = engine_api.GameState
-GameStateND = engine_api.GameStateND
-ActivePieceND = engine_api.ActivePieceND
-rotate_blocks_nd = engine_api.rotate_blocks_nd
-plan_best_2d_move = engine_api.plan_best_2d_move
-plan_best_nd_move = engine_api.plan_best_nd_move
-_canonical_blocks = engine_api.playbot_canonical_blocks_nd
-rotation_planes = engine_api.playbot_rotation_planes_nd
-playbot_default_hard_drop_after_soft_drops = (
-    engine_api.playbot_default_hard_drop_after_soft_drops_runtime
+from tet4d.engine.core.piece_transform import (
+    canonicalize_blocks_nd,
+    rotate_blocks_nd,
+    rotation_planes_nd,
 )
+from tet4d.engine.gameplay.game2d import GameState
+from tet4d.engine.gameplay.game_nd import GameStateND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND
+from tet4d.engine.runtime.runtime_config import (
+    playbot_default_hard_drop_after_soft_drops,
+)
+
+_canonical_blocks = canonicalize_blocks_nd
+rotation_planes = rotation_planes_nd
 
 
 def _next_mode(mode: BotMode) -> BotMode:
@@ -666,3 +669,4 @@ class PlayBotController:
             return
         if self._should_auto_step(dt_ms):
             self._step_piece_nd(state)
+

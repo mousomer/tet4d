@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from tet4d.engine.api import BotMode, runtime_assist_combined_score_multiplier
+from tet4d.ai.playbot.types import BotMode
+from tet4d.engine.gameplay.api import runtime_assist_combined_score_multiplier
 from tet4d.engine.ui_logic.view_modes import GridMode
 
 combined_score_multiplier = runtime_assist_combined_score_multiplier
@@ -80,3 +81,4 @@ class TestAssistScoring(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

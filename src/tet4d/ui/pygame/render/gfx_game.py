@@ -5,7 +5,14 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.gameplay.api import (
+    gravity_interval_ms_gameplay,
+    map_overlay_cells_gameplay,
+)
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.runtime.menu_config import ui_copy_section
+from tet4d.engine.runtime.project_config import project_constant_int
+from tet4d.engine.ui_logic.view_modes import GridMode
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
@@ -13,21 +20,18 @@ from tet4d.ui.pygame.render.font_profiles import (
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
-GameConfig = engine_api.GameConfig
-GameState = engine_api.GameState
-GridMode = engine_api.GridMode
-_SETUP_MENU_COPY = engine_api.ui_copy_section_runtime("setup_menu")
+_SETUP_MENU_COPY = ui_copy_section("setup_menu")
 
 
 # ---------- Visual config & colors ----------
 
-CELL_SIZE = engine_api.project_constant_int(
+CELL_SIZE = project_constant_int(
     ("rendering", "2d", "cell_size"), 30, min_value=12, max_value=120
 )
-MARGIN = engine_api.project_constant_int(
+MARGIN = project_constant_int(
     ("rendering", "2d", "margin"), 20, min_value=0, max_value=240
 )
-SIDE_PANEL = engine_api.project_constant_int(
+SIDE_PANEL = project_constant_int(
     ("rendering", "2d", "side_panel"), 360, min_value=120, max_value=720
 )
 
@@ -643,7 +647,7 @@ def _draw_active_piece_cells(
 ) -> None:
     if overlay is not None:
         raw_cells, color_id = overlay
-        mapped_overlay = engine_api.map_overlay_cells_gameplay(
+        mapped_overlay = map_overlay_cells_gameplay(
             state.topology_policy,
             raw_cells,
             allow_above_gravity=False,
@@ -751,7 +755,7 @@ def draw_side_panel(
 
 
 def gravity_interval_ms_from_config(cfg: GameConfig) -> int:
-    return engine_api.gravity_interval_ms_gameplay(cfg.speed_level, dimension=2)
+    return gravity_interval_ms_gameplay(cfg.speed_level, dimension=2)
 
 
 def draw_game_frame(

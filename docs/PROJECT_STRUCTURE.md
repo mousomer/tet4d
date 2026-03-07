@@ -1,266 +1,123 @@
 # Project Structure And Documentation
 
-This document is section `1` of the unified documentation layout.
+This document describes the current canonical package layout and ownership model.
 
-## Top-level structure
+## Top-Level Layout
 
 ```text
 tet4d/
-â”œâ”€â”€ cli/
-â”‚   â”œâ”€â”€ front.py                # canonical unified launcher entrypoint
-â”‚   â”œâ”€â”€ front2d.py              # canonical 2D entrypoint
-â”‚   â”œâ”€â”€ front3d.py              # canonical 3D entrypoint
-â”‚   â””â”€â”€ front4d.py              # canonical 4D entrypoint
-â”œâ”€â”€ front.py                     # unified launcher (2D/3D/4D + settings)
-â”œâ”€â”€ front2d.py                   # 2D game entrypoint
-â”œâ”€â”€ front3d.py                   # 3D game entrypoint
-â”œâ”€â”€ front4d.py                   # 4D game entrypoint
-â”œâ”€â”€ requirements.txt             # runtime dependency list (pygame-ce)
-â”œâ”€â”€ packaging/
-â”‚   â”œâ”€â”€ pyinstaller/
-â”‚   â”‚   â””â”€â”€ tet4d.spec          # canonical desktop bundle spec (embedded Python runtime)
-â”‚   â””â”€â”€ scripts/
-â”‚       â”œâ”€â”€ build_macos.sh      # local macOS desktop package build
-â”‚       â”œâ”€â”€ build_linux.sh      # local Linux desktop package build
-â”‚       â””â”€â”€ build_windows.ps1   # local Windows desktop package build
-â”œâ”€â”€ config/
-â”‚   â”œâ”€â”€ menu/
-â”‚   â”‚   â”œâ”€â”€ defaults.json        # default menu/app settings (source-controlled)
-â”‚   â”‚   â””â”€â”€ structure.json       # menu row/field definitions (source-controlled)
-â”‚   â”œâ”€â”€ schema/
-â”‚   â”‚   â”œâ”€â”€ menu_settings.schema.json  # canonical menu-settings schema
-â”‚   â”‚   â”œâ”€â”€ save_state.schema.json     # canonical saved-state schema (planned runtime file)
-â”‚   â”‚   â”œâ”€â”€ help_runtime_content.schema.json # runtime help content contract
-â”‚   â”‚   â”œâ”€â”€ help_runtime_layout.schema.json  # runtime help layout contract
-â”‚   â”‚   â”œâ”€â”€ tutorial_lessons.schema.json     # tutorial lesson data contract
-â”‚   â”‚   â””â”€â”€ tutorial_plan.schema.json        # tutorial stage-plan data contract
-â”‚   â”œâ”€â”€ tutorial/
-â”‚   â”‚   â”œâ”€â”€ lessons.json         # tutorial packs/steps/gating definitions
-â”‚   â”‚   â””â”€â”€ plan.json            # canonical tutorial stage order/coverage plan
-â”‚   â”œâ”€â”€ gameplay/
-â”‚   â”‚   â”œâ”€â”€ tuning.json          # speed/challenge/scoring/grid/rotation-kick tuning
-â”‚   â”‚   â””â”€â”€ score_analyzer.json  # score-analyzer feature map and weights
-â”‚   â”œâ”€â”€ help/
-â”‚   â”‚   â”œâ”€â”€ topics.json          # help topic registry
-â”‚   â”‚   â”œâ”€â”€ action_map.json      # action-to-topic mapping
-â”‚   â”‚   â”œâ”€â”€ icon_map.json        # action-to-icon mapping for external SVG icon pack
-â”‚   â”‚   â”œâ”€â”€ content/
-â”‚   â”‚   â”‚   â””â”€â”€ runtime_help_content.json # runtime help content templates
-â”‚   â”‚   â””â”€â”€ layout/
-â”‚   â”‚       â””â”€â”€ runtime_help_layout.json # runtime help layout/media placement rules
-â”‚   â”œâ”€â”€ topology/
-â”‚   â”‚   â””â”€â”€ designer_presets.json # advanced boundary topology profile definitions
-â”‚   â”œâ”€â”€ playbot/
-â”‚   â”‚   â””â”€â”€ policy.json          # planner budgets/lookahead/controller defaults
-â”‚   â”œâ”€â”€ project/
-â”‚   â”‚   â”œâ”€â”€ canonical_maintenance.json  # machine-checked maintenance contract
-â”‚   â”‚   â”œâ”€â”€ io_paths.json               # externalized repo-relative I/O path defaults
-â”‚   â”‚   â”œâ”€â”€ constants.json              # externalized shared runtime constants
-â”‚   â”‚   â”œâ”€â”€ folder_balance_budgets.json # leaf-folder fuzzy balance non-regression gate baselines
-â”‚   â”‚   â”œâ”€â”€ tech_debt_budgets.json      # weighted tech-debt metric baseline + non-regression debt gate
-â”‚   â”‚   â”œâ”€â”€ backlog_debt.json           # canonical machine-readable active debt backlog source
-â”‚   â”‚   â””â”€â”€ secret_scan.json            # secret scanning policy and pattern set
-â”‚   â””â”€â”€ audio/
-â”‚       â””â”€â”€ sfx.json             # generated SFX event tone specs
-â”œâ”€â”€ keybindings/
-â”‚   â”œâ”€â”€ 2d.json                  # 2D key map
-â”‚   â”œâ”€â”€ 3d.json                  # 3D key map
-â”‚   â””â”€â”€ 4d.json                  # 4D key map
-â”œâ”€â”€ state/
-â”‚   â”œâ”€â”€ menu_settings.json       # user runtime overrides (generated)
-â”‚   â””â”€â”€ analytics/               # optional runtime score-analyzer telemetry
-â”œâ”€â”€ assets/
-â”‚   â””â”€â”€ help/
-â”‚       â”œâ”€â”€ manifest.json        # canonical help-asset index
-â”‚       â””â”€â”€ icons/
-â”‚           â””â”€â”€ transform/
-â”‚               â””â”€â”€ svg/         # external transform icon pack (16/64, dark/light)
-â”œâ”€â”€ tests/
-â”‚   â”œâ”€â”€ replay/
-â”‚   â”‚   â”œâ”€â”€ manifest.json        # canonical replay fixture manifest
-â”‚   â”‚   â””â”€â”€ golden/
-â”‚   â”‚       â””â”€â”€ .gitkeep         # anchor for golden replay fixtures
-â”‚   â””â”€â”€ unit/
-â”‚       â””â”€â”€ engine/              # canonical engine/unit regression suites
-â”œâ”€â”€ src/
-â”‚   â””â”€â”€ tet4d/
-â”‚       â”œâ”€â”€ __init__.py          # installable package root (src layout)
-â”‚       â”œâ”€â”€ ui/                  # UI adapters (incremental separation; pygame adapters live here)
-â”‚       â”œâ”€â”€ ai/                  # AI facades (playbot boundary seam over engine.api)
-â”‚       â”œâ”€â”€ replay/              # replay data schema + pure playback helpers (no file I/O)
-â”‚       â””â”€â”€ engine/              # shared engine + frontends (source of truth)
-â”‚           â”œâ”€â”€ core/            # strict-purity deterministic logic extraction subtree
-â”‚           â”œâ”€â”€ gameplay/        # non-core gameplay helpers/primitives (merged folder split sequence)
-â”‚           â”œâ”€â”€ runtime/         # runtime/config/validation/analytics/assist-scoring/persistence helpers (merged folder split sequence)
-â”‚           â”œâ”€â”€ tutorial/        # tutorial schema/content loader/state machine/gating logic
-â”‚           â”œâ”€â”€ ui_logic/        # non-rendering menu/input helpers (merged folder split sequence)
-â”‚           â”œâ”€â”€ board.py         # sparse ND board + plane clear logic
-â”‚           â”œâ”€â”€ game2d.py        # 2D game rules/state
-â”‚           â””â”€â”€ game_nd.py       # ND game rules/state (3D/4D)
-â”‚       â”œâ”€â”€ topology.py          # bounded/wrap/invert topology rules and mapping helpers
-â”‚       â”œâ”€â”€ topology_designer.py # advanced topology profile loader/resolver/export helpers
-â”‚       â”œâ”€â”€ pieces2d.py          # classic tetromino set
-â”‚       â”œâ”€â”€ pieces_nd.py         # 3D + 4D native piece sets
-â”‚       â”œâ”€â”€ keybindings.py       # binding definitions + load/save
-â”‚       â”œâ”€â”€ input/               # key dispatch/name formatting + default key maps helper subpackage
-â”‚       â”œâ”€â”€ launch/              # launcher/setup/profile UI subpackage
-â”‚       â”œâ”€â”€ menu/                # menu + keybindings-menu UI subpackage
-â”‚       â”œâ”€â”€ render/              # rendering/panel/icon/font helper UI subpackage
-â”‚       â”œâ”€â”€ runtime_ui/          # runtime audio/display/bootstrap + loop + pause/help UI helper subpackage
-â”‚       â”‚   â””â”€â”€ tutorial_overlay.py # in-game tutorial instruction overlay renderer
-â”‚       â”œâ”€â”€ score_analyzer.py    # board-health and placement-quality analyzer
-â”‚       â”œâ”€â”€ runtime_config_validation.py # runtime-config schema validation helpers
-â”‚       â”œâ”€â”€ front3d_game.py      # 3D gameplay frontend
-â”‚       â”œâ”€â”€ front4d_game.py      # 4D gameplay frontend
-â”‚       â”œâ”€â”€ projection3d.py      # shared projection/camera helpers
-â”‚       â””â”€â”€ ...                  # additional package modules (see src/tet4d/)
-â”œâ”€â”€ tools/
-â”‚   â”œâ”€â”€ governance/
-â”‚   â”‚   â”œâ”€â”€ validate_project_contracts.py  # canonical maintenance validator
-â”‚   â”‚   â”œâ”€â”€ scan_secrets.py                # secret scanner (policy from config/project/policy/manifests/secret_scan.json)
-â”‚   â”‚   â”œâ”€â”€ check_pygame_ce.py             # pygame-ce runtime compatibility check
-â”‚   â”‚   â””â”€â”€ lint_menu_graph.py             # menu graph structural lint
-â”‚   â”œâ”€â”€ stability/
-â”‚   â”‚   â””â”€â”€ check_playbot_stability.py     # repeated dry-run stability checks
-â”‚   â””â”€â”€ benchmarks/
-â”‚       â”œâ”€â”€ bench_playbot.py               # planner benchmark + trend recording
-â”‚       â”œâ”€â”€ analyze_playbot_policies.py    # offline playbot policy comparison
-â”‚       â””â”€â”€ profile_4d_render.py           # renderer profiling helper
-â”œâ”€â”€ .github/workflows/
-â”‚   â”œâ”€â”€ ci.yml                   # push/PR CI matrix
-â”‚   â”œâ”€â”€ stability-watch.yml      # scheduled dry-run + benchmark + policy analysis
-â”‚   â””â”€â”€ release-packaging.yml    # installer build matrix + GitHub release asset publish
-â”œâ”€â”€ .githooks/
-â”‚   â””â”€â”€ pre-push                 # local push gate -> scripts/ci_check.sh
-â””â”€â”€ docs/
-    â”œâ”€â”€ BACKLOG.md               # canonical open TODO / technical debt tracker
-    â”œâ”€â”€ history/
-    â”‚   â””â”€â”€ DONE_SUMMARIES.md    # canonical historical DONE summary ledger
-    â”œâ”€â”€ CHANGELOG.md             # consolidated change history notes
-    â”œâ”€â”€ FEATURE_MAP.md          # user-facing shipped feature map
-    â”œâ”€â”€ PROJECT_STRUCTURE.md     # this file
-    ????????? USER_SETTINGS_REFERENCE.md  # generated compact view of user-tunable settings
-    â”œâ”€â”€ RELEASE_CHECKLIST.md     # pre-release required verification list
-    â”œâ”€â”€ RELEASE_INSTALLERS.md    # local/CI desktop packaging guide
-    â”œâ”€â”€ RDS_AND_CODEX.md         # RDS index + Codex contributor instructions
-    â”œâ”€â”€ SECURITY_AND_CONFIG_PLAN.md  # repo-level security/config externalization policy
-    â”œâ”€â”€ help/
-    â”‚   â””â”€â”€ HELP_INDEX.md        # canonical help-topic index
-    â”œâ”€â”€ migrations/
-    â”‚   â”œâ”€â”€ menu_settings.md     # menu-settings migration ledger
-    â”‚   â””â”€â”€ save_state.md        # saved-state migration ledger
-    â””â”€â”€ rds/
-        â”œâ”€â”€ RDS_TETRIS_GENERAL.md
-        â”œâ”€â”€ RDS_KEYBINDINGS.md
-        â”œâ”€â”€ RDS_MENU_STRUCTURE.md
-        â”œâ”€â”€ RDS_SCORE_ANALYZER.md
-        â”œâ”€â”€ RDS_PACKAGING.md
-        â”œâ”€â”€ RDS_FILE_FETCH_LIBRARY.md
-        â”œâ”€â”€ RDS_2D_TETRIS.md
-        â”œâ”€â”€ RDS_3D_TETRIS.md
-        â””â”€â”€ RDS_4D_TETRIS.md
+|- cli/                         thin entrypoint shims
+|- config/                      source-controlled runtime/config assets
+|- docs/                        RDS, policies, handoff, and release docs
+|- packaging/                   PyInstaller spec and OS packaging scripts
+|- scripts/                     local verification and architecture checks
+|- src/tet4d/
+|  |- ai/playbot/               playbot ownership
+|  |- engine/                   reusable engine lower layer
+|  |  |- core/                  pure deterministic helpers
+|  |  |- gameplay/              gameplay rules and state
+|  |  |- runtime/               config, persistence, validation, analytics
+|  |  |- tutorial/              tutorial schema/content/runtime
+|  |  `- ui_logic/              non-rendering engine-owned interaction helpers
+|  |- replay/                   replay schema/playback helpers
+|  `- ui/pygame/                pygame adapters and frontends
+|- tests/                       top-level test tree
+`- tools/                       governance, stability, benchmark tooling
 ```
 
-## Runtime architecture
+## Dependency Direction
 
-1. `cli/front.py` is the canonical unified startup flow and settings hub.
-2. `cli/front2d.py`,`cli/front3d.py`, and`cli/front4d.py` are the canonical direct mode entrypoints.
-3. Root `front*.py` files are compatibility wrappers that delegate to `cli/`.
-4. Core rule logic lives in `game2d.py`and`game_nd.py`.
-5. Board occupancy and line/layer clearing logic lives in `board.py`.
-6. Boundary topology mapping (`bounded`,`wrap_all`,`invert_all`) lives in `topology.py` and is consumed by `game2d.py`/`game_nd.py`.
-7. Advanced topology profile loading/resolution/export is handled in `topology_designer.py` using `config/topology/designer_presets.json`.
-8. Input binding definitions are centralized in `keybindings.py` and persisted as JSON.
-9. Shared key-name formatting is centralized in `input/key_display.py`.
-10. Shared keybinding editor model/scope helpers are in `menu/keybindings_menu_model.py`.
-11. Shared keybinding editor UI is in `menu/keybindings_menu.py`.
-12. Audio/display/bootstrap runtime helpers are in `runtime_ui/audio.py` and
-    `runtime_ui/app_runtime.py`.
-13. Shared in-game loop orchestration helpers are in
-    `runtime_ui/loop_runner_nd.py`.
-14. Shared in-game pause flows (settings + keybindings + profiles + help) are in `runtime_ui/pause_menu.py`.
-15. Launcher tutorial-pack selection is in the shared menu graph (`config/menu/structure.json`) and launched from `cli/front.py` action handlers.
-16. In-game tutorial instruction overlay rendering is in `runtime_ui/tutorial_overlay.py`.
-17. Shared in-game key helper grouping is in `render/control_helper.py`.
-18. Help/explanation pages are in `runtime_ui/help_menu.py`; action icons for control visuals are rendered by `render/control_icons.py`.
-19. Shared menu/help layout-zone allocation logic is in `engine/ui_logic/menu_layout.py`.
-20. Shared menu/default/settings persistence and schema validation are in
-    `engine/runtime/menu_settings_state.py`, `engine/runtime/menu_config.py`,
-    `engine/runtime/settings_schema.py`,
-    `engine/runtime/settings_sanitize.py`, and
-    `engine/runtime/menu_structure_schema.py`.
-21. Tests in `tests/unit/engine/` cover engine behavior and replay/smoke gameplay paths.
-22. `config/menu/*` drives launcher/setup/pause menu structure and copy,
-    launcher subtitles, launcher route-action mappings, setup hints, pause hints,
-    and default values.
-23. `config/help/topics.json` + `config/help/action_map.json` define help-topic registry and action-to-topic contracts; `config/help/content/runtime_help_content.json` is the canonical runtime help-copy content source formatted by `runtime_ui/help_menu.py`.
-24. `config/help/layout/runtime_help_layout.json` defines runtime help layout/placement rules (including topic media mode and icon/image placement policy) consumed by `runtime_ui/help_menu.py`.
-25. `config/help/icon_map.json` defines runtime action-to-icon mapping for external SVG transform icons.
-26. Default keybinding maps/profile templates are config-backed in `config/keybindings/defaults.json` and loaded via runtime keybinding helpers.
-27. `config/gameplay/*`,`config/playbot/*`, and`config/audio/*` drive runtime tuning defaults.
-28. `config/project/io_paths.json` + `config/project/constants.json` feed safe runtime path/constants loading in `src/tet4d/engine/runtime/project_config.py`.
-29. `config/project/policy/manifests/secret_scan.json` defines repository secret-scan policy used by `tools/governance/scan_secrets.py`.
-30. `config/schema/*`and`docs/migrations/*` are canonical schema + migration ledgers for persisted data contracts.
-31. `config/tutorial/lessons.json` is the canonical data source for tutorial lesson packs and deterministic step contracts.
-32. `config/tutorial/plan.json` is the canonical data source for ordered tutorial stage coverage (single-button progression plan).
-33. `config/project/policy/manifests/replay_manifest.json` tracks deterministic replay-contract expectations.
-34. `docs/help/HELP_INDEX.md`,`config/help/content/runtime_help_content.json`,`config/help/layout/runtime_help_layout.json`, and`config/project/policy/manifests/help_assets_manifest.json` are canonical help-content/layout contracts.
-35. `docs/history/DONE_SUMMARIES.md` is the single source for long historical DONE stage summaries.
-36. `docs/RELEASE_CHECKLIST.md` defines pre-release required checks.
-37. `state/menu_settings.json` stores user overrides and can be deleted to reset to config defaults.
-38. `config/project/policy/manifests/canonical_maintenance.json` defines enforced doc/help/test/config consistency rules.
-39. `tools/governance/validate_project_contracts.py` validates canonical maintenance contract and is run in CI.
-40. `tools/governance/scan_secrets.py` executes the secret-scan policy and is wired into local CI.
-41. `tools/stability/check_playbot_stability.py` runs repeated dry-run regression checks and is wired into local CI script.
-42. `.github/workflows/stability-watch.yml` runs scheduled stability-watch and policy-analysis automation.
-43. `.github/workflows/release-packaging.yml` builds desktop packages with embedded Python runtime for macOS/Linux/Windows.
-44. `packaging/pyinstaller/tet4d.spec` is the canonical frozen-bundle build spec.
-45. `packaging/scripts/*` are the local OS-specific packaging entrypoints.
-46. `scripts/arch_metrics.py` emits top-level `tech_debt` and `stage_loc_logger`;
-    active debt backlog input is read from `config/project/backlog_debt.json`,
-    and `scripts/check_architecture_metric_budgets.sh` enforces configurable
-    tech-debt gate modes (active default: `non_regression_baseline`) through
-    `config/project/policy/manifests/tech_debt_budgets.json`.
-47. Canonical piece-local transform math lives in
-    `src/tet4d/engine/core/piece_transform.py` and is reused by gameplay,
-    AI planning, tutorial setup, and rotation animation.
-48. Canonical rotation-kick candidate generation and first-fit resolution live in
-    `src/tet4d/engine/core/rotation_kicks.py` and are reused by gameplay via
-    topology-aware legality checks.
-49. `scripts/install_git_hooks.sh` sets `core.hooksPath=.githooks` and installs
-    the pre-push local CI gate.
-50. `docs/CONFIGURATION_REFERENCE.md` is the generated human-readable index of
-    source-controlled config assets under `config/` (excluding schemas).
-51. `docs/USER_SETTINGS_REFERENCE.md` is the generated compact view of
-    persisted user-facing settings defaults and built-in keybinding profiles.
-52. `tools/governance/generate_configuration_reference.py` regenerates and
-    verifies both generated configuration docs during local verification and CI.
+The current rule is one-way:
 
-## Placement rubric
+1. `ui`, `ai`, `replay`, and `tools` may import engine modules directly.
+2. `engine` must not import `ui`, `ai`, `replay`, or `tools`.
+3. `engine/core` must remain pure.
+4. `tet4d.engine.api` is a small compatibility surface for engine-owned helpers,
+   not the only allowed import seam. Replay code and compatibility tests may use
+   it; runtime UI/AI/tools should prefer direct canonical owners.
 
-1. New pure deterministic logic slices (no pygame/I/O/time/logging) go in `src/tet4d/engine/core/`.
-2. New runtime/gameplay modules that are not yet pure-core-ready go in `src/tet4d/engine/`.
-3. New pygame/event-loop/render adapters go in `src/tet4d/ui/pygame/`; cluster subpackage families (for example `src/tet4d/ui/pygame/menu/`) once a prefix group grows.
-4. New AI/playbot entry/facade modules go in `src/tet4d/ai/` and should depend on `src/tet4d/engine/api.py`.
-5. New replay data schema/playback helpers go in `src/tet4d/replay/` (keep file I/O outside engine core).
-6. New CLI-facing entry scripts go in `cli/`; keep root `front*.py` wrappers stable unless compatibility changes are intentional.
-7. New repo tooling scripts go in `tools/governance/`, `tools/stability/`, or `tools/benchmarks/` by purpose.
-8. Prefer `tet4d.engine.api` for tool imports; UI/render profiling tools may use `src/tet4d/ui/pygame/` adapter seams.
-9. `scripts/check_architecture_boundaries.sh` enforces incremental import boundaries (with documented temporary baselines).
-10. `scripts/check_engine_core_purity.sh` strictly enforces `src/tet4d/engine/core/` purity.
-11. Use editable install (`pip install -e .`) for local imports; do not add runtime logic at repo root.
+## Canonical Entry Points
 
-## Unified documentation sections
+1. [cli/front.py](/C:/Users/omer/Documents/workspace/repos/tet4d/cli/front.py): unified launcher
+2. [cli/front2d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/cli/front2d.py): thin 2D shim
+3. [cli/front3d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/cli/front3d.py): thin 3D shim
+4. [cli/front4d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/cli/front4d.py): thin 4D shim
 
-1. Project structure and documentation:
-   - `docs/PROJECT_STRUCTURE.md`
-   - `docs/FEATURE_MAP.md`
-   - `docs/CONFIGURATION_REFERENCE.md`
-   - `docs/USER_SETTINGS_REFERENCE.md`
-   - `docs/GUIDELINES_RESEARCH.md`
-   - `docs/RELEASE_INSTALLERS.md`
-2. Usage README:
-   - `README.md`
-3. RDS and Codex instructions:
-   - `docs/RDS_AND_CODEX.md`
-   - `docs/rds/`
+## Canonical Runtime Owners
+
+### Engine
+
+1. [api.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/api.py): small compatibility facade used mainly by replay and explicit compatibility tests
+2. [api.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/gameplay/api.py): gameplay convenience exports
+3. [api.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/api.py): runtime/help/menu convenience exports
+4. [api.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/api.py): tutorial convenience exports
+5. [piece_transform.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/core/piece_transform.py): canonical piece-local transform math
+6. [rotation_kicks.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/core/rotation_kicks.py): canonical kick candidate generation and shared resolution
+7. [game2d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/gameplay/game2d.py): 2D gameplay state/rules
+8. [game_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/gameplay/game_nd.py): 3D/4D gameplay state/rules
+9. [menu_config.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_config.py): menu/runtime config loading
+10. [menu_settings_state.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/runtime/menu_settings_state.py): persisted settings state
+11. [content.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/content.py): tutorial content loader
+12. [runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/engine/tutorial/runtime.py): tutorial runtime session logic
+
+### UI
+
+1. [front2d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_game.py): 2D orchestration entry
+2. [front2d_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_setup.py): 2D setup/menu owner
+3. [front2d_loop.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_loop.py): 2D runtime loop owner
+4. [front2d_runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_runtime.py): 2D runtime compatibility facade for legacy imports/tests
+5. [frontend_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd.py): shared ND setup/menu/input helpers
+6. [front3d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_game.py): 3D frontend
+7. [front4d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_game.py): 4D frontend
+8. [front3d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_render.py): 3D render adapter
+9. [front4d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_render.py): 4D render adapter
+10. [runtime_ui/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/runtime_ui): bootstrap, pause/help, tutorial overlay, shared loop helpers
+11. [launch/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/launch): launcher, settings, bot, leaderboard flows
+12. [menu/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/menu): shared menu/keybinding adapters, including `setup_menu_runner.py`
+13. [render/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/render): render/layout/helper adapters
+
+### AI
+
+1. [controller.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/controller.py): playbot runtime controller
+2. [planner_2d.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/planner_2d.py): 2D planning
+3. [planner_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/planner_nd.py): ND planning entry
+4. [planner_nd_core.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/planner_nd_core.py): shared ND candidate logic
+5. [planner_nd_search.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/planner_nd_search.py): ND search/budget logic
+6. [dry_run.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ai/playbot/dry_run.py): stability/dry-run harness
+
+## Config And Docs Sources Of Truth
+
+1. [config/menu/structure.json](/C:/Users/omer/Documents/workspace/repos/tet4d/config/menu/structure.json): launcher/pause/settings/help/menu graph and copy
+2. [config/menu/defaults.json](/C:/Users/omer/Documents/workspace/repos/tet4d/config/menu/defaults.json): default persisted settings payload
+3. [config/tutorial/lessons.json](/C:/Users/omer/Documents/workspace/repos/tet4d/config/tutorial/lessons.json): tutorial packs and board profiles
+4. [config/gameplay/tuning.json](/C:/Users/omer/Documents/workspace/repos/tet4d/config/gameplay/tuning.json): scoring/kick/tuning defaults
+5. [docs/CONFIGURATION_REFERENCE.md](/C:/Users/omer/Documents/workspace/repos/tet4d/docs/CONFIGURATION_REFERENCE.md): generated full config inventory
+6. [docs/USER_SETTINGS_REFERENCE.md](/C:/Users/omer/Documents/workspace/repos/tet4d/docs/USER_SETTINGS_REFERENCE.md): generated user-facing settings summary
+7. [docs/ARCHITECTURE_CONTRACT.md](/C:/Users/omer/Documents/workspace/repos/tet4d/docs/ARCHITECTURE_CONTRACT.md): dependency contract
+8. [CURRENT_STATE.md](/C:/Users/omer/Documents/workspace/repos/tet4d/CURRENT_STATE.md): restart handoff
+9. [docs/BACKLOG.md](/C:/Users/omer/Documents/workspace/repos/tet4d/docs/BACKLOG.md): active backlog and current change footprint
+
+## Placement Rules
+
+1. Put pure deterministic logic in `src/tet4d/engine/core/`.
+2. Put gameplay/runtime/tutorial logic in `src/tet4d/engine/`.
+3. Put `pygame` frontends, rendering, audio, and menu adapters in `src/tet4d/ui/pygame/`.
+4. Put playbot ownership in `src/tet4d/ai/playbot/`.
+5. Keep CLI files as thin shims over package code.
+6. Prefer reusing an existing canonical owner over adding wrappers.
+7. Do not reintroduce reverse imports from engine into UI or AI.
+
+## Verification Contract
+
+Run:
+
+```bash
+CODEX_MODE=1 ./scripts/verify.sh
+```
+
+Authoritative enforcement is backed by:
+
+1. [scripts/check_architecture_boundaries.sh](/C:/Users/omer/Documents/workspace/repos/tet4d/scripts/check_architecture_boundaries.sh)
+2. [scripts/check_engine_core_purity.sh](/C:/Users/omer/Documents/workspace/repos/tet4d/scripts/check_engine_core_purity.sh)
+3. [scripts/arch_metrics.py](/C:/Users/omer/Documents/workspace/repos/tet4d/scripts/arch_metrics.py)
+4. [tools/governance/architecture_metric_budget.py](/C:/Users/omer/Documents/workspace/repos/tet4d/tools/governance/architecture_metric_budget.py)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tet4d.engine import api as engine_api
+from tet4d.ai.playbot.planner_nd_search import plan_best_nd_with_budget
 from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
@@ -10,10 +10,8 @@ from tet4d.ai.playbot.types import (
     clamp_planning_budget_ms,
     default_planning_budget_ms,
 )
-
-GameStateND = engine_api.GameStateND
-ActivePieceND = engine_api.ActivePieceND
-plan_best_nd_with_budget = engine_api.plan_best_nd_with_budget
+from tet4d.engine.gameplay.game_nd import GameStateND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND
 
 
 @dataclass(frozen=True)
@@ -55,3 +53,4 @@ def plan_best_nd_move(
         final_piece=search_plan.final_piece,
         stats=search_plan.stats,
     )
+

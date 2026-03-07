@@ -14,8 +14,8 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
-from cli import front2d
-from tet4d.engine import frontend_nd
+from tet4d.ui.pygame import front2d_game as front2d
+from tet4d.ui.pygame import frontend_nd
 from tet4d.ui.pygame import front3d_game
 from tet4d.ui.pygame import front4d_game
 from tet4d.engine.gameplay.game2d import Action, GameConfig
@@ -124,7 +124,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="fixed_seed",
             rng_seed=4242,
         )
-        with patch("cli.front2d.random.Random", side_effect=random.Random) as ctor:
+        with patch("tet4d.ui.pygame.front2d_loop.random.Random", side_effect=random.Random) as ctor:
             state = front2d.create_initial_state(fixed_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with(4242)
@@ -137,7 +137,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="true_random",
             rng_seed=4242,
         )
-        with patch("cli.front2d.random.Random", side_effect=random.Random) as ctor:
+        with patch("tet4d.ui.pygame.front2d_loop.random.Random", side_effect=random.Random) as ctor:
             state = front2d.create_initial_state(true_random_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with()
@@ -179,7 +179,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_seed=2024,
         )
         with patch(
-            "tet4d.engine.frontend_nd.random.Random", side_effect=random.Random
+            "tet4d.ui.pygame.frontend_nd.random.Random", side_effect=random.Random
         ) as ctor:
             state = frontend_nd.create_initial_state(fixed_cfg)
         self.assertIsNotNone(state.current_piece)
@@ -193,7 +193,7 @@ class TestGameplayReplay(unittest.TestCase):
             rng_seed=2024,
         )
         with patch(
-            "tet4d.engine.frontend_nd.random.Random", side_effect=random.Random
+            "tet4d.ui.pygame.frontend_nd.random.Random", side_effect=random.Random
         ) as ctor:
             state = frontend_nd.create_initial_state(true_random_cfg)
         self.assertIsNotNone(state.current_piece)
@@ -578,3 +578,4 @@ class TestGameplayReplay(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

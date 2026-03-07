@@ -4,12 +4,12 @@ from typing import Callable, Optional, TypeVar
 
 import pygame
 
-from tet4d.engine.api import (
-    GameConfigND,
-    capture_windowed_display_settings_runtime as capture_windowed_display_settings,
-    open_display_runtime as open_display,
+from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
+    capture_windowed_display_settings,
+    open_display,
 )
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 SettingsT = TypeVar("SettingsT")

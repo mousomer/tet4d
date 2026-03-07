@@ -8,7 +8,7 @@ from typing import Any
 
 import pygame
 
-from tet4d.engine.api import project_root_path
+from tet4d.engine.runtime.project_config import project_root_path
 
 
 _ICON_FG = (224, 236, 252)

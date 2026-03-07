@@ -29,7 +29,7 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
 
     def test_overlay_action_label_uses_short_system_labels(self) -> None:
         with patch.object(
-            tutorial_overlay.engine_api,
+            tutorial_overlay,
             "binding_action_description",
             return_value="unused",
         ):
@@ -88,17 +88,17 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
 
         with (
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "runtime_binding_groups_for_dimension",
                 side_effect=_runtime_groups,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "format_key_tuple",
                 side_effect=_format_key_tuple,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "binding_action_description",
                 return_value="Move left",
             ),
@@ -126,17 +126,17 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
 
         with (
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "runtime_binding_groups_for_dimension",
                 side_effect=_runtime_groups,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "format_key_tuple",
                 return_value="[,",
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "binding_action_description",
                 return_value="Lower locked-cell transparency",
             ),
@@ -173,17 +173,17 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
 
         with (
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "runtime_binding_groups_for_dimension",
                 side_effect=_runtime_groups,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "format_key_tuple",
                 side_effect=_format_key_tuple,
             ),
             patch.object(
-                tutorial_overlay.engine_api,
+                tutorial_overlay,
                 "binding_action_description",
                 side_effect=_label,
             ),

@@ -391,6 +391,36 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-07): one-way architecture enforcement + 2D frontend folding.
+
+- Folded the 2D frontend into the shared pygame package and split ownership into:
+  - `src/tet4d/ui/pygame/front2d_game.py` (orchestration entry)
+  - `src/tet4d/ui/pygame/front2d_setup.py` (setup/menu owner)
+  - `src/tet4d/ui/pygame/front2d_loop.py` (runtime loop owner)
+  - `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade only)
+  - kept `cli/front2d.py` as a thin compatibility shim only.
+- Moved engine-owned frontend/render adapter ownership fully into UI:
+  - `src/tet4d/ui/pygame/frontend_nd.py`
+  - `src/tet4d/ui/pygame/front3d_render.py`
+  - `src/tet4d/ui/pygame/front4d_render.py`
+- Removed remaining reverse dependency plumbing from `src/tet4d/engine/api.py`; engine no longer imports `tet4d.ui` or `tet4d.ai`.
+- Decomposed engine-owned convenience exports into:
+  - `src/tet4d/engine/gameplay/api.py`
+  - `src/tet4d/engine/runtime/api.py`
+  - `src/tet4d/engine/tutorial/api.py`
+  - kept `src/tet4d/engine/api.py` as a thin compatibility facade over those engine-owned owners.
+- Rewired AI playbot modules to import engine modules directly instead of routing through `engine.api` wrappers.
+- Centralized shared rotation-with-kicks application through `resolve_rotated_piece(...)`, removing duplicated first-fit kick application flow from `game2d.py` and `game_nd.py`.
+- Cut `menu_settings_state` side effects into UI keybinding globals; live keybinding profile sync now happens in UI runtime/menu ownership.
+- Tightened architecture enforcement to the implemented one-way rule:
+  - `engine_to_ui_non_api = 0`
+  - `engine_to_ai_non_api = 0`
+  - `pygame_imports_non_test = 0`
+- Rewrote stale structure/architecture handoff docs so they describe the current lower-layer engine model rather than the old transitional `engine.api`-only seam.
+- Moved governance/config-reference helpers and the 4D render benchmark off `engine.api` onto direct engine/UI owners.
+- Reduced `src/tet4d/engine/api.py` to a small compatibility facade used mainly by replay and explicit compatibility tests.
+- Extracted the shared setup-menu loop into `src/tet4d/ui/pygame/menu/setup_menu_runner.py` and rewired both `front2d_setup.py` and `frontend_nd.py` to use it.
+- Trimmed duplicated settings/default loader wrappers in `src/tet4d/ui/pygame/launch/launcher_settings.py` by extending `src/tet4d/engine/runtime/menu_settings_state.py` and reusing `src/tet4d/engine/runtime/settings_schema.py` window-size helpers.
 Current sub-batch (2026-03-05): center-of-piece rotation semantic swap.
 
 - Switched canonical block rotation semantics in `src/tet4d/engine/core/piece_transform.py` from origin-style pivot turns to active-bounding-box center rotation for occupied cells.

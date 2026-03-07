@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.runtime_config import audio_event_specs
 
 
 @dataclass
@@ -16,9 +16,7 @@ class AudioSettings:
     mute: bool = False
 
 
-_EVENT_SPECS: dict[str, tuple[float, int, float]] = (
-    engine_api.audio_event_specs_runtime()
-)
+_EVENT_SPECS: dict[str, tuple[float, int, float]] = audio_event_specs()
 
 
 class AudioEngine:

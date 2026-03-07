@@ -42,8 +42,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
 
         with patch.object(
-            topology_lab_menu.engine_api,
-            "save_menu_payload_runtime",
+            topology_lab_menu,
+            "save_app_settings_payload",
             return_value=(True, "saved"),
         ) as save_payload:
             ok, _msg = topology_lab_menu._save_dimension_settings(state)

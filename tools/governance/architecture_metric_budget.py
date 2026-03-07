@@ -6,20 +6,17 @@ from typing import Any
 ARCHITECTURE_METRIC_BUDGETS = {
     "engine_core_purity.violation_count": 0,
     "deep_imports.engine_core_to_engine_non_core_imports.count": 0,
-    "deep_imports.ui_to_engine_non_api.count": 0,
-    "deep_imports.replay_to_engine_non_api.count": 0,
-    "deep_imports.ai_to_engine_non_api.count": 0,
-    "deep_imports.tools_stability_to_engine_non_api.count": 0,
-    "deep_imports.tools_benchmarks_to_engine_non_api.count": 0,
+    "deep_imports.engine_to_ui_non_api.count": 0,
+    "deep_imports.engine_to_ai_non_api.count": 0,
     "deep_imports.external_callers_to_engine_playbot.count": 0,
     "migration_debt_signals.core_step_state_method_calls.count": 0,
     "migration_debt_signals.core_step_private_state_method_calls.count": 0,
     "migration_debt_signals.core_step_state_field_assignments.count": 0,
     "migration_debt_signals.core_rules_private_state_method_calls.count": 0,
-    "migration_debt_signals.pygame_imports_non_test.count": 39,
-    "migration_debt_signals.file_io_calls_non_test.count": 16,
-    "migration_debt_signals.random_imports_non_test.count": 11,
-    "migration_debt_signals.time_imports_non_test.count": 3,
+    "migration_debt_signals.pygame_imports_non_test.count": 0,
+    "migration_debt_signals.file_io_calls_non_test.count": 12,
+    "migration_debt_signals.random_imports_non_test.count": 9,
+    "migration_debt_signals.time_imports_non_test.count": 2,
 }
 
 

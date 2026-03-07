@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import pygame
 
-from tet4d.engine.api import project_constant_int
+from tet4d.engine.runtime.project_config import project_constant_int
 
 _TEXT_SURFACE_CACHE_MAX = project_constant_int(
     ("cache_limits", "text_surface_max"),

@@ -4,7 +4,7 @@ import unittest
 
 import pygame
 
-from tet4d.engine import frontend_nd
+from tet4d.ui.pygame import frontend_nd
 from tet4d.ui.pygame.runtime_ui import help_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import (
     help_topic_action_rows,
@@ -77,3 +77,4 @@ class TestHelpMenu(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

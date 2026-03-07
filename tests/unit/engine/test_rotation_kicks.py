@@ -6,6 +6,7 @@ from tet4d.engine.core.rotation_kicks import (
     kick_candidate_vectors,
     normalize_kick_level_name,
     resolve_kicked_candidate,
+    resolve_rotated_piece,
 )
 
 
@@ -33,6 +34,21 @@ class TestRotationKicks(unittest.TestCase):
         candidate = resolve_kicked_candidate(
             rotated_piece,
             candidate_vectors=((1, 0), (-1, 0), (0, -1)),
+            move_piece=lambda piece, vector: (piece[0] + vector[0], piece[1] + vector[1]),
+            can_place=lambda piece: piece == (-1, 0),
+        )
+        self.assertEqual(candidate, (-1, 0))
+
+
+    def test_resolve_rotated_piece_uses_kick_table_and_first_fit(self) -> None:
+        candidate = resolve_rotated_piece(
+            (0, 0),
+            ndim=2,
+            axis_a=0,
+            axis_b=1,
+            gravity_axis=1,
+            kick_level="light",
+            plane_offsets_for_level=lambda level: ((1, 0), (-1, 0)) if level == "light" else (),
             move_piece=lambda piece, vector: (piece[0] + vector[0], piece[1] + vector[1]),
             can_place=lambda piece: piece == (-1, 0),
         )

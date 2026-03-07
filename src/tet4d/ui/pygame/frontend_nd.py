@@ -1,4 +1,4 @@
-# tetris_nd/frontend_nd.py
+# tet4d/ui/pygame/frontend_nd.py
 import random
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -6,48 +6,46 @@ from typing import Optional, Tuple
 
 import pygame
 
-from .core.model import BoardND
-from .core.rng import RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM
-from .gameplay.challenge_mode import apply_challenge_prefill_nd
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.rng import RNG_MODE_TRUE_RANDOM
+from tet4d.engine.gameplay.challenge_mode import apply_challenge_prefill_nd
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
 )
-from .gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.keybindings import (
     KEYS_3D,
     KEYS_4D,
     SYSTEM_KEYS,
     active_key_profile,
-    load_active_profile_bindings,
 )
-from tet4d.ui.pygame.menu.menu_controls import (
-    FieldSpec,
-    MenuAction,
-    apply_menu_actions,
-    gather_menu_actions,
-)
-from .runtime.menu_config import (
+from tet4d.ui.pygame.menu.menu_controls import FieldSpec
+from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
-    settings_option_labels,
+    kick_level_name_for_index,
+    random_mode_id_from_index,
+    random_mode_label_for_index,
+    setup_fields_for_settings,
     setup_hints_for_dimension,
-    setup_fields_for_dimension,
     ui_copy_section,
 )
-from .runtime.runtime_config import kick_level_names
 from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
-from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
-from .gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
-from .gameplay.exploration_mode import minimal_exploration_dims_nd
+from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
+from tet4d.engine.gameplay.pieces_nd import (
+    piece_set_label,
+    piece_set_options_for_dimension,
+)
+from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_nd
 from tet4d.ai.playbot import run_dry_run_nd
 from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
 )
-from .gameplay.speed_curve import gravity_interval_ms
-from .gameplay.topology import topology_mode_from_index, topology_mode_label
-from .gameplay.topology_designer import (
+from tet4d.engine.gameplay.speed_curve import gravity_interval_ms
+from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
+from tet4d.engine.gameplay.topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
@@ -61,12 +59,6 @@ TEXT_COLOR = (230, 230, 230)
 HIGHLIGHT_COLOR = (255, 215, 0)
 RANDOM_MODE_FIXED_INDEX = 0
 RANDOM_MODE_TRUE_RANDOM_INDEX = 1
-_RANDOM_MODE_CHOICES = (
-    RNG_MODE_FIXED_SEED,
-    RNG_MODE_TRUE_RANDOM,
-)
-_RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
-_KICK_LEVEL_NAMES = kick_level_names()
 _DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
 _SETUP_MENU_COPY = ui_copy_section("setup_menu")
 
@@ -129,18 +121,15 @@ def _piece_set_index_to_id(dimension: int, index: int) -> str:
 
 
 def _random_mode_index_to_id(index: int) -> str:
-    safe_index = max(0, min(len(_RANDOM_MODE_CHOICES) - 1, int(index)))
-    return _RANDOM_MODE_CHOICES[safe_index]
+    return random_mode_id_from_index(index)
 
 
 def _random_mode_label(index: int) -> str:
-    safe_index = max(0, min(len(_RANDOM_MODE_LABELS) - 1, int(index)))
-    return _RANDOM_MODE_LABELS[safe_index]
+    return random_mode_label_for_index(index)
 
 
 def _kick_level_name(index: int) -> str:
-    safe_index = max(0, min(len(_KICK_LEVEL_NAMES) - 1, int(index)))
-    return _KICK_LEVEL_NAMES[safe_index]
+    return kick_level_name_for_index(index)
 
 
 def piece_set_4d_label(piece_set_4d: str) -> str:
@@ -169,32 +158,12 @@ def menu_fields_for_settings(
     choices = _PIECE_SET_CHOICES.get(dimension)
     piece_set_max = 0 if choices is None else max(0, len(choices) - 1)
     topology_profile_max = max(0, len(_TOPOLOGY_PROFILE_LABELS.get(dimension, ())) - 1)
-    fields = setup_fields_for_dimension(
+    return setup_fields_for_settings(
         dimension,
         piece_set_max=piece_set_max,
         topology_profile_max=topology_profile_max,
+        topology_advanced=bool(settings.topology_advanced),
     )
-    if int(settings.topology_advanced):
-        return fields
-    return [field for field in fields if field[1] != "topology_profile_index"]
-
-
-_SETUP_BLOCKED_ACTIONS = {
-    MenuAction.LOAD_BINDINGS,
-    MenuAction.SAVE_BINDINGS,
-    MenuAction.LOAD_SETTINGS,
-    MenuAction.SAVE_SETTINGS,
-    MenuAction.RESET_SETTINGS,
-    MenuAction.PROFILE_PREV,
-    MenuAction.PROFILE_NEXT,
-    MenuAction.PROFILE_NEW,
-    MenuAction.PROFILE_DELETE,
-    MenuAction.REBIND_TOGGLE,
-    MenuAction.REBIND_TARGET_NEXT,
-    MenuAction.REBIND_TARGET_PREV,
-    MenuAction.REBIND_CONFLICT_NEXT,
-    MenuAction.RESET_BINDINGS,
-}
 
 
 def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
@@ -316,68 +285,56 @@ def draw_menu(
         screen.blit(status_surf, (status_x, hint_y))
 
 
+def _run_dry_run(state: MenuState, dimension: int) -> None:
+    if bool(state.settings.exploration_mode):
+        state.bindings_status = "Dry-run is disabled in exploration mode"
+        state.bindings_status_error = False
+        return
+    report = run_dry_run_nd(
+        build_config(state.settings, dimension),
+        planner_profile=bot_planner_profile_from_index(
+            state.settings.bot_profile_index
+        ),
+        planning_budget_ms=state.settings.bot_budget_ms,
+        planner_algorithm=bot_planner_algorithm_from_index(
+            state.settings.bot_algorithm_index
+        ),
+    )
+    state.bindings_status = report.reason
+    state.bindings_status_error = not report.passed
+
+
+def _export_topology_profile(state: MenuState, dimension: int) -> None:
+    topology_mode = topology_mode_from_index(state.settings.topology_mode)
+    export_resolved_topology_profile(
+        dimension=dimension,
+        gravity_axis=1,
+        topology_mode=topology_mode,
+        topology_advanced=bool(state.settings.topology_advanced),
+        profile_index=state.settings.topology_profile_index,
+    )
+
+
 def run_menu(
     screen: pygame.Surface, fonts: GfxFonts, dimension: int
 ) -> Optional[GameSettingsND]:
-    clock = pygame.time.Clock()
-    load_active_profile_bindings()
     state = MenuState()
-    ok, msg = load_menu_settings(state, dimension, include_profile=True)
-    if not ok:
-        state.bindings_status = msg
-        state.bindings_status_error = True
-
-    while state.running and not state.start_game:
-        _dt = clock.tick(60)
-        actions = gather_menu_actions(state, dimension)
-        fields = menu_fields_for_settings(state.settings, dimension)
-        if state.selected_index >= len(fields):
-            state.selected_index = max(0, len(fields) - 1)
-        apply_menu_actions(
-            state,
-            actions,
-            fields,
+    return run_setup_menu_loop(
+        screen=screen,
+        state=state,
+        dimension=dimension,
+        fields_for_state=lambda settings: menu_fields_for_settings(settings, dimension),
+        draw_frame=lambda current_screen, current_state, _fields: draw_menu(
+            current_screen,
+            fonts,
+            current_state,
             dimension,
-            blocked_actions=_SETUP_BLOCKED_ACTIONS,
-        )
-        if state.run_dry_run:
-            if bool(state.settings.exploration_mode):
-                state.bindings_status = "Dry-run is disabled in exploration mode"
-                state.bindings_status_error = False
-            else:
-                report = run_dry_run_nd(
-                    build_config(state.settings, dimension),
-                    planner_profile=bot_planner_profile_from_index(
-                        state.settings.bot_profile_index
-                    ),
-                    planning_budget_ms=state.settings.bot_budget_ms,
-                    planner_algorithm=bot_planner_algorithm_from_index(
-                        state.settings.bot_algorithm_index
-                    ),
-                )
-                state.bindings_status = report.reason
-                state.bindings_status_error = not report.passed
-        draw_menu(screen, fonts, state, dimension)
-        pygame.display.flip()
-
-    if state.start_game and state.running:
-        ok, msg = save_menu_settings(state, dimension)
-        if not ok:
-            state.bindings_status = msg
-            state.bindings_status_error = True
-        else:
-            topology_mode = topology_mode_from_index(state.settings.topology_mode)
-            export_resolved_topology_profile(
-                dimension=dimension,
-                gravity_axis=1,
-                topology_mode=topology_mode,
-                topology_advanced=bool(state.settings.topology_advanced),
-                profile_index=state.settings.topology_profile_index,
-            )
-        return state.settings
-    # Autosave setup/session state on exit as well (without explicit Save action).
-    save_menu_settings(state, dimension)
-    return None
+        ),
+        run_dry_run=lambda current_state: _run_dry_run(current_state, dimension),
+        on_start_saved=lambda current_state: _export_topology_profile(
+            current_state, dimension
+        ),
+    )
 
 
 def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
@@ -1043,3 +1000,5 @@ def handle_game_keydown(event: pygame.event.Event, state: GameStateND) -> str:
         event.key,
         state,
     )
+
+

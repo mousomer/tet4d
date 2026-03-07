@@ -195,7 +195,7 @@ TECH_DEBT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
-ARCH_STAGE = 890
+ARCH_STAGE = 900
 
 
 def _py_files(root: Path) -> list[Path]:
@@ -263,6 +263,25 @@ def _match_core_to_non_core_engine_imports(paths: list[Path]) -> list[str]:
         for lineno, line in enumerate(_read(path).splitlines(), start=1):
             if rx.search(line) and not allow_rx.search(line):
                 hits.append(f"{rel}:{lineno}: {line.strip()}")
+    return hits
+
+
+def _match_reverse_dependency_lines(
+    paths: list[Path],
+    module_prefix: str,
+) -> list[str]:
+    escaped = re.escape(module_prefix)
+    import_rx = re.compile(rf"^\s*(?:from|import)\s+{escaped}(?:\.|\b)")
+    dynamic_rx = re.compile(rf"[\"']{escaped}(?:\.|\b)")
+    hits: list[str] = []
+    for path in paths:
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        for lineno, line in enumerate(_read(path).splitlines(), start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if import_rx.search(line) or dynamic_rx.search(line):
+                hits.append(f"{rel}:{lineno}: {stripped}")
     return hits
 
 
@@ -1907,6 +1926,8 @@ def main() -> int:
     replay_deep_engine = _match_engine_deep_import_lines(replay_paths)
     ai_deep_engine = _match_engine_deep_import_lines(ai_paths)
     core_non_core_engine = _match_core_to_non_core_engine_imports(core_paths)
+    engine_to_ui_reverse = _match_reverse_dependency_lines(engine_paths, "tet4d.ui")
+    engine_to_ai_reverse = _match_reverse_dependency_lines(engine_paths, "tet4d.ai")
     tools_stability_deep_engine = _match_engine_deep_import_lines(tools_stability_paths)
     tools_bench_deep_engine = _match_engine_deep_import_lines(tools_bench_paths)
     legacy_engine_playbot_external = _match_lines(
@@ -1979,6 +2000,14 @@ def main() -> int:
             "engine_core_to_engine_non_core_imports": {
                 "count": len(core_non_core_engine),
                 "samples": core_non_core_engine[:20],
+            },
+            "engine_to_ui_non_api": {
+                "count": len(engine_to_ui_reverse),
+                "samples": engine_to_ui_reverse[:20],
+            },
+            "engine_to_ai_non_api": {
+                "count": len(engine_to_ai_reverse),
+                "samples": engine_to_ai_reverse[:20],
             },
             "ui_to_engine_non_api": {
                 "count": len(ui_deep_engine),

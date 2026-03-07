@@ -35,13 +35,16 @@ from tet4d.ui.pygame.render.panel_utils import (
     draw_unified_game_side_panel,
 )
 
-from .gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from .frontend_nd import gravity_interval_ms_from_config
-from .gameplay.pieces_nd import piece_set_label
-from .gameplay.topology import map_overlay_cells
-from .runtime.project_config import project_constant_float, project_constant_int
-from .runtime.score_analyzer import hud_analysis_lines
-from .ui_logic.view_modes import GridMode, grid_mode_label
+from tet4d.engine.gameplay.pieces_nd import piece_set_label
+from tet4d.engine.gameplay.topology import map_overlay_cells
+from tet4d.engine.runtime.project_config import (
+    project_constant_float,
+    project_constant_int,
+)
+from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
+from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
 
 
 MARGIN = project_constant_int(
@@ -518,5 +521,6 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
     board_w = int(max(560, cfg.dims[0] * 68))
     board_h = int(max(620, cfg.dims[1] * 30))
     return board_w + SIDE_PANEL + 3 * MARGIN, board_h + 2 * MARGIN
+
 
 

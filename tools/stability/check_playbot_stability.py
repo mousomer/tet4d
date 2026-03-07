@@ -3,15 +3,11 @@ from __future__ import annotations
 
 import argparse
 
-from tet4d.engine.api import (
-    PIECE_SET_2D_DEBUG,
-    PIECE_SET_3D_DEBUG,
-    PIECE_SET_4D_DEBUG,
-    GameConfig,
-    GameConfigND,
-    run_dry_run_2d,
-    run_dry_run_nd,
-)
+from tet4d.ai.playbot import run_dry_run_2d, run_dry_run_nd
+from tet4d.engine.gameplay.game2d import GameConfig
+from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG
+from tet4d.engine.gameplay.pieces_nd import PIECE_SET_3D_DEBUG, PIECE_SET_4D_DEBUG
 
 
 def _assert_report(ok: bool, details: str) -> None:

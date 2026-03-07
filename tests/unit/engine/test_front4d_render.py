@@ -13,7 +13,7 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
-from tet4d.engine import front4d_render, frontend_nd
+from tet4d.ui.pygame import front4d_render, frontend_nd
 from tet4d.ui.pygame import front4d_game
 from tet4d.ui.pygame import projection3d
 from tet4d.engine.gameplay.game_nd import GameConfigND
@@ -329,3 +329,4 @@ class TestFront4DRender(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

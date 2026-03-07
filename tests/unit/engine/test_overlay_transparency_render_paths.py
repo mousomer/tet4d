@@ -4,7 +4,7 @@ import unittest
 
 import pygame
 
-from tet4d.engine import front3d_render, front4d_render, frontend_nd
+from tet4d.ui.pygame import front3d_render, front4d_render, frontend_nd
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.ui.pygame import front3d_game, front4d_game
@@ -211,3 +211,4 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

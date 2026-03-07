@@ -74,16 +74,15 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         with (
             patch.object(
                 front,
-                "engine_api",
-                wraps=front.engine_api,
-            ) as engine_api_mock,
+                "tutorial_lesson_ids_runtime",
+                return_value=(
+                    "tutorial_2d_core",
+                    "tutorial_3d_core",
+                    "tutorial_4d_core",
+                ),
+            ),
             patch.object(front, "_launch_mode") as launch_mode,
         ):
-            engine_api_mock.tutorial_lesson_ids_runtime.return_value = (
-                "tutorial_2d_core",
-                "tutorial_3d_core",
-                "tutorial_4d_core",
-            )
             close = front._menu_action_tutorial_dimension(
                 "2d",
                 state,

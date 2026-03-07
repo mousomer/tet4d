@@ -15,14 +15,15 @@ from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_DEBUG,
     PieceShapeND,
 )
-from tet4d.engine.api import (
+from tet4d.ai.playbot import (
     PlayBotController,
     run_dry_run_2d,
     run_dry_run_nd,
     plan_best_2d_move,
     plan_best_nd_move,
-    greedy_key_4d,
-    simulate_lock_board,
+)
+from tet4d.ai.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
+from tet4d.ai.playbot.types import (
     BotMode,
     BotPlannerAlgorithm,
     BotPlannerProfile,
@@ -412,3 +413,4 @@ class TestPlaybot(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

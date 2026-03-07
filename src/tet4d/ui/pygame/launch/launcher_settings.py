@@ -4,7 +4,33 @@ from dataclasses import dataclass
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.menu_config import (
+    settings_hub_layout_rows,
+    settings_option_labels,
+    settings_top_level_categories,
+    ui_copy_section,
+)
+from tet4d.engine.runtime.menu_settings_state import (
+    DEFAULT_GAME_SEED,
+    GAME_SEED_STEP,
+    OVERLAY_TRANSPARENCY_STEP,
+    clamp_game_seed,
+    clamp_overlay_transparency,
+    default_analytics_settings,
+    default_audio_settings,
+    default_display_settings,
+    default_mode_shared_gameplay_settings,
+    get_global_game_seed,
+    get_overlay_transparency,
+    mode_shared_gameplay_settings,
+    save_analytics_settings,
+    save_audio_settings,
+    save_display_settings,
+    save_global_game_seed,
+    save_shared_gameplay_settings,
+)
+from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
+from tet4d.engine.runtime.settings_schema import clamp_lines_per_level, sanitize_text
 from tet4d.ui.pygame.menu.numeric_text_input import (
     append_numeric_text,
     parse_numeric_text,
@@ -25,12 +51,12 @@ BG_BOTTOM = (4, 7, 20)
 TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
 MUTED_COLOR = (192, 200, 228)
-_SETTINGS_OPTION_LABELS = engine_api.settings_option_labels_runtime()
+_SETTINGS_OPTION_LABELS = settings_option_labels()
 _RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
 _KICK_LEVEL_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_kick_level"])
-_SETTINGS_HUB_COPY = engine_api.ui_copy_section_runtime("settings_hub")
+_SETTINGS_HUB_COPY = ui_copy_section("settings_hub")
 _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS = (
-    engine_api.gameplay_default_mode_shared_settings_runtime("2d")
+    default_mode_shared_gameplay_settings("2d")
 )
 _RANDOM_MODE_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["random_mode_index"])
 _TOPOLOGY_ADVANCED_DEFAULT = int(
@@ -52,7 +78,7 @@ _NUMERIC_TEXT_MAX_LENGTH = 16
 
 
 def _sanitize_text(value: str, max_length: int) -> str:
-    return engine_api.sanitize_text_runtime(value, max_length=max_length)
+    return sanitize_text(value, max_length=max_length)
 
 
 @dataclass
@@ -97,7 +123,7 @@ class _UnifiedSettingsState:
 
 
 _UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = (
-    engine_api.settings_hub_layout_rows_runtime()
+    settings_hub_layout_rows()
 )
 _UNIFIED_SELECTABLE = tuple(
     idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item"
@@ -105,7 +131,7 @@ _UNIFIED_SELECTABLE = tuple(
 
 
 def _configured_top_level_labels() -> tuple[str, ...]:
-    entries = engine_api.settings_top_level_categories_runtime()
+    entries = settings_top_level_categories()
     return tuple(entry["label"] for entry in entries)
 
 
@@ -133,100 +159,25 @@ def _draw_gradient(surface: pygame.Surface) -> None:
 
 
 def _audio_defaults() -> AudioSettings:
-    defaults = engine_api.default_settings_payload_runtime().get("audio", {})
-    master = 0.8
-    sfx = 0.7
-    mute = False
-    if isinstance(defaults, dict):
-        raw_master = defaults.get("master_volume")
-        raw_sfx = defaults.get("sfx_volume")
-        if isinstance(raw_master, (int, float)) and not isinstance(raw_master, bool):
-            master = float(raw_master)
-        if isinstance(raw_sfx, (int, float)) and not isinstance(raw_sfx, bool):
-            sfx = float(raw_sfx)
-        mute = bool(defaults.get("mute", False))
-    return AudioSettings(master_volume=master, sfx_volume=sfx, mute=mute)
+    defaults = default_audio_settings()
+    return AudioSettings(
+        master_volume=float(defaults["master_volume"]),
+        sfx_volume=float(defaults["sfx_volume"]),
+        mute=bool(defaults["mute"]),
+    )
 
 
 def _display_defaults() -> DisplaySettings:
-    defaults = engine_api.default_settings_payload_runtime().get("display", {})
-    fullscreen = False
-    windowed_size = engine_api.default_windowed_size_runtime()
-    if isinstance(defaults, dict):
-        fullscreen = bool(defaults.get("fullscreen", False))
-        raw_size = defaults.get("windowed_size")
-        if (
-            isinstance(raw_size, list)
-            and len(raw_size) == 2
-            and all(isinstance(v, int) and not isinstance(v, bool) for v in raw_size)
-        ):
-            windowed_size = (raw_size[0], raw_size[1])
-    return DisplaySettings(fullscreen=fullscreen, windowed_size=windowed_size)
+    defaults = default_display_settings()
+    return DisplaySettings(
+        fullscreen=bool(defaults["fullscreen"]),
+        windowed_size=tuple(defaults["windowed_size"]),
+    )
 
 
 def _analytics_defaults() -> bool:
-    defaults = engine_api.default_settings_payload_runtime().get("analytics", {})
-    if isinstance(defaults, dict):
-        return bool(defaults.get("score_logging_enabled", False))
-    return False
-
-
-def _overlay_transparency_default() -> float:
-    return engine_api.default_overlay_transparency_runtime()
-
-
-def _game_seed_default() -> int:
-    return int(engine_api.default_game_seed_runtime())
-
-
-def _runtime_mode_shared_gameplay_settings() -> dict[str, int]:
-    return engine_api.gameplay_mode_shared_settings_runtime("2d")
-
-
-def _load_overlay_transparency_setting() -> float:
-    payload = engine_api.get_display_settings_runtime()
-    if isinstance(payload, dict):
-        return engine_api.clamp_overlay_transparency_runtime(
-            payload.get("overlay_transparency"),
-            default=_overlay_transparency_default(),
-        )
-    return _overlay_transparency_default()
-
-
-def _load_game_seed_setting() -> int:
-    return int(
-        engine_api.clamp_game_seed_runtime(
-            engine_api.get_global_game_seed_runtime(),
-            default=_game_seed_default(),
-        )
-    )
-
-
-def _load_mode_shared_gameplay_settings() -> dict[str, int]:
-    return _runtime_mode_shared_gameplay_settings()
-
-
-def _save_shared_gameplay_settings(
-    random_mode_index: int,
-    topology_advanced: int,
-    kick_level_index: int,
-    auto_speedup_enabled: int,
-    lines_per_level: int,
-) -> tuple[bool, str]:
-    return engine_api.gameplay_save_shared_settings_runtime(
-        random_mode_index=int(random_mode_index),
-        topology_advanced=int(topology_advanced),
-        kick_level_index=int(kick_level_index),
-        auto_speedup_enabled=int(auto_speedup_enabled),
-        lines_per_level=int(lines_per_level),
-    )
-
-
-def _load_score_logging_setting() -> bool:
-    payload = engine_api.load_analytics_payload_runtime()
-    if isinstance(payload, dict):
-        return bool(payload.get("score_logging_enabled", _analytics_defaults()))
-    return _analytics_defaults()
+    defaults = default_analytics_settings()
+    return bool(defaults["score_logging_enabled"])
 
 
 def _clone_audio_settings(settings: AudioSettings) -> AudioSettings:
@@ -252,7 +203,7 @@ def _sync_audio_preview(settings: AudioSettings) -> None:
 
 
 def _sync_analytics_preview(score_logging_enabled: bool) -> None:
-    engine_api.set_score_analyzer_logging_enabled_runtime(bool(score_logging_enabled))
+    set_score_analyzer_logging_enabled(bool(score_logging_enabled))
 
 
 def _unified_row_key(state: _UnifiedSettingsState) -> str:
@@ -337,9 +288,9 @@ def _apply_unified_numeric_text_value(state: _UnifiedSettingsState) -> bool:
         state.display_settings = DisplaySettings(state.display_settings.fullscreen, (_width, height))
     elif row_key == "game_seed":
         state.game_seed = int(
-            engine_api.clamp_game_seed_runtime(
+            clamp_game_seed(
                 parsed,
-                default=_game_seed_default(),
+                default=int(DEFAULT_GAME_SEED),
             )
         )
     else:
@@ -370,23 +321,23 @@ def _save_unified_settings(
         state.display_settings,
         preferred_windowed_size=state.display_settings.windowed_size,
     )
-    ok_audio, msg_audio = engine_api.persist_audio_payload_runtime(
+    ok_audio, msg_audio = save_audio_settings(
         master_volume=state.audio_settings.master_volume,
         sfx_volume=state.audio_settings.sfx_volume,
         mute=state.audio_settings.mute,
     )
-    ok_display, msg_display = engine_api.persist_display_payload_runtime(
+    ok_display, msg_display = save_display_settings(
         fullscreen=state.display_settings.fullscreen,
         windowed_size=state.display_settings.windowed_size,
         overlay_transparency=state.overlay_transparency,
     )
-    ok_analytics, msg_analytics = engine_api.persist_analytics_payload_runtime(
+    ok_analytics, msg_analytics = save_analytics_settings(
         score_logging_enabled=state.score_logging_enabled,
     )
-    ok_game_seed, msg_game_seed = engine_api.save_global_game_seed_runtime(
+    ok_game_seed, msg_game_seed = save_global_game_seed(
         int(state.game_seed)
     )
-    ok_gameplay_shared, msg_gameplay_shared = _save_shared_gameplay_settings(
+    ok_gameplay_shared, msg_gameplay_shared = save_shared_gameplay_settings(
         int(state.random_mode_index),
         int(state.topology_advanced),
         int(state.kick_level_index),
@@ -427,8 +378,9 @@ def _reset_unified_settings(
 ) -> pygame.Surface:
     state.audio_settings = _audio_defaults()
     state.display_settings = _display_defaults()
-    state.overlay_transparency = _overlay_transparency_default()
-    state.game_seed = _game_seed_default()
+    display_defaults = default_display_settings()
+    state.overlay_transparency = float(display_defaults["overlay_transparency"])
+    state.game_seed = int(DEFAULT_GAME_SEED)
     state.random_mode_index = _RANDOM_MODE_DEFAULT
     state.topology_advanced = _TOPOLOGY_ADVANCED_DEFAULT
     state.kick_level_index = _KICK_LEVEL_DEFAULT
@@ -493,10 +445,11 @@ def _adjust_unified_display_row(
         )
         return True
     if row_key == "display_overlay_transparency":
-        state.overlay_transparency = engine_api.clamp_overlay_transparency_runtime(
+        display_defaults = default_display_settings()
+        state.overlay_transparency = clamp_overlay_transparency(
             state.overlay_transparency
-            + delta_sign * engine_api.overlay_transparency_step_runtime(),
-            default=_overlay_transparency_default(),
+            + delta_sign * float(OVERLAY_TRANSPARENCY_STEP),
+            default=float(display_defaults["overlay_transparency"]),
         )
         return True
     return False
@@ -507,10 +460,10 @@ def _adjust_unified_gameplay_row(
 ) -> bool:
     if row_key == "game_seed":
         state.game_seed = int(
-            engine_api.clamp_game_seed_runtime(
+            clamp_game_seed(
                 int(state.game_seed)
-                + delta_sign * int(engine_api.game_seed_step_runtime()),
-                default=_game_seed_default(),
+                + delta_sign * int(GAME_SEED_STEP),
+                default=int(DEFAULT_GAME_SEED),
             )
         )
         return True
@@ -628,7 +581,7 @@ def _adjust_advanced_gameplay_value(
     if row_key == "lines_per_level":
         if delta_sign == 0:
             return False
-        state.lines_per_level = engine_api.clamp_lines_per_level_runtime(
+        state.lines_per_level = clamp_lines_per_level(
             int(state.lines_per_level) + int(delta_sign),
             default=_LINES_PER_LEVEL_DEFAULT,
         )
@@ -1044,10 +997,15 @@ def run_settings_hub_menu(
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
 ) -> SettingsHubResult:
-    score_logging_enabled = _load_score_logging_setting()
-    overlay_transparency = _load_overlay_transparency_setting()
-    game_seed = _load_game_seed_setting()
-    mode_gameplay = _load_mode_shared_gameplay_settings()
+    score_logging_enabled = bool(default_analytics_settings()["score_logging_enabled"])
+    overlay_transparency = get_overlay_transparency()
+    game_seed = int(
+        clamp_game_seed(
+            get_global_game_seed(),
+            default=int(DEFAULT_GAME_SEED),
+        )
+    )
+    mode_gameplay = mode_shared_gameplay_settings("2d")
     random_mode_index = int(mode_gameplay["random_mode_index"])
     topology_advanced = int(mode_gameplay["topology_advanced"])
     kick_level_index = int(mode_gameplay["kick_level_index"])

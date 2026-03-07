@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pygame
 
-from tet4d.engine.api import project_constant_int
+from tet4d.engine.runtime.project_config import project_constant_int
 
 from .ui_utils import draw_vertical_gradient
 

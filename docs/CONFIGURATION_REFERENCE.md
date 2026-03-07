@@ -1095,7 +1095,7 @@ Parameters:
 ### `config/project/policy/manifests/architecture_metrics.json`
 Top-level keys: `arch_stage`, `backlog`, `class_gate_eligibility`, `class_to_profile`, `classification`, `long_term_goals`, `schema_version`, `source_roots`
 Parameters:
-- `arch_stage`: `890` (`int`)
+- `arch_stage`: `900` (`int`)
 - `backlog.default_priority`: `"P2"` (`string`)
 - `backlog.mode`: `"tet4d_bkl"` (`string`)
 - `class_gate_eligibility.code_default`: `true` (`bool`)
@@ -1268,7 +1268,7 @@ Parameters:
 - `magic_numbers.config_backed_entrypoints[]`: array[`object`]
 - `magic_numbers.config_backed_entrypoints[].forbidden_regex[]`: array[`empty, string`]; examples: `"\\b999_?999_?999\\b"`, `"\\b0\\.85\\b"`
 - `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/launcher_settings.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
-- `magic_numbers.config_backed_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed_runtime"`, `"clamp_overlay_transparency_runtime"`, `"clamp_lines_per_level_runtime"`
+- `magic_numbers.config_backed_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed"`, `"clamp_overlay_transparency"`, `"clamp_lines_per_level"`
 - `magic_numbers.config_backed_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `manifest_id`: `"policy_runtime_rules"` (`string`)
 - `sanitation.text_entrypoints[]`: array[`object`]

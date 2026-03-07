@@ -4,14 +4,28 @@ from dataclasses import dataclass
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.ai.playbot.types import (
+    BOT_MODE_OPTIONS,
+    BOT_PLANNER_ALGORITHM_OPTIONS,
+    BOT_PLANNER_PROFILE_OPTIONS,
+    bot_mode_from_index,
+    bot_mode_label,
+    bot_planner_algorithm_from_index,
+    bot_planner_algorithm_label,
+    bot_planner_profile_from_index,
+    bot_planner_profile_label,
+)
+from tet4d.engine.runtime.api import (
+    bot_defaults_by_mode_runtime,
+    bot_options_rows_runtime,
+    ui_copy_section_runtime,
+)
+from tet4d.engine.runtime.menu_settings_state import (
+    load_app_settings_payload,
+    save_app_settings_payload,
+)
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
-from tet4d.ai.playbot.types import (
-    bot_mode_from_index,
-    bot_planner_algorithm_from_index,
-    bot_planner_profile_from_index,
-)
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient
 
 
@@ -22,9 +36,9 @@ _HIGHLIGHT_COLOR = (255, 224, 128)
 _MUTED_COLOR = (192, 200, 228)
 
 _BOT_DIMENSIONS = (2, 3, 4)
-_BOT_MENU_ROWS = engine_api.bot_options_rows_runtime()
-_BOT_DEFAULTS = engine_api.bot_defaults_by_mode_runtime()
-_BOT_COPY = engine_api.ui_copy_section_runtime("bot_options")
+_BOT_MENU_ROWS = bot_options_rows_runtime()
+_BOT_DEFAULTS = bot_defaults_by_mode_runtime()
+_BOT_COPY = ui_copy_section_runtime("bot_options")
 
 
 @dataclass
@@ -75,9 +89,9 @@ def _bot_values(loop: _BotMenuState) -> tuple[str, ...]:
     profile = bot_planner_profile_from_index(mode_settings["bot_profile_index"])
     return (
         f"{loop.dimension}D",
-        engine_api.bot_mode_label(bot_mode),
-        engine_api.bot_planner_algorithm_label(algorithm),
-        engine_api.bot_planner_profile_label(profile),
+        bot_mode_label(bot_mode),
+        bot_planner_algorithm_label(algorithm),
+        bot_planner_profile_label(profile),
         str(mode_settings["bot_speed_level"]),
         str(mode_settings["bot_budget_ms"]),
         "",
@@ -94,7 +108,7 @@ def _set_bot_status(
 
 
 def _save_bot_menu(loop: _BotMenuState) -> tuple[bool, str]:
-    ok, msg = engine_api.save_menu_payload_runtime(loop.payload)
+    ok, msg = save_app_settings_payload(loop.payload)
     if ok:
         _set_bot_status(loop, _BOT_COPY["saved_status"])
         loop.dirty = False
@@ -182,17 +196,17 @@ def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
     if loop.selected == 1:
         value = mode_settings["bot_mode_index"] + delta
         mode_settings["bot_mode_index"] = max(
-            0, min(len(engine_api.BOT_MODE_OPTIONS) - 1, value)
+            0, min(len(BOT_MODE_OPTIONS) - 1, value)
         )
     elif loop.selected == 2:
         value = mode_settings["bot_algorithm_index"] + delta
         mode_settings["bot_algorithm_index"] = max(
-            0, min(len(engine_api.BOT_PLANNER_ALGORITHM_OPTIONS) - 1, value)
+            0, min(len(BOT_PLANNER_ALGORITHM_OPTIONS) - 1, value)
         )
     elif loop.selected == 3:
         value = mode_settings["bot_profile_index"] + delta
         mode_settings["bot_profile_index"] = max(
-            0, min(len(engine_api.BOT_PLANNER_PROFILE_OPTIONS) - 1, value)
+            0, min(len(BOT_PLANNER_PROFILE_OPTIONS) - 1, value)
         )
     elif loop.selected == 4:
         value = mode_settings["bot_speed_level"] + delta
@@ -277,7 +291,7 @@ def run_bot_options_menu(
     start_dimension: int,
 ) -> tuple[bool, str]:
     loop = _BotMenuState(
-        payload=engine_api.load_menu_payload_runtime(),
+        payload=load_app_settings_payload(),
         dimension=start_dimension if start_dimension in _BOT_DIMENSIONS else 2,
     )
     clock = pygame.time.Clock()
@@ -302,3 +316,7 @@ def run_bot_options_menu(
     if loop.status:
         return (not loop.status_error), loop.status
     return True, "Bot options unchanged"
+
+
+
+

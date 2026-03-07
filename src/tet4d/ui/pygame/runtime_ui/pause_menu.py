@@ -5,7 +5,14 @@ from typing import Callable, Literal
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.menu_config import menu_items, pause_copy, pause_menu_id
+from tet4d.engine.runtime.menu_settings_state import get_audio_settings, get_display_settings
+from tet4d.ui.pygame.keybindings import (
+    active_key_profile,
+    cycle_key_profile,
+    load_keybindings_file,
+    save_keybindings_file,
+)
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
@@ -15,16 +22,6 @@ from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
-
-active_key_profile = engine_api.keybindings_active_key_profile
-cycle_key_profile = engine_api.keybindings_cycle_key_profile
-load_keybindings_file = engine_api.keybindings_load_keybindings_file
-save_keybindings_file = engine_api.keybindings_save_keybindings_file
-menu_items = engine_api.menu_items_runtime
-pause_menu_id = engine_api.pause_menu_id_runtime
-pause_copy = engine_api.pause_copy_runtime
-load_audio_payload = engine_api.load_audio_payload_runtime
-load_display_payload = engine_api.load_display_payload_runtime
 
 
 PauseDecision = Literal["resume", "restart", "menu", "quit"]
@@ -211,7 +208,7 @@ def _draw_pause_menu(
 
 
 def _audio_settings_from_payload() -> AudioSettings:
-    audio = load_audio_payload()
+    audio = get_audio_settings()
     return AudioSettings(
         master_volume=max(0.0, min(1.0, float(audio["master_volume"]))),
         sfx_volume=max(0.0, min(1.0, float(audio["sfx_volume"]))),
@@ -220,7 +217,7 @@ def _audio_settings_from_payload() -> AudioSettings:
 
 
 def _display_settings_from_payload() -> DisplaySettings:
-    display = load_display_payload()
+    display = get_display_settings()
     return DisplaySettings(
         fullscreen=bool(display["fullscreen"]),
         windowed_size=(

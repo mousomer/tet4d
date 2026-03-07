@@ -5,7 +5,7 @@ from typing import Tuple
 
 import pygame
 
-from tet4d.engine.api import project_constant_int
+from tet4d.engine.runtime.project_config import project_constant_int
 
 Color3 = Tuple[int, int, int]
 _GRADIENT_CACHE_MAX = project_constant_int(

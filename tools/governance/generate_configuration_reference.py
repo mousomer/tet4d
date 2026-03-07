@@ -330,32 +330,40 @@ def _bot_algorithm_labels() -> tuple[str, ...]:
 
 
 def _piece_set_labels_by_dimension() -> dict[int, tuple[str, ...]]:
-    from tet4d.engine import api as engine_api
+    from tet4d.engine.gameplay.api import (
+        piece_set_2d_label_gameplay,
+        piece_set_2d_options_gameplay,
+        piece_set_label_gameplay,
+        piece_set_options_for_dimension_gameplay,
+    )
 
     return {
         2: tuple(
-            engine_api.piece_set_2d_label_gameplay(piece_set_id)
-            for piece_set_id in engine_api.piece_set_2d_options_gameplay()
+            piece_set_2d_label_gameplay(piece_set_id)
+            for piece_set_id in piece_set_2d_options_gameplay()
         ),
         3: tuple(
-            engine_api.piece_set_label_gameplay(piece_set_id)
-            for piece_set_id in engine_api.piece_set_options_for_dimension_gameplay(3)
+            piece_set_label_gameplay(piece_set_id)
+            for piece_set_id in piece_set_options_for_dimension_gameplay(3)
         ),
         4: tuple(
-            engine_api.piece_set_label_gameplay(piece_set_id)
-            for piece_set_id in engine_api.piece_set_options_for_dimension_gameplay(4)
+            piece_set_label_gameplay(piece_set_id)
+            for piece_set_id in piece_set_options_for_dimension_gameplay(4)
         ),
     }
 
 
 def _topology_profile_labels_by_dimension() -> dict[int, tuple[str, ...]]:
-    from tet4d.engine import api as engine_api
+    from tet4d.engine.gameplay.api import (
+        topology_designer_profile_label_runtime,
+        topology_designer_profiles_runtime,
+    )
 
     labels: dict[int, tuple[str, ...]] = {}
     for dimension in (2, 3, 4):
-        profiles = engine_api.topology_designer_profiles_runtime(dimension)
+        profiles = topology_designer_profiles_runtime(dimension)
         labels[dimension] = tuple(
-            engine_api.topology_designer_profile_label_runtime(dimension, index)
+            topology_designer_profile_label_runtime(dimension, index)
             for index, _profile in enumerate(profiles)
         )
     return labels

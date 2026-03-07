@@ -5,7 +5,13 @@ from typing import Any, Literal
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.gameplay.api import compute_speed_level_runtime
+from tet4d.engine.runtime.menu_settings_state import mode_speedup_settings
+from tet4d.engine.tutorial.api import (
+    tutorial_runtime_is_running_runtime,
+    tutorial_runtime_restart_runtime,
+    tutorial_runtime_skip_runtime,
+)
 from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
 from tet4d.ui.pygame.runtime_ui.tutorial_overlay import draw_tutorial_overlay
 
@@ -25,7 +31,7 @@ def _mode_key_for_dimension(dimension: int) -> str:
 
 def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
     mode_key = _mode_key_for_dimension(dimension)
-    return engine_api.gameplay_mode_speedup_settings_runtime(mode_key)
+    return mode_speedup_settings(mode_key)
 
 
 def process_game_events(
@@ -78,11 +84,11 @@ def _restart_tutorial_if_running_nd(loop: Any) -> bool:
     tutorial_session = getattr(loop, "tutorial_session", None)
     if tutorial_session is None:
         return False
-    if not engine_api.tutorial_runtime_is_running_runtime(tutorial_session):
+    if not tutorial_runtime_is_running_runtime(tutorial_session):
         return False
     if hasattr(loop, "_tutorial_observe_action"):
         loop._tutorial_observe_action("restart")
-    restarted = engine_api.tutorial_runtime_restart_runtime(tutorial_session)
+    restarted = tutorial_runtime_restart_runtime(tutorial_session)
     if not restarted:
         return False
     on_restart = getattr(loop, "_apply_pending_tutorial_setup", None)
@@ -103,7 +109,7 @@ def _pause_tutorial_skip_nd(loop: Any) -> bool:
     tutorial_session = getattr(loop, "tutorial_session", None)
     if tutorial_session is None:
         return False
-    return bool(engine_api.tutorial_runtime_skip_runtime(tutorial_session))
+    return bool(tutorial_runtime_skip_runtime(tutorial_session))
 
 
 def _resolve_menu_decision(
@@ -139,6 +145,22 @@ def _resolve_menu_decision(
     return "continue", next_screen
 
 
+def _advance_gravity(state: Any, accumulator_ms: int, gravity_interval_ms: int) -> int:
+    while not state.game_over and accumulator_ms >= gravity_interval_ms:
+        state.step_gravity()
+        accumulator_ms -= gravity_interval_ms
+    return accumulator_ms
+
+
+def _tick_animation(animation: Any, dt_ms: int) -> Any:
+    if animation is None:
+        return None
+    animation.step(dt_ms)
+    if getattr(animation, "done", False):
+        return None
+    return animation
+
+
 def _advance_simulation_step(
     *,
     loop: Any,
@@ -156,7 +178,7 @@ def _advance_simulation_step(
     if loop.bot.controls_descent:
         loop.gravity_accumulator = 0
         return
-    loop.gravity_accumulator = engine_api.advance_gravity_runtime(
+    loop.gravity_accumulator = _advance_gravity(
         loop.state,
         loop.gravity_accumulator,
         gravity_interval_ms,
@@ -185,7 +207,7 @@ def _update_loop_effects(
     loop.was_game_over = loop.state.game_over
 
     step_view(dt)
-    loop.clear_anim = engine_api.tick_animation_runtime(loop.clear_anim, dt)
+    loop.clear_anim = _tick_animation(loop.clear_anim, dt)
     loop.rotation_anim.observe(loop.state.current_piece, dt)
     return loop.rotation_anim.overlay_cells(loop.state.current_piece)
 
@@ -197,7 +219,7 @@ def _maybe_apply_auto_speedup(
     lines_per_level: int,
     gravity_interval_from_config: Callable[[Any], int],
 ) -> None:
-    target_speed_level = engine_api.compute_speed_level_runtime(
+    target_speed_level = compute_speed_level_runtime(
         start_level=int(getattr(loop, "base_speed_level", 1)),
         lines_cleared=int(loop.state.lines_cleared),
         enabled=bool(auto_speedup_enabled),
@@ -295,7 +317,7 @@ def _tutorial_step_pause_active(loop: Any) -> bool:
     tutorial_session = getattr(loop, "tutorial_session", None)
     if tutorial_session is None:
         return False
-    return bool(engine_api.tutorial_runtime_is_running_runtime(tutorial_session))
+    return bool(tutorial_runtime_is_running_runtime(tutorial_session))
 
 
 def _run_optional_tutorial_safety(loop: Any) -> None:

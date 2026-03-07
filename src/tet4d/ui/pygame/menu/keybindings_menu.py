@@ -1,35 +1,38 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.settings_schema import sanitize_text
+from tet4d.ui.pygame.keybindings import (
+    REBIND_CONFLICT_REPLACE,
+    active_key_profile,
+    clone_key_profile,
+    cycle_key_profile,
+    cycle_rebind_conflict_mode,
+    delete_key_profile,
+    load_active_profile_bindings,
+    load_keybindings_file,
+    next_auto_profile_name,
+    rebind_action_key,
+    rename_key_profile,
+    reset_active_profile_bindings,
+    save_keybindings_file,
+    set_active_key_profile,
+)
+from tet4d.ui.pygame.menu.keybindings_menu_model import (
+    SECTION_MENU,
+    BindingRow,
+    RenderedRow,
+    resolve_initial_scope,
+    rows_for_scope,
+    scope_dimensions,
+    scope_file_hint,
+    scope_label,
+)
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-
-BindingRow = Any
-RenderedRow = Any
-REBIND_CONFLICT_REPLACE = engine_api.keybindings_rebind_conflict_replace()
-SECTION_MENU = engine_api.keybindings_menu_section_menu()
-active_key_profile = engine_api.keybindings_active_key_profile
-clone_key_profile = engine_api.keybindings_clone_key_profile
-cycle_key_profile = engine_api.keybindings_cycle_key_profile
-cycle_rebind_conflict_mode = engine_api.keybindings_cycle_rebind_conflict_mode
-delete_key_profile = engine_api.keybindings_delete_key_profile
-load_active_profile_bindings = engine_api.keybindings_load_active_profile_bindings
-load_keybindings_file = engine_api.keybindings_load_keybindings_file
-next_auto_profile_name = engine_api.keybindings_next_auto_profile_name
-rebind_action_key = engine_api.keybindings_rebind_action_key
-rename_key_profile = engine_api.keybindings_rename_key_profile
-reset_active_profile_bindings = engine_api.keybindings_reset_active_profile_bindings
-save_keybindings_file = engine_api.keybindings_save_keybindings_file
-set_active_key_profile = engine_api.keybindings_set_active_key_profile
-resolve_initial_scope = engine_api.keybindings_menu_resolve_initial_scope
-rows_for_scope = engine_api.keybindings_menu_rows_for_scope
-scope_dimensions = engine_api.keybindings_menu_scope_dimensions
-scope_file_hint = engine_api.keybindings_menu_scope_file_hint
-scope_label = engine_api.keybindings_menu_scope_label
 
 
 _TEXT_MODE_CREATE = "create"
@@ -39,7 +42,7 @@ _PROFILE_NAME_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 
 
 def _sanitize_profile_name(raw: str) -> str:
-    lowered = engine_api.sanitize_text_runtime(raw, max_length=128).strip().lower()
+    lowered = sanitize_text(raw, max_length=128).strip().lower()
     filtered = "".join(ch for ch in lowered if ch in _PROFILE_NAME_CHARS)
     return filtered[:64]
 
@@ -179,7 +182,7 @@ def _cancel_text_mode(state: KeybindingsMenuState) -> None:
 def _handle_text_input_event(state: KeybindingsMenuState, text: str) -> None:
     if not state.text_mode:
         return
-    sanitized = engine_api.sanitize_text_runtime(text, max_length=16).lower()
+    sanitized = sanitize_text(text, max_length=16).lower()
     appended = "".join(ch for ch in sanitized if ch in _PROFILE_NAME_CHARS)
     if not appended:
         return

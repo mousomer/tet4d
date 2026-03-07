@@ -4,14 +4,11 @@ from bisect import bisect_right
 from itertools import product
 from typing import Iterable
 
-from tet4d.engine import api as engine_api
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.piece_transform import block_axis_bounds
+from tet4d.engine.gameplay.game_nd import GameStateND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.shared.nd_coords import coord_from_column
-
-BoardND = engine_api.BoardND
-GameStateND = engine_api.GameStateND
-ActivePieceND = engine_api.ActivePieceND
-PieceShapeND = engine_api.PieceShapeND
-block_axis_bounds = engine_api.block_axis_bounds
 
 RelBlocks = tuple[tuple[int, ...], ...]
 
@@ -353,3 +350,4 @@ def iter_settled_candidates(
                 lateral_axes=lateral_axes,
                 column_levels=column_levels,
             )
+

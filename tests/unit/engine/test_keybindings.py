@@ -374,6 +374,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertTrue(ok, msg)
 
         state = _MenuState2D()
+        state.active_profile = keybindings.PROFILE_FULL
         state.settings.width = 13
         state.settings.height = 24
         state.settings.speed_level = 4
@@ -394,7 +395,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(restored.settings.height, 24)
         self.assertEqual(restored.settings.speed_level, 4)
         self.assertEqual(restored.active_profile, keybindings.PROFILE_FULL)
-        self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_FULL)
+        self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
 
     def test_reset_menu_settings_restores_defaults(self) -> None:
         state = _MenuState2D()
@@ -414,7 +415,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(state.settings.height, 20)
         self.assertEqual(state.settings.speed_level, 1)
         self.assertEqual(state.active_profile, keybindings.PROFILE_SMALL)
-        self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_SMALL)
+        self.assertEqual(keybindings.active_key_profile(), keybindings.PROFILE_FULL)
 
     def test_load_payload_backfills_missing_mode_fields(self) -> None:
         menu_settings_state.STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -575,3 +576,4 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             sanitize_text("ok\x00bad\nsafe", max_length=32),
             "okbadsafe",
         )
+

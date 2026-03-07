@@ -3,7 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 import pygame
-from tet4d.engine import api
+
+from tet4d.ui.pygame.keybindings import (
+    load_keybindings_file,
+    save_keybindings_file,
+)
 
 
 def menu_binding_action_for_key(
@@ -20,9 +24,9 @@ def apply_menu_binding_action(
     action: Any, load_action: Any, save_action: Any, dimension: int, state: Any
 ) -> bool:
     if action == load_action:
-        ok, msg = api.keybindings_load_keybindings_file(dimension)
+        ok, msg = load_keybindings_file(dimension)
     elif action == save_action:
-        ok, msg = api.keybindings_save_keybindings_file(dimension)
+        ok, msg = save_keybindings_file(dimension)
     else:
         return False
 

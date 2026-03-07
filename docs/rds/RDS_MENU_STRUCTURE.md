@@ -19,17 +19,22 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 9. Helper panel information hierarchy and control-guide visuals
 
 Primary implementation and maintenance files:
-1. `front2d.py`
-2. `src/tet4d/ui/pygame/front3d_game.py`
-3. `src/tet4d/engine/frontend_nd.py`
-4. `src/tet4d/ui/pygame/menu/menu_controls.py`
-5. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
-6. `src/tet4d/engine/runtime/menu_config.py`
-7. `src/tet4d/engine/runtime/help_topics.py`
-8. `config/menu/defaults.json`
-9. `config/menu/structure.json`
-10. `config/help/topics.json`
-11. `config/help/action_map.json`
+1. `src/tet4d/ui/pygame/front2d_game.py`
+2. `src/tet4d/ui/pygame/front2d_setup.py`
+3. `src/tet4d/ui/pygame/front2d_loop.py`
+4. `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade)
+5. `src/tet4d/ui/pygame/front3d_game.py`
+6. `src/tet4d/ui/pygame/front4d_game.py`
+7. `src/tet4d/ui/pygame/frontend_nd.py`
+8. `src/tet4d/ui/pygame/menu/menu_controls.py`
+9. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+10. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+11. `src/tet4d/engine/runtime/menu_config.py`
+12. `src/tet4d/engine/runtime/help_topics.py`
+13. `config/menu/defaults.json`
+14. `config/menu/structure.json`
+15. `config/help/topics.json`
+16. `config/help/action_map.json`
 
 ## 2. Design Goals
 
@@ -352,8 +357,7 @@ Implemented in code:
     (`pause_copy`) and consumed by `runtime_ui/pause_menu.py`.
 14. launcher/settings/keybindings/bot/setup UI copy is sourced from
     `config/menu/structure.json` (`ui_copy`) and consumed via
-    `menu_structure_schema.py` + `menu_config.py` accessors (through
-    `engine.api` for UI adapters).
+    `menu_structure_schema.py` + `menu_config.py` accessors in the UI adapters.
 15. User overrides remain in `state/menu_settings.json`.
 16. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 

@@ -4,7 +4,6 @@ import time
 from dataclasses import dataclass
 from typing import Iterable
 
-from tet4d.engine import api as engine_api
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
 from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
@@ -17,13 +16,10 @@ from tet4d.ai.playbot.types import (
     planning_lookahead_depth,
     planning_lookahead_top_k,
 )
-
-BoardND = engine_api.BoardND
-GameState = engine_api.GameState
-ActivePiece2D = engine_api.ActivePiece2D
-PieceShape2D = engine_api.PieceShape2D
-rotate_blocks_2d = engine_api.rotate_blocks_2d
-canonicalize_blocks_2d = engine_api.canonicalize_blocks_2d
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.piece_transform import canonicalize_blocks_2d, rotate_blocks_2d
+from tet4d.engine.gameplay.game2d import GameState
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 
 
 @dataclass(frozen=True)
@@ -390,3 +386,4 @@ def plan_best_2d_move(
             planning_ms=elapsed_ms,
         ),
     )
+

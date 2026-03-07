@@ -4,12 +4,14 @@ from typing import Any
 
 import pygame
 
-from tet4d.ui.pygame.render.control_icons import draw_action_icon
+from tet4d.engine.runtime.menu_config import ui_copy_section
+from tet4d.engine.ui_logic.keybindings_catalog import binding_action_description
 from tet4d.ui.pygame.input.key_display import format_key_tuple
-import tet4d.engine.api as engine_api
+from tet4d.ui.pygame.menu.keybindings_menu_model import binding_keys, binding_title
+from tet4d.ui.pygame.render.control_icons import draw_action_icon
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
-_KEYBINDINGS_MENU_COPY = engine_api.ui_copy_section_runtime("keybindings_menu")
+_KEYBINDINGS_MENU_COPY = ui_copy_section("keybindings_menu")
 
 
 def _draw_background(surface: pygame.Surface) -> None:
@@ -119,9 +121,9 @@ def _draw_binding_row(
             surface, panel_x=panel_x, panel_w=panel_w, y=y, line_h=row_h - 4
         )
 
-    label = engine_api.keybindings_menu_binding_title(row, scope)
-    desc = engine_api.binding_action_description(row.action)
-    key_text = format_key_tuple(engine_api.keybindings_menu_binding_keys(row))
+    label = binding_title(row, scope)
+    desc = binding_action_description(row.action)
+    key_text = format_key_tuple(binding_keys(row))
 
     left_x = panel_x + 18
     right_x = panel_x + panel_w - 18
@@ -241,7 +243,7 @@ def _draw_capture_hint(
     cap_text = fit_text(
         fonts.hint_font,
         _KEYBINDINGS_MENU_COPY["capture_template"].format(
-            binding_title=engine_api.keybindings_menu_binding_title(
+            binding_title=binding_title(
                 selected, state.scope
             )
         ),

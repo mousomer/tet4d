@@ -7,12 +7,12 @@ import re
 
 import pygame
 
-from tet4d.engine.api import (
-    format_key_tuple,
-    help_action_layout_payload_runtime,
-    help_action_panel_specs_runtime,
-    runtime_binding_groups_for_dimension,
+from tet4d.engine.help_text import (
+    help_action_layout_payload,
+    help_action_panel_specs,
 )
+from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 
 from .control_icons import draw_action_icon
 from .text_render_cache import render_text_cached
@@ -50,7 +50,7 @@ _MIN_ROWS_BY_GROUP: dict[str, int] = {
 
 @lru_cache(maxsize=1)
 def _canonical_panel_titles() -> tuple[str, ...]:
-    payload = help_action_layout_payload_runtime()
+    payload = help_action_layout_payload()
     raw_panels = tuple(payload.get("panels", ()))
     titles: list[str] = []
     for panel in sorted(
@@ -139,7 +139,7 @@ def control_groups_for_dimension(
 ) -> list[ControlGroup]:
     dim = max(2, min(4, int(dimension)))
     mode = _MODE_BY_DIMENSION[dim]
-    panel_specs = help_action_panel_specs_runtime(
+    panel_specs = help_action_panel_specs(
         mode=mode,
         capabilities=_helper_capabilities(
             dimension=dim,

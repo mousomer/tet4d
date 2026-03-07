@@ -4,34 +4,29 @@ from dataclasses import dataclass
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.runtime.menu_settings_state import (
+    get_analytics_settings,
+    get_audio_settings,
+    get_display_settings,
+    load_app_settings_payload,
+    save_display_settings,
+)
+from tet4d.engine.runtime.settings_schema import (
+    MIN_WINDOW_HEIGHT,
+    MIN_WINDOW_WIDTH,
+    normalize_windowed_size,
+)
+from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
+from tet4d.ui.pygame.keybindings import (
+    initialize_keybinding_files,
+    load_active_profile_bindings,
+    set_active_key_profile,
+)
 from tet4d.ui.pygame.runtime_ui.audio import (
     AudioSettings,
     initialize_audio,
     set_audio_settings,
 )
-MIN_WINDOW_WIDTH = 640
-MIN_WINDOW_HEIGHT = 480
-FALLBACK_WINDOWED_SIZE = (1200, 760)
-
-
-def normalize_windowed_size(
-    raw_size: object,
-    *,
-    fallback: tuple[int, int] = FALLBACK_WINDOWED_SIZE,
-    min_width: int = MIN_WINDOW_WIDTH,
-    min_height: int = MIN_WINDOW_HEIGHT,
-) -> tuple[int, int]:
-    # Ensure window size stays within sane bounds and never drops below minimums.
-    if (
-        isinstance(raw_size, (list, tuple))
-        and len(raw_size) == 2
-        and all(isinstance(v, int) and not isinstance(v, bool) for v in raw_size)
-    ):
-        width, height = int(raw_size[0]), int(raw_size[1])
-    else:
-        width, height = fallback
-    return (max(min_width, width), max(min_height, height))
 
 _WINDOW_RESIZE_EVENTS = tuple(
     event_type
@@ -82,7 +77,7 @@ def apply_display_mode(
 
 
 def load_audio_settings_from_store() -> AudioSettings:
-    payload = engine_api.get_audio_settings_runtime()
+    payload = get_audio_settings()
     return AudioSettings(
         master_volume=float(payload["master_volume"]),
         sfx_volume=float(payload["sfx_volume"]),
@@ -91,7 +86,7 @@ def load_audio_settings_from_store() -> AudioSettings:
 
 
 def load_display_settings_from_store() -> DisplaySettings:
-    payload = engine_api.get_display_settings_runtime()
+    payload = get_display_settings()
     return normalize_display_settings(
         DisplaySettings(
             fullscreen=bool(payload["fullscreen"]),
@@ -100,9 +95,18 @@ def load_display_settings_from_store() -> DisplaySettings:
     )
 
 
+def _sync_saved_keybinding_profile() -> None:
+    initialize_keybinding_files()
+    payload = load_app_settings_payload()
+    profile = payload.get("active_profile") if isinstance(payload, dict) else None
+    if isinstance(profile, str) and profile.strip():
+        set_active_key_profile(profile)
+    load_active_profile_bindings()
+
+
 def initialize_runtime(*, sync_audio_state: bool = True) -> RuntimeSettings:
     pygame.init()
-    engine_api.initialize_keybinding_files_runtime()
+    _sync_saved_keybinding_profile()
     audio_settings = load_audio_settings_from_store()
     initialize_audio(audio_settings)
     if sync_audio_state:
@@ -112,8 +116,8 @@ def initialize_runtime(*, sync_audio_state: bool = True) -> RuntimeSettings:
             mute=audio_settings.mute,
         )
     display_settings = load_display_settings_from_store()
-    analytics = engine_api.get_analytics_settings_runtime()
-    engine_api.set_score_analyzer_logging_enabled_runtime(
+    analytics = get_analytics_settings()
+    set_score_analyzer_logging_enabled(
         bool(analytics.get("score_logging_enabled", False))
     )
     return RuntimeSettings(
@@ -157,7 +161,7 @@ def capture_windowed_display_settings(
     if (width, height) == display_settings.windowed_size:
         return display_settings
     updated = DisplaySettings(fullscreen=False, windowed_size=(width, height))
-    engine_api.save_display_settings_runtime(windowed_size=updated.windowed_size)
+    save_display_settings(windowed_size=updated.windowed_size)
     return updated
 
 
@@ -192,5 +196,7 @@ def capture_windowed_display_settings_from_event(
     if normalized.windowed_size == display_settings.windowed_size:
         return display_settings
 
-    engine_api.save_display_settings_runtime(windowed_size=normalized.windowed_size)
+    save_display_settings(windowed_size=normalized.windowed_size)
     return normalized
+
+

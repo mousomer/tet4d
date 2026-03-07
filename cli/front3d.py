@@ -14,9 +14,9 @@ def _parse_cli_args(argv=None):
 
 def main(argv=None):
     _parse_cli_args(sys.argv[1:] if argv is None else argv)
-    from tet4d.engine import api as engine_api
+    from tet4d.ui.pygame.front3d_game import run
 
-    engine_api.run_front3d_ui()
+    run()
 
 
 if __name__ == "__main__":

@@ -24,8 +24,9 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dependent
     raise SystemExit("pygame-ce is required for profiling") from exc
 
-from tet4d.engine import api as engine_api
-from tet4d.engine.api import GameConfigND
+from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame import front4d_render, frontend_nd
 
 
 @dataclass(frozen=True)
@@ -66,30 +67,28 @@ def _run_scenario(
     dims4: tuple[int, int, int, int],
 ) -> dict[str, float | int | str | bool]:
     cfg = GameConfigND(dims=dims4, gravity_axis=1, speed_level=1)
-    state = engine_api.profile_4d_create_initial_state(cfg)
+    state = frontend_nd.create_initial_state(cfg)
     if scenario.dense:
         _fill_dense_board(state)
-    view = engine_api.profile_4d_new_layer_view_3d(
-        xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg
-    )
+    view = front4d_render.LayerView3D(xw_deg=scenario.xw_deg, zw_deg=scenario.zw_deg)
 
     for _ in range(warmup):
-        engine_api.profile_4d_draw_game_frame(
+        front4d_render.draw_game_frame(
             surface,
             state,
             view,
             fonts,
-            grid_mode=engine_api.GridMode.FULL,
+            grid_mode=GridMode.FULL,
         )
 
     t0 = time.perf_counter()
     for _ in range(frames):
-        engine_api.profile_4d_draw_game_frame(
+        front4d_render.draw_game_frame(
             surface,
             state,
             view,
             fonts,
-            grid_mode=engine_api.GridMode.FULL,
+            grid_mode=GridMode.FULL,
         )
     elapsed_s = time.perf_counter() - t0
     avg_ms = (elapsed_s / max(1, frames)) * 1000.0
@@ -154,7 +153,7 @@ def main() -> int:
 
     pygame.init()
     try:
-        fonts = engine_api.profile_4d_init_fonts()
+        fonts = frontend_nd.init_fonts()
         surface = pygame.Surface((args.width, args.height), pygame.SRCALPHA)
         scenarios = (
             Scenario(name="default_sparse", xw_deg=0.0, zw_deg=0.0, dense=False),

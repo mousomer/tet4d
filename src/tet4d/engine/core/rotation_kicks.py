@@ -129,6 +129,35 @@ def resolve_kicked_piece_nd(
     )
 
 
+def resolve_rotated_piece(
+    rotated_piece: _T,
+    *,
+    ndim: int,
+    axis_a: int,
+    axis_b: int,
+    gravity_axis: int,
+    kick_level: str,
+    plane_offsets_for_level: Callable[[str], Sequence[PlaneOffset]],
+    move_piece: Callable[[_T, Sequence[int]], _T],
+    can_place: Callable[[_T], bool],
+) -> _T | None:
+    plane_offsets = tuple(plane_offsets_for_level(kick_level))
+    if not plane_offsets:
+        return rotated_piece if can_place(rotated_piece) else None
+    return resolve_kicked_candidate(
+        rotated_piece,
+        candidate_vectors=kick_candidate_vectors(
+            ndim=ndim,
+            axis_a=axis_a,
+            axis_b=axis_b,
+            gravity_axis=gravity_axis,
+            plane_offsets=plane_offsets,
+        ),
+        move_piece=move_piece,
+        can_place=can_place,
+    )
+
+
 __all__ = [
     "PlaneOffset",
     "kick_candidate_vectors",
@@ -137,4 +166,5 @@ __all__ = [
     "resolve_kicked_candidate",
     "resolve_kicked_piece_2d",
     "resolve_kicked_piece_nd",
+    "resolve_rotated_piece",
 ]

@@ -81,11 +81,11 @@ class TestPieceTransform(unittest.TestCase):
             rotate_blocks_2d(blocks_2d, 1),
         )
         self.assertEqual(
-            engine_api.playbot_canonical_blocks_nd(blocks_nd),
+            engine_api.canonicalize_blocks_nd(blocks_nd),
             canonicalize_blocks_nd(blocks_nd),
         )
         self.assertEqual(
-            engine_api.playbot_enumerate_orientations_nd(
+            engine_api.enumerate_orientations_nd(
                 canonicalize_blocks_nd(blocks_nd),
                 3,
                 1,

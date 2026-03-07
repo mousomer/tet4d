@@ -5,16 +5,17 @@ from types import SimpleNamespace
 
 import pygame
 
-import tet4d.engine.api as engine_api
-from cli import front2d
+from tet4d.engine.runtime.menu_config import branding_copy, default_settings_payload
+from tet4d.engine.runtime.menu_settings_state import load_app_settings_payload
+from tet4d.ai.playbot.types import bot_mode_from_index
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
     capture_windowed_display_settings,
     open_display,
 )
-from tet4d.ai.playbot.types import bot_mode_from_index
 
-_BRANDING = engine_api.branding_copy_runtime()
+
+_BRANDING = branding_copy()
 _GAME_TITLE = str(_BRANDING["game_title"])
 
 
@@ -76,8 +77,8 @@ def _launch_mode_flow(
 ) -> LaunchResult:
     settings = None
     if tutorial_lesson_id:
-        payload = engine_api.load_menu_payload_runtime()
-        defaults = engine_api.default_settings_payload_runtime()
+        payload = load_app_settings_payload()
+        defaults = default_settings_payload()
         merged_mode_settings = {}
         if (
             isinstance(defaults, dict)
@@ -132,17 +133,19 @@ def launch_2d(
     *,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
+    from tet4d.ui.pygame import front2d_game
+
     return _launch_mode_flow(
         screen=screen,
         fonts=fonts_2d,
         display_settings=display_settings,
         setup_caption=setup_caption_for_dimension(2),
         game_caption=game_caption_for_dimension(2),
-        run_menu_fn=front2d.run_menu,
-        build_cfg_fn=front2d._config_from_settings,
+        run_menu_fn=front2d_game.run_menu,
+        build_cfg_fn=front2d_game._config_from_settings,
         suggested_size_fn=_suggested_window_size_2d,
         run_game_loop_fn=lambda game_screen, cfg, active_fonts, **kwargs: (
-            front2d.run_game_loop(
+            front2d_game.run_game_loop(
                 game_screen,
                 cfg,
                 active_fonts,
@@ -163,16 +166,22 @@ def launch_3d(
     *,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
+    from tet4d.ui.pygame import front3d_game, frontend_nd
+
     return _launch_mode_flow(
         screen=screen,
         fonts=fonts_nd,
         display_settings=display_settings,
         setup_caption=setup_caption_for_dimension(3),
         game_caption=game_caption_for_dimension(3),
-        run_menu_fn=engine_api.launcher_play_run_menu_3d,
-        build_cfg_fn=engine_api.launcher_play_build_config_3d,
-        suggested_size_fn=engine_api.launcher_play_suggested_window_size_3d,
-        run_game_loop_fn=engine_api.launcher_play_run_game_loop_3d,
+        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd.run_menu(
+            menu_screen,
+            active_fonts,
+            3,
+        ),
+        build_cfg_fn=lambda settings: frontend_nd.build_config(settings, 3),
+        suggested_size_fn=front3d_game.suggested_window_size,
+        run_game_loop_fn=front3d_game.run_game_loop,
         default_budget_ms=24,
         mode_key="3d",
         tutorial_lesson_id=tutorial_lesson_id,
@@ -186,19 +195,22 @@ def launch_4d(
     *,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
+    from tet4d.ui.pygame import front4d_game, frontend_nd
+
     return _launch_mode_flow(
         screen=screen,
         fonts=fonts_nd,
         display_settings=display_settings,
         setup_caption=setup_caption_for_dimension(4),
         game_caption=game_caption_for_dimension(4),
-        run_menu_fn=lambda menu_screen,
-        menu_fonts: engine_api.launcher_play_run_menu_nd(menu_screen, menu_fonts, 4),
-        build_cfg_fn=lambda settings: engine_api.launcher_play_build_config_nd(
-            settings, 4
+        run_menu_fn=lambda menu_screen, active_fonts: frontend_nd.run_menu(
+            menu_screen,
+            active_fonts,
+            4,
         ),
-        suggested_size_fn=engine_api.launcher_play_suggested_window_size_4d,
-        run_game_loop_fn=engine_api.launcher_play_run_game_loop_4d,
+        build_cfg_fn=lambda settings: frontend_nd.build_config(settings, 4),
+        suggested_size_fn=front4d_game.suggested_window_size,
+        run_game_loop_fn=front4d_game.run_game_loop,
         default_budget_ms=36,
         mode_key="4d",
         tutorial_lesson_id=tutorial_lesson_id,

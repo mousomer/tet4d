@@ -5,6 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from ..core.rng import RNG_MODE_OPTIONS
 from .menu_structure_schema import (
     collect_actions_for_menu_ids,
     collect_reachable_menu_ids,
@@ -172,6 +173,28 @@ def settings_option_labels() -> dict[str, tuple[str, ...]]:
     return deepcopy(_structure_payload().get("settings_option_labels", {}))
 
 
+def random_mode_ids() -> tuple[str, ...]:
+    return tuple(str(mode_id) for mode_id in RNG_MODE_OPTIONS)
+
+
+def random_mode_id_from_index(index: int) -> str:
+    mode_ids = random_mode_ids()
+    safe_index = max(0, min(len(mode_ids) - 1, int(index)))
+    return mode_ids[safe_index]
+
+
+def random_mode_label_for_index(index: int) -> str:
+    labels = tuple(settings_option_labels()["game_random_mode"])
+    safe_index = max(0, min(len(labels) - 1, int(index)))
+    return labels[safe_index]
+
+
+def kick_level_name_for_index(index: int) -> str:
+    names = kick_level_names()
+    safe_index = max(0, min(len(names) - 1, int(index)))
+    return names[safe_index]
+
+
 def pause_menu_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["pause_menu_rows"])
 
@@ -215,6 +238,23 @@ def setup_fields_for_dimension(
             )
         fields.append((label, attr_name, min_val, max_val))
     return fields
+
+
+def setup_fields_for_settings(
+    dimension: int,
+    *,
+    piece_set_max: int = 0,
+    topology_profile_max: int = 0,
+    topology_advanced: bool = False,
+) -> list[FieldSpec]:
+    fields = setup_fields_for_dimension(
+        dimension,
+        piece_set_max=piece_set_max,
+        topology_profile_max=topology_profile_max,
+    )
+    if bool(topology_advanced):
+        return fields
+    return [field for field in fields if field[1] != "topology_profile_index"]
 
 
 def keybinding_category_docs() -> dict[str, Any]:

@@ -1,4 +1,4 @@
-# Feature Map
+﻿# Feature Map
 
 User-facing feature map for the shipped `tet4d` experience.
 
@@ -14,7 +14,7 @@ User-facing feature map for the shipped `tet4d` experience.
     including kick permissiveness, auto speed-up, and lines-per-level.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
-- 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/engine/frontend_nd.py`) to reduce drift.
+- 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/ui/pygame/frontend_nd.py`) to reduce drift.
 - Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.
 - Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
 - Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.
@@ -51,7 +51,7 @@ User-facing feature map for the shipped `tet4d` experience.
   3. `FULL` (full lattice)
   4. `HELPER` (grid lines intersecting active piece)
 - 3D camera controls:
-  - Numeric row mapping: `1/4` yaw fine, `2/3` yaw 90°, `5/6` pitch 90°, `7/8` zoom, `9` projection, `0` reset.
+  - Numeric row mapping: `1/4` yaw fine, `2/3` yaw 90Â°, `5/6` pitch 90Â°, `7/8` zoom, `9` projection, `0` reset.
   - Additional mouse orbit/zoom controls.
 - 4D rendering:
   - 4D board is displayed as multiple 3D layer boards derived from current 4D view basis.
@@ -207,3 +207,4 @@ User-facing feature map for the shipped `tet4d` experience.
   - `packaging/scripts/build_windows.ps1`
 - CI packaging matrix is available in `.github/workflows/release-packaging.yml`.
 - Packaging guidance and output artifact conventions are documented in `docs/RELEASE_INSTALLERS.md`.
+

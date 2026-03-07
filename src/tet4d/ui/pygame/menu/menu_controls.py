@@ -7,7 +7,24 @@ from typing import Any
 
 import pygame
 
-from tet4d.engine import api
+from tet4d.engine.runtime.menu_settings_state import (
+    load_menu_settings,
+    reset_menu_settings_to_defaults,
+    save_menu_settings,
+)
+from tet4d.ui.pygame.keybindings import (
+    active_key_profile,
+    binding_actions_for_dimension,
+    create_auto_profile,
+    cycle_key_profile,
+    cycle_rebind_conflict_mode,
+    delete_key_profile,
+    load_active_profile_bindings,
+    normalize_rebind_conflict_mode,
+    rebind_action_key,
+    reset_active_profile_bindings,
+    set_active_key_profile,
+)
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from .menu_keybinding_shortcuts import (
     apply_menu_binding_action,
@@ -88,16 +105,16 @@ def _ensure_rebind_state(state: Any, dimension: int) -> None:
         state.rebind_index = 0
     if not hasattr(state, "rebind_targets") or not state.rebind_targets:
         targets: list[tuple[str, str]] = []
-        for group_name, actions in api.keybindings_binding_actions_for_dimension(
+        for group_name, actions in binding_actions_for_dimension(
             dimension
         ).items():
             for action_name in actions:
                 targets.append((group_name, action_name))
         state.rebind_targets = targets
     if not hasattr(state, "active_profile"):
-        state.active_profile = api.keybindings_active_key_profile()
+        state.active_profile = active_key_profile()
     if not hasattr(state, "rebind_conflict_mode"):
-        state.rebind_conflict_mode = api.keybindings_normalize_rebind_conflict_mode(
+        state.rebind_conflict_mode = normalize_rebind_conflict_mode(
             None
         )
 
@@ -172,7 +189,7 @@ def _handle_rebind_capture(state: Any, dimension: int, capture: RebindCapture) -
     if target is None:
         return
     group, action_name = target
-    ok, msg = api.keybindings_rebind_action_key(
+    ok, msg = rebind_action_key(
         dimension,
         group,
         action_name,
@@ -211,25 +228,25 @@ def _shift_rebind_target(state: Any, step: int) -> None:
 
 
 def _handle_reset_bindings(state: Any, dimension: int) -> None:
-    ok, msg = api.keybindings_reset_active_profile_bindings(dimension)
+    ok, msg = reset_active_profile_bindings(dimension)
     _set_bindings_status(state, ok, msg)
 
 
 def _handle_profile_cycle(state: Any, step: int) -> None:
-    ok, msg, profile = api.keybindings_cycle_key_profile(step)
+    ok, msg, profile = cycle_key_profile(step)
     state.active_profile = profile
     _set_bindings_status(state, ok, msg)
 
 
 def _handle_profile_create(state: Any) -> None:
-    ok, msg, profile = api.keybindings_create_auto_profile()
+    ok, msg, profile = create_auto_profile()
     if ok and profile is not None:
-        set_ok, set_msg = api.keybindings_set_active_key_profile(profile)
+        set_ok, set_msg = set_active_key_profile(profile)
         if not set_ok:
             ok = False
             msg = set_msg
         else:
-            load_ok, load_msg = api.keybindings_load_active_profile_bindings()
+            load_ok, load_msg = load_active_profile_bindings()
             if not load_ok:
                 ok = False
                 msg = load_msg
@@ -240,20 +257,36 @@ def _handle_profile_create(state: Any) -> None:
 
 def _handle_profile_delete(state: Any) -> None:
     profile_name = str(
-        getattr(state, "active_profile", api.keybindings_active_key_profile())
+        getattr(state, "active_profile", active_key_profile())
     )
-    ok, msg = api.keybindings_delete_key_profile(profile_name)
-    state.active_profile = api.keybindings_active_key_profile()
+    ok, msg = delete_key_profile(profile_name)
+    state.active_profile = active_key_profile()
     _set_bindings_status(state, ok, msg)
+
+
+def _sync_runtime_profile_from_state(state: Any) -> tuple[bool, str]:
+    profile_name = str(getattr(state, "active_profile", active_key_profile()))
+    ok, msg = set_active_key_profile(profile_name)
+    if not ok:
+        return False, msg
+    ok, msg = load_active_profile_bindings()
+    if not ok:
+        return False, msg
+    state.active_profile = active_key_profile()
+    return True, state.active_profile
 
 
 def _handle_settings_action(state: Any, dimension: int, action: MenuAction) -> None:
     if action == MenuAction.SAVE_SETTINGS:
-        ok, msg = api.menu_settings_save(state, dimension)
+        ok, msg = save_menu_settings(state, dimension)
     elif action == MenuAction.LOAD_SETTINGS:
-        ok, msg = api.menu_settings_load(state, dimension)
+        ok, msg = load_menu_settings(state, dimension)
+        if ok:
+            ok, msg = _sync_runtime_profile_from_state(state)
     else:
-        ok, msg = api.menu_settings_reset_to_defaults(state, dimension)
+        ok, msg = reset_menu_settings_to_defaults(state, dimension)
+        if ok:
+            ok, msg = _sync_runtime_profile_from_state(state)
     _set_bindings_status(state, ok, msg)
 
 
@@ -311,7 +344,7 @@ def _apply_state_only_action(state: Any, action: MenuAction) -> bool:
         _shift_rebind_target(state, -1)
         return True
     if action == MenuAction.REBIND_CONFLICT_NEXT:
-        state.rebind_conflict_mode = api.keybindings_cycle_rebind_conflict_mode(
+        state.rebind_conflict_mode = cycle_rebind_conflict_mode(
             state.rebind_conflict_mode, 1
         )
         state.bindings_status = f"Rebind conflict mode: {state.rebind_conflict_mode}"

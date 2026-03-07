@@ -17,22 +17,18 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tet4d.engine.api import (
-    PIECE_SET_2D_CLASSIC,
-    PIECE_SET_3D_STANDARD,
-    PIECE_SET_4D_STANDARD,
-    BoardND,
+from tet4d.ai.playbot import plan_best_2d_move, plan_best_nd_move
+from tet4d.ai.playbot.types import (
     BotPlannerAlgorithm,
     BotPlannerProfile,
-    GameConfig,
-    GameConfigND,
-    GameState,
-    GameStateND,
     default_planning_budget_ms,
-    plan_best_2d_move,
-    plan_best_nd_move,
-    playbot_benchmark_p95_thresholds,
 )
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_CLASSIC
+from tet4d.engine.gameplay.pieces_nd import PIECE_SET_3D_STANDARD, PIECE_SET_4D_STANDARD
+from tet4d.engine.runtime.runtime_config import playbot_benchmark_p95_thresholds
 
 
 @dataclass(frozen=True)

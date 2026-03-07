@@ -3,11 +3,6 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from ..api import (
-    keybindings_active_key_profile as active_key_profile,
-    keybindings_load_active_profile_bindings as load_active_profile_bindings,
-    keybindings_set_active_key_profile as set_active_key_profile,
-)
 from .menu_config import default_settings_payload
 from .project_config import menu_settings_file_path, state_dir_path
 from .settings_sanitize import (
@@ -20,6 +15,7 @@ from .settings_sanitize import (
 )
 from .settings_schema import (
     MODE_KEYS,
+    PROFILE_NAME_RE,
     RuntimeSettingDefaults,
     atomic_write_json,
     clamp_lines_per_level,
@@ -99,6 +95,14 @@ def _coerce_shared_gameplay_settings(
             )
         )
     return normalized
+
+
+def _normalize_active_profile_name(raw: Any, *, default: str) -> str:
+    if isinstance(raw, str):
+        value = raw.strip().lower()
+        if PROFILE_NAME_RE.match(value):
+            return value
+    return default
 
 
 def _settings_mapping(payload: dict[str, Any]) -> dict[str, Any]:
@@ -195,19 +199,6 @@ def _save_payload_section(
     return _sanitize_and_save_payload(payload)
 
 
-def _load_saved_profile(payload: dict[str, Any]) -> tuple[bool, str]:
-    profile = payload.get("active_profile")
-    if not isinstance(profile, str):
-        return True, ""
-    ok_profile, msg_profile = set_active_key_profile(profile)
-    if not ok_profile:
-        return False, msg_profile
-    ok_bindings, msg_bindings = load_active_profile_bindings()
-    if not ok_bindings:
-        return False, msg_bindings
-    return True, ""
-
-
 def _apply_mode_settings_to_state(state: Any, mode_settings: dict[str, Any]) -> None:
     for attr_name, value in mode_settings.items():
         if not hasattr(state.settings, attr_name):
@@ -227,15 +218,19 @@ def apply_saved_menu_settings(
     include_profile: bool = True,
 ) -> tuple[bool, str]:
     payload = _load_payload()
-    if include_profile:
-        ok_profile, msg_profile = _load_saved_profile(payload)
-        if not ok_profile:
-            return False, msg_profile
+    default_profile = _normalize_active_profile_name(
+        _default_settings_payload().get("active_profile"),
+        default="small",
+    )
     mode_key = mode_key_for_dimension(dimension)
     mode_settings = payload.get("settings", {}).get(mode_key, {})
     if isinstance(mode_settings, dict):
         _apply_mode_settings_to_state(state, mode_settings)
-    state.active_profile = active_key_profile()
+    if include_profile:
+        state.active_profile = _normalize_active_profile_name(
+            payload.get("active_profile"),
+            default=default_profile,
+        )
     return True, "Loaded saved menu settings"
 
 
@@ -243,7 +238,13 @@ def save_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
     payload = _load_payload()
     mode_key = mode_key_for_dimension(dimension)
     payload["last_mode"] = mode_key
-    payload["active_profile"] = active_key_profile()
+    payload["active_profile"] = _normalize_active_profile_name(
+        getattr(state, "active_profile", payload.get("active_profile")),
+        default=_normalize_active_profile_name(
+            _default_settings_payload().get("active_profile"),
+            default="small",
+        ),
+    )
     mode_settings = payload.setdefault("settings", {}).setdefault(mode_key, {})
     for attr_name, value in vars(state.settings).items():
         mode_settings[attr_name] = value
@@ -266,15 +267,10 @@ def reset_menu_settings_to_defaults(state: Any, dimension: int) -> tuple[bool, s
         if hasattr(state.settings, attr_name):
             setattr(state.settings, attr_name, value)
 
-    default_profile = defaults.get("active_profile")
-    if isinstance(default_profile, str):
-        ok_profile, msg_profile = set_active_key_profile(default_profile)
-        if not ok_profile:
-            return False, msg_profile
-        ok_bindings, msg_bindings = load_active_profile_bindings()
-        if not ok_bindings:
-            return False, msg_bindings
-    state.active_profile = active_key_profile()
+    state.active_profile = _normalize_active_profile_name(
+        defaults.get("active_profile"),
+        default="small",
+    )
     return True, f"Reset {mode_key} settings to defaults"
 
 
@@ -310,9 +306,28 @@ def get_display_settings() -> dict[str, Any]:
     )
 
 
+def default_display_settings() -> dict[str, Any]:
+    return display_settings_from_payload(
+        _default_settings_payload(),
+        default_payload=_default_settings_payload(),
+        defaults=_RUNTIME_DEFAULTS,
+    )
+
+
+def get_overlay_transparency() -> float:
+    return float(get_display_settings()["overlay_transparency"])
+
+
 def get_analytics_settings() -> dict[str, Any]:
     return analytics_settings_from_payload(
         _load_payload(),
+        default_payload=_default_settings_payload(),
+    )
+
+
+def default_analytics_settings() -> dict[str, Any]:
+    return analytics_settings_from_payload(
+        _default_settings_payload(),
         default_payload=_default_settings_payload(),
     )
 
@@ -341,6 +356,13 @@ def save_display_settings(
 def get_audio_settings() -> dict[str, Any]:
     return audio_settings_from_payload(
         _load_payload(),
+        default_payload=_default_settings_payload(),
+    )
+
+
+def default_audio_settings() -> dict[str, Any]:
+    return audio_settings_from_payload(
+        _default_settings_payload(),
         default_payload=_default_settings_payload(),
     )
 
@@ -437,3 +459,7 @@ def save_global_game_seed(seed: int) -> tuple[bool, str]:
         mode_settings["game_seed"] = clamped_seed
 
     return _sanitize_and_save_payload(payload)
+
+
+
+

@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.tutorial.api import tutorial_lesson_ids_runtime
 from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
@@ -413,7 +413,7 @@ def _menu_action_tutorial_dimension(
         state.status = f"Unsupported tutorial mode: {mode}"
         state.status_error = True
         return False
-    available_lessons = set(engine_api.tutorial_lesson_ids_runtime())
+    available_lessons = set(tutorial_lesson_ids_runtime())
     if lesson_id not in available_lessons:
         state.status = f"Lesson unavailable: {lesson_id}"
         state.status_error = True

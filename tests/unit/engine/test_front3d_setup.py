@@ -4,44 +4,80 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-import tet4d.engine.api as engine_api
-from tet4d.engine import frontend_nd
+from tet4d.engine.gameplay.api import runtime_collect_cleared_ghost_cells
 from tet4d.engine.gameplay.game_nd import GameConfigND
-from tet4d.ui.pygame import front3d_game
 from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_SIX,
     get_piece_shapes_nd,
     piece_set_options_for_dimension,
 )
+from tet4d.ui.pygame import front3d_game, frontend_nd
 from tet4d.ui.pygame.launch import launcher_play
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 class TestFront3DSetupDedup(unittest.TestCase):
-    def test_launcher_play_run_menu_3d_delegates_dimension_3(self) -> None:
+    def test_launch_3d_uses_dimension_3_frontend_helpers(self) -> None:
         sentinel = object()
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         with mock.patch.object(
-            engine_api,
-            "front3d_setup_run_menu_nd",
+            launcher_play,
+            "_launch_mode_flow",
             return_value=sentinel,
         ) as patched:
-            result = engine_api.launcher_play_run_menu_3d("screen", "fonts")
-        self.assertIs(result, sentinel)
-        patched.assert_called_once_with("screen", "fonts", 3)
+            result = launcher_play.launch_3d(
+                screen=object(),
+                fonts_nd=object(),
+                display_settings=display_settings,
+            )
 
-    def test_launcher_play_build_config_3d_delegates_dimension_3(self) -> None:
+        self.assertIs(result, sentinel)
+        kwargs = patched.call_args.kwargs
+        self.assertEqual(kwargs["default_budget_ms"], 24)
+        self.assertEqual(kwargs["mode_key"], "3d")
+        self.assertEqual(kwargs["setup_caption"], launcher_play.setup_caption_for_dimension(3))
+        self.assertEqual(kwargs["game_caption"], launcher_play.game_caption_for_dimension(3))
+        self.assertIs(kwargs["suggested_size_fn"], front3d_game.suggested_window_size)
+        self.assertIs(kwargs["run_game_loop_fn"], front3d_game.run_game_loop)
+
+        with mock.patch.object(frontend_nd, "run_menu", return_value="menu") as run_menu:
+            self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
+        run_menu.assert_called_once_with("screen", "fonts", 3)
+
+        with mock.patch.object(frontend_nd, "build_config", return_value="cfg") as build_config:
+            self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
+        build_config.assert_called_once_with("settings", 3)
+
+    def test_launch_4d_uses_dimension_4_frontend_helpers(self) -> None:
         sentinel = object()
-        settings = frontend_nd.GameSettingsND()
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         with mock.patch.object(
-            engine_api,
-            "front3d_setup_build_config_nd",
+            launcher_play,
+            "_launch_mode_flow",
             return_value=sentinel,
         ) as patched:
-            result = engine_api.launcher_play_build_config_3d(settings)
+            result = launcher_play.launch_4d(
+                screen=object(),
+                fonts_nd=object(),
+                display_settings=display_settings,
+            )
+
         self.assertIs(result, sentinel)
-        patched.assert_called_once_with(settings, 3)
+        kwargs = patched.call_args.kwargs
+        self.assertEqual(kwargs["default_budget_ms"], 36)
+        self.assertEqual(kwargs["mode_key"], "4d")
+
+        with mock.patch.object(frontend_nd, "run_menu", return_value="menu") as run_menu:
+            self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
+        run_menu.assert_called_once_with("screen", "fonts", 4)
+
+        with mock.patch.object(frontend_nd, "build_config", return_value="cfg") as build_config:
+            self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
+        build_config.assert_called_once_with("settings", 4)
 
     def test_launcher_play_2d_passes_display_settings_to_game_loop(self) -> None:
+        from tet4d.ui.pygame import front2d_game
+
         setup_screen = object()
         game_screen = object()
         return_screen = object()
@@ -61,11 +97,11 @@ class TestFront3DSetupDedup(unittest.TestCase):
             "open_display",
             side_effect=[setup_screen, game_screen, return_screen],
         ), mock.patch.object(
-            launcher_play.front2d, "run_menu", return_value=settings
+            front2d_game, "run_menu", return_value=settings
         ), mock.patch.object(
-            launcher_play.front2d, "_config_from_settings", return_value=cfg
+            front2d_game, "_config_from_settings", return_value=cfg
         ), mock.patch.object(
-            launcher_play.front2d, "run_game_loop", return_value=True
+            front2d_game, "run_game_loop", return_value=True
         ) as run_game_loop_mock, mock.patch.object(
             launcher_play,
             "capture_windowed_display_settings",
@@ -158,7 +194,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
                 ]
             )
         )
-        ghost_cells = engine_api.runtime_collect_cleared_ghost_cells(
+        ghost_cells = runtime_collect_cleared_ghost_cells(
             state,
             expected_coord_len=3,
             color_for_cell=lambda cell_id: (cell_id, cell_id, cell_id),

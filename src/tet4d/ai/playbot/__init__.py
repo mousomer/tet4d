@@ -1,7 +1,7 @@
 """AI playbot package.
 
 Contains migrated playbot helpers and AI-owned implementations.
-Public playbot APIs should generally be imported from ``tet4d.engine.api``.
+Public playbot APIs should be imported from ``tet4d.ai.playbot``; playbot internals may import engine modules directly.
 """
 
 from importlib import import_module
@@ -37,3 +37,4 @@ def __getattr__(name: str):
         mod = import_module("tet4d.ai.playbot.types")
         return getattr(mod, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+

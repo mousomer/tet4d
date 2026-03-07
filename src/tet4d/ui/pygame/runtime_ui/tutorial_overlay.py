@@ -4,7 +4,11 @@ from typing import Any
 
 import pygame
 
-import tet4d.engine.api as engine_api
+from tet4d.engine.tutorial.api import tutorial_runtime_overlay_payload_runtime
+from tet4d.engine.ui_logic.keybindings_catalog import binding_action_description
+from tet4d.ui.pygame import front3d_render, front4d_render
+from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 from tet4d.ui.pygame.ui_utils import fit_text
 
 _PANEL_BG = (8, 12, 28, 190)
@@ -37,12 +41,12 @@ def tutorial_panel_last_rect(dimension: int) -> pygame.Rect | None:
 
 def _binding_lookup_for_dimension(dimension: int) -> dict[str, tuple[int, ...]]:
     merged: dict[str, tuple[int, ...]] = {}
-    groups = engine_api.runtime_binding_groups_for_dimension(dimension)
+    groups = runtime_binding_groups_for_dimension(dimension)
     for binding_map in groups.values():
         for action_id, keys in binding_map.items():
             merged[str(action_id)] = tuple(int(key) for key in keys)
     if dimension == 2:
-        camera_groups = engine_api.runtime_binding_groups_for_dimension(3)
+        camera_groups = runtime_binding_groups_for_dimension(3)
         camera_map = camera_groups.get("camera", {})
         for action_id in ("overlay_alpha_dec", "overlay_alpha_inc"):
             keys = camera_map.get(action_id, ())
@@ -60,7 +64,7 @@ def _key_label_for_action(
     if not keys:
         normalized = str(action_id).strip().lower()
         return _MOUSE_ACTION_KEY_LABELS.get(normalized, "-")
-    return engine_api.format_key_tuple(keys)
+    return format_key_tuple(keys)
 
 
 def _render_line(
@@ -169,7 +173,7 @@ def _overlay_action_label(action_id: str) -> str:
         return "zoom board"
     if normalized in {"quit", "menu_back"}:
         return "main menu"
-    return engine_api.binding_action_description(normalized).strip()
+    return binding_action_description(normalized).strip()
 
 
 def _parse_key_action_line(line: str) -> tuple[tuple[str, ...], str] | None:
@@ -323,11 +327,11 @@ def _panel_base_geometry(
 ) -> tuple[int, int, int]:
     if dimension in (3, 4):
         if dimension == 3:
-            margin = int(engine_api.front3d_render_margin())
-            side_panel = int(engine_api.front3d_render_side_panel())
+            margin = int(front3d_render.MARGIN)
+            side_panel = int(front3d_render.SIDE_PANEL)
         else:
-            margin = int(engine_api.front4d_render_margin())
-            side_panel = int(engine_api.front4d_render_side_panel())
+            margin = int(front4d_render.MARGIN)
+            side_panel = int(front4d_render.SIDE_PANEL)
         lane_left = max(0, width - side_panel - margin)
         lane_width = max(0, min(side_panel, width - lane_left))
         panel_x = lane_left + 8
@@ -348,11 +352,11 @@ def _panel_x_bounds(
     if dimension not in (3, 4):
         return 0, max_x
     if dimension == 3:
-        margin = int(engine_api.front3d_render_margin())
-        side_panel = int(engine_api.front3d_render_side_panel())
+        margin = int(front3d_render.MARGIN)
+        side_panel = int(front3d_render.SIDE_PANEL)
     else:
-        margin = int(engine_api.front4d_render_margin())
-        side_panel = int(engine_api.front4d_render_side_panel())
+        margin = int(front4d_render.MARGIN)
+        side_panel = int(front4d_render.SIDE_PANEL)
     lane_left = max(0, width - side_panel - margin)
     lane_right = max(lane_left, width - margin)
     min_x = max(0, lane_left + 8)
@@ -455,7 +459,7 @@ def draw_tutorial_overlay(
     tutorial_session: Any,
     panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
-    payload = engine_api.tutorial_runtime_overlay_payload_runtime(tutorial_session)
+    payload = tutorial_runtime_overlay_payload_runtime(tutorial_session)
     base_lines = _overlay_lines(payload, dimension=dimension)
     if not base_lines:
         return
@@ -536,3 +540,4 @@ def draw_tutorial_overlay(
         line_surf = _render_line(font, draw_text, color, bold=bold)
         screen.blit(line_surf, (panel_rect.x + 9, y))
         y += int(row["row_h"])
+

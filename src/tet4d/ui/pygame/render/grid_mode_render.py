@@ -10,7 +10,7 @@ from tet4d.ui.pygame.projection3d import (
     draw_projected_box_shadow,
     draw_projected_helper_lattice,
 )
-from tet4d.engine.api import GridMode
+from tet4d.engine.ui_logic.view_modes import GridMode
 
 
 MarkSet3: TypeAlias = tuple[set[int], set[int], set[int]]

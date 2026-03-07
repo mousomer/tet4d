@@ -1,14 +1,22 @@
-"""pygame UI adapters (transitional wrappers during architecture refactor)."""
+"""pygame UI adapters."""
 
-from tet4d.engine import api as engine_api
+
+def run_2d() -> None:
+    from tet4d.ui.pygame.front2d_game import run
+
+    run()
 
 
 def run_3d() -> None:
-    engine_api.run_front3d_ui()
+    from tet4d.ui.pygame.front3d_game import run
+
+    run()
 
 
 def run_4d() -> None:
-    engine_api.run_front4d_ui()
+    from tet4d.ui.pygame.front4d_game import run
+
+    run()
 
 
-__all__ = ["run_3d", "run_4d"]
+__all__ = ["run_2d", "run_3d", "run_4d"]

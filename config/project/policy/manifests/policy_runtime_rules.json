@@ -65,10 +65,10 @@
         "path": "src/tet4d/ui/pygame/launch/launcher_settings.py",
         "severity": "error",
         "required_all_tokens": [
-          "clamp_game_seed_runtime",
-          "clamp_overlay_transparency_runtime",
-          "clamp_lines_per_level_runtime",
-          "game_seed_step_runtime"
+          "clamp_game_seed",
+          "clamp_overlay_transparency",
+          "clamp_lines_per_level",
+          "GAME_SEED_STEP"
         ],
         "forbidden_regex": [
           "\\b999_?999_?999\\b",

@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised without pygame-ce
 if pygame is None:  # pragma: no cover - exercised without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for ND routing tests")
 
-from tet4d.engine import frontend_nd
+from tet4d.ui.pygame import frontend_nd
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
 
@@ -352,3 +352,4 @@ class TestNdRouting(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
