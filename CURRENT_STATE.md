@@ -15,7 +15,7 @@ not a historical ledger. Long historical migration detail belongs in
 - `arch_stage`: `900`
 - Canonical local gate: `CODEX_MODE=1 ./scripts/verify.sh`
 - CI wrapper: `./scripts/ci_check.sh`
-- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and now include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.
+- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and now include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_policy_compliance_repo.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.
 - Dependency direction:
   - `ui`, `ai`, `replay`, and `tools` may import engine modules directly
   - `engine` must not import `ui`, `ai`, `replay`, or `tools`

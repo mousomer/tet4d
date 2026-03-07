@@ -120,6 +120,7 @@ require_module pytest pytest
 require_repo_package
 
 run_step "policy_compliance" ./scripts/check_policy_compliance.sh
+run_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
 
 run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py

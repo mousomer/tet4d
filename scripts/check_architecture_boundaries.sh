@@ -34,7 +34,7 @@ collect_matches() {
   shift
   local file
   while IFS= read -r -d '' file; do
-    grep -nE "$pattern" "$file" || true
+    grep -HnE "$pattern" "$file" || true
   done < <(iter_py_files "$@")
 }
 

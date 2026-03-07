@@ -12,6 +12,10 @@ fi
 
 RG_BASE=(rg -n --hidden --glob '!.git/**' --glob '!.venv/**' --glob '!**/__pycache__/**')
 
+rg_usable() {
+  command -v rg >/dev/null 2>&1 && rg --version >/dev/null 2>&1
+}
+
 fail() {
   echo "$1" >&2
   exit 2
@@ -20,7 +24,16 @@ fail() {
 collect_lines() {
   local pattern="$1"
   shift
-  "${RG_BASE[@]}" "$pattern" "$@" || true
+  if rg_usable; then
+    "${RG_BASE[@]}" "$pattern" "$@" || true
+    return
+  fi
+  grep -RInE \
+    --exclude-dir=.git \
+    --exclude-dir=.venv \
+    --exclude-dir=__pycache__ \
+    --binary-files=without-match \
+    "$pattern" "$@" || true
 }
 
 # 1) No pygame/UI/tools imports in engine/core.
