@@ -6,13 +6,27 @@ cd "$(dirname "$0")/.."
 absolute_path_pattern='(/'"Users/"'|/'"home/"'|[A-Za-z]:\\)'
 relative_parent_pattern='\.\./'
 
+rg_usable() {
+  command -v rg >/dev/null 2>&1 && rg --version >/dev/null 2>&1
+}
+
 search_repo_text() {
   local pattern="$1"
-  if command -v rg >/dev/null 2>&1; then
+  if rg_usable; then
     rg -n -I --hidden \
       --glob '!**/.git/**' \
       --glob '!**/.venv/**' \
       --glob '!**/__pycache__/**' \
+      --glob '!**/.pytest_cache/**' \
+      --glob '!**/.pytest_tmp/**' \
+      --glob '!**/.tmp_pytest/**' \
+      --glob '!**/.tmp_pytest_run/**' \
+      --glob '!**/.tmp_pytest_contracts/**' \
+      --glob '!**/.tmp_test_leaderboard/**' \
+      --glob '!**/state/**' \
+      --glob '!**/dist/**' \
+      --glob '!**/build/**' \
+      --glob '!**/artifacts/**' \
       --glob '!**/context-*.instructions.md' \
       --glob '!**/check_git_sanitation.sh' \
       --glob '!**/check_git_sanitation_repo.sh' \
@@ -23,6 +37,16 @@ search_repo_text() {
     --exclude-dir=.git \
     --exclude-dir=.venv \
     --exclude-dir=__pycache__ \
+    --exclude-dir=.pytest_cache \
+    --exclude-dir=.pytest_tmp \
+    --exclude-dir=.tmp_pytest \
+    --exclude-dir=.tmp_pytest_run \
+    --exclude-dir=.tmp_pytest_contracts \
+    --exclude-dir=.tmp_test_leaderboard \
+    --exclude-dir=state \
+    --exclude-dir=dist \
+    --exclude-dir=build \
+    --exclude-dir=artifacts \
     --exclude='context-*.instructions.md' \
     --exclude=check_git_sanitation.sh \
     --exclude=check_git_sanitation_repo.sh \
@@ -32,7 +56,7 @@ search_repo_text() {
 
 search_docs_and_config_text() {
   local pattern="$1"
-  if command -v rg >/dev/null 2>&1; then
+  if rg_usable; then
     rg -n -I "$pattern" config docs
     return
   fi
@@ -49,13 +73,9 @@ if search_docs_and_config_text "$relative_parent_pattern"; then
   exit 2
 fi
 
-space_name="$(
-  find . \
-    \( -path './.git' -o -path './.venv' \) -prune -o \
-    -name '* *' -print -quit
-)"
+space_name="$({ git ls-files; git ls-files --others --exclude-standard; } | awk '/ /' | head -n 1)"
 
 if [[ -n "$space_name" ]]; then
-  echo "Filenames with spaces detected: ${space_name#./}" >&2
+  echo "Filenames with spaces detected: ${space_name}" >&2
   exit 2
 fi

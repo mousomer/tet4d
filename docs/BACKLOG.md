@@ -401,7 +401,7 @@ Current sub-batch (2026-03-07): settings/analytics correctness hotfix.
 Current sub-batch (2026-03-07): verification/state isolation hardening.
 
 - Added a canonical `TET4D_STATE_ROOT` override path in `src/tet4d/engine/runtime/project_config.py` so runtime state helpers can resolve menu settings, tutorial progress, analytics, and leaderboard outputs under an isolated project-local state root.
-- Hardened `scripts/verify.sh` with a serialized full-gate lock, per-run isolated state root, repo-local step logs, and a local `check_policy_compliance.sh` step so local verification matches CI formatting/policy checks and avoids GNU/BSD `mktemp` drift.
+- Hardened `scripts/verify.sh` with a serialized full-gate lock, per-run isolated state root, repo-local step logs, and local policy/sanitation checks (`check_policy_compliance.sh`, `check_git_sanitation_repo.sh`) so local verification matches CI formatting/path checks and avoids GNU/BSD `mktemp` drift.
 - Repointed pytest temp handling and repo-local unittest helpers to the canonical state root instead of hardcoded `Path.cwd()/state/pytest_temp` paths.
 - Ignored the recurring `.tmp_pytest_contracts/` local artifact to reduce git-status noise from inaccessible temp directories.
 
