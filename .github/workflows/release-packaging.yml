@@ -71,10 +71,16 @@ jobs:
       - name: Publish GitHub release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
           title="tet4d ${tag#v}"
-          gh release view "${tag}" >/dev/null 2>&1 || \
-            gh release create "${tag}" --title "${title}" --generate-notes
-          gh release upload "${tag}" artifacts/release/* --clobber
+          assets=(
+            artifacts/release/*.deb
+            artifacts/release/*.dmg
+            artifacts/release/*.msi
+          )
+          gh release view "${tag}" --repo "${GH_REPO}" >/dev/null 2>&1 || \
+            gh release create "${tag}" --repo "${GH_REPO}" --title "${title}" --generate-notes
+          gh release upload "${tag}" --repo "${GH_REPO}" "${assets[@]}" --clobber
