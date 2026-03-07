@@ -25,12 +25,15 @@ Primary implementation and maintenance files:
 4. `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade)
 5. `src/tet4d/ui/pygame/front3d_game.py`
 6. `src/tet4d/ui/pygame/front4d_game.py`
-7. `src/tet4d/ui/pygame/frontend_nd.py`
-8. `src/tet4d/ui/pygame/menu/menu_controls.py`
-9. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
-10. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-11. `src/tet4d/engine/runtime/menu_config.py`
-12. `src/tet4d/engine/runtime/help_topics.py`
+7. `src/tet4d/ui/pygame/frontend_nd_setup.py`
+8. `src/tet4d/ui/pygame/frontend_nd.py`
+9. `src/tet4d/ui/pygame/launch/settings_hub_state.py`
+10. `src/tet4d/ui/pygame/launch/launcher_settings.py`
+11. `src/tet4d/ui/pygame/menu/menu_controls.py`
+12. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+13. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+14. `src/tet4d/engine/runtime/menu_config.py`
+15. `src/tet4d/engine/runtime/help_topics.py`
 13. `config/menu/defaults.json`
 14. `config/menu/structure.json`
 15. `config/help/topics.json`
@@ -349,10 +352,10 @@ Implemented in code:
 7. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
-10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/launcher_settings.py`.
+10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/settings_hub_state.py` + `src/tet4d/ui/pygame/launch/launcher_settings.py`.
 11. gameplay option labels used across setup/settings (for example random mode) are sourced from `config/menu/structure.json` (`settings_option_labels`) without Python fallback literals.
 12. setup hint copy for `2D/3D/4D` is sourced from
-    `config/menu/structure.json` (`setup_hints`) and consumed by `frontend_nd.py`.
+    `config/menu/structure.json` (`setup_hints`) and consumed by `frontend_nd_setup.py`.
 13. pause subtitle/hint copy is sourced from `config/menu/structure.json`
     (`pause_copy`) and consumed by `runtime_ui/pause_menu.py`.
 14. launcher/settings/keybindings/bot/setup UI copy is sourced from

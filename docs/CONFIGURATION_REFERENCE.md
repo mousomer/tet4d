@@ -1267,12 +1267,12 @@ Top-level keys: `magic_numbers`, `manifest_id`, `sanitation`, `schema_version`
 Parameters:
 - `magic_numbers.config_backed_entrypoints[]`: array[`object`]
 - `magic_numbers.config_backed_entrypoints[].forbidden_regex[]`: array[`empty, string`]; examples: `"\\b999_?999_?999\\b"`, `"\\b0\\.85\\b"`
-- `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/launcher_settings.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
+- `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_state.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
 - `magic_numbers.config_backed_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed"`, `"clamp_overlay_transparency"`, `"clamp_lines_per_level"`
 - `magic_numbers.config_backed_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `manifest_id`: `"policy_runtime_rules"` (`string`)
 - `sanitation.text_entrypoints[]`: array[`object`]
-- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/launcher_settings.py"`, `"src/tet4d/ui/pygame/launch/topology_lab_menu.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`
+- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_state.py"`, `"src/tet4d/ui/pygame/launch/topology_lab_menu.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`
 - `sanitation.text_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"append_numeric_text"`, `"parse_numeric_text"`, `"_sanitize_profile_name"`
 - `sanitation.text_entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
 - `sanitation.text_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`

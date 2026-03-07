@@ -129,10 +129,13 @@ creating reverse dependencies.
 8. 2D runtime loop owner: `src/tet4d/ui/pygame/front2d_loop.py`
 9. 2D runtime compatibility facade: `src/tet4d/ui/pygame/front2d_runtime.py`
 10. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-11. ND shared gameplay frontend helpers: `src/tet4d/ui/pygame/frontend_nd.py`
-12. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
-13. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
-14. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
+11. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
+12. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd.py`
+13. Settings-hub state/actions owner: `src/tet4d/ui/pygame/launch/settings_hub_state.py`
+14. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
+15. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
+16. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
+17. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
 
 ## Enforcement
 

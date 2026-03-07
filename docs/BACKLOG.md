@@ -421,6 +421,8 @@ Current sub-batch (2026-03-07): one-way architecture enforcement + 2D frontend f
 - Reduced `src/tet4d/engine/api.py` to a small compatibility facade used mainly by replay and explicit compatibility tests.
 - Extracted the shared setup-menu loop into `src/tet4d/ui/pygame/menu/setup_menu_runner.py` and rewired both `front2d_setup.py` and `frontend_nd.py` to use it.
 - Trimmed duplicated settings/default loader wrappers in `src/tet4d/ui/pygame/launch/launcher_settings.py` by extending `src/tet4d/engine/runtime/menu_settings_state.py` and reusing `src/tet4d/engine/runtime/settings_schema.py` window-size helpers.
+- Split ND setup/menu/config ownership into `src/tet4d/ui/pygame/frontend_nd_setup.py` and kept `src/tet4d/ui/pygame/frontend_nd.py` focused on gameplay/input routing.
+- Split settings-hub state/actions into `src/tet4d/ui/pygame/launch/settings_hub_state.py` and reduced `src/tet4d/ui/pygame/launch/launcher_settings.py` to orchestration/view ownership.
 Current sub-batch (2026-03-05): center-of-piece rotation semantic swap.
 
 - Switched canonical block rotation semantics in `src/tet4d/engine/core/piece_transform.py` from origin-style pivot turns to active-bounding-box center rotation for occupied cells.

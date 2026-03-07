@@ -14,7 +14,7 @@ User-facing feature map for the shipped `tet4d` experience.
     including kick permissiveness, auto speed-up, and lines-per-level.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
-- 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/ui/pygame/frontend_nd.py`) to reduce drift.
+- 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/ui/pygame/frontend_nd_setup.py`) with gameplay/input routing kept separately in `src/tet4d/ui/pygame/frontend_nd.py`.
 - Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.
 - Help screen uses shared header/content/footer layout zones to reduce overlap in compact windows.
 - Help topics are context/dimension-filtered from `config/help/topics.json` and ordered by priority.

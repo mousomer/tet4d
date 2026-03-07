@@ -66,15 +66,16 @@ The current rule is one-way:
 2. [front2d_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_setup.py): 2D setup/menu owner
 3. [front2d_loop.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_loop.py): 2D runtime loop owner
 4. [front2d_runtime.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front2d_runtime.py): 2D runtime compatibility facade for legacy imports/tests
-5. [frontend_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd.py): shared ND setup/menu/input helpers
-6. [front3d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_game.py): 3D frontend
-7. [front4d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_game.py): 4D frontend
-8. [front3d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_render.py): 3D render adapter
-9. [front4d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_render.py): 4D render adapter
-10. [runtime_ui/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/runtime_ui): bootstrap, pause/help, tutorial overlay, shared loop helpers
-11. [launch/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/launch): launcher, settings, bot, leaderboard flows
-12. [menu/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/menu): shared menu/keybinding adapters, including `setup_menu_runner.py`
-13. [render/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/render): render/layout/helper adapters
+5. [frontend_nd_setup.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd_setup.py): shared ND setup/menu/config owner
+6. [frontend_nd.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/frontend_nd.py): shared ND gameplay/input owner
+7. [front3d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_game.py): 3D frontend
+8. [front4d_game.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_game.py): 4D frontend
+9. [front3d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front3d_render.py): 3D render adapter
+10. [front4d_render.py](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/front4d_render.py): 4D render adapter
+11. [runtime_ui/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/runtime_ui): bootstrap, pause/help, tutorial overlay, shared loop helpers
+12. [launch/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/launch): launcher, settings, bot, leaderboard flows, including `settings_hub_state.py` + `launcher_settings.py`
+13. [menu/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/menu): shared menu/keybinding adapters, including `setup_menu_runner.py`
+14. [render/](/C:/Users/omer/Documents/workspace/repos/tet4d/src/tet4d/ui/pygame/render): render/layout/helper adapters
 
 ### AI
 

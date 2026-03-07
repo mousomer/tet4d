@@ -26,7 +26,7 @@ From `python scripts/arch_metrics.py` on 2026-03-07:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 117` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 118` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -57,6 +57,7 @@ Dominant remaining pressure:
 - `src/tet4d/ui/pygame/front2d_setup.py`
 - `src/tet4d/ui/pygame/front2d_loop.py`
 - `src/tet4d/ui/pygame/front2d_runtime.py` (compatibility facade)
+- `src/tet4d/ui/pygame/frontend_nd_setup.py`
 - `src/tet4d/ui/pygame/frontend_nd.py`
 - `src/tet4d/ui/pygame/front3d_game.py`
 - `src/tet4d/ui/pygame/front4d_game.py`
@@ -64,7 +65,7 @@ Dominant remaining pressure:
 - `src/tet4d/ui/pygame/front4d_render.py`
 - `src/tet4d/ui/pygame/runtime_ui/*`
 - `src/tet4d/ui/pygame/menu/*`
-- `src/tet4d/ui/pygame/launch/*`
+- `src/tet4d/ui/pygame/launch/*` (with `settings_hub_state.py` owning settings state/actions and `launcher_settings.py` owning orchestration/view)
 - `src/tet4d/ui/pygame/render/*`
 
 ### AI
@@ -108,6 +109,14 @@ Dominant remaining pressure:
     `src/tet4d/ui/pygame/launch/launcher_settings.py` by extending
     `src/tet4d/engine/runtime/menu_settings_state.py` and reusing
     `src/tet4d/engine/runtime/settings_schema.py` window-size helpers.
+14. Split ND setup/menu/config ownership into
+    `src/tet4d/ui/pygame/frontend_nd_setup.py` and kept
+    `src/tet4d/ui/pygame/frontend_nd.py` focused on gameplay/input routing and
+    state creation.
+15. Split the shared settings hub into
+    `src/tet4d/ui/pygame/launch/settings_hub_state.py` (state/actions/defaults)
+    and `src/tet4d/ui/pygame/launch/launcher_settings.py`
+    (orchestration/view/entrypoints).
 
 ## Validation Status
 
@@ -124,7 +133,7 @@ Validation completed during this batch:
 These are not current correctness bugs; they are watch areas for future LOC and
 ownership reduction.
 
-1. `src/tet4d/ui/pygame/launch/launcher_settings.py`
+1. `src/tet4d/ui/pygame/launch/settings_hub_state.py`
 2. `src/tet4d/ui/pygame/frontend_nd.py`
 3. `src/tet4d/ui/pygame/front2d_loop.py`
 4. `src/tet4d/engine/runtime/`
@@ -134,9 +143,9 @@ ownership reduction.
 
 1. Keep shrinking `src/tet4d/ui/pygame/front2d_loop.py`; the loop owner is now
    isolated, but it is still one of the larger 2D-specific modules.
-2. Continue reducing duplication between `src/tet4d/ui/pygame/frontend_nd.py` and
-   `src/tet4d/ui/pygame/launch/launcher_settings.py` now that the setup-menu loop
-   and settings/default helpers are shared owners.
+2. Keep shrinking `src/tet4d/ui/pygame/frontend_nd.py` and
+   `src/tet4d/ui/pygame/launch/settings_hub_state.py` now that setup/config state
+   and settings-hub actions are separated from orchestration.
 3. Keep trimming oversized UI/runtime owners in `src/tet4d/ui/pygame/launch/` and
    `src/tet4d/engine/runtime/` without reintroducing wrapper layers.
 4. Keep docs, budgets, and package manifests synchronized whenever ownership changes.
