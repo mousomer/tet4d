@@ -1,6 +1,5 @@
 import unittest
 
-from tet4d.engine import api as engine_api
 from tet4d.engine.core.piece_transform import (
     block_axis_bounds,
     canonicalize_blocks_2d,
@@ -73,25 +72,21 @@ class TestPieceTransform(unittest.TestCase):
         self.assertEqual(rotate_point_2d(1, 0, 1), (0, -1))
         self.assertEqual(rotate_point_nd((1, 0, 0), 0, 2, 1), (0, 0, -1))
 
-    def test_engine_api_exports_transform_helpers(self) -> None:
-        blocks_2d = ((0, 0), (1, 0), (1, 1))
-        blocks_nd = ((0, 0, 0), (1, 0, 0))
-        self.assertEqual(
-            engine_api.rotate_blocks_2d(blocks_2d, 1),
-            rotate_blocks_2d(blocks_2d, 1),
-        )
-        self.assertEqual(
-            engine_api.canonicalize_blocks_nd(blocks_nd),
-            canonicalize_blocks_nd(blocks_nd),
-        )
-        self.assertEqual(
-            engine_api.enumerate_orientations_nd(
-                canonicalize_blocks_nd(blocks_nd),
-                3,
-                1,
-            ),
-            enumerate_orientations_nd(canonicalize_blocks_nd(blocks_nd), 3, 1),
-        )
+    def test_piece_transform_helpers_are_not_reexported_via_engine_api(self) -> None:
+        from tet4d.engine import api as engine_api
+
+        for name in (
+            "block_axis_bounds",
+            "canonicalize_blocks_2d",
+            "canonicalize_blocks_nd",
+            "enumerate_orientations_nd",
+            "rotate_blocks_2d",
+            "rotate_blocks_nd",
+            "rotate_point_2d",
+            "rotate_point_nd",
+            "rotation_planes_nd",
+        ):
+            self.assertFalse(hasattr(engine_api, name), name)
 
 
 if __name__ == "__main__":

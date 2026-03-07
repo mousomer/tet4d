@@ -12,20 +12,16 @@ from .pieces2d import (
     get_piece_bag_2d,
     normalize_piece_set_2d,
 )
-from ..runtime.score_analyzer import (
-    analyze_lock_event,
-    new_analysis_session_id,
-    record_score_analysis_event,
-)
+from ..runtime.score_analyzer import new_analysis_session_id
 from ..runtime.runtime_config import (
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
-from .scoring_bonus import plane_cell_count_for_dims, score_with_clear_bonuses
 from ..core.rotation_kicks import resolve_rotated_piece
-from ..core.rules.locking import apply_lock_and_score
+from ..core.rules.lifecycle import run_hard_drop
 from ..core.rules.state_queries import can_piece_exist_2d
 from ..core.step.reducer import step_2d as core_step_2d
+from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -249,56 +245,37 @@ class GameState:
             self.game_over = True
             return 0
         pre_cells = dict(self.board.cells)
-        visible_piece_cells = tuple(coord for coord in mapped_cells if coord[1] >= 0)
-
-        # If any block is above the top row, the game is over.
-        for x, y in mapped_cells:
-            if y < 0:
-                self.game_over = True
-
-        lock_result = apply_lock_and_score(
-            board=self.board,
-            visible_piece_cells=visible_piece_cells,
-            color_id=piece.shape.color_id,
+        visible_piece_cells = visible_locked_cells(
+            mapped_cells,
             gravity_axis=self.config.gravity_axis,
-            lock_piece_points=self.config.lock_piece_points,
-            score_multiplier=self.score_multiplier,
         )
-        cleared = lock_result.cleared
-        self.lines_cleared += cleared
-        raw_points, awarded_points = score_with_clear_bonuses(
-            raw_base_points=lock_result.raw_points,
-            cleared_count=cleared,
-            plane_cell_count=plane_cell_count_for_dims(
-                (self.config.width, self.config.height),
-                gravity_axis=self.config.gravity_axis,
-            ),
-            board_cell_count_after_clear=len(self.board.cells),
-            score_multiplier=self.score_multiplier,
-        )
-        self.score += awarded_points
+
+        if has_cells_above_gravity(mapped_cells, gravity_axis=self.config.gravity_axis):
+            self.game_over = True
 
         self.analysis_seq += 1
-        self.last_score_analysis = analyze_lock_event(
+        lock_flow = apply_lock_flow(
+            board=self.board,
             board_pre=pre_cells,
-            board_post=dict(self.board.cells),
             dims=(self.config.width, self.config.height),
             gravity_axis=self.config.gravity_axis,
-            locked_cells=visible_piece_cells,
-            cleared=cleared,
+            visible_piece_cells=visible_piece_cells,
+            color_id=piece.shape.color_id,
+            lock_piece_points=self.config.lock_piece_points,
+            score_multiplier=self.score_multiplier,
             piece_id=piece.shape.name,
             actor_mode=self.analysis_actor_mode,
             bot_mode=self.analysis_bot_mode,
             grid_mode=self.analysis_grid_mode,
             speed_level=self.config.speed_level,
-            raw_points=raw_points,
-            final_points=awarded_points,
             session_id=self.analysis_session_id,
             seq=self.analysis_seq,
         )
-        record_score_analysis_event(self.last_score_analysis)
+        self.lines_cleared += lock_flow.cleared
+        self.score += lock_flow.awarded_points
+        self.last_score_analysis = lock_flow.analysis
 
-        return cleared
+        return lock_flow.cleared
 
     # --- Movement / rotation helpers ---
 
@@ -328,22 +305,14 @@ class GameState:
             self.current_piece = resolved
 
     def hard_drop(self):
-        if self.current_piece is None:
-            return
-        if self.config.exploration_mode:
-            self.spawn_new_piece()
-            return
-        # Move down until just before collision
-        while True:
+        def _try_advance() -> bool:
             moved = self.current_piece.moved(0, 1)
-            if self._can_exist(moved):
-                self.current_piece = moved
-            else:
-                break
-        # Lock piece and spawn new one
-        self.lock_current_piece()
-        if not self.game_over:
-            self.spawn_new_piece()
+            if not self._can_exist(moved):
+                return False
+            self.current_piece = moved
+            return True
+
+        run_hard_drop(self, try_advance=_try_advance)
 
     # --- Main step function ---
 

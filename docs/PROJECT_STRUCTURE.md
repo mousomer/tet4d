@@ -59,14 +59,17 @@ The current rule is one-way:
 4. `src/tet4d/engine/tutorial/api.py`: tutorial convenience exports
 5. `src/tet4d/engine/core/piece_transform.py`: canonical piece-local transform math
 6. `src/tet4d/engine/core/rotation_kicks.py`: canonical kick candidate generation and shared resolution
-7. `src/tet4d/engine/gameplay/game2d.py`: 2D gameplay state/rules
-8. `src/tet4d/engine/gameplay/game_nd.py`: 3D/4D gameplay state/rules
-9. `src/tet4d/engine/runtime/menu_config.py`: menu/runtime config loading
-10. `src/tet4d/engine/runtime/menu_settings_state.py`: stable persisted-settings facade over `runtime/menu_settings/`
-11. `src/tet4d/engine/runtime/menu_structure_schema.py`: stable menu-structure parsing facade over `runtime/menu_structure/`
-12. `src/tet4d/engine/runtime/score_analyzer.py`: stable score-analysis facade over `runtime/score_analysis/`
-13. `src/tet4d/engine/tutorial/content.py`: tutorial content loader
-14. `src/tet4d/engine/tutorial/runtime.py`: tutorial runtime session logic
+7. `src/tet4d/engine/core/rules/lifecycle.py`: shared lock/spawn/drop lifecycle orchestration
+8. `src/tet4d/engine/gameplay/game2d.py`: 2D gameplay state/rules
+9. `src/tet4d/engine/gameplay/game_nd.py`: 3D/4D gameplay state/rules
+10. `src/tet4d/engine/gameplay/lock_flow.py`: shared lock-and-analysis orchestration
+11. `src/tet4d/engine/runtime/menu_config.py`: menu/runtime config loading
+12. `src/tet4d/engine/runtime/keybinding_store.py`: runtime-owned keybinding profile/path/json storage
+13. `src/tet4d/engine/runtime/menu_settings_state.py`: stable persisted-settings facade over `runtime/menu_settings/`
+14. `src/tet4d/engine/runtime/menu_structure_schema.py`: stable menu-structure parsing facade over `runtime/menu_structure/`
+15. `src/tet4d/engine/runtime/score_analyzer.py`: stable score-analysis facade over `runtime/score_analysis/`
+16. `src/tet4d/engine/tutorial/content.py`: tutorial content loader
+17. `src/tet4d/engine/tutorial/runtime.py`: tutorial runtime session logic
 
 ### UI
 
@@ -133,8 +136,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 Authoritative enforcement is backed by:
 
-1. `scripts/check_architecture_boundaries.sh`
-2. `scripts/check_engine_core_purity.sh`
-3. `scripts/arch_metrics.py`
-4. `tools/governance/architecture_metric_budget.py`
+1. `scripts/check_editable_install.sh`
+2. `scripts/check_architecture_boundaries.sh`
+3. `scripts/check_engine_core_purity.sh`
+4. `scripts/arch_metrics.py`
+5. `tools/governance/architecture_metric_budget.py`
 <!-- END GENERATED:project_structure_verification_contract -->

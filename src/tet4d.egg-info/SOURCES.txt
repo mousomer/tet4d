@@ -34,6 +34,7 @@ src/tet4d/engine/core/rng/engine_rng.py
 src/tet4d/engine/core/rules/__init__.py
 src/tet4d/engine/core/rules/board_rules.py
 src/tet4d/engine/core/rules/gravity_2d.py
+src/tet4d/engine/core/rules/lifecycle.py
 src/tet4d/engine/core/rules/locking.py
 src/tet4d/engine/core/rules/scoring.py
 src/tet4d/engine/core/rules/state_queries.py
@@ -46,6 +47,7 @@ src/tet4d/engine/gameplay/exploration_mode.py
 src/tet4d/engine/gameplay/game2d.py
 src/tet4d/engine/gameplay/game_nd.py
 src/tet4d/engine/gameplay/leveling.py
+src/tet4d/engine/gameplay/lock_flow.py
 src/tet4d/engine/gameplay/pieces2d.py
 src/tet4d/engine/gameplay/pieces_nd.py
 src/tet4d/engine/gameplay/pieces_shared.py
@@ -57,6 +59,7 @@ src/tet4d/engine/gameplay/topology_designer.py
 src/tet4d/engine/runtime/__init__.py
 src/tet4d/engine/runtime/api.py
 src/tet4d/engine/runtime/help_topics.py
+src/tet4d/engine/runtime/keybinding_store.py
 src/tet4d/engine/runtime/leaderboard.py
 src/tet4d/engine/runtime/menu_config.py
 src/tet4d/engine/runtime/menu_settings_state.py
@@ -74,6 +77,8 @@ src/tet4d/engine/runtime/menu_settings/sections.py
 src/tet4d/engine/runtime/menu_settings/store.py
 src/tet4d/engine/runtime/menu_structure/__init__.py
 src/tet4d/engine/runtime/menu_structure/graph.py
+src/tet4d/engine/runtime/menu_structure/settings_parse.py
+src/tet4d/engine/runtime/menu_structure/menu_parse.py
 src/tet4d/engine/runtime/menu_structure/parse_helpers.py
 src/tet4d/engine/runtime/menu_structure/policy.py
 src/tet4d/engine/runtime/score_analysis/__init__.py

@@ -4,6 +4,7 @@ from typing import Any
 
 from ..model.game2d_types import Action, GameState2DLike
 from ..rules.gravity_2d import apply_gravity_tick_2d
+from ..rules.lifecycle import advance_or_lock_and_respawn
 
 
 def apply_action_2d(state: GameState2DLike, action: Action) -> bool:
@@ -40,11 +41,10 @@ def step_nd(state: Any) -> Any:
         return state
 
     g = state.config.gravity_axis
-    if not state.try_move_axis(g, 1):
-        state.lock_current_piece()
-        if not state.game_over:
-            state.spawn_new_piece()
-    return state
+    return advance_or_lock_and_respawn(
+        state,
+        try_advance=lambda: state.try_move_axis(g, 1),
+    )
 
 
 __all__ = ["apply_action_2d", "step_2d", "step_nd"]

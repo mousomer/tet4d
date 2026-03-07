@@ -16,10 +16,11 @@ Define keybinding requirements for all game dimensions and keyboard profiles:
 
 Implementation references:
 1. `src/tet4d/ui/pygame/keybindings.py`
-2. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
-3. `keybindings/2d.json`
-4. `keybindings/3d.json`
-5. `keybindings/4d.json`
+2. `src/tet4d/engine/runtime/keybinding_store.py`
+3. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+4. `keybindings/2d.json`
+5. `keybindings/3d.json`
+6. `keybindings/4d.json`
 
 ## 2. Keyboard Type Profiles
 
@@ -232,7 +233,7 @@ Both menu contexts must expose the same keybinding profile actions:
 
 ### 5.7 Local save/load policy
 
-1. Save/load operations are local filesystem operations only (no network/cloud dependency).
+1. Save/load operations are local filesystem operations only (no network/cloud dependency) and are owned by runtime storage helpers, not UI menus.
 2. Default save target for the active profile is:
 3. `keybindings/profiles/<profile>/<dimension>.json`
 4. `Save As` must allow writing to a new local profile folder name.
@@ -370,7 +371,7 @@ Implemented in code:
 1. Implement a shared keybinding editor model and renderer for setup/pause menus.
 2. Add action-group metadata so each dimension can render only valid groups/actions.
 3. Add rebind capture state with conflict resolution (`replace`,`swap`,`cancel`).
-4. Add local profile IO helpers (`load`,`save`,`save_as`,`reset`) with atomic writes.
+4. Add runtime-owned local profile IO helpers (`load`,`save`,`save_as`,`reset`) with atomic writes.
 5. Add test coverage for editor-state transitions and profile file round-trips.
 6. Completed:
 7. profile actions now include `load/save/save as/reset/create/rename/delete` via keybindings setup + pause entrypoints.

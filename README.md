@@ -25,12 +25,14 @@ Advanced topology designer controls are available per mode:
 ## Requirements
 
 - Python `3.11+` (target compatibility includes `3.14`)
-- `pygame-ce` (installed via `requirements.txt`)
+- Development, local verification, CI, and packaging all use the editable-install contract from `pyproject.toml`
 - Do not install legacy `pygame` in the same environment
 - CI validation matrix: Python `3.11`, `3.12`, `3.13`, `3.14`
 - Desktop installers include embedded Python runtime (end users do not need system Python)
 
 ## Setup
+
+Bootstrap script (preferred):
 
 ```bash
 cd .
@@ -41,25 +43,17 @@ source .venv/bin/activate
 `scripts/bootstrap_env.sh` also installs the repo pre-push hook path
 (`.githooks/pre-push`) so pushes run the local CI gate by default.
 
-Alternative manual setup:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install ruff pytest
-scripts/install_git_hooks.sh
-```
-
-`scripts/ci_check.sh` prefers `.venv/bin/python` when present and expects the repo to be installed in editable mode (`pip install -e .[dev]`) in that same environment.
-
-## Dev setup (editable install)
+Manual setup uses the same editable-install contract:
 
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -U pip
 python -m pip install -e ".[dev]"
+scripts/install_git_hooks.sh
 ```
+
+`./scripts/verify.sh`, `./scripts/ci_check.sh`, and the GitHub workflows all assume the repo package is installed this way in the active environment.
 
 ## Development
 
@@ -164,6 +158,7 @@ Control/action icon renderer:
 ```bash
 ruff check .
 ruff check --select C901 .
+./scripts/check_editable_install.sh
 python3 tools/governance/validate_project_contracts.py
 python3 tools/governance/scan_secrets.py
 python3 tools/governance/check_pygame_ce.py

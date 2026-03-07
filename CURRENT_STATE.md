@@ -37,11 +37,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.03` (`low`)
+- `tech_debt.score = 2.06` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.32`
+1. `delivery_size_pressure = 1.34`
 2. `code_balance = 0.72`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -52,6 +52,7 @@ Dominant remaining pressure:
 
 - `src/tet4d/engine/core/piece_transform.py`
 - `src/tet4d/engine/core/rotation_kicks.py`
+- `src/tet4d/engine/core/rules/lifecycle.py`
 - `src/tet4d/engine/gameplay/*`
 - `src/tet4d/engine/gameplay/api.py`
 - `src/tet4d/engine/runtime/*`
@@ -160,11 +161,18 @@ Dominant remaining pressure:
     manual/generated maintenance docs and added
     `tools/governance/generate_maintenance_docs.py` plus verify-time drift
     checks for the generated sections.
+20. Added `docs/plans/cleanup_master_plan.md` as the canonical cleanup ledger and used code, not manifests, as the stage-status authority for the remaining dedup program.
+21. Narrowed `src/tet4d/engine/api.py` by deleting raw piece-transform re-exports; replay/tests now consume stable engine contracts there while transform tests import the canonical kernel directly.
+22. Extracted shared gameplay orchestration into `src/tet4d/engine/gameplay/lock_flow.py` (lock-analysis / score-bookkeeping) and `src/tet4d/engine/core/rules/lifecycle.py` (lock-and-respawn / hard-drop flow), then rewired `game2d.py`, `game_nd.py`, `core/rules/gravity_2d.py`, and `core/step/reducer.py` to consume those shared owners.
+23. Moved keybinding path/profile/json ownership into `src/tet4d/engine/runtime/keybinding_store.py`; `src/tet4d/ui/pygame/keybindings.py` now owns runtime maps and rebinding behavior only.
+24. Unified the install contract on editable install from `pyproject.toml`, removed `requirements.txt`, added `scripts/check_editable_install.sh`, and wired that smoke check into `scripts/verify.sh`.
+25. Further thinned `src/tet4d/engine/runtime/menu_structure_schema.py` by moving menu graph parsing into `runtime/menu_structure/menu_parse.py` and settings/payload parsing into `runtime/menu_structure/settings_parse.py`, keeping `menu_structure_schema.py` as the stable validation facade only.
 
 ## Validation Status
 
 Validation completed during this batch:
 
+- focused cleanup slices covering `engine.api`, keybinding storage migration, and shared gameplay lifecycle/lock-flow helpers: passed
 - focused `ruff check`: passed
 - focused pytest batches covering the 2D split, compatibility facade, and shared kick-resolution paths: passed
 - `python scripts/arch_metrics.py`: passed with zero reverse imports
@@ -190,6 +198,9 @@ ownership reduction.
    only if new feature work pushes them back into mixed responsibility.
 3. Keep docs, budgets, generated references, and package manifests synchronized
    whenever ownership changes.
+4. If more 2D/ND gameplay orchestration duplication remains after `lock_flow.py` and `core/rules/lifecycle.py`, extract only the next shared owner that produces net deletion.
+5. Keep `engine.api` narrow and do not reintroduce raw transform or upper-layer
+   convenience exports there.
 
 ## Restart Checklist
 

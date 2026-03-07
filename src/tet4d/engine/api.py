@@ -3,17 +3,6 @@ from __future__ import annotations
 import random
 
 from .core.model import Action, BoardND
-from .core.piece_transform import (
-    block_axis_bounds,
-    canonicalize_blocks_2d,
-    canonicalize_blocks_nd,
-    enumerate_orientations_nd,
-    rotate_blocks_2d,
-    rotate_blocks_nd,
-    rotate_point_2d,
-    rotate_point_nd,
-    rotation_planes_nd,
-)
 from .core.rng import EngineRNG, coerce_random
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
@@ -110,21 +99,12 @@ __all__ = [
     "GameState",
     "GameState2D",
     "GameStateND",
-    "block_axis_bounds",
     "board_cells",
-    "canonicalize_blocks_2d",
-    "canonicalize_blocks_nd",
     "current_piece_cells",
-    "enumerate_orientations_nd",
     "is_game_over",
     "new_game_state_2d",
     "new_game_state_nd",
     "new_rng",
-    "rotate_blocks_2d",
-    "rotate_blocks_nd",
-    "rotate_point_2d",
-    "rotate_point_nd",
-    "rotation_planes_nd",
     "step",
     "step_2d",
     "step_nd",

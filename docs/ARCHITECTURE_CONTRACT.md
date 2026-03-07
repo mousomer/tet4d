@@ -48,7 +48,7 @@ Owns:
 
 1. Core model/state types.
 2. Deterministic gameplay rules and topology.
-3. Runtime config, persistence, validation, and tutorial state machinery.
+3. Runtime config, persistence, validation, tutorial state machinery, and keybinding storage.
 4. Engine-owned convenience exports in `tet4d.engine.api`.
 
 Must not own:
@@ -80,7 +80,7 @@ Owns:
 1. Event loops and runtime bootstrap.
 2. Rendering, layout, and camera/view adapters.
 3. Menu surfaces and gameplay frontends.
-4. Keybinding runtime and adapter-local state sync.
+4. Keybinding runtime maps and adapter-local state sync.
 
 UI may import engine modules directly. It should prefer the narrowest engine
 owner that already exists instead of adding new `engine.api` wrappers.
@@ -121,25 +121,28 @@ creating reverse dependencies.
 
 1. Piece-local transform math: `src/tet4d/engine/core/piece_transform.py`
 2. Rotation-kick candidate and resolution logic: `src/tet4d/engine/core/rotation_kicks.py`
-3. Engine gameplay convenience exports: `src/tet4d/engine/gameplay/api.py`
-4. Engine runtime convenience exports: `src/tet4d/engine/runtime/api.py`
-5. Engine tutorial convenience exports: `src/tet4d/engine/tutorial/api.py`
-6. 2D orchestration frontend: `src/tet4d/ui/pygame/front2d_game.py`
-7. 2D setup/menu owner: `src/tet4d/ui/pygame/front2d_setup.py`
-8. 2D runtime loop orchestration owner: `src/tet4d/ui/pygame/front2d_loop.py`
-9. 2D runtime session/state owner: `src/tet4d/ui/pygame/front2d_session.py`
-10. 2D per-frame/update owner: `src/tet4d/ui/pygame/front2d_frame.py`
-11. 2D results/leaderboard owner: `src/tet4d/ui/pygame/front2d_results.py`
-12. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-13. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
-14. ND state-construction owner: `src/tet4d/ui/pygame/frontend_nd_state.py`
-15. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd_input.py`
-16. Settings-hub model owner: `src/tet4d/ui/pygame/launch/settings_hub_model.py`
-17. Settings-hub actions owner: `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
-18. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
-19. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
-20. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
-21. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
+3. Shared lock/spawn/drop lifecycle: `src/tet4d/engine/core/rules/lifecycle.py`
+4. Shared lock-and-analysis orchestration: `src/tet4d/engine/gameplay/lock_flow.py`
+5. Engine gameplay convenience exports: `src/tet4d/engine/gameplay/api.py`
+6. Runtime-owned keybinding storage: `src/tet4d/engine/runtime/keybinding_store.py`
+7. Engine runtime convenience exports: `src/tet4d/engine/runtime/api.py`
+8. Engine tutorial convenience exports: `src/tet4d/engine/tutorial/api.py`
+9. 2D orchestration frontend: `src/tet4d/ui/pygame/front2d_game.py`
+10. 2D setup/menu owner: `src/tet4d/ui/pygame/front2d_setup.py`
+11. 2D runtime loop orchestration owner: `src/tet4d/ui/pygame/front2d_loop.py`
+12. 2D runtime session/state owner: `src/tet4d/ui/pygame/front2d_session.py`
+13. 2D per-frame/update owner: `src/tet4d/ui/pygame/front2d_frame.py`
+14. 2D results/leaderboard owner: `src/tet4d/ui/pygame/front2d_results.py`
+15. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+16. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
+17. ND state-construction owner: `src/tet4d/ui/pygame/frontend_nd_state.py`
+18. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd_input.py`
+19. Settings-hub model owner: `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+20. Settings-hub actions owner: `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
+21. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
+22. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
+23. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
+24. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
 
 ## Enforcement
 

@@ -1,23 +1,30 @@
-"""Shared keyboard bindings for 2D/3D/4D frontends."""
+﻿"""Shared keyboard bindings for 2D/3D/4D frontends."""
 
 from __future__ import annotations
 
-import json
-import os
-import re
 from pathlib import Path
 from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
-from tet4d.engine.runtime.project_config import (
-    keybindings_defaults_path,
-    keybindings_dir_path,
-    keybindings_profiles_dir_path,
-)
-from tet4d.engine.runtime.settings_schema import (
-    atomic_write_text,
-    copy_text_file,
-    read_json_value_or_raise,
+from tet4d.engine.runtime import keybinding_store as runtime_keybinding_store
+from tet4d.engine.runtime.keybinding_store import (
+    BUILTIN_PROFILES,
+    PROFILE_SMALL,
+    SUPPORTED_DIMENSIONS,
+    active_key_profile_from_env,
+    clone_keybinding_dimension,
+    delete_key_profile as delete_key_profile_files,
+    load_keybinding_defaults_payload,
+    keybinding_file_path_for_profile as runtime_keybinding_file_path_for_profile,
+    list_key_profiles as list_key_profiles_from_store,
+    load_keybindings_payload,
+    next_auto_profile_name as next_auto_profile_name_from_store,
+    normalize_builtin_profile,
+    normalize_profile_name,
+    profile_keybinding_file_path as runtime_profile_keybinding_file_path,
+    rename_key_profile as rename_key_profile_files,
+    resolve_keybinding_io_path as resolve_keybindings_io_path_from_store,
+    save_keybindings_payload,
 )
 from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_action_description,  # noqa: F401 - re-exported for UI callers
@@ -29,9 +36,10 @@ from tet4d.ui.pygame.input.key_display import display_key_name
 KeyTuple = Tuple[int, ...]
 KeyBindingMap = Dict[str, KeyTuple]
 
-KEY_PROFILE_ENV = "TETRIS_KEY_PROFILE"
-BUILTIN_PROFILES = ("small", "full", "macbook", "tiny")
-SUPPORTED_DIMENSIONS = (2, 3, 4)
+KEY_PROFILE_ENV = runtime_keybinding_store.KEY_PROFILE_ENV
+PROFILE_FULL = runtime_keybinding_store.PROFILE_FULL
+PROFILE_MACBOOK = runtime_keybinding_store.PROFILE_MACBOOK
+PROFILE_TINY = runtime_keybinding_store.PROFILE_TINY
 
 REBIND_CONFLICT_REPLACE = "replace"
 REBIND_CONFLICT_SWAP = "swap"
@@ -44,21 +52,11 @@ REBIND_CONFLICT_OPTIONS = (
 
 
 def _load_defaults_payload() -> dict:
-    path = keybindings_defaults_path()
-    raw = path.read_text(encoding="utf-8")
-    data = json.loads(raw)
-    if not isinstance(data, dict):
-        raise ValueError("keybindings defaults config must be a JSON object")
-    return data
+    return load_keybinding_defaults_payload()
 
 
 _DEFAULTS = _load_defaults_payload()
 _PROFILE_MAP = _DEFAULTS.get("profiles", {})
-PROFILE_SMALL = "small"
-PROFILE_FULL = "full"
-PROFILE_MACBOOK = "macbook"
-PROFILE_TINY = "tiny"
-_PROFILE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 
 def _bindings_for(
@@ -100,33 +98,17 @@ def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
 
 DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
 
-KEYBINDINGS_DIR = keybindings_dir_path()
-KEYBINDINGS_PROFILES_DIR = keybindings_profiles_dir_path()
-KEYBINDING_FILES = {
-    2: KEYBINDINGS_DIR / "2d.json",
-    3: KEYBINDINGS_DIR / "3d.json",
-    4: KEYBINDINGS_DIR / "4d.json",
-}
-
 
 def _normalize_profile(raw: str | None) -> str:
-    if raw is None:
-        return PROFILE_SMALL
-    value = raw.strip().lower()
-    if value in BUILTIN_PROFILES:
-        return value
-    return PROFILE_SMALL
+    return normalize_builtin_profile(raw)
 
 
 def _normalize_profile_name(raw: str) -> str:
-    value = raw.strip().lower()
-    if not _PROFILE_NAME_RE.match(value):
-        raise ValueError("invalid profile name; use letters, numbers, '_' or '-'")
-    return value
+    return normalize_profile_name(raw)
 
 
 def get_active_key_profile() -> str:
-    return _normalize_profile(os.environ.get(KEY_PROFILE_ENV))
+    return active_key_profile_from_env()
 
 
 ACTIVE_KEY_PROFILE = get_active_key_profile()
@@ -157,34 +139,18 @@ def cycle_rebind_conflict_mode(mode: str, step: int = 1) -> str:
     return REBIND_CONFLICT_OPTIONS[(idx + step) % len(REBIND_CONFLICT_OPTIONS)]
 
 
-def _safe_resolve_path(path: Path) -> Path:
-    root = KEYBINDINGS_DIR.resolve()
-    resolved = path.expanduser().resolve()
-    if resolved != root and root not in resolved.parents:
-        raise ValueError(f"path must be within keybindings directory: {root}")
-    return resolved
-
-
-def _default_profile_file_path(dimension: int) -> Path:
-    path = KEYBINDING_FILES.get(dimension)
-    if path is None:
-        raise ValueError("dimension must be one of: 2, 3, 4")
-    return path
-
-
 def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
-    normalized = _normalize_profile_name(profile)
-    if normalized == PROFILE_SMALL:
-        return _safe_resolve_path(_default_profile_file_path(dimension))
-    filename = _default_profile_file_path(dimension).name
-    return _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / normalized / filename)
+    return runtime_profile_keybinding_file_path(dimension, profile)
 
 
 def keybinding_file_path_for_profile(
     dimension: int, profile: str | None = None
 ) -> Path:
-    selected = _selected_profile(profile)
-    return profile_keybinding_file_path(dimension, selected)
+    return runtime_keybinding_file_path_for_profile(
+        dimension,
+        profile=profile,
+        active_profile=ACTIVE_KEY_PROFILE,
+    )
 
 
 def key_matches(bindings: Mapping[str, KeyTuple], action: str, key: int) -> bool:
@@ -347,10 +313,12 @@ def _resolve_keybindings_io_context(
     profile: str | None,
 ) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str]:
     groups = _binding_groups_for_dimension(dimension)
-    selected_profile = _selected_profile(profile)
-    if file_path is not None:
-        return groups, _safe_resolve_path(Path(file_path)), selected_profile
-    path = keybinding_file_path_for_profile(dimension, selected_profile)
+    path, selected_profile = resolve_keybindings_io_path_from_store(
+        dimension,
+        file_path=file_path,
+        profile=profile,
+        active_profile=ACTIVE_KEY_PROFILE,
+    )
     return groups, path, selected_profile
 
 
@@ -520,27 +488,11 @@ def keybinding_file_label(dimension: int) -> str:
 
 
 def list_key_profiles() -> list[str]:
-    profiles = set(BUILTIN_PROFILES)
-    if KEYBINDINGS_PROFILES_DIR.exists():
-        for child in KEYBINDINGS_PROFILES_DIR.iterdir():
-            if not child.is_dir():
-                continue
-            try:
-                profiles.add(_normalize_profile_name(child.name))
-            except ValueError:
-                continue
-    return sorted(profiles)
+    return list_key_profiles_from_store()
 
 
 def next_auto_profile_name(prefix: str = "custom") -> str:
-    safe_prefix = _normalize_profile_name(prefix)
-    existing = set(list_key_profiles())
-    idx = 1
-    while True:
-        candidate = f"{safe_prefix}_{idx}"
-        if candidate not in existing:
-            return candidate
-        idx += 1
+    return next_auto_profile_name_from_store(prefix)
 
 
 def set_active_key_profile(profile: str) -> tuple[bool, str]:
@@ -586,45 +538,22 @@ def clone_key_profile(
 
 def delete_key_profile(profile: str) -> tuple[bool, str]:
     normalized = _normalize_profile_name(profile)
-    if normalized in BUILTIN_PROFILES:
-        return False, "cannot delete built-in profile"
-    dir_path = _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / normalized)
-    if not dir_path.exists():
-        return False, f"profile not found: {normalized}"
-    try:
-        for child in dir_path.glob("*.json"):
-            child.unlink()
-        dir_path.rmdir()
-    except OSError as exc:
-        return False, f"failed deleting profile: {exc}"
+    ok, msg = delete_key_profile_files(normalized)
+    if not ok:
+        return ok, msg
     global ACTIVE_KEY_PROFILE
     if ACTIVE_KEY_PROFILE == normalized:
         ACTIVE_KEY_PROFILE = PROFILE_SMALL
         load_active_profile_bindings()
-    return True, f"Deleted profile: {normalized}"
+    return ok, msg
 
 
 def rename_key_profile(profile: str, new_profile: str) -> tuple[bool, str]:
     source = _normalize_profile_name(profile)
     target = _normalize_profile_name(new_profile)
-    if source in BUILTIN_PROFILES:
-        return False, "cannot rename built-in profile"
-    if target in BUILTIN_PROFILES:
-        return False, "cannot rename to built-in profile name"
-    if source == target:
-        return True, f"Profile already named: {source}"
-    profiles = set(list_key_profiles())
-    if source not in profiles:
-        return False, f"profile not found: {source}"
-    if target in profiles:
-        return False, f"profile already exists: {target}"
-
-    src_dir = _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / source)
-    dst_dir = _safe_resolve_path(KEYBINDINGS_PROFILES_DIR / target)
-    try:
-        src_dir.rename(dst_dir)
-    except OSError as exc:
-        return False, f"failed renaming profile: {exc}"
+    ok, msg = rename_key_profile_files(source, target)
+    if not ok:
+        return ok, msg
 
     global ACTIVE_KEY_PROFILE
     if ACTIVE_KEY_PROFILE == source:
@@ -632,7 +561,7 @@ def rename_key_profile(profile: str, new_profile: str) -> tuple[bool, str]:
         ok, msg = load_active_profile_bindings()
         if not ok:
             return False, msg
-    return True, f"Renamed profile {source} -> {target}"
+    return True, msg
 
 
 def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
@@ -652,21 +581,42 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
     return True, msg, next_profile
 
 
-def _atomic_write(path: Path, payload: str) -> None:
-    atomic_write_text(path, payload)
+def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, object]:
+    game_2d, game_3d, game_4d = default_game_bindings_for_profile(profile)
+    camera_3d, camera_4d = default_camera_bindings_for_profile(profile)
+    system = default_system_bindings_for_profile(profile)
+    group_map = {
+        2: {"game": game_2d, "system": system},
+        3: {"game": game_3d, "camera": camera_3d, "system": system},
+        4: {"game": game_4d, "camera": camera_4d, "system": system},
+    }
+    bindings = group_map.get(dimension)
+    if bindings is None:
+        raise ValueError("dimension must be one of: 2, 3, 4")
+    return {
+        "dimension": dimension,
+        "profile": _normalize_profile_name(profile),
+        "bindings": {
+            group_name: _serialize_binding_group(binding_map)
+            for group_name, binding_map in bindings.items()
+        },
+    }
 
 
 def _clone_keybinding_dimension(
     source_profile: str, target_profile: str, dimension: int
 ) -> None:
-    src_path = keybinding_file_path_for_profile(dimension, source_profile)
-    if not src_path.exists():
-        # Fallback: materialize defaults for source profile first.
-        reset_keybindings_to_profile_defaults(source_profile)
-        save_keybindings_file(dimension, profile=source_profile)
-        src_path = keybinding_file_path_for_profile(dimension, source_profile)
-    dst_path = keybinding_file_path_for_profile(dimension, target_profile)
-    copy_text_file(src_path, dst_path)
+    clone_keybinding_dimension(
+        source_profile,
+        target_profile,
+        dimension,
+        materialize_source=lambda: save_keybindings_payload(
+            dimension,
+            _binding_payload_for_dimension(dimension, source_profile),
+            profile=source_profile,
+            active_profile=ACTIVE_KEY_PROFILE,
+        ),
+    )
 
 
 def save_keybindings_file(
@@ -675,7 +625,7 @@ def save_keybindings_file(
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups, path, selected_profile = _resolve_keybindings_io_context(
+        groups, _path, selected_profile = _resolve_keybindings_io_context(
             dimension,
             file_path=file_path,
             profile=profile,
@@ -691,14 +641,13 @@ def save_keybindings_file(
             for group_name, binding_map in groups.items()
         },
     }
-
-    encoded_payload = json.dumps(payload, indent=2, sort_keys=True)
-    try:
-        _atomic_write(path, encoded_payload)
-    except OSError as exc:
-        return False, f"Failed saving keybindings: {exc}"
-
-    return True, f"Saved keybindings to {path}"
+    return save_keybindings_payload(
+        dimension,
+        payload,
+        file_path=file_path,
+        profile=profile,
+        active_profile=ACTIVE_KEY_PROFILE,
+    )
 
 
 def load_keybindings_file(
@@ -707,7 +656,7 @@ def load_keybindings_file(
     profile: str | None = None,
 ) -> Tuple[bool, str]:
     try:
-        groups, path, _selected_profile = _resolve_keybindings_io_context(
+        groups, _path, _selected_profile = _resolve_keybindings_io_context(
             dimension,
             file_path=file_path,
             profile=profile,
@@ -715,12 +664,14 @@ def load_keybindings_file(
     except ValueError as exc:
         return False, str(exc)
 
-    try:
-        payload = read_json_value_or_raise(path)
-    except OSError as exc:
-        return False, f"Failed loading keybindings: {exc}"
-    except json.JSONDecodeError as exc:
-        return False, f"Invalid keybindings JSON: {exc}"
+    ok, msg, payload = load_keybindings_payload(
+        dimension,
+        file_path=file_path,
+        profile=profile,
+        active_profile=ACTIVE_KEY_PROFILE,
+    )
+    if not ok or payload is None:
+        return ok, msg
 
     bindings_payload = payload.get("bindings")
     if not isinstance(bindings_payload, dict):
@@ -734,7 +685,7 @@ def load_keybindings_file(
         _apply_group_payload(target, raw_group)
 
     _sanitize_runtime_bindings()
-    return True, f"Loaded keybindings from {path}"
+    return True, msg
 
 
 _KEYBINDINGS_INITIALIZED = False

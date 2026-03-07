@@ -1,5 +1,6 @@
 from .board_rules import clear_planes, full_levels
 from .gravity_2d import apply_gravity_tick_2d
+from .lifecycle import advance_or_lock_and_respawn, lock_and_respawn, run_hard_drop
 from .locking import LockScoreResult, apply_lock_and_score
 from .scoring import score_for_clear
 from .state_queries import (
@@ -12,12 +13,15 @@ from .state_queries import (
 __all__ = [
     "apply_lock_and_score",
     "apply_gravity_tick_2d",
+    "advance_or_lock_and_respawn",
     "board_cells",
     "can_piece_exist_2d",
     "clear_planes",
     "current_piece_cells",
     "full_levels",
     "is_game_over",
+    "lock_and_respawn",
     "LockScoreResult",
+    "run_hard_drop",
     "score_for_clear",
 ]

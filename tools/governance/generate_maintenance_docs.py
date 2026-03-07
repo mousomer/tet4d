@@ -35,9 +35,21 @@ CANONICAL_OWNERS: dict[str, tuple[tuple[str, str], ...]] = {
             "src/tet4d/engine/core/rotation_kicks.py",
             "canonical kick candidate generation and shared resolution",
         ),
+        (
+            "src/tet4d/engine/core/rules/lifecycle.py",
+            "shared lock/spawn/drop lifecycle orchestration",
+        ),
         ("src/tet4d/engine/gameplay/game2d.py", "2D gameplay state/rules"),
         ("src/tet4d/engine/gameplay/game_nd.py", "3D/4D gameplay state/rules"),
+        (
+            "src/tet4d/engine/gameplay/lock_flow.py",
+            "shared lock-and-analysis orchestration",
+        ),
         ("src/tet4d/engine/runtime/menu_config.py", "menu/runtime config loading"),
+        (
+            "src/tet4d/engine/runtime/keybinding_store.py",
+            "runtime-owned keybinding profile/path/json storage",
+        ),
         (
             "src/tet4d/engine/runtime/menu_settings_state.py",
             "stable persisted-settings facade over `runtime/menu_settings/`",
@@ -104,6 +116,7 @@ CANONICAL_OWNERS_FOR_CURRENT_STATE: dict[str, tuple[str, ...]] = {
     "Engine": (
         "src/tet4d/engine/core/piece_transform.py",
         "src/tet4d/engine/core/rotation_kicks.py",
+        "src/tet4d/engine/core/rules/lifecycle.py",
         "src/tet4d/engine/gameplay/*",
         "src/tet4d/engine/gameplay/api.py",
         "src/tet4d/engine/runtime/*",
@@ -147,6 +160,7 @@ SOURCE_OF_TRUTH_FILES: tuple[tuple[str, str], ...] = (
 )
 
 VERIFICATION_ENFORCERS: tuple[str, ...] = (
+    "scripts/check_editable_install.sh",
     "scripts/check_architecture_boundaries.sh",
     "scripts/check_engine_core_purity.sh",
     "scripts/arch_metrics.py",

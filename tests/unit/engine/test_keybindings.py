@@ -19,7 +19,7 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
 from tet4d.ui.pygame import keybindings
-from tet4d.engine.runtime import menu_settings_state
+from tet4d.engine.runtime import keybinding_store, menu_settings_state
 from tet4d.engine.runtime import menu_config
 from tet4d.engine.runtime.project_config import state_dir_path
 
@@ -56,13 +56,13 @@ class _TempKeybindingRoot:
             4: self.keybindings_dir / "4d.json",
         }
         self.patches = [
-            patch.object(keybindings, "KEYBINDINGS_DIR", self.keybindings_dir),
+            patch.object(keybinding_store, "KEYBINDINGS_DIR", self.keybindings_dir),
             patch.object(
-                keybindings,
+                keybinding_store,
                 "KEYBINDINGS_PROFILES_DIR",
                 self.keybindings_dir / "profiles",
             ),
-            patch.object(keybindings, "KEYBINDING_FILES", self.files),
+            patch.object(keybinding_store, "KEYBINDING_FILES", self.files),
             patch.object(menu_settings_state, "STATE_DIR", self.state_dir),
             patch.object(
                 menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"

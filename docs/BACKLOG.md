@@ -391,6 +391,21 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-07): cleanup ledger + remaining owner cleanup.
+
+- Added `docs/plans/cleanup_master_plan.md` as the canonical ledger for the remaining cleanup program, with stage/domain ownership status taken from live code rather than older manifests.
+- Narrowed `src/tet4d/engine/api.py` so it no longer re-exports raw piece-transform helpers; transform tests now import `src/tet4d/engine/core/piece_transform.py` directly.
+- Extracted shared gameplay orchestration into `src/tet4d/engine/gameplay/lock_flow.py` (lock-analysis / score-bookkeeping) and `src/tet4d/engine/core/rules/lifecycle.py` (lock-and-respawn / hard-drop flow), then rewired `src/tet4d/engine/gameplay/game2d.py`, `src/tet4d/engine/gameplay/game_nd.py`, `src/tet4d/engine/core/rules/gravity_2d.py`, and `src/tet4d/engine/core/step/reducer.py` to use those shared owners.
+- Moved keybinding path/profile/json ownership into `src/tet4d/engine/runtime/keybinding_store.py`, leaving `src/tet4d/ui/pygame/keybindings.py` with runtime binding maps, conflict handling, and presentation-facing helpers only.
+- Removed the stale `requirements.txt` install authority, updated `README.md` to the editable-install-only contract, and added `scripts/check_editable_install.sh` to the local verification gate.
+- Further reduced `src/tet4d/engine/runtime/menu_structure_schema.py` by moving menu graph parsing into `src/tet4d/engine/runtime/menu_structure/menu_parse.py` and settings/payload parsing into `src/tet4d/engine/runtime/menu_structure/settings_parse.py`, leaving `menu_structure_schema.py` as the stable validation facade consumed by `menu_config.py`.
+- Validation:
+  - focused `ruff check` passed
+  - focused pytest (`test_piece_transform.py`, `test_keybindings.py`, `test_game2d.py`, `test_game_nd.py`, `test_lifecycle_rules.py`) passed
+  - additional focused pytest (`test_menu_policy.py`, `test_menu_graph_linter.py`, `test_front_launcher_routes.py`, `test_help_text.py`) passed
+  - full `CODEX_MODE=1 ./scripts/verify.sh` passed
+  - full `CODEX_MODE=1 ./scripts/ci_check.sh` passed
+
 Current sub-batch (2026-03-07): maintenance-doc generation for architecture handoff.
 
 - Added `tools/governance/generate_maintenance_docs.py` to generate the marker-backed sections in `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` from canonical architecture metrics and owner lists.
