@@ -33,6 +33,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
 11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
 12. Advanced profiles may apply per-edge inversion/wrap behavior including `w` edges.
+13. Rotated candidate acceptance must be decided by topology-aware legality after mapping, not by raw board-edge checks.
 
 ## 4. Piece Set
 
@@ -88,8 +89,8 @@ Gameplay (default small profile):
 View controls:
 1. View `xw -/+`: `1`/`2`
 2. View `zw -/+`: `3`/`4`
-3. Yaw turn (animated 90°): `5`/`6`
-4. Pitch turn (animated 90°): `7`/`8`
+3. Yaw turn (animated 90-degree): `5`/`6`
+4. Pitch turn (animated 90-degree): `7`/`8`
 5. Zoom: `9`/`0`
 6. Advanced camera (numeric keypad): yaw fine `-`/`+`=`Numpad7`/`Numpad9`, cycle projection=`Numpad1`, reset view=`Numpad3`
 
@@ -211,6 +212,7 @@ Minimum required coverage after 4D changes:
 16. dims `(5,4,3,2)` + `xw` regression asserting `layer_count=5` and board dims `(2,4,3)`.
 17. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
 18. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
+19. Bounded/wrap/invert kick-legality parity checks, including seam-straddling `w` cases.
 
 Relevant tests:
 - `tests/unit/engine/test_game_nd.py`

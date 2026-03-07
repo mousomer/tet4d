@@ -163,6 +163,14 @@ def tutorial_lesson_ids() -> tuple[str, ...]:
     return tuple(sorted(tutorial_lesson_map().keys()))
 
 
+def tutorial_board_dims_for_mode(mode: str) -> tuple[int, ...]:
+    clean_mode = _plan_text(mode, path="tutorial.mode", max_length=8).lower()
+    if clean_mode not in {"2d", "3d", "4d"}:
+        raise RuntimeError("tutorial.mode must be one of: 2d, 3d, 4d")
+    payload = load_tutorial_payload()
+    return tuple(int(value) for value in payload.board_profiles.dims_for_mode(clean_mode))
+
+
 def clear_tutorial_content_cache() -> None:
     load_tutorial_payload.cache_clear()
     load_tutorial_plan_payload.cache_clear()

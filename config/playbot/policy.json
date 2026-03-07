@@ -43,7 +43,7 @@
       "3d": {"per_ms": 18, "min": 96, "max": 1200},
       "4d_plus": {"per_ms": 12, "min": 120, "max": 1400}
     },
-    "deadline_safety_ms": 1.25
+    "deadline_safety_ms": 3.0
   },
   "auto_algorithm": {
     "greedy_bias": {"2d": -1.4, "3d": -0.25, "4d_plus": 0.8},

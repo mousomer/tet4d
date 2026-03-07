@@ -44,6 +44,7 @@ from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
     tutorial_allowed_actions_blocked,
     tutorial_action_delay_ms,
     tutorial_overlay_start_from_setup,
+    tutorial_gated_mouse_orbit_event,
     tutorial_required_action_blocked,
     tutorial_sync,
 )
@@ -195,26 +196,20 @@ _TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
     min_value=0,
     max_value=10,
 )
-_TUTORIAL_MIN_DIMS_3D = (
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "3d", "x"),
-        8,
-        min_value=4,
-        max_value=40,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "3d", "y"),
-        18,
-        min_value=8,
-        max_value=80,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "3d", "z"),
-        8,
-        min_value=4,
-        max_value=40,
-    ),
-)
+def _tutorial_board_dims_3d() -> tuple[int, int, int]:
+    dims = engine_api.tutorial_board_dims_runtime("3d")
+    return (int(dims[0]), int(dims[1]), int(dims[2]))
+
+
+def _apply_tutorial_board_profile_3d(
+    cfg: GameConfigND,
+    *,
+    tutorial_lesson_id: str | None,
+) -> None:
+    if not tutorial_lesson_id:
+        return
+    cfg.dims = _tutorial_board_dims_3d()
+
 
 
 def _tutorial_required_action_legal_3d(loop: "LoopContext3D", action_id: str) -> bool:
@@ -445,6 +440,10 @@ class LoopContext3D(PanelDragMixin):
         bot_speed_level: int = 7,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext3D":
+        _apply_tutorial_board_profile_3d(
+            cfg,
+            tutorial_lesson_id=tutorial_lesson_id,
+        )
         state = create_initial_state(cfg)
         overlay_default = default_overlay_transparency()
         tutorial_session = None
@@ -583,25 +582,30 @@ class LoopContext3D(PanelDragMixin):
         if wheel != 0:
             if not self._tutorial_action_allowed("mouse_zoom"):
                 return
+            current_zoom = float(self.camera.zoom)
+            step = 3.0 * abs(wheel)
+            next_zoom = (
+                min(140.0, current_zoom + step)
+                if wheel > 0
+                else max(18.0, current_zoom - step)
+            )
+            if next_zoom == current_zoom:
+                return
             self.camera.stop_animation()
             self.camera.auto_fit_once = False
-            step = 3.0 * abs(wheel)
-            if wheel > 0:
-                self.camera.zoom = min(140.0, self.camera.zoom + step)
-            else:
-                self.camera.zoom = max(18.0, self.camera.zoom - step)
+            self.camera.zoom = next_zoom
             self._tutorial_observe_action("mouse_zoom")
             return
 
-        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+        yaw_deg, pitch_deg, changed = tutorial_gated_mouse_orbit_event(
             event,
-            self.mouse_orbit,
+            mouse_orbit=self.mouse_orbit,
             yaw_deg=self.camera.yaw_deg,
             pitch_deg=self.camera.pitch_deg,
+            action_allowed=self._tutorial_action_allowed("mouse_orbit"),
+            apply_mouse_orbit_event=apply_mouse_orbit_event,
         )
         if not changed:
-            return
-        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.camera.stop_animation()
         self.camera.auto_fit_once = False
@@ -622,13 +626,6 @@ def run_game_loop(
     bot_budget_ms: int = 24,
     tutorial_lesson_id: str | None = None,
 ) -> bool:
-    if tutorial_lesson_id:
-        dims = cfg.dims
-        cfg.dims = (
-            max(int(dims[0]), int(_TUTORIAL_MIN_DIMS_3D[0])),
-            max(int(dims[1]), int(_TUTORIAL_MIN_DIMS_3D[1])),
-            max(int(dims[2]), int(_TUTORIAL_MIN_DIMS_3D[2])),
-        )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
@@ -761,13 +758,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
-
-
-
-
-
-
-
-
-

@@ -5,12 +5,16 @@
   "type": "object",
   "required": [
     "schema_version",
+    "board_profiles",
     "lessons"
   ],
   "properties": {
     "schema_version": {
       "type": "integer",
       "minimum": 1
+    },
+    "board_profiles": {
+      "$ref": "#/$defs/boardProfiles"
     },
     "lessons": {
       "type": "array",
@@ -26,6 +30,100 @@
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "boardProfile2d": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 40
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 80
+        }
+      }
+    },
+    "boardProfile3d": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 40
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 80
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 40
+        }
+      }
+    },
+    "boardProfile4d": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 60
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 100
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 40
+        },
+        "w": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 20
+        }
+      }
+    },
+    "boardProfiles": {
+      "type": "object",
+      "required": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "properties": {
+        "2d": {
+          "$ref": "#/$defs/boardProfile2d"
+        },
+        "3d": {
+          "$ref": "#/$defs/boardProfile3d"
+        },
+        "4d": {
+          "$ref": "#/$defs/boardProfile4d"
+        }
       }
     },
     "ui": {
@@ -146,6 +244,11 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9
+        },
+        "event_span_min_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
         }
       }
     },

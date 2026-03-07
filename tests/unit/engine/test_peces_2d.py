@@ -1,6 +1,7 @@
 # tests/test_pieces2d.py
 import unittest
 
+from tet4d.engine.core.piece_transform import canonicalize_blocks_2d, rotate_blocks_2d
 from tet4d.engine.gameplay.pieces2d import (
     ActivePiece2D,
     PIECE_SET_2D_OPTIONS,
@@ -13,12 +14,19 @@ from tet4d.engine.gameplay.pieces2d import (
 
 class TestPieces2D(unittest.TestCase):
     def test_rotate_point_2d(self):
-        # Rotate (1, 0) around origin
-        self.assertEqual(rotate_point_2d(1, 0, 0), (1, 0))  # 0°
-        self.assertEqual(rotate_point_2d(1, 0, 1), (0, -1))  # 90° CW
-        self.assertEqual(rotate_point_2d(1, 0, 2), (-1, 0))  # 180°
-        self.assertEqual(rotate_point_2d(1, 0, 3), (0, 1))  # 270° CW
-        self.assertEqual(rotate_point_2d(1, 0, 4), (1, 0))  # 360° -> back
+        # Rotate (1, 0) around the origin primitive.
+        self.assertEqual(rotate_point_2d(1, 0, 0), (1, 0))
+        self.assertEqual(rotate_point_2d(1, 0, 1), (0, -1))
+        self.assertEqual(rotate_point_2d(1, 0, 2), (-1, 0))
+        self.assertEqual(rotate_point_2d(1, 0, 3), (0, 1))
+        self.assertEqual(rotate_point_2d(1, 0, 4), (1, 0))
+
+    def test_rotate_blocks_2d_keeps_square_in_place(self):
+        square = ((0, 0), (1, 0), (0, 1), (1, 1))
+        self.assertEqual(
+            canonicalize_blocks_2d(rotate_blocks_2d(square, 1)),
+            canonicalize_blocks_2d(square),
+        )
 
     def test_active_piece_cells_no_rotation(self):
         shape = PieceShape2D("test", [(0, 0), (1, 0)], color_id=1)
@@ -27,13 +35,10 @@ class TestPieces2D(unittest.TestCase):
         self.assertEqual(cells, {(5, 10), (6, 10)})
 
     def test_active_piece_cells_with_rotation(self):
-        # Shape: two blocks horizontally
         shape = PieceShape2D("test", [(0, 0), (1, 0)], color_id=1)
-        # Place pivot at (5, 10), rotate 90° CW -> blocks stacked vertically
         piece = ActivePiece2D(shape=shape, pos=(5, 10), rotation=1)
         cells = set(piece.cells())
-        # (0,0) -> (0,0), (1,0) -> (0,-1) after rotation, so absolute: (5,10) and (5,9)
-        self.assertEqual(cells, {(5, 10), (5, 9)})
+        self.assertEqual(cells, {(5, 10), (5, 11)})
 
     def test_debug_2d_set_contains_large_shape_categories(self):
         shapes = get_debug_rectangles_2d(board_dims=(10, 20))

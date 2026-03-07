@@ -6,6 +6,8 @@ This repository documentation is unified into exactly three sections.
 
 - `docs/PROJECT_STRUCTURE.md`
 - `docs/FEATURE_MAP.md`
+- `docs/CONFIGURATION_REFERENCE.md`
+- `docs/USER_SETTINGS_REFERENCE.md`
 - `docs/CHANGELOG.md`
 - `docs/RELEASE_INSTALLERS.md`
 

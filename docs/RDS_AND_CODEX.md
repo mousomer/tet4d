@@ -20,6 +20,7 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 - `docs/policies/POLICY_STRING_SANITATION.md`
 - `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`
 - `docs/policies/POLICY_FORMATTING.md`
+- `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`
 - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
 - `config/project/policy/pack.json`
 - `config/project/policy/manifests/project_policy.json`
@@ -52,6 +53,8 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 7. Update docs in the same change when behavior/governance changes:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md`
+   - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
+   - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
 8. Keep contract files synchronized and valid:
    - `config/project/policy/manifests/canonical_maintenance.json`
@@ -76,6 +79,7 @@ For governance/contract changes, additionally run:
 
 ```bash
 python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/generate_configuration_reference.py --check
 python3 tools/governance/check_risk_gates.py
 ./scripts/check_policy_compliance.sh
 ./scripts/check_git_sanitation.sh

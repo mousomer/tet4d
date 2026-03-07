@@ -1,9 +1,18 @@
 {
   "version": 1,
   "speed_curve": {
-    "2d": {"base_ms": 1000, "min_ms": 80},
-    "3d": {"base_ms": 1350, "min_ms": 110},
-    "4d_plus": {"base_ms": 1700, "min_ms": 140}
+    "2d": {
+      "base_ms": 1000,
+      "min_ms": 80
+    },
+    "3d": {
+      "base_ms": 1350,
+      "min_ms": 110
+    },
+    "4d_plus": {
+      "base_ms": 1700,
+      "min_ms": 140
+    }
   },
   "challenge_prefill": {
     "2d_fill_ratio": 0.42,
@@ -32,6 +41,12 @@
     "combined": {
       "min": 0.2,
       "max": 1.0
+    },
+    "kick_factors": {
+      "off": 1.0,
+      "light": 0.97,
+      "standard": 0.93,
+      "forgiving": 0.88
     }
   },
   "clear_scoring": {
@@ -48,7 +63,77 @@
     }
   },
   "grid_modes": {
-    "cycle": ["off", "edge", "full", "helper"],
+    "cycle": [
+      "off",
+      "edge",
+      "full",
+      "helper"
+    ],
     "fallback": "full"
+  },
+  "rotation_kicks": {
+    "default_level": "off",
+    "level_order": [
+      "off",
+      "light",
+      "standard",
+      "forgiving"
+    ],
+    "level_candidates": {
+      "off": 0,
+      "light": 4,
+      "standard": 8,
+      "forgiving": 12
+    },
+    "candidate_offsets": [
+      [
+        1,
+        0
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        -2,
+        0
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        -2
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        -1,
+        -1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        -1,
+        1
+      ]
+    ]
   }
 }

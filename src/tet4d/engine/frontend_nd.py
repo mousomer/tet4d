@@ -35,6 +35,7 @@ from .runtime.menu_config import (
     setup_fields_for_dimension,
     ui_copy_section,
 )
+from .runtime.runtime_config import kick_level_names
 from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
 from .runtime.menu_settings_state import load_menu_settings, save_menu_settings
 from .gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
@@ -65,6 +66,7 @@ _RANDOM_MODE_CHOICES = (
     RNG_MODE_TRUE_RANDOM,
 )
 _RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
+_KICK_LEVEL_NAMES = kick_level_names()
 _DEFAULT_MODE_4D = default_settings_payload()["settings"]["4d"]
 _SETUP_MENU_COPY = ui_copy_section("setup_menu")
 
@@ -94,6 +96,7 @@ class GameSettingsND:
     topology_mode: int = _DEFAULT_MODE_4D["topology_mode"]
     topology_advanced: int = _DEFAULT_MODE_4D["topology_advanced"]
     topology_profile_index: int = _DEFAULT_MODE_4D["topology_profile_index"]
+    kick_level_index: int = _DEFAULT_MODE_4D["kick_level_index"]
     bot_mode_index: int = _DEFAULT_MODE_4D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_4D["bot_algorithm_index"]
     bot_profile_index: int = _DEFAULT_MODE_4D["bot_profile_index"]
@@ -133,6 +136,11 @@ def _random_mode_index_to_id(index: int) -> str:
 def _random_mode_label(index: int) -> str:
     safe_index = max(0, min(len(_RANDOM_MODE_LABELS) - 1, int(index)))
     return _RANDOM_MODE_LABELS[safe_index]
+
+
+def _kick_level_name(index: int) -> str:
+    safe_index = max(0, min(len(_KICK_LEVEL_NAMES) - 1, int(index)))
+    return _KICK_LEVEL_NAMES[safe_index]
 
 
 def piece_set_4d_label(piece_set_4d: str) -> str:
@@ -397,6 +405,7 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
         piece_set_id=piece_set_id,
+        kick_level=_kick_level_name(settings.kick_level_index),
         rng_mode=_random_mode_index_to_id(settings.random_mode_index),
         rng_seed=max(0, int(settings.game_seed)),
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,

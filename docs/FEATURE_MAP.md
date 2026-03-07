@@ -10,6 +10,8 @@ User-facing feature map for the shipped `tet4d` experience.
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
+  - Gameplay: random type, topology advanced, and advanced gameplay controls
+    including kick permissiveness, auto speed-up, and lines-per-level.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/engine/frontend_nd.py`) to reduce drift.
@@ -116,6 +118,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - Score multiplier depends on assistance level:
   - bot mode,
   - grid mode,
+  - kick permissiveness level,
   - speed level.
 - Easier assistance yields lower score multiplier.
 - Multiplier and bot status are visible in side panels.
@@ -153,6 +156,8 @@ User-facing feature map for the shipped `tet4d` experience.
 - `config/audio/sfx.json`
 - `config/project/io_paths.json`
 - `config/project/constants.json`
+- `docs/CONFIGURATION_REFERENCE.md`
+- `docs/USER_SETTINGS_REFERENCE.md`
 - `config/project/policy/manifests/secret_scan.json`
 - User state persisted in:
   - `state/menu_settings.json`
@@ -177,6 +182,8 @@ User-facing feature map for the shipped `tet4d` experience.
   - `config/project/policy/manifests/canonical_maintenance.json`
 - Contract validator:
   - `tools/governance/validate_project_contracts.py`
+- Config reference generator/check:
+  - `tools/governance/generate_configuration_reference.py`
 - Secret scanner:
   - `tools/governance/scan_secrets.py`
 - CI runs this validator through:

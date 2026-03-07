@@ -8,6 +8,11 @@ from tet4d.engine.tutorial.schema import parse_tutorial_payload
 def _base_payload() -> dict[str, object]:
     return {
         "schema_version": 1,
+        "board_profiles": {
+            "2d": {"width": 10, "height": 20},
+            "3d": {"x": 6, "y": 18, "z": 6},
+            "4d": {"x": 10, "y": 20, "z": 6, "w": 6},
+        },
         "lessons": [
             {
                 "lesson_id": "lesson_2d",
@@ -52,6 +57,9 @@ class TutorialSchemaTests(unittest.TestCase):
     def test_parse_valid_payload(self) -> None:
         parsed = parse_tutorial_payload(_base_payload())
         self.assertEqual(parsed.schema_version, 1)
+        self.assertEqual(parsed.board_profiles.dims_2d, (10, 20))
+        self.assertEqual(parsed.board_profiles.dims_3d, (6, 18, 6))
+        self.assertEqual(parsed.board_profiles.dims_4d, (10, 20, 6, 6))
         self.assertEqual(len(parsed.lessons), 1)
         lesson = parsed.lessons[0]
         self.assertEqual(lesson.lesson_id, "lesson_2d")
@@ -64,6 +72,13 @@ class TutorialSchemaTests(unittest.TestCase):
         self.assertEqual(lesson.steps[0].setup.overlay_start_percent, 50)
         self.assertEqual(lesson.steps[0].setup.overlay_target_percent, 10)
         self.assertEqual(lesson.steps[0].complete_when.event_count_required, 1)
+        self.assertEqual(lesson.steps[0].complete_when.event_span_min_ms, 0)
+
+    def test_missing_board_profiles_raises(self) -> None:
+        payload = _base_payload()
+        payload.pop("board_profiles")
+        with self.assertRaises(RuntimeError):
+            parse_tutorial_payload(payload)
 
     def test_duplicate_lesson_id_raises(self) -> None:
         payload = _base_payload()
@@ -106,6 +121,13 @@ class TutorialSchemaTests(unittest.TestCase):
         payload = _base_payload()
         step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
         step["complete_when"]["event_count_required"] = 0  # type: ignore[index]
+        with self.assertRaises(RuntimeError):
+            parse_tutorial_payload(payload)
+
+    def test_event_span_min_ms_validation(self) -> None:
+        payload = _base_payload()
+        step = payload["lessons"][0]["steps"][0]  # type: ignore[index]
+        step["complete_when"]["event_span_min_ms"] = -1  # type: ignore[index]
         with self.assertRaises(RuntimeError):
             parse_tutorial_payload(payload)
 

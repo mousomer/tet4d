@@ -1,5 +1,22 @@
 {
   "schema_version": 1,
+  "board_profiles": {
+    "2d": {
+      "width": 10,
+      "height": 20
+    },
+    "3d": {
+      "x": 6,
+      "y": 18,
+      "z": 6
+    },
+    "4d": {
+      "x": 10,
+      "y": 20,
+      "z": 6,
+      "w": 6
+    }
+  },
   "lessons": [
     {
       "lesson_id": "tutorial_2d_core",
@@ -1098,8 +1115,8 @@
         {
           "id": "mouse_orbit",
           "ui": {
-            "text": "Rotate the board with mouse drag.",
-            "hint": "Hold Right Mouse Button and drag once to rotate the board.",
+            "text": "Rotate the board with the mouse.",
+            "hint": "Hold Right Mouse Button and keep moving the mouse for at least 2 seconds.",
             "highlights": [
               "camera_axes"
             ],
@@ -1124,14 +1141,15 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 1
+            "event_count_required": 4,
+            "event_span_min_ms": 2000
           }
         },
         {
           "id": "mouse_zoom",
           "ui": {
             "text": "Zoom the board with the mouse wheel.",
-            "hint": "Scroll Mouse Wheel once to zoom the board.",
+            "hint": "Keep scrolling the Mouse Wheel for at least 2 seconds to zoom the board.",
             "highlights": [
               "camera_axes"
             ],
@@ -1156,7 +1174,8 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 1
+            "event_count_required": 4,
+            "event_span_min_ms": 2000
           }
         },
         {
@@ -2591,8 +2610,8 @@
         {
           "id": "mouse_orbit",
           "ui": {
-            "text": "Rotate the board with mouse drag.",
-            "hint": "Hold Right Mouse Button and drag once to rotate the board.",
+            "text": "Rotate the board with the mouse.",
+            "hint": "Hold Right Mouse Button and keep moving the mouse for at least 2 seconds.",
             "highlights": [
               "camera_axes"
             ],
@@ -2617,14 +2636,15 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 1
+            "event_count_required": 4,
+            "event_span_min_ms": 2000
           }
         },
         {
           "id": "mouse_zoom",
           "ui": {
             "text": "Zoom the board with the mouse wheel.",
-            "hint": "Scroll Mouse Wheel once to zoom the board.",
+            "hint": "Keep scrolling the Mouse Wheel for at least 2 seconds to zoom the board.",
             "highlights": [
               "camera_axes"
             ],
@@ -2649,7 +2669,8 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 1
+            "event_count_required": 4,
+            "event_span_min_ms": 2000
           }
         },
         {

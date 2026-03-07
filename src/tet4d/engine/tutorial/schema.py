@@ -17,6 +17,7 @@ _MAX_ID_LENGTH = 96
 _MAX_TITLE_LENGTH = 160
 _MAX_TEXT_LENGTH = 320
 _MAX_TOKEN_LENGTH = 128
+_MAX_EVENT_SPAN_MIN_MS = 60000
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,7 @@ class TutorialCompletionCondition:
     predicates: tuple[str, ...]
     logic: str
     event_count_required: int
+    event_span_min_ms: int
 
 
 @dataclass(frozen=True)
@@ -73,8 +75,25 @@ class TutorialLesson:
 
 
 @dataclass(frozen=True)
+class TutorialBoardProfiles:
+    dims_2d: tuple[int, int]
+    dims_3d: tuple[int, int, int]
+    dims_4d: tuple[int, int, int, int]
+
+    def dims_for_mode(self, mode: str) -> tuple[int, ...]:
+        if mode == "2d":
+            return self.dims_2d
+        if mode == "3d":
+            return self.dims_3d
+        if mode == "4d":
+            return self.dims_4d
+        raise RuntimeError(f"unknown tutorial mode for board profile: {mode}")
+
+
+@dataclass(frozen=True)
 class TutorialPayload:
     schema_version: int
+    board_profiles: TutorialBoardProfiles
     lessons: tuple[TutorialLesson, ...]
 
 
@@ -295,6 +314,12 @@ def _parse_complete_when(raw: object, *, path: str) -> TutorialCompletionConditi
         min_value=1,
         max_value=9,
     )
+    event_span_min_ms = require_int(
+        completion_obj.get("event_span_min_ms", 0),
+        path=f"{path}.event_span_min_ms",
+        min_value=0,
+        max_value=_MAX_EVENT_SPAN_MIN_MS,
+    )
     if logic not in _VALID_LOGIC:
         raise RuntimeError(f"{path}.logic must be one of: all, any")
     if len(events) > 9:
@@ -308,6 +333,7 @@ def _parse_complete_when(raw: object, *, path: str) -> TutorialCompletionConditi
         predicates=predicates,
         logic=logic,
         event_count_required=event_count_required,
+        event_span_min_ms=event_span_min_ms,
     )
 
 
@@ -371,12 +397,85 @@ def _parse_lesson(raw: object, *, path: str) -> TutorialLesson:
     )
 
 
+def _parse_board_profiles(raw: object, *, path: str) -> TutorialBoardProfiles:
+    profiles_obj = require_object(raw, path=path)
+    profile_2d = require_object(profiles_obj.get("2d"), path=f"{path}.2d")
+    profile_3d = require_object(profiles_obj.get("3d"), path=f"{path}.3d")
+    profile_4d = require_object(profiles_obj.get("4d"), path=f"{path}.4d")
+    return TutorialBoardProfiles(
+        dims_2d=(
+            require_int(
+                profile_2d.get("width"),
+                path=f"{path}.2d.width",
+                min_value=4,
+                max_value=40,
+            ),
+            require_int(
+                profile_2d.get("height"),
+                path=f"{path}.2d.height",
+                min_value=8,
+                max_value=80,
+            ),
+        ),
+        dims_3d=(
+            require_int(
+                profile_3d.get("x"),
+                path=f"{path}.3d.x",
+                min_value=4,
+                max_value=40,
+            ),
+            require_int(
+                profile_3d.get("y"),
+                path=f"{path}.3d.y",
+                min_value=8,
+                max_value=80,
+            ),
+            require_int(
+                profile_3d.get("z"),
+                path=f"{path}.3d.z",
+                min_value=4,
+                max_value=40,
+            ),
+        ),
+        dims_4d=(
+            require_int(
+                profile_4d.get("x"),
+                path=f"{path}.4d.x",
+                min_value=4,
+                max_value=60,
+            ),
+            require_int(
+                profile_4d.get("y"),
+                path=f"{path}.4d.y",
+                min_value=8,
+                max_value=100,
+            ),
+            require_int(
+                profile_4d.get("z"),
+                path=f"{path}.4d.z",
+                min_value=4,
+                max_value=40,
+            ),
+            require_int(
+                profile_4d.get("w"),
+                path=f"{path}.4d.w",
+                min_value=3,
+                max_value=20,
+            ),
+        ),
+    )
+
+
 def parse_tutorial_payload(payload: dict[str, Any]) -> TutorialPayload:
     root = require_object(payload, path="tutorial")
     schema_version = require_int(
         root.get("schema_version"),
         path="tutorial.schema_version",
         min_value=1,
+    )
+    board_profiles = _parse_board_profiles(
+        root.get("board_profiles"),
+        path="tutorial.board_profiles",
     )
     lessons_raw = require_list(root.get("lessons"), path="tutorial.lessons")
     if not lessons_raw:
@@ -392,7 +491,11 @@ def parse_tutorial_payload(payload: dict[str, Any]) -> TutorialPayload:
             )
         seen_lesson_ids.add(lesson.lesson_id)
         parsed_lessons.append(lesson)
-    return TutorialPayload(schema_version=schema_version, lessons=tuple(parsed_lessons))
+    return TutorialPayload(
+        schema_version=schema_version,
+        board_profiles=board_profiles,
+        lessons=tuple(parsed_lessons),
+    )
 
 
 def build_tutorial_lesson_map(payload: TutorialPayload) -> dict[str, TutorialLesson]:
@@ -438,6 +541,7 @@ def _step_payload(step: TutorialStep) -> dict[str, Any]:
             "predicates": list(step.complete_when.predicates),
             "logic": step.complete_when.logic,
             "event_count_required": int(step.complete_when.event_count_required),
+            "event_span_min_ms": int(step.complete_when.event_span_min_ms),
         },
     }
 
@@ -454,4 +558,24 @@ def tutorial_payload_to_dict(payload: TutorialPayload) -> dict[str, Any]:
                 "steps": steps,
             }
         )
-    return {"schema_version": payload.schema_version, "lessons": lessons}
+    return {
+        "schema_version": payload.schema_version,
+        "board_profiles": {
+            "2d": {
+                "width": int(payload.board_profiles.dims_2d[0]),
+                "height": int(payload.board_profiles.dims_2d[1]),
+            },
+            "3d": {
+                "x": int(payload.board_profiles.dims_3d[0]),
+                "y": int(payload.board_profiles.dims_3d[1]),
+                "z": int(payload.board_profiles.dims_3d[2]),
+            },
+            "4d": {
+                "x": int(payload.board_profiles.dims_4d[0]),
+                "y": int(payload.board_profiles.dims_4d[1]),
+                "z": int(payload.board_profiles.dims_4d[2]),
+                "w": int(payload.board_profiles.dims_4d[3]),
+            },
+        },
+        "lessons": lessons,
+    }

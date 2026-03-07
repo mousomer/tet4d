@@ -361,7 +361,7 @@
     {
       "stage_id": "mouse_orbit",
       "title": "Mouse Orbit",
-      "objective": "Orbit camera with mouse drag 4 times (or keyboard fallback).",
+      "objective": "Orbit camera with sustained mouse drag for at least 2 seconds.",
       "applies_to": [
         "3d",
         "4d"
@@ -373,7 +373,7 @@
     {
       "stage_id": "mouse_zoom",
       "title": "Mouse Zoom",
-      "objective": "Zoom camera with mouse wheel 4 ticks (or keyboard fallback).",
+      "objective": "Zoom camera with mouse wheel scrolling for at least 2 seconds.",
       "applies_to": [
         "3d",
         "4d"

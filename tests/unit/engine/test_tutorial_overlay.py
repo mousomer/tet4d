@@ -38,6 +38,29 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
             self.assertEqual(tutorial_overlay._overlay_action_label("restart"), "restart")
             self.assertEqual(tutorial_overlay._overlay_action_label("quit"), "main menu")
 
+    def test_mouse_overlay_prompt_uses_explicit_mouse_key_labels(self) -> None:
+        orbit_lines = tutorial_overlay._overlay_lines_running(
+            _base_payload(action_id="mouse_orbit"),
+            dimension=3,
+        )
+        self.assertTrue(
+            any(
+                "KEY: RMB + Move Mouse  rotate board" in text
+                for text, *_ in orbit_lines
+            )
+        )
+
+        zoom_lines = tutorial_overlay._overlay_lines_running(
+            _base_payload(action_id="mouse_zoom"),
+            dimension=3,
+        )
+        self.assertTrue(
+            any(
+                "KEY: Mouse Wheel Scroll  zoom board" in text
+                for text, *_ in zoom_lines
+            )
+        )
+
     def test_overlay_does_not_render_next_step_text(self) -> None:
         payload = _base_payload(action_id="move_x_neg")
         payload["next_step_text"] = "Should not render"

@@ -49,6 +49,8 @@ Cross-cutting requirements are defined in:
 24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
 26. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
+27. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
+28. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -77,6 +79,28 @@ Cross-cutting requirements are defined in:
 5. Gravity-axis wrapping remains disabled unless explicitly enabled in engine config.
 6. Deterministic replay rule still applies to `(seed, topology mode/profile, input stream)`.
 
+### 3.3 Shared piece-local transform rules
+
+1. Piece-local coordinates are occupied-cell offsets from a deterministic piece origin, not a fixed pivot cell.
+2. Piece rotation semantics are owned by `src/tet4d/engine/core/piece_transform.py` and reused by gameplay, AI, tutorials, and rotation animation.
+3. A 90-degree piece rotation must rotate occupied cells around the center of the active bounding box in the active rotation plane.
+4. Odd active-plane spans rotate around the center cell.
+5. Even active-plane spans rotate around the between-cells axis or plane.
+6. Deterministic local re-anchoring after rotation is allowed as long as gameplay, bot planning, tutorials, and animation all consume the same canonical transform math.
+
+### 3.4 Shared rotation-kick rules
+
+1. Rotation kicks are a post-rotation translation policy and must not change canonical piece-local rotation semantics in `src/tet4d/engine/core/piece_transform.py`.
+2. Kick candidate generation must have exactly one canonical engine-core owner; target module path is `src/tet4d/engine/core/rotation_kicks.py`.
+3. Kick candidate generation must stay pure and deterministic.
+4. Kick acceptance must reuse the same topology-aware legality path as normal placement and existence checks.
+5. Kick code must not duplicate bounded/wrap/invert edge math, topology crossing rules, or invert uniqueness handling from `src/tet4d/engine/gameplay/topology.py`.
+6. `TopologyPolicy` remains authoritative for whether a rotated or kicked candidate is legal after mapping.
+7. Gameplay and AI must consume the same canonical kick resolver; AI access should route through `src/tet4d/engine/api.py`.
+8. `kick_level` is a gameplay-affecting advanced setting that must be persisted with menu settings and recorded in replay and save metadata.
+9. Score multiplier may include a permissiveness factor keyed by configured `kick_level`, while leaderboard ordering remains score-first and is not bucketed by kick level.
+10. Deterministic replay rule applies to `(seed, topology selection, kick_level, input stream)`.
+
 ## 4. Shared UX Requirements
 
 1. Menu/setup screen before starting each mode.
@@ -92,11 +116,12 @@ Cross-cutting requirements are defined in:
 11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
-14. Tutorial overlay panel must be left-anchored, enlarged for readability, and clearly separate lesson, segment, task, and action hint lines.
+14. Tutorial overlay panel must be enlarged for readability, clearly separate lesson/segment/task/action hint lines, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
 15. Tutorial progression must expose explicit segment order:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
+19. Advanced gameplay settings expose kick permissiveness (`kick_level`).
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -191,6 +216,11 @@ Cross-cutting requirements are defined in:
 61. Shared font model/factory is source-controlled:
 62. `src/tet4d/ui/pygame/render/font_profiles.py`
 63. Per-mode font profile values (2D vs ND) must remain explicit and stable.
+64. Generated configuration reference is source-controlled at:
+65. `docs/CONFIGURATION_REFERENCE.md`
+66. Generated user-settings reference is source-controlled at:
+67. `docs/USER_SETTINGS_REFERENCE.md`
+68. Config changes under `config/` must regenerate those references via `tools/governance/generate_configuration_reference.py`.
 
 ## 7. Engineering Best Practices
 
@@ -230,6 +260,7 @@ Expected test categories:
 7. Rotation-animation state machine tests (start, progress, finish, interruption/retrigger).
 8. Topology seam regression tests: seam-straddling invert moves (including 4D `w` seam) must remain movable when target cells are otherwise valid.
 9. Visual topology parity tests: rotation overlays and active-piece cells must agree under wrap/invert topologies.
+10. Topology-aware kick acceptance tests must cover bounded, wrap, and invert modes without duplicating topology rules in kick code.
 
 ## 9. Acceptance Criteria (Family)
 
@@ -244,6 +275,7 @@ Expected test categories:
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
 11. Topology presets are selectable in setup menus and persisted in menu settings.
+12. `kick_level` is persisted, participates in score multiplier calculation, and leaves leaderboard ordering unchanged.
 
 ## 10. Backlog Status
 

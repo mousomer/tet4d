@@ -13,6 +13,7 @@ class GameConfigNDCoreView:
     topology_mode: str
     wrap_gravity_axis: bool
     piece_set_id: str | None
+    kick_level: str
     random_cell_count: int
     challenge_layers: int
     lock_piece_points: int

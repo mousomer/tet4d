@@ -357,6 +357,7 @@ def run_nd_loop(
                 grid_mode=str(getattr(loop.grid_mode, "value", "full")),
                 random_mode=str(loop.state.config.rng_mode),
                 topology_mode=str(loop.state.config.topology_mode),
+                kick_level=str(loop.state.config.kick_level),
                 exploration_mode=bool(loop.state.config.exploration_mode),
             )
         except Exception:

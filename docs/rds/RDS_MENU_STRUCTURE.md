@@ -68,55 +68,55 @@ This design is based on:
 
 ```text
 Main Menu
-├── Play
-│   ├── 2D
-│   ├── 3D
-│   ├── 4D
-│   ├── Tutorials
-│   └── Topology Lab
-├── Continue
-│   └── Launch last used mode setup
-├── Settings
-│   ├── Audio
-│   ├── Display
-│   ├── Gameplay
-│   └── Analytics
-├── Controls
-│   ├── General
-│   ├── 2D
-│   ├── 3D
-│   └── 4D
-├── Help
-│   ├── Controls (2D/3D/4D)
-│   ├── Scoring
-│   ├── Piece Sets
-│   ├── Bots
-│   └── Views / Camera
-├── Leaderboard
-│   └── Top session scores (2D/3D/4D)
-├── Bot
-│   ├── Dimension (2D/3D/4D)
-│   ├── Playbot mode
-│   ├── Bot algorithm
-│   ├── Bot profile
-│   ├── Bot speed
-│   └── Bot budget (ms)
-└── Quit
+|-- Play
+|   |-- 2D
+|   |-- 3D
+|   |-- 4D
+|   |-- Tutorials
+|   `-- Topology Lab
+|-- Continue
+|   `-- Launch last used mode setup
+|-- Settings
+|   |-- Audio
+|   |-- Display
+|   |-- Gameplay
+|   `-- Analytics
+|-- Controls
+|   |-- General
+|   |-- 2D
+|   |-- 3D
+|   `-- 4D
+|-- Help
+|   |-- Controls (2D/3D/4D)
+|   |-- Scoring
+|   |-- Piece Sets
+|   |-- Bots
+|   `-- Views / Camera
+|-- Leaderboard
+|   `-- Top session scores (2D/3D/4D)
+|-- Bot
+|   |-- Dimension (2D/3D/4D)
+|   |-- Playbot mode
+|   |-- Bot algorithm
+|   |-- Bot profile
+|   |-- Bot speed
+|   `-- Bot budget (ms)
+`-- Quit
 ```
 
 ### 4.2 In-game pause menu map
 
 ```text
 Pause Menu
-├── Resume
-├── Restart Run
-├── Settings (same shared sections as launcher)
-├── Controls
-├── Help
-├── Leaderboard
-├── Bot
-├── Back To Main Menu
-└── Quit
+|-- Resume
+|-- Restart Run
+|-- Settings (same shared sections as launcher)
+|-- Controls
+|-- Help
+|-- Leaderboard
+|-- Bot
+|-- Back To Main Menu
+`-- Quit
 ```
 
 ### 4.3 Setup screens (mode-specific)
@@ -129,8 +129,9 @@ Pause Menu
 6. Setup screens must expose topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
 8. Setup screens keep dimension-specific topology mode and topology profile selection.
-9. Shared settings hub owns `Random type` and `Topology advanced` for all modes.
+9. Shared settings hub owns `Random type`, `Topology advanced`, and kick permissiveness (`kick_level`) for all modes.
 10. `Topology profile` remains in setup and stays hidden unless shared `Topology advanced` is enabled.
+11. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 
 ## 5. Layout and Readability Requirements
 
@@ -165,7 +166,7 @@ Pause Menu
 
 ### 6.2 Consistency rules
 
-1. The same key should never mean “confirm” in one menu and “cancel” in another.
+1. The same key should never mean "confirm" in one menu and "cancel" in another.
 2. Linear lists should support optional loop navigation (last->first and first->last).
 3. Focus order must match visible order.
 
@@ -251,7 +252,7 @@ Add persistent settings file:
 1. Reset action must always open confirmation:
 2. `Confirm Reset`
 3. `Cancel`
-4. Reset should affect selected profile by default, with optional “Reset all profiles”.
+4. Reset should affect selected profile by default, with optional "Reset all profiles".
 
 ## 8. Error Handling Requirements
 

@@ -12,7 +12,7 @@ from .menu_structure_schema import (
     validate_structure_payload,
 )
 from .project_config import project_root_path
-from .runtime_config import playbot_budget_table_for_ndim
+from .runtime_config import kick_level_names, playbot_budget_table_for_ndim
 from .settings_schema import (
     MODE_KEYS,
     as_non_empty_string,
@@ -42,15 +42,33 @@ def _runtime_budget_for_mode(mode_key: str) -> int:
 
 @lru_cache(maxsize=1)
 def _defaults_payload() -> dict[str, Any]:
-    return validate_defaults_payload(
+    defaults = validate_defaults_payload(
         _read_json_payload(DEFAULTS_FILE),
         runtime_budget_for_mode_fn=_runtime_budget_for_mode,
     )
+    max_kick_index = max(0, len(kick_level_names()) - 1)
+    for mode_key in MODE_KEYS:
+        kick_index = int(defaults['settings'][mode_key].get('kick_level_index', 0))
+        if not (0 <= kick_index <= max_kick_index):
+            raise RuntimeError(
+                f"defaults.settings.{mode_key}.kick_level_index must be within configured kick levels"
+            )
+    return defaults
 
 
 @lru_cache(maxsize=1)
 def _structure_payload() -> dict[str, Any]:
-    return validate_structure_payload(_read_json_payload(STRUCTURE_FILE))
+    payload = validate_structure_payload(_read_json_payload(STRUCTURE_FILE))
+    kick_labels = payload['settings_option_labels'].get('game_kick_level')
+    if kick_labels is None:
+        raise RuntimeError(
+            'structure.settings_option_labels must include game_kick_level labels'
+        )
+    if len(kick_labels) != len(kick_level_names()):
+        raise RuntimeError(
+            'structure.settings_option_labels.game_kick_level must match configured kick levels'
+        )
+    return payload
 
 
 def default_settings_payload() -> dict[str, Any]:

@@ -86,6 +86,7 @@ from tet4d.engine.api import (
     clamp_toggle_index_runtime,
     compute_speed_level_runtime,
     gameplay_default_mode_shared_settings_runtime,
+    gameplay_kick_level_names_runtime,
     gameplay_mode_speedup_settings_runtime,
     get_display_settings_runtime,
     clamp_overlay_transparency_runtime,
@@ -108,6 +109,7 @@ from tet4d.engine.api import (
     tutorial_runtime_skip_runtime,
     tutorial_runtime_sync_and_advance_runtime,
     tutorial_runtime_overlay_payload_runtime,
+    tutorial_board_dims_runtime,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
@@ -136,8 +138,10 @@ _RANDOM_MODE_CHOICES = (
 _RANDOM_MODE_LABELS = tuple(settings_option_labels()["game_random_mode"])
 _DEFAULT_MODE_2D = default_settings_payload()["settings"]["2d"]
 _MODE_GAMEPLAY_DEFAULTS = gameplay_default_mode_shared_settings_runtime("2d")
+_KICK_LEVEL_NAMES = gameplay_kick_level_names_runtime()
 _AUTO_SPEEDUP_ENABLED_DEFAULT = int(_MODE_GAMEPLAY_DEFAULTS["auto_speedup_enabled"])
 _LINES_PER_LEVEL_DEFAULT = int(_MODE_GAMEPLAY_DEFAULTS["lines_per_level"])
+_KICK_LEVEL_INDEX_DEFAULT = int(_MODE_GAMEPLAY_DEFAULTS["kick_level_index"])
 _TUTORIAL_MOVE_DELAY_MS = project_constant_int(
     ("tutorial", "action_delay_ms", "movement"),
     170,
@@ -207,18 +211,10 @@ _TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
     min_value=0,
     max_value=10,
 )
-_TUTORIAL_MIN_WIDTH_2D = project_constant_int(
-    ("tutorial", "min_board_dims", "2d", "width"),
-    10,
-    min_value=4,
-    max_value=40,
-)
-_TUTORIAL_MIN_HEIGHT_2D = project_constant_int(
-    ("tutorial", "min_board_dims", "2d", "height"),
-    20,
-    min_value=8,
-    max_value=80,
-)
+def _tutorial_board_dims_2d() -> tuple[int, int]:
+    dims = tutorial_board_dims_runtime("2d")
+    return (int(dims[0]), int(dims[1]))
+
 _TUTORIAL_TARGET_FILL_RGBA = (255, 214, 80, 72)
 _TUTORIAL_TARGET_BORDER_RGBA = (255, 242, 168, 220)
 
@@ -236,6 +232,7 @@ class GameSettings:
     topology_mode: int = _DEFAULT_MODE_2D["topology_mode"]
     topology_advanced: int = _DEFAULT_MODE_2D["topology_advanced"]
     topology_profile_index: int = _DEFAULT_MODE_2D["topology_profile_index"]
+    kick_level_index: int = _DEFAULT_MODE_2D["kick_level_index"]
     bot_mode_index: int = _DEFAULT_MODE_2D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_2D["bot_algorithm_index"]
     bot_profile_index: int = _DEFAULT_MODE_2D["bot_profile_index"]
@@ -317,6 +314,11 @@ def _load_speedup_settings_for_mode(mode_key: str) -> tuple[int, int]:
     return gameplay_mode_speedup_settings_runtime(mode_key)
 
 
+def _kick_level_name(index: int) -> str:
+    safe_index = max(0, min(len(_KICK_LEVEL_NAMES) - 1, int(index)))
+    return _KICK_LEVEL_NAMES[safe_index]
+
+
 def _load_overlay_transparency_for_runtime_2d() -> float:
     display_payload = get_display_settings_runtime()
     overlay_transparency = default_overlay_transparency_runtime()
@@ -376,6 +378,7 @@ def _config_from_settings(settings: GameSettings) -> GameConfig:
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
         piece_set=piece_set_id,
+        kick_level=_kick_level_name(settings.kick_level_index),
         rng_mode=_random_mode_index_to_id(settings.random_mode_index),
         rng_seed=max(0, int(settings.game_seed)),
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
@@ -800,6 +803,10 @@ class LoopContext2D:
         overlay_transparency: float | None = None,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext2D":
+        _apply_tutorial_board_profile_2d(
+            cfg,
+            tutorial_lesson_id=tutorial_lesson_id,
+        )
         state = create_initial_state(cfg)
         tutorial_session = None
         if tutorial_lesson_id:
@@ -946,6 +953,7 @@ class LoopContext2D:
             bot_mode=self.bot.mode,
             grid_mode=self.grid_mode,
             speed_level=self.cfg.speed_level,
+            kick_level=self.cfg.kick_level,
         )
         mode_name = self.bot.mode.value
         self.state.analysis_actor_mode = (
@@ -1315,15 +1323,16 @@ def _run_game_frame_2d(
     pygame.display.flip()
 
 
-def _apply_tutorial_min_board_dims_2d(
+def _apply_tutorial_board_profile_2d(
     cfg: GameConfig,
     *,
     tutorial_lesson_id: str | None,
 ) -> None:
     if not tutorial_lesson_id:
         return
-    cfg.width = max(int(cfg.width), int(_TUTORIAL_MIN_WIDTH_2D))
-    cfg.height = max(int(cfg.height), int(_TUTORIAL_MIN_HEIGHT_2D))
+    width, height = _tutorial_board_dims_2d()
+    cfg.width = int(width)
+    cfg.height = int(height)
 
 
 def _record_leaderboard_session_2d(
@@ -1353,6 +1362,7 @@ def _record_leaderboard_session_2d(
             grid_mode=str(loop.grid_mode.value),
             random_mode=str(loop.cfg.rng_mode),
             topology_mode=str(loop.cfg.topology_mode),
+            kick_level=str(loop.cfg.kick_level),
             exploration_mode=bool(loop.cfg.exploration_mode),
         )
     except Exception:
@@ -1378,10 +1388,6 @@ def run_game_loop(
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
-    _apply_tutorial_min_board_dims_2d(
-        cfg,
-        tutorial_lesson_id=tutorial_lesson_id,
-    )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     session_start_ms = pygame.time.get_ticks()

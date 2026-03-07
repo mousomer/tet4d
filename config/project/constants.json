@@ -19,29 +19,12 @@
       "max": 90
     },
     "overlay_target_tolerance_percent": 2,
-    "min_board_dims": {
-      "2d": {
-        "width": 10,
-        "height": 20
-      },
-      "3d": {
-        "x": 8,
-        "y": 18,
-        "z": 8
-      },
-      "4d": {
-        "x": 10,
-        "y": 20,
-        "z": 8,
-        "w": 8
-      }
-    },
     "action_delay_ms": {
-      "movement": 280,
-      "rotation": 340,
-      "drop": 1000,
-      "soft_drop": 180,
-      "hard_drop": 900
+      "movement": 140,
+      "rotation": 170,
+      "drop": 500,
+      "soft_drop": 90,
+      "hard_drop": 450
     }
   },
   "rendering": {

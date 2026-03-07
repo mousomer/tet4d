@@ -5,7 +5,9 @@ from typing import Any
 from .settings_schema import (
     BOT_MODE_NAMES,
     GRID_MODE_NAMES,
+    as_non_empty_string,
     require_int,
+    require_list,
     require_number,
     require_object,
 )
@@ -98,7 +100,34 @@ def _validate_mode_factors(
     return factors
 
 
-def _validate_assist_scoring(raw_assist: object) -> dict[str, Any]:
+def _validate_kick_factors(
+    raw_factors: object,
+    *,
+    level_order: tuple[str, ...],
+) -> dict[str, float]:
+    factors = _validate_mode_factors(
+        raw_factors,
+        path="gameplay.assist_scoring.kick_factors",
+        mode_names=level_order,
+    )
+    if "off" in factors and float(factors["off"]) != 1.0:
+        raise RuntimeError("gameplay.assist_scoring.kick_factors.off must be 1.0")
+    previous: float | None = None
+    for level_name in level_order:
+        factor = float(factors[level_name])
+        if previous is not None and factor > previous:
+            raise RuntimeError(
+                "gameplay.assist_scoring.kick_factors must not increase with kick permissiveness"
+            )
+        previous = factor
+    return factors
+
+
+def _validate_assist_scoring(
+    raw_assist: object,
+    *,
+    kick_level_order: tuple[str, ...],
+) -> dict[str, Any]:
     assist = require_object(raw_assist, path="gameplay.assist_scoring")
     bot_factors = _validate_mode_factors(
         assist.get("bot_factors"),
@@ -148,8 +177,147 @@ def _validate_assist_scoring(raw_assist: object) -> dict[str, Any]:
     return {
         "bot_factors": bot_factors,
         "grid_factors": grid_factors,
+        "kick_factors": _validate_kick_factors(
+            assist.get("kick_factors"),
+            level_order=kick_level_order,
+        ),
         "speed": speed,
         "combined": {"min": combined_min, "max": combined_max},
+    }
+
+
+def _validate_rotation_kick_level_order(
+    kicks: dict[str, Any],
+) -> tuple[tuple[str, ...], set[str], str]:
+    raw_level_order = require_list(
+        kicks.get("level_order"),
+        path="gameplay.rotation_kicks.level_order",
+    )
+    if not raw_level_order:
+        raise RuntimeError("gameplay.rotation_kicks.level_order must not be empty")
+    level_order: list[str] = []
+    seen_levels: set[str] = set()
+    for idx, raw_level in enumerate(raw_level_order):
+        level_name = as_non_empty_string(
+            raw_level,
+            path=f"gameplay.rotation_kicks.level_order[{idx}]",
+        ).lower()
+        if level_name in seen_levels:
+            raise RuntimeError(
+                "gameplay.rotation_kicks.level_order must not contain duplicates"
+            )
+        seen_levels.add(level_name)
+        level_order.append(level_name)
+    default_level = as_non_empty_string(
+        kicks.get("default_level"),
+        path="gameplay.rotation_kicks.default_level",
+    ).lower()
+    if default_level not in seen_levels:
+        raise RuntimeError(
+            "gameplay.rotation_kicks.default_level must exist in level_order"
+        )
+    return tuple(level_order), seen_levels, default_level
+
+
+
+def _validate_rotation_kick_level_candidates(
+    raw_level_candidates: object,
+    *,
+    level_order: tuple[str, ...],
+    seen_levels: set[str],
+) -> dict[str, int]:
+    level_candidates_obj = require_object(
+        raw_level_candidates,
+        path="gameplay.rotation_kicks.level_candidates",
+    )
+    if set(level_candidates_obj) != seen_levels:
+        raise RuntimeError(
+            "gameplay.rotation_kicks.level_candidates keys must match level_order"
+        )
+    level_candidates: dict[str, int] = {}
+    previous = -1
+    for level_name in level_order:
+        count = require_int(
+            level_candidates_obj.get(level_name),
+            path=f"gameplay.rotation_kicks.level_candidates.{level_name}",
+            min_value=0,
+        )
+        if count < previous:
+            raise RuntimeError(
+                "gameplay.rotation_kicks.level_candidates must be non-decreasing across level_order"
+            )
+        level_candidates[level_name] = count
+        previous = count
+    return level_candidates
+
+
+
+def _validate_rotation_kick_candidate_offsets(
+    raw_candidate_offsets: object,
+) -> tuple[tuple[int, int], ...]:
+    candidate_offset_rows = require_list(
+        raw_candidate_offsets,
+        path="gameplay.rotation_kicks.candidate_offsets",
+    )
+    if not candidate_offset_rows:
+        raise RuntimeError(
+            "gameplay.rotation_kicks.candidate_offsets must not be empty"
+        )
+    candidate_offsets: list[tuple[int, int]] = []
+    seen_offsets: set[tuple[int, int]] = set()
+    for idx, raw_pair in enumerate(candidate_offset_rows):
+        pair = require_list(
+            raw_pair,
+            path=f"gameplay.rotation_kicks.candidate_offsets[{idx}]",
+        )
+        if len(pair) != 2:
+            raise RuntimeError(
+                f"gameplay.rotation_kicks.candidate_offsets[{idx}] must have length 2"
+            )
+        offset = (
+            require_int(
+                pair[0],
+                path=f"gameplay.rotation_kicks.candidate_offsets[{idx}][0]",
+            ),
+            require_int(
+                pair[1],
+                path=f"gameplay.rotation_kicks.candidate_offsets[{idx}][1]",
+            ),
+        )
+        if offset == (0, 0):
+            raise RuntimeError(
+                f"gameplay.rotation_kicks.candidate_offsets[{idx}] must not be [0, 0]"
+            )
+        if offset in seen_offsets:
+            raise RuntimeError(
+                f"gameplay.rotation_kicks.candidate_offsets[{idx}] duplicates an earlier offset"
+            )
+        seen_offsets.add(offset)
+        candidate_offsets.append(offset)
+    return tuple(candidate_offsets)
+
+
+
+def _validate_rotation_kicks(raw_rotation_kicks: object) -> dict[str, Any]:
+    kicks = require_object(raw_rotation_kicks, path="gameplay.rotation_kicks")
+    level_order, seen_levels, default_level = _validate_rotation_kick_level_order(kicks)
+    level_candidates = _validate_rotation_kick_level_candidates(
+        kicks.get("level_candidates"),
+        level_order=level_order,
+        seen_levels=seen_levels,
+    )
+    candidate_offsets = _validate_rotation_kick_candidate_offsets(
+        kicks.get("candidate_offsets")
+    )
+    if max(level_candidates.values()) > len(candidate_offsets):
+        raise RuntimeError(
+            "gameplay.rotation_kicks.level_candidates exceeds available candidate_offsets"
+        )
+    return {
+        "default_level": default_level,
+        "level_order": level_order,
+        "level_candidates": level_candidates,
+        "candidate_offsets": candidate_offsets,
     }
 
 
@@ -246,13 +414,18 @@ def _validate_clear_scoring(raw_clear_scoring: object) -> dict[str, Any]:
 
 def validate_gameplay_tuning_payload(payload: dict[str, Any]) -> dict[str, Any]:
     require_int(payload.get("version"), path="gameplay.version", min_value=1)
+    rotation_kicks = _validate_rotation_kicks(payload.get("rotation_kicks"))
     return {
         "version": payload["version"],
         "speed_curve": _validate_speed_curve(payload.get("speed_curve")),
         "challenge_prefill": _validate_challenge_prefill(
             payload.get("challenge_prefill")
         ),
-        "assist_scoring": _validate_assist_scoring(payload.get("assist_scoring")),
+        "assist_scoring": _validate_assist_scoring(
+            payload.get("assist_scoring"),
+            kick_level_order=rotation_kicks["level_order"],
+        ),
+        "rotation_kicks": rotation_kicks,
         "clear_scoring": _validate_clear_scoring(payload.get("clear_scoring")),
         "grid_modes": _validate_grid_modes(payload.get("grid_modes")),
     }

@@ -291,6 +291,98 @@ class TestGameND(unittest.TestCase):
         mapped = state.current_piece_cells_mapped(include_above=False)
         self.assertEqual(len(mapped), len(set(mapped)))
 
+    def test_wrap_topology_rotation_uses_topology_mapping_with_kicks(self):
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_WRAP_ALL,
+            kick_level="standard",
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "tri4_center_rotation",
+            ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+            color_id=8,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(-1, 8, 2, 3))
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertTrue(state.try_rotate(0, 3, 1))
+        self.assertEqual(state.current_piece.pos, (-1, 8, 2, 3))
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(len(mapped), len(set(mapped)))
+        self.assertIn((5, 8, 2, 3), mapped)
+
+    def test_invert_topology_rotation_uses_topology_mapping_with_kicks(self):
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4),
+            gravity_axis=1,
+            topology_mode=TOPOLOGY_INVERT_ALL,
+            kick_level="standard",
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "tri4_center_rotation",
+            ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+            color_id=8,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(-1, 8, 2, 3))
+
+        self.assertTrue(state._can_exist(state.current_piece))
+        self.assertTrue(state.try_rotate(0, 3, 1))
+        self.assertEqual(state.current_piece.pos, (-1, 8, 2, 3))
+        mapped = state.current_piece_cells_mapped(include_above=False)
+        self.assertEqual(len(mapped), len(set(mapped)))
+        self.assertIn((5, 8, 3, 0), mapped)
+
+    def test_4d_xw_rotation_succeeds_in_bounds_under_center_rotation(self):
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "tri4_center_rotation",
+            ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+            color_id=8,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(2, 2, 2, 2))
+
+        before_blocks = tuple(sorted(state.current_piece.rel_blocks))
+        self.assertTrue(state.try_rotate(0, 3, 1))
+        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+    def test_4d_xw_rotation_can_kick_at_w_edge(self):
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, kick_level="standard")
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "tri4_center_rotation",
+            ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+            color_id=8,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(2, 2, 2, 3))
+
+        before_pos = tuple(state.current_piece.pos)
+        self.assertTrue(state.try_rotate(0, 3, 1))
+        self.assertNotEqual(tuple(state.current_piece.pos), before_pos)
+
+    def test_4d_xw_rotation_fails_cleanly_at_w_edge(self):
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "tri4_center_rotation",
+            ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+            color_id=8,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(2, 2, 2, 3))
+
+        before_blocks = tuple(sorted(state.current_piece.rel_blocks))
+        self.assertFalse(state.try_rotate(0, 3, 1))
+        self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+
 
 if __name__ == "__main__":
     unittest.main()

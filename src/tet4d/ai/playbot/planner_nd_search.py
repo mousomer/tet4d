@@ -251,6 +251,7 @@ def _plan_best_nd_with_deadline(
     top_candidates: list[_CandidateND] = []
     top_k = planning_lookahead_top_k(ndim, profile, budget_ms=planning_budget_ms)
     candidate_cap = adaptive_candidate_cap(ndim, planning_budget_ms, dims=dims)
+    deadline_safety_s = adaptive_deadline_safety_ms() / 1000.0
 
     for settled in iter_settled_candidates(
         state,
@@ -262,7 +263,7 @@ def _plan_best_nd_with_deadline(
         lateral_axes=lateral_axes,
         column_levels=column_levels,
     ):
-        if candidate_count > 0 and time.perf_counter() >= deadline_s:
+        if candidate_count > 0 and time.perf_counter() >= deadline_s - deadline_safety_s:
             break
         if candidate_count >= candidate_cap:
             break

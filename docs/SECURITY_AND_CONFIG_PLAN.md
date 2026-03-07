@@ -30,8 +30,10 @@ Remediation flow:
 Implemented controls:
 1. canonical path defaults in `config/project/io_paths.json`,
 2. canonical runtime constants in `config/project/constants.json`,
-3. safe loader/resolver in `src/tet4d/engine/runtime/project_config.py`,
-4. path consumers updated to use safe `Path` resolution:
+3. generated configuration references in `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md`,
+4. config-reference generator/check in `tools/governance/generate_configuration_reference.py`,
+5. safe loader/resolver in `src/tet4d/engine/runtime/project_config.py`,
+6. path consumers updated to use safe `Path` resolution:
 5. `src/tet4d/ui/pygame/keybindings.py`,
 6. `src/tet4d/engine/runtime/menu_settings_state.py`,
 7. `src/tet4d/engine/runtime/runtime_config.py`,
@@ -56,5 +58,6 @@ Next batches:
 ## 5. Governance
 
 1. update `docs/BACKLOG.md` and relevant `docs/rds/*.md` for each policy/contract change,
-2. keep `config/project/policy/manifests/canonical_maintenance.json` aligned with these artifacts,
-3. run `scripts/ci_check.sh` before push and release.
+2. regenerate `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md` whenever source-controlled `config/` assets change or user-facing settings defaults move,
+3. keep `config/project/policy/manifests/canonical_maintenance.json` aligned with these artifacts,
+4. run `scripts/ci_check.sh` before push and release.

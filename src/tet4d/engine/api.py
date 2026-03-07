@@ -14,6 +14,17 @@ from .core.model import (
     GameState2DCoreView,
     GameStateNDCoreView,
 )
+from .core.piece_transform import (
+    block_axis_bounds,
+    canonicalize_blocks_2d,
+    canonicalize_blocks_nd,
+    enumerate_orientations_nd,
+    rotate_blocks_2d,
+    rotate_blocks_nd,
+    rotate_point_2d,
+    rotate_point_nd,
+    rotation_planes_nd,
+)
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
     current_piece_cells as core_current_piece_cells,
@@ -28,7 +39,6 @@ from .gameplay.pieces2d import (
     PIECE_SET_2D_DEBUG,
     ActivePiece2D,
     PieceShape2D,
-    rotate_point_2d,
 )
 from .gameplay.pieces_nd import (
     ActivePieceND,
@@ -37,7 +47,6 @@ from .gameplay.pieces_nd import (
     PIECE_SET_4D_DEBUG,
     PIECE_SET_4D_STANDARD,
     PieceShapeND,
-    rotate_point_nd,
 )
 from tet4d.ai.playbot.types import (
     BOT_MODE_OPTIONS,
@@ -174,15 +183,11 @@ def simulate_lock_board(
 def playbot_rotation_planes_nd(
     ndim: int, gravity_axis: int
 ) -> tuple[tuple[int, int], ...]:
-    from tet4d.ai.playbot.planner_nd_core import rotation_planes as _rotation_planes
-
-    return _rotation_planes(ndim, gravity_axis)
+    return rotation_planes_nd(ndim, gravity_axis)
 
 
 def playbot_canonical_blocks_nd(blocks: Any) -> tuple[tuple[int, ...], ...]:
-    from tet4d.ai.playbot.planner_nd_core import canonical_blocks as _canonical_blocks
-
-    return _canonical_blocks(blocks)
+    return canonicalize_blocks_nd(blocks)
 
 
 def playbot_enumerate_orientations_nd(
@@ -190,11 +195,8 @@ def playbot_enumerate_orientations_nd(
     ndim: int,
     gravity_axis: int,
 ) -> tuple[tuple[tuple[int, ...], ...], ...]:
-    from tet4d.ai.playbot.planner_nd_core import (
-        enumerate_orientations as _enumerate_orientations,
-    )
+    return enumerate_orientations_nd(start_blocks, ndim, gravity_axis)
 
-    return _enumerate_orientations(start_blocks, ndim, gravity_axis)
 
 
 def playbot_build_column_levels_nd(
@@ -556,6 +558,7 @@ def leaderboard_entry_would_enter_runtime(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
 ) -> tuple[bool, int]:
     from .runtime.leaderboard import (
@@ -574,6 +577,7 @@ def leaderboard_entry_would_enter_runtime(
         grid_mode=str(grid_mode),
         random_mode=str(random_mode),
         topology_mode=str(topology_mode),
+        kick_level=str(kick_level),
         exploration_mode=bool(exploration_mode),
     )
 
@@ -591,6 +595,7 @@ def record_leaderboard_entry_runtime(
     grid_mode: str,
     random_mode: str,
     topology_mode: str,
+    kick_level: str,
     exploration_mode: bool,
     player_name: str = "Player",
 ) -> dict[str, object]:
@@ -610,6 +615,7 @@ def record_leaderboard_entry_runtime(
         grid_mode=str(grid_mode),
         random_mode=str(random_mode),
         topology_mode=str(topology_mode),
+        kick_level=str(kick_level),
         exploration_mode=bool(exploration_mode),
         player_name=str(player_name),
     )
@@ -790,10 +796,19 @@ def gameplay_mode_speedup_settings_runtime(mode_key: str) -> tuple[int, int]:
     return _call_runtime_menu_settings_state("mode_speedup_settings", mode_key)
 
 
+def gameplay_kick_level_names_runtime() -> tuple[str, ...]:
+    return _call_runtime_runtime_config("kick_level_names")
+
+
+def gameplay_default_kick_level_runtime() -> str:
+    return _call_runtime_runtime_config("kick_default_level")
+
+
 def gameplay_save_shared_settings_runtime(
     *,
     random_mode_index: int,
     topology_advanced: int,
+    kick_level_index: int,
     auto_speedup_enabled: int,
     lines_per_level: int,
 ) -> tuple[bool, str]:
@@ -801,6 +816,7 @@ def gameplay_save_shared_settings_runtime(
         "save_shared_gameplay_settings",
         random_mode_index=int(random_mode_index),
         topology_advanced=int(topology_advanced),
+        kick_level_index=int(kick_level_index),
         auto_speedup_enabled=int(auto_speedup_enabled),
         lines_per_level=int(lines_per_level),
     )
@@ -1228,6 +1244,11 @@ def tutorial_lesson_ids_runtime() -> tuple[str, ...]:
     return tuple(str(lesson_id) for lesson_id in lesson_ids)
 
 
+def tutorial_board_dims_runtime(mode: str) -> tuple[int, ...]:
+    dims = _call_tutorial_content("tutorial_board_dims_for_mode", mode)
+    return tuple(int(value) for value in dims)
+
+
 def tutorial_progress_snapshot_runtime() -> dict[str, Any]:
     payload = _call_tutorial_runtime("tutorial_progress_snapshot")
     return dict(payload)
@@ -1540,20 +1561,25 @@ def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
         assist_bot_factor,
         assist_combined_bounds,
         assist_grid_factor,
+        assist_kick_factor,
         assist_speed_formula,
+        kick_default_level,
     )
 
     bot_mode = kwargs.get("bot_mode") if kwargs else args[0]
     grid_mode = kwargs.get("grid_mode") if kwargs else args[1]
     speed_level = kwargs.get("speed_level") if kwargs else args[2]
+    kick_level = kwargs.get("kick_level") if kwargs else (args[3] if len(args) > 3 else None)
     bot_name = getattr(bot_mode, "value", bot_mode)
     grid_name = getattr(grid_mode, "value", grid_mode)
+    kick_name = kick_default_level() if kick_level is None else getattr(kick_level, "value", kick_level)
     base, per_level, min_level, max_level = assist_speed_formula()
     level = max(min_level, min(max_level, int(speed_level)))
     speed_factor = min(1.0, base + (per_level * level))
     combined = (
         assist_bot_factor(str(bot_name))
         * assist_grid_factor(str(grid_name))
+        * assist_kick_factor(str(kick_name))
         * speed_factor
     )
     min_factor, max_factor = assist_combined_bounds()
@@ -1745,6 +1771,10 @@ __all__ = [
     "new_game_state_2d",
     "new_game_state_nd",
     "new_rng",
+    "block_axis_bounds",
+    "canonicalize_blocks_2d",
+    "canonicalize_blocks_nd",
+    "enumerate_orientations_nd",
     "open_display_runtime",
     "PIECE_SET_2D_CLASSIC",
     "PIECE_SET_2D_DEBUG",
@@ -1777,9 +1807,12 @@ __all__ = [
     "run_dry_run_nd",
     "run_front3d_ui",
     "run_front4d_ui",
+    "rotate_blocks_2d",
+    "rotate_blocks_nd",
     "rotate_point_2d",
     "rotate_point_nd",
     "simulate_lock_board",
+    "rotation_planes_nd",
     "state_view_2d",
     "state_view_nd",
     "step",

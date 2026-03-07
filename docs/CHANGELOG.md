@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-03-07
+
+### Release
+1. Published `tet4d 0.4` desktop installers for:
+   - Windows x64: `.msi`
+   - macOS x64: `.dmg`
+   - macOS arm64: `.dmg`
+   - Linux amd64: `.deb`
+
+### Added
+1. Config-documented tutorial board profiles with exact tutorial-only dimensions for `2D`, `3D`, and `4D`.
+2. Mouse orbit and mouse zoom tutorial stages in both `3D` and `4D`, including gated completion rules and explicit on-screen prompts.
+3. Generated configuration reference governance:
+   - full config inventory in `docs/CONFIGURATION_REFERENCE.md`
+   - user-facing settings view in `docs/USER_SETTINGS_REFERENCE.md`
+   - drift checks wired into `scripts/verify.sh`
+4. Canonical rotation-kick system with configurable permissiveness and score-factor integration.
+
+### Changed
+1. Piece rotation semantics now use center-of-piece rotation from one canonical engine transform owner.
+2. Tutorial board sizing is now independent of player gameplay settings and defined by tutorial config instead of runtime min-clamping.
+3. Tutorial mouse-operation stages now require sustained interaction instead of single quick gestures.
+4. Tutorial overlay placement in `3D` and `4D` is constrained to a safe side lane so it no longer obstructs the game board.
+5. Release packaging now builds native installer artifacts instead of archive bundles:
+   - Windows: `.msi`
+   - macOS: `.dmg`
+   - Linux: `.deb`
+6. Release workflow now builds all installer targets on GitHub and publishes tagged assets to the GitHub release.
+
+### Fixed
+1. Stability Watch workflow bootstrap now installs the project correctly for the `src/` layout.
+2. Windows packaging now fails fast with a clear message when the host lacks `.NET 6+` for WiX.
+3. Accidentally tracked configuration-reference scratch fixtures were removed from the repository and ignored going forward.
+4. Canonical tech-debt tracking and `CURRENT_STATE.md` were resynchronized before the `0.4` release.
 ## 2026-02-21
 
 ### Added

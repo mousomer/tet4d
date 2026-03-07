@@ -79,6 +79,7 @@
         "- Bonus: +80 (2), +240 (3), +600 (4), +900 (5+).",
         "- Board clear bonus: +1500.",
         "- Final points = round((base + bonuses) * score multiplier).",
+        "- Multiplier reflects bot/grid/kick settings and speed level.",
         "- Leaderboard ranks by score, then lines, then speed."
       ],
       "full_lines": [
@@ -97,7 +98,7 @@
         "",
         "## Final score per lock",
         "- Awarded = round((base + bonuses) * score_multiplier)",
-        "- Multiplier reflects bot mode, grid mode, and speed level.",
+        "- Multiplier reflects bot mode, grid mode, kick permissiveness, and speed level.",
         "",
         "## Leaderboard",
         "- Leaderboard stores finished runs from 2D/3D/4D.",
@@ -107,11 +108,16 @@
     "settings_profiles": {
       "compact_lines": [
         "",
-        "## Settings categories"
+        "## Settings categories",
+        "- Gameplay settings include random mode, topology advanced, and kick permissiveness."
       ],
       "full_lines": [
         "",
-        "## Settings categories"
+        "## Settings categories",
+        "- Audio: volume, SFX, mute.",
+        "- Display: fullscreen, window size, overlay transparency.",
+        "- Gameplay: random mode, topology advanced, kick permissiveness, auto speed-up, lines per level.",
+        "- Analytics: score-analyzer logging and persistence behavior."
       ]
     },
     "camera_and_view": {

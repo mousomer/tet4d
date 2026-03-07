@@ -17,7 +17,12 @@ from ..runtime.score_analyzer import (
     new_analysis_session_id,
     record_score_analysis_event,
 )
+from ..runtime.runtime_config import (
+    normalize_kick_level_name,
+    rotation_kick_candidate_offsets,
+)
 from .scoring_bonus import plane_cell_count_for_dims, score_with_clear_bonuses
+from ..core.rotation_kicks import kick_candidate_vectors, resolve_kicked_piece_2d
 from ..core.rules.locking import apply_lock_and_score
 from ..core.rules.state_queries import can_piece_exist_2d
 from ..core.step.reducer import step_2d as core_step_2d
@@ -39,6 +44,7 @@ class GameConfig:
     wrap_gravity_axis: bool = False
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None
     piece_set: str = PIECE_SET_2D_CLASSIC
+    kick_level: str = "off"
     random_cell_count: int = 4
     challenge_layers: int = 0
     lock_piece_points: int = 5
@@ -55,6 +61,7 @@ class GameConfig:
         if not (1 <= self.speed_level <= 10):
             raise ValueError("speed_level must be in [1, 10]")
         self.piece_set = normalize_piece_set_2d(self.piece_set)
+        self.kick_level = normalize_kick_level_name(self.kick_level)
         if not (3 <= self.random_cell_count <= 8):
             raise ValueError("random_cell_count must be in [3, 8]")
         if self.challenge_layers < 0:
@@ -88,6 +95,7 @@ class GameConfig:
             topology_mode=self.topology_mode,
             wrap_gravity_axis=self.wrap_gravity_axis,
             piece_set=self.piece_set,
+            kick_level=self.kick_level,
             random_cell_count=self.random_cell_count,
             challenge_layers=self.challenge_layers,
             lock_piece_points=self.lock_piece_points,
@@ -305,8 +313,25 @@ class GameState:
         if self.current_piece is None:
             return
         rotated = self.current_piece.rotated(delta_steps)
-        if self._can_exist(rotated):
-            self.current_piece = rotated
+        plane_offsets = rotation_kick_candidate_offsets(self.config.kick_level)
+        if not plane_offsets:
+            if self._can_exist(rotated):
+                self.current_piece = rotated
+            return
+        resolved = resolve_kicked_piece_2d(
+            rotated,
+            candidate_vectors=kick_candidate_vectors(
+                ndim=2,
+                axis_a=0,
+                axis_b=self.config.gravity_axis,
+                gravity_axis=self.config.gravity_axis,
+                plane_offsets=plane_offsets,
+            ),
+            move_piece=lambda piece, dx, dy: piece.moved(dx, dy),
+            can_place=self._can_exist,
+        )
+        if resolved is not None:
+            self.current_piece = resolved
 
     def hard_drop(self):
         if self.current_piece is None:

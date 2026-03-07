@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-04
+Last updated: 2026-03-06
 Branch: `codex/tutorials1`
-Worktree expectation at handoff: clean (latest CI-compliance hardening batch committed + pushed)
+Worktree expectation at handoff: dirty (kick-system integration batch in progress)
 
 ## Purpose
 
@@ -23,12 +23,12 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 1.28` (`low`, below current baseline 15.06)
+- `tech_debt.score = 2.29` (`low`, below current baseline 15.06)
   - weighted components (current dominant drivers):
-    - backlog priority pressure: `0.0` (no active P1/P2/P3 debt items in canonical debt source)
+    - backlog priority pressure: `0.0` (no active `P1/P2/P3` debt items remain in canonical debt source)
     - backlog bug pressure: `0.0`
-    - delivery-size pressure: `0.92` (172 Python files, 32,243 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
-    - code-balance pressure: `0.36` (gate-eligible leaf avg 0.97, runtime leaf watch)
+    - delivery-size pressure: `1.22` (225 Python files, 46,998 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
+    - code-balance pressure: `1.07` (gate-eligible leaf avg 0.91; `engine/runtime` remains the main watch folder)
     - menu/keybinding retention pressures: `0.0` (goals met)
   - active gate policy (`non_regression_baseline`, `score_epsilon=0.03`):
     - commits must not exceed baseline score + epsilon
@@ -146,12 +146,13 @@ Completed:
     - per-stage redo is available (`F7`) without resetting full lesson
     - target-drop stages now require clear predicates (no event-only pass)
     - tutorial overlay key-action rows are unified and bolded for clarity
+    - 3D/4D tutorial overlay now defaults and stays clamped in the side-panel lane, outside the active board/layers area
     - tutorial step setup now enforces visible active-piece placement on every stage
     - tutorial movement/rotation/drop pacing is rate-limited by config-backed delays
     - runtime safety guard auto-redoes stage if no legal tutorial action remains
     - tutorial runtime re-enforces visible active-piece placement; impossible
       placement triggers tutorial restart
-    - tutorial sessions clamp board dims to configured 2D/3D/4D minimums at launch
+    - tutorial sessions use exact 2D/3D/4D board profiles from `config/tutorial/lessons.json`, independent of user mode settings
     - full-clear bonus stages now use deterministic single-piece board-clear presets:
       - 2D: `O` + `2d_almost_full_clear_o`
       - 3D: `O3` + `3d_almost_full_clear_o3`
@@ -329,6 +330,41 @@ Completed locally:
   - `cli/front2d.py`
   - `src/tet4d/ui/pygame/front3d_game.py`
   - `src/tet4d/ui/pygame/front4d_game.py`
+- Extracted canonical piece-local transform math into
+  `src/tet4d/engine/core/piece_transform.py` and repointed gameplay, AI,
+  tutorial setup, rotation animation, and `engine.api` consumers.
+- Follow-up semantic swap completed in the same canonical owner:
+  - piece-local block rotation now uses active-bounding-box center rotation
+    instead of origin/pivot-style turns
+  - odd active-plane spans rotate around the center cell
+  - even active-plane spans rotate around the between-cells axis/plane with
+    deterministic local re-anchoring
+- Implemented the topology-aware kick system end-to-end:
+  - canonical kick candidate generation and first-fit resolution now live in
+    `src/tet4d/engine/core/rotation_kicks.py`
+  - gameplay 2D/ND rotation paths consume the shared resolver while keeping
+    topology-aware legality checks authoritative for acceptance
+  - `kick_level` is now a shared advanced-gameplay setting, replay/leaderboard
+    metadata field, and score-multiplier factor while leaderboard ordering
+    remains unchanged
+- Stabilized post-kick verification gates:
+  - ND planning now applies deadline-safety margin during candidate enumeration
+  - `tools/benchmarks/bench_playbot.py` now warms caches, disables cyclic GC
+    during timed samples, and computes p95 with nearest-rank percentile to
+    avoid small-sample interpolation spikes
+  - `config/playbot/policy.json` deadline safety increased to `3.0 ms`
+- Removed duplicate transform owners from gameplay and playbot modules by
+  making them consume the shared core owner for:
+  - local rotation
+  - normalization
+  - block-bounds/canonicalization
+  - ND orientation enumeration
+- Added focused transform/rotation-semantic coverage in:
+  - `tests/unit/engine/test_piece_transform.py`
+- `.venv/bin/ruff check src/tet4d/engine/core/piece_transform.py src/tet4d/engine/gameplay/pieces2d.py src/tet4d/engine/gameplay/pieces_nd.py src/tet4d/engine/gameplay/rotation_anim.py src/tet4d/engine/tutorial/setup_apply.py src/tet4d/engine/api.py src/tet4d/ai/playbot/planner_2d.py src/tet4d/ai/playbot/planner_nd_core.py src/tet4d/ai/playbot/controller.py tests/unit/engine/test_piece_transform.py` passed.
+- `.venv/bin/pytest -q tests/unit/engine/test_piece_transform.py tests/unit/engine/test_peces_2d.py tests/unit/engine/test_pieces_nd.py tests/unit/engine/test_rotation_anim.py tests/unit/engine/test_playbot.py tests/unit/engine/test_tutorial_setup_apply.py` passed (`68 passed`, local `.pytest_cache` permission warning unchanged).
+- `CODEX_MODE=1 ./scripts/verify.sh` passed.
+- `CODEX_MODE=1 ./scripts/ci_check.sh` passed.
 
 Verification (current working tree):
 - `.venv/bin/pytest -q tests/unit/engine/test_tutorial_runtime.py tests/unit/engine/test_tutorial_overlay.py` passed (`15 passed`).
@@ -669,7 +705,7 @@ Core constraints:
 
 1. Deterministic progression on explicit conditions only.
 2. Lesson content/flow is data; code only implements generic engine/conditions.
-3. Per-step input gating (`allow`/`deny`) enforced at input dispatch.
+3. Per-step input gating (`allow`/`deny`) enforced at input dispatch, including tutorial mouse orbit/zoom handlers.
 4. Always skippable/restartable; never softlock users.
 5. Mode-agnostic core: mode differences live in content packs.
 
@@ -756,9 +792,24 @@ Recommended approach:
    - `CODEX_MODE=1 ./scripts/verify.sh`
    - `./scripts/ci_check.sh`
 
+## Current checkpoint
+
+- Tutorial intra-step action delays are now halved in `config/project/constants.json` with matching fallback defaults in `src/tet4d/engine/runtime/project_config.py`.
+- Source-controlled config documentation is now generated into `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md`, and verified by `tools/governance/generate_configuration_reference.py --check` through `./scripts/verify.sh`.
+- `docs/USER_SETTINGS_REFERENCE.md` is now bucketed by canonical user-facing categories and resolves dynamic piece-set/topology-profile defaults to labels; generation fails on unbucketed persisted settings.
+- Keybinding profile summaries in `docs/USER_SETTINGS_REFERENCE.md` now use canonical keybinding category docs + scope ordering and fail on unknown profile groups/scopes.
+- GitHub scheduled stability-watch bootstrap is now aligned with CI/local verification: `.github/workflows/stability-watch.yml` installs the repo with `pip install -e .[dev]` in both jobs so scheduled dry-run and policy-analysis steps can import the `src/` layout package reliably.
+- Tutorial mouse stages now use explicit mouse KEY labels and require sustained mouse orbit/zoom interaction across at least 2 seconds before completion.
+- Release packaging is now aligned to the `0.4` installer goal:
+  - `pyproject.toml` version advanced to `0.4`
+  - local packaging scripts now target `.msi` (Windows), `.dmg` (macOS x64/arm64), and `.deb` (Linux AMD64)
+  - `.github/workflows/release-packaging.yml` now publishes tag-triggered installers to the matching GitHub release
+
 ## Current Source of Truth References
 
 - Architecture contract: `docs/ARCHITECTURE_CONTRACT.md`
 - RDS + Codex workflow: `docs/RDS_AND_CODEX.md`
 - Backlog: `docs/BACKLOG.md`
+- Configuration reference: `docs/CONFIGURATION_REFERENCE.md`
+- User settings reference: `docs/USER_SETTINGS_REFERENCE.md`
 - Canonical maintenance contract: `config/project/policy/manifests/canonical_maintenance.json`

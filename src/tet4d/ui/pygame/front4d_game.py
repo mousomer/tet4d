@@ -42,6 +42,7 @@ from tet4d.ui.pygame.runtime_ui.tutorial_loop_common import (
     tutorial_allowed_actions_blocked,
     tutorial_action_delay_ms,
     tutorial_overlay_start_from_setup,
+    tutorial_gated_mouse_orbit_event,
     tutorial_required_action_blocked,
     tutorial_sync,
 )
@@ -220,32 +221,20 @@ _TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
     min_value=0,
     max_value=10,
 )
-_TUTORIAL_MIN_DIMS_4D = (
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "x"),
-        10,
-        min_value=4,
-        max_value=60,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "y"),
-        20,
-        min_value=8,
-        max_value=100,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "z"),
-        8,
-        min_value=4,
-        max_value=40,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "w"),
-        8,
-        min_value=3,
-        max_value=20,
-    ),
-)
+def _tutorial_board_dims_4d() -> tuple[int, int, int, int]:
+    dims = engine_api.tutorial_board_dims_runtime("4d")
+    return (int(dims[0]), int(dims[1]), int(dims[2]), int(dims[3]))
+
+
+def _apply_tutorial_board_profile_4d(
+    cfg: GameConfigND,
+    *,
+    tutorial_lesson_id: str | None,
+) -> None:
+    if not tutorial_lesson_id:
+        return
+    cfg.dims = _tutorial_board_dims_4d()
+
 
 
 def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) -> bool:
@@ -395,6 +384,10 @@ class LoopContext4D(PanelDragMixin):
         bot_speed_level: int = 7,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext4D":
+        _apply_tutorial_board_profile_4d(
+            cfg,
+            tutorial_lesson_id=tutorial_lesson_id,
+        )
         state = create_initial_state(cfg)
         overlay_default = default_overlay_transparency()
         tutorial_session = None
@@ -546,25 +539,28 @@ class LoopContext4D(PanelDragMixin):
         if wheel != 0:
             if not self._tutorial_action_allowed("mouse_zoom"):
                 return
+            current_zoom = float(self.view.zoom_scale)
+            next_zoom = (
+                min(2.6, current_zoom * (1.08**wheel))
+                if wheel > 0
+                else max(0.45, current_zoom / (1.08 ** abs(wheel)))
+            )
+            if next_zoom == current_zoom:
+                return
             self.view.stop_animation()
-            if wheel > 0:
-                self.view.zoom_scale = min(2.6, self.view.zoom_scale * (1.08**wheel))
-            else:
-                self.view.zoom_scale = max(
-                    0.45, self.view.zoom_scale / (1.08 ** abs(wheel))
-                )
+            self.view.zoom_scale = next_zoom
             self._tutorial_observe_action("mouse_zoom")
             return
 
-        yaw_deg, pitch_deg, changed = apply_mouse_orbit_event(
+        yaw_deg, pitch_deg, changed = tutorial_gated_mouse_orbit_event(
             event,
-            self.mouse_orbit,
+            mouse_orbit=self.mouse_orbit,
             yaw_deg=self.view.yaw_deg,
             pitch_deg=self.view.pitch_deg,
+            action_allowed=self._tutorial_action_allowed("mouse_orbit"),
+            apply_mouse_orbit_event=apply_mouse_orbit_event,
         )
         if not changed:
-            return
-        if not self._tutorial_action_allowed("mouse_orbit"):
             return
         self.view.stop_animation()
         self.view.yaw_deg = yaw_deg
@@ -588,14 +584,6 @@ def run_game_loop(
     bot_budget_ms: int = 36,
     tutorial_lesson_id: str | None = None,
 ) -> bool:
-    if tutorial_lesson_id:
-        dims = cfg.dims
-        cfg.dims = (
-            max(int(dims[0]), int(_TUTORIAL_MIN_DIMS_4D[0])),
-            max(int(dims[1]), int(_TUTORIAL_MIN_DIMS_4D[1])),
-            max(int(dims[2]), int(_TUTORIAL_MIN_DIMS_4D[2])),
-            max(int(dims[3]), int(_TUTORIAL_MIN_DIMS_4D[3])),
-        )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
@@ -739,10 +727,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
-
-
-
-
-
-

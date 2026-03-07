@@ -7,12 +7,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, List, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 from .pieces2d import get_standard_tetrominoes
 from .pieces_shared import scaled_span
 from ..core.model import Coord
-
+from ..core.piece_transform import normalize_blocks_nd, rotate_blocks_nd
+from ..core.piece_transform import rotate_point_nd  # noqa: F401
 
 RelCoordND = Coord
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
@@ -104,45 +105,6 @@ def normalize_piece_set_for_dimension(ndim: int, piece_set_id: str | None) -> st
     raise ValueError(f"unsupported piece set for {ndim}D: {piece_set_id}")
 
 
-def rotate_point_nd(
-    point: Sequence[int],
-    axis_a: int,
-    axis_b: int,
-    steps_cw: int,
-) -> RelCoordND:
-    """
-    Rotate an integer lattice point by 90-degree steps in the (axis_a, axis_b) plane.
-    Positive steps are clockwise using the same convention as 2D rotation.
-    """
-    ndim = len(point)
-    _validate_ndim(ndim)
-    if axis_a == axis_b:
-        raise ValueError("rotation axes must be different")
-    if not (0 <= axis_a < ndim and 0 <= axis_b < ndim):
-        raise ValueError("rotation axis out of bounds")
-
-    steps = steps_cw % 4
-    coords = list(point)
-    a_val = coords[axis_a]
-    b_val = coords[axis_b]
-
-    if steps == 0:
-        return tuple(coords)
-    if steps == 1:
-        coords[axis_a] = b_val
-        coords[axis_b] = -a_val
-        return tuple(coords)
-    if steps == 2:
-        coords[axis_a] = -a_val
-        coords[axis_b] = -b_val
-        return tuple(coords)
-
-    # steps == 3
-    coords[axis_a] = -b_val
-    coords[axis_b] = a_val
-    return tuple(coords)
-
-
 def lift_2d_blocks_to_nd(
     blocks_2d: Sequence[Tuple[int, int]],
     ndim: int,
@@ -173,25 +135,6 @@ def _embed_blocks_to_nd(
             raise ValueError("all blocks must have equal dimension")
     tail = (0,) * (ndim - src_dim)
     return tuple(tuple(block) + tail for block in blocks)
-
-
-def _normalize_blocks_nd(blocks: Iterable[RelCoordND]) -> Tuple[RelCoordND, ...]:
-    coords = list(blocks)
-    if not coords:
-        raise ValueError("piece must contain at least one block")
-    ndim = len(coords[0])
-    if ndim < 2:
-        raise ValueError("piece dimension must be >= 2")
-    for coord in coords:
-        if len(coord) != ndim:
-            raise ValueError("inconsistent coordinate dimensions")
-    mins = [min(coord[axis] for coord in coords) for axis in range(ndim)]
-    maxs = [max(coord[axis] for coord in coords) for axis in range(ndim)]
-    centers = [(mins[axis] + maxs[axis]) // 2 for axis in range(ndim)]
-    normalized = sorted(
-        tuple(coord[axis] - centers[axis] for axis in range(ndim)) for coord in coords
-    )
-    return tuple(normalized)
 
 
 def _axis_neighbors_nd(coord: RelCoordND) -> tuple[RelCoordND, ...]:
@@ -284,7 +227,7 @@ def _random_connected_blocks_nd(
         while len(cells) < cell_count:
             next_coord[0] += 1
             cells.add(tuple(next_coord))
-    return _normalize_blocks_nd(cells)
+    return normalize_blocks_nd(cells)
 
 
 def _random_piece_bag_nd(
@@ -337,7 +280,7 @@ def _rect_blocks_nd(size_by_axis: Sequence[int]) -> Tuple[RelCoordND, ...]:
             for value in range(axis_size):
                 expanded.append((*base, value))
         coords = expanded
-    return _normalize_blocks_nd(coords)
+    return normalize_blocks_nd(coords)
 
 
 
@@ -639,8 +582,8 @@ def get_standard_pieces_nd(
 class ActivePieceND:
     """
     A falling ND piece.
-    Position is the pivot coordinate in board space.
-    rel_blocks contains oriented offsets from that pivot.
+    Position is the piece origin in board space.
+    rel_blocks contains oriented local occupied-cell offsets from that origin.
     """
 
     shape: PieceShapeND
@@ -677,9 +620,10 @@ class ActivePieceND:
         return ActivePieceND(shape=self.shape, pos=new_pos, rel_blocks=self.rel_blocks)
 
     def rotated(self, axis_a: int, axis_b: int, delta_steps: int) -> "ActivePieceND":
-        new_blocks = tuple(
-            rotate_point_nd(block, axis_a=axis_a, axis_b=axis_b, steps_cw=delta_steps)
-            for block in self.rel_blocks
+        new_blocks = rotate_blocks_nd(
+            self.rel_blocks,
+            axis_a=axis_a,
+            axis_b=axis_b,
+            steps_cw=delta_steps,
         )
         return ActivePieceND(shape=self.shape, pos=self.pos, rel_blocks=new_blocks)
-

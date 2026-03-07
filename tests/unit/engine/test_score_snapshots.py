@@ -16,7 +16,7 @@ from tet4d.engine.api import (
 from tet4d.engine.ui_logic.view_modes import GridMode
 
 combined_score_multiplier = runtime_assist_combined_score_multiplier
-
+_SNAPSHOT_BUDGET_MS = 120
 
 _EXPECTED_2D_SNAPSHOTS: dict[BotMode, tuple[tuple[int, int, int], ...]] = {
     BotMode.OFF: (
@@ -62,7 +62,11 @@ class TestScoreSnapshots(unittest.TestCase):
             speed_level=cfg.speed_level,
         )
 
-        controller = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0)
+        controller = PlayBotController(
+            mode=BotMode.AUTO,
+            action_interval_ms=0,
+            planning_budget_ms=_SNAPSHOT_BUDGET_MS,
+        )
         snapshots: list[tuple[int, int, int]] = []
 
         for idx in range(60):
@@ -74,7 +78,7 @@ class TestScoreSnapshots(unittest.TestCase):
                 plan = plan_best_2d_move(
                     state,
                     profile=BotPlannerProfile.BALANCED,
-                    budget_ms=40,
+                    budget_ms=_SNAPSHOT_BUDGET_MS,
                 )
                 self.assertIsNotNone(plan)
                 state.current_piece = plan.final_piece

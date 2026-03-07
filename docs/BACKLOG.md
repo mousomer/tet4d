@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-05  
+Updated: 2026-03-06  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 ## 1. Priority Verification Rules
@@ -35,8 +35,7 @@ Historical anchor references:
 
 ### Active Open Items (Canonical)
 
-1. [BKL-P1-010] Tutorial overlay panel can obstruct gameplay board visibility in some window/layout combinations.
-2. [BKL-P1-011] Tutorial zoom_in / zoom_out stages should require four actions and stay config-defined via lesson payloads.
+1. None currently.
 
 ### Historical ID Lineage Policy
 
@@ -392,6 +391,67 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-05): center-of-piece rotation semantic swap.
+
+- Switched canonical block rotation semantics in `src/tet4d/engine/core/piece_transform.py` from origin-style pivot turns to active-bounding-box center rotation for occupied cells.
+- Odd active-plane spans rotate around the center cell; even spans rotate around the between-cells axis/plane with deterministic local re-anchoring.
+- Rewired remaining gameplay state holders to use block-rotation helpers instead of pointwise pivot-style math:
+  - `src/tet4d/engine/gameplay/pieces2d.py`
+  - `src/tet4d/engine/gameplay/pieces_nd.py`
+- Updated transform, piece, and RDS coverage to describe the new local occupied-cell semantics and even-span rotation behavior.
+
+Current sub-batch (2026-03-06): topology-aware kick-system implementation.
+
+- Implemented canonical rotation-kick candidate generation and first-fit resolution in `src/tet4d/engine/core/rotation_kicks.py`.
+- Rewired 2D/ND gameplay rotation to consume the shared resolver while keeping topology-aware legality checks authoritative for acceptance.
+- Added shared `kick_level` runtime/config support:
+  - persisted in shared advanced gameplay settings
+  - exposed in launcher advanced gameplay menu
+  - folded into assist score multiplier
+  - serialized in replay and leaderboard metadata while leaving leaderboard ordering unchanged
+- Added topology-aware regression coverage for bounded, wrap, and invert rotation acceptance paths in 2D/4D plus replay, leaderboard, settings, and assist-scoring coverage.
+- Synced help/RDS/project-structure/current-state docs to the implemented kick system.
+- Stabilized the playbot benchmark gate after the kick batch by:
+  - applying deadline-safety margin during ND candidate enumeration
+  - warming benchmark runs and disabling cyclic GC during timed samples
+  - switching benchmark p95 to nearest-rank percentile for 40-sample stability
+- Fixed GitHub scheduled stability-watch bootstrap drift by switching `.github/workflows/stability-watch.yml` to editable install (`pip install -e .[dev]`) for both the dry-run matrix and policy-analysis jobs so the `src/` layout imports resolve consistently with `ci.yml` and local `verify.sh`.
+
+Current sub-batch (2026-03-06): release-installer hardening for `0.4`.
+
+- Advanced the project version in `pyproject.toml` from `0.3` to `0.4`.
+- Reworked local packaging outputs from archive bundles to installer artifacts:
+  - Windows: `.msi`
+  - macOS x64/arm64: `.dmg`
+  - Linux AMD64: `.deb`
+- Updated `.github/workflows/release-packaging.yml` to build the full installer matrix and publish tag-triggered assets to the matching GitHub release.
+- Synced packaging/release docs and RDS for the installer-based release contract:
+  - `README.md`
+  - `docs/RELEASE_INSTALLERS.md`
+  - `docs/RELEASE_CHECKLIST.md`
+  - `docs/rds/RDS_PACKAGING.md`
+  - `docs/CHANGELOG.md`
+
+Current sub-batch (2026-03-05): canonical piece-transform extraction (no behavior change).
+
+- Added pure canonical piece-local transform owner:
+  - `src/tet4d/engine/core/piece_transform.py`
+- Moved current local rotation, normalization, block-bounds, canonicalization,
+  and ND orientation-enumeration math into engine core without changing
+  current integer/floor-centered semantics.
+- Rewired gameplay, AI, tutorial setup, rotation animation, and `engine.api`
+  wrappers to consume the shared core owner instead of duplicating transform math:
+  - `src/tet4d/engine/gameplay/pieces2d.py`
+  - `src/tet4d/engine/gameplay/pieces_nd.py`
+  - `src/tet4d/engine/gameplay/rotation_anim.py`
+  - `src/tet4d/engine/tutorial/setup_apply.py`
+  - `src/tet4d/ai/playbot/planner_2d.py`
+  - `src/tet4d/ai/playbot/planner_nd_core.py`
+  - `src/tet4d/ai/playbot/controller.py`
+  - `src/tet4d/engine/api.py`
+- Added transform-equivalence regression coverage:
+  - `tests/unit/engine/test_piece_transform.py`
+
 Current sub-batch (2026-03-05): menu navigation key policy split (`Esc` vs `Q`).
 
 - Menu navigation normalization no longer aliases `Q` to `Esc`; tiny-profile
@@ -425,8 +485,7 @@ Current sub-batch (2026-03-05): tutorial overlay readability/placement polish.
   - `menu -> pause MENU`
   - `restart -> restart`
   - `quit/menu_back -> main menu`
-- Moved default 3D/4D tutorial overlay placement to the left side of the board
-  column (clamped to viewport bounds).
+- Moved default 3D/4D tutorial overlay placement into the right-side panel lane, outside the active board/layers area, and clamp tutorial-panel dragging to that safe lane.
 - Added/updated overlay tests for:
   - key prompt parsing and short-label behavior
   - 2D/3D/4D render-bounds/layout stability after keychip rendering
@@ -786,8 +845,8 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
     (prevents dead-end game-over states during gated steps)
   - active tutorial piece visibility is re-enforced at runtime; if visibility
     cannot be restored deterministically, tutorial session restarts
-  - tutorial mode clamps board dimensions to configured minimums (2D/3D/4D)
-    before session start to avoid invalid spawn/setup states
+  - tutorial mode uses exact board profiles from `config/tutorial/lessons.json` (2D/3D/4D)
+    before session start so tutorial geometry is independent of normal mode settings
   - full-clear bonus stages now use deterministic one-piece board-clear presets:
     - `2d_almost_full_clear_o` + starter `O`
     - `3d_almost_full_clear_o3` + starter `O3`
@@ -827,8 +886,8 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
   - movement and rotation stages now require 4 successful actions per direction
   - full-board clean stages now require `board_cleared` predicate in addition to
     clear-event predicates
-  - tutorial overlay panel moved to enlarged left-side layout with clearer
-    `Segment` + `Task` + `KEY/ACTION` formatting
+  - tutorial overlay panel moved to enlarged ND side-panel docking with clearer
+    Segment + Task + KEY/ACTION formatting
   - files:
     - `config/tutorial/lessons.json`
     - `config/project/constants.json`
@@ -1376,6 +1435,8 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
   - `mouse_zoom` now completes only on `mouse_zoom` event.
 - Removed `event_count_required` from mouse stages (default single successful mouse action).
 - Tightened mouse-stage input gating to remove keyboard camera actions from allowed lists.
+- Strengthened tutorial pointer gating in 3D/4D loops so blocked RMB drags cannot arm stale orbit state and mouse-wheel completion requires a real zoom delta.
+- Extended 3D/4D mouse tutorial stages so the overlay uses explicit mouse KEY labels and completion now requires sustained orbit/zoom input across at least 2 seconds instead of a single mouse event.
 - Updated content/runtime tests to enforce:
   - no keyboard fallback completion
   - mouse-stage progression requires mouse events
@@ -1387,6 +1448,76 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
   - `pytest -q tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
   - `ruff check config/tutorial/lessons.json tests/unit/engine/test_tutorial_content.py tests/unit/engine/test_tutorial_runtime.py` passed.
 
+Current sub-batch (2026-03-06): tutorial action-delay reduction + generated configuration reference governance.
+
+- Halved tutorial intra-step action delays in canonical project constants and runtime fallback values:
+  - `movement`: `140 ms`
+  - `rotation`: `170 ms`
+  - `drop`: `500 ms`
+  - `soft_drop`: `90 ms`
+  - `hard_drop`: `450 ms`
+  - files:
+    - `config/project/constants.json`
+    - `src/tet4d/engine/runtime/project_config.py`
+- Added generated configuration references:
+  - full config inventory: `docs/CONFIGURATION_REFERENCE.md`
+  - compact user-facing settings view: `docs/USER_SETTINGS_REFERENCE.md`
+  - generator/check: `tools/governance/generate_configuration_reference.py`
+  - tests: `tests/unit/governance/test_generate_configuration_reference.py`
+- Refined the compact user settings reference to:
+  - group settings into stable buckets (`Profiles`, `Display`, `Audio`, `Analytics`, per-mode `Gameplay Setup` / `Gameplay` / `Bot Options`)
+  - resolve dynamic option labels for piece-set and topology-profile indices
+  - fail generation when a persisted setting is not assigned to a bucket
+- Extended the compact keybinding profile summary to use canonical category docs and scope ordering (`General / System`, `Gameplay`, `Camera / View`) with hard failures for unknown profile groups/scopes.
+- Added policy/contract enforcement so config changes must keep the reference synchronized:
+  - `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`
+  - `config/project/policy/manifests/policy_registry.json`
+  - `config/project/policy/manifests/project_policy.json`
+  - `config/project/policy/manifests/canonical_maintenance.json`
+  - `scripts/verify.sh`
+- Docs updated to link the generated reference and document the governance rule:
+  - `README.md`
+  - `docs/README.md`
+  - `docs/RDS_AND_CODEX.md`
+  - `docs/FEATURE_MAP.md`
+  - `docs/PROJECT_STRUCTURE.md`
+  - `docs/SECURITY_AND_CONFIG_PLAN.md`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+- Verification:
+  - `tools/governance/generate_configuration_reference.py --check` will now fail on drift.
+  - Full verification pending after this batch.
+
+Current sub-batch (2026-03-07): tutorial overlay safe-lane closure for ND tutorials.
+
+- Closed active debt item `BKL-P1-010` after moving the default 3D/4D tutorial overlay dock into the side-panel lane and clamping tutorial-panel dragging to stay outside the active board/layers area.
+- Added layout regression coverage that asserts the default 3D/4D tutorial overlay rect does not intersect the gameplay area and stays inside the safe lane even under extreme drag offsets:
+  - `tests/unit/engine/test_tutorial_overlay_layout.py`
+- Files:
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+  - `config/project/backlog_debt.json`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `CURRENT_STATE.md`
+- Verification:
+  - `pytest -q tests/unit/engine/test_tutorial_overlay_layout.py tests/unit/engine/test_tutorial_overlay.py` passed.
+  - `ruff check src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py tests/unit/engine/test_tutorial_overlay_layout.py` passed.
+Current sub-batch (2026-03-07): tutorial zoom-stage debt closure.
+
+- Closed stale active debt item `BKL-P1-011`; zoom tutorial stages are already config-defined in `config/tutorial/lessons.json` and enforced by tutorial content/runtime tests.
+- Canonical debt source now has no active open debt items.
+- Files:
+  - `config/project/backlog_debt.json`
+  - `docs/BACKLOG.md`
+  - `CURRENT_STATE.md`
+  - `docs/CONFIGURATION_REFERENCE.md`
+- Verification:
+  - `python scripts/arch_metrics.py` passed after debt-source update.
+Current sub-batch (2026-03-07): Windows packaging host-tooling guard.
+
+- Hardened `packaging/scripts/build_windows.ps1` so local MSI builds:
+  - fail fast with a clear message when only `.NET SDK < 6` is available,
+  - avoid user-profile global WiX installation by using a repo-local `--tool-path`,
+  - default `DOTNET_CLI_HOME` into the packaging build directory for cleaner local execution.
+- Updated `docs/RELEASE_INSTALLERS.md` to document the Windows local-build prerequisite and local tool-path behavior.
 ## 6. Source Inputs
 
 1. `config/project/backlog_debt.json`

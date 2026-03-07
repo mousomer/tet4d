@@ -48,6 +48,35 @@ class TestAssistScoring(unittest.TestCase):
         )
         self.assertGreater(fast, slow)
 
+    def test_more_permissive_kicks_reduce_multiplier(self) -> None:
+        off = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.OFF,
+            speed_level=10,
+            kick_level="off",
+        )
+        light = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.OFF,
+            speed_level=10,
+            kick_level="light",
+        )
+        standard = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.OFF,
+            speed_level=10,
+            kick_level="standard",
+        )
+        forgiving = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.OFF,
+            speed_level=10,
+            kick_level="forgiving",
+        )
+        self.assertGreater(off, light)
+        self.assertGreater(light, standard)
+        self.assertGreater(standard, forgiving)
+
 
 if __name__ == "__main__":
     unittest.main()

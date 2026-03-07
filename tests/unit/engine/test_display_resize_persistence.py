@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import pygame
 
 from cli import front2d
+from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.ui.pygame.launch import launcher_nd_runner
 from tet4d.ui.pygame.runtime_ui import app_runtime, loop_runner_nd
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
@@ -176,6 +177,20 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
 
         self.assertFalse(result)
         capture_event_mock.assert_called_once()
+
+    def test_loop_context_2d_uses_exact_tutorial_board_profile(self) -> None:
+        cfg = GameConfig(width=4, height=8, gravity_axis=1, speed_level=1)
+        loop = front2d.LoopContext2D.create(
+            cfg,
+            tutorial_lesson_id="tutorial_2d_core",
+        )
+
+        self.assertEqual((loop.cfg.width, loop.cfg.height), (10, 20))
+        self.assertEqual(
+            (loop.state.config.width, loop.state.config.height),
+            (10, 20),
+        )
+        self.assertEqual(loop.state.board.dims, (10, 20))
 
     def test_front2d_menu_restart_triggers_loop_restart(self) -> None:
         loop = SimpleNamespace(on_restart=Mock())

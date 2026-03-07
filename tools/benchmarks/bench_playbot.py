@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
+from math import ceil
 import random
 import statistics
 import sys
@@ -37,6 +39,7 @@ from tet4d.engine.api import (
 DIMS_2D = (10, 20)
 DIMS_3D = (6, 18, 6)
 DIMS_4D = (6, 18, 6, 4)
+BENCH_WARMUP_RUNS = 6
 
 
 def _resolve_repo_local_path(raw: Path) -> Path:
@@ -53,6 +56,14 @@ class BenchSample:
     candidates: int
 
 
+def _nearest_rank_percentile(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    rank = max(1, ceil(float(percentile) * len(ordered)))
+    return ordered[min(len(ordered) - 1, rank - 1)]
+
+
 def _bench_2d(
     profile: BotPlannerProfile,
     budget_ms: int,
@@ -60,28 +71,51 @@ def _bench_2d(
     *,
     algorithm: BotPlannerAlgorithm,
 ) -> list[BenchSample]:
-    samples: list[BenchSample] = []
-    for i in range(runs):
-        cfg = GameConfig(
-            width=DIMS_2D[0],
-            height=DIMS_2D[1],
-            piece_set=PIECE_SET_2D_CLASSIC,
-            speed_level=3,
-        )
-        state = GameState(
-            config=cfg,
-            board=BoardND((cfg.width, cfg.height)),
-            rng=random.Random(100 + i),
-        )
-        t0 = time.perf_counter()
-        plan = plan_best_2d_move(
-            state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
-        )
-        elapsed = (time.perf_counter() - t0) * 1000.0
-        if plan is None:
-            continue
-        samples.append(BenchSample(ms=elapsed, candidates=plan.stats.candidate_count))
-    return samples
+    cfg = GameConfig(
+        width=DIMS_2D[0],
+        height=DIMS_2D[1],
+        piece_set=PIECE_SET_2D_CLASSIC,
+        speed_level=3,
+    )
+    gc.collect()
+    gc_was_enabled = gc.isenabled()
+    if gc_was_enabled:
+        gc.disable()
+    try:
+        for i in range(BENCH_WARMUP_RUNS):
+            warm_state = GameState(
+                config=cfg,
+                board=BoardND((cfg.width, cfg.height)),
+                rng=random.Random(100 + i),
+            )
+            plan_best_2d_move(
+                warm_state,
+                profile=profile,
+                budget_ms=budget_ms,
+                algorithm=algorithm,
+            )
+
+        samples: list[BenchSample] = []
+        for i in range(runs):
+            state = GameState(
+                config=cfg,
+                board=BoardND((cfg.width, cfg.height)),
+                rng=random.Random(100 + i),
+            )
+            t0 = time.perf_counter()
+            plan = plan_best_2d_move(
+                state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+            )
+            elapsed = (time.perf_counter() - t0) * 1000.0
+            if plan is None:
+                continue
+            samples.append(
+                BenchSample(ms=elapsed, candidates=plan.stats.candidate_count)
+            )
+        return samples
+    finally:
+        if gc_was_enabled:
+            gc.enable()
 
 
 def _bench_nd(
@@ -107,20 +141,43 @@ def _bench_nd(
             speed_level=3,
         )
 
-    samples: list[BenchSample] = []
-    for i in range(runs):
-        state = GameStateND(
-            config=cfg, board=BoardND(cfg.dims), rng=random.Random(200 + i)
-        )
-        t0 = time.perf_counter()
-        plan = plan_best_nd_move(
-            state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
-        )
-        elapsed = (time.perf_counter() - t0) * 1000.0
-        if plan is None:
-            continue
-        samples.append(BenchSample(ms=elapsed, candidates=plan.stats.candidate_count))
-    return samples
+    gc.collect()
+    gc_was_enabled = gc.isenabled()
+    if gc_was_enabled:
+        gc.disable()
+    try:
+        for i in range(BENCH_WARMUP_RUNS):
+            warm_state = GameStateND(
+                config=cfg,
+                board=BoardND(cfg.dims),
+                rng=random.Random(200 + i),
+            )
+            plan_best_nd_move(
+                warm_state,
+                profile=profile,
+                budget_ms=budget_ms,
+                algorithm=algorithm,
+            )
+
+        samples: list[BenchSample] = []
+        for i in range(runs):
+            state = GameStateND(
+                config=cfg, board=BoardND(cfg.dims), rng=random.Random(200 + i)
+            )
+            t0 = time.perf_counter()
+            plan = plan_best_nd_move(
+                state, profile=profile, budget_ms=budget_ms, algorithm=algorithm
+            )
+            elapsed = (time.perf_counter() - t0) * 1000.0
+            if plan is None:
+                continue
+            samples.append(
+                BenchSample(ms=elapsed, candidates=plan.stats.candidate_count)
+            )
+        return samples
+    finally:
+        if gc_was_enabled:
+            gc.enable()
 
 
 def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
@@ -134,11 +191,7 @@ def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
         }
     ms_values = [sample.ms for sample in samples]
     p50 = statistics.median(ms_values)
-    p95 = (
-        statistics.quantiles(ms_values, n=20)[18]
-        if len(ms_values) >= 20
-        else max(ms_values)
-    )
+    p95 = _nearest_rank_percentile(ms_values, 0.95)
     return {
         "runs": len(samples),
         "p50_ms": round(p50, 3),
