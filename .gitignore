@@ -15,6 +15,7 @@ __pycache__/
 .tmp_pytest_run/
 .tmp_pytest_contracts/
 .tmp_test_generate_configuration_reference/
+.tmp_test_generate_maintenance_docs/
 .tmp_test_leaderboard/
 .dotnet_cli_home/
 

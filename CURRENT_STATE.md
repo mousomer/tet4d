@@ -10,24 +10,30 @@ This file is the restart handoff for the current architecture baseline. It is
 not a historical ledger. Long historical migration detail belongs in
 `docs/history/DONE_SUMMARIES.md`.
 
+Sections with `BEGIN/END GENERATED:*` markers are maintained by
+`tools/governance/generate_maintenance_docs.py`.
+
+<!-- BEGIN GENERATED:current_state_architecture_snapshot -->
 ## Current Architecture Snapshot
 
 - `arch_stage`: `900`
 - Canonical local gate: `CODEX_MODE=1 ./scripts/verify.sh`
 - CI wrapper: `./scripts/ci_check.sh`
-- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and now include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_policy_compliance_repo.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.
+- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_policy_compliance_repo.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.
 - Dependency direction:
   - `ui`, `ai`, `replay`, and `tools` may import engine modules directly
   - `engine` must not import `ui`, `ai`, `replay`, or `tools`
   - `engine/core` remains strict-pure
+<!-- END GENERATED:current_state_architecture_snapshot -->
 
+<!-- BEGIN GENERATED:current_state_metric_snapshot -->
 ## Current Metric Snapshot
 
-From `python scripts/arch_metrics.py` on 2026-03-07:
+From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 118` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 123` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -35,9 +41,11 @@ From `python scripts/arch_metrics.py` on 2026-03-07:
 
 Dominant remaining pressure:
 
-1. `code_balance = 0.72`
-2. `delivery_size_pressure = 1.31`
+1. `delivery_size_pressure = 1.32`
+2. `code_balance = 0.72`
+<!-- END GENERATED:current_state_metric_snapshot -->
 
+<!-- BEGIN GENERATED:current_state_canonical_ownership -->
 ## Canonical Ownership After This Batch
 
 ### Engine
@@ -50,7 +58,7 @@ Dominant remaining pressure:
 - `src/tet4d/engine/runtime/api.py`
 - `src/tet4d/engine/tutorial/*`
 - `src/tet4d/engine/tutorial/api.py`
-- `src/tet4d/engine/api.py` (small compatibility facade for replay/tests/tutorial payload exports)
+- `src/tet4d/engine/api.py (small compatibility facade for replay/tests/tutorial payload exports)`
 
 ### UI
 
@@ -69,12 +77,13 @@ Dominant remaining pressure:
 - `src/tet4d/ui/pygame/front4d_render.py`
 - `src/tet4d/ui/pygame/runtime_ui/*`
 - `src/tet4d/ui/pygame/menu/*`
-- `src/tet4d/ui/pygame/launch/*` (with `settings_hub_model.py` owning settings model/layout, `settings_hub_actions.py` owning settings mutations/text-entry, and `launcher_settings.py` owning orchestration/view)
+- `src/tet4d/ui/pygame/launch/* (with settings_hub_model.py owning settings model/layout, settings_hub_actions.py owning settings mutations/text-entry, and launcher_settings.py owning orchestration/view)`
 - `src/tet4d/ui/pygame/render/*`
 
 ### AI
 
 - `src/tet4d/ai/playbot/*`
+<!-- END GENERATED:current_state_canonical_ownership -->
 
 ## Transform Ownership Note
 
@@ -83,7 +92,8 @@ Dominant remaining pressure:
 - Retrospective plan/inventory docs now exist at:
   - `docs/plans/piece_transform_extraction.md`
   - `docs/plans/piece_transform_inventory.md`
-- Current `HEAD` has already progressed beyond the original extraction-stage non-goal and now uses center-of-piece block rotation semantics.
+- Current `HEAD` has already progressed beyond the original extraction-stage
+  non-goal and now uses center-of-piece block rotation semantics.
 
 ## What This Batch Changed
 
@@ -137,8 +147,19 @@ Dominant remaining pressure:
     - `menu_settings_state.py` over `runtime/menu_settings/`
     - `menu_structure_schema.py` over `runtime/menu_structure/`
     - `score_analyzer.py` over `runtime/score_analysis/`
-17. Applied a correctness hotfix batch after the restructure: the settings hub now seeds analytics from persisted runtime state, `score_analysis_summary_snapshot()` returns detached copies, and the unused `dispatch_nd_gameplay_key()` helper was deleted from `frontend_nd_input.py`.
-18. Hardened local verification against recurring Windows state collisions by adding a serialized `verify.sh` lock, a per-run `TET4D_STATE_ROOT` sandbox for full-gate runs, and env-aware pytest temp roots for Codex/local test helpers.
+17. Applied a correctness hotfix batch after the restructure: the settings hub
+    now seeds analytics from persisted runtime state,
+    `score_analysis_summary_snapshot()` returns detached copies, and the unused
+    `dispatch_nd_gameplay_key()` helper was deleted from
+    `frontend_nd_input.py`.
+18. Hardened local verification against recurring Windows state collisions by
+    adding a serialized `verify.sh` lock, a per-run `TET4D_STATE_ROOT` sandbox
+    for full-gate runs, and env-aware pytest temp roots for Codex/local test
+    helpers.
+19. Converted `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` to mixed
+    manual/generated maintenance docs and added
+    `tools/governance/generate_maintenance_docs.py` plus verify-time drift
+    checks for the generated sections.
 
 ## Validation Status
 
@@ -191,5 +212,3 @@ python scripts/arch_metrics.py
 CODEX_MODE=1 ./scripts/verify.sh
 ./scripts/ci_check.sh
 ```
-
-

@@ -109,6 +109,7 @@
       "tools/governance/update_tech_debt_budgets.py",
       "tools/governance/validate_project_contracts.py",
       "tools/governance/generate_configuration_reference.py",
+      "tools/governance/generate_maintenance_docs.py",
       "tools/governance/check_risk_gates.py",
       "tools/governance/check_policy_runtime_rules.py",
       "tools/governance/check_wheel_reuse_rules.py",
@@ -291,6 +292,7 @@
         "set -euo pipefail",
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
+        "run_step \"maintenance_docs\"",
         "run_step \"risk_gates\"",
         "run_step \"policy_runtime_rules\"",
         "run_step \"wheel_reuse_rules\"",
@@ -716,6 +718,25 @@
         "tet4d.engine.runtime.menu_config.default_settings_payload()",
         "config/schema/menu_settings.schema.json",
         "config/keybindings/defaults.json"
+      ]
+    },
+    {
+      "file": "CURRENT_STATE.md",
+      "must_contain": [
+        "tools/governance/generate_maintenance_docs.py",
+        "<!-- BEGIN GENERATED:current_state_architecture_snapshot -->",
+        "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
+        "<!-- BEGIN GENERATED:current_state_canonical_ownership -->"
+      ]
+    },
+    {
+      "file": "docs/PROJECT_STRUCTURE.md",
+      "must_contain": [
+        "tools/governance/generate_maintenance_docs.py",
+        "<!-- BEGIN GENERATED:project_structure_entry_points -->",
+        "<!-- BEGIN GENERATED:project_structure_runtime_owners -->",
+        "<!-- BEGIN GENERATED:project_structure_sources_of_truth -->",
+        "<!-- BEGIN GENERATED:project_structure_verification_contract -->"
       ]
     }
   ],

@@ -179,8 +179,9 @@ violations under the current architecture.
    transitional location.
 3. If a wrapper remains, document why it still exists.
 4. Update docs and architecture gates in the same batch as code movement.
-5. Keep `CURRENT_STATE.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/BACKLOG.md`
-   synchronized whenever ownership changes.
+5. Keep `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` synchronized
+   through `tools/governance/generate_maintenance_docs.py`, and keep
+   `docs/BACKLOG.md` updated manually whenever ownership changes.
 
 ## Acceptance Criteria For Architecture Batches
 

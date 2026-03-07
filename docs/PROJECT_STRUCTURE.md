@@ -2,6 +2,9 @@
 
 This document describes the current canonical package layout and ownership model.
 
+Sections with `BEGIN/END GENERATED:*` markers are maintained by
+`tools/governance/generate_maintenance_docs.py`.
+
 ## Top-Level Layout
 
 ```text
@@ -36,13 +39,16 @@ The current rule is one-way:
    not the only allowed import seam. Replay code and compatibility tests may use
    it; runtime UI/AI/tools should prefer direct canonical owners.
 
+<!-- BEGIN GENERATED:project_structure_entry_points -->
 ## Canonical Entry Points
 
 1. `cli/front.py`: unified launcher
 2. `cli/front2d.py`: thin 2D shim
 3. `cli/front3d.py`: thin 3D shim
 4. `cli/front4d.py`: thin 4D shim
+<!-- END GENERATED:project_structure_entry_points -->
 
+<!-- BEGIN GENERATED:project_structure_runtime_owners -->
 ## Canonical Runtime Owners
 
 ### Engine
@@ -90,7 +96,9 @@ The current rule is one-way:
 4. `src/tet4d/ai/playbot/planner_nd_core.py`: shared ND candidate logic
 5. `src/tet4d/ai/playbot/planner_nd_search.py`: ND search/budget logic
 6. `src/tet4d/ai/playbot/dry_run.py`: stability/dry-run harness
+<!-- END GENERATED:project_structure_runtime_owners -->
 
+<!-- BEGIN GENERATED:project_structure_sources_of_truth -->
 ## Config And Docs Sources Of Truth
 
 1. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
@@ -102,6 +110,7 @@ The current rule is one-way:
 7. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
 8. `CURRENT_STATE.md`: restart handoff
 9. `docs/BACKLOG.md`: active backlog and current change footprint
+<!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules
 
@@ -113,6 +122,7 @@ The current rule is one-way:
 6. Prefer reusing an existing canonical owner over adding wrappers.
 7. Do not reintroduce reverse imports from engine into UI or AI.
 
+<!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract
 
 Run:
@@ -127,3 +137,4 @@ Authoritative enforcement is backed by:
 2. `scripts/check_engine_core_purity.sh`
 3. `scripts/arch_metrics.py`
 4. `tools/governance/architecture_metric_budget.py`
+<!-- END GENERATED:project_structure_verification_contract -->

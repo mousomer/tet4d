@@ -52,7 +52,8 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 6. Keep tunable thresholds in canonical config (avoid magic numbers).
 7. Update docs in the same change when behavior/governance changes:
    - `docs/BACKLOG.md`
-   - `CURRENT_STATE.md`
+   - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
+     are maintained by `tools/governance/generate_maintenance_docs.py`)
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
@@ -80,6 +81,7 @@ For governance/contract changes, additionally run:
 ```bash
 python3 tools/governance/validate_project_contracts.py
 python3 tools/governance/generate_configuration_reference.py --check
+python3 tools/governance/generate_maintenance_docs.py --check
 python3 tools/governance/check_risk_gates.py
 ./scripts/check_policy_compliance.sh
 ./scripts/check_git_sanitation.sh

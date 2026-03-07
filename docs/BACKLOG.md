@@ -391,6 +391,12 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-07): maintenance-doc generation for architecture handoff.
+
+- Added `tools/governance/generate_maintenance_docs.py` to generate the marker-backed sections in `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` from canonical architecture metrics and owner lists.
+- Converted both maintenance docs to mixed manual/generated templates so ownership snapshots, metric snapshots, entry-point inventories, and verification-contract sections are checked mechanically instead of hand-maintained.
+- Added a dedicated governance regression test for stale maintenance-doc detection and wired the new `--check` path into `scripts/verify.sh` and the canonical-maintenance contract.
+
 Current sub-batch (2026-03-07): settings/analytics correctness hotfix.
 
 - Fixed the shared settings hub to seed `analytics.score_logging_enabled` from persisted runtime settings instead of source-controlled defaults, so preview and unsaved restore reflect the actual saved value.
