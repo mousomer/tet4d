@@ -23,6 +23,9 @@ class TutorialContentTests(unittest.TestCase):
     def test_lessons_file_loads(self) -> None:
         payload = content.load_tutorial_payload()
         self.assertEqual(payload.schema_version, 1)
+        self.assertEqual(payload.board_profiles.dims_2d, (10, 20))
+        self.assertEqual(payload.board_profiles.dims_3d, (6, 18, 6))
+        self.assertEqual(payload.board_profiles.dims_4d, (10, 20, 6, 6))
         lesson_ids = {lesson.lesson_id for lesson in payload.lessons}
         self.assertIn("tutorial_2d_core", lesson_ids)
         self.assertIn("tutorial_3d_core", lesson_ids)
@@ -32,9 +35,17 @@ class TutorialContentTests(unittest.TestCase):
         payload = engine_api.tutorial_lessons_payload_runtime()
         lesson_ids = engine_api.tutorial_lesson_ids_runtime()
         self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["board_profiles"]["2d"], {"width": 10, "height": 20})
+        self.assertEqual(payload["board_profiles"]["3d"], {"x": 6, "y": 18, "z": 6})
+        self.assertEqual(payload["board_profiles"]["4d"], {"x": 10, "y": 20, "z": 6, "w": 6})
         self.assertTrue(any(lesson_id == "tutorial_2d_core" for lesson_id in lesson_ids))
         self.assertTrue(any(lesson_id == "tutorial_3d_core" for lesson_id in lesson_ids))
         self.assertTrue(any(lesson_id == "tutorial_4d_core" for lesson_id in lesson_ids))
+
+    def test_api_exposes_tutorial_board_dims_runtime(self) -> None:
+        self.assertEqual(engine_api.tutorial_board_dims_runtime("2d"), (10, 20))
+        self.assertEqual(engine_api.tutorial_board_dims_runtime("3d"), (6, 18, 6))
+        self.assertEqual(engine_api.tutorial_board_dims_runtime("4d"), (10, 20, 6, 6))
 
     def test_tutorial_plan_file_loads(self) -> None:
         payload = content.load_tutorial_plan_payload()
@@ -208,7 +219,9 @@ class TutorialContentTests(unittest.TestCase):
 
             self.assertEqual(orbit.complete_when.logic, "all")
             self.assertEqual(orbit.complete_when.events, ("mouse_orbit",))
-            self.assertEqual(orbit.complete_when.event_count_required, 1)
+            self.assertEqual(orbit.complete_when.event_count_required, 4)
+            self.assertEqual(orbit.complete_when.event_span_min_ms, 2000)
+            self.assertIn("2 seconds", orbit.ui.hint or "")
             self.assertIn("mouse_orbit", orbit.gating.allow)
             self.assertNotIn("yaw_pos", orbit.gating.allow)
             self.assertNotIn("pitch_pos", orbit.gating.allow)
@@ -217,7 +230,9 @@ class TutorialContentTests(unittest.TestCase):
 
             self.assertEqual(zoom.complete_when.logic, "all")
             self.assertEqual(zoom.complete_when.events, ("mouse_zoom",))
-            self.assertEqual(zoom.complete_when.event_count_required, 1)
+            self.assertEqual(zoom.complete_when.event_count_required, 4)
+            self.assertEqual(zoom.complete_when.event_span_min_ms, 2000)
+            self.assertIn("2 seconds", zoom.ui.hint or "")
             self.assertIn("mouse_zoom", zoom.gating.allow)
             self.assertNotIn("zoom_in", zoom.gating.allow)
             self.assertNotIn("zoom_out", zoom.gating.allow)
@@ -490,7 +505,7 @@ class TutorialContentTests(unittest.TestCase):
                 for shape in get_piece_shapes_nd(
                     4,
                     piece_set_id=PIECE_SET_4D_STANDARD,
-                    board_dims=(10, 20, 6, 4),
+                    board_dims=(10, 20, 6, 6),
                 )
             },
         }

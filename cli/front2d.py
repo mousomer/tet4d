@@ -109,6 +109,7 @@ from tet4d.engine.api import (
     tutorial_runtime_skip_runtime,
     tutorial_runtime_sync_and_advance_runtime,
     tutorial_runtime_overlay_payload_runtime,
+    tutorial_board_dims_runtime,
 )
 from tet4d.engine.gameplay.pieces2d import piece_set_2d_label, PIECE_SET_2D_OPTIONS
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
@@ -210,18 +211,10 @@ _TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
     min_value=0,
     max_value=10,
 )
-_TUTORIAL_MIN_WIDTH_2D = project_constant_int(
-    ("tutorial", "min_board_dims", "2d", "width"),
-    10,
-    min_value=4,
-    max_value=40,
-)
-_TUTORIAL_MIN_HEIGHT_2D = project_constant_int(
-    ("tutorial", "min_board_dims", "2d", "height"),
-    20,
-    min_value=8,
-    max_value=80,
-)
+def _tutorial_board_dims_2d() -> tuple[int, int]:
+    dims = tutorial_board_dims_runtime("2d")
+    return (int(dims[0]), int(dims[1]))
+
 _TUTORIAL_TARGET_FILL_RGBA = (255, 214, 80, 72)
 _TUTORIAL_TARGET_BORDER_RGBA = (255, 242, 168, 220)
 
@@ -810,6 +803,10 @@ class LoopContext2D:
         overlay_transparency: float | None = None,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext2D":
+        _apply_tutorial_board_profile_2d(
+            cfg,
+            tutorial_lesson_id=tutorial_lesson_id,
+        )
         state = create_initial_state(cfg)
         tutorial_session = None
         if tutorial_lesson_id:
@@ -1326,15 +1323,16 @@ def _run_game_frame_2d(
     pygame.display.flip()
 
 
-def _apply_tutorial_min_board_dims_2d(
+def _apply_tutorial_board_profile_2d(
     cfg: GameConfig,
     *,
     tutorial_lesson_id: str | None,
 ) -> None:
     if not tutorial_lesson_id:
         return
-    cfg.width = max(int(cfg.width), int(_TUTORIAL_MIN_WIDTH_2D))
-    cfg.height = max(int(cfg.height), int(_TUTORIAL_MIN_HEIGHT_2D))
+    width, height = _tutorial_board_dims_2d()
+    cfg.width = int(width)
+    cfg.height = int(height)
 
 
 def _record_leaderboard_session_2d(
@@ -1390,10 +1388,6 @@ def run_game_loop(
         True  -> user wants to go back to menu
         False -> user wants to quit the program
     """
-    _apply_tutorial_min_board_dims_2d(
-        cfg,
-        tutorial_lesson_id=tutorial_lesson_id,
-    )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     session_start_ms = pygame.time.get_ticks()

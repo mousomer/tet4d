@@ -6,6 +6,8 @@ from unittest import mock
 
 import tet4d.engine.api as engine_api
 from tet4d.engine import frontend_nd
+from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.ui.pygame import front3d_game
 from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_SIX,
     get_piece_shapes_nd,
@@ -80,6 +82,18 @@ class TestFront3DSetupDedup(unittest.TestCase):
             run_game_loop_mock.call_args.args,
             (game_screen, cfg, fonts_2d, display_settings),
         )
+
+    def test_tutorial_loop_context_uses_exact_3d_board_profile(self) -> None:
+        cfg = GameConfigND(dims=(12, 30, 9), gravity_axis=1, speed_level=1)
+        with mock.patch.object(front3d_game, "tutorial_runtime_create_session", return_value=object()):
+            loop = front3d_game.LoopContext3D.create(
+                cfg,
+                tutorial_lesson_id="tutorial_3d_core",
+            )
+
+        self.assertEqual(loop.cfg.dims, (6, 18, 6))
+        self.assertEqual(loop.state.config.dims, (6, 18, 6))
+        self.assertEqual(loop.state.board.dims, (6, 18, 6))
 
     def test_build_config_matches_shared_nd_builder(self) -> None:
         settings = frontend_nd.GameSettingsND(

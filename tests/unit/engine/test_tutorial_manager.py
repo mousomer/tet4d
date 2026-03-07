@@ -9,6 +9,11 @@ from tet4d.engine.tutorial.schema import parse_tutorial_payload
 def _manager_payload() -> dict[str, object]:
     return {
         "schema_version": 1,
+        "board_profiles": {
+            "2d": {"width": 10, "height": 20},
+            "3d": {"x": 6, "y": 18, "z": 6},
+            "4d": {"x": 10, "y": 20, "z": 6, "w": 6},
+        },
         "lessons": [
             {
                 "lesson_id": "lesson_2d",

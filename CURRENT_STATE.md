@@ -23,12 +23,12 @@ Read this first in a new Codex thread before continuing staged refactors.
 
 ## Current Debt Metrics (from `python3 scripts/arch_metrics.py`)
 
-- `tech_debt.score = 1.28` (`low`, below current baseline 15.06)
+- `tech_debt.score = 2.29` (`low`, below current baseline 15.06)
   - weighted components (current dominant drivers):
-    - backlog priority pressure: `0.0` (no active P1/P2/P3 debt items in canonical debt source)
+    - backlog priority pressure: `0.0` (no active `P1/P2/P3` debt items remain in canonical debt source)
     - backlog bug pressure: `0.0`
-    - delivery-size pressure: `0.92` (172 Python files, 32,243 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
-    - code-balance pressure: `0.36` (gate-eligible leaf avg 0.97, runtime leaf watch)
+    - delivery-size pressure: `1.22` (225 Python files, 46,998 LOC; weights: src=1.0, tests=0.35, tools/scripts=0.2)
+    - code-balance pressure: `1.07` (gate-eligible leaf avg 0.91; `engine/runtime` remains the main watch folder)
     - menu/keybinding retention pressures: `0.0` (goals met)
   - active gate policy (`non_regression_baseline`, `score_epsilon=0.03`):
     - commits must not exceed baseline score + epsilon
@@ -146,12 +146,13 @@ Completed:
     - per-stage redo is available (`F7`) without resetting full lesson
     - target-drop stages now require clear predicates (no event-only pass)
     - tutorial overlay key-action rows are unified and bolded for clarity
+    - 3D/4D tutorial overlay now defaults and stays clamped in the side-panel lane, outside the active board/layers area
     - tutorial step setup now enforces visible active-piece placement on every stage
     - tutorial movement/rotation/drop pacing is rate-limited by config-backed delays
     - runtime safety guard auto-redoes stage if no legal tutorial action remains
     - tutorial runtime re-enforces visible active-piece placement; impossible
       placement triggers tutorial restart
-    - tutorial sessions clamp board dims to configured 2D/3D/4D minimums at launch
+    - tutorial sessions use exact 2D/3D/4D board profiles from `config/tutorial/lessons.json`, independent of user mode settings
     - full-clear bonus stages now use deterministic single-piece board-clear presets:
       - 2D: `O` + `2d_almost_full_clear_o`
       - 3D: `O3` + `3d_almost_full_clear_o3`
@@ -798,6 +799,11 @@ Recommended approach:
 - `docs/USER_SETTINGS_REFERENCE.md` is now bucketed by canonical user-facing categories and resolves dynamic piece-set/topology-profile defaults to labels; generation fails on unbucketed persisted settings.
 - Keybinding profile summaries in `docs/USER_SETTINGS_REFERENCE.md` now use canonical keybinding category docs + scope ordering and fail on unknown profile groups/scopes.
 - GitHub scheduled stability-watch bootstrap is now aligned with CI/local verification: `.github/workflows/stability-watch.yml` installs the repo with `pip install -e .[dev]` in both jobs so scheduled dry-run and policy-analysis steps can import the `src/` layout package reliably.
+- Tutorial mouse stages now use explicit mouse KEY labels and require sustained mouse orbit/zoom interaction across at least 2 seconds before completion.
+- Release packaging is now aligned to the `0.4` installer goal:
+  - `pyproject.toml` version advanced to `0.4`
+  - local packaging scripts now target `.msi` (Windows), `.dmg` (macOS x64/arm64), and `.deb` (Linux AMD64)
+  - `.github/workflows/release-packaging.yml` now publishes tag-triggered installers to the matching GitHub release
 
 ## Current Source of Truth References
 
@@ -807,5 +813,3 @@ Recommended approach:
 - Configuration reference: `docs/CONFIGURATION_REFERENCE.md`
 - User settings reference: `docs/USER_SETTINGS_REFERENCE.md`
 - Canonical maintenance contract: `config/project/policy/manifests/canonical_maintenance.json`
-
-

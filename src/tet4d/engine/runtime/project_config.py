@@ -57,23 +57,6 @@ _DEFAULT_CONSTANTS = {
             "max": 90,
         },
         "overlay_target_tolerance_percent": 2,
-        "min_board_dims": {
-            "2d": {
-                "width": 10,
-                "height": 20,
-            },
-            "3d": {
-                "x": 8,
-                "y": 18,
-                "z": 8,
-            },
-            "4d": {
-                "x": 10,
-                "y": 20,
-                "z": 8,
-                "w": 8,
-            },
-        },
         "action_delay_ms": {
             "movement": 140,
             "rotation": 170,
@@ -379,4 +362,3 @@ def project_constant_float(
     if max_value is not None and fval > max_value:
         return default
     return fval
-

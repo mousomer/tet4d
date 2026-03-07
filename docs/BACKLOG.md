@@ -35,8 +35,7 @@ Historical anchor references:
 
 ### Active Open Items (Canonical)
 
-1. [BKL-P1-010] Tutorial overlay panel can obstruct gameplay board visibility in some window/layout combinations.
-2. [BKL-P1-011] Tutorial zoom_in / zoom_out stages should require four actions and stay config-defined via lesson payloads.
+1. None currently.
 
 ### Historical ID Lineage Policy
 
@@ -418,6 +417,21 @@ Current sub-batch (2026-03-06): topology-aware kick-system implementation.
   - switching benchmark p95 to nearest-rank percentile for 40-sample stability
 - Fixed GitHub scheduled stability-watch bootstrap drift by switching `.github/workflows/stability-watch.yml` to editable install (`pip install -e .[dev]`) for both the dry-run matrix and policy-analysis jobs so the `src/` layout imports resolve consistently with `ci.yml` and local `verify.sh`.
 
+Current sub-batch (2026-03-06): release-installer hardening for `0.4`.
+
+- Advanced the project version in `pyproject.toml` from `0.3` to `0.4`.
+- Reworked local packaging outputs from archive bundles to installer artifacts:
+  - Windows: `.msi`
+  - macOS x64/arm64: `.dmg`
+  - Linux AMD64: `.deb`
+- Updated `.github/workflows/release-packaging.yml` to build the full installer matrix and publish tag-triggered assets to the matching GitHub release.
+- Synced packaging/release docs and RDS for the installer-based release contract:
+  - `README.md`
+  - `docs/RELEASE_INSTALLERS.md`
+  - `docs/RELEASE_CHECKLIST.md`
+  - `docs/rds/RDS_PACKAGING.md`
+  - `docs/CHANGELOG.md`
+
 Current sub-batch (2026-03-05): canonical piece-transform extraction (no behavior change).
 
 - Added pure canonical piece-local transform owner:
@@ -471,8 +485,7 @@ Current sub-batch (2026-03-05): tutorial overlay readability/placement polish.
   - `menu -> pause MENU`
   - `restart -> restart`
   - `quit/menu_back -> main menu`
-- Moved default 3D/4D tutorial overlay placement to the left side of the board
-  column (clamped to viewport bounds).
+- Moved default 3D/4D tutorial overlay placement into the right-side panel lane, outside the active board/layers area, and clamp tutorial-panel dragging to that safe lane.
 - Added/updated overlay tests for:
   - key prompt parsing and short-label behavior
   - 2D/3D/4D render-bounds/layout stability after keychip rendering
@@ -832,8 +845,8 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
     (prevents dead-end game-over states during gated steps)
   - active tutorial piece visibility is re-enforced at runtime; if visibility
     cannot be restored deterministically, tutorial session restarts
-  - tutorial mode clamps board dimensions to configured minimums (2D/3D/4D)
-    before session start to avoid invalid spawn/setup states
+  - tutorial mode uses exact board profiles from `config/tutorial/lessons.json` (2D/3D/4D)
+    before session start so tutorial geometry is independent of normal mode settings
   - full-clear bonus stages now use deterministic one-piece board-clear presets:
     - `2d_almost_full_clear_o` + starter `O`
     - `3d_almost_full_clear_o3` + starter `O3`
@@ -873,8 +886,8 @@ Current sub-batch (2026-03-02): interactive tutorial runtime integration (M2-M6 
   - movement and rotation stages now require 4 successful actions per direction
   - full-board clean stages now require `board_cleared` predicate in addition to
     clear-event predicates
-  - tutorial overlay panel moved to enlarged left-side layout with clearer
-    `Segment` + `Task` + `KEY/ACTION` formatting
+  - tutorial overlay panel moved to enlarged ND side-panel docking with clearer
+    Segment + Task + KEY/ACTION formatting
   - files:
     - `config/tutorial/lessons.json`
     - `config/project/constants.json`
@@ -1423,6 +1436,7 @@ Current sub-batch (2026-03-05): tutorial mouse stages are mouse-only (no keyboar
 - Removed `event_count_required` from mouse stages (default single successful mouse action).
 - Tightened mouse-stage input gating to remove keyboard camera actions from allowed lists.
 - Strengthened tutorial pointer gating in 3D/4D loops so blocked RMB drags cannot arm stale orbit state and mouse-wheel completion requires a real zoom delta.
+- Extended 3D/4D mouse tutorial stages so the overlay uses explicit mouse KEY labels and completion now requires sustained orbit/zoom input across at least 2 seconds instead of a single mouse event.
 - Updated content/runtime tests to enforce:
   - no keyboard fallback completion
   - mouse-stage progression requires mouse events
@@ -1473,6 +1487,37 @@ Current sub-batch (2026-03-06): tutorial action-delay reduction + generated conf
   - `tools/governance/generate_configuration_reference.py --check` will now fail on drift.
   - Full verification pending after this batch.
 
+Current sub-batch (2026-03-07): tutorial overlay safe-lane closure for ND tutorials.
+
+- Closed active debt item `BKL-P1-010` after moving the default 3D/4D tutorial overlay dock into the side-panel lane and clamping tutorial-panel dragging to stay outside the active board/layers area.
+- Added layout regression coverage that asserts the default 3D/4D tutorial overlay rect does not intersect the gameplay area and stays inside the safe lane even under extreme drag offsets:
+  - `tests/unit/engine/test_tutorial_overlay_layout.py`
+- Files:
+  - `src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py`
+  - `config/project/backlog_debt.json`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `CURRENT_STATE.md`
+- Verification:
+  - `pytest -q tests/unit/engine/test_tutorial_overlay_layout.py tests/unit/engine/test_tutorial_overlay.py` passed.
+  - `ruff check src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py tests/unit/engine/test_tutorial_overlay_layout.py` passed.
+Current sub-batch (2026-03-07): tutorial zoom-stage debt closure.
+
+- Closed stale active debt item `BKL-P1-011`; zoom tutorial stages are already config-defined in `config/tutorial/lessons.json` and enforced by tutorial content/runtime tests.
+- Canonical debt source now has no active open debt items.
+- Files:
+  - `config/project/backlog_debt.json`
+  - `docs/BACKLOG.md`
+  - `CURRENT_STATE.md`
+  - `docs/CONFIGURATION_REFERENCE.md`
+- Verification:
+  - `python scripts/arch_metrics.py` passed after debt-source update.
+Current sub-batch (2026-03-07): Windows packaging host-tooling guard.
+
+- Hardened `packaging/scripts/build_windows.ps1` so local MSI builds:
+  - fail fast with a clear message when only `.NET SDK < 6` is available,
+  - avoid user-profile global WiX installation by using a repo-local `--tool-path`,
+  - default `DOTNET_CLI_HOME` into the packaging build directory for cleaner local execution.
+- Updated `docs/RELEASE_INSTALLERS.md` to document the Windows local-build prerequisite and local tool-path behavior.
 ## 6. Source Inputs
 
 1. `config/project/backlog_debt.json`
@@ -1482,5 +1527,3 @@ Current sub-batch (2026-03-06): tutorial action-delay reduction + generated conf
 5. `docs/ARCHITECTURE_CONTRACT.md`
 6. `CURRENT_STATE.md`
 7. `docs/history/DONE_SUMMARIES.md`
-
-

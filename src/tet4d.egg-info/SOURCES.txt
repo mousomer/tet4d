@@ -25,6 +25,8 @@ src/tet4d/engine/front4d_render.py
 src/tet4d/engine/frontend_nd.py
 src/tet4d/engine/help_text.py
 src/tet4d/engine/core/__init__.py
+src/tet4d/engine/core/piece_transform.py
+src/tet4d/engine/core/rotation_kicks.py
 src/tet4d/engine/core/model/__init__.py
 src/tet4d/engine/core/model/board.py
 src/tet4d/engine/core/model/game2d_types.py
@@ -48,6 +50,7 @@ src/tet4d/engine/gameplay/game_nd.py
 src/tet4d/engine/gameplay/leveling.py
 src/tet4d/engine/gameplay/pieces2d.py
 src/tet4d/engine/gameplay/pieces_nd.py
+src/tet4d/engine/gameplay/pieces_shared.py
 src/tet4d/engine/gameplay/rotation_anim.py
 src/tet4d/engine/gameplay/scoring_bonus.py
 src/tet4d/engine/gameplay/speed_curve.py
@@ -87,6 +90,8 @@ src/tet4d/engine/ui_logic/menu_layout.py
 src/tet4d/engine/ui_logic/view_modes.py
 src/tet4d/replay/__init__.py
 src/tet4d/replay/format.py
+src/tet4d/shared/__init__.py
+src/tet4d/shared/nd_coords.py
 src/tet4d/ui/__init__.py
 src/tet4d/ui/pygame/__init__.py
 src/tet4d/ui/pygame/front3d_game.py
@@ -107,7 +112,6 @@ src/tet4d/ui/pygame/launch/launcher_play.py
 src/tet4d/ui/pygame/launch/launcher_settings.py
 src/tet4d/ui/pygame/launch/leaderboard_menu.py
 src/tet4d/ui/pygame/launch/topology_lab_menu.py
-src/tet4d/ui/pygame/launch/tutorials_menu.py
 src/tet4d/ui/pygame/menu/__init__.py
 src/tet4d/ui/pygame/menu/keybindings_menu.py
 src/tet4d/ui/pygame/menu/keybindings_menu_input.py
@@ -134,6 +138,8 @@ src/tet4d/ui/pygame/runtime_ui/app_runtime.py
 src/tet4d/ui/pygame/runtime_ui/audio.py
 src/tet4d/ui/pygame/runtime_ui/help_menu.py
 src/tet4d/ui/pygame/runtime_ui/loop_runner_nd.py
+src/tet4d/ui/pygame/runtime_ui/panel_drag.py
 src/tet4d/ui/pygame/runtime_ui/pause_menu.py
+src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py
 src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py
 tests/test_leveling.py

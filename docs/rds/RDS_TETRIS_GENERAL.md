@@ -49,6 +49,8 @@ Cross-cutting requirements are defined in:
 24. Keep view-plane turns keybindable as explicit camera actions, not overloaded with gameplay rotation actions.
 25. Ship desktop bundles for macOS/Linux/Windows that include embedded Python runtime (no Python preinstall required for end users).
 26. Add interactive tutorials for 2D/3D/4D with data-driven lesson packs, deterministic progression, and per-step input gating.
+27. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
+28. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -114,7 +116,7 @@ Cross-cutting requirements are defined in:
 11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
-14. Tutorial overlay panel must be left-anchored, enlarged for readability, and clearly separate lesson, segment, task, and action hint lines.
+14. Tutorial overlay panel must be enlarged for readability, clearly separate lesson/segment/task/action hint lines, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
 15. Tutorial progression must expose explicit segment order:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.

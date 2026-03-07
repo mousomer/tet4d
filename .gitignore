@@ -10,6 +10,12 @@ __pycache__/
 # Tool caches
 .pytest_cache/
 .ruff_cache/
+.pytest_tmp/
+.tmp_pytest/
+.tmp_pytest_run/
+.tmp_test_generate_configuration_reference/
+.tmp_test_leaderboard/
+.dotnet_cli_home/
 
 # Runtime state
 state/

@@ -67,6 +67,22 @@ class TutorialRuntimeTests(unittest.TestCase):
                     overlay_transparency=float(target_percent) / 100.0,
                 )
             )
+        event_span_min_ms = max(0, int(step.complete_when.event_span_min_ms))
+        if event_span_min_ms > 0:
+            interval_ms = (
+                event_span_min_ms // max(1, repeats - 1) if repeats > 1 else event_span_min_ms
+            )
+            current_ms = {"value": 0}
+            with patch(
+                "tet4d.engine.tutorial.manager._now_ms",
+                side_effect=lambda: current_ms["value"],
+            ):
+                for index in range(repeats):
+                    current_ms["value"] = (
+                        event_span_min_ms if index + 1 >= repeats else interval_ms * index
+                    )
+                    session.observe_action(action_id)
+            return bool(session.sync_and_advance(lines_cleared=0))
         for _ in range(repeats):
             session.observe_action(action_id)
         return bool(session.sync_and_advance(lines_cleared=0))
@@ -573,12 +589,18 @@ class TutorialRuntimeTests(unittest.TestCase):
             )
 
     def test_mouse_camera_steps_require_mouse_events(self) -> None:
+        current_ms = {"value": 0}
         with (
             patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_completed"),
+            patch(
+                "tet4d.engine.tutorial.manager._now_ms",
+                side_effect=lambda: current_ms["value"],
+            ),
         ):
             for lesson_id, mode in (("tutorial_3d_core", "3d"), ("tutorial_4d_core", "4d")):
+                current_ms["value"] = 0
                 session = create_tutorial_runtime_session(
                     lesson_id=lesson_id,
                     mode=mode,
@@ -594,6 +616,11 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
                 session.observe_action("pitch_pos")
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                for time_ms in (0, 700, 1400, 1900):
+                    current_ms["value"] = time_ms
+                    session.observe_action("mouse_orbit")
+                    self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                current_ms["value"] = 2100
                 session.observe_action("mouse_orbit")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
                 self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
@@ -606,6 +633,11 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
                 session.observe_action("zoom_out")
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                for time_ms in (2200, 2900, 3600, 4000):
+                    current_ms["value"] = time_ms
+                    session.observe_action("mouse_zoom")
+                    self.assertFalse(session.sync_and_advance(lines_cleared=0))
+                current_ms["value"] = 4300
                 session.observe_action("mouse_zoom")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
                 expected_next = "zoom_in" if mode == "3d" else "toggle_grid"

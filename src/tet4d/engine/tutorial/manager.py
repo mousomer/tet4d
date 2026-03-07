@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -27,6 +28,10 @@ from .schema import (
 _MAX_LESSON_ID_LENGTH = 96
 _MAX_PREDICATE_NAME_LENGTH = 96
 _EVENT_LOG_LIMIT = 200
+
+
+def _now_ms() -> int:
+    return int(time.monotonic() * 1000.0)
 
 
 def _normalize_lesson_id(raw: object) -> str:
@@ -58,6 +63,8 @@ class TutorialManager:
         self._active_lesson_id: str | None = None
         self._step_index = 0
         self._events_seen: dict[str, int] = {}
+        self._event_first_seen_ms: dict[str, int] = {}
+        self._event_last_seen_ms: dict[str, int] = {}
         self._predicate_values: dict[str, bool] = {}
         self._event_log: list[TutorialEvent] = []
         self._sequence = 0
@@ -116,6 +123,8 @@ class TutorialManager:
         self._step_index = 0
         self._status = "skipped"
         self._events_seen.clear()
+        self._event_first_seen_ms.clear()
+        self._event_last_seen_ms.clear()
         self._predicate_values.clear()
         return True
 
@@ -143,9 +152,12 @@ class TutorialManager:
             name=name,
             payload=payload,
         )
+        now_ms = _now_ms()
         self._event_log.append(event)
         self._event_log = self._event_log[-_EVENT_LOG_LIMIT:]
         self._events_seen[event.name] = self._events_seen.get(event.name, 0) + 1
+        self._event_first_seen_ms.setdefault(event.name, now_ms)
+        self._event_last_seen_ms[event.name] = now_ms
 
     def set_predicate(self, name: object, value: bool) -> None:
         key = _normalize_predicate_name(name)
@@ -165,6 +177,8 @@ class TutorialManager:
                 step.complete_when,
                 events_seen=self._events_seen,
                 predicate_values=self._predicate_values,
+                event_first_seen_ms=self._event_first_seen_ms,
+                event_last_seen_ms=self._event_last_seen_ms,
             )
         )
 
@@ -197,6 +211,8 @@ class TutorialManager:
             self._step_index = 0
             self._status = "completed"
             self._events_seen.clear()
+            self._event_first_seen_ms.clear()
+            self._event_last_seen_ms.clear()
             self._predicate_values.clear()
             return True
         self._step_index += 1
@@ -234,6 +250,8 @@ class TutorialManager:
         lesson = self.current_lesson()
         step = self.current_step()
         self._events_seen.clear()
+        self._event_first_seen_ms.clear()
+        self._event_last_seen_ms.clear()
         self._predicate_values.clear()
         self._emit(
             EVENT_STEP_STARTED,

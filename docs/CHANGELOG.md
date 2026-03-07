@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-03-06
+
+### Changed
+1. Release packaging now produces installer artifacts instead of archive bundles:
+   - Windows: `.msi`
+   - macOS: `.dmg`
+   - Linux: `.deb`
+2. Release packaging workflow now publishes tag-build installers to the matching GitHub release:
+   - `.github/workflows/release-packaging.yml`
+3. Project version advanced to `0.4` in preparation for the next tagged desktop release.
 ## 2026-02-21
 
 ### Added

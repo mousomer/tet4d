@@ -22,6 +22,24 @@ class TestTutorialOverlayLayout(unittest.TestCase):
     def tearDownClass(cls) -> None:
         pygame.quit()
 
+    @staticmethod
+    def _board_rect_3d(width: int, height: int, margin: int, side_panel: int) -> pygame.Rect:
+        return pygame.Rect(
+            margin,
+            margin,
+            width - side_panel - (3 * margin),
+            height - (2 * margin),
+        )
+
+    @staticmethod
+    def _layers_rect_4d(width: int, height: int, margin: int, side_panel: int) -> pygame.Rect:
+        return pygame.Rect(
+            margin,
+            margin,
+            width - side_panel - (3 * margin),
+            height - (2 * margin),
+        )
+
     def test_2d_overlay_panel_stays_top_left(self) -> None:
         width, height = 1280, 720
         panel_h = 220
@@ -37,7 +55,7 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         self.assertEqual(rect.y, 12)
         self.assertEqual(rect.width, min(760, max(420, int(width * 0.52))))
 
-    def test_3d_overlay_panel_defaults_to_left_side(self) -> None:
+    def test_3d_overlay_panel_defaults_to_side_panel_lane_outside_board(self) -> None:
         width, height = 1400, 900
         margin = 20
         side_panel = 360
@@ -53,12 +71,13 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 panel_h=220,
             )
 
-        self.assertEqual(rect.x, 12)
+        board_rect = self._board_rect_3d(width, height, margin, side_panel)
+        self.assertGreaterEqual(rect.left, board_rect.right)
         self.assertGreaterEqual(rect.y, margin + 8)
-        self.assertLessEqual(rect.right, width - 12)
-        self.assertLessEqual(rect.width, side_panel)
+        self.assertLessEqual(rect.right, width - margin)
+        self.assertLessEqual(rect.width, side_panel - 16)
 
-    def test_4d_overlay_panel_defaults_to_left_side(self) -> None:
+    def test_4d_overlay_panel_defaults_to_side_panel_lane_outside_layers(self) -> None:
         width, height = 1600, 920
         margin = 16
         side_panel = 360
@@ -74,30 +93,47 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 panel_h=220,
             )
 
-        self.assertEqual(rect.x, 12)
+        layers_rect = self._layers_rect_4d(width, height, margin, side_panel)
+        self.assertGreaterEqual(rect.left, layers_rect.right)
         self.assertGreaterEqual(rect.y, margin + 8)
-        self.assertLessEqual(rect.right, width - 12)
-        self.assertLessEqual(rect.width, side_panel)
+        self.assertLessEqual(rect.right, width - margin)
+        self.assertLessEqual(rect.width, side_panel - 16)
 
-    def test_panel_offsets_are_clamped_to_screen_bounds(self) -> None:
+    def test_nd_panel_offsets_are_clamped_to_safe_lane(self) -> None:
         width, height = 1200, 700
         panel_h = 240
-        with (
-            patch.object(tutorial_overlay.engine_api, "front3d_render_margin", return_value=20),
-            patch.object(tutorial_overlay.engine_api, "front3d_render_side_panel", return_value=360),
-        ):
-            rect = tutorial_overlay._panel_rect_for_dimension(
-                width=width,
-                height=height,
-                dimension=3,
-                panel_h=panel_h,
-                panel_offset=(-5000, 4000),
-            )
-
-        self.assertGreaterEqual(rect.left, 0)
-        self.assertGreaterEqual(rect.top, 0)
-        self.assertLessEqual(rect.right, width)
-        self.assertLessEqual(rect.bottom, height)
+        cases = (
+            (
+                3,
+                self._board_rect_3d,
+                "front3d_render_margin",
+                "front3d_render_side_panel",
+            ),
+            (
+                4,
+                self._layers_rect_4d,
+                "front4d_render_margin",
+                "front4d_render_side_panel",
+            ),
+        )
+        for dimension, area_factory, margin_name, side_panel_name in cases:
+            with self.subTest(dimension=dimension):
+                with (
+                    patch.object(tutorial_overlay.engine_api, margin_name, return_value=20),
+                    patch.object(tutorial_overlay.engine_api, side_panel_name, return_value=360),
+                ):
+                    rect = tutorial_overlay._panel_rect_for_dimension(
+                        width=width,
+                        height=height,
+                        dimension=dimension,
+                        panel_h=panel_h,
+                        panel_offset=(-5000, 4000),
+                    )
+            gameplay_rect = area_factory(width, height, 20, 360)
+            self.assertGreaterEqual(rect.left, gameplay_rect.right)
+            self.assertGreaterEqual(rect.top, 0)
+            self.assertLessEqual(rect.right, width)
+            self.assertLessEqual(rect.bottom, height)
 
     def test_wrap_text_line_breaks_long_content(self) -> None:
         font = pygame.font.Font(None, 24)

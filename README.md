@@ -28,7 +28,7 @@ Advanced topology designer controls are available per mode:
 - `pygame-ce` (installed via `requirements.txt`)
 - Do not install legacy `pygame` in the same environment
 - CI validation matrix: Python `3.11`, `3.12`, `3.13`, `3.14`
-- Desktop packaged bundles include embedded Python runtime (end users do not need system Python)
+- Desktop installers include embedded Python runtime (end users do not need system Python)
 
 ## Setup
 
@@ -102,23 +102,24 @@ python cli/front4d.py
   - `F8`: exit tutorial to menu
   - `F9`: restart tutorial lesson
 
-## Local desktop packaging (bundled runtime)
+## Local desktop packaging (installer outputs)
 
 ```bash
-# macOS
+# macOS (.dmg)
 bash packaging/scripts/build_macos.sh
 
-# Linux
+# Linux (.deb)
 bash packaging/scripts/build_linux.sh
 ```
 
-Windows (PowerShell):
+Windows (PowerShell, `.msi`):
 
 ```powershell
 ./packaging/scripts/build_windows.ps1
 ```
 
 Build artifacts are written to `artifacts/installers/`.
+Tag pushes matching `v*` also publish the generated installers through `.github/workflows/release-packaging.yml`.
 
 ## Key files
 

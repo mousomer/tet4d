@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 try:
     import pygame
@@ -76,6 +77,18 @@ class TestFront4DRender(unittest.TestCase):
         )
 
         self.assertEqual(state.board.cells, before_board)
+
+    def test_tutorial_loop_context_uses_exact_4d_board_profile(self) -> None:
+        cfg = GameConfigND(dims=(14, 26, 9, 2), gravity_axis=1, speed_level=1)
+        with patch.object(front4d_game, "tutorial_runtime_create_session", return_value=object()):
+            loop = front4d_game.LoopContext4D.create(
+                cfg,
+                tutorial_lesson_id="tutorial_4d_core",
+            )
+
+        self.assertEqual(loop.cfg.dims, (10, 20, 6, 6))
+        self.assertEqual(loop.state.config.dims, (10, 20, 6, 6))
+        self.assertEqual(loop.state.board.dims, (10, 20, 6, 6))
 
     def test_projection_cache_key_changes_when_w_size_changes(self) -> None:
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)

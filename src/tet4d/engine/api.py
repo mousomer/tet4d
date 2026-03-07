@@ -1244,6 +1244,11 @@ def tutorial_lesson_ids_runtime() -> tuple[str, ...]:
     return tuple(str(lesson_id) for lesson_id in lesson_ids)
 
 
+def tutorial_board_dims_runtime(mode: str) -> tuple[int, ...]:
+    dims = _call_tutorial_content("tutorial_board_dims_for_mode", mode)
+    return tuple(int(value) for value in dims)
+
+
 def tutorial_progress_snapshot_runtime() -> dict[str, Any]:
     payload = _call_tutorial_runtime("tutorial_progress_snapshot")
     return dict(payload)

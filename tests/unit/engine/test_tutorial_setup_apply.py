@@ -48,7 +48,7 @@ def _new_state_3d() -> tuple[GameConfigND, GameStateND]:
 
 def _new_state_4d() -> tuple[GameConfigND, GameStateND]:
     cfg = GameConfigND(
-        dims=(10, 20, 6, 4),
+        dims=(10, 20, 6, 6),
         gravity_axis=1,
         piece_set_id=PIECE_SET_4D_STANDARD,
         challenge_layers=0,

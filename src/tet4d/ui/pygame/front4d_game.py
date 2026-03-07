@@ -221,32 +221,20 @@ _TUTORIAL_MIN_VISIBLE_LAYER = engine_api.project_constant_int(
     min_value=0,
     max_value=10,
 )
-_TUTORIAL_MIN_DIMS_4D = (
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "x"),
-        10,
-        min_value=4,
-        max_value=60,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "y"),
-        20,
-        min_value=8,
-        max_value=100,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "z"),
-        8,
-        min_value=4,
-        max_value=40,
-    ),
-    engine_api.project_constant_int(
-        ("tutorial", "min_board_dims", "4d", "w"),
-        8,
-        min_value=3,
-        max_value=20,
-    ),
-)
+def _tutorial_board_dims_4d() -> tuple[int, int, int, int]:
+    dims = engine_api.tutorial_board_dims_runtime("4d")
+    return (int(dims[0]), int(dims[1]), int(dims[2]), int(dims[3]))
+
+
+def _apply_tutorial_board_profile_4d(
+    cfg: GameConfigND,
+    *,
+    tutorial_lesson_id: str | None,
+) -> None:
+    if not tutorial_lesson_id:
+        return
+    cfg.dims = _tutorial_board_dims_4d()
+
 
 
 def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) -> bool:
@@ -396,6 +384,10 @@ class LoopContext4D(PanelDragMixin):
         bot_speed_level: int = 7,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext4D":
+        _apply_tutorial_board_profile_4d(
+            cfg,
+            tutorial_lesson_id=tutorial_lesson_id,
+        )
         state = create_initial_state(cfg)
         overlay_default = default_overlay_transparency()
         tutorial_session = None
@@ -592,14 +584,6 @@ def run_game_loop(
     bot_budget_ms: int = 36,
     tutorial_lesson_id: str | None = None,
 ) -> bool:
-    if tutorial_lesson_id:
-        dims = cfg.dims
-        cfg.dims = (
-            max(int(dims[0]), int(_TUTORIAL_MIN_DIMS_4D[0])),
-            max(int(dims[1]), int(_TUTORIAL_MIN_DIMS_4D[1])),
-            max(int(dims[2]), int(_TUTORIAL_MIN_DIMS_4D[2])),
-            max(int(dims[3]), int(_TUTORIAL_MIN_DIMS_4D[3])),
-        )
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     gravity_interval_ms = gravity_interval_ms_from_config(cfg)
@@ -743,10 +727,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
-
-
-
-
-
-

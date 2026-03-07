@@ -6,6 +6,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   package:
     runs-on: ${{ matrix.runner }}
@@ -14,9 +17,9 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-latest
-            target: linux
+            target: linux-amd64
           - runner: windows-latest
-            target: windows
+            target: windows-x64
           - runner: macos-15-intel
             target: macos-x64
           - runner: macos-latest
@@ -28,27 +31,50 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Build desktop package (Linux)
+      - name: Build installer (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           bash packaging/scripts/build_linux.sh
 
-      - name: Build desktop package (macOS)
+      - name: Build installer (macOS)
         if: runner.os == 'macOS'
         shell: bash
         run: |
           bash packaging/scripts/build_macos.sh
 
-      - name: Build desktop package (Windows)
+      - name: Build installer (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           ./packaging/scripts/build_windows.ps1
 
-      - name: Upload package artifacts
+      - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tet4d-${{ matrix.target }}-package
+          name: tet4d-${{ matrix.target }}-installer
           path: artifacts/installers/*
           if-no-files-found: error
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tet4d-*-installer
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: Publish GitHub release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/}"
+          title="tet4d ${tag#v}"
+          gh release view "${tag}" >/dev/null 2>&1 || \
+            gh release create "${tag}" --title "${title}" --generate-notes
+          gh release upload "${tag}" artifacts/release/* --clobber

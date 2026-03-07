@@ -29,8 +29,9 @@
 
 1. Packaging spec is up to date: `packaging/pyinstaller/tet4d.spec`.
 2. Packaging docs reflect current flow: `docs/RELEASE_INSTALLERS.md`.
-3. Local package build is verified for the target release OS:
-   - macOS: `bash packaging/scripts/build_macos.sh`
-   - Linux: `bash packaging/scripts/build_linux.sh`
-   - Windows: `./packaging/scripts/build_windows.ps1`
-4. CI workflow exists and is green for package matrix: `.github/workflows/release-packaging.yml`.
+3. Local installer build is verified for the target release OS:
+   - macOS: `bash packaging/scripts/build_macos.sh` (`.dmg`)
+   - Linux: `bash packaging/scripts/build_linux.sh` (`.deb`)
+   - Windows: `./packaging/scripts/build_windows.ps1` (`.msi`)
+4. CI workflow is green for the installer matrix: `.github/workflows/release-packaging.yml`.
+5. The tag-triggered release workflow attached the generated installers to the GitHub release.

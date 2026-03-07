@@ -21,8 +21,8 @@ _KEY_CHIP_GAP = 6
 _KEY_ROW_GAP = 3
 _LAST_PANEL_RECT_BY_DIMENSION: dict[int, pygame.Rect] = {}
 _MOUSE_ACTION_KEY_LABELS = {
-    "mouse_orbit": "RMB Drag",
-    "mouse_zoom": "Mouse Wheel",
+    "mouse_orbit": "RMB + Move Mouse",
+    "mouse_zoom": "Mouse Wheel Scroll",
 }
 
 
@@ -328,13 +328,36 @@ def _panel_base_geometry(
         else:
             margin = int(engine_api.front4d_render_margin())
             side_panel = int(engine_api.front4d_render_side_panel())
-        panel_x = 12
-        panel_w = max(240, side_panel - 16)
-        panel_w = min(panel_w, max(240, width - panel_x - 12))
+        lane_left = max(0, width - side_panel - margin)
+        lane_width = max(0, min(side_panel, width - lane_left))
+        panel_x = lane_left + 8
+        panel_w = max(0, min(max(240, side_panel - 16), max(0, lane_width - 16)))
         panel_y = max(12, margin + 8)
         return panel_x, panel_y, panel_w
     panel_w = min(760, max(420, int(width * 0.52)))
     return 12, 12, panel_w
+
+
+def _panel_x_bounds(
+    *,
+    width: int,
+    dimension: int,
+    panel_w: int,
+) -> tuple[int, int]:
+    max_x = max(0, width - panel_w)
+    if dimension not in (3, 4):
+        return 0, max_x
+    if dimension == 3:
+        margin = int(engine_api.front3d_render_margin())
+        side_panel = int(engine_api.front3d_render_side_panel())
+    else:
+        margin = int(engine_api.front4d_render_margin())
+        side_panel = int(engine_api.front4d_render_side_panel())
+    lane_left = max(0, width - side_panel - margin)
+    lane_right = max(lane_left, width - margin)
+    min_x = max(0, lane_left + 8)
+    max_lane_x = max(min_x, lane_right - 8 - panel_w)
+    return min_x, min(max_x, max_lane_x)
 
 
 def _panel_rect_for_dimension(
@@ -354,9 +377,13 @@ def _panel_rect_for_dimension(
     panel_x += offset_x
     panel_y += offset_y
 
-    max_x = max(0, width - panel_w)
+    min_x, max_x = _panel_x_bounds(
+        width=width,
+        dimension=dimension,
+        panel_w=panel_w,
+    )
     max_y = max(0, height - panel_h)
-    panel_x = max(0, min(max_x, panel_x))
+    panel_x = max(min_x, min(max_x, panel_x))
     panel_y = max(0, min(max_y, panel_y))
     return pygame.Rect(panel_x, panel_y, panel_w, panel_h)
 

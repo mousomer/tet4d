@@ -978,10 +978,7 @@ Parameters:
 ### `config/project/backlog_debt.json`
 Top-level keys: `active_debt_items`, `operational_watch_items`, `schema_version`
 Parameters:
-- `active_debt_items[]`: array[`object`]
-- `active_debt_items[].id`: varies (`string`); examples: `"BKL-P1-010"`, `"BKL-P1-011"`
-- `active_debt_items[].priority`: varies (`string`); examples: `"P1"`
-- `active_debt_items[].title`: varies (`string`); examples: `"Tutorial overlay panel can obstruct gameplay board visibility in som...`, `"Tutorial zoom-in/zoom-out stages should require four actions and sta...`
+- `active_debt_items[]`: array[`empty`]
 - `operational_watch_items[]`: array[`object`]
 - `operational_watch_items[].id`: varies (`string`); examples: `"BKL-P3-002"`, `"BKL-P3-003"`, `"BKL-P3-006"`
 - `operational_watch_items[].priority`: varies (`string`); examples: `"P3"`
@@ -1023,15 +1020,6 @@ Parameters:
 - `tutorial.action_delay_ms.movement`: `140` (`int`)
 - `tutorial.action_delay_ms.rotation`: `170` (`int`)
 - `tutorial.action_delay_ms.soft_drop`: `90` (`int`)
-- `tutorial.min_board_dims.2d.height`: `20` (`int`)
-- `tutorial.min_board_dims.2d.width`: `10` (`int`)
-- `tutorial.min_board_dims.3d.x`: `8` (`int`)
-- `tutorial.min_board_dims.3d.y`: `18` (`int`)
-- `tutorial.min_board_dims.3d.z`: `8` (`int`)
-- `tutorial.min_board_dims.4d.w`: `8` (`int`)
-- `tutorial.min_board_dims.4d.x`: `10` (`int`)
-- `tutorial.min_board_dims.4d.y`: `20` (`int`)
-- `tutorial.min_board_dims.4d.z`: `8` (`int`)
 - `tutorial.min_visible_layer`: `2` (`int`)
 - `tutorial.overlay_target_percent.max`: `90` (`int`)
 - `tutorial.overlay_target_percent.min`: `20` (`int`)
@@ -1468,13 +1456,23 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/tutorial/lessons.json`
-Top-level keys: `lessons`, `schema_version`
+Top-level keys: `board_profiles`, `lessons`, `schema_version`
 Parameters:
+- `board_profiles.2d.height`: `20` (`int`)
+- `board_profiles.2d.width`: `10` (`int`)
+- `board_profiles.3d.x`: `6` (`int`)
+- `board_profiles.3d.y`: `18` (`int`)
+- `board_profiles.3d.z`: `6` (`int`)
+- `board_profiles.4d.w`: `6` (`int`)
+- `board_profiles.4d.x`: `10` (`int`)
+- `board_profiles.4d.y`: `20` (`int`)
+- `board_profiles.4d.z`: `6` (`int`)
 - `lessons[]`: array[`object`]
 - `lessons[].lesson_id`: varies (`string`); examples: `"tutorial_2d_core"`, `"tutorial_3d_core"`, `"tutorial_4d_core"`
 - `lessons[].mode`: varies (`string`); examples: `"2d"`, `"3d"`, `"4d"`
 - `lessons[].steps[]`: array[`object`]
-- `lessons[].steps[].complete_when.event_count_required`: varies (`int`); examples: `4`, `1`
+- `lessons[].steps[].complete_when.event_count_required`: varies (`int`); examples: `4`
+- `lessons[].steps[].complete_when.event_span_min_ms`: varies (`int`); examples: `2000`
 - `lessons[].steps[].complete_when.events[]`: array[`string`]; examples: `"move_x_neg"`, `"move_x_pos"`, `"rotate_xy_pos"`
 - `lessons[].steps[].complete_when.logic`: varies (`string`); examples: `"all"`
 - `lessons[].steps[].complete_when.predicates[]`: array[`empty, string`]; examples: `"overlay_alpha_target_reached"`, `"line_cleared"`, `"board_cleared"`
