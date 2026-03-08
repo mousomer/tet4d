@@ -92,7 +92,8 @@
       "config/project/backlog_debt.json",
       "config/project/policy/manifests/secret_scan.json",
       "config/project/policy/manifests/canonical_maintenance.json",
-      "config/project/policy/manifests/architecture_metrics.json"
+      "config/project/policy/manifests/architecture_metrics.json",
+      "config/project/policy/manifests/drift_protection.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
@@ -110,6 +111,7 @@
       "tools/governance/validate_project_contracts.py",
       "tools/governance/generate_configuration_reference.py",
       "tools/governance/generate_maintenance_docs.py",
+      "tools/governance/check_drift_protection.py",
       "tools/governance/check_risk_gates.py",
       "tools/governance/check_policy_runtime_rules.py",
       "tools/governance/check_wheel_reuse_rules.py",
@@ -165,6 +167,7 @@
         "config/project/policy/manifests/loc_guidance.json",
         "config/project/policy/manifests/dedup_dead_code_rules.json",
         "config/project/policy/manifests/policy_registry.json",
+        "config/project/policy/manifests/drift_protection.json",
         "config/project/policy/manifests/project_policy.json",
         "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
         "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
@@ -293,6 +296,7 @@
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
         "run_step \"contracts\"",
         "run_step \"maintenance_docs\"",
+        "run_step \"drift_protection\"",
         "run_step \"risk_gates\"",
         "run_step \"policy_runtime_rules\"",
         "run_step \"wheel_reuse_rules\"",
@@ -726,7 +730,8 @@
         "tools/governance/generate_maintenance_docs.py",
         "<!-- BEGIN GENERATED:current_state_architecture_snapshot -->",
         "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
-        "<!-- BEGIN GENERATED:current_state_canonical_ownership -->"
+        "<!-- BEGIN GENERATED:current_state_canonical_ownership -->",
+        "<!-- BEGIN GENERATED:current_state_drift_watch -->"
       ]
     },
     {

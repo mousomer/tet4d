@@ -185,6 +185,17 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertTrue(shapes)
         self.assertTrue(all(len(shape.blocks) == 6 for shape in shapes))
 
+    def test_4d_exploration_mode_uses_fixed_compact_board_profile(self) -> None:
+        settings = frontend_nd_setup.GameSettingsND(
+            width=14,
+            height=26,
+            depth=9,
+            fourth=8,
+            exploration_mode=1,
+        )
+        cfg = frontend_nd_setup.build_config(settings, 4)
+        self.assertEqual(cfg.dims, (8, 9, 7, 6))
+
     def test_runtime_collect_cleared_ghost_cells_accepts_mixed_args_kwargs(self) -> None:
         state = SimpleNamespace(
             board=SimpleNamespace(

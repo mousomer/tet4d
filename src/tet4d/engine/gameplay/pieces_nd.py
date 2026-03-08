@@ -32,6 +32,8 @@ PIECE_SET_3D_OPTIONS = (
 
 PIECE_SET_4D_STANDARD = "standard_4d_5"
 PIECE_SET_4D_SIX = "standard_4d_6"
+PIECE_SET_4D_SEVEN = "standard_4d_7"
+PIECE_SET_4D_EIGHT = "standard_4d_8"
 PIECE_SET_4D_EMBED_3D = "embedded_3d"
 PIECE_SET_4D_EMBED_2D = "embedded_2d"
 PIECE_SET_4D_RANDOM = "random_cells_4d"
@@ -39,6 +41,8 @@ PIECE_SET_4D_DEBUG = "debug_rectangles_4d"
 PIECE_SET_4D_OPTIONS = (
     PIECE_SET_4D_STANDARD,
     PIECE_SET_4D_SIX,
+    PIECE_SET_4D_SEVEN,
+    PIECE_SET_4D_EIGHT,
     PIECE_SET_4D_EMBED_3D,
     PIECE_SET_4D_EMBED_2D,
     PIECE_SET_4D_RANDOM,
@@ -76,6 +80,8 @@ def piece_set_label(piece_set_id: str) -> str:
         PIECE_SET_3D_DEBUG: "Debug Rectangles 3D",
         PIECE_SET_4D_STANDARD: "True 4D (5-cell)",
         PIECE_SET_4D_SIX: "True 4D (6-cell)",
+        PIECE_SET_4D_SEVEN: "True 4D (7-cell)",
+        PIECE_SET_4D_EIGHT: "True 4D (8-cell)",
         PIECE_SET_4D_EMBED_3D: "Embedded 3D",
         PIECE_SET_4D_EMBED_2D: "Embedded 2D",
         PIECE_SET_4D_RANDOM: "Random Cells 4D",
@@ -199,6 +205,16 @@ def _pieces_4d_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
 @lru_cache(maxsize=1)
 def _pieces_4d_six_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_4d_6")
+
+
+@lru_cache(maxsize=1)
+def _pieces_4d_seven_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    return _load_piece_records("pieces_4d_7")
+
+
+@lru_cache(maxsize=1)
+def _pieces_4d_eight_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+    return _load_piece_records("pieces_4d_8")
 
 
 def _random_connected_blocks_nd(
@@ -358,7 +374,9 @@ _PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] =
 
 _PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_six_records()
 
+_PIECES_4D_SEVEN: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_seven_records()
 
+_PIECES_4D_EIGHT: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_eight_records()
 
 
 @dataclass(frozen=True)
@@ -479,6 +497,24 @@ def _six_cell_4d_piece_set(
     return _shape_records_to_nd(_PIECES_4D_SIX, ndim)
 
 
+def _seven_cell_4d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_4D_SEVEN, ndim)
+
+
+def _eight_cell_4d_piece_set(
+    ndim: int,
+    _rng: random.Random | None,
+    _random_cell_count: int | None,
+    _board_dims: Sequence[int] | None,
+) -> List[PieceShapeND]:
+    return _shape_records_to_nd(_PIECES_4D_EIGHT, ndim)
+
+
 def _embedded_3d_piece_set(
     ndim: int,
     _rng: random.Random | None,
@@ -514,6 +550,8 @@ _PIECE_SET_FACTORIES_3D: dict[str, PieceSetFactoryND] = {
 _PIECE_SET_FACTORIES_4D: dict[str, PieceSetFactoryND] = {
     PIECE_SET_4D_STANDARD: _standard_4d_piece_set,
     PIECE_SET_4D_SIX: _six_cell_4d_piece_set,
+    PIECE_SET_4D_SEVEN: _seven_cell_4d_piece_set,
+    PIECE_SET_4D_EIGHT: _eight_cell_4d_piece_set,
     PIECE_SET_4D_EMBED_3D: _embedded_3d_piece_set,
     PIECE_SET_4D_EMBED_2D: _embedded_2d_piece_set,
     PIECE_SET_4D_RANDOM: _random_4d_piece_set,

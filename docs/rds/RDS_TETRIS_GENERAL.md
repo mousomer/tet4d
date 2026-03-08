@@ -117,7 +117,7 @@ Cross-cutting requirements are defined in:
 11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
-14. Tutorial overlay panel must be enlarged for readability, clearly separate lesson/segment/task/action hint lines, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
+14. Tutorial overlay panel must be enlarged for readability, present one clear plain-language primary action line plus one optional tip line, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
 15. Tutorial progression must expose explicit segment order:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.

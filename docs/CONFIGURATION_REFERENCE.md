@@ -33,6 +33,7 @@ Coverage:
 - `config/project/policy/manifests/context_router_manifest.json`
 - `config/project/policy/manifests/contributor_directives.json`
 - `config/project/policy/manifests/dedup_dead_code_rules.json`
+- `config/project/policy/manifests/drift_protection.json`
 - `config/project/policy/manifests/help_assets_manifest.json`
 - `config/project/policy/manifests/loc_guidance.json`
 - `config/project/policy/manifests/policy_registry.json`
@@ -81,7 +82,7 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/gameplay/piece_sets_nd.json`
-Top-level keys: `pieces_3d`, `pieces_4d_5`, `pieces_4d_6`, `version`
+Top-level keys: `pieces_3d`, `pieces_4d_5`, `pieces_4d_6`, `pieces_4d_7`, `pieces_4d_8`, `version`
 Parameters:
 - `pieces_3d[]`: array[`object`]
 - `pieces_3d[].blocks[]`: array[`array`]
@@ -98,6 +99,16 @@ Parameters:
 - `pieces_4d_6[].blocks[][]`: array[`int`]; examples: `0`, `-1`, `1`
 - `pieces_4d_6[].color_id`: varies (`int`); examples: `1`, `2`, `3`
 - `pieces_4d_6[].name`: varies (`string`); examples: `"CROSS6"`, `"RIBBON6_A"`, `"RIBBON6_B"`
+- `pieces_4d_7[]`: array[`object`]
+- `pieces_4d_7[].blocks[]`: array[`array`]
+- `pieces_4d_7[].blocks[][]`: array[`int`]; examples: `0`, `-1`, `1`
+- `pieces_4d_7[].color_id`: varies (`int`); examples: `1`, `2`, `3`
+- `pieces_4d_7[].name`: varies (`string`); examples: `"CROSS7"`, `"RIBBON7_A"`, `"RIBBON7_B"`
+- `pieces_4d_8[]`: array[`object`]
+- `pieces_4d_8[].blocks[]`: array[`array`]
+- `pieces_4d_8[].blocks[][]`: array[`int`]; examples: `0`, `-1`, `1`
+- `pieces_4d_8[].color_id`: varies (`int`); examples: `1`, `2`, `3`
+- `pieces_4d_8[].name`: varies (`string`); examples: `"CROSS8"`, `"RIBBON8_A"`, `"RIBBON8_B"`
 - `version`: `1` (`int`)
 
 ### `config/gameplay/score_analyzer.json`
@@ -1219,6 +1230,22 @@ Parameters:
 - `todo_backlog_rule.scope_globs[]`: array[`string`]; examples: `"src/**/*.py"`, `"tools/**/*.py"`, `"scripts/**/*.py"`
 - `todo_backlog_rule.token_regex`: `"\\b(?:TODO|FIXME)\\b"` (`string`)
 
+### `config/project/policy/manifests/drift_protection.json`
+Top-level keys: `hotspot_scan`, `manifest_id`, `schema_version`, `thin_wrapper_budgets`, `tutorial_copy_contract`
+Parameters:
+- `hotspot_scan.roots[]`: array[`string`]; examples: `"src"`, `"cli"`, `"tests"`
+- `hotspot_scan.top_n`: `8` (`int`)
+- `manifest_id`: `"drift_protection"` (`string`)
+- `schema_version`: `1` (`int`)
+- `thin_wrapper_budgets[]`: array[`object`]
+- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `720`, `24`, `120`
+- `thin_wrapper_budgets[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
+- `thin_wrapper_budgets[].role`: varies (`string`); examples: `"compatibility launcher wrapper"`, `"thin 2D launcher shim"`, `"thin 3D launcher shim"`
+- `tutorial_copy_contract.forbidden_prefixes[]`: array[`string`]; examples: `"Goal:"`, `"Action:"`
+- `tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
+- `tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
+- `tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
+
 ### `config/project/policy/manifests/help_assets_manifest.json`
 Top-level keys: `assets`, `icon_map`, `renderer`, `source_pack`, `version`
 Parameters:
@@ -1321,7 +1348,7 @@ Parameters:
 - `policy_pack.version`: `"2026-02-28"` (`string`)
 - `policy_source`: `"workspace/policy-kit"` (`string`)
 - `policy_source_path`: `"${HOME}/workspace/policy-kit"` (`string`)
-- `policy_version`: `"1.1.3"` (`string`)
+- `policy_version`: `"1.1.4"` (`string`)
 - `project_name`: `"tet4d"` (`string`)
 - `secret_scan`: `"python3 tools/governance/scan_secrets.py"` (`string`)
 - `verification_command`: `"./scripts/verify.sh"` (`string`)
@@ -1479,9 +1506,9 @@ Parameters:
 - `board_profiles.3d.y`: `18` (`int`)
 - `board_profiles.3d.z`: `6` (`int`)
 - `board_profiles.4d.w`: `6` (`int`)
-- `board_profiles.4d.x`: `10` (`int`)
+- `board_profiles.4d.x`: `8` (`int`)
 - `board_profiles.4d.y`: `20` (`int`)
-- `board_profiles.4d.z`: `6` (`int`)
+- `board_profiles.4d.z`: `7` (`int`)
 - `lessons[]`: array[`object`]
 - `lessons[].lesson_id`: varies (`string`); examples: `"tutorial_2d_core"`, `"tutorial_3d_core"`, `"tutorial_4d_core"`
 - `lessons[].mode`: varies (`string`); examples: `"2d"`, `"3d"`, `"4d"`

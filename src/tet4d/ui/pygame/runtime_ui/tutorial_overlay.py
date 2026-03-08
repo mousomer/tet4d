@@ -5,7 +5,6 @@ from typing import Any
 import pygame
 
 from tet4d.engine.tutorial.api import tutorial_runtime_overlay_payload_runtime
-from tet4d.engine.ui_logic.keybindings_catalog import binding_action_description
 from tet4d.ui.pygame import front3d_render, front4d_render
 from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
@@ -131,12 +130,10 @@ def _overlay_intro_lines(
     step_text = str(payload.get("step_text", "")).strip()
     step_hint = str(payload.get("step_hint", "")).strip()
     if step_text or step_hint:
-        if step_text and step_hint:
-            lines.append((f"Goal: {step_text} ({step_hint})", _TEXT_PRIMARY, False))
-        elif step_text:
-            lines.append((f"Goal: {step_text}", _TEXT_PRIMARY, False))
-        else:
-            lines.append((f"Goal: {step_hint}", _TEXT_PRIMARY, False))
+        if step_text:
+            lines.append((f"Do this: {step_text}", _TEXT_PRIMARY, False))
+        if step_hint and step_hint != step_text:
+            lines.append((f"Tip: {step_hint}", _TEXT_SECONDARY, False))
     return lines
 
 
@@ -155,29 +152,19 @@ def _append_key_prompt_lines(
         if not action_id:
             continue
         key_label = _key_label_for_action(action_id, binding_map=binding_map)
-        action_label = _overlay_action_label(action_id)
-        lines.append((f"KEY: {key_label}  {action_label}", _TEXT_HIGHLIGHT, True))
-
-
-def _overlay_action_label(action_id: str) -> str:
-    normalized = str(action_id).strip().lower()
-    if normalized == "help":
-        return "HELP"
-    if normalized == "menu":
-        return "pause MENU"
-    if normalized == "restart":
-        return "restart"
-    if normalized == "mouse_orbit":
-        return "rotate board"
-    if normalized == "mouse_zoom":
-        return "zoom board"
-    if normalized in {"quit", "menu_back"}:
-        return "main menu"
-    return binding_action_description(normalized).strip()
+        lines.append((f"USE: {key_label}", _TEXT_HIGHLIGHT, True))
 
 
 def _parse_key_action_line(line: str) -> tuple[tuple[str, ...], str] | None:
     text = str(line).strip()
+    if text.lower().startswith("use:"):
+        body = text[4:].strip()
+        if not body:
+            return None
+        tokens = tuple(part.strip() for part in body.split("/") if part.strip())
+        if not tokens:
+            return None
+        return (tokens, "")
     if not text.lower().startswith("key:"):
         return None
     body = text[4:].strip()
@@ -238,7 +225,7 @@ def _build_key_prompt_rows(
     action_label: str,
     max_width: int,
 ) -> list[dict[str, object]]:
-    key_label = "KEY:"
+    key_label = "USE:"
     key_label_w = font.size(key_label)[0] + _KEY_CHIP_GAP
     token_rows = _wrap_key_tokens(
         font,
@@ -256,22 +243,24 @@ def _build_key_prompt_rows(
                 "font": font,
                 "tokens": token_row,
                 "show_key_label": idx == 0,
+                "key_label": key_label,
                 "row_h": key_row_h,
             }
         )
-    action_lines = _wrap_text_line(font, f"ACTION: {action_label}", max_width=max_width)
-    text_row_h = max(16, font.get_height() + 4)
-    for action_line in action_lines:
-        rows.append(
-            {
-                "kind": "text",
-                "font": font,
-                "text": action_line,
-                "color": _TEXT_PRIMARY,
-                "bold": False,
-                "row_h": text_row_h,
-            }
-        )
+    if action_label:
+        action_lines = _wrap_text_line(font, f"Do: {action_label}", max_width=max_width)
+        text_row_h = max(16, font.get_height() + 4)
+        for action_line in action_lines:
+            rows.append(
+                {
+                    "kind": "text",
+                    "font": font,
+                    "text": action_line,
+                    "color": _TEXT_PRIMARY,
+                    "bold": False,
+                    "row_h": text_row_h,
+                }
+            )
     return rows
 
 
@@ -282,6 +271,7 @@ def _draw_key_prompt_row(
     font: pygame.font.Font,
     tokens: tuple[str, ...],
     show_key_label: bool,
+    key_label: str,
     y: int,
     text_w: int,
 ) -> None:
@@ -289,9 +279,9 @@ def _draw_key_prompt_row(
     chip_h = font.get_height() + (_KEY_CHIP_PAD_Y * 2)
     base_y = y + 1
     if show_key_label:
-        key_label = _render_line(font, "KEY:", _TEXT_SECONDARY, bold=True)
-        screen.blit(key_label, (x, y))
-        x += key_label.get_width() + _KEY_CHIP_GAP
+        key_label_surf = _render_line(font, key_label, _TEXT_SECONDARY, bold=True)
+        screen.blit(key_label_surf, (x, y))
+        x += key_label_surf.get_width() + _KEY_CHIP_GAP
     max_chip_text_w = max(16, text_w - (_KEY_CHIP_PAD_X * 2))
     for token in tokens:
         token_text = fit_text(font, token, max_chip_text_w)
@@ -527,6 +517,7 @@ def draw_tutorial_overlay(
                 font=row["font"],
                 tokens=tuple(row["tokens"]),
                 show_key_label=bool(row["show_key_label"]),
+                key_label=str(row.get("key_label", "USE:")),
                 y=y,
                 text_w=text_w,
             )

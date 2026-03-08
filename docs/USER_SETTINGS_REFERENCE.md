@@ -100,7 +100,7 @@ Dimension-specific board size, piece set, random mode/seed, challenge layers, an
 - `settings.4d.height`: `20`; integer; min: 8
 - `settings.4d.depth`: `6`; integer; min: 2
 - `settings.4d.fourth`: `4`; integer; min: 1
-- `settings.4d.piece_set_index`: `0`; integer; min: 0; default option: True 4D (5-cell); choices: 0=True 4D (5-cell), 1=True 4D (6-cell), 2=Embedded 3D, 3=Embedded 2D, 4=Random Cells 4D, 5=Debug Rectangles 4D
+- `settings.4d.piece_set_index`: `0`; integer; min: 0; default option: True 4D (5-cell); choices: 0=True 4D (5-cell), 1=True 4D (6-cell), 2=True 4D (7-cell), 3=True 4D (8-cell), 4=Embedded 3D, 5=Embedded 2D, 6=Random Cells 4D, 7=Debug Rectangles 4D
 - `settings.4d.challenge_layers`: `0`; integer; min: 0
 - `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.speed_level`: `1`; integer; range: 1..10

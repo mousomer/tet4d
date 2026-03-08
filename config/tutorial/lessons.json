@@ -11,9 +11,9 @@
       "z": 6
     },
     "4d": {
-      "x": 10,
+      "x": 8,
       "y": 20,
-      "z": 6,
+      "z": 7,
       "w": 6
     }
   },
@@ -338,7 +338,7 @@
         {
           "id": "line_fill",
           "ui": {
-            "text": "Goal: remove one full line.",
+            "text": "remove one full line.",
             "hint": "Move and rotate the piece into the hole, then Hard Drop to clear exactly one line.",
             "highlights": [
               "target_row"
@@ -381,7 +381,7 @@
         {
           "id": "full_clear_bonus",
           "ui": {
-            "text": "Goal: clear the full prepared board.",
+            "text": "clear the full prepared board.",
             "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board.",
             "highlights": [
               "target_row"
@@ -424,7 +424,7 @@
         {
           "id": "target_drop",
           "ui": {
-            "text": "Goal: place the piece into the highlighted target.",
+            "text": "place the piece into the highlighted target.",
             "hint": "Use movement and rotation, then Hard Drop to complete the target.",
             "highlights": [
               "target_row"
@@ -1380,7 +1380,7 @@
         {
           "id": "target_drop",
           "ui": {
-            "text": "Goal: place the piece into the highlighted target.",
+            "text": "place the piece into the highlighted target.",
             "hint": "Use movement and rotation, then Hard Drop to complete the target.",
             "highlights": [
               "target_layer"
@@ -1429,7 +1429,7 @@
         {
           "id": "layer_fill",
           "ui": {
-            "text": "Goal: remove one full layer.",
+            "text": "remove one full layer.",
             "hint": "Move and rotate into the prepared gap, then Hard Drop to clear one full 3D layer.",
             "highlights": [
               "target_layer"
@@ -1479,7 +1479,7 @@
         {
           "id": "full_clear_bonus",
           "ui": {
-            "text": "Goal: clear the full prepared board.",
+            "text": "clear the full prepared board.",
             "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board.",
             "highlights": [
               "target_layer"
@@ -1537,8 +1537,8 @@
         {
           "id": "move_x_neg",
           "ui": {
-            "text": "Move piece left four times.",
-            "hint": "Press Move Left 4 times.",
+            "text": "Move the falling shape left four times.",
+            "hint": "Press the Move Left control 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -1575,8 +1575,8 @@
         {
           "id": "move_x_pos",
           "ui": {
-            "text": "Move piece right four times.",
-            "hint": "Press Move Right 4 times.",
+            "text": "Move the falling shape right four times.",
+            "hint": "Press the Move Right control 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -1613,8 +1613,8 @@
         {
           "id": "move_z_neg",
           "ui": {
-            "text": "Move piece depth-away four times.",
-            "hint": "Press Move Away 4 times.",
+            "text": "Move the falling shape farther away four times.",
+            "hint": "Press the Move Away control 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -1651,8 +1651,8 @@
         {
           "id": "move_z_pos",
           "ui": {
-            "text": "Move piece depth-closer four times.",
-            "hint": "Press Move Closer 4 times.",
+            "text": "Move the falling shape closer four times.",
+            "hint": "Press the Move Closer control 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -1689,8 +1689,8 @@
         {
           "id": "move_w_neg",
           "ui": {
-            "text": "Move piece to previous W slice four times.",
-            "hint": "Press Move W- 4 times.",
+            "text": "Move the falling shape to the previous W layer four times.",
+            "hint": "Press the W- control 4 times.",
             "highlights": [
               "slice_indicator"
             ],
@@ -1727,8 +1727,8 @@
         {
           "id": "move_w_pos",
           "ui": {
-            "text": "Move piece to next W slice four times.",
-            "hint": "Press Move W+ 4 times.",
+            "text": "Move the falling shape to the next W layer four times.",
+            "hint": "Press the W+ control 4 times.",
             "highlights": [
               "slice_indicator"
             ],
@@ -1765,7 +1765,7 @@
         {
           "id": "rotate_xy_pos",
           "ui": {
-            "text": "Rotate piece in XY positive direction four times.",
+            "text": "Turn the falling shape in the flat XY plane four times.",
             "hint": "Press Rotate XY + 4 times.",
             "highlights": [
               "active_piece"
@@ -1803,7 +1803,7 @@
         {
           "id": "rotate_xy_neg",
           "ui": {
-            "text": "Rotate piece in XY negative direction four times.",
+            "text": "Turn the falling shape in the flat XY plane the other way four times.",
             "hint": "Press Rotate XY - 4 times.",
             "highlights": [
               "active_piece"
@@ -1841,7 +1841,7 @@
         {
           "id": "rotate_xz_pos",
           "ui": {
-            "text": "Rotate piece in XZ positive direction four times.",
+            "text": "Turn the falling shape in the XZ plane four times.",
             "hint": "Press Rotate XZ + 4 times.",
             "highlights": [
               "active_piece"
@@ -1879,7 +1879,7 @@
         {
           "id": "rotate_xz_neg",
           "ui": {
-            "text": "Rotate piece in XZ negative direction four times.",
+            "text": "Turn the falling shape in the XZ plane the other way four times.",
             "hint": "Press Rotate XZ - 4 times.",
             "highlights": [
               "active_piece"
@@ -1917,7 +1917,7 @@
         {
           "id": "rotate_yz_pos",
           "ui": {
-            "text": "Rotate piece in YZ positive direction four times.",
+            "text": "Turn the falling shape in the YZ plane four times.",
             "hint": "Press Rotate YZ + 4 times.",
             "highlights": [
               "active_piece"
@@ -1955,7 +1955,7 @@
         {
           "id": "rotate_yz_neg",
           "ui": {
-            "text": "Rotate piece in YZ negative direction four times.",
+            "text": "Turn the falling shape in the YZ plane the other way four times.",
             "hint": "Press Rotate YZ - 4 times.",
             "highlights": [
               "active_piece"
@@ -1993,8 +1993,8 @@
         {
           "id": "rotate_xw_pos",
           "ui": {
-            "text": "Rotate piece in XW positive direction four times.",
-            "hint": "Press Rotate XW + 4 times.",
+            "text": "Turn the falling shape in the XW plane four times.",
+            "hint": "This is a 4D turn. Press Rotate XW + 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2031,8 +2031,8 @@
         {
           "id": "rotate_xw_neg",
           "ui": {
-            "text": "Rotate piece in XW negative direction four times.",
-            "hint": "Press Rotate XW - 4 times.",
+            "text": "Turn the falling shape in the XW plane the other way four times.",
+            "hint": "This is a 4D turn. Press Rotate XW - 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2069,8 +2069,8 @@
         {
           "id": "rotate_yw_pos",
           "ui": {
-            "text": "Rotate piece in YW positive direction four times.",
-            "hint": "Press Rotate YW + 4 times.",
+            "text": "Turn the falling shape in the YW plane four times.",
+            "hint": "This is a 4D turn. Press Rotate YW + 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2107,8 +2107,8 @@
         {
           "id": "rotate_yw_neg",
           "ui": {
-            "text": "Rotate piece in YW negative direction four times.",
-            "hint": "Press Rotate YW - 4 times.",
+            "text": "Turn the falling shape in the YW plane the other way four times.",
+            "hint": "This is a 4D turn. Press Rotate YW - 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2145,8 +2145,8 @@
         {
           "id": "rotate_zw_pos",
           "ui": {
-            "text": "Rotate piece in ZW positive direction four times.",
-            "hint": "Press Rotate ZW + 4 times.",
+            "text": "Turn the falling shape in the ZW plane four times.",
+            "hint": "This is a 4D turn. Press Rotate ZW + 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2183,8 +2183,8 @@
         {
           "id": "rotate_zw_neg",
           "ui": {
-            "text": "Rotate piece in ZW negative direction four times.",
-            "hint": "Press Rotate ZW - 4 times.",
+            "text": "Turn the falling shape in the ZW plane the other way four times.",
+            "hint": "This is a 4D turn. Press Rotate ZW - 4 times.",
             "highlights": [
               "active_piece"
             ],
@@ -2221,8 +2221,8 @@
         {
           "id": "soft_drop",
           "ui": {
-            "text": "Soft-drop four times.",
-            "hint": "Press Soft Drop 4 times for controlled descent.",
+            "text": "Move the shape down slowly four times.",
+            "hint": "Press Soft Drop 4 times for a controlled fall.",
             "highlights": [
               "active_piece"
             ],
@@ -2252,8 +2252,8 @@
         {
           "id": "hard_drop",
           "ui": {
-            "text": "Hard-drop once.",
-            "hint": "Press Hard Drop once to lock quickly.",
+            "text": "Drop and lock the shape once.",
+            "hint": "Press Hard Drop once to place the shape immediately.",
             "highlights": [
               "active_piece"
             ],
@@ -2283,8 +2283,8 @@
         {
           "id": "yaw_fine_neg",
           "ui": {
-            "text": "Rotate camera yaw fine negative four times.",
-            "hint": "Press camera Yaw Fine - 4 times.",
+            "text": "Pan the camera a little to the left four times.",
+            "hint": "Press Camera Yaw Fine - 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2322,8 +2322,8 @@
         {
           "id": "yaw_neg",
           "ui": {
-            "text": "Rotate camera yaw negative four times.",
-            "hint": "Press camera Yaw - 4 times.",
+            "text": "Pan the camera left four times.",
+            "hint": "Press Camera Yaw - 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2354,8 +2354,8 @@
         {
           "id": "yaw_pos",
           "ui": {
-            "text": "Rotate camera yaw positive four times.",
-            "hint": "Press camera Yaw + 4 times.",
+            "text": "Pan the camera right four times.",
+            "hint": "Press Camera Yaw + 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2386,8 +2386,8 @@
         {
           "id": "yaw_fine_pos",
           "ui": {
-            "text": "Rotate camera yaw fine positive four times.",
-            "hint": "Press camera Yaw Fine + 4 times.",
+            "text": "Pan the camera a little to the right four times.",
+            "hint": "Press Camera Yaw Fine + 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2418,8 +2418,8 @@
         {
           "id": "pitch_neg",
           "ui": {
-            "text": "Rotate camera pitch negative four times.",
-            "hint": "Press camera Pitch - 4 times.",
+            "text": "Tilt the camera with Pitch - four times.",
+            "hint": "Press Camera Pitch - 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2450,8 +2450,8 @@
         {
           "id": "pitch_pos",
           "ui": {
-            "text": "Rotate camera pitch positive four times.",
-            "hint": "Press camera Pitch + 4 times.",
+            "text": "Tilt the camera with Pitch + four times.",
+            "hint": "Press Camera Pitch + 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2482,7 +2482,7 @@
         {
           "id": "view_xw_neg",
           "ui": {
-            "text": "Rotate camera view XW negative four times.",
+            "text": "Change to another 4D viewing angle four times with XW-.",
             "hint": "Press View XW - 4 times.",
             "highlights": [
               "camera_axes"
@@ -2514,7 +2514,7 @@
         {
           "id": "view_xw_pos",
           "ui": {
-            "text": "Rotate camera view XW positive four times.",
+            "text": "Change to another 4D viewing angle four times with XW+.",
             "hint": "Press View XW + 4 times.",
             "highlights": [
               "camera_axes"
@@ -2546,7 +2546,7 @@
         {
           "id": "view_zw_neg",
           "ui": {
-            "text": "Rotate camera view ZW negative four times.",
+            "text": "Change to another 4D viewing angle four times with ZW-.",
             "hint": "Press View ZW - 4 times.",
             "highlights": [
               "camera_axes"
@@ -2578,7 +2578,7 @@
         {
           "id": "view_zw_pos",
           "ui": {
-            "text": "Rotate camera view ZW positive four times.",
+            "text": "Change to another 4D viewing angle four times with ZW+.",
             "hint": "Press View ZW + 4 times.",
             "highlights": [
               "camera_axes"
@@ -2611,7 +2611,7 @@
           "id": "mouse_orbit",
           "ui": {
             "text": "Rotate the board with the mouse.",
-            "hint": "Hold Right Mouse Button and keep moving the mouse for at least 2 seconds.",
+            "hint": "Hold the right mouse button and keep moving the mouse for at least 2 seconds.",
             "highlights": [
               "camera_axes"
             ],
@@ -2644,7 +2644,7 @@
           "id": "mouse_zoom",
           "ui": {
             "text": "Zoom the board with the mouse wheel.",
-            "hint": "Keep scrolling the Mouse Wheel for at least 2 seconds to zoom the board.",
+            "hint": "Keep scrolling the mouse wheel for at least 2 seconds.",
             "highlights": [
               "camera_axes"
             ],
@@ -2772,8 +2772,8 @@
         {
           "id": "camera_reset",
           "ui": {
-            "text": "Reset camera once.",
-            "hint": "Press Reset View once.",
+            "text": "Reset the camera once.",
+            "hint": "Press Reset View once to go back to the default angle.",
             "highlights": [
               "camera_axes"
             ],
@@ -2803,7 +2803,7 @@
         {
           "id": "overlay_alpha_dec",
           "ui": {
-            "text": "Set locked-cell transparency to minimum allowed.",
+            "text": "Set locked-cell transparency to the minimum allowed value.",
             "hint": "This stage starts at 50%. Press transparency down until you reach the minimum allowed value.",
             "highlights": [
               "stats_panel"
@@ -2839,7 +2839,7 @@
         {
           "id": "overlay_alpha_inc",
           "ui": {
-            "text": "Set locked-cell transparency to maximum allowed.",
+            "text": "Set locked-cell transparency to the maximum allowed value.",
             "hint": "This stage starts at 50%. Press transparency up until you reach the maximum allowed value.",
             "highlights": [
               "stats_panel"
@@ -2875,8 +2875,8 @@
         {
           "id": "target_drop",
           "ui": {
-            "text": "Goal: place the piece into the highlighted target.",
-            "hint": "Use movement and rotation, then Hard Drop to complete the target.",
+            "text": "Place the shape into the highlighted target.",
+            "hint": "Use movement and rotation, then press Hard Drop to finish the target.",
             "highlights": [
               "target_hyper_layer"
             ],
@@ -2932,8 +2932,8 @@
         {
           "id": "hyper_layer_fill",
           "ui": {
-            "text": "Goal: remove one full hyper-layer.",
-            "hint": "Move and rotate into the prepared gap, then Hard Drop to clear one full 4D hyper-layer.",
+            "text": "Clear one full hyper-layer.",
+            "hint": "Move and rotate into the prepared gap, then press Hard Drop to clear one full 4D hyper-layer.",
             "highlights": [
               "target_hyper_layer"
             ],
@@ -2990,8 +2990,8 @@
         {
           "id": "full_clear_bonus",
           "ui": {
-            "text": "Goal: clear the full prepared board.",
-            "hint": "Move and rotate into the prepared hole, then Hard Drop to clear the full board for an extra score bonus.",
+            "text": "Clear the whole prepared board.",
+            "hint": "Move and rotate into the prepared hole, then press Hard Drop to clear the whole board for a bonus.",
             "highlights": [
               "target_hyper_layer"
             ],

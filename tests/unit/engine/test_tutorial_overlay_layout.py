@@ -187,11 +187,8 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 "format_key_tuple",
                 return_value="Page Up/Page Down",
             ),
-            patch.object(
-                tutorial_overlay,
-                "binding_action_description",
-                return_value="Move left",
-            ),
+
+
             patch.object(tutorial_overlay.front3d_render, "MARGIN", 20),
             patch.object(tutorial_overlay.front3d_render, "SIDE_PANEL", 360),
             patch.object(tutorial_overlay.front4d_render, "MARGIN", 20),

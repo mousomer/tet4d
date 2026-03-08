@@ -8,7 +8,7 @@
   ],
   "contract_validation": "python3 tools/governance/validate_project_contracts.py",
   "secret_scan": "python3 tools/governance/scan_secrets.py",
-  "policy_version": "1.1.3",
+  "policy_version": "1.1.4",
   "policy_id": "workspace-github-sanitation-and-security",
   "policy_source": "workspace/policy-kit",
   "policy_source_path": "${HOME}/workspace/policy-kit",
@@ -130,6 +130,11 @@
         "id": "dedup_dead_code_rules",
         "path": "config/project/policy/manifests/dedup_dead_code_rules.json",
         "validated_by": "tools/governance/check_dedup_dead_code_rules.py"
+      },
+      {
+        "id": "drift_protection",
+        "path": "config/project/policy/manifests/drift_protection.json",
+        "validated_by": "tools/governance/check_drift_protection.py"
       }
     ]
   }

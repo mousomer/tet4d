@@ -11,6 +11,11 @@ from .pieces_nd import (
 )
 
 
+_FIXED_EXPLORATION_DIMS_ND: dict[int, tuple[int, ...]] = {
+    4: (8, 9, 7, 6),
+}
+
+
 def _max_radius(blocks: Iterable[Sequence[int]]) -> int:
     radius = 0
     for block in blocks:
@@ -76,6 +81,9 @@ def minimal_exploration_dims_nd(
     *,
     random_cell_count: int | None = None,
 ) -> tuple[int, ...]:
+    fixed_dims = _FIXED_EXPLORATION_DIMS_ND.get(ndim)
+    if fixed_dims is not None:
+        return fixed_dims
     count = (
         _default_random_count_for_ndim(ndim)
         if random_cell_count is None

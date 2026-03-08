@@ -7,6 +7,12 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
+if __package__:
+    from . import check_drift_protection as drift_guard
+else:
+    sys.path.append(str(Path(__file__).resolve().parent))
+    import check_drift_protection as drift_guard
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CURRENT_STATE_PATH = PROJECT_ROOT / "CURRENT_STATE.md"
 PROJECT_STRUCTURE_PATH = PROJECT_ROOT / "docs" / "PROJECT_STRUCTURE.md"
@@ -226,6 +232,7 @@ def render_current_state_sections(
     metrics: dict[str, object] | None = None,
 ) -> dict[str, str]:
     payload = metrics if metrics is not None else _arch_metrics_payload()
+    drift_manifest = drift_guard._load_manifest()
     deep = payload["deep_imports"]
     purity = payload["engine_core_purity"]
     debt = payload["tech_debt"]
@@ -274,7 +281,70 @@ def render_current_state_sections(
         )
         ownership_lines.append("")
     sections["current_state_canonical_ownership"] = "\n".join(ownership_lines).rstrip()
+    sections["current_state_drift_watch"] = _render_current_state_drift_watch(
+        drift_manifest=drift_manifest
+    )
     return sections
+
+
+def _render_current_state_drift_watch(*, drift_manifest: dict[str, object]) -> str:
+    hotspot_scan = drift_manifest.get("hotspot_scan", {})
+    if isinstance(hotspot_scan, dict):
+        top_n = int(hotspot_scan.get("top_n", 8))
+        roots = drift_guard._validate_hotspot_scan(hotspot_scan, [])
+    else:
+        top_n = 8
+        roots = ("src", "cli", "tests", "tools", "scripts")
+    hotspots = drift_guard.collect_top_hotspots(roots=roots, top_n=top_n)
+
+    budget_rows: list[str] = []
+    budget_entries = drift_manifest.get("thin_wrapper_budgets", [])
+    if isinstance(budget_entries, list):
+        for entry in budget_entries:
+            if not isinstance(entry, dict):
+                continue
+            raw_path = entry.get("path")
+            max_real_loc = entry.get("max_real_loc")
+            role = entry.get("role")
+            if not isinstance(raw_path, str) or not isinstance(max_real_loc, int):
+                continue
+            if not isinstance(role, str):
+                role = "wrapper budget"
+            current = drift_guard.count_real_loc(PROJECT_ROOT / raw_path)
+            budget_rows.append(
+                f"{raw_path}: {current}/{max_real_loc} real LOC ({role})"
+            )
+
+    lines = [
+        "## Live Drift Watch",
+        "",
+        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/manifests/drift_protection.json`.",
+        "",
+        f"Top {top_n} live Python hotspots by real LOC:",
+        "",
+    ]
+    lines.extend(
+        f"{index}. `{path}`: `{loc}` real LOC"
+        for index, (loc, path) in enumerate(hotspots, start=1)
+    )
+    lines.extend(
+        [
+            "",
+            "Thin-wrapper budgets:",
+            "",
+        ]
+    )
+    lines.extend(f"{index}. `{row}`" for index, row in enumerate(budget_rows, start=1))
+    lines.extend(
+        [
+            "",
+            "Tutorial wording drift guard:",
+            "",
+            "1. Lesson copy must not start with `Goal:` or `Action:`.",
+            "2. Tutorial overlay must keep `Do this:`, `Tip:`, and `USE:` tokens.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def render_project_structure_sections() -> dict[str, str]:

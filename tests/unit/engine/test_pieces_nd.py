@@ -13,6 +13,8 @@ from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_EMBED_3D,
     PIECE_SET_4D_RANDOM,
     PIECE_SET_4D_SIX,
+    PIECE_SET_4D_SEVEN,
+    PIECE_SET_4D_EIGHT,
     get_piece_shapes_nd,
     get_standard_pieces_nd,
     rotate_point_nd,
@@ -93,6 +95,18 @@ class TestPiecesND(unittest.TestCase):
                 for axis in range(4):
                     axis_values[axis].add(block[axis])
             self.assertTrue(all(len(values) > 1 for values in axis_values))
+
+    def test_4d_larger_piece_sets_span_all_axes(self):
+        for piece_set_id, cell_count in ((PIECE_SET_4D_SEVEN, 7), (PIECE_SET_4D_EIGHT, 8)):
+            shapes = get_standard_pieces_nd(4, piece_set_4d=piece_set_id)
+            self.assertTrue(shapes)
+            for shape in shapes:
+                self.assertEqual(len(shape.blocks), cell_count)
+                axis_values = [set() for _ in range(4)]
+                for block in shape.blocks:
+                    for axis in range(4):
+                        axis_values[axis].add(block[axis])
+                self.assertTrue(all(len(values) > 1 for values in axis_values))
 
     def test_5d_shapes_embed_selected_4d_set_with_zero_extra_axis(self):
         shapes_4d = get_standard_pieces_nd(4, piece_set_4d=PIECE_SET_4D_SIX)

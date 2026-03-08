@@ -24,29 +24,33 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 1. Coordinate system: `(x, y, z, w)`.
 2. Gravity axis: `y`.
 3. Typical setup defaults: `6 x 18 x 6 x 4`.
-4. Clear rule: full `x-z-w`hyperlayer at fixed`y`.
-5. Lock and game-over semantics are shared with ND engine rules.
-6. Setup exposes topology preset:
-7. `bounded` (default),
-8. `wrap_all` (`x`/`z`/`w` wrap; gravity `y` remains bounded),
-9. `invert_all` (`x`/`z`/`w` wrap with mirrored non-gravity axis mapping).
-10. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
-11. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
-12. Advanced profiles may apply per-edge inversion/wrap behavior including `w` edges.
-13. Rotated candidate acceptance must be decided by topology-aware legality after mapping, not by raw board-edge checks.
+4. Dedicated tutorial board profile: `8 x 20 x 7 x 6`.
+5. Exploration mode uses a fixed compact board profile: `8 x 9 x 7 x 6`.
+6. Clear rule: full `x-z-w` hyperlayer at fixed `y`.
+7. Lock and game-over semantics are shared with ND engine rules.
+8. Setup exposes topology preset:
+9. `bounded` (default),
+10. `wrap_all` (`x`/`z`/`w` wrap; gravity `y` remains bounded),
+11. `invert_all` (`x`/`z`/`w` wrap with mirrored non-gravity axis mapping).
+12. Shared Settings includes `Random type` and `Topology advanced` controls for all modes.
+13. Setup includes `topology_profile_index`, hidden unless shared `topology_advanced` is enabled.
+14. Advanced profiles may apply per-edge inversion/wrap behavior including `w` edges.
+15. Rotated candidate acceptance must be decided by topology-aware legality after mapping, not by raw board-edge checks.
 
 ## 4. Piece Set
 
-1. Default set: dedicated true 4D piece bag.
-2. Optional set: dedicated 4D six-cell piece bag.
-3. Optional set: embedded 3D pieces (`3D->4D` lift).
-4. Optional set: embedded 2D pieces (`2D->4D` lift).
-5. Optional set: `random_cells_4d` (connected random cells).
-6. Optional set: `debug_rectangles_4d` (simple hyper-rectangles for progression testing).
-7. Current baseline 4D pieces are 5-cell forms with variation on all axes (`x,y,z,w`).
-8. Definitions are in `src/tet4d/engine/gameplay/pieces_nd.py`.
-9. Setup menu must expose piece set source selection (`native_4d`,`native_4d_6cell`,`embedded_3d`,`embedded_2d`,`random_cells_4d`,`debug_rectangles_4d`).
-10. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
+1. Default set: dedicated true 4D five-cell piece bag.
+2. Optional set: dedicated true 4D six-cell piece bag.
+3. Optional set: dedicated true 4D seven-cell piece bag.
+4. Optional set: dedicated true 4D eight-cell piece bag.
+5. Optional set: embedded 3D pieces (`3D->4D` lift).
+6. Optional set: embedded 2D pieces (`2D->4D` lift).
+7. Optional set: `random_cells_4d` (connected random cells).
+8. Optional set: `debug_rectangles_4d` (simple hyper-rectangles for progression testing).
+9. Native 4D piece definitions currently cover 5-cell, 6-cell, 7-cell, and 8-cell bags with variation on all axes (`x,y,z,w`).
+10. Definitions are in `src/tet4d/engine/gameplay/pieces_nd.py`.
+11. Setup menu must expose piece set source selection (`standard_4d_5`,`standard_4d_6`,`standard_4d_7`,`standard_4d_8`,`embedded_3d`,`embedded_2d`,`random_cells_4d`,`debug_rectangles_4d`).
+12. Setup menu must expose bot planner algorithm (`AUTO/HEURISTIC/GREEDY_LAYER`), planner profile (`FAST/BALANCED/DEEP/ULTRA`), and planner budget (ms).
 
 ## 4.1 Lower-dimensional set embedding requirements (4D)
 
@@ -223,7 +227,7 @@ Relevant tests:
 
 1. 4D mode is playable from menu to game-over.
 2. Hyperlayer clear behavior is correct for `x-z-w`at each`y`.
-3. Dedicated 4D piece set is used and validated by tests.
+3. Dedicated 4D piece-set families (`5`/`6`/`7`/`8` cell) are selectable and validated by tests.
 4. Replay/smoke tests pass.
 5. Embedded 2D/3D and random-cell 4D sets are selectable and playable.
 6. Debug 4D piece set is selectable and supports fast hyperlayer-fill validation.

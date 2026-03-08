@@ -106,7 +106,7 @@ User-facing feature map for the shipped `tet4d` experience.
 ## 5. Piece Sets
 
 - Native piece sets for 2D, 3D, and truly 4D gameplay.
-- Optional 4D six-cell piece set.
+- Optional larger true-4D piece sets in 6-cell, 7-cell, and 8-cell variants.
 - Random-cell piece sets per dimension.
 - Debug rectangular piece sets (large deterministic fillers for verification).
 - Lower-dimensional set embedding into higher-dimensional boards.

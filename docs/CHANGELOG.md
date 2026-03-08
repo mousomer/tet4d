@@ -17,6 +17,7 @@
    - user-facing settings view in `docs/USER_SETTINGS_REFERENCE.md`
    - drift checks wired into `scripts/verify.sh`
 4. Canonical rotation-kick system with configurable permissiveness and score-factor integration.
+5. Larger dedicated 4D piece-set variants (`True 4D (7-cell)` and `True 4D (8-cell)`).
 
 ### Changed
 1. Piece rotation semantics now use center-of-piece rotation from one canonical engine transform owner.
@@ -28,6 +29,7 @@
    - macOS: `.dmg`
    - Linux: `.deb`
 6. Release workflow now builds all installer targets on GitHub and publishes tagged assets to the GitHub release.
+7. 4D tutorial and exploration profiles were compacted to smaller fixed boards, and tutorial copy was simplified to plain-language `Do this`/`Tip`/`USE` prompts.
 
 ### Fixed
 1. Stability Watch workflow bootstrap now installs the project correctly for the `src/` layout.

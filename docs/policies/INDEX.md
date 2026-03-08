@@ -25,6 +25,7 @@ Contracts referenced by the pack:
 - `config/project/policy/manifests/wheel_reuse_rules.json` (validated by `tools/governance/check_wheel_reuse_rules.py`)
 - `config/project/policy/manifests/loc_guidance.json` (validated by `tools/governance/check_loc_guidance.py`)
 - `config/project/policy/manifests/dedup_dead_code_rules.json` (validated by `tools/governance/check_dedup_dead_code_rules.py`)
+- `config/project/policy/manifests/drift_protection.json` (validated by `tools/governance/check_drift_protection.py`)
 
 Source of truth list: policy manifest + this index. Update both when adding or
 retiring policies.

@@ -79,3 +79,37 @@ if [[ -n "$space_name" ]]; then
   echo "Filenames with spaces detected: ${space_name}" >&2
   exit 2
 fi
+
+
+required_exec_paths=(
+  "scripts/bootstrap_env.sh"
+  "scripts/check_architecture_boundaries.sh"
+  "scripts/check_architecture_metric_budgets.sh"
+  "scripts/check_architecture_metrics_soft_gate.sh"
+  "scripts/check_editable_install.sh"
+  "scripts/check_engine_core_purity.sh"
+  "scripts/check_git_sanitation.sh"
+  "scripts/check_git_sanitation_repo.sh"
+  "scripts/check_policy_compliance.sh"
+  "scripts/check_policy_compliance_repo.sh"
+  "scripts/check_policy_template_drift.sh"
+  "scripts/ci_check.sh"
+  "scripts/ci_preflight.sh"
+  "scripts/install_git_hooks.sh"
+  "scripts/update_policy_template_hashes.sh"
+  "scripts/verify.sh"
+  ".githooks/pre-push"
+)
+
+for exec_path in "${required_exec_paths[@]}"; do
+  mode_line="$(git ls-files --stage -- "$exec_path")"
+  if [[ -z "$mode_line" ]]; then
+    echo "Required executable entrypoint missing from git index: $exec_path" >&2
+    exit 2
+  fi
+  mode="${mode_line%% *}"
+  if [[ "$mode" != "100755" ]]; then
+    echo "Executable bit missing for direct-run shell entrypoint: $exec_path (mode $mode)" >&2
+    exit 2
+  fi
+done

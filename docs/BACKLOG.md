@@ -391,6 +391,24 @@ Acceptance:
 
 ## 5. Change Footprint (Current Batch)
 
+Current sub-batch (2026-03-07): drift prevention and generated hotspot enforcement.
+
+- Added `config/project/policy/manifests/drift_protection.json` as the canonical drift-protection manifest for live hotspot scans, thin-wrapper LOC budgets, and tutorial copy taxonomy checks.
+- Added `tools/governance/check_drift_protection.py` and wired it into `scripts/verify.sh` so wrapper growth and tutorial wording drift fail the local gate before docs drift silently.
+- Extended `tools/governance/generate_maintenance_docs.py` so `CURRENT_STATE.md` now generates a `Live Drift Watch` section from live code metrics instead of hand-maintaining hotspot lists.
+- Updated governance docs/contracts to treat the generated hotspot section and thin-wrapper budgets as enforced maintenance surfaces.
+- Fixed the recurring GitHub-only CI failure mode where new shell entrypoints could be committed from Windows without `100755` mode by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to enforce executable bits for all direct-run shell entrypoints in git metadata.
+
+Current sub-batch (2026-03-07): smaller 4D tutorial/exploration boards, clearer tutorial copy, and larger 4D piece sets.
+
+- Reduced the fixed 4D tutorial board profile in `config/tutorial/lessons.json` to `8 x 20 x 7 x 6`, preserving explicit tutorial-only sizing independent from normal 4D setup settings.
+- Reduced the fixed 4D exploration board profile in `src/tet4d/engine/gameplay/exploration_mode.py` to `8 x 9 x 7 x 6` so 4D exploration stays compact and readable.
+- Simplified tutorial overlay instruction wording to one plain-language `Do this:` line, one optional `Tip:` line, and `USE:` prompts, and rewrote 4D lesson text for clearer layman guidance.
+- Added larger dedicated 4D piece-set options (`True 4D (7-cell)`, `True 4D (8-cell)`) in `config/gameplay/piece_sets_nd.json` and `src/tet4d/engine/gameplay/pieces_nd.py`, with regression coverage in `tests/unit/engine/test_pieces_nd.py`.
+- Validation:
+  - focused `ruff check` passed
+  - focused pytest slice covering tutorial overlay/content/schema/setup, 4D render/setup, and ND piece sets passed
+
 Current sub-batch (2026-03-07): cleanup ledger + remaining owner cleanup.
 
 - Added `docs/plans/cleanup_master_plan.md` as the canonical ledger for the remaining cleanup program, with stage/domain ownership status taken from live code rather than older manifests.

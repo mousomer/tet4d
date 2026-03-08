@@ -33,7 +33,7 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 123` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 122` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -167,6 +167,11 @@ Dominant remaining pressure:
 23. Moved keybinding path/profile/json ownership into `src/tet4d/engine/runtime/keybinding_store.py`; `src/tet4d/ui/pygame/keybindings.py` now owns runtime maps and rebinding behavior only.
 24. Unified the install contract on editable install from `pyproject.toml`, removed `requirements.txt`, added `scripts/check_editable_install.sh`, and wired that smoke check into `scripts/verify.sh`.
 25. Further thinned `src/tet4d/engine/runtime/menu_structure_schema.py` by moving menu graph parsing into `runtime/menu_structure/menu_parse.py` and settings/payload parsing into `runtime/menu_structure/settings_parse.py`, keeping `menu_structure_schema.py` as the stable validation facade only.
+26. Reduced the fixed 4D tutorial board profile to `8 x 20 x 7 x 6` and the fixed 4D exploration board profile to `8 x 9 x 7 x 6`.
+27. Unified tutorial instruction copy around one plain-language `Do this:` line, one optional `Tip:` line, and simpler `USE:` input prompts, with clearer layman wording across the 4D lesson pack.
+28. Added larger dedicated 4D piece-set options (`True 4D (7-cell)` and `True 4D (8-cell)`) plus regression coverage for the new 4D bag families.
+29. Added machine-checked drift protection via `config/project/policy/manifests/drift_protection.json`, `tools/governance/check_drift_protection.py`, a generated `Live Drift Watch` section in `CURRENT_STATE.md`, and verify-time enforcement of thin-wrapper LOC budgets plus tutorial copy taxonomy.
+30. Fixed recurring GitHub CI parity drift by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to fail if any direct-run shell entrypoint in the repo loses `100755` mode in git metadata.
 
 ## Validation Status
 
@@ -179,16 +184,36 @@ Validation completed during this batch:
 - `CODEX_MODE=1 ./scripts/verify.sh`: passed
 - `CODEX_MODE=1 ./scripts/ci_check.sh`: passed
 
-## Known Hotspots
+<!-- BEGIN GENERATED:current_state_drift_watch -->
+## Live Drift Watch
 
-These are not current correctness bugs; they are watch areas for future LOC and
-ownership reduction.
+Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/manifests/drift_protection.json`.
 
-1. `src/tet4d/ui/pygame/launch/settings_hub_model.py`
-2. `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
-3. `src/tet4d/engine/runtime/menu_structure_schema.py`
-4. `src/tet4d/engine/runtime/score_analyzer.py`
-5. `src/tet4d/engine/runtime/menu_settings_state.py`
+Top 8 live Python hotspots by real LOC:
+
+1. `scripts/arch_metrics.py`: `1869` real LOC
+2. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+3. `tools/governance/validate_project_contracts.py`: `1178` real LOC
+4. `tools/governance/generate_configuration_reference.py`: `974` real LOC
+5. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
+6. `src/tet4d/engine/help_text.py`: `830` real LOC
+7. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `740` real LOC
+8. `src/tet4d/ui/pygame/front3d_game.py`: `692` real LOC
+
+Thin-wrapper budgets:
+
+1. `cli/front.py: 681/720 real LOC (compatibility launcher wrapper)`
+2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
+3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
+4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
+5. `src/tet4d/engine/api.py: 91/120 real LOC (small engine compatibility facade)`
+6. `src/tet4d/ui/pygame/front2d_game.py: 94/120 real LOC (2D orchestration entrypoint)`
+
+Tutorial wording drift guard:
+
+1. Lesson copy must not start with `Goal:` or `Action:`.
+2. Tutorial overlay must keep `Do this:`, `Tip:`, and `USE:` tokens.
+<!-- END GENERATED:current_state_drift_watch -->
 
 ## Next High-Value Follow-Ups
 

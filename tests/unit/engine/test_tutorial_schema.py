@@ -11,7 +11,7 @@ def _base_payload() -> dict[str, object]:
         "board_profiles": {
             "2d": {"width": 10, "height": 20},
             "3d": {"x": 6, "y": 18, "z": 6},
-            "4d": {"x": 10, "y": 20, "z": 6, "w": 6},
+            "4d": {"x": 8, "y": 20, "z": 7, "w": 6},
         },
         "lessons": [
             {
@@ -59,7 +59,7 @@ class TutorialSchemaTests(unittest.TestCase):
         self.assertEqual(parsed.schema_version, 1)
         self.assertEqual(parsed.board_profiles.dims_2d, (10, 20))
         self.assertEqual(parsed.board_profiles.dims_3d, (6, 18, 6))
-        self.assertEqual(parsed.board_profiles.dims_4d, (10, 20, 6, 6))
+        self.assertEqual(parsed.board_profiles.dims_4d, (8, 20, 7, 6))
         self.assertEqual(len(parsed.lessons), 1)
         lesson = parsed.lessons[0]
         self.assertEqual(lesson.lesson_id, "lesson_2d")

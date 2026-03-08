@@ -25,7 +25,7 @@ class TutorialContentTests(unittest.TestCase):
         self.assertEqual(payload.schema_version, 1)
         self.assertEqual(payload.board_profiles.dims_2d, (10, 20))
         self.assertEqual(payload.board_profiles.dims_3d, (6, 18, 6))
-        self.assertEqual(payload.board_profiles.dims_4d, (10, 20, 6, 6))
+        self.assertEqual(payload.board_profiles.dims_4d, (8, 20, 7, 6))
         lesson_ids = {lesson.lesson_id for lesson in payload.lessons}
         self.assertIn("tutorial_2d_core", lesson_ids)
         self.assertIn("tutorial_3d_core", lesson_ids)
@@ -37,7 +37,7 @@ class TutorialContentTests(unittest.TestCase):
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["board_profiles"]["2d"], {"width": 10, "height": 20})
         self.assertEqual(payload["board_profiles"]["3d"], {"x": 6, "y": 18, "z": 6})
-        self.assertEqual(payload["board_profiles"]["4d"], {"x": 10, "y": 20, "z": 6, "w": 6})
+        self.assertEqual(payload["board_profiles"]["4d"], {"x": 8, "y": 20, "z": 7, "w": 6})
         self.assertTrue(any(lesson_id == "tutorial_2d_core" for lesson_id in lesson_ids))
         self.assertTrue(any(lesson_id == "tutorial_3d_core" for lesson_id in lesson_ids))
         self.assertTrue(any(lesson_id == "tutorial_4d_core" for lesson_id in lesson_ids))
@@ -45,7 +45,7 @@ class TutorialContentTests(unittest.TestCase):
     def test_api_exposes_tutorial_board_dims_runtime(self) -> None:
         self.assertEqual(engine_api.tutorial_board_dims_runtime("2d"), (10, 20))
         self.assertEqual(engine_api.tutorial_board_dims_runtime("3d"), (6, 18, 6))
-        self.assertEqual(engine_api.tutorial_board_dims_runtime("4d"), (10, 20, 6, 6))
+        self.assertEqual(engine_api.tutorial_board_dims_runtime("4d"), (8, 20, 7, 6))
 
     def test_tutorial_plan_file_loads(self) -> None:
         payload = content.load_tutorial_plan_payload()
@@ -505,7 +505,7 @@ class TutorialContentTests(unittest.TestCase):
                 for shape in get_piece_shapes_nd(
                     4,
                     piece_set_id=PIECE_SET_4D_STANDARD,
-                    board_dims=(10, 20, 6, 6),
+                    board_dims=(8, 20, 7, 6),
                 )
             },
         }

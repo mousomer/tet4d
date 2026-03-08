@@ -86,9 +86,9 @@ class TestFront4DRender(unittest.TestCase):
                 tutorial_lesson_id="tutorial_4d_core",
             )
 
-        self.assertEqual(loop.cfg.dims, (10, 20, 6, 6))
-        self.assertEqual(loop.state.config.dims, (10, 20, 6, 6))
-        self.assertEqual(loop.state.board.dims, (10, 20, 6, 6))
+        self.assertEqual(loop.cfg.dims, (8, 20, 7, 6))
+        self.assertEqual(loop.state.config.dims, (8, 20, 7, 6))
+        self.assertEqual(loop.state.board.dims, (8, 20, 7, 6))
 
     def test_projection_cache_key_changes_when_w_size_changes(self) -> None:
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)

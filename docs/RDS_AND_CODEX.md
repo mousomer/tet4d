@@ -54,6 +54,8 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
      are maintained by `tools/governance/generate_maintenance_docs.py`)
+   - drift-protection contracts and thin-wrapper budgets in
+     `config/project/policy/manifests/drift_protection.json`
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
@@ -82,6 +84,7 @@ For governance/contract changes, additionally run:
 python3 tools/governance/validate_project_contracts.py
 python3 tools/governance/generate_configuration_reference.py --check
 python3 tools/governance/generate_maintenance_docs.py --check
+python3 tools/governance/check_drift_protection.py
 python3 tools/governance/check_risk_gates.py
 ./scripts/check_policy_compliance.sh
 ./scripts/check_git_sanitation.sh

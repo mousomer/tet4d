@@ -58,6 +58,10 @@ stale
 stale
 <!-- END GENERATED:current_state_canonical_ownership -->
 
+<!-- BEGIN GENERATED:current_state_drift_watch -->
+stale
+<!-- END GENERATED:current_state_drift_watch -->
+
 Manual tail.
 """
 
@@ -98,12 +102,34 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
     monkeypatch.setattr(maint_doc, "PROJECT_STRUCTURE_PATH", project_structure)
     monkeypatch.setattr(maint_doc, "_arch_metrics_payload", _metrics_payload)
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "_load_manifest",
+        lambda: {
+            "hotspot_scan": {"roots": ["src", "cli"], "top_n": 2},
+            "thin_wrapper_budgets": [
+                {"path": "cli/front.py", "max_real_loc": 720, "role": "compatibility launcher wrapper"}
+            ],
+            "tutorial_copy_contract": {
+                "lessons_path": "config/tutorial/lessons.json",
+                "overlay_path": "src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py",
+                "forbidden_prefixes": ["Goal:", "Action:"],
+                "required_overlay_tokens": ["Do this:", "Tip:", "USE:"],
+            },
+        },
+    )
+    monkeypatch.setattr(maint_doc.drift_guard, "_validate_hotspot_scan", lambda payload, issues: ("src", "cli"))
+    monkeypatch.setattr(maint_doc.drift_guard, "collect_top_hotspots", lambda *, roots, top_n: [(42, "src/tet4d/engine/tutorial/setup_apply.py"), (17, "cli/front.py")])
+    monkeypatch.setattr(maint_doc.drift_guard, "count_real_loc", lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0)
 
     rendered_current = maint_doc.render_current_state_doc()
     rendered_structure = maint_doc.render_project_structure_doc()
 
     assert "## Current Architecture Snapshot" in rendered_current
     assert "`tech_debt.score = 2.03` (`low`)" in rendered_current
+    assert "## Live Drift Watch" in rendered_current
+    assert "`src/tet4d/engine/tutorial/setup_apply.py`: `42` real LOC" in rendered_current
+    assert "`cli/front.py: 681/720 real LOC (compatibility launcher wrapper)`" in rendered_current
     assert "Manual intro." in rendered_current
     assert "## Canonical Entry Points" in rendered_structure
     assert "`cli/front2d.py`: thin 2D shim" in rendered_structure
@@ -122,6 +148,25 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
     monkeypatch.setattr(maint_doc, "PROJECT_STRUCTURE_PATH", project_structure)
     monkeypatch.setattr(maint_doc, "_arch_metrics_payload", _metrics_payload)
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "_load_manifest",
+        lambda: {
+            "hotspot_scan": {"roots": ["src", "cli"], "top_n": 2},
+            "thin_wrapper_budgets": [
+                {"path": "cli/front.py", "max_real_loc": 720, "role": "compatibility launcher wrapper"}
+            ],
+            "tutorial_copy_contract": {
+                "lessons_path": "config/tutorial/lessons.json",
+                "overlay_path": "src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py",
+                "forbidden_prefixes": ["Goal:", "Action:"],
+                "required_overlay_tokens": ["Do this:", "Tip:", "USE:"],
+            },
+        },
+    )
+    monkeypatch.setattr(maint_doc.drift_guard, "_validate_hotspot_scan", lambda payload, issues: ("src", "cli"))
+    monkeypatch.setattr(maint_doc.drift_guard, "collect_top_hotspots", lambda *, roots, top_n: [(42, "src/tet4d/engine/tutorial/setup_apply.py"), (17, "cli/front.py")])
+    monkeypatch.setattr(maint_doc.drift_guard, "count_real_loc", lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0)
 
     assert maint_doc.check_generated_docs() == 1
 
