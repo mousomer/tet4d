@@ -53,6 +53,24 @@ def _component_count(graph: dict[tuple[int, ...], tuple[object, ...]]) -> int:
     return components
 
 
+
+
+def _preview_warnings(
+    profile: ExplorerTopologyProfile,
+    *,
+    component_count: int,
+) -> list[str]:
+    warnings: list[str] = []
+    if component_count > 1:
+        warnings.append(
+            f"Movement graph has {component_count} disconnected components."
+        )
+    if any(any(sign < 0 for sign in glue.transform.signs) for glue in profile.gluings):
+        warnings.append("Contains orientation-reversing seam transforms.")
+    if any(glue.source.axis != glue.target.axis for glue in profile.gluings):
+        warnings.append("Contains cross-axis seam pairings.")
+    return warnings
+
 def _sample_traversals(
     graph: dict[tuple[int, ...], tuple[object, ...]],
     *,
@@ -89,6 +107,7 @@ def compile_explorer_topology_preview(
     traversal_count = sum(
         1 for edges in graph.values() for edge in edges if edge.traversal is not None
     )
+    component_count = _component_count(graph)
     return {
         "version": 1,
         "source": str(source),
@@ -100,13 +119,14 @@ def compile_explorer_topology_preview(
             "cell_count": len(graph),
             "directed_edge_count": sum(len(edges) for edges in graph.values()),
             "boundary_traversal_count": traversal_count,
-            "component_count": _component_count(graph),
+            "component_count": component_count,
             "degree_histogram": {
                 str(key): count for key, count in sorted(degree_histogram.items())
             },
             "origin": [0 for _ in dims],
         },
         "sample_boundary_traversals": _sample_traversals(graph),
+        "warnings": _preview_warnings(profile, component_count=component_count),
         "axes": [axis_name(index) for index in range(profile.dimension)],
     }
 

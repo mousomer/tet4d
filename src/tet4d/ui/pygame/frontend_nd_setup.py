@@ -44,6 +44,15 @@ from tet4d.engine.gameplay.topology_designer import (
     export_topology_profile_state,
     resolve_topology_designer_selection,
 )
+from tet4d.engine.runtime.topology_explorer_bridge import (
+    explorer_profile_from_edge_rules,
+    explorer_profile_from_legacy_profile,
+)
+from tet4d.engine.runtime.topology_explorer_preview import (
+    export_explorer_topology_preview,
+    preview_dims_for_dimension,
+)
+from tet4d.engine.runtime.topology_explorer_store import load_explorer_topology_profile
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -298,13 +307,16 @@ def _run_dry_run(state: MenuState, dimension: int) -> None:
 
 
 def _export_topology_profile(state: MenuState, dimension: int) -> None:
-    if bool(state.settings.topology_advanced) and dimension >= 3:
-        gameplay_mode = (
-            GAMEPLAY_MODE_EXPLORER
-            if bool(state.settings.exploration_mode)
-            else GAMEPLAY_MODE_NORMAL
+    if bool(state.settings.topology_advanced) and bool(state.settings.exploration_mode):
+        profile = load_explorer_topology_profile(dimension)
+        export_explorer_topology_preview(
+            profile,
+            dims=preview_dims_for_dimension(dimension),
+            source="stored_profile",
         )
-        profile = load_topology_profile(gameplay_mode, dimension)
+        return
+    if bool(state.settings.topology_advanced) and dimension >= 3:
+        profile = load_topology_profile(GAMEPLAY_MODE_NORMAL, dimension)
         export_topology_profile_state(profile=profile, gravity_axis=1)
         return
     topology_mode = topology_mode_from_index(state.settings.topology_mode)
@@ -343,24 +355,33 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
     piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
     topology_mode = topology_mode_from_index(settings.topology_mode)
     exploration_enabled = bool(settings.exploration_mode)
-    if bool(settings.topology_advanced) and dimension >= 3:
-        gameplay_mode = (
-            GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
-        )
-        topology_profile = load_topology_profile(gameplay_mode, dimension)
+    explorer_topology_profile = None
+    if bool(settings.topology_advanced) and dimension >= 3 and not exploration_enabled:
+        topology_profile = load_topology_profile(GAMEPLAY_MODE_NORMAL, dimension)
         resolved_mode = topology_profile.topology_mode
         topology_edge_rules = topology_profile.edge_rules
     else:
-        resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
+        resolved_mode, topology_edge_rules, legacy_profile = resolve_topology_designer_selection(
             dimension=dimension,
             gravity_axis=1,
             topology_mode=topology_mode,
-            topology_advanced=bool(settings.topology_advanced),
+            topology_advanced=bool(settings.topology_advanced) and not exploration_enabled,
             profile_index=settings.topology_profile_index,
             gameplay_mode=(
                 GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
             ),
         )
+        if exploration_enabled:
+            if bool(settings.topology_advanced):
+                explorer_topology_profile = load_explorer_topology_profile(dimension)
+            elif legacy_profile is not None:
+                explorer_topology_profile = explorer_profile_from_legacy_profile(legacy_profile)
+            else:
+                explorer_topology_profile = explorer_profile_from_edge_rules(
+                    dimension=dimension,
+                    topology_mode=resolved_mode,
+                    edge_rules=topology_edge_rules,
+                )
     dims = [settings.width, settings.height]
     if dimension >= 3:
         dims.append(settings.depth)
@@ -374,6 +395,7 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         speed_level=settings.speed_level,
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
+        explorer_topology_profile=explorer_topology_profile,
         piece_set_id=piece_set_id,
         kick_level=_kick_level_name(settings.kick_level_index),
         rng_mode=_random_mode_index_to_id(settings.random_mode_index),

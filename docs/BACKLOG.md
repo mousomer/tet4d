@@ -4,7 +4,11 @@ Generated: 2026-02-18
 Updated: 2026-03-07  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-08): explorer topology Phase 4 direct lab completion for 2D and 4D.
+Current sub-batch (2026-03-08): explorer topology Phase 5 live ND runtime migration + Phase 6 diagnostics.
+- Routed live ND explorer gameplay/runtime through the general gluing engine via `src/tet4d/engine/gameplay/explorer_runtime_nd.py` and `GameConfigND.explorer_topology_profile`.
+- Updated ND predictive input and setup/export flows so explorer movement prediction, stored advanced explorer profiles, and preview export use the same gluing-backed model.
+- Added focused regression coverage for mode-aware config loading, live ND wrap movement, and ND explorer move prediction.
+- Added engine-owned explorer diagnostics in preview payloads and surfaced them in the lab sidebar for orientation-reversing, cross-axis, and disconnected movement-graph warnings.
 
 - Extended the direct Explorer Topology Lab editor to 2D and 4D, so all explorer dimensions now edit engine-owned gluing profiles instead of legacy edge-rule rows.
 - Added engine-owned 2D/4D explorer presets plus a live sidebar preview for boundary ownership, active gluings, and movement-graph diagnostics in all direct editor dimensions.

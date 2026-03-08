@@ -23,6 +23,12 @@ from ..runtime.runtime_config import (
 from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
 from ..core.step.reducer import step_nd as core_step_nd
+from ..topology_explorer import ExplorerTopologyProfile
+from .explorer_runtime_nd import (
+    can_piece_exist_explorer,
+    move_piece_via_explorer_glue,
+    piece_cells_in_bounds,
+)
 from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -63,6 +69,7 @@ class GameConfigND:
     topology_mode: str = TOPOLOGY_BOUNDED
     wrap_gravity_axis: bool = False
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None
+    explorer_topology_profile: ExplorerTopologyProfile | None = None
     piece_set_id: str | None = None
     piece_set_4d: str = PIECE_SET_4D_STANDARD
     kick_level: str = "off"
@@ -96,6 +103,11 @@ class GameConfigND:
         self.kick_level = normalize_kick_level_name(self.kick_level)
 
         ndim = len(self.dims)
+        if (
+            self.explorer_topology_profile is not None
+            and self.explorer_topology_profile.dimension != ndim
+        ):
+            raise ValueError("explorer_topology_profile dimension must match dims")
         self.piece_set_id = _resolve_piece_set_id(
             ndim=ndim,
             piece_set_id=self.piece_set_id,
@@ -243,6 +255,8 @@ class GameStateND:
         return True
 
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            return piece_cells_in_bounds(piece, dims=self.config.dims)
         return map_piece_cells(
             self.topology_policy,
             piece.cells(),
@@ -265,6 +279,8 @@ class GameStateND:
     # --- Validation and locking ---
 
     def _can_exist(self, piece: ActivePieceND) -> bool:
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            return can_piece_exist_explorer(self.board, piece, dims=self.config.dims)
         mapped_cells = self._mapped_piece_cells(piece)
         if mapped_cells is None:
             return False
@@ -325,6 +341,15 @@ class GameStateND:
     def try_move(self, delta: Sequence[int]) -> bool:
         if self.current_piece is None:
             return False
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            non_zero = [
+                (axis, int(value))
+                for axis, value in enumerate(delta)
+                if int(value) != 0
+            ]
+            if len(non_zero) == 1 and abs(non_zero[0][1]) == 1:
+                axis, step = non_zero[0]
+                return self.try_move_axis(axis, step)
         candidate = self.current_piece.moved(delta)
         if self._can_exist(candidate):
             self.current_piece = candidate
@@ -334,6 +359,22 @@ class GameStateND:
     def try_move_axis(self, axis: int, delta: int) -> bool:
         if not (0 <= axis < self.config.ndim):
             raise ValueError("axis out of bounds")
+        if self.current_piece is None:
+            return False
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            candidate = move_piece_via_explorer_glue(
+                self.current_piece,
+                dims=self.config.dims,
+                profile=self.config.explorer_topology_profile,
+                axis=axis,
+                delta=delta,
+            )
+            if candidate is None or not can_piece_exist_explorer(
+                self.board, candidate, dims=self.config.dims
+            ):
+                return False
+            self.current_piece = candidate
+            return True
         vector = [0] * self.config.ndim
         vector[axis] = delta
         return self.try_move(vector)
@@ -360,6 +401,16 @@ class GameStateND:
 
     def hard_drop(self) -> None:
         g = self.config.gravity_axis
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            seen: set[tuple[Coord, ...]] = set()
+            while self.current_piece is not None:
+                signature = tuple(sorted(self.current_piece.cells()))
+                if signature in seen:
+                    break
+                seen.add(signature)
+                if not self.try_move_axis(g, 1):
+                    break
+            return
         run_hard_drop(self, try_advance=lambda: self.try_move_axis(g, 1))
 
     # --- Time step ---

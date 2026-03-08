@@ -49,4 +49,19 @@ def explorer_profile_from_legacy_profile(
     return ExplorerTopologyProfile(dimension=profile.dimension, gluings=tuple(gluings))
 
 
-__all__ = ["explorer_profile_from_legacy_profile"]
+def explorer_profile_from_edge_rules(
+    *,
+    dimension: int,
+    topology_mode: str,
+    edge_rules: tuple[tuple[str, str], ...],
+) -> ExplorerTopologyProfile:
+    return explorer_profile_from_legacy_profile(
+        TopologyProfileState(
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=int(dimension),
+            topology_mode=str(topology_mode),
+            edge_rules=tuple((str(neg), str(pos)) for neg, pos in edge_rules),
+        )
+    )
+
+__all__ = ["explorer_profile_from_edge_rules", "explorer_profile_from_legacy_profile"]

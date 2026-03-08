@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 
 import pygame
 
+from tet4d.engine.gameplay.explorer_runtime_nd import move_piece_via_explorer_glue
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.input.view_controls import viewer_relative_move_axis_delta
@@ -249,14 +250,27 @@ def _apply_action_override(
 
 
 def _candidate_from_axis_override(
-    piece: object,
+    state: GameStateND,
     *,
     override: AxisOverride,
-    ndim: int,
-) -> object:
+) -> object | None:
+    piece = state.current_piece
+    if piece is None:
+        return None
     if len(override) == 2:
         axis, delta = int(override[0]), int(override[1])
-        vector = [0] * int(ndim)
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            return move_piece_via_explorer_glue(
+                piece,
+                dims=state.config.dims,
+                profile=state.config.explorer_topology_profile,
+                axis=axis,
+                delta=delta,
+            )
+        vector = [0] * int(state.config.ndim)
         vector[axis] = delta
         return piece.moved(tuple(vector))
     axis_a, axis_b, direction = (
@@ -276,6 +290,17 @@ def _candidate_for_base_nd_action(
         return None
     gravity_axis = int(state.config.gravity_axis)
     if action == "soft_drop":
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            return move_piece_via_explorer_glue(
+                piece,
+                dims=state.config.dims,
+                profile=state.config.explorer_topology_profile,
+                axis=gravity_axis,
+                delta=1,
+            )
         vector = [0] * int(state.config.ndim)
         vector[gravity_axis] = 1
         return piece.moved(tuple(vector))
@@ -294,6 +319,17 @@ def _candidate_for_base_nd_action(
         axis, delta = move_spec
         if not (0 <= int(axis) < int(state.config.ndim)):
             return None
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            return move_piece_via_explorer_glue(
+                piece,
+                dims=state.config.dims,
+                profile=state.config.explorer_topology_profile,
+                axis=int(axis),
+                delta=int(delta),
+            )
         vector = [0] * int(state.config.ndim)
         vector[int(axis)] = int(delta)
         return piece.moved(tuple(vector))
@@ -324,10 +360,9 @@ def _candidate_for_base_nd_action(
 
 
 def _candidate_from_action_override(
+    state: GameStateND,
     *,
-    piece: object,
     action: str,
-    ndim: int,
     axis_overrides_by_action: Mapping[str, AxisOverride] | None,
 ) -> object | None:
     if axis_overrides_by_action is None:
@@ -335,18 +370,20 @@ def _candidate_from_action_override(
     override = axis_overrides_by_action.get(action)
     if override is None:
         return None
-    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+    return _candidate_from_axis_override(state, override=override)
 
 
 def _candidate_from_rotation_override(
     *,
-    piece: object,
+    state: GameStateND,
     action: str,
     cfg: GameConfigND,
-    ndim: int,
     yaw_deg_for_view_movement: float | None,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
 ) -> object | None:
+    piece = state.current_piece
+    if piece is None:
+        return None
     override = _rotation_override_from_view(
         action=action,
         cfg=cfg,
@@ -355,17 +392,19 @@ def _candidate_from_rotation_override(
     )
     if override is None:
         return None
-    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+    return _candidate_from_axis_override(state, override=override)
 
 
 def _viewer_relative_move_candidate(
     *,
-    piece: object,
+    state: GameStateND,
     action: str,
-    ndim: int,
     yaw_deg_for_view_movement: float | None,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
 ) -> tuple[object | None, bool]:
+    piece = state.current_piece
+    if piece is None:
+        return None, False
     if yaw_deg_for_view_movement is None:
         return None, False
     intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
@@ -383,9 +422,23 @@ def _viewer_relative_move_candidate(
         if target_axis is not None:
             mapped_axis = int(target_axis[0])
             mapped_delta = int(local_delta) * int(target_axis[1])
-    if not (0 <= mapped_axis < int(ndim)):
+    if not (0 <= mapped_axis < int(state.config.ndim)):
         return None, True
-    vector = [0] * int(ndim)
+    if (
+        state.config.exploration_mode
+        and state.config.explorer_topology_profile is not None
+    ):
+        return (
+            move_piece_via_explorer_glue(
+                piece,
+                dims=state.config.dims,
+                profile=state.config.explorer_topology_profile,
+                axis=mapped_axis,
+                delta=mapped_delta,
+            ),
+            True,
+        )
+    vector = [0] * int(state.config.ndim)
     vector[mapped_axis] = mapped_delta
     return piece.moved(tuple(vector)), True
 
@@ -403,29 +456,25 @@ def can_apply_nd_gameplay_action_with_view(
         return False
     if action == "hard_drop":
         return True
-    ndim = int(state.config.ndim)
     candidate = _candidate_from_action_override(
-        piece=piece,
+        state,
         action=action,
-        ndim=ndim,
         axis_overrides_by_action=axis_overrides_by_action,
     )
     if candidate is not None:
         return bool(state._can_exist(candidate))
     candidate = _candidate_from_rotation_override(
-        piece=piece,
+        state=state,
         action=action,
         cfg=state.config,
-        ndim=ndim,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
         viewer_axes_by_label=viewer_axes_by_label,
     )
     if candidate is not None:
         return bool(state._can_exist(candidate))
     candidate, is_view_relative = _viewer_relative_move_candidate(
-        piece=piece,
+        state=state,
         action=action,
-        ndim=ndim,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
         viewer_axes_by_label=viewer_axes_by_label,
     )

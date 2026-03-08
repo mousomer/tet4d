@@ -900,6 +900,11 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
         "  Traversals: "
         f"{graph['boundary_traversal_count']}  Components: {graph['component_count']}"
     )
+    warnings = preview.get("warnings", ())
+    if warnings:
+        lines.append("  Warnings")
+        for warning in warnings[:3]:
+            lines.append(f"    {warning}")
     samples = preview["sample_boundary_traversals"]
     if samples:
         lines.append("  Samples")

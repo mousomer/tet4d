@@ -307,6 +307,25 @@ class TestTopologyLabMenu(unittest.TestCase):
         export_legacy.assert_not_called()
         self.assertIn("preview exported", state.status)
 
+    def test_preview_lines_show_engine_owned_warnings(self) -> None:
+        state = self._explorer_state(3)
+        state.explorer_profile = ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                GluingDescriptor(
+                    glue_id="twist",
+                    source=BoundaryRef(dimension=3, axis=0, side="-"),
+                    target=BoundaryRef(dimension=3, axis=0, side="+"),
+                    transform=BoundaryTransform(permutation=(0, 1), signs=(-1, 1)),
+                ),
+            ),
+        )
+        lines = topology_lab_menu._explorer_sidebar_lines(state)
+        self.assertIn("  Warnings", lines)
+        self.assertTrue(
+            any("orientation-reversing seam transforms" in line for line in lines)
+        )
+
     def test_remove_explorer_glue_drops_selected_gluing(self) -> None:
         glue = GluingDescriptor(
             glue_id="glue_001",

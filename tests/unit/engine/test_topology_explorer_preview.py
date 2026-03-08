@@ -17,6 +17,7 @@ from tet4d.engine.runtime.project_config import (
 from tet4d.engine.runtime.topology_explorer_bridge import (
     explorer_profile_from_legacy_profile,
 )
+from tet4d.engine.topology_explorer.presets import mobius_strip_profile_2d
 from tet4d.engine.runtime.topology_explorer_preview import (
     compile_explorer_topology_preview,
     export_explorer_topology_preview,
@@ -60,6 +61,17 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             explorer_profile_from_legacy_profile(legacy)
+
+    def test_preview_reports_orientation_reversing_warning(self) -> None:
+        preview = compile_explorer_topology_preview(
+            mobius_strip_profile_2d(),
+            dims=(6, 6),
+            source="preset",
+        )
+        self.assertIn(
+            "Contains orientation-reversing seam transforms.",
+            preview["warnings"],
+        )
 
     def test_export_writes_preview_payload_to_runtime_path(self) -> None:
         root = (

@@ -11,7 +11,10 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for ND routing tests")
 
 from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, EXPLORER_KEYS_3D, EXPLORER_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
 
 
@@ -381,6 +384,27 @@ class TestNdRouting(unittest.TestCase):
                 state,
                 "move_w_neg",
                 axis_overrides_by_action={"move_w_neg": (0, -1)},
+            )
+        )
+
+    def test_can_apply_nd_action_respects_explorer_glue_wraps(self) -> None:
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+            rng_seed=1234,
+        )
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.board = BoardND(cfg.dims)
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(3, 3, 2))
+
+        self.assertTrue(
+            frontend_nd_input.can_apply_nd_gameplay_action_with_view(
+                state,
+                "move_x_pos",
             )
         )
 

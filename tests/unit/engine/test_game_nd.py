@@ -15,6 +15,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     PieceShapeND,
 )
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.engine.core.rules.scoring import score_for_clear
 
 
@@ -255,6 +256,22 @@ class TestGameND(unittest.TestCase):
         state.current_piece = ActivePieceND.from_shape(dot, pos=(1, cfg.dims[1], 1))
 
         self.assertFalse(state._can_exist(state.current_piece))
+
+    def test_explorer_glue_runtime_wraps_live_nd_movement(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(3, 3, 2))
+
+        self.assertTrue(state.try_move_axis(0, 1))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
+        )
 
     def test_invert_all_mirrors_other_wrapped_axis_3d(self):
         cfg = GameConfigND(
