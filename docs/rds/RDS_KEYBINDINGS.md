@@ -57,7 +57,7 @@ Implementation references:
 #### `small` profile
 
 1. Move `x-`/`x+`:`Left`/`Right`
-2. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
+2. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
 3. Soft drop: `Down`
 4. Hard drop: `Space`
 5. Rotate `x-y +`/`x-y -`:`Up`or`Q`/`W`
@@ -81,7 +81,7 @@ Implementation references:
 
 1. Move `x-`/`x+`:`Left`/`Right`
 2. Move `z-`/`z+`:`Up`/`Down`
-3. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
+3. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
 4. Soft drop: `LShift`or`RShift`
 5. Hard drop: `Space`
 6. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -95,7 +95,7 @@ Implementation references:
 
 1. Move `x-`/`x+`:`Numpad4`/`Numpad6`
 2. Move `z-`/`z+`:`Numpad8`/`Numpad2`
-3. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
+3. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
 4. Soft drop: `Numpad5`
 5. Hard drop: `Numpad0`
 6. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -118,7 +118,7 @@ Implementation references:
 1. Move `x-`/`x+`:`Left`/`Right`
 2. Move `z-`/`z+`:`Up`/`Down`
 3. Move `w-`/`w+`:`N`/`/`
-4. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
+4. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
 5. Soft drop: `LShift`or`RShift`
 6. Hard drop: `Space`
 7. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -137,7 +137,7 @@ Implementation references:
 1. Move `x-`/`x+`:`Numpad4`/`Numpad6`
 2. Move `z-`/`z+`:`Numpad8`/`Numpad2`
 3. Move `w-`/`w+`:`Numpad /`/`Numpad *`
-4. Exploration vertical `y-`/`y+`:`PageUp`/`PageDown`
+4. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
 5. Soft drop: `Numpad5`
 6. Hard drop: `Numpad0`
 7. Rotate `x-y +`/`x-y -`:`Q`/`W`
@@ -379,3 +379,9 @@ Implemented in code:
 9. In-game key helper layout is grouped into clear sections:
 10. `Main`,`Translation`,`Rotation`,`Camera`,`View/Overlay` (mode/capability gated).
 11. arrow-diagram key guides are available in Help UI for translation and rotation.
+
+### 4.4 Explorer-only movement contract
+
+1. `move_up` and `move_down` are explorer-only traversal actions and are stored under the dedicated `explorer` keybinding group, not under normal gameplay translation.
+2. Normal Game controls must not expose or dispatch `move_up`.
+3. Explorer Mode help/control panels must show the bound `move_up` / `move_down` keys whenever exploration controls are active.

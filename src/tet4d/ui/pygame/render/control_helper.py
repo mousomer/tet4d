@@ -37,7 +37,7 @@ def _line_with_icon(keys: str, text: str, action: str) -> str:
 
 _KEY_TOKEN_RE = re.compile(r"\{key:([a-z0-9_]+)\}")
 _MODE_BY_DIMENSION = {2: "2d", 3: "3d", 4: "4d"}
-_KEY_GROUP_PRIORITY = ("system", "game", "camera")
+_KEY_GROUP_PRIORITY = ("system", "game", "explorer", "camera")
 
 _MIN_ROWS_BY_GROUP: dict[str, int] = {
     "Main": 7,

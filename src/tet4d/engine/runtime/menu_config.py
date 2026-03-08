@@ -251,6 +251,8 @@ def setup_fields_for_settings(
         piece_set_max=piece_set_max,
         topology_profile_max=topology_profile_max,
     )
+    if dimension >= 3:
+        fields = [field for field in fields if field[1] != "topology_profile_index"]
     if bool(topology_advanced):
         return fields
     return [field for field in fields if field[1] != "topology_profile_index"]

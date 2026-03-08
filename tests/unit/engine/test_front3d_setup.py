@@ -196,6 +196,24 @@ class TestFront3DSetupDedup(unittest.TestCase):
         cfg = frontend_nd_setup.build_config(settings, 4)
         self.assertEqual(cfg.dims, (8, 9, 7, 6))
 
+    def test_nd_build_config_uses_mode_specific_topology_profiles(self) -> None:
+        normal_profile = mock.Mock(topology_mode="bounded", edge_rules=(("bounded", "bounded"),) * 4)
+        explorer_profile = mock.Mock(topology_mode="bounded", edge_rules=(("bounded", "bounded"), ("wrap", "wrap"), ("bounded", "bounded"), ("bounded", "bounded")))
+        with mock.patch.object(frontend_nd_setup, "load_topology_profile", side_effect=[normal_profile, explorer_profile]) as load_profile:
+            normal_cfg = frontend_nd_setup.build_config(
+                frontend_nd_setup.GameSettingsND(topology_advanced=1, exploration_mode=0),
+                4,
+            )
+            explorer_cfg = frontend_nd_setup.build_config(
+                frontend_nd_setup.GameSettingsND(topology_advanced=1, exploration_mode=1),
+                4,
+            )
+
+        self.assertEqual(load_profile.call_args_list[0].args, ("normal", 4))
+        self.assertEqual(load_profile.call_args_list[1].args, ("explorer", 4))
+        self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
+        self.assertEqual(explorer_cfg.topology_edge_rules[1], ("wrap", "wrap"))
+
     def test_runtime_collect_cleared_ghost_cells_accepts_mixed_args_kwargs(self) -> None:
         state = SimpleNamespace(
             board=SimpleNamespace(

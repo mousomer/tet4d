@@ -10,6 +10,7 @@
     "score_summary_file_default": "state/analytics/score_summary.json",
     "leaderboard_file_default": "state/analytics/leaderboard.json",
     "topology_profile_export_file_default": "state/topology/selected_profile.json",
-    "tutorial_progress_file_default": "state/tutorial/progress.json"
+    "tutorial_progress_file_default": "state/tutorial/progress.json",
+    "topology_profiles_file_default": "state/topology/profiles.json"
   }
 }

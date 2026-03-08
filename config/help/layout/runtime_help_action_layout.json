@@ -86,8 +86,8 @@
           "order": 40,
           "modes": ["2d", "3d", "4d"],
           "requires": ["exploration.enabled"],
-          "key_actions": ["move_y_neg", "move_y_pos"],
-          "icon_action": "move_y_neg",
+          "key_actions": ["move_up", "move_down"],
+          "icon_action": "move_up",
           "template": "up/down (explore)"
         },
         {

@@ -205,12 +205,12 @@ Parameters:
 - `action_topics.hard_drop`: `"movement_rotation"` (`string`)
 - `action_topics.help`: `"overview"` (`string`)
 - `action_topics.menu`: `"menu_workflows"` (`string`)
+- `action_topics.move_down`: `"movement_rotation"` (`string`)
+- `action_topics.move_up`: `"movement_rotation"` (`string`)
 - `action_topics.move_w_neg`: `"movement_rotation"` (`string`)
 - `action_topics.move_w_pos`: `"movement_rotation"` (`string`)
 - `action_topics.move_x_neg`: `"movement_rotation"` (`string`)
 - `action_topics.move_x_pos`: `"movement_rotation"` (`string`)
-- `action_topics.move_y_neg`: `"movement_rotation"` (`string`)
-- `action_topics.move_y_pos`: `"movement_rotation"` (`string`)
 - `action_topics.move_z_neg`: `"movement_rotation"` (`string`)
 - `action_topics.move_z_pos`: `"movement_rotation"` (`string`)
 - `action_topics.overlay_alpha_dec`: `"camera_and_view"` (`string`)
@@ -286,12 +286,12 @@ Parameters:
 ### `config/help/icon_map.json`
 Top-level keys: `action_map`, `available_sizes`, `default_theme`, `pack_root`, `themes`, `version`
 Parameters:
+- `action_map.move_down`: `"move_y_pos"` (`string`)
+- `action_map.move_up`: `"move_y_neg"` (`string`)
 - `action_map.move_w_neg`: `"move_w_neg"` (`string`)
 - `action_map.move_w_pos`: `"move_w_pos"` (`string`)
 - `action_map.move_x_neg`: `"move_x_neg"` (`string`)
 - `action_map.move_x_pos`: `"move_x_pos"` (`string`)
-- `action_map.move_y_neg`: `"move_y_neg"` (`string`)
-- `action_map.move_y_pos`: `"move_y_pos"` (`string`)
 - `action_map.move_z_neg`: `"move_z_neg"` (`string`)
 - `action_map.move_z_pos`: `"move_z_pos"` (`string`)
 - `action_map.rotate_xw_neg`: `"rot_xw_neg"` (`string`)
@@ -427,19 +427,21 @@ Parameters:
 - `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741915`
+- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741913`
+- `profiles.full.explorer.d3.move_down[]`: array[`int`]; examples: `1073741915`
+- `profiles.full.explorer.d3.move_up[]`: array[`int`]; examples: `1073741913`
+- `profiles.full.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.full.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.full.game.d2.hard_drop[]`: array[`int`]; examples: `1073741922`
 - `profiles.full.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741916`
 - `profiles.full.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d2.move_y_neg[]`: array[`int`]; examples: `1073741913`
-- `profiles.full.game.d2.move_y_pos[]`: array[`int`]; examples: `1073741915`
 - `profiles.full.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `122`
 - `profiles.full.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `120`
 - `profiles.full.game.d2.soft_drop[]`: array[`int`]; examples: `1073741917`
 - `profiles.full.game.d3.hard_drop[]`: array[`int`]; examples: `1073741922`
 - `profiles.full.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741916`
 - `profiles.full.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d3.move_y_neg[]`: array[`int`]; examples: `1073741913`
-- `profiles.full.game.d3.move_y_pos[]`: array[`int`]; examples: `1073741915`
 - `profiles.full.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741920`
 - `profiles.full.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741914`
 - `profiles.full.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
@@ -454,8 +456,6 @@ Parameters:
 - `profiles.full.game.d4.move_w_pos[]`: array[`int`]; examples: `1073741909`
 - `profiles.full.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741916`
 - `profiles.full.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d4.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.full.game.d4.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.full.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741920`
 - `profiles.full.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741914`
 - `profiles.full.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
@@ -504,19 +504,21 @@ Parameters:
 - `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.macbook.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.macbook.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.macbook.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.macbook.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.macbook.game.d2.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.macbook.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.macbook.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d2.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.macbook.game.d2.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
 - `profiles.macbook.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `113`
 - `profiles.macbook.game.d2.soft_drop[]`: array[`int`]; examples: `1073741905`
 - `profiles.macbook.game.d3.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.macbook.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.macbook.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d3.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.macbook.game.d3.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741906`
 - `profiles.macbook.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741905`
 - `profiles.macbook.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
@@ -531,8 +533,6 @@ Parameters:
 - `profiles.macbook.game.d4.move_w_pos[]`: array[`int`]; examples: `46`
 - `profiles.macbook.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.macbook.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d4.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.macbook.game.d4.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741906`
 - `profiles.macbook.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741905`
 - `profiles.macbook.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
@@ -581,19 +581,21 @@ Parameters:
 - `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.small.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.small.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.small.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
+- `profiles.small.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.small.game.d2.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.small.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.small.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d2.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.small.game.d2.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
 - `profiles.small.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `113`
 - `profiles.small.game.d2.soft_drop[]`: array[`int`]; examples: `1073741905`
 - `profiles.small.game.d3.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.small.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.small.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d3.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.small.game.d3.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741906`
 - `profiles.small.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741905`
 - `profiles.small.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
@@ -608,8 +610,6 @@ Parameters:
 - `profiles.small.game.d4.move_w_pos[]`: array[`int`]; examples: `47`
 - `profiles.small.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741904`
 - `profiles.small.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d4.move_y_neg[]`: array[`int`]; examples: `1073741899`
-- `profiles.small.game.d4.move_y_pos[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741906`
 - `profiles.small.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741905`
 - `profiles.small.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
@@ -658,19 +658,21 @@ Parameters:
 - `profiles.tiny.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.tiny.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.tiny.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.tiny.explorer.d2.move_down[]`: array[`int`]; examples: `107`
+- `profiles.tiny.explorer.d2.move_up[]`: array[`int`]; examples: `105`
+- `profiles.tiny.explorer.d3.move_down[]`: array[`int`]; examples: `107`
+- `profiles.tiny.explorer.d3.move_up[]`: array[`int`]; examples: `105`
+- `profiles.tiny.explorer.d4.move_down[]`: array[`int`]; examples: `107`
+- `profiles.tiny.explorer.d4.move_up[]`: array[`int`]; examples: `105`
 - `profiles.tiny.game.d2.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.tiny.game.d2.move_x_neg[]`: array[`int`]; examples: `106`
 - `profiles.tiny.game.d2.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d2.move_y_neg[]`: array[`int`]; examples: `105`
-- `profiles.tiny.game.d2.move_y_pos[]`: array[`int`]; examples: `107`
 - `profiles.tiny.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
 - `profiles.tiny.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `113`
 - `profiles.tiny.game.d2.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.tiny.game.d3.hard_drop[]`: array[`int`]; examples: `32`
 - `profiles.tiny.game.d3.move_x_neg[]`: array[`int`]; examples: `106`
 - `profiles.tiny.game.d3.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d3.move_y_neg[]`: array[`int`]; examples: `105`
-- `profiles.tiny.game.d3.move_y_pos[]`: array[`int`]; examples: `107`
 - `profiles.tiny.game.d3.move_z_neg[]`: array[`int`]; examples: `117`
 - `profiles.tiny.game.d3.move_z_pos[]`: array[`int`]; examples: `111`
 - `profiles.tiny.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
@@ -685,8 +687,6 @@ Parameters:
 - `profiles.tiny.game.d4.move_w_pos[]`: array[`int`]; examples: `46`
 - `profiles.tiny.game.d4.move_x_neg[]`: array[`int`]; examples: `106`
 - `profiles.tiny.game.d4.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d4.move_y_neg[]`: array[`int`]; examples: `105`
-- `profiles.tiny.game.d4.move_y_pos[]`: array[`int`]; examples: `107`
 - `profiles.tiny.game.d4.move_z_neg[]`: array[`int`]; examples: `117`
 - `profiles.tiny.game.d4.move_z_pos[]`: array[`int`]; examples: `111`
 - `profiles.tiny.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
@@ -756,7 +756,6 @@ Parameters:
 - `settings.3d.speed_level`: `1` (`int`)
 - `settings.3d.topology_advanced`: `0` (`int`)
 - `settings.3d.topology_mode`: `0` (`int`)
-- `settings.3d.topology_profile_index`: `0` (`int`)
 - `settings.3d.width`: `6` (`int`)
 - `settings.4d.auto_speedup_enabled`: `1` (`int`)
 - `settings.4d.bot_algorithm_index`: `0` (`int`)
@@ -776,7 +775,6 @@ Parameters:
 - `settings.4d.speed_level`: `1` (`int`)
 - `settings.4d.topology_advanced`: `0` (`int`)
 - `settings.4d.topology_mode`: `0` (`int`)
-- `settings.4d.topology_profile_index`: `0` (`int`)
 - `settings.4d.width`: `10` (`int`)
 - `version`: `1` (`int`)
 
@@ -789,6 +787,8 @@ Parameters:
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
 - `keybinding_category_docs.groups.camera.description`: `"Board orbit, zoom, and projection controls."` (`string`)
 - `keybinding_category_docs.groups.camera.label`: `"Camera / View"` (`string`)
+- `keybinding_category_docs.groups.explorer.description`: `"Explorer-only traversal controls, including upward and downward move...` (`string`)
+- `keybinding_category_docs.groups.explorer.label`: `"Explorer Movement"` (`string`)
 - `keybinding_category_docs.groups.game.description`: `"Piece translation, drop, and rotation actions."` (`string`)
 - `keybinding_category_docs.groups.game.label`: `"Gameplay"` (`string`)
 - `keybinding_category_docs.groups.system.description`: `"Global actions available in all modes."` (`string`)
@@ -1112,6 +1112,7 @@ Parameters:
 - `paths.score_summary_file_default`: `"state/analytics/score_summary.json"` (`string`)
 - `paths.state_dir`: `"state"` (`string`)
 - `paths.topology_profile_export_file_default`: `"state/topology/selected_profile.json"` (`string`)
+- `paths.topology_profiles_file_default`: `"state/topology/profiles.json"` (`string`)
 - `paths.tutorial_progress_file_default`: `"state/tutorial/progress.json"` (`string`)
 - `version`: `1` (`int`)
 
@@ -1314,7 +1315,7 @@ Parameters:
 - `magic_numbers.config_backed_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `manifest_id`: `"policy_runtime_rules"` (`string`)
 - `sanitation.text_entrypoints[]`: array[`object`]
-- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/ui/pygame/launch/topology_lab_menu.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`
+- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`, `"src/tet4d/ui/pygame/launch/leaderboard_menu.py"`
 - `sanitation.text_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"append_numeric_text"`, `"parse_numeric_text"`, `"_sanitize_profile_name"`
 - `sanitation.text_entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
 - `sanitation.text_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
@@ -1466,34 +1467,80 @@ Parameters:
 ### `config/topology/designer_presets.json`
 Top-level keys: `profiles`, `version`
 Parameters:
-- `profiles[]`: array[`object`]
-- `profiles[].axis_edges.w.neg`: `"wrap"` (`string`)
-- `profiles[].axis_edges.w.pos`: `"invert"` (`string`)
-- `profiles[].axis_edges.x.neg`: varies (`string`); examples: `"invert"`, `"wrap"`
-- `profiles[].axis_edges.x.pos`: varies (`string`); examples: `"invert"`
-- `profiles[].axis_edges.z.neg`: `"wrap"` (`string`)
-- `profiles[].axis_edges.z.pos`: `"invert"` (`string`)
-- `profiles[].description`: varies (`string`); examples: `"Use the selected topology preset exactly as configured."`, `"Wrap all non-gravity axes regardless of selected preset mode."`, `"Invert all non-gravity axes regardless of selected preset mode."`
-- `profiles[].id`: varies (`string`); examples: `"inherit_mode"`, `"force_wrap_all"`, `"force_invert_all"`
-- `profiles[].label`: varies (`string`); examples: `"Inherit mode"`, `"Force wrap all"`, `"Force invert all"`
-- `profiles[].mode`: varies (`null, string`); examples: `null`, `"wrap_all"`, `"invert_all"`
-- `version`: `1` (`int`)
+- `profiles.explorer.2d[]`: array[`object`]
+- `profiles.explorer.2d[].axis_edges.y.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.2d[].axis_edges.y.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.2d[].description`: varies (`string`); examples: `"Keep all boundaries fixed."`, `"Allow vertical wrap for exploration."`, `"Invert across the vertical seam for exploration."`
+- `profiles.explorer.2d[].id`: varies (`string`); examples: `"explorer_bounded"`, `"explorer_wrap_y"`, `"explorer_invert_y"`
+- `profiles.explorer.2d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap Y only"`, `"Invert Y only"`
+- `profiles.explorer.2d[].mode`: varies (`string`); examples: `"bounded"`
+- `profiles.explorer.3d[]`: array[`object`]
+- `profiles.explorer.3d[].axis_edges.x.neg`: varies (`string`); examples: `"wrap"`
+- `profiles.explorer.3d[].axis_edges.x.pos`: varies (`string`); examples: `"wrap"`
+- `profiles.explorer.3d[].axis_edges.y.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.3d[].axis_edges.y.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.3d[].axis_edges.z.neg`: varies (`string`); examples: `"wrap"`
+- `profiles.explorer.3d[].axis_edges.z.pos`: varies (`string`); examples: `"wrap"`
+- `profiles.explorer.3d[].description`: varies (`string`); examples: `"Keep all boundaries fixed."`, `"Allow vertical wrap for exploration."`, `"Wrap left/right and vertical boundaries."`
+- `profiles.explorer.3d[].id`: varies (`string`); examples: `"explorer_bounded"`, `"explorer_wrap_y"`, `"explorer_wrap_xy"`
+- `profiles.explorer.3d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap Y only"`, `"Wrap X + Y"`
+- `profiles.explorer.3d[].mode`: varies (`string`); examples: `"bounded"`
+- `profiles.explorer.4d[]`: array[`object`]
+- `profiles.explorer.4d[].axis_edges.w.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.4d[].axis_edges.w.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.4d[].axis_edges.x.neg`: `"wrap"` (`string`)
+- `profiles.explorer.4d[].axis_edges.x.pos`: `"wrap"` (`string`)
+- `profiles.explorer.4d[].axis_edges.y.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.4d[].axis_edges.y.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.explorer.4d[].axis_edges.z.neg`: `"wrap"` (`string`)
+- `profiles.explorer.4d[].axis_edges.z.pos`: `"wrap"` (`string`)
+- `profiles.explorer.4d[].description`: varies (`string`); examples: `"Keep all boundaries fixed."`, `"Allow vertical wrap for exploration."`, `"Wrap vertical and W boundaries."`
+- `profiles.explorer.4d[].id`: varies (`string`); examples: `"explorer_bounded"`, `"explorer_wrap_y"`, `"explorer_wrap_yw"`
+- `profiles.explorer.4d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap Y only"`, `"Wrap Y + W"`
+- `profiles.explorer.4d[].mode`: varies (`string`); examples: `"bounded"`
+- `profiles.normal.2d[]`: array[`object`]
+- `profiles.normal.2d[].axis_edges.x.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.2d[].axis_edges.x.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.2d[].description`: varies (`string`); examples: `"No wrapping or inversion."`, `"Wrap the X boundaries while keeping vertical movement bounded."`, `"Invert only across the X boundaries while keeping Y fixed."`
+- `profiles.normal.2d[].id`: varies (`string`); examples: `"normal_bounded"`, `"normal_wrap_x"`, `"normal_invert_x"`
+- `profiles.normal.2d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap X only"`, `"Invert X only"`
+- `profiles.normal.2d[].mode`: varies (`string`); examples: `"bounded"`
+- `profiles.normal.3d[]`: array[`object`]
+- `profiles.normal.3d[].axis_edges.x.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.3d[].axis_edges.x.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.3d[].axis_edges.z.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.3d[].axis_edges.z.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.3d[].description`: varies (`string`); examples: `"No wrapping or inversion."`, `"Wrap left/right while Y remains fixed."`, `"Wrap depth only while Y remains fixed."`
+- `profiles.normal.3d[].id`: varies (`string`); examples: `"normal_bounded"`, `"normal_wrap_x"`, `"normal_wrap_z"`
+- `profiles.normal.3d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap X only"`, `"Wrap Z only"`
+- `profiles.normal.3d[].mode`: varies (`string`); examples: `"bounded"`
+- `profiles.normal.4d[]`: array[`object`]
+- `profiles.normal.4d[].axis_edges.w.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].axis_edges.w.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].axis_edges.x.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].axis_edges.x.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].axis_edges.z.neg`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].axis_edges.z.pos`: varies (`string`); examples: `"wrap"`, `"invert"`
+- `profiles.normal.4d[].description`: varies (`string`); examples: `"No wrapping or inversion."`, `"Wrap left/right while Y remains fixed."`, `"Wrap Z only while Y remains fixed."`
+- `profiles.normal.4d[].id`: varies (`string`); examples: `"normal_bounded"`, `"normal_wrap_x"`, `"normal_wrap_z"`
+- `profiles.normal.4d[].label`: varies (`string`); examples: `"Bounded"`, `"Wrap X only"`, `"Wrap Z only"`
+- `profiles.normal.4d[].mode`: varies (`string`); examples: `"bounded"`
+- `version`: `2` (`int`)
 
 ### `config/topology/lab_menu.json`
 Top-level keys: `hints`, `rows`, `status_copy`, `subtitle`, `title`, `version`
 Parameters:
 - `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter triggers Save/Export/Back"`
 - `rows[]`: array[`object`]
-- `rows[].key`: varies (`string`); examples: `"dimension"`, `"topology_mode"`, `"topology_advanced"`
-- `rows[].label`: varies (`string`); examples: `"Dimension"`, `"Topology mode"`, `"Advanced topology"`
+- `rows[].key`: varies (`string`); examples: `"gameplay_mode"`, `"dimension"`, `"preset"`
+- `rows[].label`: varies (`string`); examples: `"Game Type"`, `"Dimension"`, `"Preset"`
 - `status_copy.export_error`: `"{message}"` (`string`)
 - `status_copy.export_ok`: `"{message}"` (`string`)
-- `status_copy.invalid_number`: `"Invalid profile index"` (`string`)
-- `status_copy.save_failed`: `"Failed saving topology settings: {message}"` (`string`)
-- `status_copy.saved`: `"Saved topology settings for {mode_key}"` (`string`)
-- `status_copy.text_mode`: `"Type profile index, Enter apply, Esc cancel"` (`string`)
-- `status_copy.updated`: `"Topology setting updated (not saved yet)"` (`string`)
-- `subtitle`: `"Interactive topology editor (preview + export)"` (`string`)
+- `status_copy.locked`: `"Y boundaries are fixed in Normal Game"` (`string`)
+- `status_copy.save_failed`: `"Failed saving topology profile: {message}"` (`string`)
+- `status_copy.saved`: `"Saved topology profile for {mode_label} {dimension}D"` (`string`)
+- `status_copy.updated`: `"Topology profile updated (not saved yet)"` (`string`)
+- `subtitle`: `"Mode-aware topology editor for Normal Game and Explorer Mode"` (`string`)
 - `title`: `"Topology Lab"` (`string`)
 - `version`: `1` (`int`)
 

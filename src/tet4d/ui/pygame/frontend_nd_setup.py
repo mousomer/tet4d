@@ -36,11 +36,15 @@ from tet4d.ai.playbot.types import (
 from tet4d.engine.gameplay.speed_curve import gravity_interval_ms
 from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
 from tet4d.engine.gameplay.topology_designer import (
+    GAMEPLAY_MODE_EXPLORER,
+    GAMEPLAY_MODE_NORMAL,
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
+    export_topology_profile_state,
     resolve_topology_designer_selection,
 )
+from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
@@ -76,7 +80,7 @@ class GameSettingsND:
     piece_set_index: int = _DEFAULT_MODE_4D["piece_set_index"]
     topology_mode: int = _DEFAULT_MODE_4D["topology_mode"]
     topology_advanced: int = _DEFAULT_MODE_4D["topology_advanced"]
-    topology_profile_index: int = _DEFAULT_MODE_4D["topology_profile_index"]
+    topology_profile_index: int = _DEFAULT_MODE_4D.get("topology_profile_index", 0)
     kick_level_index: int = _DEFAULT_MODE_4D["kick_level_index"]
     bot_mode_index: int = _DEFAULT_MODE_4D["bot_mode_index"]
     bot_algorithm_index: int = _DEFAULT_MODE_4D["bot_algorithm_index"]
@@ -294,6 +298,15 @@ def _run_dry_run(state: MenuState, dimension: int) -> None:
 
 
 def _export_topology_profile(state: MenuState, dimension: int) -> None:
+    if bool(state.settings.topology_advanced) and dimension >= 3:
+        gameplay_mode = (
+            GAMEPLAY_MODE_EXPLORER
+            if bool(state.settings.exploration_mode)
+            else GAMEPLAY_MODE_NORMAL
+        )
+        profile = load_topology_profile(gameplay_mode, dimension)
+        export_topology_profile_state(profile=profile, gravity_axis=1)
+        return
     topology_mode = topology_mode_from_index(state.settings.topology_mode)
     export_resolved_topology_profile(
         dimension=dimension,
@@ -329,14 +342,25 @@ def run_menu(
 def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
     piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
     topology_mode = topology_mode_from_index(settings.topology_mode)
-    resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
-        dimension=dimension,
-        gravity_axis=1,
-        topology_mode=topology_mode,
-        topology_advanced=bool(settings.topology_advanced),
-        profile_index=settings.topology_profile_index,
-    )
     exploration_enabled = bool(settings.exploration_mode)
+    if bool(settings.topology_advanced) and dimension >= 3:
+        gameplay_mode = (
+            GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
+        )
+        topology_profile = load_topology_profile(gameplay_mode, dimension)
+        resolved_mode = topology_profile.topology_mode
+        topology_edge_rules = topology_profile.edge_rules
+    else:
+        resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
+            dimension=dimension,
+            gravity_axis=1,
+            topology_mode=topology_mode,
+            topology_advanced=bool(settings.topology_advanced),
+            profile_index=settings.topology_profile_index,
+            gameplay_mode=(
+                GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
+            ),
+        )
     dims = [settings.width, settings.height]
     if dimension >= 3:
         dims.append(settings.depth)

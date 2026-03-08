@@ -72,15 +72,16 @@ src/tet4d/engine/runtime/score_analyzer.py
 src/tet4d/engine/runtime/score_analyzer_features.py
 src/tet4d/engine/runtime/settings_sanitize.py
 src/tet4d/engine/runtime/settings_schema.py
+src/tet4d/engine/runtime/topology_profile_store.py
 src/tet4d/engine/runtime/menu_settings/__init__.py
 src/tet4d/engine/runtime/menu_settings/sections.py
 src/tet4d/engine/runtime/menu_settings/store.py
 src/tet4d/engine/runtime/menu_structure/__init__.py
 src/tet4d/engine/runtime/menu_structure/graph.py
-src/tet4d/engine/runtime/menu_structure/settings_parse.py
 src/tet4d/engine/runtime/menu_structure/menu_parse.py
 src/tet4d/engine/runtime/menu_structure/parse_helpers.py
 src/tet4d/engine/runtime/menu_structure/policy.py
+src/tet4d/engine/runtime/menu_structure/settings_parse.py
 src/tet4d/engine/runtime/score_analysis/__init__.py
 src/tet4d/engine/runtime/score_analysis/store.py
 src/tet4d/engine/runtime/score_analysis/validate.py

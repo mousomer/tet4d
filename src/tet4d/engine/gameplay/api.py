@@ -59,6 +59,7 @@ def topology_designer_resolve_runtime(
     topology_mode: str,
     topology_advanced: bool,
     profile_index: int,
+    gameplay_mode: str | None = None,
 ):
     return resolve_topology_designer_selection(
         dimension=dimension,
@@ -66,6 +67,7 @@ def topology_designer_resolve_runtime(
         topology_mode=topology_mode,
         topology_advanced=topology_advanced,
         profile_index=profile_index,
+        gameplay_mode=gameplay_mode,
     )
 
 
@@ -76,6 +78,7 @@ def topology_designer_export_runtime(
     topology_mode: str,
     topology_advanced: bool,
     profile_index: int,
+    gameplay_mode: str | None = None,
 ):
     return export_resolved_topology_profile(
         dimension=dimension,

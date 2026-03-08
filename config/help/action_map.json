@@ -13,8 +13,6 @@
     "move_z_pos": "movement_rotation",
     "move_w_neg": "movement_rotation",
     "move_w_pos": "movement_rotation",
-    "move_y_neg": "movement_rotation",
-    "move_y_pos": "movement_rotation",
     "soft_drop": "movement_rotation",
     "hard_drop": "movement_rotation",
     "rotate_xy_pos": "movement_rotation",
@@ -44,6 +42,8 @@
     "overlay_alpha_dec": "camera_and_view",
     "overlay_alpha_inc": "camera_and_view",
     "cycle_projection": "camera_and_view",
-    "reset": "camera_and_view"
+    "reset": "camera_and_view",
+    "move_up": "movement_rotation",
+    "move_down": "movement_rotation"
   }
 }

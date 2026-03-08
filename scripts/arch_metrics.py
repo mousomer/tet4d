@@ -924,13 +924,13 @@ def _expected_keybinding_scope_bindings(
             expected.add((2, "system", action))
         for dimension in (2, 3, 4):
             groups = runtime_binding_groups_for_dimension(dimension)
-            for group in ("game", "camera"):
+            for group in ("game", "explorer", "camera"):
                 for action in groups.get(group, {}):
                     expected.add((dimension, group, action))
         return expected
     dimension = int(scope[0])
     groups = runtime_binding_groups_for_dimension(dimension)
-    for group in ("game", "camera"):
+    for group in ("game", "explorer", "camera"):
         for action in groups.get(group, {}):
             expected.add((dimension, group, action))
     return expected

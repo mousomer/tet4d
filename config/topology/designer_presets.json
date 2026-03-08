@@ -1,62 +1,347 @@
 {
-  "version": 1,
-  "profiles": [
-    {
-      "id": "inherit_mode",
-      "label": "Inherit mode",
-      "description": "Use the selected topology preset exactly as configured.",
-      "mode": null,
-      "axis_edges": {}
+  "version": 2,
+  "profiles": {
+    "normal": {
+      "2d": [
+        {
+          "id": "normal_bounded",
+          "label": "Bounded",
+          "description": "No wrapping or inversion.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "normal_wrap_x",
+          "label": "Wrap X only",
+          "description": "Wrap the X boundaries while keeping vertical movement bounded.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_invert_x",
+          "label": "Invert X only",
+          "description": "Invert only across the X boundaries while keeping Y fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "invert", "pos": "invert"}
+          }
+        }
+      ],
+      "3d": [
+        {
+          "id": "normal_bounded",
+          "label": "Bounded",
+          "description": "No wrapping or inversion.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "normal_wrap_x",
+          "label": "Wrap X only",
+          "description": "Wrap left/right while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_wrap_z",
+          "label": "Wrap Z only",
+          "description": "Wrap depth only while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "z": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_wrap_xz",
+          "label": "Wrap X + Z",
+          "description": "Wrap the horizontal exploration axes while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"},
+            "z": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_invert_x",
+          "label": "Invert X only",
+          "description": "Invert across X while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "normal_invert_z",
+          "label": "Invert Z only",
+          "description": "Invert across Z while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "z": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "normal_invert_xz",
+          "label": "Invert X + Z",
+          "description": "Invert across X and Z while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "invert", "pos": "invert"},
+            "z": {"neg": "invert", "pos": "invert"}
+          }
+        }
+      ],
+      "4d": [
+        {
+          "id": "normal_bounded",
+          "label": "Bounded",
+          "description": "No wrapping or inversion.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "normal_wrap_x",
+          "label": "Wrap X only",
+          "description": "Wrap left/right while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_wrap_z",
+          "label": "Wrap Z only",
+          "description": "Wrap Z only while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "z": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_wrap_w",
+          "label": "Wrap W only",
+          "description": "Wrap W only while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "w": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_wrap_xzw",
+          "label": "Wrap X + Z + W",
+          "description": "Wrap the non-gravity axes while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"},
+            "z": {"neg": "wrap", "pos": "wrap"},
+            "w": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "normal_invert_x",
+          "label": "Invert X only",
+          "description": "Invert across X while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "normal_invert_z",
+          "label": "Invert Z only",
+          "description": "Invert across Z while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "z": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "normal_invert_w",
+          "label": "Invert W only",
+          "description": "Invert across W while Y remains fixed.",
+          "mode": "bounded",
+          "axis_edges": {
+            "w": {"neg": "invert", "pos": "invert"}
+          }
+        }
+      ]
     },
-    {
-      "id": "force_wrap_all",
-      "label": "Force wrap all",
-      "description": "Wrap all non-gravity axes regardless of selected preset mode.",
-      "mode": "wrap_all",
-      "axis_edges": {}
-    },
-    {
-      "id": "force_invert_all",
-      "label": "Force invert all",
-      "description": "Invert all non-gravity axes regardless of selected preset mode.",
-      "mode": "invert_all",
-      "axis_edges": {}
-    },
-    {
-      "id": "twist_x_both",
-      "label": "Twist X both edges",
-      "description": "Crossing either X edge adds inversion coupling for wrapped companion axes.",
-      "mode": "wrap_all",
-      "axis_edges": {
-        "x": {"neg": "invert", "pos": "invert"}
-      }
-    },
-    {
-      "id": "twist_x_pos_only",
-      "label": "Twist +X only",
-      "description": "Only crossing the positive X edge adds inversion coupling.",
-      "mode": "wrap_all",
-      "axis_edges": {
-        "x": {"neg": "wrap", "pos": "invert"}
-      }
-    },
-    {
-      "id": "twist_z_pos_only",
-      "label": "Twist +Z only",
-      "description": "Only crossing the positive Z edge adds inversion coupling (3D/4D).",
-      "mode": "wrap_all",
-      "axis_edges": {
-        "z": {"neg": "wrap", "pos": "invert"}
-      }
-    },
-    {
-      "id": "twist_w_pos_only",
-      "label": "Twist +W only",
-      "description": "Only crossing the positive W edge adds inversion coupling (4D).",
-      "mode": "wrap_all",
-      "axis_edges": {
-        "w": {"neg": "wrap", "pos": "invert"}
-      }
+    "explorer": {
+      "2d": [
+        {
+          "id": "explorer_bounded",
+          "label": "Bounded",
+          "description": "Keep all boundaries fixed.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "explorer_wrap_y",
+          "label": "Wrap Y only",
+          "description": "Allow vertical wrap for exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_invert_y",
+          "label": "Invert Y only",
+          "description": "Invert across the vertical seam for exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "invert", "pos": "invert"}
+          }
+        }
+      ],
+      "3d": [
+        {
+          "id": "explorer_bounded",
+          "label": "Bounded",
+          "description": "Keep all boundaries fixed.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "explorer_wrap_y",
+          "label": "Wrap Y only",
+          "description": "Allow vertical wrap for exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_wrap_xy",
+          "label": "Wrap X + Y",
+          "description": "Wrap left/right and vertical boundaries.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"},
+            "y": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_wrap_yz",
+          "label": "Wrap Y + Z",
+          "description": "Wrap depth and vertical boundaries.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "wrap"},
+            "z": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_wrap_xyz",
+          "label": "Full wrap",
+          "description": "Wrap X, Y, and Z for free exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"},
+            "y": {"neg": "wrap", "pos": "wrap"},
+            "z": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_invert_y",
+          "label": "Invert Y only",
+          "description": "Invert across the vertical seam.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "explorer_twist_y_pos_only",
+          "label": "Twist +Y only",
+          "description": "Only crossing the positive Y edge inverts the wrap.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "invert"}
+          }
+        }
+      ],
+      "4d": [
+        {
+          "id": "explorer_bounded",
+          "label": "Bounded",
+          "description": "Keep all boundaries fixed.",
+          "mode": "bounded",
+          "axis_edges": {}
+        },
+        {
+          "id": "explorer_wrap_y",
+          "label": "Wrap Y only",
+          "description": "Allow vertical wrap for exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_wrap_yw",
+          "label": "Wrap Y + W",
+          "description": "Wrap vertical and W boundaries.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "wrap"},
+            "w": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_wrap_xyzw",
+          "label": "Full wrap",
+          "description": "Wrap all four axes for unrestricted exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "x": {"neg": "wrap", "pos": "wrap"},
+            "y": {"neg": "wrap", "pos": "wrap"},
+            "z": {"neg": "wrap", "pos": "wrap"},
+            "w": {"neg": "wrap", "pos": "wrap"}
+          }
+        },
+        {
+          "id": "explorer_invert_y",
+          "label": "Invert Y only",
+          "description": "Invert across the vertical seam.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "explorer_invert_yw",
+          "label": "Invert Y + W",
+          "description": "Invert vertical and W seams for 4D exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "invert", "pos": "invert"},
+            "w": {"neg": "invert", "pos": "invert"}
+          }
+        },
+        {
+          "id": "explorer_twist_y_pos_only",
+          "label": "Twist +Y only",
+          "description": "Only crossing the positive Y edge inverts the wrap.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "invert"}
+          }
+        },
+        {
+          "id": "explorer_twist_yw_pos_only",
+          "label": "Twist +Y and +W",
+          "description": "Positive Y and W edges add inversion for exploration.",
+          "mode": "bounded",
+          "axis_edges": {
+            "y": {"neg": "wrap", "pos": "invert"},
+            "w": {"neg": "wrap", "pos": "invert"}
+          }
+        }
+      ]
     }
-  ]
+  }
 }

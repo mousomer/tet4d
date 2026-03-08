@@ -1,27 +1,31 @@
 {
   "version": 1,
   "title": "Topology Lab",
-  "subtitle": "Interactive topology editor (preview + export)",
+  "subtitle": "Mode-aware topology editor for Normal Game and Explorer Mode",
   "rows": [
+    {
+      "key": "gameplay_mode",
+      "label": "Game Type"
+    },
     {
       "key": "dimension",
       "label": "Dimension"
+    },
+    {
+      "key": "preset",
+      "label": "Preset"
     },
     {
       "key": "topology_mode",
       "label": "Topology mode"
     },
     {
-      "key": "topology_advanced",
-      "label": "Advanced topology"
+      "key": "axis_edges",
+      "label": "Boundary seams"
     },
     {
-      "key": "topology_profile_index",
-      "label": "Designer profile"
-    },
-    {
-      "key": "save_mode",
-      "label": "Save to mode settings"
+      "key": "save_profile",
+      "label": "Save profile"
     },
     {
       "key": "export",
@@ -36,15 +40,14 @@
     "Up/Down select row",
     "Left/Right change values",
     "Enter triggers Save/Export/Back",
-    "Press E to export quickly",
-    "Press S to save selected mode quickly"
+    "Normal Game locks Y boundaries and keeps vertical gravity fixed",
+    "Explorer Mode allows Y wrapping and upward traversal"
   ],
   "status_copy": {
-    "saved": "Saved topology settings for {mode_key}",
-    "save_failed": "Failed saving topology settings: {message}",
-    "updated": "Topology setting updated (not saved yet)",
-    "text_mode": "Type profile index, Enter apply, Esc cancel",
-    "invalid_number": "Invalid profile index",
+    "saved": "Saved topology profile for {mode_label} {dimension}D",
+    "save_failed": "Failed saving topology profile: {message}",
+    "updated": "Topology profile updated (not saved yet)",
+    "locked": "Y boundaries are fixed in Normal Game",
     "export_ok": "{message}",
     "export_error": "{message}"
   }

@@ -45,10 +45,19 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 _HELP_LAYOUT = help_layout_payload()
 _SETTINGS_DOCS = settings_category_docs()
 _ACTION_GROUPS = _HELP_LAYOUT.get("action_groups") or {}
-_RUNTIME_GROUP_ORDER = tuple(_ACTION_GROUPS.get("runtime_order") or ("system", "game", "camera"))
+_RUNTIME_GROUP_ORDER = tuple(
+    _ACTION_GROUPS.get("runtime_order") or ("system", "game", "explorer", "camera")
+)
 _LIVE_KEY_GROUP_ORDER = tuple(
     _ACTION_GROUPS.get("live_order")
-    or ("system", "game_translation", "game_rotation", "game_other", "camera")
+    or (
+        "system",
+        "game_translation",
+        "game_rotation",
+        "game_other",
+        "explorer",
+        "camera",
+    )
 )
 _HELP_COLORS = _HELP_LAYOUT["colors"]
 _BG_TOP = tuple(_HELP_COLORS["bg_top"])

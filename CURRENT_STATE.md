@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-07  
+Last updated: 2026-03-08  
 Branch: `master`  
 Worktree expectation: dirty only when an active batch is in progress
 
@@ -33,15 +33,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 122` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 123` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.06` (`low`)
+- `tech_debt.score = 2.08` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.34`
+1. `delivery_size_pressure = 1.36`
 2. `code_balance = 0.72`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -172,6 +172,8 @@ Dominant remaining pressure:
 28. Added larger dedicated 4D piece-set options (`True 4D (7-cell)` and `True 4D (8-cell)`) plus regression coverage for the new 4D bag families.
 29. Added machine-checked drift protection via `config/project/policy/manifests/drift_protection.json`, `tools/governance/check_drift_protection.py`, a generated `Live Drift Watch` section in `CURRENT_STATE.md`, and verify-time enforcement of thin-wrapper LOC budgets plus tutorial copy taxonomy.
 30. Fixed recurring GitHub CI parity drift by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to fail if any direct-run shell entrypoint in the repo loses `100755` mode in git metadata.
+31. Split Topology Lab topology ownership by gameplay mode (`normal` vs `explorer`) for 3D/4D, with engine-owned validation rejecting wrapped `Y` boundaries in Normal Game while Explorer Mode persists separate topology profiles and allows bidirectional vertical traversal.
+32. Added explorer-only `move_up` / `move_down` keybinding groups and routing for 2D/3D/4D exploration, removed stale `move_y_*` gameplay naming from live help/control mappings, and hid 3D/4D topology-profile setup rows so advanced topology now flows through the mode-aware Topology Lab store.
 
 ## Validation Status
 
@@ -197,7 +199,7 @@ Top 8 live Python hotspots by real LOC:
 4. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 6. `src/tet4d/engine/help_text.py`: `830` real LOC
-7. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `740` real LOC
+7. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `749` real LOC
 8. `src/tet4d/ui/pygame/front3d_game.py`: `692` real LOC
 
 Thin-wrapper budgets:

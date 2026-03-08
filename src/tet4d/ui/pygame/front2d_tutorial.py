@@ -39,8 +39,8 @@ from .front2d_input import overlay_action_for_key_2d
 _TUTORIAL_DELAYED_ACTIONS_2D = {
     "move_x_neg",
     "move_x_pos",
-    "move_y_neg",
-    "move_y_pos",
+    "move_up",
+    "move_down",
     "rotate_xy_pos",
     "rotate_xy_neg",
     "soft_drop",
@@ -50,8 +50,8 @@ _TUTORIAL_ALWAYS_LEGAL_ACTIONS_2D = {"menu", "help", "restart", "menu_back"}
 _TUTORIAL_MOVE_DELTAS_2D = {
     "move_x_neg": (-1, 0),
     "move_x_pos": (1, 0),
-    "move_y_neg": (0, -1),
-    "move_y_pos": (0, 1),
+    "move_up": (0, -1),
+    "move_down": (0, 1),
 }
 _TUTORIAL_ROTATIONS_2D = {
     "rotate_xy_pos": 1,

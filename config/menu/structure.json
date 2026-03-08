@@ -460,12 +460,6 @@
         "max": 2
       },
       {
-        "label": "Topology profile",
-        "attr": "topology_profile_index",
-        "min": 0,
-        "max": "topology_profile_max"
-      },
-      {
         "label": "Challenge layers",
         "attr": "challenge_layers",
         "min": 0,
@@ -522,12 +516,6 @@
         "max": 2
       },
       {
-        "label": "Topology profile",
-        "attr": "topology_profile_index",
-        "min": 0,
-        "max": "topology_profile_max"
-      },
-      {
         "label": "Challenge layers",
         "attr": "challenge_layers",
         "min": 0,
@@ -567,6 +555,10 @@
       "camera": {
         "label": "Camera / View",
         "description": "Board orbit, zoom, and projection controls."
+      },
+      "explorer": {
+        "label": "Explorer Movement",
+        "description": "Explorer-only traversal controls, including upward and downward movement."
       }
     }
   },

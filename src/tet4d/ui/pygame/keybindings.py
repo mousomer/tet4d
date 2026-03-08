@@ -92,6 +92,16 @@ def default_camera_bindings_for_profile(
     )
 
 
+def default_explorer_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+    return (
+        _bindings_for(profile, "explorer", "d2"),
+        _bindings_for(profile, "explorer", "d3"),
+        _bindings_for(profile, "explorer", "d4"),
+    )
+
+
 def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
     return _bindings_for(profile, "system")
 
@@ -170,6 +180,9 @@ _DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = (
 _DEFAULT_CAMERA_KEYS_3D, _DEFAULT_CAMERA_KEYS_4D = default_camera_bindings_for_profile(
     ACTIVE_KEY_PROFILE
 )
+_DEFAULT_EXPLORER_KEYS_2D, _DEFAULT_EXPLORER_KEYS_3D, _DEFAULT_EXPLORER_KEYS_4D = (
+    default_explorer_bindings_for_profile(ACTIVE_KEY_PROFILE)
+)
 _DEFAULT_SYSTEM_KEYS = default_system_bindings_for_profile(ACTIVE_KEY_PROFILE)
 
 
@@ -177,6 +190,9 @@ SYSTEM_KEYS: KeyBindingMap = dict(_DEFAULT_SYSTEM_KEYS)
 KEYS_2D: KeyBindingMap = dict(_DEFAULT_KEYS_2D)
 KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
 KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
+EXPLORER_KEYS_2D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_2D)
+EXPLORER_KEYS_3D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_3D)
+EXPLORER_KEYS_4D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_4D)
 CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
 CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
 
@@ -184,12 +200,16 @@ CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
     selected = _selected_profile(profile)
     keys_2d, keys_3d, keys_4d = default_game_bindings_for_profile(selected)
+    explorer_2d, explorer_3d, explorer_4d = default_explorer_bindings_for_profile(selected)
     camera_3d, camera_4d = default_camera_bindings_for_profile(selected)
     system_keys = default_system_bindings_for_profile(selected)
     _replace_map(SYSTEM_KEYS, system_keys)
     _replace_map(KEYS_2D, keys_2d)
     _replace_map(KEYS_3D, keys_3d)
     _replace_map(KEYS_4D, keys_4d)
+    _replace_map(EXPLORER_KEYS_2D, explorer_2d)
+    _replace_map(EXPLORER_KEYS_3D, explorer_3d)
+    _replace_map(EXPLORER_KEYS_4D, explorer_4d)
     _replace_map(CAMERA_KEYS_3D, camera_3d)
     _replace_map(CAMERA_KEYS_4D, camera_4d)
     _sanitize_runtime_bindings(camera_defaults_4d=camera_4d)
@@ -287,15 +307,18 @@ def _binding_groups_for_dimension(
     group_map: dict[int, Dict[str, MutableMapping[str, KeyTuple]]] = {
         2: {
             "game": KEYS_2D,
+            "explorer": EXPLORER_KEYS_2D,
             "system": SYSTEM_KEYS,
         },
         3: {
             "game": KEYS_3D,
+            "explorer": EXPLORER_KEYS_3D,
             "camera": CAMERA_KEYS_3D,
             "system": SYSTEM_KEYS,
         },
         4: {
             "game": KEYS_4D,
+            "explorer": EXPLORER_KEYS_4D,
             "camera": CAMERA_KEYS_4D,
             "system": SYSTEM_KEYS,
         },
@@ -583,12 +606,13 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
 
 def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, object]:
     game_2d, game_3d, game_4d = default_game_bindings_for_profile(profile)
+    explorer_2d, explorer_3d, explorer_4d = default_explorer_bindings_for_profile(profile)
     camera_3d, camera_4d = default_camera_bindings_for_profile(profile)
     system = default_system_bindings_for_profile(profile)
     group_map = {
-        2: {"game": game_2d, "system": system},
-        3: {"game": game_3d, "camera": camera_3d, "system": system},
-        4: {"game": game_4d, "camera": camera_4d, "system": system},
+        2: {"game": game_2d, "explorer": explorer_2d, "system": system},
+        3: {"game": game_3d, "explorer": explorer_3d, "camera": camera_3d, "system": system},
+        4: {"game": game_4d, "explorer": explorer_4d, "camera": camera_4d, "system": system},
     }
     bindings = group_map.get(dimension)
     if bindings is None:

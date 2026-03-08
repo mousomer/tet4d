@@ -27,8 +27,6 @@ def profile_movement_maps(
         movement_2d = {
             "move_x_neg": (pygame.K_KP4,),
             "move_x_pos": (pygame.K_KP6,),
-            "move_y_neg": (pygame.K_KP1,),
-            "move_y_pos": (pygame.K_KP3,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -37,8 +35,6 @@ def profile_movement_maps(
             "move_x_pos": (pygame.K_KP6,),
             "move_z_neg": (pygame.K_KP8,),
             "move_z_pos": (pygame.K_KP2,),
-            "move_y_neg": (pygame.K_KP1,),
-            "move_y_pos": (pygame.K_KP3,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -49,8 +45,6 @@ def profile_movement_maps(
             "move_z_pos": (pygame.K_KP2,),
             "move_w_neg": (pygame.K_KP_DIVIDE,),
             "move_w_pos": (pygame.K_KP_MULTIPLY,),
-            "move_y_neg": (pygame.K_PAGEUP,),
-            "move_y_pos": (pygame.K_PAGEDOWN,),
             "soft_drop": (pygame.K_KP5,),
             "hard_drop": (pygame.K_KP0,),
         }
@@ -59,8 +53,6 @@ def profile_movement_maps(
     movement_2d = {
         "move_x_neg": (pygame.K_LEFT,),
         "move_x_pos": (pygame.K_RIGHT,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_DOWN,),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -69,8 +61,6 @@ def profile_movement_maps(
         "move_x_pos": (pygame.K_RIGHT,),
         "move_z_neg": (pygame.K_UP,),
         "move_z_pos": (pygame.K_DOWN,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -81,8 +71,6 @@ def profile_movement_maps(
         "move_z_pos": (pygame.K_DOWN,),
         "move_w_neg": (pygame.K_n,),
         "move_w_pos": (pygame.K_SLASH,),
-        "move_y_neg": (pygame.K_PAGEUP,),
-        "move_y_pos": (pygame.K_PAGEDOWN,),
         "soft_drop": (pygame.K_LSHIFT, pygame.K_RSHIFT),
         "hard_drop": (pygame.K_SPACE,),
     }
@@ -260,6 +248,40 @@ def default_camera_bindings_for_profile(
     if profile == PROFILE_MACBOOK:
         return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D_MACBOOK)
     return dict(DEFAULT_CAMERA_KEYS_3D), dict(DEFAULT_CAMERA_KEYS_4D)
+
+
+def default_explorer_bindings_for_profile(
+    profile: str,
+) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
+    if profile == PROFILE_FULL:
+        return (
+            {
+                "move_up": (pygame.K_KP1,),
+                "move_down": (pygame.K_KP3,),
+            },
+            {
+                "move_up": (pygame.K_KP1,),
+                "move_down": (pygame.K_KP3,),
+            },
+            {
+                "move_up": (pygame.K_PAGEUP,),
+                "move_down": (pygame.K_PAGEDOWN,),
+            },
+        )
+    return (
+        {
+            "move_up": (pygame.K_PAGEUP,),
+            "move_down": (pygame.K_PAGEDOWN,),
+        },
+        {
+            "move_up": (pygame.K_PAGEUP,),
+            "move_down": (pygame.K_PAGEDOWN,),
+        },
+        {
+            "move_up": (pygame.K_PAGEUP,),
+            "move_down": (pygame.K_PAGEDOWN,),
+        },
+    )
 
 
 def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:

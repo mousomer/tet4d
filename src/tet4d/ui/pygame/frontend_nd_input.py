@@ -7,14 +7,18 @@ import pygame
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.input.view_controls import viewer_relative_move_axis_delta
-from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D, SYSTEM_KEYS
+from tet4d.ui.pygame.keybindings import (
+    EXPLORER_KEYS_3D,
+    EXPLORER_KEYS_4D,
+    KEYS_3D,
+    KEYS_4D,
+    SYSTEM_KEYS,
+)
 
 _SYSTEM_ACTIONS = ("quit", "menu", "restart", "toggle_grid", "help")
 _GAMEPLAY_ACTIONS_3D = (
     "move_x_neg",
     "move_x_pos",
-    "move_y_neg",
-    "move_y_pos",
     "soft_drop",
     "hard_drop",
     "rotate_xy_pos",
@@ -37,6 +41,8 @@ _GAMEPLAY_ACTIONS_4D = (
     "rotate_zw_pos",
     "rotate_zw_neg",
 )
+
+_EXPLORER_ACTIONS = ("move_up", "move_down")
 _SYSTEM_SFX = {
     "menu": "menu_confirm",
     "restart": "menu_confirm",
@@ -73,13 +79,13 @@ def system_key_action(key: int) -> str | None:
 def gameplay_action_for_key(key: int, cfg: GameConfigND) -> str | None:
     gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
     action_order = _GAMEPLAY_ACTIONS_4D if cfg.ndim >= 4 else _GAMEPLAY_ACTIONS_3D
+    gameplay_action = match_bound_action(key, gameplay_keys, action_order)
+    if gameplay_action is not None:
+        return gameplay_action
     if not cfg.exploration_mode:
-        action_order = tuple(
-            action
-            for action in action_order
-            if action not in {"move_y_neg", "move_y_pos"}
-        )
-    return match_bound_action(key, gameplay_keys, action_order)
+        return None
+    explorer_keys = EXPLORER_KEYS_4D if cfg.ndim >= 4 else EXPLORER_KEYS_3D
+    return match_bound_action(key, explorer_keys, _EXPLORER_ACTIONS)
 
 
 def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
@@ -88,8 +94,8 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     gameplay_handlers = {
         "move_x_neg": lambda: state.try_move_axis(0, -1),
         "move_x_pos": lambda: state.try_move_axis(0, 1),
-        "move_y_neg": lambda: state.try_move_axis(cfg.gravity_axis, -1),
-        "move_y_pos": lambda: state.try_move_axis(cfg.gravity_axis, 1),
+        "move_up": lambda: state.try_move_axis(cfg.gravity_axis, -1),
+        "move_down": lambda: state.try_move_axis(cfg.gravity_axis, 1),
         "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
         "hard_drop": state.hard_drop,
         "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
@@ -117,7 +123,7 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     handler = gameplay_handlers.get(action)
     if handler is None:
         return False
-    if action in {"move_y_neg", "move_y_pos"} and not cfg.exploration_mode:
+    if action in {"move_up", "move_down"} and not cfg.exploration_mode:
         return False
     handler()
     return True
@@ -138,6 +144,9 @@ def _binding_contains_key(bindings: Mapping[str, tuple[int, ...]], key: int) -> 
 def _is_reserved_nd_key(key: int, cfg: GameConfigND) -> bool:
     gameplay_keys = KEYS_4D if cfg.ndim >= 4 else KEYS_3D
     if _binding_contains_key(gameplay_keys, key):
+        return True
+    explorer_keys = EXPLORER_KEYS_4D if cfg.ndim >= 4 else EXPLORER_KEYS_3D
+    if _binding_contains_key(explorer_keys, key):
         return True
     return _binding_contains_key(SYSTEM_KEYS, key)
 
@@ -273,8 +282,8 @@ def _candidate_for_base_nd_action(
     move_vectors = {
         "move_x_neg": (0, -1),
         "move_x_pos": (0, 1),
-        "move_y_neg": (gravity_axis, -1),
-        "move_y_pos": (gravity_axis, 1),
+        "move_up": (gravity_axis, -1),
+        "move_down": (gravity_axis, 1),
         "move_z_neg": (2, -1),
         "move_z_pos": (2, 1),
         "move_w_neg": (3, -1),

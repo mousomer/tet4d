@@ -399,6 +399,17 @@ Current sub-batch (2026-03-07): drift prevention and generated hotspot enforceme
 - Updated governance docs/contracts to treat the generated hotspot section and thin-wrapper budgets as enforced maintenance surfaces.
 - Fixed the recurring GitHub-only CI failure mode where new shell entrypoints could be committed from Windows without `100755` mode by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to enforce executable bits for all direct-run shell entrypoints in git metadata.
 
+Current sub-batch (2026-03-08): mode-aware Topology Lab split for normal vs explorer rules.
+
+- Split topology profile ownership for advanced 3D/4D play into `normal` and `explorer` stores in `src/tet4d/engine/runtime/topology_profile_store.py`, keyed by gameplay mode and dimension instead of one shared profile bucket per dimension.
+- Extended `src/tet4d/engine/gameplay/topology_designer.py` with gameplay-mode normalization and hard validation rules so Normal Game rejects any seam touching gravity-axis `Y` boundaries while Explorer Mode allows them.
+- Reworked `src/tet4d/ui/pygame/launch/topology_lab_menu.py` and `config/topology/lab_menu.json` so Topology Lab now edits a `(game type, dimension)` profile pair, locks `Y` edges in Normal Game, and clearly explains the rule difference in UI copy.
+- Added explorer-only `move_up` / `move_down` bindings and routing across 2D/3D/4D exploration, updated help/control maps to those canonical action ids, and removed stale 3D/4D setup rows for `topology_profile_index` so advanced topology selection is isolated to the lab/store path.
+- Added regression coverage for mode-aware topology validation, lab locking behavior, separate profile save/load, ND explorer routing, and mode-specific topology profile application in ND setup.
+- Validation:
+  - focused `ruff check` passed
+  - focused pytest (`test_topology_profile_store.py`, `test_topology_designer.py`, `test_topology_lab_menu.py`, `test_keybindings.py`, `test_front3d_setup.py`, `test_gameplay_replay.py`, `test_nd_routing.py`, `test_menu_policy.py`) passed
+
 Current sub-batch (2026-03-07): smaller 4D tutorial/exploration boards, clearer tutorial copy, and larger 4D piece sets.
 
 - Reduced the fixed 4D tutorial board profile in `config/tutorial/lessons.json` to `8 x 20 x 7 x 6`, preserving explicit tutorial-only sizing independent from normal 4D setup settings.

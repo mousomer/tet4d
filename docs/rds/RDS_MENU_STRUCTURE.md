@@ -484,3 +484,12 @@ Execution status:
 Execution artifact:
 1. Detailed execution plan lives in `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
 
+
+## 17. Topology Lab Mode Split (2026-03-08)
+
+1. Topology Lab now edits separate topology profiles for `(gameplay mode, dimension)` rather than one shared 3D/4D profile bucket.
+2. Required pairs are `normal/3d`, `explorer/3d`, `normal/4d`, and `explorer/4d`.
+3. Lab entry flow must expose both `Game Type` (`Normal Game`, `Explorer Mode`) and `Dimension` (`3D`, `4D`).
+4. In `Normal Game`, gravity-axis `Y` boundaries are visually locked and any attempted seam touching `Y+` or `Y-` must be rejected immediately by engine-owned validation.
+5. In `Explorer Mode`, `Y` boundaries are selectable and may be wrapped or inverted subject to the general bijection rules.
+6. 3D/4D setup screens no longer expose `topology_profile_index`; advanced topology selection for those modes belongs to Topology Lab only.

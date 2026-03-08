@@ -23,6 +23,8 @@ from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import (
     CAMERA_KEYS_3D,
     CAMERA_KEYS_4D,
+    EXPLORER_KEYS_2D,
+    EXPLORER_KEYS_4D,
     KEYS_2D,
     KEYS_3D,
     KEYS_4D,
@@ -216,14 +218,14 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
 
-        move_up = self._key_for(KEYS_2D, "move_y_neg")
+        move_up = self._key_for(EXPLORER_KEYS_2D, "move_up")
         self.assertEqual(
             front2d.handle_game_keydown(_keydown(move_up), state, cfg), "continue"
         )
         if state.current_piece is not None and y_before is not None:
             self.assertEqual(state.current_piece.pos[1], y_before - 1)
 
-        move_down = self._key_for(KEYS_2D, "move_y_pos")
+        move_down = self._key_for(EXPLORER_KEYS_2D, "move_down")
         self.assertEqual(
             front2d.handle_game_keydown(_keydown(move_down), state, cfg), "continue"
         )
@@ -258,14 +260,14 @@ class TestGameplayReplay(unittest.TestCase):
         if state.current_piece is not None:
             self.assertEqual(state.current_piece.pos, pos_before)
 
-        move_up = self._key_for(KEYS_4D, "move_y_neg")
+        move_up = self._key_for(EXPLORER_KEYS_4D, "move_up")
         self.assertEqual(
             frontend_nd_input.handle_game_keydown(_keydown(move_up), state), "continue"
         )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
 
-        move_down = self._key_for(KEYS_4D, "move_y_pos")
+        move_down = self._key_for(EXPLORER_KEYS_4D, "move_down")
         self.assertEqual(
             frontend_nd_input.handle_game_keydown(_keydown(move_down), state), "continue"
         )

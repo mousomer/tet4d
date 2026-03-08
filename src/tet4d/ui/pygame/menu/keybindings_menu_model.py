@@ -142,6 +142,14 @@ def _sections_for_dimension(*, dimension: int) -> list[_SectionSpec]:
     sections: list[_SectionSpec] = []
     if groups.get("game"):
         sections.extend(_gameplay_sections_for_dimension(dimension))
+    if groups.get("explorer"):
+        sections.append(
+            _SectionSpec(
+                title=f"{prefix}{_doc_label('explorer')}",
+                dimension=dimension,
+                group="explorer",
+            )
+        )
     if groups.get("camera"):
         sections.append(
             _SectionSpec(

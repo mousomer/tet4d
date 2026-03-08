@@ -6,7 +6,13 @@ import pygame
 
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
-from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D, DISABLED_KEYS_2D, KEYS_2D, SYSTEM_KEYS
+from tet4d.ui.pygame.keybindings import (
+    CAMERA_KEYS_3D,
+    DISABLED_KEYS_2D,
+    EXPLORER_KEYS_2D,
+    KEYS_2D,
+    SYSTEM_KEYS,
+)
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
 
@@ -45,9 +51,12 @@ def gameplay_action_for_key_2d(state: GameState, key: int) -> str | None:
         "hard_drop",
         "soft_drop",
     ]
-    if state.config.exploration_mode:
-        action_order.extend(["move_y_neg", "move_y_pos"])
-    return match_bound_action(key, KEYS_2D, tuple(action_order))
+    gameplay_action = match_bound_action(key, KEYS_2D, tuple(action_order))
+    if gameplay_action is not None:
+        return gameplay_action
+    if not state.config.exploration_mode:
+        return None
+    return match_bound_action(key, EXPLORER_KEYS_2D, ("move_up", "move_down"))
 
 
 def overlay_action_for_key_2d(key: int) -> str | None:
@@ -66,8 +75,8 @@ def apply_2d_gameplay_action(state: GameState, action: str) -> None:
         "rotate_xy_neg": lambda: state.try_rotate(-1),
         "hard_drop": state.hard_drop,
         "soft_drop": lambda: state.try_move(0, 1),
-        "move_y_neg": lambda: state.try_move(0, -1),
-        "move_y_pos": lambda: state.try_move(0, 1),
+        "move_up": lambda: state.try_move(0, -1),
+        "move_down": lambda: state.try_move(0, 1),
     }
     handler = handlers.get(action)
     if handler is not None:

@@ -137,8 +137,8 @@ _VIEW_ACTIONS_4D = (
 _TUTORIAL_DELAYED_ACTIONS_4D = {
     "move_x_neg",
     "move_x_pos",
-    "move_y_neg",
-    "move_y_pos",
+    "move_up",
+    "move_down",
     "move_z_neg",
     "move_z_pos",
     "move_w_neg",

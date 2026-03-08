@@ -33,6 +33,7 @@ _DEFAULT_IO_PATHS = {
         "score_summary_file_default": "state/analytics/score_summary.json",
         "leaderboard_file_default": "state/analytics/leaderboard.json",
         "topology_profile_export_file_default": "state/topology/selected_profile.json",
+        "topology_profiles_file_default": "state/topology/profiles.json",
         "tutorial_progress_file_default": "state/tutorial/progress.json",
     },
 }
@@ -419,6 +420,24 @@ def topology_profile_export_file_default_path(
     return _resolve_state_path_for_root(
         rel,
         default_relative="state/topology/selected_profile.json",
+        root_dir=root,
+    )
+
+
+def topology_profiles_file_default_relative() -> str:
+    return _path_value(
+        "topology_profiles_file_default",
+        default_relative="state/topology/profiles.json",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def topology_profiles_file_default_path(*, root_dir: Path | None = None) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = topology_profiles_file_default_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/topology/profiles.json",
         root_dir=root,
     )
 

@@ -16,18 +16,6 @@
         ]
       },
       {
-        "path": "src/tet4d/ui/pygame/launch/topology_lab_menu.py",
-        "severity": "error",
-        "required_any_tokens": [
-          "sanitize_text_runtime",
-          "_sanitize_text("
-        ],
-        "required_all_tokens": [
-          "append_numeric_text",
-          "parse_numeric_text"
-        ]
-      },
-      {
         "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
         "severity": "warning",
         "required_any_tokens": [
@@ -91,4 +79,3 @@
     ]
   }
 }
-

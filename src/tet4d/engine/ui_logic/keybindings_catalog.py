@@ -7,12 +7,14 @@ _BINDING_GROUP_LABELS = {
     "system": "General / System",
     "game": "Gameplay",
     "camera": "Camera / View",
+    "explorer": "Explorer Movement",
 }
 
 _BINDING_GROUP_DESCRIPTIONS = {
     "system": "Global actions available in all modes.",
     "game": "Piece translation, drop, and rotation actions.",
     "camera": "Board/view camera orbit, projection, and zoom controls.",
+    "explorer": "Explorer-only traversal controls, including vertical movement.",
 }
 
 _COMMON_ACTION_DESCRIPTIONS = {
@@ -27,8 +29,8 @@ _COMMON_ACTION_DESCRIPTIONS = {
     "move_z_pos": "Move active piece closer to viewer (default view).",
     "move_w_neg": "Move active piece to previous W-layer board.",
     "move_w_pos": "Move active piece to next W-layer board.",
-    "move_y_neg": "Exploration mode: move active piece up along gravity axis.",
-    "move_y_pos": "Exploration mode: move active piece down along gravity axis.",
+    "move_up": "Explorer mode: move active piece up along the gravity axis.",
+    "move_down": "Explorer mode: move active piece down along the gravity axis.",
     "soft_drop": "Move piece one gravity step down.",
     "hard_drop": "Drop piece immediately to lock position.",
     "rotate_xy_pos": "Rotate piece in x-y plane (+90).",

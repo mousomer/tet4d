@@ -84,7 +84,10 @@ class TestMenuPolicy(unittest.TestCase):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
             attrs = {attr for _label, attr, _min_val, _max_val in fields}
             self.assertIn("topology_mode", attrs)
-            self.assertIn("topology_profile_index", attrs)
+            if dimension == 2:
+                self.assertIn("topology_profile_index", attrs)
+            else:
+                self.assertNotIn("topology_profile_index", attrs)
             self.assertNotIn("topology_advanced", attrs)
             self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)

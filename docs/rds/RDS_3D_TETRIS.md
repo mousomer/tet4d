@@ -156,3 +156,9 @@ Relevant tests:
 5. Embedded 2D and random-cell 3D sets are selectable and playable.
 6. Debug 3D piece set is selectable and supports fast layer-fill validation.
 7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
+
+## 10. Mode-aware topology split (2026-03-08)
+
+1. 3D advanced topology profiles are split by gameplay mode: `normal_3d_topology` and `explorer_3d_topology`.
+2. Normal 3D play keeps gravity-axis `Y` bounded; seams touching `Y+` or `Y-` are illegal.
+3. Explorer 3D may wrap `Y` and exposes bindable `move_up` / `move_down` traversal controls.

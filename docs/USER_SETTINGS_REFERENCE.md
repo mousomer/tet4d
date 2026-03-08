@@ -48,7 +48,7 @@ Shared run controls across 2D/3D/4D (game seed, random type, advanced topology t
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.2d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
-- `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Inherit mode; choices: 0=Inherit mode, 1=Force wrap all, 2=Force invert all, 3=Twist X both edges, 4=Twist +X only
+- `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
 - `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.2d.lines_per_level`: `10`
 - `settings.2d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
@@ -79,7 +79,6 @@ Shared run controls across 2D/3D/4D (game seed, random type, advanced topology t
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
-- `settings.3d.topology_profile_index`: `0`; integer; min: 0; default option: Inherit mode; choices: 0=Inherit mode, 1=Force wrap all, 2=Force invert all, 3=Twist X both edges, 4=Twist +X only, 5=Twist +Z only
 - `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.3d.lines_per_level`: `10`
 - `settings.3d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
@@ -111,7 +110,6 @@ Shared run controls across 2D/3D/4D (game seed, random type, advanced topology t
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
-- `settings.4d.topology_profile_index`: `0`; integer; min: 0; default option: Inherit mode; choices: 0=Inherit mode, 1=Force wrap all, 2=Force invert all, 3=Twist X both edges, 4=Twist +X only, 5=Twist +Z only, 6=Twist +W only
 - `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.4d.lines_per_level`: `10`
 - `settings.4d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
@@ -137,14 +135,20 @@ Global actions available in all modes.
 
 #### Gameplay
 Piece translation, drop, and rotation actions.
-- 2D: 8 actions
-- 3D: 14 actions
-- 4D: 22 actions
+- 2D: 6 actions
+- 3D: 12 actions
+- 4D: 20 actions
 
 #### Camera / View
 Board orbit, zoom, and projection controls.
 - 3D: 12 actions
 - 4D: 16 actions
+
+#### Explorer Movement
+Explorer-only traversal controls, including upward and downward movement.
+- 2D: 2 actions
+- 3D: 2 actions
+- 4D: 2 actions
 
 
 ### `macbook`
@@ -154,14 +158,20 @@ Global actions available in all modes.
 
 #### Gameplay
 Piece translation, drop, and rotation actions.
-- 2D: 8 actions
-- 3D: 14 actions
-- 4D: 22 actions
+- 2D: 6 actions
+- 3D: 12 actions
+- 4D: 20 actions
 
 #### Camera / View
 Board orbit, zoom, and projection controls.
 - 3D: 12 actions
 - 4D: 16 actions
+
+#### Explorer Movement
+Explorer-only traversal controls, including upward and downward movement.
+- 2D: 2 actions
+- 3D: 2 actions
+- 4D: 2 actions
 
 
 ### `small`
@@ -171,14 +181,20 @@ Global actions available in all modes.
 
 #### Gameplay
 Piece translation, drop, and rotation actions.
-- 2D: 8 actions
-- 3D: 14 actions
-- 4D: 22 actions
+- 2D: 6 actions
+- 3D: 12 actions
+- 4D: 20 actions
 
 #### Camera / View
 Board orbit, zoom, and projection controls.
 - 3D: 12 actions
 - 4D: 16 actions
+
+#### Explorer Movement
+Explorer-only traversal controls, including upward and downward movement.
+- 2D: 2 actions
+- 3D: 2 actions
+- 4D: 2 actions
 
 
 ### `tiny`
@@ -188,11 +204,17 @@ Global actions available in all modes.
 
 #### Gameplay
 Piece translation, drop, and rotation actions.
-- 2D: 8 actions
-- 3D: 14 actions
-- 4D: 22 actions
+- 2D: 6 actions
+- 3D: 12 actions
+- 4D: 20 actions
 
 #### Camera / View
 Board orbit, zoom, and projection controls.
 - 3D: 12 actions
 - 4D: 16 actions
+
+#### Explorer Movement
+Explorer-only traversal controls, including upward and downward movement.
+- 2D: 2 actions
+- 3D: 2 actions
+- 4D: 2 actions

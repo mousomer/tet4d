@@ -12,7 +12,7 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
 from tet4d.engine.gameplay.game_nd import GameConfigND
-from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
+from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D, EXPLORER_KEYS_3D, EXPLORER_KEYS_4D, KEYS_3D, KEYS_4D, SYSTEM_KEYS
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
@@ -58,6 +58,41 @@ class _AxisCaptureState:
 
 
 class TestNdRouting(unittest.TestCase):
+    def test_explorer_move_up_is_available_only_in_exploration_mode(self) -> None:
+        explorer_cfg = GameConfigND(
+            dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
+        explorer_state = _AxisCaptureState(explorer_cfg)
+        result = frontend_nd_input.route_nd_keydown(
+            _key_for(EXPLORER_KEYS_4D, "move_up"),
+            explorer_state,
+        )
+        self.assertEqual(result, "continue")
+        self.assertEqual(explorer_state.moves, [(1, -1)])
+
+        normal_cfg = GameConfigND(
+            dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1, exploration_mode=False
+        )
+        normal_state = _AxisCaptureState(normal_cfg)
+        result_normal = frontend_nd_input.route_nd_keydown(
+            _key_for(EXPLORER_KEYS_4D, "move_up"),
+            normal_state,
+        )
+        self.assertEqual(result_normal, "continue")
+        self.assertEqual(normal_state.moves, [])
+
+    def test_explorer_move_down_is_available_in_3d_exploration_mode(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 10, 6), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
+        state = _AxisCaptureState(cfg)
+        result = frontend_nd_input.route_nd_keydown(
+            _key_for(EXPLORER_KEYS_3D, "move_down"),
+            state,
+        )
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [(1, 1)])
+
     def test_viewer_relative_routing_uses_yaw_for_3d(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)

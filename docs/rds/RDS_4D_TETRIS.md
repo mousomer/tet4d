@@ -259,3 +259,11 @@ Implemented in code:
 16. layer axis/count and per-layer board dims are derived from the active signed-axis basis, and all layer render paths share that mapping.
 17. Regression coverage includes `(5,4,3,2)` decomposition expectations and coord-map bijection checks (`tests/unit/engine/test_front4d_render.py`).
 
+
+## 12. Mode-aware topology and exploration (2026-03-08)
+
+1. 4D advanced topology profiles are now split by gameplay mode: `normal_4d_topology` and `explorer_4d_topology`.
+2. Normal 4D play keeps the gravity axis bounded; `Y+` / `Y-` seams are illegal and must be rejected by engine validation.
+3. Explorer 4D may wrap `Y` and requires explicit upward traversal via the bindable `move_up` action.
+4. The fixed compact 4D exploration board profile is `8 x 9 x 7 x 6`.
+5. The fixed 4D tutorial board profile is `8 x 20 x 7 x 6`.

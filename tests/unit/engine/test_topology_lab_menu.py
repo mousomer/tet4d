@@ -3,77 +3,101 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_WRAP
+from tet4d.engine.gameplay.topology_designer import (
+    GAMEPLAY_MODE_EXPLORER,
+    GAMEPLAY_MODE_NORMAL,
+    default_topology_profile_state,
+)
 from tet4d.ui.pygame.launch import topology_lab_menu
 
 
 class TestTopologyLabMenu(unittest.TestCase):
-    def test_load_dimension_settings_reads_mode_payload(self) -> None:
-        state = topology_lab_menu._TopologyLabState(
-            payload={
-                "settings": {
-                    "3d": {
-                        "topology_mode": 2,
-                        "topology_advanced": 1,
-                        "topology_profile_index": 1,
-                    }
-                }
-            },
-            selected=0,
+    def test_rows_lock_y_boundaries_in_normal_mode(self) -> None:
+        profile = default_topology_profile_state(
             dimension=3,
-            topology_mode_index=0,
-            topology_advanced=0,
-            topology_profile_index=0,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_NORMAL,
         )
-
-        topology_lab_menu._load_dimension_settings(state)
-
-        self.assertEqual(state.topology_mode_index, 2)
-        self.assertEqual(state.topology_advanced, 1)
-        self.assertGreaterEqual(state.topology_profile_index, 0)
-
-    def test_save_dimension_settings_updates_selected_mode(self) -> None:
         state = topology_lab_menu._TopologyLabState(
-            payload={"settings": {"2d": {}}},
             selected=0,
-            dimension=2,
-            topology_mode_index=1,
-            topology_advanced=1,
-            topology_profile_index=2,
+            gameplay_mode=GAMEPLAY_MODE_NORMAL,
+            dimension=3,
+            profile=profile,
         )
+        rows = topology_lab_menu._rows_for_state(state)
+        y_rows = [row for row in rows if row.key in {"y_neg", "y_pos"}]
+        self.assertEqual(len(y_rows), 2)
+        self.assertTrue(all(row.disabled for row in y_rows))
 
-        with patch.object(
-            topology_lab_menu,
-            "save_app_settings_payload",
-            return_value=(True, "saved"),
-        ) as save_payload:
-            ok, _msg = topology_lab_menu._save_dimension_settings(state)
-
-        self.assertTrue(ok)
-        mode_settings = state.payload["settings"]["2d"]
-        self.assertEqual(mode_settings["topology_mode"], 1)
-        self.assertEqual(mode_settings["topology_advanced"], 1)
-        self.assertEqual(mode_settings["topology_profile_index"], 2)
-        save_payload.assert_called_once_with(state.payload)
-
-    def test_profile_text_input_clamps_index(self) -> None:
-        state = topology_lab_menu._TopologyLabState(
-            payload={"settings": {"4d": {}}},
-            selected=0,
+    def test_rows_enable_y_boundaries_in_explorer_mode(self) -> None:
+        profile = default_topology_profile_state(
             dimension=4,
-            topology_mode_index=0,
-            topology_advanced=0,
-            topology_profile_index=0,
-            text_mode_row_key="topology_profile_index",
-            text_mode_buffer="9999",
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
         )
-
-        updated = topology_lab_menu._apply_profile_index_from_text(state)
-
-        self.assertTrue(updated)
-        self.assertEqual(
-            state.topology_profile_index,
-            topology_lab_menu._profile_count_for_dimension(4) - 1,
+        state = topology_lab_menu._TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=4,
+            profile=profile,
         )
+        rows = topology_lab_menu._rows_for_state(state)
+        y_rows = [row for row in rows if row.key in {"y_neg", "y_pos"}]
+        self.assertEqual(len(y_rows), 2)
+        self.assertTrue(all(not row.disabled for row in y_rows))
+
+    def test_cycle_edge_rule_blocks_normal_y_wrap(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_NORMAL,
+        )
+        state = topology_lab_menu._TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_NORMAL,
+            dimension=3,
+            profile=profile,
+        )
+        row = next(row for row in topology_lab_menu._rows_for_state(state) if row.key == "y_neg")
+        topology_lab_menu._cycle_edge_rule(state, row, 1)
+        self.assertEqual(state.profile.edge_rules[1], (EDGE_BOUNDED, EDGE_BOUNDED))
+        self.assertTrue(state.status_error)
+
+    def test_cycle_edge_rule_allows_explorer_y_wrap(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = topology_lab_menu._TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=3,
+            profile=profile,
+        )
+        row = next(row for row in topology_lab_menu._rows_for_state(state) if row.key == "y_neg")
+        topology_lab_menu._cycle_edge_rule(state, row, 1)
+        self.assertEqual(state.profile.edge_rules[1][0], EDGE_WRAP)
+        self.assertTrue(state.dirty)
+
+    def test_save_profile_persists_selected_mode_dimension(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=4,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = topology_lab_menu._TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=4,
+            profile=profile,
+            dirty=True,
+        )
+        with patch.object(topology_lab_menu, 'save_topology_profile', return_value=(True, 'saved')) as save_profile:
+            ok, _message = topology_lab_menu._save_profile(state)
+        self.assertTrue(ok)
+        save_profile.assert_called_once_with(state.profile)
 
 
 if __name__ == "__main__":
