@@ -60,5 +60,20 @@
     "leaderboard_max_entries": 200,
     "leaderboard_page_rows": 12,
     "leaderboard_name_max_length": 24
+  },
+  "topology": {
+    "explorer_preview_dims": {
+      "3d": [
+        4,
+        4,
+        4
+      ],
+      "4d": [
+        4,
+        4,
+        4,
+        4
+      ]
+    }
   }
 }

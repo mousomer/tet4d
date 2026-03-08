@@ -100,6 +100,7 @@
       "scripts/install_git_hooks.sh",
       "scripts/ci_check.sh",
       "scripts/verify.sh",
+      "scripts/verify_focus.sh",
       "scripts/check_git_sanitation.sh",
       "scripts/check_policy_compliance.sh",
       "tools/governance/check_pygame_ce.py",

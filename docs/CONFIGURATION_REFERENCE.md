@@ -997,7 +997,7 @@ Parameters:
 - `schema_version`: `1` (`int`)
 
 ### `config/project/constants.json`
-Top-level keys: `analytics`, `animation`, `cache_limits`, `layout`, `rendering`, `tutorial`, `version`
+Top-level keys: `analytics`, `animation`, `cache_limits`, `layout`, `rendering`, `topology`, `tutorial`, `version`
 Parameters:
 - `analytics.leaderboard_max_entries`: `200` (`int`)
 - `analytics.leaderboard_name_max_length`: `24` (`int`)
@@ -1026,6 +1026,8 @@ Parameters:
 - `rendering.4d.layer_gap`: `12` (`int`)
 - `rendering.4d.margin`: `16` (`int`)
 - `rendering.4d.side_panel`: `360` (`int`)
+- `topology.explorer_preview_dims.3d[]`: array[`int`]; examples: `4`
+- `topology.explorer_preview_dims.4d[]`: array[`int`]; examples: `4`
 - `tutorial.action_delay_ms.drop`: `500` (`int`)
 - `tutorial.action_delay_ms.hard_drop`: `450` (`int`)
 - `tutorial.action_delay_ms.movement`: `140` (`int`)
@@ -1103,6 +1105,8 @@ Entries:
 ### `config/project/io_paths.json`
 Top-level keys: `paths`, `version`
 Parameters:
+- `paths.explorer_topology_preview_file_default`: `"state/topology/explorer_preview.json"` (`string`)
+- `paths.explorer_topology_profiles_file_default`: `"state/topology/explorer_profiles.json"` (`string`)
 - `paths.keybindings_dir`: `"keybindings"` (`string`)
 - `paths.keybindings_profiles_dir`: `"keybindings/profiles"` (`string`)
 - `paths.leaderboard_file_default`: `"state/analytics/leaderboard.json"` (`string`)

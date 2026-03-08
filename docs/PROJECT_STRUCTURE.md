@@ -60,16 +60,17 @@ The current rule is one-way:
 5. `src/tet4d/engine/core/piece_transform.py`: canonical piece-local transform math
 6. `src/tet4d/engine/core/rotation_kicks.py`: canonical kick candidate generation and shared resolution
 7. `src/tet4d/engine/core/rules/lifecycle.py`: shared lock/spawn/drop lifecycle orchestration
-8. `src/tet4d/engine/gameplay/game2d.py`: 2D gameplay state/rules
-9. `src/tet4d/engine/gameplay/game_nd.py`: 3D/4D gameplay state/rules
-10. `src/tet4d/engine/gameplay/lock_flow.py`: shared lock-and-analysis orchestration
-11. `src/tet4d/engine/runtime/menu_config.py`: menu/runtime config loading
-12. `src/tet4d/engine/runtime/keybinding_store.py`: runtime-owned keybinding profile/path/json storage
-13. `src/tet4d/engine/runtime/menu_settings_state.py`: stable persisted-settings facade over `runtime/menu_settings/`
-14. `src/tet4d/engine/runtime/menu_structure_schema.py`: stable menu-structure parsing facade over `runtime/menu_structure/`
-15. `src/tet4d/engine/runtime/score_analyzer.py`: stable score-analysis facade over `runtime/score_analysis/`
-16. `src/tet4d/engine/tutorial/content.py`: tutorial content loader
-17. `src/tet4d/engine/tutorial/runtime.py`: tutorial runtime session logic
+8. `src/tet4d/engine/topology_explorer/`: explorer-only general gluing kernel, validation, mapping, and movement graph helpers
+9. `src/tet4d/engine/gameplay/game2d.py`: 2D gameplay state/rules
+10. `src/tet4d/engine/gameplay/game_nd.py`: 3D/4D gameplay state/rules
+11. `src/tet4d/engine/gameplay/lock_flow.py`: shared lock-and-analysis orchestration
+12. `src/tet4d/engine/runtime/menu_config.py`: menu/runtime config loading
+13. `src/tet4d/engine/runtime/keybinding_store.py`: runtime-owned keybinding profile/path/json storage
+14. `src/tet4d/engine/runtime/menu_settings_state.py`: stable persisted-settings facade over `runtime/menu_settings/`
+15. `src/tet4d/engine/runtime/menu_structure_schema.py`: stable menu-structure parsing facade over `runtime/menu_structure/`
+16. `src/tet4d/engine/runtime/score_analyzer.py`: stable score-analysis facade over `runtime/score_analysis/`
+17. `src/tet4d/engine/tutorial/content.py`: tutorial content loader
+18. `src/tet4d/engine/tutorial/runtime.py`: tutorial runtime session logic
 
 ### UI
 

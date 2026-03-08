@@ -33,15 +33,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 123` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 126` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.08` (`low`)
+- `tech_debt.score = 2.13` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.36`
+1. `delivery_size_pressure = 1.41`
 2. `code_balance = 0.72`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -53,6 +53,7 @@ Dominant remaining pressure:
 - `src/tet4d/engine/core/piece_transform.py`
 - `src/tet4d/engine/core/rotation_kicks.py`
 - `src/tet4d/engine/core/rules/lifecycle.py`
+- `src/tet4d/engine/topology_explorer/*`
 - `src/tet4d/engine/gameplay/*`
 - `src/tet4d/engine/gameplay/api.py`
 - `src/tet4d/engine/runtime/*`
@@ -174,6 +175,9 @@ Dominant remaining pressure:
 30. Fixed recurring GitHub CI parity drift by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to fail if any direct-run shell entrypoint in the repo loses `100755` mode in git metadata.
 31. Split Topology Lab topology ownership by gameplay mode (`normal` vs `explorer`) for 3D/4D, with engine-owned validation rejecting wrapped `Y` boundaries in Normal Game while Explorer Mode persists separate topology profiles and allows bidirectional vertical traversal.
 32. Added explorer-only `move_up` / `move_down` keybinding groups and routing for 2D/3D/4D exploration, removed stale `move_y_*` gameplay naming from live help/control mappings, and hid 3D/4D topology-profile setup rows so advanced topology now flows through the mode-aware Topology Lab store.
+33. Added a new engine-only explorer topology kernel under `src/tet4d/engine/topology_explorer/` covering general boundary gluing descriptors, signed-permutation transform validation, move-through-boundary mapping, movement-graph compilation, and basic quotient-topology presets without switching the live runtime/UI to the new model yet.
+34. Added Stage 2 runtime-owned explorer topology integration: `topology_explorer_store.py` now owns JSON save/load for general explorer gluing profiles, `topology_explorer_bridge.py` converts the representable subset of legacy explorer edge-rule profiles into the new gluing model for preview/export, `topology_explorer_preview.py` compiles and exports movement-graph previews, and Topology Lab export now emits that explorer preview when the current explorer profile is representable as a true paired-boundary gluing.
+35. Added `scripts/verify_focus.sh` as the documented fast-path staged local validation helper for focused lint/tests and maintenance-doc checks while keeping `./scripts/verify.sh` as the required pre-commit/pre-push gate.
 
 ## Validation Status
 
@@ -182,6 +186,7 @@ Validation completed during this batch:
 - focused cleanup slices covering `engine.api`, keybinding storage migration, and shared gameplay lifecycle/lock-flow helpers: passed
 - focused `ruff check`: passed
 - focused pytest batches covering the 2D split, compatibility facade, and shared kick-resolution paths: passed
+- focused explorer-topology kernel tests (`test_topology_explorer.py`): passed
 - `python scripts/arch_metrics.py`: passed with zero reverse imports
 - `CODEX_MODE=1 ./scripts/verify.sh`: passed
 - `CODEX_MODE=1 ./scripts/ci_check.sh`: passed
@@ -228,6 +233,7 @@ Tutorial wording drift guard:
 4. If more 2D/ND gameplay orchestration duplication remains after `lock_flow.py` and `core/rules/lifecycle.py`, extract only the next shared owner that produces net deletion.
 5. Keep `engine.api` narrow and do not reintroduce raw transform or upper-layer
    convenience exports there.
+6. Continue explorer topology Stage 3 by replacing the legacy edge-rule editor/export flow with a real general-gluing GUI on top of the runtime-owned explorer store and preview contracts.
 
 ## Restart Checklist
 

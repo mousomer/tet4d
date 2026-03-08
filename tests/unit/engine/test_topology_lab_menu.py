@@ -3,6 +3,8 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+
 from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_WRAP
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
@@ -59,7 +61,11 @@ class TestTopologyLabMenu(unittest.TestCase):
             dimension=3,
             profile=profile,
         )
-        row = next(row for row in topology_lab_menu._rows_for_state(state) if row.key == "y_neg")
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "y_neg"
+        )
         topology_lab_menu._cycle_edge_rule(state, row, 1)
         self.assertEqual(state.profile.edge_rules[1], (EDGE_BOUNDED, EDGE_BOUNDED))
         self.assertTrue(state.status_error)
@@ -76,7 +82,11 @@ class TestTopologyLabMenu(unittest.TestCase):
             dimension=3,
             profile=profile,
         )
-        row = next(row for row in topology_lab_menu._rows_for_state(state) if row.key == "y_neg")
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "y_neg"
+        )
         topology_lab_menu._cycle_edge_rule(state, row, 1)
         self.assertEqual(state.profile.edge_rules[1][0], EDGE_WRAP)
         self.assertTrue(state.dirty)
@@ -94,10 +104,47 @@ class TestTopologyLabMenu(unittest.TestCase):
             profile=profile,
             dirty=True,
         )
-        with patch.object(topology_lab_menu, 'save_topology_profile', return_value=(True, 'saved')) as save_profile:
+        with patch.object(
+            topology_lab_menu, "save_topology_profile", return_value=(True, "saved")
+        ) as save_profile:
             ok, _message = topology_lab_menu._save_profile(state)
         self.assertTrue(ok)
         save_profile.assert_called_once_with(state.profile)
+
+    def test_export_runs_explorer_preview_when_bridge_is_representable(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=4,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = topology_lab_menu._TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=4,
+            profile=profile,
+        )
+        preview_profile = ExplorerTopologyProfile(dimension=4, gluings=())
+        with (
+            patch.object(
+                topology_lab_menu,
+                "export_topology_profile_state",
+                return_value=(True, "legacy exported", None),
+            ),
+            patch.object(
+                topology_lab_menu,
+                "explorer_profile_from_legacy_profile",
+                return_value=preview_profile,
+            ) as bridge,
+            patch.object(
+                topology_lab_menu,
+                "export_explorer_topology_preview",
+                return_value=(True, "preview exported", None),
+            ) as export_preview,
+        ):
+            topology_lab_menu._run_export(state)
+        bridge.assert_called_once_with(state.profile)
+        export_preview.assert_called_once()
+        self.assertIn("preview exported", state.status)
 
 
 if __name__ == "__main__":

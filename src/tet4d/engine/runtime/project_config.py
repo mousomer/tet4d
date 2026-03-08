@@ -34,6 +34,8 @@ _DEFAULT_IO_PATHS = {
         "leaderboard_file_default": "state/analytics/leaderboard.json",
         "topology_profile_export_file_default": "state/topology/selected_profile.json",
         "topology_profiles_file_default": "state/topology/profiles.json",
+        "explorer_topology_profiles_file_default": "state/topology/explorer_profiles.json",
+        "explorer_topology_preview_file_default": "state/topology/explorer_preview.json",
         "tutorial_progress_file_default": "state/tutorial/progress.json",
     },
 }
@@ -65,7 +67,7 @@ _DEFAULT_CONSTANTS = {
             "drop": 500,
             "soft_drop": 90,
             "hard_drop": 450,
-        }
+        },
     },
     "rendering": {
         "2d": {
@@ -87,6 +89,12 @@ _DEFAULT_CONSTANTS = {
         "leaderboard_max_entries": 200,
         "leaderboard_page_rows": 12,
         "leaderboard_name_max_length": 24,
+    },
+    "topology": {
+        "explorer_preview_dims": {
+            "3d": [4, 4, 4],
+            "4d": [4, 4, 4, 4],
+        },
     },
 }
 
@@ -412,9 +420,7 @@ def topology_profile_export_file_default_relative() -> str:
     )
 
 
-def topology_profile_export_file_default_path(
-    *, root_dir: Path | None = None
-) -> Path:
+def topology_profile_export_file_default_path(*, root_dir: Path | None = None) -> Path:
     root = PROJECT_ROOT if root_dir is None else root_dir
     rel = topology_profile_export_file_default_relative()
     return _resolve_state_path_for_root(
@@ -440,6 +446,67 @@ def topology_profiles_file_default_path(*, root_dir: Path | None = None) -> Path
         default_relative="state/topology/profiles.json",
         root_dir=root,
     )
+
+
+def explorer_topology_profiles_file_default_relative() -> str:
+    return _path_value(
+        "explorer_topology_profiles_file_default",
+        default_relative="state/topology/explorer_profiles.json",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def explorer_topology_profiles_file_default_path(
+    *, root_dir: Path | None = None
+) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = explorer_topology_profiles_file_default_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/topology/explorer_profiles.json",
+        root_dir=root,
+    )
+
+
+def explorer_topology_preview_file_default_relative() -> str:
+    return _path_value(
+        "explorer_topology_preview_file_default",
+        default_relative="state/topology/explorer_preview.json",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def explorer_topology_preview_file_default_path(
+    *, root_dir: Path | None = None
+) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = explorer_topology_preview_file_default_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/topology/explorer_preview.json",
+        root_dir=root,
+    )
+
+
+def explorer_topology_preview_dims(dimension: int) -> tuple[int, ...]:
+    dim = int(dimension)
+    if dim <= 0:
+        raise ValueError("dimension must be positive")
+    default = tuple(4 for _ in range(dim))
+    value: object = constants_payload()
+    for key in ("topology", "explorer_preview_dims", f"{dim}d"):
+        if not isinstance(value, dict):
+            value = None
+            break
+        value = value.get(key)
+    if not isinstance(value, list) or len(value) != dim:
+        return default
+    normalized: list[int] = []
+    for raw in value:
+        if isinstance(raw, bool) or not isinstance(raw, int) or raw <= 0:
+            return default
+        normalized.append(int(raw))
+    return tuple(normalized)
 
 
 def tutorial_progress_file_default_relative() -> str:

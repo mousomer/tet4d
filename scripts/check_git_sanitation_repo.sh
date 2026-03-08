@@ -98,6 +98,7 @@ required_exec_paths=(
   "scripts/install_git_hooks.sh"
   "scripts/update_policy_template_hashes.sh"
   "scripts/verify.sh"
+  "scripts/verify_focus.sh"
   ".githooks/pre-push"
 )
 

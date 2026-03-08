@@ -45,6 +45,10 @@ CANONICAL_OWNERS: dict[str, tuple[tuple[str, str], ...]] = {
             "src/tet4d/engine/core/rules/lifecycle.py",
             "shared lock/spawn/drop lifecycle orchestration",
         ),
+        (
+            "src/tet4d/engine/topology_explorer/",
+            "explorer-only general gluing kernel, validation, mapping, and movement graph helpers",
+        ),
         ("src/tet4d/engine/gameplay/game2d.py", "2D gameplay state/rules"),
         ("src/tet4d/engine/gameplay/game_nd.py", "3D/4D gameplay state/rules"),
         (
@@ -123,6 +127,7 @@ CANONICAL_OWNERS_FOR_CURRENT_STATE: dict[str, tuple[str, ...]] = {
         "src/tet4d/engine/core/piece_transform.py",
         "src/tet4d/engine/core/rotation_kicks.py",
         "src/tet4d/engine/core/rules/lifecycle.py",
+        "src/tet4d/engine/topology_explorer/*",
         "src/tet4d/engine/gameplay/*",
         "src/tet4d/engine/gameplay/api.py",
         "src/tet4d/engine/runtime/*",

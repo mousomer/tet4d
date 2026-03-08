@@ -7,6 +7,10 @@ from unittest import mock
 from tet4d.engine.runtime.project_config import (
     PROJECT_ROOT,
     keybindings_dir_relative,
+    explorer_topology_preview_dims,
+    explorer_topology_preview_file_default_path,
+    explorer_topology_preview_file_default_relative,
+    explorer_topology_profiles_file_default_path,
     leaderboard_file_default_path,
     leaderboard_file_default_relative,
     menu_settings_file_path,
@@ -80,6 +84,14 @@ class TestProjectConfig(unittest.TestCase):
                 expected_root / "analytics/score_summary.json",
             )
             self.assertEqual(
+                explorer_topology_profiles_file_default_path(),
+                expected_root / "topology/explorer_profiles.json",
+            )
+            self.assertEqual(
+                explorer_topology_preview_file_default_path(),
+                expected_root / "topology/explorer_preview.json",
+            )
+            self.assertEqual(
                 resolve_state_relative_path(
                     "state/analytics/custom.jsonl",
                     default_relative="state/analytics/score_events.jsonl",
@@ -123,6 +135,13 @@ class TestProjectConfig(unittest.TestCase):
                 state_dir_relative() + "/"
             )
         )
+        self.assertTrue(
+            explorer_topology_preview_file_default_relative().startswith(
+                state_dir_relative() + "/"
+            )
+        )
+        self.assertEqual(explorer_topology_preview_dims(3), (4, 4, 4))
+        self.assertEqual(explorer_topology_preview_dims(4), (4, 4, 4, 4))
         self.assertTrue(
             leaderboard_file_default_relative().startswith(state_dir_relative() + "/")
         )

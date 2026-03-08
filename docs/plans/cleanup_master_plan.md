@@ -1,4 +1,4 @@
-﻿# Cleanup Master Plan
+# Cleanup Master Plan
 
 Status date: 2026-03-07
 
@@ -34,6 +34,7 @@ behavior. Structural work means:
 | 10 | Release/packaging cleanup | Mostly complete | Installer workflows exist and are green; keep as a watch item. |
 | 11 | Stop minifying operational code | Watch | No broad formatting issue found in current Python sources; enforce readability drift only. |
 | 12 | Docs/manifests sync last | Complete for this batch | Code changes are now reflected in backlog/state/RDS/generated maintenance docs. |
+| 13 | Explorer topology engine | Active | Phase 1 kernel is complete; Phase 2 runtime-owned explorer profile storage, legacy bridge, and preview export are now in place while live gameplay/UI remain on the legacy topology model. |
 
 ## Domain Ledger
 
@@ -146,3 +147,14 @@ behavior. Structural work means:
 | Migration status | Complete for this batch |
 | Equivalence tests | `tools/governance/generate_maintenance_docs.py --check`, contract validation |
 | Deletion checkpoint | Docs/manifests updated after code cleanup is complete |
+
+### Explorer topology engine
+
+| Field | Value |
+| --- | --- |
+| Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py` for runtime-owned storage/preview integration |
+| Current duplicate owners | Legacy explorer edge-rule profiles in `src/tet4d/engine/gameplay/topology_designer.py` remain as the live runtime model until the GUI/lab rewrite lands |
+| Migration status | Active |
+| Equivalence tests | `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_explorer_store.py`, `tests/unit/engine/test_topology_explorer_preview.py`, `tests/unit/engine/test_topology_lab_menu.py` |
+| Deletion checkpoint | Remove the legacy bridge after the topology lab edits and stores general gluing profiles directly |
+

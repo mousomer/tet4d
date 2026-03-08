@@ -11,6 +11,8 @@
     "leaderboard_file_default": "state/analytics/leaderboard.json",
     "topology_profile_export_file_default": "state/topology/selected_profile.json",
     "tutorial_progress_file_default": "state/tutorial/progress.json",
-    "topology_profiles_file_default": "state/topology/profiles.json"
+    "topology_profiles_file_default": "state/topology/profiles.json",
+    "explorer_topology_profiles_file_default": "state/topology/explorer_profiles.json",
+    "explorer_topology_preview_file_default": "state/topology/explorer_preview.json"
   }
 }

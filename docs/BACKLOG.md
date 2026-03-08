@@ -4,6 +4,12 @@ Generated: 2026-02-18
 Updated: 2026-03-07  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
+Current sub-batch (2026-03-08): explorer topology Stage 2 runtime integration.
+
+- Added runtime-owned explorer general-gluing profile storage plus preview export on top of the new `engine/topology_explorer/` kernel.
+- Added a legacy explorer-profile bridge so the current topology lab can export truthful general-gluing previews only for representable paired-boundary configurations, while explicitly rejecting asymmetric edge-rule cases.
+- Added `scripts/verify_focus.sh` as the documented staged local validation helper; full `verify.sh` remains the required final gate.
+
 ## 1. Priority Verification Rules
 
 1. `P1` = user-facing correctness, consistency, and discoverability gaps.
@@ -398,6 +404,15 @@ Current sub-batch (2026-03-07): drift prevention and generated hotspot enforceme
 - Extended `tools/governance/generate_maintenance_docs.py` so `CURRENT_STATE.md` now generates a `Live Drift Watch` section from live code metrics instead of hand-maintaining hotspot lists.
 - Updated governance docs/contracts to treat the generated hotspot section and thin-wrapper budgets as enforced maintenance surfaces.
 - Fixed the recurring GitHub-only CI failure mode where new shell entrypoints could be committed from Windows without `100755` mode by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to enforce executable bits for all direct-run shell entrypoints in git metadata.
+
+Current sub-batch (2026-03-08): explorer topology engine Phase 1 kernel.
+
+- Added `src/tet4d/engine/topology_explorer/` as the canonical engine-owned explorer topology package for general boundary gluing descriptors, signed-permutation tangent transforms, boundary-crossing mapping, movement-graph compilation, and basic quotient-topology presets.
+- Added focused kernel regression coverage in `tests/unit/engine/test_topology_explorer.py` for transform inversion, duplicate-boundary rejection, discrete bijection failure, torus-style wrapping, Mobius-style twisting, and graph compilation.
+- Documented the staged rollout and explicit non-goals in `docs/plans/explorer_topology_phase1.md` and updated `docs/plans/cleanup_master_plan.md` so the live runtime remains on the existing per-edge explorer topology path until a later integration batch proves parity.
+- Validation:
+  - focused `ruff check` passed
+  - focused pytest (`test_topology_explorer.py`) passed
 
 Current sub-batch (2026-03-08): mode-aware Topology Lab split for normal vs explorer rules.
 

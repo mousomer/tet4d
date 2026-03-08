@@ -38,6 +38,14 @@ Codex/local quick mode (same checks, lower stability repeats, quieter success ou
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
+Fast staged local validation while a batch is in progress:
+
+```bash
+./scripts/verify_focus.sh [--docs] [ruff-targets...] [--pytest pytest-targets...]
+```
+
+Use `verify_focus.sh` for focused lint/tests and maintenance-doc checks before the full canonical gate. It does not replace `./scripts/verify.sh` before commit/push.
+
 Verification must pass:
 - ruff
 - ruff (C901)

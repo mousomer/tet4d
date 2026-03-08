@@ -78,6 +78,14 @@ Codex/local quick mode:
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
+Fast staged local validation before the full gate:
+
+```bash
+./scripts/verify_focus.sh [--docs] [ruff-targets...] [--pytest pytest-targets...]
+```
+
+Use `verify_focus.sh` for focused lint/tests and maintenance-doc checks while a batch is in progress. It does not replace `./scripts/verify.sh` before commit/push.
+
 For governance/contract changes, additionally run:
 
 ```bash

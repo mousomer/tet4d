@@ -399,6 +399,12 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 4. Phase 4: expose geometry selection in setup menus and help documentation.
 5. Phase 5: boundary-warping designer for custom topology authoring.
 
+### 11.6.1 Current engine staging note
+
+1. A new exploratory kernel now exists under `src/tet4d/engine/topology_explorer/` for general boundary gluings, signed-permutation transforms, boundary-crossing movement, and movement-graph compilation.
+2. This kernel is not yet the active gameplay/runtime topology path; live play still uses the existing bounded/wrap/invert explorer topology model until a later integration batch switches explorer-mode runtime and lab preview onto the new engine-owned model.
+3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`; the current Topology Lab can export a general-gluing preview only when its legacy explorer edge rules are representable as a true paired-boundary gluing.
+
 ### 11.7 Test requirements (for future implementation)
 
 1. Golden parity tests: `cartesian` profile must match current gameplay results.

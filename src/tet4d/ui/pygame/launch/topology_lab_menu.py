@@ -23,6 +23,13 @@ from tet4d.engine.gameplay.topology_designer import (
     validate_topology_profile_state,
 )
 from tet4d.engine.runtime.api import topology_lab_menu_payload_runtime
+from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
+from tet4d.engine.runtime.topology_explorer_bridge import (
+    explorer_profile_from_legacy_profile,
+)
+from tet4d.engine.runtime.topology_explorer_preview import (
+    export_explorer_topology_preview,
+)
 from tet4d.engine.runtime.topology_profile_store import (
     load_topology_profile,
     save_topology_profile,
@@ -109,7 +116,9 @@ class _TopologyLabState:
     dirty: bool = False
 
 
-def _set_status(state: _TopologyLabState, message: str, *, is_error: bool = False) -> None:
+def _set_status(
+    state: _TopologyLabState, message: str, *, is_error: bool = False
+) -> None:
     state.status = message
     state.status_error = is_error
 
@@ -148,8 +157,24 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
     for axis_name in axis_names:
         axis = "xyzw".index(axis_name)
         disabled = axis_name == "y" and state.gameplay_mode == GAMEPLAY_MODE_NORMAL
-        rows.append(_RowSpec(f"{axis_name}_neg", f"{_AXIS_LABELS[axis_name]}-", axis=axis, side=0, disabled=disabled))
-        rows.append(_RowSpec(f"{axis_name}_pos", f"{_AXIS_LABELS[axis_name]}+", axis=axis, side=1, disabled=disabled))
+        rows.append(
+            _RowSpec(
+                f"{axis_name}_neg",
+                f"{_AXIS_LABELS[axis_name]}-",
+                axis=axis,
+                side=0,
+                disabled=disabled,
+            )
+        )
+        rows.append(
+            _RowSpec(
+                f"{axis_name}_pos",
+                f"{_AXIS_LABELS[axis_name]}+",
+                axis=axis,
+                side=1,
+                disabled=disabled,
+            )
+        )
     rows.extend(
         (
             _RowSpec("save_profile", "Save Profile"),
@@ -211,7 +236,9 @@ def _reset_to_mode_dimension(state: _TopologyLabState) -> None:
 
 def _cycle_gameplay_mode(state: _TopologyLabState, step: int) -> None:
     idx = TOPOLOGY_GAMEPLAY_MODE_OPTIONS.index(state.gameplay_mode)
-    state.gameplay_mode = TOPOLOGY_GAMEPLAY_MODE_OPTIONS[(idx + step) % len(TOPOLOGY_GAMEPLAY_MODE_OPTIONS)]
+    state.gameplay_mode = TOPOLOGY_GAMEPLAY_MODE_OPTIONS[
+        (idx + step) % len(TOPOLOGY_GAMEPLAY_MODE_OPTIONS)
+    ]
     _sync_profile(state)
     _mark_updated(state)
 
@@ -310,15 +337,41 @@ def _run_export(state: _TopologyLabState) -> None:
         profile=state.profile,
         gravity_axis=1,
     )
-    if ok:
-        _set_status(state, str(_LAB_STATUS_COPY["export_ok"]).format(message=message))
-        play_sfx("menu_confirm")
+    if not ok:
+        _set_status(
+            state,
+            str(_LAB_STATUS_COPY["export_error"]).format(message=message),
+            is_error=True,
+        )
         return
-    _set_status(
-        state,
-        str(_LAB_STATUS_COPY["export_error"]).format(message=message),
-        is_error=True,
-    )
+
+    status_lines = [str(_LAB_STATUS_COPY["export_ok"]).format(message=message)]
+    if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
+        try:
+            explorer_profile = explorer_profile_from_legacy_profile(state.profile)
+        except ValueError as exc:
+            status_lines.append(f"Explorer gluing preview unavailable: {exc}")
+        else:
+            preview_ok, preview_message, _preview_path = (
+                export_explorer_topology_preview(
+                    explorer_profile,
+                    dims=explorer_topology_preview_dims(state.dimension),
+                    source="legacy_edge_rules_bridge",
+                )
+            )
+            if not preview_ok:
+                _set_status(
+                    state,
+                    str(_LAB_STATUS_COPY["export_error"]).format(
+                        message=preview_message
+                    ),
+                    is_error=True,
+                )
+                return
+            status_lines.append(preview_message)
+
+    _set_status(state, " | ".join(status_lines))
+    play_sfx("menu_confirm")
 
 
 def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
@@ -341,7 +394,9 @@ def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
     return False
 
 
-def _handle_navigation_key(state: _TopologyLabState, nav_key: int, selectable: tuple[int, ...]) -> bool:
+def _handle_navigation_key(
+    state: _TopologyLabState, nav_key: int, selectable: tuple[int, ...]
+) -> bool:
     if nav_key == pygame.K_UP:
         state.selected = (state.selected - 1) % len(selectable)
         play_sfx("menu_move")
@@ -389,12 +444,23 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     title = fonts.title_font.render(_LAB_TITLE, True, _TEXT_COLOR)
     subtitle_text = fit_text(fonts.hint_font, _LAB_SUBTITLE, width - 28)
     subtitle = fonts.hint_font.render(subtitle_text, True, _MUTED_COLOR)
-    note_text = fit_text(fonts.hint_font, topology_profile_note(state.gameplay_mode), width - 28)
+    note_text = fit_text(
+        fonts.hint_font, topology_profile_note(state.gameplay_mode), width - 28
+    )
     note = fonts.hint_font.render(note_text, True, _HIGHLIGHT_COLOR)
     title_y = 42
     screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, title_y + title.get_height() + 6))
-    screen.blit(note, ((width - note.get_width()) // 2, title_y + title.get_height() + subtitle.get_height() + 14))
+    screen.blit(
+        subtitle,
+        ((width - subtitle.get_width()) // 2, title_y + title.get_height() + 6),
+    )
+    screen.blit(
+        note,
+        (
+            (width - note.get_width()) // 2,
+            title_y + title.get_height() + subtitle.get_height() + 14,
+        ),
+    )
 
     rows = _rows_for_state(state)
     selectable = _selectable_row_indexes(state)
@@ -411,14 +477,26 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     y = panel_y + 16
     for idx, row in enumerate(rows):
         selected = idx == selected_row
-        color = _DISABLED_COLOR if row.disabled else (_HIGHLIGHT_COLOR if selected else _TEXT_COLOR)
+        color = (
+            _DISABLED_COLOR
+            if row.disabled
+            else (_HIGHLIGHT_COLOR if selected else _TEXT_COLOR)
+        )
         if selected:
-            hi = pygame.Surface((panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA)
+            hi = pygame.Surface(
+                (panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA
+            )
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 4))
         label_text = row.label + (" (locked)" if row.disabled else "")
-        label = fonts.menu_font.render(fit_text(fonts.menu_font, label_text, panel_w // 2), True, color)
-        value = fonts.menu_font.render(fit_text(fonts.menu_font, _row_value_text(state, row), panel_w // 2), True, color)
+        label = fonts.menu_font.render(
+            fit_text(fonts.menu_font, label_text, panel_w // 2), True, color
+        )
+        value = fonts.menu_font.render(
+            fit_text(fonts.menu_font, _row_value_text(state, row), panel_w // 2),
+            True,
+            color,
+        )
         screen.blit(label, (panel_x + 22, y))
         screen.blit(value, (panel_x + panel_w - value.get_width() - 22, y))
         y += 38
