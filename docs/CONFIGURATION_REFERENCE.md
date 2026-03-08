@@ -1243,7 +1243,7 @@ Parameters:
 - `manifest_id`: `"drift_protection"` (`string`)
 - `schema_version`: `1` (`int`)
 - `thin_wrapper_budgets[]`: array[`object`]
-- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `720`, `24`, `120`
+- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `840`, `24`, `160`
 - `thin_wrapper_budgets[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
 - `thin_wrapper_budgets[].role`: varies (`string`); examples: `"compatibility launcher wrapper"`, `"thin 2D launcher shim"`, `"thin 3D launcher shim"`
 - `tutorial_copy_contract.forbidden_prefixes[]`: array[`string`]; examples: `"Goal:"`, `"Action:"`

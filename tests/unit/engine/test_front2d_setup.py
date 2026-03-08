@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+import unittest
+from types import SimpleNamespace
+from unittest import mock
+
+from tet4d.ui.pygame import front2d_setup
+
+
+class TestFront2DSetup(unittest.TestCase):
+    def test_2d_exploration_mode_uses_fixed_compact_board_profile(self) -> None:
+        settings = front2d_setup.GameSettings(
+            width=14,
+            height=26,
+            exploration_mode=1,
+        )
+        cfg = front2d_setup.config_from_settings(settings)
+        self.assertEqual((cfg.width, cfg.height), (8, 8))
+
+    def test_2d_build_config_uses_mode_specific_topology_profiles(self) -> None:
+        normal_profile = mock.Mock(
+            topology_mode="bounded", edge_rules=(("bounded", "bounded"),) * 2
+        )
+        explorer_profile = SimpleNamespace(dimension=2, gluings=())
+        with (
+            mock.patch.object(
+                front2d_setup,
+                "load_topology_profile",
+                return_value=normal_profile,
+            ) as load_profile,
+            mock.patch.object(
+                front2d_setup,
+                "load_explorer_topology_profile",
+                return_value=explorer_profile,
+            ) as load_explorer_profile,
+        ):
+            normal_cfg = front2d_setup.config_from_settings(
+                front2d_setup.GameSettings(topology_advanced=1, exploration_mode=0),
+            )
+            explorer_cfg = front2d_setup.config_from_settings(
+                front2d_setup.GameSettings(topology_advanced=1, exploration_mode=1),
+            )
+
+        self.assertEqual(load_profile.call_args_list[0].args, ("normal", 2))
+        self.assertEqual(load_explorer_profile.call_args_list[0].args, (2,))
+        self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
+        self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
+
+
+if __name__ == "__main__":
+    unittest.main()

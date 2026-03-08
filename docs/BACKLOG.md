@@ -4,16 +4,17 @@ Generated: 2026-02-18
 Updated: 2026-03-07  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-08): explorer topology Phase 5 live ND runtime migration + Phase 6 diagnostics.
-- Routed live ND explorer gameplay/runtime through the general gluing engine via `src/tet4d/engine/gameplay/explorer_runtime_nd.py` and `GameConfigND.explorer_topology_profile`.
-- Updated ND predictive input and setup/export flows so explorer movement prediction, stored advanced explorer profiles, and preview export use the same gluing-backed model.
-- Added focused regression coverage for mode-aware config loading, live ND wrap movement, and ND explorer move prediction.
+Current sub-batch (2026-03-08): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics.
+- Routed live explorer gameplay/runtime through the general gluing engine for ND and 2D via `src/tet4d/engine/gameplay/explorer_runtime_nd.py`, `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, `GameConfigND.explorer_topology_profile`, and `GameConfig.explorer_topology_profile`.
+- Updated ND and 2D setup/export flows so stored advanced explorer profiles, legacy-edge-rule bridging for non-advanced explorer setup, and preview export all use the same gluing-backed model.
+- Added focused regression coverage for mode-aware config loading, live explorer wrap movement, and explorer move prediction.
 - Added engine-owned explorer diagnostics in preview payloads and surfaced them in the lab sidebar for orientation-reversing, cross-axis, and disconnected movement-graph warnings.
-
+- Added engine-owned tangent-basis arrow previews to explorer preview payloads so the lab now shows actual signed basis mappings for each gluing instead of only counts and warnings.
 - Extended the direct Explorer Topology Lab editor to 2D and 4D, so all explorer dimensions now edit engine-owned gluing profiles instead of legacy edge-rule rows.
 - Added engine-owned 2D/4D explorer presets plus a live sidebar preview for boundary ownership, active gluings, and movement-graph diagnostics in all direct editor dimensions.
 - Added unsafe `Projective` / `Sphere` preset families for 2D/3D/4D at the engine preset layer and exposed them in the lab with explicit unsafe labeling.
 - Added `scripts/verify_focus.sh` as the documented staged local validation helper; full `verify.sh` remains the required final gate.
+- Relaxed the newer thin-wrapper drift budgets for `cli/front.py`, `src/tet4d/engine/api.py`, and `src/tet4d/ui/pygame/front2d_game.py`, and documented a contributor rule preferring medium-sized localized patches over brittle ultra-narrow patch fragmentation.
 
 ## 1. Priority Verification Rules
 

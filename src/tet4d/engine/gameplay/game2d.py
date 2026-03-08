@@ -21,6 +21,11 @@ from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import run_hard_drop
 from ..core.rules.state_queries import can_piece_exist_2d
 from ..core.step.reducer import step_2d as core_step_2d
+from .explorer_runtime_2d import (
+    can_piece_exist_explorer_2d,
+    move_piece_via_explorer_glue_2d,
+    piece_cells_in_bounds_2d,
+)
 from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -28,6 +33,7 @@ from .topology import (
     map_piece_cells,
     normalize_topology_mode,
 )
+from ..topology_explorer import ExplorerTopologyProfile
 
 
 @dataclass
@@ -45,6 +51,7 @@ class GameConfig:
     challenge_layers: int = 0
     lock_piece_points: int = 5
     exploration_mode: bool = False
+    explorer_topology_profile: ExplorerTopologyProfile | None = None
     rng_mode: str = RNG_MODE_FIXED_SEED
     rng_seed: int = 1337
 
@@ -65,6 +72,11 @@ class GameConfig:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
+        if (
+            self.explorer_topology_profile is not None
+            and self.explorer_topology_profile.dimension != 2
+        ):
+            raise ValueError("explorer_topology_profile dimension must match 2D")
         self.rng_mode = normalize_rng_mode(self.rng_mode)
         if isinstance(self.rng_seed, bool) or not isinstance(self.rng_seed, int):
             raise ValueError("rng_seed must be an integer")
@@ -193,6 +205,11 @@ class GameState:
     def _mapped_piece_cells(
         self, piece: ActivePiece2D
     ) -> tuple[tuple[int, int], ...] | None:
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            return piece_cells_in_bounds_2d(
+                piece,
+                dims=(self.config.width, self.config.height),
+            )
         mapped = map_piece_cells(
             self.topology_policy,
             piece.cells(),
@@ -227,6 +244,12 @@ class GameState:
 
     def _can_exist(self, piece: ActivePiece2D) -> bool:
         """Compatibility wrapper over the core 2D existence/collision helper."""
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            return can_piece_exist_explorer_2d(
+                self.board.cells,
+                piece,
+                dims=(self.config.width, self.config.height),
+            )
         return can_piece_exist_2d(self, piece)
 
     def lock_current_piece(self) -> int:
@@ -282,6 +305,17 @@ class GameState:
     def try_move(self, dx: int, dy: int):
         if self.current_piece is None:
             return
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            moved = move_piece_via_explorer_glue_2d(
+                self.current_piece,
+                dims=(self.config.width, self.config.height),
+                profile=self.config.explorer_topology_profile,
+                dx=dx,
+                dy=dy,
+            )
+            if moved is not None and self._can_exist(moved):
+                self.current_piece = moved
+            return
         moved = self.current_piece.moved(dx, dy)
         if self._can_exist(moved):
             self.current_piece = moved
@@ -305,6 +339,25 @@ class GameState:
             self.current_piece = resolved
 
     def hard_drop(self):
+        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+            seen: set[tuple[tuple[int, int], ...]] = set()
+            while self.current_piece is not None:
+                signature = tuple(sorted(self.current_piece_cells_mapped(include_above=True)))
+                if signature in seen:
+                    break
+                seen.add(signature)
+                moved = move_piece_via_explorer_glue_2d(
+                    self.current_piece,
+                    dims=(self.config.width, self.config.height),
+                    profile=self.config.explorer_topology_profile,
+                    dx=0,
+                    dy=1,
+                )
+                if moved is None or not self._can_exist(moved):
+                    break
+                self.current_piece = moved
+            return
+
         def _try_advance() -> bool:
             moved = self.current_piece.moved(0, 1)
             if not self._can_exist(moved):

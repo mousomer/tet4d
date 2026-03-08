@@ -12,6 +12,7 @@ from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     axis_name,
     boundary_label,
+    tangent_axes_for_boundary,
 )
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
 
@@ -31,6 +32,42 @@ def _glue_payload(profile: ExplorerTopologyProfile) -> list[dict[str, object]]:
                 "target": boundary_label(glue.target),
                 "permutation": list(glue.transform.permutation),
                 "signs": list(glue.transform.signs),
+            }
+        )
+    return rows
+
+
+def _signed_axis_label(axis: int, sign: int) -> str:
+    prefix = "+" if int(sign) > 0 else "-"
+    return f"{prefix}{axis_name(axis)}"
+
+
+def _basis_arrow_payload(profile: ExplorerTopologyProfile) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    for glue in profile.gluings:
+        source_axes = tangent_axes_for_boundary(glue.source)
+        target_axes = tangent_axes_for_boundary(glue.target)
+        source_basis = [_signed_axis_label(axis, 1) for axis in source_axes]
+        target_basis: list[str] = []
+        for source_index, target_index in enumerate(glue.transform.permutation):
+            target_basis.append(
+                _signed_axis_label(
+                    target_axes[target_index],
+                    glue.transform.signs[source_index],
+                )
+            )
+        rows.append(
+            {
+                "id": glue.glue_id,
+                "crossing": (
+                    f"{boundary_label(glue.source)} -> {boundary_label(glue.target)}"
+                ),
+                "source_basis": source_basis,
+                "target_basis": target_basis,
+                "basis_pairs": [
+                    {"from": source_basis[index], "to": target_basis[index]}
+                    for index in range(len(source_basis))
+                ],
             }
         )
     return rows
@@ -115,6 +152,7 @@ def compile_explorer_topology_preview(
         "dims": [int(value) for value in dims],
         "glue_count": len(profile.gluings),
         "gluings": _glue_payload(profile),
+        "basis_arrows": _basis_arrow_payload(profile),
         "movement_graph": {
             "cell_count": len(graph),
             "directed_edge_count": sum(len(edges) for edges in graph.values()),

@@ -326,6 +326,25 @@ class TestTopologyLabMenu(unittest.TestCase):
             any("orientation-reversing seam transforms" in line for line in lines)
         )
 
+    def test_preview_lines_show_engine_owned_arrow_basis(self) -> None:
+        state = self._explorer_state(3)
+        state.explorer_profile = ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                GluingDescriptor(
+                    glue_id="swap",
+                    source=BoundaryRef(dimension=3, axis=0, side="-"),
+                    target=BoundaryRef(dimension=3, axis=2, side="+"),
+                    transform=BoundaryTransform(permutation=(1, 0), signs=(1, -1)),
+                ),
+            ),
+        )
+        lines = topology_lab_menu._explorer_sidebar_lines(state)
+        self.assertIn("  Arrow basis", lines)
+        self.assertTrue(any("x- -> z+" in line for line in lines))
+        self.assertTrue(any("+y -> +y" in line for line in lines))
+        self.assertTrue(any("+z -> -x" in line for line in lines))
+
     def test_remove_explorer_glue_drops_selected_gluing(self) -> None:
         glue = GluingDescriptor(
             glue_id="glue_001",

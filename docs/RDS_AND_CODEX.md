@@ -47,10 +47,11 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 1. Read relevant RDS sections before code changes.
 2. For restructuring/behavior changes, define short plan + acceptance criteria.
 3. Prefer existing helpers/APIs; avoid wheel reinvention.
-4. Keep keybindings/settings/tutorial structure config-backed (non-Python).
-5. Use runtime sanitization helpers for user/external strings.
-6. Keep tunable thresholds in canonical config (avoid magic numbers).
-7. Update docs in the same change when behavior/governance changes:
+4. Prefer medium-sized localized patches over ultra-narrow patch fragmentation. Split patches only when a broader patch becomes tool-rejected or hard to review.
+5. Keep keybindings/settings/tutorial structure config-backed (non-Python).
+6. Use runtime sanitization helpers for user/external strings.
+7. Keep tunable thresholds in canonical config (avoid magic numbers).
+8. Update docs in the same change when behavior/governance changes:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
      are maintained by `tools/governance/generate_maintenance_docs.py`)
@@ -59,7 +60,7 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
-8. Keep contract files synchronized and valid:
+9. Keep contract files synchronized and valid:
    - `config/project/policy/manifests/canonical_maintenance.json`
    - `config/project/policy/manifests/context_router_manifest.json`
    - `config/project/policy/manifests/project_policy.json`

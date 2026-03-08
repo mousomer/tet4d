@@ -860,27 +860,65 @@ def _topology_note_text(state: _TopologyLabState) -> str:
     return topology_profile_note(state.gameplay_mode)
 
 
-def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
-    assert state.explorer_profile is not None
-    lines = [f"Explorer {state.dimension}D gluing editor", _explorer_transform_label(state), ""]
-    boundary_status = {
-        boundary.label: "free" for boundary in _explorer_boundaries(state)
-    }
+def _explorer_boundary_lines(state: _TopologyLabState) -> list[str]:
+    boundary_status = {boundary.label: "free" for boundary in _explorer_boundaries(state)}
     for glue in _explorer_glues(state):
         boundary_status[glue.source.label] = glue.glue_id
         boundary_status[glue.target.label] = glue.glue_id
-    lines.append("Boundaries")
+    lines = ["Boundaries"]
     for boundary in _explorer_boundaries(state):
         lines.append(f"  {boundary.label}: {boundary_status[boundary.label]}")
-    lines.append("")
-    lines.append("Gluings")
-    if not _explorer_glues(state):
+    return lines
+
+
+def _explorer_gluing_lines(state: _TopologyLabState) -> list[str]:
+    lines = ["Gluings"]
+    glues = _explorer_glues(state)
+    if not glues:
         lines.append("  none")
-    else:
-        for glue in _explorer_glues(state):
+        return lines
+    for glue in glues:
+        lines.append("  " + transform_preview_label(glue.source, glue.target, glue.transform))
+    return lines
+
+
+def _explorer_preview_lines(state: _TopologyLabState, preview: dict[str, object]) -> list[str]:
+    graph = preview["movement_graph"]
+    lines = ["Preview"]
+    lines.append(f"  Cells: {graph['cell_count']}  Edges: {graph['directed_edge_count']}")
+    lines.append(
+        "  Traversals: "
+        f"{graph['boundary_traversal_count']}  Components: {graph['component_count']}"
+    )
+    warnings = preview.get("warnings", ())
+    if warnings:
+        lines.append("  Warnings")
+        for warning in warnings[:3]:
+            lines.append(f"    {warning}")
+    basis_arrows = preview.get("basis_arrows", ())
+    if basis_arrows:
+        lines.append("  Arrow basis")
+        for arrow in basis_arrows[:2]:
+            lines.append(f"    {arrow['crossing']}")
+            for pair in arrow.get("basis_pairs", ())[: max(1, state.dimension - 1)]:
+                lines.append(f"      {pair['from']} -> {pair['to']}")
+    samples = preview["sample_boundary_traversals"]
+    if samples:
+        lines.append("  Samples")
+        for sample in samples[:4]:
             lines.append(
-                "  " + transform_preview_label(glue.source, glue.target, glue.transform)
+                "    "
+                f"{sample['source_boundary']} -> {sample['target_boundary']} via {sample['step']}"
             )
+    return lines
+
+
+def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
+    assert state.explorer_profile is not None
+    lines = [f"Explorer {state.dimension}D gluing editor", _explorer_transform_label(state), ""]
+    lines.extend(_explorer_boundary_lines(state))
+    lines.append("")
+    lines.extend(_explorer_gluing_lines(state))
     lines.append("")
     try:
         preview = compile_explorer_topology_preview(
@@ -891,28 +929,7 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
     except ValueError as exc:
         lines.append(f"Preview invalid: {exc}")
         return lines
-    graph = preview["movement_graph"]
-    lines.append("Preview")
-    lines.append(
-        f"  Cells: {graph['cell_count']}  Edges: {graph['directed_edge_count']}"
-    )
-    lines.append(
-        "  Traversals: "
-        f"{graph['boundary_traversal_count']}  Components: {graph['component_count']}"
-    )
-    warnings = preview.get("warnings", ())
-    if warnings:
-        lines.append("  Warnings")
-        for warning in warnings[:3]:
-            lines.append(f"    {warning}")
-    samples = preview["sample_boundary_traversals"]
-    if samples:
-        lines.append("  Samples")
-        for sample in samples[:4]:
-            lines.append(
-                "    "
-                f"{sample['source_boundary']} -> {sample['target_boundary']} via {sample['step']}"
-            )
+    lines.extend(_explorer_preview_lines(state, preview))
     return lines
 
 

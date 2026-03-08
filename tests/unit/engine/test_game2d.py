@@ -6,6 +6,7 @@ from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.pieces2d import PieceShape2D, ActivePiece2D
 from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 from tet4d.engine.core.rules.scoring import score_for_clear
 
@@ -280,6 +281,24 @@ class TestGame2D(unittest.TestCase):
         mapped = state.current_piece_cells_mapped(include_above=False)
         self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
         self.assertEqual(len(mapped), len(set(mapped)))
+
+    def test_explorer_glue_runtime_wraps_live_2d_movement(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(3, 3), rotation=0)
+
+        state.try_move(1, 0)
+
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False),
+            ((0, 3),),
+        )
 
     def test_invert_topology_rotation_uses_topology_mapping_with_kicks(self):
         cfg = GameConfig(

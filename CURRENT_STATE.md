@@ -33,15 +33,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 134` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 138` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.52` (`low`)
+- `tech_debt.score = 2.53` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.45`
+1. `delivery_size_pressure = 1.46`
 2. `code_balance = 1.07`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -181,6 +181,9 @@ Dominant remaining pressure:
 35. Added `scripts/verify_focus.sh` as the documented fast-path staged local validation helper for focused lint/tests and maintenance-doc checks while keeping `./scripts/verify.sh` as the required pre-commit/pre-push gate.
 36. Replaced the legacy edge-rule editor path for Explorer 2D, Explorer 3D, and Explorer 4D inside Topology Lab with direct general-gluing editors backed by `src/tet4d/engine/runtime/topology_explorer_store.py`, engine-owned explorer presets, and live sidebar previews compiled from the explorer movement graph; Normal Game remains on the legacy lab path in this phase.
 37. Added engine-owned unsafe `Projective` / `Sphere` explorer preset families for 2D/3D/4D and surfaced them in Topology Lab with explicit `[unsafe]` labeling while keeping validation canonical in `src/tet4d/engine/topology_explorer/glue_validate.py`.
+38. Routed live Explorer 2D gameplay/runtime through the general gluing engine by adding `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, teaching `src/tet4d/engine/gameplay/game2d.py` to use `explorer_topology_profile` for explorer movement/collision/hard-drop behavior, and updating `src/tet4d/ui/pygame/front2d_setup.py` so advanced explorer setup loads stored gluing profiles while non-advanced explorer setup/export bridges legacy edge-rule selections into the same engine-owned explorer profile model.
+39. Expanded explorer preview diagnostics so `src/tet4d/engine/runtime/topology_explorer_preview.py` now exports engine-owned tangent-basis arrow mappings for each gluing, and `src/tet4d/ui/pygame/launch/topology_lab_menu.py` renders those signed basis transforms in the live lab sidebar directly from the preview payload.
+40. Relaxed the newer thin-wrapper drift budgets for `cli/front.py`, `src/tet4d/engine/api.py`, and `src/tet4d/ui/pygame/front2d_game.py`, and documented a contributor-process rule preferring medium-sized localized patches over ultra-narrow patch fragmentation while keeping the core architecture/purity gates unchanged.
 
 ## Validation Status
 
@@ -190,6 +193,7 @@ Validation completed during this batch:
 - focused `ruff check`: passed
 - focused pytest batches covering the 2D split, compatibility facade, and shared kick-resolution paths: passed
 - focused explorer-topology kernel tests (`test_topology_explorer.py`): passed
+- focused 2D explorer runtime/setup tests (`test_game2d.py`, `test_front2d_setup.py`): passed
 - `python scripts/arch_metrics.py`: passed with zero reverse imports
 - `CODEX_MODE=1 ./scripts/verify.sh`: passed
 - `CODEX_MODE=1 ./scripts/ci_check.sh`: passed
@@ -205,19 +209,19 @@ Top 8 live Python hotspots by real LOC:
 2. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 3. `tools/governance/validate_project_contracts.py`: `1178` real LOC
 4. `tools/governance/generate_configuration_reference.py`: `974` real LOC
-5. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
-6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `942` real LOC
+5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `953` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 7. `src/tet4d/engine/help_text.py`: `830` real LOC
 8. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `749` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 681/720 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 681/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
-5. `src/tet4d/engine/api.py: 91/120 real LOC (small engine compatibility facade)`
-6. `src/tet4d/ui/pygame/front2d_game.py: 94/120 real LOC (2D orchestration entrypoint)`
+5. `src/tet4d/engine/api.py: 91/160 real LOC (small engine compatibility facade)`
+6. `src/tet4d/ui/pygame/front2d_game.py: 94/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:
 

@@ -73,6 +73,15 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             preview["warnings"],
         )
 
+    def test_preview_exports_basis_arrow_mapping(self) -> None:
+        preview = compile_explorer_topology_preview(
+            mobius_strip_profile_2d(),
+            dims=(6, 6),
+            source="preset",
+        )
+        self.assertEqual(preview["basis_arrows"][0]["crossing"], "x- -> x+")
+        self.assertEqual(preview["basis_arrows"][0]["basis_pairs"], [{"from": "+y", "to": "-y"}])
+
     def test_export_writes_preview_payload_to_runtime_path(self) -> None:
         root = (
             state_dir_path()
