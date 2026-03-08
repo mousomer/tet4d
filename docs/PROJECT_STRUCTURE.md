@@ -87,10 +87,11 @@ The current rule is one-way:
 11. `src/tet4d/ui/pygame/front4d_game.py`: 4D frontend
 12. `src/tet4d/ui/pygame/front3d_render.py`: 3D render adapter
 13. `src/tet4d/ui/pygame/front4d_render.py`: 4D render adapter
-14. `src/tet4d/ui/pygame/runtime_ui`: bootstrap, pause/help, tutorial overlay, shared loop helpers
-15. `src/tet4d/ui/pygame/launch`: launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`
-16. `src/tet4d/ui/pygame/menu`: shared menu/keybinding adapters, including `setup_menu_runner.py`
-17. `src/tet4d/ui/pygame/render`: render/layout/helper adapters
+14. `src/tet4d/ui/pygame/topology_lab`: explorer topology lab editor helpers
+15. `src/tet4d/ui/pygame/runtime_ui`: bootstrap, pause/help, tutorial overlay, shared loop helpers
+16. `src/tet4d/ui/pygame/launch`: launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`
+17. `src/tet4d/ui/pygame/menu`: shared menu/keybinding adapters, including `setup_menu_runner.py`
+18. `src/tet4d/ui/pygame/render`: render/layout/helper adapters
 
 ### AI
 

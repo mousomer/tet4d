@@ -1,12 +1,14 @@
 LICENSE
 NOTICE
-pyproject.toml
 README.md
+docs/plans/explorer_topology_phase3.md
+docs/plans/explorer_topology_phase4.md
+pyproject.toml
 scripts/verify_focus.sh
-src/tet4d.egg-info/dependency_links.txt
 src/tet4d.egg-info/PKG-INFO
-src/tet4d.egg-info/requires.txt
 src/tet4d.egg-info/SOURCES.txt
+src/tet4d.egg-info/dependency_links.txt
+src/tet4d.egg-info/requires.txt
 src/tet4d.egg-info/top_level.txt
 src/tet4d/__init__.py
 src/tet4d/ai/__init__.py
@@ -181,6 +183,8 @@ src/tet4d/ui/pygame/runtime_ui/panel_drag.py
 src/tet4d/ui/pygame/runtime_ui/pause_menu.py
 src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py
 src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py
+src/tet4d/ui/pygame/topology_lab/__init__.py
+src/tet4d/ui/pygame/topology_lab/common.py
 src/tet4d/ui/pygame/ui_utils.py
 tests/test_leveling.py
 tests/unit/engine/test_topology_explorer.py

@@ -27,9 +27,13 @@ def _validate_boundary_ownership(gluings: tuple[GluingDescriptor, ...]) -> None:
     seen: set[BoundaryRef] = set()
     for glue in gluings:
         if glue.source in seen:
-            raise ValueError(f"boundary {glue.source.label} is already owned by another gluing")
+            raise ValueError(
+                f"boundary {glue.source.label} is already owned by another gluing"
+            )
         if glue.target in seen:
-            raise ValueError(f"boundary {glue.target.label} is already owned by another gluing")
+            raise ValueError(
+                f"boundary {glue.target.label} is already owned by another gluing"
+            )
         seen.add(glue.source)
         seen.add(glue.target)
 

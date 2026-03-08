@@ -18,7 +18,7 @@ from tet4d.engine.topology_explorer import (
     GluingDescriptor,
 )
 
-_TOPOLOGY_DIMENSIONS = (3, 4)
+_TOPOLOGY_DIMENSIONS = (2, 3, 4)
 _AXIS_TO_INDEX = {axis_name: index for index, axis_name in enumerate(AXIS_NAMES)}
 
 
@@ -168,7 +168,7 @@ def load_explorer_topology_profile(
 ) -> ExplorerTopologyProfile:
     normalized_dimension = int(dimension)
     if normalized_dimension not in _TOPOLOGY_DIMENSIONS:
-        raise ValueError("dimension must be 3 or 4 for explorer topology profiles")
+        raise ValueError("dimension must be 2, 3, or 4 for explorer topology profiles")
     payload = _load_payload(root_dir=root_dir)
     raw = payload.get("explorer_topology_profiles", {}).get(f"{normalized_dimension}d")
     return _profile_from_payload(normalized_dimension, raw)
@@ -180,7 +180,7 @@ def save_explorer_topology_profile(
     root_dir: Path | None = None,
 ) -> tuple[bool, str]:
     if profile.dimension not in _TOPOLOGY_DIMENSIONS:
-        return False, "dimension must be 3 or 4 for explorer topology profiles"
+        return False, "dimension must be 2, 3, or 4 for explorer topology profiles"
     payload = _load_payload(root_dir=root_dir)
     profiles = payload.setdefault("explorer_topology_profiles", {})
     if not isinstance(profiles, dict):

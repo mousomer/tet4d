@@ -22,7 +22,9 @@ def neighbors_for_cell(
     dims: Coord,
     coord: Coord,
 ) -> tuple[MovementEdge, ...]:
-    validate_explorer_topology_profile(profile, dims=tuple(int(value) for value in dims))
+    validate_explorer_topology_profile(
+        profile, dims=tuple(int(value) for value in dims)
+    )
     edges: list[MovementEdge] = []
     for step in movement_steps_for_dimension(len(dims)):
         target = move_cell(profile, dims=dims, coord=coord, step=step)
@@ -44,7 +46,9 @@ def build_movement_graph(
     *,
     dims: Coord,
 ) -> dict[Coord, tuple[MovementEdge, ...]]:
-    validate_explorer_topology_profile(profile, dims=tuple(int(value) for value in dims))
+    validate_explorer_topology_profile(
+        profile, dims=tuple(int(value) for value in dims)
+    )
     graph: dict[Coord, tuple[MovementEdge, ...]] = {}
     for coord_values in product(*(range(size) for size in dims)):
         coord = tuple(int(value) for value in coord_values)

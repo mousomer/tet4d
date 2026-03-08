@@ -42,6 +42,28 @@ class TestTopologyProfileStore(unittest.TestCase):
             import shutil
             shutil.rmtree(root, ignore_errors=True)
 
+    def test_normal_2d_profile_round_trips(self) -> None:
+        root = state_dir_path() / "pytest_temp" / f"topology_profile_store_2d_{uuid4().hex}"
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            normal = validate_topology_profile_state(
+                gameplay_mode=GAMEPLAY_MODE_NORMAL,
+                dimension=2,
+                gravity_axis=1,
+                topology_mode="bounded",
+                edge_rules=(
+                    (EDGE_WRAP, EDGE_WRAP),
+                    (EDGE_BOUNDED, EDGE_BOUNDED),
+                ),
+            )
+            ok, msg = save_topology_profile(normal, root_dir=root)
+            self.assertTrue(ok, msg)
+            loaded = load_topology_profile(GAMEPLAY_MODE_NORMAL, 2, root_dir=root)
+            self.assertEqual(loaded.edge_rules[0], (EDGE_WRAP, EDGE_WRAP))
+        finally:
+            import shutil
+            shutil.rmtree(root, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

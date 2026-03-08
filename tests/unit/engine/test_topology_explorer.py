@@ -14,6 +14,7 @@ from tet4d.engine.topology_explorer.glue_validate import (
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
+    explorer_presets_for_dimension,
     klein_bottle_profile_2d,
     mobius_strip_profile_2d,
     pair_boundaries,
@@ -117,6 +118,56 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertEqual(traversal.target_boundary.label, "x-")
         self.assertEqual(traversal.target_coord, (0, 1))
         self.assertEqual(traversal.entry_step.label, "x+")
+
+    def test_2d_presets_include_classic_surface_examples(self) -> None:
+        presets = explorer_presets_for_dimension(2)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("torus_2d", preset_ids)
+        self.assertIn("mobius_2d", preset_ids)
+        self.assertIn("klein_2d", preset_ids)
+        self.assertIn("projective_2d", preset_ids)
+        self.assertIn("sphere_2d", preset_ids)
+        unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
+        self.assertIn("projective_2d", unsafe_ids)
+        self.assertIn("sphere_2d", unsafe_ids)
+
+
+    def test_3d_presets_include_unsafe_projective_and_sphere(self) -> None:
+        presets = explorer_presets_for_dimension(3)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("projective_3d", preset_ids)
+        self.assertIn("sphere_3d", preset_ids)
+        unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
+        self.assertIn("projective_3d", unsafe_ids)
+        self.assertIn("sphere_3d", unsafe_ids)
+
+
+    def test_4d_presets_include_full_wrap_and_twist(self) -> None:
+        presets = explorer_presets_for_dimension(4)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("full_wrap_4d", preset_ids)
+        self.assertIn("twist_y_4d", preset_ids)
+        self.assertIn("projective_4d", preset_ids)
+        self.assertIn("sphere_4d", preset_ids)
+        full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_4d")
+        self.assertEqual(full_wrap.profile.dimension, 4)
+        self.assertEqual(len(full_wrap.profile.gluings), 4)
+
+
+    def test_unsafe_projective_and_sphere_presets_validate_for_preview_dims(self) -> None:
+        for dimension, projective_id, sphere_id in (
+            (2, "projective_2d", "sphere_2d"),
+            (3, "projective_3d", "sphere_3d"),
+            (4, "projective_4d", "sphere_4d"),
+        ):
+            presets = {preset.preset_id: preset for preset in explorer_presets_for_dimension(dimension)}
+            for preset_id in (projective_id, sphere_id):
+                preset = presets[preset_id]
+                validated = validate_explorer_topology_profile(
+                    preset.profile, dims=tuple(4 for _ in range(dimension))
+                )
+                self.assertEqual(validated.dimension, dimension)
+
 
     def test_klein_bottle_graph_keeps_four_neighbors_per_cell(self) -> None:
         profile = klein_bottle_profile_2d()

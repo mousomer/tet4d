@@ -403,7 +403,10 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 
 1. A new exploratory kernel now exists under `src/tet4d/engine/topology_explorer/` for general boundary gluings, signed-permutation transforms, boundary-crossing movement, and movement-graph compilation.
 2. This kernel is not yet the active gameplay/runtime topology path; live play still uses the existing bounded/wrap/invert explorer topology model until a later integration batch switches explorer-mode runtime and lab preview onto the new engine-owned model.
-3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`; the current Topology Lab can export a general-gluing preview only when its legacy explorer edge rules are representable as a true paired-boundary gluing.
+3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`.
+4. Explorer 2D, Explorer 3D, and Explorer 4D Topology Lab now edit general gluing profiles directly through those runtime owners and render live movement-graph sidebar previews.
+5. Explorer preset libraries now include explicitly marked unsafe `Projective` / `Sphere` families for 2D/3D/4D; legality remains engine-owned in `src/tet4d/engine/topology_explorer/glue_validate.py`, not UI-owned.
+6. Normal Game still uses the legacy bounded/wrap/invert topology path in this phase; the legacy bridge remains only for that non-direct path and for future live-runtime migration work.
 
 ### 11.7 Test requirements (for future implementation)
 

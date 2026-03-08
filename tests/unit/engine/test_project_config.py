@@ -140,6 +140,7 @@ class TestProjectConfig(unittest.TestCase):
                 state_dir_relative() + "/"
             )
         )
+        self.assertEqual(explorer_topology_preview_dims(2), (4, 4))
         self.assertEqual(explorer_topology_preview_dims(3), (4, 4, 4))
         self.assertEqual(explorer_topology_preview_dims(4), (4, 4, 4, 4))
         self.assertTrue(

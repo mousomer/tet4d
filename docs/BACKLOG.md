@@ -4,10 +4,11 @@ Generated: 2026-02-18
 Updated: 2026-03-07  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-08): explorer topology Stage 2 runtime integration.
+Current sub-batch (2026-03-08): explorer topology Phase 4 direct lab completion for 2D and 4D.
 
-- Added runtime-owned explorer general-gluing profile storage plus preview export on top of the new `engine/topology_explorer/` kernel.
-- Added a legacy explorer-profile bridge so the current topology lab can export truthful general-gluing previews only for representable paired-boundary configurations, while explicitly rejecting asymmetric edge-rule cases.
+- Extended the direct Explorer Topology Lab editor to 2D and 4D, so all explorer dimensions now edit engine-owned gluing profiles instead of legacy edge-rule rows.
+- Added engine-owned 2D/4D explorer presets plus a live sidebar preview for boundary ownership, active gluings, and movement-graph diagnostics in all direct editor dimensions.
+- Added unsafe `Projective` / `Sphere` preset families for 2D/3D/4D at the engine preset layer and exposed them in the lab with explicit unsafe labeling.
 - Added `scripts/verify_focus.sh` as the documented staged local validation helper; full `verify.sh` remains the required final gate.
 
 ## 1. Priority Verification Rules

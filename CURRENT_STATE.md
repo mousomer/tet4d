@@ -33,16 +33,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 126` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 130` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.13` (`low`)
+- `tech_debt.score = 2.51` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.41`
-2. `code_balance = 0.72`
+1. `delivery_size_pressure = 1.44`
+2. `code_balance = 1.07`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -77,6 +77,7 @@ Dominant remaining pressure:
 - `src/tet4d/ui/pygame/front4d_game.py`
 - `src/tet4d/ui/pygame/front3d_render.py`
 - `src/tet4d/ui/pygame/front4d_render.py`
+- `src/tet4d/ui/pygame/topology_lab/*`
 - `src/tet4d/ui/pygame/runtime_ui/*`
 - `src/tet4d/ui/pygame/menu/*`
 - `src/tet4d/ui/pygame/launch/* (with settings_hub_model.py owning settings model/layout, settings_hub_actions.py owning settings mutations/text-entry, and launcher_settings.py owning orchestration/view)`
@@ -178,6 +179,8 @@ Dominant remaining pressure:
 33. Added a new engine-only explorer topology kernel under `src/tet4d/engine/topology_explorer/` covering general boundary gluing descriptors, signed-permutation transform validation, move-through-boundary mapping, movement-graph compilation, and basic quotient-topology presets without switching the live runtime/UI to the new model yet.
 34. Added Stage 2 runtime-owned explorer topology integration: `topology_explorer_store.py` now owns JSON save/load for general explorer gluing profiles, `topology_explorer_bridge.py` converts the representable subset of legacy explorer edge-rule profiles into the new gluing model for preview/export, `topology_explorer_preview.py` compiles and exports movement-graph previews, and Topology Lab export now emits that explorer preview when the current explorer profile is representable as a true paired-boundary gluing.
 35. Added `scripts/verify_focus.sh` as the documented fast-path staged local validation helper for focused lint/tests and maintenance-doc checks while keeping `./scripts/verify.sh` as the required pre-commit/pre-push gate.
+36. Replaced the legacy edge-rule editor path for Explorer 2D, Explorer 3D, and Explorer 4D inside Topology Lab with direct general-gluing editors backed by `src/tet4d/engine/runtime/topology_explorer_store.py`, engine-owned explorer presets, and live sidebar previews compiled from the explorer movement graph; Normal Game remains on the legacy lab path in this phase.
+37. Added engine-owned unsafe `Projective` / `Sphere` explorer preset families for 2D/3D/4D and surfaced them in Topology Lab with explicit `[unsafe]` labeling while keeping validation canonical in `src/tet4d/engine/topology_explorer/glue_validate.py`.
 
 ## Validation Status
 
@@ -203,9 +206,9 @@ Top 8 live Python hotspots by real LOC:
 3. `tools/governance/validate_project_contracts.py`: `1178` real LOC
 4. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
-6. `src/tet4d/engine/help_text.py`: `830` real LOC
-7. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `749` real LOC
-8. `src/tet4d/ui/pygame/front3d_game.py`: `692` real LOC
+6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `937` real LOC
+7. `src/tet4d/engine/help_text.py`: `830` real LOC
+8. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `749` real LOC
 
 Thin-wrapper budgets:
 
@@ -233,7 +236,7 @@ Tutorial wording drift guard:
 4. If more 2D/ND gameplay orchestration duplication remains after `lock_flow.py` and `core/rules/lifecycle.py`, extract only the next shared owner that produces net deletion.
 5. Keep `engine.api` narrow and do not reintroduce raw transform or upper-layer
    convenience exports there.
-6. Continue explorer topology Stage 3 by replacing the legacy edge-rule editor/export flow with a real general-gluing GUI on top of the runtime-owned explorer store and preview contracts.
+6. Continue explorer topology Stage 5 by switching live explorer gameplay/runtime off the legacy edge-rule path and onto the general gluing engine.
 
 ## Restart Checklist
 

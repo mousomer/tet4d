@@ -34,7 +34,7 @@ behavior. Structural work means:
 | 10 | Release/packaging cleanup | Mostly complete | Installer workflows exist and are green; keep as a watch item. |
 | 11 | Stop minifying operational code | Watch | No broad formatting issue found in current Python sources; enforce readability drift only. |
 | 12 | Docs/manifests sync last | Complete for this batch | Code changes are now reflected in backlog/state/RDS/generated maintenance docs. |
-| 13 | Explorer topology engine | Active | Phase 1 kernel is complete; Phase 2 runtime-owned explorer profile storage, legacy bridge, and preview export are now in place while live gameplay/UI remain on the legacy topology model. |
+| 13 | Explorer topology engine | Active | Phase 1 kernel and Phase 2 runtime/store/preview integration are complete; Phases 3-4 now add direct 2D/3D/4D explorer gluing editors while Normal Game remains on the legacy topology path. |
 
 ## Domain Ledger
 
@@ -153,8 +153,8 @@ behavior. Structural work means:
 | Field | Value |
 | --- | --- |
 | Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py` for runtime-owned storage/preview integration |
-| Current duplicate owners | Legacy explorer edge-rule profiles in `src/tet4d/engine/gameplay/topology_designer.py` remain as the live runtime model until the GUI/lab rewrite lands |
+| Current duplicate owners | Legacy explorer edge-rule profiles in `src/tet4d/engine/gameplay/topology_designer.py` still back Normal Game only; Explorer 2D/3D/4D lab editing now targets the general gluing model directly |
 | Migration status | Active |
 | Equivalence tests | `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_explorer_store.py`, `tests/unit/engine/test_topology_explorer_preview.py`, `tests/unit/engine/test_topology_lab_menu.py` |
-| Deletion checkpoint | Remove the legacy bridge after the topology lab edits and stores general gluing profiles directly |
+| Deletion checkpoint | Remove the legacy bridge after live explorer gameplay/runtime also consume the general gluing model directly |
 
