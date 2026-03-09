@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tet4d.engine.core.piece_transform import rotate_blocks_2d, rotate_blocks_nd
+from tet4d.engine.gameplay.api import piece_set_options_for_dimension_gameplay
 from tet4d.engine.gameplay.pieces2d import (
-    PIECE_SET_2D_CLASSIC,
+    PIECE_SET_2D_OPTIONS,
     get_piece_bag_2d,
     piece_set_2d_label,
 )
@@ -14,12 +15,15 @@ from tet4d.engine.gameplay.pieces_nd import (
     get_piece_shapes_nd,
     piece_set_label,
 )
-from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, movement_steps_for_dimension
 from tet4d.engine.topology_explorer.glue_model import coord_in_bounds
 from tet4d.engine.topology_explorer.glue_map import move_cell
 
-from .scene_state import TopologyLabState, ensure_sandbox_state
+from .scene_state import (
+    TopologyLabState,
+    ensure_sandbox_state,
+    playground_dims_for_state,
+)
 
 
 @dataclass(frozen=True)
@@ -30,18 +34,32 @@ class SandboxShape:
     blocks: tuple[tuple[int, ...], ...]
 
 
-def _shape_catalog(dimension: int) -> tuple[SandboxShape, ...]:
-    if dimension == 2:
+def _selected_piece_set_id(state: TopologyLabState) -> str:
+    index = 0 if state.play_settings is None else int(state.play_settings.piece_set_index)
+    if state.dimension == 2:
+        options = tuple(PIECE_SET_2D_OPTIONS)
+    elif state.dimension == 3:
+        options = tuple(piece_set_options_for_dimension_gameplay(3))
+    else:
+        options = tuple(piece_set_options_for_dimension_gameplay(4))
+    if not options:
+        return PIECE_SET_3D_STANDARD if state.dimension == 3 else PIECE_SET_4D_STANDARD
+    return options[max(0, min(len(options) - 1, index))]
+
+
+def _shape_catalog(state: TopologyLabState) -> tuple[SandboxShape, ...]:
+    if state.dimension == 2:
+        piece_set_id = _selected_piece_set_id(state)
         return tuple(
             SandboxShape(
-                set_id=PIECE_SET_2D_CLASSIC,
-                label=piece_set_2d_label(PIECE_SET_2D_CLASSIC),
+                set_id=piece_set_id,
+                label=piece_set_2d_label(piece_set_id),
                 name=shape.name,
                 blocks=tuple(tuple(int(v) for v in block) for block in shape.blocks),
             )
-            for shape in get_piece_bag_2d(PIECE_SET_2D_CLASSIC)
+            for shape in get_piece_bag_2d(piece_set_id)
         )
-    piece_set_id = PIECE_SET_3D_STANDARD if dimension == 3 else PIECE_SET_4D_STANDARD
+    piece_set_id = _selected_piece_set_id(state)
     return tuple(
         SandboxShape(
             set_id=piece_set_id,
@@ -49,12 +67,12 @@ def _shape_catalog(dimension: int) -> tuple[SandboxShape, ...]:
             name=shape.name,
             blocks=tuple(tuple(int(v) for v in block) for block in shape.blocks),
         )
-        for shape in get_piece_shapes_nd(dimension, piece_set_id=piece_set_id)
+        for shape in get_piece_shapes_nd(state.dimension, piece_set_id=piece_set_id)
     )
 
 
 def sandbox_shapes_for_state(state: TopologyLabState) -> tuple[SandboxShape, ...]:
-    return _shape_catalog(state.dimension)
+    return _shape_catalog(state)
 
 
 def _fit_origin_for_blocks(
@@ -80,7 +98,7 @@ def ensure_piece_sandbox(state: TopologyLabState) -> None:
     assert sandbox is not None
     shapes = sandbox_shapes_for_state(state)
     sandbox.piece_index = max(0, min(sandbox.piece_index, len(shapes) - 1))
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     blocks = shapes[sandbox.piece_index].blocks
     fitted_origin = _fit_origin_for_blocks(blocks, dims)
     if sandbox.origin is None or not coord_in_bounds(sandbox.origin, dims):
@@ -125,7 +143,7 @@ def sandbox_cells(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
 
 def sandbox_validity(state: TopologyLabState, profile: ExplorerTopologyProfile) -> tuple[bool, str]:
     del profile
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     cells = sandbox_cells(state)
     if len(set(cells)) != len(cells):
         return False, "sandbox piece collapses onto itself"
@@ -143,7 +161,7 @@ def move_sandbox_piece(state: TopologyLabState, profile: ExplorerTopologyProfile
     if step is None:
         return False, f"unknown sandbox step {step_label}"
     moved: list[tuple[int, ...]] = []
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     for cell in cells:
         target = move_cell(profile, dims=dims, coord=cell, step=step)
         if target is None:
@@ -189,14 +207,14 @@ def cycle_sandbox_piece(state: TopologyLabState, step: int) -> None:
     state.sandbox.rotation_steps = 0
     state.sandbox.trace = []
     state.sandbox.invalid_message = ""
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
 
 
 def reset_sandbox_piece(state: TopologyLabState) -> None:
     ensure_piece_sandbox(state)
     assert state.sandbox is not None
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     state.sandbox.rotation_steps = 0
     state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
     state.sandbox.trace = []

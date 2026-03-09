@@ -32,6 +32,7 @@ def _run_default_explorer_playground(
             explorer_profile=cfg.explorer_topology_profile,
             display_settings=display_settings,
             entry_source="explorer",
+            source_settings=_settings,
         ),
     )[0]
 

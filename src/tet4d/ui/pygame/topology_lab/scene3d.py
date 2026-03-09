@@ -77,6 +77,30 @@ def _draw_boundary_cards(
     return hit_targets, cards_by_label
 
 
+def _draw_cube_guides(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    area: pygame.Rect,
+    cards_by_label: dict[str, pygame.Rect],
+) -> None:
+    cube = pygame.Rect(0, 0, max(42, area.width // 7), max(42, area.height // 5))
+    cube.center = area.center
+    pygame.draw.rect(surface, (42, 50, 78), cube, border_radius=8)
+    pygame.draw.rect(surface, (92, 104, 146), cube, 1, border_radius=8)
+    front = cube.inflate(-10, -10)
+    pygame.draw.rect(surface, (28, 34, 56), front, border_radius=6)
+    pygame.draw.rect(surface, (120, 132, 176), front, 1, border_radius=6)
+    for label in ("x-", "x+", "y-", "y+", "z-", "z+"):
+        rect = cards_by_label.get(label)
+        if rect is None:
+            continue
+        color = axis_color("xyzw".index(label[0]))
+        pygame.draw.line(surface, color, cube.center, rect.center, 1)
+    guide = fonts.hint_font.render("Projected shell", True, (176, 188, 220))
+    surface.blit(guide, (cube.centerx - guide.get_width() // 2, cube.bottom + 6))
+
+
 def _overlay_lines(
     probe_coord: tuple[int, ...] | None,
     probe_path: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None,
@@ -148,6 +172,7 @@ def draw_scene(
         hovered_boundary_index=hovered_boundary_index,
         selected_boundary_index=selected_boundary_index,
     )
+    _draw_cube_guides(surface, fonts, area=area, cards_by_label=cards_by_label)
     hit_targets.extend(
         draw_glue_arrows(
             surface,

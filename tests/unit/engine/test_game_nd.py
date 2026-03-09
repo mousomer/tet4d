@@ -281,6 +281,7 @@ class TestGameND(unittest.TestCase):
             (
                 "main_3d",
                 GameConfigND(dims=(6, 8, 6), gravity_axis=1),
+                PieceShapeND("dot", ((0, 0, 0),), color_id=9),
                 (4, 3, 2),
                 [((3, 3, 2),), ((2, 3, 2),), ((1, 3, 2),)],
             ),
@@ -294,16 +295,51 @@ class TestGameND(unittest.TestCase):
                         dimension=3, wrapped_axes=(0,)
                     ),
                 ),
+                PieceShapeND("dot", ((0, 0, 0),), color_id=9),
                 (1, 3, 2),
                 [((0, 3, 2),), ((5, 3, 2),), ((4, 3, 2),)],
             ),
+            (
+                "main_3d_multicell",
+                GameConfigND(dims=(8, 8, 8), gravity_axis=1),
+                PieceShapeND(
+                    "el3",
+                    ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+                    color_id=5,
+                ),
+                (4, 3, 4),
+                [
+                    ((2, 3, 4), (3, 3, 4), (4, 3, 4), (4, 4, 4)),
+                    ((1, 3, 4), (2, 3, 4), (3, 3, 4), (3, 4, 4)),
+                    ((0, 3, 4), (1, 3, 4), (2, 3, 4), (2, 4, 4)),
+                ],
+            ),
+            (
+                "explorer_3d_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8),
+                    gravity_axis=1,
+                    speed_level=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el3",
+                    ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+                    color_id=5,
+                ),
+                (4, 3, 4),
+                [
+                    ((2, 3, 4), (3, 3, 4), (4, 3, 4), (4, 4, 4)),
+                    ((1, 3, 4), (2, 3, 4), (3, 3, 4), (3, 4, 4)),
+                    ((0, 3, 4), (1, 3, 4), (2, 3, 4), (2, 4, 4)),
+                ],
+            ),
         )
-        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
-        for label, cfg, start_pos, expected in cases:
+        for label, cfg, shape, start_pos, expected in cases:
             with self.subTest(mode=label):
                 state = GameStateND(config=cfg, board=BoardND(cfg.dims))
                 state.board.cells.clear()
-                state.current_piece = ActivePieceND.from_shape(dot, pos=start_pos)
+                state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
                     step=lambda: state.try_move_axis(0, -1),
@@ -320,6 +356,7 @@ class TestGameND(unittest.TestCase):
             (
                 "main_4d_w",
                 GameConfigND(dims=(6, 8, 6, 4), gravity_axis=1),
+                PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7),
                 (2, 3, 2, 1),
                 [((2, 3, 2, 2),), ((2, 3, 2, 3),)],
             ),
@@ -333,16 +370,48 @@ class TestGameND(unittest.TestCase):
                         dimension=4, wrapped_axes=(3,)
                     ),
                 ),
+                PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7),
                 (2, 3, 2, 2),
                 [((2, 3, 2, 3),), ((2, 3, 2, 0),), ((2, 3, 2, 1),)],
             ),
+            (
+                "main_4d_w_multicell",
+                GameConfigND(dims=(8, 8, 8, 6), gravity_axis=1),
+                PieceShapeND(
+                    "el4",
+                    ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)),
+                    color_id=8,
+                ),
+                (4, 3, 4, 2),
+                [
+                    ((3, 3, 4, 3), (4, 3, 4, 3), (5, 3, 4, 3), (5, 3, 4, 4)),
+                    ((3, 3, 4, 4), (4, 3, 4, 4), (5, 3, 4, 4), (5, 3, 4, 5)),
+                ],
+            ),
+            (
+                "explorer_4d_w_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8, 6),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el4",
+                    ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)),
+                    color_id=8,
+                ),
+                (4, 3, 4, 2),
+                [
+                    ((3, 3, 4, 3), (4, 3, 4, 3), (5, 3, 4, 3), (5, 3, 4, 4)),
+                    ((3, 3, 4, 4), (4, 3, 4, 4), (5, 3, 4, 4), (5, 3, 4, 5)),
+                ],
+            ),
         )
-        dot = PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7)
-        for label, cfg, start_pos, expected in cases:
+        for label, cfg, shape, start_pos, expected in cases:
             with self.subTest(mode=label):
                 state = GameStateND(config=cfg, board=BoardND(cfg.dims))
                 state.board.cells.clear()
-                state.current_piece = ActivePieceND.from_shape(dot, pos=start_pos)
+                state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
                     step=lambda: state.try_move_axis(3, 1),

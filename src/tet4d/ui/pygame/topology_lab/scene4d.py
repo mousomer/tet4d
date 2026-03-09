@@ -12,25 +12,35 @@ from tet4d.ui.pygame.topology_lab.common import (
 from tet4d.ui.pygame.ui_utils import fit_text
 
 
-def _layout_cards(area: pygame.Rect, count: int) -> list[pygame.Rect]:
-    columns = 4 if count >= 8 else 3
-    rows = max(1, (count + columns - 1) // columns)
-    gutter = 12
-    card_w = max(72, (area.width - gutter * (columns - 1)) // columns)
-    card_h = max(54, (area.height - gutter * (rows - 1)) // rows)
+def _layout_cards(area: pygame.Rect, boundaries: tuple[BoundaryRef, ...]) -> tuple[list[pygame.Rect], list[tuple[str, pygame.Rect]]]:
+    gutter_y = 12
+    axis_gap = 10
+    rows = len(boundaries) // 2
+    header_h = 18
+    available_h = area.height - rows * header_h - max(0, rows - 1) * axis_gap
+    row_h = max(54, available_h // max(1, rows))
+    card_h = max(48, row_h - header_h - gutter_y)
+    card_w = max(84, (area.width - 12) // 2 - 10)
     rects: list[pygame.Rect] = []
-    for index in range(count):
-        row = index // columns
-        col = index % columns
-        rects.append(
-            pygame.Rect(
-                area.x + col * (card_w + gutter),
-                area.y + row * (card_h + gutter),
-                card_w,
-                card_h,
-            )
-        )
-    return rects
+    headers: list[tuple[str, pygame.Rect]] = []
+    y = area.y
+    for row in range(rows):
+        header_rect = pygame.Rect(area.x, y, area.width, header_h)
+        headers.append((f"{boundaries[row * 2].label[0].upper()} axis", header_rect))
+        card_y = y + header_h + 4
+        left = pygame.Rect(area.x, card_y, card_w, card_h)
+        right = pygame.Rect(area.right - card_w, card_y, card_w, card_h)
+        rects.extend((left, right))
+        y += header_h + card_h + axis_gap
+    return rects, headers
+
+
+def _draw_axis_headers(surface: pygame.Surface, fonts, headers: list[tuple[str, pygame.Rect]], boundaries: tuple[BoundaryRef, ...]) -> None:
+    for row, (label, rect) in enumerate(headers):
+        axis = boundaries[row * 2].axis
+        text = fonts.hint_font.render(label, True, axis_color(axis))
+        pygame.draw.line(surface, (72, 82, 116), (rect.x, rect.bottom), (rect.right, rect.bottom), 1)
+        surface.blit(text, (rect.x + 2, rect.y))
 
 
 def _draw_boundary_cards(
@@ -133,9 +143,12 @@ def draw_scene(
     sandbox_message: str = "",
 ) -> list[TopologyLabHitTarget]:
     del preview_dims
-    title = fonts.hint_font.render("Hyperface graph", True, (220, 228, 250))
-    surface.blit(title, (area.x, area.y - title.get_height() - 4))
-    rects = _layout_cards(area, len(boundaries))
+    title = fonts.hint_font.render("Hyperface shell", True, (220, 228, 250))
+    subtitle = fonts.hint_font.render("Grouped by axis", True, (168, 178, 208))
+    surface.blit(title, (area.x, area.y - title.get_height() - 6))
+    surface.blit(subtitle, (area.x + title.get_width() + 10, area.y - subtitle.get_height() - 6))
+    rects, headers = _layout_cards(area, boundaries)
+    _draw_axis_headers(surface, fonts, headers, boundaries)
     hit_targets, cards_by_label = _draw_boundary_cards(
         surface,
         fonts,

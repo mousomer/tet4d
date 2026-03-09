@@ -11,12 +11,13 @@ from tet4d.engine.gameplay.topology_designer import (
     default_topology_profile_state,
 )
 from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
-from tet4d.engine.topology_explorer.presets import torus_profile_2d
+from tet4d.engine.topology_explorer.presets import torus_profile_2d, axis_wrap_profile
 from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     ensure_piece_sandbox,
     move_sandbox_piece,
     reset_sandbox_piece,
     sandbox_cells,
+    sandbox_shapes_for_state,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import TopologyLabState
 from tests.unit.engine._translation_contract import (
@@ -110,6 +111,76 @@ class TestTopologyLabSandbox(unittest.TestCase):
             signature=lambda: tuple(sorted(sandbox_cells(state))),
             expected_signatures=expected,
             label="explorer_sandbox_left",
+        )
+
+    def test_repeated_sandbox_translation_progresses_through_dispatch_3d(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=3,
+            profile=profile,
+            explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.piece_index = next(
+            index
+            for index, shape in enumerate(sandbox_shapes_for_state(state))
+            if shape.name == "O3"
+        )
+        state.sandbox.origin = (3, 3, 3)
+        start_cells = tuple(sorted(sandbox_cells(state)))
+        expected = [
+            tuple(sorted((x - 1, y, z) for x, y, z in start_cells)),
+            tuple(sorted((x - 2, y, z) for x, y, z in start_cells)),
+        ]
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: topology_lab_menu._dispatch_key(state, pygame.K_LEFT),
+            signature=lambda: tuple(sorted(sandbox_cells(state))),
+            expected_signatures=expected,
+            label="explorer_sandbox_left_3d",
+        )
+
+    def test_repeated_sandbox_translation_progresses_through_dispatch_4d(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=4,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=4,
+            profile=profile,
+            explorer_profile=axis_wrap_profile(dimension=4, wrapped_axes=(0,)),
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.piece_index = next(
+            index
+            for index, shape in enumerate(sandbox_shapes_for_state(state))
+            if shape.name == "CROSS4"
+        )
+        state.sandbox.origin = (3, 3, 3, 2)
+        start_cells = tuple(sorted(sandbox_cells(state)))
+        expected = [
+            tuple(sorted((x - 1, y, z, w) for x, y, z, w in start_cells)),
+            tuple(sorted((x - 2, y, z, w) for x, y, z, w in start_cells)),
+        ]
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: topology_lab_menu._dispatch_key(state, pygame.K_LEFT),
+            signature=lambda: tuple(sorted(sandbox_cells(state))),
+            expected_signatures=expected,
+            label="explorer_sandbox_left_4d",
         )
 
 

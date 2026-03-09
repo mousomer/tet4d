@@ -87,16 +87,21 @@ def draw_glue_arrows(
                 )
                 width = 4 if is_selected else 3 if is_highlighted else 2
                 pygame.draw.line(surface, color, start, end, width)
+                pygame.draw.circle(surface, color, start, 4 if is_selected else 3)
+                pygame.draw.circle(surface, color, end, 4 if is_selected else 3)
                 _draw_arrowhead(surface, color=color, start=start, end=end)
                 pair_label = f"{pair['from']} -> {pair['to']}"
                 pair_surf = fonts.hint_font.render(pair_label, True, color)
                 pair_rect = pair_surf.get_rect(
                     center=((start[0] + end[0]) // 2, (start[1] + end[1]) // 2 - 10)
                 )
+                pair_bg = pair_rect.inflate(8, 4)
+                pygame.draw.rect(surface, (18, 22, 34), pair_bg, border_radius=5)
+                pygame.draw.rect(surface, color, pair_bg, 1, border_radius=5)
                 surface.blit(pair_surf, pair_rect)
                 hit_rect = _line_hit_rect(start, end)
                 line_rect = hit_rect if line_rect is None else line_rect.union(hit_rect)
-                line_rect = line_rect.union(pair_rect.inflate(8, 6))
+                line_rect = line_rect.union(pair_bg)
             crossing_surf = fonts.hint_font.render(crossing, True, label_color)
             crossing_rect = crossing_surf.get_rect(
                 center=(
@@ -104,9 +109,15 @@ def draw_glue_arrows(
                     min(source_rect.top, target_rect.top) - 10,
                 )
             )
-            crossing_bg = crossing_rect.inflate(10, 6)
+            crossing_bg = crossing_rect.inflate(12, 8)
             pygame.draw.rect(surface, label_bg, crossing_bg, border_radius=6)
-            pygame.draw.rect(surface, (84, 92, 126), crossing_bg, 1, border_radius=6)
+            pygame.draw.rect(
+                surface,
+                (120, 132, 178) if is_selected else (96, 108, 148),
+                crossing_bg,
+                1,
+                border_radius=6,
+            )
             surface.blit(crossing_surf, crossing_rect)
             if line_rect is None:
                 line_rect = crossing_bg.copy()

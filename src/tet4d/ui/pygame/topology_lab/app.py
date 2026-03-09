@@ -7,9 +7,14 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
 )
+from tet4d.engine.runtime.menu_config import default_settings_payload
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
-from .scene_state import TOOL_CREATE, TOOL_PROBE
+from .scene_state import (
+    ExplorerPlaygroundSettings,
+    TOOL_CREATE,
+    TOOL_PROBE,
+)
 
 EntrySource = Literal["explorer", "lab"]
 
@@ -20,9 +25,42 @@ class ExplorerPlaygroundLaunch:
     gameplay_mode: str
     initial_tool: str
     entry_source: EntrySource
+    settings_snapshot: ExplorerPlaygroundSettings
     explorer_profile: ExplorerTopologyProfile | None = None
     display_settings: object | None = None
     fonts_2d: object | None = None
+
+
+def _default_mode_payload(dimension: int) -> dict[str, int]:
+    payload = default_settings_payload()["settings"]
+    return dict(payload[f"{int(dimension)}d"])
+
+
+def build_explorer_playground_settings(
+    *,
+    dimension: int,
+    source_settings: object | None = None,
+) -> ExplorerPlaygroundSettings:
+    dim = int(dimension)
+    defaults = _default_mode_payload(dim)
+
+    def _value(name: str) -> int:
+        if source_settings is not None and hasattr(source_settings, name):
+            return int(getattr(source_settings, name))
+        return int(defaults[name])
+
+    board_dims = [_value("width"), _value("height")]
+    if dim >= 3:
+        board_dims.append(_value("depth"))
+    if dim >= 4:
+        board_dims.append(_value("fourth"))
+    return ExplorerPlaygroundSettings(
+        board_dims=tuple(board_dims),
+        piece_set_index=_value("piece_set_index"),
+        speed_level=_value("speed_level"),
+        random_mode_index=_value("random_mode_index"),
+        game_seed=_value("game_seed"),
+    )
 
 
 def build_explorer_playground_launch(
@@ -34,6 +72,8 @@ def build_explorer_playground_launch(
     gameplay_mode: str = GAMEPLAY_MODE_EXPLORER,
     entry_source: EntrySource = "explorer",
     initial_tool: str | None = None,
+    source_settings: object | None = None,
+    settings_snapshot: ExplorerPlaygroundSettings | None = None,
 ) -> ExplorerPlaygroundLaunch:
     mode = (
         gameplay_mode
@@ -43,11 +83,16 @@ def build_explorer_playground_launch(
     tool = initial_tool
     if tool is None:
         tool = TOOL_PROBE if entry_source == "explorer" else TOOL_CREATE
+    snapshot = settings_snapshot or build_explorer_playground_settings(
+        dimension=int(dimension),
+        source_settings=source_settings,
+    )
     return ExplorerPlaygroundLaunch(
         dimension=int(dimension),
         gameplay_mode=mode,
         initial_tool=tool,
         entry_source=entry_source,
+        settings_snapshot=snapshot,
         explorer_profile=explorer_profile,
         display_settings=display_settings,
         fonts_2d=fonts_2d,
@@ -58,32 +103,53 @@ def build_explorer_playground_config(
     *,
     dimension: int,
     explorer_profile: ExplorerTopologyProfile,
+    settings_snapshot: ExplorerPlaygroundSettings | None = None,
 ):
+    snapshot = settings_snapshot or build_explorer_playground_settings(
+        dimension=int(dimension)
+    )
     if int(dimension) == 2:
         from tet4d.ui.pygame import front2d_setup
 
         settings = front2d_setup.GameSettings()
+        settings.width, settings.height = snapshot.board_dims[:2]
+        settings.piece_set_index = int(snapshot.piece_set_index)
+        settings.speed_level = int(snapshot.speed_level)
+        settings.random_mode_index = int(snapshot.random_mode_index)
+        settings.game_seed = int(snapshot.game_seed)
         settings.exploration_mode = 1
         settings.topology_advanced = 1
-        return front2d_setup.config_from_settings(
+        cfg = front2d_setup.config_from_settings(
             settings,
             explorer_topology_profile_override=explorer_profile,
         )
+        cfg.width, cfg.height = snapshot.board_dims[:2]
+        return cfg
 
     from tet4d.ui.pygame import frontend_nd_setup
 
     settings = frontend_nd_setup.GameSettingsND()
+    settings.width, settings.height = snapshot.board_dims[:2]
+    settings.depth = int(snapshot.board_dims[2]) if len(snapshot.board_dims) >= 3 else int(settings.depth)
+    settings.fourth = int(snapshot.board_dims[3]) if len(snapshot.board_dims) >= 4 else int(settings.fourth)
+    settings.piece_set_index = int(snapshot.piece_set_index)
+    settings.speed_level = int(snapshot.speed_level)
+    settings.random_mode_index = int(snapshot.random_mode_index)
+    settings.game_seed = int(snapshot.game_seed)
     settings.exploration_mode = 1
     settings.topology_advanced = 1
-    return frontend_nd_setup.build_config(
+    cfg = frontend_nd_setup.build_config(
         settings,
         int(dimension),
         explorer_topology_profile_override=explorer_profile,
     )
+    cfg.dims = tuple(int(value) for value in snapshot.board_dims)
+    return cfg
 
 
 __all__ = [
     "ExplorerPlaygroundLaunch",
     "build_explorer_playground_config",
     "build_explorer_playground_launch",
+    "build_explorer_playground_settings",
 ]

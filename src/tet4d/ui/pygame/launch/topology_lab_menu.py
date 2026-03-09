@@ -22,8 +22,13 @@ from tet4d.engine.gameplay.topology_designer import (
     topology_gameplay_mode_label,
     validate_topology_profile_state,
 )
+from tet4d.engine.gameplay.api import (
+    piece_set_2d_label_gameplay,
+    piece_set_2d_options_gameplay,
+    piece_set_label_gameplay,
+    piece_set_options_for_dimension_gameplay,
+)
 from tet4d.engine.runtime.api import topology_lab_menu_payload_runtime
-from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
 from tet4d.engine.runtime.topology_explorer_runtime import (
     export_explorer_preview_from_profile_state,
     load_runtime_explorer_topology_profile,
@@ -55,6 +60,7 @@ from tet4d.engine.topology_explorer.presets import (
     explorer_presets_for_dimension,
 )
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
+from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.keybindings import (
     EXPLORER_KEYS_2D,
     EXPLORER_KEYS_3D,
@@ -74,6 +80,7 @@ from tet4d.ui.pygame.topology_lab import (
     TOOL_PLAY,
     TOOL_PROBE,
     TOOL_SANDBOX,
+    ExplorerPlaygroundSettings,
     TopologyLabHitTarget,
     TopologyLabState,
     apply_boundary_edit_pick,
@@ -99,6 +106,7 @@ from tet4d.ui.pygame.topology_lab import (
     move_sandbox_piece,
     permutation_options_for_dimension,
     pick_target,
+    playground_dims_for_state,
     update_hover_target,
     reset_sandbox_piece,
     rotate_sandbox_piece,
@@ -113,6 +121,7 @@ from tet4d.ui.pygame.topology_lab.app import (
     ExplorerPlaygroundLaunch,
     build_explorer_playground_config,
     build_explorer_playground_launch,
+    build_explorer_playground_settings,
 )
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -224,6 +233,18 @@ def _explorer_action_to_step_label(action: str) -> str | None:
         "move_w_neg": "w-",
         "move_w_pos": "w+",
     }.get(action)
+
+
+def _board_dims_for_state(state: _TopologyLabState) -> tuple[int, ...]:
+    return playground_dims_for_state(state)
+
+
+def _ensure_play_settings(state: _TopologyLabState) -> ExplorerPlaygroundSettings:
+    if state.play_settings is None:
+        state.play_settings = build_explorer_playground_settings(
+            dimension=state.dimension
+        )
+    return state.play_settings
 
 
 def _bound_explorer_step_label(state: _TopologyLabState, key: int) -> str | None:
@@ -387,7 +408,7 @@ def _explorer_preview_payload(
         return (
             compile_explorer_topology_preview(
                 state.explorer_profile,
-                dims=explorer_topology_preview_dims(state.dimension),
+                dims=_board_dims_for_state(state),
                 source="topology_lab_live_preview",
             ),
             None,
@@ -448,30 +469,47 @@ def _ensure_probe_state(state: _TopologyLabState) -> None:
     ensure_probe_state_runtime(state)
     if state.explorer_profile is None:
         return
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = _board_dims_for_state(state)
     if needs_default or any(
         value < 0 or value >= dims[index]
         for index, value in enumerate(state.probe_coord or ())
     ):
-        state.probe_coord = recommended_explorer_probe_coord(
-            state.explorer_profile,
-            dims=dims,
-        )
-        state.probe_trace = []
-        state.probe_path = [state.probe_coord]
+        try:
+            state.probe_coord = recommended_explorer_probe_coord(
+                state.explorer_profile,
+                dims=dims,
+            )
+            state.probe_trace = []
+            state.probe_path = [state.probe_coord]
+        except ValueError as exc:
+            state.probe_coord = None
+            state.probe_trace = [f"Probe unavailable: {exc}"]
+            state.probe_path = []
+            state.highlighted_glue_id = None
 
 
 def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
     assert state.explorer_profile is not None
     _ensure_probe_state(state)
-    assert state.probe_coord is not None
+    if state.probe_coord is None:
+        _set_status(
+            state,
+            "Probe is unavailable until the current gluing fits the board dimensions",
+            is_error=True,
+        )
+        return
     start = state.probe_coord
-    target, result = advance_explorer_probe(
-        state.explorer_profile,
-        dims=explorer_topology_preview_dims(state.dimension),
-        coord=state.probe_coord,
-        step_label=step_label,
-    )
+    try:
+        target, result = advance_explorer_probe(
+            state.explorer_profile,
+            dims=_board_dims_for_state(state),
+            coord=state.probe_coord,
+            step_label=step_label,
+        )
+    except ValueError as exc:
+        state.highlighted_glue_id = None
+        _set_status(state, str(exc), is_error=True)
+        return
     state.probe_coord = target
     traversal = result.get("traversal")
     state.highlighted_glue_id = None if traversal is None else str(traversal.get("glue_id"))
@@ -493,13 +531,23 @@ def _reset_probe(state: _TopologyLabState) -> None:
     if state.explorer_profile is None:
         reset_probe_state(state)
     else:
-        state.probe_coord = recommended_explorer_probe_coord(
-            state.explorer_profile,
-            dims=explorer_topology_preview_dims(state.dimension),
-        )
-        state.probe_trace = []
-        state.probe_path = [state.probe_coord]
-        state.highlighted_glue_id = None
+        try:
+            state.probe_coord = recommended_explorer_probe_coord(
+                state.explorer_profile,
+                dims=_board_dims_for_state(state),
+            )
+            state.probe_trace = []
+            state.probe_path = [state.probe_coord]
+            state.highlighted_glue_id = None
+            _set_status(state, f"Probe reset to {list(state.probe_coord or ())}")
+            return
+        except ValueError as exc:
+            state.probe_coord = None
+            state.probe_trace = [f"Probe unavailable: {exc}"]
+            state.probe_path = []
+            state.highlighted_glue_id = None
+            _set_status(state, str(exc), is_error=True)
+            return
     _set_status(state, f"Probe reset to {list(state.probe_coord or ())}")
 
 
@@ -508,12 +556,24 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
         rows = [
             _RowSpec("gameplay_mode", "Game Type"),
             _RowSpec("dimension", "Dimension"),
-            _RowSpec("explorer_preset", "Explorer Preset"),
-            _RowSpec("explorer_glue", "Active Glue"),
-            _RowSpec("explorer_source", "Source Boundary"),
-            _RowSpec("explorer_target", "Target Boundary"),
-            _RowSpec("explorer_permutation", "Tangent Map"),
+            _RowSpec("board_x", "Board X"),
+            _RowSpec("board_y", "Board Y"),
         ]
+        if state.dimension >= 3:
+            rows.append(_RowSpec("board_z", "Board Z"))
+        if state.dimension >= 4:
+            rows.append(_RowSpec("board_w", "Board W"))
+        rows.extend(
+            (
+                _RowSpec("piece_set", "Piece Set"),
+                _RowSpec("speed_level", "Speed"),
+                _RowSpec("explorer_preset", "Explorer Preset"),
+                _RowSpec("explorer_glue", "Active Glue"),
+                _RowSpec("explorer_source", "Source Boundary"),
+                _RowSpec("explorer_target", "Target Boundary"),
+                _RowSpec("explorer_permutation", "Tangent Map"),
+            )
+        )
         for index in range(state.dimension - 1):
             rows.append(_RowSpec(f"explorer_sign_{index}", f"Flip Tangent {index + 1}"))
         rows.extend(
@@ -594,29 +654,122 @@ def _explorer_preset_value_text(state: _TopologyLabState) -> str:
     return preset.label + (" [unsafe]" if preset.unsafe else "")
 
 
+def _explorer_piece_set_options(state: _TopologyLabState) -> tuple[str, ...]:
+    if state.dimension == 2:
+        return tuple(piece_set_2d_options_gameplay())
+    return tuple(piece_set_options_for_dimension_gameplay(state.dimension))
+
+
+def _explorer_piece_set_index(state: _TopologyLabState) -> int:
+    settings = _ensure_play_settings(state)
+    options = _explorer_piece_set_options(state)
+    if not options:
+        return 0
+    return max(0, min(len(options) - 1, int(settings.piece_set_index)))
+
+
+def _explorer_piece_set_label(state: _TopologyLabState) -> str:
+    options = _explorer_piece_set_options(state)
+    if not options:
+        return "-"
+    piece_set_id = options[_explorer_piece_set_index(state)]
+    if state.dimension == 2:
+        return piece_set_2d_label_gameplay(piece_set_id)
+    return piece_set_label_gameplay(piece_set_id)
+
+
+def _set_explorer_piece_set_index(state: _TopologyLabState, step: int) -> None:
+    settings = _ensure_play_settings(state)
+    options = _explorer_piece_set_options(state)
+    if not options:
+        return
+    index = (_explorer_piece_set_index(state) + step) % len(options)
+    state.play_settings = ExplorerPlaygroundSettings(
+        board_dims=settings.board_dims,
+        piece_set_index=index,
+        speed_level=settings.speed_level,
+        random_mode_index=settings.random_mode_index,
+        game_seed=settings.game_seed,
+    )
+    _mark_play_settings_updated(state)
+
+
+def _set_explorer_board_dim(state: _TopologyLabState, axis: int, step: int) -> None:
+    settings = _ensure_play_settings(state)
+    mins = (4, 8, 2, 1)
+    max_size = 40
+    dims = list(settings.board_dims)
+    while len(dims) < state.dimension:
+        dims.append(mins[len(dims)])
+    dims[axis] = max(mins[axis], min(max_size, int(dims[axis]) + int(step)))
+    state.play_settings = ExplorerPlaygroundSettings(
+        board_dims=tuple(dims[: state.dimension]),
+        piece_set_index=settings.piece_set_index,
+        speed_level=settings.speed_level,
+        random_mode_index=settings.random_mode_index,
+        game_seed=settings.game_seed,
+    )
+    _mark_play_settings_updated(state)
+
+
+def _set_explorer_speed_level(state: _TopologyLabState, step: int) -> None:
+    settings = _ensure_play_settings(state)
+    level = max(1, min(10, int(settings.speed_level) + int(step)))
+    state.play_settings = ExplorerPlaygroundSettings(
+        board_dims=settings.board_dims,
+        piece_set_index=settings.piece_set_index,
+        speed_level=level,
+        random_mode_index=settings.random_mode_index,
+        game_seed=settings.game_seed,
+    )
+    _mark_play_settings_updated(state)
+
+
 def _edge_value_text(state: _TopologyLabState, axis: int, side: int) -> str:
     value = state.profile.edge_rules[axis][side]
     return _EDGE_LABELS.get(value, str(value).title())
 
 
-def _explorer_row_value_text(state: _TopologyLabState, row: _RowSpec) -> str | None:
-    if row.key == "explorer_preset":
+_EXPLORER_BOARD_ROW_AXES = {
+    "board_x": 0,
+    "board_y": 1,
+    "board_z": 2,
+    "board_w": 3,
+}
+
+
+def _explorer_scalar_row_value_text(state: _TopologyLabState, key: str) -> str | None:
+    if key == "piece_set":
+        return _explorer_piece_set_label(state)
+    if key == "speed_level":
+        return str(_ensure_play_settings(state).speed_level)
+    if key == "explorer_preset":
         return _explorer_preset_value_text(state)
-    if row.key == "explorer_glue":
+    if key == "explorer_glue":
         return _explorer_slot_label(state)
-    if row.key == "explorer_source":
+    if key in {"explorer_source", "explorer_target"}:
         assert state.explorer_draft is not None
-        return _explorer_boundaries(state)[state.explorer_draft.source_index].label
-    if row.key == "explorer_target":
-        assert state.explorer_draft is not None
-        return _explorer_boundaries(state)[state.explorer_draft.target_index].label
-    if row.key == "explorer_permutation":
+        boundary_index = (
+            state.explorer_draft.source_index
+            if key == "explorer_source"
+            else state.explorer_draft.target_index
+        )
+        return _explorer_boundaries(state)[boundary_index].label
+    if key == "explorer_permutation":
         return _explorer_transform_label(state)
+    return None
+
+
+def _explorer_row_value_text(state: _TopologyLabState, row: _RowSpec) -> str | None:
+    axis = _EXPLORER_BOARD_ROW_AXES.get(row.key)
+    if axis is not None:
+        dims = _board_dims_for_state(state)
+        return str(dims[axis]) if axis < len(dims) else None
     if row.key.startswith("explorer_sign_"):
         assert state.explorer_draft is not None
         sign_index = int(row.key.rsplit("_", 1)[1])
         return "Flipped" if state.explorer_draft.signs[sign_index] < 0 else "Straight"
-    return None
+    return _explorer_scalar_row_value_text(state, row.key)
 
 
 def _legacy_row_value_text(state: _TopologyLabState, row: _RowSpec) -> str | None:
@@ -648,6 +801,10 @@ def _mark_updated(state: _TopologyLabState) -> None:
     _set_status(state, str(_LAB_STATUS_COPY["updated"]))
 
 
+def _mark_play_settings_updated(state: _TopologyLabState) -> None:
+    _set_status(state, "Explorer play settings updated")
+
+
 def _apply_profile(state: _TopologyLabState, profile: TopologyProfileState) -> None:
     state.profile = profile
     _mark_updated(state)
@@ -674,6 +831,10 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
     idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
     state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
     _sync_profile(state)
+    if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
+        state.play_settings = build_explorer_playground_settings(
+            dimension=state.dimension
+        )
     _sync_explorer_state(state)
     _mark_updated(state)
 
@@ -825,7 +986,7 @@ def _validate_explorer_profile_or_error(
     try:
         return validate_explorer_topology_profile(
             profile,
-            dims=explorer_topology_preview_dims(state.dimension),
+            dims=_board_dims_for_state(state),
         )
     except ValueError as exc:
         _set_status(state, str(exc), is_error=True)
@@ -945,7 +1106,7 @@ def _run_export(state: _TopologyLabState) -> None:
         assert state.explorer_profile is not None
         ok, message, _path = export_explorer_topology_preview(
             state.explorer_profile,
-            dims=explorer_topology_preview_dims(state.dimension),
+            dims=_board_dims_for_state(state),
             source=f"topology_lab_{state.dimension}d_mvp",
         )
         if not ok:
@@ -977,7 +1138,7 @@ def _run_export(state: _TopologyLabState) -> None:
             preview_ok, preview_message, _preview_path = (
                 export_explorer_preview_from_profile_state(
                     state.profile,
-                    dims=explorer_topology_preview_dims(state.dimension),
+                    dims=_board_dims_for_state(state),
                     source="legacy_edge_rules_bridge",
                 )
             )
@@ -999,26 +1160,37 @@ def _run_export(state: _TopologyLabState) -> None:
     play_sfx("menu_confirm")
 
 
-def _adjust_explorer_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
-    if row.key == "explorer_preset":
+def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -> bool:
+    if key == "piece_set":
+        _set_explorer_piece_set_index(state, step)
+        return True
+    if key == "speed_level":
+        _set_explorer_speed_level(state, step)
+        return True
+    if key == "explorer_preset":
         _cycle_explorer_preset(state, step)
         return True
-    if row.key == "explorer_glue":
+    if key == "explorer_glue":
         _set_explorer_draft_slot(state, step)
         return True
-    if row.key == "explorer_source":
-        _cycle_explorer_boundary(state, is_source=True, step=step)
+    if key in {"explorer_source", "explorer_target"}:
+        _cycle_explorer_boundary(state, is_source=(key == "explorer_source"), step=step)
         return True
-    if row.key == "explorer_target":
-        _cycle_explorer_boundary(state, is_source=False, step=step)
-        return True
-    if row.key == "explorer_permutation":
+    if key == "explorer_permutation":
         _cycle_explorer_permutation(state, step)
+        return True
+    return False
+
+
+def _adjust_explorer_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
+    axis = _EXPLORER_BOARD_ROW_AXES.get(row.key)
+    if axis is not None:
+        _set_explorer_board_dim(state, axis, step)
         return True
     if row.key.startswith("explorer_sign_"):
         _toggle_explorer_sign(state, int(row.key.rsplit("_", 1)[1]))
         return True
-    return False
+    return _adjust_explorer_scalar_row(state, row.key, step)
 
 
 def _adjust_legacy_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
@@ -1034,8 +1206,9 @@ def _adjust_legacy_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bo
     return False
 
 
-def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
-    row = _rows_for_state(state)[_selectable_row_indexes(state)[state.selected]]
+def _adjust_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
+    if row.disabled:
+        return False
     if row.key == "gameplay_mode":
         _cycle_gameplay_mode(state, step)
         return True
@@ -1047,6 +1220,21 @@ def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
     if _adjust_legacy_row(state, row, step):
         return True
     return False
+
+
+def _row_supports_step_adjustment(row: _RowSpec) -> bool:
+    return (not row.disabled) and row.key not in {
+        "apply_glue",
+        "remove_glue",
+        "save_profile",
+        "export",
+        "back",
+    }
+
+
+def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
+    row = _rows_for_state(state)[_selectable_row_indexes(state)[state.selected]]
+    return _adjust_row(state, row, step)
 
 
 def _handle_navigation_key(
@@ -1226,6 +1414,7 @@ def _launch_play_preview(
         cfg = build_explorer_playground_config(
             dimension=state.dimension,
             explorer_profile=state.explorer_profile,
+            settings_snapshot=state.play_settings,
         )
         if state.dimension == 2:
             front2d_game.run_game_loop(
@@ -1251,7 +1440,10 @@ def _launch_play_preview(
 
 def _topology_note_text(state: _TopologyLabState) -> str:
     if _uses_general_explorer_editor(state):
-        return f"Explorer {state.dimension}D uses direct boundary gluings with tangent transforms."
+        return (
+            f"Explorer {state.dimension}D and Topology Lab share this playground shell. "
+            "Direct boundary gluings, probe movement, sandbox play, and play preview all use the same draft topology."
+        )
     return topology_profile_note(state.gameplay_mode)
 
 
@@ -1313,8 +1505,14 @@ def _explorer_preview_lines(
 
 def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
     assert state.explorer_profile is not None
+    settings = _ensure_play_settings(state)
+    dims = list(_board_dims_for_state(state))
     lines = [
-        f"Explorer {state.dimension}D gluing editor",
+        f"Explorer {state.dimension}D topology playground",
+        "Explorer Mode and Topology Lab use this same shell.",
+        f"Board: {dims}",
+        f"Piece set: {_explorer_piece_set_label(state)}",
+        f"Speed: {settings.speed_level}",
         _explorer_transform_label(state),
         "",
     ]
@@ -1462,6 +1660,14 @@ def _workspace_preview_lines(
     if state.selected_boundary_index is not None:
         boundary = _explorer_boundaries(state)[state.selected_boundary_index].label
         lines.append(f"Selected boundary: {boundary}")
+    if state.hovered_boundary_index is not None:
+        hovered = _explorer_boundaries(state)[state.hovered_boundary_index].label
+        lines.append(f"Hover boundary: {hovered}")
+    if state.selected_glue_id:
+        lines.append(f"Selected seam: {state.selected_glue_id}")
+    elif state.hovered_glue_id:
+        lines.append(f"Hover seam: {state.hovered_glue_id}")
+    lines.append(f"Tool: {state.active_tool.replace('_', ' ')}")
     if state.probe_coord is not None:
         lines.append(f"Probe: {list(state.probe_coord)}")
         lines.append(f"Trace points: {max(0, len(state.probe_path or []) - 1)}")
@@ -1491,7 +1697,7 @@ def _draw_probe_controls_if_needed(
         area=area,
         step_options=explorer_probe_options(
             state.explorer_profile,
-            dims=explorer_topology_preview_dims(state.dimension),
+            dims=_board_dims_for_state(state),
             coord=state.probe_coord or tuple(0 for _ in range(state.dimension)),
         ),
     )
@@ -1525,7 +1731,7 @@ def _draw_explorer_workspace(
     active_glue_ids = _explorer_active_glue_ids(state)
     preview, preview_error = _explorer_preview_payload(state)
     basis_arrows = [] if preview is None else list(preview.get("basis_arrows", ()))
-    preview_dims = explorer_topology_preview_dims(state.dimension)
+    preview_dims = _board_dims_for_state(state)
     sandbox_cells_payload, sandbox_ok, sandbox_message = _sandbox_scene_payload(state)
     hits.extend(
         _draw_explorer_scene(
@@ -1749,6 +1955,13 @@ def _handle_mouse_boundary_target(
 def _dispatch_mouse_target(
     state: _TopologyLabState, target: TopologyLabHitTarget, button: int
 ) -> bool:
+    if target.kind == "row_step":
+        row_key, step = target.value
+        _set_selected_row_by_key(state, str(row_key))
+        row = next((candidate for candidate in _rows_for_state(state) if candidate.key == str(row_key)), None)
+        if row is not None and _adjust_row(state, row, int(step)):
+            play_sfx("menu_move")
+        return True
     if target.kind == "row_select":
         _set_selected_row_by_key(state, str(target.value))
         play_sfx("menu_move")
@@ -1782,6 +1995,35 @@ def _handle_mouse_down(
 
 def _handle_mouse_motion(state: _TopologyLabState, pos: tuple[int, int]) -> None:
     update_hover_target(state, pick_target(state.mouse_targets, pos))
+
+
+def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
+    if not _uses_general_explorer_editor(state):
+        return _LAB_HINTS
+    gameplay = _gameplay_bindings_for_dimension(state.dimension)
+    explorer = _explorer_bindings_for_dimension(state.dimension)
+    lines = [
+        "Explorer Mode = Topology Playground",
+        f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",
+        f"Move Y: {format_key_tuple(explorer.get('move_up', ()))} / {format_key_tuple(explorer.get('move_down', ()))}",
+    ]
+    if state.dimension >= 3:
+        lines.append(
+            f"Move Z: {format_key_tuple(gameplay.get('move_z_neg', ()))} / {format_key_tuple(gameplay.get('move_z_pos', ()))}"
+        )
+    if state.dimension >= 4:
+        lines.append(
+            f"Move W: {format_key_tuple(gameplay.get('move_w_neg', ()))} / {format_key_tuple(gameplay.get('move_w_pos', ()))}"
+        )
+    lines.extend(
+        (
+            "Right-click boundary: create or edit seam",
+            "Click +/- on left rows to change board, piece set, and speed",
+            "Board size / piece set rows change the current draft play session",
+            "Play uses the current draft without saving",
+        )
+    )
+    return tuple(lines)
 
 
 def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
@@ -1837,8 +2079,9 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     y = panel_y + 16
     for idx, row in enumerate(rows):
         selected = idx == selected_row
+        row_height = fonts.menu_font.get_height() + 10
         row_rect = pygame.Rect(
-            panel_x + 14, y - 4, menu_w - 28, fonts.menu_font.get_height() + 10
+            panel_x + 14, y - 4, menu_w - 28, row_height
         )
         state.mouse_targets.append(
             TopologyLabHitTarget("row_select", row.key, row_rect)
@@ -1860,13 +2103,35 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         )
         value = fonts.menu_font.render(
             fit_text(
-                fonts.menu_font, _row_value_text(state, row), max(160, menu_w // 2 - 10)
+                fonts.menu_font, _row_value_text(state, row), max(160, menu_w // 2 - 70)
             ),
             True,
             color,
         )
         screen.blit(label, (panel_x + 22, y))
-        screen.blit(value, (panel_x + menu_w - value.get_width() - 22, y))
+        value_right = panel_x + menu_w - 22
+        if _row_supports_step_adjustment(row):
+            button_size = 18
+            plus_rect = pygame.Rect(value_right - button_size, y - 1, button_size, row_height - 2)
+            value_x = plus_rect.x - 8 - value.get_width()
+            minus_rect = pygame.Rect(value_x - 8 - button_size, y - 1, button_size, row_height - 2)
+            for step_value, glyph, button_rect in ((-1, '-', minus_rect), (1, '+', plus_rect)):
+                pygame.draw.rect(screen, (78, 92, 128), button_rect, border_radius=6)
+                pygame.draw.rect(screen, (128, 148, 196), button_rect, 1, border_radius=6)
+                glyph_surf = fonts.hint_font.render(glyph, True, _TEXT_COLOR)
+                screen.blit(
+                    glyph_surf,
+                    (
+                        button_rect.x + (button_rect.width - glyph_surf.get_width()) // 2,
+                        button_rect.y + (button_rect.height - glyph_surf.get_height()) // 2,
+                    ),
+                )
+                state.mouse_targets.append(
+                    TopologyLabHitTarget("row_step", (row.key, step_value), button_rect)
+                )
+            screen.blit(value, (value_x, y))
+        else:
+            screen.blit(value, (value_right - value.get_width(), y))
         y += 38
 
     if _uses_general_explorer_editor(state):
@@ -1884,7 +2149,7 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         )
 
     hint_y = panel_y + panel_h + 10
-    for hint in _LAB_HINTS:
+    for hint in _hint_lines_for_state(state):
         hint_text = fit_text(fonts.hint_font, hint, width - 24)
         hint_surf = fonts.hint_font.render(hint_text, True, _MUTED_COLOR)
         screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
@@ -1916,6 +2181,7 @@ def _initial_topology_lab_state(
     gameplay_mode: str = GAMEPLAY_MODE_NORMAL,
     initial_explorer_profile: ExplorerTopologyProfile | None = None,
     initial_tool: str | None = None,
+    play_settings: ExplorerPlaygroundSettings | None = None,
 ) -> _TopologyLabState:
     dimension = start_dimension if start_dimension in _TOPOLOGY_DIMENSIONS else 3
     mode = (
@@ -1928,9 +2194,14 @@ def _initial_topology_lab_state(
         gameplay_mode=mode,
         dimension=dimension,
         profile=load_topology_profile(mode, dimension),
+        play_settings=play_settings,
     )
     _sync_explorer_state(state)
     if mode == GAMEPLAY_MODE_EXPLORER:
+        if state.play_settings is None:
+            state.play_settings = build_explorer_playground_settings(
+                dimension=dimension
+            )
         if initial_explorer_profile is not None:
             state.explorer_profile = initial_explorer_profile
             ensure_explorer_draft(state)
@@ -2018,6 +2289,7 @@ def run_topology_lab_menu(
         gameplay_mode=resolved_launch.gameplay_mode,
         initial_explorer_profile=resolved_launch.explorer_profile,
         initial_tool=resolved_launch.initial_tool,
+        play_settings=resolved_launch.settings_snapshot,
     )
     clock = pygame.time.Clock()
     while state.running:

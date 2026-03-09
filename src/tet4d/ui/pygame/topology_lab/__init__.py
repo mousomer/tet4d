@@ -28,6 +28,7 @@ from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
 from .scene4d import draw_scene as draw_scene_4d
 from .scene_state import (
+    ExplorerPlaygroundSettings as ExplorerPlaygroundSettings,
     TOOL_CREATE as TOOL_CREATE,
     TOOL_EDIT as TOOL_EDIT,
     TOOL_INSPECT as TOOL_INSPECT,
@@ -41,6 +42,7 @@ from .scene_state import (
     ensure_probe_state as ensure_probe_state,
     reset_probe_state as reset_probe_state,
     ensure_sandbox_state as ensure_sandbox_state,
+    playground_dims_for_state as playground_dims_for_state,
     set_active_tool as set_active_tool,
     uses_general_explorer_editor as uses_general_explorer_editor,
 )
@@ -61,6 +63,7 @@ from .transform_editor import (
 
 __all__ = [
     "ExplorerGlueDraft",
+    "ExplorerPlaygroundSettings",
     "TOOL_CREATE",
     "TOOL_EDIT",
     "TOOL_INSPECT",
@@ -95,6 +98,7 @@ __all__ = [
     "reset_probe_state",
     "ensure_sandbox_state",
     "move_sandbox_piece",
+    "playground_dims_for_state",
     "permutation_options_for_dimension",
     "pick_target",
     "update_hover_target",

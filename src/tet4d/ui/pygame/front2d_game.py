@@ -62,6 +62,7 @@ def run() -> None:
                 display_settings=display_settings,
                 fonts_2d=fonts,
                 entry_source="explorer",
+                source_settings=settings,
             )
             run_explorer_playground(
                 explorer_screen,

@@ -48,6 +48,31 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu._normalize_explorer_draft(state)
         return state
 
+    def _invalid_explorer_profile(self, dimension: int) -> ExplorerTopologyProfile:
+        if dimension == 3:
+            return ExplorerTopologyProfile(
+                dimension=3,
+                gluings=(
+                    GluingDescriptor(
+                        glue_id="invalid_dims",
+                        source=BoundaryRef(dimension=3, axis=0, side="-"),
+                        target=BoundaryRef(dimension=3, axis=2, side="+"),
+                        transform=BoundaryTransform(permutation=(0, 1), signs=(1, 1)),
+                    ),
+                ),
+            )
+        return ExplorerTopologyProfile(
+            dimension=4,
+            gluings=(
+                GluingDescriptor(
+                    glue_id="invalid_dims",
+                    source=BoundaryRef(dimension=4, axis=0, side="-"),
+                    target=BoundaryRef(dimension=4, axis=2, side="+"),
+                    transform=BoundaryTransform(permutation=(0, 1, 2), signs=(1, 1, 1)),
+                ),
+            ),
+        )
+
     def test_rows_lock_y_boundaries_in_normal_mode(self) -> None:
         profile = default_topology_profile_state(
             dimension=3,
@@ -300,6 +325,76 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("apply_glue", row_keys)
         self.assertNotIn("topology_mode", row_keys)
         self.assertNotIn("y_neg", row_keys)
+
+    def test_rows_include_play_settings_for_3d_explorer(self) -> None:
+        state = self._explorer_state(3)
+        row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("board_x", row_keys)
+        self.assertIn("board_y", row_keys)
+        self.assertIn("board_z", row_keys)
+        self.assertIn("piece_set", row_keys)
+        self.assertIn("speed_level", row_keys)
+
+    def test_rows_include_play_settings_for_4d_explorer(self) -> None:
+        state = self._explorer_state(4)
+        row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("board_x", row_keys)
+        self.assertIn("board_y", row_keys)
+        self.assertIn("board_z", row_keys)
+        self.assertIn("board_w", row_keys)
+        self.assertIn("piece_set", row_keys)
+        self.assertIn("speed_level", row_keys)
+
+    def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
+        state = self._explorer_state(4)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        self.assertIn("Explorer Mode = Topology Playground", lines)
+        self.assertTrue(any(line.startswith("Move Y:") for line in lines))
+        self.assertIn("Click +/- on left rows to change board, piece set, and speed", lines)
+
+    def test_row_step_target_adjusts_explorer_board_z(self) -> None:
+        state = self._explorer_state(3)
+        state.play_settings = topology_lab_menu.build_explorer_playground_settings(dimension=3)
+        initial_dims = topology_lab_menu._board_dims_for_state(state)
+        target = topology_lab_menu.TopologyLabHitTarget("row_step", ("board_z", 1), pygame.Rect(0, 0, 10, 10))
+        handled = topology_lab_menu._dispatch_mouse_target(state, target, 1)
+        self.assertTrue(handled)
+        self.assertEqual(topology_lab_menu._board_dims_for_state(state), (initial_dims[0], initial_dims[1], initial_dims[2] + 1))
+
+    def test_cycle_dimension_with_invalid_loaded_explorer_profile_does_not_crash(self) -> None:
+        state = self._explorer_state(2)
+        with patch.object(
+            topology_lab_menu,
+            "load_runtime_explorer_topology_profile",
+            return_value=self._invalid_explorer_profile(3),
+        ):
+            topology_lab_menu._cycle_dimension(state, 1)
+        self.assertEqual(state.dimension, 3)
+        self.assertIsNone(state.probe_coord)
+        self.assertEqual(state.probe_path, [])
+        self.assertTrue(state.probe_trace)
+        self.assertIn("Probe unavailable:", state.probe_trace[0])
+
+    def test_draw_menu_does_not_crash_with_invalid_explorer_profile_for_current_dims(self) -> None:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        screen = pygame.Surface((1280, 900))
+        fonts = SimpleNamespace(
+            title_font=pygame.font.Font(None, 36),
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 22),
+        )
+        state = self._explorer_state(3)
+        state.explorer_profile = self._invalid_explorer_profile(3)
+        state.play_settings = topology_lab_menu.build_explorer_playground_settings(
+            dimension=3
+        )
+        topology_lab_menu._draw_menu(screen, fonts, state)
+        self.assertIsNone(state.probe_coord)
+        self.assertEqual(state.probe_path, [])
+        self.assertTrue(state.probe_trace)
+        self.assertTrue(any("Preview invalid:" in line for line in topology_lab_menu._workspace_preview_lines(state, None, "gluing transform is not bijective for the board dimensions")))
 
     def test_apply_explorer_glue_adds_gluing_to_profile_3d(self) -> None:
         state = self._explorer_state(3)
@@ -753,7 +848,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         state.probe_trace = ["x-: [0, 0] -> [5, 0]"]
         state.probe_path = [(0, 0), (5, 0)]
         topology_lab_menu._activate_action(state, "probe_reset")
-        dims = topology_lab_menu.explorer_topology_preview_dims(2)
+        dims = topology_lab_menu._board_dims_for_state(state)
         self.assertEqual(state.probe_coord, tuple(max(0, size // 2) for size in dims))
         self.assertEqual(state.probe_trace, [])
         self.assertEqual(state.probe_path, [tuple(max(0, size // 2) for size in dims)])
@@ -830,6 +925,34 @@ class TestTopologyLabMenu(unittest.TestCase):
             )
         self.assertIs(run_lab.call_args.kwargs["launch"], launch)
         self.assertEqual(run_lab.call_args.kwargs["start_dimension"], 3)
+
+
+    def test_workspace_preview_lines_include_hover_and_selected_glue(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.selected_boundary_index = 1
+        state.hovered_boundary_index = 4
+        state.selected_glue_id = "glue_001"
+        lines = topology_lab_menu._workspace_preview_lines(
+            state,
+            preview={"movement_graph": {"cell_count": 1, "directed_edge_count": 0, "boundary_traversal_count": 0, "component_count": 1}, "warnings": (), "sample_boundary_traversals": ()},
+            preview_error=None,
+        )
+        self.assertIn("Selected boundary: x+", lines)
+        self.assertIn("Hover boundary: z-", lines)
+        self.assertIn("Selected seam: glue_001", lines)
+        self.assertIn("Tool: probe", lines)
+
+    def test_workspace_preview_lines_fall_back_to_hovered_glue(self) -> None:
+        state = self._explorer_state(3)
+        state.hovered_glue_id = "glue_hover"
+        state.selected_glue_id = None
+        lines = topology_lab_menu._workspace_preview_lines(
+            state,
+            preview={"movement_graph": {"cell_count": 1, "directed_edge_count": 0, "boundary_traversal_count": 0, "component_count": 1}, "warnings": (), "sample_boundary_traversals": ()},
+            preview_error=None,
+        )
+        self.assertIn("Hover seam: glue_hover", lines)
 
 
 

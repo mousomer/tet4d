@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from tet4d.engine.core.model import BoardND, Coord
-from tet4d.engine.core.piece_transform import normalize_blocks_nd
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, MoveStep, move_cell
 
@@ -11,7 +10,9 @@ def _rebuild_piece_from_cells(
     cells: tuple[Coord, ...],
 ) -> ActivePieceND:
     mins = tuple(min(cell[axis] for cell in cells) for axis in range(len(cells[0])))
-    rel_blocks = normalize_blocks_nd(cells)
+    rel_blocks = tuple(
+        tuple(cell[axis] - mins[axis] for axis in range(len(mins))) for cell in cells
+    )
     return ActivePieceND(shape=piece.shape, pos=mins, rel_blocks=rel_blocks)
 
 

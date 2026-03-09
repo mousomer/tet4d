@@ -39,6 +39,15 @@ TOOL_LABELS = {
 }
 
 
+@dataclass(frozen=True)
+class ExplorerPlaygroundSettings:
+    board_dims: tuple[int, ...]
+    piece_set_index: int = 0
+    speed_level: int = 1
+    random_mode_index: int = 0
+    game_seed: int = 0
+
+
 @dataclass
 class PieceSandboxState:
     enabled: bool = False
@@ -59,6 +68,7 @@ class TopologyLabState:
     profile: TopologyProfileState
     explorer_profile: ExplorerTopologyProfile | None = None
     explorer_draft: ExplorerGlueDraft | None = None
+    play_settings: ExplorerPlaygroundSettings | None = None
     status: str = ""
     status_error: bool = False
     running: bool = True
@@ -78,7 +88,6 @@ class TopologyLabState:
     play_preview_requested: bool = False
 
 
-
 def uses_general_explorer_editor(state: TopologyLabState) -> bool:
     return (
         state.gameplay_mode == GAMEPLAY_MODE_EXPLORER
@@ -86,11 +95,18 @@ def uses_general_explorer_editor(state: TopologyLabState) -> bool:
     )
 
 
+def playground_dims_for_state(state: TopologyLabState) -> tuple[int, ...]:
+    dims = state.play_settings.board_dims if state.play_settings is not None else explorer_topology_preview_dims(state.dimension)
+    normalized = tuple(int(value) for value in dims[: state.dimension])
+    if len(normalized) != state.dimension or any(value <= 0 for value in normalized):
+        return explorer_topology_preview_dims(state.dimension)
+    return normalized
+
 
 def ensure_probe_state(state: TopologyLabState) -> None:
+    dims = playground_dims_for_state(state)
     if state.probe_coord is None or len(state.probe_coord) != state.dimension:
         state.probe_coord = tuple(0 for _ in range(state.dimension))
-    dims = explorer_topology_preview_dims(state.dimension)
     if any(
         value < 0 or value >= dims[index]
         for index, value in enumerate(state.probe_coord)
@@ -107,12 +123,11 @@ def ensure_probe_state(state: TopologyLabState) -> None:
 
 
 def reset_probe_state(state: TopologyLabState) -> None:
-    dims = explorer_topology_preview_dims(state.dimension)
+    dims = playground_dims_for_state(state)
     state.probe_coord = tuple(max(0, size // 2) for size in dims)
     state.probe_trace = []
     state.probe_path = [state.probe_coord]
     state.highlighted_glue_id = None
-
 
 
 def ensure_explorer_draft(state: TopologyLabState) -> None:
@@ -122,21 +137,19 @@ def ensure_explorer_draft(state: TopologyLabState) -> None:
         state.explorer_draft = default_draft_for_dimension(state.dimension)
 
 
-
 def ensure_sandbox_state(state: TopologyLabState) -> None:
     if state.sandbox is None:
         state.sandbox = PieceSandboxState()
     if state.sandbox.trace is None:
         state.sandbox.trace = []
     if state.sandbox.origin is None or len(state.sandbox.origin) != state.dimension:
-        dims = explorer_topology_preview_dims(state.dimension)
+        dims = playground_dims_for_state(state)
         state.sandbox.origin = tuple(max(0, size // 2) for size in dims)
     if state.sandbox.rotation_plane is None:
         if state.dimension == 2:
             state.sandbox.rotation_plane = (0, 1)
         else:
             state.sandbox.rotation_plane = (0, min(2, state.dimension - 1))
-
 
 
 def set_active_tool(state: TopologyLabState, tool: str) -> None:
@@ -155,6 +168,7 @@ def set_active_tool(state: TopologyLabState, tool: str) -> None:
 
 
 __all__ = [
+    "ExplorerPlaygroundSettings",
     "PieceSandboxState",
     "TOOL_CREATE",
     "TOOL_EDIT",
@@ -169,6 +183,7 @@ __all__ = [
     "ensure_explorer_draft",
     "ensure_probe_state",
     "ensure_sandbox_state",
+    "playground_dims_for_state",
     "reset_probe_state",
     "set_active_tool",
     "uses_general_explorer_editor",

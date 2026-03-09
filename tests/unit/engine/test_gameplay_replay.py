@@ -24,6 +24,7 @@ from tet4d.ui.pygame.keybindings import (
     CAMERA_KEYS_3D,
     CAMERA_KEYS_4D,
     EXPLORER_KEYS_2D,
+    EXPLORER_KEYS_3D,
     EXPLORER_KEYS_4D,
     KEYS_2D,
     KEYS_3D,
@@ -32,6 +33,7 @@ from tet4d.ui.pygame.keybindings import (
 )
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tests.unit.engine._translation_contract import (
     assert_repeated_translation_progress,
 )
@@ -269,6 +271,39 @@ class TestGameplayReplay(unittest.TestCase):
             tuple((x, y - 1) for x, y in cells_before),
         )
 
+    def test_exploration_mode_3d_live_move_up_uses_real_handler(self) -> None:
+        cfg = GameConfigND(
+            dims=(8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
+        state = front3d_game.create_initial_state(cfg)
+        self.assertIsNotNone(state.current_piece)
+        assert state.current_piece is not None
+        pos_before = state.current_piece.pos
+
+        move_up = self._key_for(EXPLORER_KEYS_3D, "move_up")
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(move_up), state, cfg),
+            "continue",
+        )
+
+        assert state.current_piece is not None
+        self.assertEqual(state.current_piece.pos[1], pos_before[1] - 1)
+
+    def test_exploration_mode_4d_live_move_up_uses_real_handler(self) -> None:
+        cfg = GameConfigND(
+            dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True
+        )
+        loop = front4d_game.LoopContext4D.create(cfg)
+        self.assertIsNotNone(loop.state.current_piece)
+        assert loop.state.current_piece is not None
+        pos_before = loop.state.current_piece.pos
+
+        move_up = self._key_for(EXPLORER_KEYS_4D, "move_up")
+        self.assertEqual(loop.keydown_handler(_keydown(move_up)), "continue")
+
+        assert loop.state.current_piece is not None
+        self.assertEqual(loop.state.current_piece.pos[1], pos_before[1] - 1)
+
     def test_exploration_mode_disables_gravity_and_locking_nd(self) -> None:
         cfg = GameConfigND(
             dims=(8, 8, 8, 8), gravity_axis=1, speed_level=1, exploration_mode=True
@@ -432,6 +467,27 @@ class TestGameplayReplay(unittest.TestCase):
                 [((4, 3, 3),), ((4, 3, 2),), ((4, 3, 1),)],
             ),
             (
+                "explorer_3d_keys_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8),
+                    gravity_axis=1,
+                    speed_level=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el3",
+                    ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+                    color_id=5,
+                ),
+                (4, 3, 4),
+                self._key_for(KEYS_3D, "move_z_neg"),
+                [
+                    ((3, 3, 3), (4, 3, 3), (5, 3, 3), (5, 4, 3)),
+                    ((3, 3, 2), (4, 3, 2), (5, 3, 2), (5, 4, 2)),
+                    ((3, 3, 1), (4, 3, 1), (5, 3, 1), (5, 4, 1)),
+                ],
+            ),
+            (
                 "main_4d_keys",
                 GameConfigND(dims=(8, 8, 8, 6), gravity_axis=1, speed_level=1),
                 PieceShapeND("dot4", ((0, 0, 0, 0),), color_id=7),
@@ -451,6 +507,26 @@ class TestGameplayReplay(unittest.TestCase):
                 (4, 3, 4, 2),
                 self._key_for(KEYS_4D, "move_w_pos"),
                 [((4, 3, 4, 3),), ((4, 3, 4, 4),), ((4, 3, 4, 5),)],
+            ),
+            (
+                "explorer_4d_keys_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8, 6),
+                    gravity_axis=1,
+                    speed_level=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el4",
+                    ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)),
+                    color_id=8,
+                ),
+                (4, 3, 4, 2),
+                self._key_for(KEYS_4D, "move_w_pos"),
+                [
+                    ((3, 3, 4, 3), (4, 3, 4, 3), (5, 3, 4, 3), (5, 3, 4, 4)),
+                    ((3, 3, 4, 4), (4, 3, 4, 4), (5, 3, 4, 4), (5, 3, 4, 5)),
+                ],
             ),
         )
         for label, cfg, shape, start_pos, key, expected in cases:
@@ -528,6 +604,73 @@ class TestGameplayReplay(unittest.TestCase):
                 _keydown(self._key_for(SYSTEM_KEYS, "toggle_grid")), state, cfg
             ),
             "toggle_grid",
+        )
+
+    def test_explorer_3d_frontend_repeated_left_translation_live(self):
+        cfg = GameConfigND(
+            dims=(6, 10, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = front3d_game.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("bar3", ((0, 0, 0), (1, 0, 0), (2, 0, 0)), color_id=8),
+            pos=(2, 2, 1),
+        )
+        camera = front3d_game.Camera3D()
+        camera.yaw_deg = 0.0
+        move_x_neg = self._key_for(KEYS_3D, "move_x_neg")
+        start_cells = tuple(sorted(state.current_piece.cells()))
+        expected = [
+            tuple(sorted((x - 1, y, z) for x, y, z in start_cells)),
+            tuple(sorted((x - 2, y, z) for x, y, z in start_cells)),
+        ]
+
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: front3d_game.handle_game_keydown(
+                _keydown(move_x_neg), state, camera
+            ),
+            signature=lambda: tuple(sorted(state.current_piece.cells())),
+            expected_signatures=expected,
+            label="explorer_3d_frontend_left",
+            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+        )
+
+    def test_explorer_4d_frontend_repeated_left_translation_live(self):
+        cfg = GameConfigND(
+            dims=(6, 10, 6, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=4, wrapped_axes=(0,)),
+        )
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8),
+            pos=(2, 2, 1, 1),
+        )
+        loop = front4d_game.LoopContext4D.create(cfg)
+        loop.state = state
+        loop.view.yaw_deg = 0.0
+        move_x_neg = self._key_for(KEYS_4D, "move_x_neg")
+        start_cells = tuple(sorted(loop.state.current_piece.cells()))
+        expected = [
+            tuple(sorted((x - 1, y, z, w) for x, y, z, w in start_cells)),
+            tuple(sorted((x - 2, y, z, w) for x, y, z, w in start_cells)),
+        ]
+
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: loop.keydown_handler(_keydown(move_x_neg)),
+            signature=lambda: tuple(sorted(loop.state.current_piece.cells())),
+            expected_signatures=expected,
+            label="explorer_4d_frontend_left",
+            result_assertion=lambda case, result, index: case._assert_continue(result, index),
         )
 
     def test_3d_controls_and_camera_smoke(self):

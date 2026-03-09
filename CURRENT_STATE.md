@@ -33,16 +33,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 149` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 150` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.40` (`low`)
+- `tech_debt.score = 2.53` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.56`
-2. `code_balance = 0.84`
+1. `delivery_size_pressure = 1.58`
+2. `code_balance = 0.96`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -217,14 +217,14 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `scripts/arch_metrics.py`: `1869` real LOC
-2. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1841` real LOC
+1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2083` real LOC
+2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 4. `tools/governance/validate_project_contracts.py`: `1178` real LOC
 5. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
-7. `src/tet4d/engine/help_text.py`: `830` real LOC
-8. `tests/unit/engine/test_topology_lab_menu.py`: `780` real LOC
+7. `tests/unit/engine/test_topology_lab_menu.py`: `893` real LOC
+8. `src/tet4d/engine/help_text.py`: `830` real LOC
 
 Thin-wrapper budgets:
 
@@ -233,7 +233,7 @@ Thin-wrapper budgets:
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
 5. `src/tet4d/engine/api.py: 91/160 real LOC (small engine compatibility facade)`
-6. `src/tet4d/ui/pygame/front2d_game.py: 115/180 real LOC (2D orchestration entrypoint)`
+6. `src/tet4d/ui/pygame/front2d_game.py: 116/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:
 
