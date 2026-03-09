@@ -127,6 +127,45 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         run_game.assert_not_called()
         capture_mock.assert_called_once_with(display_settings)
 
+    def test_launcher_nd_runner_default_explorer_path_builds_shared_launch(self) -> None:
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
+        explorer_profile = object()
+        cfg = SimpleNamespace(exploration_mode=True, ndim=4, explorer_topology_profile=explorer_profile)
+        with (
+            patch.object(
+                launcher_nd_runner,
+                "open_display",
+                side_effect=[Mock(), Mock(), Mock()],
+            ),
+            patch.object(
+                launcher_nd_runner,
+                "capture_windowed_display_settings",
+                return_value=capture_result,
+            ),
+            patch.object(
+                launcher_nd_runner,
+                "run_explorer_playground",
+                return_value=(True, "ok"),
+            ) as run_playground,
+        ):
+            launcher_nd_runner.run_nd_mode_launcher(
+                display_settings=display_settings,
+                fonts=object(),
+                setup_caption="setup",
+                game_caption="game",
+                run_menu=Mock(side_effect=[object(), None]),
+                build_config=lambda _settings: cfg,
+                suggested_window_size=lambda _cfg: (1200, 760),
+                run_game=Mock(return_value=False),
+            )
+
+        run_playground.assert_called_once()
+        launch = run_playground.call_args.kwargs["launch"]
+        self.assertEqual(launch.dimension, 4)
+        self.assertEqual(launch.entry_source, "explorer")
+        self.assertIs(launch.explorer_profile, explorer_profile)
+
 
     def test_front2d_run_routes_explorer_launch_into_topology_playground(self) -> None:
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
@@ -148,6 +187,10 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
             front2d.run()
 
         run_playground.assert_called_once()
+        launch = run_playground.call_args.kwargs["launch"]
+        self.assertEqual(launch.dimension, 2)
+        self.assertEqual(launch.entry_source, "explorer")
+        self.assertIs(launch.explorer_profile, cfg.explorer_topology_profile)
         run_game_loop.assert_not_called()
 
     def test_run_nd_loop_forwards_non_key_event_handler(self) -> None:

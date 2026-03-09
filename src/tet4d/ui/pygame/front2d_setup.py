@@ -99,6 +99,7 @@ def menu_fields(settings: GameSettings) -> list[FieldSpec]:
         piece_set_max=len(PIECE_SET_2D_OPTIONS) - 1,
         topology_profile_max=max(0, len(_TOPOLOGY_PROFILE_LABELS_2D) - 1),
         topology_advanced=bool(settings.topology_advanced),
+        exploration_mode=bool(settings.exploration_mode),
     )
 
 
@@ -169,7 +170,7 @@ def config_from_settings(
                     dimension=2,
                     gravity_axis=1,
                     topology_mode=topology_mode,
-                    topology_advanced=bool(settings.topology_advanced),
+                    topology_advanced=True,
                     profile_index=settings.topology_profile_index,
                     explorer_topology_profile_override=explorer_topology_profile_override,
                 )
@@ -227,7 +228,7 @@ def _run_dry_run(state: MenuState) -> None:
 
 
 def _export_topology_profile(state: MenuState) -> None:
-    if bool(state.settings.topology_advanced) and bool(state.settings.exploration_mode):
+    if bool(state.settings.exploration_mode):
         export_stored_explorer_topology_preview(2)
         return
     if bool(state.settings.topology_advanced):

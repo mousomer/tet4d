@@ -5,14 +5,35 @@ from typing import Callable, Optional, TypeVar
 import pygame
 
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
     capture_windowed_display_settings,
     open_display,
 )
+from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_launch
 
 
 SettingsT = TypeVar("SettingsT")
+
+
+def _run_default_explorer_playground(
+    screen: pygame.Surface,
+    cfg: GameConfigND,
+    fonts,
+    _settings: SettingsT,
+    display_settings: DisplaySettings,
+) -> bool:
+    return run_explorer_playground(
+        screen,
+        fonts,
+        launch=build_explorer_playground_launch(
+            dimension=cfg.ndim,
+            explorer_profile=cfg.explorer_topology_profile,
+            display_settings=display_settings,
+            entry_source="explorer",
+        ),
+    )[0]
 
 
 def run_nd_mode_launcher(
@@ -38,12 +59,13 @@ def run_nd_mode_launcher(
             break
 
         cfg = build_config(settings)
-        if bool(getattr(cfg, "exploration_mode", False)) and run_explorer is not None:
+        if bool(getattr(cfg, "exploration_mode", False)):
             explorer_screen = open_display(
                 display_settings,
                 caption=f"Explorer {cfg.ndim}D Playground",
             )
-            back_to_menu = run_explorer(
+            explorer_runner = run_explorer or _run_default_explorer_playground
+            back_to_menu = explorer_runner(
                 explorer_screen,
                 cfg,
                 fonts,

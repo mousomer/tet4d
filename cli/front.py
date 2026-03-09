@@ -25,6 +25,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_disp
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_topology_lab_menu
+from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_launch
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
@@ -524,12 +525,20 @@ def _menu_action_topology_lab(
     start_dimension = (
         int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
     )
+    launch = build_explorer_playground_launch(
+        dimension=start_dimension,
+        display_settings=session.display_settings,
+        fonts_2d=fonts_2d,
+        gameplay_mode="normal",
+        entry_source="lab",
+    )
     ok, msg = run_topology_lab_menu(
         session.screen,
         fonts_nd,
-        start_dimension=start_dimension,
-        display_settings=session.display_settings,
-        fonts_2d=fonts_2d,
+        launch=launch,
+        start_dimension=launch.dimension,
+        display_settings=launch.display_settings,
+        fonts_2d=launch.fonts_2d,
     )
     _persist_session_status(state, session)
     state.status = msg

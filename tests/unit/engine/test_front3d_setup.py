@@ -218,12 +218,13 @@ class TestFront3DSetupDedup(unittest.TestCase):
                 4,
             )
             explorer_cfg = frontend_nd_setup.build_config(
-                frontend_nd_setup.GameSettingsND(topology_advanced=1, exploration_mode=1),
+                frontend_nd_setup.GameSettingsND(topology_advanced=0, exploration_mode=1),
                 4,
             )
 
         self.assertEqual(load_profile.call_args_list[0].args, ("normal", 4))
         self.assertEqual(resolve_explorer.call_args_list[0].kwargs["dimension"], 4)
+        self.assertTrue(resolve_explorer.call_args_list[0].kwargs["topology_advanced"])
         self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
         self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
 
@@ -242,6 +243,32 @@ class TestFront3DSetupDedup(unittest.TestCase):
             color_for_cell=lambda cell_id: (cell_id, cell_id, cell_id),
         )
         self.assertEqual(ghost_cells, (((1, 2, 3), (6, 6, 6)),))
+
+
+
+    def test_nd_menu_fields_hide_topology_rows_in_explorer_mode(self) -> None:
+        attrs = {
+            attr_name
+            for _label, attr_name, _min_val, _max_val in frontend_nd_setup.menu_fields_for_settings(
+                frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=1),
+                4,
+            )
+        }
+        self.assertNotIn("topology_mode", attrs)
+        self.assertNotIn("topology_advanced", attrs)
+        self.assertNotIn("topology_profile_index", attrs)
+
+    def test_nd_export_uses_stored_explorer_preview_in_explorer_mode(self) -> None:
+        state = frontend_nd_setup.MenuState(
+            settings=frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=0)
+        )
+        with mock.patch.object(
+            frontend_nd_setup,
+            "export_stored_explorer_topology_preview",
+        ) as export_preview:
+            frontend_nd_setup._export_topology_profile(state, 4)
+
+        export_preview.assert_called_once_with(4)
 
 
 if __name__ == "__main__":

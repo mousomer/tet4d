@@ -34,7 +34,7 @@ behavior. Structural work means:
 | 10 | Release/packaging cleanup | Mostly complete | Installer workflows exist and are green; keep as a watch item. |
 | 11 | Stop minifying operational code | Watch | No broad formatting issue found in current Python sources; enforce readability drift only. |
 | 12 | Docs/manifests sync last | Complete for this batch | Code changes are now reflected in backlog/state/RDS/generated maintenance docs. |
-| 13 | Explorer topology engine | Active | Phase 1 kernel, Phase 2 runtime/store/preview integration, Phases 3-4 direct 2D/3D/4D explorer gluing editors, Phase 5 live explorer gameplay/runtime migration, Phase 6 diagnostics/basis-arrow previews, Phase 7 scene-first topology playground integration, and Phase 8 runtime-owned bridge shrink are complete; live Explorer 2D/3D/4D now enter the same scene-first playground shell directly, and the current lab supports scene-based seam selection, bound probe traversal, sandbox interaction, play-from-draft, and runtime-owned setup/export resolution, while richer scene visualization polish and final legacy-bridge deletion remain. |
+| 13 | Explorer topology engine | Active | Phase 1 kernel, Phase 2 runtime/store/preview integration, Phases 3-4 direct 2D/3D/4D explorer gluing editors, Phase 5 live explorer gameplay/runtime migration, Phase 6 diagnostics/basis-arrow previews, Phase 7 scene-first topology playground integration, Phase 8 runtime-owned bridge shrink, Phase 9 shared launch-contract unification, and Phase 10 setup-side unification are complete; live Explorer 2D/3D/4D and the Topology Lab menu action now enter the same scene-first playground shell through one launch builder, outer Explorer setup no longer acts as a topology editor, and remaining work is limited to richer scene polish plus final compatibility-bridge deletion. |
 
 ## Domain Ledger
 
@@ -153,9 +153,9 @@ behavior. Structural work means:
 | Field | Value |
 | --- | --- |
 | Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_preview.py`, and `src/tet4d/engine/runtime/topology_explorer_runtime.py` for runtime-owned storage/preview/setup-export integration; the legacy bridge remains an implementation detail behind that runtime layer, and the canonical spatial frontend is the explorer scene under `src/tet4d/ui/pygame/topology_lab/` |
-| Current duplicate owners | Legacy explorer edge-rule profiles remain only as a runtime-internal bridge for non-advanced explorer setup/export compatibility; live Explorer 2D/3D/4D runtime, scene-first lab editing, sandboxing, and play-preview now target the general gluing model directly |
+| Current duplicate owners | Legacy explorer edge-rule profiles remain only as a runtime-internal compatibility/export bridge; live Explorer 2D/3D/4D launch, runtime, scene-first lab editing, sandboxing, and play-preview all target the general gluing model directly |
 | Migration status | Active |
 | Equivalence tests | `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_explorer_store.py`, `tests/unit/engine/test_topology_explorer_preview.py`, `tests/unit/engine/test_topology_lab_menu.py` |
-| Deletion checkpoint | Remove the legacy bridge after non-advanced explorer setup/export no longer depend on legacy edge-rule conversion; keep the graphical explorer scene as the primary interface and treat side panels as supporting editors only |
+| Deletion checkpoint | Remove the legacy bridge after explicit compatibility export/preview no longer depend on legacy edge-rule conversion; keep the graphical explorer scene as the primary interface and treat side panels as supporting editors only |
 
 

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from tet4d.engine.gameplay.topology import (
+    default_edge_rules_for_mode,
+    normalize_topology_mode,
+)
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     TopologyProfileState,
@@ -26,6 +30,22 @@ def resolve_explorer_topology_runtime_profile(
     profile_index: int,
     explorer_topology_profile_override: ExplorerTopologyProfile | None = None,
 ) -> tuple[str, tuple[tuple[str, str], ...], ExplorerTopologyProfile]:
+    if explorer_topology_profile_override is not None or topology_advanced:
+        resolved_mode = normalize_topology_mode(topology_mode)
+        topology_edge_rules = default_edge_rules_for_mode(
+            int(dimension),
+            int(gravity_axis),
+            mode=resolved_mode,
+        )
+        explorer_profile = runtime_explorer_profile_from_selection(
+            dimension=dimension,
+            resolved_mode=resolved_mode,
+            topology_edge_rules=topology_edge_rules,
+            topology_advanced=topology_advanced,
+            legacy_profile=None,
+            explorer_topology_profile_override=explorer_topology_profile_override,
+        )
+        return resolved_mode, topology_edge_rules, explorer_profile
     resolved_mode, topology_edge_rules, legacy_profile = resolve_topology_designer_selection(
         dimension=dimension,
         gravity_axis=gravity_axis,

@@ -9,6 +9,7 @@ from .common import (
     transform_preview_label as transform_preview_label,
 )
 from .boundary_picker import (
+    apply_boundary_edit_pick as apply_boundary_edit_pick,
     apply_boundary_pick as apply_boundary_pick,
     apply_glue_pick as apply_glue_pick,
     pick_target as pick_target,
@@ -70,6 +71,7 @@ __all__ = [
     "TOOL_SANDBOX",
     "TopologyLabHitTarget",
     "TopologyLabState",
+    "apply_boundary_edit_pick",
     "apply_boundary_pick",
     "apply_glue_pick",
     "axis_color",

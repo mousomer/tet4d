@@ -4,9 +4,9 @@ Generated: 2026-02-18
 Updated: 2026-03-09  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics + Phase 7 scene-first playground integration + Phase 8 runtime-owned bridge shrink.
+Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics + Phase 7 scene-first playground integration + Phase 8 runtime-owned bridge shrink + Phase 9 shared launch-contract unification + Phase 10 setup-side unification.
 - Routed live explorer gameplay/runtime through the general gluing engine for ND and 2D via `src/tet4d/engine/gameplay/explorer_runtime_nd.py`, `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, `GameConfigND.explorer_topology_profile`, and `GameConfig.explorer_topology_profile`.
-- Updated ND and 2D setup/export flows so stored advanced explorer profiles, legacy-edge-rule bridging for non-advanced explorer setup, and preview export all use the same gluing-backed model.
+- Updated ND and 2D setup/export flows so Explorer launch now resolves the stored gluing profile by default, while legacy edge-rule bridging remains only for explicit compatibility export/preview paths.
 - Added focused regression coverage for mode-aware config loading, live explorer wrap movement, and explorer move prediction.
 - Added engine-owned explorer diagnostics in preview payloads and surfaced them in the lab sidebar for orientation-reversing, cross-axis, and disconnected movement-graph warnings.
 - Added engine-owned tangent-basis arrow previews to explorer preview payloads so the lab now shows actual signed basis mappings for each gluing instead of only counts and warnings.
@@ -14,6 +14,8 @@ Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration
 - Completed the scene-first playground owners (`scene_state.py`, `explorer_tools.py`, `boundary_picker.py`, `scene2d.py`, `piece_sandbox.py`) and kept `topology_lab_menu.py` as the orchestration shell over those owners.
 - Added clickable seam arrows, scene-visible probe path state with reset, explorer-only sandbox controls, and direct play-from-draft launch in the same explorer shell for 2D/3D/4D.
 - Unified live Explorer launch with the same scene-first playground shell, so entering Explorer 2D/3D/4D now opens the graphical topology playground directly instead of a separate detached explorer frontend.
+- Added `src/tet4d/ui/pygame/topology_lab/app.py` as the shared explorer-playground launch owner, so Explorer Mode and the Topology Lab menu action now build the same shell launch state and differ only by entry context.
+- Removed topology-editor rows from the outer Explorer setup menus and made Explorer launch/export resolve the stored gluing profile by default, so topology design now lives in the unified playground shell rather than in detached pre-launch menu rows.
 - Added focused regression coverage for sandbox transport/limitations, probe reset/path state, and 2D/3D/4D play-preview routing from the in-memory draft topology.
 - Moved remaining explorer setup/export bridge usage behind `src/tet4d/engine/runtime/topology_explorer_runtime.py`, so UI setup owners and Topology Lab export no longer import the legacy edge-rule bridge directly.
 - Extended the direct Explorer Topology Lab editor to 2D and 4D, so all explorer dimensions now edit engine-owned gluing profiles instead of legacy edge-rule rows.

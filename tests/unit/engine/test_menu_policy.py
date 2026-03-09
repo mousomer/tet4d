@@ -92,6 +92,20 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)
 
+    def test_explorer_setup_fields_hide_topology_editor_rows(self) -> None:
+        for dimension in (2, 3, 4):
+            fields = menu_config.setup_fields_for_settings(
+                dimension,
+                piece_set_max=5,
+                topology_profile_max=5,
+                topology_advanced=True,
+                exploration_mode=True,
+            )
+            attrs = {attr for _label, attr, _min_val, _max_val in fields}
+            self.assertNotIn("topology_mode", attrs)
+            self.assertNotIn("topology_advanced", attrs)
+            self.assertNotIn("topology_profile_index", attrs)
+
     def test_setup_hints_defined_for_all_dimensions(self) -> None:
         for dimension in (2, 3, 4):
             hints = menu_config.setup_hints_for_dimension(dimension)

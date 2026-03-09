@@ -580,6 +580,54 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
         self.assertNotEqual(state.explorer_profile, original)
 
+    def test_probe_tool_mouse_preset_cycle_updates_explorer_profile(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        original = state.explorer_profile
+        state.mouse_targets = [
+            topology_lab_menu.TopologyLabHitTarget(
+                kind="preset_step",
+                value=1,
+                rect=pygame.Rect(0, 0, 60, 24),
+            )
+        ]
+        with patch.object(topology_lab_menu, "play_sfx"):
+            topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
+        self.assertNotEqual(state.explorer_profile, original)
+
+    def test_probe_tool_right_click_boundary_starts_glue_creation(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.mouse_targets = [
+            topology_lab_menu.TopologyLabHitTarget(
+                kind="boundary_pick",
+                value=4,
+                rect=pygame.Rect(0, 0, 40, 40),
+            )
+        ]
+        with patch.object(topology_lab_menu, "play_sfx"):
+            topology_lab_menu._handle_mouse_down(state, (5, 5), 3)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_CREATE)
+        self.assertEqual(state.pending_source_index, 4)
+        self.assertEqual(state.selected_boundary_index, 4)
+
+    def test_probe_tool_right_click_boundary_edits_existing_glue(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        topology_lab_menu._apply_explorer_glue(state)
+        assert state.explorer_profile is not None
+        state.mouse_targets = [
+            topology_lab_menu.TopologyLabHitTarget(
+                kind="boundary_pick",
+                value=0,
+                rect=pygame.Rect(0, 0, 40, 40),
+            )
+        ]
+        with patch.object(topology_lab_menu, "play_sfx"):
+            topology_lab_menu._handle_mouse_down(state, (5, 5), 3)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_EDIT)
+        self.assertEqual(state.selected_glue_id, state.explorer_profile.gluings[0].glue_id)
+
     def test_mouse_glue_slot_selects_existing_glue(self) -> None:
         glue = GluingDescriptor(
             glue_id="glue_001",
@@ -682,7 +730,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             hint_font=pygame.font.Font(None, 22),
         )
         with (
-            patch("tet4d.ui.pygame.front2d_setup.config_from_settings") as build_cfg,
+            patch.object(topology_lab_menu, "build_explorer_playground_config") as build_cfg,
             patch("tet4d.ui.pygame.front2d_game.run_game_loop", return_value=True) as run_loop,
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.capture_windowed_display_settings", return_value=None),
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.open_display", return_value=screen),
@@ -694,7 +742,8 @@ class TestTopologyLabMenu(unittest.TestCase):
                 fonts_2d=fonts,
                 display_settings=None,
             )
-        self.assertIs(build_cfg.call_args.kwargs["explorer_topology_profile_override"], profile)
+        self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
+        self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
         run_loop.assert_called_once()
 
     def test_probe_reset_action_restores_center_and_clears_trace(self) -> None:
@@ -720,7 +769,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             hint_font=pygame.font.Font(None, 22),
         )
         with (
-            patch("tet4d.ui.pygame.frontend_nd_setup.build_config") as build_cfg,
+            patch.object(topology_lab_menu, "build_explorer_playground_config") as build_cfg,
             patch("tet4d.ui.pygame.front3d_game.run_game_loop", return_value=True) as run_loop,
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.capture_windowed_display_settings", return_value=None),
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.open_display", return_value=screen),
@@ -732,7 +781,8 @@ class TestTopologyLabMenu(unittest.TestCase):
                 fonts_2d=fonts,
                 display_settings=None,
             )
-        self.assertIs(build_cfg.call_args.kwargs["explorer_topology_profile_override"], profile)
+        self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
+        self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
         run_loop.assert_called_once()
 
     def test_launch_play_preview_4d_uses_draft_profile(self) -> None:
@@ -746,7 +796,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             hint_font=pygame.font.Font(None, 22),
         )
         with (
-            patch("tet4d.ui.pygame.frontend_nd_setup.build_config") as build_cfg,
+            patch.object(topology_lab_menu, "build_explorer_playground_config") as build_cfg,
             patch("tet4d.ui.pygame.front4d_game.run_game_loop", return_value=True) as run_loop,
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.capture_windowed_display_settings", return_value=None),
             patch("tet4d.ui.pygame.runtime_ui.app_runtime.open_display", return_value=screen),
@@ -758,8 +808,29 @@ class TestTopologyLabMenu(unittest.TestCase):
                 fonts_2d=fonts,
                 display_settings=None,
             )
-        self.assertIs(build_cfg.call_args.kwargs["explorer_topology_profile_override"], profile)
+        self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
+        self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
         run_loop.assert_called_once()
+
+    def test_run_explorer_playground_uses_explicit_launch_contract(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=3,
+            explorer_profile=ExplorerTopologyProfile(dimension=3, gluings=()),
+            entry_source="explorer",
+        )
+        with patch.object(
+            topology_lab_menu,
+            "run_topology_lab_menu",
+            return_value=(True, "ok"),
+        ) as run_lab:
+            topology_lab_menu.run_explorer_playground(
+                object(),
+                object(),
+                launch=launch,
+            )
+        self.assertIs(run_lab.call_args.kwargs["launch"], launch)
+        self.assertEqual(run_lab.call_args.kwargs["start_dimension"], 3)
+
 
 
 if __name__ == "__main__":

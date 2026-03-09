@@ -159,6 +159,7 @@ def menu_fields_for_settings(
         piece_set_max=piece_set_max,
         topology_profile_max=topology_profile_max,
         topology_advanced=bool(settings.topology_advanced),
+        exploration_mode=bool(settings.exploration_mode),
     )
 
 
@@ -301,7 +302,7 @@ def _run_dry_run(state: MenuState, dimension: int) -> None:
 
 
 def _export_topology_profile(state: MenuState, dimension: int) -> None:
-    if bool(state.settings.topology_advanced) and bool(state.settings.exploration_mode):
+    if bool(state.settings.exploration_mode):
         export_stored_explorer_topology_preview(dimension)
         return
     if bool(state.settings.topology_advanced) and dimension >= 3:
@@ -361,7 +362,7 @@ def build_config(
                     dimension=dimension,
                     gravity_axis=1,
                     topology_mode=topology_mode,
-                    topology_advanced=bool(settings.topology_advanced),
+                    topology_advanced=True,
                     profile_index=settings.topology_profile_index,
                     explorer_topology_profile_override=explorer_topology_profile_override,
                 )

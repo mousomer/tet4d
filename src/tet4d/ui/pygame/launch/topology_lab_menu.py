@@ -76,6 +76,7 @@ from tet4d.ui.pygame.topology_lab import (
     TOOL_SANDBOX,
     TopologyLabHitTarget,
     TopologyLabState,
+    apply_boundary_edit_pick,
     apply_boundary_pick,
     apply_glue_pick,
     boundaries_for_dimension,
@@ -107,6 +108,11 @@ from tet4d.ui.pygame.topology_lab import (
     set_active_tool,
     transform_preview_label,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
+)
+from tet4d.ui.pygame.topology_lab.app import (
+    ExplorerPlaygroundLaunch,
+    build_explorer_playground_config,
+    build_explorer_playground_launch,
 )
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -1212,19 +1218,16 @@ def _launch_play_preview(
         capture_windowed_display_settings,
         open_display,
     )
-    from tet4d.ui.pygame import front2d_game, front2d_setup, front3d_game, front4d_game, frontend_nd_setup
+    from tet4d.ui.pygame import front2d_game, front3d_game, front4d_game
     from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 
     play_fonts_2d = fonts_2d if fonts_2d is not None else init_fonts_for_profile("2d")
     try:
+        cfg = build_explorer_playground_config(
+            dimension=state.dimension,
+            explorer_profile=state.explorer_profile,
+        )
         if state.dimension == 2:
-            settings = front2d_setup.GameSettings()
-            settings.exploration_mode = 1
-            settings.topology_advanced = 1
-            cfg = front2d_setup.config_from_settings(
-                settings,
-                explorer_topology_profile_override=state.explorer_profile,
-            )
             front2d_game.run_game_loop(
                 screen,
                 cfg,
@@ -1232,14 +1235,6 @@ def _launch_play_preview(
                 display_settings,
             )
         else:
-            settings = frontend_nd_setup.GameSettingsND()
-            settings.exploration_mode = 1
-            settings.topology_advanced = 1
-            cfg = frontend_nd_setup.build_config(
-                settings,
-                state.dimension,
-                explorer_topology_profile_override=state.explorer_profile,
-            )
             if state.dimension == 3:
                 front3d_game.run_game_loop(screen, cfg, fonts_nd)
             else:
@@ -1719,6 +1714,38 @@ def _handle_mouse_action_target(
     return False
 
 
+def _handle_mouse_boundary_target(
+    state: _TopologyLabState, target: TopologyLabHitTarget, button: int
+) -> bool:
+    boundary_index = int(target.value)
+    if _uses_general_explorer_editor(state) and state.explorer_draft is not None:
+        active_row = _rows_for_state(state)[_selectable_row_indexes(state)[state.selected]].key
+        if active_row in {"explorer_source", "explorer_target"}:
+            state.explorer_draft = ExplorerGlueDraft(
+                slot_index=state.explorer_draft.slot_index,
+                source_index=boundary_index
+                if active_row == "explorer_source"
+                else state.explorer_draft.source_index,
+                target_index=boundary_index
+                if active_row == "explorer_target"
+                else state.explorer_draft.target_index,
+                permutation_index=state.explorer_draft.permutation_index,
+                signs=state.explorer_draft.signs,
+            )
+            _normalize_explorer_draft(state)
+            play_sfx("menu_move")
+            return True
+    if button == 3 and state.active_tool in {TOOL_NAVIGATE, TOOL_INSPECT, TOOL_PROBE, TOOL_PLAY}:
+        message = apply_boundary_edit_pick(state, boundary_index)
+    else:
+        message = apply_boundary_pick(state, boundary_index)
+    _normalize_explorer_draft(state)
+    if message:
+        _set_status(state, message)
+    play_sfx("menu_move")
+    return True
+
+
 def _dispatch_mouse_target(
     state: _TopologyLabState, target: TopologyLabHitTarget, button: int
 ) -> bool:
@@ -1734,25 +1761,7 @@ def _dispatch_mouse_target(
         play_sfx("menu_move")
         return True
     if target.kind == "boundary_pick":
-        if _uses_general_explorer_editor(state) and state.explorer_draft is not None:
-            active_row = _rows_for_state(state)[_selectable_row_indexes(state)[state.selected]].key
-            if active_row in {"explorer_source", "explorer_target"}:
-                state.explorer_draft = ExplorerGlueDraft(
-                    slot_index=state.explorer_draft.slot_index,
-                    source_index=int(target.value) if active_row == "explorer_source" else state.explorer_draft.source_index,
-                    target_index=int(target.value) if active_row == "explorer_target" else state.explorer_draft.target_index,
-                    permutation_index=state.explorer_draft.permutation_index,
-                    signs=state.explorer_draft.signs,
-                )
-                _normalize_explorer_draft(state)
-                play_sfx("menu_move")
-                return True
-        message = apply_boundary_pick(state, int(target.value))
-        _normalize_explorer_draft(state)
-        if message:
-            _set_status(state, message)
-        play_sfx("menu_move")
-        return True
+        return _handle_mouse_boundary_target(state, target, button)
     if target.kind in {"preset_step", "tool_mode", "glue_slot", "perm_select", "sign_toggle"}:
         return _handle_mouse_editor_target(state, target)
     if target.kind in {"action", "probe_step"}:
@@ -1981,6 +1990,7 @@ def run_topology_lab_menu(
     screen: pygame.Surface,
     fonts,
     *,
+    launch: ExplorerPlaygroundLaunch | None = None,
     start_dimension: int,
     display_settings=None,
     fonts_2d=None,
@@ -1988,11 +1998,26 @@ def run_topology_lab_menu(
     initial_explorer_profile: ExplorerTopologyProfile | None = None,
     initial_tool: str | None = None,
 ) -> tuple[bool, str]:
-    state = _initial_topology_lab_state(
-        start_dimension,
+    resolved_launch = launch or build_explorer_playground_launch(
+        dimension=start_dimension,
+        explorer_profile=initial_explorer_profile,
+        display_settings=display_settings,
+        fonts_2d=fonts_2d,
         gameplay_mode=gameplay_mode,
-        initial_explorer_profile=initial_explorer_profile,
+        entry_source="lab",
         initial_tool=initial_tool,
+    )
+    display_settings = (
+        display_settings
+        if display_settings is not None
+        else resolved_launch.display_settings
+    )
+    fonts_2d = fonts_2d if fonts_2d is not None else resolved_launch.fonts_2d
+    state = _initial_topology_lab_state(
+        resolved_launch.dimension,
+        gameplay_mode=resolved_launch.gameplay_mode,
+        initial_explorer_profile=resolved_launch.explorer_profile,
+        initial_tool=resolved_launch.initial_tool,
     )
     clock = pygame.time.Clock()
     while state.running:
@@ -2016,18 +2041,30 @@ def run_explorer_playground(
     screen: pygame.Surface,
     fonts,
     *,
-    dimension: int,
-    explorer_profile: ExplorerTopologyProfile | None,
+    launch: ExplorerPlaygroundLaunch | None = None,
+    dimension: int | None = None,
+    explorer_profile: ExplorerTopologyProfile | None = None,
     display_settings=None,
     fonts_2d=None,
 ) -> tuple[bool, str]:
+    resolved_launch = launch
+    if resolved_launch is None:
+        if dimension is None:
+            raise ValueError("dimension is required when launch is not provided")
+        resolved_launch = build_explorer_playground_launch(
+            dimension=dimension,
+            explorer_profile=explorer_profile,
+            display_settings=display_settings,
+            fonts_2d=fonts_2d,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            entry_source="explorer",
+            initial_tool=TOOL_PROBE,
+        )
     return run_topology_lab_menu(
         screen,
         fonts,
-        start_dimension=dimension,
-        display_settings=display_settings,
-        fonts_2d=fonts_2d,
-        gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-        initial_explorer_profile=explorer_profile,
-        initial_tool=TOOL_PROBE,
+        launch=resolved_launch,
+        start_dimension=resolved_launch.dimension,
+        display_settings=resolved_launch.display_settings,
+        fonts_2d=resolved_launch.fonts_2d,
     )

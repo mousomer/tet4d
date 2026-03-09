@@ -141,6 +141,26 @@ def apply_boundary_pick(state: TopologyLabState, boundary_index: int) -> str | N
     return None
 
 
+def apply_boundary_edit_pick(state: TopologyLabState, boundary_index: int) -> str | None:
+    if not uses_general_explorer_editor(state) or state.explorer_draft is None:
+        return None
+    state.hovered_boundary_index = boundary_index
+    if state.explorer_profile is not None:
+        for index, glue in enumerate(state.explorer_profile.gluings):
+            source_index, target_index = _glue_boundary_indexes(glue)
+            if boundary_index in {source_index, target_index}:
+                set_active_tool(state, TOOL_EDIT)
+                return _select_existing_glue(
+                    state,
+                    glue_index=index,
+                    glue=glue,
+                    source_index=source_index,
+                    target_index=target_index,
+                )
+    set_active_tool(state, TOOL_CREATE)
+    return _handle_create_pick(state, boundary_index)
+
+
 def apply_glue_pick(state: TopologyLabState, glue_id: str) -> str | None:
     if not uses_general_explorer_editor(state) or state.explorer_profile is None or state.explorer_draft is None:
         return None
@@ -163,5 +183,11 @@ def apply_glue_pick(state: TopologyLabState, glue_id: str) -> str | None:
     return None
 
 
-__all__ = ["apply_boundary_pick", "apply_glue_pick", "pick_target", "update_hover_target"]
+__all__ = [
+    "apply_boundary_edit_pick",
+    "apply_boundary_pick",
+    "apply_glue_pick",
+    "pick_target",
+    "update_hover_target",
+]
 

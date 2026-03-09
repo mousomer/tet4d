@@ -245,12 +245,16 @@ def setup_fields_for_settings(
     piece_set_max: int = 0,
     topology_profile_max: int = 0,
     topology_advanced: bool = False,
+    exploration_mode: bool = False,
 ) -> list[FieldSpec]:
     fields = setup_fields_for_dimension(
         dimension,
         piece_set_max=piece_set_max,
         topology_profile_max=topology_profile_max,
     )
+    if bool(exploration_mode):
+        hidden = {"topology_mode", "topology_advanced", "topology_profile_index"}
+        return [field for field in fields if field[1] not in hidden]
     if dimension >= 3:
         fields = [field for field in fields if field[1] != "topology_profile_index"]
     if bool(topology_advanced):
