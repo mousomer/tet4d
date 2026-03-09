@@ -99,7 +99,10 @@ def ensure_piece_sandbox(state: TopologyLabState) -> None:
     shapes = sandbox_shapes_for_state(state)
     sandbox.piece_index = max(0, min(sandbox.piece_index, len(shapes) - 1))
     dims = playground_dims_for_state(state)
-    blocks = shapes[sandbox.piece_index].blocks
+    base_blocks = shapes[sandbox.piece_index].blocks
+    if sandbox.local_blocks is None:
+        sandbox.local_blocks = base_blocks
+    blocks = tuple(tuple(int(v) for v in block) for block in sandbox.local_blocks)
     fitted_origin = _fit_origin_for_blocks(blocks, dims)
     if sandbox.origin is None or not coord_in_bounds(sandbox.origin, dims):
         sandbox.origin = fitted_origin
@@ -119,16 +122,9 @@ def sandbox_shape(state: TopologyLabState) -> SandboxShape:
 
 
 def _rotated_blocks(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
-    shape = sandbox_shape(state)
-    assert state.sandbox is not None
-    if state.dimension == 2:
-        return tuple(tuple(int(v) for v in block) for block in rotate_blocks_2d(shape.blocks, state.sandbox.rotation_steps))
-    assert state.sandbox.rotation_plane is not None
-    axis_a, axis_b = state.sandbox.rotation_plane
-    return tuple(
-        tuple(int(v) for v in block)
-        for block in rotate_blocks_nd(shape.blocks, axis_a=axis_a, axis_b=axis_b, steps_cw=state.sandbox.rotation_steps)
-    )
+    ensure_piece_sandbox(state)
+    assert state.sandbox is not None and state.sandbox.local_blocks is not None
+    return tuple(tuple(int(v) for v in block) for block in state.sandbox.local_blocks)
 
 
 def sandbox_cells(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
@@ -139,6 +135,65 @@ def sandbox_cells(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
         tuple(state.sandbox.origin[index] + block[index] for index in range(state.dimension))
         for block in blocks
     )
+
+
+def _rotate_blocks_for_action(
+    state: TopologyLabState,
+    blocks: tuple[tuple[int, ...], ...],
+    *,
+    action: str,
+) -> tuple[tuple[int, ...], ...] | None:
+    if action == "rotate_xy_pos":
+        return tuple(tuple(int(v) for v in block) for block in rotate_blocks_2d(blocks, 1))
+    if action == "rotate_xy_neg":
+        return tuple(tuple(int(v) for v in block) for block in rotate_blocks_2d(blocks, -1))
+    plane_map = {
+        "rotate_xy_pos": (0, 1, 1),
+        "rotate_xy_neg": (0, 1, -1),
+        "rotate_xz_pos": (0, 2, 1),
+        "rotate_xz_neg": (0, 2, -1),
+        "rotate_yz_pos": (1, 2, 1),
+        "rotate_yz_neg": (1, 2, -1),
+        "rotate_xw_pos": (0, 3, 1),
+        "rotate_xw_neg": (0, 3, -1),
+        "rotate_yw_pos": (1, 3, 1),
+        "rotate_yw_neg": (1, 3, -1),
+        "rotate_zw_pos": (2, 3, 1),
+        "rotate_zw_neg": (2, 3, -1),
+    }
+    spec = plane_map.get(action)
+    if spec is None:
+        return None
+    axis_a, axis_b, steps = spec
+    if state.dimension <= max(axis_a, axis_b):
+        return None
+    return tuple(
+        tuple(int(v) for v in block)
+        for block in rotate_blocks_nd(blocks, axis_a=axis_a, axis_b=axis_b, steps_cw=steps)
+    )
+
+
+def rotate_sandbox_piece_action(
+    state: TopologyLabState,
+    profile: ExplorerTopologyProfile,
+    action: str,
+) -> tuple[bool, str]:
+    ensure_piece_sandbox(state)
+    assert state.sandbox is not None and state.sandbox.local_blocks is not None
+    rotated = _rotate_blocks_for_action(state, state.sandbox.local_blocks, action=action)
+    if rotated is None:
+        return False, f"unsupported sandbox rotation {action}"
+    previous = state.sandbox.local_blocks
+    state.sandbox.local_blocks = rotated
+    valid, message = sandbox_validity(state, profile)
+    if valid:
+        state.sandbox.invalid_message = ""
+        state.sandbox.trace.append(action)
+        state.sandbox.trace = state.sandbox.trace[-8:]
+        return True, "sandbox rotated"
+    state.sandbox.local_blocks = previous
+    state.sandbox.invalid_message = message
+    return False, message
 
 
 def sandbox_validity(state: TopologyLabState, profile: ExplorerTopologyProfile) -> tuple[bool, str]:
@@ -185,18 +240,7 @@ def move_sandbox_piece(state: TopologyLabState, profile: ExplorerTopologyProfile
 
 
 def rotate_sandbox_piece(state: TopologyLabState, profile: ExplorerTopologyProfile) -> tuple[bool, str]:
-    ensure_piece_sandbox(state)
-    assert state.sandbox is not None
-    state.sandbox.rotation_steps = (state.sandbox.rotation_steps + 1) % 4
-    valid, message = sandbox_validity(state, profile)
-    if valid:
-        state.sandbox.invalid_message = ""
-        state.sandbox.trace.append("rotate cw")
-        state.sandbox.trace = state.sandbox.trace[-8:]
-        return True, "sandbox rotated"
-    state.sandbox.rotation_steps = (state.sandbox.rotation_steps - 1) % 4
-    state.sandbox.invalid_message = message
-    return False, message
+    return rotate_sandbox_piece_action(state, profile, "rotate_xy_pos")
 
 
 def cycle_sandbox_piece(state: TopologyLabState, step: int) -> None:
@@ -204,7 +248,7 @@ def cycle_sandbox_piece(state: TopologyLabState, step: int) -> None:
     assert state.sandbox is not None
     shapes = sandbox_shapes_for_state(state)
     state.sandbox.piece_index = (state.sandbox.piece_index + step) % len(shapes)
-    state.sandbox.rotation_steps = 0
+    state.sandbox.local_blocks = sandbox_shape(state).blocks
     state.sandbox.trace = []
     state.sandbox.invalid_message = ""
     dims = playground_dims_for_state(state)
@@ -215,7 +259,7 @@ def reset_sandbox_piece(state: TopologyLabState) -> None:
     ensure_piece_sandbox(state)
     assert state.sandbox is not None
     dims = playground_dims_for_state(state)
-    state.sandbox.rotation_steps = 0
+    state.sandbox.local_blocks = sandbox_shape(state).blocks
     state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
     state.sandbox.trace = []
     state.sandbox.invalid_message = ""
@@ -245,6 +289,7 @@ __all__ = [
     "move_sandbox_piece",
     "reset_sandbox_piece",
     "rotate_sandbox_piece",
+    "rotate_sandbox_piece_action",
     "sandbox_cells",
     "sandbox_lines",
     "sandbox_shape",

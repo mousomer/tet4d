@@ -8,6 +8,49 @@ from tet4d.engine.runtime import topology_explorer_runtime
 
 
 class TestTopologyExplorerRuntime(unittest.TestCase):
+    def test_resolve_direct_explorer_launch_profile_prefers_override(self) -> None:
+        override = SimpleNamespace(dimension=3, gluings=())
+        with mock.patch.object(
+            topology_explorer_runtime,
+            "load_runtime_explorer_topology_profile",
+        ) as load_profile:
+            resolved_mode, edge_rules, profile = (
+                topology_explorer_runtime.resolve_direct_explorer_launch_profile(
+                    dimension=3,
+                    gravity_axis=1,
+                    topology_mode="wrap_all",
+                    explorer_topology_profile_override=override,
+                )
+            )
+
+        self.assertEqual(resolved_mode, "wrap_all")
+        self.assertEqual(
+            edge_rules,
+            (("wrap", "wrap"), ("bounded", "bounded"), ("wrap", "wrap")),
+        )
+        self.assertIs(profile, override)
+        load_profile.assert_not_called()
+
+    def test_resolve_direct_explorer_launch_profile_uses_runtime_store(self) -> None:
+        stored = SimpleNamespace(dimension=4, gluings=())
+        with mock.patch.object(
+            topology_explorer_runtime,
+            "load_runtime_explorer_topology_profile",
+            return_value=stored,
+        ) as load_profile:
+            resolved_mode, edge_rules, profile = (
+                topology_explorer_runtime.resolve_direct_explorer_launch_profile(
+                    dimension=4,
+                    gravity_axis=1,
+                    topology_mode="bounded",
+                )
+            )
+
+        self.assertEqual(resolved_mode, "bounded")
+        self.assertEqual(edge_rules, (("bounded", "bounded"),) * 4)
+        self.assertIs(profile, stored)
+        load_profile.assert_called_once_with(4)
+
     def test_resolve_explorer_topology_runtime_profile_prefers_override(self) -> None:
         override = SimpleNamespace(dimension=3, gluings=())
         with mock.patch.object(

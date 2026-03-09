@@ -13,7 +13,7 @@ from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from .scene_state import (
     ExplorerPlaygroundSettings,
     TOOL_CREATE,
-    TOOL_PROBE,
+    TOOL_SANDBOX,
 )
 
 EntrySource = Literal["explorer", "lab"]
@@ -82,7 +82,7 @@ def build_explorer_playground_launch(
     )
     tool = initial_tool
     if tool is None:
-        tool = TOOL_PROBE if entry_source == "explorer" else TOOL_CREATE
+        tool = TOOL_SANDBOX if entry_source == "explorer" else TOOL_CREATE
     snapshot = settings_snapshot or build_explorer_playground_settings(
         dimension=int(dimension),
         source_settings=source_settings,

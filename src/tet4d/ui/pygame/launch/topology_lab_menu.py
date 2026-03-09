@@ -110,6 +110,7 @@ from tet4d.ui.pygame.topology_lab import (
     update_hover_target,
     reset_sandbox_piece,
     rotate_sandbox_piece,
+    rotate_sandbox_piece_action,
     sandbox_cells,
     sandbox_lines,
     sandbox_validity,
@@ -202,7 +203,7 @@ _TopologyLabState = TopologyLabState
 
 _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
     GAMEPLAY_MODE_NORMAL: TOOL_CREATE,
-    GAMEPLAY_MODE_EXPLORER: TOOL_PROBE,
+    GAMEPLAY_MODE_EXPLORER: TOOL_SANDBOX,
 }
 
 
@@ -245,6 +246,31 @@ def _ensure_play_settings(state: _TopologyLabState) -> ExplorerPlaygroundSetting
             dimension=state.dimension
         )
     return state.play_settings
+
+
+def _bound_sandbox_rotation_action(state: _TopologyLabState, key: int) -> str | None:
+    rotation_actions = ["rotate_xy_pos", "rotate_xy_neg"]
+    if state.dimension >= 3:
+        rotation_actions.extend((
+            "rotate_xz_pos",
+            "rotate_xz_neg",
+            "rotate_yz_pos",
+            "rotate_yz_neg",
+        ))
+    if state.dimension >= 4:
+        rotation_actions.extend((
+            "rotate_xw_pos",
+            "rotate_xw_neg",
+            "rotate_yw_pos",
+            "rotate_yw_neg",
+            "rotate_zw_pos",
+            "rotate_zw_neg",
+        ))
+    return match_bound_action(
+        key,
+        _gameplay_bindings_for_dimension(state.dimension),
+        tuple(rotation_actions),
+    )
 
 
 def _bound_explorer_step_label(state: _TopologyLabState, key: int) -> str | None:
@@ -1338,6 +1364,12 @@ def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
     if step_label is not None:
         _apply_sandbox_shortcut_step(state, step_label)
         return True
+    rotation_action = _bound_sandbox_rotation_action(state, key)
+    if rotation_action is not None:
+        assert state.explorer_profile is not None
+        ok, message = rotate_sandbox_piece_action(state, state.explorer_profile, rotation_action)
+        _set_status(state, message, is_error=not ok)
+        return True
     if key == pygame.K_r:
         assert state.explorer_profile is not None
         ok, message = rotate_sandbox_piece(state, state.explorer_profile)
@@ -1954,7 +1986,7 @@ def _handle_mouse_boundary_target(
             _normalize_explorer_draft(state)
             play_sfx("menu_move")
             return True
-    if button == 3 and state.active_tool in {TOOL_NAVIGATE, TOOL_INSPECT, TOOL_PROBE, TOOL_PLAY}:
+    if button == 3 and state.active_tool in {TOOL_NAVIGATE, TOOL_INSPECT, TOOL_PROBE, TOOL_PLAY, TOOL_SANDBOX}:
         message = apply_boundary_edit_pick(state, boundary_index)
     else:
         message = apply_boundary_pick(state, boundary_index)
@@ -2035,6 +2067,7 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
             "Mouse: left-click boundary/seam to select   right-click boundary to create or edit seam",
             "Click +/- on left rows to change board, piece set, and speed",
             "Board size / piece set rows change the current draft play session",
+            "Sandbox uses the normal move and rotate keys for this dimension",
             "Play uses the current draft without saving",
         )
     )
@@ -2183,10 +2216,10 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
 def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:
     nav_key = normalize_menu_navigation_key(key)
     selectable = _selectable_row_indexes(state)
+    if _handle_shortcut_key(state, key, mod=mod):
+        return
     if key == pygame.K_q or nav_key == pygame.K_ESCAPE:
         state.running = False
-        return
-    if _handle_shortcut_key(state, key, mod=mod):
         return
     if _handle_navigation_key(state, nav_key, selectable):
         return

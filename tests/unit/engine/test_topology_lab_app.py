@@ -13,11 +13,11 @@ from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
 )
-from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_PROBE
+from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_SANDBOX
 
 
 class TestTopologyLabApp(unittest.TestCase):
-    def test_build_explorer_launch_defaults_to_probe_for_explorer_entry(self) -> None:
+    def test_build_explorer_launch_defaults_to_sandbox_for_explorer_entry(self) -> None:
         profile = ExplorerTopologyProfile(dimension=3, gluings=())
         launch = build_explorer_playground_launch(
             dimension=3,
@@ -25,7 +25,7 @@ class TestTopologyLabApp(unittest.TestCase):
         )
         self.assertEqual(launch.dimension, 3)
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
-        self.assertEqual(launch.initial_tool, TOOL_PROBE)
+        self.assertEqual(launch.initial_tool, TOOL_SANDBOX)
         self.assertEqual(launch.entry_source, "explorer")
         self.assertIs(launch.explorer_profile, profile)
 

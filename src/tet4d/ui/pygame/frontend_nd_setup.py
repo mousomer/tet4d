@@ -45,7 +45,7 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.runtime.topology_explorer_runtime import (
     export_stored_explorer_topology_preview,
-    resolve_explorer_topology_runtime_profile,
+    resolve_direct_explorer_launch_profile,
 )
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
@@ -358,12 +358,10 @@ def build_config(
     else:
         if exploration_enabled:
             resolved_mode, topology_edge_rules, explorer_topology_profile = (
-                resolve_explorer_topology_runtime_profile(
+                resolve_direct_explorer_launch_profile(
                     dimension=dimension,
                     gravity_axis=1,
                     topology_mode=topology_mode,
-                    topology_advanced=True,
-                    profile_index=settings.topology_profile_index,
                     explorer_topology_profile_override=explorer_topology_profile_override,
                 )
             )

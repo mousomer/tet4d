@@ -252,6 +252,30 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_menu._dispatch_key(state, move_w_pos)
         apply_step.assert_called_once_with(state, "w+")
 
+    def test_sandbox_tool_routes_2d_rotation_binding(self) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        with patch.object(topology_lab_menu, "rotate_sandbox_piece_action", return_value=(True, "sandbox rotated")) as rotate_action:
+            topology_lab_menu._dispatch_key(state, pygame.K_q)
+        rotate_action.assert_called_once_with(state, state.explorer_profile, "rotate_xy_pos")
+
+    def test_sandbox_tool_routes_3d_rotation_binding(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        rotate_xz = KEYS_3D["rotate_xz_pos"][0]
+        with patch.object(topology_lab_menu, "rotate_sandbox_piece_action", return_value=(True, "sandbox rotated")) as rotate_action:
+            topology_lab_menu._dispatch_key(state, rotate_xz)
+        rotate_action.assert_called_once_with(state, state.explorer_profile, "rotate_xz_pos")
+
+    def test_sandbox_right_click_boundary_starts_edit_pick(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        target = topology_lab_menu.TopologyLabHitTarget("boundary_pick", 2, pygame.Rect(0, 0, 10, 10))
+        with patch.object(topology_lab_menu, "apply_boundary_edit_pick", return_value="editing") as edit_pick:
+            handled = topology_lab_menu._dispatch_mouse_target(state, target, 3)
+        self.assertTrue(handled)
+        edit_pick.assert_called_once_with(state, 2)
+
     def test_play_tool_routes_bound_translation_to_probe_step(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
@@ -790,6 +814,22 @@ class TestTopologyLabMenu(unittest.TestCase):
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
         self.assertEqual(state.active_tool, "probe")
+
+    def test_pick_target_prefers_glue_hit_over_boundary_hit(self) -> None:
+        boundary = topology_lab_menu.TopologyLabHitTarget(
+            "boundary_pick",
+            0,
+            pygame.Rect(0, 0, 40, 40),
+        )
+        glue = topology_lab_menu.TopologyLabHitTarget(
+            "glue_pick",
+            "glue_001",
+            pygame.Rect(0, 0, 40, 40),
+        )
+        picked = topology_lab_menu.pick_target([boundary, glue], (10, 10))
+        self.assertIsNotNone(picked)
+        assert picked is not None
+        self.assertEqual(picked.kind, "glue_pick")
 
     def test_mouse_glue_pick_switches_to_editing_selected_glue(self) -> None:
         state = self._explorer_state(3)

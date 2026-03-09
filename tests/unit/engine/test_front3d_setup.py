@@ -209,7 +209,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
             ) as load_profile,
             mock.patch.object(
                 frontend_nd_setup,
-                "resolve_explorer_topology_runtime_profile",
+                "resolve_direct_explorer_launch_profile",
                 return_value=("bounded", (("bounded", "bounded"),) * 4, explorer_profile),
             ) as resolve_explorer,
         ):
@@ -224,7 +224,8 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
         self.assertEqual(load_profile.call_args_list[0].args, ("normal", 4))
         self.assertEqual(resolve_explorer.call_args_list[0].kwargs["dimension"], 4)
-        self.assertTrue(resolve_explorer.call_args_list[0].kwargs["topology_advanced"])
+        self.assertNotIn("topology_advanced", resolve_explorer.call_args_list[0].kwargs)
+        self.assertNotIn("profile_index", resolve_explorer.call_args_list[0].kwargs)
         self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
         self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
 

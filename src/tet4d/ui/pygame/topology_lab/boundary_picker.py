@@ -19,7 +19,19 @@ def pick_target(
     targets: list[TopologyLabHitTarget] | None,
     pos: tuple[int, int],
 ) -> TopologyLabHitTarget | None:
-    for target in reversed(targets or []):
+    ordered = sorted(
+        targets or [],
+        key=lambda target: (
+            0
+            if target.kind == "tool_mode"
+            else 1
+            if target.kind == "action"
+            else 2
+            if target.kind == "glue_pick"
+            else 3
+        ),
+    )
+    for target in ordered:
         if target.rect.collidepoint(pos):
             return target
     return None

@@ -53,8 +53,7 @@ class PieceSandboxState:
     enabled: bool = False
     piece_index: int = 0
     origin: tuple[int, ...] | None = None
-    rotation_steps: int = 0
-    rotation_plane: tuple[int, int] | None = None
+    local_blocks: tuple[tuple[int, ...], ...] | None = None
     trace: list[str] | None = None
     invalid_message: str = ""
     show_trace: bool = True
@@ -145,11 +144,6 @@ def ensure_sandbox_state(state: TopologyLabState) -> None:
     if state.sandbox.origin is None or len(state.sandbox.origin) != state.dimension:
         dims = playground_dims_for_state(state)
         state.sandbox.origin = tuple(max(0, size // 2) for size in dims)
-    if state.sandbox.rotation_plane is None:
-        if state.dimension == 2:
-            state.sandbox.rotation_plane = (0, 1)
-        else:
-            state.sandbox.rotation_plane = (0, min(2, state.dimension - 1))
 
 
 def set_active_tool(state: TopologyLabState, tool: str) -> None:
