@@ -1,20 +1,29 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-07  
+Updated: 2026-03-09  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-08): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics.
+Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics + Phase 7 scene-first playground integration + Phase 8 runtime-owned bridge shrink.
 - Routed live explorer gameplay/runtime through the general gluing engine for ND and 2D via `src/tet4d/engine/gameplay/explorer_runtime_nd.py`, `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, `GameConfigND.explorer_topology_profile`, and `GameConfig.explorer_topology_profile`.
 - Updated ND and 2D setup/export flows so stored advanced explorer profiles, legacy-edge-rule bridging for non-advanced explorer setup, and preview export all use the same gluing-backed model.
 - Added focused regression coverage for mode-aware config loading, live explorer wrap movement, and explorer move prediction.
 - Added engine-owned explorer diagnostics in preview payloads and surfaced them in the lab sidebar for orientation-reversing, cross-axis, and disconnected movement-graph warnings.
 - Added engine-owned tangent-basis arrow previews to explorer preview payloads so the lab now shows actual signed basis mappings for each gluing instead of only counts and warnings.
+- Replaced the explorer lab's text-only workspace with a scene-first graphical playground under `src/tet4d/ui/pygame/topology_lab/`, so boundary selection, seam editing, basis-arrow inspection, and probe traversal now happen inside one explorer shell with side panels acting as supporting editors.
+- Completed the scene-first playground owners (`scene_state.py`, `explorer_tools.py`, `boundary_picker.py`, `scene2d.py`, `piece_sandbox.py`) and kept `topology_lab_menu.py` as the orchestration shell over those owners.
+- Added clickable seam arrows, scene-visible probe path state with reset, explorer-only sandbox controls, and direct play-from-draft launch in the same explorer shell for 2D/3D/4D.
+- Unified live Explorer launch with the same scene-first playground shell, so entering Explorer 2D/3D/4D now opens the graphical topology playground directly instead of a separate detached explorer frontend.
+- Added focused regression coverage for sandbox transport/limitations, probe reset/path state, and 2D/3D/4D play-preview routing from the in-memory draft topology.
+- Moved remaining explorer setup/export bridge usage behind `src/tet4d/engine/runtime/topology_explorer_runtime.py`, so UI setup owners and Topology Lab export no longer import the legacy edge-rule bridge directly.
 - Extended the direct Explorer Topology Lab editor to 2D and 4D, so all explorer dimensions now edit engine-owned gluing profiles instead of legacy edge-rule rows.
 - Added engine-owned 2D/4D explorer presets plus a live sidebar preview for boundary ownership, active gluings, and movement-graph diagnostics in all direct editor dimensions.
 - Added unsafe `Projective` / `Sphere` preset families for 2D/3D/4D at the engine preset layer and exposed them in the lab with explicit unsafe labeling.
 - Added `scripts/verify_focus.sh` as the documented staged local validation helper; full `verify.sh` remains the required final gate.
 - Relaxed the newer thin-wrapper drift budgets for `cli/front.py`, `src/tet4d/engine/api.py`, and `src/tet4d/ui/pygame/front2d_game.py`, and documented a contributor rule preferring medium-sized localized patches over brittle ultra-narrow patch fragmentation.
+- Clarified contributor edit-method selection so localized code edits use `apply_patch`, while broad drifting doc rewrites use one deterministic scripted rewrite instead of repeated failing patch retries.
+- Added stricter write-safety policy for source files: no multiline PowerShell `-replace`, no BOM-producing source writes, mandatory touched-file hygiene after non-patch rewrites, and explicit prohibition on running `verify.sh` / `ci_check.sh` in parallel.
+- Tightened edit-method escalation: dirty/generated maintenance files now skip patch-first behavior, and one rejected `apply_patch` attempt per file is the maximum before switching to a deterministic rewrite path.
 
 ## 1. Priority Verification Rules
 
@@ -1642,4 +1651,5 @@ Current sub-batch (2026-03-07): Windows packaging host-tooling guard.
 5. `docs/ARCHITECTURE_CONTRACT.md`
 6. `CURRENT_STATE.md`
 7. `docs/history/DONE_SUMMARIES.md`
+
 

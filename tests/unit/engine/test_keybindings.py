@@ -256,6 +256,16 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_n,))
         self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_SLASH,))
 
+    def test_small_profile_2d_explorer_defaults_include_arrow_aliases(self) -> None:
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_2D["move_up"],
+            (pygame.K_UP, pygame.K_PAGEUP),
+        )
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_2D["move_down"],
+            (pygame.K_DOWN, pygame.K_PAGEDOWN),
+        )
+
     def test_macbook_profile_uses_no_function_keys_for_4d_view(self) -> None:
         ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_MACBOOK)
         self.assertTrue(ok, msg)
@@ -320,6 +330,8 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertTrue(ok, msg)
         self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_KP_DIVIDE,))
         self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_KP_MULTIPLY,))
+        self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_up"], (pygame.K_UP, pygame.K_KP1))
+        self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_down"], (pygame.K_DOWN, pygame.K_KP3))
         self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_up"], (pygame.K_PAGEUP,))
         self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_down"], (pygame.K_PAGEDOWN,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_neg"], (pygame.K_1,))

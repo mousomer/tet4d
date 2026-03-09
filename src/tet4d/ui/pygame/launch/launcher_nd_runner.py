@@ -25,6 +25,7 @@ def run_nd_mode_launcher(
     build_config: Callable[[SettingsT], GameConfigND],
     suggested_window_size: Callable[[GameConfigND], tuple[int, int]],
     run_game: Callable[[pygame.Surface, GameConfigND, object, SettingsT], bool],
+    run_explorer: Callable[[pygame.Surface, GameConfigND, object, SettingsT, DisplaySettings], bool] | None = None,
 ) -> None:
     running = True
     while running:
@@ -37,6 +38,24 @@ def run_nd_mode_launcher(
             break
 
         cfg = build_config(settings)
+        if bool(getattr(cfg, "exploration_mode", False)) and run_explorer is not None:
+            explorer_screen = open_display(
+                display_settings,
+                caption=f"Explorer {cfg.ndim}D Playground",
+            )
+            back_to_menu = run_explorer(
+                explorer_screen,
+                cfg,
+                fonts,
+                settings,
+                display_settings,
+            )
+            display_settings = capture_windowed_display_settings(display_settings)
+            if not back_to_menu:
+                running = False
+                continue
+            continue
+
         win_w, win_h = suggested_window_size(cfg)
         preferred_size = (
             max(display_settings.windowed_size[0], win_w),

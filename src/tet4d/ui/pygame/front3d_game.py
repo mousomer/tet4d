@@ -57,6 +57,7 @@ from tet4d.ui.pygame.input.camera_mouse import (
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action, match_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
 from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
+from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
 from tet4d.ui.pygame.launch.launcher_play import (
     game_caption_for_dimension,
     setup_caption_for_dimension,
@@ -739,6 +740,15 @@ def run() -> None:
             bot_algorithm_index=settings.bot_algorithm_index,
             bot_profile_index=settings.bot_profile_index,
             bot_budget_ms=settings.bot_budget_ms,
+        ),
+        run_explorer=lambda explorer_screen, cfg, active_fonts, _settings, active_display_settings: bool(
+            run_explorer_playground(
+                explorer_screen,
+                active_fonts,
+                dimension=3,
+                explorer_profile=cfg.explorer_topology_profile,
+                display_settings=active_display_settings,
+            )
         ),
     )
 

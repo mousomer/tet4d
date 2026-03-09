@@ -57,7 +57,7 @@ Implementation references:
 #### `small` profile
 
 1. Move `x-`/`x+`:`Left`/`Right`
-2. Explorer-only `move_up`/`move_down`:`PageUp`/`PageDown`
+2. Explorer-only `move_up`/`move_down`:`Up`or`PageUp`/`Down`or`PageDown`
 3. Soft drop: `Down`
 4. Hard drop: `Space`
 5. Rotate `x-y +`/`x-y -`:`Up`or`Q`/`W`
@@ -65,7 +65,7 @@ Implementation references:
 #### `full` profile
 
 1. Move `x-`/`x+`:`Numpad4`/`Numpad6`
-2. Exploration vertical `y-`/`y+`:`Numpad1`/`Numpad3`
+2. Exploration vertical `y-`/`y+`:`Up`or`Numpad1`/`Down`or`Numpad3`
 3. Soft drop: `Numpad5`
 4. Hard drop: `Numpad0`
 5. Rotate `x-y +`:`Up`or`X`

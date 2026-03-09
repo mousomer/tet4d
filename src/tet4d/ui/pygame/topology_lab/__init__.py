@@ -1,15 +1,107 @@
 from .common import (
     ExplorerGlueDraft as ExplorerGlueDraft,
+    TopologyLabHitTarget as TopologyLabHitTarget,
+    axis_color as axis_color,
     boundaries_for_dimension as boundaries_for_dimension,
+    boundary_fill_color as boundary_fill_color,
     default_draft_for_dimension as default_draft_for_dimension,
     permutation_options_for_dimension as permutation_options_for_dimension,
     transform_preview_label as transform_preview_label,
 )
+from .boundary_picker import (
+    apply_boundary_pick as apply_boundary_pick,
+    apply_glue_pick as apply_glue_pick,
+    pick_target as pick_target,
+    update_hover_target as update_hover_target,
+)
+from .explorer_tools import (
+    cycle_tool as cycle_tool,
+    draw_tool_ribbon as draw_tool_ribbon,
+)
+from .preview import (
+    build_preview_lines as build_preview_lines,
+    draw_preview_panel as draw_preview_panel,
+    draw_probe_controls as draw_probe_controls,
+)
+from .scene2d import draw_scene as draw_scene_2d
+from .scene3d import draw_scene as draw_scene_3d
+from .scene4d import draw_scene as draw_scene_4d
+from .scene_state import (
+    TOOL_CREATE as TOOL_CREATE,
+    TOOL_EDIT as TOOL_EDIT,
+    TOOL_INSPECT as TOOL_INSPECT,
+    TOOL_LABELS as TOOL_LABELS,
+    TOOL_NAVIGATE as TOOL_NAVIGATE,
+    TOOL_PLAY as TOOL_PLAY,
+    TOOL_PROBE as TOOL_PROBE,
+    TOOL_SANDBOX as TOOL_SANDBOX,
+    TopologyLabState as TopologyLabState,
+    ensure_explorer_draft as ensure_explorer_draft,
+    ensure_probe_state as ensure_probe_state,
+    reset_probe_state as reset_probe_state,
+    ensure_sandbox_state as ensure_sandbox_state,
+    set_active_tool as set_active_tool,
+    uses_general_explorer_editor as uses_general_explorer_editor,
+)
+from .piece_sandbox import (
+    cycle_sandbox_piece as cycle_sandbox_piece,
+    ensure_piece_sandbox as ensure_piece_sandbox,
+    move_sandbox_piece as move_sandbox_piece,
+    reset_sandbox_piece as reset_sandbox_piece,
+    rotate_sandbox_piece as rotate_sandbox_piece,
+    sandbox_cells as sandbox_cells,
+    sandbox_lines as sandbox_lines,
+    sandbox_validity as sandbox_validity,
+)
+from .transform_editor import (
+    draw_action_buttons as draw_action_buttons,
+    draw_transform_editor as draw_transform_editor,
+)
 
 __all__ = [
     "ExplorerGlueDraft",
+    "TOOL_CREATE",
+    "TOOL_EDIT",
+    "TOOL_INSPECT",
+    "TOOL_LABELS",
+    "TOOL_NAVIGATE",
+    "TOOL_PLAY",
+    "TOOL_PROBE",
+    "TOOL_SANDBOX",
+    "TopologyLabHitTarget",
+    "TopologyLabState",
+    "apply_boundary_pick",
+    "apply_glue_pick",
+    "axis_color",
     "boundaries_for_dimension",
+    "boundary_fill_color",
+    "build_preview_lines",
+    "cycle_sandbox_piece",
+    "cycle_tool",
     "default_draft_for_dimension",
+    "draw_action_buttons",
+    "draw_preview_panel",
+    "draw_probe_controls",
+    "draw_scene_2d",
+    "draw_scene_3d",
+    "draw_scene_4d",
+    "draw_tool_ribbon",
+    "draw_transform_editor",
+    "ensure_explorer_draft",
+    "ensure_piece_sandbox",
+    "ensure_probe_state",
+    "reset_probe_state",
+    "ensure_sandbox_state",
+    "move_sandbox_piece",
     "permutation_options_for_dimension",
+    "pick_target",
+    "update_hover_target",
+    "reset_sandbox_piece",
+    "rotate_sandbox_piece",
+    "sandbox_cells",
+    "sandbox_lines",
+    "sandbox_validity",
+    "set_active_tool",
     "transform_preview_label",
+    "uses_general_explorer_editor",
 ]

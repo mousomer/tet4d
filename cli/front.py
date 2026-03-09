@@ -519,6 +519,7 @@ def _menu_action_topology_lab(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
+    fonts_2d=None,
 ) -> bool:
     start_dimension = (
         int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
@@ -527,6 +528,8 @@ def _menu_action_topology_lab(
         session.screen,
         fonts_nd,
         start_dimension=start_dimension,
+        display_settings=session.display_settings,
+        fonts_2d=fonts_2d,
     )
     _persist_session_status(state, session)
     state.status = msg
@@ -574,7 +577,7 @@ def _build_action_registry(
         "bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd)
     )
     registry.register(
-        "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd)
+        "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d)
     )
     registry.register(
         "tutorial_2d",

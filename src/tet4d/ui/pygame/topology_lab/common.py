@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import permutations
+from typing import Any
+
+import pygame
 
 from tet4d.engine.topology_explorer import (
     AXIS_NAMES,
@@ -9,6 +12,13 @@ from tet4d.engine.topology_explorer import (
     BoundaryTransform,
     boundary_label,
     tangent_axes_for_boundary,
+)
+
+_AXIS_COLORS = (
+    (236, 112, 112),
+    (116, 214, 132),
+    (112, 162, 248),
+    (236, 188, 108),
 )
 
 
@@ -19,6 +29,13 @@ class ExplorerGlueDraft:
     target_index: int
     permutation_index: int
     signs: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class TopologyLabHitTarget:
+    kind: str
+    value: Any
+    rect: pygame.Rect
 
 
 def boundaries_for_dimension(dimension: int) -> tuple[BoundaryRef, ...]:
@@ -45,6 +62,17 @@ def default_draft_for_dimension(dimension: int) -> ExplorerGlueDraft:
     )
 
 
+def axis_color(axis: int) -> tuple[int, int, int]:
+    return _AXIS_COLORS[int(axis) % len(_AXIS_COLORS)]
+
+
+def boundary_fill_color(boundary: BoundaryRef) -> tuple[int, int, int]:
+    base = axis_color(boundary.axis)
+    if boundary.side == "+":
+        return tuple(min(255, channel + 18) for channel in base)
+    return tuple(max(40, channel - 12) for channel in base)
+
+
 def transform_preview_label(
     source: BoundaryRef,
     target: BoundaryRef,
@@ -65,7 +93,10 @@ def transform_preview_label(
 
 __all__ = [
     "ExplorerGlueDraft",
+    "TopologyLabHitTarget",
+    "axis_color",
     "boundaries_for_dimension",
+    "boundary_fill_color",
     "default_draft_for_dimension",
     "permutation_options_for_dimension",
     "transform_preview_label",

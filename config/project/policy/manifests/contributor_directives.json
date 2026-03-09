@@ -74,6 +74,64 @@
       "enforced_by": [
         "code_review"
       ]
+    },
+    {
+      "id": "edit_method_selection",
+      "category": "process",
+      "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "source_write_safety",
+      "category": "process",
+      "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "post_write_hygiene",
+      "category": "verification",
+      "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify_focus.sh"
+      ]
+    },
+    {
+      "id": "serialized_full_gates",
+      "category": "verification",
+      "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify.sh",
+        "scripts/ci_check.sh"
+      ]
+    },
+    {
+      "id": "single_patch_retry_limit",
+      "category": "process",
+      "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
     }
   ]
 }

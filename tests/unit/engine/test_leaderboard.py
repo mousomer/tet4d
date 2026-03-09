@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tet4d.ui.pygame.launch import leaderboard_menu
 from tet4d.engine.runtime.leaderboard import (
     leaderboard_entry_would_enter,
     leaderboard_payload,
@@ -140,3 +141,76 @@ def test_leaderboard_payload_falls_back_on_invalid_json() -> None:
     assert int(payload["schema_version"]) >= 1
     assert isinstance(payload["updated_at_utc"], str)
     assert payload["entries"] == []
+
+
+def test_explorer_sessions_do_not_prompt_or_record(monkeypatch) -> None:
+    called: list[str] = []
+
+    def _boom(*_args, **_kwargs):
+        called.append("unexpected")
+        raise AssertionError("explorer leaderboard path should short-circuit")
+
+    monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _boom)
+    monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _boom)
+    monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", _boom)
+
+    recorded = leaderboard_menu.maybe_record_leaderboard_session(
+        None,
+        None,
+        dimension=2,
+        score=999,
+        lines_cleared=0,
+        start_speed_level=1,
+        end_speed_level=1,
+        duration_seconds=1.0,
+        outcome="menu",
+        bot_mode="off",
+        grid_mode="full",
+        random_mode="fixed_seed",
+        topology_mode="bounded",
+        kick_level="off",
+        exploration_mode=True,
+    )
+
+    assert recorded is False
+    assert called == []
+
+
+def test_non_explorer_sessions_still_record_when_qualifying(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def _qualifies(*_args, **_kwargs):
+        calls.append("rank")
+        return True, 1
+
+    def _prompt(*_args, **_kwargs):
+        calls.append("prompt")
+        return "Tester"
+
+    def _record(*_args, **_kwargs):
+        calls.append("record")
+
+    monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _qualifies)
+    monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _prompt)
+    monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", _record)
+
+    recorded = leaderboard_menu.maybe_record_leaderboard_session(
+        None,
+        None,
+        dimension=2,
+        score=999,
+        lines_cleared=0,
+        start_speed_level=1,
+        end_speed_level=1,
+        duration_seconds=1.0,
+        outcome="menu",
+        bot_mode="off",
+        grid_mode="full",
+        random_mode="fixed_seed",
+        topology_mode="bounded",
+        kick_level="off",
+        exploration_mode=False,
+    )
+
+    assert recorded is True
+    assert calls == ["rank", "prompt", "record"]

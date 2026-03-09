@@ -427,8 +427,8 @@ Parameters:
 - `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741915`
-- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741913`
+- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741915`
+- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741913`
 - `profiles.full.explorer.d3.move_down[]`: array[`int`]; examples: `1073741915`
 - `profiles.full.explorer.d3.move_up[]`: array[`int`]; examples: `1073741913`
 - `profiles.full.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
@@ -504,8 +504,8 @@ Parameters:
 - `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
-- `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
+- `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.macbook.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.macbook.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
@@ -581,8 +581,8 @@ Parameters:
 - `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
-- `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
+- `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.small.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.small.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`

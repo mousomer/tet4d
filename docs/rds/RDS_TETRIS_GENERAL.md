@@ -123,6 +123,7 @@ Cross-cutting requirements are defined in:
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
 19. Advanced gameplay settings expose kick permissiveness (`kick_level`).
+20. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -402,11 +403,11 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 ### 11.6.1 Current engine staging note
 
 1. A new exploratory kernel now exists under `src/tet4d/engine/topology_explorer/` for general boundary gluings, signed-permutation transforms, boundary-crossing movement, and movement-graph compilation.
-2. This kernel is not yet the active gameplay/runtime topology path; live play still uses the existing bounded/wrap/invert explorer topology model until a later integration batch switches explorer-mode runtime and lab preview onto the new engine-owned model.
+2. Live Explorer gameplay/runtime for 2D, 3D, and 4D now routes through that gluing engine; Normal Game remains on the legacy bounded/wrap/invert topology path.
 3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`.
-4. Explorer 2D, Explorer 3D, and Explorer 4D Topology Lab now edit general gluing profiles directly through those runtime owners and render live movement-graph sidebar previews.
+4. Explorer 2D, Explorer 3D, and Explorer 4D Topology Lab now edit general gluing profiles directly through those runtime owners and use the graphical explorer scene as the primary spatial frontend, with boundary-card selection, tangent transform controls, basis-arrow overlays, and engine-backed probe traversal supporting live seam editing inside that scene-first shell.
 5. Explorer preset libraries now include explicitly marked unsafe `Projective` / `Sphere` families for 2D/3D/4D; legality remains engine-owned in `src/tet4d/engine/topology_explorer/glue_validate.py`, not UI-owned.
-6. Normal Game still uses the legacy bounded/wrap/invert topology path in this phase; the legacy bridge remains only for that non-direct path and for future live-runtime migration work.
+6. The legacy bridge remains only for non-advanced explorer setup/export compatibility and future deletion once those paths stop depending on legacy edge-rule conversion.
 
 ### 11.7 Test requirements (for future implementation)
 
@@ -415,5 +416,6 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 3. Clear-rule tests: region clears are deterministic and invariant to iteration order.
 4. Replay tests: same input stream yields same final state per geometry profile.
 5. Bot dry-run tests: no geometry profile may generate invalid/zero-sized placements.
+
 
 

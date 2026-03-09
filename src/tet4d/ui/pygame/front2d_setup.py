@@ -27,14 +27,10 @@ from tet4d.engine.gameplay.topology_designer import (
     export_topology_profile_state,
     resolve_topology_designer_selection,
 )
-from tet4d.engine.runtime.topology_explorer_bridge import (
-    explorer_profile_from_edge_rules,
+from tet4d.engine.runtime.topology_explorer_runtime import (
+    export_stored_explorer_topology_preview,
+    resolve_explorer_topology_runtime_profile,
 )
-from tet4d.engine.runtime.topology_explorer_preview import (
-    export_explorer_topology_preview,
-    preview_dims_for_dimension,
-)
-from tet4d.engine.runtime.topology_explorer_store import load_explorer_topology_profile
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
@@ -153,7 +149,11 @@ def menu_value_formatter(attr_name: str, value: object) -> str:
     return str(value)
 
 
-def config_from_settings(settings: GameSettings) -> GameConfig:
+def config_from_settings(
+    settings: GameSettings,
+    *,
+    explorer_topology_profile_override=None,
+) -> GameConfig:
     piece_set_id = piece_set_index_to_id(settings.piece_set_index)
     topology_mode = topology_mode_from_index(settings.topology_mode)
     exploration_enabled = bool(settings.exploration_mode)
@@ -163,29 +163,26 @@ def config_from_settings(settings: GameSettings) -> GameConfig:
         resolved_mode = topology_profile.topology_mode
         topology_edge_rules = topology_profile.edge_rules
     else:
-        resolved_mode, topology_edge_rules, legacy_profile = resolve_topology_designer_selection(
-            dimension=2,
-            gravity_axis=1,
-            topology_mode=topology_mode,
-            topology_advanced=bool(settings.topology_advanced) and not exploration_enabled,
-            profile_index=settings.topology_profile_index,
-            gameplay_mode="explorer" if exploration_enabled else "normal",
-        )
         if exploration_enabled:
-            if bool(settings.topology_advanced):
-                explorer_topology_profile = load_explorer_topology_profile(2)
-            elif legacy_profile is not None:
-                explorer_topology_profile = explorer_profile_from_edge_rules(
+            resolved_mode, topology_edge_rules, explorer_topology_profile = (
+                resolve_explorer_topology_runtime_profile(
                     dimension=2,
-                    topology_mode=legacy_profile.topology_mode,
-                    edge_rules=legacy_profile.edge_rules,
+                    gravity_axis=1,
+                    topology_mode=topology_mode,
+                    topology_advanced=bool(settings.topology_advanced),
+                    profile_index=settings.topology_profile_index,
+                    explorer_topology_profile_override=explorer_topology_profile_override,
                 )
-            else:
-                explorer_topology_profile = explorer_profile_from_edge_rules(
-                    dimension=2,
-                    topology_mode=resolved_mode,
-                    edge_rules=topology_edge_rules,
-                )
+            )
+        else:
+            resolved_mode, topology_edge_rules, _legacy_profile = resolve_topology_designer_selection(
+                dimension=2,
+                gravity_axis=1,
+                topology_mode=topology_mode,
+                topology_advanced=bool(settings.topology_advanced),
+                profile_index=settings.topology_profile_index,
+                gameplay_mode="normal",
+            )
     width = settings.width
     height = settings.height
     if exploration_enabled:
@@ -231,12 +228,7 @@ def _run_dry_run(state: MenuState) -> None:
 
 def _export_topology_profile(state: MenuState) -> None:
     if bool(state.settings.topology_advanced) and bool(state.settings.exploration_mode):
-        profile = load_explorer_topology_profile(2)
-        export_explorer_topology_preview(
-            profile,
-            dims=preview_dims_for_dimension(2),
-            source="stored_profile",
-        )
+        export_stored_explorer_topology_preview(2)
         return
     if bool(state.settings.topology_advanced):
         profile = load_topology_profile(GAMEPLAY_MODE_NORMAL, 2)

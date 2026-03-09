@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from tet4d.engine.core.piece_transform import normalize_blocks_2d
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, MoveStep, move_cell
 
@@ -11,7 +10,7 @@ def _rebuild_piece_from_cells(
 ) -> ActivePiece2D:
     min_x = min(cell[0] for cell in cells)
     min_y = min(cell[1] for cell in cells)
-    rel_blocks = normalize_blocks_2d(cells)
+    rel_blocks = tuple(sorted((x - min_x, y - min_y) for x, y in cells))
     shape = PieceShape2D(piece.shape.name, list(rel_blocks), piece.shape.color_id)
     return ActivePiece2D(shape=shape, pos=(min_x, min_y), rotation=0)
 

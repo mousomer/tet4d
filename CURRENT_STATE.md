@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-08  
-Branch: `master`  
+Last updated: 2026-03-09  
+Branch: `codex/explorer-topology-live`  
 Worktree expectation: dirty only when an active batch is in progress
 
 ## Purpose
@@ -33,16 +33,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 138` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 147` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.53` (`low`)
+- `tech_debt.score = 2.39` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.46`
-2. `code_balance = 1.07`
+1. `delivery_size_pressure = 1.55`
+2. `code_balance = 0.84`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -184,6 +184,16 @@ Dominant remaining pressure:
 38. Routed live Explorer 2D gameplay/runtime through the general gluing engine by adding `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, teaching `src/tet4d/engine/gameplay/game2d.py` to use `explorer_topology_profile` for explorer movement/collision/hard-drop behavior, and updating `src/tet4d/ui/pygame/front2d_setup.py` so advanced explorer setup loads stored gluing profiles while non-advanced explorer setup/export bridges legacy edge-rule selections into the same engine-owned explorer profile model.
 39. Expanded explorer preview diagnostics so `src/tet4d/engine/runtime/topology_explorer_preview.py` now exports engine-owned tangent-basis arrow mappings for each gluing, and `src/tet4d/ui/pygame/launch/topology_lab_menu.py` renders those signed basis transforms in the live lab sidebar directly from the preview payload.
 40. Relaxed the newer thin-wrapper drift budgets for `cli/front.py`, `src/tet4d/engine/api.py`, and `src/tet4d/ui/pygame/front2d_game.py`, and documented a contributor-process rule preferring medium-sized localized patches over ultra-narrow patch fragmentation while keeping the core architecture/purity gates unchanged.
+40a. Clarified contributor edit-method selection so `apply_patch` is reserved for localized code edits with fresh context, while broad drifting maintenance-doc rewrites use one deterministic scripted rewrite instead of repeated patch retries.
+40b. Hardened contributor write-safety and verification process rules: source-file rewrites now forbid multiline PowerShell `-replace` and BOM-producing writes, require a touched-file hygiene pass after non-patch rewrites, and explicitly ban parallel `verify.sh` / `ci_check.sh` runs.
+40c. Tightened edit-method escalation so dirty/generated maintenance files skip patch-first behavior, and one rejected `apply_patch` attempt on a file is now the maximum before switching to a deterministic rewrite path.
+41. Replaced the explorer Topology Lab's text-only right-hand sidebar with a scene-first graphical playground built from `src/tet4d/ui/pygame/topology_lab/scene3d.py`, `scene4d.py`, `transform_editor.py`, `preview.py`, and `arrow_overlay.py`, so explorer 2D/3D/4D topology editing now starts from the graphical explorer shell rather than from a detached editor panel.
+42. Added engine-backed probe traversal support to the explorer lab via `advance_explorer_probe(...)` and `explorer_probe_options(...)` in `src/tet4d/engine/runtime/topology_explorer_preview.py`, and surfaced those controls in the same graphical explorer shell so seam edits, arrows, diagnostics, and movement feedback update in one coherent scene-first playground.
+43. Completed the missing scene-first topology-lab owners under `src/tet4d/ui/pygame/topology_lab/` (`scene_state.py`, `explorer_tools.py`, `boundary_picker.py`, `scene2d.py`, `piece_sandbox.py`) and reduced `src/tet4d/ui/pygame/launch/topology_lab_menu.py` to orchestration over those owners.
+44. Made seam arrows directly clickable in the explorer scene, added explicit probe path state plus reset behavior, and rendered scene-visible probe trace/sandbox status for Explorer 2D/3D/4D.
+45. Added explorer-only sandbox and play-preview regression coverage, including direct Explorer 2D/3D/4D launch-from-draft checks and a sandbox guard that reports non-rigid seam-crossing failures explicitly instead of silently corrupting piece motion.
+46. Added `src/tet4d/engine/runtime/topology_explorer_runtime.py` as the runtime-owned resolver/export facade for explorer setup and legacy-profile preview export, and migrated `front2d_setup.py`, `frontend_nd_setup.py`, and Topology Lab export to that runtime owner so the UI no longer imports the legacy edge-rule bridge directly.
+47. Unified live Explorer launch with the same scene-first topology playground shell, so Explorer 2D/3D/4D now enter `run_explorer_playground(...)` directly and use bound explorer movement inside the probe/sandbox tools instead of a separate detached explorer frontend.
 
 ## Validation Status
 
@@ -206,22 +216,22 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `scripts/arch_metrics.py`: `1869` real LOC
-2. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-3. `tools/governance/validate_project_contracts.py`: `1178` real LOC
-4. `tools/governance/generate_configuration_reference.py`: `974` real LOC
-5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `953` real LOC
+2. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1806` real LOC
+3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+4. `tools/governance/validate_project_contracts.py`: `1178` real LOC
+5. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 7. `src/tet4d/engine/help_text.py`: `830` real LOC
 8. `src/tet4d/ui/pygame/runtime_ui/help_menu.py`: `749` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 681/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 684/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
 5. `src/tet4d/engine/api.py: 91/160 real LOC (small engine compatibility facade)`
-6. `src/tet4d/ui/pygame/front2d_game.py: 94/180 real LOC (2D orchestration entrypoint)`
+6. `src/tet4d/ui/pygame/front2d_game.py: 110/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:
 
@@ -240,7 +250,7 @@ Tutorial wording drift guard:
 4. If more 2D/ND gameplay orchestration duplication remains after `lock_flow.py` and `core/rules/lifecycle.py`, extract only the next shared owner that produces net deletion.
 5. Keep `engine.api` narrow and do not reintroduce raw transform or upper-layer
    convenience exports there.
-6. Continue explorer topology Stage 5 by switching live explorer gameplay/runtime off the legacy edge-rule path and onto the general gluing engine.
+6. Continue explorer topology by polishing the scene-first graphical explorer shell (especially richer 3D/4D picking/visualization), then delete the remaining legacy bridge once non-advanced explorer setup/export no longer depend on edge-rule conversion.
 
 ## Restart Checklist
 

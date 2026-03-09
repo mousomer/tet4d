@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+import unittest
+from types import SimpleNamespace
+from unittest import mock
+
+from tet4d.engine.runtime import topology_explorer_runtime
+
+
+class TestTopologyExplorerRuntime(unittest.TestCase):
+    def test_resolve_explorer_topology_runtime_profile_prefers_override(self) -> None:
+        override = SimpleNamespace(dimension=3, gluings=())
+        legacy = SimpleNamespace(topology_mode="wrap_all", edge_rules=(("wrap", "wrap"),) * 3)
+        with mock.patch.object(
+            topology_explorer_runtime,
+            "resolve_topology_designer_selection",
+            return_value=("wrap_all", (("wrap", "wrap"),) * 3, legacy),
+        ):
+            resolved_mode, edge_rules, profile = (
+                topology_explorer_runtime.resolve_explorer_topology_runtime_profile(
+                    dimension=3,
+                    gravity_axis=1,
+                    topology_mode="wrap_all",
+                    topology_advanced=False,
+                    profile_index=0,
+                    explorer_topology_profile_override=override,
+                )
+            )
+
+        self.assertEqual(resolved_mode, "wrap_all")
+        self.assertEqual(edge_rules, (("wrap", "wrap"),) * 3)
+        self.assertIs(profile, override)
+
+    def test_export_explorer_preview_from_profile_state_bridges_then_exports(self) -> None:
+        legacy = SimpleNamespace(gameplay_mode="explorer", dimension=2, edge_rules=(("wrap", "wrap"),) * 2)
+        explorer_profile = SimpleNamespace(dimension=2, gluings=())
+        with (
+            mock.patch.object(
+                topology_explorer_runtime,
+                "explorer_profile_from_legacy_profile",
+                return_value=explorer_profile,
+            ) as bridge,
+            mock.patch.object(
+                topology_explorer_runtime,
+                "export_explorer_topology_preview",
+                return_value=(True, "ok", "preview.json"),
+            ) as export_preview,
+        ):
+            result = topology_explorer_runtime.export_explorer_preview_from_profile_state(
+                legacy,
+                dims=(8, 8),
+                source="test",
+            )
+
+        self.assertEqual(result, (True, "ok", "preview.json"))
+        bridge.assert_called_once_with(legacy)
+        export_preview.assert_called_once_with(
+            explorer_profile,
+            dims=(8, 8),
+            source="test",
+        )
+
+    def test_export_stored_explorer_topology_preview_uses_runtime_loader(self) -> None:
+        explorer_profile = SimpleNamespace(dimension=4, gluings=())
+        with (
+            mock.patch.object(
+                topology_explorer_runtime,
+                "load_runtime_explorer_topology_profile",
+                return_value=explorer_profile,
+            ) as load_profile,
+            mock.patch.object(
+                topology_explorer_runtime,
+                "preview_dims_for_dimension",
+                return_value=(8, 9, 7, 6),
+            ) as preview_dims,
+            mock.patch.object(
+                topology_explorer_runtime,
+                "export_explorer_topology_preview",
+                return_value=(True, "ok", "preview.json"),
+            ) as export_preview,
+        ):
+            result = topology_explorer_runtime.export_stored_explorer_topology_preview(
+                4,
+                source="stored_profile",
+            )
+
+        self.assertEqual(result, (True, "ok", "preview.json"))
+        load_profile.assert_called_once_with(4)
+        preview_dims.assert_called_once_with(4)
+        export_preview.assert_called_once_with(
+            explorer_profile,
+            dims=(8, 9, 7, 6),
+            source="stored_profile",
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

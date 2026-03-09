@@ -17,6 +17,9 @@ from tet4d.engine.gameplay.pieces_nd import (
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.engine.core.rules.scoring import score_for_clear
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 
 
 class TestGameND(unittest.TestCase):
@@ -272,6 +275,84 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(
             state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
         )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_3d(self):
+        cases = (
+            (
+                "main_3d",
+                GameConfigND(dims=(6, 8, 6), gravity_axis=1),
+                (4, 3, 2),
+                [((3, 3, 2),), ((2, 3, 2),), ((1, 3, 2),)],
+            ),
+            (
+                "explorer_3d",
+                GameConfigND(
+                    dims=(6, 8, 6),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=3, wrapped_axes=(0,)
+                    ),
+                ),
+                (1, 3, 2),
+                [((0, 3, 2),), ((5, 3, 2),), ((4, 3, 2),)],
+            ),
+        )
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        for label, cfg, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+                state.board.cells.clear()
+                state.current_piece = ActivePieceND.from_shape(dot, pos=start_pos)
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move_axis(0, -1),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                    result_assertion=lambda case, result, _index: case.assertTrue(result),
+                )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_4d_w_axis(self):
+        cases = (
+            (
+                "main_4d_w",
+                GameConfigND(dims=(6, 8, 6, 4), gravity_axis=1),
+                (2, 3, 2, 1),
+                [((2, 3, 2, 2),), ((2, 3, 2, 3),)],
+            ),
+            (
+                "explorer_4d_w",
+                GameConfigND(
+                    dims=(6, 8, 6, 4),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=4, wrapped_axes=(3,)
+                    ),
+                ),
+                (2, 3, 2, 2),
+                [((2, 3, 2, 3),), ((2, 3, 2, 0),), ((2, 3, 2, 1),)],
+            ),
+        )
+        dot = PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7)
+        for label, cfg, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+                state.board.cells.clear()
+                state.current_piece = ActivePieceND.from_shape(dot, pos=start_pos)
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move_axis(3, 1),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                    result_assertion=lambda case, result, _index: case.assertTrue(result),
+                )
 
     def test_invert_all_mirrors_other_wrapped_axis_3d(self):
         cfg = GameConfigND(

@@ -9,6 +9,9 @@ from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RAND
 from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 from tet4d.engine.core.rules.scoring import score_for_clear
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 
 
 class TestGame2D(unittest.TestCase):
@@ -299,6 +302,78 @@ class TestGame2D(unittest.TestCase):
             state.current_piece_cells_mapped(include_above=False),
             ((0, 3),),
         )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_2d(self):
+        cases = (
+            (
+                "main_2d",
+                GameConfig(width=6, height=6),
+                PieceShape2D("dot", [(0, 0)], color_id=5),
+                (4, 3),
+                [((3, 3),), ((2, 3),), ((1, 3),)],
+            ),
+            (
+                "explorer_2d",
+                GameConfig(
+                    width=6,
+                    height=6,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2, wrapped_axes=(0,)
+                    ),
+                ),
+                PieceShape2D("dot", [(0, 0)], color_id=5),
+                (1, 3),
+                [((0, 3),), ((5, 3),), ((4, 3),)],
+            ),
+            (
+                "main_2d_multicell",
+                GameConfig(width=8, height=8),
+                PieceShape2D("L", [(-1, 0), (0, 0), (1, 0), (1, 1)], color_id=6),
+                (4, 3),
+                [
+                    ((2, 3), (3, 3), (4, 3), (4, 4)),
+                    ((1, 3), (2, 3), (3, 3), (3, 4)),
+                    ((0, 3), (1, 3), (2, 3), (2, 4)),
+                ],
+            ),
+            (
+                "explorer_2d_multicell",
+                GameConfig(
+                    width=8,
+                    height=8,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2, wrapped_axes=(0,)
+                    ),
+                ),
+                PieceShape2D("L", [(-1, 0), (0, 0), (1, 0), (1, 1)], color_id=6),
+                (4, 3),
+                [
+                    ((2, 3), (3, 3), (4, 3), (4, 4)),
+                    ((1, 3), (2, 3), (3, 3), (3, 4)),
+                    ((0, 3), (1, 3), (2, 3), (2, 4)),
+                ],
+            ),
+        )
+        for label, cfg, shape, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+                state.board.cells.clear()
+                state.current_piece = ActivePiece2D(
+                    shape=shape,
+                    pos=start_pos,
+                    rotation=0,
+                )
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move(-1, 0),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                )
 
     def test_invert_topology_rotation_uses_topology_mapping_with_kicks(self):
         cfg = GameConfig(

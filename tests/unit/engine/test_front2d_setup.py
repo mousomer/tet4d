@@ -30,9 +30,9 @@ class TestFront2DSetup(unittest.TestCase):
             ) as load_profile,
             mock.patch.object(
                 front2d_setup,
-                "load_explorer_topology_profile",
-                return_value=explorer_profile,
-            ) as load_explorer_profile,
+                "resolve_explorer_topology_runtime_profile",
+                return_value=("bounded", (("bounded", "bounded"),) * 2, explorer_profile),
+            ) as resolve_explorer,
         ):
             normal_cfg = front2d_setup.config_from_settings(
                 front2d_setup.GameSettings(topology_advanced=1, exploration_mode=0),
@@ -42,7 +42,7 @@ class TestFront2DSetup(unittest.TestCase):
             )
 
         self.assertEqual(load_profile.call_args_list[0].args, ("normal", 2))
-        self.assertEqual(load_explorer_profile.call_args_list[0].args, (2,))
+        self.assertEqual(resolve_explorer.call_args_list[0].kwargs["dimension"], 2)
         self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
         self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
 

@@ -91,6 +91,65 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         self.assertEqual(open_display_mock.call_count, 2)
         capture_mock.assert_called_once_with(display_settings)
 
+
+    def test_launcher_nd_runner_routes_explorer_modes_into_playground(self) -> None:
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
+        cfg = SimpleNamespace(exploration_mode=True, ndim=3)
+        with (
+            patch.object(
+                launcher_nd_runner,
+                "open_display",
+                side_effect=[Mock(), Mock(), Mock()],
+            ) as open_display_mock,
+            patch.object(
+                launcher_nd_runner,
+                "capture_windowed_display_settings",
+                return_value=capture_result,
+            ) as capture_mock,
+        ):
+            run_game = Mock(return_value=False)
+            run_explorer = Mock(return_value=True)
+            launcher_nd_runner.run_nd_mode_launcher(
+                display_settings=display_settings,
+                fonts=object(),
+                setup_caption="setup",
+                game_caption="game",
+                run_menu=Mock(side_effect=[object(), None]),
+                build_config=lambda _settings: cfg,
+                suggested_window_size=lambda _cfg: (1200, 760),
+                run_game=run_game,
+                run_explorer=run_explorer,
+            )
+
+        self.assertEqual(open_display_mock.call_count, 3)
+        run_explorer.assert_called_once()
+        run_game.assert_not_called()
+        capture_mock.assert_called_once_with(display_settings)
+
+
+    def test_front2d_run_routes_explorer_launch_into_topology_playground(self) -> None:
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        runtime = SimpleNamespace(display_settings=display_settings)
+        settings = SimpleNamespace(exploration_mode=1)
+        cfg = SimpleNamespace(exploration_mode=True, explorer_topology_profile=object())
+        with (
+            patch.object(front2d, "initialize_runtime", return_value=runtime),
+            patch.object(front2d, "init_fonts", return_value=object()),
+            patch.object(front2d, "open_display", side_effect=[Mock(), Mock(), Mock()]),
+            patch.object(front2d, "run_menu", side_effect=[settings, None]),
+            patch.object(front2d, "_config_from_settings", return_value=cfg),
+            patch.object(front2d, "run_explorer_playground", return_value=(True, "ok")) as run_playground,
+            patch.object(front2d, "run_game_loop") as run_game_loop,
+            patch.object(front2d, "capture_windowed_display_settings", return_value=display_settings),
+            patch.object(front2d.pygame, "quit"),
+            patch.object(front2d.sys, "exit"),
+        ):
+            front2d.run()
+
+        run_playground.assert_called_once()
+        run_game_loop.assert_not_called()
+
     def test_run_nd_loop_forwards_non_key_event_handler(self) -> None:
         resize_event = pygame.event.Event(pygame.VIDEORESIZE, {"w": 1280, "h": 800})
         observed: list[int] = []

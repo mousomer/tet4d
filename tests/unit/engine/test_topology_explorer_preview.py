@@ -19,8 +19,11 @@ from tet4d.engine.runtime.topology_explorer_bridge import (
 )
 from tet4d.engine.topology_explorer.presets import mobius_strip_profile_2d
 from tet4d.engine.runtime.topology_explorer_preview import (
+    advance_explorer_probe,
     compile_explorer_topology_preview,
+    explorer_probe_options,
     export_explorer_topology_preview,
+    recommended_explorer_probe_coord,
 )
 
 
@@ -80,7 +83,39 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             source="preset",
         )
         self.assertEqual(preview["basis_arrows"][0]["crossing"], "x- -> x+")
-        self.assertEqual(preview["basis_arrows"][0]["basis_pairs"], [{"from": "+y", "to": "-y"}])
+        self.assertEqual(
+            preview["basis_arrows"][0]["basis_pairs"], [{"from": "+y", "to": "-y"}]
+        )
+
+    def test_probe_options_report_available_steps(self) -> None:
+        options = explorer_probe_options(
+            mobius_strip_profile_2d(),
+            dims=(6, 6),
+            coord=(0, 0),
+        )
+        self.assertEqual(
+            [option["step"] for option in options], ["x-", "x+", "y-", "y+"]
+        )
+        self.assertTrue(any(option["traversal"] is not None for option in options))
+
+    def test_recommended_probe_coord_prefers_center_when_valid(self) -> None:
+        coord = recommended_explorer_probe_coord(
+            mobius_strip_profile_2d(),
+            dims=(6, 6),
+        )
+        self.assertEqual(coord, (3, 3))
+
+    def test_advance_probe_reports_boundary_traversal_message(self) -> None:
+        coord, result = advance_explorer_probe(
+            mobius_strip_profile_2d(),
+            dims=(6, 6),
+            coord=(0, 0),
+            step_label="x-",
+        )
+        self.assertEqual(coord, (5, 5))
+        self.assertFalse(result["blocked"])
+        self.assertIn("x- -> x+", result["message"])
+        self.assertEqual(result["traversal"]["glue_id"], "mobius_x")
 
     def test_export_writes_preview_payload_to_runtime_path(self) -> None:
         root = (

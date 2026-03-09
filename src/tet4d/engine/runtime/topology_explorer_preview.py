@@ -12,13 +12,106 @@ from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     axis_name,
     boundary_label,
+    movement_steps_for_dimension,
     tangent_axes_for_boundary,
 )
+from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
 
 
 def preview_dims_for_dimension(dimension: int) -> tuple[int, ...]:
     return configured_preview_dims(dimension)
+
+
+def recommended_explorer_probe_coord(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+) -> tuple[int, ...]:
+    graph = build_movement_graph(profile, dims=dims)
+    center = tuple(max(0, size // 2) for size in dims)
+    if center in graph:
+        return center
+    if graph:
+        return min(graph)
+    return center
+
+
+def explorer_probe_options(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    coord: tuple[int, ...],
+) -> list[dict[str, object]]:
+    options: list[dict[str, object]] = []
+    for step in movement_steps_for_dimension(profile.dimension):
+        target = move_cell(profile, dims=dims, coord=coord, step=step)
+        traversal = map_boundary_exit(profile, dims=dims, coord=coord, step=step)
+        options.append(
+            {
+                "step": step.label,
+                "blocked": target is None,
+                "target": None if target is None else list(target),
+                "traversal": (
+                    None
+                    if traversal is None
+                    else {
+                        "glue_id": traversal.glue_id,
+                        "source_boundary": boundary_label(traversal.source_boundary),
+                        "target_boundary": boundary_label(traversal.target_boundary),
+                    }
+                ),
+            }
+        )
+    return options
+
+
+def advance_explorer_probe(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    coord: tuple[int, ...],
+    step_label: str,
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    step = next(
+        (
+            item
+            for item in movement_steps_for_dimension(profile.dimension)
+            if item.label == step_label
+        ),
+        None,
+    )
+    if step is None:
+        raise ValueError(f"unknown probe step: {step_label}")
+    target = move_cell(profile, dims=dims, coord=coord, step=step)
+    traversal = map_boundary_exit(profile, dims=dims, coord=coord, step=step)
+    if target is None:
+        return coord, {
+            "step": step_label,
+            "blocked": True,
+            "message": f"{step_label} blocked at {list(coord)}",
+            "traversal": None,
+        }
+    if traversal is None:
+        return target, {
+            "step": step_label,
+            "blocked": False,
+            "message": f"{step_label}: {list(coord)} -> {list(target)}",
+            "traversal": None,
+        }
+    return target, {
+        "step": step_label,
+        "blocked": False,
+        "message": (
+            f"{step_label}: {boundary_label(traversal.source_boundary)} -> "
+            f"{boundary_label(traversal.target_boundary)} to {list(target)}"
+        ),
+        "traversal": {
+            "glue_id": traversal.glue_id,
+            "source_boundary": boundary_label(traversal.source_boundary),
+            "target_boundary": boundary_label(traversal.target_boundary),
+        },
+    }
 
 
 def _glue_payload(profile: ExplorerTopologyProfile) -> list[dict[str, object]]:
@@ -62,6 +155,8 @@ def _basis_arrow_payload(profile: ExplorerTopologyProfile) -> list[dict[str, obj
                 "crossing": (
                     f"{boundary_label(glue.source)} -> {boundary_label(glue.target)}"
                 ),
+                "source_boundary": boundary_label(glue.source),
+                "target_boundary": boundary_label(glue.target),
                 "source_basis": source_basis,
                 "target_basis": target_basis,
                 "basis_pairs": [
@@ -90,8 +185,6 @@ def _component_count(graph: dict[tuple[int, ...], tuple[object, ...]]) -> int:
     return components
 
 
-
-
 def _preview_warnings(
     profile: ExplorerTopologyProfile,
     *,
@@ -107,6 +200,7 @@ def _preview_warnings(
     if any(glue.source.axis != glue.target.axis for glue in profile.gluings):
         warnings.append("Contains cross-axis seam pairings.")
     return warnings
+
 
 def _sample_traversals(
     graph: dict[tuple[int, ...], tuple[object, ...]],
@@ -186,7 +280,10 @@ def export_explorer_topology_preview(
 
 
 __all__ = [
+    "advance_explorer_probe",
     "compile_explorer_topology_preview",
+    "explorer_probe_options",
+    "recommended_explorer_probe_coord",
     "export_explorer_topology_preview",
     "preview_dims_for_dimension",
 ]
