@@ -143,14 +143,14 @@ _AXIS_LABELS = {"x": "X", "y": "Y", "z": "Z", "w": "W"}
 
 def _safe_lab_payload() -> dict[str, Any]:
     fallback = {
-        "title": "Explorer Playground (Topology Lab)",
-        "subtitle": "Scene-first topology playground for Normal Game and Explorer Mode",
+        "title": "Explorer Playground",
+        "subtitle": "Scene-first explorer playground for live traversal, presets, sandbox play, and seam editing.",
         "hints": (
             "Up/Down select row",
             "Left/Right change values",
             "Enter triggers Save/Export/Back",
             "Normal Game locks Y boundaries",
-            "Explorer Mode allows vertical wrapping",
+            "Explorer Playground keeps presets, board size, seam editing, and play on one screen",
         ),
         "status_copy": {
             "saved": "Saved topology profile for {mode_label} {dimension}D",
@@ -1486,8 +1486,8 @@ def _launch_play_preview(
 def _topology_note_text(state: _TopologyLabState) -> str:
     if _uses_general_explorer_editor(state):
         return (
-            f"Explorer Playground {state.dimension}D is the shared shell for Explorer Mode and the Topology Lab alias. "
-            "Direct boundary gluings, probe movement, sandbox play, and play preview all use the same draft topology."
+            f"Explorer Playground {state.dimension}D is the live shell for seam editing, piece movement, probe traversal, and play from the current draft topology. "
+            "Presets, board size, sandbox play, and seam edits all update the same draft in place."
         )
     return topology_profile_note(state.gameplay_mode)
 
@@ -1554,7 +1554,7 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
     dims = list(_board_dims_for_state(state))
     lines = [
         f"Explorer Playground {state.dimension}D",
-        "Explorer Mode and the Topology Lab alias use this same shell.",
+        "Presets, board size, seam editing, sandbox play, and launch all happen in this shell.",
         f"Board: {dims}",
         f"Piece set: {_explorer_piece_set_label(state)}",
         f"Speed: {settings.speed_level}",
@@ -2048,7 +2048,7 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
     gameplay = _gameplay_bindings_for_dimension(state.dimension)
     explorer = _explorer_bindings_for_dimension(state.dimension)
     lines = [
-        "Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.",
+        "Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.",
         "Tools: N navigate  I inspect  G gluing  T transform  P probe  B sandbox",
         "Tab/Shift+Tab cycle tools   Enter plays from Play tool   Delete removes selected seam",
         f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",

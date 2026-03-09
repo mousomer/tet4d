@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "title": "Explorer Playground (Topology Lab)",
-  "subtitle": "Scene-first topology playground for Normal Game and Explorer Mode",
+  "title": "Explorer Playground",
+  "subtitle": "Scene-first explorer playground for live traversal, presets, sandbox play, and seam editing.",
   "rows": [
     {
       "key": "gameplay_mode",
@@ -41,7 +41,7 @@
     "Left/Right change values",
     "Enter plays from Play tool or triggers Save/Export/Back",
     "Normal Game locks Y boundaries and keeps vertical gravity fixed",
-    "Explorer Mode allows Y wrapping and upward traversal"
+    "Explorer Playground keeps presets, board size, piece movement, seam editing, and play testing on one screen"
   ],
   "status_copy": {
     "saved": "Saved topology profile for {mode_label} {dimension}D",

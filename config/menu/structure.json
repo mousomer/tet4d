@@ -5,7 +5,7 @@
   },
   "launcher_subtitles": {
     "launcher_root": "Play, continue, or launch Tutorials; then adjust Settings, Controls, Help, and Bot options.",
-    "launcher_play": "Select a dimension or jump to the Explorer Playground.",
+    "launcher_play": "Select a dimension or open the Explorer Playground.",
     "launcher_tutorials": "Select a guided tutorial pack.",
     "default": "Up/Down select and Enter open actions."
   },
@@ -66,7 +66,7 @@
     },
     "setup_menu": {
       "title_template": "{dimension}D setup",
-      "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Random type + Advanced topology are in Settings.",
+      "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Explorer Playground is where explorer board size, presets, seam editing, and play testing happen.",
       "title_2d": "2D setup",
       "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc back, Q quit.",
       "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
@@ -144,7 +144,7 @@
         },
         {
           "type": "action",
-          "label": "Explorer Playground (Topology Lab)",
+          "label": "Explorer Playground",
           "action_id": "topology_lab"
         }
       ]
@@ -653,6 +653,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Explorer Playground is where explorer board size, presets, seam editing, and play testing happen.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
@@ -660,6 +661,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Explorer Playground is where explorer board size, presets, seam editing, and play testing happen.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
@@ -667,6 +669,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type and Advanced topology.",
+      "Explorer Playground is where explorer board size, presets, seam editing, and play testing happen.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ]

@@ -795,7 +795,7 @@ Parameters:
 - `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
 - `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Select a dimension or jump to the Explorer Playground."` (`string`)
+- `launcher_subtitles.launcher_play`: `"Select a dimension or open the Explorer Playground."` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, or launch Tutorials; then adjust Settings, Controls,...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Select a guided tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
@@ -912,7 +912,7 @@ Parameters:
 - `ui_copy.setup_menu.bindings_hint_template`: `"L = load keys, S = save keys ({bindings_file_hint})"` (`string`)
 - `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Esc back   Q quit"` (`string`)
 - `ui_copy.setup_menu.subtitle_2d`: `"Use Up/Down to select, Left/Right to change, Enter to start, Esc bac...` (`string`)
-- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Random ...` (`string`)
+- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Explore...` (`string`)
 - `ui_copy.setup_menu.title_2d`: `"2D setup"` (`string`)
 - `ui_copy.setup_menu.title_template`: `"{dimension}D setup"` (`string`)
 
@@ -1544,8 +1544,8 @@ Parameters:
 - `status_copy.save_failed`: `"Failed saving topology profile: {message}"` (`string`)
 - `status_copy.saved`: `"Saved topology profile for {mode_label} {dimension}D"` (`string`)
 - `status_copy.updated`: `"Topology profile updated (not saved yet)"` (`string`)
-- `subtitle`: `"Scene-first topology playground for Normal Game and Explorer Mode"` (`string`)
-- `title`: `"Explorer Playground (Topology Lab)"` (`string`)
+- `subtitle`: `"Scene-first explorer playground for live traversal, presets, sandbox...` (`string`)
+- `title`: `"Explorer Playground"` (`string`)
 - `version`: `1` (`int`)
 
 ### `config/tutorial/lessons.json`

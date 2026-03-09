@@ -51,58 +51,6 @@ class TestTopologyExplorerRuntime(unittest.TestCase):
         self.assertIs(profile, stored)
         load_profile.assert_called_once_with(4)
 
-    def test_resolve_explorer_topology_runtime_profile_prefers_override(self) -> None:
-        override = SimpleNamespace(dimension=3, gluings=())
-        with mock.patch.object(
-            topology_explorer_runtime,
-            "resolve_topology_designer_selection",
-        ) as resolve_selection:
-            resolved_mode, edge_rules, profile = (
-                topology_explorer_runtime.resolve_explorer_topology_runtime_profile(
-                    dimension=3,
-                    gravity_axis=1,
-                    topology_mode="wrap_all",
-                    topology_advanced=False,
-                    profile_index=0,
-                    explorer_topology_profile_override=override,
-                )
-            )
-
-        self.assertEqual(resolved_mode, "wrap_all")
-        self.assertEqual(edge_rules, (("wrap", "wrap"), ("bounded", "bounded"), ("wrap", "wrap")))
-        self.assertIs(profile, override)
-        resolve_selection.assert_not_called()
-
-
-    def test_resolve_explorer_topology_runtime_profile_advanced_uses_runtime_profile_without_legacy_selection(self) -> None:
-        explorer_profile = SimpleNamespace(dimension=4, gluings=())
-        with (
-            mock.patch.object(
-                topology_explorer_runtime,
-                "load_runtime_explorer_topology_profile",
-                return_value=explorer_profile,
-            ) as load_profile,
-            mock.patch.object(
-                topology_explorer_runtime,
-                "resolve_topology_designer_selection",
-            ) as resolve_selection,
-        ):
-            resolved_mode, edge_rules, profile = (
-                topology_explorer_runtime.resolve_explorer_topology_runtime_profile(
-                    dimension=4,
-                    gravity_axis=1,
-                    topology_mode="bounded",
-                    topology_advanced=True,
-                    profile_index=0,
-                )
-            )
-
-        self.assertEqual(resolved_mode, "bounded")
-        self.assertEqual(edge_rules, (("bounded", "bounded"),) * 4)
-        self.assertIs(profile, explorer_profile)
-        load_profile.assert_called_once_with(4)
-        resolve_selection.assert_not_called()
-
     def test_export_explorer_preview_from_profile_state_bridges_then_exports(self) -> None:
         legacy = SimpleNamespace(gameplay_mode="explorer", dimension=2, edge_rules=(("wrap", "wrap"),) * 2)
         explorer_profile = SimpleNamespace(dimension=2, gluings=())

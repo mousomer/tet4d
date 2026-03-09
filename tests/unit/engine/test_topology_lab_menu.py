@@ -398,7 +398,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn("Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.", lines)
+        self.assertIn("Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.", lines)
         self.assertTrue(any(line.startswith("Move Y:") for line in lines))
         self.assertIn("Click +/- on left rows to change board, piece set, and speed", lines)
 
@@ -1024,7 +1024,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         state = self._explorer_state(4)
         lines = topology_lab_menu._hint_lines_for_state(state)
         self.assertIn(
-            "Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.",
+            "Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.",
             lines,
         )
         self.assertIn(
