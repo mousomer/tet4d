@@ -73,6 +73,10 @@ from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.topology_lab import (
     ExplorerGlueDraft,
+    ExplorerPlaygroundSettings,
+    PANE_CONTROLS,
+    PANE_LABELS,
+    PANE_SCENE,
     TOOL_CREATE,
     TOOL_EDIT,
     TOOL_INSPECT,
@@ -80,7 +84,6 @@ from tet4d.ui.pygame.topology_lab import (
     TOOL_PLAY,
     TOOL_PROBE,
     TOOL_SANDBOX,
-    ExplorerPlaygroundSettings,
     TopologyLabHitTarget,
     TopologyLabState,
     apply_boundary_edit_pick,
@@ -88,8 +91,8 @@ from tet4d.ui.pygame.topology_lab import (
     apply_glue_pick,
     boundaries_for_dimension,
     build_preview_lines,
+    cycle_active_pane,
     cycle_sandbox_piece,
-    cycle_tool,
     default_draft_for_dimension,
     draw_action_buttons,
     draw_preview_panel,
@@ -100,22 +103,28 @@ from tet4d.ui.pygame.topology_lab import (
     draw_tool_ribbon,
     draw_transform_editor,
     ensure_explorer_draft,
+    ensure_mouse_orbit_state,
     ensure_piece_sandbox,
     ensure_probe_state as ensure_probe_state_runtime,
-    reset_probe_state,
+    ensure_scene_camera,
+    handle_scene_camera_key,
+    handle_scene_camera_mouse_event,
     move_sandbox_piece,
     permutation_options_for_dimension,
     pick_target,
     playground_dims_for_state,
-    update_hover_target,
+    reset_probe_state,
     reset_sandbox_piece,
     rotate_sandbox_piece,
     rotate_sandbox_piece_action,
     sandbox_cells,
     sandbox_lines,
     sandbox_validity,
+    scene_camera_availability,
     set_active_tool,
+    step_scene_camera,
     transform_preview_label,
+    update_hover_target,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
 from tet4d.ui.pygame.topology_lab.app import (
@@ -204,6 +213,32 @@ _TopologyLabState = TopologyLabState
 _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
     GAMEPLAY_MODE_NORMAL: TOOL_CREATE,
     GAMEPLAY_MODE_EXPLORER: TOOL_SANDBOX,
+}
+_TOOL_SHORTCUT_KEYS = {
+    pygame.K_n: TOOL_NAVIGATE,
+    pygame.K_i: TOOL_INSPECT,
+    pygame.K_g: TOOL_CREATE,
+    pygame.K_t: TOOL_EDIT,
+    pygame.K_p: TOOL_PROBE,
+    pygame.K_b: TOOL_SANDBOX,
+}
+_PROBE_MOVEMENT_TOOLS = {
+    TOOL_NAVIGATE,
+    TOOL_INSPECT,
+    TOOL_CREATE,
+    TOOL_EDIT,
+    TOOL_PROBE,
+    TOOL_PLAY,
+}
+_SANDBOX_STEP_KEYS = {
+    pygame.K_LEFT: "x-",
+    pygame.K_RIGHT: "x+",
+    pygame.K_UP: "y-",
+    pygame.K_DOWN: "y+",
+    pygame.K_PAGEUP: "y-",
+    pygame.K_PAGEDOWN: "y+",
+    pygame.K_n: "w-",
+    pygame.K_SLASH: "w+",
 }
 
 
@@ -325,6 +360,8 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         state.probe_path = None
         state.hovered_boundary_index = None
         state.hovered_glue_id = None
+        state.scene_camera = None
+        state.scene_mouse_orbit = None
         return
     state.explorer_profile = load_runtime_explorer_topology_profile(state.dimension)
     if (
@@ -333,8 +370,9 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
     ):
         ensure_explorer_draft(state)
     _normalize_explorer_draft(state)
+    state.scene_camera = ensure_scene_camera(state.dimension, state.scene_camera)
+    state.scene_mouse_orbit = ensure_mouse_orbit_state(state.scene_mouse_orbit)
     _ensure_probe_state(state)
-
 
 def _preset_profiles(state: _TopologyLabState):
     return designer_profiles_for_dimension(state.dimension, state.gameplay_mode)
@@ -1263,9 +1301,28 @@ def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
     return _adjust_row(state, row, step)
 
 
+def _controls_pane_active(state: _TopologyLabState) -> bool:
+    return state.active_pane == PANE_CONTROLS
+
+
+
+def _scene_pane_active(state: _TopologyLabState) -> bool:
+    return state.active_pane == PANE_SCENE
+
+
+
+def _set_active_pane_from_target(state: _TopologyLabState, target: TopologyLabHitTarget) -> None:
+    if target.kind in {"row_select", "row_step"}:
+        state.active_pane = PANE_CONTROLS
+    else:
+        state.active_pane = PANE_SCENE
+
+
 def _handle_navigation_key(
     state: _TopologyLabState, nav_key: int, selectable: tuple[int, ...]
 ) -> bool:
+    if not _controls_pane_active(state):
+        return False
     if nav_key == pygame.K_UP:
         state.selected = (state.selected - 1) % len(selectable)
         play_sfx("menu_move")
@@ -1281,33 +1338,6 @@ def _handle_navigation_key(
         return True
     return False
 
-
-_TOOL_SHORTCUT_KEYS = {
-    pygame.K_n: "navigate",
-    pygame.K_i: "inspect_boundary",
-    pygame.K_g: "create_gluing",
-    pygame.K_t: "edit_transform",
-    pygame.K_p: "probe",
-    pygame.K_b: "piece_sandbox",
-}
-
-_SANDBOX_STEP_KEYS = {
-    pygame.K_LEFT: "x-",
-    pygame.K_RIGHT: "x+",
-    pygame.K_UP: "y-",
-    pygame.K_DOWN: "y+",
-}
-
-_PROBE_MOVEMENT_TOOLS = {
-    TOOL_NAVIGATE,
-    TOOL_INSPECT,
-    TOOL_CREATE,
-    TOOL_EDIT,
-    TOOL_PROBE,
-    TOOL_PLAY,
-}
-
-
 def _handle_save_export_shortcut(state: _TopologyLabState, key: int) -> bool:
     if key == pygame.K_s:
         _save_profile(state)
@@ -1322,17 +1352,18 @@ def _handle_tool_shortcut(state: _TopologyLabState, key: int, *, mod: int = 0) -
     if not _uses_general_explorer_editor(state):
         return False
     if key == pygame.K_TAB:
-        cycle_tool(state, -1 if (mod & pygame.KMOD_SHIFT) else 1)
+        cycle_active_pane(state, -1 if (mod & pygame.KMOD_SHIFT) else 1)
         return True
     tool_name = _TOOL_SHORTCUT_KEYS.get(key)
     if tool_name is not None:
         set_active_tool(state, tool_name)
+        state.active_pane = PANE_SCENE
         return True
     if key == pygame.K_F5:
+        state.active_pane = PANE_SCENE
         state.play_preview_requested = True
         return True
     return False
-
 
 def _apply_sandbox_shortcut_step(state: _TopologyLabState, step_label: str) -> None:
     assert state.explorer_profile is not None
@@ -1344,6 +1375,7 @@ def _handle_probe_shortcut(state: _TopologyLabState, key: int) -> bool:
     if (
         state.active_tool not in _PROBE_MOVEMENT_TOOLS
         or not _uses_general_explorer_editor(state)
+        or not _scene_pane_active(state)
     ):
         return False
     step_label = _bound_explorer_step_label(state, key)
@@ -1354,9 +1386,12 @@ def _handle_probe_shortcut(state: _TopologyLabState, key: int) -> bool:
     _apply_probe_step(state, step_label)
     return True
 
-
 def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if state.active_tool != TOOL_SANDBOX or not _uses_general_explorer_editor(state):
+    if (
+        state.active_tool != TOOL_SANDBOX
+        or not _uses_general_explorer_editor(state)
+        or not _scene_pane_active(state)
+    ):
         return False
     step_label = _bound_explorer_step_label(state, key)
     if step_label is None:
@@ -1393,7 +1428,6 @@ def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
         return True
     return False
 
-
 def _handle_glue_shortcut(state: _TopologyLabState, key: int) -> bool:
     if not _uses_general_explorer_editor(state):
         return False
@@ -1403,19 +1437,30 @@ def _handle_glue_shortcut(state: _TopologyLabState, key: int) -> bool:
     return True
 
 
+def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
+    if (
+        not _uses_general_explorer_editor(state)
+        or not _scene_pane_active(state)
+        or state.active_tool != TOOL_NAVIGATE
+    ):
+        return False
+    return handle_scene_camera_key(state.dimension, key, state.scene_camera)
+
+
 def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
     return (
         _handle_save_export_shortcut(state, key)
         or _handle_tool_shortcut(state, key, mod=mod)
         or _handle_glue_shortcut(state, key)
+        or _handle_camera_shortcut(state, key)
         or _handle_probe_shortcut(state, key)
         or _handle_sandbox_shortcut(state, key)
     )
 
-
 def _handle_enter_key(state: _TopologyLabState, selectable: tuple[int, ...]) -> None:
-    if _uses_general_explorer_editor(state) and state.active_tool == TOOL_PLAY:
-        state.play_preview_requested = True
+    if _scene_pane_active(state):
+        if _uses_general_explorer_editor(state) and state.active_tool == TOOL_PLAY:
+            state.play_preview_requested = True
         return
     row = _rows_for_state(state)[selectable[state.selected]]
     if row.key == "save_profile":
@@ -1435,7 +1480,6 @@ def _handle_enter_key(state: _TopologyLabState, selectable: tuple[int, ...]) -> 
         return
     if _adjust_active_row(state, 1):
         play_sfx("menu_move")
-
 
 def _launch_play_preview(
     state: _TopologyLabState,
@@ -1688,8 +1732,49 @@ def _draw_explorer_scene(
     if state.dimension == 2:
         return draw_scene_2d(screen, fonts, **scene_kwargs)
     if state.dimension == 4:
-        return draw_scene_4d(screen, fonts, **scene_kwargs)
-    return draw_scene_3d(screen, fonts, **scene_kwargs)
+        return draw_scene_4d(screen, fonts, view=state.scene_camera, **scene_kwargs)
+    return draw_scene_3d(screen, fonts, camera=state.scene_camera, **scene_kwargs)
+
+def _workspace_selection_lines(state: _TopologyLabState) -> list[str]:
+    lines = [f"Pane: {PANE_LABELS.get(state.active_pane, state.active_pane)}"]
+    if state.selected_boundary_index is not None:
+        boundary = _explorer_boundaries(state)[state.selected_boundary_index].label
+        lines.append(f"Selected boundary: {boundary}")
+    if state.hovered_boundary_index is not None:
+        hovered = _explorer_boundaries(state)[state.hovered_boundary_index].label
+        lines.append(f"Hover boundary: {hovered}")
+    if state.selected_glue_id:
+        lines.append(f"Selected seam: {state.selected_glue_id}")
+    elif state.hovered_glue_id:
+        lines.append(f"Hover seam: {state.hovered_glue_id}")
+    lines.append(f"Tool: {state.active_tool.replace('_', ' ')}")
+    return lines
+
+
+def _workspace_camera_lines(state: _TopologyLabState) -> list[str]:
+    availability = scene_camera_availability(state.dimension)
+    if not availability.enabled or state.scene_camera is None:
+        return []
+    if state.dimension == 3:
+        return [
+            f"Camera: yaw {state.scene_camera.yaw_deg:.0f} pitch {state.scene_camera.pitch_deg:.0f} zoom {state.scene_camera.zoom:.0f}"
+        ]
+    if state.dimension == 4:
+        return [
+            f"Camera: yaw {state.scene_camera.yaw_deg:.0f} pitch {state.scene_camera.pitch_deg:.0f} xw {state.scene_camera.xw_deg:.0f} zw {state.scene_camera.zw_deg:.0f} zoom {state.scene_camera.zoom_scale:.2f}"
+        ]
+    return []
+
+
+def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
+    if state.probe_coord is None:
+        return []
+    lines = [
+        f"Probe: {list(state.probe_coord)}",
+        f"Trace points: {max(0, len(state.probe_path or []) - 1)}",
+    ]
+    lines.extend(f"  {line}" for line in (state.probe_trace or [])[-3:])
+    return lines
 
 
 def _workspace_preview_lines(
@@ -1702,29 +1787,15 @@ def _workspace_preview_lines(
         if preview is None
         else build_preview_lines(preview, dimension=state.dimension)
     )
-    if state.selected_boundary_index is not None:
-        boundary = _explorer_boundaries(state)[state.selected_boundary_index].label
-        lines.append(f"Selected boundary: {boundary}")
-    if state.hovered_boundary_index is not None:
-        hovered = _explorer_boundaries(state)[state.hovered_boundary_index].label
-        lines.append(f"Hover boundary: {hovered}")
-    if state.selected_glue_id:
-        lines.append(f"Selected seam: {state.selected_glue_id}")
-    elif state.hovered_glue_id:
-        lines.append(f"Hover seam: {state.hovered_glue_id}")
-    lines.append(f"Tool: {state.active_tool.replace('_', ' ')}")
-    if state.probe_coord is not None:
-        lines.append(f"Probe: {list(state.probe_coord)}")
-        lines.append(f"Trace points: {max(0, len(state.probe_path or []) - 1)}")
-        for line in (state.probe_trace or [])[-3:]:
-            lines.append(f"  {line}")
+    lines.extend(_workspace_selection_lines(state))
+    lines.extend(_workspace_camera_lines(state))
+    lines.extend(_workspace_probe_lines(state))
     if state.active_tool == TOOL_SANDBOX:
         ensure_piece_sandbox(state)
         assert state.explorer_profile is not None
         lines.append("")
         lines.extend(sandbox_lines(state, state.explorer_profile))
     return lines
-
 
 def _draw_probe_controls_if_needed(
     screen: pygame.Surface,
@@ -1768,6 +1839,14 @@ def _draw_explorer_workspace(
         panel_h=panel_h,
         menu_w=menu_w,
     )
+    workspace_focus_rect = pygame.Rect(
+        tool_rect.x - 8,
+        tool_rect.y - 8,
+        tool_rect.width + 16,
+        action_rect.bottom - tool_rect.y + 8,
+    )
+    focus_color = _HIGHLIGHT_COLOR if _scene_pane_active(state) else (92, 108, 144)
+    pygame.draw.rect(screen, focus_color, workspace_focus_rect, 2, border_radius=10)
     hits = draw_tool_ribbon(screen, fonts, area=tool_rect, active_tool=state.active_tool)
 
     boundaries = _explorer_boundaries(state)
@@ -1840,7 +1919,6 @@ def _draw_explorer_workspace(
         )
     )
     return hits
-
 
 def _set_selected_row_by_key(state: _TopologyLabState, key: str) -> None:
     selectable = _selectable_row_indexes(state)
@@ -2000,6 +2078,7 @@ def _handle_mouse_boundary_target(
 def _dispatch_mouse_target(
     state: _TopologyLabState, target: TopologyLabHitTarget, button: int
 ) -> bool:
+    _set_active_pane_from_target(state, target)
     if target.kind == "row_step":
         row_key, step = target.value
         _set_selected_row_by_key(state, str(row_key))
@@ -2027,6 +2106,23 @@ def _dispatch_mouse_target(
     return False
 
 
+def _handle_scene_camera_event(
+    state: _TopologyLabState, event: pygame.event.Event
+) -> bool:
+    if (
+        not _uses_general_explorer_editor(state)
+        or not _scene_pane_active(state)
+        or state.active_tool != TOOL_NAVIGATE
+    ):
+        return False
+    return handle_scene_camera_mouse_event(
+        state.dimension,
+        event,
+        state.scene_camera,
+        state.scene_mouse_orbit,
+    )
+
+
 def _handle_mouse_down(
     state: _TopologyLabState, pos: tuple[int, int], button: int
 ) -> None:
@@ -2047,34 +2143,48 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
         return _LAB_HINTS
     gameplay = _gameplay_bindings_for_dimension(state.dimension)
     explorer = _explorer_bindings_for_dimension(state.dimension)
-    lines = [
-        "Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.",
-        "Tools: N navigate  I inspect  G gluing  T transform  P probe  B sandbox",
-        "Tab/Shift+Tab cycle tools   Enter plays from Play tool   Delete removes selected seam",
+    pane_label = PANE_LABELS.get(state.active_pane, state.active_pane.title())
+    move_lines = [
         f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",
         f"Move Y: {format_key_tuple(explorer.get('move_up', ()))} / {format_key_tuple(explorer.get('move_down', ()))}",
     ]
     if state.dimension >= 3:
-        lines.append(
+        move_lines.append(
             f"Move Z: {format_key_tuple(gameplay.get('move_z_neg', ()))} / {format_key_tuple(gameplay.get('move_z_pos', ()))}"
         )
     if state.dimension >= 4:
-        lines.append(
+        move_lines.append(
             f"Move W: {format_key_tuple(gameplay.get('move_w_neg', ()))} / {format_key_tuple(gameplay.get('move_w_pos', ()))}"
         )
-    lines.extend(
-        (
-            "Mouse: left-click boundary/seam to select   right-click boundary to create or edit seam",
-            "Click +/- on left rows to change board, piece set, and speed",
-            "Board size / piece set rows change the current draft play session",
-            "Sandbox uses the normal move and rotate keys for this dimension",
-            "Play uses the current draft without saving",
-        )
-    )
-    if state.dimension >= 3:
+    lines = [
+        "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
+        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play",
+        *move_lines,
+    ]
+    if _controls_pane_active(state):
         lines.append(
-            "3D/4D use clickable projected faces or shell cards; side panels refine the selected seam."
+            "Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values"
         )
+    else:
+        lines.append(
+            "Scene pane: Left click selects boundary or seam   Right click boundary creates or edits a seam"
+        )
+    availability = scene_camera_availability(state.dimension)
+    if availability.enabled:
+        lines.append(
+            f"Navigate tool camera: {availability.mouse_hint}   {availability.key_hint}"
+        )
+    if state.active_tool == TOOL_SANDBOX:
+        lines.append(
+            "Sandbox tool: movement keys move the piece, gameplay rotation keys rotate it, [ ] cycle piece, 0 resets"
+        )
+    else:
+        lines.append(
+            "Scene tools move the probe; sandbox is the only tool that captures piece movement"
+        )
+    lines.append(
+        "Delete/Backspace removes the selected seam   Save and Export keep working from the current draft"
+    )
     return tuple(lines)
 
 
@@ -2123,6 +2233,14 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
             (separator_x, panel_y + 14),
             (separator_x, panel_y + panel_h - 14),
             1,
+        )
+        controls_rect = pygame.Rect(panel_x + 10, panel_y + 10, menu_w - 12, panel_h - 20)
+        pygame.draw.rect(
+            screen,
+            (236, 212, 128) if _controls_pane_active(state) else (84, 96, 132),
+            controls_rect,
+            2,
+            border_radius=10,
         )
     else:
         menu_w = panel_w
@@ -2250,6 +2368,7 @@ def _initial_topology_lab_state(
     )
     _sync_explorer_state(state)
     if mode == GAMEPLAY_MODE_EXPLORER:
+        state.active_pane = PANE_SCENE
         if state.play_settings is None:
             state.play_settings = build_explorer_playground_settings(
                 dimension=dimension
@@ -2265,19 +2384,46 @@ def _initial_topology_lab_state(
     return state
 
 
-def _process_topology_lab_events(state: _TopologyLabState) -> None:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            state.running = False
-            return
-        if event.type == pygame.KEYDOWN:
-            _dispatch_key(state, event.key, event.mod)
-        elif event.type == pygame.MOUSEMOTION:
+def _process_pointer_event(
+    state: _TopologyLabState, event: pygame.event.Event
+) -> bool:
+    if event.type in {
+        pygame.MOUSEMOTION,
+        pygame.MOUSEBUTTONDOWN,
+        pygame.MOUSEBUTTONUP,
+        pygame.MOUSEWHEEL,
+    } and _handle_scene_camera_event(state, event):
+        if event.type == pygame.MOUSEMOTION and hasattr(event, 'pos'):
             _handle_mouse_motion(state, event.pos)
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            _handle_mouse_down(state, event.pos, event.button)
+        return True
+    if event.type == pygame.MOUSEMOTION:
+        _handle_mouse_motion(state, event.pos)
+        return True
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        _handle_mouse_down(state, event.pos, event.button)
+        return True
+    return False
+
+
+def _process_single_topology_lab_event(
+    state: _TopologyLabState, event: pygame.event.Event
+) -> None:
+    if event.type == pygame.QUIT:
+        state.running = False
+        return
+    if _process_pointer_event(state, event):
+        return
+    if event.type == pygame.KEYDOWN:
+        _dispatch_key(state, event.key, event.mod)
+
+
+def _process_topology_lab_events(state: _TopologyLabState, dt_ms: float) -> None:
+    for event in pygame.event.get():
+        _process_single_topology_lab_event(state, event)
         if not state.running:
             return
+    if _uses_general_explorer_editor(state):
+        step_scene_camera(state.scene_camera, dt_ms)
 
 
 def _handle_pending_play_preview(
@@ -2346,7 +2492,7 @@ def run_topology_lab_menu(
     clock = pygame.time.Clock()
     while state.running:
         _dt = clock.tick(60)
-        _process_topology_lab_events(state)
+        _process_topology_lab_events(state, _dt)
         if not state.running:
             break
         screen, display_settings = _handle_pending_play_preview(
@@ -2382,7 +2528,6 @@ def run_explorer_playground(
             fonts_2d=fonts_2d,
             gameplay_mode=GAMEPLAY_MODE_EXPLORER,
             entry_source="explorer",
-            initial_tool=TOOL_PROBE,
         )
     return run_topology_lab_menu(
         screen,

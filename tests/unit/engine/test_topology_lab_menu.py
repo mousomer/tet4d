@@ -208,12 +208,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertEqual(state.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
         self.assertEqual(state.active_tool, topology_lab_menu.TOOL_PROBE)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
         self.assertIs(state.explorer_profile, profile)
         self.assertIsNotNone(state.probe_coord)
 
     def test_probe_tool_uses_bound_explorer_key_for_vertical_movement(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         with patch.object(topology_lab_menu, "_apply_probe_step") as apply_step:
             topology_lab_menu._dispatch_key(state, pygame.K_UP)
         apply_step.assert_called_once_with(state, "y-")
@@ -221,6 +223,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_navigate_tool_routes_bound_explorer_key_to_probe_step(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_NAVIGATE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         with patch.object(topology_lab_menu, "_apply_probe_step") as apply_step:
             topology_lab_menu._dispatch_key(state, pygame.K_UP)
         apply_step.assert_called_once_with(state, "y-")
@@ -228,6 +231,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_sandbox_tool_keeps_explorer_key_for_piece_motion(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         with (
             patch.object(topology_lab_menu, "_apply_probe_step") as apply_probe_step,
             patch.object(topology_lab_menu, "_apply_sandbox_shortcut_step") as apply_sandbox_step,
@@ -239,6 +243,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_navigate_tool_routes_3d_depth_translation_to_probe_step(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_NAVIGATE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         move_z_neg = KEYS_3D["move_z_neg"][0]
         with patch.object(topology_lab_menu, "_apply_probe_step") as apply_step:
             topology_lab_menu._dispatch_key(state, move_z_neg)
@@ -247,6 +252,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_navigate_tool_routes_4d_w_translation_to_probe_step(self) -> None:
         state = self._explorer_state(4)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_NAVIGATE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         move_w_pos = KEYS_4D["move_w_pos"][0]
         with patch.object(topology_lab_menu, "_apply_probe_step") as apply_step:
             topology_lab_menu._dispatch_key(state, move_w_pos)
@@ -255,6 +261,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_sandbox_tool_routes_2d_rotation_binding(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         with patch.object(topology_lab_menu, "rotate_sandbox_piece_action", return_value=(True, "sandbox rotated")) as rotate_action:
             topology_lab_menu._dispatch_key(state, pygame.K_q)
         rotate_action.assert_called_once_with(state, state.explorer_profile, "rotate_xy_pos")
@@ -262,6 +269,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_sandbox_tool_routes_3d_rotation_binding(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         rotate_xz = KEYS_3D["rotate_xz_pos"][0]
         with patch.object(topology_lab_menu, "rotate_sandbox_piece_action", return_value=(True, "sandbox rotated")) as rotate_action:
             topology_lab_menu._dispatch_key(state, rotate_xz)
@@ -279,23 +287,23 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_play_tool_routes_bound_translation_to_probe_step(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         with patch.object(topology_lab_menu, "_apply_probe_step") as apply_step:
             topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
         apply_step.assert_called_once_with(state, "x+")
 
-    def test_shift_tab_cycles_tools_backward(self) -> None:
+    def test_tab_and_shift_tab_cycle_panes(self) -> None:
         state = self._explorer_state(3)
-        with patch.object(topology_lab_menu, "cycle_tool") as cycle_tool:
-            topology_lab_menu._dispatch_key(
-                state,
-                pygame.K_TAB,
-                pygame.KMOD_SHIFT,
-            )
-        cycle_tool.assert_called_once_with(state, -1)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
+        topology_lab_menu._dispatch_key(state, pygame.K_TAB)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        topology_lab_menu._dispatch_key(state, pygame.K_TAB, pygame.KMOD_SHIFT)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
 
     def test_enter_in_play_tool_requests_play_preview(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         self.assertFalse(state.play_preview_requested)
         topology_lab_menu._dispatch_key(state, pygame.K_RETURN)
         self.assertTrue(state.play_preview_requested)
@@ -398,9 +406,9 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn("Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.", lines)
+        self.assertIn("Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.", lines)
         self.assertTrue(any(line.startswith("Move Y:") for line in lines))
-        self.assertIn("Click +/- on left rows to change board, piece set, and speed", lines)
+        self.assertIn("Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values", lines)
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -410,6 +418,17 @@ class TestTopologyLabMenu(unittest.TestCase):
         handled = topology_lab_menu._dispatch_mouse_target(state, target, 1)
         self.assertTrue(handled)
         self.assertEqual(topology_lab_menu._board_dims_for_state(state), (initial_dims[0], initial_dims[1], initial_dims[2] + 1))
+
+    def test_row_step_target_sets_controls_pane_and_supports_minus(self) -> None:
+        state = self._explorer_state(3)
+        state.play_settings = topology_lab_menu.build_explorer_playground_settings(dimension=3)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        initial_dims = topology_lab_menu._board_dims_for_state(state)
+        target = topology_lab_menu.TopologyLabHitTarget("row_step", ("board_z", -1), pygame.Rect(0, 0, 10, 10))
+        handled = topology_lab_menu._dispatch_mouse_target(state, target, 1)
+        self.assertTrue(handled)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
+        self.assertEqual(topology_lab_menu._board_dims_for_state(state), (initial_dims[0], initial_dims[1], initial_dims[2] - 1))
 
     def test_cycle_dimension_with_invalid_loaded_explorer_profile_does_not_crash(self) -> None:
         state = self._explorer_state(2)
@@ -625,6 +644,31 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertTrue(any(target.kind == "glue_slot" for target in targets))
         self.assertTrue(any(target.kind == "perm_select" for target in targets))
         self.assertTrue(any(target.kind == "action" for target in targets))
+
+    def test_mouse_click_minus_button_decrements_board_size(self) -> None:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        screen = pygame.Surface((1280, 900))
+        fonts = SimpleNamespace(
+            title_font=pygame.font.Font(None, 36),
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 22),
+        )
+        state = self._explorer_state(3)
+        state.play_settings = topology_lab_menu.build_explorer_playground_settings(dimension=3)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        before = topology_lab_menu._board_dims_for_state(state)
+        topology_lab_menu._draw_menu(screen, fonts, state)
+        minus_target = next(
+            target
+            for target in state.mouse_targets or []
+            if target.kind == "row_step" and target.value == ("board_z", -1)
+        )
+        with patch.object(topology_lab_menu, "play_sfx"):
+            topology_lab_menu._handle_mouse_down(state, minus_target.rect.center, 1)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
+        self.assertEqual(topology_lab_menu._board_dims_for_state(state), (before[0], before[1], before[2] - 1))
 
     def test_draw_menu_populates_glue_pick_targets_for_existing_glues(self) -> None:
         pygame.init()
@@ -973,6 +1017,115 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
         run_loop.assert_called_once()
 
+    def test_camera_shortcut_uses_scene_camera_in_navigate_tool(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_NAVIGATE)
+        state.scene_camera = object()
+        with patch.object(topology_lab_menu, "handle_scene_camera_key", return_value=True) as handle_camera:
+            topology_lab_menu._dispatch_key(state, pygame.K_r)
+        handle_camera.assert_called_once_with(3, pygame.K_r, state.scene_camera)
+
+    def test_process_events_uses_scene_camera_mouse_handler(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_NAVIGATE)
+        state.scene_camera = object()
+        state.scene_mouse_orbit = object()
+        event = pygame.event.Event(pygame.MOUSEWHEEL, {"x": 0, "y": 1})
+        with (
+            patch("pygame.event.get", return_value=[event]),
+            patch.object(topology_lab_menu, "handle_scene_camera_mouse_event", return_value=True) as handle_camera_event,
+            patch.object(topology_lab_menu, "step_scene_camera") as step_camera,
+        ):
+            topology_lab_menu._process_topology_lab_events(state, 16.0)
+        handle_camera_event.assert_called_once_with(3, event, state.scene_camera, state.scene_mouse_orbit)
+        step_camera.assert_called_once_with(state.scene_camera, 16.0)
+
+    def test_explorer_entry_defaults_to_scene_pane_and_sandbox_tool(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
+
+    def test_explorer_entry_rows_include_adjustable_board_controls(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("board_x", row_keys)
+        self.assertIn("board_y", row_keys)
+        self.assertIn("board_z", row_keys)
+        self.assertIn("piece_set", row_keys)
+        self.assertIn("speed_level", row_keys)
+
+    def test_explorer_entry_mouse_minus_adjusts_board_size(self) -> None:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        screen = pygame.Surface((1280, 900))
+        fonts = SimpleNamespace(
+            title_font=pygame.font.Font(None, 36),
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 22),
+        )
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        initial_dims = topology_lab_menu._board_dims_for_state(state)
+        topology_lab_menu._draw_menu(screen, fonts, state)
+        minus_target = next(
+            target
+            for target in state.mouse_targets
+            if target.kind == "row_step" and target.value == ("board_z", -1)
+        )
+        with patch.object(topology_lab_menu, "play_sfx"):
+            topology_lab_menu._handle_mouse_down(state, minus_target.rect.center, 1)
+        self.assertEqual(
+            topology_lab_menu._board_dims_for_state(state),
+            (initial_dims[0], initial_dims[1], initial_dims[2] - 1),
+        )
+
+    def test_explorer_entry_3d_starts_with_scene_camera(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=topology_lab_menu.TOOL_NAVIGATE,
+            play_settings=launch.settings_snapshot,
+        )
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        self.assertIsNotNone(state.scene_camera)
+
+    def test_explorer_entry_4d_starts_with_scene_camera(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=4, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=topology_lab_menu.TOOL_NAVIGATE,
+            play_settings=launch.settings_snapshot,
+        )
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        self.assertIsNotNone(state.scene_camera)
+
     def test_run_explorer_playground_uses_explicit_launch_contract(self) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(
             dimension=3,
@@ -1020,21 +1173,37 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertIn("Hover seam: glue_hover", lines)
 
-    def test_hint_lines_expose_unified_explorer_playground_shortcuts(self) -> None:
+    def test_hint_lines_expose_generated_pane_and_camera_contract(self) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         lines = topology_lab_menu._hint_lines_for_state(state)
         self.assertIn(
-            "Explorer Playground unifies movement, presets, seam editing, sandbox, and play on one screen.",
+            "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
             lines,
         )
         self.assertIn(
-            "Tab/Shift+Tab cycle tools   Enter plays from Play tool   Delete removes selected seam",
+            "Pane: Controls   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play",
             lines,
         )
         self.assertIn(
-            "3D/4D use clickable projected faces or shell cards; side panels refine the selected seam.",
+            "Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values",
             lines,
         )
+        self.assertTrue(any(line.startswith("Navigate tool camera:") for line in lines))
+
+    def test_hint_lines_change_for_scene_pane(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        self.assertIn(
+            "Scene pane: Left click selects boundary or seam   Right click boundary creates or edits a seam",
+            lines,
+        )
+
+    def test_hint_lines_do_not_expose_camera_in_2d(self) -> None:
+        state = self._explorer_state(2)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        self.assertFalse(any(line.startswith("Navigate tool camera:") for line in lines))
 
 
 

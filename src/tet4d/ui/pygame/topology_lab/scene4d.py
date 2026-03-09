@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 
 from tet4d.engine.topology_explorer import BoundaryRef
+from tet4d.ui.pygame.front4d_render import LayerView3D
 from tet4d.ui.pygame.topology_lab.arrow_overlay import draw_glue_arrows
 from tet4d.ui.pygame.topology_lab.common import (
     TopologyLabHitTarget,
@@ -12,25 +13,42 @@ from tet4d.ui.pygame.topology_lab.common import (
 from tet4d.ui.pygame.ui_utils import fit_text
 
 
-def _layout_cards(area: pygame.Rect, boundaries: tuple[BoundaryRef, ...]) -> tuple[list[pygame.Rect], list[tuple[str, pygame.Rect]], list[pygame.Rect]]:
+def _view_scalars(view: LayerView3D | None) -> tuple[float, float, float, float, float]:
+    if view is None:
+        return 0.0, 0.0, 0.0, 0.0, 1.0
+    yaw_norm = max(-1.0, min(1.0, ((((float(view.yaw_deg) + 180.0) % 360.0) - 180.0) / 120.0)))
+    pitch_norm = max(-1.0, min(1.0, float(view.pitch_deg) / 74.0))
+    xw_norm = max(-1.0, min(1.0, ((((float(view.xw_deg) + 180.0) % 360.0) - 180.0) / 120.0)))
+    zw_norm = max(-1.0, min(1.0, ((((float(view.zw_deg) + 180.0) % 360.0) - 180.0) / 120.0)))
+    zoom_scale = max(0.8, min(1.4, float(view.zoom_scale)))
+    return yaw_norm, pitch_norm, xw_norm, zw_norm, zoom_scale
+
+
+def _layout_cards(
+    area: pygame.Rect,
+    boundaries: tuple[BoundaryRef, ...],
+    view: LayerView3D | None = None,
+) -> tuple[list[pygame.Rect], list[tuple[str, pygame.Rect]], list[pygame.Rect]]:
+    yaw_norm, pitch_norm, xw_norm, zw_norm, zoom_scale = _view_scalars(view)
     gutter_y = 12
     axis_gap = 10
     rows = len(boundaries) // 2
     header_h = 18
     available_h = area.height - rows * header_h - max(0, rows - 1) * axis_gap
     row_h = max(54, available_h // max(1, rows))
-    card_h = max(48, row_h - header_h - gutter_y)
-    card_w = max(84, (area.width - 12) // 2 - 10)
+    card_h = int(max(48, (row_h - header_h - gutter_y) * zoom_scale))
+    card_w = int(max(84, ((area.width - 12) // 2 - 10) * zoom_scale))
     rects: list[pygame.Rect] = []
     headers: list[tuple[str, pygame.Rect]] = []
     groups: list[pygame.Rect] = []
-    y = area.y
+    y = area.y - int(pitch_norm * 6)
     for row in range(rows):
         header_rect = pygame.Rect(area.x, y, area.width, header_h)
         headers.append((f"{boundaries[row * 2].label[0].upper()} axis", header_rect))
         card_y = y + header_h + 4
-        left = pygame.Rect(area.x, card_y, card_w, card_h)
-        right = pygame.Rect(area.right - card_w, card_y, card_w, card_h)
+        row_shift = int((xw_norm if row % 2 == 0 else zw_norm) * 18 + yaw_norm * 10)
+        left = pygame.Rect(area.x + row_shift, card_y, card_w, card_h)
+        right = pygame.Rect(area.right - card_w + row_shift, card_y, card_w, card_h)
         rects.extend((left, right))
         groups.append(left.union(right).inflate(10, 16))
         y += header_h + card_h + axis_gap
@@ -83,7 +101,7 @@ def _draw_boundary_cards(
             pygame.draw.rect(surface, (248, 248, 248), rect.inflate(2, 2), 1, border_radius=10)
         if selected_boundary_index == index:
             pygame.draw.rect(surface, (184, 204, 255), rect.inflate(10, 10), 2, border_radius=14)
-        glue_id = active_glue_ids.get(boundary.label, "free")
+        glue_id = active_glue_ids.get(boundary.label, 'free')
         label = fonts.menu_font.render(boundary.label, True, (12, 18, 28))
         status = fonts.hint_font.render(
             fit_text(fonts.hint_font, glue_id, rect.width - 20),
@@ -94,7 +112,7 @@ def _draw_boundary_cards(
         surface.blit(label, (rect.x + 18, rect.y + 6))
         surface.blit(axis_badge, (rect.right - axis_badge.get_width() - 8, rect.y + 6))
         surface.blit(status, (rect.x + 18, rect.bottom - status.get_height() - 8))
-        hit_targets.append(TopologyLabHitTarget("boundary_pick", index, rect.copy()))
+        hit_targets.append(TopologyLabHitTarget('boundary_pick', index, rect.copy()))
     return hit_targets, cards_by_label
 
 
@@ -126,16 +144,16 @@ def _draw_probe_ribbon(
     x = ribbon.x + 8
     labels: list[tuple[str, tuple[int, int, int]]] = []
     if probe_coord is not None:
-        labels.append((f"Probe {list(probe_coord)}", (112, 240, 255)))
+        labels.append((f'Probe {list(probe_coord)}', (112, 240, 255)))
     for item in _path_preview_labels(probe_path):
         labels.append((item, (188, 198, 228)))
     if selected_glue_id:
-        labels.append((f"Seam {selected_glue_id}", (255, 226, 120)))
+        labels.append((f'Seam {selected_glue_id}', (255, 226, 120)))
     elif highlighted_glue_id:
-        labels.append((f"Hover {highlighted_glue_id}", (192, 206, 255)))
+        labels.append((f'Hover {highlighted_glue_id}', (192, 206, 255)))
     if sandbox_cells:
-        status = "valid" if sandbox_valid or sandbox_valid is None else "invalid"
-        labels.append((f"Sandbox {len(sandbox_cells)} {status}", (236, 198, 92) if status == "valid" else (220, 92, 92)))
+        status = 'valid' if sandbox_valid or sandbox_valid is None else 'invalid'
+        labels.append((f'Sandbox {len(sandbox_cells)} {status}', (236, 198, 92) if status == 'valid' else (220, 92, 92)))
     if sandbox_message:
         labels.append((sandbox_message, (220, 92, 92)))
     for label, color in labels[:5]:
@@ -168,13 +186,17 @@ def draw_scene(
     probe_path: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None = None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
-    sandbox_message: str = "",
+    sandbox_message: str = '',
+    view: LayerView3D | None = None,
 ) -> list[TopologyLabHitTarget]:
-    title = fonts.hint_font.render("Hyperface shell", True, (220, 228, 250))
-    subtitle = fonts.hint_font.render("Grouped by axis", True, (168, 178, 208))
-    surface.blit(title, (area.x, area.y - title.get_height() - 6))
-    surface.blit(subtitle, (area.x + title.get_width() + 10, area.y - subtitle.get_height() - 6))
-    rects, headers, groups = _layout_cards(area, boundaries)
+    title = 'Hyperface shell'
+    if view is not None:
+        title = f'Hyperface shell  yaw {view.yaw_deg:.0f}  pitch {view.pitch_deg:.0f}  xw {view.xw_deg:.0f}  zw {view.zw_deg:.0f}'
+    title_surf = fonts.hint_font.render(title, True, (220, 228, 250))
+    subtitle = fonts.hint_font.render('Grouped by axis', True, (168, 178, 208))
+    surface.blit(title_surf, (area.x, area.y - title_surf.get_height() - 6))
+    surface.blit(subtitle, (area.x + title_surf.get_width() + 10, area.y - subtitle.get_height() - 6))
+    rects, headers, groups = _layout_cards(area, boundaries, view)
     _draw_axis_groups(surface, fonts, headers, groups, boundaries)
     hit_targets, cards_by_label = _draw_boundary_cards(
         surface,
@@ -213,4 +235,4 @@ def draw_scene(
     return hit_targets
 
 
-__all__ = ["draw_scene", "_path_preview_labels"]
+__all__ = ['draw_scene', '_path_preview_labels']

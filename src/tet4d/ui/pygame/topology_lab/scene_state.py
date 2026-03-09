@@ -19,6 +19,13 @@ TOOL_EDIT = "edit_transform"
 TOOL_PROBE = "probe"
 TOOL_SANDBOX = "piece_sandbox"
 TOOL_PLAY = "play_preview"
+PANE_CONTROLS = "controls"
+PANE_SCENE = "scene"
+TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
+PANE_LABELS = {
+    PANE_CONTROLS: "Controls",
+    PANE_SCENE: "Scene",
+}
 TOPOLOGY_LAB_TOOLS = (
     TOOL_NAVIGATE,
     TOOL_INSPECT,
@@ -77,6 +84,7 @@ class TopologyLabState:
     probe_trace: list[str] | None = None
     probe_path: list[tuple[int, ...]] | None = None
     active_tool: str = TOOL_CREATE
+    active_pane: str = PANE_CONTROLS
     hovered_boundary_index: int | None = None
     hovered_glue_id: str | None = None
     selected_boundary_index: int | None = None
@@ -85,6 +93,8 @@ class TopologyLabState:
     highlighted_glue_id: str | None = None
     sandbox: PieceSandboxState | None = None
     play_preview_requested: bool = False
+    scene_camera: Any | None = None
+    scene_mouse_orbit: Any | None = None
 
 
 def uses_general_explorer_editor(state: TopologyLabState) -> bool:
@@ -161,8 +171,16 @@ def set_active_tool(state: TopologyLabState, tool: str) -> None:
         state.sandbox.enabled = True
 
 
+def cycle_active_pane(state: TopologyLabState, step: int) -> None:
+    current = TOPOLOGY_LAB_PANES.index(state.active_pane)
+    state.active_pane = TOPOLOGY_LAB_PANES[(current + step) % len(TOPOLOGY_LAB_PANES)]
+
+
 __all__ = [
     "ExplorerPlaygroundSettings",
+    "PANE_CONTROLS",
+    "PANE_LABELS",
+    "PANE_SCENE",
     "PieceSandboxState",
     "TOOL_CREATE",
     "TOOL_EDIT",
@@ -174,6 +192,7 @@ __all__ = [
     "TOOL_SANDBOX",
     "TOPOLOGY_LAB_TOOLS",
     "TopologyLabState",
+    "cycle_active_pane",
     "ensure_explorer_draft",
     "ensure_probe_state",
     "ensure_sandbox_state",

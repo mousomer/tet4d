@@ -15,6 +15,14 @@ from .boundary_picker import (
     pick_target as pick_target,
     update_hover_target as update_hover_target,
 )
+from .camera_controls import (
+    ensure_mouse_orbit_state as ensure_mouse_orbit_state,
+    ensure_scene_camera as ensure_scene_camera,
+    handle_scene_camera_key as handle_scene_camera_key,
+    handle_scene_camera_mouse_event as handle_scene_camera_mouse_event,
+    scene_camera_availability as scene_camera_availability,
+    step_scene_camera as step_scene_camera,
+)
 from .explorer_tools import (
     cycle_tool as cycle_tool,
     draw_tool_ribbon as draw_tool_ribbon,
@@ -29,6 +37,9 @@ from .scene3d import draw_scene as draw_scene_3d
 from .scene4d import draw_scene as draw_scene_4d
 from .scene_state import (
     ExplorerPlaygroundSettings as ExplorerPlaygroundSettings,
+    PANE_CONTROLS as PANE_CONTROLS,
+    PANE_LABELS as PANE_LABELS,
+    PANE_SCENE as PANE_SCENE,
     TOOL_CREATE as TOOL_CREATE,
     TOOL_EDIT as TOOL_EDIT,
     TOOL_INSPECT as TOOL_INSPECT,
@@ -38,6 +49,7 @@ from .scene_state import (
     TOOL_PROBE as TOOL_PROBE,
     TOOL_SANDBOX as TOOL_SANDBOX,
     TopologyLabState as TopologyLabState,
+    cycle_active_pane as cycle_active_pane,
     ensure_explorer_draft as ensure_explorer_draft,
     ensure_probe_state as ensure_probe_state,
     reset_probe_state as reset_probe_state,
@@ -65,6 +77,9 @@ from .transform_editor import (
 __all__ = [
     "ExplorerGlueDraft",
     "ExplorerPlaygroundSettings",
+    "PANE_CONTROLS",
+    "PANE_LABELS",
+    "PANE_SCENE",
     "TOOL_CREATE",
     "TOOL_EDIT",
     "TOOL_INSPECT",
@@ -82,6 +97,7 @@ __all__ = [
     "boundaries_for_dimension",
     "boundary_fill_color",
     "build_preview_lines",
+    "cycle_active_pane",
     "cycle_sandbox_piece",
     "cycle_tool",
     "default_draft_for_dimension",
@@ -94,6 +110,8 @@ __all__ = [
     "draw_tool_ribbon",
     "draw_transform_editor",
     "ensure_explorer_draft",
+    "ensure_mouse_orbit_state",
+    "ensure_scene_camera",
     "ensure_piece_sandbox",
     "ensure_probe_state",
     "reset_probe_state",
@@ -101,7 +119,11 @@ __all__ = [
     "move_sandbox_piece",
     "playground_dims_for_state",
     "permutation_options_for_dimension",
+    "handle_scene_camera_key",
+    "handle_scene_camera_mouse_event",
     "pick_target",
+    "scene_camera_availability",
+    "step_scene_camera",
     "update_hover_target",
     "reset_sandbox_piece",
     "rotate_sandbox_piece",

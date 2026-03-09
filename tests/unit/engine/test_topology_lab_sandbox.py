@@ -119,6 +119,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
             explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
         )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xz_pos")
@@ -142,6 +143,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
             explorer_profile=axis_wrap_profile(dimension=4, wrapped_axes=(0,)),
         )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xw_pos")
@@ -155,6 +157,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state = self._state()
         state.explorer_profile = torus_profile_2d()
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         state.sandbox.piece_index = 1
@@ -187,6 +190,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
             explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
         )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         state.sandbox.piece_index = next(
@@ -223,6 +227,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
             explorer_profile=axis_wrap_profile(dimension=4, wrapped_axes=(0,)),
         )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         state.sandbox.piece_index = next(

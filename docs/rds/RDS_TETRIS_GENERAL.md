@@ -124,6 +124,7 @@ Cross-cutting requirements are defined in:
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
 19. Advanced gameplay settings expose kick permissiveness (`kick_level`).
 20. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
+21. The Explorer Playground shell must expose an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- value controls, and in-shell 3D/4D camera orbit/zoom in Navigate; these interactions are part of the product contract, not optional copy.
 
 ### 4.1 Soft piece-rotation animation requirements
 

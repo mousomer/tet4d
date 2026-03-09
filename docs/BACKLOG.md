@@ -26,6 +26,7 @@ Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration
 - Clarified contributor edit-method selection so localized code edits use `apply_patch`, while broad drifting doc rewrites use one deterministic scripted rewrite instead of repeated failing patch retries.
 - Added stricter write-safety policy for source files: no multiline PowerShell `-replace`, no BOM-producing source writes, mandatory touched-file hygiene after non-patch rewrites, and explicit prohibition on running `verify.sh` / `ci_check.sh` in parallel.
 - Tightened edit-method escalation: dirty/generated maintenance files now skip patch-first behavior, and one rejected `apply_patch` attempt per file is the maximum before switching to a deterministic rewrite path.
+- Added an explicit Explorer Playground unification contract: pane-aware helper text, mouse-adjustable +/- controls, scene-first Explorer entry parity, and 3D/4D in-shell camera controls are now treated as drift-protected behavior rather than implied UX.
 
 ## 1. Priority Verification Rules
 
