@@ -33,7 +33,7 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 150` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 151` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -97,6 +97,14 @@ Dominant remaining pressure:
   - `docs/plans/piece_transform_inventory.md`
 - Current `HEAD` has already progressed beyond the original extraction-stage
   non-goal and now uses center-of-piece block rotation semantics.
+
+## Explorer Playground Status
+
+- The same-screen Explorer Playground product goal is complete on `codex/explorer-topology-live`.
+- In one shell, the player can change presets, adjust board size, move and rotate the sandbox piece, glue/edit seams, and launch play from the current draft.
+- The remaining explorer topology work is optional cleanup only:
+  1. further structural decomposition of `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
+  2. deliberate removal of explicit legacy export compatibility if that support is dropped later
 
 ## What This Batch Changed
 
@@ -217,11 +225,11 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2268` real LOC
+1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2270` real LOC
 2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 4. `tools/governance/validate_project_contracts.py`: `1178` real LOC
-5. `tests/unit/engine/test_topology_lab_menu.py`: `1125` real LOC
+5. `tests/unit/engine/test_topology_lab_menu.py`: `1140` real LOC
 6. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 7. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 8. `src/tet4d/engine/help_text.py`: `830` real LOC

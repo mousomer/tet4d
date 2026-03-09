@@ -27,6 +27,9 @@ Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration
 - Added stricter write-safety policy for source files: no multiline PowerShell `-replace`, no BOM-producing source writes, mandatory touched-file hygiene after non-patch rewrites, and explicit prohibition on running `verify.sh` / `ci_check.sh` in parallel.
 - Tightened edit-method escalation: dirty/generated maintenance files now skip patch-first behavior, and one rejected `apply_patch` attempt per file is the maximum before switching to a deterministic rewrite path.
 - Added an explicit Explorer Playground unification contract: pane-aware helper text, mouse-adjustable +/- controls, scene-first Explorer entry parity, and 3D/4D in-shell camera controls are now treated as drift-protected behavior rather than implied UX.
+- Moved the remaining legacy-profile preview export bridge out of `src/tet4d/engine/runtime/topology_explorer_runtime.py` and into the explicit compatibility bridge owner, so the runtime facade now only owns direct explorer launch/store/export paths.
+- Tightened scene picking so overlapping targets prefer the most specific nearby hit, reducing false row picks when seam/step targets overlap in the Explorer Playground.
+- Explorer Playground unification is now complete for the product contract; only optional structural cleanup remains.
 
 ## 1. Priority Verification Rules
 

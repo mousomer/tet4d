@@ -875,6 +875,22 @@ class TestTopologyLabMenu(unittest.TestCase):
         assert picked is not None
         self.assertEqual(picked.kind, "glue_pick")
 
+    def test_pick_target_prefers_smaller_specific_hit_with_same_priority(self) -> None:
+        large = topology_lab_menu.TopologyLabHitTarget(
+            "row_step",
+            ("board_x", 1),
+            pygame.Rect(0, 0, 80, 40),
+        )
+        small = topology_lab_menu.TopologyLabHitTarget(
+            "row_step",
+            ("board_x", -1),
+            pygame.Rect(4, 4, 20, 20),
+        )
+        picked = topology_lab_menu.pick_target([large, small], (10, 10))
+        self.assertIsNotNone(picked)
+        assert picked is not None
+        self.assertEqual(picked.value, ("board_x", -1))
+
     def test_mouse_glue_pick_switches_to_editing_selected_glue(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu._apply_explorer_glue(state)

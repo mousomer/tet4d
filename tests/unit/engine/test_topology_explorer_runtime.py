@@ -51,35 +51,6 @@ class TestTopologyExplorerRuntime(unittest.TestCase):
         self.assertIs(profile, stored)
         load_profile.assert_called_once_with(4)
 
-    def test_export_explorer_preview_from_profile_state_bridges_then_exports(self) -> None:
-        legacy = SimpleNamespace(gameplay_mode="explorer", dimension=2, edge_rules=(("wrap", "wrap"),) * 2)
-        explorer_profile = SimpleNamespace(dimension=2, gluings=())
-        with (
-            mock.patch.object(
-                topology_explorer_runtime,
-                "explorer_profile_from_legacy_profile",
-                return_value=explorer_profile,
-            ) as bridge,
-            mock.patch.object(
-                topology_explorer_runtime,
-                "export_explorer_topology_preview",
-                return_value=(True, "ok", "preview.json"),
-            ) as export_preview,
-        ):
-            result = topology_explorer_runtime.export_explorer_preview_from_profile_state(
-                legacy,
-                dims=(8, 8),
-                source="test",
-            )
-
-        self.assertEqual(result, (True, "ok", "preview.json"))
-        bridge.assert_called_once_with(legacy)
-        export_preview.assert_called_once_with(
-            explorer_profile,
-            dims=(8, 8),
-            source="test",
-        )
-
     def test_export_stored_explorer_topology_preview_uses_runtime_loader(self) -> None:
         explorer_profile = SimpleNamespace(dimension=4, gluings=())
         with (

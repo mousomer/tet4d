@@ -1,6 +1,6 @@
 # Explorer Playground Unification Plan
 
-Status date: 2026-03-09
+Status date: 2026-03-09 (completed on branch codex/explorer-topology-live)
 Branch baseline: `codex/explorer-topology-live`
 
 ## Objective
@@ -104,9 +104,11 @@ Required regression coverage:
 
 ## Remaining follow-up
 
-Still optional after this plan:
-1. richer `3D/4D` visual picking polish
-2. final removal of the remaining compatibility-only export helpers in `src/tet4d/engine/runtime/topology_explorer_runtime.py`
+Core product work is complete on `codex/explorer-topology-live`.
+
+Only optional future cleanup remains:
+1. further structural decomposition of `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
+2. removal of explicit legacy export compatibility entirely, if that support is intentionally dropped later
 
 ## Acceptance
 

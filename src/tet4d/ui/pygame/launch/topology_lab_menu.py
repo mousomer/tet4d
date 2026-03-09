@@ -29,8 +29,10 @@ from tet4d.engine.gameplay.api import (
     piece_set_options_for_dimension_gameplay,
 )
 from tet4d.engine.runtime.api import topology_lab_menu_payload_runtime
+from tet4d.engine.runtime.topology_explorer_bridge import (
+    export_explorer_preview_from_legacy_profile,
+)
 from tet4d.engine.runtime.topology_explorer_runtime import (
-    export_explorer_preview_from_profile_state,
     load_runtime_explorer_topology_profile,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
@@ -1200,7 +1202,7 @@ def _run_export(state: _TopologyLabState) -> None:
     if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
         try:
             preview_ok, preview_message, _preview_path = (
-                export_explorer_preview_from_profile_state(
+                export_explorer_preview_from_legacy_profile(
                     state.profile,
                     dims=_board_dims_for_state(state),
                     source="legacy_edge_rules_bridge",

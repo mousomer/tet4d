@@ -4,10 +4,6 @@ from tet4d.engine.gameplay.topology import (
     default_edge_rules_for_mode,
     normalize_topology_mode,
 )
-from tet4d.engine.gameplay.topology_designer import TopologyProfileState
-from tet4d.engine.runtime.topology_explorer_bridge import (
-    explorer_profile_from_legacy_profile,
-)
 from tet4d.engine.runtime.topology_explorer_preview import (
     export_explorer_topology_preview,
     preview_dims_for_dimension,
@@ -53,23 +49,9 @@ def export_stored_explorer_topology_preview(
     )
 
 
-def export_explorer_preview_from_profile_state(
-    profile: TopologyProfileState,
-    *,
-    dims: tuple[int, ...],
-    source: str,
-) -> tuple[bool, str, str | None]:
-    explorer_profile = explorer_profile_from_legacy_profile(profile)
-    return export_explorer_topology_preview(
-        explorer_profile,
-        dims=dims,
-        source=source,
-    )
-
 
 __all__ = [
     "resolve_direct_explorer_launch_profile",
-    "export_explorer_preview_from_profile_state",
     "export_stored_explorer_topology_preview",
     "load_runtime_explorer_topology_profile",
 ]

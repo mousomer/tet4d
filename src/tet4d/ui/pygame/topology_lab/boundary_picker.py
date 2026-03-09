@@ -27,14 +27,18 @@ def pick_target(
         "boundary_pick": 4,
         "row_select": 5,
     }
+    matches = [target for target in (targets or []) if target.rect.collidepoint(pos)]
+    if not matches:
+        return None
     ordered = sorted(
-        targets or [],
-        key=lambda target: priority.get(target.kind, 6),
+        matches,
+        key=lambda target: (
+            priority.get(target.kind, 6),
+            target.rect.width * target.rect.height,
+            abs(target.rect.centerx - pos[0]) + abs(target.rect.centery - pos[1]),
+        ),
     )
-    for target in ordered:
-        if target.rect.collidepoint(pos):
-            return target
-    return None
+    return ordered[0]
 
 
 _BOUNDARY_LABELS = tuple(f"{axis}{side}" for axis in "xyzw" for side in ("-", "+"))
