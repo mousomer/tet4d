@@ -259,6 +259,32 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
         apply_step.assert_called_once_with(state, "x+")
 
+    def test_shift_tab_cycles_tools_backward(self) -> None:
+        state = self._explorer_state(3)
+        with patch.object(topology_lab_menu, "cycle_tool") as cycle_tool:
+            topology_lab_menu._dispatch_key(
+                state,
+                pygame.K_TAB,
+                pygame.KMOD_SHIFT,
+            )
+        cycle_tool.assert_called_once_with(state, -1)
+
+    def test_enter_in_play_tool_requests_play_preview(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
+        self.assertFalse(state.play_preview_requested)
+        topology_lab_menu._dispatch_key(state, pygame.K_RETURN)
+        self.assertTrue(state.play_preview_requested)
+
+    def test_backspace_removes_selected_glue(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu._apply_explorer_glue(state)
+        assert state.explorer_profile is not None
+        self.assertEqual(len(state.explorer_profile.gluings), 1)
+        topology_lab_menu._dispatch_key(state, pygame.K_BACKSPACE)
+        assert state.explorer_profile is not None
+        self.assertEqual(len(state.explorer_profile.gluings), 0)
+
     def test_apply_explorer_glue_adds_2d_gluing_to_profile(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu._apply_explorer_glue(state)
@@ -348,7 +374,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn("Explorer Mode = Topology Playground", lines)
+        self.assertIn("Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.", lines)
         self.assertTrue(any(line.startswith("Move Y:") for line in lines))
         self.assertIn("Click +/- on left rows to change board, piece set, and speed", lines)
 
@@ -953,6 +979,22 @@ class TestTopologyLabMenu(unittest.TestCase):
             preview_error=None,
         )
         self.assertIn("Hover seam: glue_hover", lines)
+
+    def test_hint_lines_expose_unified_explorer_playground_shortcuts(self) -> None:
+        state = self._explorer_state(4)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        self.assertIn(
+            "Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.",
+            lines,
+        )
+        self.assertIn(
+            "Tab/Shift+Tab cycle tools   Enter plays from Play tool   Delete removes selected seam",
+            lines,
+        )
+        self.assertIn(
+            "3D/4D use clickable projected faces or shell cards; side panels refine the selected seam.",
+            lines,
+        )
 
 
 

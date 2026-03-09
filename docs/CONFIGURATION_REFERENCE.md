@@ -795,7 +795,7 @@ Parameters:
 - `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
 - `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Select a dimension or jump to topology controls."` (`string`)
+- `launcher_subtitles.launcher_play`: `"Select a dimension or jump to the Explorer Playground."` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, or launch Tutorials; then adjust Settings, Controls,...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Select a guided tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
@@ -1534,7 +1534,7 @@ Parameters:
 ### `config/topology/lab_menu.json`
 Top-level keys: `hints`, `rows`, `status_copy`, `subtitle`, `title`, `version`
 Parameters:
-- `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter triggers Save/Export/Back"`
+- `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter plays from Play tool or triggers Save/Export/Back"`
 - `rows[]`: array[`object`]
 - `rows[].key`: varies (`string`); examples: `"gameplay_mode"`, `"dimension"`, `"preset"`
 - `rows[].label`: varies (`string`); examples: `"Game Type"`, `"Dimension"`, `"Preset"`
@@ -1544,8 +1544,8 @@ Parameters:
 - `status_copy.save_failed`: `"Failed saving topology profile: {message}"` (`string`)
 - `status_copy.saved`: `"Saved topology profile for {mode_label} {dimension}D"` (`string`)
 - `status_copy.updated`: `"Topology profile updated (not saved yet)"` (`string`)
-- `subtitle`: `"Mode-aware topology editor for Normal Game and Explorer Mode"` (`string`)
-- `title`: `"Topology Lab"` (`string`)
+- `subtitle`: `"Scene-first topology playground for Normal Game and Explorer Mode"` (`string`)
+- `title`: `"Explorer Playground (Topology Lab)"` (`string`)
 - `version`: `1` (`int`)
 
 ### `config/tutorial/lessons.json`

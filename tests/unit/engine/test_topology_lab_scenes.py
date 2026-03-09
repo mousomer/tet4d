@@ -6,7 +6,10 @@ import unittest
 import pygame
 
 from tet4d.engine.topology_explorer import BoundaryRef
+from tet4d.ui.pygame.topology_lab.arrow_overlay import _glue_style
+from tet4d.ui.pygame.topology_lab.scene3d import _project_coord
 from tet4d.ui.pygame.topology_lab.scene3d import draw_scene as draw_scene_3d
+from tet4d.ui.pygame.topology_lab.scene4d import _path_preview_labels
 from tet4d.ui.pygame.topology_lab.scene4d import draw_scene as draw_scene_4d
 
 
@@ -87,6 +90,34 @@ class TestTopologyLabScenes(unittest.TestCase):
         glue_hits = [target for target in hits if target.kind == 'glue_pick']
         self.assertEqual(len(boundary_hits), 8)
         self.assertEqual(len(glue_hits), 1)
+
+    def test_scene3d_project_coord_uses_depth_projection(self) -> None:
+        front = pygame.Rect(100, 120, 200, 160)
+        dims = (8, 9, 7)
+        near = _project_coord(front, (2, 3, 0), dims)
+        far = _project_coord(front, (2, 3, 6), dims)
+        self.assertNotEqual(near, far)
+        self.assertGreater(far[0], near[0])
+        self.assertLess(far[1], near[1])
+
+    def test_scene4d_path_preview_labels_limit_to_last_four(self) -> None:
+        labels = _path_preview_labels(
+            [(0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0), (3, 0, 0, 0), (4, 0, 0, 0)]
+        )
+        self.assertEqual(
+            labels,
+            ['[1, 0, 0, 0]', '[2, 0, 0, 0]', '[3, 0, 0, 0]', '[4, 0, 0, 0]'],
+        )
+
+    def test_arrow_overlay_glue_style_emphasizes_selection(self) -> None:
+        normal = _glue_style('glue_001', None, None)
+        highlighted = _glue_style('glue_001', None, 'glue_001')
+        selected = _glue_style('glue_001', 'glue_001', None)
+        self.assertEqual(normal[3], 2)
+        self.assertEqual(highlighted[3], 4)
+        self.assertEqual(selected[3], 6)
+        self.assertTrue(selected[0])
+        self.assertFalse(selected[1])
 
 
 if __name__ == '__main__':

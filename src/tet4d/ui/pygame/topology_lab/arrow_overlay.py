@@ -43,6 +43,24 @@ def _line_hit_rect(
     return pygame.Rect(left, top, width, height)
 
 
+def _glue_style(glue_id: str, selected_glue_id: str | None, highlighted_glue_id: str | None) -> tuple[bool, bool, tuple[int, int, int], int]:
+    is_selected = glue_id == selected_glue_id
+    is_highlighted = glue_id == highlighted_glue_id
+    bridge_color = (248, 230, 166) if is_selected else (162, 180, 228) if is_highlighted else (86, 96, 132)
+    bridge_width = 6 if is_selected else 4 if is_highlighted else 2
+    return is_selected, is_highlighted, bridge_color, bridge_width
+
+
+def _draw_endpoint_badge(surface: pygame.Surface, fonts, *, center: tuple[int, int], label: str, color: tuple[int, int, int]) -> pygame.Rect:
+    surf = fonts.hint_font.render(label, True, color)
+    rect = surf.get_rect(center=center)
+    bg = rect.inflate(10, 8)
+    pygame.draw.rect(surface, (18, 22, 34), bg, border_radius=8)
+    pygame.draw.rect(surface, color, bg, 1, border_radius=8)
+    surface.blit(surf, rect)
+    return bg
+
+
 def draw_glue_arrows(
     surface: pygame.Surface,
     fonts,
@@ -63,12 +81,23 @@ def draw_glue_arrows(
             if source_rect is None or target_rect is None:
                 continue
             glue_id = str(arrow.get("id", ""))
-            is_selected = glue_id == selected_glue_id
-            is_highlighted = glue_id == highlighted_glue_id
+            is_selected, is_highlighted, bridge_color, bridge_width = _glue_style(
+                glue_id,
+                selected_glue_id,
+                highlighted_glue_id,
+            )
             label_color = (248, 244, 196) if is_selected else (220, 228, 250)
             label_bg = (64, 52, 24) if is_selected else (24, 28, 40)
             crossing = str(arrow.get("crossing", glue_id))
-            line_rect: pygame.Rect | None = None
+            start_center = (int(source_rect.centerx), int(source_rect.centery))
+            end_center = (int(target_rect.centerx), int(target_rect.centery))
+            pygame.draw.line(surface, bridge_color, start_center, end_center, bridge_width)
+            pygame.draw.circle(surface, bridge_color, start_center, 7 if is_selected else 6 if is_highlighted else 5)
+            pygame.draw.circle(surface, bridge_color, end_center, 7 if is_selected else 6 if is_highlighted else 5)
+            line_rect: pygame.Rect | None = _line_hit_rect(start_center, end_center, padding=14)
+            source_badge = _draw_endpoint_badge(surface, fonts, center=(source_rect.centerx, source_rect.centery - 18), label="S", color=bridge_color)
+            target_badge = _draw_endpoint_badge(surface, fonts, center=(target_rect.centerx, target_rect.centery - 18), label="T", color=bridge_color)
+            line_rect = line_rect.union(source_badge).union(target_badge)
             basis_pairs = arrow.get("basis_pairs", ())
             for index, pair in enumerate(basis_pairs[:3]):
                 base = axis_color(index)
@@ -99,10 +128,9 @@ def draw_glue_arrows(
                 pygame.draw.rect(surface, (18, 22, 34), pair_bg, border_radius=5)
                 pygame.draw.rect(surface, color, pair_bg, 1, border_radius=5)
                 surface.blit(pair_surf, pair_rect)
-                hit_rect = _line_hit_rect(start, end)
-                line_rect = hit_rect if line_rect is None else line_rect.union(hit_rect)
-                line_rect = line_rect.union(pair_bg)
-            crossing_surf = fonts.hint_font.render(crossing, True, label_color)
+                line_rect = line_rect.union(_line_hit_rect(start, end)).union(pair_bg)
+            crossing_text = crossing if not is_selected else f"{crossing} [{glue_id}]"
+            crossing_surf = fonts.hint_font.render(crossing_text, True, label_color)
             crossing_rect = crossing_surf.get_rect(
                 center=(
                     (source_rect.centerx + target_rect.centerx) // 2,
@@ -113,20 +141,17 @@ def draw_glue_arrows(
             pygame.draw.rect(surface, label_bg, crossing_bg, border_radius=6)
             pygame.draw.rect(
                 surface,
-                (120, 132, 178) if is_selected else (96, 108, 148),
+                bridge_color,
                 crossing_bg,
                 1,
                 border_radius=6,
             )
             surface.blit(crossing_surf, crossing_rect)
-            if line_rect is None:
-                line_rect = crossing_bg.copy()
-            else:
-                line_rect = line_rect.union(crossing_bg)
+            line_rect = line_rect.union(crossing_bg)
             hits.append(TopologyLabHitTarget("glue_pick", glue_id, line_rect.clip(clip_rect)))
     finally:
         surface.set_clip(previous_clip)
     return hits
 
 
-__all__ = ["draw_glue_arrows"]
+__all__ = ["draw_glue_arrows", "_glue_style"]

@@ -142,8 +142,8 @@ _AXIS_LABELS = {"x": "X", "y": "Y", "z": "Z", "w": "W"}
 
 def _safe_lab_payload() -> dict[str, Any]:
     fallback = {
-        "title": "Topology Lab",
-        "subtitle": "Mode-aware topology profiles",
+        "title": "Explorer Playground (Topology Lab)",
+        "subtitle": "Scene-first topology playground for Normal Game and Explorer Mode",
         "hints": (
             "Up/Down select row",
             "Left/Right change values",
@@ -181,7 +181,7 @@ _LAB_SUBTITLE = str(_LAB_COPY["subtitle"])
 
 def _display_title_for_state(state: _TopologyLabState) -> str:
     if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
-        return f"Explorer {state.dimension}D Playground"
+        return f"Explorer Playground {state.dimension}D"
     return _LAB_TITLE
 
 
@@ -1292,11 +1292,11 @@ def _handle_save_export_shortcut(state: _TopologyLabState, key: int) -> bool:
     return False
 
 
-def _handle_tool_shortcut(state: _TopologyLabState, key: int) -> bool:
+def _handle_tool_shortcut(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
     if not _uses_general_explorer_editor(state):
         return False
     if key == pygame.K_TAB:
-        cycle_tool(state, 1)
+        cycle_tool(state, -1 if (mod & pygame.KMOD_SHIFT) else 1)
         return True
     tool_name = _TOOL_SHORTCUT_KEYS.get(key)
     if tool_name is not None:
@@ -1362,16 +1362,29 @@ def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
     return False
 
 
-def _handle_shortcut_key(state: _TopologyLabState, key: int) -> bool:
+def _handle_glue_shortcut(state: _TopologyLabState, key: int) -> bool:
+    if not _uses_general_explorer_editor(state):
+        return False
+    if key not in (pygame.K_DELETE, pygame.K_BACKSPACE):
+        return False
+    _remove_explorer_glue(state)
+    return True
+
+
+def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
     return (
         _handle_save_export_shortcut(state, key)
-        or _handle_tool_shortcut(state, key)
+        or _handle_tool_shortcut(state, key, mod=mod)
+        or _handle_glue_shortcut(state, key)
         or _handle_probe_shortcut(state, key)
         or _handle_sandbox_shortcut(state, key)
     )
 
 
 def _handle_enter_key(state: _TopologyLabState, selectable: tuple[int, ...]) -> None:
+    if _uses_general_explorer_editor(state) and state.active_tool == TOOL_PLAY:
+        state.play_preview_requested = True
+        return
     row = _rows_for_state(state)[selectable[state.selected]]
     if row.key == "save_profile":
         _save_profile(state)
@@ -1441,7 +1454,7 @@ def _launch_play_preview(
 def _topology_note_text(state: _TopologyLabState) -> str:
     if _uses_general_explorer_editor(state):
         return (
-            f"Explorer {state.dimension}D and Topology Lab share this playground shell. "
+            f"Explorer Playground {state.dimension}D is the shared shell for Explorer Mode and the Topology Lab alias. "
             "Direct boundary gluings, probe movement, sandbox play, and play preview all use the same draft topology."
         )
     return topology_profile_note(state.gameplay_mode)
@@ -1508,8 +1521,8 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
     settings = _ensure_play_settings(state)
     dims = list(_board_dims_for_state(state))
     lines = [
-        f"Explorer {state.dimension}D topology playground",
-        "Explorer Mode and Topology Lab use this same shell.",
+        f"Explorer Playground {state.dimension}D",
+        "Explorer Mode and the Topology Lab alias use this same shell.",
         f"Board: {dims}",
         f"Piece set: {_explorer_piece_set_label(state)}",
         f"Speed: {settings.speed_level}",
@@ -2003,7 +2016,9 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
     gameplay = _gameplay_bindings_for_dimension(state.dimension)
     explorer = _explorer_bindings_for_dimension(state.dimension)
     lines = [
-        "Explorer Mode = Topology Playground",
+        "Explorer Playground: Explorer Mode and Topology Lab are aliases into this shell.",
+        "Tools: N navigate  I inspect  G gluing  T transform  P probe  B sandbox",
+        "Tab/Shift+Tab cycle tools   Enter plays from Play tool   Delete removes selected seam",
         f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",
         f"Move Y: {format_key_tuple(explorer.get('move_up', ()))} / {format_key_tuple(explorer.get('move_down', ()))}",
     ]
@@ -2017,12 +2032,16 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
         )
     lines.extend(
         (
-            "Right-click boundary: create or edit seam",
+            "Mouse: left-click boundary/seam to select   right-click boundary to create or edit seam",
             "Click +/- on left rows to change board, piece set, and speed",
             "Board size / piece set rows change the current draft play session",
             "Play uses the current draft without saving",
         )
     )
+    if state.dimension >= 3:
+        lines.append(
+            "3D/4D use clickable projected faces or shell cards; side panels refine the selected seam."
+        )
     return tuple(lines)
 
 
@@ -2161,13 +2180,13 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         screen.blit(status_surf, ((width - status_surf.get_width()) // 2, hint_y + 2))
 
 
-def _dispatch_key(state: _TopologyLabState, key: int) -> None:
+def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:
     nav_key = normalize_menu_navigation_key(key)
     selectable = _selectable_row_indexes(state)
     if key == pygame.K_q or nav_key == pygame.K_ESCAPE:
         state.running = False
         return
-    if _handle_shortcut_key(state, key):
+    if _handle_shortcut_key(state, key, mod=mod):
         return
     if _handle_navigation_key(state, nav_key, selectable):
         return
@@ -2219,7 +2238,7 @@ def _process_topology_lab_events(state: _TopologyLabState) -> None:
             state.running = False
             return
         if event.type == pygame.KEYDOWN:
-            _dispatch_key(state, event.key)
+            _dispatch_key(state, event.key, event.mod)
         elif event.type == pygame.MOUSEMOTION:
             _handle_mouse_motion(state, event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -2254,7 +2273,7 @@ def _finalize_topology_lab_result(state: _TopologyLabState) -> tuple[bool, str]:
         return ok, message
     if state.status:
         return (not state.status_error), state.status
-    return True, "Topology Lab unchanged"
+    return True, "Explorer playground unchanged"
 
 
 def run_topology_lab_menu(

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "title": "Topology Lab",
-  "subtitle": "Mode-aware topology editor for Normal Game and Explorer Mode",
+  "title": "Explorer Playground (Topology Lab)",
+  "subtitle": "Scene-first topology playground for Normal Game and Explorer Mode",
   "rows": [
     {
       "key": "gameplay_mode",
@@ -39,7 +39,7 @@
   "hints": [
     "Up/Down select row",
     "Left/Right change values",
-    "Enter triggers Save/Export/Back",
+    "Enter plays from Play tool or triggers Save/Export/Back",
     "Normal Game locks Y boundaries and keeps vertical gravity fixed",
     "Explorer Mode allows Y wrapping and upward traversal"
   ],
