@@ -86,6 +86,11 @@ class MenuState:
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
     rebind_conflict_mode: str = "replace"
     run_dry_run: bool = False
+    numeric_text_mode: bool = False
+    numeric_text_attr_name: str = ""
+    numeric_text_label: str = ""
+    numeric_text_buffer: str = ""
+    numeric_text_replace_on_type: bool = False
 
 
 _TOPOLOGY_PROFILE_LABELS_2D = tuple(

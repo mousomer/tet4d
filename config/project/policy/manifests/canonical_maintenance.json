@@ -247,7 +247,10 @@
         "docs/BACKLOG.md",
         "docs/rds/RDS_PACKAGING.md",
         "docs/CONFIGURATION_REFERENCE.md",
-        "docs/USER_SETTINGS_REFERENCE.md"
+        "docs/USER_SETTINGS_REFERENCE.md",
+        "do not treat partial progress as completion",
+        "add new modules first, route one flow to them, verify, and only then remove old paths",
+        "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",

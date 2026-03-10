@@ -116,3 +116,30 @@ def test_policy_manifest_string_safety_allows_clean_manifests(
     monkeypatch.setattr(contracts, "POLICY_MANIFEST_DIR", manifests_dir)
     issues = contracts._validate_policy_manifest_string_safety()
     assert issues == []
+
+def test_contributor_directives_include_staged_migration_contract() -> None:
+    payload = json.loads(contracts.CONTRIBUTOR_DIRECTIVES_PATH.read_text(encoding="utf-8"))
+    directives = payload["directives"]
+    directive_ids = {item["id"] for item in directives}
+    assert {
+        "staged_migration_honesty",
+        "additive_migration_first",
+        "delta_report_required",
+    }.issubset(directive_ids)
+
+
+def test_rds_and_codex_rule_requires_control_contract_tokens() -> None:
+    manifest = contracts._load_manifest()
+    rules = manifest["content_rules"]
+    rds_rule = next(rule for rule in rules if rule["file"] == "docs/RDS_AND_CODEX.md")
+    must_contain = set(rds_rule["must_contain"])
+    assert "do not treat partial progress as completion" in must_contain
+    assert (
+        "add new modules first, route one flow to them, verify, and only then remove old paths"
+        in must_contain
+    )
+    assert (
+        "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers"
+        in must_contain
+    )
+

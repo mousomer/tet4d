@@ -1648,6 +1648,24 @@ Current sub-batch (2026-03-07): Windows packaging host-tooling guard.
   - avoid user-profile global WiX installation by using a repo-local `--tool-path`,
   - default `DOTNET_CLI_HOME` into the packaging build directory for cleaner local execution.
 - Updated `docs/RELEASE_INSTALLERS.md` to document the Windows local-build prerequisite and local tool-path behavior.
+Current sub-batch (2026-03-10): numeric setup-menu entry and explorer translation regression hardening.
+
+- Added shared numeric text parsing/editing for setup menus so numeric rows can be entered directly from typed digits, committed with `Enter`, canceled with `Esc`, and edited with `Backspace`.
+- Extended setup state owners and shared menu controls to support numeric text mode:
+  - `src/tet4d/ui/pygame/menu/menu_controls.py`
+  - `src/tet4d/ui/pygame/front2d_setup.py`
+  - `src/tet4d/ui/pygame/frontend_nd_setup.py`
+- Added focused regression coverage:
+  - `tests/unit/engine/test_setup_menu_numeric_input.py`
+  - strengthened live explorer/playground translation coverage in `tests/unit/engine/test_gameplay_replay.py`
+- Verified the current explorer playground launch path does not reproduce the reported `3D/4D` translation-to-menu regression on this branch; the new tests pin that behavior directly through the live handlers.
+
+Current sub-batch (2026-03-10): staged migration control-contract hardening.
+
+- Contributor directives now encode staged-migration honesty, additive migration before deletion, and required delta reporting for migration work.
+- `docs/RDS_AND_CODEX.md` now states that partial progress is not completion, large migrations must add new modules and route one flow before deleting old code, and staged batches must end with a delta report.
+- Governance tests now pin those directives and the corresponding `docs/RDS_AND_CODEX.md` contract tokens.
+
 ## 6. Source Inputs
 
 1. `config/project/backlog_debt.json`

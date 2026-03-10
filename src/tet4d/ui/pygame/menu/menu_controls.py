@@ -12,6 +12,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     reset_menu_settings_to_defaults,
     save_menu_settings,
 )
+from tet4d.engine.runtime.settings_schema import sanitize_text
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,
     binding_actions_for_dimension,
@@ -26,10 +27,12 @@ from tet4d.ui.pygame.keybindings import (
     set_active_key_profile,
 )
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
+
 from .menu_keybinding_shortcuts import (
     apply_menu_binding_action,
     menu_binding_action_for_key,
 )
+from .numeric_text_input import append_numeric_text, parse_numeric_text
 
 FieldSpec = tuple[str, str, int, int]
 
@@ -37,6 +40,11 @@ FieldSpec = tuple[str, str, int, int]
 @dataclass(frozen=True)
 class RebindCapture:
     key: int
+
+
+@dataclass(frozen=True)
+class NumericTextAppend:
+    text: str
 
 
 class MenuAction(Enum):
@@ -61,6 +69,9 @@ class MenuAction(Enum):
     REBIND_CONFLICT_NEXT = auto()
     RESET_BINDINGS = auto()
     RUN_DRY_RUN = auto()
+    NUMERIC_TEXT_BACKSPACE = auto()
+    NUMERIC_TEXT_COMMIT = auto()
+    NUMERIC_TEXT_CANCEL = auto()
     NO_OP = auto()
 
 
@@ -90,7 +101,13 @@ _MENU_KEY_ACTIONS = {
 }
 
 
-MenuInput = MenuAction | RebindCapture
+MenuInput = MenuAction | NumericTextAppend | RebindCapture
+
+_NUMERIC_TEXT_MAX_LENGTH = 12
+
+
+def _sanitize_numeric_text(value: str, max_length: int) -> str:
+    return sanitize_text(value, max_length=max_length)
 
 
 def _set_bindings_status(state: Any, ok: bool, message: str) -> None:
@@ -98,25 +115,151 @@ def _set_bindings_status(state: Any, ok: bool, message: str) -> None:
     state.bindings_status_error = not ok
 
 
-def _ensure_rebind_state(state: Any, dimension: int) -> None:
-    if not hasattr(state, "rebind_mode"):
-        state.rebind_mode = False
-    if not hasattr(state, "rebind_index"):
-        state.rebind_index = 0
-    if not hasattr(state, "rebind_targets") or not state.rebind_targets:
-        targets: list[tuple[str, str]] = []
-        for group_name, actions in binding_actions_for_dimension(
-            dimension
-        ).items():
-            for action_name in actions:
-                targets.append((group_name, action_name))
-        state.rebind_targets = targets
-    if not hasattr(state, "active_profile"):
-        state.active_profile = active_key_profile()
-    if not hasattr(state, "rebind_conflict_mode"):
-        state.rebind_conflict_mode = normalize_rebind_conflict_mode(
-            None
+def _numeric_text_mode_enabled(state: Any | None) -> bool:
+    return bool(getattr(state, "numeric_text_mode", False))
+
+
+def _set_numeric_text_status(state: Any) -> None:
+    state.bindings_status = (
+        f"Edit {state.numeric_text_label}: {state.numeric_text_buffer}_ "
+        "(Enter apply, Esc cancel)"
+    )
+    state.bindings_status_error = False
+
+
+def _stop_numeric_text_mode(state: Any, *, clear_buffer: bool = True) -> None:
+    if _numeric_text_mode_enabled(state):
+        pygame.key.stop_text_input()
+    state.numeric_text_mode = False
+    state.numeric_text_attr_name = ""
+    state.numeric_text_label = ""
+    state.numeric_text_replace_on_type = False
+    if clear_buffer:
+        state.numeric_text_buffer = ""
+
+
+def _start_numeric_text_mode(
+    state: Any,
+    fields: Sequence[FieldSpec],
+    *,
+    incoming_text: str = "",
+) -> None:
+    label, attr_name, _min_val, _max_val = fields[state.selected_index]
+    current_value = int(getattr(state.settings, attr_name))
+    _stop_numeric_text_mode(state)
+    state.numeric_text_mode = True
+    state.numeric_text_attr_name = attr_name
+    state.numeric_text_label = label
+    state.numeric_text_buffer = str(current_value)
+    state.numeric_text_replace_on_type = True
+    pygame.key.start_text_input()
+    if incoming_text:
+        state.numeric_text_buffer, state.numeric_text_replace_on_type = append_numeric_text(
+            current_buffer=state.numeric_text_buffer,
+            incoming_text=incoming_text,
+            replace_on_type=state.numeric_text_replace_on_type,
+            max_length=_NUMERIC_TEXT_MAX_LENGTH,
+            sanitize_text=_sanitize_numeric_text,
         )
+    _set_numeric_text_status(state)
+
+
+def _matching_field(state: Any, fields: Sequence[FieldSpec]) -> FieldSpec | None:
+    attr_name = str(getattr(state, "numeric_text_attr_name", ""))
+    for field in fields:
+        if field[1] == attr_name:
+            return field
+    return None
+
+
+def _apply_numeric_text_value(state: Any, fields: Sequence[FieldSpec]) -> bool:
+    field = _matching_field(state, fields)
+    if field is None:
+        _stop_numeric_text_mode(state)
+        return False
+    label, attr_name, min_val, max_val = field
+    parsed = parse_numeric_text(
+        str(getattr(state, "numeric_text_buffer", "")),
+        max_length=_NUMERIC_TEXT_MAX_LENGTH,
+        sanitize_text=_sanitize_numeric_text,
+    )
+    if parsed is None:
+        state.bindings_status = f"Invalid value for {label}"
+        state.bindings_status_error = True
+        return False
+    setattr(state.settings, attr_name, max(min_val, min(max_val, parsed)))
+    _stop_numeric_text_mode(state)
+    state.bindings_status = f"Updated {label}"
+    state.bindings_status_error = False
+    return True
+
+
+def _handle_numeric_text_input(
+    state: Any,
+    action: MenuInput,
+    fields: Sequence[FieldSpec],
+) -> bool:
+    if isinstance(action, NumericTextAppend):
+        if not _numeric_text_mode_enabled(state):
+            _start_numeric_text_mode(state, fields, incoming_text=action.text)
+            return True
+        state.numeric_text_buffer, state.numeric_text_replace_on_type = append_numeric_text(
+            current_buffer=str(getattr(state, "numeric_text_buffer", "")),
+            incoming_text=action.text,
+            replace_on_type=bool(getattr(state, "numeric_text_replace_on_type", False)),
+            max_length=_NUMERIC_TEXT_MAX_LENGTH,
+            sanitize_text=_sanitize_numeric_text,
+        )
+        _set_numeric_text_status(state)
+        return True
+    if not _numeric_text_mode_enabled(state):
+        return False
+    if action == MenuAction.NUMERIC_TEXT_BACKSPACE:
+        state.numeric_text_buffer = str(getattr(state, "numeric_text_buffer", ""))[:-1]
+        state.numeric_text_replace_on_type = False
+        _set_numeric_text_status(state)
+        return True
+    if action == MenuAction.NUMERIC_TEXT_COMMIT:
+        _apply_numeric_text_value(state, fields)
+        return True
+    if action == MenuAction.NUMERIC_TEXT_CANCEL:
+        _stop_numeric_text_mode(state)
+        state.bindings_status = "Numeric entry canceled"
+        state.bindings_status_error = False
+        return True
+    return False
+
+
+def _ensure_state_attr(state: Any, attr_name: str, default: Any) -> None:
+    if not hasattr(state, attr_name):
+        setattr(state, attr_name, default)
+
+
+def _build_rebind_targets(dimension: int) -> list[tuple[str, str]]:
+    targets: list[tuple[str, str]] = []
+    for group_name, actions in binding_actions_for_dimension(dimension).items():
+        for action_name in actions:
+            targets.append((group_name, action_name))
+    return targets
+
+
+def _ensure_numeric_text_state(state: Any) -> None:
+    _ensure_state_attr(state, "numeric_text_mode", False)
+    _ensure_state_attr(state, "numeric_text_attr_name", "")
+    _ensure_state_attr(state, "numeric_text_label", "")
+    _ensure_state_attr(state, "numeric_text_buffer", "")
+    _ensure_state_attr(state, "numeric_text_replace_on_type", False)
+
+
+def _ensure_rebind_state(state: Any, dimension: int) -> None:
+    _ensure_state_attr(state, "rebind_mode", False)
+    _ensure_state_attr(state, "rebind_index", 0)
+    if not hasattr(state, "rebind_targets") or not state.rebind_targets:
+        state.rebind_targets = _build_rebind_targets(dimension)
+    _ensure_state_attr(state, "active_profile", active_key_profile())
+    if not hasattr(state, "rebind_conflict_mode"):
+        state.rebind_conflict_mode = normalize_rebind_conflict_mode(None)
+    _ensure_numeric_text_state(state)
 
 
 def _action_for_rebind_key(key: int) -> MenuInput:
@@ -144,23 +287,53 @@ def _action_for_menu_key(key: int) -> MenuAction | None:
     )
 
 
+def _decode_numeric_mode_key(key: int) -> MenuAction | None:
+    if key == pygame.K_ESCAPE:
+        return MenuAction.NUMERIC_TEXT_CANCEL
+    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        return MenuAction.NUMERIC_TEXT_COMMIT
+    if key == pygame.K_BACKSPACE:
+        return MenuAction.NUMERIC_TEXT_BACKSPACE
+    return None
+
+
+def _decode_keydown_action(
+    event: pygame.event.Event,
+    *,
+    rebind_mode: bool,
+    numeric_mode: bool,
+) -> MenuInput | None:
+    if rebind_mode:
+        return _action_for_rebind_key(event.key)
+    if numeric_mode:
+        return _decode_numeric_mode_key(event.key)
+    if event.unicode and event.unicode.isdigit():
+        return NumericTextAppend(event.unicode)
+    return _action_for_menu_key(event.key)
+
+
 def gather_menu_actions(
     state: Any | None = None, _dimension: int | None = None
 ) -> list[MenuInput]:
     actions: list[MenuInput] = []
     rebind_mode = bool(getattr(state, "rebind_mode", False))
+    numeric_mode = _numeric_text_mode_enabled(state)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             actions.append(MenuAction.QUIT)
             continue
+        if event.type == pygame.TEXTINPUT:
+            if numeric_mode:
+                actions.append(NumericTextAppend(event.text))
+            continue
         if event.type != pygame.KEYDOWN:
             continue
 
-        if rebind_mode:
-            actions.append(_action_for_rebind_key(event.key))
-            continue
-
-        action = _action_for_menu_key(event.key)
+        action = _decode_keydown_action(
+            event,
+            rebind_mode=rebind_mode,
+            numeric_mode=numeric_mode,
+        )
         if action is not None:
             actions.append(action)
 
@@ -375,6 +548,27 @@ _VALUE_ACTION_DELTA = {
 }
 
 
+def _apply_selection_or_value_action(
+    state: Any,
+    action: MenuAction,
+    *,
+    field_count: int,
+    fields: Sequence[FieldSpec],
+) -> bool:
+    step = _SELECTION_ACTION_STEP.get(action)
+    if step is not None:
+        if _numeric_text_mode_enabled(state):
+            _stop_numeric_text_mode(state)
+        state.selected_index = (state.selected_index + step) % field_count
+        return True
+
+    delta = _VALUE_ACTION_DELTA.get(action)
+    if delta is None:
+        return False
+    _handle_value_delta(state, fields, delta)
+    return True
+
+
 def _apply_single_menu_action(
     state: Any,
     action: MenuInput,
@@ -384,6 +578,9 @@ def _apply_single_menu_action(
     dimension: int,
     blocked: set[MenuAction],
 ) -> None:
+    if _handle_numeric_text_input(state, action, fields):
+        return
+
     if isinstance(action, RebindCapture):
         if MenuAction.REBIND_TOGGLE in blocked:
             return
@@ -400,18 +597,16 @@ def _apply_single_menu_action(
         simple_handler(state, dimension)
         return
 
-    step = _SELECTION_ACTION_STEP.get(action)
-    if step is not None:
-        state.selected_index = (state.selected_index + step) % field_count
-        return
-
     if action == MenuAction.RUN_DRY_RUN:
         state.run_dry_run = True
         return
 
-    delta = _VALUE_ACTION_DELTA.get(action)
-    if delta is not None:
-        _handle_value_delta(state, fields, delta)
+    if _apply_selection_or_value_action(
+        state,
+        action,
+        field_count=field_count,
+        fields=fields,
+    ):
         return
 
     apply_menu_binding_action(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 import random
 
@@ -34,6 +35,10 @@ from tet4d.ui.pygame.keybindings import (
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.topology_explorer.presets import axis_wrap_profile
+from tet4d.ui.pygame.topology_lab.app import (
+    build_explorer_playground_config,
+    build_explorer_playground_launch,
+)
 from tests.unit.engine._translation_contract import (
     assert_repeated_translation_progress,
 )
@@ -670,6 +675,94 @@ class TestGameplayReplay(unittest.TestCase):
             signature=lambda: tuple(sorted(loop.state.current_piece.cells())),
             expected_signatures=expected,
             label="explorer_4d_frontend_left",
+            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+        )
+
+    def test_explorer_3d_playground_launch_repeated_left_translation_live(self):
+        profile = axis_wrap_profile(dimension=3, wrapped_axes=(0,))
+        launch = build_explorer_playground_launch(
+            dimension=3,
+            explorer_profile=profile,
+            source_settings=SimpleNamespace(
+                width=6,
+                height=10,
+                depth=4,
+                piece_set_index=0,
+                speed_level=1,
+                random_mode_index=0,
+                game_seed=1337,
+            ),
+        )
+        cfg = build_explorer_playground_config(
+            dimension=3,
+            explorer_profile=profile,
+            settings_snapshot=launch.settings_snapshot,
+        )
+        state = front3d_game.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("bar3", ((0, 0, 0), (1, 0, 0), (2, 0, 0)), color_id=8),
+            pos=(2, 2, 1),
+        )
+        camera = front3d_game.Camera3D()
+        camera.yaw_deg = 0.0
+        move_x_neg = self._key_for(KEYS_3D, "move_x_neg")
+        start_cells = tuple(sorted(state.current_piece.cells()))
+        expected = [
+            tuple(sorted((x - 1, y, z) for x, y, z in start_cells)),
+            tuple(sorted((x - 2, y, z) for x, y, z in start_cells)),
+        ]
+
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: front3d_game.handle_game_keydown(_keydown(move_x_neg), state, camera),
+            signature=lambda: tuple(sorted(state.current_piece.cells())),
+            expected_signatures=expected,
+            label="explorer_3d_playground_left",
+            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+        )
+
+    def test_explorer_4d_playground_launch_repeated_left_translation_live(self):
+        profile = axis_wrap_profile(dimension=4, wrapped_axes=(0,))
+        launch = build_explorer_playground_launch(
+            dimension=4,
+            explorer_profile=profile,
+            source_settings=SimpleNamespace(
+                width=6,
+                height=10,
+                depth=6,
+                fourth=4,
+                piece_set_index=0,
+                speed_level=1,
+                random_mode_index=0,
+                game_seed=1337,
+            ),
+        )
+        cfg = build_explorer_playground_config(
+            dimension=4,
+            explorer_profile=profile,
+            settings_snapshot=launch.settings_snapshot,
+        )
+        loop = front4d_game.LoopContext4D.create(cfg)
+        loop.state.board.cells.clear()
+        loop.state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8),
+            pos=(2, 2, 1, 1),
+        )
+        loop.view.yaw_deg = 0.0
+        move_x_neg = self._key_for(KEYS_4D, "move_x_neg")
+        start_cells = tuple(sorted(loop.state.current_piece.cells()))
+        expected = [
+            tuple(sorted((x - 1, y, z, w) for x, y, z, w in start_cells)),
+            tuple(sorted((x - 2, y, z, w) for x, y, z, w in start_cells)),
+        ]
+
+        assert_repeated_translation_progress(
+            self,
+            step=lambda: loop.keydown_handler(_keydown(move_x_neg)),
+            signature=lambda: tuple(sorted(loop.state.current_piece.cells())),
+            expected_signatures=expected,
+            label="explorer_4d_playground_left",
             result_assertion=lambda case, result, index: case._assert_continue(result, index),
         )
 

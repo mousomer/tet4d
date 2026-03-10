@@ -132,6 +132,40 @@
       "enforced_by": [
         "code_review"
       ]
+    },
+    {
+      "id": "staged_migration_honesty",
+      "category": "process",
+      "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "additive_migration_first",
+      "category": "process",
+      "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify_focus.sh"
+      ]
+    },
+    {
+      "id": "delta_report_required",
+      "category": "process",
+      "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
     }
   ]
 }
