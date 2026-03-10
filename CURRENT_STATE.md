@@ -41,7 +41,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.60`
+1. `delivery_size_pressure = 1.61`
 2. `code_balance = 0.96`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -105,6 +105,9 @@ Dominant remaining pressure:
 - Stage 3 is live for one direct explorer-entry topology edit path: from the explorer scene, the user can select a source boundary, select a target boundary, create a gluing draft, edit its transform in the linked side panel, and apply the glue without leaving the shell.
 - Stage 5 sandbox migration is now live: spawn, move, rotate, and seam-cross preview all run inside the canonical explorer playground shell.
 - Stage 6 is now live: the detached playground launcher entry is demoted to an optional direct-open shortcut, while ordinary custom-topology flow uses the unified explorer playground shell. Remaining old-only blockers for ordinary topology editing: none.
+- Stage 7 is now live: the graphical explorer is the primary editor, while the former line+dots row/panel surface is explicitly demoted to `Analysis` as a secondary view.
+- Stage 8 is now live: the shell's `Play This Topology` action launches directly from the current in-memory playground draft state, with no secondary conversion menu on the migrated path.
+- Stage 9 is now live: ordinary play menus are now minimal launchers only, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` without reintroducing full topology editing into the menu surface.
 
 Stage 4 is now live for the migrated explorer-entry settings path: the playground shell itself exposes the dimension selector, board-axis size editors, and explorer preset selector, and those changes update canonical playground state directly while the explorer scene refreshes from that state.
 - In one shell, the player can change presets, adjust board size, move and rotate the sandbox piece, glue/edit seams, and launch play from the current draft.
@@ -232,10 +235,10 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2328` real LOC
+1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2329` real LOC
 2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-4. `tests/unit/engine/test_topology_lab_menu.py`: `1450` real LOC
+4. `tests/unit/engine/test_topology_lab_menu.py`: `1463` real LOC
 5. `tools/governance/validate_project_contracts.py`: `1178` real LOC
 6. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 7. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
@@ -243,7 +246,7 @@ Top 8 live Python hotspots by real LOC:
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 693/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 784/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

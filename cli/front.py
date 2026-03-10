@@ -3,6 +3,7 @@ import argparse
 import sys
 from pathlib import Path
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 
 def _parse_cli_args(argv=None):
@@ -21,11 +22,18 @@ if __name__ == "__main__":
 import pygame
 
 from tet4d.engine.tutorial.api import tutorial_lesson_ids_runtime
-from tet4d.ui.pygame.runtime_ui.app_runtime import initialize_runtime, open_display
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    capture_windowed_display_settings,
+    initialize_runtime,
+    open_display,
+)
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_topology_lab_menu
-from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_launch
+from tet4d.ui.pygame.topology_lab.app import (
+    build_explorer_playground_config,
+    build_explorer_playground_launch,
+)
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
@@ -41,6 +49,7 @@ from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import (
     branding_copy,
+    default_settings_payload,
     launcher_menu_id,
     launcher_route_actions,
     launcher_subtitles,
@@ -52,6 +61,9 @@ from tet4d.engine.runtime.menu_settings_state import (
 )
 from tet4d.engine.runtime.menu_settings_state import (
     save_app_settings_payload as save_menu_payload,
+)
+from tet4d.engine.runtime.topology_explorer_runtime import (
+    load_runtime_explorer_topology_profile,
 )
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
@@ -546,6 +558,83 @@ def _menu_action_topology_lab(
     return not session.running
 
 
+def _mode_settings_snapshot(mode: str) -> SimpleNamespace:
+    defaults = default_settings_payload()
+    merged: dict[str, object] = {}
+    if isinstance(defaults, dict):
+        settings_defaults = defaults.get("settings")
+        if isinstance(settings_defaults, dict):
+            mode_defaults = settings_defaults.get(mode)
+            if isinstance(mode_defaults, dict):
+                merged.update(mode_defaults)
+    payload = load_menu_payload()
+    if isinstance(payload, dict):
+        payload_settings = payload.get("settings")
+        if isinstance(payload_settings, dict):
+            mode_payload = payload_settings.get(mode)
+            if isinstance(mode_payload, dict):
+                merged.update(mode_payload)
+    return SimpleNamespace(**merged)
+
+
+def _menu_action_play_last_custom_topology(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+    fonts_2d,
+) -> bool:
+    mode = state.last_mode if state.last_mode in {"2d", "3d", "4d"} else "2d"
+    dimension = int(mode[0])
+    launch = build_explorer_playground_launch(
+        dimension=dimension,
+        explorer_profile=load_runtime_explorer_topology_profile(dimension),
+        display_settings=session.display_settings,
+        fonts_2d=fonts_2d,
+        gameplay_mode="explorer",
+        entry_source="explorer",
+        source_settings=_mode_settings_snapshot(mode),
+    )
+    from tet4d.ui.pygame import front2d_game, front3d_game, front4d_game
+
+    try:
+        cfg = build_explorer_playground_config(
+            dimension=launch.dimension,
+            explorer_profile=launch.explorer_profile,
+            settings_snapshot=launch.settings_snapshot,
+        )
+        session.screen = open_display(
+            session.display_settings,
+            caption=f"{launch.dimension}D Explorer",
+        )
+        if launch.dimension == 2:
+            back_to_menu = front2d_game.run_game_loop(
+                session.screen,
+                cfg,
+                fonts_2d,
+                session.display_settings,
+            )
+        elif launch.dimension == 3:
+            back_to_menu = front3d_game.run_game_loop(session.screen, cfg, fonts_nd)
+        else:
+            back_to_menu = front4d_game.run_game_loop(session.screen, cfg, fonts_nd)
+    except Exception as exc:
+        state.status = f"Play last custom topology failed: {exc}"
+        state.status_error = True
+        return False
+
+    if not back_to_menu:
+        session.running = False
+        return True
+
+    state.last_mode = mode
+    session.display_settings = capture_windowed_display_settings(session.display_settings)
+    session.screen = open_display(session.display_settings)
+    _persist_session_status(state, session)
+    state.status = launch.startup_notice or f"Returned from {launch.dimension}D custom topology play"
+    state.status_error = False
+    return False
+
+
 def _build_action_registry(
     state: MainMenuState,
     session: _LauncherSession,
@@ -567,6 +656,15 @@ def _build_action_registry(
     registry.register(
         "play_4d",
         lambda: _menu_action_play_dimension("4d", state, session, fonts_nd, fonts_2d),
+    )
+    registry.register(
+        "play_last_custom_topology",
+        lambda: _menu_action_play_last_custom_topology(
+            state,
+            session,
+            fonts_nd,
+            fonts_2d,
+        ),
     )
     registry.register(
         "continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)

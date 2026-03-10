@@ -5,7 +5,7 @@
   },
   "launcher_subtitles": {
     "launcher_root": "Play, continue, or launch Tutorials; then adjust Settings, Controls, Help, and Bot options.",
-    "launcher_play": "Select a dimension. Explorer Playground (Direct Open) is an optional shortcut.",
+    "launcher_play": "Minimal play launcher: safe presets, last custom topology, or open Explorer Playground.",
     "launcher_tutorials": "Select a guided tutorial pack.",
     "default": "Up/Down select and Enter open actions."
   },
@@ -144,7 +144,12 @@
         },
         {
           "type": "action",
-          "label": "Explorer Playground (Direct Open)",
+          "label": "Play Last Custom Topology",
+          "action_id": "play_last_custom_topology"
+        },
+        {
+          "type": "action",
+          "label": "Open Explorer Playground",
           "action_id": "topology_lab"
         }
       ]

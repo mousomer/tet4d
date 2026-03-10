@@ -308,3 +308,84 @@ Current implementation status:
 2. the launcher play menu now labels the detached entry as `Explorer Playground (Direct Open)` and describes it as an optional shortcut instead of the primary path
 3. focused launcher/menu tests pin that ordinary explorer use no longer depends on the detached direct-open item
 4. remaining old-only blockers for ordinary topology editing: none
+
+## Stage 7 Scope And Non-Goals
+
+Stage 7 demotes the line+dots row/panel surface so it remains available only as optional secondary analysis while the graphical explorer becomes the primary editing surface.
+
+Required work:
+- keep the line+dots row/panel controls as optional analysis/research support
+- remove them from the primary editing workflow
+- label them clearly as abstract/secondary analysis
+
+Explicit Stage 7 non-goals:
+- do not remove the supporting analysis pane entirely
+- do not yet decompose `src/tet4d/ui/pygame/launch/topology_lab_menu.py` fully
+- do not change explorer topology semantics
+
+## Stage 7 Acceptance Criteria
+Stage 7 is complete only if:
+- main editing is done in the graphical explorer
+- the line+dots analysis surface remains available as secondary analysis only
+- helper/footer copy reflects that priority directly
+
+## Stage 7 Status
+Current implementation status:
+1. the explorer pane is the primary pane label and the default active pane for the explorer-playground path
+2. the former controls pane is now explicitly labeled `Analysis`
+3. helper/footer copy states that the graphical explorer is the primary editor and the analysis pane is a secondary view
+4. focused tests pin the explorer-first pane contract and the secondary-analysis helper text
+
+## Stage 8 Scope And Non-Goals
+
+Stage 8 makes play launch use the current playground state directly, with no export/import mental model and no secondary conversion menu requirement on the migrated path.
+
+Required work:
+- add a direct `Play This Topology` action from the playground shell
+- launch gameplay directly from the current in-memory playground draft
+
+Explicit Stage 8 non-goals:
+- do not remove minimal preset launchers from ordinary play menus
+- do not delete explicit compatibility export paths unrelated to normal playground play launch
+- do not broaden this stage into a full menu rewrite
+
+## Stage 8 Acceptance Criteria
+Stage 8 is complete only if:
+- current playground state launches gameplay directly
+- no secondary conversion menu is required for the migrated path
+- play menus can still launch minimal presets separately
+
+## Stage 8 Status
+Current implementation status:
+1. the playground shell now exposes the direct action label `Play This Topology`
+2. the shell play path calls `build_explorer_playground_config(...)` directly from the current `TopologyPlaygroundState` draft data
+3. focused tests pin that `dimension`, `explorer_profile`, and `settings_snapshot` passed to play launch come from the live playground state itself
+4. ordinary preset launchers remain outside the shell and are unchanged by this stage
+
+
+## Stage 9 Scope And Non-Goals
+
+Stage 9 freezes ordinary play menus as minimal launchers so topology complexity no longer sprawls back into play-menu flows.
+
+Required work:
+- keep only minimal safe presets in play menus
+- keep an explicit action to open the Explorer Playground shell
+- keep a direct action to play the last custom topology from stored explorer state
+
+Explicit Stage 9 non-goals:
+- do not remove minimal preset launchers for ordinary play
+- do not move full topology editing back into play menus
+- do not remove the Explorer Playground shell as the canonical topology editor
+
+## Stage 9 Acceptance Criteria
+Stage 9 is complete only if:
+- play menus are no longer full topology editors
+- topology complexity lives only in the playground shell
+- play menus keep only minimal safe presets, open-playground, and play-last-custom actions for the migrated path
+
+## Stage 9 Status
+Current implementation status:
+1. `launcher_play` now contains only `Play 2D`, `Play 3D`, `Play 4D`, `Play Last Custom Topology`, and `Open Explorer Playground`
+2. `Play Last Custom Topology` launches directly through the shared playground launch/config path using the stored explorer profile and current mode settings snapshot
+3. ordinary play-menu copy now describes the surface as a minimal launcher instead of a topology editor
+4. focused menu/launcher tests pin the minimal action set and the direct last-custom launch path

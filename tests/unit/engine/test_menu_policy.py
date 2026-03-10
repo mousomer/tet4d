@@ -194,16 +194,20 @@ class TestMenuPolicy(unittest.TestCase):
             item["action_id"] for item in play_items if item["type"] == "action"
         }
         self.assertTrue(
-            {"play_2d", "play_3d", "play_4d", "topology_lab"}.issubset(play_actions)
+            {"play_2d", "play_3d", "play_4d", "play_last_custom_topology", "topology_lab"}.issubset(play_actions)
         )
 
-    def test_detached_explorer_playground_entry_is_marked_as_direct_open_shortcut(self) -> None:
+    def test_play_menu_is_minimal_launcher(self) -> None:
         launcher_play = menu_config.menu_definition("launcher_play")
         detached_item = next(
             item for item in launcher_play["items"] if item.get("action_id") == "topology_lab"
         )
-        self.assertEqual(detached_item["label"], "Explorer Playground (Direct Open)")
-        self.assertIn("optional shortcut", menu_config.launcher_subtitles()["launcher_play"])
+        self.assertEqual(detached_item["label"], "Open Explorer Playground")
+        self.assertIn("Minimal play launcher", menu_config.launcher_subtitles()["launcher_play"])
+        self.assertIn(
+            "play_last_custom_topology",
+            {item["action_id"] for item in launcher_play["items"] if item["type"] == "action"},
+        )
 
     def test_launcher_route_actions_cover_launcher_routes(self) -> None:
         pending = [menu_config.launcher_menu_id()]

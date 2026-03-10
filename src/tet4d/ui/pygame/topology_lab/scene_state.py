@@ -23,8 +23,8 @@ PANE_CONTROLS = "controls"
 PANE_SCENE = "scene"
 TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
 PANE_LABELS = {
-    PANE_CONTROLS: "Controls",
-    PANE_SCENE: "Scene",
+    PANE_CONTROLS: "Analysis",
+    PANE_SCENE: "Explorer",
 }
 TOPOLOGY_LAB_TOOLS = (
     TOOL_NAVIGATE,
@@ -42,7 +42,7 @@ TOOL_LABELS = {
     TOOL_EDIT: "Edit",
     TOOL_PROBE: "Probe",
     TOOL_SANDBOX: "Sandbox",
-    TOOL_PLAY: "Play",
+    TOOL_PLAY: "Play This Topology",
 }
 
 

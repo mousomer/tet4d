@@ -1678,7 +1678,7 @@ def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str]
     if state.active_tool == TOOL_PROBE:
         return (
             ("probe_reset", "Reset Probe"),
-            ("play_preview", "Play"),
+            ("play_preview", "Play This Topology"),
             ("save_profile", "Save"),
             ("back", "Back"),
         )
@@ -1692,7 +1692,7 @@ def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str]
             ("sandbox_rotate", "Rotate"),
             ("sandbox_trace", "Hide Trace" if state.sandbox.show_trace else "Show Trace"),
             ("sandbox_reset", "Reset"),
-            ("play_preview", "Play"),
+            ("play_preview", "Play This Topology"),
             ("save_profile", "Save"),
             ("back", "Back"),
         )
@@ -1701,7 +1701,7 @@ def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str]
         ("remove_glue", "Remove"),
         ("save_profile", "Save"),
         ("export", "Export"),
-        ("play_preview", "Play"),
+        ("play_preview", "Play This Topology"),
         ("back", "Back"),
     )
 
@@ -2220,16 +2220,17 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
         )
     lines = [
         "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
+        "Graphical explorer is the primary editor; the Analysis pane is an optional secondary view.",
         f"Pane: {pane_label}   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play",
         *move_lines,
     ]
     if _controls_pane_active(state):
         lines.append(
-            "Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values"
+            "Analysis pane (secondary): Up/Down select row   Left/Right change value   Click +/- to adjust values"
         )
     else:
         lines.append(
-            "Scene pane: Left click selects boundary or seam   Right click boundary creates or edits a seam"
+            "Explorer pane (primary): Left click selects boundary or seam   Right click boundary creates or edits a seam"
         )
     availability = scene_camera_availability(state.dimension)
     if availability.enabled:

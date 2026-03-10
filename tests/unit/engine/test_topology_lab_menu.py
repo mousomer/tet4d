@@ -46,6 +46,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             ),
         )
         topology_lab_menu._normalize_explorer_draft(state)
+        state.active_pane = topology_lab_menu.PANE_SCENE
         return state
 
     def _invalid_explorer_profile(self, dimension: int) -> ExplorerTopologyProfile:
@@ -294,11 +295,11 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_tab_and_shift_tab_cycle_panes(self) -> None:
         state = self._explorer_state(3)
-        self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
-        topology_lab_menu._dispatch_key(state, pygame.K_TAB)
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
-        topology_lab_menu._dispatch_key(state, pygame.K_TAB, pygame.KMOD_SHIFT)
+        topology_lab_menu._dispatch_key(state, pygame.K_TAB)
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_CONTROLS)
+        topology_lab_menu._dispatch_key(state, pygame.K_TAB, pygame.KMOD_SHIFT)
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
 
     def test_enter_in_play_tool_requests_play_preview(self) -> None:
         state = self._explorer_state(3)
@@ -405,10 +406,12 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         lines = topology_lab_menu._hint_lines_for_state(state)
         self.assertIn("Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.", lines)
+        self.assertIn("Graphical explorer is the primary editor; the Analysis pane is an optional secondary view.", lines)
         self.assertTrue(any(line.startswith("Move Y:") for line in lines))
-        self.assertIn("Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values", lines)
+        self.assertIn("Analysis pane (secondary): Up/Down select row   Left/Right change value   Click +/- to adjust values", lines)
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -949,6 +952,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu._activate_action(state, "play_preview")
         self.assertTrue(state.play_preview_requested)
 
+    def test_action_buttons_label_play_from_current_topology(self) -> None:
+        state = self._explorer_state(3)
+        labels = dict(topology_lab_menu._action_buttons_for_state(state))
+        self.assertEqual(labels["play_preview"], "Play This Topology")
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        labels = dict(topology_lab_menu._action_buttons_for_state(state))
+        self.assertEqual(labels["play_preview"], "Play This Topology")
+
     def test_launch_play_preview_2d_uses_draft_profile(self) -> None:
         state = self._explorer_state(2)
         profile = topology_lab_menu._explorer_presets(state)[1].profile
@@ -974,6 +985,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             )
         self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
         self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
+        self.assertIs(build_cfg.call_args.kwargs["settings_snapshot"], state.play_settings)
         run_loop.assert_called_once()
 
     def test_probe_reset_action_restores_center_and_clears_trace(self) -> None:
@@ -1013,6 +1025,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             )
         self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
         self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
+        self.assertIs(build_cfg.call_args.kwargs["settings_snapshot"], state.play_settings)
         run_loop.assert_called_once()
 
     def test_launch_play_preview_3d_invalid_preview_blocks_runtime(self) -> None:
@@ -1070,6 +1083,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             )
         self.assertEqual(build_cfg.call_args.kwargs["dimension"], state.dimension)
         self.assertIs(build_cfg.call_args.kwargs["explorer_profile"], profile)
+        self.assertIs(build_cfg.call_args.kwargs["settings_snapshot"], state.play_settings)
         run_loop.assert_called_once()
 
     def test_camera_shortcut_uses_scene_camera_in_navigate_tool(self) -> None:
@@ -1312,11 +1326,11 @@ class TestTopologyLabMenu(unittest.TestCase):
             lines,
         )
         self.assertIn(
-            "Pane: Controls   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play",
+            "Pane: Analysis   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play",
             lines,
         )
         self.assertIn(
-            "Controls pane: Up/Down select row   Left/Right change value   Click +/- to adjust values",
+            "Analysis pane (secondary): Up/Down select row   Left/Right change value   Click +/- to adjust values",
             lines,
         )
         self.assertTrue(any(line.startswith("Navigate tool camera:") for line in lines))
@@ -1326,7 +1340,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         state.active_pane = topology_lab_menu.PANE_SCENE
         lines = topology_lab_menu._hint_lines_for_state(state)
         self.assertIn(
-            "Scene pane: Left click selects boundary or seam   Right click boundary creates or edits a seam",
+            "Explorer pane (primary): Left click selects boundary or seam   Right click boundary creates or edits a seam",
             lines,
         )
 

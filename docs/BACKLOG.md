@@ -6,6 +6,9 @@ Scope: active open backlog, governance watchlist, and current change footprint.
 
 Current sub-batch (2026-03-10): Stage 5 sandbox migration is now live: spawn, move, rotate, and seam-cross preview all run inside the canonical explorer playground shell.
 Stage 6 is now live: the detached playground launcher entry is demoted to an optional direct-open shortcut, and ordinary custom-topology flow now routes through the same unified explorer playground shell. Remaining old-only blockers for ordinary topology editing: none.
+Stage 7 is now live: the graphical explorer is the primary editor, and the former row/list line+dots surface is now labeled `Analysis` and treated as optional secondary analysis only.
+Stage 8 is now live: the shell action is explicitly `Play This Topology`, and play launch uses the current in-memory playground draft directly without a secondary conversion menu on the migrated path.
+Stage 9 is now live: ordinary play menus are frozen as minimal launchers, keeping only safe preset launches, `Play Last Custom Topology`, and `Open Explorer Playground` while leaving topology complexity in the playground shell.
 
 Stage 4 live playground settings on top of the Stage 3 explorer-side topology editing path.
 - Kept `TopologyPlaygroundState` scene caches in `src/tet4d/ui/pygame/topology_lab/scene_state.py` as the canonical source of truth for the migrated explorer shell.

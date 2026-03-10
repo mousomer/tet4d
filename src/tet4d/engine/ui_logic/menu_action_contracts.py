@@ -17,6 +17,7 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "play_2d",
         "play_3d",
         "play_4d",
+        "play_last_custom_topology",
         "continue",
         "tutorial_2d",
         "tutorial_3d",

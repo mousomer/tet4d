@@ -42,6 +42,42 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertEqual(launch.entry_source, "lab")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
 
+    def test_play_last_custom_topology_uses_direct_playground_launch(self) -> None:
+        state = front.MainMenuState(last_mode="3d")
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+        launch = SimpleNamespace(
+            dimension=3,
+            startup_notice=None,
+            explorer_profile=object(),
+            settings_snapshot=object(),
+        )
+
+        with (
+            patch.object(front, "_persist_session_status"),
+            patch.object(front, "_mode_settings_snapshot", return_value=SimpleNamespace()),
+            patch.object(front, "load_runtime_explorer_topology_profile", return_value=object()),
+            patch.object(front, "build_explorer_playground_launch", return_value=launch),
+            patch.object(front, "build_explorer_playground_config", return_value=object()),
+            patch.object(front, "open_display", side_effect=lambda display_settings, caption=None: object()),
+            patch.object(front, "capture_windowed_display_settings", side_effect=lambda display_settings: display_settings),
+            patch("tet4d.ui.pygame.front3d_game.run_game_loop", return_value=True) as run_loop,
+        ):
+            close = front._menu_action_play_last_custom_topology(
+                state,
+                session,
+                object(),
+                object(),
+            )
+
+        self.assertFalse(close)
+        self.assertFalse(state.status_error)
+        run_loop.assert_called_once()
+
     def test_non_tutorial_route_uses_registry_dispatch(self) -> None:
         state = front.MainMenuState(last_mode="2d")
         session = SimpleNamespace(
