@@ -8,7 +8,12 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
 )
 from tet4d.engine.runtime.menu_config import default_settings_payload
+from tet4d.engine.runtime.topology_explorer_preview import compile_explorer_topology_preview
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.engine.topology_explorer.presets import (
+    ExplorerTopologyPreset,
+    explorer_presets_for_dimension,
+)
 
 from .scene_state import (
     ExplorerPlaygroundSettings,
@@ -29,6 +34,7 @@ class ExplorerPlaygroundLaunch:
     explorer_profile: ExplorerTopologyProfile | None = None
     display_settings: object | None = None
     fonts_2d: object | None = None
+    startup_notice: str | None = None
 
 
 def _default_mode_payload(dimension: int) -> dict[str, int]:
@@ -63,6 +69,37 @@ def build_explorer_playground_settings(
     )
 
 
+def _profile_validation_error(
+    profile: ExplorerTopologyProfile | None,
+    dims: tuple[int, ...],
+) -> str | None:
+    if profile is None:
+        return None
+    try:
+        compile_explorer_topology_preview(
+            profile,
+            dims=dims,
+            source="explorer_playground_launch",
+        )
+    except ValueError as exc:
+        return str(exc)
+    return None
+
+
+def _fallback_explorer_preset(
+    dimension: int,
+    dims: tuple[int, ...],
+) -> ExplorerTopologyPreset | None:
+    presets = explorer_presets_for_dimension(int(dimension))
+    for allow_empty in (False, True):
+        for preset in presets:
+            if not allow_empty and preset.preset_id.startswith("empty_"):
+                continue
+            if _profile_validation_error(preset.profile, dims) is None:
+                return preset
+    return None
+
+
 def build_explorer_playground_launch(
     *,
     dimension: int,
@@ -87,15 +124,28 @@ def build_explorer_playground_launch(
         dimension=int(dimension),
         source_settings=source_settings,
     )
+    resolved_profile = explorer_profile
+    startup_notice = None
+    if entry_source == "explorer":
+        validation_error = _profile_validation_error(resolved_profile, snapshot.board_dims)
+        if validation_error is not None:
+            fallback = _fallback_explorer_preset(int(dimension), snapshot.board_dims)
+            if fallback is not None:
+                resolved_profile = fallback.profile
+                startup_notice = (
+                    "Stored explorer topology is invalid for the current board size; "
+                    f"loaded preset '{fallback.label}' instead."
+                )
     return ExplorerPlaygroundLaunch(
         dimension=int(dimension),
         gameplay_mode=mode,
         initial_tool=tool,
         entry_source=entry_source,
         settings_snapshot=snapshot,
-        explorer_profile=explorer_profile,
+        explorer_profile=resolved_profile,
         display_settings=display_settings,
         fonts_2d=fonts_2d,
+        startup_notice=startup_notice,
     )
 
 

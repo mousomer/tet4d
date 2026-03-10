@@ -8,7 +8,12 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
 )
-from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.engine.topology_explorer import (
+    BoundaryRef,
+    BoundaryTransform,
+    ExplorerTopologyProfile,
+    GluingDescriptor,
+)
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
@@ -17,6 +22,19 @@ from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_SANDBOX
 
 
 class TestTopologyLabApp(unittest.TestCase):
+    def _invalid_profile_3d(self) -> ExplorerTopologyProfile:
+        return ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                GluingDescriptor(
+                    glue_id="invalid_dims",
+                    source=BoundaryRef(dimension=3, axis=0, side="-"),
+                    target=BoundaryRef(dimension=3, axis=1, side="+"),
+                    transform=BoundaryTransform(permutation=(0, 1), signs=(1, 1)),
+                ),
+            ),
+        )
+
     def test_build_explorer_launch_defaults_to_sandbox_for_explorer_entry(self) -> None:
         profile = ExplorerTopologyProfile(dimension=3, gluings=())
         launch = build_explorer_playground_launch(
@@ -60,6 +78,29 @@ class TestTopologyLabApp(unittest.TestCase):
         self.assertEqual(launch.settings_snapshot.speed_level, 4)
         self.assertEqual(launch.settings_snapshot.random_mode_index, 1)
         self.assertEqual(launch.settings_snapshot.game_seed, 1234)
+
+    def test_build_explorer_launch_falls_back_from_invalid_3d_profile(self) -> None:
+        launch = build_explorer_playground_launch(
+            dimension=3,
+            explorer_profile=self._invalid_profile_3d(),
+            source_settings=SimpleNamespace(width=6, height=18, depth=6, piece_set_index=0, speed_level=1, random_mode_index=0, game_seed=0),
+        )
+        self.assertIsNotNone(launch.startup_notice)
+        self.assertIn("Stored explorer topology is invalid", launch.startup_notice)
+        assert launch.explorer_profile is not None
+        self.assertNotEqual(launch.explorer_profile, self._invalid_profile_3d())
+
+    def test_build_lab_launch_preserves_invalid_3d_profile_for_manual_repair(self) -> None:
+        invalid = self._invalid_profile_3d()
+        launch = build_explorer_playground_launch(
+            dimension=3,
+            explorer_profile=invalid,
+            entry_source="lab",
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            source_settings=SimpleNamespace(width=6, height=18, depth=6, piece_set_index=0, speed_level=1, random_mode_index=0, game_seed=0),
+        )
+        self.assertIs(launch.explorer_profile, invalid)
+        self.assertIsNone(launch.startup_notice)
 
     def test_build_explorer_playground_config_uses_2d_builder(self) -> None:
         profile = ExplorerTopologyProfile(dimension=2, gluings=())

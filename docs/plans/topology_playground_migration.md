@@ -1,9 +1,9 @@
 # Topology Playground Migration
 
 ## Status
-- Stage: 0
-- Scope: UX architecture freeze only
-- Code migration: not started in this document
+- Stage: 6
+- Scope: demote the detached playground menu after canonical-state, live edit, settings, and sandbox migration
+- Code migration: in progress for the migrated explorer-playground path
 
 ## Objective
 Freeze the user-facing topology UX architecture before implementation so the migration has one canonical target and clear non-goals.
@@ -167,31 +167,144 @@ Removed or demoted responsibilities:
 4. The line+dots mini tool is secondary analysis only.
 5. Play launch uses current playground state directly.
 
-## Non-Goals
-This stage does not perform code migration.
+## Stage 2 Scope And Non-Goals
 
-Explicit non-goals:
-- no runtime rewiring
-- no UI event rewiring
+Stage 2 migrates the graphical explorer rendering/picking path to canonical playground state.
+
+Explicit Stage 2 non-goals:
+- do not yet merge all menus
+- do not yet delete old configuration panels
 - no engine topology semantic changes
-- no deletion of old code paths
 - no launcher removal
-- no structural cleanup in this document-only stage
+- no destructive cleanup of old paths before the migrated path is verified
 
-## Acceptance Criteria
-This Stage 0 document is complete only if it clearly defines:
-- current surfaces
-- target surfaces
-- removed/demoted responsibilities
-- minimal role of play menus
-- playground as the only full topology editor
-- graphical explorer as primary canvas
-- line+dots mini tool as secondary analysis view
-- direct play launch from current playground state
+## Stage 2 Acceptance Criteria
+Stage 2 is complete only if:
+- explorer reads canonical playground state for the migrated path
+- topology changes reflected in explorer come from that canonical state
+- explorer is no longer driven by ad hoc local copies for the migrated path
+- old configuration panels remain present for non-migrated responsibilities
+
+## Stage 2 Status
+Current implementation status:
+1. canonical playground scene caches now live on `TopologyPlaygroundState` in `src/tet4d/ui/pygame/topology_lab/scene_state.py`
+2. the migrated explorer rendering/picking path in `src/tet4d/ui/pygame/launch/topology_lab_menu.py` now consumes those canonical caches
+3. focused tests assert canonical scene-state population, canonical scene-state refresh on topology mutation, and draw-path consumption without recomputing preview locally
+4. menu consolidation and old-panel removal are still deferred to later stages
+
+## Stage 3 Scope And Non-Goals
+
+Stage 3 adds one fully live explorer-side topology editing path without requiring a round-trip to another menu.
+
+Required migrated path:
+- select source boundary from the explorer scene
+- select target boundary from the explorer scene
+- create a gluing draft in the same shell
+- edit transform controls from the linked side panel
+- apply the gluing without leaving explorer
+
+Explicit Stage 3 non-goals:
+- do not yet migrate every menu feature
+- do not yet remove old configuration panels
+- do not yet delete non-migrated topology editing paths
+
+## Stage 3 Acceptance Criteria
+Stage 3 is complete only if:
+- the user can change core topology settings without leaving explorer
+- at least one topology edit path is fully live from the explorer scene
+- no back-and-forth is needed for that migrated path
+
+## Stage 3 Status
+Current implementation status:
+1. Explorer entry can start from the scene in sandbox/probe-facing flow, right-click a boundary, and enter direct gluing creation without leaving the shell
+2. a second scene boundary pick completes the source/target draft path and switches into transform editing
+3. linked side-panel transform editing and apply-glue actions operate on that in-memory draft in the same shell
+4. focused tests pin this direct explorer-entry scene path end to end
+
+## Stage 4 Scope And Non-Goals
+
+Stage 4 makes dimension, board size, and explorer preset changes live playground settings.
+
+Required migrated settings:
+- dimension selector
+- axis-size editor
+- current topology preset selector
+
+Explicit Stage 4 non-goals:
+- do not yet migrate every remaining menu feature
+- do not yet delete old configuration panels
+- do not yet consolidate every retained row/panel responsibility into new modules
+
+## Stage 4 Acceptance Criteria
+Stage 4 is complete only if:
+- dimension, board-size, and explorer-preset settings are editable from the playground shell
+- those settings update canonical playground state directly
+- the explorer scene reflects those changes live from canonical state
+
+## Stage 4 Status
+Current implementation status:
+1. explorer-entry rows now expose the dimension selector, axis-size editors, and explorer preset selector from the playground shell itself
+2. changing dimension updates `TopologyPlaygroundState.dimension`, refreshes canonical scene caches, and refreshes the live explorer scene for the new dimension
+3. changing board size updates `TopologyPlaygroundState.play_settings.board_dims`, refreshes canonical scene caches, and redraws the explorer against the new dimensions
+4. changing explorer preset updates `TopologyPlaygroundState.explorer_profile`, rebuilds canonical scene preview state, and refreshes the scene without leaving the shell
+5. focused explorer-entry tests now pin all three setting classes against canonical scene state instead of treating them as implied behavior
+
+## Stage 5 Scope And Non-Goals
+
+Stage 5 makes piece testing a first-class playground capability inside the explorer shell.
+
+Required migrated sandbox responsibilities:
+- spawn piece
+- move piece
+- rotate piece
+- seam-cross preview
+
+Explicit Stage 5 non-goals:
+- do not yet migrate every remaining menu feature
+- do not yet remove retained old configuration panels
+- do not yet redesign Normal Game play/runtime around sandbox behavior
+
+## Stage 5 Acceptance Criteria
+Stage 5 is complete only if:
+- sandbox uses canonical playground state
+- piece behavior is testable without leaving playground
+
+## Stage 5 Status
+Current implementation status:
+1. the unified explorer shell exposes sandbox actions directly, including spawn, move, rotate, trace, reset, and play-preview
+2. sandbox state is owned on `TopologyPlaygroundState.sandbox`, not by ad hoc local shell copies
+3. seam-cross preview is derived from engine-owned gluing traversal and rendered through the sandbox preview lines inside the same shell
+4. focused tests pin spawn, repeated movement, rotation, and seam-cross preview without leaving the playground
 
 ## Next Stage Preview
-The next implementation stage should migrate code toward this target incrementally:
-1. add or isolate any missing playground ownership modules
-2. route one explorer/playground flow through the canonical state
-3. verify
-4. only then demote or remove old paths
+After Stage 4, later stages may:
+1. migrate additional retained menu-owned topology settings fully into the canonical playground state
+2. consolidate or remove old configuration surfaces only after the new path is verified
+3. continue shrinking launcher-shell orchestration until `topology_lab_menu.py` is orchestration-only
+
+## Stage 6 Scope And Non-Goals
+
+Stage 6 demotes the detached playground launcher entry so ordinary custom-topology flow routes through the unified explorer shell instead of treating the direct-open menu as primary.
+
+Required work:
+- keep only what has not yet been migrated on the detached path
+- route the main custom-topology flow into the unified explorer playground shell
+- remove duplicated launcher responsibilities for ordinary topology editing
+
+Explicit Stage 6 non-goals:
+- do not yet remove the detached direct-open shortcut entirely
+- do not yet migrate every remaining retained configuration panel feature
+- do not yet claim `topology_lab_menu.py` is fully decomposed
+
+## Stage 6 Acceptance Criteria
+Stage 6 is complete only if:
+- the detached menu is no longer required for ordinary topology editing
+- the main custom-topology flow routes into the unified explorer shell
+- any remaining old-only features are listed explicitly as blockers
+
+## Stage 6 Status
+Current implementation status:
+1. the detached `topology_lab` launcher action now builds the same explorer gameplay shell as ordinary explorer entry, differing only by entry context (`entry_source="lab"`) rather than by a separate normal-mode launcher flow
+2. the launcher play menu now labels the detached entry as `Explorer Playground (Direct Open)` and describes it as an optional shortcut instead of the primary path
+3. focused launcher/menu tests pin that ordinary explorer use no longer depends on the detached direct-open item
+4. remaining old-only blockers for ordinary topology editing: none

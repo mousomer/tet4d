@@ -795,7 +795,7 @@ Parameters:
 - `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
 - `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Select a dimension or open the Explorer Playground."` (`string`)
+- `launcher_subtitles.launcher_play`: `"Select a dimension. Explorer Playground (Direct Open) is an optional...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, or launch Tutorials; then adjust Settings, Controls,...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Select a guided tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)

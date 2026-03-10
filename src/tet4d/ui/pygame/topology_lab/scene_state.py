@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from tet4d.engine.gameplay.topology_designer import (
@@ -8,7 +8,7 @@ from tet4d.engine.gameplay.topology_designer import (
     TopologyProfileState,
 )
 from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
-from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
 
 from .common import ExplorerGlueDraft, default_draft_for_dimension
 
@@ -62,12 +62,13 @@ class PieceSandboxState:
     origin: tuple[int, ...] | None = None
     local_blocks: tuple[tuple[int, ...], ...] | None = None
     trace: list[str] | None = None
+    seam_crossings: list[str] | None = None
     invalid_message: str = ""
     show_trace: bool = True
 
 
 @dataclass
-class TopologyLabState:
+class TopologyPlaygroundState:
     selected: int
     gameplay_mode: str
     dimension: int
@@ -95,16 +96,25 @@ class TopologyLabState:
     play_preview_requested: bool = False
     scene_camera: Any | None = None
     scene_mouse_orbit: Any | None = None
+    scene_boundaries: tuple[BoundaryRef, ...] = ()
+    scene_preview_dims: tuple[int, ...] = ()
+    scene_active_glue_ids: dict[str, str] = field(default_factory=dict)
+    scene_basis_arrows: tuple[dict[str, object], ...] = ()
+    scene_preview: dict[str, object] | None = None
+    scene_preview_error: str | None = None
 
 
-def uses_general_explorer_editor(state: TopologyLabState) -> bool:
+TopologyLabState = TopologyPlaygroundState
+
+
+def uses_general_explorer_editor(state: TopologyPlaygroundState) -> bool:
     return (
         state.gameplay_mode == GAMEPLAY_MODE_EXPLORER
         and state.dimension in (2, 3, 4)
     )
 
 
-def playground_dims_for_state(state: TopologyLabState) -> tuple[int, ...]:
+def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]:
     dims = state.play_settings.board_dims if state.play_settings is not None else explorer_topology_preview_dims(state.dimension)
     normalized = tuple(int(value) for value in dims[: state.dimension])
     if len(normalized) != state.dimension or any(value <= 0 for value in normalized):
@@ -112,7 +122,7 @@ def playground_dims_for_state(state: TopologyLabState) -> tuple[int, ...]:
     return normalized
 
 
-def ensure_probe_state(state: TopologyLabState) -> None:
+def ensure_probe_state(state: TopologyPlaygroundState) -> None:
     dims = playground_dims_for_state(state)
     if state.probe_coord is None or len(state.probe_coord) != state.dimension:
         state.probe_coord = tuple(0 for _ in range(state.dimension))
@@ -131,7 +141,7 @@ def ensure_probe_state(state: TopologyLabState) -> None:
         state.probe_path = [state.probe_coord]
 
 
-def reset_probe_state(state: TopologyLabState) -> None:
+def reset_probe_state(state: TopologyPlaygroundState) -> None:
     dims = playground_dims_for_state(state)
     state.probe_coord = tuple(max(0, size // 2) for size in dims)
     state.probe_trace = []
@@ -139,24 +149,26 @@ def reset_probe_state(state: TopologyLabState) -> None:
     state.highlighted_glue_id = None
 
 
-def ensure_explorer_draft(state: TopologyLabState) -> None:
+def ensure_explorer_draft(state: TopologyPlaygroundState) -> None:
     if state.explorer_draft is None or len(state.explorer_draft.signs) != (
         state.dimension - 1
     ):
         state.explorer_draft = default_draft_for_dimension(state.dimension)
 
 
-def ensure_sandbox_state(state: TopologyLabState) -> None:
+def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
     if state.sandbox is None:
         state.sandbox = PieceSandboxState()
     if state.sandbox.trace is None:
         state.sandbox.trace = []
+    if state.sandbox.seam_crossings is None:
+        state.sandbox.seam_crossings = []
     if state.sandbox.origin is None or len(state.sandbox.origin) != state.dimension:
         dims = playground_dims_for_state(state)
         state.sandbox.origin = tuple(max(0, size // 2) for size in dims)
 
 
-def set_active_tool(state: TopologyLabState, tool: str) -> None:
+def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
     if tool not in TOPOLOGY_LAB_TOOLS:
         raise ValueError(f"unsupported topology lab tool: {tool}")
     state.active_tool = tool
@@ -171,7 +183,7 @@ def set_active_tool(state: TopologyLabState, tool: str) -> None:
         state.sandbox.enabled = True
 
 
-def cycle_active_pane(state: TopologyLabState, step: int) -> None:
+def cycle_active_pane(state: TopologyPlaygroundState, step: int) -> None:
     current = TOPOLOGY_LAB_PANES.index(state.active_pane)
     state.active_pane = TOPOLOGY_LAB_PANES[(current + step) % len(TOPOLOGY_LAB_PANES)]
 
@@ -192,6 +204,7 @@ __all__ = [
     "TOOL_SANDBOX",
     "TOPOLOGY_LAB_TOOLS",
     "TopologyLabState",
+    "TopologyPlaygroundState",
     "cycle_active_pane",
     "ensure_explorer_draft",
     "ensure_probe_state",

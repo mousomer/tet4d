@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-09  
+Last updated: 2026-03-10  
 Branch: `codex/explorer-topology-live`  
 Worktree expectation: dirty only when an active batch is in progress
 
@@ -33,11 +33,11 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 152` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 154` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.55` (`low`)
+- `tech_debt.score = 2.56` (`low`)
 
 Dominant remaining pressure:
 
@@ -100,11 +100,18 @@ Dominant remaining pressure:
 
 ## Explorer Playground Status
 
-- The same-screen Explorer Playground product goal is complete on `codex/explorer-topology-live`.
+- The same-screen Explorer Playground product goal remains complete on `codex/explorer-topology-live`.
+- For the migrated Stage 2 path, explorer rendering and picking now consume canonical scene caches from `TopologyPlaygroundState` instead of recomputing ad hoc local copies in the launcher shell.
+- Stage 3 is live for one direct explorer-entry topology edit path: from the explorer scene, the user can select a source boundary, select a target boundary, create a gluing draft, edit its transform in the linked side panel, and apply the glue without leaving the shell.
+- Stage 5 sandbox migration is now live: spawn, move, rotate, and seam-cross preview all run inside the canonical explorer playground shell.
+- Stage 6 is now live: the detached playground launcher entry is demoted to an optional direct-open shortcut, while ordinary custom-topology flow uses the unified explorer playground shell. Remaining old-only blockers for ordinary topology editing: none.
+
+Stage 4 is now live for the migrated explorer-entry settings path: the playground shell itself exposes the dimension selector, board-axis size editors, and explorer preset selector, and those changes update canonical playground state directly while the explorer scene refreshes from that state.
 - In one shell, the player can change presets, adjust board size, move and rotate the sandbox piece, glue/edit seams, and launch play from the current draft.
-- The remaining explorer topology work is optional cleanup only:
+- Old configuration panels are intentionally still present for later-stage consolidation; this batch does not remove them.
+- The remaining explorer topology work after Stage 4 is later-stage consolidation only:
   1. further structural decomposition of `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
-  2. deliberate removal of explicit legacy export compatibility if that support is dropped later
+  2. migration of additional retained panel responsibilities into the canonical playground state
 
 ## What This Batch Changed
 
@@ -225,11 +232,11 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2270` real LOC
+1. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `2328` real LOC
 2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-4. `tools/governance/validate_project_contracts.py`: `1178` real LOC
-5. `tests/unit/engine/test_topology_lab_menu.py`: `1140` real LOC
+4. `tests/unit/engine/test_topology_lab_menu.py`: `1450` real LOC
+5. `tools/governance/validate_project_contracts.py`: `1178` real LOC
 6. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 7. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 8. `tests/unit/engine/test_gameplay_replay.py`: `885` real LOC

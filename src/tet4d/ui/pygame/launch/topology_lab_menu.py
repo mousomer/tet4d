@@ -122,6 +122,7 @@ from tet4d.ui.pygame.topology_lab import (
     sandbox_cells,
     sandbox_lines,
     sandbox_validity,
+    spawn_sandbox_piece,
     scene_camera_availability,
     set_active_tool,
     step_scene_camera,
@@ -353,6 +354,52 @@ def _uses_general_explorer_editor(state: _TopologyLabState) -> bool:
     return uses_general_explorer_editor_runtime(state)
 
 
+def _clear_explorer_scene_state(state: _TopologyLabState) -> None:
+    state.scene_boundaries = ()
+    state.scene_preview_dims = ()
+    state.scene_active_glue_ids = {}
+    state.scene_basis_arrows = ()
+    state.scene_preview = None
+    state.scene_preview_error = None
+
+
+def _compile_explorer_preview_payload(
+    state: _TopologyLabState,
+) -> tuple[dict[str, object] | None, str | None]:
+    assert state.explorer_profile is not None
+    try:
+        return (
+            compile_explorer_topology_preview(
+                state.explorer_profile,
+                dims=_board_dims_for_state(state),
+                source="topology_lab_live_preview",
+            ),
+            None,
+        )
+    except ValueError as exc:
+        return None, str(exc)
+
+
+def _refresh_explorer_scene_state(state: _TopologyLabState) -> None:
+    if not _uses_general_explorer_editor(state) or state.explorer_profile is None:
+        _clear_explorer_scene_state(state)
+        return
+    boundaries = boundaries_for_dimension(state.dimension)
+    preview, preview_error = _compile_explorer_preview_payload(state)
+    active_glue_ids = {boundary.label: "free" for boundary in boundaries}
+    for glue in state.explorer_profile.gluings:
+        active_glue_ids[glue.source.label] = glue.glue_id
+        active_glue_ids[glue.target.label] = glue.glue_id
+    state.scene_boundaries = boundaries
+    state.scene_preview_dims = _board_dims_for_state(state)
+    state.scene_active_glue_ids = active_glue_ids
+    state.scene_preview = preview
+    state.scene_preview_error = preview_error
+    state.scene_basis_arrows = (
+        () if preview is None else tuple(preview.get("basis_arrows", ()))
+    )
+
+
 def _sync_explorer_state(state: _TopologyLabState) -> None:
     if not _uses_general_explorer_editor(state):
         state.explorer_profile = None
@@ -364,6 +411,7 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         state.hovered_glue_id = None
         state.scene_camera = None
         state.scene_mouse_orbit = None
+        _clear_explorer_scene_state(state)
         return
     state.explorer_profile = load_runtime_explorer_topology_profile(state.dimension)
     if (
@@ -374,6 +422,7 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
     _normalize_explorer_draft(state)
     state.scene_camera = ensure_scene_camera(state.dimension, state.scene_camera)
     state.scene_mouse_orbit = ensure_mouse_orbit_state(state.scene_mouse_orbit)
+    _refresh_explorer_scene_state(state)
     _ensure_probe_state(state)
 
 def _preset_profiles(state: _TopologyLabState):
@@ -396,6 +445,8 @@ def _preset_index(state: _TopologyLabState) -> int:
 
 
 def _explorer_boundaries(state: _TopologyLabState):
+    if state.scene_boundaries and len(state.scene_boundaries) == state.dimension * 2:
+        return state.scene_boundaries
     return boundaries_for_dimension(state.dimension)
 
 
@@ -469,21 +520,14 @@ def _explorer_transform_label(state: _TopologyLabState) -> str:
 def _explorer_preview_payload(
     state: _TopologyLabState,
 ) -> tuple[dict[str, object] | None, str | None]:
-    assert state.explorer_profile is not None
-    try:
-        return (
-            compile_explorer_topology_preview(
-                state.explorer_profile,
-                dims=_board_dims_for_state(state),
-                source="topology_lab_live_preview",
-            ),
-            None,
-        )
-    except ValueError as exc:
-        return None, str(exc)
+    if _uses_general_explorer_editor(state):
+        return state.scene_preview, state.scene_preview_error
+    return None, None
 
 
 def _explorer_active_glue_ids(state: _TopologyLabState) -> dict[str, str]:
+    if state.scene_active_glue_ids:
+        return dict(state.scene_active_glue_ids)
     boundary_status = {
         boundary.label: "free" for boundary in _explorer_boundaries(state)
     }
@@ -863,11 +907,15 @@ def _row_value_text(state: _TopologyLabState, row: _RowSpec) -> str:
 
 
 def _mark_updated(state: _TopologyLabState) -> None:
+    if _uses_general_explorer_editor(state):
+        _refresh_explorer_scene_state(state)
     state.dirty = True
     _set_status(state, str(_LAB_STATUS_COPY["updated"]))
 
 
 def _mark_play_settings_updated(state: _TopologyLabState) -> None:
+    if _uses_general_explorer_editor(state):
+        _refresh_explorer_scene_state(state)
     _set_status(state, "Explorer play settings updated")
 
 
@@ -1493,6 +1541,13 @@ def _launch_play_preview(
 ) -> tuple[pygame.Surface, object | None]:
     if not _uses_general_explorer_editor(state) or state.explorer_profile is None:
         return screen, display_settings
+    if state.scene_preview_error:
+        _set_status(
+            state,
+            f"Cannot play current topology: {state.scene_preview_error}",
+            is_error=True,
+        )
+        return screen, display_settings
     from tet4d.ui.pygame.runtime_ui.app_runtime import (
         capture_windowed_display_settings,
         open_display,
@@ -1631,6 +1686,7 @@ def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str]
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         return (
+            ("sandbox_spawn", "Spawn"),
             ("sandbox_prev", "Prev Piece"),
             ("sandbox_next", "Next Piece"),
             ("sandbox_rotate", "Rotate"),
@@ -1856,8 +1912,8 @@ def _draw_explorer_workspace(
     target_boundary = boundaries[state.explorer_draft.target_index]
     active_glue_ids = _explorer_active_glue_ids(state)
     preview, preview_error = _explorer_preview_payload(state)
-    basis_arrows = [] if preview is None else list(preview.get("basis_arrows", ()))
-    preview_dims = _board_dims_for_state(state)
+    basis_arrows = list(state.scene_basis_arrows)
+    preview_dims = state.scene_preview_dims or _board_dims_for_state(state)
     sandbox_cells_payload, sandbox_ok, sandbox_message = _sandbox_scene_payload(state)
     hits.extend(
         _draw_explorer_scene(
@@ -1947,6 +2003,10 @@ def _handle_standard_action(state: _TopologyLabState, action: str) -> bool:
 
 
 def _handle_sandbox_action(state: _TopologyLabState, action: str) -> bool:
+    if action == "sandbox_spawn":
+        spawn_sandbox_piece(state)
+        _set_status(state, "Sandbox piece spawned")
+        return True
     if action == "sandbox_prev":
         cycle_sandbox_piece(state, -1)
         return True
@@ -2375,10 +2435,12 @@ def _initial_topology_lab_state(
             state.play_settings = build_explorer_playground_settings(
                 dimension=dimension
             )
+            _refresh_explorer_scene_state(state)
         if initial_explorer_profile is not None:
             state.explorer_profile = initial_explorer_profile
             ensure_explorer_draft(state)
             _normalize_explorer_draft(state)
+            _refresh_explorer_scene_state(state)
             _ensure_probe_state(state)
         set_active_tool(state, initial_tool or _INITIAL_TOOL_BY_GAMEPLAY_MODE[mode])
     elif initial_tool is not None:
@@ -2491,6 +2553,8 @@ def run_topology_lab_menu(
         initial_tool=resolved_launch.initial_tool,
         play_settings=resolved_launch.settings_snapshot,
     )
+    if resolved_launch.startup_notice:
+        _set_status(state, resolved_launch.startup_notice, is_error=True)
     clock = pygame.time.Clock()
     while state.running:
         _dt = clock.tick(60)

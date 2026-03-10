@@ -17,7 +17,7 @@ from tet4d.engine.gameplay.pieces_nd import (
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, movement_steps_for_dimension
 from tet4d.engine.topology_explorer.glue_model import coord_in_bounds
-from tet4d.engine.topology_explorer.glue_map import move_cell
+from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 
 from .scene_state import (
     TopologyLabState,
@@ -98,6 +98,7 @@ def ensure_piece_sandbox(state: TopologyLabState) -> None:
     assert sandbox is not None
     shapes = sandbox_shapes_for_state(state)
     sandbox.piece_index = max(0, min(sandbox.piece_index, len(shapes) - 1))
+    sandbox.enabled = True
     dims = playground_dims_for_state(state)
     base_blocks = shapes[sandbox.piece_index].blocks
     if sandbox.local_blocks is None:
@@ -113,6 +114,18 @@ def ensure_piece_sandbox(state: TopologyLabState) -> None:
     )
     if any(not coord_in_bounds(cell, dims) for cell in cells):
         sandbox.origin = fitted_origin
+
+
+def spawn_sandbox_piece(state: TopologyLabState) -> None:
+    ensure_piece_sandbox(state)
+    assert state.sandbox is not None
+    dims = playground_dims_for_state(state)
+    state.sandbox.enabled = True
+    state.sandbox.local_blocks = sandbox_shape(state).blocks
+    state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
+    state.sandbox.trace = []
+    state.sandbox.seam_crossings = []
+    state.sandbox.invalid_message = ""
 
 
 def sandbox_shape(state: TopologyLabState) -> SandboxShape:
@@ -216,13 +229,19 @@ def move_sandbox_piece(state: TopologyLabState, profile: ExplorerTopologyProfile
     if step is None:
         return False, f"unknown sandbox step {step_label}"
     moved: list[tuple[int, ...]] = []
+    seam_crossings: list[str] = []
     dims = playground_dims_for_state(state)
     for cell in cells:
+        traversal = map_boundary_exit(profile, dims=dims, coord=cell, step=step)
         target = move_cell(profile, dims=dims, coord=cell, step=step)
         if target is None:
             state.sandbox.invalid_message = f"{step_label} blocked for sandbox piece"
             return False, state.sandbox.invalid_message
         moved.append(target)
+        if traversal is not None:
+            seam_crossings.append(
+                f"{traversal.glue_id}: {traversal.source_boundary.label} -> {traversal.target_boundary.label}"
+            )
     if len(set(moved)) != len(moved):
         state.sandbox.invalid_message = "sandbox movement collapses cells"
         return False, state.sandbox.invalid_message
@@ -235,6 +254,7 @@ def move_sandbox_piece(state: TopologyLabState, profile: ExplorerTopologyProfile
     state.sandbox.origin = tuple(state.sandbox.origin[index] + origin_delta[index] for index in range(state.dimension))
     state.sandbox.trace.append(f"{step_label}: {list(cells[0])} -> {list(moved[0])}")
     state.sandbox.trace = state.sandbox.trace[-8:]
+    state.sandbox.seam_crossings = seam_crossings[-4:]
     state.sandbox.invalid_message = ""
     return True, "sandbox moved"
 
@@ -250,6 +270,7 @@ def cycle_sandbox_piece(state: TopologyLabState, step: int) -> None:
     state.sandbox.piece_index = (state.sandbox.piece_index + step) % len(shapes)
     state.sandbox.local_blocks = sandbox_shape(state).blocks
     state.sandbox.trace = []
+    state.sandbox.seam_crossings = []
     state.sandbox.invalid_message = ""
     dims = playground_dims_for_state(state)
     state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
@@ -262,6 +283,7 @@ def reset_sandbox_piece(state: TopologyLabState) -> None:
     state.sandbox.local_blocks = sandbox_shape(state).blocks
     state.sandbox.origin = _fit_origin_for_blocks(sandbox_shape(state).blocks, dims)
     state.sandbox.trace = []
+    state.sandbox.seam_crossings = []
     state.sandbox.invalid_message = ""
 
 
@@ -277,6 +299,9 @@ def sandbox_lines(state: TopologyLabState, profile: ExplorerTopologyProfile) -> 
         f"Cells: {len(sandbox_cells(state))}",
         "Status: valid" if valid else f"Status: invalid ({message})",
     ]
+    if state.sandbox.seam_crossings:
+        lines.append("Seam crossings")
+        lines.extend(f"  {item}" for item in state.sandbox.seam_crossings)
     if state.sandbox.show_trace and state.sandbox.trace:
         lines.append("Trace")
         lines.extend(f"  {item}" for item in state.sandbox.trace[-4:])
@@ -288,6 +313,7 @@ __all__ = [
     "ensure_piece_sandbox",
     "move_sandbox_piece",
     "reset_sandbox_piece",
+    "spawn_sandbox_piece",
     "rotate_sandbox_piece",
     "rotate_sandbox_piece_action",
     "sandbox_cells",

@@ -529,7 +529,7 @@ def _menu_action_topology_lab(
         dimension=start_dimension,
         display_settings=session.display_settings,
         fonts_2d=fonts_2d,
-        gameplay_mode="normal",
+        gameplay_mode="explorer",
         entry_source="lab",
     )
     ok, msg = run_topology_lab_menu(

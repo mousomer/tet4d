@@ -18,6 +18,7 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     move_sandbox_piece,
     reset_sandbox_piece,
     sandbox_cells,
+    sandbox_lines,
     sandbox_shapes_for_state,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import TopologyLabState
@@ -72,6 +73,32 @@ class TestTopologyLabSandbox(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("cannot remain rigid", message)
         self.assertEqual(tuple(state.sandbox.origin), start_origin)
+
+
+    def test_sandbox_spawn_action_creates_piece_in_shell(self) -> None:
+        state = self._state()
+        self.assertIsNone(state.sandbox)
+        topology_lab_menu._activate_action(state, "sandbox_spawn")
+        self.assertIsNotNone(state.sandbox)
+        assert state.sandbox is not None
+        self.assertTrue(state.sandbox.enabled)
+        self.assertEqual(state.sandbox.trace, [])
+        self.assertEqual(state.sandbox.seam_crossings, [])
+
+    def test_sandbox_records_seam_cross_preview(self) -> None:
+        state = self._state()
+        ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.local_blocks = ((0, 0),)
+        dims = explorer_topology_preview_dims(2)
+        state.sandbox.origin = (dims[0] - 1, 1)
+        ok, message = move_sandbox_piece(state, torus_profile_2d(), "x+")
+        self.assertTrue(ok, message)
+        self.assertTrue(state.sandbox.seam_crossings)
+        self.assertIn("->", state.sandbox.seam_crossings[0])
+        self.assertIn("x+ -> x-", state.sandbox.seam_crossings[0])
+        lines = sandbox_lines(state, torus_profile_2d())
+        self.assertIn("Seam crossings", lines)
 
     def test_reset_sandbox_piece_clears_trace_and_invalid_message(self) -> None:
         state = self._state()

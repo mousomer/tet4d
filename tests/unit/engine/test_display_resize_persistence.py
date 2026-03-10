@@ -12,6 +12,7 @@ from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.ui.pygame.launch import launcher_nd_runner
 from tet4d.ui.pygame.runtime_ui import app_runtime, loop_runner_nd
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
 
 class RuntimeResizePersistenceTests(unittest.TestCase):
@@ -130,7 +131,7 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
     def test_launcher_nd_runner_default_explorer_path_builds_shared_launch(self) -> None:
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
-        explorer_profile = object()
+        explorer_profile = ExplorerTopologyProfile(dimension=4, gluings=())
         cfg = SimpleNamespace(exploration_mode=True, ndim=4, explorer_topology_profile=explorer_profile)
         with (
             patch.object(
@@ -171,7 +172,10 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         runtime = SimpleNamespace(display_settings=display_settings)
         settings = SimpleNamespace(exploration_mode=1)
-        cfg = SimpleNamespace(exploration_mode=True, explorer_topology_profile=object())
+        cfg = SimpleNamespace(
+            exploration_mode=True,
+            explorer_topology_profile=ExplorerTopologyProfile(dimension=2, gluings=()),
+        )
         with (
             patch.object(front2d, "initialize_runtime", return_value=runtime),
             patch.object(front2d, "init_fonts", return_value=object()),
