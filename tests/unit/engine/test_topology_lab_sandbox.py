@@ -82,8 +82,8 @@ class TestTopologyLabSandbox(unittest.TestCase):
         self.assertIsNotNone(state.sandbox)
         assert state.sandbox is not None
         self.assertTrue(state.sandbox.enabled)
-        self.assertEqual(state.sandbox.trace, [])
-        self.assertEqual(state.sandbox.seam_crossings, [])
+        self.assertEqual(state.sandbox.trace, ())
+        self.assertEqual(state.sandbox.seam_crossings, ())
 
     def test_sandbox_records_seam_cross_preview(self) -> None:
         state = self._state()
@@ -107,7 +107,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.trace = ["x+: [1, 1] -> [2, 1]"]
         state.sandbox.invalid_message = "bad"
         reset_sandbox_piece(state)
-        self.assertEqual(state.sandbox.trace, [])
+        self.assertEqual(state.sandbox.trace, ())
         self.assertEqual(state.sandbox.invalid_message, "")
 
     def test_sandbox_trace_toggle_action_flips_visibility(self) -> None:
@@ -276,6 +276,65 @@ class TestTopologyLabSandbox(unittest.TestCase):
             expected_signatures=expected,
             label="explorer_sandbox_left_4d",
         )
+
+    def test_sandbox_spawn_uses_canonical_playground_state(self) -> None:
+        state = self._state()
+
+        topology_lab_menu._activate_action(state, 'sandbox_spawn')
+
+        assert state.canonical_state is not None
+        assert state.sandbox is not None
+        self.assertIs(state.sandbox, state.canonical_state.sandbox_piece_state)
+        self.assertTrue(state.canonical_state.sandbox_piece_state.enabled)
+        self.assertIsNotNone(state.canonical_state.sandbox_piece_state.local_blocks)
+
+    def test_sandbox_move_updates_canonical_playground_state(self) -> None:
+        state = self._state()
+        state.explorer_profile = torus_profile_2d()
+        topology_lab_menu._sync_canonical_playground_state(state)
+        ensure_piece_sandbox(state)
+        assert state.canonical_state is not None
+        assert state.sandbox is not None
+        state.sandbox.local_blocks = ((0, 0),)
+        dims = explorer_topology_preview_dims(2)
+        state.sandbox.origin = (dims[0] - 1, 1)
+
+        ok, message = move_sandbox_piece(state, torus_profile_2d(), 'x+')
+
+        self.assertTrue(ok, message)
+        self.assertIs(state.sandbox, state.canonical_state.sandbox_piece_state)
+        self.assertEqual(
+            state.canonical_state.sandbox_piece_state.origin,
+            state.sandbox.origin,
+        )
+        self.assertTrue(state.canonical_state.sandbox_piece_state.seam_crossings)
+
+    def test_sandbox_rotation_updates_canonical_playground_state(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=3,
+            profile=profile,
+            explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        ensure_piece_sandbox(state)
+        assert state.canonical_state is not None
+        assert state.sandbox is not None
+        state.sandbox.piece_index = self._first_rotatable_shape_index(state, 'rotate_xz_pos')
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        before = state.canonical_state.sandbox_piece_state.local_blocks
+
+        topology_lab_menu._dispatch_key(state, KEYS_3D['rotate_xz_pos'][0])
+
+        self.assertIs(state.sandbox, state.canonical_state.sandbox_piece_state)
+        self.assertNotEqual(before, state.canonical_state.sandbox_piece_state.local_blocks)
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ from .scene_state import (
     TOOL_SANDBOX,
 )
 
-EntrySource = Literal["explorer", "lab"]
+EntrySource = Literal["explorer", "launcher", "lab"]
 
 
 @dataclass(frozen=True)
@@ -126,7 +126,7 @@ def build_explorer_playground_launch(
     )
     resolved_profile = explorer_profile
     startup_notice = None
-    if entry_source == "explorer":
+    if entry_source in {"explorer", "launcher"}:
         validation_error = _profile_validation_error(resolved_profile, snapshot.board_dims)
         if validation_error is not None:
             fallback = _fallback_explorer_preset(int(dimension), snapshot.board_dims)

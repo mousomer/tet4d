@@ -47,6 +47,19 @@ class TestTopologyLabApp(unittest.TestCase):
         self.assertEqual(launch.entry_source, "explorer")
         self.assertIs(launch.explorer_profile, profile)
 
+    def test_build_launcher_launch_defaults_to_create_for_launcher_entry(self) -> None:
+        profile = ExplorerTopologyProfile(dimension=4, gluings=())
+        launch = build_explorer_playground_launch(
+            dimension=4,
+            explorer_profile=profile,
+            entry_source="launcher",
+        )
+        self.assertEqual(launch.dimension, 4)
+        self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
+        self.assertEqual(launch.initial_tool, TOOL_CREATE)
+        self.assertEqual(launch.entry_source, "launcher")
+        self.assertIs(launch.explorer_profile, profile)
+
     def test_build_lab_launch_defaults_to_create_for_lab_entry(self) -> None:
         launch = build_explorer_playground_launch(
             dimension=4,

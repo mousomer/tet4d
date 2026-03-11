@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from cli import front
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
 
 
@@ -21,11 +22,17 @@ class TestFrontLauncherRoutes(unittest.TestCase):
 
         with (
             patch.object(front, "_persist_session_status"),
+            patch.object(front, "_mode_settings_snapshot", return_value=SimpleNamespace()),
             patch.object(
                 front,
-                "run_topology_lab_menu",
-                return_value=(True, "Topology lab saved"),
-            ) as run_lab,
+                "load_runtime_explorer_topology_profile",
+                return_value=ExplorerTopologyProfile(dimension=3, gluings=()),
+            ),
+            patch.object(
+                front,
+                "run_explorer_playground",
+                return_value=(True, "Explorer playground saved"),
+            ) as run_playground,
         ):
             close = front._menu_action_topology_lab(
                 state,
@@ -34,12 +41,12 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             )
 
         self.assertFalse(close)
-        self.assertEqual(state.status, "Topology lab saved")
+        self.assertEqual(state.status, "Explorer playground saved")
         self.assertFalse(state.status_error)
-        run_lab.assert_called_once()
-        launch = run_lab.call_args.kwargs["launch"]
+        run_playground.assert_called_once()
+        launch = run_playground.call_args.kwargs["launch"]
         self.assertEqual(launch.dimension, 3)
-        self.assertEqual(launch.entry_source, "lab")
+        self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
 
     def test_play_last_custom_topology_uses_direct_playground_launch(self) -> None:

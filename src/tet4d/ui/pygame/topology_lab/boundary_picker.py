@@ -11,6 +11,7 @@ from .scene_state import (
     TOOL_SANDBOX,
     TopologyLabState,
     set_active_tool,
+    sync_canonical_playground_state,
     uses_general_explorer_editor,
 )
 
@@ -71,6 +72,7 @@ def _finish_create_pick(state: TopologyLabState, boundary_index: int) -> str:
     state.selected_boundary_index = boundary_index
     state.pending_source_index = None
     set_active_tool(state, TOOL_EDIT)
+    sync_canonical_playground_state(state)
     return "Target boundary selected; editing transform"
 
 
@@ -78,6 +80,7 @@ def _handle_create_pick(state: TopologyLabState, boundary_index: int) -> str:
     if state.pending_source_index is None:
         state.pending_source_index = boundary_index
         state.selected_boundary_index = boundary_index
+        sync_canonical_playground_state(state)
         return "Source boundary selected"
     return _finish_create_pick(state, boundary_index)
 
@@ -91,12 +94,14 @@ def _glue_boundary_indexes(glue) -> tuple[int, int]:
 def _select_existing_glue(
     state: TopologyLabState,
     *,
+    boundary_index: int,
     glue_index: int,
     glue,
     source_index: int,
     target_index: int,
 ) -> str:
     assert state.explorer_draft is not None
+    state.selected_boundary_index = boundary_index
     state.selected_glue_id = glue.glue_id
     state.highlighted_glue_id = glue.glue_id
     state.explorer_draft = state.explorer_draft.__class__(
@@ -106,23 +111,27 @@ def _select_existing_glue(
         permutation_index=state.explorer_draft.permutation_index,
         signs=state.explorer_draft.signs,
     )
+    sync_canonical_playground_state(state)
     return f"Editing {glue.glue_id}"
 
 
 def _handle_edit_pick(state: TopologyLabState, boundary_index: int) -> str | None:
     _select_boundary_only(state, boundary_index)
     if state.explorer_profile is None:
+        sync_canonical_playground_state(state)
         return None
     for index, glue in enumerate(state.explorer_profile.gluings):
         source_index, target_index = _glue_boundary_indexes(glue)
         if boundary_index in {source_index, target_index}:
             return _select_existing_glue(
                 state,
+                boundary_index=boundary_index,
                 glue_index=index,
                 glue=glue,
                 source_index=source_index,
                 target_index=target_index,
             )
+    sync_canonical_playground_state(state)
     return "No active gluing on selected boundary"
 
 
@@ -147,6 +156,7 @@ def apply_boundary_pick(state: TopologyLabState, boundary_index: int) -> str | N
         return None
     if state.active_tool == TOOL_INSPECT:
         _select_boundary_only(state, boundary_index)
+        sync_canonical_playground_state(state)
         return f"Boundary {_BOUNDARY_LABELS[boundary_index]} selected"
     if state.active_tool == TOOL_CREATE:
         return _handle_create_pick(state, boundary_index)
@@ -154,6 +164,7 @@ def apply_boundary_pick(state: TopologyLabState, boundary_index: int) -> str | N
         return _handle_edit_pick(state, boundary_index)
     if state.active_tool in {TOOL_PROBE, TOOL_SANDBOX, TOOL_PLAY}:
         _select_boundary_only(state, boundary_index)
+        sync_canonical_playground_state(state)
     return None
 
 
@@ -168,6 +179,7 @@ def apply_boundary_edit_pick(state: TopologyLabState, boundary_index: int) -> st
                 set_active_tool(state, TOOL_EDIT)
                 return _select_existing_glue(
                     state,
+                    boundary_index=boundary_index,
                     glue_index=index,
                     glue=glue,
                     source_index=source_index,
@@ -195,6 +207,7 @@ def apply_glue_pick(state: TopologyLabState, glue_id: str) -> str | None:
             signs=state.explorer_draft.signs,
         )
         set_active_tool(state, TOOL_EDIT)
+        sync_canonical_playground_state(state)
         return f"Editing {glue_id}"
     return None
 
@@ -206,4 +219,3 @@ __all__ = [
     "pick_target",
     "update_hover_target",
 ]
-

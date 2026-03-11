@@ -54,7 +54,7 @@ class TestMenuPolicy(unittest.TestCase):
                 if kind == "item"
             )
         )
-        self.assertTrue(
+        self.assertFalse(
             any(
                 row_key == "game_topology_advanced"
                 for kind, _label, row_key in rows
@@ -79,15 +79,13 @@ class TestMenuPolicy(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(headers))
 
-    def test_setup_fields_include_topology_mode_per_dimension(self) -> None:
+    def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
             attrs = {attr for _label, attr, _min_val, _max_val in fields}
             self.assertIn("topology_mode", attrs)
-            if dimension == 2:
-                self.assertIn("topology_profile_index", attrs)
-            else:
-                self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("exploration_mode", attrs)
             self.assertNotIn("topology_advanced", attrs)
             self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)
@@ -105,6 +103,7 @@ class TestMenuPolicy(unittest.TestCase):
             self.assertNotIn("topology_mode", attrs)
             self.assertNotIn("topology_advanced", attrs)
             self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("exploration_mode", attrs)
 
     def test_setup_hints_defined_for_all_dimensions(self) -> None:
         for dimension in (2, 3, 4):

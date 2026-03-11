@@ -25,7 +25,7 @@ from .front2d_session import LoopContext2D, create_initial_state
 from .front2d_setup import (
     GameSettings,
     MenuState,
-    config_from_settings,
+    build_play_menu_config,
     run_menu,
 )
 
@@ -106,7 +106,7 @@ def run() -> None:
     sys.exit()
 
 
-_config_from_settings = config_from_settings
+_config_from_settings = build_play_menu_config
 
 
 def main(argv=None) -> None:

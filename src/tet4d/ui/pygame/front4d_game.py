@@ -694,7 +694,10 @@ def run() -> None:
         run_menu=lambda menu_screen, active_fonts: run_menu(
             menu_screen, active_fonts, 4
         ),
-        build_config=lambda settings: build_config(settings, 4),
+        build_config=lambda settings: frontend_nd_setup.build_play_menu_config(
+            settings,
+            4,
+        ),
         suggested_window_size=suggested_window_size,
         run_game=lambda game_screen, cfg, active_fonts, settings: run_game_loop(
             game_screen,

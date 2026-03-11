@@ -826,7 +826,7 @@ Parameters:
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
 - `settings_category_docs[]`: array[`object`]
-- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D (game seed, random type, advance...`
+- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D (game seed, random type, and adv...`
 - `settings_category_docs[].id`: varies (`string`); examples: `"audio"`, `"display"`, `"gameplay"`
 - `settings_category_docs[].label`: varies (`string`); examples: `"Audio"`, `"Display"`, `"Gameplay"`
 - `settings_category_metrics.analytics.action_count`: `1` (`int`)
@@ -846,11 +846,11 @@ Parameters:
 - `settings_category_metrics.display.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.display.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay.action_count`: `0` (`int`)
-- `settings_category_metrics.gameplay.field_count`: `5` (`int`)
+- `settings_category_metrics.gameplay.field_count`: `4` (`int`)
 - `settings_category_metrics.gameplay.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.gameplay.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay_setup.action_count`: `2` (`int`)
-- `settings_category_metrics.gameplay_setup.field_count`: `9` (`int`)
+- `settings_category_metrics.gameplay_setup.field_count`: `8` (`int`)
 - `settings_category_metrics.gameplay_setup.mode_specific`: `true` (`bool`)
 - `settings_category_metrics.gameplay_setup.top_level`: `false` (`bool`)
 - `settings_category_metrics.profiles.action_count`: `6` (`int`)
@@ -882,9 +882,9 @@ Parameters:
 - `setup_fields.4d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth (z)"`
 - `setup_fields.4d[].max`: varies (`int, string`); examples: `16`, `30`, `12`
 - `setup_fields.4d[].min`: varies (`int`); examples: `6`, `12`, `4`
-- `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
-- `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
-- `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
+- `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
+- `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
+- `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `ui_copy.bot_options.hints[]`: array[`string`]; examples: `"Left/Right adjust values   Up/Down select"`, `"F5 save   F8 reset defaults   Esc back   Q quit"`
 - `ui_copy.bot_options.reset_confirm_enter`: `"Press Enter on Reset defaults again to confirm"` (`string`)
 - `ui_copy.bot_options.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
@@ -912,7 +912,7 @@ Parameters:
 - `ui_copy.setup_menu.bindings_hint_template`: `"L = load keys, S = save keys ({bindings_file_hint})"` (`string`)
 - `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Esc back   Q quit"` (`string`)
 - `ui_copy.setup_menu.subtitle_2d`: `"Use Up/Down to select, Left/Right to change, Enter to start, Esc bac...` (`string`)
-- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Explore...` (`string`)
+- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Setup k...` (`string`)
 - `ui_copy.setup_menu.title_2d`: `"2D setup"` (`string`)
 - `ui_copy.setup_menu.title_template`: `"{dimension}D setup"` (`string`)
 
@@ -1105,6 +1105,7 @@ Entries:
 ### `config/project/io_paths.json`
 Top-level keys: `paths`, `version`
 Parameters:
+- `paths.explorer_topology_experiments_file_default`: `"state/topology/explorer_experiments.json"` (`string`)
 - `paths.explorer_topology_preview_file_default`: `"state/topology/explorer_preview.json"` (`string`)
 - `paths.explorer_topology_profiles_file_default`: `"state/topology/explorer_profiles.json"` (`string`)
 - `paths.keybindings_dir`: `"keybindings"` (`string`)

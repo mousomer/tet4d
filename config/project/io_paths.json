@@ -13,6 +13,7 @@
     "tutorial_progress_file_default": "state/tutorial/progress.json",
     "topology_profiles_file_default": "state/topology/profiles.json",
     "explorer_topology_profiles_file_default": "state/topology/explorer_profiles.json",
-    "explorer_topology_preview_file_default": "state/topology/explorer_preview.json"
+    "explorer_topology_preview_file_default": "state/topology/explorer_preview.json",
+    "explorer_topology_experiments_file_default": "state/topology/explorer_experiments.json"
   }
 }

@@ -4,6 +4,10 @@ from tet4d.engine.gameplay.topology import (
     default_edge_rules_for_mode,
     normalize_topology_mode,
 )
+from tet4d.engine.runtime.topology_explorer_experiments import (
+    compile_parallel_explorer_experiments,
+    export_parallel_explorer_experiments,
+)
 from tet4d.engine.runtime.topology_explorer_preview import (
     export_explorer_topology_preview,
     preview_dims_for_dimension,
@@ -49,9 +53,36 @@ def export_stored_explorer_topology_preview(
     )
 
 
+def compile_runtime_explorer_experiments(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    source: str = "explorer_playground",
+) -> dict[str, object]:
+    return compile_parallel_explorer_experiments(
+        profile,
+        dims=dims,
+        source=source,
+    )
+
+
+def export_runtime_explorer_experiments(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    source: str = "explorer_playground",
+) -> tuple[bool, str, str | None]:
+    return export_parallel_explorer_experiments(
+        profile,
+        dims=dims,
+        source=source,
+    )
+
 
 __all__ = [
     "resolve_direct_explorer_launch_profile",
     "export_stored_explorer_topology_preview",
+    "compile_runtime_explorer_experiments",
+    "export_runtime_explorer_experiments",
     "load_runtime_explorer_topology_profile",
 ]

@@ -1,19 +1,30 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-10  
+Updated: 2026-03-11  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
-Current sub-batch (2026-03-10): Stage 5 sandbox migration is now live: spawn, move, rotate, and seam-cross preview all run inside the canonical explorer playground shell.
-Stage 6 is now live: the detached playground launcher entry is demoted to an optional direct-open shortcut, and ordinary custom-topology flow now routes through the same unified explorer playground shell. Remaining old-only blockers for ordinary topology editing: none.
-Stage 7 is now live: the graphical explorer is the primary editor, and the former row/list line+dots surface is now labeled `Analysis` and treated as optional secondary analysis only.
+Current sub-batch (2026-03-10): topology playground canonical-state Stages 1-2.
+- Added `src/tet4d/engine/runtime/topology_playground_state.py` as the canonical engine/runtime-owned topology playground state contract for dimension, axis sizes, topology config, selection, probe/sandbox state, transport/gravity, playability, presets, launch settings, and dirty tracking.
+- Routed the migrated explorer scene cache, preview payload, and explorer-side selection/probe read path through that canonical state via additive bridge helpers in `src/tet4d/ui/pygame/topology_lab/scene_state.py`, `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, `src/tet4d/ui/pygame/topology_lab/boundary_picker.py`, and `src/tet4d/ui/pygame/launch/topology_lab_menu.py`.
+- Kept retained UI-local shell paths in place for compatibility and non-migrated analysis/edit flows; this batch does not delete the old panels or claim full direct gluing-edit migration.
+Current sub-batch (2026-03-10): Stage 3 direct explorer-side gluing edits.
+- Explorer-scene seam picks, right-click existing-boundary edit picks, and linked glue-slot inspection now synchronize canonical boundary/seam selection plus the normalized gluing draft instead of only mutating shell-local state.
+- Added focused explorer playground regressions in `tests/unit/engine/test_topology_lab_menu.py` covering seam picks, glue-slot seam inspection, and right-click edits of existing glued boundaries without leaving the explorer shell.
+Current sub-batch (2026-03-11): Stage 5 sandbox migration is now live through engine/runtime-owned playground state: added `src/tet4d/engine/runtime/topology_playground_sandbox.py` as the canonical sandbox owner, rewired `src/tet4d/ui/pygame/topology_lab/piece_sandbox.py` into a thin adapter, and moved spawn/move/rotate/seam-cross preview off the detached UI-local sandbox state path.
+Stage 6 demotion cleanup is now live: the launcher's ordinary custom-topology action now enters the unified Explorer Playground shell through `run_explorer_playground(...)`, so the detached lab route is no longer required for ordinary topology editing.
+Stage 7 is now live: the graphical explorer is the primary editor, and the former row/list line+dots surface is now labeled `Analysis View` and treated as optional secondary analysis only.
+- The `Analysis View` pane now keeps board/preset settings, save/export, experiment-pack launch, and read-only seam context only; row-based source/target/tangent/apply/remove seam editing no longer acts as a parallel editor on the migrated explorer path.
+Remaining old-only fallback path: compatibility-only `run_topology_lab_menu(...)` lab-entry semantics for manual repair / non-migrated callers; ordinary launcher editing no longer depends on it.
 Stage 8 is now live: the shell action is explicitly `Play This Topology`, and play launch uses the current in-memory playground draft directly without a secondary conversion menu on the migrated path.
-Stage 9 is now live: ordinary play menus are frozen as minimal launchers, keeping only safe preset launches, `Play Last Custom Topology`, and `Open Explorer Playground` while leaving topology complexity in the playground shell.
+- The migrated play-launch path now bypasses the older shell-snapshot `build_explorer_playground_config(...)` helper and instead routes through `src/tet4d/engine/runtime/topology_playground_launch.py` plus `src/tet4d/ui/pygame/topology_lab/play_launch.py`, which derive gameplay launch directly from the canonical `TopologyPlaygroundState`.
+Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` while leaving topology complexity in the playground shell.
+Explorer experiment packs now live in the Explorer Playground: the current draft and preset family export as a shared comparison batch with an in-shell recommendation for what to try next.
 
 Stage 4 live playground settings on top of the Stage 3 explorer-side topology editing path.
-- Kept `TopologyPlaygroundState` scene caches in `src/tet4d/ui/pygame/topology_lab/scene_state.py` as the canonical source of truth for the migrated explorer shell.
+- Kept the existing UI scene caches in `src/tet4d/ui/pygame/topology_lab/scene_state.py` as retained shell-local compatibility debt rather than the canonical source of truth.
 - Confirmed the playground shell itself exposes the dimension selector, axis-size editors, and explorer preset selector for the migrated explorer-entry path.
-- Added focused explorer-entry regressions in `tests/unit/engine/test_topology_lab_menu.py` proving dimension, board-size, and preset changes update canonical state directly and refresh the live explorer scene without leaving the shell.
+- Added focused explorer-entry regressions in `tests/unit/engine/test_topology_lab_menu.py` proving dimension, board-size, and preset changes update canonical state directly and refresh the migrated explorer scene without leaving the shell.
 
 Current sub-batch (2026-03-09): explorer topology Phase 5 live runtime migration + Phase 6 diagnostics + Phase 7 scene-first playground integration + Phase 8 runtime-owned bridge shrink + Phase 9 shared launch-contract unification + Phase 10 setup-side unification.
 - Routed live explorer gameplay/runtime through the general gluing engine for ND and 2D via `src/tet4d/engine/gameplay/explorer_runtime_nd.py`, `src/tet4d/engine/gameplay/explorer_runtime_2d.py`, `GameConfigND.explorer_topology_profile`, and `GameConfig.explorer_topology_profile`.
@@ -428,6 +439,12 @@ Acceptance:
 3. Do not add cinematic tutorial sequences; keep interactive and fast.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-10): explorer playground experiment packs and recommendation loop.
+
+- Added `src/tet4d/engine/runtime/topology_explorer_experiments.py` plus `state/topology/explorer_experiments.json` path support so the current draft and preset family can be compiled/exported as one comparison batch.
+- Wired the Explorer Playground controls/action ribbon to build that experiment pack from the current draft, keep it scoped to the live board dimensions, and surface the recommended next topology directly in the preview panel.
+- Added focused regression coverage in `tests/unit/engine/test_topology_explorer_experiments.py` and `tests/unit/engine/test_topology_lab_experiments.py`, alongside focused project-config and preview checks.
 
 Current sub-batch (2026-03-07): drift prevention and generated hotspot enforcement.
 

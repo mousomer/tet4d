@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional
 
 import pygame
@@ -24,11 +24,9 @@ from tet4d.engine.gameplay.topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
-    export_topology_profile_state,
     resolve_topology_designer_selection,
 )
 from tet4d.engine.runtime.topology_explorer_runtime import (
-    export_stored_explorer_topology_preview,
     resolve_direct_explorer_launch_profile,
 )
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
@@ -105,6 +103,19 @@ def menu_fields(settings: GameSettings) -> list[FieldSpec]:
         topology_profile_max=max(0, len(_TOPOLOGY_PROFILE_LABELS_2D) - 1),
         topology_advanced=bool(settings.topology_advanced),
         exploration_mode=bool(settings.exploration_mode),
+    )
+
+
+def _freeze_play_menu_state(state: MenuState) -> None:
+    state.settings.exploration_mode = 0
+
+
+def _play_menu_settings(settings: GameSettings) -> GameSettings:
+    return replace(
+        settings,
+        exploration_mode=0,
+        topology_advanced=0,
+        topology_profile_index=0,
     )
 
 
@@ -211,13 +222,13 @@ def config_from_settings(
     )
 
 
+def build_play_menu_config(settings: GameSettings) -> GameConfig:
+    return config_from_settings(_play_menu_settings(settings))
+
+
 def _run_dry_run(state: MenuState) -> None:
-    if bool(state.settings.exploration_mode):
-        state.bindings_status = "Dry-run is disabled in exploration mode"
-        state.bindings_status_error = False
-        return
     report = run_dry_run_2d(
-        config_from_settings(state.settings),
+        build_play_menu_config(state.settings),
         planner_profile=bot_planner_profile_from_index(
             state.settings.bot_profile_index
         ),
@@ -231,21 +242,15 @@ def _run_dry_run(state: MenuState) -> None:
 
 
 def _export_topology_profile(state: MenuState) -> None:
-    if bool(state.settings.exploration_mode):
-        export_stored_explorer_topology_preview(2)
-        return
-    if bool(state.settings.topology_advanced):
-        profile = load_topology_profile(GAMEPLAY_MODE_NORMAL, 2)
-        export_topology_profile_state(profile=profile, gravity_axis=1)
-        return
-    topology_mode = topology_mode_from_index(state.settings.topology_mode)
+    safe_settings = _play_menu_settings(state.settings)
+    topology_mode = topology_mode_from_index(safe_settings.topology_mode)
     export_resolved_topology_profile(
         dimension=2,
         gravity_axis=1,
         topology_mode=topology_mode,
-        topology_advanced=bool(state.settings.topology_advanced),
-        profile_index=state.settings.topology_profile_index,
-        gameplay_mode="explorer" if bool(state.settings.exploration_mode) else "normal",
+        topology_advanced=False,
+        profile_index=0,
+        gameplay_mode="normal",
     )
 
 
@@ -266,7 +271,8 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             extra_hint_lines=tuple(setup_hints_for_dimension(2))
             or (
                 "F7 dry-run verify (bot, no graphics)",
-                "Use Main Menu -> Settings for Random type and Advanced topology.",
+                "Use Main Menu -> Settings for Random type.",
+                "Use Play -> Open Explorer Playground or Play Last Custom Topology for custom topology.",
                 "Use Main Menu -> Bot Options / Keybindings for shared controls.",
             ),
             bindings_status=current_state.bindings_status,
@@ -283,6 +289,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
         draw_frame=_draw_frame,
         run_dry_run=_run_dry_run,
         on_start_saved=_export_topology_profile,
+        after_load=_freeze_play_menu_state,
     )
     return result
 
@@ -292,6 +299,7 @@ __all__ = [
     "_LINES_PER_LEVEL_DEFAULT",
     "GameSettings",
     "MenuState",
+    "build_play_menu_config",
     "config_from_settings",
     "kick_level_name",
     "load_overlay_transparency_for_runtime_2d",

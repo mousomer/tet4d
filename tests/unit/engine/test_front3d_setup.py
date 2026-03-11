@@ -44,7 +44,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 3)
 
-        with mock.patch.object(frontend_nd_setup, "build_config", return_value="cfg") as build_config:
+        with mock.patch.object(frontend_nd_setup, "build_play_menu_config", return_value="cfg") as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 3)
 
@@ -71,7 +71,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 4)
 
-        with mock.patch.object(frontend_nd_setup, "build_config", return_value="cfg") as build_config:
+        with mock.patch.object(frontend_nd_setup, "build_play_menu_config", return_value="cfg") as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 4)
 
@@ -247,29 +247,58 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
 
 
-    def test_nd_menu_fields_hide_topology_rows_in_explorer_mode(self) -> None:
+    def test_build_play_menu_config_forces_safe_topology_launch(self) -> None:
+        with mock.patch.object(
+            frontend_nd_setup,
+            "build_config",
+            return_value="cfg",
+        ) as build_config:
+            cfg = frontend_nd_setup.build_play_menu_config(
+                frontend_nd_setup.GameSettingsND(
+                    topology_advanced=1,
+                    topology_profile_index=4,
+                    exploration_mode=1,
+                ),
+                4,
+            )
+
+        self.assertEqual(cfg, "cfg")
+        forwarded = build_config.call_args.args[0]
+        self.assertEqual(forwarded.exploration_mode, 0)
+        self.assertEqual(forwarded.topology_advanced, 0)
+        self.assertEqual(forwarded.topology_profile_index, 0)
+        self.assertEqual(build_config.call_args.args[1], 4)
+
+    def test_nd_menu_fields_keep_only_safe_topology_controls(self) -> None:
         attrs = {
             attr_name
             for _label, attr_name, _min_val, _max_val in frontend_nd_setup.menu_fields_for_settings(
-                frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=1),
+                frontend_nd_setup.GameSettingsND(exploration_mode=0, topology_advanced=1),
                 4,
             )
         }
-        self.assertNotIn("topology_mode", attrs)
-        self.assertNotIn("topology_advanced", attrs)
+        self.assertIn("topology_mode", attrs)
         self.assertNotIn("topology_profile_index", attrs)
+        self.assertNotIn("exploration_mode", attrs)
+        self.assertNotIn("topology_advanced", attrs)
 
-    def test_nd_export_uses_stored_explorer_preview_in_explorer_mode(self) -> None:
+    def test_nd_export_uses_safe_topology_preset(self) -> None:
         state = frontend_nd_setup.MenuState(
-            settings=frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=0)
+            settings=frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=1)
         )
         with mock.patch.object(
             frontend_nd_setup,
-            "export_stored_explorer_topology_preview",
-        ) as export_preview:
+            "export_resolved_topology_profile",
+        ) as export_profile:
             frontend_nd_setup._export_topology_profile(state, 4)
 
-        export_preview.assert_called_once_with(4)
+        export_profile.assert_called_once_with(
+            dimension=4,
+            gravity_axis=1,
+            topology_mode="bounded",
+            topology_advanced=False,
+            profile_index=0,
+        )
 
 
 if __name__ == "__main__":

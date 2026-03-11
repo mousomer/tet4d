@@ -48,30 +48,56 @@ class TestFront2DSetup(unittest.TestCase):
         self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
         self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
 
+    def test_build_play_menu_config_forces_safe_topology_launch(self) -> None:
+        with mock.patch.object(
+            front2d_setup,
+            "config_from_settings",
+            return_value="cfg",
+        ) as build_config:
+            cfg = front2d_setup.build_play_menu_config(
+                front2d_setup.GameSettings(
+                    topology_advanced=1,
+                    topology_profile_index=3,
+                    exploration_mode=1,
+                )
+            )
 
+        self.assertEqual(cfg, "cfg")
+        forwarded = build_config.call_args.args[0]
+        self.assertEqual(forwarded.exploration_mode, 0)
+        self.assertEqual(forwarded.topology_advanced, 0)
+        self.assertEqual(forwarded.topology_profile_index, 0)
 
-    def test_2d_menu_fields_hide_topology_rows_in_explorer_mode(self) -> None:
+    def test_2d_menu_fields_keep_only_safe_topology_controls(self) -> None:
         attrs = {
             attr_name
             for _label, attr_name, _min_val, _max_val in front2d_setup.menu_fields(
-                front2d_setup.GameSettings(exploration_mode=1, topology_advanced=1)
+                front2d_setup.GameSettings(exploration_mode=0, topology_advanced=1)
             )
         }
-        self.assertNotIn("topology_mode", attrs)
-        self.assertNotIn("topology_advanced", attrs)
+        self.assertIn("topology_mode", attrs)
         self.assertNotIn("topology_profile_index", attrs)
+        self.assertNotIn("exploration_mode", attrs)
+        self.assertNotIn("topology_advanced", attrs)
 
-    def test_2d_export_uses_stored_explorer_preview_in_explorer_mode(self) -> None:
+    def test_2d_export_uses_safe_topology_preset(self) -> None:
         state = front2d_setup.MenuState(
-            settings=front2d_setup.GameSettings(exploration_mode=1, topology_advanced=0)
+            settings=front2d_setup.GameSettings(exploration_mode=1, topology_advanced=1)
         )
         with mock.patch.object(
             front2d_setup,
-            "export_stored_explorer_topology_preview",
-        ) as export_preview:
+            "export_resolved_topology_profile",
+        ) as export_profile:
             front2d_setup._export_topology_profile(state)
 
-        export_preview.assert_called_once_with(2)
+        export_profile.assert_called_once_with(
+            dimension=2,
+            gravity_axis=1,
+            topology_mode="bounded",
+            topology_advanced=False,
+            profile_index=0,
+            gameplay_mode="normal",
+        )
 
 
 if __name__ == "__main__":

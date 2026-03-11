@@ -179,7 +179,10 @@ def launch_3d(
             active_fonts,
             3,
         ),
-        build_cfg_fn=lambda settings: frontend_nd_setup.build_config(settings, 3),
+        build_cfg_fn=lambda settings: frontend_nd_setup.build_play_menu_config(
+            settings,
+            3,
+        ),
         suggested_size_fn=front3d_game.suggested_window_size,
         run_game_loop_fn=front3d_game.run_game_loop,
         default_budget_ms=24,
@@ -208,7 +211,10 @@ def launch_4d(
             active_fonts,
             4,
         ),
-        build_cfg_fn=lambda settings: frontend_nd_setup.build_config(settings, 4),
+        build_cfg_fn=lambda settings: frontend_nd_setup.build_play_menu_config(
+            settings,
+            4,
+        ),
         suggested_size_fn=front4d_game.suggested_window_size,
         run_game_loop_fn=front4d_game.run_game_loop,
         default_budget_ms=36,
