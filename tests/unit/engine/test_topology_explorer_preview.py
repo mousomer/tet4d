@@ -135,6 +135,22 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         )
         self.assertEqual(coord, (3, 3))
 
+    def test_recommended_probe_coord_skips_graph_build_when_dims_validate(self) -> None:
+        profile = mobius_strip_profile_2d()
+        with (
+            mock.patch(
+                "tet4d.engine.runtime.topology_explorer_preview.validate_explorer_topology_profile",
+                return_value=profile,
+            ) as validate_profile,
+            mock.patch(
+                "tet4d.engine.runtime.topology_explorer_preview.build_movement_graph",
+            ) as build_graph,
+        ):
+            coord = recommended_explorer_probe_coord(profile, dims=(6, 6))
+        self.assertEqual(coord, (3, 3))
+        validate_profile.assert_called_once_with(profile, dims=(6, 6))
+        build_graph.assert_not_called()
+
     def test_advance_probe_reports_boundary_traversal_message(self) -> None:
         coord, result = advance_explorer_probe(
             mobius_strip_profile_2d(),

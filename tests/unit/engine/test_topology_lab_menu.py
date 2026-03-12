@@ -218,6 +218,45 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIs(state.explorer_profile, profile)
         self.assertIsNotNone(state.probe_coord)
 
+    def test_initial_state_skips_stored_profile_refresh_for_explicit_explorer_launch(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=3,
+            entry_source="explorer",
+            explorer_profile=ExplorerTopologyProfile(dimension=3, gluings=()),
+        )
+        preview = {
+            "movement_graph": {
+                "cell_count": 1,
+                "directed_edge_count": 0,
+                "boundary_traversal_count": 0,
+                "component_count": 1,
+            },
+            "warnings": (),
+            "sample_boundary_traversals": (),
+            "basis_arrows": (),
+        }
+        with (
+            patch.object(
+                topology_lab_menu,
+                "load_runtime_explorer_topology_profile",
+            ) as load_runtime_profile,
+            patch.object(
+                topology_lab_menu,
+                "compile_explorer_topology_preview",
+                return_value=preview,
+            ) as compile_preview,
+        ):
+            state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+        load_runtime_profile.assert_not_called()
+        compile_preview.assert_called_once()
+        self.assertEqual(state.scene_preview, preview)
+
     def test_refresh_explorer_scene_state_uses_canonical_profile(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu._sync_explorer_state(state)
@@ -1243,6 +1282,92 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(state.scene_preview_dims, topology_lab_menu._board_dims_for_state(state))
         self.assertEqual(state.canonical_state.axis_sizes, state.scene_preview_dims)
         self.assertEqual(state.scene_preview_dims[2], old_preview_dims[2] + 1)
+
+    def test_repeated_refresh_reuses_cached_preview_for_same_signature(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        cached_preview = state.scene_preview
+        cached_signature = state.scene_preview_signature
+
+        with patch.object(topology_lab_menu, "compile_explorer_topology_preview") as compile_preview:
+            topology_lab_menu._refresh_explorer_scene_state(state)
+            topology_lab_menu._refresh_explorer_scene_state(state)
+
+        compile_preview.assert_not_called()
+        self.assertIs(state.scene_preview, cached_preview)
+        self.assertEqual(state.scene_preview_signature, cached_signature)
+
+    def test_speed_change_reuses_cached_preview_and_batch_for_same_signature(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+        state.experiment_batch = {"experiment_count": 1, "valid_experiment_count": 1}
+        cached_batch = state.experiment_batch
+        cached_preview = state.scene_preview
+        cached_signature = state.scene_preview_signature
+        topology_lab_menu._set_selected_row_by_key(state, "speed_level")
+
+        with patch.object(topology_lab_menu, "compile_explorer_topology_preview") as compile_preview:
+            topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
+
+        compile_preview.assert_not_called()
+        assert state.play_settings is not None
+        self.assertEqual(state.play_settings.speed_level, launch.settings_snapshot.speed_level + 1)
+        self.assertIs(state.scene_preview, cached_preview)
+        self.assertEqual(state.scene_preview_signature, cached_signature)
+        self.assertIs(state.experiment_batch, cached_batch)
+
+    def test_board_size_change_recompiles_preview_for_new_signature(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+        state.experiment_batch = {"experiment_count": 1, "valid_experiment_count": 1}
+        old_preview = state.scene_preview
+        old_signature = state.scene_preview_signature
+        topology_lab_menu._set_selected_row_by_key(state, "board_z")
+        refreshed_preview = {
+            "movement_graph": {
+                "cell_count": 2,
+                "directed_edge_count": 1,
+                "boundary_traversal_count": 0,
+                "component_count": 1,
+            },
+            "warnings": (),
+            "sample_boundary_traversals": (),
+            "basis_arrows": (),
+        }
+
+        with patch.object(
+            topology_lab_menu,
+            "compile_explorer_topology_preview",
+            return_value=refreshed_preview,
+        ) as compile_preview:
+            topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
+
+        compile_preview.assert_called_once()
+        self.assertIs(state.scene_preview, refreshed_preview)
+        self.assertIsNot(state.scene_preview, old_preview)
+        self.assertNotEqual(state.scene_preview_signature, old_signature)
+        self.assertEqual(state.scene_preview_dims, topology_lab_menu._board_dims_for_state(state))
+        self.assertIsNone(state.experiment_batch)
 
     def test_explorer_entry_preset_change_updates_canonical_scene_state(self) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(dimension=3, entry_source="explorer")

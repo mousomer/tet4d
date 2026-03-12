@@ -14,6 +14,7 @@ from tet4d.engine.topology_explorer import (
     boundary_label,
     movement_steps_for_dimension,
     tangent_axes_for_boundary,
+    validate_explorer_topology_profile,
 )
 from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
@@ -28,13 +29,9 @@ def recommended_explorer_probe_coord(
     *,
     dims: tuple[int, ...],
 ) -> tuple[int, ...]:
-    graph = build_movement_graph(profile, dims=dims)
-    center = tuple(max(0, size // 2) for size in dims)
-    if center in graph:
-        return center
-    if graph:
-        return min(graph)
-    return center
+    normalized_dims = tuple(int(value) for value in dims)
+    validate_explorer_topology_profile(profile, dims=normalized_dims)
+    return tuple(max(0, size // 2) for size in normalized_dims)
 
 
 def explorer_probe_options(

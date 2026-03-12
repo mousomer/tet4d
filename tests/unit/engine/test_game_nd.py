@@ -276,6 +276,50 @@ class TestGameND(unittest.TestCase):
             state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
         )
 
+    def test_explorer_interior_translation_preserves_rotation_frame_nd(self):
+        normal_cfg = GameConfigND(dims=(10, 10, 10), gravity_axis=1)
+        explorer_cfg = GameConfigND(
+            dims=(10, 10, 10),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        shape = PieceShapeND(
+            "el3",
+            ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+            color_id=5,
+        )
+        seeded_piece = ActivePieceND.from_shape(shape, pos=(5, 4, 5)).rotated(0, 2, 1)
+        normal_state = GameStateND(config=normal_cfg, board=BoardND(normal_cfg.dims))
+        explorer_state = GameStateND(
+            config=explorer_cfg, board=BoardND(explorer_cfg.dims)
+        )
+        normal_state.board.cells.clear()
+        explorer_state.board.cells.clear()
+        normal_state.current_piece = seeded_piece
+        explorer_state.current_piece = seeded_piece
+
+        self.assertTrue(normal_state.try_move_axis(0, -1))
+        self.assertTrue(explorer_state.try_move_axis(0, -1))
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.rel_blocks)),
+            tuple(sorted(normal_state.current_piece.rel_blocks)),
+        )
+
+        self.assertTrue(normal_state.try_rotate(1, 2, 1))
+        self.assertTrue(explorer_state.try_rotate(1, 2, 1))
+        self.assertEqual(
+            explorer_state.current_piece.pos, normal_state.current_piece.pos
+        )
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.rel_blocks)),
+            tuple(sorted(normal_state.current_piece.rel_blocks)),
+        )
+        self.assertEqual(
+            explorer_state.current_piece_cells_mapped(include_above=False),
+            normal_state.current_piece_cells_mapped(include_above=False),
+        )
+
     def test_repeated_translation_contract_matches_main_and_explorer_3d(self):
         cases = (
             (
@@ -348,7 +392,9 @@ class TestGameND(unittest.TestCase):
                     ),
                     expected_signatures=expected,
                     label=label,
-                    result_assertion=lambda case, result, _index: case.assertTrue(result),
+                    result_assertion=lambda case, result, _index: case.assertTrue(
+                        result
+                    ),
                 )
 
     def test_repeated_translation_contract_matches_main_and_explorer_4d_w_axis(self):
@@ -420,7 +466,9 @@ class TestGameND(unittest.TestCase):
                     ),
                     expected_signatures=expected,
                     label=label,
-                    result_assertion=lambda case, result, _index: case.assertTrue(result),
+                    result_assertion=lambda case, result, _index: case.assertTrue(
+                        result
+                    ),
                 )
 
     def test_invert_all_mirrors_other_wrapped_axis_3d(self):
@@ -517,7 +565,9 @@ class TestGameND(unittest.TestCase):
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertTrue(state.try_rotate(0, 3, 1))
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
     def test_4d_xw_rotation_can_kick_at_w_edge(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, kick_level="standard")
@@ -548,7 +598,6 @@ class TestGameND(unittest.TestCase):
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertFalse(state.try_rotate(0, 3, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
-
 
 
 if __name__ == "__main__":

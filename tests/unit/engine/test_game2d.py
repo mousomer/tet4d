@@ -303,6 +303,47 @@ class TestGame2D(unittest.TestCase):
             ((0, 3),),
         )
 
+    def test_explorer_interior_translation_preserves_rotation_frame_2d(self):
+        normal_cfg = GameConfig(width=10, height=10)
+        explorer_cfg = GameConfig(
+            width=10,
+            height=10,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        normal_state = GameState(config=normal_cfg, board=BoardND((10, 10)))
+        explorer_state = GameState(config=explorer_cfg, board=BoardND((10, 10)))
+        normal_state.board.cells.clear()
+        explorer_state.board.cells.clear()
+        normal_state.current_piece = ActivePiece2D(shape=line, pos=(5, 4), rotation=1)
+        explorer_state.current_piece = ActivePiece2D(shape=line, pos=(5, 4), rotation=1)
+
+        normal_state.try_move(-1, 0)
+        explorer_state.try_move(-1, 0)
+
+        self.assertEqual(
+            explorer_state.current_piece.rotation, normal_state.current_piece.rotation
+        )
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.shape.blocks)),
+            tuple(sorted(normal_state.current_piece.shape.blocks)),
+        )
+
+        normal_state.try_rotate(1)
+        explorer_state.try_rotate(1)
+
+        self.assertEqual(
+            explorer_state.current_piece.rotation, normal_state.current_piece.rotation
+        )
+        self.assertEqual(
+            explorer_state.current_piece.pos, normal_state.current_piece.pos
+        )
+        self.assertEqual(
+            explorer_state.current_piece_cells_mapped(include_above=False),
+            normal_state.current_piece_cells_mapped(include_above=False),
+        )
+
     def test_repeated_translation_contract_matches_main_and_explorer_2d(self):
         cases = (
             (
@@ -408,7 +449,6 @@ class TestGame2D(unittest.TestCase):
 
         self.assertEqual(state.current_piece.rotation, before_rotation)
         self.assertEqual(tuple(sorted(state.current_piece.cells())), before_cells)
-
 
 
 if __name__ == "__main__":

@@ -92,7 +92,6 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         self.assertEqual(open_display_mock.call_count, 2)
         capture_mock.assert_called_once_with(display_settings)
 
-
     def test_launcher_nd_runner_routes_explorer_modes_into_playground(self) -> None:
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
@@ -128,11 +127,15 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         run_game.assert_not_called()
         capture_mock.assert_called_once_with(display_settings)
 
-    def test_launcher_nd_runner_default_explorer_path_builds_shared_launch(self) -> None:
+    def test_launcher_nd_runner_default_explorer_path_builds_shared_launch(
+        self,
+    ) -> None:
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
         capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
         explorer_profile = ExplorerTopologyProfile(dimension=4, gluings=())
-        cfg = SimpleNamespace(exploration_mode=True, ndim=4, explorer_topology_profile=explorer_profile)
+        cfg = SimpleNamespace(
+            exploration_mode=True, ndim=4, explorer_topology_profile=explorer_profile
+        )
         with (
             patch.object(
                 launcher_nd_runner,
@@ -167,6 +170,48 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         self.assertEqual(launch.entry_source, "explorer")
         self.assertIs(launch.explorer_profile, explorer_profile)
 
+    def test_launcher_nd_runner_default_explorer_path_ignores_playground_status_failures(
+        self,
+    ) -> None:
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        capture_result = DisplaySettings(fullscreen=False, windowed_size=(1360, 820))
+        explorer_profile = ExplorerTopologyProfile(dimension=4, gluings=())
+        cfg = SimpleNamespace(
+            exploration_mode=True, ndim=4, explorer_topology_profile=explorer_profile
+        )
+        run_game = Mock(return_value=False)
+
+        with (
+            patch.object(
+                launcher_nd_runner,
+                "open_display",
+                side_effect=[Mock(), Mock(), Mock()],
+            ) as open_display_mock,
+            patch.object(
+                launcher_nd_runner,
+                "capture_windowed_display_settings",
+                return_value=capture_result,
+            ),
+            patch.object(
+                launcher_nd_runner,
+                "run_explorer_playground",
+                return_value=(False, "recoverable playground status"),
+            ) as run_playground,
+        ):
+            launcher_nd_runner.run_nd_mode_launcher(
+                display_settings=display_settings,
+                fonts=object(),
+                setup_caption="setup",
+                game_caption="game",
+                run_menu=Mock(side_effect=[object(), None]),
+                build_config=lambda _settings: cfg,
+                suggested_window_size=lambda _cfg: (1200, 760),
+                run_game=run_game,
+            )
+
+        run_playground.assert_called_once()
+        run_game.assert_not_called()
+        self.assertEqual(open_display_mock.call_count, 3)
 
     def test_front2d_run_routes_explorer_launch_into_topology_playground(self) -> None:
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
@@ -182,9 +227,15 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
             patch.object(front2d, "open_display", side_effect=[Mock(), Mock(), Mock()]),
             patch.object(front2d, "run_menu", side_effect=[settings, None]),
             patch.object(front2d, "_config_from_settings", return_value=cfg),
-            patch.object(front2d, "run_explorer_playground", return_value=(True, "ok")) as run_playground,
+            patch.object(
+                front2d, "run_explorer_playground", return_value=(True, "ok")
+            ) as run_playground,
             patch.object(front2d, "run_game_loop") as run_game_loop,
-            patch.object(front2d, "capture_windowed_display_settings", return_value=display_settings),
+            patch.object(
+                front2d,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
             patch.object(front2d.pygame, "quit"),
             patch.object(front2d.sys, "exit"),
         ):
@@ -257,13 +308,18 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         with (
             patch.object(front2d.LoopContext2D, "create", return_value=loop),
             patch.object(front2d_frame, "_configure_game_loop", return_value=500),
-            patch.object(front2d_frame, "capture_windowed_display_settings_from_event",
+            patch.object(
+                front2d_frame,
+                "capture_windowed_display_settings_from_event",
                 return_value=DisplaySettings(
                     fullscreen=False,
                     windowed_size=(1333, 777),
                 ),
             ) as capture_event_mock,
-            patch.object(front2d_frame, "process_game_events", side_effect=fake_process_game_events
+            patch.object(
+                front2d_frame,
+                "process_game_events",
+                side_effect=fake_process_game_events,
             ),
         ):
             result = front2d.run_game_loop(
@@ -295,7 +351,9 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
         screen = Mock()
         next_screen = Mock()
 
-        with patch.object(front2d_results, "run_pause_menu",
+        with patch.object(
+            front2d_results,
+            "run_pause_menu",
             return_value=("restart", next_screen),
         ):
             status, returned_screen = front2d._resolve_loop_decision(

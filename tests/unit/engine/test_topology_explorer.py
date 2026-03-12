@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest import mock
 
 from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.glue_model import (
@@ -168,6 +169,15 @@ class TestTopologyExplorer(unittest.TestCase):
                 )
                 self.assertEqual(validated.dimension, dimension)
 
+
+    def test_build_movement_graph_validates_profile_once(self) -> None:
+        profile = mobius_strip_profile_2d()
+        with mock.patch(
+            "tet4d.engine.topology_explorer.movement_graph.validate_explorer_topology_profile",
+            return_value=profile,
+        ) as validate_profile:
+            build_movement_graph(profile, dims=(4, 3))
+        validate_profile.assert_called_once_with(profile, dims=(4, 3))
 
     def test_klein_bottle_graph_keeps_four_neighbors_per_cell(self) -> None:
         profile = klein_bottle_profile_2d()

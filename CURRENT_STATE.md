@@ -33,16 +33,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 163` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 162` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.51` (`low`)
+- `tech_debt.score = 2.65` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.68`
-2. `code_balance = 0.84`
+1. `delivery_size_pressure = 1.69`
+2. `code_balance = 0.96`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -114,6 +114,10 @@ Dominant remaining pressure:
 - The migrated play-launch path now bypasses the older shell-snapshot `build_explorer_playground_config(...)` helper and instead routes through `src/tet4d/engine/runtime/topology_playground_launch.py` plus `src/tet4d/ui/pygame/topology_lab/play_launch.py`, so gameplay launch now reads the canonical `TopologyPlaygroundState` directly.
 - Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` without reintroducing full topology editing into launcher UI.
 - Explorer experiment packs are now live inside that shell: the current draft and preset family compile into a shared comparison/export batch, and the playground surfaces a recommended next topology to try.
+- Explorer piece transport now keeps active-piece frame semantics explicit: `src/tet4d/engine/gameplay/explorer_piece_transport.py` classifies explorer moves as `plain_translation`, `rigid_transform`, or `cellwise_deformation`, while the 2D/ND explorer runtimes preserve frame metadata for ordinary translation, apply explicit rigid frame transforms for coherent seam moves, and block unsafe non-rigid seam deformation instead of silently rebasing the piece.
+- The ND launcher no longer treats Explorer Playground status messages as app-exit flags; `src/tet4d/ui/pygame/launch/launcher_nd_runner.py` now returns to the launcher menu after the playground closes unless the launcher callback itself explicitly requests exit.
+- Startup optimization pass 1 is now live for the audited explorer-entry route: explicit Explorer launches skip the stored explorer-profile refresh, launch validation and default probe placement no longer build extra movement graphs, and representative first-frame readiness improved from `137.5/555.5/6890.3 ms` to `64.6/215.9/2326.1 ms` for `2D/3D/4D` launches while startup movement-graph builds fell from `4` to `1`.
+- Remaining startup hotspot after that pass: the one required preview compile inside `_refresh_explorer_scene_state(...)`, especially in `4D`; deferred playability analysis remains intentionally off the startup path.
 
 Stage 4 live playground settings remain available on the current explorer-entry shell: the playground exposes the dimension selector, board-axis size editors, and explorer preset selector, and those changes now refresh the migrated explorer scene through the engine/runtime-owned canonical state while retained UI-local shell fields remain compatibility debt for later cleanup.
 - In one shell, the player can change presets, adjust board size, move and rotate the sandbox piece, glue/edit seams, and launch play from the current draft.
@@ -245,11 +249,11 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `scripts/arch_metrics.py`: `1869` real LOC
-2. `tests/unit/engine/test_topology_lab_menu.py`: `1648` real LOC
+2. `tests/unit/engine/test_topology_lab_menu.py`: `1766` real LOC
 3. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-4. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1413` real LOC
-5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1262` real LOC
-6. `tools/governance/validate_project_contracts.py`: `1178` real LOC
+4. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1447` real LOC
+5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1304` real LOC
+6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
 7. `tools/governance/generate_configuration_reference.py`: `974` real LOC
 8. `src/tet4d/ui/pygame/front4d_render.py`: `947` real LOC
 

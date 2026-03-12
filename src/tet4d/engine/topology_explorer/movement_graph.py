@@ -16,21 +16,29 @@ class MovementEdge:
     traversal: BoundaryTraversal | None
 
 
-def neighbors_for_cell(
+def _normalized_dims(dims: Coord) -> Coord:
+    return tuple(int(value) for value in dims)
+
+
+def _neighbors_for_validated_cell(
     profile: ExplorerTopologyProfile,
     *,
     dims: Coord,
     coord: Coord,
 ) -> tuple[MovementEdge, ...]:
-    validate_explorer_topology_profile(
-        profile, dims=tuple(int(value) for value in dims)
-    )
+    normalized_dims = _normalized_dims(dims)
+    normalized_coord = tuple(int(value) for value in coord)
     edges: list[MovementEdge] = []
-    for step in movement_steps_for_dimension(len(dims)):
-        target = move_cell(profile, dims=dims, coord=coord, step=step)
+    for step in movement_steps_for_dimension(profile.dimension):
+        target = move_cell(profile, dims=normalized_dims, coord=normalized_coord, step=step)
         if target is None:
             continue
-        traversal = map_boundary_exit(profile, dims=dims, coord=coord, step=step)
+        traversal = map_boundary_exit(
+            profile,
+            dims=normalized_dims,
+            coord=normalized_coord,
+            step=step,
+        )
         edges.append(
             MovementEdge(
                 step=step,
@@ -41,16 +49,30 @@ def neighbors_for_cell(
     return tuple(edges)
 
 
+def neighbors_for_cell(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: Coord,
+    coord: Coord,
+) -> tuple[MovementEdge, ...]:
+    normalized_dims = _normalized_dims(dims)
+    validate_explorer_topology_profile(profile, dims=normalized_dims)
+    return _neighbors_for_validated_cell(profile, dims=normalized_dims, coord=coord)
+
+
 def build_movement_graph(
     profile: ExplorerTopologyProfile,
     *,
     dims: Coord,
 ) -> dict[Coord, tuple[MovementEdge, ...]]:
-    validate_explorer_topology_profile(
-        profile, dims=tuple(int(value) for value in dims)
-    )
+    normalized_dims = _normalized_dims(dims)
+    validate_explorer_topology_profile(profile, dims=normalized_dims)
     graph: dict[Coord, tuple[MovementEdge, ...]] = {}
-    for coord_values in product(*(range(size) for size in dims)):
+    for coord_values in product(*(range(size) for size in normalized_dims)):
         coord = tuple(int(value) for value in coord_values)
-        graph[coord] = neighbors_for_cell(profile, dims=dims, coord=coord)
+        graph[coord] = _neighbors_for_validated_cell(
+            profile,
+            dims=normalized_dims,
+            coord=coord,
+        )
     return graph

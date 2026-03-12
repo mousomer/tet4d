@@ -1,18 +1,37 @@
 from __future__ import annotations
 
+from tet4d.engine.core.piece_transform import rotate_blocks_2d
+from tet4d.engine.gameplay.explorer_piece_transport import (
+    CELLWISE_DEFORMATION,
+    PLAIN_TRANSLATION,
+    ExplorerPieceMoveOutcome,
+    classify_explorer_piece_move,
+)
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, MoveStep, move_cell
 
 
-def _rebuild_piece_from_cells(
+def _apply_transport_outcome(
     piece: ActivePiece2D,
-    cells: tuple[tuple[int, int], ...],
+    outcome: ExplorerPieceMoveOutcome,
 ) -> ActivePiece2D:
-    min_x = min(cell[0] for cell in cells)
-    min_y = min(cell[1] for cell in cells)
-    rel_blocks = tuple(sorted((x - min_x, y - min_y) for x, y in cells))
-    shape = PieceShape2D(piece.shape.name, list(rel_blocks), piece.shape.color_id)
-    return ActivePiece2D(shape=shape, pos=(min_x, min_y), rotation=0)
+    transform = outcome.frame_transform
+    if transform is None:
+        raise ValueError("rigid transport outcome requires a frame transform")
+    if outcome.kind == PLAIN_TRANSLATION:
+        return piece.moved(transform.translation[0], transform.translation[1])
+    current_blocks = rotate_blocks_2d(piece.shape.blocks, piece.rotation)
+    transformed_blocks = [transform.apply_linear(block) for block in current_blocks]
+    shape = PieceShape2D(
+        piece.shape.name,
+        list(transformed_blocks),
+        piece.shape.color_id,
+    )
+    return ActivePiece2D(
+        shape=shape,
+        pos=transform.apply_absolute(piece.pos),
+        rotation=0,
+    )
 
 
 def move_piece_via_explorer_glue_2d(
@@ -25,18 +44,22 @@ def move_piece_via_explorer_glue_2d(
 ) -> ActivePiece2D | None:
     if (dx, dy) not in {(-1, 0), (1, 0), (0, -1), (0, 1)}:
         return None
+    source_cells = tuple(piece.cells())
     axis = 0 if dx != 0 else 1
     delta = dx if dx != 0 else dy
     step = MoveStep(axis=axis, delta=delta)
     moved_cells: list[tuple[int, int]] = []
-    for cell in piece.cells():
+    for cell in source_cells:
         mapped = move_cell(profile, dims=dims, coord=cell, step=step)
         if mapped is None:
             return None
         moved_cells.append((mapped[0], mapped[1]))
     if len(moved_cells) != len(set(moved_cells)):
         return None
-    return _rebuild_piece_from_cells(piece, tuple(moved_cells))
+    outcome = classify_explorer_piece_move(source_cells, tuple(moved_cells))
+    if outcome.kind == CELLWISE_DEFORMATION:
+        return None
+    return _apply_transport_outcome(piece, outcome)
 
 
 def piece_cells_in_bounds_2d(

@@ -89,6 +89,10 @@ Cross-cutting requirements are defined in:
 4. Odd active-plane spans rotate around the center cell.
 5. Even active-plane spans rotate around the between-cells axis or plane.
 6. Deterministic local re-anchoring after rotation is allowed as long as gameplay, bot planning, tutorials, and animation all consume the same canonical transform math.
+7. Explorer-runtime piece transport must classify single-step outcomes as `plain_translation`, `rigid_transform`, or `cellwise_deformation` before mutating active-piece frame state.
+8. `plain_translation` must preserve the existing piece-local frame and any rotation metadata exactly; ordinary movement must not rebase the piece origin through generic min-corner normalization.
+9. `rigid_transform` outcomes may reframe the piece only through an explicit signed-permutation piece-frame transform that preserves coherent later rotations.
+10. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame.
 
 ### 3.4 Shared rotation-kick rules
 

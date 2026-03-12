@@ -75,6 +75,19 @@ class ExplorerPlaygroundSettings:
     game_seed: int = 0
 
 
+@dataclass(frozen=True)
+class ExplorerPreviewCompileSignature:
+    profile: ExplorerTopologyProfile
+    dims: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class ExplorerPreviewCompileArtifacts:
+    signature: ExplorerPreviewCompileSignature
+    preview: dict[str, object] | None
+    preview_error: str | None
+
+
 @dataclass
 class TopologyPlaygroundState:
     selected: int
@@ -110,6 +123,8 @@ class TopologyPlaygroundState:
     scene_basis_arrows: tuple[dict[str, object], ...] = ()
     scene_preview: dict[str, object] | None = None
     scene_preview_error: str | None = None
+    scene_preview_signature: ExplorerPreviewCompileSignature | None = None
+    scene_preview_cache: ExplorerPreviewCompileArtifacts | None = None
     experiment_batch: dict[str, object] | None = None
     canonical_state: RuntimeTopologyPlaygroundState | None = None
 
@@ -215,7 +230,10 @@ def _axis_sizes_from_ui(state: TopologyPlaygroundState) -> tuple[int, ...]:
         )
         if len(dims) == state.dimension and all(value > 0 for value in dims):
             return dims
-    if state.canonical_state is not None and len(state.canonical_state.axis_sizes) == state.dimension:
+    if (
+        state.canonical_state is not None
+        and len(state.canonical_state.axis_sizes) == state.dimension
+    ):
         return tuple(int(value) for value in state.canonical_state.axis_sizes)
     return explorer_topology_preview_dims(state.dimension)
 
@@ -342,9 +360,10 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
 
 
 def uses_general_explorer_editor(state: TopologyPlaygroundState) -> bool:
-    return (
-        state.gameplay_mode == GAMEPLAY_MODE_EXPLORER
-        and state.dimension in (2, 3, 4)
+    return state.gameplay_mode == GAMEPLAY_MODE_EXPLORER and state.dimension in (
+        2,
+        3,
+        4,
     )
 
 

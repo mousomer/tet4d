@@ -1109,6 +1109,26 @@ def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:
         _handle_enter_key(state, selectable)
 
 
+def _initialize_explicit_explorer_startup(
+    state: _TopologyLabState,
+    *,
+    initial_explorer_profile: ExplorerTopologyProfile,
+) -> None:
+    state.active_pane = PANE_SCENE
+    if state.play_settings is None:
+        state.play_settings = build_explorer_playground_settings(
+            dimension=state.dimension
+        )
+    state.explorer_profile = initial_explorer_profile
+    ensure_explorer_draft(state)
+    _normalize_explorer_draft(state)
+    _sync_canonical_playground_state(state)
+    state.scene_camera = ensure_scene_camera(state.dimension, state.scene_camera)
+    state.scene_mouse_orbit = ensure_mouse_orbit_state(state.scene_mouse_orbit)
+    _refresh_explorer_scene_state(state)
+    _ensure_probe_state(state)
+
+
 def _initial_topology_lab_state(
     start_dimension: int,
     *,
@@ -1130,6 +1150,13 @@ def _initial_topology_lab_state(
         profile=load_topology_profile(mode, dimension),
         play_settings=play_settings,
     )
+    if mode == GAMEPLAY_MODE_EXPLORER and initial_explorer_profile is not None:
+        _initialize_explicit_explorer_startup(
+            state,
+            initial_explorer_profile=initial_explorer_profile,
+        )
+        set_active_tool(state, initial_tool or _INITIAL_TOOL_BY_GAMEPLAY_MODE[mode])
+        return state
     _sync_explorer_state(state)
     if mode == GAMEPLAY_MODE_EXPLORER:
         state.active_pane = PANE_SCENE

@@ -1,19 +1,31 @@
 from __future__ import annotations
 
 from tet4d.engine.core.model import BoardND, Coord
+from tet4d.engine.gameplay.explorer_piece_transport import (
+    CELLWISE_DEFORMATION,
+    PLAIN_TRANSLATION,
+    ExplorerPieceMoveOutcome,
+    classify_explorer_piece_move,
+)
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile, MoveStep, move_cell
 
 
-def _rebuild_piece_from_cells(
+def _apply_transport_outcome(
     piece: ActivePieceND,
-    cells: tuple[Coord, ...],
+    outcome: ExplorerPieceMoveOutcome,
 ) -> ActivePieceND:
-    mins = tuple(min(cell[axis] for cell in cells) for axis in range(len(cells[0])))
-    rel_blocks = tuple(
-        tuple(cell[axis] - mins[axis] for axis in range(len(mins))) for cell in cells
+    transform = outcome.frame_transform
+    if transform is None:
+        raise ValueError("rigid transport outcome requires a frame transform")
+    if outcome.kind == PLAIN_TRANSLATION:
+        return piece.moved(transform.translation)
+    rel_blocks = tuple(transform.apply_linear(block) for block in piece.rel_blocks)
+    return ActivePieceND(
+        shape=piece.shape,
+        pos=transform.apply_absolute(piece.pos),
+        rel_blocks=rel_blocks,
     )
-    return ActivePieceND(shape=piece.shape, pos=mins, rel_blocks=rel_blocks)
 
 
 def move_piece_via_explorer_glue(
@@ -24,16 +36,20 @@ def move_piece_via_explorer_glue(
     axis: int,
     delta: int,
 ) -> ActivePieceND | None:
+    source_cells = tuple(piece.cells())
     step = MoveStep(axis=int(axis), delta=int(delta))
     moved_cells: list[Coord] = []
-    for cell in piece.cells():
+    for cell in source_cells:
         mapped = move_cell(profile, dims=dims, coord=cell, step=step)
         if mapped is None:
             return None
         moved_cells.append(mapped)
     if len(moved_cells) != len({tuple(cell) for cell in moved_cells}):
         return None
-    return _rebuild_piece_from_cells(piece, tuple(moved_cells))
+    outcome = classify_explorer_piece_move(source_cells, tuple(moved_cells))
+    if outcome.kind == CELLWISE_DEFORMATION:
+        return None
+    return _apply_transport_outcome(piece, outcome)
 
 
 def piece_cells_in_bounds(

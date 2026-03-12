@@ -8,8 +8,10 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
 )
 from tet4d.engine.runtime.menu_config import default_settings_payload
-from tet4d.engine.runtime.topology_explorer_preview import compile_explorer_topology_preview
-from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.engine.topology_explorer import (
+    ExplorerTopologyProfile,
+    validate_explorer_topology_profile,
+)
 from tet4d.engine.topology_explorer.presets import (
     ExplorerTopologyPreset,
     explorer_presets_for_dimension,
@@ -76,11 +78,7 @@ def _profile_validation_error(
     if profile is None:
         return None
     try:
-        compile_explorer_topology_preview(
-            profile,
-            dims=dims,
-            source="explorer_playground_launch",
-        )
+        validate_explorer_topology_profile(profile, dims=dims)
     except ValueError as exc:
         return str(exc)
     return None

@@ -24,7 +24,7 @@ def _run_default_explorer_playground(
     _settings: SettingsT,
     display_settings: DisplaySettings,
 ) -> bool:
-    return run_explorer_playground(
+    run_explorer_playground(
         screen,
         fonts,
         launch=build_explorer_playground_launch(
@@ -34,7 +34,8 @@ def _run_default_explorer_playground(
             entry_source="explorer",
             source_settings=_settings,
         ),
-    )[0]
+    )
+    return True
 
 
 def run_nd_mode_launcher(
@@ -47,7 +48,10 @@ def run_nd_mode_launcher(
     build_config: Callable[[SettingsT], GameConfigND],
     suggested_window_size: Callable[[GameConfigND], tuple[int, int]],
     run_game: Callable[[pygame.Surface, GameConfigND, object, SettingsT], bool],
-    run_explorer: Callable[[pygame.Surface, GameConfigND, object, SettingsT, DisplaySettings], bool] | None = None,
+    run_explorer: Callable[
+        [pygame.Surface, GameConfigND, object, SettingsT, DisplaySettings], bool
+    ]
+    | None = None,
 ) -> None:
     running = True
     while running:
