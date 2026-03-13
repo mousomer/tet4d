@@ -16,8 +16,12 @@ from tet4d.engine.topology_explorer import (
     tangent_axes_for_boundary,
     validate_explorer_topology_profile,
 )
-from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
+from tet4d.engine.topology_explorer.transport_resolver import (
+    CellStepResult,
+    build_explorer_transport_resolver,
+)
+from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
 
 
 def preview_dims_for_dimension(dimension: int) -> tuple[int, ...]:
@@ -34,30 +38,35 @@ def recommended_explorer_probe_coord(
     return tuple(max(0, size // 2) for size in normalized_dims)
 
 
+def _traversal_payload(step_result: CellStepResult) -> dict[str, object] | None:
+    traversal = step_result.traversal
+    if traversal is None:
+        return None
+    return {
+        "glue_id": traversal.glue_id,
+        "source_boundary": boundary_label(traversal.source_boundary),
+        "target_boundary": boundary_label(traversal.target_boundary),
+    }
+
+
 def explorer_probe_options(
     profile: ExplorerTopologyProfile,
     *,
     dims: tuple[int, ...],
     coord: tuple[int, ...],
 ) -> list[dict[str, object]]:
+    resolver = build_explorer_transport_resolver(profile, dims)
     options: list[dict[str, object]] = []
     for step in movement_steps_for_dimension(profile.dimension):
-        target = move_cell(profile, dims=dims, coord=coord, step=step)
-        traversal = map_boundary_exit(profile, dims=dims, coord=coord, step=step)
+        step_result = resolver.resolve_cell_step(coord, step)
         options.append(
             {
                 "step": step.label,
-                "blocked": target is None,
-                "target": None if target is None else list(target),
-                "traversal": (
-                    None
-                    if traversal is None
-                    else {
-                        "glue_id": traversal.glue_id,
-                        "source_boundary": boundary_label(traversal.source_boundary),
-                        "target_boundary": boundary_label(traversal.target_boundary),
-                    }
-                ),
+                "blocked": step_result.target is None,
+                "target": None
+                if step_result.target is None
+                else list(step_result.target),
+                "traversal": _traversal_payload(step_result),
             }
         )
     return options
@@ -80,34 +89,34 @@ def advance_explorer_probe(
     )
     if step is None:
         raise ValueError(f"unknown probe step: {step_label}")
-    target = move_cell(profile, dims=dims, coord=coord, step=step)
-    traversal = map_boundary_exit(profile, dims=dims, coord=coord, step=step)
-    if target is None:
+
+    step_result = build_explorer_transport_resolver(profile, dims).resolve_cell_step(
+        coord,
+        step,
+    )
+    if step_result.target is None:
         return coord, {
             "step": step_label,
             "blocked": True,
             "message": f"{step_label} blocked at {list(coord)}",
             "traversal": None,
         }
-    if traversal is None:
-        return target, {
+    if step_result.traversal is None:
+        return step_result.target, {
             "step": step_label,
             "blocked": False,
-            "message": f"{step_label}: {list(coord)} -> {list(target)}",
+            "message": f"{step_label}: {list(coord)} -> {list(step_result.target)}",
             "traversal": None,
         }
-    return target, {
+    traversal = step_result.traversal
+    return step_result.target, {
         "step": step_label,
         "blocked": False,
         "message": (
             f"{step_label}: {boundary_label(traversal.source_boundary)} -> "
-            f"{boundary_label(traversal.target_boundary)} to {list(target)}"
+            f"{boundary_label(traversal.target_boundary)} to {list(step_result.target)}"
         ),
-        "traversal": {
-            "glue_id": traversal.glue_id,
-            "source_boundary": boundary_label(traversal.source_boundary),
-            "target_boundary": boundary_label(traversal.target_boundary),
-        },
+        "traversal": _traversal_payload(step_result),
     }
 
 
@@ -230,34 +239,54 @@ def compile_explorer_topology_preview(
     dims: tuple[int, ...],
     source: str = "stored_profile",
 ) -> dict[str, object]:
-    graph = build_movement_graph(profile, dims=dims)
-    degree_histogram = Counter(len(edges) for edges in graph.values())
-    traversal_count = sum(
-        1 for edges in graph.values() for edge in edges if edge.traversal is not None
-    )
-    component_count = _component_count(graph)
-    return {
-        "version": 1,
-        "source": str(source),
-        "dimension": profile.dimension,
-        "dims": [int(value) for value in dims],
-        "glue_count": len(profile.gluings),
-        "gluings": _glue_payload(profile),
-        "basis_arrows": _basis_arrow_payload(profile),
-        "movement_graph": {
-            "cell_count": len(graph),
-            "directed_edge_count": sum(len(edges) for edges in graph.values()),
-            "boundary_traversal_count": traversal_count,
-            "component_count": component_count,
-            "degree_histogram": {
-                str(key): count for key, count in sorted(degree_histogram.items())
+    with record_active_interaction_phase(
+        "preview_compile",
+        dimension=profile.dimension,
+        dims=tuple(int(value) for value in dims),
+        glue_count=len(profile.gluings),
+        source=source,
+    ):
+        graph = build_movement_graph(profile, dims=dims)
+        degree_histogram = Counter(len(edges) for edges in graph.values())
+        traversal_count = sum(
+            1
+            for edges in graph.values()
+            for edge in edges
+            if edge.traversal is not None
+        )
+        component_count = _component_count(graph)
+        return {
+            "version": 1,
+            "source": str(source),
+            "dimension": profile.dimension,
+            "dims": [int(value) for value in dims],
+            "glue_count": len(profile.gluings),
+            "gluings": _glue_payload(profile),
+            "basis_arrows": _basis_arrow_payload(profile),
+            "movement_graph": {
+                "cell_count": len(graph),
+                "directed_edge_count": sum(len(edges) for edges in graph.values()),
+                "boundary_traversal_count": traversal_count,
+                "component_count": component_count,
+                "degree_histogram": {
+                    str(key): count for key, count in sorted(degree_histogram.items())
+                },
+                "origin": [0 for _ in dims],
             },
-            "origin": [0 for _ in dims],
-        },
-        "sample_boundary_traversals": _sample_traversals(graph),
-        "warnings": _preview_warnings(profile, component_count=component_count),
-        "axes": [axis_name(index) for index in range(profile.dimension)],
-    }
+            "sample_boundary_traversals": _sample_traversals(graph),
+            "warnings": _preview_warnings(profile, component_count=component_count),
+            "axes": [axis_name(index) for index in range(profile.dimension)],
+        }
+
+
+def _preview_payload_for_export(
+    payload: dict[str, object],
+    *,
+    source: str,
+) -> dict[str, object]:
+    export_payload = dict(payload)
+    export_payload["source"] = str(source)
+    return export_payload
 
 
 def export_explorer_topology_preview(
@@ -266,8 +295,13 @@ def export_explorer_topology_preview(
     dims: tuple[int, ...],
     source: str = "stored_profile",
     root_dir: Path | None = None,
+    preview_payload: dict[str, object] | None = None,
 ) -> tuple[bool, str, Path | None]:
-    payload = compile_explorer_topology_preview(profile, dims=dims, source=source)
+    payload = (
+        _preview_payload_for_export(preview_payload, source=source)
+        if preview_payload is not None
+        else compile_explorer_topology_preview(profile, dims=dims, source=source)
+    )
     destination = explorer_topology_preview_file_default_path(root_dir=root_dir)
     try:
         write_json_object(destination, payload)

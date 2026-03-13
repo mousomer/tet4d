@@ -6,16 +6,19 @@ from itertools import permutations, product
 from typing import Iterable, Literal, Sequence
 
 from tet4d.engine.core.model import Coord
-
-PLAIN_TRANSLATION = "plain_translation"
-RIGID_TRANSFORM = "rigid_transform"
-CELLWISE_DEFORMATION = "cellwise_deformation"
+from tet4d.engine.topology_explorer.transport_resolver import (
+    CELLWISE_DEFORMATION,
+    PLAIN_TRANSLATION,
+    RIGID_TRANSFORM,
+    ExplorerTransportFrameTransform,
+)
 
 ExplorerPieceMoveKind = Literal[
     "plain_translation",
     "rigid_transform",
     "cellwise_deformation",
 ]
+ExplorerPieceFrameTransform = ExplorerTransportFrameTransform
 
 
 def _coerce_coords(coords: Iterable[Sequence[int]]) -> tuple[Coord, ...]:
@@ -24,50 +27,6 @@ def _coerce_coords(coords: Iterable[Sequence[int]]) -> tuple[Coord, ...]:
 
 def _sub_coords(left: Coord, right: Coord) -> Coord:
     return tuple(left[axis] - right[axis] for axis in range(len(left)))
-
-
-@dataclass(frozen=True)
-class ExplorerPieceFrameTransform:
-    permutation: tuple[int, ...]
-    signs: tuple[int, ...]
-    translation: Coord
-
-    def __post_init__(self) -> None:
-        permutation = tuple(int(value) for value in self.permutation)
-        signs = tuple(int(value) for value in self.signs)
-        translation = tuple(int(value) for value in self.translation)
-        dimension = len(permutation)
-        if dimension == 0:
-            raise ValueError("frame transform requires at least one axis")
-        if tuple(sorted(permutation)) != tuple(range(dimension)):
-            raise ValueError("frame transform permutation must cover each axis once")
-        if len(signs) != dimension or any(value not in (-1, 1) for value in signs):
-            raise ValueError("frame transform signs must contain only -1 or +1")
-        if len(translation) != dimension:
-            raise ValueError("frame transform translation must match dimension")
-        object.__setattr__(self, "permutation", permutation)
-        object.__setattr__(self, "signs", signs)
-        object.__setattr__(self, "translation", translation)
-
-    def is_identity_linear(self) -> bool:
-        return self.permutation == tuple(
-            range(len(self.permutation))
-        ) and self.signs == tuple(1 for _ in self.permutation)
-
-    def apply_linear(self, coord: Sequence[int]) -> Coord:
-        values = tuple(int(value) for value in coord)
-        if len(values) != len(self.permutation):
-            raise ValueError("coord dimension must match frame transform")
-        mapped = [0] * len(values)
-        for source_axis, target_axis in enumerate(self.permutation):
-            mapped[target_axis] = self.signs[source_axis] * values[source_axis]
-        return tuple(mapped)
-
-    def apply_absolute(self, coord: Sequence[int]) -> Coord:
-        mapped = self.apply_linear(coord)
-        return tuple(
-            mapped[axis] + self.translation[axis] for axis in range(len(mapped))
-        )
 
 
 @dataclass(frozen=True)

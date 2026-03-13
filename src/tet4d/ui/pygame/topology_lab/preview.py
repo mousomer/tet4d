@@ -5,6 +5,9 @@ import pygame
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
 from tet4d.ui.pygame.ui_utils import fit_text
 
+_BLOCKED_BUTTON_COLOR = (74, 84, 118)
+_BUTTON_TEXT = (232, 236, 248)
+
 
 def build_preview_lines(preview: dict[str, object], *, dimension: int) -> list[str]:
     graph = preview["movement_graph"]
@@ -65,30 +68,41 @@ def draw_probe_controls(
     *,
     area: pygame.Rect,
     step_options: list[dict[str, object]],
+    title: str,
+    active_color: tuple[int, int, int],
 ) -> list[TopologyLabHitTarget]:
     hits: list[TopologyLabHitTarget] = []
     if not step_options:
         return hits
+    title_surf = fonts.hint_font.render(
+        fit_text(fonts.hint_font, title, area.width - 4),
+        True,
+        active_color,
+    )
+    surface.blit(title_surf, (area.x + 2, area.y))
+    buttons_area = area.copy()
+    buttons_area.y += title_surf.get_height() + 6
+    buttons_area.height = max(24, area.height - title_surf.get_height() - 6)
     columns = min(4, max(1, len(step_options)))
     rows = max(1, (len(step_options) + columns - 1) // columns)
-    gap = 8
-    button_w = max(54, (area.width - (columns - 1) * gap) // columns)
-    button_h = max(24, (area.height - (rows - 1) * gap) // rows)
+    gap = 6
+    button_w = max(54, (buttons_area.width - (columns - 1) * gap) // columns)
+    button_h = max(16, (buttons_area.height - (rows - 1) * gap) // rows)
     for index, option in enumerate(step_options):
         row = index // columns
         col = index % columns
         rect = pygame.Rect(
-            area.x + col * (button_w + gap),
-            area.y + row * (button_h + gap),
+            buttons_area.x + col * (button_w + gap),
+            buttons_area.y + row * (button_h + gap),
             button_w,
             button_h,
         )
         blocked = bool(option.get("blocked", False))
-        color = (74, 84, 118) if blocked else (56, 92, 130)
+        color = _BLOCKED_BUTTON_COLOR if blocked else active_color
         pygame.draw.rect(surface, color, rect, border_radius=8)
         pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
         text_surf = fonts.hint_font.render(
-            str(option.get("step", "?")), True, (232, 236, 248)
+            str(option.get("step", "?")), True, _BUTTON_TEXT
         )
         surface.blit(
             text_surf,

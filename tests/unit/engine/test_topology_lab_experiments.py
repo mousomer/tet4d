@@ -27,13 +27,13 @@ class TestTopologyLabExperiments(unittest.TestCase):
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("experiments", row_keys)
 
-    def test_action_buttons_include_experiments(self) -> None:
+    def test_action_buttons_drop_duplicate_experiments(self) -> None:
         state = self._explorer_state(3)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
-        self.assertIn("experiments", labels)
+        self.assertNotIn("experiments", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
-        self.assertIn("experiments", labels)
+        self.assertNotIn("experiments", labels)
 
     def test_run_experiments_updates_batch_and_status(self) -> None:
         state = self._explorer_state(3)
@@ -55,11 +55,12 @@ class TestTopologyLabExperiments(unittest.TestCase):
                 controls_panel,
                 "export_runtime_explorer_experiments",
                 return_value=(True, "Exported experiment pack to state/topology/explorer_experiments.json", Path("state/topology/explorer_experiments.json")),
-            ),
+            ) as export_batch,
             patch.object(controls_panel, "play_sfx") as play_sfx,
         ):
             controls_panel._run_experiments(state)
         self.assertIs(state.experiment_batch, batch)
+        self.assertIs(export_batch.call_args.kwargs["batch_payload"], batch)
         self.assertIn("Next: Wrap X,Y,Z", state.status)
         play_sfx.assert_called_once_with("menu_confirm")
 

@@ -215,11 +215,19 @@ def _collect_visible_cells(
 
     if active_overlay is not None:
         overlay_cells, overlay_color = active_overlay
-        mapped_overlay = map_overlay_cells(
-            state.topology_policy,
-            overlay_cells,
-            allow_above_gravity=False,
-        )
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            mapped_overlay = tuple(
+                tuple(float(value) for value in coord) for coord in overlay_cells
+            )
+        else:
+            mapped_overlay = map_overlay_cells(
+                state.topology_policy,
+                overlay_cells,
+                allow_above_gravity=False,
+            )
         for x, y, z in mapped_overlay:
             if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
                 cells.append(((x, y, z), overlay_color, True, True))
@@ -521,7 +529,3 @@ def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
     board_w = int(max(560, cfg.dims[0] * 68))
     board_h = int(max(620, cfg.dims[1] * 30))
     return board_w + SIDE_PANEL + 3 * MARGIN, board_h + 2 * MARGIN
-
-
-
-

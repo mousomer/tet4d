@@ -45,6 +45,9 @@ from tet4d.engine.gameplay.topology_designer import (
 from tet4d.engine.runtime.topology_explorer_runtime import (
     resolve_direct_explorer_launch_profile,
 )
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
@@ -373,13 +376,15 @@ def build_config(
                 )
             )
         else:
-            resolved_mode, topology_edge_rules, _legacy_profile = resolve_topology_designer_selection(
-                dimension=dimension,
-                gravity_axis=1,
-                topology_mode=topology_mode,
-                topology_advanced=bool(settings.topology_advanced),
-                profile_index=settings.topology_profile_index,
-                gameplay_mode=GAMEPLAY_MODE_NORMAL,
+            resolved_mode, topology_edge_rules, _legacy_profile = (
+                resolve_topology_designer_selection(
+                    dimension=dimension,
+                    gravity_axis=1,
+                    topology_mode=topology_mode,
+                    topology_advanced=bool(settings.topology_advanced),
+                    profile_index=settings.topology_profile_index,
+                    gameplay_mode=GAMEPLAY_MODE_NORMAL,
+                )
             )
     dims = [settings.width, settings.height]
     if dimension >= 3:
@@ -388,6 +393,12 @@ def build_config(
         dims.append(settings.fourth)
     if exploration_enabled:
         dims = list(minimal_exploration_dims_nd(dimension, piece_set_id))
+    explorer_transport = None
+    if explorer_topology_profile is not None:
+        explorer_transport = build_explorer_transport_resolver(
+            explorer_topology_profile,
+            tuple(dims),
+        )
     return GameConfigND(
         dims=tuple(dims),
         gravity_axis=1,
@@ -395,6 +406,7 @@ def build_config(
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
         explorer_topology_profile=explorer_topology_profile,
+        explorer_transport=explorer_transport,
         piece_set_id=piece_set_id,
         kick_level=_kick_level_name(settings.kick_level_index),
         rng_mode=_random_mode_index_to_id(settings.random_mode_index),
@@ -413,4 +425,3 @@ def build_play_menu_config(
 
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
     return gravity_interval_ms(cfg.speed_level, dimension=max(2, cfg.ndim))
-

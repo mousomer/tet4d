@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from types import SimpleNamespace
+from dataclasses import dataclass, fields
+from typing import TypeVar
 
 import pygame
 
@@ -17,6 +17,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 
 _BRANDING = branding_copy()
 _GAME_TITLE = str(_BRANDING["game_title"])
+SettingsT = TypeVar("SettingsT")
 
 
 def setup_caption_for_dimension(dimension: int) -> str:
@@ -60,6 +61,38 @@ def _suggested_window_size_2d(cfg) -> tuple[int, int]:
     return board_px_w + 260, board_px_h + 40
 
 
+def _merged_mode_settings(mode_key: str) -> dict[str, object]:
+    payload = load_app_settings_payload()
+    defaults = default_settings_payload()
+    merged_mode_settings: dict[str, object] = {}
+    if (
+        isinstance(defaults, dict)
+        and isinstance(defaults.get("settings"), dict)
+        and isinstance(defaults["settings"].get(mode_key), dict)
+    ):
+        merged_mode_settings.update(defaults["settings"][mode_key])
+    if (
+        isinstance(payload, dict)
+        and isinstance(payload.get("settings"), dict)
+        and isinstance(payload["settings"].get(mode_key), dict)
+    ):
+        merged_mode_settings.update(payload["settings"][mode_key])
+    return merged_mode_settings
+
+
+def _tutorial_settings_from_payload(
+    settings_type: type[SettingsT],
+    mode_key: str,
+) -> SettingsT:
+    field_names = {field.name for field in fields(settings_type)}
+    settings_kwargs = {
+        attr_name: value
+        for attr_name, value in _merged_mode_settings(mode_key).items()
+        if attr_name in field_names
+    }
+    return settings_type(**settings_kwargs)
+
+
 def _launch_mode_flow(
     *,
     screen: pygame.Surface,
@@ -73,26 +106,16 @@ def _launch_mode_flow(
     run_game_loop_fn,
     default_budget_ms: int,
     mode_key: str,
+    tutorial_settings_type: type[SettingsT] | None = None,
     tutorial_lesson_id: str | None = None,
 ) -> LaunchResult:
     settings = None
     if tutorial_lesson_id:
-        payload = load_app_settings_payload()
-        defaults = default_settings_payload()
-        merged_mode_settings = {}
-        if (
-            isinstance(defaults, dict)
-            and isinstance(defaults.get("settings"), dict)
-            and isinstance(defaults["settings"].get(mode_key), dict)
-        ):
-            merged_mode_settings.update(defaults["settings"][mode_key])
-        if (
-            isinstance(payload, dict)
-            and isinstance(payload.get("settings"), dict)
-            and isinstance(payload["settings"].get(mode_key), dict)
-        ):
-            merged_mode_settings.update(payload["settings"][mode_key])
-        settings = SimpleNamespace(**merged_mode_settings)
+        if tutorial_settings_type is None:
+            raise RuntimeError(
+                f"Tutorial launch requires a settings dataclass for mode {mode_key}"
+            )
+        settings = _tutorial_settings_from_payload(tutorial_settings_type, mode_key)
     else:
         screen = open_display(display_settings, caption=setup_caption)
         settings = run_menu_fn(screen, fonts)
@@ -155,6 +178,7 @@ def launch_2d(
         ),
         default_budget_ms=12,
         mode_key="2d",
+        tutorial_settings_type=front2d_game.GameSettings,
         tutorial_lesson_id=tutorial_lesson_id,
     )
 
@@ -187,6 +211,7 @@ def launch_3d(
         run_game_loop_fn=front3d_game.run_game_loop,
         default_budget_ms=24,
         mode_key="3d",
+        tutorial_settings_type=frontend_nd_setup.GameSettingsND,
         tutorial_lesson_id=tutorial_lesson_id,
     )
 
@@ -219,6 +244,6 @@ def launch_4d(
         run_game_loop_fn=front4d_game.run_game_loop,
         default_budget_ms=36,
         mode_key="4d",
+        tutorial_settings_type=frontend_nd_setup.GameSettingsND,
         tutorial_lesson_id=tutorial_lesson_id,
     )
-

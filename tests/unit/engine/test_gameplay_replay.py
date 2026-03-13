@@ -255,6 +255,45 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(state.score, 0)
         self.assertIsNot(state.current_piece, piece_before)
 
+    def test_space_still_hard_drops_in_main_2d_gameplay(self) -> None:
+        cfg = GameConfig(width=8, height=16, gravity_axis=1, speed_level=1)
+        state = front2d.create_initial_state(cfg)
+        state.board.cells.clear()
+        state.current_piece = ActivePiece2D(
+            PieceShape2D("dot", [(0, 0)], color_id=8),
+            pos=(4, 1),
+            rotation=0,
+        )
+        self.assertIn(pygame.K_SPACE, KEYS_2D["hard_drop"])
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(pygame.K_SPACE), state, cfg),
+            "continue",
+        )
+        self.assertGreater(len(state.board.cells), 0)
+
+    def test_space_replaces_piece_in_explorer_topology_2d_gameplay(self) -> None:
+        cfg = GameConfig(
+            width=8,
+            height=8,
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = front2d.create_initial_state(cfg)
+        bag_len_before = len(state.next_bag)
+        score_before = state.score
+        lines_before = state.lines_cleared
+        self.assertIn(pygame.K_SPACE, KEYS_2D["hard_drop"])
+        self.assertEqual(
+            front2d.handle_game_keydown(_keydown(pygame.K_SPACE), state, cfg),
+            "continue",
+        )
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.score, score_before)
+        self.assertEqual(state.lines_cleared, lines_before)
+        self.assertEqual(len(state.next_bag), bag_len_before - 1)
+
     def test_exploration_mode_2d_up_arrow_moves_up_instead_of_rotating(self) -> None:
         cfg = GameConfig(
             width=8, height=8, gravity_axis=1, speed_level=1, exploration_mode=True
@@ -349,6 +388,28 @@ class TestGameplayReplay(unittest.TestCase):
         self.assertEqual(state.lines_cleared, 0)
         self.assertEqual(state.score, 0)
         self.assertIsNot(state.current_piece, piece_before)
+
+    def test_space_replaces_piece_in_explorer_topology_nd_gameplay(self) -> None:
+        cfg = GameConfigND(
+            dims=(8, 8, 8),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = front3d_game.create_initial_state(cfg)
+        bag_len_before = len(state.next_bag)
+        score_before = state.score
+        lines_before = state.lines_cleared
+        self.assertIn(pygame.K_SPACE, KEYS_3D["hard_drop"])
+        self.assertEqual(
+            front3d_game.handle_game_keydown(_keydown(pygame.K_SPACE), state, cfg),
+            "continue",
+        )
+        self.assertEqual(len(state.board.cells), 0)
+        self.assertEqual(state.score, score_before)
+        self.assertEqual(state.lines_cleared, lines_before)
+        self.assertEqual(len(state.next_bag), bag_len_before - 1)
 
     def test_replay_determinism_4d(self):
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)

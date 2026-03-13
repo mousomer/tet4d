@@ -201,17 +201,32 @@ def compile_parallel_explorer_experiments(
     }
 
 
+def _experiment_payload_for_export(
+    payload: dict[str, object],
+    *,
+    source: str,
+) -> dict[str, object]:
+    export_payload = dict(payload)
+    export_payload["source"] = str(source)
+    return export_payload
+
+
 def export_parallel_explorer_experiments(
     current_profile: ExplorerTopologyProfile,
     *,
     dims: tuple[int, ...],
     source: str = "explorer_playground",
     root_dir: Path | None = None,
+    batch_payload: dict[str, object] | None = None,
 ) -> tuple[bool, str, Path | None]:
-    payload = compile_parallel_explorer_experiments(
-        current_profile,
-        dims=dims,
-        source=source,
+    payload = (
+        _experiment_payload_for_export(batch_payload, source=source)
+        if batch_payload is not None
+        else compile_parallel_explorer_experiments(
+            current_profile,
+            dims=dims,
+            source=source,
+        )
     )
     destination = explorer_topology_experiments_file_default_path(root_dir=root_dir)
     try:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import unittest
+from unittest import mock
 from uuid import uuid4
 
 from tet4d.engine.runtime.project_config import (
@@ -30,6 +31,39 @@ class TestTopologyExplorerExperiments(unittest.TestCase):
         self.assertEqual(batch["experiments"][0]["id"], "current_draft")
         self.assertEqual(batch["recommendation"]["label"], "Wrap X,Y,Z")
         self.assertIn("boundary traversals", batch["recommendation"]["reason"])
+
+    def test_export_parallel_explorer_experiments_uses_precompiled_batch(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_experiments_cached_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = ExplorerTopologyProfile(dimension=3, gluings=())
+            batch = compile_parallel_explorer_experiments(
+                profile,
+                dims=(4, 4, 4),
+                source="topology_lab_3d_experiments",
+            )
+            with mock.patch(
+                "tet4d.engine.runtime.topology_explorer_experiments.compile_parallel_explorer_experiments"
+            ) as compile_batch:
+                ok, message, path = export_parallel_explorer_experiments(
+                    profile,
+                    dims=(4, 4, 4),
+                    source="topology_lab_3d_experiments",
+                    root_dir=root,
+                    batch_payload=batch,
+                )
+            self.assertTrue(ok, message)
+            compile_batch.assert_not_called()
+            assert path is not None
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["source"], "topology_lab_3d_experiments")
+            self.assertEqual(payload["experiment_count"], batch["experiment_count"])
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
 
     def test_export_parallel_explorer_experiments_writes_runtime_payload(self) -> None:
         root = (

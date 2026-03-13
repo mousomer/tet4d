@@ -4,31 +4,18 @@ from dataclasses import dataclass
 
 import pygame
 
-from tet4d.engine.gameplay.topology import (
-    EDGE_BEHAVIOR_OPTIONS,
-    default_edge_rules_for_mode,
-    topology_mode_from_index,
-    topology_mode_label,
-)
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
     TOPOLOGY_GAMEPLAY_MODE_OPTIONS,
     TopologyProfileState,
-    designer_profiles_for_dimension,
-    export_topology_profile_state,
-    profile_state_from_preset,
     topology_gameplay_mode_label,
-    validate_topology_profile_state,
 )
 from tet4d.engine.gameplay.api import (
     piece_set_2d_label_gameplay,
     piece_set_2d_options_gameplay,
     piece_set_label_gameplay,
     piece_set_options_for_dimension_gameplay,
-)
-from tet4d.engine.runtime.topology_explorer_bridge import (
-    export_explorer_preview_from_legacy_profile,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     advance_explorer_probe,
@@ -41,17 +28,27 @@ from tet4d.engine.runtime.topology_explorer_runtime import (
     export_runtime_explorer_experiments,
     load_runtime_explorer_topology_profile,
 )
+from tet4d.engine.runtime.topology_playability_signal import (
+    resolve_rigid_play_enabled,
+    update_topology_playability_analysis,
+)
 from tet4d.engine.runtime.topology_explorer_store import save_explorer_topology_profile
 from tet4d.engine.runtime.topology_profile_store import (
     load_topology_profile,
     save_topology_profile,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    RIGID_PLAY_MODE_AUTO,
+    RIGID_PLAY_MODE_OFF,
+    RIGID_PLAY_MODE_ON,
+    TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.engine.topology_explorer import (
     BoundaryTransform,
     ExplorerTopologyProfile,
     GluingDescriptor,
     tangent_axes_for_boundary,
-    validate_explorer_topology_profile,
+    validate_topology_structure,
 )
 from tet4d.engine.topology_explorer.presets import (
     ExplorerTopologyPreset,
@@ -67,6 +64,12 @@ from tet4d.ui.pygame.keybindings import (
     KEYS_4D,
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
+
+from . import legacy_panel_support
+from .interaction_audit import (
+    record_interaction_handler,
+    record_interaction_phase,
+)
 from tet4d.ui.pygame.topology_lab.camera_controls import (
     ensure_mouse_orbit_state,
     ensure_scene_camera,
@@ -107,16 +110,29 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     TOOL_SANDBOX,
     TopologyLabState,
     canonical_playground_state,
+    current_explorer_draft,
+    current_explorer_profile,
+    current_play_settings,
+    current_probe_coord,
+    current_probe_path,
+    current_probe_trace,
     current_selected_boundary_index,
     current_selected_glue_id,
-    current_explorer_profile,
     cycle_active_pane,
     ensure_explorer_draft,
     ensure_probe_state as ensure_probe_state_runtime,
     playground_dims_for_state,
+    replace_explorer_draft,
+    replace_explorer_profile,
+    replace_play_settings,
+    replace_probe_state,
     reset_probe_state,
     set_active_tool,
+    set_highlighted_glue_id,
+    set_selected_boundary_index,
+    set_selected_glue_id,
     sync_canonical_playground_state,
+    update_explorer_draft,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
 from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_settings
@@ -138,12 +154,6 @@ _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
 }
 _TopologyLabState = TopologyLabState
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
-_EDGE_LABELS = {
-    "bounded": "Bounded",
-    "wrap": "Wrap",
-    "invert": "Invert",
-}
-_AXIS_LABELS = {"x": "X", "y": "Y", "z": "Z", "w": "W"}
 _TOOL_SHORTCUT_KEYS = {
     pygame.K_n: TOOL_NAVIGATE,
     pygame.K_i: TOOL_INSPECT,
@@ -170,6 +180,38 @@ _SANDBOX_STEP_KEYS = {
     pygame.K_n: "w-",
     pygame.K_SLASH: "w+",
 }
+_STATUS_ROW_KEYS = frozenset(
+    {
+        "playability_summary",
+        "playability_validity",
+        "playability_explorer",
+        "playability_rigid",
+        "playability_reason",
+        "analysis_boundary",
+        "analysis_glue",
+        "analysis_transform",
+    }
+)
+_PLAYABILITY_VALIDITY_LABELS = {
+    "unknown": "Unknown",
+    "valid": "Valid",
+    "invalid": "Invalid",
+}
+_PLAYABILITY_EXPLORER_LABELS = {
+    "unknown": "Unknown",
+    "cellwise_explorable": "Cellwise explorable",
+    "not_explorable": "Not explorable",
+}
+_PLAYABILITY_RIGID_LABELS = {
+    "unknown": "Unknown",
+    "rigid_playable": "Rigid-playable",
+    "not_rigid_playable": "Not rigid-playable",
+}
+_RIGID_PLAY_MODE_SEQUENCE = (
+    RIGID_PLAY_MODE_AUTO,
+    RIGID_PLAY_MODE_ON,
+    RIGID_PLAY_MODE_OFF,
+)
 
 
 def _explorer_bindings_for_dimension(dimension: int):
@@ -206,11 +248,11 @@ def _board_dims_for_state(state: _TopologyLabState) -> tuple[int, ...]:
 
 
 def _ensure_play_settings(state: _TopologyLabState) -> ExplorerPlaygroundSettings:
-    if state.play_settings is None:
-        state.play_settings = build_explorer_playground_settings(
-            dimension=state.dimension
-        )
-    return state.play_settings
+    settings = current_play_settings(state)
+    if settings is None:
+        settings = build_explorer_playground_settings(dimension=state.dimension)
+        replace_play_settings(state, settings)
+    return settings
 
 
 def _bound_sandbox_rotation_action(state: _TopologyLabState, key: int) -> str | None:
@@ -272,6 +314,123 @@ def _set_status(
 ) -> None:
     state.status = message
     state.status_error = is_error
+
+
+def _current_playability_analysis(
+    state: _TopologyLabState,
+) -> TopologyPlaygroundPlayabilityAnalysis:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is None:
+        return TopologyPlaygroundPlayabilityAnalysis()
+    return runtime_state.playability_analysis
+
+
+def _playability_summary_value_text(state: _TopologyLabState) -> str:
+    summary = _current_playability_analysis(state).summary.strip()
+    return summary or "Status unavailable"
+
+
+def _playability_validity_value_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    return _PLAYABILITY_VALIDITY_LABELS.get(analysis.validity, "Unknown")
+
+
+def _playability_explorer_value_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    return _PLAYABILITY_EXPLORER_LABELS.get(
+        analysis.explorer_usability,
+        "Unknown",
+    )
+
+
+def _playability_rigid_value_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    return _PLAYABILITY_RIGID_LABELS.get(analysis.rigid_playability, "Unknown")
+
+
+def _resolved_rigid_play_enabled(state: _TopologyLabState) -> bool:
+    profile = current_explorer_profile(state)
+    if profile is None:
+        return True
+    settings = _ensure_play_settings(state)
+    return resolve_rigid_play_enabled(
+        profile,
+        dims=_board_dims_for_state(state),
+        rigid_play_mode=settings.rigid_play_mode,
+        analysis=_current_playability_analysis(state),
+    )
+
+
+def _rigid_play_mode_value_text(state: _TopologyLabState) -> str:
+    mode = _ensure_play_settings(state).rigid_play_mode
+    if mode == RIGID_PLAY_MODE_ON:
+        return "Rigid (Forced)"
+    if mode == RIGID_PLAY_MODE_OFF:
+        return "Cellwise (Forced)"
+    return "Auto (Rigid)" if _resolved_rigid_play_enabled(state) else "Auto (Cellwise)"
+
+
+def _playability_reason_value_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    if analysis.validity == "invalid" and analysis.validity_reason:
+        return analysis.validity_reason
+    if analysis.rigid_playability == "not_rigid_playable" and analysis.rigid_reason:
+        return analysis.rigid_reason
+    if analysis.explorer_usability == "not_explorable" and analysis.explorer_reason:
+        return analysis.explorer_reason
+    return (
+        analysis.rigid_reason
+        or analysis.validity_reason
+        or analysis.explorer_reason
+        or "No additional reason"
+    )
+
+
+def _playability_launch_note_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    if analysis.validity == "invalid":
+        return "Play launch stays restricted until the topology validates."
+    mode = _ensure_play_settings(state).rigid_play_mode
+    if mode == RIGID_PLAY_MODE_ON:
+        return "Play uses rigid transport because the user forced rigid play."
+    if mode == RIGID_PLAY_MODE_OFF:
+        return (
+            "Play uses cellwise seam transport because the user forced cellwise play."
+        )
+    if analysis.summary:
+        return (
+            "Play uses rigid transport automatically for this topology."
+            if _resolved_rigid_play_enabled(state)
+            else "Play uses cellwise seam transport automatically for this topology."
+        )
+    return "Play launch status is still being derived."
+
+
+def _playability_panel_lines(state: _TopologyLabState) -> list[str]:
+    lines = [
+        "Topology status",
+        f"Validity: {_playability_validity_value_text(state)}",
+        f"Explorer: {_playability_explorer_value_text(state)}",
+        f"Rigid play: {_playability_rigid_value_text(state)}",
+        f"Why: {_playability_reason_value_text(state)}",
+        f"Play: {_playability_launch_note_text(state)}",
+    ]
+    return lines
+
+
+def _playability_status_text(state: _TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    summary = analysis.summary.strip()
+    if not summary:
+        return ""
+    reason = ""
+    if analysis.validity == "invalid" and analysis.validity_reason:
+        reason = analysis.validity_reason
+    elif analysis.rigid_playability == "not_rigid_playable" and analysis.rigid_reason:
+        reason = analysis.rigid_reason
+    if not reason or reason in summary:
+        return summary
+    return f"{summary} {reason}"
 
 
 def _profile_for_state(state: _TopologyLabState) -> TopologyProfileState:
@@ -373,6 +532,13 @@ def _refresh_explorer_scene_state(state: _TopologyLabState) -> None:
     if state.scene_preview_signature != signature:
         state.experiment_batch = None
     state.scene_preview_signature = signature
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        update_topology_playability_analysis(
+            runtime_state,
+            preview=state.scene_preview,
+            preview_error=state.scene_preview_error,
+        )
 
 
 def _sync_explorer_state(state: _TopologyLabState) -> None:
@@ -389,37 +555,41 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         state.scene_mouse_orbit = None
         _clear_explorer_scene_state(state)
         return
-    state.explorer_profile = load_runtime_explorer_topology_profile(state.dimension)
-    if (
-        state.explorer_draft is None
-        or len(state.explorer_draft.signs) != state.dimension - 1
-    ):
+    replace_explorer_profile(
+        state,
+        load_runtime_explorer_topology_profile(state.dimension),
+    )
+    draft = current_explorer_draft(state)
+    if draft is None or len(draft.signs) != state.dimension - 1:
         ensure_explorer_draft(state)
     _normalize_explorer_draft(state)
-    sync_canonical_playground_state(state)
+    with record_interaction_phase(
+        state,
+        "canonical_sync",
+        source="sync_explorer_state",
+        dimension=state.dimension,
+    ):
+        sync_canonical_playground_state(state)
     state.scene_camera = ensure_scene_camera(state.dimension, state.scene_camera)
     state.scene_mouse_orbit = ensure_mouse_orbit_state(state.scene_mouse_orbit)
-    _refresh_explorer_scene_state(state)
-    _ensure_probe_state(state)
-
-
-def _preset_profiles(state: _TopologyLabState):
-    return designer_profiles_for_dimension(state.dimension, state.gameplay_mode)
+    with record_interaction_phase(
+        state,
+        "scene_refresh",
+        source="sync_explorer_state",
+        dimension=state.dimension,
+    ):
+        _refresh_explorer_scene_state(state)
+    with record_interaction_phase(
+        state,
+        "probe_refresh",
+        source="sync_explorer_state",
+        dimension=state.dimension,
+    ):
+        _ensure_probe_state(state)
 
 
 def _explorer_presets(state: _TopologyLabState) -> tuple[ExplorerTopologyPreset, ...]:
     return explorer_presets_for_dimension(state.dimension)
-
-
-def _preset_index(state: _TopologyLabState) -> int:
-    profiles = _preset_profiles(state)
-    preset_id = state.profile.preset_id
-    if not preset_id:
-        return 0
-    for idx, profile in enumerate(profiles):
-        if profile.profile_id == preset_id:
-            return idx
-    return 0
 
 
 def _explorer_boundaries(state: _TopologyLabState):
@@ -433,24 +603,23 @@ def _explorer_permutations(state: _TopologyLabState):
 
 
 def _explorer_glues(state: _TopologyLabState) -> tuple[GluingDescriptor, ...]:
-    return () if state.explorer_profile is None else state.explorer_profile.gluings
+    profile = current_explorer_profile(state)
+    return () if profile is None else profile.gluings
 
 
 def _normalize_explorer_draft(state: _TopologyLabState) -> None:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     boundaries = _explorer_boundaries(state)
     permutations = _explorer_permutations(state)
     glues = _explorer_glues(state)
     max_slot = len(glues)
-    slot_index = max(0, min(state.explorer_draft.slot_index, max_slot))
-    source_index = max(0, min(state.explorer_draft.source_index, len(boundaries) - 1))
-    target_index = max(0, min(state.explorer_draft.target_index, len(boundaries) - 1))
-    permutation_index = max(
-        0, min(state.explorer_draft.permutation_index, len(permutations) - 1)
-    )
+    slot_index = max(0, min(draft.slot_index, max_slot))
+    source_index = max(0, min(draft.source_index, len(boundaries) - 1))
+    target_index = max(0, min(draft.target_index, len(boundaries) - 1))
+    permutation_index = max(0, min(draft.permutation_index, len(permutations) - 1))
     signs = tuple(
-        -1 if int(value) < 0 else 1
-        for value in state.explorer_draft.signs[: state.dimension - 1]
+        -1 if int(value) < 0 else 1 for value in draft.signs[: state.dimension - 1]
     )
     if len(signs) != state.dimension - 1:
         signs = tuple(1 for _ in range(state.dimension - 1))
@@ -460,7 +629,8 @@ def _normalize_explorer_draft(state: _TopologyLabState) -> None:
         target_index = boundaries.index(glue.target)
         permutation_index = permutations.index(glue.transform.permutation)
         signs = glue.transform.signs
-    state.explorer_draft = ExplorerGlueDraft(
+    update_explorer_draft(
+        state,
         slot_index=slot_index,
         source_index=source_index,
         target_index=target_index,
@@ -470,24 +640,27 @@ def _normalize_explorer_draft(state: _TopologyLabState) -> None:
 
 
 def _explorer_slot_label(state: _TopologyLabState) -> str:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     glues = _explorer_glues(state)
-    if state.explorer_draft.slot_index >= len(glues):
+    if draft.slot_index >= len(glues):
         return "New glue"
-    return glues[state.explorer_draft.slot_index].glue_id
+    return glues[draft.slot_index].glue_id
 
 
 def _explorer_transform_from_draft(state: _TopologyLabState) -> BoundaryTransform:
-    assert state.explorer_draft is not None
-    permutation = _explorer_permutations(state)[state.explorer_draft.permutation_index]
-    return BoundaryTransform(permutation=permutation, signs=state.explorer_draft.signs)
+    draft = current_explorer_draft(state)
+    assert draft is not None
+    permutation = _explorer_permutations(state)[draft.permutation_index]
+    return BoundaryTransform(permutation=permutation, signs=draft.signs)
 
 
 def _explorer_transform_label(state: _TopologyLabState) -> str:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     boundaries = _explorer_boundaries(state)
-    source = boundaries[state.explorer_draft.source_index]
-    target = boundaries[state.explorer_draft.target_index]
+    source = boundaries[draft.source_index]
+    target = boundaries[draft.target_index]
     return transform_preview_label(
         source,
         target,
@@ -520,34 +693,31 @@ def _explorer_glue_labels(state: _TopologyLabState) -> tuple[str, ...]:
 
 
 def _select_explorer_draft_slot(state: _TopologyLabState, slot_index: int) -> None:
-    assert state.explorer_draft is not None
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=slot_index,
-        source_index=state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index,
-        permutation_index=state.explorer_draft.permutation_index,
-        signs=state.explorer_draft.signs,
-    )
+    draft = current_explorer_draft(state)
+    assert draft is not None
+    update_explorer_draft(state, slot_index=slot_index)
     glues = _explorer_glues(state)
+    highlighted_glue_id: str | None = None
     if slot_index >= len(glues):
-        state.selected_glue_id = None
-        state.highlighted_glue_id = None
+        set_selected_glue_id(state, None)
     else:
         selected_glue = glues[slot_index]
-        state.selected_glue_id = selected_glue.glue_id
-        state.highlighted_glue_id = selected_glue.glue_id
-        state.selected_boundary_index = _explorer_boundaries(state).index(
-            selected_glue.source
+        set_selected_glue_id(state, selected_glue.glue_id)
+        set_selected_boundary_index(
+            state,
+            _explorer_boundaries(state).index(selected_glue.source),
         )
+        highlighted_glue_id = selected_glue.glue_id
     _normalize_explorer_draft(state)
-    sync_canonical_playground_state(state)
+    set_highlighted_glue_id(state, highlighted_glue_id)
 
 
 def _explorer_permutation_labels(state: _TopologyLabState) -> tuple[str, ...]:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     boundaries = _explorer_boundaries(state)
-    source = boundaries[state.explorer_draft.source_index]
-    target = boundaries[state.explorer_draft.target_index]
+    source = boundaries[draft.source_index]
+    target = boundaries[draft.target_index]
     source_axes = tangent_axes_for_boundary(source)
     target_axes = tangent_axes_for_boundary(target)
     labels: list[str] = []
@@ -559,116 +729,145 @@ def _explorer_permutation_labels(state: _TopologyLabState) -> tuple[str, ...]:
 
 
 def _ensure_probe_state(state: _TopologyLabState) -> None:
+    profile = current_explorer_profile(state)
+    probe_coord = current_probe_coord(state)
+    probe_path = current_probe_path(state)
     needs_default = (
-        state.probe_coord is None
-        or len(state.probe_coord) != state.dimension
-        or state.probe_path is None
+        probe_coord is None or len(probe_coord) != state.dimension or not probe_path
     )
     ensure_probe_state_runtime(state)
-    if state.explorer_profile is None:
+    if profile is None:
         return
     if state.scene_preview_error is not None:
-        state.probe_coord = None
-        state.probe_trace = [f"Probe unavailable: {state.scene_preview_error}"]
-        state.probe_path = []
-        state.highlighted_glue_id = None
-        if state.canonical_state is not None:
-            sync_canonical_playground_state(state)
+        replace_probe_state(
+            state,
+            coord=None,
+            trace=[f"Probe unavailable: {state.scene_preview_error}"],
+            path=[],
+            highlighted_glue_id=None,
+        )
         return
     dims = _board_dims_for_state(state)
-    if needs_default or any(
-        value < 0 or value >= dims[index]
-        for index, value in enumerate(state.probe_coord or ())
+    probe_coord = current_probe_coord(state)
+    if (
+        probe_coord is None
+        or needs_default
+        or any(
+            value < 0 or value >= dims[index] for index, value in enumerate(probe_coord)
+        )
     ):
         try:
-            state.probe_coord = recommended_explorer_probe_coord(
-                state.explorer_profile,
+            probe_coord = recommended_explorer_probe_coord(
+                profile,
                 dims=dims,
             )
-            state.probe_trace = []
-            state.probe_path = [state.probe_coord]
+            replace_probe_state(
+                state,
+                coord=probe_coord,
+                trace=[],
+                path=[probe_coord],
+                highlighted_glue_id=None,
+            )
         except ValueError as exc:
-            state.probe_coord = None
-            state.probe_trace = [f"Probe unavailable: {exc}"]
-            state.probe_path = []
-            state.highlighted_glue_id = None
-    if state.canonical_state is not None:
-        sync_canonical_playground_state(state)
+            replace_probe_state(
+                state,
+                coord=None,
+                trace=[f"Probe unavailable: {exc}"],
+                path=[],
+                highlighted_glue_id=None,
+            )
 
 
 def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
-    assert state.explorer_profile is not None
-    _ensure_probe_state(state)
-    if state.probe_coord is None:
+    with record_interaction_handler(
+        state,
+        "probe_move",
+        step=step_label,
+        dimension=state.dimension,
+    ):
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        _ensure_probe_state(state)
+        probe_coord = current_probe_coord(state)
+        if probe_coord is None:
+            _set_status(
+                state,
+                "Probe is unavailable until the current gluing fits the board dimensions",
+                is_error=True,
+            )
+            return
+        start = probe_coord
+        try:
+            target, result = advance_explorer_probe(
+                profile,
+                dims=_board_dims_for_state(state),
+                coord=probe_coord,
+                step_label=step_label,
+            )
+        except ValueError as exc:
+            set_highlighted_glue_id(state, None)
+            _set_status(state, str(exc), is_error=True)
+            return
+        traversal = result.get("traversal")
+        highlighted_glue_id = (
+            None if traversal is None else str(traversal.get("glue_id"))
+        )
+        trace = current_probe_trace(state)
+        trace.append(str(result["message"]))
+        path = current_probe_path(state) or [start]
+        if not path or path[-1] != start:
+            path.append(start)
+        if target != start:
+            path.append(target)
+        replace_probe_state(
+            state,
+            coord=target,
+            trace=trace[-6:],
+            path=path[-20:],
+            highlighted_glue_id=highlighted_glue_id,
+        )
         _set_status(
             state,
-            "Probe is unavailable until the current gluing fits the board dimensions",
-            is_error=True,
+            str(result["message"]),
+            is_error=bool(result.get("blocked", False)),
         )
-        return
-    start = state.probe_coord
-    try:
-        target, result = advance_explorer_probe(
-            state.explorer_profile,
-            dims=_board_dims_for_state(state),
-            coord=state.probe_coord,
-            step_label=step_label,
-        )
-    except ValueError as exc:
-        state.highlighted_glue_id = None
-        _set_status(state, str(exc), is_error=True)
-        return
-    state.probe_coord = target
-    traversal = result.get("traversal")
-    state.highlighted_glue_id = (
-        None if traversal is None else str(traversal.get("glue_id"))
-    )
-    trace = list(state.probe_trace or [])
-    trace.append(str(result["message"]))
-    state.probe_trace = trace[-6:]
-    path = list(state.probe_path or [start])
-    if not path or path[-1] != start:
-        path.append(start)
-    if target != start:
-        path.append(target)
-    state.probe_path = path[-20:]
-    sync_canonical_playground_state(state)
-    _set_status(
-        state, str(result["message"]), is_error=bool(result.get("blocked", False))
-    )
 
 
 def _reset_probe(state: _TopologyLabState) -> None:
-    if state.explorer_profile is None:
+    profile = current_explorer_profile(state)
+    if profile is None:
         reset_probe_state(state)
-    else:
-        try:
-            state.probe_coord = recommended_explorer_probe_coord(
-                state.explorer_profile,
-                dims=_board_dims_for_state(state),
-            )
-            state.probe_trace = []
-            state.probe_path = [state.probe_coord]
-            state.highlighted_glue_id = None
-            sync_canonical_playground_state(state)
-            _set_status(state, f"Probe reset to {list(state.probe_coord or ())}")
-            return
-        except ValueError as exc:
-            state.probe_coord = None
-            state.probe_trace = [f"Probe unavailable: {exc}"]
-            state.probe_path = []
-            state.highlighted_glue_id = None
-            sync_canonical_playground_state(state)
-            _set_status(state, str(exc), is_error=True)
-            return
-    sync_canonical_playground_state(state)
-    _set_status(state, f"Probe reset to {list(state.probe_coord or ())}")
+        _set_status(state, f"Probe reset to {list(current_probe_coord(state) or ())}")
+        return
+    try:
+        probe_coord = recommended_explorer_probe_coord(
+            profile,
+            dims=_board_dims_for_state(state),
+        )
+        replace_probe_state(
+            state,
+            coord=probe_coord,
+            trace=[],
+            path=[probe_coord],
+            highlighted_glue_id=None,
+        )
+        _set_status(state, f"Probe reset to {list(probe_coord)}")
+        return
+    except ValueError as exc:
+        replace_probe_state(
+            state,
+            coord=None,
+            trace=[f"Probe unavailable: {exc}"],
+            path=[],
+            highlighted_glue_id=None,
+        )
+        _set_status(state, str(exc), is_error=True)
 
 
 def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
     if _uses_general_explorer_editor(state):
         rows = [
-            _RowSpec("gameplay_mode", "Game Type"),
+            _RowSpec("gameplay_mode", "Workspace Path"),
             _RowSpec("dimension", "Dimension"),
             _RowSpec("board_x", "Board X"),
             _RowSpec("board_y", "Board Y"),
@@ -681,7 +880,13 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
             (
                 _RowSpec("piece_set", "Piece Set"),
                 _RowSpec("speed_level", "Speed"),
+                _RowSpec("rigid_play_mode", "Play Transport"),
                 _RowSpec("explorer_preset", "Explorer Preset"),
+                _RowSpec("playability_summary", "Topology Status"),
+                _RowSpec("playability_validity", "Validity"),
+                _RowSpec("playability_explorer", "Explorer"),
+                _RowSpec("playability_rigid", "Rigid Play"),
+                _RowSpec("playability_reason", "Why"),
                 _RowSpec("analysis_boundary", "Selected Boundary"),
                 _RowSpec("analysis_glue", "Selected Seam"),
                 _RowSpec("analysis_transform", "Draft Transform"),
@@ -694,37 +899,23 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
         return tuple(rows)
 
     rows = [
-        _RowSpec("gameplay_mode", "Game Type"),
+        _RowSpec("gameplay_mode", "Workspace Path"),
         _RowSpec("dimension", "Dimension"),
-        _RowSpec("preset", "Preset"),
-        _RowSpec("topology_mode", "Topology Mode"),
     ]
-    axis_names = tuple("xyzw"[: state.dimension])
-    for axis_name in axis_names:
-        axis = "xyzw".index(axis_name)
-        disabled = axis_name == "y" and state.gameplay_mode == GAMEPLAY_MODE_NORMAL
-        rows.append(
-            _RowSpec(
-                f"{axis_name}_neg",
-                f"{_AXIS_LABELS[axis_name]}-",
-                axis=axis,
-                side=0,
-                disabled=disabled,
-            )
+    rows.extend(
+        _RowSpec(
+            spec.key,
+            spec.label,
+            axis=spec.axis,
+            side=spec.side,
+            disabled=spec.disabled,
         )
-        rows.append(
-            _RowSpec(
-                f"{axis_name}_pos",
-                f"{_AXIS_LABELS[axis_name]}+",
-                axis=axis,
-                side=1,
-                disabled=disabled,
-            )
-        )
+        for spec in legacy_panel_support.legacy_row_specs(state)
+    )
     rows.extend(
         (
-            _RowSpec("save_profile", "Save Profile"),
-            _RowSpec("export", "Export Resolved Profile"),
+            _RowSpec("save_profile", "Save Legacy Profile"),
+            _RowSpec("export", "Export Legacy Resolved Profile"),
             _RowSpec("back", "Back"),
         )
     )
@@ -732,24 +923,25 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
 
 
 def _selectable_row_indexes(state: _TopologyLabState) -> tuple[int, ...]:
-    return tuple(idx for idx, _row in enumerate(_rows_for_state(state)))
+    return tuple(
+        idx
+        for idx, row in enumerate(_rows_for_state(state))
+        if not _row_is_status_display(row)
+    )
 
 
 def _mode_value_text(state: _TopologyLabState) -> str:
-    return topology_gameplay_mode_label(state.gameplay_mode)
-
-
-def _preset_value_text(state: _TopologyLabState) -> str:
-    profiles = _preset_profiles(state)
-    index = _preset_index(state)
-    return profiles[index].label
+    if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
+        return "Explorer Playground"
+    return "Normal Game (legacy compat)"
 
 
 def _explorer_preset_index(state: _TopologyLabState) -> int:
-    assert state.explorer_profile is not None
+    profile = current_explorer_profile(state)
+    assert profile is not None
     presets = _explorer_presets(state)
     for idx, preset in enumerate(presets):
-        if preset.profile == state.explorer_profile:
+        if preset.profile == profile:
             return idx
     return 0
 
@@ -789,51 +981,92 @@ def _set_explorer_piece_set_index(state: _TopologyLabState, step: int) -> None:
     options = _explorer_piece_set_options(state)
     if not options:
         return
+    previous_signature = _preview_signature_for_state(state)
     index = (_explorer_piece_set_index(state) + step) % len(options)
-    state.play_settings = ExplorerPlaygroundSettings(
-        board_dims=settings.board_dims,
-        piece_set_index=index,
-        speed_level=settings.speed_level,
-        random_mode_index=settings.random_mode_index,
-        game_seed=settings.game_seed,
+    replace_play_settings(
+        state,
+        ExplorerPlaygroundSettings(
+            board_dims=settings.board_dims,
+            piece_set_index=index,
+            speed_level=settings.speed_level,
+            random_mode_index=settings.random_mode_index,
+            game_seed=settings.game_seed,
+            rigid_play_mode=settings.rigid_play_mode,
+        ),
     )
-    _mark_play_settings_updated(state)
+    _mark_play_settings_updated(state, previous_signature=previous_signature)
 
 
 def _set_explorer_board_dim(state: _TopologyLabState, axis: int, step: int) -> None:
-    settings = _ensure_play_settings(state)
-    mins = (4, 8, 2, 1)
-    max_size = 40
-    dims = list(settings.board_dims)
-    while len(dims) < state.dimension:
-        dims.append(mins[len(dims)])
-    dims[axis] = max(mins[axis], min(max_size, int(dims[axis]) + int(step)))
-    state.play_settings = ExplorerPlaygroundSettings(
-        board_dims=tuple(dims[: state.dimension]),
-        piece_set_index=settings.piece_set_index,
-        speed_level=settings.speed_level,
-        random_mode_index=settings.random_mode_index,
-        game_seed=settings.game_seed,
-    )
-    _mark_play_settings_updated(state)
+    with record_interaction_handler(
+        state,
+        "board_size_change",
+        axis=axis,
+        step=step,
+        dimension=state.dimension,
+    ):
+        settings = _ensure_play_settings(state)
+        previous_signature = _preview_signature_for_state(state)
+        mins = (4, 8, 2, 1)
+        max_size = 40
+        dims = list(settings.board_dims)
+        while len(dims) < state.dimension:
+            dims.append(mins[len(dims)])
+        dims[axis] = max(mins[axis], min(max_size, int(dims[axis]) + int(step)))
+        replace_play_settings(
+            state,
+            ExplorerPlaygroundSettings(
+                board_dims=tuple(dims[: state.dimension]),
+                piece_set_index=settings.piece_set_index,
+                speed_level=settings.speed_level,
+                random_mode_index=settings.random_mode_index,
+                game_seed=settings.game_seed,
+                rigid_play_mode=settings.rigid_play_mode,
+            ),
+        )
+        _mark_play_settings_updated(state, previous_signature=previous_signature)
 
 
 def _set_explorer_speed_level(state: _TopologyLabState, step: int) -> None:
     settings = _ensure_play_settings(state)
+    previous_signature = _preview_signature_for_state(state)
     level = max(1, min(10, int(settings.speed_level) + int(step)))
-    state.play_settings = ExplorerPlaygroundSettings(
-        board_dims=settings.board_dims,
-        piece_set_index=settings.piece_set_index,
-        speed_level=level,
-        random_mode_index=settings.random_mode_index,
-        game_seed=settings.game_seed,
+    replace_play_settings(
+        state,
+        ExplorerPlaygroundSettings(
+            board_dims=settings.board_dims,
+            piece_set_index=settings.piece_set_index,
+            speed_level=level,
+            random_mode_index=settings.random_mode_index,
+            game_seed=settings.game_seed,
+            rigid_play_mode=settings.rigid_play_mode,
+        ),
     )
-    _mark_play_settings_updated(state)
+    _mark_play_settings_updated(state, previous_signature=previous_signature)
 
 
-def _edge_value_text(state: _TopologyLabState, axis: int, side: int) -> str:
-    value = state.profile.edge_rules[axis][side]
-    return _EDGE_LABELS.get(value, str(value).title())
+def _set_explorer_rigid_play_mode(state: _TopologyLabState, step: int) -> None:
+    settings = _ensure_play_settings(state)
+    previous_signature = _preview_signature_for_state(state)
+    current_index = _RIGID_PLAY_MODE_SEQUENCE.index(str(settings.rigid_play_mode))
+    next_mode = _RIGID_PLAY_MODE_SEQUENCE[
+        (current_index + step) % len(_RIGID_PLAY_MODE_SEQUENCE)
+    ]
+    replace_play_settings(
+        state,
+        ExplorerPlaygroundSettings(
+            board_dims=settings.board_dims,
+            piece_set_index=settings.piece_set_index,
+            speed_level=settings.speed_level,
+            random_mode_index=settings.random_mode_index,
+            game_seed=settings.game_seed,
+            rigid_play_mode=next_mode,
+        ),
+    )
+    _mark_play_settings_updated(
+        state,
+        previous_signature=previous_signature,
+    )
 
 
 _EXPLORER_BOARD_ROW_AXES = {
@@ -855,11 +1088,10 @@ def _explorer_draft_boundary_value_text(
     state: _TopologyLabState,
     key: str,
 ) -> str:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     boundary_index = (
-        state.explorer_draft.source_index
-        if key == "explorer_source"
-        else state.explorer_draft.target_index
+        draft.source_index if key == "explorer_source" else draft.target_index
     )
     return _explorer_boundaries(state)[boundary_index].label
 
@@ -867,7 +1099,13 @@ def _explorer_draft_boundary_value_text(
 _EXPLORER_SCALAR_ROW_VALUE_GETTERS = {
     "piece_set": _explorer_piece_set_label,
     "speed_level": lambda state: str(_ensure_play_settings(state).speed_level),
+    "rigid_play_mode": _rigid_play_mode_value_text,
     "explorer_preset": _explorer_preset_value_text,
+    "playability_summary": _playability_summary_value_text,
+    "playability_validity": _playability_validity_value_text,
+    "playability_explorer": _playability_explorer_value_text,
+    "playability_rigid": _playability_rigid_value_text,
+    "playability_reason": _playability_reason_value_text,
     "analysis_boundary": _analysis_boundary_value_text,
     "analysis_glue": lambda state: current_selected_glue_id(state) or "none",
     "analysis_transform": _explorer_transform_label,
@@ -891,20 +1129,20 @@ def _explorer_row_value_text(state: _TopologyLabState, row: _RowSpec) -> str | N
         dims = _board_dims_for_state(state)
         return str(dims[axis]) if axis < len(dims) else None
     if row.key.startswith("explorer_sign_"):
-        assert state.explorer_draft is not None
+        draft = current_explorer_draft(state)
+        assert draft is not None
         sign_index = int(row.key.rsplit("_", 1)[1])
-        return "Flipped" if state.explorer_draft.signs[sign_index] < 0 else "Straight"
+        return "Flipped" if draft.signs[sign_index] < 0 else "Straight"
     return _explorer_scalar_row_value_text(state, row.key)
 
 
 def _legacy_row_value_text(state: _TopologyLabState, row: _RowSpec) -> str | None:
-    if row.key == "preset":
-        return _preset_value_text(state)
-    if row.key == "topology_mode":
-        return topology_mode_label(state.profile.topology_mode)
-    if row.axis is not None and row.side is not None:
-        return _edge_value_text(state, row.axis, row.side)
-    return None
+    return legacy_panel_support.legacy_row_value_text(
+        state,
+        key=row.key,
+        axis=row.axis,
+        side=row.side,
+    )
 
 
 def _row_value_text(state: _TopologyLabState, row: _RowSpec) -> str:
@@ -921,19 +1159,66 @@ def _row_value_text(state: _TopologyLabState, row: _RowSpec) -> str:
     return ""
 
 
+def _set_topology_status_after_refresh(
+    state: _TopologyLabState,
+    *,
+    ok_message: str,
+) -> None:
+    if _uses_general_explorer_editor(state):
+        analysis = _current_playability_analysis(state)
+        status_text = _playability_status_text(state)
+        if status_text:
+            _set_status(
+                state,
+                status_text,
+                is_error=(analysis.status == "blocked"),
+            )
+            return
+    _set_status(state, ok_message)
+
+
 def _mark_updated(state: _TopologyLabState) -> None:
     state.dirty = True
     if _uses_general_explorer_editor(state):
-        sync_canonical_playground_state(state)
-        _refresh_explorer_scene_state(state)
-    _set_status(state, str(_LAB_STATUS_COPY["updated"]))
+        with record_interaction_phase(
+            state,
+            "canonical_sync",
+            source="mark_updated",
+            dimension=state.dimension,
+        ):
+            sync_canonical_playground_state(state)
+        with record_interaction_phase(
+            state,
+            "scene_refresh",
+            source="mark_updated",
+            dimension=state.dimension,
+        ):
+            _refresh_explorer_scene_state(state)
+    _set_topology_status_after_refresh(
+        state,
+        ok_message=str(_LAB_STATUS_COPY["updated"]),
+    )
 
 
-def _mark_play_settings_updated(state: _TopologyLabState) -> None:
+def _mark_play_settings_updated(
+    state: _TopologyLabState,
+    *,
+    previous_signature: ExplorerPreviewCompileSignature | None,
+) -> None:
     if _uses_general_explorer_editor(state):
-        sync_canonical_playground_state(state)
-        _refresh_explorer_scene_state(state)
-    _set_status(state, "Explorer play settings updated")
+        next_signature = _preview_signature_for_state(state)
+        if next_signature != previous_signature:
+            with record_interaction_phase(
+                state,
+                "scene_refresh",
+                source="mark_play_settings_updated",
+                dimension=state.dimension,
+            ):
+                _refresh_explorer_scene_state(state)
+    _set_topology_status_after_refresh(
+        state,
+        ok_message="Explorer play settings updated",
+    )
 
 
 def _apply_profile(state: _TopologyLabState, profile: TopologyProfileState) -> None:
@@ -959,165 +1244,171 @@ def _cycle_gameplay_mode(state: _TopologyLabState, step: int) -> None:
 
 
 def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
-    idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
-    state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
-    _sync_profile(state)
-    if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
-        state.play_settings = build_explorer_playground_settings(
-            dimension=state.dimension
+    with record_interaction_handler(
+        state,
+        "dimension_change",
+        step=step,
+        previous_dimension=state.dimension,
+    ):
+        idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
+        state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
+        state.dirty = True
+        _sync_profile(state)
+        if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
+            replace_play_settings(
+                state,
+                build_explorer_playground_settings(dimension=state.dimension),
+            )
+        _sync_explorer_state(state)
+        _set_topology_status_after_refresh(
+            state,
+            ok_message=str(_LAB_STATUS_COPY["updated"]),
         )
-    _sync_explorer_state(state)
-    _mark_updated(state)
+
+
+def _apply_legacy_row_adjustment(
+    state: _TopologyLabState,
+    *,
+    key: str,
+    axis: int | None,
+    side: int | None,
+    disabled: bool,
+    step: int,
+) -> bool:
+    result = legacy_panel_support.adjust_legacy_row(
+        state,
+        key=key,
+        axis=axis,
+        side=side,
+        disabled=disabled,
+        step=step,
+        locked_message=str(_LAB_STATUS_COPY["locked"]),
+    )
+    if not result.handled:
+        return False
+    if result.error is not None:
+        _set_status(state, result.error, is_error=True)
+        return True
+    assert result.profile is not None
+    _apply_profile(state, result.profile)
+    return True
 
 
 def _cycle_preset(state: _TopologyLabState, step: int) -> None:
-    profiles = _preset_profiles(state)
-    idx = (_preset_index(state) + step) % len(profiles)
-    profile = profile_state_from_preset(
-        dimension=state.dimension,
-        gravity_axis=1,
-        gameplay_mode=state.gameplay_mode,
-        preset_index=idx,
-        topology_mode=state.profile.topology_mode,
+    _apply_legacy_row_adjustment(
+        state,
+        key="preset",
+        axis=None,
+        side=None,
+        disabled=False,
+        step=step,
     )
-    _apply_profile(state, profile)
 
 
 def _cycle_explorer_preset(state: _TopologyLabState, step: int) -> None:
-    assert state.explorer_profile is not None
-    presets = _explorer_presets(state)
-    idx = (_explorer_preset_index(state) + step) % len(presets)
-    state.explorer_profile = presets[idx].profile
-    draft = default_draft_for_dimension(state.dimension)
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=len(state.explorer_profile.gluings),
-        source_index=draft.source_index,
-        target_index=draft.target_index,
-        permutation_index=draft.permutation_index,
-        signs=draft.signs,
-    )
-    _normalize_explorer_draft(state)
-    _mark_updated(state)
+    with record_interaction_handler(
+        state,
+        "preset_change",
+        step=step,
+        dimension=state.dimension,
+    ):
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        presets = _explorer_presets(state)
+        idx = (_explorer_preset_index(state) + step) % len(presets)
+        next_profile = presets[idx].profile
+        replace_explorer_profile(state, next_profile)
+        draft = default_draft_for_dimension(state.dimension)
+        replace_explorer_draft(
+            state,
+            ExplorerGlueDraft(
+                slot_index=len(next_profile.gluings),
+                source_index=draft.source_index,
+                target_index=draft.target_index,
+                permutation_index=draft.permutation_index,
+                signs=draft.signs,
+            ),
+        )
+        set_selected_glue_id(state, None)
+        set_selected_boundary_index(state, None)
+        set_highlighted_glue_id(state, None)
+        _normalize_explorer_draft(state)
+        _mark_updated(state)
 
 
 def _cycle_topology_mode(state: _TopologyLabState, step: int) -> None:
-    options = tuple(topology_mode_from_index(idx) for idx in range(3))
-    current = state.profile.topology_mode
-    idx = options.index(current)
-    next_mode = options[(idx + step) % len(options)]
-    rules = default_edge_rules_for_mode(
-        state.dimension,
-        1,
-        mode=next_mode,
-        wrap_gravity_axis=(state.gameplay_mode == GAMEPLAY_MODE_EXPLORER),
+    _apply_legacy_row_adjustment(
+        state,
+        key="topology_mode",
+        axis=None,
+        side=None,
+        disabled=False,
+        step=step,
     )
-    profile = validate_topology_profile_state(
-        gameplay_mode=state.gameplay_mode,
-        dimension=state.dimension,
-        gravity_axis=1,
-        topology_mode=next_mode,
-        edge_rules=rules,
-        preset_id=None,
-    )
-    _apply_profile(state, profile)
 
 
 def _cycle_edge_rule(state: _TopologyLabState, row: _RowSpec, step: int) -> None:
-    if row.disabled:
-        _set_status(state, str(_LAB_STATUS_COPY["locked"]), is_error=True)
-        return
-    assert row.axis is not None and row.side is not None
-    current = state.profile.edge_rules[row.axis][row.side]
-    idx = EDGE_BEHAVIOR_OPTIONS.index(current)
-    next_value = EDGE_BEHAVIOR_OPTIONS[(idx + step) % len(EDGE_BEHAVIOR_OPTIONS)]
-    rules = [tuple(axis_rule) for axis_rule in state.profile.edge_rules]
-    axis_rule = list(rules[row.axis])
-    axis_rule[row.side] = next_value
-    rules[row.axis] = tuple(axis_rule)
-    try:
-        profile = validate_topology_profile_state(
-            gameplay_mode=state.gameplay_mode,
-            dimension=state.dimension,
-            gravity_axis=1,
-            topology_mode=state.profile.topology_mode,
-            edge_rules=tuple(rules),
-            preset_id=None,
-        )
-    except ValueError as exc:
-        _set_status(state, str(exc), is_error=True)
-        return
-    _apply_profile(state, profile)
+    _apply_legacy_row_adjustment(
+        state,
+        key=row.key,
+        axis=row.axis,
+        side=row.side,
+        disabled=row.disabled,
+        step=step,
+    )
 
 
 def _set_explorer_draft_slot(state: _TopologyLabState, step: int) -> None:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     glues = _explorer_glues(state)
     slot_count = len(glues) + 1
     _select_explorer_draft_slot(
         state,
-        (state.explorer_draft.slot_index + step) % slot_count,
+        (draft.slot_index + step) % slot_count,
     )
 
 
 def _cycle_explorer_boundary(
     state: _TopologyLabState, *, is_source: bool, step: int
 ) -> None:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     boundaries = _explorer_boundaries(state)
-    current = (
-        state.explorer_draft.source_index
-        if is_source
-        else state.explorer_draft.target_index
-    )
+    current = draft.source_index if is_source else draft.target_index
     next_index = (current + step) % len(boundaries)
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=state.explorer_draft.slot_index,
-        source_index=next_index if is_source else state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index if is_source else next_index,
-        permutation_index=state.explorer_draft.permutation_index,
-        signs=state.explorer_draft.signs,
+    update_explorer_draft(
+        state,
+        source_index=next_index if is_source else draft.source_index,
+        target_index=draft.target_index if is_source else next_index,
     )
     _normalize_explorer_draft(state)
-    sync_canonical_playground_state(state)
 
 
 def _cycle_explorer_permutation(state: _TopologyLabState, step: int) -> None:
-    assert state.explorer_draft is not None
+    draft = current_explorer_draft(state)
+    assert draft is not None
     options = _explorer_permutations(state)
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=state.explorer_draft.slot_index,
-        source_index=state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index,
-        permutation_index=(state.explorer_draft.permutation_index + step)
-        % len(options),
-        signs=state.explorer_draft.signs,
+    update_explorer_draft(
+        state,
+        permutation_index=(draft.permutation_index + step) % len(options),
     )
-    sync_canonical_playground_state(state)
 
 
 def _toggle_explorer_sign(state: _TopologyLabState, sign_index: int) -> None:
-    assert state.explorer_draft is not None
-    signs = list(state.explorer_draft.signs)
+    draft = current_explorer_draft(state)
+    assert draft is not None
+    signs = list(draft.signs)
     signs[sign_index] *= -1
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=state.explorer_draft.slot_index,
-        source_index=state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index,
-        permutation_index=state.explorer_draft.permutation_index,
-        signs=tuple(signs),
-    )
-    sync_canonical_playground_state(state)
+    update_explorer_draft(state, signs=tuple(signs))
 
 
-def _validate_explorer_profile_or_error(
+def _validate_explorer_profile_structure_or_error(
     state: _TopologyLabState,
     profile: ExplorerTopologyProfile,
 ) -> ExplorerTopologyProfile | None:
     try:
-        return validate_explorer_topology_profile(
-            profile,
-            dims=_board_dims_for_state(state),
-        )
+        return validate_topology_structure(profile)
     except ValueError as exc:
         _set_status(state, str(exc), is_error=True)
         return None
@@ -1134,85 +1425,118 @@ def _next_glue_id(state: _TopologyLabState) -> str:
 
 
 def _apply_explorer_glue(state: _TopologyLabState) -> None:
-    assert state.explorer_profile is not None
-    assert state.explorer_draft is not None
-    boundaries = _explorer_boundaries(state)
-    source = boundaries[state.explorer_draft.source_index]
-    target = boundaries[state.explorer_draft.target_index]
-    transform = _explorer_transform_from_draft(state)
-    gluings = list(_explorer_glues(state))
-    slot_index = state.explorer_draft.slot_index
-    if slot_index < len(gluings):
-        glue_id = gluings[slot_index].glue_id
-    else:
-        glue_id = _next_glue_id(state)
-    try:
-        glue = GluingDescriptor(
-            glue_id=glue_id,
-            source=source,
-            target=target,
-            transform=transform,
+    draft = current_explorer_draft(state)
+    assert draft is not None
+    action = "seam_create"
+    if draft.slot_index < len(_explorer_glues(state)):
+        action = "seam_edit"
+    with record_interaction_handler(
+        state,
+        action,
+        slot_index=draft.slot_index,
+        dimension=state.dimension,
+    ):
+        profile = current_explorer_profile(state)
+        draft = current_explorer_draft(state)
+        assert profile is not None
+        assert draft is not None
+        boundaries = _explorer_boundaries(state)
+        source = boundaries[draft.source_index]
+        target = boundaries[draft.target_index]
+        transform = _explorer_transform_from_draft(state)
+        gluings = list(_explorer_glues(state))
+        slot_index = draft.slot_index
+        if slot_index < len(gluings):
+            glue_id = gluings[slot_index].glue_id
+        else:
+            glue_id = _next_glue_id(state)
+        try:
+            glue = GluingDescriptor(
+                glue_id=glue_id,
+                source=source,
+                target=target,
+                transform=transform,
+            )
+        except ValueError as exc:
+            _set_status(state, str(exc), is_error=True)
+            return
+        if slot_index < len(gluings):
+            gluings[slot_index] = glue
+        else:
+            gluings.append(glue)
+            slot_index = len(gluings) - 1
+        next_profile = ExplorerTopologyProfile(
+            dimension=state.dimension,
+            gluings=tuple(gluings),
         )
-    except ValueError as exc:
-        _set_status(state, str(exc), is_error=True)
-        return
-    if slot_index < len(gluings):
-        gluings[slot_index] = glue
-    else:
-        gluings.append(glue)
-        slot_index = len(gluings) - 1
-    profile = ExplorerTopologyProfile(dimension=state.dimension, gluings=tuple(gluings))
-    validated = _validate_explorer_profile_or_error(state, profile)
-    if validated is None:
-        return
-    state.explorer_profile = validated
-    state.selected_glue_id = glue_id
-    state.highlighted_glue_id = glue_id
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=slot_index,
-        source_index=state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index,
-        permutation_index=state.explorer_draft.permutation_index,
-        signs=state.explorer_draft.signs,
-    )
-    glues = _explorer_glues(state)
-    state.selected_glue_id = (
-        None if slot_index >= len(glues) else glues[slot_index].glue_id
-    )
-    _normalize_explorer_draft(state)
-    _mark_updated(state)
+        validated = _validate_explorer_profile_structure_or_error(state, next_profile)
+        if validated is None:
+            return
+        replace_explorer_profile(state, validated)
+        set_highlighted_glue_id(state, glue_id)
+        replace_explorer_draft(
+            state,
+            ExplorerGlueDraft(
+                slot_index=slot_index,
+                source_index=draft.source_index,
+                target_index=draft.target_index,
+                permutation_index=draft.permutation_index,
+                signs=draft.signs,
+            ),
+        )
+        glues = _explorer_glues(state)
+        set_selected_glue_id(
+            state,
+            None if slot_index >= len(glues) else glues[slot_index].glue_id,
+        )
+        _normalize_explorer_draft(state)
+        _mark_updated(state)
 
 
 def _remove_explorer_glue(state: _TopologyLabState) -> None:
-    assert state.explorer_profile is not None
-    assert state.explorer_draft is not None
-    gluings = list(_explorer_glues(state))
-    if state.explorer_draft.slot_index >= len(gluings):
-        _set_status(state, "No active glue selected", is_error=True)
-        return
-    del gluings[state.explorer_draft.slot_index]
-    state.explorer_profile = ExplorerTopologyProfile(
+    with record_interaction_handler(
+        state,
+        "seam_remove",
         dimension=state.dimension,
-        gluings=tuple(gluings),
-    )
-    state.selected_glue_id = None
-    state.highlighted_glue_id = None
-    next_slot = min(state.explorer_draft.slot_index, len(gluings))
-    state.explorer_draft = ExplorerGlueDraft(
-        slot_index=next_slot,
-        source_index=state.explorer_draft.source_index,
-        target_index=state.explorer_draft.target_index,
-        permutation_index=state.explorer_draft.permutation_index,
-        signs=state.explorer_draft.signs,
-    )
-    _normalize_explorer_draft(state)
-    _mark_updated(state)
+    ):
+        profile = current_explorer_profile(state)
+        draft = current_explorer_draft(state)
+        assert profile is not None
+        assert draft is not None
+        gluings = list(_explorer_glues(state))
+        if draft.slot_index >= len(gluings):
+            _set_status(state, "No active glue selected", is_error=True)
+            return
+        del gluings[draft.slot_index]
+        replace_explorer_profile(
+            state,
+            ExplorerTopologyProfile(
+                dimension=state.dimension,
+                gluings=tuple(gluings),
+            ),
+        )
+        set_selected_glue_id(state, None)
+        set_highlighted_glue_id(state, None)
+        next_slot = min(draft.slot_index, len(gluings))
+        replace_explorer_draft(
+            state,
+            ExplorerGlueDraft(
+                slot_index=next_slot,
+                source_index=draft.source_index,
+                target_index=draft.target_index,
+                permutation_index=draft.permutation_index,
+                signs=draft.signs,
+            ),
+        )
+        _normalize_explorer_draft(state)
+        _mark_updated(state)
 
 
 def _save_profile(state: _TopologyLabState) -> tuple[bool, str]:
     if _uses_general_explorer_editor(state):
-        assert state.explorer_profile is not None
-        ok, message = save_explorer_topology_profile(state.explorer_profile)
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        ok, message = save_explorer_topology_profile(profile)
     else:
         ok, message = save_topology_profile(state.profile)
     if ok:
@@ -1234,111 +1558,148 @@ def _save_profile(state: _TopologyLabState) -> tuple[bool, str]:
 
 
 def _run_export(state: _TopologyLabState) -> None:
-    if _uses_general_explorer_editor(state):
-        assert state.explorer_profile is not None
-        ok, message, _path = export_explorer_topology_preview(
-            state.explorer_profile,
-            dims=_board_dims_for_state(state),
-            source=f"topology_lab_{state.dimension}d_mvp",
-        )
-        if not ok:
-            _set_status(
+    with record_interaction_handler(
+        state,
+        "preview_export",
+        dimension=state.dimension,
+        gameplay_mode=state.gameplay_mode,
+    ):
+        if _uses_general_explorer_editor(state):
+            profile = current_explorer_profile(state)
+            assert profile is not None
+            if state.scene_preview_error is not None:
+                _set_status(state, state.scene_preview_error, is_error=True)
+                return
+            live_preview_payload = None
+            export_signature = _preview_signature_for_state(state)
+            if (
+                export_signature is not None
+                and state.scene_preview_signature == export_signature
+                and state.scene_preview_error is None
+                and state.scene_preview is not None
+            ):
+                live_preview_payload = state.scene_preview
+            with record_interaction_phase(
                 state,
-                str(_LAB_STATUS_COPY["export_error"]).format(message=message),
-                is_error=True,
-            )
-            return
-        _set_status(state, str(_LAB_STATUS_COPY["export_ok"]).format(message=message))
-        play_sfx("menu_confirm")
-        return
-
-    ok, message, _path = export_topology_profile_state(
-        profile=state.profile,
-        gravity_axis=1,
-    )
-    if not ok:
-        _set_status(
-            state,
-            str(_LAB_STATUS_COPY["export_error"]).format(message=message),
-            is_error=True,
-        )
-        return
-
-    status_lines = [str(_LAB_STATUS_COPY["export_ok"]).format(message=message)]
-    if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
-        try:
-            preview_ok, preview_message, _preview_path = (
-                export_explorer_preview_from_legacy_profile(
-                    state.profile,
+                "preview_export_call",
+                dimension=state.dimension,
+                dims=_board_dims_for_state(state),
+                glue_count=len(profile.gluings),
+            ):
+                ok, message, _path = export_explorer_topology_preview(
+                    profile,
                     dims=_board_dims_for_state(state),
-                    source="legacy_edge_rules_bridge",
+                    source=f"topology_lab_{state.dimension}d_mvp",
+                    preview_payload=live_preview_payload,
                 )
-            )
-        except ValueError as exc:
-            status_lines.append(f"Explorer gluing preview unavailable: {exc}")
-        else:
-            if not preview_ok:
+            if not ok:
                 _set_status(
                     state,
-                    str(_LAB_STATUS_COPY["export_error"]).format(
-                        message=preview_message
-                    ),
+                    str(_LAB_STATUS_COPY["export_error"]).format(message=message),
                     is_error=True,
                 )
                 return
-            status_lines.append(preview_message)
+            _set_status(
+                state, str(_LAB_STATUS_COPY["export_ok"]).format(message=message)
+            )
+            play_sfx("menu_confirm")
+            return
 
-    _set_status(state, " | ".join(status_lines))
-    play_sfx("menu_confirm")
+        with record_interaction_phase(
+            state,
+            "legacy_export_call",
+            dimension=state.dimension,
+            gameplay_mode=state.gameplay_mode,
+        ):
+            result = legacy_panel_support.export_legacy_profile(state.profile)
+        if not result.ok:
+            _set_status(
+                state,
+                str(_LAB_STATUS_COPY["export_error"]).format(message=result.error),
+                is_error=True,
+            )
+            return
+
+        status_lines = [
+            str(_LAB_STATUS_COPY["export_ok"]).format(message=message)
+            for message in result.status_lines
+        ]
+        _set_status(state, " | ".join(status_lines))
+        play_sfx("menu_confirm")
 
 
 def _run_experiments(state: _TopologyLabState) -> None:
-    if not _uses_general_explorer_editor(state):
-        _set_status(
+    with record_interaction_handler(
+        state,
+        "experiment_pack_generation",
+        dimension=state.dimension,
+        gameplay_mode=state.gameplay_mode,
+    ):
+        if not _uses_general_explorer_editor(state):
+            _set_status(
+                state,
+                "Experiment packs are only available in Explorer Playground",
+                is_error=True,
+            )
+            return
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        if state.scene_preview_error is not None:
+            _set_status(state, state.scene_preview_error, is_error=True)
+            return
+        dims = _board_dims_for_state(state)
+        with record_interaction_phase(
             state,
-            "Experiment packs are only available in Explorer Playground",
-            is_error=True,
-        )
-        return
-    assert state.explorer_profile is not None
-    dims = _board_dims_for_state(state)
-    batch = compile_runtime_explorer_experiments(
-        state.explorer_profile,
-        dims=dims,
-        source=f"topology_lab_{state.dimension}d_experiments",
-    )
-    state.experiment_batch = batch
-    ok, message, _path = export_runtime_explorer_experiments(
-        state.explorer_profile,
-        dims=dims,
-        source=f"topology_lab_{state.dimension}d_experiments",
-    )
-    recommendation = batch.get("recommendation")
-    if not ok:
-        _set_status(
+            "experiment_compile",
+            dimension=state.dimension,
+            dims=dims,
+            glue_count=len(profile.gluings),
+        ):
+            batch = compile_runtime_explorer_experiments(
+                profile,
+                dims=dims,
+                source=f"topology_lab_{state.dimension}d_experiments",
+            )
+        state.experiment_batch = batch
+        with record_interaction_phase(
             state,
-            str(
-                _LAB_STATUS_COPY.get(
-                    "experiments_error",
-                    "Failed exporting explorer experiment pack: {message}",
-                )
-            ).format(message=message),
-            is_error=True,
-        )
-        return
-    status = str(
-        _LAB_STATUS_COPY.get(
-            "experiments_ok",
-            "Explorer experiment pack ready: {message}",
-        )
-    ).format(message=message)
-    if isinstance(recommendation, dict):
-        status += (
-            f" | Next: {recommendation.get('label', 'n/a')}"
-            f" ({recommendation.get('reason', 'no reason')})"
-        )
-    _set_status(state, status)
-    play_sfx("menu_confirm")
+            "experiment_export",
+            dimension=state.dimension,
+            dims=dims,
+            glue_count=len(profile.gluings),
+        ):
+            ok, message, _path = export_runtime_explorer_experiments(
+                profile,
+                dims=dims,
+                source=f"topology_lab_{state.dimension}d_experiments",
+                batch_payload=batch,
+            )
+        recommendation = batch.get("recommendation")
+        if not ok:
+            _set_status(
+                state,
+                str(
+                    _LAB_STATUS_COPY.get(
+                        "experiments_error",
+                        "Failed exporting explorer experiment pack: {message}",
+                    )
+                ).format(message=message),
+                is_error=True,
+            )
+            return
+        status = str(
+            _LAB_STATUS_COPY.get(
+                "experiments_ok",
+                "Explorer experiment pack ready: {message}",
+            )
+        ).format(message=message)
+        if isinstance(recommendation, dict):
+            status += (
+                f" | Next: {recommendation.get('label', 'n/a')}"
+                f" ({recommendation.get('reason', 'no reason')})"
+            )
+        _set_status(state, status)
+        play_sfx("menu_confirm")
 
 
 def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -> bool:
@@ -1350,6 +1711,9 @@ def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -
         return True
     if key == "explorer_preset":
         _cycle_explorer_preset(state, step)
+        return True
+    if key == "rigid_play_mode":
+        _set_explorer_rigid_play_mode(state, step)
         return True
     if key == "explorer_glue":
         _set_explorer_draft_slot(state, step)
@@ -1375,16 +1739,14 @@ def _adjust_explorer_row(state: _TopologyLabState, row: _RowSpec, step: int) -> 
 
 
 def _adjust_legacy_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
-    if row.key == "preset":
-        _cycle_preset(state, step)
-        return True
-    if row.key == "topology_mode":
-        _cycle_topology_mode(state, step)
-        return True
-    if row.axis is not None:
-        _cycle_edge_rule(state, row, step)
-        return True
-    return False
+    return _apply_legacy_row_adjustment(
+        state,
+        key=row.key,
+        axis=row.axis,
+        side=row.side,
+        disabled=row.disabled,
+        step=step,
+    )
 
 
 def _adjust_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
@@ -1404,17 +1766,26 @@ def _adjust_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
 
 
 def _row_supports_step_adjustment(row: _RowSpec) -> bool:
-    return (not row.disabled) and row.key not in {
-        "analysis_boundary",
-        "analysis_glue",
-        "analysis_transform",
-        "apply_glue",
-        "remove_glue",
-        "save_profile",
-        "export",
-        "experiments",
-        "back",
-    }
+    return (
+        (not row.disabled)
+        and (not _row_is_status_display(row))
+        and row.key
+        not in {
+            "analysis_boundary",
+            "analysis_glue",
+            "analysis_transform",
+            "apply_glue",
+            "remove_glue",
+            "save_profile",
+            "export",
+            "experiments",
+            "back",
+        }
+    )
+
+
+def _row_is_status_display(row: _RowSpec) -> bool:
+    return row.key in _STATUS_ROW_KEYS
 
 
 def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
@@ -1461,6 +1832,8 @@ def _handle_navigation_key(
 
 
 def _handle_save_export_shortcut(state: _TopologyLabState, key: int) -> bool:
+    if _scene_pane_active(state):
+        return False
     if key == pygame.K_s:
         _save_profile(state)
         return True
@@ -1489,9 +1862,18 @@ def _handle_tool_shortcut(state: _TopologyLabState, key: int, *, mod: int = 0) -
 
 
 def _apply_sandbox_shortcut_step(state: _TopologyLabState, step_label: str) -> None:
-    assert state.explorer_profile is not None
-    ok, message = move_sandbox_piece(state, state.explorer_profile, step_label)
+    profile = current_explorer_profile(state)
+    assert profile is not None
+    ok, message = move_sandbox_piece(state, profile, step_label)
     _set_status(state, message, is_error=not ok)
+
+
+def _sandbox_piece_cycle_step(key: int) -> int | None:
+    if key == pygame.K_LEFTBRACKET:
+        return -1
+    if key in (pygame.K_RIGHTBRACKET, pygame.K_SPACE):
+        return 1
+    return None
 
 
 def _handle_probe_shortcut(state: _TopologyLabState, key: int) -> bool:
@@ -1525,22 +1907,20 @@ def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
         return True
     rotation_action = _bound_sandbox_rotation_action(state, key)
     if rotation_action is not None:
-        assert state.explorer_profile is not None
-        ok, message = rotate_sandbox_piece_action(
-            state, state.explorer_profile, rotation_action
-        )
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        ok, message = rotate_sandbox_piece_action(state, profile, rotation_action)
         _set_status(state, message, is_error=not ok)
         return True
     if key == pygame.K_r:
-        assert state.explorer_profile is not None
-        ok, message = rotate_sandbox_piece(state, state.explorer_profile)
+        profile = current_explorer_profile(state)
+        assert profile is not None
+        ok, message = rotate_sandbox_piece(state, profile)
         _set_status(state, message, is_error=not ok)
         return True
-    if key == pygame.K_LEFTBRACKET:
-        cycle_sandbox_piece(state, -1)
-        return True
-    if key == pygame.K_RIGHTBRACKET:
-        cycle_sandbox_piece(state, 1)
+    cycle_step = _sandbox_piece_cycle_step(key)
+    if cycle_step is not None:
+        cycle_sandbox_piece(state, cycle_step)
         return True
     if key == pygame.K_0:
         reset_sandbox_piece(state)
@@ -1578,12 +1958,12 @@ def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
 
 def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
     return (
-        _handle_save_export_shortcut(state, key)
-        or _handle_tool_shortcut(state, key, mod=mod)
-        or _handle_glue_shortcut(state, key)
-        or _handle_camera_shortcut(state, key)
+        _handle_camera_shortcut(state, key)
         or _handle_probe_shortcut(state, key)
         or _handle_sandbox_shortcut(state, key)
+        or _handle_save_export_shortcut(state, key)
+        or _handle_tool_shortcut(state, key, mod=mod)
+        or _handle_glue_shortcut(state, key)
     )
 
 
@@ -1623,32 +2003,68 @@ def _launch_play_preview(
     fonts_2d=None,
     display_settings=None,
 ) -> tuple[pygame.Surface, object | None]:
-    runtime_state = canonical_playground_state(state)
-    if not _uses_general_explorer_editor(state) or runtime_state is None:
-        _set_status(
-            state,
-            "Play preview is unavailable until the canonical playground state is ready",
-            is_error=True,
-        )
+    with record_interaction_handler(
+        state,
+        "play_preview_launch",
+        dimension=state.dimension,
+        glue_count=len(_explorer_glues(state)),
+    ):
+        runtime_state = canonical_playground_state(state)
+        if _uses_general_explorer_editor(state):
+            if runtime_state is None or state.dirty:
+                with record_interaction_phase(
+                    state,
+                    "canonical_sync",
+                    source="play_preview_launch",
+                    dimension=state.dimension,
+                ):
+                    sync_canonical_playground_state(state)
+                runtime_state = canonical_playground_state(state)
+            expected_signature = _preview_signature_for_state(state)
+            if runtime_state is not None and (
+                state.scene_preview_signature != expected_signature
+                or state.scene_preview_error is not None
+            ):
+                with record_interaction_phase(
+                    state,
+                    "scene_refresh",
+                    source="play_preview_launch",
+                    dimension=state.dimension,
+                ):
+                    _refresh_explorer_scene_state(state)
+                runtime_state = canonical_playground_state(state)
+        if not _uses_general_explorer_editor(state) or runtime_state is None:
+            _set_status(
+                state,
+                "Play preview is unavailable until the canonical playground state is ready",
+                is_error=True,
+            )
+            return screen, display_settings
+        if state.scene_preview_error:
+            _set_status(
+                state,
+                f"Cannot play current topology: {state.scene_preview_error}",
+                is_error=True,
+            )
+            return screen, display_settings
+        try:
+            with record_interaction_phase(
+                state,
+                "play_launch",
+                dimension=state.dimension,
+                dims=_board_dims_for_state(state),
+                glue_count=len(runtime_state.explorer_profile.gluings),
+            ):
+                screen, display_settings = launch_playground_state_gameplay(
+                    runtime_state,
+                    screen,
+                    fonts_nd,
+                    return_caption=_display_title_for_state(state),
+                    fonts_2d=fonts_2d,
+                    display_settings=display_settings,
+                )
+        except Exception as exc:
+            _set_status(state, f"Play preview failed: {exc}", is_error=True)
+            return screen, display_settings
+        _set_status(state, f"Returned from Explorer {state.dimension}D play preview")
         return screen, display_settings
-    if state.scene_preview_error:
-        _set_status(
-            state,
-            f"Cannot play current topology: {state.scene_preview_error}",
-            is_error=True,
-        )
-        return screen, display_settings
-    try:
-        screen, display_settings = launch_playground_state_gameplay(
-            runtime_state,
-            screen,
-            fonts_nd,
-            return_caption=_display_title_for_state(state),
-            fonts_2d=fonts_2d,
-            display_settings=display_settings,
-        )
-    except Exception as exc:
-        _set_status(state, f"Play preview failed: {exc}", is_error=True)
-        return screen, display_settings
-    _set_status(state, f"Returned from Explorer {state.dimension}D play preview")
-    return screen, display_settings

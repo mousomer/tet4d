@@ -12,7 +12,7 @@ from .scene_state import uses_general_explorer_editor
 def _safe_lab_payload() -> dict[str, Any]:
     fallback = {
         "title": "Explorer Playground",
-        "subtitle": "Scene-first explorer playground for live traversal, presets, sandbox play, and seam editing.",
+        "subtitle": "Scene-first explorer playground with synchronized 2D coordinate-plane projections for live traversal, presets, sandbox play, and seam editing.",
         "hints": (
             "Up/Down select row",
             "Left/Right change values",
@@ -53,16 +53,20 @@ LAB_STATUS_COPY = dict(_LAB_COPY["status_copy"])
 def display_title_for_state(state: Any) -> str:
     if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
         return f"Explorer Playground {state.dimension}D"
-    return LAB_TITLE
+    return f"{LAB_TITLE} (Legacy Compatibility)"
 
 
 def topology_note_text(state: Any) -> str:
     if uses_general_explorer_editor(state):
         return (
             f"Explorer Playground {state.dimension}D is the live shell for seam editing, piece movement, probe traversal, and play from the current draft topology. "
-            "Presets, board size, sandbox play, and seam edits all update the same draft in place."
+            "For 3D and 4D, the primary scene now uses synchronized 2D coordinate-plane projections with explicit hidden-coordinate slices so selection and sandbox movement stay readable across panels."
         )
-    return topology_profile_note(state.gameplay_mode)
+    return (
+        "Legacy compatibility surface: retained Normal Game profile rows and the resolved-profile export bridge live here. "
+        "Use Explorer Playground for the current seam editor, sandbox workflow, and direct play launch. "
+        f"{topology_profile_note(state.gameplay_mode)}"
+    )
 
 
 __all__ = [

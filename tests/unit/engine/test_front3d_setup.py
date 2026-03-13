@@ -11,7 +11,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     get_piece_shapes_nd,
     piece_set_options_for_dimension,
 )
-from tet4d.ui.pygame import front3d_game, frontend_nd_setup
+from tet4d.ui.pygame import front2d_setup, front3d_game, frontend_nd_setup
 from tet4d.ui.pygame.launch import launcher_play
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -35,16 +35,24 @@ class TestFront3DSetupDedup(unittest.TestCase):
         kwargs = patched.call_args.kwargs
         self.assertEqual(kwargs["default_budget_ms"], 24)
         self.assertEqual(kwargs["mode_key"], "3d")
-        self.assertEqual(kwargs["setup_caption"], launcher_play.setup_caption_for_dimension(3))
-        self.assertEqual(kwargs["game_caption"], launcher_play.game_caption_for_dimension(3))
+        self.assertEqual(
+            kwargs["setup_caption"], launcher_play.setup_caption_for_dimension(3)
+        )
+        self.assertEqual(
+            kwargs["game_caption"], launcher_play.game_caption_for_dimension(3)
+        )
         self.assertIs(kwargs["suggested_size_fn"], front3d_game.suggested_window_size)
         self.assertIs(kwargs["run_game_loop_fn"], front3d_game.run_game_loop)
 
-        with mock.patch.object(frontend_nd_setup, "run_menu", return_value="menu") as run_menu:
+        with mock.patch.object(
+            frontend_nd_setup, "run_menu", return_value="menu"
+        ) as run_menu:
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 3)
 
-        with mock.patch.object(frontend_nd_setup, "build_play_menu_config", return_value="cfg") as build_config:
+        with mock.patch.object(
+            frontend_nd_setup, "build_play_menu_config", return_value="cfg"
+        ) as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 3)
 
@@ -67,11 +75,15 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(kwargs["default_budget_ms"], 36)
         self.assertEqual(kwargs["mode_key"], "4d")
 
-        with mock.patch.object(frontend_nd_setup, "run_menu", return_value="menu") as run_menu:
+        with mock.patch.object(
+            frontend_nd_setup, "run_menu", return_value="menu"
+        ) as run_menu:
             self.assertEqual(kwargs["run_menu_fn"]("screen", "fonts"), "menu")
         run_menu.assert_called_once_with("screen", "fonts", 4)
 
-        with mock.patch.object(frontend_nd_setup, "build_play_menu_config", return_value="cfg") as build_config:
+        with mock.patch.object(
+            frontend_nd_setup, "build_play_menu_config", return_value="cfg"
+        ) as build_config:
             self.assertEqual(kwargs["build_cfg_fn"]("settings"), "cfg")
         build_config.assert_called_once_with("settings", 4)
 
@@ -92,20 +104,22 @@ class TestFront3DSetupDedup(unittest.TestCase):
         )
         display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
 
-        with mock.patch.object(
-            launcher_play,
-            "open_display",
-            side_effect=[setup_screen, game_screen, return_screen],
-        ), mock.patch.object(
-            front2d_game, "run_menu", return_value=settings
-        ), mock.patch.object(
-            front2d_game, "_config_from_settings", return_value=cfg
-        ), mock.patch.object(
-            front2d_game, "run_game_loop", return_value=True
-        ) as run_game_loop_mock, mock.patch.object(
-            launcher_play,
-            "capture_windowed_display_settings",
-            return_value=display_settings,
+        with (
+            mock.patch.object(
+                launcher_play,
+                "open_display",
+                side_effect=[setup_screen, game_screen, return_screen],
+            ),
+            mock.patch.object(front2d_game, "run_menu", return_value=settings),
+            mock.patch.object(front2d_game, "_config_from_settings", return_value=cfg),
+            mock.patch.object(
+                front2d_game, "run_game_loop", return_value=True
+            ) as run_game_loop_mock,
+            mock.patch.object(
+                launcher_play,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
         ):
             result = launcher_play.launch_2d(
                 screen=setup_screen,
@@ -119,9 +133,206 @@ class TestFront3DSetupDedup(unittest.TestCase):
             (game_screen, cfg, fonts_2d, display_settings),
         )
 
+    def test_tutorial_launch_2d_uses_game_settings_dataclass(self) -> None:
+        from tet4d.ui.pygame import front2d_game
+
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        original_build = front2d_setup.build_play_menu_config
+        captured: dict[str, front2d_setup.GameSettings] = {}
+
+        def build_cfg(settings):
+            self.assertIsInstance(settings, front2d_setup.GameSettings)
+            captured["settings"] = settings
+            return original_build(settings)
+
+        with (
+            mock.patch.object(
+                launcher_play,
+                "load_app_settings_payload",
+                return_value={
+                    "settings": {
+                        "2d": {
+                            "width": 9,
+                            "height": 21,
+                            "bot_budget_ms": 44,
+                        }
+                    }
+                },
+            ),
+            mock.patch.object(
+                launcher_play,
+                "open_display",
+                side_effect=[object(), object()],
+            ),
+            mock.patch.object(
+                front2d_game,
+                "_config_from_settings",
+                side_effect=build_cfg,
+            ),
+            mock.patch.object(
+                front2d_game,
+                "run_game_loop",
+                return_value=True,
+            ) as run_game_loop_mock,
+            mock.patch.object(
+                launcher_play,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
+        ):
+            result = launcher_play.launch_2d(
+                screen=object(),
+                fonts_2d=object(),
+                display_settings=display_settings,
+                tutorial_lesson_id="tutorial_2d_core",
+            )
+
+        self.assertTrue(result.keep_running)
+        self.assertEqual(captured["settings"].width, 9)
+        self.assertEqual(captured["settings"].height, 21)
+        self.assertEqual(run_game_loop_mock.call_args.kwargs["bot_budget_ms"], 44)
+        self.assertEqual(
+            run_game_loop_mock.call_args.kwargs["tutorial_lesson_id"],
+            "tutorial_2d_core",
+        )
+
+    def test_tutorial_launch_3d_uses_nd_settings_dataclass(self) -> None:
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        original_build = frontend_nd_setup.build_play_menu_config
+        captured: dict[str, frontend_nd_setup.GameSettingsND] = {}
+
+        def build_cfg(settings, dimension):
+            self.assertIsInstance(settings, frontend_nd_setup.GameSettingsND)
+            self.assertEqual(dimension, 3)
+            captured["settings"] = settings
+            return original_build(settings, dimension)
+
+        with (
+            mock.patch.object(
+                launcher_play,
+                "load_app_settings_payload",
+                return_value={
+                    "settings": {
+                        "3d": {
+                            "width": 7,
+                            "height": 19,
+                            "depth": 8,
+                            "bot_budget_ms": 33,
+                        }
+                    }
+                },
+            ),
+            mock.patch.object(
+                launcher_play,
+                "open_display",
+                side_effect=[object(), object()],
+            ),
+            mock.patch.object(
+                frontend_nd_setup,
+                "build_play_menu_config",
+                side_effect=build_cfg,
+            ),
+            mock.patch.object(
+                front3d_game,
+                "run_game_loop",
+                return_value=True,
+            ) as run_game_loop_mock,
+            mock.patch.object(
+                launcher_play,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
+        ):
+            result = launcher_play.launch_3d(
+                screen=object(),
+                fonts_nd=object(),
+                display_settings=display_settings,
+                tutorial_lesson_id="tutorial_3d_core",
+            )
+
+        self.assertTrue(result.keep_running)
+        self.assertEqual(captured["settings"].width, 7)
+        self.assertEqual(captured["settings"].height, 19)
+        self.assertEqual(captured["settings"].depth, 8)
+        self.assertEqual(run_game_loop_mock.call_args.kwargs["bot_budget_ms"], 33)
+        self.assertEqual(
+            run_game_loop_mock.call_args.kwargs["tutorial_lesson_id"],
+            "tutorial_3d_core",
+        )
+
+    def test_tutorial_launch_4d_uses_nd_settings_dataclass(self) -> None:
+        from tet4d.ui.pygame import front4d_game
+
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+        original_build = frontend_nd_setup.build_play_menu_config
+        captured: dict[str, frontend_nd_setup.GameSettingsND] = {}
+
+        def build_cfg(settings, dimension):
+            self.assertIsInstance(settings, frontend_nd_setup.GameSettingsND)
+            self.assertEqual(dimension, 4)
+            captured["settings"] = settings
+            return original_build(settings, dimension)
+
+        with (
+            mock.patch.object(
+                launcher_play,
+                "load_app_settings_payload",
+                return_value={
+                    "settings": {
+                        "4d": {
+                            "width": 6,
+                            "height": 20,
+                            "depth": 7,
+                            "fourth": 5,
+                            "bot_budget_ms": 52,
+                        }
+                    }
+                },
+            ),
+            mock.patch.object(
+                launcher_play,
+                "open_display",
+                side_effect=[object(), object()],
+            ),
+            mock.patch.object(
+                frontend_nd_setup,
+                "build_play_menu_config",
+                side_effect=build_cfg,
+            ),
+            mock.patch.object(
+                front4d_game,
+                "run_game_loop",
+                return_value=True,
+            ) as run_game_loop_mock,
+            mock.patch.object(
+                launcher_play,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
+        ):
+            result = launcher_play.launch_4d(
+                screen=object(),
+                fonts_nd=object(),
+                display_settings=display_settings,
+                tutorial_lesson_id="tutorial_4d_core",
+            )
+
+        self.assertTrue(result.keep_running)
+        self.assertEqual(captured["settings"].width, 6)
+        self.assertEqual(captured["settings"].height, 20)
+        self.assertEqual(captured["settings"].depth, 7)
+        self.assertEqual(captured["settings"].fourth, 5)
+        self.assertEqual(run_game_loop_mock.call_args.kwargs["bot_budget_ms"], 52)
+        self.assertEqual(
+            run_game_loop_mock.call_args.kwargs["tutorial_lesson_id"],
+            "tutorial_4d_core",
+        )
+
     def test_tutorial_loop_context_uses_exact_3d_board_profile(self) -> None:
         cfg = GameConfigND(dims=(12, 30, 9), gravity_axis=1, speed_level=1)
-        with mock.patch.object(front3d_game, "tutorial_runtime_create_session", return_value=object()):
+        with mock.patch.object(
+            front3d_game, "tutorial_runtime_create_session", return_value=object()
+        ):
             loop = front3d_game.LoopContext3D.create(
                 cfg,
                 tutorial_lesson_id="tutorial_3d_core",
@@ -210,15 +421,28 @@ class TestFront3DSetupDedup(unittest.TestCase):
             mock.patch.object(
                 frontend_nd_setup,
                 "resolve_direct_explorer_launch_profile",
-                return_value=("bounded", (("bounded", "bounded"),) * 4, explorer_profile),
+                return_value=(
+                    "bounded",
+                    (("bounded", "bounded"),) * 4,
+                    explorer_profile,
+                ),
             ) as resolve_explorer,
+            mock.patch.object(
+                frontend_nd_setup,
+                "build_explorer_transport_resolver",
+                return_value=SimpleNamespace(dims=(8, 9, 7, 6)),
+            ) as build_transport,
         ):
             normal_cfg = frontend_nd_setup.build_config(
-                frontend_nd_setup.GameSettingsND(topology_advanced=1, exploration_mode=0),
+                frontend_nd_setup.GameSettingsND(
+                    topology_advanced=1, exploration_mode=0
+                ),
                 4,
             )
             explorer_cfg = frontend_nd_setup.build_config(
-                frontend_nd_setup.GameSettingsND(topology_advanced=0, exploration_mode=1),
+                frontend_nd_setup.GameSettingsND(
+                    topology_advanced=0, exploration_mode=1
+                ),
                 4,
             )
 
@@ -228,8 +452,12 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertNotIn("profile_index", resolve_explorer.call_args_list[0].kwargs)
         self.assertEqual(normal_cfg.topology_edge_rules[1], ("bounded", "bounded"))
         self.assertIs(explorer_cfg.explorer_topology_profile, explorer_profile)
+        self.assertEqual(explorer_cfg.explorer_transport.dims, (8, 9, 7, 6))
+        build_transport.assert_called_once_with(explorer_profile, (8, 9, 7, 6))
 
-    def test_runtime_collect_cleared_ghost_cells_accepts_mixed_args_kwargs(self) -> None:
+    def test_runtime_collect_cleared_ghost_cells_accepts_mixed_args_kwargs(
+        self,
+    ) -> None:
         state = SimpleNamespace(
             board=SimpleNamespace(
                 last_cleared_cells=[
@@ -244,8 +472,6 @@ class TestFront3DSetupDedup(unittest.TestCase):
             color_for_cell=lambda cell_id: (cell_id, cell_id, cell_id),
         )
         self.assertEqual(ghost_cells, (((1, 2, 3), (6, 6, 6)),))
-
-
 
     def test_build_play_menu_config_forces_safe_topology_launch(self) -> None:
         with mock.patch.object(
@@ -273,7 +499,9 @@ class TestFront3DSetupDedup(unittest.TestCase):
         attrs = {
             attr_name
             for _label, attr_name, _min_val, _max_val in frontend_nd_setup.menu_fields_for_settings(
-                frontend_nd_setup.GameSettingsND(exploration_mode=0, topology_advanced=1),
+                frontend_nd_setup.GameSettingsND(
+                    exploration_mode=0, topology_advanced=1
+                ),
                 4,
             )
         }
@@ -284,7 +512,9 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
     def test_nd_export_uses_safe_topology_preset(self) -> None:
         state = frontend_nd_setup.MenuState(
-            settings=frontend_nd_setup.GameSettingsND(exploration_mode=1, topology_advanced=1)
+            settings=frontend_nd_setup.GameSettingsND(
+                exploration_mode=1, topology_advanced=1
+            )
         )
         with mock.patch.object(
             frontend_nd_setup,
@@ -303,5 +533,3 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

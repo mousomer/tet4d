@@ -47,8 +47,34 @@ def _validate_extent_compatibility(
     for source_index, target_index in enumerate(glue.transform.permutation):
         if source_extents[source_index] != target_extents[target_index]:
             raise ValueError(
-                "gluing transform is not bijective for the board dimensions"
+                "unsupported for current board dimensions "
+                f"{dims}: gluing transform is not bijective for the board "
+                "dimensions "
+                f"(glue {glue.glue_id} {glue.source.label} -> "
+                f"{glue.target.label}, source extents {source_extents}, "
+                f"target extents {target_extents}, permutation "
+                f"{glue.transform.permutation})"
             )
+
+
+def validate_topology_structure(
+    profile: ExplorerTopologyProfile,
+) -> ExplorerTopologyProfile:
+    normalize_dimension(profile.dimension)
+    _validate_boundary_ownership(profile.active_gluings())
+    return profile
+
+
+def validate_topology_bijection(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+) -> ExplorerTopologyProfile:
+    dimension = normalize_dimension(profile.dimension)
+    normalized_dims = _validate_dims(dims, dimension)
+    for glue in profile.active_gluings():
+        _validate_extent_compatibility(normalized_dims, glue)
+    return profile
 
 
 def validate_explorer_topology_profile(
@@ -56,10 +82,13 @@ def validate_explorer_topology_profile(
     *,
     dims: tuple[int, ...],
 ) -> ExplorerTopologyProfile:
-    dimension = normalize_dimension(profile.dimension)
-    normalized_dims = _validate_dims(dims, dimension)
-    active_gluings = profile.active_gluings()
-    _validate_boundary_ownership(active_gluings)
-    for glue in active_gluings:
-        _validate_extent_compatibility(normalized_dims, glue)
+    validate_topology_structure(profile)
+    validate_topology_bijection(profile, dims=dims)
     return profile
+
+
+__all__ = [
+    "validate_explorer_topology_profile",
+    "validate_topology_bijection",
+    "validate_topology_structure",
+]

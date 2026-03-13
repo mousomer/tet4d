@@ -15,7 +15,12 @@ from tet4d.engine.gameplay.pieces_nd import (
     PieceShapeND,
 )
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
-from tet4d.engine.topology_explorer.presets import axis_wrap_profile
+from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
+    projective_space_profile_3d,
+    swap_xw_profile_4d,
+)
 from tet4d.engine.core.rules.scoring import score_for_clear
 from tests.unit.engine._translation_contract import (
     assert_repeated_translation_progress,
@@ -320,6 +325,66 @@ class TestGameND(unittest.TestCase):
             normal_state.current_piece_cells_mapped(include_above=False),
         )
 
+    def test_explorer_cross_axis_seam_uses_shared_rigid_transform_4d(self):
+        cfg = GameConfigND(
+            dims=(4, 4, 4, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=swap_xw_profile_4d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("pair4", ((0, 0, 0, 0), (0, 1, 0, 0)), color_id=7)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 1, 2, 1))
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertEqual(expected.kind, "rigid_transform")
+        self.assertIsNotNone(expected.frame_transform)
+        self.assertTrue(state.try_move_axis(0, -1))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+        self.assertEqual(
+            tuple(sorted(state.current_piece.rel_blocks)),
+            tuple(
+                sorted(
+                    expected.frame_transform.apply_linear(block)
+                    for block in shape.blocks
+                )
+            ),
+        )
+
+    def test_projective_auto_mode_allows_cellwise_seam_move_for_non_flat_piece(self):
+        cfg = GameConfigND(
+            dims=(4, 4, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=projective_space_profile_3d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("pair3", ((0, 0, 0), (1, 0, 0)), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 0, 0))
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertFalse(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertTrue(state.try_move_axis(0, -1))
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
     def test_repeated_translation_contract_matches_main_and_explorer_3d(self):
         cases = (
             (
@@ -598,6 +663,22 @@ class TestGameND(unittest.TestCase):
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertFalse(state.try_rotate(0, 3, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+
+
+    def test_atomic_move_ignores_current_piece_source_cells(self):
+        cfg = GameConfigND(dims=(5, 5, 5), gravity_axis=1)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        pair = PieceShapeND("pair", ((0, 0, 0), (1, 0, 0)), color_id=2)
+        state.current_piece = ActivePieceND.from_shape(pair, pos=(1, 1, 1))
+        for coord in state.current_piece.cells():
+            state.board.cells[coord] = 9
+
+        self.assertTrue(state.try_move((1, 0, 0)))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((2, 1, 1), (3, 1, 1)),
+        )
 
 
 if __name__ == "__main__":

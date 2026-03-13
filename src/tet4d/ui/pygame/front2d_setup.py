@@ -29,6 +29,9 @@ from tet4d.engine.gameplay.topology_designer import (
 from tet4d.engine.runtime.topology_explorer_runtime import (
     resolve_direct_explorer_launch_profile,
 )
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
@@ -190,13 +193,15 @@ def config_from_settings(
                 )
             )
         else:
-            resolved_mode, topology_edge_rules, _legacy_profile = resolve_topology_designer_selection(
-                dimension=2,
-                gravity_axis=1,
-                topology_mode=topology_mode,
-                topology_advanced=bool(settings.topology_advanced),
-                profile_index=settings.topology_profile_index,
-                gameplay_mode="normal",
+            resolved_mode, topology_edge_rules, _legacy_profile = (
+                resolve_topology_designer_selection(
+                    dimension=2,
+                    gravity_axis=1,
+                    topology_mode=topology_mode,
+                    topology_advanced=bool(settings.topology_advanced),
+                    profile_index=settings.topology_profile_index,
+                    gameplay_mode="normal",
+                )
             )
     width = settings.width
     height = settings.height
@@ -204,6 +209,12 @@ def config_from_settings(
         width, height = minimal_exploration_dims_2d(
             piece_set_id,
             random_cell_count=4,
+        )
+    explorer_transport = None
+    if explorer_topology_profile is not None:
+        explorer_transport = build_explorer_transport_resolver(
+            explorer_topology_profile,
+            (width, height),
         )
     return GameConfig(
         width=width,
@@ -219,6 +230,7 @@ def config_from_settings(
         challenge_layers=0 if exploration_enabled else settings.challenge_layers,
         exploration_mode=exploration_enabled,
         explorer_topology_profile=explorer_topology_profile,
+        explorer_transport=explorer_transport,
     )
 
 

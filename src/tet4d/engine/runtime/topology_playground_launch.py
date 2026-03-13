@@ -7,11 +7,16 @@ from tet4d.engine.gameplay.api import (
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
+from tet4d.engine.topology_explorer import validate_explorer_topology_profile
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     kick_level_name_for_index,
     random_mode_id_from_index,
 )
+from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.runtime.topology_playground_state import (
     TRANSPORT_OWNER_EXPLORER,
     TopologyPlaygroundState,
@@ -50,6 +55,11 @@ def build_gameplay_config_from_topology_playground_state(
         raise ValueError("direct playground launch requires explorer-owned transport")
 
     axis_sizes = tuple(int(value) for value in state.axis_sizes)
+    validate_explorer_topology_profile(state.explorer_profile, dims=axis_sizes)
+    explorer_transport = build_explorer_transport_resolver(
+        state.explorer_profile,
+        axis_sizes,
+    )
     common_kwargs = dict(
         gravity_axis=int(state.gravity_mode.gravity_axis),
         speed_level=int(state.launch_settings.speed_level),
@@ -60,6 +70,13 @@ def build_gameplay_config_from_topology_playground_state(
         challenge_layers=0,
         exploration_mode=True,
         explorer_topology_profile=state.explorer_profile,
+        explorer_transport=explorer_transport,
+        explorer_rigid_play_enabled=resolve_rigid_play_enabled(
+            state.explorer_profile,
+            dims=axis_sizes,
+            rigid_play_mode=state.launch_settings.rigid_play_mode,
+            resolver=explorer_transport,
+        ),
         rng_mode=random_mode_id_from_index(state.launch_settings.random_mode_index),
         rng_seed=int(state.launch_settings.game_seed),
     )

@@ -13,6 +13,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     PRESET_SOURCE_CUSTOM,
     PRESET_SOURCE_DESIGNER,
     PRESET_SOURCE_EXPLORER,
+    RIGID_PLAY_MODE_AUTO,
     TopologyPlaygroundGluingDraft as RuntimeTopologyPlaygroundGluingDraft,
     TopologyPlaygroundLaunchSettings as RuntimeTopologyPlaygroundLaunchSettings,
     TopologyPlaygroundPresetMetadata as RuntimeTopologyPlaygroundPresetMetadata,
@@ -31,6 +32,7 @@ from .common import (
     default_draft_for_dimension,
     permutation_options_for_dimension,
 )
+from .interaction_audit import ExplorerInteractionAudit
 
 TOOL_NAVIGATE = "navigate"
 TOOL_INSPECT = "inspect_boundary"
@@ -62,7 +64,7 @@ TOOL_LABELS = {
     TOOL_EDIT: "Edit",
     TOOL_PROBE: "Probe",
     TOOL_SANDBOX: "Sandbox",
-    TOOL_PLAY: "Play This Topology",
+    TOOL_PLAY: "Play Mode",
 }
 
 
@@ -73,6 +75,7 @@ class ExplorerPlaygroundSettings:
     speed_level: int = 1
     random_mode_index: int = 0
     game_seed: int = 0
+    rigid_play_mode: str = RIGID_PLAY_MODE_AUTO
 
 
 @dataclass(frozen=True)
@@ -126,10 +129,15 @@ class TopologyPlaygroundState:
     scene_preview_signature: ExplorerPreviewCompileSignature | None = None
     scene_preview_cache: ExplorerPreviewCompileArtifacts | None = None
     experiment_batch: dict[str, object] | None = None
+    interaction_audit: ExplorerInteractionAudit = field(
+        default_factory=ExplorerInteractionAudit
+    )
     canonical_state: RuntimeTopologyPlaygroundState | None = None
 
 
 TopologyLabState = TopologyPlaygroundState
+
+_UNSET = object()
 
 
 def _boundary_index(boundary: BoundaryRef | None) -> int | None:
@@ -151,28 +159,39 @@ def _boundary_from_index(
     return boundaries[index]
 
 
-def _runtime_draft_from_ui(
-    state: TopologyPlaygroundState,
+def _runtime_draft_from_value(
+    *,
+    dimension: int,
+    draft: ExplorerGlueDraft | None,
 ) -> RuntimeTopologyPlaygroundGluingDraft:
-    draft = state.explorer_draft or default_draft_for_dimension(state.dimension)
-    boundaries = boundaries_for_dimension(state.dimension)
-    permutations = permutation_options_for_dimension(state.dimension)
-    source_index = max(0, min(int(draft.source_index), len(boundaries) - 1))
-    target_index = max(0, min(int(draft.target_index), len(boundaries) - 1))
+    resolved_draft = draft or default_draft_for_dimension(dimension)
+    boundaries = boundaries_for_dimension(dimension)
+    permutations = permutation_options_for_dimension(dimension)
+    source_index = max(0, min(int(resolved_draft.source_index), len(boundaries) - 1))
+    target_index = max(0, min(int(resolved_draft.target_index), len(boundaries) - 1))
     permutation_index = max(
         0,
-        min(int(draft.permutation_index), len(permutations) - 1),
+        min(int(resolved_draft.permutation_index), len(permutations) - 1),
     )
-    signs = tuple(-1 if int(value) < 0 else 1 for value in draft.signs)
-    if len(signs) != state.dimension - 1:
-        signs = tuple(1 for _ in range(state.dimension - 1))
+    signs = tuple(-1 if int(value) < 0 else 1 for value in resolved_draft.signs)
+    if len(signs) != dimension - 1:
+        signs = tuple(1 for _ in range(dimension - 1))
     return RuntimeTopologyPlaygroundGluingDraft(
-        slot_index=max(0, int(draft.slot_index)),
+        slot_index=max(0, int(resolved_draft.slot_index)),
         source_boundary=boundaries[source_index],
         target_boundary=boundaries[target_index],
         permutation=permutations[permutation_index],
         signs=signs,
         enabled=True,
+    )
+
+
+def _runtime_draft_from_ui(
+    state: TopologyPlaygroundState,
+) -> RuntimeTopologyPlaygroundGluingDraft:
+    return _runtime_draft_from_value(
+        dimension=state.dimension,
+        draft=state.explorer_draft,
     )
 
 
@@ -209,10 +228,9 @@ def _ui_draft_from_runtime(
     )
 
 
-def _runtime_launch_settings_from_ui(
-    state: TopologyPlaygroundState,
+def _runtime_launch_settings_from_value(
+    settings: ExplorerPlaygroundSettings | None,
 ) -> RuntimeTopologyPlaygroundLaunchSettings:
-    settings = state.play_settings
     if settings is None:
         return RuntimeTopologyPlaygroundLaunchSettings()
     return RuntimeTopologyPlaygroundLaunchSettings(
@@ -220,7 +238,14 @@ def _runtime_launch_settings_from_ui(
         speed_level=int(settings.speed_level),
         random_mode_index=int(settings.random_mode_index),
         game_seed=int(settings.game_seed),
+        rigid_play_mode=str(settings.rigid_play_mode),
     )
+
+
+def _runtime_launch_settings_from_ui(
+    state: TopologyPlaygroundState,
+) -> RuntimeTopologyPlaygroundLaunchSettings:
+    return _runtime_launch_settings_from_value(state.play_settings)
 
 
 def _axis_sizes_from_ui(state: TopologyPlaygroundState) -> tuple[int, ...]:
@@ -286,13 +311,13 @@ def _runtime_topology_preset_selection_from_ui(
     )
 
 
-def _runtime_explorer_preset_selection_from_ui(
-    state: TopologyPlaygroundState,
+def _runtime_explorer_preset_selection_from_value(
+    dimension: int,
+    profile: ExplorerTopologyProfile | None,
 ) -> RuntimeTopologyPlaygroundPresetSelection:
-    profile = state.explorer_profile
     if profile is None:
         return RuntimeTopologyPlaygroundPresetSelection(source=PRESET_SOURCE_CUSTOM)
-    for preset in explorer_presets_for_dimension(state.dimension):
+    for preset in explorer_presets_for_dimension(dimension):
         if preset.profile == profile:
             return RuntimeTopologyPlaygroundPresetSelection(
                 preset_id=preset.preset_id,
@@ -302,6 +327,15 @@ def _runtime_explorer_preset_selection_from_ui(
                 unsafe=preset.unsafe,
             )
     return RuntimeTopologyPlaygroundPresetSelection(source=PRESET_SOURCE_CUSTOM)
+
+
+def _runtime_explorer_preset_selection_from_ui(
+    state: TopologyPlaygroundState,
+) -> RuntimeTopologyPlaygroundPresetSelection:
+    return _runtime_explorer_preset_selection_from_value(
+        state.dimension,
+        state.explorer_profile,
+    )
 
 
 def _runtime_preset_metadata_from_ui(
@@ -332,6 +366,8 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     runtime_state = state.canonical_state
     if runtime_state is None:
         return
+    # Retained shell fields are compatibility snapshots only; the migrated
+    # explorer flow should treat the runtime state as authoritative.
     state.explorer_profile = runtime_state.explorer_profile
     state.explorer_draft = _ui_draft_from_runtime(runtime_state)
     state.play_settings = ExplorerPlaygroundSettings(
@@ -340,6 +376,7 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
         speed_level=int(runtime_state.launch_settings.speed_level),
         random_mode_index=int(runtime_state.launch_settings.random_mode_index),
         game_seed=int(runtime_state.launch_settings.game_seed),
+        rigid_play_mode=str(runtime_state.launch_settings.rigid_play_mode),
     )
     probe_unavailable = any(
         str(entry).startswith("Probe unavailable:")
@@ -399,17 +436,37 @@ def sync_canonical_playground_state(state: TopologyPlaygroundState) -> None:
         preset_metadata=_runtime_preset_metadata_from_ui(state),
         dirty=state.dirty,
     )
-    if state.canonical_state is None:
+    if (
+        state.canonical_state is None
+        or state.canonical_state.dimension != state.dimension
+    ):
         state.canonical_state = RuntimeTopologyPlaygroundState(**runtime_kwargs)
     else:
         state.canonical_state = replace(state.canonical_state, **runtime_kwargs)
     sync_shell_state_from_canonical(state)
 
 
+def _replace_canonical_state(
+    state: TopologyPlaygroundState,
+    **changes: object,
+) -> RuntimeTopologyPlaygroundState | None:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is None or not uses_general_explorer_editor(state):
+        return None
+    state.canonical_state = replace(runtime_state, **changes)
+    sync_shell_state_from_canonical(state)
+    return state.canonical_state
+
+
 def canonical_playground_state(
     state: TopologyPlaygroundState,
 ) -> RuntimeTopologyPlaygroundState | None:
-    return state.canonical_state if uses_general_explorer_editor(state) else None
+    runtime_state = state.canonical_state
+    if not uses_general_explorer_editor(state) or runtime_state is None:
+        return None
+    if runtime_state.dimension != state.dimension:
+        return None
+    return runtime_state
 
 
 def current_explorer_profile(
@@ -430,6 +487,138 @@ def current_explorer_draft(
     return state.explorer_draft
 
 
+def current_play_settings(
+    state: TopologyPlaygroundState,
+) -> ExplorerPlaygroundSettings | None:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is None:
+        return state.play_settings
+    return ExplorerPlaygroundSettings(
+        board_dims=tuple(int(value) for value in runtime_state.axis_sizes),
+        piece_set_index=int(runtime_state.launch_settings.piece_set_index),
+        speed_level=int(runtime_state.launch_settings.speed_level),
+        random_mode_index=int(runtime_state.launch_settings.random_mode_index),
+        game_seed=int(runtime_state.launch_settings.game_seed),
+        rigid_play_mode=str(runtime_state.launch_settings.rigid_play_mode),
+    )
+
+
+def replace_play_settings(
+    state: TopologyPlaygroundState,
+    settings: ExplorerPlaygroundSettings,
+) -> None:
+    if not uses_general_explorer_editor(state):
+        state.play_settings = settings
+        return
+    runtime_state = state.canonical_state
+    if runtime_state is None or runtime_state.dimension != state.dimension:
+        state.play_settings = settings
+        if runtime_state is None:
+            sync_canonical_playground_state(state)
+        return
+    axis_sizes = tuple(int(value) for value in settings.board_dims[: state.dimension])
+    if len(axis_sizes) != state.dimension or any(value <= 0 for value in axis_sizes):
+        axis_sizes = runtime_state.axis_sizes
+    _replace_canonical_state(
+        state,
+        axis_sizes=axis_sizes,
+        launch_settings=_runtime_launch_settings_from_value(settings),
+        transport_policy=None,
+    )
+
+
+def replace_explorer_profile(
+    state: TopologyPlaygroundState,
+    explorer_profile: ExplorerTopologyProfile | None,
+) -> None:
+    if not uses_general_explorer_editor(state):
+        state.explorer_profile = explorer_profile
+        return
+    runtime_state = state.canonical_state
+    if runtime_state is None:
+        state.explorer_profile = explorer_profile
+        sync_canonical_playground_state(state)
+        return
+    if runtime_state.dimension != state.dimension:
+        state.explorer_profile = explorer_profile
+        return
+    _replace_canonical_state(
+        state,
+        topology_config=replace(
+            runtime_state.topology_config,
+            explorer_profile=explorer_profile,
+        ),
+        preset_metadata=replace(
+            runtime_state.preset_metadata,
+            explorer_preset=_runtime_explorer_preset_selection_from_value(
+                state.dimension,
+                explorer_profile,
+            ),
+        ),
+        transport_policy=None,
+    )
+
+
+def replace_explorer_draft(
+    state: TopologyPlaygroundState,
+    explorer_draft: ExplorerGlueDraft,
+) -> None:
+    if not uses_general_explorer_editor(state):
+        state.explorer_draft = explorer_draft
+        return
+    runtime_state = state.canonical_state
+    if runtime_state is None:
+        state.explorer_draft = explorer_draft
+        sync_canonical_playground_state(state)
+        return
+    if runtime_state.dimension != state.dimension:
+        state.explorer_draft = explorer_draft
+        sync_canonical_playground_state(state)
+        return
+    _replace_canonical_state(
+        state,
+        topology_config=replace(
+            runtime_state.topology_config,
+            gluing_draft=_runtime_draft_from_value(
+                dimension=state.dimension,
+                draft=explorer_draft,
+            ),
+        ),
+        transport_policy=None,
+    )
+
+
+def update_explorer_draft(
+    state: TopologyPlaygroundState,
+    *,
+    slot_index: int | object = _UNSET,
+    source_index: int | object = _UNSET,
+    target_index: int | object = _UNSET,
+    permutation_index: int | object = _UNSET,
+    signs: tuple[int, ...] | object = _UNSET,
+) -> ExplorerGlueDraft:
+    draft = current_explorer_draft(state) or default_draft_for_dimension(
+        state.dimension
+    )
+    updated = ExplorerGlueDraft(
+        slot_index=draft.slot_index if slot_index is _UNSET else int(slot_index),
+        source_index=(
+            draft.source_index if source_index is _UNSET else int(source_index)
+        ),
+        target_index=(
+            draft.target_index if target_index is _UNSET else int(target_index)
+        ),
+        permutation_index=(
+            draft.permutation_index
+            if permutation_index is _UNSET
+            else int(permutation_index)
+        ),
+        signs=draft.signs if signs is _UNSET else tuple(int(value) for value in signs),
+    )
+    replace_explorer_draft(state, updated)
+    return updated
+
+
 def current_selected_boundary_index(
     state: TopologyPlaygroundState,
 ) -> int | None:
@@ -439,11 +628,50 @@ def current_selected_boundary_index(
     return state.selected_boundary_index
 
 
+def set_selected_boundary_index(
+    state: TopologyPlaygroundState,
+    boundary_index: int | None,
+) -> None:
+    if not uses_general_explorer_editor(state):
+        state.selected_boundary_index = boundary_index
+        return
+    runtime_state = state.canonical_state
+    if runtime_state is None:
+        state.selected_boundary_index = boundary_index
+        sync_canonical_playground_state(state)
+        return
+    if runtime_state.dimension != state.dimension:
+        state.selected_boundary_index = boundary_index
+        return
+    _replace_canonical_state(
+        state,
+        selected_boundary=_boundary_from_index(state.dimension, boundary_index),
+    )
+
+
 def current_selected_glue_id(state: TopologyPlaygroundState) -> str | None:
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return runtime_state.selected_gluing
     return state.selected_glue_id
+
+
+def set_selected_glue_id(
+    state: TopologyPlaygroundState,
+    glue_id: str | None,
+) -> None:
+    if not uses_general_explorer_editor(state):
+        state.selected_glue_id = glue_id
+        return
+    runtime_state = state.canonical_state
+    if runtime_state is None:
+        state.selected_glue_id = glue_id
+        sync_canonical_playground_state(state)
+        return
+    if runtime_state.dimension != state.dimension:
+        state.selected_glue_id = glue_id
+        return
+    _replace_canonical_state(state, selected_gluing=glue_id)
 
 
 def current_highlighted_glue_id(state: TopologyPlaygroundState) -> str | None:
@@ -460,6 +688,36 @@ def _probe_unavailable_locally(state: TopologyPlaygroundState) -> bool:
         str(entry).startswith("Probe unavailable:")
         for entry in (state.probe_trace or ())
     )
+
+
+def _normalize_probe_coord_value(
+    dimension: int,
+    coord: tuple[int, ...] | None,
+) -> tuple[int, ...] | None:
+    if coord is None:
+        return None
+    normalized = tuple(int(value) for value in coord)
+    if len(normalized) != dimension:
+        return None
+    return normalized
+
+
+def _normalize_probe_trace_value(
+    trace: list[str] | tuple[str, ...] | None,
+) -> tuple[str, ...]:
+    return tuple(str(entry) for entry in (trace or ()))
+
+
+def _normalize_probe_path_value(
+    dimension: int,
+    path: list[tuple[int, ...]] | tuple[tuple[int, ...], ...] | None,
+) -> tuple[tuple[int, ...], ...]:
+    normalized: list[tuple[int, ...]] = []
+    for entry in path or ():
+        coord = tuple(int(value) for value in entry)
+        if len(coord) == dimension:
+            normalized.append(coord)
+    return tuple(normalized)
 
 
 def current_probe_coord(state: TopologyPlaygroundState) -> tuple[int, ...] | None:
@@ -487,6 +745,75 @@ def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
     if runtime_state is not None:
         return list(runtime_state.probe_state.path)
     return list(state.probe_path or ())
+
+
+def replace_probe_state(
+    state: TopologyPlaygroundState,
+    *,
+    coord: tuple[int, ...] | None,
+    trace: list[str] | tuple[str, ...] | None,
+    path: list[tuple[int, ...]] | tuple[tuple[int, ...], ...] | None,
+    highlighted_glue_id: str | None,
+) -> None:
+    normalized_coord = _normalize_probe_coord_value(state.dimension, coord)
+    normalized_trace = _normalize_probe_trace_value(trace)
+    normalized_path = _normalize_probe_path_value(state.dimension, path)
+    normalized_highlight = (
+        None if highlighted_glue_id is None else str(highlighted_glue_id)
+    )
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None and not any(
+        entry.startswith("Probe unavailable:") for entry in normalized_trace
+    ):
+        _replace_canonical_state(
+            state,
+            probe_state=RuntimeTopologyPlaygroundProbeState(
+                coord=normalized_coord,
+                path=normalized_path,
+                trace=normalized_trace,
+                highlighted_gluing=normalized_highlight,
+            ),
+        )
+        return
+    state.probe_coord = normalized_coord
+    state.probe_trace = list(normalized_trace)
+    state.probe_path = list(normalized_path)
+    state.highlighted_glue_id = normalized_highlight
+    if uses_general_explorer_editor(state):
+        sync_canonical_playground_state(state)
+
+
+def set_highlighted_glue_id(
+    state: TopologyPlaygroundState,
+    glue_id: str | None,
+) -> None:
+    replace_probe_state(
+        state,
+        coord=current_probe_coord(state),
+        trace=current_probe_trace(state),
+        path=current_probe_path(state),
+        highlighted_glue_id=glue_id,
+    )
+
+
+def select_projection_coord(
+    state: TopologyPlaygroundState,
+    coord: tuple[int, ...],
+) -> tuple[int, ...] | None:
+    normalized = _normalize_probe_coord_value(state.dimension, coord)
+    if normalized is None:
+        return None
+    dims = playground_dims_for_state(state)
+    if any(value < 0 or value >= dims[index] for index, value in enumerate(normalized)):
+        return None
+    replace_probe_state(
+        state,
+        coord=normalized,
+        trace=(),
+        path=(normalized,),
+        highlighted_glue_id=current_highlighted_glue_id(state),
+    )
+    return normalized
 
 
 def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]:
@@ -522,7 +849,7 @@ def ensure_probe_state(state: TopologyPlaygroundState) -> None:
         state.probe_path = [state.probe_coord]
     elif state.probe_path[-1] != state.probe_coord:
         state.probe_path = [state.probe_coord]
-    if state.canonical_state is not None:
+    if canonical_playground_state(state) is not None:
         sync_canonical_playground_state(state)
 
 
@@ -537,17 +864,18 @@ def reset_probe_state(state: TopologyPlaygroundState) -> None:
 
 
 def ensure_explorer_draft(state: TopologyPlaygroundState) -> None:
-    if state.explorer_draft is None or len(state.explorer_draft.signs) != (
-        state.dimension - 1
-    ):
-        state.explorer_draft = default_draft_for_dimension(state.dimension)
+    draft = current_explorer_draft(state)
+    if draft is None or len(draft.signs) != state.dimension - 1:
+        replace_explorer_draft(state, default_draft_for_dimension(state.dimension))
 
 
 def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
-    if state.canonical_state is None and uses_general_explorer_editor(state):
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is None and uses_general_explorer_editor(state):
         sync_canonical_playground_state(state)
-    if state.canonical_state is not None:
-        state.sandbox = state.canonical_state.sandbox_piece_state
+        runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        state.sandbox = runtime_state.sandbox_piece_state
         return
     if state.sandbox is None:
         state.sandbox = RuntimeTopologyPlaygroundSandboxPieceState()
@@ -566,7 +894,7 @@ def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
         ensure_sandbox_state(state)
         assert state.sandbox is not None
         state.sandbox.enabled = True
-    if state.canonical_state is not None:
+    if canonical_playground_state(state) is not None:
         sync_canonical_playground_state(state)
 
 
@@ -595,6 +923,7 @@ __all__ = [
     "current_explorer_draft",
     "current_explorer_profile",
     "current_highlighted_glue_id",
+    "current_play_settings",
     "current_probe_coord",
     "current_probe_path",
     "current_probe_trace",
@@ -605,9 +934,18 @@ __all__ = [
     "ensure_probe_state",
     "ensure_sandbox_state",
     "playground_dims_for_state",
+    "replace_explorer_draft",
+    "replace_explorer_profile",
+    "replace_play_settings",
+    "replace_probe_state",
+    "select_projection_coord",
     "reset_probe_state",
     "set_active_tool",
+    "set_highlighted_glue_id",
+    "set_selected_boundary_index",
+    "set_selected_glue_id",
     "sync_canonical_playground_state",
     "sync_shell_state_from_canonical",
+    "update_explorer_draft",
     "uses_general_explorer_editor",
 ]

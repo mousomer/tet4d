@@ -8,6 +8,10 @@ from tet4d.ui.pygame.ui_utils import fit_text
 _BUTTON_BG = (38, 44, 70)
 _BUTTON_ACTIVE = (86, 98, 146)
 _BUTTON_TEXT = (232, 236, 248)
+_DISPLAY_BG = (24, 29, 47)
+_DISPLAY_BORDER = (84, 96, 132)
+_DISPLAY_CAPTION = (150, 164, 198)
+_DISPLAY_TEXT = (220, 228, 250)
 
 
 def _draw_button(
@@ -28,6 +32,24 @@ def _draw_button(
             rect.centery - text_surf.get_height() // 2,
         ),
     )
+
+
+def _draw_read_only_display(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    title: str,
+    text: str,
+    font,
+) -> None:
+    pygame.draw.rect(surface, _DISPLAY_BG, rect, border_radius=8)
+    pygame.draw.rect(surface, _DISPLAY_BORDER, rect, 1, border_radius=8)
+    caption = font.render(
+        fit_text(font, title, rect.width - 12), True, _DISPLAY_CAPTION
+    )
+    surface.blit(caption, (rect.x + 8, rect.y + 5))
+    value = font.render(fit_text(font, text, rect.width - 12), True, _DISPLAY_TEXT)
+    surface.blit(value, (rect.x + 8, rect.bottom - value.get_height() - 5))
 
 
 def draw_transform_editor(
@@ -57,26 +79,16 @@ def draw_transform_editor(
     hits: list[TopologyLabHitTarget] = []
     y = area.y + 54
 
-    prev_rect = pygame.Rect(area.x + 10, y, 34, 28)
-    next_rect = pygame.Rect(area.right - 44, y, 34, 28)
-    current_rect = pygame.Rect(area.x + 52, y, area.width - 104, 28)
-    _draw_button(
-        surface, rect=prev_rect, text="<", color=_BUTTON_BG, font=fonts.hint_font
-    )
-    _draw_button(
-        surface, rect=next_rect, text=">", color=_BUTTON_BG, font=fonts.hint_font
-    )
-    _draw_button(
+    preset_rect = pygame.Rect(area.x + 10, y, area.width - 20, 38)
+    _draw_read_only_display(
         surface,
-        rect=current_rect,
+        rect=preset_rect,
+        title="Preset (Analysis View)",
         text=preset_label,
-        color=_BUTTON_ACTIVE,
         font=fonts.hint_font,
     )
-    hits.append(TopologyLabHitTarget("preset_step", -1, prev_rect.copy()))
-    hits.append(TopologyLabHitTarget("preset_step", 1, next_rect.copy()))
 
-    y += 38
+    y += 48
     if glue_labels:
         slot_gap = 8
         slot_w = max(

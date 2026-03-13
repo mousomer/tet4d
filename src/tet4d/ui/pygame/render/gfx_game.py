@@ -647,11 +647,19 @@ def _draw_active_piece_cells(
 ) -> None:
     if overlay is not None:
         raw_cells, color_id = overlay
-        mapped_overlay = map_overlay_cells_gameplay(
-            state.topology_policy,
-            raw_cells,
-            allow_above_gravity=False,
-        )
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            mapped_overlay = tuple(
+                tuple(float(value) for value in coord) for coord in raw_cells
+            )
+        else:
+            mapped_overlay = map_overlay_cells_gameplay(
+                state.topology_policy,
+                raw_cells,
+                allow_above_gravity=False,
+            )
         for x, y in mapped_overlay:
             if 0.0 <= x < width_cells and 0.0 <= y < height_cells:
                 _draw_cell_float(

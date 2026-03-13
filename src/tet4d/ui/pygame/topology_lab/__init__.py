@@ -118,6 +118,7 @@ __all__ = [
     "ensure_piece_sandbox",
     "ensure_probe_state",
     "reset_probe_state",
+    "select_projection_coord",
     "ensure_sandbox_state",
     "move_sandbox_piece",
     "playground_dims_for_state",

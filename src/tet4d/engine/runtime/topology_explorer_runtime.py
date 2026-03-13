@@ -71,11 +71,13 @@ def export_runtime_explorer_experiments(
     *,
     dims: tuple[int, ...],
     source: str = "explorer_playground",
+    batch_payload: dict[str, object] | None = None,
 ) -> tuple[bool, str, str | None]:
     return export_parallel_explorer_experiments(
         profile,
         dims=dims,
         source=source,
+        batch_payload=batch_payload,
     )
 
 

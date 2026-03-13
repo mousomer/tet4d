@@ -11,6 +11,7 @@ from tet4d.engine.topology_explorer.glue_model import (
 )
 from tet4d.engine.topology_explorer.glue_validate import (
     validate_explorer_topology_profile,
+    validate_topology_bijection,
 )
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
 from tet4d.engine.topology_explorer.presets import (
@@ -19,6 +20,8 @@ from tet4d.engine.topology_explorer.presets import (
     klein_bottle_profile_2d,
     mobius_strip_profile_2d,
     pair_boundaries,
+    swap_xw_profile_4d,
+    swapped_xz_profile_3d,
     torus_profile_2d,
 )
 
@@ -75,6 +78,26 @@ class TestTopologyExplorer(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_explorer_topology_profile(profile, dims=(4, 5, 6))
 
+    def test_validate_topology_bijection_rejects_board_dependent_extent_mismatch(
+        self,
+    ) -> None:
+        profile = ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                pair_boundaries(
+                    dimension=3,
+                    source_axis=0,
+                    source_side="-",
+                    target_axis=2,
+                    target_side="+",
+                    glue_id="bad",
+                    transform=BoundaryTransform(permutation=(0, 1), signs=(1, 1)),
+                ),
+            ),
+        )
+        with self.assertRaises(ValueError):
+            validate_topology_bijection(profile, dims=(4, 5, 6))
+
     def test_torus_wrap_maps_across_x_boundary(self) -> None:
         profile = torus_profile_2d()
         self.assertEqual(
@@ -119,6 +142,51 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertEqual(traversal.target_boundary.label, "x-")
         self.assertEqual(traversal.target_coord, (0, 1))
         self.assertEqual(traversal.entry_step.label, "x+")
+
+    def test_cross_axis_gluing_roundtrips_in_3d_and_4d(self) -> None:
+        cases = (
+            (
+                "swap_xz_3d",
+                swapped_xz_profile_3d(),
+                (4, 4, 4),
+                (0, 1, 2),
+                MoveStep(axis=0, delta=-1),
+                MoveStep(axis=2, delta=1),
+                (2, 1, 3),
+                "z+",
+            ),
+            (
+                "swap_xw_4d",
+                swap_xw_profile_4d(),
+                (4, 4, 4, 4),
+                (0, 1, 2, 3),
+                MoveStep(axis=0, delta=-1),
+                MoveStep(axis=3, delta=1),
+                (1, 3, 1, 3),
+                "w+",
+            ),
+        )
+
+        for label, profile, dims, origin, exit_step, reverse_step, expected, target_boundary in cases:
+            with self.subTest(case=label):
+                traversal = map_boundary_exit(
+                    profile,
+                    dims=dims,
+                    coord=origin,
+                    step=exit_step,
+                )
+                self.assertIsNotNone(traversal)
+                assert traversal is not None
+                self.assertEqual(traversal.target_boundary.label, target_boundary)
+                self.assertEqual(traversal.target_coord, expected)
+                self.assertEqual(
+                    move_cell(profile, dims=dims, coord=origin, step=exit_step),
+                    expected,
+                )
+                self.assertEqual(
+                    move_cell(profile, dims=dims, coord=expected, step=reverse_step),
+                    origin,
+                )
 
     def test_2d_presets_include_classic_surface_examples(self) -> None:
         presets = explorer_presets_for_dimension(2)

@@ -38,6 +38,18 @@ PLAYABILITY_STATUS_UNKNOWN = "unknown"
 PLAYABILITY_STATUS_PLAYABLE = "playable"
 PLAYABILITY_STATUS_WARNING = "warning"
 PLAYABILITY_STATUS_BLOCKED = "blocked"
+TOPOLOGY_VALIDITY_UNKNOWN = "unknown"
+TOPOLOGY_VALIDITY_VALID = "valid"
+TOPOLOGY_VALIDITY_INVALID = "invalid"
+EXPLORER_USABILITY_UNKNOWN = "unknown"
+EXPLORER_USABILITY_CELLWISE = "cellwise_explorable"
+EXPLORER_USABILITY_BLOCKED = "not_explorable"
+RIGID_PLAYABILITY_UNKNOWN = "unknown"
+RIGID_PLAYABILITY_PLAYABLE = "rigid_playable"
+RIGID_PLAYABILITY_BLOCKED = "not_rigid_playable"
+RIGID_PLAY_MODE_AUTO = "auto"
+RIGID_PLAY_MODE_ON = "on"
+RIGID_PLAY_MODE_OFF = "off"
 PRESET_SOURCE_CUSTOM = "custom"
 PRESET_SOURCE_DESIGNER = "designer"
 PRESET_SOURCE_EXPLORER = "explorer"
@@ -57,6 +69,26 @@ PlayabilityStatus = Literal[
     "warning",
     "blocked",
 ]
+TopologyValidity = Literal[
+    "unknown",
+    "valid",
+    "invalid",
+]
+ExplorerUsability = Literal[
+    "unknown",
+    "cellwise_explorable",
+    "not_explorable",
+]
+RigidPlayability = Literal[
+    "unknown",
+    "rigid_playable",
+    "not_rigid_playable",
+]
+RigidPlayMode = Literal[
+    "auto",
+    "on",
+    "off",
+]
 PresetSource = Literal[
     "custom",
     "designer",
@@ -73,6 +105,34 @@ _VALID_PLAYABILITY_STATUSES = frozenset(
         PLAYABILITY_STATUS_PLAYABLE,
         PLAYABILITY_STATUS_WARNING,
         PLAYABILITY_STATUS_BLOCKED,
+    )
+)
+_VALID_TOPOLOGY_VALIDITY = frozenset(
+    (
+        TOPOLOGY_VALIDITY_UNKNOWN,
+        TOPOLOGY_VALIDITY_VALID,
+        TOPOLOGY_VALIDITY_INVALID,
+    )
+)
+_VALID_EXPLORER_USABILITY = frozenset(
+    (
+        EXPLORER_USABILITY_UNKNOWN,
+        EXPLORER_USABILITY_CELLWISE,
+        EXPLORER_USABILITY_BLOCKED,
+    )
+)
+_VALID_RIGID_PLAYABILITY = frozenset(
+    (
+        RIGID_PLAYABILITY_UNKNOWN,
+        RIGID_PLAYABILITY_PLAYABLE,
+        RIGID_PLAYABILITY_BLOCKED,
+    )
+)
+_VALID_RIGID_PLAY_MODES = frozenset(
+    (
+        RIGID_PLAY_MODE_AUTO,
+        RIGID_PLAY_MODE_ON,
+        RIGID_PLAY_MODE_OFF,
     )
 )
 _VALID_PRESET_SOURCES = frozenset(
@@ -124,12 +184,17 @@ class TopologyPlaygroundLaunchSettings:
     speed_level: int = 1
     random_mode_index: int = 0
     game_seed: int = 0
+    rigid_play_mode: RigidPlayMode = RIGID_PLAY_MODE_AUTO
 
     def __post_init__(self) -> None:
         self.piece_set_index = max(0, int(self.piece_set_index))
         self.speed_level = max(1, int(self.speed_level))
         self.random_mode_index = max(0, int(self.random_mode_index))
         self.game_seed = max(0, int(self.game_seed))
+        rigid_play_mode = str(self.rigid_play_mode)
+        if rigid_play_mode not in _VALID_RIGID_PLAY_MODES:
+            raise ValueError(f"unsupported rigid play mode: {self.rigid_play_mode!r}")
+        self.rigid_play_mode = rigid_play_mode
 
 
 @dataclass
@@ -356,7 +421,13 @@ class TopologyPlaygroundMovementSummary:
 @dataclass
 class TopologyPlaygroundPlayabilityAnalysis:
     status: PlayabilityStatus = PLAYABILITY_STATUS_UNKNOWN
+    validity: TopologyValidity = TOPOLOGY_VALIDITY_UNKNOWN
+    explorer_usability: ExplorerUsability = EXPLORER_USABILITY_UNKNOWN
+    rigid_playability: RigidPlayability = RIGID_PLAYABILITY_UNKNOWN
     summary: str = ""
+    validity_reason: str = ""
+    explorer_reason: str = ""
+    rigid_reason: str = ""
     warnings: tuple[str, ...] = ()
     errors: tuple[str, ...] = ()
     movement_summary: TopologyPlaygroundMovementSummary = field(
@@ -368,8 +439,27 @@ class TopologyPlaygroundPlayabilityAnalysis:
         status = str(self.status)
         if status not in _VALID_PLAYABILITY_STATUSES:
             raise ValueError(f"unsupported playability status: {self.status!r}")
+        validity = str(self.validity)
+        if validity not in _VALID_TOPOLOGY_VALIDITY:
+            raise ValueError(f"unsupported topology validity: {self.validity!r}")
+        explorer_usability = str(self.explorer_usability)
+        if explorer_usability not in _VALID_EXPLORER_USABILITY:
+            raise ValueError(
+                f"unsupported explorer usability: {self.explorer_usability!r}"
+            )
+        rigid_playability = str(self.rigid_playability)
+        if rigid_playability not in _VALID_RIGID_PLAYABILITY:
+            raise ValueError(
+                f"unsupported rigid playability: {self.rigid_playability!r}"
+            )
         self.status = status
+        self.validity = validity
+        self.explorer_usability = explorer_usability
+        self.rigid_playability = rigid_playability
         self.summary = str(self.summary)
+        self.validity_reason = str(self.validity_reason)
+        self.explorer_reason = str(self.explorer_reason)
+        self.rigid_reason = str(self.rigid_reason)
         self.warnings = tuple(str(entry) for entry in self.warnings)
         self.errors = tuple(str(entry) for entry in self.errors)
         self.recommended_next_preset = (
@@ -586,6 +676,9 @@ def default_topology_playground_state(
 
 
 __all__ = [
+    "EXPLORER_USABILITY_BLOCKED",
+    "EXPLORER_USABILITY_CELLWISE",
+    "EXPLORER_USABILITY_UNKNOWN",
     "GRAVITY_MODE_EXPLORATION",
     "GRAVITY_MODE_FALLING",
     "PLAYABILITY_STATUS_BLOCKED",
@@ -596,6 +689,12 @@ __all__ = [
     "PRESET_SOURCE_DESIGNER",
     "PRESET_SOURCE_EXPLORER",
     "PRESET_SOURCE_FALLBACK",
+    "RIGID_PLAYABILITY_BLOCKED",
+    "RIGID_PLAY_MODE_AUTO",
+    "RIGID_PLAY_MODE_OFF",
+    "RIGID_PLAY_MODE_ON",
+    "RIGID_PLAYABILITY_PLAYABLE",
+    "RIGID_PLAYABILITY_UNKNOWN",
     "TOOL_CREATE",
     "TOOL_EDIT",
     "TOOL_INSPECT",
@@ -603,6 +702,9 @@ __all__ = [
     "TOOL_PLAY",
     "TOOL_PROBE",
     "TOOL_SANDBOX",
+    "TOPOLOGY_VALIDITY_INVALID",
+    "TOPOLOGY_VALIDITY_UNKNOWN",
+    "TOPOLOGY_VALIDITY_VALID",
     "TOPOLOGY_PLAYGROUND_TOOLS",
     "TRANSPORT_OWNER_EXPLORER",
     "TRANSPORT_OWNER_LEGACY",

@@ -13,16 +13,21 @@ from .pieces2d import (
     normalize_piece_set_2d,
 )
 from ..runtime.score_analyzer import new_analysis_session_id
+from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
 from ..runtime.runtime_config import (
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
 from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import run_hard_drop
-from ..core.rules.state_queries import can_piece_exist_2d
+from ..core.rules.piece_placement import (
+    CandidatePiecePlacement,
+    build_candidate_piece_placement,
+    commit_piece_placement,
+    validate_candidate_piece_placement,
+)
 from ..core.step.reducer import step_2d as core_step_2d
 from .explorer_runtime_2d import (
-    can_piece_exist_explorer_2d,
     move_piece_via_explorer_glue_2d,
     piece_cells_in_bounds_2d,
 )
@@ -34,6 +39,44 @@ from .topology import (
     normalize_topology_mode,
 )
 from ..topology_explorer import ExplorerTopologyProfile
+from ..topology_explorer.transport_resolver import (
+    ExplorerTransportResolver,
+    build_explorer_transport_resolver,
+)
+
+
+def _normalize_explorer_transport_2d(config) -> ExplorerTransportResolver | None:
+    profile = config.explorer_topology_profile
+    transport = config.explorer_transport
+    if profile is not None and profile.dimension != 2:
+        raise ValueError("explorer_topology_profile dimension must match 2D")
+    if transport is not None and profile is None:
+        raise ValueError("explorer_transport requires explorer_topology_profile")
+    if profile is None:
+        return transport
+    expected_dims = (config.width, config.height)
+    if transport is None:
+        return build_explorer_transport_resolver(profile, expected_dims)
+    if transport.dims != expected_dims:
+        raise ValueError("explorer_transport dims must match 2D board size")
+    return transport
+
+
+def _resolve_explorer_rigid_play_enabled_2d(config) -> bool | None:
+    enabled = config.explorer_rigid_play_enabled
+    if enabled is not None:
+        return bool(enabled)
+    profile = config.explorer_topology_profile
+    if profile is None:
+        return None
+    resolver = config.explorer_transport
+    if resolver is not None and not hasattr(resolver, "resolve_piece_step"):
+        return True
+    return resolve_rigid_play_enabled(
+        profile,
+        dims=(config.width, config.height),
+        resolver=config.explorer_transport,
+    )
 
 
 @dataclass
@@ -52,6 +95,8 @@ class GameConfig:
     lock_piece_points: int = 5
     exploration_mode: bool = False
     explorer_topology_profile: ExplorerTopologyProfile | None = None
+    explorer_transport: ExplorerTransportResolver | None = None
+    explorer_rigid_play_enabled: bool | None = None
     rng_mode: str = RNG_MODE_FIXED_SEED
     rng_seed: int = 1337
 
@@ -72,11 +117,8 @@ class GameConfig:
         if self.lock_piece_points < 0:
             raise ValueError("lock_piece_points must be >= 0")
         self.exploration_mode = bool(self.exploration_mode)
-        if (
-            self.explorer_topology_profile is not None
-            and self.explorer_topology_profile.dimension != 2
-        ):
-            raise ValueError("explorer_topology_profile dimension must match 2D")
+        self.explorer_transport = _normalize_explorer_transport_2d(self)
+        self.explorer_rigid_play_enabled = _resolve_explorer_rigid_play_enabled_2d(self)
         self.rng_mode = normalize_rng_mode(self.rng_mode)
         if isinstance(self.rng_seed, bool) or not isinstance(self.rng_seed, int):
             raise ValueError("rng_seed must be an integer")
@@ -187,9 +229,10 @@ class GameState:
             spawn_y = ((self.config.height - span_y) // 2) - min_y
         else:
             spawn_y = -2  # above the visible area
-        self.current_piece = ActivePiece2D(shape, (spawn_x, spawn_y), rotation=0)
-        if not self._can_exist(self.current_piece):
+        candidate = ActivePiece2D(shape, (spawn_x, spawn_y), rotation=0)
+        if not self._can_exist(candidate):
             self.game_over = True
+        self.current_piece = candidate
 
     def _shape_fits_spawn(self, shape: PieceShape2D) -> bool:
         if not shape.blocks:
@@ -205,7 +248,10 @@ class GameState:
     def _mapped_piece_cells(
         self, piece: ActivePiece2D
     ) -> tuple[tuple[int, int], ...] | None:
-        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+        if (
+            self.config.exploration_mode
+            and self.config.explorer_topology_profile is not None
+        ):
             return piece_cells_in_bounds_2d(
                 piece,
                 dims=(self.config.width, self.config.height),
@@ -242,15 +288,52 @@ class GameState:
             return ()
         return mapped
 
+    def _placement_ignore_cells(
+        self,
+        *,
+        allow_self_overlap: bool = False,
+    ) -> tuple[tuple[int, int], ...]:
+        if not allow_self_overlap or self.current_piece is None:
+            return ()
+        return self.current_piece_cells_mapped(include_above=True)
+
+    def _candidate_placement(
+        self,
+        piece: ActivePiece2D,
+    ) -> CandidatePiecePlacement[ActivePiece2D] | None:
+        return build_candidate_piece_placement(piece, self._mapped_piece_cells(piece))
+
+    def _can_place_candidate(
+        self,
+        candidate: CandidatePiecePlacement[ActivePiece2D] | None,
+        *,
+        allow_self_overlap: bool = False,
+    ) -> bool:
+        return validate_candidate_piece_placement(
+            candidate,
+            self.board.cells,
+            ignore_cells=self._placement_ignore_cells(
+                allow_self_overlap=allow_self_overlap
+            ),
+        )
+
+    def _can_exist_after_motion(self, piece: ActivePiece2D) -> bool:
+        return self._can_place_candidate(
+            self._candidate_placement(piece),
+            allow_self_overlap=True,
+        )
+
+    def _try_commit_candidate_piece(self, piece: ActivePiece2D) -> bool:
+        candidate = self._candidate_placement(piece)
+        if not self._can_place_candidate(candidate, allow_self_overlap=True):
+            return False
+        assert candidate is not None
+        commit_piece_placement(self, candidate)
+        return True
+
     def _can_exist(self, piece: ActivePiece2D) -> bool:
-        """Compatibility wrapper over the core 2D existence/collision helper."""
-        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
-            return can_piece_exist_explorer_2d(
-                self.board.cells,
-                piece,
-                dims=(self.config.width, self.config.height),
-            )
-        return can_piece_exist_2d(self, piece)
+        """Compatibility wrapper over the shared placement validator."""
+        return self._can_place_candidate(self._candidate_placement(piece))
 
     def lock_current_piece(self) -> int:
         """
@@ -305,20 +388,23 @@ class GameState:
     def try_move(self, dx: int, dy: int):
         if self.current_piece is None:
             return
-        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
+        if (
+            self.config.exploration_mode
+            and self.config.explorer_topology_profile is not None
+        ):
+            if self.config.explorer_transport is None:
+                raise ValueError("explorer transport must exist in exploration mode")
             moved = move_piece_via_explorer_glue_2d(
                 self.current_piece,
-                dims=(self.config.width, self.config.height),
-                profile=self.config.explorer_topology_profile,
+                transport=self.config.explorer_transport,
                 dx=dx,
                 dy=dy,
+                rigid_play_enabled=bool(self.config.explorer_rigid_play_enabled),
             )
-            if moved is not None and self._can_exist(moved):
-                self.current_piece = moved
+            if moved is not None:
+                self._try_commit_candidate_piece(moved)
             return
-        moved = self.current_piece.moved(dx, dy)
-        if self._can_exist(moved):
-            self.current_piece = moved
+        self._try_commit_candidate_piece(self.current_piece.moved(dx, dy))
 
     def try_rotate(self, delta_steps: int):
         if self.current_piece is None:
@@ -332,38 +418,17 @@ class GameState:
             gravity_axis=self.config.gravity_axis,
             kick_level=self.config.kick_level,
             plane_offsets_for_level=rotation_kick_candidate_offsets,
-            move_piece=lambda piece, vector: piece.moved(int(vector[0]), int(vector[1])),
-            can_place=self._can_exist,
+            move_piece=lambda piece, vector: piece.moved(
+                int(vector[0]), int(vector[1])
+            ),
+            can_place=self._can_exist_after_motion,
         )
         if resolved is not None:
-            self.current_piece = resolved
+            self._try_commit_candidate_piece(resolved)
 
     def hard_drop(self):
-        if self.config.exploration_mode and self.config.explorer_topology_profile is not None:
-            seen: set[tuple[tuple[int, int], ...]] = set()
-            while self.current_piece is not None:
-                signature = tuple(sorted(self.current_piece_cells_mapped(include_above=True)))
-                if signature in seen:
-                    break
-                seen.add(signature)
-                moved = move_piece_via_explorer_glue_2d(
-                    self.current_piece,
-                    dims=(self.config.width, self.config.height),
-                    profile=self.config.explorer_topology_profile,
-                    dx=0,
-                    dy=1,
-                )
-                if moved is None or not self._can_exist(moved):
-                    break
-                self.current_piece = moved
-            return
-
         def _try_advance() -> bool:
-            moved = self.current_piece.moved(0, 1)
-            if not self._can_exist(moved):
-                return False
-            self.current_piece = moved
-            return True
+            return self._try_commit_candidate_piece(self.current_piece.moved(0, 1))
 
         run_hard_drop(self, try_advance=_try_advance)
 

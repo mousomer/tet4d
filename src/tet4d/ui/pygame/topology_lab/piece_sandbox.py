@@ -21,10 +21,12 @@ from tet4d.engine.runtime.topology_playground_state import (
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
+from .interaction_audit import record_interaction_handler
 from .scene_state import (
     TopologyLabState,
     canonical_playground_state,
     ensure_sandbox_state,
+    replace_explorer_profile,
     sync_canonical_playground_state,
 )
 
@@ -38,8 +40,7 @@ def _runtime_state_for_sandbox(
     if profile is not None and (
         runtime_state is None or runtime_state.explorer_profile != profile
     ):
-        state.explorer_profile = profile
-        sync_canonical_playground_state(state)
+        replace_explorer_profile(state, profile)
         runtime_state = canonical_playground_state(state)
     if runtime_state is None:
         sync_canonical_playground_state(state)
@@ -107,10 +108,17 @@ def move_sandbox_piece(
     profile: ExplorerTopologyProfile,
     step_label: str,
 ) -> tuple[bool, str]:
-    return move_sandbox_piece_runtime(
-        _runtime_state_for_sandbox(state, profile=profile),
-        step_label,
-    )
+    with record_interaction_handler(
+        state,
+        "sandbox_move",
+        step=step_label,
+        dimension=state.dimension,
+        glue_count=len(profile.gluings),
+    ):
+        return move_sandbox_piece_runtime(
+            _runtime_state_for_sandbox(state, profile=profile),
+            step_label,
+        )
 
 
 def rotate_sandbox_piece(

@@ -59,7 +59,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
         self.assertNotEqual(before, after)
         self.assertEqual(state.sandbox.invalid_message, "")
 
-    def test_sandbox_piece_reports_nonrigid_seam_crossing(self) -> None:
+    def test_sandbox_piece_crosses_safe_torus_seam(self) -> None:
         state = self._state()
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
@@ -67,12 +67,14 @@ class TestTopologyLabSandbox(unittest.TestCase):
         current = sandbox_cells(state)
         max_x = max(cell[0] for cell in current)
         min_y = min(cell[1] for cell in current)
-        state.sandbox.origin = (state.sandbox.origin[0] + (dims[0] - 1 - max_x), state.sandbox.origin[1] - min_y)
-        start_origin = tuple(state.sandbox.origin)
+        state.sandbox.origin = (
+            state.sandbox.origin[0] + (dims[0] - 1 - max_x),
+            state.sandbox.origin[1] - min_y,
+        )
         ok, message = move_sandbox_piece(state, torus_profile_2d(), "x+")
-        self.assertFalse(ok)
-        self.assertIn("cannot remain rigid", message)
-        self.assertEqual(tuple(state.sandbox.origin), start_origin)
+        self.assertTrue(ok, message)
+        self.assertTrue(state.sandbox.seam_crossings)
+        self.assertEqual(state.sandbox.invalid_message, "")
 
 
     def test_sandbox_spawn_action_creates_piece_in_shell(self) -> None:
@@ -177,6 +179,54 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xw_pos"][0])
+        after = tuple(sorted(sandbox_cells(state)))
+        self.assertNotEqual(before, after)
+
+    def test_sandbox_xy_rotation_binding_changes_3d_piece(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=3,
+            profile=profile,
+            explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xy_pos")
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        before = tuple(sorted(sandbox_cells(state)))
+        topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xy_pos"][0])
+        after = tuple(sorted(sandbox_cells(state)))
+        self.assertNotEqual(before, after)
+
+    def test_sandbox_xy_rotation_binding_changes_4d_piece(self) -> None:
+        profile = default_topology_profile_state(
+            dimension=4,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyLabState(
+            selected=0,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=4,
+            profile=profile,
+            explorer_profile=axis_wrap_profile(dimension=4, wrapped_axes=(0,)),
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xy_neg")
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        before = tuple(sorted(sandbox_cells(state)))
+        topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xy_neg"][0])
         after = tuple(sorted(sandbox_cells(state)))
         self.assertNotEqual(before, after)
 

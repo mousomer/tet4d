@@ -1,27 +1,34 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
+
 from tet4d.engine.core.piece_transform import rotate_blocks_2d
-from tet4d.engine.gameplay.explorer_piece_transport import (
-    CELLWISE_DEFORMATION,
-    PLAIN_TRANSLATION,
-    ExplorerPieceMoveOutcome,
-    classify_explorer_piece_move,
+from tet4d.engine.core.rules.piece_placement import (
+    build_candidate_piece_placement,
+    validate_candidate_piece_placement,
 )
+from tet4d.engine.gameplay.explorer_piece_transport import CELLWISE_DEFORMATION
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.topology_explorer import ExplorerTopologyProfile, MoveStep, move_cell
+from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.transport_resolver import (
+    BLOCKED_MOVE,
+    ExplorerTransportFrameTransform,
+    ExplorerTransportResolver,
+)
 
 
-def _apply_transport_outcome(
+def _apply_frame_transform(
     piece: ActivePiece2D,
-    outcome: ExplorerPieceMoveOutcome,
+    frame_transform: ExplorerTransportFrameTransform,
 ) -> ActivePiece2D:
-    transform = outcome.frame_transform
-    if transform is None:
-        raise ValueError("rigid transport outcome requires a frame transform")
-    if outcome.kind == PLAIN_TRANSLATION:
-        return piece.moved(transform.translation[0], transform.translation[1])
+    if frame_transform.is_identity_linear():
+        return piece.moved(
+            frame_transform.translation[0], frame_transform.translation[1]
+        )
     current_blocks = rotate_blocks_2d(piece.shape.blocks, piece.rotation)
-    transformed_blocks = [transform.apply_linear(block) for block in current_blocks]
+    transformed_blocks = [
+        frame_transform.apply_linear(block) for block in current_blocks
+    ]
     shape = PieceShape2D(
         piece.shape.name,
         list(transformed_blocks),
@@ -29,37 +36,54 @@ def _apply_transport_outcome(
     )
     return ActivePiece2D(
         shape=shape,
-        pos=transform.apply_absolute(piece.pos),
+        pos=frame_transform.apply_absolute(piece.pos),
         rotation=0,
     )
+
+
+def _piece_from_exact_cells(
+    piece: ActivePiece2D,
+    moved_cells: Sequence[Sequence[int]],
+) -> ActivePiece2D:
+    cells = tuple((int(coord[0]), int(coord[1])) for coord in moved_cells)
+    origin = cells[0]
+    shape = PieceShape2D(
+        piece.shape.name,
+        [(cell[0] - origin[0], cell[1] - origin[1]) for cell in cells],
+        piece.shape.color_id,
+    )
+    return ActivePiece2D(shape=shape, pos=origin, rotation=0)
 
 
 def move_piece_via_explorer_glue_2d(
     piece: ActivePiece2D,
     *,
-    dims: tuple[int, int],
-    profile: ExplorerTopologyProfile,
+    transport: ExplorerTransportResolver,
     dx: int,
     dy: int,
+    rigid_play_enabled: bool = True,
 ) -> ActivePiece2D | None:
     if (dx, dy) not in {(-1, 0), (1, 0), (0, -1), (0, 1)}:
         return None
-    source_cells = tuple(piece.cells())
     axis = 0 if dx != 0 else 1
     delta = dx if dx != 0 else dy
     step = MoveStep(axis=axis, delta=delta)
-    moved_cells: list[tuple[int, int]] = []
-    for cell in source_cells:
-        mapped = move_cell(profile, dims=dims, coord=cell, step=step)
-        if mapped is None:
-            return None
-        moved_cells.append((mapped[0], mapped[1]))
-    if len(moved_cells) != len(set(moved_cells)):
+    step_result = transport.resolve_piece_step(piece.cells(), step)
+    if step_result.kind == BLOCKED_MOVE:
         return None
-    outcome = classify_explorer_piece_move(source_cells, tuple(moved_cells))
-    if outcome.kind == CELLWISE_DEFORMATION:
+    if not rigid_play_enabled:
+        assert step_result.moved_cells is not None
+        use_exact_cells = step_result.kind == CELLWISE_DEFORMATION or any(
+            cell_step.traversal is not None for cell_step in step_result.cell_steps
+        )
+        if use_exact_cells:
+            return _piece_from_exact_cells(piece, step_result.moved_cells)
+        assert step_result.frame_transform is not None
+        return _apply_frame_transform(piece, step_result.frame_transform)
+    if step_result.kind == CELLWISE_DEFORMATION:
         return None
-    return _apply_transport_outcome(piece, outcome)
+    assert step_result.frame_transform is not None
+    return _apply_frame_transform(piece, step_result.frame_transform)
 
 
 def piece_cells_in_bounds_2d(
@@ -78,11 +102,15 @@ def can_piece_exist_explorer_2d(
     piece: ActivePiece2D,
     *,
     dims: tuple[int, int],
+    ignore_cells: Iterable[Sequence[int]] = (),
 ) -> bool:
-    cells = piece_cells_in_bounds_2d(piece, dims=dims)
-    if cells is None:
-        return False
-    return all(coord not in board_cells for coord in cells)
+    return validate_candidate_piece_placement(
+        build_candidate_piece_placement(
+            piece, piece_cells_in_bounds_2d(piece, dims=dims)
+        ),
+        board_cells,
+        ignore_cells=ignore_cells,
+    )
 
 
 __all__ = [
