@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from importlib import import_module
 from math import prod
 from typing import TypeVar
 
+#from importlib import import_module
 #def _runtime_config():
 #    return import_module("tet4d.engine.runtime.runtime_config")
 
