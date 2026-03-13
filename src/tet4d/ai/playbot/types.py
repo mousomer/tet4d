@@ -6,53 +6,53 @@ from importlib import import_module
 from math import prod
 from typing import TypeVar
 
+#def _runtime_config():
+#    return import_module("tet4d.engine.runtime.runtime_config")
 
-def _runtime_config():
-    return import_module("tet4d.engine.runtime.runtime_config")
-
+from tet4d.engine.runtime import runtime_config as _runtime_config
 
 def playbot_adaptive_candidate_cap_for_ndim(ndim: int):
-    return _runtime_config().playbot_adaptive_candidate_cap_for_ndim(ndim)
+    return _runtime_config.playbot_adaptive_candidate_cap_for_ndim(ndim)
 
 
 def playbot_adaptive_fallback_enabled() -> bool:
-    return _runtime_config().playbot_adaptive_fallback_enabled()
+    return _runtime_config.playbot_adaptive_fallback_enabled()
 
 
 def playbot_adaptive_lookahead_min_budget_ms(ndim: int) -> int:
-    return _runtime_config().playbot_adaptive_lookahead_min_budget_ms(ndim)
+    return _runtime_config.playbot_adaptive_lookahead_min_budget_ms(ndim)
 
 
 def playbot_auto_algorithm_policy_for_ndim(ndim: int):
-    return _runtime_config().playbot_auto_algorithm_policy_for_ndim(ndim)
+    return _runtime_config.playbot_auto_algorithm_policy_for_ndim(ndim)
 
 
 def playbot_board_size_scaling_policy_for_ndim(ndim: int):
-    return _runtime_config().playbot_board_size_scaling_policy_for_ndim(ndim)
+    return _runtime_config.playbot_board_size_scaling_policy_for_ndim(ndim)
 
 
 def playbot_budget_table_for_ndim(ndim: int):
-    return _runtime_config().playbot_budget_table_for_ndim(ndim)
+    return _runtime_config.playbot_budget_table_for_ndim(ndim)
 
 
 def playbot_clamp_policy():
-    return _runtime_config().playbot_clamp_policy()
+    return _runtime_config.playbot_clamp_policy()
 
 
 def playbot_deadline_safety_ms() -> float:
-    return _runtime_config().playbot_deadline_safety_ms()
+    return _runtime_config.playbot_deadline_safety_ms()
 
 
 def playbot_learning_mode_policy() -> tuple[bool, int, float, float]:
-    return _runtime_config().playbot_learning_mode_policy()
+    return _runtime_config.playbot_learning_mode_policy()
 
 
 def playbot_lookahead_depth(ndim: int, profile: str) -> int:
-    return _runtime_config().playbot_lookahead_depth(ndim, profile)
+    return _runtime_config.playbot_lookahead_depth(ndim, profile)
 
 
 def playbot_lookahead_top_k(ndim: int, profile: str, depth: int) -> int:
-    return _runtime_config().playbot_lookahead_top_k(ndim, profile, depth)
+    return _runtime_config.playbot_lookahead_top_k(ndim, profile, depth)
 
 
 class BotMode(str, Enum):
