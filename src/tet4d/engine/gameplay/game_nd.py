@@ -17,6 +17,7 @@ from .pieces_nd import (
 )
 from ..runtime.score_analyzer import new_analysis_session_id
 from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
+from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
 from ..runtime.runtime_config import (
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
@@ -449,7 +450,9 @@ class GameStateND:
                 transport=self.config.explorer_transport,
                 axis=axis,
                 delta=delta,
-                rigid_play_enabled=bool(self.config.explorer_rigid_play_enabled),
+                movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                    self.config.explorer_rigid_play_enabled
+                ),
             )
             if candidate is None:
                 return False

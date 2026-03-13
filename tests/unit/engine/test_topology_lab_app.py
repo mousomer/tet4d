@@ -23,6 +23,7 @@ from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
     build_explorer_playground_settings,
+    mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_SANDBOX
 
@@ -110,6 +111,30 @@ class TestTopologyLabApp(unittest.TestCase):
             ),
         )
         self.assertEqual(launch.settings_snapshot.board_dims, (8, 8, 8, 8))
+
+    def test_mode_settings_snapshot_for_dimension_merges_saved_payload(self) -> None:
+        with mock.patch(
+            "tet4d.ui.pygame.topology_lab.app.load_app_settings_payload",
+            return_value={
+                "settings": {
+                    "4d": {
+                        "width": 11,
+                        "height": 17,
+                        "depth": 7,
+                        "fourth": 5,
+                        "piece_set_index": 3,
+                    }
+                }
+            },
+        ):
+            snapshot = mode_settings_snapshot_for_dimension(4)
+
+        self.assertEqual(
+            (snapshot.width, snapshot.height, snapshot.depth, snapshot.fourth),
+            (11, 17, 7, 5),
+        )
+        self.assertEqual(snapshot.explorer_width, 8)
+        self.assertEqual(snapshot.explorer_fourth, 8)
 
     def test_build_explorer_launch_uses_source_settings_snapshot(self) -> None:
         settings = SimpleNamespace(

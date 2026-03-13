@@ -4,6 +4,9 @@ from collections.abc import Callable, Mapping
 
 import pygame
 
+from tet4d.engine.gameplay.explorer_movement_policy import (
+    explorer_movement_policy_from_rigid_play_enabled,
+)
 from tet4d.engine.gameplay.explorer_runtime_nd import move_piece_via_explorer_glue
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
@@ -268,6 +271,9 @@ def _translated_or_explorer_candidate(
             transport=transport,
             axis=mapped_axis,
             delta=mapped_delta,
+            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                state.config.explorer_rigid_play_enabled
+            ),
         )
     vector = [0] * int(state.config.ndim)
     vector[mapped_axis] = mapped_delta

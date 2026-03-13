@@ -114,6 +114,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_explorer_profile,
     current_play_settings,
     current_probe_coord,
+    current_probe_frame,
     current_probe_path,
     current_probe_trace,
     current_selected_boundary_index,
@@ -135,7 +136,10 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     update_explorer_draft,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
-from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_settings
+from tet4d.ui.pygame.topology_lab.app import (
+    build_explorer_playground_settings,
+    mode_settings_snapshot_for_dimension,
+)
 from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
 
 
@@ -253,6 +257,28 @@ def _ensure_play_settings(state: _TopologyLabState) -> ExplorerPlaygroundSetting
         settings = build_explorer_playground_settings(dimension=state.dimension)
         replace_play_settings(state, settings)
     return settings
+
+
+def _configured_explorer_play_settings_for_dimension(
+    dimension: int,
+) -> ExplorerPlaygroundSettings:
+    return build_explorer_playground_settings(
+        dimension=dimension,
+        source_settings=mode_settings_snapshot_for_dimension(dimension),
+    )
+
+
+def _reset_explorer_play_settings_to_defaults(state: _TopologyLabState) -> None:
+    previous_signature = _preview_signature_for_state(state)
+    replace_play_settings(
+        state,
+        build_explorer_playground_settings(dimension=state.dimension),
+    )
+    _mark_play_settings_updated(
+        state,
+        previous_signature=previous_signature,
+    )
+    _set_status(state, f"Explorer {state.dimension}D play settings reset to defaults")
 
 
 def _bound_sandbox_rotation_action(state: _TopologyLabState, key: int) -> str | None:
@@ -745,6 +771,8 @@ def _ensure_probe_state(state: _TopologyLabState) -> None:
             trace=[f"Probe unavailable: {state.scene_preview_error}"],
             path=[],
             highlighted_glue_id=None,
+            frame_permutation=tuple(range(state.dimension)),
+            frame_signs=tuple(1 for _ in range(state.dimension)),
         )
         return
     dims = _board_dims_for_state(state)
@@ -767,6 +795,8 @@ def _ensure_probe_state(state: _TopologyLabState) -> None:
                 trace=[],
                 path=[probe_coord],
                 highlighted_glue_id=None,
+                frame_permutation=tuple(range(state.dimension)),
+                frame_signs=tuple(1 for _ in range(state.dimension)),
             )
         except ValueError as exc:
             replace_probe_state(
@@ -775,6 +805,8 @@ def _ensure_probe_state(state: _TopologyLabState) -> None:
                 trace=[f"Probe unavailable: {exc}"],
                 path=[],
                 highlighted_glue_id=None,
+                frame_permutation=tuple(range(state.dimension)),
+                frame_signs=tuple(1 for _ in range(state.dimension)),
             )
 
 
@@ -797,12 +829,15 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
             )
             return
         start = probe_coord
+        frame_permutation, frame_signs = current_probe_frame(state)
         try:
             target, result = advance_explorer_probe(
                 profile,
                 dims=_board_dims_for_state(state),
                 coord=probe_coord,
                 step_label=step_label,
+                frame_permutation=frame_permutation,
+                frame_signs=frame_signs,
             )
         except ValueError as exc:
             set_highlighted_glue_id(state, None)
@@ -819,12 +854,20 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
             path.append(start)
         if target != start:
             path.append(target)
+        next_frame_permutation = tuple(
+            int(value) for value in result.get("frame_permutation", frame_permutation)
+        )
+        next_frame_signs = tuple(
+            int(value) for value in result.get("frame_signs", frame_signs)
+        )
         replace_probe_state(
             state,
             coord=target,
             trace=trace[-6:],
             path=path[-20:],
             highlighted_glue_id=highlighted_glue_id,
+            frame_permutation=next_frame_permutation,
+            frame_signs=next_frame_signs,
         )
         _set_status(
             state,
@@ -850,6 +893,8 @@ def _reset_probe(state: _TopologyLabState) -> None:
             trace=[],
             path=[probe_coord],
             highlighted_glue_id=None,
+            frame_permutation=tuple(range(state.dimension)),
+            frame_signs=tuple(1 for _ in range(state.dimension)),
         )
         _set_status(state, f"Probe reset to {list(probe_coord)}")
         return
@@ -860,6 +905,8 @@ def _reset_probe(state: _TopologyLabState) -> None:
             trace=[f"Probe unavailable: {exc}"],
             path=[],
             highlighted_glue_id=None,
+            frame_permutation=tuple(range(state.dimension)),
+            frame_signs=tuple(1 for _ in range(state.dimension)),
         )
         _set_status(state, str(exc), is_error=True)
 
@@ -1250,15 +1297,21 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
         step=step,
         previous_dimension=state.dimension,
     ):
+        previous_dimension = state.dimension
+        previous_settings = current_play_settings(state)
+        if previous_settings is not None:
+            state.play_settings_by_dimension[previous_dimension] = previous_settings
         idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
         state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
         state.dirty = True
         _sync_profile(state)
         if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
-            replace_play_settings(
-                state,
-                build_explorer_playground_settings(dimension=state.dimension),
-            )
+            next_settings = state.play_settings_by_dimension.get(state.dimension)
+            if next_settings is None:
+                next_settings = _configured_explorer_play_settings_for_dimension(
+                    state.dimension,
+                )
+            replace_play_settings(state, next_settings)
         _sync_explorer_state(state)
         _set_topology_status_after_refresh(
             state,
@@ -1946,6 +1999,13 @@ def _handle_glue_shortcut(state: _TopologyLabState, key: int) -> bool:
     return True
 
 
+def _handle_reset_defaults_shortcut(state: _TopologyLabState, key: int) -> bool:
+    if key != pygame.K_F8 or not _uses_general_explorer_editor(state):
+        return False
+    _reset_explorer_play_settings_to_defaults(state)
+    return True
+
+
 def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
     if (
         not _uses_general_explorer_editor(state)
@@ -1960,6 +2020,7 @@ def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) ->
     return (
         _handle_camera_shortcut(state, key)
         or _handle_probe_shortcut(state, key)
+        or _handle_reset_defaults_shortcut(state, key)
         or _handle_sandbox_shortcut(state, key)
         or _handle_save_export_shortcut(state, key)
         or _handle_tool_shortcut(state, key, mod=mod)

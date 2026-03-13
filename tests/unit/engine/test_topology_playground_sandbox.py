@@ -326,7 +326,36 @@ class TestTopologyPlaygroundSandbox(unittest.TestCase):
                 ok, message = move_sandbox_piece(state, "x-")
 
                 self.assertTrue(ok, message)
-                self.assertEqual(tuple(sorted(sandbox_cells(state))), tuple(sorted(expected_cells)))
+                self.assertEqual(
+                    tuple(sorted(sandbox_cells(state))), tuple(sorted(expected_cells))
+                )
+
+    def test_sandbox_forced_rigid_mode_accepts_torus_chart_split_when_transport_stays_coherent(
+        self,
+    ) -> None:
+        state = self._explorer_state(
+            2,
+            axis_sizes=(4, 4),
+            explorer_profile=axis_wrap_profile(dimension=2, wrapped_axes=(1,)),
+            origin=(0, 0),
+            local_blocks=((0, 0), (0, 1)),
+        )
+        state.launch_settings.rigid_play_mode = RIGID_PLAY_MODE_ON
+
+        expected_cells, outcome = self._expected_move_outcome(
+            state,
+            step=MoveStep(axis=1, delta=-1),
+        )
+
+        self.assertEqual(outcome.kind, CELLWISE_DEFORMATION)
+        self.assertTrue(outcome.rigidly_coherent)
+
+        ok, message = move_sandbox_piece(state, "y-")
+
+        self.assertTrue(ok, message)
+        self.assertEqual(
+            tuple(sorted(sandbox_cells(state))), tuple(sorted(expected_cells))
+        )
 
     def test_sandbox_forced_rigid_mode_blocks_cellwise_projective_cases_across_dimensions(
         self,

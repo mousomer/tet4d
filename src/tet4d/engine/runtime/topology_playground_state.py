@@ -178,6 +178,36 @@ def _center_coord(axis_sizes: Coord) -> Coord:
     return tuple(max(0, size // 2) for size in axis_sizes)
 
 
+def _identity_probe_frame(dimension: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    return tuple(range(dimension)), tuple(1 for _ in range(dimension))
+
+
+def _normalize_probe_frame(
+    *,
+    dimension: int,
+    permutation: tuple[int, ...] | None,
+    signs: tuple[int, ...] | None,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    default_permutation, default_signs = _identity_probe_frame(dimension)
+    normalized_permutation = (
+        default_permutation
+        if permutation is None
+        else tuple(int(value) for value in permutation)
+    )
+    normalized_signs = (
+        default_signs if signs is None else tuple(int(value) for value in signs)
+    )
+    if len(normalized_permutation) != dimension:
+        normalized_permutation = default_permutation
+    if len(normalized_signs) != dimension:
+        normalized_signs = default_signs
+    if tuple(sorted(normalized_permutation)) != tuple(range(dimension)):
+        normalized_permutation = default_permutation
+    if any(value not in (-1, 1) for value in normalized_signs):
+        normalized_signs = default_signs
+    return normalized_permutation, normalized_signs
+
+
 @dataclass
 class TopologyPlaygroundLaunchSettings:
     piece_set_index: int = 0
@@ -273,6 +303,8 @@ class TopologyPlaygroundProbeState:
     path: tuple[Coord, ...] = ()
     trace: tuple[str, ...] = ()
     highlighted_gluing: str | None = None
+    frame_permutation: tuple[int, ...] | None = None
+    frame_signs: tuple[int, ...] | None = None
     last_step: str | None = None
 
     def normalize(self, *, dimension: int, axis_sizes: Coord) -> None:
@@ -295,12 +327,19 @@ class TopologyPlaygroundProbeState:
             normalized_path = [coord]
         elif normalized_path[-1] != coord:
             normalized_path.append(coord)
+        frame_permutation, frame_signs = _normalize_probe_frame(
+            dimension=dimension,
+            permutation=self.frame_permutation,
+            signs=self.frame_signs,
+        )
         self.coord = coord
         self.path = tuple(normalized_path)
         self.trace = tuple(str(entry) for entry in self.trace)
         self.highlighted_gluing = (
             None if self.highlighted_gluing is None else str(self.highlighted_gluing)
         )
+        self.frame_permutation = frame_permutation
+        self.frame_signs = frame_signs
         self.last_step = None if self.last_step is None else str(self.last_step)
 
 

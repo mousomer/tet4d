@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Literal
 
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
 )
-from tet4d.engine.runtime.menu_config import default_settings_payload
+from tet4d.engine.runtime.menu_config import (
+    default_settings_payload,
+    explorer_default_board_dims,
+)
+from tet4d.engine.runtime.menu_settings_state import load_app_settings_payload
 from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.runtime.topology_playground_state import RIGID_PLAY_MODE_AUTO
 from tet4d.engine.topology_explorer import (
@@ -25,11 +30,6 @@ from .scene_state import (
 EntrySource = Literal["explorer", "launcher", "lab"]
 
 _BOARD_DIMENSION_FIELDS = ("width", "height", "depth", "fourth")
-_EXPLORER_DEFAULT_BOARD_DIMS = {
-    2: (8, 8),
-    3: (8, 8, 8),
-    4: (8, 8, 8, 8),
-}
 
 
 @dataclass(frozen=True)
@@ -52,13 +52,33 @@ def _default_mode_payload(dimension: int) -> dict[str, int]:
 
 def _board_fields_for_dimension(dimension: int) -> tuple[str, ...]:
     dim = int(dimension)
-    if dim not in _EXPLORER_DEFAULT_BOARD_DIMS:
+    if not 2 <= dim <= len(_BOARD_DIMENSION_FIELDS):
         raise ValueError(f"unsupported explorer dimension: {dimension}")
     return _BOARD_DIMENSION_FIELDS[:dim]
 
 
 def _explorer_default_board_dims(dimension: int) -> tuple[int, ...]:
-    return tuple(_EXPLORER_DEFAULT_BOARD_DIMS[int(dimension)])
+    return explorer_default_board_dims(int(dimension))
+
+
+def mode_settings_snapshot_for_dimension(dimension: int) -> SimpleNamespace:
+    mode_key = f"{int(dimension)}d"
+    merged: dict[str, object] = {}
+    defaults = default_settings_payload()
+    if isinstance(defaults, dict):
+        settings_defaults = defaults.get("settings")
+        if isinstance(settings_defaults, dict):
+            mode_defaults = settings_defaults.get(mode_key)
+            if isinstance(mode_defaults, dict):
+                merged.update(mode_defaults)
+    payload = load_app_settings_payload()
+    if isinstance(payload, dict):
+        payload_settings = payload.get("settings")
+        if isinstance(payload_settings, dict):
+            mode_payload = payload_settings.get(mode_key)
+            if isinstance(mode_payload, dict):
+                merged.update(mode_payload)
+    return SimpleNamespace(**merged)
 
 
 def _source_uses_mode_default_board_dims(
@@ -266,4 +286,5 @@ __all__ = [
     "build_explorer_playground_config",
     "build_explorer_playground_launch",
     "build_explorer_playground_settings",
+    "mode_settings_snapshot_for_dimension",
 ]

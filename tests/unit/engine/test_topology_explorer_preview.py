@@ -29,6 +29,7 @@ from tet4d.engine.runtime.topology_explorer_preview import (
 from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.presets import (
     mobius_strip_profile_2d,
+    sphere_profile_2d,
     swapped_xz_profile_3d,
 )
 from tet4d.engine.topology_explorer.transport_resolver import (
@@ -169,6 +170,29 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         self.assertFalse(result["blocked"])
         self.assertIn("x- -> x+", result["message"])
         self.assertEqual(result["traversal"]["glue_id"], "mobius_x")
+
+    def test_probe_keeps_local_direction_frame_across_sphere_corner(self) -> None:
+        coord, result = advance_explorer_probe(
+            sphere_profile_2d(),
+            dims=(8, 8),
+            coord=(7, 7),
+            step_label="y+",
+        )
+        self.assertEqual(coord, (7, 0))
+        self.assertEqual(tuple(result["frame_permutation"]), (1, 0))
+        self.assertEqual(tuple(result["frame_signs"]), (-1, -1))
+
+        coord, result = advance_explorer_probe(
+            sphere_profile_2d(),
+            dims=(8, 8),
+            coord=coord,
+            step_label="x+",
+            frame_permutation=tuple(result["frame_permutation"]),
+            frame_signs=tuple(result["frame_signs"]),
+        )
+        self.assertEqual(coord, (0, 0))
+        self.assertEqual(tuple(result["frame_permutation"]), (0, 1))
+        self.assertEqual(tuple(result["frame_signs"]), (1, 1))
 
     def test_probe_matches_shared_transport_resolver_on_cross_axis_seam(self) -> None:
         profile = swapped_xz_profile_3d()

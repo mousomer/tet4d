@@ -26,6 +26,13 @@ FieldSpec = tuple[str, str, int, int]
 CONFIG_DIR = project_root_path() / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
 STRUCTURE_FILE = CONFIG_DIR / "structure.json"
+_BOARD_DIMENSION_FIELDS = ("width", "height", "depth", "fourth")
+_EXPLORER_BOARD_DIMENSION_FIELDS = (
+    "explorer_width",
+    "explorer_height",
+    "explorer_depth",
+    "explorer_fourth",
+)
 
 
 def _read_json_payload(path: Path) -> dict[str, Any]:
@@ -48,7 +55,7 @@ def _defaults_payload() -> dict[str, Any]:
     )
     max_kick_index = max(0, len(kick_level_names()) - 1)
     for mode_key in MODE_KEYS:
-        kick_index = int(defaults['settings'][mode_key].get('kick_level_index', 0))
+        kick_index = int(defaults["settings"][mode_key].get("kick_level_index", 0))
         if not (0 <= kick_index <= max_kick_index):
             raise RuntimeError(
                 f"defaults.settings.{mode_key}.kick_level_index must be within configured kick levels"
@@ -59,20 +66,40 @@ def _defaults_payload() -> dict[str, Any]:
 @lru_cache(maxsize=1)
 def _structure_payload() -> dict[str, Any]:
     payload = validate_structure_payload(_read_json_payload(STRUCTURE_FILE))
-    kick_labels = payload['settings_option_labels'].get('game_kick_level')
+    kick_labels = payload["settings_option_labels"].get("game_kick_level")
     if kick_labels is None:
         raise RuntimeError(
-            'structure.settings_option_labels must include game_kick_level labels'
+            "structure.settings_option_labels must include game_kick_level labels"
         )
     if len(kick_labels) != len(kick_level_names()):
         raise RuntimeError(
-            'structure.settings_option_labels.game_kick_level must match configured kick levels'
+            "structure.settings_option_labels.game_kick_level must match configured kick levels"
         )
     return payload
 
 
 def default_settings_payload() -> dict[str, Any]:
     return deepcopy(_defaults_payload())
+
+
+def explorer_default_board_dims(dimension: int) -> tuple[int, ...]:
+    dim = int(dimension)
+    if not 2 <= dim <= len(_BOARD_DIMENSION_FIELDS):
+        raise ValueError(f"unsupported explorer dimension: {dimension}")
+    mode_key = mode_key_for_dimension(dim)
+    mode_defaults = _defaults_payload()["settings"][mode_key]
+    dims: list[int] = []
+    for attr_name in _EXPLORER_BOARD_DIMENSION_FIELDS[:dim]:
+        raw_value = mode_defaults.get(attr_name)
+        if isinstance(raw_value, bool) or not isinstance(raw_value, int):
+            raise RuntimeError(
+                f"defaults.settings.{mode_key}.{attr_name} must be a positive integer"
+            )
+        value = int(raw_value)
+        if value <= 0:
+            raise RuntimeError(f"defaults.settings.{mode_key}.{attr_name} must be > 0")
+        dims.append(value)
+    return tuple(dims)
 
 
 def menu_graph() -> dict[str, dict[str, Any]]:

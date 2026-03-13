@@ -252,6 +252,61 @@ class TestTopologyLabMenu(unittest.TestCase):
             )
         )
 
+    def test_dimension_roundtrip_preserves_custom_explorer_play_settings(
+        self,
+    ) -> None:
+        state = topology_lab_menu._initial_topology_lab_state(
+            4,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            initial_explorer_profile=ExplorerTopologyProfile(dimension=4, gluings=()),
+            play_settings=topology_lab_menu.ExplorerPlaygroundSettings(
+                board_dims=(11, 17, 7, 5),
+                piece_set_index=2,
+                speed_level=4,
+                random_mode_index=1,
+                game_seed=1234,
+            ),
+        )
+
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state), (11, 17, 7, 5)
+        )
+        topology_lab_controls_panel._cycle_dimension(state, -1)
+        topology_lab_controls_panel._cycle_dimension(state, 1)
+
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state), (11, 17, 7, 5)
+        )
+
+    def test_f8_resets_current_dimension_play_settings_to_configured_defaults(
+        self,
+    ) -> None:
+        state = topology_lab_menu._initial_topology_lab_state(
+            4,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            initial_explorer_profile=ExplorerTopologyProfile(dimension=4, gluings=()),
+            play_settings=topology_lab_menu.ExplorerPlaygroundSettings(
+                board_dims=(11, 17, 7, 5),
+                piece_set_index=2,
+                speed_level=4,
+                random_mode_index=1,
+                game_seed=1234,
+            ),
+        )
+        state.active_pane = topology_lab_menu.PANE_SCENE
+
+        topology_lab_menu._dispatch_key(state, pygame.K_F8)
+
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state), (8, 8, 8, 8)
+        )
+        self.assertIn("reset to defaults", state.status)
+        topology_lab_controls_panel._cycle_dimension(state, -1)
+        topology_lab_controls_panel._cycle_dimension(state, 1)
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state), (8, 8, 8, 8)
+        )
+
     def test_initial_state_can_boot_directly_into_explorer_probe_mode(self) -> None:
         profile = topology_lab_menu._explorer_presets(self._explorer_state(3))[
             1
@@ -882,6 +937,40 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertEqual(state.highlighted_glue_id, "glue_123")
         self.assertIn("Moved x+", state.canonical_state.probe_state.trace)
+
+    def test_probe_repeated_diagonal_on_sphere_keeps_progress_across_seam(
+        self,
+    ) -> None:
+        cases = (
+            ((8, 8), 4),
+            ((9, 9), 5),
+        )
+
+        for dims, diagonal_pairs in cases:
+            with self.subTest(dims=dims):
+                state = self._explorer_state(2)
+                topology_lab_controls_panel.replace_explorer_profile(
+                    state, sphere_profile_2d()
+                )
+                topology_lab_controls_panel.replace_play_settings(
+                    state,
+                    topology_lab_menu.ExplorerPlaygroundSettings(board_dims=dims),
+                )
+                topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+                state.active_pane = topology_lab_menu.PANE_SCENE
+                topology_lab_controls_panel._reset_probe(state)
+
+                for _ in range(diagonal_pairs):
+                    topology_lab_menu._dispatch_key(state, pygame.K_DOWN)
+                    topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
+
+                self.assertEqual(state.probe_coord, (0, 0))
+                assert state.canonical_state is not None
+                self.assertEqual(state.canonical_state.probe_state.coord, (0, 0))
+
+                topology_lab_menu._dispatch_key(state, pygame.K_DOWN)
+                self.assertEqual(state.probe_coord, (0, 1))
+                self.assertEqual(state.canonical_state.probe_state.coord, (0, 1))
 
     def test_apply_explorer_glue_adds_gluing_to_profile_3d(self) -> None:
         state = self._explorer_state(3)

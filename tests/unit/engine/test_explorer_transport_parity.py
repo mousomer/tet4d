@@ -281,7 +281,6 @@ class TestExplorerTransportParity(unittest.TestCase):
             ),
         )
 
-
     def test_atomic_seam_move_matches_explorer_sandbox_and_gameplay_2d(self) -> None:
         profile = axis_wrap_profile(dimension=2, wrapped_axes=(0,))
         dims = (4, 4)
@@ -289,7 +288,7 @@ class TestExplorerTransportParity(unittest.TestCase):
         resolver = build_explorer_transport_resolver(profile, dims)
         expected = resolver.resolve_piece_step(((3, 1), (3, 2)), step)
 
-        self.assertEqual(expected.kind, "rigid_transform")
+        self.assertEqual(expected.kind, "plain_translation")
         self.assertEqual(tuple(sorted(expected.moved_cells)), ((0, 1), (0, 2)))
 
         sandbox_state = self._sandbox_state(
@@ -311,7 +310,9 @@ class TestExplorerTransportParity(unittest.TestCase):
         gameplay_state = GameState(config=cfg, board=BoardND(dims))
         gameplay_state.board.cells.clear()
         shape = PieceShape2D("pair2", [(0, 0), (0, 1)], color_id=5)
-        gameplay_state.current_piece = ActivePiece2D(shape=shape, pos=(3, 1), rotation=0)
+        gameplay_state.current_piece = ActivePiece2D(
+            shape=shape, pos=(3, 1), rotation=0
+        )
 
         gameplay_state.try_move(1, 0)
 
@@ -331,7 +332,7 @@ class TestExplorerTransportParity(unittest.TestCase):
         resolver = build_explorer_transport_resolver(profile, dims)
         expected = resolver.resolve_piece_step(((3, 1, 1), (3, 2, 1)), step)
 
-        self.assertEqual(expected.kind, "rigid_transform")
+        self.assertEqual(expected.kind, "plain_translation")
         self.assertEqual(tuple(sorted(expected.moved_cells)), ((0, 1, 1), (0, 2, 1)))
 
         sandbox_state = self._sandbox_state(
@@ -356,6 +357,54 @@ class TestExplorerTransportParity(unittest.TestCase):
         gameplay_state.current_piece = ActivePieceND.from_shape(shape, pos=(3, 1, 1))
 
         self.assertTrue(gameplay_state.try_move_axis(step.axis, step.delta))
+        self.assertEqual(
+            tuple(sorted(expected.moved_cells)),
+            tuple(sorted(sandbox_cells(sandbox_state))),
+        )
+        self.assertEqual(
+            tuple(sorted(expected.moved_cells)),
+            tuple(sorted(gameplay_state.current_piece.cells())),
+        )
+
+    def test_torus_chart_split_piece_matches_resolver_sandbox_and_gameplay_rigid_mode(
+        self,
+    ) -> None:
+        profile = axis_wrap_profile(dimension=2, wrapped_axes=(1,))
+        dims = (4, 4)
+        step = MoveStep(axis=1, delta=-1)
+        resolver = build_explorer_transport_resolver(profile, dims)
+        expected = resolver.resolve_piece_step(((0, 0), (0, 1)), step)
+
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertTrue(expected.rigidly_coherent)
+
+        sandbox_state = self._sandbox_state(
+            2,
+            axis_sizes=dims,
+            explorer_profile=profile,
+            origin=(0, 0),
+            local_blocks=((0, 0), (0, 1)),
+        )
+        sandbox_state.launch_settings.rigid_play_mode = "on"
+        sandbox_ok, sandbox_message = move_sandbox_piece(sandbox_state, step.label)
+        self.assertTrue(sandbox_ok, sandbox_message)
+
+        cfg = GameConfig(
+            width=dims[0],
+            height=dims[1],
+            exploration_mode=True,
+            explorer_topology_profile=profile,
+            explorer_rigid_play_enabled=True,
+        )
+        gameplay_state = GameState(config=cfg, board=BoardND(dims))
+        gameplay_state.board.cells.clear()
+        shape = PieceShape2D("pair2", [(0, 0), (0, 1)], color_id=5)
+        gameplay_state.current_piece = ActivePiece2D(
+            shape=shape, pos=(0, 0), rotation=0
+        )
+
+        gameplay_state.try_move(0, -1)
+
         self.assertEqual(
             tuple(sorted(expected.moved_cells)),
             tuple(sorted(sandbox_cells(sandbox_state))),

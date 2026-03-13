@@ -10,6 +10,7 @@ from tet4d.engine.runtime.project_config import (
 from tet4d.engine.runtime.settings_schema import write_json_object
 from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
+    MoveStep,
     axis_name,
     boundary_label,
     movement_steps_for_dimension,
@@ -38,6 +39,80 @@ def recommended_explorer_probe_coord(
     return tuple(max(0, size // 2) for size in normalized_dims)
 
 
+def _identity_probe_frame(dimension: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    return tuple(range(dimension)), tuple(1 for _ in range(dimension))
+
+
+def _normalize_probe_frame(
+    dimension: int,
+    *,
+    permutation: tuple[int, ...] | None,
+    signs: tuple[int, ...] | None,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    default_permutation, default_signs = _identity_probe_frame(dimension)
+    normalized_permutation = (
+        default_permutation
+        if permutation is None
+        else tuple(int(value) for value in permutation)
+    )
+    normalized_signs = (
+        default_signs if signs is None else tuple(int(value) for value in signs)
+    )
+    if len(normalized_permutation) != dimension:
+        normalized_permutation = default_permutation
+    if len(normalized_signs) != dimension:
+        normalized_signs = default_signs
+    if tuple(sorted(normalized_permutation)) != tuple(range(dimension)):
+        normalized_permutation = default_permutation
+    if any(value not in (-1, 1) for value in normalized_signs):
+        normalized_signs = default_signs
+    return normalized_permutation, normalized_signs
+
+
+def _step_in_probe_frame(
+    step: MoveStep,
+    *,
+    permutation: tuple[int, ...],
+    signs: tuple[int, ...],
+) -> MoveStep:
+    axis = int(step.axis)
+    return MoveStep(
+        axis=int(permutation[axis]),
+        delta=int(step.delta) * int(signs[axis]),
+    )
+
+
+def _compose_probe_frame(
+    *,
+    dimension: int,
+    permutation: tuple[int, ...],
+    signs: tuple[int, ...],
+    frame_transform,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    if frame_transform is None or frame_transform.is_identity_linear():
+        return permutation, signs
+    composed_permutation = [0] * dimension
+    composed_signs = [1] * dimension
+    for source_axis, intermediate_axis in enumerate(permutation):
+        target_axis = int(frame_transform.permutation[intermediate_axis])
+        composed_permutation[source_axis] = target_axis
+        composed_signs[source_axis] = (
+            int(signs[source_axis])
+            * int(frame_transform.signs[intermediate_axis])
+        )
+    return tuple(composed_permutation), tuple(composed_signs)
+
+
+def _probe_frame_payload(
+    permutation: tuple[int, ...],
+    signs: tuple[int, ...],
+) -> dict[str, object]:
+    return {
+        'frame_permutation': list(permutation),
+        'frame_signs': list(signs),
+    }
+
+
 def _traversal_payload(step_result: CellStepResult) -> dict[str, object] | None:
     traversal = step_result.traversal
     if traversal is None:
@@ -54,11 +129,23 @@ def explorer_probe_options(
     *,
     dims: tuple[int, ...],
     coord: tuple[int, ...],
+    frame_permutation: tuple[int, ...] | None = None,
+    frame_signs: tuple[int, ...] | None = None,
 ) -> list[dict[str, object]]:
     resolver = build_explorer_transport_resolver(profile, dims)
+    normalized_permutation, normalized_signs = _normalize_probe_frame(
+        profile.dimension,
+        permutation=frame_permutation,
+        signs=frame_signs,
+    )
     options: list[dict[str, object]] = []
     for step in movement_steps_for_dimension(profile.dimension):
-        step_result = resolver.resolve_cell_step(coord, step)
+        world_step = _step_in_probe_frame(
+            step,
+            permutation=normalized_permutation,
+            signs=normalized_signs,
+        )
+        step_result = resolver.resolve_cell_step(coord, world_step)
         options.append(
             {
                 "step": step.label,
@@ -78,7 +165,14 @@ def advance_explorer_probe(
     dims: tuple[int, ...],
     coord: tuple[int, ...],
     step_label: str,
+    frame_permutation: tuple[int, ...] | None = None,
+    frame_signs: tuple[int, ...] | None = None,
 ) -> tuple[tuple[int, ...], dict[str, object]]:
+    normalized_permutation, normalized_signs = _normalize_probe_frame(
+        profile.dimension,
+        permutation=frame_permutation,
+        signs=frame_signs,
+    )
     step = next(
         (
             item
@@ -90,9 +184,20 @@ def advance_explorer_probe(
     if step is None:
         raise ValueError(f"unknown probe step: {step_label}")
 
+    world_step = _step_in_probe_frame(
+        step,
+        permutation=normalized_permutation,
+        signs=normalized_signs,
+    )
     step_result = build_explorer_transport_resolver(profile, dims).resolve_cell_step(
         coord,
-        step,
+        world_step,
+    )
+    next_permutation, next_signs = _compose_probe_frame(
+        dimension=profile.dimension,
+        permutation=normalized_permutation,
+        signs=normalized_signs,
+        frame_transform=step_result.frame_transform,
     )
     if step_result.target is None:
         return coord, {
@@ -100,6 +205,7 @@ def advance_explorer_probe(
             "blocked": True,
             "message": f"{step_label} blocked at {list(coord)}",
             "traversal": None,
+            **_probe_frame_payload(next_permutation, next_signs),
         }
     if step_result.traversal is None:
         return step_result.target, {
@@ -107,6 +213,7 @@ def advance_explorer_probe(
             "blocked": False,
             "message": f"{step_label}: {list(coord)} -> {list(step_result.target)}",
             "traversal": None,
+            **_probe_frame_payload(next_permutation, next_signs),
         }
     traversal = step_result.traversal
     return step_result.target, {
@@ -117,6 +224,7 @@ def advance_explorer_probe(
             f"{boundary_label(traversal.target_boundary)} to {list(step_result.target)}"
         ),
         "traversal": _traversal_payload(step_result),
+        **_probe_frame_payload(next_permutation, next_signs),
     }
 
 

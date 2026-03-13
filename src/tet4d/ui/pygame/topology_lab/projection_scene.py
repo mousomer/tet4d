@@ -381,6 +381,8 @@ def _piece_result_style(
     if result.kind == BLOCKED_MOVE:
         return _INVALID, "blocked"
     if result.kind == CELLWISE_DEFORMATION:
+        if result.rigidly_coherent:
+            return _SELECTED, "rigid/chart-split"
         return _DEFORMATION, "cellwise"
     if result.kind == RIGID_TRANSFORM:
         return _SELECTED, "rigid"

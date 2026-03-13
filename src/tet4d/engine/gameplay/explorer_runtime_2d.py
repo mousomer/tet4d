@@ -7,6 +7,12 @@ from tet4d.engine.core.rules.piece_placement import (
     build_candidate_piece_placement,
     validate_candidate_piece_placement,
 )
+from tet4d.engine.gameplay.explorer_movement_policy import (
+    CELLWISE_FREE,
+    ExplorerMovementPolicy,
+    explorer_movement_policy_from_rigid_play_enabled,
+    normalize_explorer_movement_policy,
+)
 from tet4d.engine.gameplay.explorer_piece_transport import CELLWISE_DEFORMATION
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.topology_explorer import MoveStep
@@ -55,23 +61,38 @@ def _piece_from_exact_cells(
     return ActivePiece2D(shape=shape, pos=origin, rotation=0)
 
 
+def _resolved_movement_policy(
+    *,
+    movement_policy: ExplorerMovementPolicy | None,
+    rigid_play_enabled: bool | None,
+) -> ExplorerMovementPolicy:
+    if movement_policy is not None:
+        return normalize_explorer_movement_policy(movement_policy)
+    return explorer_movement_policy_from_rigid_play_enabled(rigid_play_enabled)
+
+
 def move_piece_via_explorer_glue_2d(
     piece: ActivePiece2D,
     *,
     transport: ExplorerTransportResolver,
     dx: int,
     dy: int,
-    rigid_play_enabled: bool = True,
+    movement_policy: ExplorerMovementPolicy | None = None,
+    rigid_play_enabled: bool | None = True,
 ) -> ActivePiece2D | None:
     if (dx, dy) not in {(-1, 0), (1, 0), (0, -1), (0, 1)}:
         return None
     axis = 0 if dx != 0 else 1
     delta = dx if dx != 0 else dy
     step = MoveStep(axis=axis, delta=delta)
+    policy = _resolved_movement_policy(
+        movement_policy=movement_policy,
+        rigid_play_enabled=rigid_play_enabled,
+    )
     step_result = transport.resolve_piece_step(piece.cells(), step)
     if step_result.kind == BLOCKED_MOVE:
         return None
-    if not rigid_play_enabled:
+    if policy == CELLWISE_FREE:
         assert step_result.moved_cells is not None
         use_exact_cells = step_result.kind == CELLWISE_DEFORMATION or any(
             cell_step.traversal is not None for cell_step in step_result.cell_steps
@@ -80,9 +101,11 @@ def move_piece_via_explorer_glue_2d(
             return _piece_from_exact_cells(piece, step_result.moved_cells)
         assert step_result.frame_transform is not None
         return _apply_frame_transform(piece, step_result.frame_transform)
-    if step_result.kind == CELLWISE_DEFORMATION:
+    if step_result.kind == CELLWISE_DEFORMATION and not step_result.rigidly_coherent:
         return None
-    assert step_result.frame_transform is not None
+    if step_result.frame_transform is None:
+        assert step_result.moved_cells is not None
+        return _piece_from_exact_cells(piece, step_result.moved_cells)
     return _apply_frame_transform(piece, step_result.frame_transform)
 
 

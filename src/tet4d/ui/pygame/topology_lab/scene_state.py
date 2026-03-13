@@ -100,6 +100,9 @@ class TopologyPlaygroundState:
     explorer_profile: ExplorerTopologyProfile | None = None
     explorer_draft: ExplorerGlueDraft | None = None
     play_settings: ExplorerPlaygroundSettings | None = None
+    play_settings_by_dimension: dict[int, ExplorerPlaygroundSettings] = field(
+        default_factory=dict
+    )
     status: str = ""
     status_error: bool = False
     running: bool = True
@@ -108,6 +111,8 @@ class TopologyPlaygroundState:
     probe_coord: tuple[int, ...] | None = None
     probe_trace: list[str] | None = None
     probe_path: list[tuple[int, ...]] | None = None
+    probe_frame_permutation: tuple[int, ...] | None = None
+    probe_frame_signs: tuple[int, ...] | None = None
     active_tool: str = TOOL_CREATE
     active_pane: str = PANE_CONTROLS
     hovered_boundary_index: int | None = None
@@ -138,6 +143,35 @@ class TopologyPlaygroundState:
 TopologyLabState = TopologyPlaygroundState
 
 _UNSET = object()
+
+
+def _identity_probe_frame(dimension: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    return tuple(range(dimension)), tuple(1 for _ in range(dimension))
+
+
+def _normalize_probe_frame_value(
+    dimension: int,
+    permutation: tuple[int, ...] | None,
+    signs: tuple[int, ...] | None,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    default_permutation, default_signs = _identity_probe_frame(dimension)
+    normalized_permutation = (
+        default_permutation
+        if permutation is None
+        else tuple(int(value) for value in permutation)
+    )
+    normalized_signs = (
+        default_signs if signs is None else tuple(int(value) for value in signs)
+    )
+    if len(normalized_permutation) != dimension:
+        normalized_permutation = default_permutation
+    if len(normalized_signs) != dimension:
+        normalized_signs = default_signs
+    if tuple(sorted(normalized_permutation)) != tuple(range(dimension)):
+        normalized_permutation = default_permutation
+    if any(value not in (-1, 1) for value in normalized_signs):
+        normalized_signs = default_signs
+    return normalized_permutation, normalized_signs
 
 
 def _boundary_index(boundary: BoundaryRef | None) -> int | None:
@@ -275,11 +309,18 @@ def _runtime_probe_state_from_ui(
         if len(entry) == state.dimension
     )
     trace = tuple(str(entry) for entry in (state.probe_trace or ()))
+    frame_permutation, frame_signs = _normalize_probe_frame_value(
+        state.dimension,
+        state.probe_frame_permutation,
+        state.probe_frame_signs,
+    )
     return RuntimeTopologyPlaygroundProbeState(
         coord=coord,
         path=path,
         trace=trace,
         highlighted_gluing=state.highlighted_glue_id,
+        frame_permutation=frame_permutation,
+        frame_signs=frame_signs,
     )
 
 
@@ -362,6 +403,17 @@ def _sandbox_visible_in_shell(
     )
 
 
+def _remember_play_settings(
+    state: TopologyPlaygroundState,
+    settings: ExplorerPlaygroundSettings,
+    *,
+    dimension: int | None = None,
+) -> None:
+    target_dimension = state.dimension if dimension is None else int(dimension)
+    state.play_settings = settings
+    state.play_settings_by_dimension[target_dimension] = settings
+
+
 def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     runtime_state = state.canonical_state
     if runtime_state is None:
@@ -370,7 +422,7 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     # explorer flow should treat the runtime state as authoritative.
     state.explorer_profile = runtime_state.explorer_profile
     state.explorer_draft = _ui_draft_from_runtime(runtime_state)
-    state.play_settings = ExplorerPlaygroundSettings(
+    settings = ExplorerPlaygroundSettings(
         board_dims=tuple(int(value) for value in runtime_state.axis_sizes),
         piece_set_index=int(runtime_state.launch_settings.piece_set_index),
         speed_level=int(runtime_state.launch_settings.speed_level),
@@ -378,6 +430,7 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
         game_seed=int(runtime_state.launch_settings.game_seed),
         rigid_play_mode=str(runtime_state.launch_settings.rigid_play_mode),
     )
+    _remember_play_settings(state, settings, dimension=runtime_state.dimension)
     probe_unavailable = any(
         str(entry).startswith("Probe unavailable:")
         for entry in (state.probe_trace or ())
@@ -386,6 +439,8 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
         state.probe_coord = runtime_state.probe_state.coord
         state.probe_trace = list(runtime_state.probe_state.trace)
         state.probe_path = list(runtime_state.probe_state.path)
+        state.probe_frame_permutation = runtime_state.probe_state.frame_permutation
+        state.probe_frame_signs = runtime_state.probe_state.frame_signs
         state.highlighted_glue_id = runtime_state.probe_state.highlighted_gluing
     sandbox_state = runtime_state.sandbox_piece_state
     state.sandbox = (
@@ -508,11 +563,11 @@ def replace_play_settings(
     settings: ExplorerPlaygroundSettings,
 ) -> None:
     if not uses_general_explorer_editor(state):
-        state.play_settings = settings
+        _remember_play_settings(state, settings)
         return
     runtime_state = state.canonical_state
     if runtime_state is None or runtime_state.dimension != state.dimension:
-        state.play_settings = settings
+        _remember_play_settings(state, settings)
         if runtime_state is None:
             sync_canonical_playground_state(state)
         return
@@ -747,6 +802,29 @@ def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
     return list(state.probe_path or ())
 
 
+def current_probe_frame(
+    state: TopologyPlaygroundState,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    if _probe_unavailable_locally(state):
+        return _normalize_probe_frame_value(
+            state.dimension,
+            state.probe_frame_permutation,
+            state.probe_frame_signs,
+        )
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        return _normalize_probe_frame_value(
+            state.dimension,
+            runtime_state.probe_state.frame_permutation,
+            runtime_state.probe_state.frame_signs,
+        )
+    return _normalize_probe_frame_value(
+        state.dimension,
+        state.probe_frame_permutation,
+        state.probe_frame_signs,
+    )
+
+
 def replace_probe_state(
     state: TopologyPlaygroundState,
     *,
@@ -754,12 +832,20 @@ def replace_probe_state(
     trace: list[str] | tuple[str, ...] | None,
     path: list[tuple[int, ...]] | tuple[tuple[int, ...], ...] | None,
     highlighted_glue_id: str | None,
+    frame_permutation: tuple[int, ...] | object = _UNSET,
+    frame_signs: tuple[int, ...] | object = _UNSET,
 ) -> None:
     normalized_coord = _normalize_probe_coord_value(state.dimension, coord)
     normalized_trace = _normalize_probe_trace_value(trace)
     normalized_path = _normalize_probe_path_value(state.dimension, path)
     normalized_highlight = (
         None if highlighted_glue_id is None else str(highlighted_glue_id)
+    )
+    current_permutation, current_signs = current_probe_frame(state)
+    normalized_permutation, normalized_signs = _normalize_probe_frame_value(
+        state.dimension,
+        current_permutation if frame_permutation is _UNSET else frame_permutation,
+        current_signs if frame_signs is _UNSET else frame_signs,
     )
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None and not any(
@@ -772,12 +858,16 @@ def replace_probe_state(
                 path=normalized_path,
                 trace=normalized_trace,
                 highlighted_gluing=normalized_highlight,
+                frame_permutation=normalized_permutation,
+                frame_signs=normalized_signs,
             ),
         )
         return
     state.probe_coord = normalized_coord
     state.probe_trace = list(normalized_trace)
     state.probe_path = list(normalized_path)
+    state.probe_frame_permutation = normalized_permutation
+    state.probe_frame_signs = normalized_signs
     state.highlighted_glue_id = normalized_highlight
     if uses_general_explorer_editor(state):
         sync_canonical_playground_state(state)
@@ -806,12 +896,15 @@ def select_projection_coord(
     dims = playground_dims_for_state(state)
     if any(value < 0 or value >= dims[index] for index, value in enumerate(normalized)):
         return None
+    identity_permutation, identity_signs = _identity_probe_frame(state.dimension)
     replace_probe_state(
         state,
         coord=normalized,
         trace=(),
         path=(normalized,),
         highlighted_glue_id=current_highlighted_glue_id(state),
+        frame_permutation=identity_permutation,
+        frame_signs=identity_signs,
     )
     return normalized
 
@@ -849,6 +942,13 @@ def ensure_probe_state(state: TopologyPlaygroundState) -> None:
         state.probe_path = [state.probe_coord]
     elif state.probe_path[-1] != state.probe_coord:
         state.probe_path = [state.probe_coord]
+    state.probe_frame_permutation, state.probe_frame_signs = (
+        _normalize_probe_frame_value(
+            state.dimension,
+            state.probe_frame_permutation,
+            state.probe_frame_signs,
+        )
+    )
     if canonical_playground_state(state) is not None:
         sync_canonical_playground_state(state)
 
@@ -858,6 +958,9 @@ def reset_probe_state(state: TopologyPlaygroundState) -> None:
     state.probe_coord = tuple(max(0, size // 2) for size in dims)
     state.probe_trace = []
     state.probe_path = [state.probe_coord]
+    state.probe_frame_permutation, state.probe_frame_signs = _identity_probe_frame(
+        state.dimension
+    )
     state.highlighted_glue_id = None
     if state.canonical_state is not None:
         sync_canonical_playground_state(state)
@@ -925,6 +1028,7 @@ __all__ = [
     "current_highlighted_glue_id",
     "current_play_settings",
     "current_probe_coord",
+    "current_probe_frame",
     "current_probe_path",
     "current_probe_trace",
     "current_selected_boundary_index",

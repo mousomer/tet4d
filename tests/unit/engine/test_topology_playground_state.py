@@ -106,6 +106,8 @@ class TestTopologyPlaygroundState(unittest.TestCase):
                 path=((0, 2, 3), (1, 2, 3)),
                 trace=("x+: [0, 2, 3] -> [1, 2, 3]",),
                 highlighted_gluing=glue.glue_id,
+                frame_permutation=(2, 1, 0),
+                frame_signs=(1, -1, 1),
                 last_step="x+",
             ),
             sandbox_piece_state=TopologyPlaygroundSandboxPieceState(
@@ -161,6 +163,8 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertEqual(state.selected_gluing, "glue_001")
         self.assertEqual(state.active_tool, TOOL_PROBE)
         self.assertEqual(state.probe_state.coord, (1, 2, 3))
+        self.assertEqual(state.probe_state.frame_permutation, (2, 1, 0))
+        self.assertEqual(state.probe_state.frame_signs, (1, -1, 1))
         self.assertEqual(state.sandbox_piece_state.origin, (3, 5, 2))
         self.assertEqual(state.transport_policy.owner, TRANSPORT_OWNER_EXPLORER)
         self.assertEqual(state.gravity_mode.name, GRAVITY_MODE_EXPLORATION)

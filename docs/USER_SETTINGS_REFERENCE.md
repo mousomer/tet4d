@@ -37,6 +37,8 @@ Score analyzer logging toggle and telemetry output settings.
 Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
 - `settings.2d.width`: `10`; integer; min: 4
 - `settings.2d.height`: `20`; integer; min: 8
+- `settings.2d.explorer_width`: `8`
+- `settings.2d.explorer_height`: `8`
 - `settings.2d.piece_set_index`: `0`; integer; min: 0; default option: Classic Tetrominoes; choices: 0=Classic Tetrominoes, 1=Random Cells, 2=Debug Rectangles
 - `settings.2d.challenge_layers`: `0`; integer; min: 0
 - `settings.2d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
@@ -68,6 +70,9 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.3d.width`: `6`; integer; min: 4
 - `settings.3d.height`: `18`; integer; min: 8
 - `settings.3d.depth`: `6`; integer; min: 2
+- `settings.3d.explorer_width`: `8`
+- `settings.3d.explorer_height`: `8`
+- `settings.3d.explorer_depth`: `8`
 - `settings.3d.piece_set_index`: `0`; integer; min: 0; default option: True 3D; choices: 0=True 3D, 1=Embedded 2D, 2=Random Cells 3D, 3=Debug Rectangles 3D
 - `settings.3d.challenge_layers`: `0`; integer; min: 0
 - `settings.3d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
@@ -99,6 +104,10 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.4d.height`: `20`; integer; min: 8
 - `settings.4d.depth`: `6`; integer; min: 2
 - `settings.4d.fourth`: `4`; integer; min: 1
+- `settings.4d.explorer_width`: `8`
+- `settings.4d.explorer_height`: `8`
+- `settings.4d.explorer_depth`: `8`
+- `settings.4d.explorer_fourth`: `8`
 - `settings.4d.piece_set_index`: `0`; integer; min: 0; default option: True 4D (5-cell); choices: 0=True 4D (5-cell), 1=True 4D (6-cell), 2=True 4D (7-cell), 3=True 4D (8-cell), 4=Embedded 3D, 5=Embedded 2D, 6=Random Cells 4D, 7=Debug Rectangles 4D
 - `settings.4d.challenge_layers`: `0`; integer; min: 0
 - `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On

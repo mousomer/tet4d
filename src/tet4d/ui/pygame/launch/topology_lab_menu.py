@@ -71,6 +71,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_explorer_profile as _current_explorer_profile,
     current_highlighted_glue_id as _current_highlighted_glue_id,
     current_probe_coord as _current_probe_coord,
+    current_probe_frame as _current_probe_frame,
     current_probe_path as _current_probe_path,
     current_probe_trace as _current_probe_trace,
     current_selected_boundary_index as _current_selected_boundary_index,
@@ -481,6 +482,7 @@ def _draw_probe_controls_if_needed(
         "Sandbox piece moves" if state.active_tool == TOOL_SANDBOX else "Probe moves"
     )
     active_color = (78, 116, 92) if state.active_tool == TOOL_SANDBOX else (56, 92, 130)
+    frame_permutation, frame_signs = _current_probe_frame(state)
     return draw_probe_controls(
         screen,
         fonts,
@@ -490,6 +492,8 @@ def _draw_probe_controls_if_needed(
             dims=_board_dims_for_state(state),
             coord=_current_probe_coord(state)
             or tuple(0 for _ in range(state.dimension)),
+            frame_permutation=frame_permutation,
+            frame_signs=frame_signs,
         ),
         title=title,
         active_color=active_color,
@@ -945,6 +949,7 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
         "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
         "Graphical explorer is the primary editor; Analysis View is optional secondary research and diagnostics.",
         f"Pane: {pane_label}   Tab/Shift+Tab switch pane   N/I/G/T/P/B choose tool   Enter plays from Play Mode",
+        "F8 resets the current dimension's Explorer play settings to the configured defaults",
         *move_lines,
     ]
     if _controls_pane_active(state):

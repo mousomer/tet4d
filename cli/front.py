@@ -33,6 +33,7 @@ from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
+    mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
@@ -49,7 +50,6 @@ from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import (
     branding_copy,
-    default_settings_payload,
     launcher_menu_id,
     launcher_route_actions,
     launcher_subtitles,
@@ -557,22 +557,9 @@ def _menu_action_topology_lab(
 
 
 def _mode_settings_snapshot(mode: str) -> SimpleNamespace:
-    defaults = default_settings_payload()
-    merged: dict[str, object] = {}
-    if isinstance(defaults, dict):
-        settings_defaults = defaults.get("settings")
-        if isinstance(settings_defaults, dict):
-            mode_defaults = settings_defaults.get(mode)
-            if isinstance(mode_defaults, dict):
-                merged.update(mode_defaults)
-    payload = load_menu_payload()
-    if isinstance(payload, dict):
-        payload_settings = payload.get("settings")
-        if isinstance(payload_settings, dict):
-            mode_payload = payload_settings.get(mode)
-            if isinstance(mode_payload, dict):
-                merged.update(mode_payload)
-    return SimpleNamespace(**merged)
+    if mode not in {"2d", "3d", "4d"}:
+        mode = "2d"
+    return mode_settings_snapshot_for_dimension(int(mode[0]))
 
 
 def _menu_action_play_last_custom_topology(
@@ -625,10 +612,15 @@ def _menu_action_play_last_custom_topology(
         return True
 
     state.last_mode = mode
-    session.display_settings = capture_windowed_display_settings(session.display_settings)
+    session.display_settings = capture_windowed_display_settings(
+        session.display_settings
+    )
     session.screen = open_display(session.display_settings)
     _persist_session_status(state, session)
-    state.status = launch.startup_notice or f"Returned from {launch.dimension}D custom topology play"
+    state.status = (
+        launch.startup_notice
+        or f"Returned from {launch.dimension}D custom topology play"
+    )
     state.status_error = False
     return False
 
@@ -682,19 +674,26 @@ def _build_action_registry(
         "bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd)
     )
     registry.register(
-        "topology_lab", lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d)
+        "topology_lab",
+        lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d),
     )
     registry.register(
         "tutorial_2d",
-        lambda: _menu_action_tutorial_dimension("2d", state, session, fonts_nd, fonts_2d),
+        lambda: _menu_action_tutorial_dimension(
+            "2d", state, session, fonts_nd, fonts_2d
+        ),
     )
     registry.register(
         "tutorial_3d",
-        lambda: _menu_action_tutorial_dimension("3d", state, session, fonts_nd, fonts_2d),
+        lambda: _menu_action_tutorial_dimension(
+            "3d", state, session, fonts_nd, fonts_2d
+        ),
     )
     registry.register(
         "tutorial_4d",
-        lambda: _menu_action_tutorial_dimension("4d", state, session, fonts_nd, fonts_2d),
+        lambda: _menu_action_tutorial_dimension(
+            "4d", state, session, fonts_nd, fonts_2d
+        ),
     )
     registry.register("quit", lambda: _menu_action_quit(state, session))
     return registry

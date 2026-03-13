@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from tet4d.engine.topology_explorer import (
+    CELLWISE_DEFORMATION,
     MoveStep,
     RIGID_TRANSFORM,
     build_explorer_transport_resolver,
@@ -223,6 +224,21 @@ class TestExplorerTransportResolver(unittest.TestCase):
                     reverse.traversal.target_boundary,
                     forward.traversal.source_boundary,
                 )
+
+    def test_torus_chart_split_piece_step_stays_rigidly_coherent(self) -> None:
+        resolver = build_explorer_transport_resolver(
+            axis_wrap_profile(dimension=2, wrapped_axes=(1,)),
+            (4, 4),
+        )
+
+        result = resolver.resolve_piece_step(
+            ((0, 0), (0, 1)),
+            MoveStep(axis=1, delta=-1),
+        )
+
+        self.assertEqual(result.kind, CELLWISE_DEFORMATION)
+        self.assertTrue(result.rigidly_coherent)
+        self.assertEqual(result.moved_cells, ((0, 3), (0, 0)))
 
     def test_projective_pair_can_move_rigidly_when_all_cells_cross_same_seam(
         self,

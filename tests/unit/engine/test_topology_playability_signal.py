@@ -27,6 +27,7 @@ from tet4d.engine.runtime.topology_playground_state import (
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
     projective_plane_profile_2d,
     sphere_profile_2d,
 )
@@ -76,6 +77,25 @@ class TestTopologyPlayabilitySignal(unittest.TestCase):
             analysis.summary, "Valid. Cellwise explorable. Rigid-playable."
         )
         self.assertEqual(analysis.movement_summary.component_count, 1)
+
+    def test_torus_chart_split_piece_stays_rigid_playable(self) -> None:
+        state = self._state(
+            2,
+            axis_sizes=(4, 4),
+            explorer_profile=axis_wrap_profile(dimension=2, wrapped_axes=(1,)),
+        )
+        preview = compile_explorer_topology_preview(
+            state.explorer_profile,
+            dims=state.axis_sizes,
+            source="playability_signal_test",
+        )
+
+        analysis = derive_topology_playability_analysis(state, preview=preview)
+
+        self.assertEqual(analysis.status, PLAYABILITY_STATUS_PLAYABLE)
+        self.assertEqual(analysis.validity, TOPOLOGY_VALIDITY_VALID)
+        self.assertEqual(analysis.explorer_usability, EXPLORER_USABILITY_CELLWISE)
+        self.assertEqual(analysis.rigid_playability, RIGID_PLAYABILITY_PLAYABLE)
 
     def test_projective_topology_is_valid_explorable_but_not_rigid_playable(
         self,

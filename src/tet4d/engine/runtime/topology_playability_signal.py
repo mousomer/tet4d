@@ -106,7 +106,7 @@ def _first_rigid_transport_failure(
                     continue
                 source_cells = (coord, neighbor)
                 outcome = resolver.resolve_piece_step(source_cells, step)
-                if outcome.kind != CELLWISE_DEFORMATION:
+                if outcome.kind != CELLWISE_DEFORMATION or outcome.rigidly_coherent:
                     continue
                 if outcome.moved_cells is None or len(outcome.moved_cells) != 2:
                     continue

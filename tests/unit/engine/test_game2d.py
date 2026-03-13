@@ -414,6 +414,34 @@ class TestGame2D(unittest.TestCase):
             tuple(sorted(expected.moved_cells)),
         )
 
+    def test_torus_chart_split_wrap_is_allowed_in_rigid_mode(self):
+        cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(1,)),
+            explorer_rigid_play_enabled=True,
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("domino", [(0, 0), (0, 1)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=shape, pos=(0, 0), rotation=0)
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=1, delta=-1),
+        )
+
+        self.assertTrue(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertTrue(expected.rigidly_coherent)
+        state.try_move(0, -1)
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
     def test_repeated_translation_contract_matches_main_and_explorer_2d(self):
         cases = (
             (
@@ -519,7 +547,6 @@ class TestGame2D(unittest.TestCase):
 
         self.assertEqual(state.current_piece.rotation, before_rotation)
         self.assertEqual(tuple(sorted(state.current_piece.cells())), before_cells)
-
 
     def test_atomic_move_ignores_current_piece_source_cells(self):
         state = self.make_empty_state(width=5, height=5)

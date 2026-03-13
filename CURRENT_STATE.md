@@ -33,15 +33,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 168` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 170` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.89` (`low`)
+- `tech_debt.score = 2.90` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.81`
+1. `delivery_size_pressure = 1.83`
 2. `code_balance = 1.07`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -110,6 +110,7 @@ Dominant remaining pressure:
 - Stage 7 is now live: the graphical explorer is the primary editor, while the former line+dots row/panel surface is explicitly demoted to `Analysis View` as a secondary view.
 - Projection-first visualization follow-up (2026-03-13): for `3D` and `4D`, the Explorer Playground primary scene now uses synchronized 2D coordinate-plane projections (`xy/xz/yz` in `3D`; `xy/xz/xw/yz/yw/zw` in `4D`) with explicit hidden-coordinate slice labels and cross-panel cell selection, replacing the older free-camera shell sketches as the default user-facing inspector/sandbox view.
 - Compact explorer-board defaults follow-up (2026-03-13): `build_explorer_playground_settings(...)` now starts untouched explorer launches on `8`-bounded board sizes in `2D/3D/4D`, keeping initial topology-lab boards under `9` on every axis while still preserving explicitly user-chosen board dimensions from launcher/setup flows.
+- Semantics-correctness stabilization follow-up (2026-03-13): explorer/sandbox/gameplay now share one explicit `CELLWISE_FREE` vs `RIGID` movement-policy split on the active transport paths, the shared resolver distinguishes boundary point-maps from piece-frame transport, chart-split torus wraps remain rigidly coherent instead of being mislabeled as non-rigid, and the ND legality-preview/input path now uses the same policy-aware whole-piece transport semantics as live gameplay.
 - The `Analysis View` pane now limits itself to board/preset settings, save/export, experiment-pack actions, and read-only seam context; row-based source/target/tangent/apply/remove controls no longer act as a parallel editor for the migrated explorer path.
 - Menu ambiguity cleanup pass 1 is now live on that migrated path: `Explorer Preset` in `Analysis View` is the only visible preset selector, the transform editor shows the active preset as a read-only display, `Save`/`Export`/`Experiments`/`Back` no longer duplicate in the workspace action bar, `Play Mode` replaces the misleading play-toggle label, analysis seam-context rows are non-selectable status displays, the `Normal Game` branch is labeled as legacy compatibility, and the footer movement grid now identifies `Probe moves` versus `Sandbox piece moves`.
 - Legacy-consumer retirement follow-up (2026-03-12): the migrated probe/highlight path now writes canonical playground probe state through `src/tet4d/ui/pygame/topology_lab/scene_state.py` helpers, `src/tet4d/ui/pygame/topology_lab/controls_panel.py` delegates normal-mode rows and resolved-profile export to `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`, and the unused `run_topology_lab_menu(...)` alias has been removed after caller audit found no remaining `src/` callers.
@@ -259,18 +260,18 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `2618` real LOC
-2. `scripts/arch_metrics.py`: `1869` real LOC
-3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1839` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `2696` real LOC
+2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1894` real LOC
+3. `scripts/arch_metrics.py`: `1869` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1248` real LOC
+5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1253` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
-7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1013` real LOC
-8. `tools/governance/generate_configuration_reference.py`: `974` real LOC
+7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1015` real LOC
+8. `tools/governance/generate_configuration_reference.py`: `978` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 782/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 781/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

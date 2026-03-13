@@ -90,6 +90,7 @@ class DirectedBoundarySeam:
     entry_step: MoveStep
     seam_transform: BoundaryTransform
     frame_transform: ExplorerTransportFrameTransform
+    piece_frame_transform: ExplorerTransportFrameTransform
     boundary_coord_map: tuple[tuple[Coord, Coord], ...]
     _target_lookup: dict[Coord, Coord] = field(repr=False, compare=False)
 
@@ -108,6 +109,8 @@ class DirectedBoundarySeam:
             raise ValueError("directed seam boundaries must share a dimension")
         if len(self.frame_transform.translation) != dimension:
             raise ValueError("directed seam frame transform dimension mismatch")
+        if len(self.piece_frame_transform.translation) != dimension:
+            raise ValueError("directed seam piece-frame transform dimension mismatch")
         lookup: dict[Coord, Coord] = {}
         for source_coord, target_coord in mapping:
             if len(source_coord) != dimension or len(target_coord) != dimension:
@@ -137,6 +140,7 @@ class CellStepResult:
     target: Coord | None
     traversal: BoundaryTraversal | None
     frame_transform: ExplorerTransportFrameTransform | None
+    piece_frame_transform: ExplorerTransportFrameTransform | None
 
     @property
     def blocked(self) -> bool:
@@ -151,6 +155,7 @@ class PieceStepResult:
     moved_cells: tuple[Coord, ...] | None = None
     frame_transform: ExplorerTransportFrameTransform | None = None
     cell_steps: tuple[CellStepResult, ...] = ()
+    rigidly_coherent: bool = False
 
     def __post_init__(self) -> None:
         source_cells = tuple(
@@ -179,19 +184,23 @@ class PieceStepResult:
                 raise ValueError(
                     "blocked piece transport must not include moved cells or a frame transform"
                 )
+            rigidly_coherent = False
         elif self.kind == CELLWISE_DEFORMATION:
             if moved_cells is None or self.frame_transform is not None:
                 raise ValueError(
                     "cellwise deformation requires moved cells and no frame transform"
                 )
+            rigidly_coherent = bool(self.rigidly_coherent)
         else:
             if moved_cells is None or self.frame_transform is None:
                 raise ValueError(
                     "rigid or translated piece transport requires moved cells and a frame transform"
                 )
+            rigidly_coherent = True
         object.__setattr__(self, "source_cells", source_cells)
         object.__setattr__(self, "moved_cells", moved_cells)
         object.__setattr__(self, "cell_steps", cell_steps)
+        object.__setattr__(self, "rigidly_coherent", rigidly_coherent)
 
 
 def _identity_frame_transform(
@@ -218,6 +227,7 @@ def _lift_boundary_transform(
     source_boundary: BoundaryRef,
     target_boundary: BoundaryRef,
     seam_transform: BoundaryTransform,
+    normal_sign: int,
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
     permutation = [0] * int(dimension)
     signs = [1] * int(dimension)
@@ -231,8 +241,23 @@ def _lift_boundary_transform(
         signs[source_axis] = seam_transform.signs[source_index]
 
     permutation[source_boundary.axis] = target_boundary.axis
-    signs[source_boundary.axis] = -1
+    signs[source_boundary.axis] = int(normal_sign)
     return tuple(permutation), tuple(signs)
+
+
+def _piece_frame_normal_sign(
+    source_boundary: BoundaryRef,
+    target_boundary: BoundaryRef,
+) -> int:
+    exit_step = _exit_step_for_boundary(source_boundary)
+    entry_step = _target_inward_step(target_boundary)
+    return 1 if int(exit_step.delta) == int(entry_step.delta) else -1
+
+
+def _linear_signature(
+    frame_transform: ExplorerTransportFrameTransform,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    return frame_transform.permutation, frame_transform.signs
 
 
 def _coerce_cells(cells: Iterable[Sequence[int]]) -> tuple[Coord, ...]:
@@ -290,6 +315,7 @@ def _frame_transform_for_boundary_mapping(
     target_boundary: BoundaryRef,
     seam_transform: BoundaryTransform,
     boundary_coord_map: tuple[tuple[Coord, Coord], ...],
+    normal_sign: int,
 ) -> ExplorerTransportFrameTransform:
     dimension = source_boundary.dimension
     permutation, signs = _lift_boundary_transform(
@@ -297,6 +323,7 @@ def _frame_transform_for_boundary_mapping(
         source_boundary=source_boundary,
         target_boundary=target_boundary,
         seam_transform=seam_transform,
+        normal_sign=normal_sign,
     )
     linear = ExplorerTransportFrameTransform(
         permutation=permutation,
@@ -355,6 +382,14 @@ def _materialize_directed_boundary_seam(
             target_boundary=target_boundary,
             seam_transform=seam_transform,
             boundary_coord_map=boundary_coord_map,
+            normal_sign=-1,
+        ),
+        piece_frame_transform=_frame_transform_for_boundary_mapping(
+            source_boundary=source_boundary,
+            target_boundary=target_boundary,
+            seam_transform=seam_transform,
+            boundary_coord_map=boundary_coord_map,
+            normal_sign=_piece_frame_normal_sign(source_boundary, target_boundary),
         ),
         boundary_coord_map=boundary_coord_map,
         _target_lookup={},
@@ -448,6 +483,10 @@ class ExplorerTransportResolver:
                     len(self.dims),
                     translation=_translation_for_step(len(self.dims), step),
                 ),
+                piece_frame_transform=_identity_frame_transform(
+                    len(self.dims),
+                    translation=_translation_for_step(len(self.dims), step),
+                ),
             )
 
         source_boundary = _boundary_for_exit(normalized_coord, step, self.dims)
@@ -458,6 +497,7 @@ class ExplorerTransportResolver:
                 target=None,
                 traversal=None,
                 frame_transform=None,
+                piece_frame_transform=None,
             )
 
         seam = self._seam_lookup.get(source_boundary)
@@ -468,6 +508,7 @@ class ExplorerTransportResolver:
                 target=None,
                 traversal=None,
                 frame_transform=None,
+                piece_frame_transform=None,
             )
 
         target_coord = seam.target_for_source_coord(normalized_coord)
@@ -486,6 +527,7 @@ class ExplorerTransportResolver:
             target=target_coord,
             traversal=traversal,
             frame_transform=seam.frame_transform,
+            piece_frame_transform=seam.piece_frame_transform,
         )
 
     def resolve_piece_step(
@@ -522,42 +564,46 @@ class ExplorerTransportResolver:
                 cell_steps=cell_steps,
             )
 
-        frame_transform = cell_steps[0].frame_transform
-        if frame_transform is None:
-            raise ValueError("non-blocked cell transport requires a frame transform")
-        if any(result.frame_transform != frame_transform for result in cell_steps):
-            return PieceStepResult(
-                step=step,
-                source_cells=source_cells,
-                kind=CELLWISE_DEFORMATION,
-                moved_cells=moved_cells,
-                cell_steps=cell_steps,
+        piece_frame_transform = cell_steps[0].piece_frame_transform
+        if piece_frame_transform is None:
+            raise ValueError(
+                "non-blocked cell transport requires a piece-frame transform"
             )
-
-        transformed_cells = tuple(
-            frame_transform.apply_absolute(coord) for coord in source_cells
-        )
-        if transformed_cells != moved_cells:
-            return PieceStepResult(
-                step=step,
-                source_cells=source_cells,
-                kind=CELLWISE_DEFORMATION,
-                moved_cells=moved_cells,
-                cell_steps=cell_steps,
+        if all(
+            result.piece_frame_transform == piece_frame_transform
+            for result in cell_steps
+        ):
+            transformed_cells = tuple(
+                piece_frame_transform.apply_absolute(coord) for coord in source_cells
             )
+            if transformed_cells == moved_cells:
+                kind = (
+                    PLAIN_TRANSLATION
+                    if piece_frame_transform.is_identity_linear()
+                    else RIGID_TRANSFORM
+                )
+                return PieceStepResult(
+                    step=step,
+                    source_cells=source_cells,
+                    kind=kind,
+                    moved_cells=moved_cells,
+                    frame_transform=piece_frame_transform,
+                    cell_steps=cell_steps,
+                )
 
-        kind = (
-            PLAIN_TRANSLATION
-            if frame_transform.is_identity_linear()
-            else RIGID_TRANSFORM
+        rigidly_coherent = all(
+            result.piece_frame_transform is not None
+            and _linear_signature(result.piece_frame_transform)
+            == _linear_signature(piece_frame_transform)
+            for result in cell_steps
         )
         return PieceStepResult(
             step=step,
             source_cells=source_cells,
-            kind=kind,
+            kind=CELLWISE_DEFORMATION,
             moved_cells=moved_cells,
-            frame_transform=frame_transform,
             cell_steps=cell_steps,
+            rigidly_coherent=rigidly_coherent,
         )
 
 

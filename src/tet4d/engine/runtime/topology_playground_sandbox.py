@@ -16,6 +16,12 @@ from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
 from tet4d.engine.gameplay.api import piece_set_options_for_dimension_gameplay
+from tet4d.engine.gameplay.explorer_movement_policy import (
+    CELLWISE_FREE,
+    RIGID,
+    ExplorerMovementPolicy,
+    explorer_movement_policy_from_rigid_play_enabled,
+)
 from tet4d.engine.gameplay.pieces2d import (
     PIECE_SET_2D_OPTIONS,
     get_piece_bag_2d,
@@ -360,11 +366,15 @@ def _apply_exact_cells_to_sandbox(
     )
 
 
-def _resolve_sandbox_rigid_play_enabled(state: TopologyPlaygroundState) -> bool:
-    return resolve_rigid_play_enabled(
-        state.explorer_profile,
-        dims=state.axis_sizes,
-        rigid_play_mode=state.launch_settings.rigid_play_mode,
+def _resolve_sandbox_movement_policy(
+    state: TopologyPlaygroundState,
+) -> ExplorerMovementPolicy:
+    return explorer_movement_policy_from_rigid_play_enabled(
+        resolve_rigid_play_enabled(
+            state.explorer_profile,
+            dims=state.axis_sizes,
+            rigid_play_mode=state.launch_settings.rigid_play_mode,
+        )
     )
 
 
@@ -387,7 +397,7 @@ def _move_sandbox_piece_explorer(
     *,
     step: MoveStep,
     step_label: str,
-    rigid_play_enabled: bool,
+    movement_policy: ExplorerMovementPolicy,
 ) -> SandboxMoveOutcome:
     result = build_explorer_transport_resolver(
         state.explorer_profile,
@@ -398,10 +408,11 @@ def _move_sandbox_piece_explorer(
     assert result.moved_cells is not None
     if len(set(result.moved_cells)) != len(result.moved_cells):
         raise ValueError("sandbox movement collapses cells")
-    if rigid_play_enabled and result.kind == CELLWISE_DEFORMATION:
-        raise ValueError("sandbox piece cannot remain rigid across seam crossing")
+    if movement_policy == RIGID and result.kind == CELLWISE_DEFORMATION:
+        if not result.rigidly_coherent:
+            raise ValueError("sandbox piece cannot remain rigid across seam crossing")
     use_exact_cells = result.kind == CELLWISE_DEFORMATION or (
-        not rigid_play_enabled
+        movement_policy == CELLWISE_FREE
         and any(cell_step.traversal is not None for cell_step in result.cell_steps)
     )
     if not use_exact_cells and result.frame_transform is None:
@@ -461,7 +472,7 @@ def _sandbox_move_outcome(
             cells,
             step=step,
             step_label=step_label,
-            rigid_play_enabled=_resolve_sandbox_rigid_play_enabled(state),
+            movement_policy=_resolve_sandbox_movement_policy(state),
         )
     return _move_sandbox_piece_legacy(
         state,
