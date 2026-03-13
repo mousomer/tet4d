@@ -34,7 +34,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
 - `deep_imports.ui_to_engine_non_api.count = 171` (allowed under current rule)
-- `deep_imports.ai_to_engine_non_api.count = 26` (allowed under current rule)
+- `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
 - `tech_debt.score = 2.92` (`low`)
