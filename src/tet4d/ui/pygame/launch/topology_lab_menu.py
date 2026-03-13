@@ -80,6 +80,13 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     sync_canonical_playground_state as _sync_canonical_playground_state,
     update_explorer_draft as _update_explorer_draft,
 )
+from tet4d.ui.pygame.topology_lab.state_ownership import (
+    current_sandbox_focus_coord as _current_sandbox_focus_coord,
+    current_sandbox_focus_frame as _current_sandbox_focus_frame,
+    current_sandbox_focus_path as _current_sandbox_focus_path,
+    current_sandbox_focus_trace as _current_sandbox_focus_trace,
+    select_sandbox_projection_coord as _select_sandbox_projection_coord,
+)
 from tet4d.ui.pygame.topology_lab.copy import (
     LAB_HINTS as _LAB_HINTS,
     LAB_SUBTITLE as _LAB_SUBTITLE,
@@ -329,6 +336,32 @@ def _sandbox_scene_payload(
     return sandbox_cells_payload, sandbox_ok, sandbox_message
 
 
+def _active_workspace_coord(state: _TopologyLabState) -> tuple[int, ...] | None:
+    if state.active_tool == TOOL_SANDBOX:
+        return _current_sandbox_focus_coord(state)
+    return _current_probe_coord(state)
+
+
+def _active_workspace_path(state: _TopologyLabState) -> list[tuple[int, ...]]:
+    if state.active_tool == TOOL_SANDBOX:
+        return _current_sandbox_focus_path(state)
+    return _current_probe_path(state)
+
+
+def _active_workspace_trace(state: _TopologyLabState) -> list[str]:
+    if state.active_tool == TOOL_SANDBOX:
+        return _current_sandbox_focus_trace(state)
+    return _current_probe_trace(state)
+
+
+def _active_workspace_frame(
+    state: _TopologyLabState,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    if state.active_tool == TOOL_SANDBOX:
+        return _current_sandbox_focus_frame(state)
+    return _current_probe_frame(state)
+
+
 def _draw_explorer_scene(
     screen: pygame.Surface,
     fonts,
@@ -359,8 +392,8 @@ def _draw_explorer_scene(
         ),
         hovered_boundary_index=state.hovered_boundary_index,
         selected_boundary_index=_current_selected_boundary_index(state),
-        probe_coord=_current_probe_coord(state),
-        probe_path=tuple(_current_probe_path(state)),
+        probe_coord=_active_workspace_coord(state),
+        probe_path=tuple(_active_workspace_path(state)),
         sandbox_cells=sandbox_cells_payload,
         sandbox_valid=sandbox_ok,
         sandbox_message=sandbox_message,
@@ -395,7 +428,7 @@ def _workspace_selection_lines(state: _TopologyLabState) -> list[str]:
 def _workspace_camera_lines(state: _TopologyLabState) -> list[str]:
     if not _uses_general_explorer_editor(state):
         return []
-    probe_coord = _current_probe_coord(state)
+    probe_coord = _active_workspace_coord(state)
     if probe_coord is None:
         return []
     pairs = (
@@ -415,6 +448,14 @@ def _workspace_camera_lines(state: _TopologyLabState) -> list[str]:
 
 
 def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
+    if state.active_tool == TOOL_SANDBOX:
+        focus_coord = _current_sandbox_focus_coord(state)
+        lines = [
+            f"Sandbox focus: {list(focus_coord)}",
+            f"Focus steps: {max(0, len(_current_sandbox_focus_path(state)) - 1)}",
+        ]
+        lines.extend(f"  {line}" for line in _current_sandbox_focus_trace(state)[-3:])
+        return lines
     probe_coord = _current_probe_coord(state)
     if probe_coord is None:
         return []
@@ -482,7 +523,7 @@ def _draw_probe_controls_if_needed(
         "Sandbox piece moves" if state.active_tool == TOOL_SANDBOX else "Probe moves"
     )
     active_color = (78, 116, 92) if state.active_tool == TOOL_SANDBOX else (56, 92, 130)
-    frame_permutation, frame_signs = _current_probe_frame(state)
+    frame_permutation, frame_signs = _active_workspace_frame(state)
     return draw_probe_controls(
         screen,
         fonts,
@@ -490,7 +531,7 @@ def _draw_probe_controls_if_needed(
         step_options=explorer_probe_options(
             profile,
             dims=_board_dims_for_state(state),
-            coord=_current_probe_coord(state)
+            coord=_active_workspace_coord(state)
             or tuple(0 for _ in range(state.dimension)),
             frame_permutation=frame_permutation,
             frame_signs=frame_signs,
@@ -810,6 +851,12 @@ def _handle_projection_cell_target(
     if target.kind != "projection_cell" or not _uses_general_explorer_editor(state):
         return False
     coord = tuple(int(value) for value in tuple(target.value))
+    if state.active_tool == TOOL_SANDBOX:
+        selected = _select_sandbox_projection_coord(state, coord)
+        if selected is not None:
+            _set_status(state, f"Sandbox focus {list(selected)}")
+            play_sfx("menu_move")
+        return True
     selected = _select_projection_coord(state, coord)
     if selected is not None:
         _set_status(state, f"Selected cell {list(selected)}")

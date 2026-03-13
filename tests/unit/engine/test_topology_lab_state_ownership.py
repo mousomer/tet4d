@@ -1,0 +1,203 @@
+from __future__ import annotations
+
+import unittest
+from unittest.mock import patch
+
+import pygame
+
+from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.ui.pygame.launch import topology_lab_menu
+from tet4d.ui.pygame.topology_lab import TopologyLabHitTarget
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    ExplorerPlaygroundSettings,
+    replace_play_settings,
+)
+from tet4d.ui.pygame.topology_lab.state_ownership import (
+    current_sandbox_focus_coord,
+    current_sandbox_focus_path,
+    ownership_snapshot,
+    select_sandbox_projection_coord,
+)
+
+
+class TestTopologyLabStateOwnership(unittest.TestCase):
+    def _state(self, dimension: int = 2) -> topology_lab_menu._TopologyLabState:
+        return topology_lab_menu._initial_topology_lab_state(
+            dimension,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            initial_explorer_profile=ExplorerTopologyProfile(
+                dimension=dimension,
+                gluings=(),
+            ),
+        )
+
+    @staticmethod
+    def _preview() -> dict[str, object]:
+        return {
+            "movement_graph": {
+                "cell_count": 1,
+                "directed_edge_count": 0,
+                "boundary_traversal_count": 0,
+                "component_count": 1,
+            },
+            "warnings": (),
+            "sample_boundary_traversals": (),
+            "basis_arrows": (),
+        }
+
+    def test_ownership_snapshot_separates_inspector_and_sandbox_transients(self) -> None:
+        state = self._state()
+        state.probe_coord = (1, 0)
+        state.probe_trace = ["probe-step"]
+        state.probe_path = [(1, 0)]
+        select_sandbox_projection_coord(state, (3, 2))
+
+        snapshot = ownership_snapshot(state)
+
+        self.assertEqual(snapshot.inspector.probe_coord, (1, 0))
+        self.assertEqual(snapshot.inspector.probe_trace, ("probe-step",))
+        self.assertEqual(snapshot.sandbox.focus_coord, (3, 2))
+        self.assertNotEqual(
+            snapshot.inspector.probe_coord,
+            snapshot.sandbox.focus_coord,
+        )
+
+    def test_projection_click_in_sandbox_does_not_overwrite_inspector_probe_state(self) -> None:
+        state = self._state()
+        state.probe_coord = (1, 0)
+        state.probe_trace = ["probe-step"]
+        state.probe_path = [(1, 0)]
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        target = TopologyLabHitTarget(
+            kind="projection_cell",
+            value=(4, 1),
+            rect=pygame.Rect(0, 0, 16, 16),
+        )
+
+        handled = topology_lab_menu._handle_projection_cell_target(state, target)
+
+        self.assertTrue(handled)
+        self.assertEqual(state.probe_coord, (1, 0))
+        self.assertEqual(state.probe_trace, ["probe-step"])
+        self.assertEqual(state.probe_path, [(1, 0)])
+        self.assertEqual(getattr(state, "sandbox_focus_coord", None), (4, 1))
+        self.assertEqual(getattr(state, "sandbox_focus_path", None), [(4, 1)])
+
+    def test_workspace_preview_lines_hide_inspector_probe_trace_in_sandbox_mode(self) -> None:
+        state = self._state()
+        state.probe_coord = (1, 1)
+        state.probe_trace = ["probe-step"]
+        state.probe_path = [(1, 1)]
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        select_sandbox_projection_coord(state, (5, 2))
+
+        lines = topology_lab_menu._workspace_preview_lines(
+            state,
+            preview=self._preview(),
+            preview_error=None,
+        )
+
+        self.assertIn("Sandbox focus: [5, 2]", lines)
+        self.assertFalse(any(line.startswith("Probe:") for line in lines))
+        self.assertFalse(any("probe-step" in line for line in lines))
+
+    def test_switching_back_to_probe_restores_inspector_state_after_sandbox_focus_change(self) -> None:
+        state = self._state()
+        state.probe_coord = (1, 1)
+        state.probe_trace = ["probe-step"]
+        state.probe_path = [(1, 1)]
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        select_sandbox_projection_coord(state, (6, 0))
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+
+        lines = topology_lab_menu._workspace_probe_lines(state)
+
+        self.assertEqual(state.probe_coord, (1, 1))
+        self.assertIn("Probe: [1, 1]", lines)
+        self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
+
+    def test_draw_explorer_scene_uses_sandbox_focus_overlay_when_active(self) -> None:
+        state = self._state()
+        state.probe_coord = (0, 0)
+        state.probe_path = [(0, 0)]
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        select_sandbox_projection_coord(state, (2, 3))
+        boundaries = topology_lab_menu.boundaries_for_dimension(2)
+        active_glue_ids = {boundary.label: "free" for boundary in boundaries}
+
+        with patch.object(topology_lab_menu, "draw_scene_2d", return_value=[]) as draw_scene:
+            topology_lab_menu._draw_explorer_scene(
+                pygame.Surface((320, 240)),
+                fonts=None,
+                state=state,
+                area=pygame.Rect(0, 0, 100, 100),
+                boundaries=boundaries,
+                source_boundary=boundaries[0],
+                target_boundary=boundaries[1],
+                active_glue_ids=active_glue_ids,
+                basis_arrows=[],
+                preview_dims=topology_lab_menu._board_dims_for_state(state),
+                sandbox_cells_payload=None,
+                sandbox_ok=None,
+                sandbox_message="",
+            )
+
+        kwargs = draw_scene.call_args.kwargs
+        self.assertEqual(kwargs["probe_coord"], (2, 3))
+        self.assertEqual(kwargs["probe_path"], ((2, 3),))
+
+    def test_canonical_topology_state_survives_tool_switches(self) -> None:
+        state = self._state(dimension=3)
+        topology_lab_menu._sync_canonical_playground_state(state)
+        assert state.canonical_state is not None
+        expected_axis_sizes = state.canonical_state.axis_sizes
+        expected_profile = state.canonical_state.explorer_profile
+        expected_launch_settings = state.canonical_state.launch_settings
+
+        for tool in (
+            topology_lab_menu.TOOL_INSPECT,
+            topology_lab_menu.TOOL_SANDBOX,
+            topology_lab_menu.TOOL_PLAY,
+            topology_lab_menu.TOOL_PROBE,
+        ):
+            topology_lab_menu.set_active_tool(state, tool)
+            assert state.canonical_state is not None
+            self.assertEqual(state.canonical_state.axis_sizes, expected_axis_sizes)
+            self.assertEqual(state.canonical_state.explorer_profile, expected_profile)
+            self.assertEqual(
+                state.canonical_state.launch_settings,
+                expected_launch_settings,
+            )
+
+
+    def test_sandbox_focus_rebinds_to_canonical_dims_after_board_change(self) -> None:
+        state = self._state(dimension=3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        settings = state.play_settings
+        assert settings is not None
+
+        self.assertEqual(select_sandbox_projection_coord(state, (7, 1, 1)), (7, 1, 1))
+
+        replace_play_settings(
+            state,
+            ExplorerPlaygroundSettings(
+                board_dims=(5, 8, 8),
+                piece_set_index=settings.piece_set_index,
+                speed_level=settings.speed_level,
+                random_mode_index=settings.random_mode_index,
+                game_seed=settings.game_seed,
+                rigid_play_mode=settings.rigid_play_mode,
+            ),
+        )
+
+        assert state.canonical_state is not None
+        self.assertEqual(state.canonical_state.axis_sizes, (5, 8, 8))
+        self.assertEqual(current_sandbox_focus_coord(state), (2, 4, 4))
+        self.assertEqual(current_sandbox_focus_path(state), [(2, 4, 4)])
+        self.assertIsNone(select_sandbox_projection_coord(state, (7, 1, 1)))
+        self.assertEqual(select_sandbox_projection_coord(state, (4, 1, 1)), (4, 1, 1))
+
+
+if __name__ == "__main__":
+    unittest.main()

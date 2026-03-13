@@ -30,6 +30,12 @@ from .scene_state import (
 EntrySource = Literal["explorer", "launcher", "lab"]
 
 _BOARD_DIMENSION_FIELDS = ("width", "height", "depth", "fourth")
+_EXPLORER_BOARD_DIMENSION_FIELDS = (
+    "explorer_width",
+    "explorer_height",
+    "explorer_depth",
+    "explorer_fourth",
+)
 
 
 @dataclass(frozen=True)
@@ -57,6 +63,13 @@ def _board_fields_for_dimension(dimension: int) -> tuple[str, ...]:
     return _BOARD_DIMENSION_FIELDS[:dim]
 
 
+def _explorer_board_fields_for_dimension(dimension: int) -> tuple[str, ...]:
+    dim = int(dimension)
+    if not 2 <= dim <= len(_EXPLORER_BOARD_DIMENSION_FIELDS):
+        raise ValueError(f"unsupported explorer dimension: {dimension}")
+    return _EXPLORER_BOARD_DIMENSION_FIELDS[:dim]
+
+
 def _explorer_default_board_dims(dimension: int) -> tuple[int, ...]:
     return explorer_default_board_dims(int(dimension))
 
@@ -81,6 +94,49 @@ def mode_settings_snapshot_for_dimension(dimension: int) -> SimpleNamespace:
     return SimpleNamespace(**merged)
 
 
+def _source_uses_shared_nd_defaults_for_other_dimension(
+    dimension: int,
+    *,
+    source_settings: object | None,
+) -> bool:
+    if source_settings is None or int(dimension) >= 4:
+        return False
+    try:
+        from tet4d.ui.pygame.frontend_nd_setup import GameSettingsND
+    except ImportError:
+        return False
+    if not isinstance(source_settings, GameSettingsND):
+        return False
+    default_source = GameSettingsND()
+    field_names = (
+        "width",
+        "height",
+        "depth",
+        "fourth",
+        "speed_level",
+        "random_mode_index",
+        "game_seed",
+        "piece_set_index",
+        "topology_mode",
+        "topology_advanced",
+        "topology_profile_index",
+        "kick_level_index",
+        "bot_mode_index",
+        "bot_algorithm_index",
+        "bot_profile_index",
+        "bot_speed_level",
+        "bot_budget_ms",
+        "challenge_layers",
+        "exploration_mode",
+    )
+    return all(
+        hasattr(source_settings, field_name)
+        and int(getattr(source_settings, field_name))
+        == int(getattr(default_source, field_name))
+        for field_name in field_names
+    )
+
+
 def _source_uses_mode_default_board_dims(
     dimension: int,
     *,
@@ -88,6 +144,11 @@ def _source_uses_mode_default_board_dims(
     mode_defaults: dict[str, int],
 ) -> bool:
     if source_settings is None:
+        return True
+    if _source_uses_shared_nd_defaults_for_other_dimension(
+        dimension,
+        source_settings=source_settings,
+    ):
         return True
     for field_name in _board_fields_for_dimension(dimension):
         if not hasattr(source_settings, field_name):
@@ -97,6 +158,24 @@ def _source_uses_mode_default_board_dims(
     return True
 
 
+def _source_explorer_board_dims(
+    dimension: int,
+    *,
+    source_settings: object | None,
+) -> tuple[int, ...] | None:
+    if source_settings is None:
+        return None
+    dims: list[int] = []
+    for field_name in _explorer_board_fields_for_dimension(dimension):
+        if not hasattr(source_settings, field_name):
+            return None
+        value = int(getattr(source_settings, field_name))
+        if value <= 0:
+            return None
+        dims.append(value)
+    return tuple(dims)
+
+
 def build_explorer_playground_settings(
     *,
     dimension: int,
@@ -104,16 +183,21 @@ def build_explorer_playground_settings(
 ) -> ExplorerPlaygroundSettings:
     dim = int(dimension)
     defaults = _default_mode_payload(dim)
+    explorer_source_board_dims = _source_explorer_board_dims(
+        dim,
+        source_settings=source_settings,
+    )
     use_compact_board_defaults = _source_uses_mode_default_board_dims(
         dim,
         source_settings=source_settings,
         mode_defaults=defaults,
     )
-    default_board_dims = _explorer_default_board_dims(dim)
+    default_board_dims = explorer_source_board_dims or _explorer_default_board_dims(dim)
 
     def _board_value(name: str, axis: int) -> int:
         if (
-            not use_compact_board_defaults
+            explorer_source_board_dims is None
+            and not use_compact_board_defaults
             and source_settings is not None
             and hasattr(source_settings, name)
         ):

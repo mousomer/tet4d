@@ -25,8 +25,8 @@ from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_settings,
     mode_settings_snapshot_for_dimension,
 )
+from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_SANDBOX
-
 
 class TestTopologyLabApp(unittest.TestCase):
     def _invalid_profile_3d(self) -> ExplorerTopologyProfile:
@@ -93,6 +93,16 @@ class TestTopologyLabApp(unittest.TestCase):
             build_explorer_playground_settings(dimension=4).board_dims,
             (8, 8, 8, 8),
         )
+
+    def test_build_explorer_launch_treats_generic_3d_nd_defaults_as_untouched(
+        self,
+    ) -> None:
+        launch = build_explorer_playground_launch(
+            dimension=3,
+            source_settings=frontend_nd_setup.GameSettingsND(),
+        )
+        self.assertEqual(launch.settings_snapshot.board_dims, (8, 8, 8))
+        self.assertEqual(launch.settings_snapshot.game_seed, 1337)
 
     def test_build_explorer_launch_uses_compact_defaults_for_untouched_mode_sizes(
         self,

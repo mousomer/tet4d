@@ -4,6 +4,11 @@ Generated: 2026-02-18
 Updated: 2026-03-13  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
+Current sub-batch (2026-03-13): topology playground ownership and mode-boundary cleanup.
+- Root cause: after the semantics pass, the live playground still mixed canonical runtime state with UI-local transients in one shell surface, and sandbox reused inspector probe selection/path/frame for projection clicks, overlays, and footer controls. That made mode ownership hard to audit and kept sandbox/inspector leakage alive even though movement semantics were already correct.
+- Fix strategy: documented the live surface in `docs/plans/topology_playground_ownership_audit.md`, exposed explicit canonical/editor/inspector/sandbox/derived ownership views from `src/tet4d/engine/runtime/topology_playground_state.py`, added `src/tet4d/ui/pygame/topology_lab/state_ownership.py` for UI-side transient buckets, and rewired `src/tet4d/ui/pygame/launch/topology_lab_menu.py` so sandbox uses sandbox-local projection focus/path/frame while inspector probe state remains isolated.
+- Added focused regressions in `tests/unit/engine/test_topology_playground_state.py` and `tests/unit/engine/test_topology_lab_state_ownership.py`, plus the existing menu/sandbox suites, covering inspector/sandbox transient isolation, sandbox overlay routing, and canonical-state survival across tool switches.
+
 Current sub-batch (2026-03-13): topology-lab explorer defaults + dimension round-trip reset semantics.
 - Root cause: Explorer Playground still carried hard-coded compact board defaults in code, while topology-lab launch and dimension switching mixed those defaults with saved mode snapshots inconsistently. A saved 4D launch size could be discarded on a dimension round-trip, and there was no explicit way to restore explorer defaults other than toggling dimensions.
 - Fix strategy: moved explorer compact board defaults into `config/menu/defaults.json`, added a shared `mode_settings_snapshot_for_dimension(...)` helper so launcher/topology-lab read one merged saved-mode snapshot path, cached per-dimension explorer play settings inside the topology-lab scene state, and restored target-dimension settings from that cache or the saved-mode snapshot instead of rebuilding from bare defaults.

@@ -73,6 +73,11 @@ def _initial_topology_lab_state(
         profile=load_topology_profile(mode, dimension),
         play_settings=play_settings,
     )
+    if mode == GAMEPLAY_MODE_EXPLORER and state.play_settings is None:
+        replace_play_settings(
+            state,
+            build_explorer_playground_settings(dimension=dimension),
+        )
     if mode == GAMEPLAY_MODE_EXPLORER and initial_explorer_profile is not None:
         _initialize_explicit_explorer_startup(
             state,

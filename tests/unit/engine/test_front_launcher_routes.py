@@ -4,13 +4,69 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import pygame
+
 from cli import front
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
 
 
 class TestFrontLauncherRoutes(unittest.TestCase):
+    def _run_live_topology_lab_launcher_action(
+        self,
+        *,
+        mode: str,
+        payload: dict[str, object],
+    ) -> tuple[object, topology_lab_menu._TopologyLabState]:
+        state = front.MainMenuState(last_mode=mode)
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+        captured: dict[str, object] = {}
+
+        def _run_live_entry(_screen, _fonts, *, launch):
+            live_state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+            captured["launch"] = launch
+            captured["state"] = live_state
+            return True, "Explorer playground saved"
+
+        with (
+            patch.object(front, "_persist_session_status"),
+            patch(
+                "tet4d.ui.pygame.topology_lab.app.load_app_settings_payload",
+                return_value=payload,
+            ),
+            patch.object(
+                front,
+                "load_runtime_explorer_topology_profile",
+                return_value=ExplorerTopologyProfile(dimension=int(mode[0]), gluings=()),
+            ),
+            patch.object(
+                front,
+                "run_explorer_playground",
+                side_effect=_run_live_entry,
+            ),
+        ):
+            closed = front._menu_action_topology_lab(
+                state,
+                session,
+                object(),
+            )
+
+        self.assertFalse(closed)
+        return captured["launch"], captured["state"]
+
     def test_topology_lab_action_updates_status(self) -> None:
         state = front.MainMenuState(last_mode="3d")
         session = SimpleNamespace(
@@ -48,6 +104,93 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertEqual(launch.dimension, 3)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
+
+    def test_topology_lab_launcher_entry_uses_explorer_config_dims_in_live_state(
+        self,
+    ) -> None:
+        launch, live_state = self._run_live_topology_lab_launcher_action(
+            mode="3d",
+            payload={
+                "settings": {
+                    "3d": {
+                        "width": 7,
+                        "height": 19,
+                        "depth": 7,
+                    }
+                }
+            },
+        )
+
+        self.assertEqual(launch.settings_snapshot.board_dims, (8, 8, 8))
+        assert live_state.play_settings is not None
+        self.assertEqual(live_state.play_settings.board_dims, (8, 8, 8))
+        self.assertEqual(
+            topology_lab_menu._board_dims_for_state(live_state),
+            (8, 8, 8),
+        )
+        self.assertEqual(live_state.scene_preview_dims, (8, 8, 8))
+        assert live_state.canonical_state is not None
+        self.assertEqual(live_state.canonical_state.axis_sizes, (8, 8, 8))
+
+    def test_topology_lab_launcher_probe_footer_steps_reach_true_board_edge(
+        self,
+    ) -> None:
+        _launch, live_state = self._run_live_topology_lab_launcher_action(
+            mode="3d",
+            payload={
+                "settings": {
+                    "3d": {
+                        "width": 7,
+                        "height": 19,
+                        "depth": 7,
+                    }
+                }
+            },
+        )
+        topology_lab_menu.set_active_tool(live_state, topology_lab_menu.TOOL_PROBE)
+        live_state.active_pane = topology_lab_menu.PANE_SCENE
+
+        selected = topology_lab_menu._dispatch_mouse_target(
+            live_state,
+            topology_lab_menu.TopologyLabHitTarget(
+                kind="projection_cell",
+                value=(0, 0, 0),
+                rect=pygame.Rect(0, 0, 20, 20),
+            ),
+            1,
+        )
+
+        self.assertTrue(selected)
+        self.assertEqual(topology_lab_menu._current_probe_coord(live_state), (0, 0, 0))
+        for _ in range(7):
+            handled = topology_lab_menu._dispatch_mouse_target(
+                live_state,
+                topology_lab_menu.TopologyLabHitTarget(
+                    kind="probe_step",
+                    value="x+",
+                    rect=pygame.Rect(0, 0, 20, 20),
+                ),
+                1,
+            )
+            self.assertTrue(handled)
+
+        self.assertEqual(topology_lab_menu._current_probe_coord(live_state), (7, 0, 0))
+        assert live_state.canonical_state is not None
+        self.assertEqual(live_state.canonical_state.probe_state.coord, (7, 0, 0))
+
+        topology_lab_menu._dispatch_mouse_target(
+            live_state,
+            topology_lab_menu.TopologyLabHitTarget(
+                kind="probe_step",
+                value="x+",
+                rect=pygame.Rect(0, 0, 20, 20),
+            ),
+            1,
+        )
+
+        self.assertEqual(topology_lab_menu._current_probe_coord(live_state), (7, 0, 0))
+        self.assertTrue(live_state.status_error)
+        self.assertIn("blocked", live_state.status)
 
     def test_play_last_custom_topology_uses_direct_playground_launch(self) -> None:
         state = front.MainMenuState(last_mode="3d")

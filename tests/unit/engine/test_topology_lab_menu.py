@@ -24,10 +24,10 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
     default_topology_profile_state,
 )
+from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
-
 
 class TestTopologyLabMenu(unittest.TestCase):
     def _explorer_state(self, dimension: int) -> topology_lab_menu._TopologyLabState:
@@ -322,6 +322,124 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
         self.assertIs(state.explorer_profile, profile)
         self.assertIsNotNone(state.probe_coord)
+
+    def test_initial_explorer_state_uses_configured_board_defaults(self) -> None:
+        state = topology_lab_menu._initial_topology_lab_state(
+            3,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state),
+            (8, 8, 8),
+        )
+        assert state.play_settings is not None
+        self.assertEqual(state.play_settings.board_dims, (8, 8, 8))
+        assert state.canonical_state is not None
+        self.assertEqual(state.canonical_state.axis_sizes, (8, 8, 8))
+        self.assertEqual(state.canonical_state.launch_settings.game_seed, 1337)
+
+    def test_default_explorer_probe_can_cross_six_steps_before_edge_block(self) -> None:
+        state = topology_lab_menu._initial_topology_lab_state(
+            3,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+
+        selected = topology_lab_menu._select_projection_coord(state, (0, 0, 0))
+
+        self.assertEqual(selected, (0, 0, 0))
+        for _ in range(6):
+            topology_lab_menu._apply_probe_step(state, "x+")
+        self.assertEqual(state.probe_coord, (6, 0, 0))
+        assert state.canonical_state is not None
+        self.assertEqual(state.canonical_state.probe_state.coord, (6, 0, 0))
+
+        topology_lab_menu._apply_probe_step(state, "x+")
+        self.assertEqual(state.probe_coord, (7, 0, 0))
+
+        topology_lab_menu._apply_probe_step(state, "x+")
+        self.assertEqual(state.probe_coord, (7, 0, 0))
+        self.assertTrue(state.status_error)
+        self.assertIn("blocked", state.status)
+
+    def test_3d_launch_from_generic_nd_defaults_keeps_probe_moving_past_six_steps(
+        self,
+    ) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=3,
+            entry_source="explorer",
+            source_settings=frontend_nd_setup.GameSettingsND(),
+        )
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+
+        selected = topology_lab_menu._select_projection_coord(state, (0, 0, 0))
+
+        self.assertEqual(selected, (0, 0, 0))
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state),
+            (8, 8, 8),
+        )
+        for _ in range(6):
+            topology_lab_menu._apply_probe_step(state, "z+")
+        self.assertEqual(state.probe_coord, (0, 0, 6))
+
+        topology_lab_menu._apply_probe_step(state, "z+")
+        self.assertEqual(state.probe_coord, (0, 0, 7))
+
+        topology_lab_menu._apply_probe_step(state, "z+")
+        self.assertEqual(state.probe_coord, (0, 0, 7))
+        self.assertTrue(state.status_error)
+        self.assertIn("blocked", state.status)
+
+    def test_probe_bounds_follow_canonical_board_dims_after_board_change(self) -> None:
+        state = topology_lab_menu._initial_topology_lab_state(
+            3,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        settings = state.play_settings
+        assert settings is not None
+
+        self.assertEqual(topology_lab_menu._select_projection_coord(state, (0, 0, 0)), (0, 0, 0))
+
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(
+                board_dims=(5, 8, 8),
+                piece_set_index=settings.piece_set_index,
+                speed_level=settings.speed_level,
+                random_mode_index=settings.random_mode_index,
+                game_seed=settings.game_seed,
+                rigid_play_mode=settings.rigid_play_mode,
+            ),
+        )
+        topology_lab_controls_panel._refresh_explorer_scene_state(state)
+
+        assert state.canonical_state is not None
+        self.assertEqual(state.canonical_state.axis_sizes, (5, 8, 8))
+        self.assertEqual(topology_lab_controls_panel._board_dims_for_state(state), (5, 8, 8))
+        self.assertEqual(state.scene_preview_dims, (5, 8, 8))
+
+        for _ in range(4):
+            topology_lab_menu._apply_probe_step(state, "x+")
+        self.assertEqual(state.probe_coord, (4, 0, 0))
+        self.assertEqual(state.canonical_state.probe_state.coord, (4, 0, 0))
+
+        topology_lab_menu._apply_probe_step(state, "x+")
+        self.assertEqual(state.probe_coord, (4, 0, 0))
+        self.assertTrue(state.status_error)
+        self.assertIn("blocked", state.status)
 
     def test_initial_state_skips_stored_profile_refresh_for_explicit_explorer_launch(
         self,
@@ -2876,7 +2994,6 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIsNotNone(state.selected_glue_id)
         self.assertEqual(state.active_tool, topology_lab_menu.TOOL_EDIT)
         self.assertTrue(state.running)
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -579,6 +579,11 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         state.hovered_glue_id = None
         state.scene_camera = None
         state.scene_mouse_orbit = None
+        setattr(state, "sandbox_focus_coord", None)
+        setattr(state, "sandbox_focus_trace", [])
+        setattr(state, "sandbox_focus_path", [])
+        setattr(state, "sandbox_focus_frame_permutation", None)
+        setattr(state, "sandbox_focus_frame_signs", None)
         _clear_explorer_scene_state(state)
         return
     replace_explorer_profile(

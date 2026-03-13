@@ -21,6 +21,11 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundGluingDraft,
     TopologyPlaygroundGravityMode,
     TopologyPlaygroundLaunchSettings,
+    TopologyPlaygroundCanonicalOwnershipState,
+    TopologyPlaygroundDerivedOwnershipState,
+    TopologyPlaygroundEditorOwnershipState,
+    TopologyPlaygroundInspectorOwnershipState,
+    TopologyPlaygroundSandboxOwnershipState,
     TopologyPlaygroundMovementSummary,
     TopologyPlaygroundPlayabilityAnalysis,
     TopologyPlaygroundPresetMetadata,
@@ -177,6 +182,31 @@ class TestTopologyPlaygroundState(unittest.TestCase):
             "full_wrap_3d",
         )
         self.assertTrue(state.dirty)
+
+    def test_state_exposes_explicit_ownership_views(self) -> None:
+        state = default_topology_playground_state(
+            dimension=3,
+            axis_sizes=(6, 12, 6),
+            active_tool=TOOL_PROBE,
+        )
+
+        canonical = state.canonical_state
+        editor = state.editor_state
+        inspector = state.inspector_state
+        sandbox = state.sandbox_state
+        derived = state.derived_state
+
+        self.assertIsInstance(canonical, TopologyPlaygroundCanonicalOwnershipState)
+        self.assertEqual(canonical.axis_sizes, (6, 12, 6))
+        self.assertIsInstance(editor, TopologyPlaygroundEditorOwnershipState)
+        self.assertEqual(editor.active_tool, TOOL_PROBE)
+        self.assertIsInstance(inspector, TopologyPlaygroundInspectorOwnershipState)
+        self.assertIs(inspector.probe_state, state.probe_state)
+        self.assertIsInstance(sandbox, TopologyPlaygroundSandboxOwnershipState)
+        self.assertIs(sandbox.sandbox_piece_state, state.sandbox_piece_state)
+        self.assertIsInstance(derived, TopologyPlaygroundDerivedOwnershipState)
+        self.assertIs(derived.transport_policy, state.transport_policy)
+        self.assertIs(derived.gravity_mode, state.gravity_mode)
 
     def test_normal_mode_defaults_to_legacy_transport_policy(self) -> None:
         legacy_profile = default_topology_profile_state(

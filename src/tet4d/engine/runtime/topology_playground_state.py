@@ -537,6 +537,40 @@ class TopologyPlaygroundPresetMetadata:
     )
 
 
+@dataclass(frozen=True)
+class TopologyPlaygroundCanonicalOwnershipState:
+    dimension: int
+    axis_sizes: Coord
+    topology_config: TopologyPlaygroundTopologyConfig
+    launch_settings: TopologyPlaygroundLaunchSettings
+    playability_analysis: TopologyPlaygroundPlayabilityAnalysis
+    preset_metadata: TopologyPlaygroundPresetMetadata
+    dirty: bool
+
+
+@dataclass(frozen=True)
+class TopologyPlaygroundEditorOwnershipState:
+    selected_boundary: BoundaryRef | None
+    selected_gluing: str | None
+    active_tool: str
+
+
+@dataclass(frozen=True)
+class TopologyPlaygroundInspectorOwnershipState:
+    probe_state: TopologyPlaygroundProbeState
+
+
+@dataclass(frozen=True)
+class TopologyPlaygroundSandboxOwnershipState:
+    sandbox_piece_state: TopologyPlaygroundSandboxPieceState
+
+
+@dataclass(frozen=True)
+class TopologyPlaygroundDerivedOwnershipState:
+    transport_policy: TopologyPlaygroundTransportPolicy
+    gravity_mode: TopologyPlaygroundGravityMode
+
+
 @dataclass
 class TopologyPlaygroundState:
     dimension: int
@@ -614,6 +648,48 @@ class TopologyPlaygroundState:
     def explorer_profile(self) -> ExplorerTopologyProfile:
         assert self.topology_config.explorer_profile is not None
         return self.topology_config.explorer_profile
+
+
+    @property
+    def canonical_state(self) -> TopologyPlaygroundCanonicalOwnershipState:
+        return TopologyPlaygroundCanonicalOwnershipState(
+            dimension=self.dimension,
+            axis_sizes=self.axis_sizes,
+            topology_config=self.topology_config,
+            launch_settings=self.launch_settings,
+            playability_analysis=self.playability_analysis,
+            preset_metadata=self.preset_metadata,
+            dirty=self.dirty,
+        )
+
+    @property
+    def editor_state(self) -> TopologyPlaygroundEditorOwnershipState:
+        return TopologyPlaygroundEditorOwnershipState(
+            selected_boundary=self.selected_boundary,
+            selected_gluing=self.selected_gluing,
+            active_tool=self.active_tool,
+        )
+
+    @property
+    def inspector_state(self) -> TopologyPlaygroundInspectorOwnershipState:
+        return TopologyPlaygroundInspectorOwnershipState(
+            probe_state=self.probe_state,
+        )
+
+    @property
+    def sandbox_state(self) -> TopologyPlaygroundSandboxOwnershipState:
+        return TopologyPlaygroundSandboxOwnershipState(
+            sandbox_piece_state=self.sandbox_piece_state,
+        )
+
+    @property
+    def derived_state(self) -> TopologyPlaygroundDerivedOwnershipState:
+        assert self.transport_policy is not None
+        assert self.gravity_mode is not None
+        return TopologyPlaygroundDerivedOwnershipState(
+            transport_policy=self.transport_policy,
+            gravity_mode=self.gravity_mode,
+        )
 
 
 def default_gravity_mode_for_gameplay(
@@ -750,6 +826,11 @@ __all__ = [
     "TopologyPlaygroundGluingDraft",
     "TopologyPlaygroundGravityMode",
     "TopologyPlaygroundLaunchSettings",
+    "TopologyPlaygroundCanonicalOwnershipState",
+    "TopologyPlaygroundDerivedOwnershipState",
+    "TopologyPlaygroundEditorOwnershipState",
+    "TopologyPlaygroundInspectorOwnershipState",
+    "TopologyPlaygroundSandboxOwnershipState",
     "TopologyPlaygroundMovementSummary",
     "TopologyPlaygroundPlayabilityAnalysis",
     "TopologyPlaygroundPresetMetadata",
