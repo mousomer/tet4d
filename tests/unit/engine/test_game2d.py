@@ -308,6 +308,38 @@ class TestGame2D(unittest.TestCase):
             ((0, 3),),
         )
 
+    def test_explorer_glue_runtime_wraps_live_2d_movement_in_actual_play(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(3, 3), rotation=0)
+
+        state.try_move(1, 0)
+
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False),
+            ((0, 3),),
+        )
+
+    def test_actual_play_with_explorer_profile_spawns_piece_without_game_over(self):
+        cfg = GameConfig(
+            width=10,
+            height=20,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+
+        self.assertIsNotNone(state.current_piece)
+        self.assertFalse(state.game_over)
+        self.assertTrue(any(y < 0 for _x, y in state.current_piece.cells()))
+
     def test_explorer_interior_translation_preserves_rotation_frame_2d(self):
         normal_cfg = GameConfig(width=10, height=10)
         explorer_cfg = GameConfig(

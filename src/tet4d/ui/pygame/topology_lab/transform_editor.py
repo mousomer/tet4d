@@ -57,6 +57,7 @@ def draw_transform_editor(
     fonts,
     *,
     area: pygame.Rect,
+    editable: bool = True,
     preset_label: str,
     glue_labels: tuple[str, ...],
     active_slot_index: int,
@@ -67,7 +68,8 @@ def draw_transform_editor(
 ) -> list[TopologyLabHitTarget]:
     pygame.draw.rect(surface, (18, 22, 38), area, border_radius=10)
     pygame.draw.rect(surface, (76, 84, 112), area, 1, border_radius=10)
-    title = fonts.hint_font.render("Transform editor", True, (220, 228, 250))
+    title_text = "Transform editor" if editable else "Transform (Edit mode)"
+    title = fonts.hint_font.render(title_text, True, (220, 228, 250))
     surface.blit(title, (area.x + 10, area.y + 10))
     label = fonts.hint_font.render(
         fit_text(fonts.hint_font, transform_label, area.width - 20),
@@ -105,7 +107,8 @@ def draw_transform_editor(
                 color=_BUTTON_ACTIVE if index == active_slot_index else _BUTTON_BG,
                 font=fonts.hint_font,
             )
-            hits.append(TopologyLabHitTarget("glue_slot", index, rect.copy()))
+            if editable:
+                hits.append(TopologyLabHitTarget("glue_slot", index, rect.copy()))
         y += 38
 
     columns = 2 if len(permutation_labels) > 2 else max(1, len(permutation_labels))
@@ -128,7 +131,8 @@ def draw_transform_editor(
             color=_BUTTON_ACTIVE if index == selected_permutation_index else _BUTTON_BG,
             font=fonts.hint_font,
         )
-        hits.append(TopologyLabHitTarget("perm_select", index, rect.copy()))
+        if editable:
+            hits.append(TopologyLabHitTarget("perm_select", index, rect.copy()))
 
     y += rows * (button_h + 8) + 6
     for index, sign in enumerate(signs):
@@ -141,7 +145,8 @@ def draw_transform_editor(
             color=_BUTTON_ACTIVE if sign < 0 else _BUTTON_BG,
             font=fonts.hint_font,
         )
-        hits.append(TopologyLabHitTarget("sign_toggle", index, rect.copy()))
+        if editable:
+            hits.append(TopologyLabHitTarget("sign_toggle", index, rect.copy()))
         y += 36
 
     return hits

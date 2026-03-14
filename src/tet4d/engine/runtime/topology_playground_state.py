@@ -13,22 +13,28 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
 
-TOOL_NAVIGATE = "navigate"
 TOOL_INSPECT = "inspect_boundary"
-TOOL_CREATE = "create_gluing"
 TOOL_EDIT = "edit_transform"
-TOOL_PROBE = "probe"
 TOOL_SANDBOX = "piece_sandbox"
 TOOL_PLAY = "play_preview"
+TOOL_NAVIGATE = TOOL_INSPECT
+TOOL_CREATE = TOOL_EDIT
+TOOL_PROBE = TOOL_INSPECT
 TOPOLOGY_PLAYGROUND_TOOLS = (
-    TOOL_NAVIGATE,
-    TOOL_INSPECT,
-    TOOL_CREATE,
     TOOL_EDIT,
-    TOOL_PROBE,
+    TOOL_INSPECT,
     TOOL_SANDBOX,
     TOOL_PLAY,
 )
+_CANONICAL_TOOL_BY_NAME = {
+    "navigate": TOOL_INSPECT,
+    "inspect_boundary": TOOL_INSPECT,
+    "create_gluing": TOOL_EDIT,
+    "edit_transform": TOOL_EDIT,
+    "probe": TOOL_INSPECT,
+    "piece_sandbox": TOOL_SANDBOX,
+    "play_preview": TOOL_PLAY,
+}
 
 TRANSPORT_OWNER_LEGACY = "legacy_topology"
 TRANSPORT_OWNER_EXPLORER = "explorer_gluing"
@@ -313,7 +319,7 @@ class TopologyPlaygroundProbeState:
             if self.coord is None
             else _normalize_coord("probe coord", self.coord, dimension=dimension)
         )
-        if coord is None or not _coord_in_bounds(coord, axis_sizes):
+        if coord is not None and not _coord_in_bounds(coord, axis_sizes):
             coord = _center_coord(axis_sizes)
         normalized_path = [
             item
@@ -323,7 +329,9 @@ class TopologyPlaygroundProbeState:
             )
             if _coord_in_bounds(item, axis_sizes)
         ]
-        if not normalized_path:
+        if coord is None:
+            normalized_path = []
+        elif not normalized_path:
             normalized_path = [coord]
         elif normalized_path[-1] != coord:
             normalized_path.append(coord)
@@ -578,7 +586,7 @@ class TopologyPlaygroundState:
     topology_config: TopologyPlaygroundTopologyConfig
     selected_boundary: BoundaryRef | None = None
     selected_gluing: str | None = None
-    active_tool: str = TOOL_CREATE
+    active_tool: str = TOOL_EDIT
     probe_state: TopologyPlaygroundProbeState = field(
         default_factory=TopologyPlaygroundProbeState
     )
@@ -612,6 +620,7 @@ class TopologyPlaygroundState:
         self.selected_gluing = (
             None if self.selected_gluing is None else str(self.selected_gluing)
         )
+        self.active_tool = _normalize_active_tool(self.active_tool)
         if self.active_tool not in TOPOLOGY_PLAYGROUND_TOOLS:
             raise ValueError(
                 f"unsupported topology playground tool: {self.active_tool}"
@@ -750,7 +759,7 @@ def default_topology_playground_state(
     axis_sizes: Coord | None = None,
     gameplay_mode: str = GAMEPLAY_MODE_EXPLORER,
     gravity_axis: int = 1,
-    active_tool: str = TOOL_CREATE,
+    active_tool: str = TOOL_EDIT,
 ) -> TopologyPlaygroundState:
     normalized_dimension = _normalize_dimension(dimension)
     if not (0 <= int(gravity_axis) < normalized_dimension):
@@ -785,9 +794,16 @@ def default_topology_playground_state(
         dimension=normalized_dimension,
         axis_sizes=resolved_axis_sizes,
         topology_config=topology_config,
-        active_tool=active_tool,
+        active_tool=_normalize_active_tool(active_tool),
         preset_metadata=preset_metadata,
     )
+
+
+def _normalize_active_tool(tool: str) -> str:
+    try:
+        return _CANONICAL_TOOL_BY_NAME[str(tool)]
+    except KeyError as exc:
+        raise ValueError(f"unsupported topology playground tool: {tool}") from exc
 
 
 __all__ = [

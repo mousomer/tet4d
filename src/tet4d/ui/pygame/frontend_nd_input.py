@@ -76,6 +76,18 @@ _ROTATION_ACTION_TO_LOCAL_AXES = {
 AxisOverride = tuple[int, int] | tuple[int, int, int]
 
 
+def _uses_explorer_piece_transport(cfg: GameConfigND) -> bool:
+    return cfg.explorer_topology_profile is not None
+
+
+def _piece_has_cells_above_gravity(state: GameStateND) -> bool:
+    piece = state.current_piece
+    if piece is None:
+        return False
+    gravity_axis = int(state.config.gravity_axis)
+    return any(int(coord[gravity_axis]) < 0 for coord in piece.cells())
+
+
 def system_key_action(key: int) -> str | None:
     return match_bound_action(key, SYSTEM_KEYS, _SYSTEM_ACTIONS)
 
@@ -259,10 +271,7 @@ def _translated_or_explorer_candidate(
     mapped_delta = int(delta)
     if not (0 <= mapped_axis < int(state.config.ndim)):
         return None
-    if (
-        state.config.exploration_mode
-        and state.config.explorer_topology_profile is not None
-    ):
+    if _uses_explorer_piece_transport(state.config) and not _piece_has_cells_above_gravity(state):
         transport = state.config.explorer_transport
         if transport is None:
             return None

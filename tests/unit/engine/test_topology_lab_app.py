@@ -26,7 +26,7 @@ from tet4d.ui.pygame.topology_lab.app import (
     mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame import frontend_nd_setup
-from tet4d.ui.pygame.topology_lab.scene_state import TOOL_CREATE, TOOL_SANDBOX
+from tet4d.ui.pygame.topology_lab.scene_state import TOOL_EDIT, TOOL_SANDBOX
 
 class TestTopologyLabApp(unittest.TestCase):
     def _invalid_profile_3d(self) -> ExplorerTopologyProfile:
@@ -54,7 +54,7 @@ class TestTopologyLabApp(unittest.TestCase):
         self.assertEqual(launch.entry_source, "explorer")
         self.assertIs(launch.explorer_profile, profile)
 
-    def test_build_launcher_launch_defaults_to_create_for_launcher_entry(self) -> None:
+    def test_build_launcher_launch_defaults_to_edit_for_launcher_entry(self) -> None:
         profile = ExplorerTopologyProfile(dimension=4, gluings=())
         launch = build_explorer_playground_launch(
             dimension=4,
@@ -63,11 +63,11 @@ class TestTopologyLabApp(unittest.TestCase):
         )
         self.assertEqual(launch.dimension, 4)
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
-        self.assertEqual(launch.initial_tool, TOOL_CREATE)
+        self.assertEqual(launch.initial_tool, TOOL_EDIT)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertIs(launch.explorer_profile, profile)
 
-    def test_build_lab_launch_defaults_to_create_for_lab_entry(self) -> None:
+    def test_build_lab_launch_defaults_to_edit_for_lab_entry(self) -> None:
         launch = build_explorer_playground_launch(
             dimension=4,
             gameplay_mode=GAMEPLAY_MODE_NORMAL,
@@ -75,7 +75,7 @@ class TestTopologyLabApp(unittest.TestCase):
         )
         self.assertEqual(launch.dimension, 4)
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_NORMAL)
-        self.assertEqual(launch.initial_tool, TOOL_CREATE)
+        self.assertEqual(launch.initial_tool, TOOL_EDIT)
         self.assertEqual(launch.entry_source, "lab")
 
     def test_build_explorer_settings_use_compact_under_nine_board_defaults(

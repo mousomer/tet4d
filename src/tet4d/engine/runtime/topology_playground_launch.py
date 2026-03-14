@@ -68,7 +68,7 @@ def build_gameplay_config_from_topology_playground_state(
         topology_edge_rules=state.transport_policy.base_policy.edge_rules,
         kick_level=_default_kick_level_name(state.dimension),
         challenge_layers=0,
-        exploration_mode=True,
+        exploration_mode=False,
         explorer_topology_profile=state.explorer_profile,
         explorer_transport=explorer_transport,
         explorer_rigid_play_enabled=resolve_rigid_play_enabled(

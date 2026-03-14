@@ -57,6 +57,10 @@ from .scene_state import (
     ensure_sandbox_state as ensure_sandbox_state,
     playground_dims_for_state as playground_dims_for_state,
     set_active_tool as set_active_tool,
+    tool_is_edit as tool_is_edit,
+    tool_is_inspect as tool_is_inspect,
+    tool_is_play as tool_is_play,
+    tool_is_sandbox as tool_is_sandbox,
     uses_general_explorer_editor as uses_general_explorer_editor,
 )
 from .piece_sandbox import (
@@ -137,6 +141,10 @@ __all__ = [
     "sandbox_lines",
     "sandbox_validity",
     "set_active_tool",
+    "tool_is_edit",
+    "tool_is_inspect",
+    "tool_is_play",
+    "tool_is_sandbox",
     "transform_preview_label",
     "uses_general_explorer_editor",
 ]

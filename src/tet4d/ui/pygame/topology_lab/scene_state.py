@@ -34,13 +34,13 @@ from .common import (
 )
 from .interaction_audit import ExplorerInteractionAudit
 
-TOOL_NAVIGATE = "navigate"
 TOOL_INSPECT = "inspect_boundary"
-TOOL_CREATE = "create_gluing"
 TOOL_EDIT = "edit_transform"
-TOOL_PROBE = "probe"
 TOOL_SANDBOX = "piece_sandbox"
 TOOL_PLAY = "play_preview"
+TOOL_NAVIGATE = TOOL_INSPECT
+TOOL_CREATE = TOOL_EDIT
+TOOL_PROBE = TOOL_INSPECT
 PANE_CONTROLS = "controls"
 PANE_SCENE = "scene"
 TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
@@ -49,22 +49,25 @@ PANE_LABELS = {
     PANE_SCENE: "Explorer Editor",
 }
 TOPOLOGY_LAB_TOOLS = (
-    TOOL_NAVIGATE,
-    TOOL_INSPECT,
-    TOOL_CREATE,
     TOOL_EDIT,
-    TOOL_PROBE,
+    TOOL_INSPECT,
     TOOL_SANDBOX,
     TOOL_PLAY,
 )
 TOOL_LABELS = {
-    TOOL_NAVIGATE: "Navigate",
-    TOOL_INSPECT: "Inspect",
-    TOOL_CREATE: "Create",
     TOOL_EDIT: "Edit",
-    TOOL_PROBE: "Probe",
+    TOOL_INSPECT: "Inspect",
     TOOL_SANDBOX: "Sandbox",
-    TOOL_PLAY: "Play Mode",
+    TOOL_PLAY: "Play",
+}
+_CANONICAL_TOOL_BY_NAME = {
+    "navigate": TOOL_INSPECT,
+    "inspect_boundary": TOOL_INSPECT,
+    "create_gluing": TOOL_EDIT,
+    "edit_transform": TOOL_EDIT,
+    "probe": TOOL_INSPECT,
+    "piece_sandbox": TOOL_SANDBOX,
+    "play_preview": TOOL_PLAY,
 }
 
 
@@ -113,7 +116,7 @@ class TopologyPlaygroundState:
     probe_path: list[tuple[int, ...]] | None = None
     probe_frame_permutation: tuple[int, ...] | None = None
     probe_frame_signs: tuple[int, ...] | None = None
-    active_tool: str = TOOL_CREATE
+    active_tool: str = TOOL_EDIT
     active_pane: str = PANE_CONTROLS
     hovered_boundary_index: int | None = None
     hovered_glue_id: str | None = None
@@ -329,6 +332,14 @@ def _runtime_sandbox_state_from_ui(
 ) -> RuntimeTopologyPlaygroundSandboxPieceState:
     if state.sandbox is None:
         return RuntimeTopologyPlaygroundSandboxPieceState()
+    origin = state.sandbox.origin
+    local_blocks = state.sandbox.local_blocks
+    if origin is not None and len(origin) != state.dimension:
+        return RuntimeTopologyPlaygroundSandboxPieceState()
+    if local_blocks is not None and any(
+        len(block) != state.dimension for block in local_blocks
+    ):
+        return RuntimeTopologyPlaygroundSandboxPieceState()
     return state.sandbox
 
 
@@ -414,6 +425,29 @@ def _remember_play_settings(
     state.play_settings_by_dimension[target_dimension] = settings
 
 
+def canonical_tool_name(tool: str) -> str:
+    try:
+        return _CANONICAL_TOOL_BY_NAME[str(tool)]
+    except KeyError as exc:
+        raise ValueError(f"unsupported topology lab tool: {tool}") from exc
+
+
+def tool_is_edit(tool: str) -> bool:
+    return canonical_tool_name(tool) == TOOL_EDIT
+
+
+def tool_is_inspect(tool: str) -> bool:
+    return canonical_tool_name(tool) == TOOL_INSPECT
+
+
+def tool_is_sandbox(tool: str) -> bool:
+    return canonical_tool_name(tool) == TOOL_SANDBOX
+
+
+def tool_is_play(tool: str) -> bool:
+    return canonical_tool_name(tool) == TOOL_PLAY
+
+
 def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     runtime_state = state.canonical_state
     if runtime_state is None:
@@ -431,17 +465,12 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
         rigid_play_mode=str(runtime_state.launch_settings.rigid_play_mode),
     )
     _remember_play_settings(state, settings, dimension=runtime_state.dimension)
-    probe_unavailable = any(
-        str(entry).startswith("Probe unavailable:")
-        for entry in (state.probe_trace or ())
-    )
-    if not probe_unavailable:
-        state.probe_coord = runtime_state.probe_state.coord
-        state.probe_trace = list(runtime_state.probe_state.trace)
-        state.probe_path = list(runtime_state.probe_state.path)
-        state.probe_frame_permutation = runtime_state.probe_state.frame_permutation
-        state.probe_frame_signs = runtime_state.probe_state.frame_signs
-        state.highlighted_glue_id = runtime_state.probe_state.highlighted_gluing
+    state.probe_coord = runtime_state.probe_state.coord
+    state.probe_trace = list(runtime_state.probe_state.trace)
+    state.probe_path = list(runtime_state.probe_state.path)
+    state.probe_frame_permutation = runtime_state.probe_state.frame_permutation
+    state.probe_frame_signs = runtime_state.probe_state.frame_signs
+    state.highlighted_glue_id = runtime_state.probe_state.highlighted_gluing
     sandbox_state = runtime_state.sandbox_piece_state
     state.sandbox = (
         sandbox_state if _sandbox_visible_in_shell(state, sandbox_state) else None
@@ -730,19 +759,10 @@ def set_selected_glue_id(
 
 
 def current_highlighted_glue_id(state: TopologyPlaygroundState) -> str | None:
-    if _probe_unavailable_locally(state):
-        return state.highlighted_glue_id
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return runtime_state.probe_state.highlighted_gluing
     return state.highlighted_glue_id
-
-
-def _probe_unavailable_locally(state: TopologyPlaygroundState) -> bool:
-    return any(
-        str(entry).startswith("Probe unavailable:")
-        for entry in (state.probe_trace or ())
-    )
 
 
 def _normalize_probe_coord_value(
@@ -776,8 +796,6 @@ def _normalize_probe_path_value(
 
 
 def current_probe_coord(state: TopologyPlaygroundState) -> tuple[int, ...] | None:
-    if _probe_unavailable_locally(state):
-        return state.probe_coord
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return runtime_state.probe_state.coord
@@ -785,8 +803,6 @@ def current_probe_coord(state: TopologyPlaygroundState) -> tuple[int, ...] | Non
 
 
 def current_probe_trace(state: TopologyPlaygroundState) -> list[str]:
-    if _probe_unavailable_locally(state):
-        return list(state.probe_trace or ())
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return list(runtime_state.probe_state.trace)
@@ -794,8 +810,6 @@ def current_probe_trace(state: TopologyPlaygroundState) -> list[str]:
 
 
 def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
-    if _probe_unavailable_locally(state):
-        return list(state.probe_path or ())
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return list(runtime_state.probe_state.path)
@@ -805,12 +819,6 @@ def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
 def current_probe_frame(
     state: TopologyPlaygroundState,
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
-    if _probe_unavailable_locally(state):
-        return _normalize_probe_frame_value(
-            state.dimension,
-            state.probe_frame_permutation,
-            state.probe_frame_signs,
-        )
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
         return _normalize_probe_frame_value(
@@ -848,9 +856,7 @@ def replace_probe_state(
         current_signs if frame_signs is _UNSET else frame_signs,
     )
     runtime_state = canonical_playground_state(state)
-    if runtime_state is not None and not any(
-        entry.startswith("Probe unavailable:") for entry in normalized_trace
-    ):
+    if runtime_state is not None:
         _replace_canonical_state(
             state,
             probe_state=RuntimeTopologyPlaygroundProbeState(
@@ -926,6 +932,10 @@ def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]
 
 
 def ensure_probe_state(state: TopologyPlaygroundState) -> None:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        sync_shell_state_from_canonical(state)
+        return
     dims = playground_dims_for_state(state)
     if state.probe_coord is None or len(state.probe_coord) != state.dimension:
         state.probe_coord = tuple(0 for _ in range(state.dimension))
@@ -985,15 +995,13 @@ def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
 
 
 def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
-    if tool not in TOPOLOGY_LAB_TOOLS:
-        raise ValueError(f"unsupported topology lab tool: {tool}")
-    state.active_tool = tool
+    state.active_tool = canonical_tool_name(tool)
     state.pending_source_index = None
     state.hovered_boundary_index = None
     state.hovered_glue_id = None
-    if tool != TOOL_SANDBOX and state.sandbox is not None:
+    if not tool_is_sandbox(state.active_tool) and state.sandbox is not None:
         state.sandbox.enabled = False
-    if tool == TOOL_SANDBOX:
+    if tool_is_sandbox(state.active_tool):
         ensure_sandbox_state(state)
         assert state.sandbox is not None
         state.sandbox.enabled = True
@@ -1023,6 +1031,7 @@ __all__ = [
     "TopologyLabState",
     "TopologyPlaygroundState",
     "canonical_playground_state",
+    "canonical_tool_name",
     "current_explorer_draft",
     "current_explorer_profile",
     "current_highlighted_glue_id",
@@ -1050,6 +1059,10 @@ __all__ = [
     "set_selected_glue_id",
     "sync_canonical_playground_state",
     "sync_shell_state_from_canonical",
+    "tool_is_edit",
+    "tool_is_inspect",
+    "tool_is_play",
+    "tool_is_sandbox",
     "update_explorer_draft",
     "uses_general_explorer_editor",
 ]

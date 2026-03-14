@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-13  
-Branch: `codex/explorer-topology-live`  
+Last updated: 2026-03-14  
+Branch: `codex/toplogy-dirty`  
 Worktree expectation: dirty only when an active batch is in progress
 
 ## Purpose
@@ -41,7 +41,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.84`
+1. `delivery_size_pressure = 1.85`
 2. `code_balance = 1.07`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -100,7 +100,7 @@ Dominant remaining pressure:
 
 ## Explorer Playground Status
 
-- The same-screen Explorer Playground product goal remains complete on `codex/explorer-topology-live`.
+- The same-screen Explorer Playground product goal remains complete on `codex/toplogy-dirty`.
 - Stage 1 of the canonical-state migration is now live: `src/tet4d/engine/runtime/topology_playground_state.py` now defines the engine/runtime-owned playground state contract.
 - Stage 2 is now live for the migrated explorer path: explorer scene refresh, topology preview compilation, and explorer-side selection/probe highlighting now consume that canonical state through additive bridge helpers in `src/tet4d/ui/pygame/topology_lab/scene_state.py`, `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, `src/tet4d/ui/pygame/topology_lab/boundary_picker.py`, and `src/tet4d/ui/pygame/launch/topology_lab_menu.py`.
 - Retained UI-local shell fields in `src/tet4d/ui/pygame/topology_lab/scene_state.py` remain additive compatibility paths for non-migrated analysis/edit flows; Stage 3 completion here is limited to the core explorer gluing workflow, not every retained panel consumer.
@@ -113,9 +113,11 @@ Dominant remaining pressure:
 - Semantics-correctness stabilization follow-up (2026-03-13): explorer/sandbox/gameplay now share one explicit `CELLWISE_FREE` vs `RIGID` movement-policy split on the active transport paths, the shared resolver distinguishes boundary point-maps from piece-frame transport, chart-split torus wraps remain rigidly coherent instead of being mislabeled as non-rigid, and the ND legality-preview/input path now uses the same policy-aware whole-piece transport semantics as live gameplay.
 - Ownership + mode-boundary cleanup follow-up (2026-03-13): `src/tet4d/engine/runtime/topology_playground_state.py` now exposes explicit canonical/editor/inspector/sandbox/derived ownership views, `src/tet4d/ui/pygame/topology_lab/state_ownership.py` records the UI-side transient bucket split, and the live menu path now keeps sandbox projection focus/path/frame separate from inspector probe state for scene overlays, footer controls, and workspace diagnostics. The repo-truth matrix for the current surface lives in `docs/plans/topology_playground_ownership_audit.md`.
 - The `Analysis View` pane now limits itself to board/preset settings, save/export, experiment-pack actions, and read-only seam context; row-based source/target/tangent/apply/remove controls no longer act as a parallel editor for the migrated explorer path.
-- Menu ambiguity cleanup pass 1 is now live on that migrated path: `Explorer Preset` in `Analysis View` is the only visible preset selector, the transform editor shows the active preset as a read-only display, `Save`/`Export`/`Experiments`/`Back` no longer duplicate in the workspace action bar, `Play Mode` replaces the misleading play-toggle label, analysis seam-context rows are non-selectable status displays, the `Normal Game` branch is labeled as legacy compatibility, and the footer movement grid now identifies `Probe moves` versus `Sandbox piece moves`.
+- Menu ambiguity cleanup pass 1 remains the live baseline on that migrated path: `Explorer Preset` in `Analysis View` is the only visible preset selector, the transform editor shows the active preset as a read-only display, `Save`/`Export`/`Experiments`/`Back` no longer duplicate in the workspace action bar, analysis seam-context rows are non-selectable status displays, the `Normal Game` branch is labeled as legacy compatibility, and the footer movement grid distinguishes inspector-local traversal from sandbox piece movement.
+- Mode/action simplification pass 2 is now live on the migrated explorer path: the scene-first workspace now exposes four canonical user-facing modes (`Edit`, `Inspect`, `Sandbox`, `Play`), the transform editor is interactive only in `Edit`, `Apply`/`Remove` live only in `Edit`, inspect reset and cellwise traversal live only in `Inspect`, sandbox piece controls live only in `Sandbox`, and `Play This Topology` lives only in `Play`.
 - Legacy-consumer retirement follow-up (2026-03-12): the migrated probe/highlight path now writes canonical playground probe state through `src/tet4d/ui/pygame/topology_lab/scene_state.py` helpers, `src/tet4d/ui/pygame/topology_lab/controls_panel.py` delegates normal-mode rows and resolved-profile export to `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`, and the unused `run_topology_lab_menu(...)` alias has been removed after caller audit found no remaining `src/` callers.
-- Remaining compatibility debt: retained shell snapshots still backstop non-explorer reset/rehydration and probe-unavailable fallback paths in `src/tet4d/ui/pygame/topology_lab/scene_state.py`, while normal-mode legacy rows and resolved-profile export still exist intentionally as isolated helpers.
+- Compatibility-debt retirement pass 2 is now live on the migrated explorer path: `src/tet4d/ui/pygame/topology_lab/scene_state.py` no longer relies on retained shell snapshots for probe-unavailable fallback, the direct play-launch path no longer re-syncs stale dirty shell fields before launch, and canonical runtime probe/play state remains authoritative on the explorer path.
+- Remaining compatibility debt after this pass: retained shell snapshot fields in `src/tet4d/ui/pygame/topology_lab/scene_state.py` are still kept only as non-explorer compatibility mirrors, while normal-mode legacy rows and resolved-profile export remain intentionally isolated in `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`.
 - Stage 8 is now live: the shell's `Play This Topology` action launches directly from the current in-memory playground draft state, with no secondary conversion menu on the migrated path.
 - The migrated play-launch path now bypasses the older shell-snapshot `build_explorer_playground_config(...)` helper and instead routes through `src/tet4d/engine/runtime/topology_playground_launch.py` plus `src/tet4d/ui/pygame/topology_lab/play_launch.py`, so gameplay launch now reads the canonical `TopologyPlaygroundState` directly.
 - Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` without reintroducing full topology editing into launcher UI.
@@ -125,7 +127,10 @@ Dominant remaining pressure:
 
 - Unsafe-topology correctness fix pass 1 (2026-03-12): preview/probe remains the cellwise topology surface and gameplay remains the rigid-piece transport surface, but sandbox now shares gameplay's transport classifier so both accept `plain_translation` and `rigid_transform` while still blocking `cellwise_deformation`. Non-bijective unsafe preset / board-size pairings now surface explicitly as `unsupported for current board dimensions ...` during preview/runtime validation instead of degrading into partial connectivity.
 - Topology playability signaling pass 1 (2026-03-12): the canonical playground state now owns a runtime-derived playability analysis that distinguishes `valid` vs `invalid`, `cellwise explorable` vs `not explorable`, and `rigid-playable` vs `not rigid-playable` from current validation plus rigid transport behavior. Analysis View and the workspace status/preview panel surface that same signal directly above `Play This Topology`, so confusing cases such as valid-but-explorer-only `Projective` and invalid-dimension `Sphere` now explain themselves in-shell.
-- Play-launch topology propagation + unsafe launch fix (2026-03-12): `Play This Topology` now treats launch as a synchronization boundary on the migrated path, re-syncing dirty canonical playground state and refreshing launch-critical preview validity before deciding whether to block or launch. This prevents retained shell/canonical drift from launching stale topology state and clears stale invalid preview errors before a now-valid unsafe topology launches.
+- Play-launch topology propagation + unsafe launch fix (2026-03-12, refined 2026-03-14): `Play This Topology` still refreshes launch-critical preview validity before deciding whether to block or launch, but it no longer treats stale dirty shell fields as an explorer-path source of truth. Launch now uses the canonical `TopologyPlaygroundState` already held by the migrated explorer path instead of re-importing drifted shell snapshots.
+- Play-launch gameplay/runtime correction (2026-03-14): direct playground launch now enters ordinary gameplay controls/gravity/locking again instead of the free-exploration runtime, while 2D/ND gameplay still keeps explorer seam transport active whenever the launched topology carries an explorer profile.
+- Actual-play spawn follow-up (2026-03-14): launched explorer-topology games no longer invalidate the opening piece while it is still above the gravity axis; standard spawn works again, and explorer seam transport takes over once the piece enters the board.
+- Dimension-cycle sandbox follow-up (2026-03-14): changing Explorer Playground dimensions now clears stale sandbox transients from the previous dimension before canonical-state rebuild, so retained sandbox origin/local-block payloads no longer crash the migrated explorer shell during dimension changes.
 - The ND launcher no longer treats Explorer Playground status messages as app-exit flags; `src/tet4d/ui/pygame/launch/launcher_nd_runner.py` now returns to the launcher menu after the playground closes unless the launcher callback itself explicitly requests exit.
 - Startup optimization pass 1 is now live for the audited explorer-entry route: explicit Explorer launches skip the stored explorer-profile refresh, launch validation and default probe placement no longer build extra movement graphs, and representative first-frame readiness improved from `137.5/555.5/6890.3 ms` to `64.6/215.9/2326.1 ms` for `2D/3D/4D` launches while startup movement-graph builds fell from `4` to `1`.
 - Remaining startup hotspot after that pass: the one required preview compile inside `_refresh_explorer_scene_state(...)`, especially in `4D`; the new playability signal now piggybacks on that canonical refresh using the live preview plus a lightweight rigid-transport scan, while the heavier experiment-pack analysis still remains deferred.
@@ -262,13 +267,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `2797` real LOC
-2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1899` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `2842` real LOC
+2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1898` real LOC
 3. `scripts/arch_metrics.py`: `1869` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1292` real LOC
+5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1325` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
-7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1015` real LOC
+7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1021` real LOC
 8. `tools/governance/generate_configuration_reference.py`: `978` real LOC
 
 Thin-wrapper budgets:

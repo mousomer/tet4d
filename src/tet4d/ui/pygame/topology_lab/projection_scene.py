@@ -646,10 +646,16 @@ def _draw_info_panel(
 ) -> None:
     pygame.draw.rect(surface, _BACKGROUND, rect, border_radius=10)
     pygame.draw.rect(surface, _BORDER, rect, 1, border_radius=10)
+    mode_label = {
+        "edit_transform": "Edit",
+        "inspect_boundary": "Inspect",
+        "piece_sandbox": "Sandbox",
+        "play_preview": "Play",
+    }.get(str(active_tool or ""), "Inspect")
     lines = [
         "Projection sync",
         f"Selected cell: {list(selected_coord)}",
-        f"Tool: {str(active_tool or '').replace('_', ' ') or 'inspect'}",
+        f"Mode: {mode_label}",
     ]
     if focused_glue_id:
         lines.append(f"Seam focus: {focused_glue_id}")

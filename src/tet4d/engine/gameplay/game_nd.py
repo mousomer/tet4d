@@ -107,6 +107,37 @@ def _resolve_explorer_rigid_play_enabled_nd(config) -> bool | None:
     )
 
 
+def _uses_explorer_piece_transport_nd(config) -> bool:
+    return config.explorer_topology_profile is not None
+
+
+def _piece_cells_in_play_bounds_nd(
+    piece: ActivePieceND,
+    *,
+    dims: Coord,
+    gravity_axis: int,
+) -> tuple[Coord, ...] | None:
+    cells = tuple(piece.cells())
+    for coord in cells:
+        for axis in range(len(dims)):
+            value = int(coord[axis])
+            if axis == int(gravity_axis):
+                if value >= int(dims[axis]):
+                    return None
+                continue
+            if value < 0 or value >= int(dims[axis]):
+                return None
+    return cells
+
+
+def _piece_has_cells_above_gravity_nd(
+    piece: ActivePieceND,
+    *,
+    gravity_axis: int,
+) -> bool:
+    return any(int(coord[int(gravity_axis)]) < 0 for coord in piece.cells())
+
+
 @dataclass
 class GameConfigND:
     dims: Coord = (10, 20, 6)
@@ -299,11 +330,14 @@ class GameStateND:
         return True
 
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
-        if (
-            self.config.exploration_mode
-            and self.config.explorer_topology_profile is not None
-        ):
+        if self.config.exploration_mode and _uses_explorer_piece_transport_nd(self.config):
             return piece_cells_in_bounds(piece, dims=self.config.dims)
+        if _uses_explorer_piece_transport_nd(self.config):
+            return _piece_cells_in_play_bounds_nd(
+                piece,
+                dims=self.config.dims,
+                gravity_axis=self.config.gravity_axis,
+            )
         return map_piece_cells(
             self.topology_policy,
             piece.cells(),
@@ -421,8 +455,11 @@ class GameStateND:
         if self.current_piece is None:
             return False
         if (
-            self.config.exploration_mode
-            and self.config.explorer_topology_profile is not None
+            _uses_explorer_piece_transport_nd(self.config)
+            and not _piece_has_cells_above_gravity_nd(
+                self.current_piece,
+                gravity_axis=self.config.gravity_axis,
+            )
         ):
             non_zero = [
                 (axis, int(value))
@@ -440,11 +477,14 @@ class GameStateND:
         if self.current_piece is None:
             return False
         if (
-            self.config.exploration_mode
-            and self.config.explorer_topology_profile is not None
+            _uses_explorer_piece_transport_nd(self.config)
+            and not _piece_has_cells_above_gravity_nd(
+                self.current_piece,
+                gravity_axis=self.config.gravity_axis,
+            )
         ):
             if self.config.explorer_transport is None:
-                raise ValueError("explorer transport must exist in exploration mode")
+                raise ValueError("explorer transport must exist when explorer topology is active")
             candidate = move_piece_via_explorer_glue(
                 self.current_piece,
                 transport=self.config.explorer_transport,

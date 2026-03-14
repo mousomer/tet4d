@@ -8,8 +8,9 @@ from tet4d.engine.gameplay.api import (
     piece_set_2d_options_gameplay,
     piece_set_options_for_dimension_gameplay,
 )
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig
-from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 from tet4d.engine.runtime import topology_playground_launch
 from tet4d.engine.runtime.topology_explorer_preview import advance_explorer_probe
@@ -23,10 +24,13 @@ from tet4d.engine.runtime.topology_playground_state import (
 )
 from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
     projective_plane_profile_2d,
     projective_space_profile_3d,
     swap_xw_profile_4d,
 )
+from tet4d.ui.pygame import frontend_nd_input
+from tet4d.ui.pygame.keybindings import EXPLORER_KEYS_3D, KEYS_3D
 from tet4d.ui.pygame.topology_lab.play_launch import (
     launch_playground_state_gameplay,
 )
@@ -58,7 +62,7 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         self.assertEqual((cfg.width, cfg.height), (12, 18))
         self.assertEqual(cfg.piece_set, piece_options[piece_index])
         self.assertEqual(cfg.speed_level, 5)
-        self.assertTrue(cfg.exploration_mode)
+        self.assertFalse(cfg.exploration_mode)
         self.assertIs(cfg.explorer_topology_profile, state.explorer_profile)
         self.assertIsNotNone(cfg.explorer_transport)
         self.assertEqual(cfg.explorer_transport.dims, (12, 18))
@@ -90,7 +94,7 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         self.assertEqual(cfg.dims, (6, 6, 6, 6))
         self.assertEqual(cfg.piece_set_id, piece_options[piece_index])
         self.assertEqual(cfg.speed_level, 6)
-        self.assertTrue(cfg.exploration_mode)
+        self.assertFalse(cfg.exploration_mode)
         self.assertIs(cfg.explorer_topology_profile, state.explorer_profile)
         self.assertIsNotNone(cfg.explorer_transport)
         self.assertEqual(cfg.explorer_transport.dims, (6, 6, 6, 6))
@@ -156,6 +160,48 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         state.launch_settings.rigid_play_mode = RIGID_PLAY_MODE_OFF
         cellwise_cfg = build_gameplay_config_from_topology_playground_state(state)
         self.assertFalse(cellwise_cfg.explorer_rigid_play_enabled)
+
+    def test_launch_config_uses_gameplay_bindings_instead_of_explorer_traversal(self) -> None:
+        state = default_topology_playground_state(
+            dimension=3,
+            axis_sizes=(6, 12, 6),
+        )
+        state.topology_config.explorer_profile = axis_wrap_profile(
+            dimension=3,
+            wrapped_axes=(0,),
+        )
+
+        cfg = build_gameplay_config_from_topology_playground_state(state)
+
+        self.assertEqual(
+            frontend_nd_input.gameplay_action_for_key(KEYS_3D["move_x_pos"][0], cfg),
+            "move_x_pos",
+        )
+        self.assertIsNone(
+            frontend_nd_input.gameplay_action_for_key(
+                EXPLORER_KEYS_3D["move_up"][0],
+                cfg,
+            )
+        )
+
+    def test_launch_config_spawns_playable_piece_above_gravity_axis(self) -> None:
+        state = default_topology_playground_state(
+            dimension=3,
+            axis_sizes=(6, 12, 6),
+        )
+        state.topology_config.explorer_profile = axis_wrap_profile(
+            dimension=3,
+            wrapped_axes=(0,),
+        )
+
+        cfg = build_gameplay_config_from_topology_playground_state(state)
+        gameplay_state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+
+        self.assertIsNotNone(gameplay_state.current_piece)
+        self.assertFalse(gameplay_state.game_over)
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in gameplay_state.current_piece.cells())
+        )
 
 
     def test_launch_preserves_full_projective_directed_seam_family(self) -> None:

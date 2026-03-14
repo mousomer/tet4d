@@ -208,6 +208,30 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertIs(derived.transport_policy, state.transport_policy)
         self.assertIs(derived.gravity_mode, state.gravity_mode)
 
+    def test_probe_state_preserves_unavailable_inspect_state(self) -> None:
+        legacy_profile = default_topology_profile_state(
+            dimension=3,
+            gravity_axis=1,
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+        )
+        state = TopologyPlaygroundState(
+            dimension=3,
+            axis_sizes=(5, 8, 8),
+            topology_config=TopologyPlaygroundTopologyConfig(
+                legacy_profile=legacy_profile,
+                explorer_profile=ExplorerTopologyProfile(dimension=3, gluings=()),
+            ),
+            probe_state=TopologyPlaygroundProbeState(
+                coord=None,
+                path=(),
+                trace=("Probe unavailable",),
+            ),
+        )
+
+        self.assertIsNone(state.probe_state.coord)
+        self.assertEqual(state.probe_state.path, ())
+        self.assertEqual(state.probe_state.trace, ("Probe unavailable",))
+
     def test_normal_mode_defaults_to_legacy_transport_policy(self) -> None:
         legacy_profile = default_topology_profile_state(
             dimension=2,

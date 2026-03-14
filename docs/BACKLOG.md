@@ -1,8 +1,25 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-13  
+Updated: 2026-03-14  
 Scope: active open backlog, governance watchlist, and current change footprint.
+
+Current sub-batch (2026-03-14): topology playground cleanup pass 2.
+- Root cause: even after the ownership split and pass-1 ambiguity cleanup, the migrated explorer shell still exposed mixed tool/action concepts (`create`/`probe`/`play mode`), let non-edit surfaces reach seam-edit controls, and still carried compatibility behavior where retained shell snapshots could backstop probe-unavailable or stale play-launch paths.
+- Fix strategy: collapsed the live explorer surface to four canonical modes (`Edit`, `Inspect`, `Sandbox`, `Play`), restricted scene action bars and transform-editor interactivity to the owning mode, removed probe-unavailable shell-fallback dependence from `src/tet4d/ui/pygame/topology_lab/scene_state.py`, and stopped `Play This Topology` from rebuilding explorer launch state from drifted dirty shell fields.
+- Updated `CURRENT_STATE.md` and `docs/plans/topology_playground_ownership_audit.md` to mark pass-2 mode ownership as the live baseline and to narrow the remaining compatibility debt to isolated non-explorer mirrors plus explicit legacy normal-mode helpers.
+- Added focused regressions in `tests/unit/engine/test_topology_lab_menu.py`, `tests/unit/engine/test_topology_lab_state_ownership.py`, `tests/unit/engine/test_topology_lab_app.py`, `tests/unit/engine/test_topology_playground_state.py`, and `tests/unit/engine/test_topology_playground_launch.py` covering mode-owned action bars, read-only inspect behavior, sandbox/play no-longer-editing paths, canonical-only play launch, and inspector/sandbox ownership continuity.
+
+Current sub-batch (2026-03-14): explorer play-launch gameplay/runtime fix.
+- Root cause: `Play This Topology` was launching gameplay with `exploration_mode=True`, so the runtime entered explorer free-movement controls/spawn/gravity semantics instead of actual play, which made launched games behave like probe/sandbox traversal and left only explorer vertical bindings visibly active.
+- Fix strategy: changed `src/tet4d/engine/runtime/topology_playground_launch.py` so direct playground play launch enters standard gameplay mode, while `src/tet4d/engine/gameplay/game2d.py`, `src/tet4d/engine/gameplay/game_nd.py`, and `src/tet4d/ui/pygame/frontend_nd_input.py` now keep explorer seam transport active whenever an explorer topology profile is present instead of keying that transport solely off the free-exploration flag. Actual-play explorer pieces now remain spawn-valid above the gravity axis and use ordinary translation until they fully enter the board, preventing the no-piece/game-over-at-start regression.
+- Updated `CURRENT_STATE.md` to record that explorer play launch now preserves ordinary gameplay controls/gravity/locking while still honoring the canonical explorer transport.
+- Added focused regressions in `tests/unit/engine/test_topology_playground_launch.py`, `tests/unit/engine/test_game2d.py`, and `tests/unit/engine/test_game_nd.py` covering gameplay-key routing on launched playground configs, actual-play spawn validity, and live seam transport in actual play mode.
+
+Current sub-batch (2026-03-14): topology playground dimension-cycle sandbox-state fix.
+- Root cause: changing Explorer Playground dimensions while a sandbox piece/state from the old dimension was still retained could push a stale-origin sandbox payload into canonical-state reconstruction, crashing normalization with `ValueError: sandbox origin must match the active dimension`.
+- Fix strategy: reset transient sandbox focus/state during dimension changes in `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, and sanitize old-dimension sandbox payloads in `src/tet4d/ui/pygame/topology_lab/scene_state.py` before rebuilding canonical runtime state.
+- Updated focused menu regression coverage in `tests/unit/engine/test_topology_lab_menu.py` so stale sandbox state no longer crashes dimension switching and is replaced by a clean empty sandbox state for the new dimension.
 
 Current sub-batch (2026-03-13): topology playground ownership and mode-boundary cleanup.
 - Root cause: after the semantics pass, the live playground still mixed canonical runtime state with UI-local transients in one shell surface, and sandbox reused inspector probe selection/path/frame for projection clicks, overlays, and footer controls. That made mode ownership hard to audit and kept sandbox/inspector leakage alive even though movement semantics were already correct.
@@ -1835,5 +1852,3 @@ Current sub-batch (2026-03-13): explorer rigid-play mode and unsafe seam movemen
 5. `docs/ARCHITECTURE_CONTRACT.md`
 6. `CURRENT_STATE.md`
 7. `docs/history/DONE_SUMMARIES.md`
-
-

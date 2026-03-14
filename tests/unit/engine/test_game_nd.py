@@ -281,6 +281,38 @@ class TestGameND(unittest.TestCase):
             state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
         )
 
+    def test_explorer_glue_runtime_wraps_live_nd_movement_in_actual_play(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(3, 3, 2))
+
+        self.assertTrue(state.try_move_axis(0, 1))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
+        )
+
+    def test_actual_play_with_explorer_profile_spawns_piece_without_game_over(self):
+        cfg = GameConfigND(
+            dims=(6, 12, 6),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+
+        self.assertIsNotNone(state.current_piece)
+        self.assertFalse(state.game_over)
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in state.current_piece.cells())
+        )
+
     def test_explorer_interior_translation_preserves_rotation_frame_nd(self):
         normal_cfg = GameConfigND(dims=(10, 10, 10), gravity_axis=1)
         explorer_cfg = GameConfigND(

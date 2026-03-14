@@ -2,13 +2,7 @@ from __future__ import annotations
 
 from .common import TopologyLabHitTarget
 from .scene_state import (
-    TOOL_CREATE,
     TOOL_EDIT,
-    TOOL_INSPECT,
-    TOOL_NAVIGATE,
-    TOOL_PLAY,
-    TOOL_PROBE,
-    TOOL_SANDBOX,
     TopologyLabState,
     current_explorer_draft,
     current_explorer_profile,
@@ -16,6 +10,8 @@ from .scene_state import (
     set_highlighted_glue_id,
     set_selected_boundary_index,
     set_selected_glue_id,
+    tool_is_edit,
+    tool_is_inspect,
     update_explorer_draft,
     uses_general_explorer_editor,
 )
@@ -84,14 +80,6 @@ def _finish_create_pick(state: TopologyLabState, boundary_index: int) -> str:
     return "Target boundary selected; editing transform"
 
 
-def _handle_create_pick(state: TopologyLabState, boundary_index: int) -> str:
-    if state.pending_source_index is None:
-        state.pending_source_index = boundary_index
-        set_selected_boundary_index(state, boundary_index)
-        return "Source boundary selected"
-    return _finish_create_pick(state, boundary_index)
-
-
 def _glue_boundary_indexes(glue) -> tuple[int, int]:
     source_index = glue.source.axis * 2 + (1 if glue.source.side == "+" else 0)
     target_index = glue.target.axis * 2 + (1 if glue.target.side == "+" else 0)
@@ -125,6 +113,8 @@ def _select_existing_glue(
 
 def _handle_edit_pick(state: TopologyLabState, boundary_index: int) -> str | None:
     _select_boundary_only(state, boundary_index)
+    if state.pending_source_index is not None:
+        return _finish_create_pick(state, boundary_index)
     profile = current_explorer_profile(state)
     if profile is None:
         return None
@@ -139,7 +129,10 @@ def _handle_edit_pick(state: TopologyLabState, boundary_index: int) -> str | Non
                 source_index=source_index,
                 target_index=target_index,
             )
-    return "No active gluing on selected boundary"
+    state.pending_source_index = boundary_index
+    set_selected_glue_id(state, None)
+    set_highlighted_glue_id(state, None)
+    return "Source boundary selected"
 
 
 def update_hover_target(
@@ -159,17 +152,11 @@ def apply_boundary_pick(state: TopologyLabState, boundary_index: int) -> str | N
     if not uses_general_explorer_editor(state) or current_explorer_draft(state) is None:
         return None
     state.hovered_boundary_index = boundary_index
-    if state.active_tool == TOOL_NAVIGATE:
-        return None
-    if state.active_tool == TOOL_INSPECT:
+    if tool_is_edit(state.active_tool):
+        return _handle_edit_pick(state, boundary_index)
+    if tool_is_inspect(state.active_tool):
         _select_boundary_only(state, boundary_index)
         return f"Boundary {_BOUNDARY_LABELS[boundary_index]} selected"
-    if state.active_tool == TOOL_CREATE:
-        return _handle_create_pick(state, boundary_index)
-    if state.active_tool == TOOL_EDIT:
-        return _handle_edit_pick(state, boundary_index)
-    if state.active_tool in {TOOL_PROBE, TOOL_SANDBOX, TOOL_PLAY}:
-        _select_boundary_only(state, boundary_index)
     return None
 
 
@@ -178,6 +165,8 @@ def apply_boundary_edit_pick(
 ) -> str | None:
     if not uses_general_explorer_editor(state) or current_explorer_draft(state) is None:
         return None
+    if not tool_is_edit(state.active_tool):
+        return "Switch to Edit to change seams"
     state.hovered_boundary_index = boundary_index
     profile = current_explorer_profile(state)
     if profile is not None:
@@ -193,8 +182,11 @@ def apply_boundary_edit_pick(
                     source_index=source_index,
                     target_index=target_index,
                 )
-    set_active_tool(state, TOOL_CREATE)
-    return _handle_create_pick(state, boundary_index)
+    state.pending_source_index = boundary_index
+    set_selected_boundary_index(state, boundary_index)
+    set_selected_glue_id(state, None)
+    set_highlighted_glue_id(state, None)
+    return "Source boundary selected"
 
 
 def apply_glue_pick(state: TopologyLabState, glue_id: str) -> str | None:
@@ -209,16 +201,18 @@ def apply_glue_pick(state: TopologyLabState, glue_id: str) -> str | None:
         set_selected_glue_id(state, glue_id)
         set_highlighted_glue_id(state, glue_id)
         set_selected_boundary_index(state, source_index)
-        update_explorer_draft(
-            state,
-            slot_index=index,
-            source_index=source_index,
-            target_index=target_index,
-            permutation_index=draft.permutation_index,
-            signs=draft.signs,
-        )
-        set_active_tool(state, TOOL_EDIT)
-        return f"Editing {glue_id}"
+        if tool_is_edit(state.active_tool):
+            update_explorer_draft(
+                state,
+                slot_index=index,
+                source_index=source_index,
+                target_index=target_index,
+                permutation_index=draft.permutation_index,
+                signs=draft.signs,
+            )
+            set_active_tool(state, TOOL_EDIT)
+            return f"Editing {glue_id}"
+        return f"Selected {glue_id}"
     return None
 
 

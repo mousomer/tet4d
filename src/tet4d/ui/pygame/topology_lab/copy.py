@@ -59,7 +59,7 @@ def display_title_for_state(state: Any) -> str:
 def topology_note_text(state: Any) -> str:
     if uses_general_explorer_editor(state):
         return (
-            f"Explorer Playground {state.dimension}D is the live shell for seam editing, piece movement, probe traversal, and play from the current draft topology. "
+            f"Explorer Playground {state.dimension}D is the live shell for seam editing, inspect traversal, piece movement, and play from the current draft topology. "
             "For 3D and 4D, the primary scene now uses synchronized 2D coordinate-plane projections with explicit hidden-coordinate slices so selection and sandbox movement stay readable across panels."
         )
     return (

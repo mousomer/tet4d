@@ -80,6 +80,26 @@ def _resolve_explorer_rigid_play_enabled_2d(config) -> bool | None:
     )
 
 
+def _uses_explorer_piece_transport_2d(config) -> bool:
+    return config.explorer_topology_profile is not None
+
+
+def _piece_cells_in_play_bounds_2d(
+    piece: ActivePiece2D,
+    *,
+    width: int,
+    height: int,
+) -> tuple[tuple[int, int], ...] | None:
+    cells = tuple(piece.cells())
+    if any(x < 0 or x >= width or y >= height for x, y in cells):
+        return None
+    return cells
+
+
+def _piece_has_cells_above_gravity_2d(piece: ActivePiece2D) -> bool:
+    return any(int(y) < 0 for _x, y in piece.cells())
+
+
 @dataclass
 class GameConfig:
     width: int = 10
@@ -249,13 +269,16 @@ class GameState:
     def _mapped_piece_cells(
         self, piece: ActivePiece2D
     ) -> tuple[tuple[int, int], ...] | None:
-        if (
-            self.config.exploration_mode
-            and self.config.explorer_topology_profile is not None
-        ):
+        if self.config.exploration_mode and _uses_explorer_piece_transport_2d(self.config):
             return piece_cells_in_bounds_2d(
                 piece,
                 dims=(self.config.width, self.config.height),
+            )
+        if _uses_explorer_piece_transport_2d(self.config):
+            return _piece_cells_in_play_bounds_2d(
+                piece,
+                width=self.config.width,
+                height=self.config.height,
             )
         mapped = map_piece_cells(
             self.topology_policy,
@@ -390,11 +413,11 @@ class GameState:
         if self.current_piece is None:
             return
         if (
-            self.config.exploration_mode
-            and self.config.explorer_topology_profile is not None
+            _uses_explorer_piece_transport_2d(self.config)
+            and not _piece_has_cells_above_gravity_2d(self.current_piece)
         ):
             if self.config.explorer_transport is None:
-                raise ValueError("explorer transport must exist in exploration mode")
+                raise ValueError("explorer transport must exist when explorer topology is active")
             moved = move_piece_via_explorer_glue_2d(
                 self.current_piece,
                 transport=self.config.explorer_transport,

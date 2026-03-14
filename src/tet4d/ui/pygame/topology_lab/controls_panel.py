@@ -101,12 +101,9 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPreviewCompileSignature,
     PANE_CONTROLS,
     PANE_SCENE,
-    TOOL_CREATE,
     TOOL_EDIT,
     TOOL_INSPECT,
-    TOOL_NAVIGATE,
     TOOL_PLAY,
-    TOOL_PROBE,
     TOOL_SANDBOX,
     TopologyLabState,
     canonical_playground_state,
@@ -133,6 +130,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     set_selected_boundary_index,
     set_selected_glue_id,
     sync_canonical_playground_state,
+    tool_is_inspect,
     update_explorer_draft,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
@@ -153,27 +151,20 @@ class _RowSpec:
 
 
 _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
-    GAMEPLAY_MODE_NORMAL: TOOL_CREATE,
+    GAMEPLAY_MODE_NORMAL: TOOL_EDIT,
     GAMEPLAY_MODE_EXPLORER: TOOL_SANDBOX,
 }
 _TopologyLabState = TopologyLabState
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
 _TOOL_SHORTCUT_KEYS = {
-    pygame.K_n: TOOL_NAVIGATE,
+    pygame.K_e: TOOL_EDIT,
     pygame.K_i: TOOL_INSPECT,
-    pygame.K_g: TOOL_CREATE,
-    pygame.K_t: TOOL_EDIT,
-    pygame.K_p: TOOL_PROBE,
     pygame.K_b: TOOL_SANDBOX,
+    pygame.K_p: TOOL_PLAY,
+    pygame.K_g: TOOL_EDIT,
+    pygame.K_t: TOOL_EDIT,
 }
-_PROBE_MOVEMENT_TOOLS = {
-    TOOL_NAVIGATE,
-    TOOL_INSPECT,
-    TOOL_CREATE,
-    TOOL_EDIT,
-    TOOL_PROBE,
-    TOOL_PLAY,
-}
+_PROBE_MOVEMENT_TOOLS = {TOOL_INSPECT}
 _SANDBOX_STEP_KEYS = {
     pygame.K_LEFT: "x-",
     pygame.K_RIGHT: "x+",
@@ -829,7 +820,7 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
         if probe_coord is None:
             _set_status(
                 state,
-                "Probe is unavailable until the current gluing fits the board dimensions",
+                "Inspect mode is unavailable until the current gluing fits the board dimensions",
                 is_error=True,
             )
             return
@@ -885,7 +876,9 @@ def _reset_probe(state: _TopologyLabState) -> None:
     profile = current_explorer_profile(state)
     if profile is None:
         reset_probe_state(state)
-        _set_status(state, f"Probe reset to {list(current_probe_coord(state) or ())}")
+        _set_status(
+            state, f"Inspect reset to {list(current_probe_coord(state) or ())}"
+        )
         return
     try:
         probe_coord = recommended_explorer_probe_coord(
@@ -901,7 +894,7 @@ def _reset_probe(state: _TopologyLabState) -> None:
             frame_permutation=tuple(range(state.dimension)),
             frame_signs=tuple(1 for _ in range(state.dimension)),
         )
-        _set_status(state, f"Probe reset to {list(probe_coord)}")
+        _set_status(state, f"Inspect reset to {list(probe_coord)}")
         return
     except ValueError as exc:
         replace_probe_state(
@@ -1309,6 +1302,12 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
         idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
         state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
         state.dirty = True
+        state.sandbox = None
+        setattr(state, "sandbox_focus_coord", None)
+        setattr(state, "sandbox_focus_trace", [])
+        setattr(state, "sandbox_focus_path", [])
+        setattr(state, "sandbox_focus_frame_permutation", None)
+        setattr(state, "sandbox_focus_frame_signs", None)
         _sync_profile(state)
         if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
             next_settings = state.play_settings_by_dimension.get(state.dimension)
@@ -2015,7 +2014,7 @@ def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
     if (
         not _uses_general_explorer_editor(state)
         or not _scene_pane_active(state)
-        or state.active_tool != TOOL_NAVIGATE
+        or not tool_is_inspect(state.active_tool)
     ):
         return False
     return handle_scene_camera_key(state.dimension, key, state.scene_camera)
@@ -2077,7 +2076,7 @@ def _launch_play_preview(
     ):
         runtime_state = canonical_playground_state(state)
         if _uses_general_explorer_editor(state):
-            if runtime_state is None or state.dirty:
+            if runtime_state is None:
                 with record_interaction_phase(
                     state,
                     "canonical_sync",

@@ -114,7 +114,7 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         lines = topology_lab_menu._workspace_probe_lines(state)
 
         self.assertEqual(state.probe_coord, (1, 1))
-        self.assertIn("Probe: [1, 1]", lines)
+        self.assertIn("Inspect cell: [1, 1]", lines)
         self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
 
     def test_draw_explorer_scene_uses_sandbox_focus_overlay_when_active(self) -> None:
