@@ -1339,30 +1339,26 @@ def _handle_pending_play_preview(
     fonts_2d=None,
     display_settings=None,
 ) -> tuple[pygame.Surface, object | None]:
-    if (not state.play_preview_requested) and (not state.explore_preview_requested):
+    play_requested = state.play_preview_requested
+    explore_requested = state.explore_preview_requested
+
+    if not (play_requested or explore_requested):
         return screen, display_settings
 
-    if state.play_preview_requested:
-        state.play_preview_requested = False
-        return _launch_play_preview(
-            state,
-            screen,
-            fonts,
-            fonts_2d=fonts_2d,
-            display_settings=display_settings,
-            exploration_mode=False,
-        )
-    elif state.explore_preview_requested:
-        state.explore_preview_requested = False
-        return _launch_play_preview(
-            state,
-            screen,
-            fonts,
-            fonts_2d=fonts_2d,
-            display_settings=display_settings,
-            exploration_mode=True,
-        )
+    state.play_preview_requested = False
+    state.explore_preview_requested = False
 
+    if play_requested and explore_requested:
+        raise RuntimeError("Conflicting pending topology launch modes")
+
+    return _launch_play_preview(
+        state,
+        screen,
+        fonts,
+        fonts_2d=fonts_2d,
+        display_settings=display_settings,
+        exploration_mode=explore_requested,
+    )
 
 
 def _finalize_topology_lab_result(state: _TopologyLabState) -> tuple[bool, str]:
