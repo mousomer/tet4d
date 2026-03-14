@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pygame
 
+from tet4d.engine.gameplay import exploration_mode
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
 )
@@ -270,7 +271,8 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
 
 def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str], ...]:
     if tool_is_play(state.active_tool):
-        return (("play_preview", "Play This Topology"),)
+        return (("play_preview", "Play This Topology"),
+                ("explore_preview", "Explore This Topology"),)
     if tool_is_sandbox(state.active_tool):
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
@@ -748,6 +750,9 @@ def _activate_action(state: _TopologyLabState, action: str) -> None:
         return
     if action == "play_preview":
         state.play_preview_requested = True
+        return
+    if action == "explore_preview":
+        state.explore_preview_requested = True
         return
     if action == "back":
         state.running = False
@@ -1334,16 +1339,30 @@ def _handle_pending_play_preview(
     fonts_2d=None,
     display_settings=None,
 ) -> tuple[pygame.Surface, object | None]:
-    if not state.play_preview_requested:
+    if (not state.play_preview_requested) and (not state.explore_preview_requested):
         return screen, display_settings
-    state.play_preview_requested = False
-    return _launch_play_preview(
-        state,
-        screen,
-        fonts,
-        fonts_2d=fonts_2d,
-        display_settings=display_settings,
-    )
+
+    if state.play_preview_requested:
+        state.play_preview_requested = False
+        return _launch_play_preview(
+            state,
+            screen,
+            fonts,
+            fonts_2d=fonts_2d,
+            display_settings=display_settings,
+            exploration_state=False,
+        )
+    elif state.explore_preview_requested:
+        state.explore_preview_requested = False
+        return _launch_play_preview(
+            state,
+            screen,
+            fonts,
+            fonts_2d=fonts_2d,
+            display_settings=display_settings,
+            exploration_state=True,
+        )
+
 
 
 def _finalize_topology_lab_result(state: _TopologyLabState) -> tuple[bool, str]:

@@ -2067,6 +2067,7 @@ def _launch_play_preview(
     *,
     fonts_2d=None,
     display_settings=None,
+    exploration_state = False,
 ) -> tuple[pygame.Surface, object | None]:
     with record_interaction_handler(
         state,
@@ -2127,6 +2128,7 @@ def _launch_play_preview(
                     return_caption=_display_title_for_state(state),
                     fonts_2d=fonts_2d,
                     display_settings=display_settings,
+                    exploration_state=exploration_state,
                 )
         except Exception as exc:
             _set_status(state, f"Play preview failed: {exc}", is_error=True)

@@ -126,6 +126,7 @@ class TopologyPlaygroundState:
     highlighted_glue_id: str | None = None
     sandbox: RuntimeTopologyPlaygroundSandboxPieceState | None = None
     play_preview_requested: bool = False
+    explore_preview_requested: bool = False
     scene_camera: Any | None = None
     scene_mouse_orbit: Any | None = None
     scene_boundaries: tuple[BoundaryRef, ...] = ()

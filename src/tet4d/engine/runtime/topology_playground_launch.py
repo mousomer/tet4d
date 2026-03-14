@@ -47,8 +47,7 @@ def _piece_set_id_for_state(state: TopologyPlaygroundState) -> str:
 
 
 def build_gameplay_config_from_topology_playground_state(
-    state: TopologyPlaygroundState,
-) -> GameConfig | GameConfigND:
+    state: TopologyPlaygroundState, exploration_mode: bool = False) -> GameConfig | GameConfigND:
     if state.gameplay_mode != GAMEPLAY_MODE_EXPLORER:
         raise ValueError("direct playground launch requires Explorer gameplay mode")
     if state.transport_policy.owner != TRANSPORT_OWNER_EXPLORER:
@@ -68,7 +67,7 @@ def build_gameplay_config_from_topology_playground_state(
         topology_edge_rules=state.transport_policy.base_policy.edge_rules,
         kick_level=_default_kick_level_name(state.dimension),
         challenge_layers=0,
-        exploration_mode=False,
+        exploration_mode=exploration_mode,
         explorer_topology_profile=state.explorer_profile,
         explorer_transport=explorer_transport,
         explorer_rigid_play_enabled=resolve_rigid_play_enabled(
