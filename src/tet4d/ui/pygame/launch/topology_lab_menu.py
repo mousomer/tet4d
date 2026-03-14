@@ -1350,7 +1350,7 @@ def _handle_pending_play_preview(
             fonts,
             fonts_2d=fonts_2d,
             display_settings=display_settings,
-            exploration_state=False,
+            exploration_mode=False,
         )
     elif state.explore_preview_requested:
         state.explore_preview_requested = False
@@ -1360,7 +1360,7 @@ def _handle_pending_play_preview(
             fonts,
             fonts_2d=fonts_2d,
             display_settings=display_settings,
-            exploration_state=True,
+            exploration_mode=True,
         )
 
 
