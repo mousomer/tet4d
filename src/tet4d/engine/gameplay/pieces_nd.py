@@ -622,11 +622,15 @@ class ActivePieceND:
     A falling ND piece.
     Position is the piece origin in board space.
     rel_blocks contains oriented local occupied-cell offsets from that origin.
+    last_rotation_plane tracks the rotation axes used in the most recent rotation,
+    for smooth animation purposes.
     """
 
     shape: PieceShapeND
     pos: Coord
     rel_blocks: Tuple[RelCoordND, ...]
+    last_rotation_plane: Tuple[int, int] | None = None
+    last_rotation_steps: int = 0
 
     def __post_init__(self) -> None:
         ndim = len(self.pos)
@@ -655,7 +659,13 @@ class ActivePieceND:
         if len(delta) != len(self.pos):
             raise ValueError("delta dimension mismatch")
         new_pos = tuple(p + d for p, d in zip(self.pos, delta))
-        return ActivePieceND(shape=self.shape, pos=new_pos, rel_blocks=self.rel_blocks)
+        return ActivePieceND(
+            shape=self.shape,
+            pos=new_pos,
+            rel_blocks=self.rel_blocks,
+            last_rotation_plane=self.last_rotation_plane,
+            last_rotation_steps=self.last_rotation_steps,
+        )
 
     def rotated(self, axis_a: int, axis_b: int, delta_steps: int) -> "ActivePieceND":
         new_blocks = rotate_blocks_nd(
@@ -664,4 +674,10 @@ class ActivePieceND:
             axis_b=axis_b,
             steps_cw=delta_steps,
         )
-        return ActivePieceND(shape=self.shape, pos=self.pos, rel_blocks=new_blocks)
+        return ActivePieceND(
+            shape=self.shape,
+            pos=self.pos,
+            rel_blocks=new_blocks,
+            last_rotation_plane=(axis_a, axis_b),
+            last_rotation_steps=delta_steps,
+        )

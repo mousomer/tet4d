@@ -7,6 +7,7 @@ from ..core.piece_transform import (
     canonicalize_blocks_2d,
     canonicalize_blocks_nd,
     rotate_blocks_2d,
+    rotate_blocks_nd_continuous,
 )
 from ..runtime.project_config import project_constant_float
 
@@ -21,7 +22,7 @@ _DEFAULT_ROTATION_DURATION_MS = project_constant_float(
     ("animation", "piece_rotation_duration_ms"),
     150.0,
     min_value=60.0,
-    max_value=400.0,
+    max_value=3400.0,
 )
 
 
@@ -62,6 +63,8 @@ class _RotationTween:
     end_pos: CoordF
     duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
     elapsed_ms: float = 0.0
+    rotation_plane: tuple[int, int] | None = None
+    rotation_steps: int = 0
 
     @property
     def done(self) -> bool:
@@ -77,11 +80,104 @@ class _RotationTween:
         self.elapsed_ms += max(0.0, dt_ms)
 
     def interpolated_rel(self) -> tuple[CoordF, ...]:
+        """Interpolate using rotation-based or linear interpolation."""
+        if self.rotation_plane is not None and self.rotation_steps != 0:
+            return self._interpolated_rel_rotational()
+        else:
+            return self._interpolated_rel_linear()
+
+    def _interpolated_rel_linear(self) -> tuple[CoordF, ...]:
+        """Original linear interpolation (fallback)."""
         eased = _smoothstep01(self.progress)
         return tuple(
             _lerp_coord(start, end, eased)
             for start, end in zip(self.start_rel, self.end_rel)
         )
+
+    def _interpolated_rel_rotational(self) -> tuple[CoordF, ...]:
+        """
+        Rotation-based interpolation using circular arc between start and end positions.
+
+        Matches the discrete rotation algorithm's 3-case pivot selection:
+        - Odd×Odd or Even×Even: rotate around geometric center
+        - Even×Odd or Odd×Even: rotate around block closest to center of mass
+        """
+        import math
+
+        eased = _smoothstep01(self.progress)
+        axis_a, axis_b = self.rotation_plane  # type: ignore
+
+        # Calculate bounding box in rotation plane
+        a_values = [b[axis_a] for b in self.start_rel]
+        b_values = [b[axis_b] for b in self.start_rel]
+        min_a, max_a = min(a_values), max(a_values)
+        min_b, max_b = min(b_values), max(b_values)
+        span_a = max_a - min_a
+        span_b = max_b - min_b
+
+        # Determine pivot using same logic as discrete rotation
+        a_even = (span_a % 2) == 0
+        b_even = (span_b % 2) == 0
+
+        if a_even == b_even:
+            # Both odd or both even - use geometric center
+            pivot_a = (min_a + max_a) / 2.0
+            pivot_b = (min_b + max_b) / 2.0
+        else:
+            # Mixed parity - find block closest to center of mass
+            center_mass_a = sum(a_values) / len(self.start_rel)
+            center_mass_b = sum(b_values) / len(self.start_rel)
+
+            min_dist_sq = float('inf')
+            pivot_a = self.start_rel[0][axis_a]
+            pivot_b = self.start_rel[0][axis_b]
+
+            for block in self.start_rel:
+                dist_sq = (block[axis_a] - center_mass_a) ** 2 + (block[axis_b] - center_mass_b) ** 2
+                if dist_sq < min_dist_sq:
+                    min_dist_sq = dist_sq
+                    pivot_a = float(block[axis_a])
+                    pivot_b = float(block[axis_b])
+
+        # Interpolate each block along a circular arc
+        result: list[CoordF] = []
+        for start_block, end_block in zip(self.start_rel, self.end_rel):
+            # Get coordinates in the rotation plane
+            start_a = start_block[axis_a] - pivot_a
+            start_b = start_block[axis_b] - pivot_b
+            end_a = end_block[axis_a] - pivot_a
+            end_b = end_block[axis_b] - pivot_b
+
+            # Calculate angle for this block
+            start_angle = math.atan2(start_b, start_a)
+            end_angle = math.atan2(end_b, end_a)
+
+            # Handle angle wrapping to take shortest path
+            angle_diff = end_angle - start_angle
+            if angle_diff > math.pi:
+                angle_diff -= 2 * math.pi
+            elif angle_diff < -math.pi:
+                angle_diff += 2 * math.pi
+
+            # Interpolate angle
+            current_angle = start_angle + angle_diff * eased
+
+            # Interpolate radius (for blocks that may change distance during discrete rotation)
+            start_radius = math.sqrt(start_a**2 + start_b**2)
+            end_radius = math.sqrt(end_a**2 + end_b**2)
+            current_radius = start_radius + (end_radius - start_radius) * eased
+
+            # Convert back to coordinates
+            new_a = current_radius * math.cos(current_angle) + pivot_a
+            new_b = current_radius * math.sin(current_angle) + pivot_b
+
+            # Build result block with interpolated values
+            new_block = list(start_block)
+            new_block[axis_a] = new_a
+            new_block[axis_b] = new_b
+            result.append(tuple(new_block))
+
+        return tuple(result)
 
     def interpolated_pos(self) -> CoordF:
         eased = _smoothstep01(self.progress)
@@ -99,6 +195,8 @@ def _build_tween(
     start_pos: CoordF,
     end_pos: CoordF,
     duration_ms: float,
+    rotation_plane: tuple[int, int] | None = None,
+    rotation_steps: int = 0,
 ) -> _RotationTween:
     if not start_rel or len(start_rel) != len(end_rel):
         return _RotationTween(
@@ -107,14 +205,32 @@ def _build_tween(
             start_pos=end_pos,
             end_pos=end_pos,
             duration_ms=duration_ms,
+            rotation_plane=rotation_plane,
+            rotation_steps=rotation_steps,
         )
-    return _RotationTween(
-        start_rel=start_rel,
-        end_rel=_pair_endpoints(start_rel, end_rel),
-        start_pos=start_pos,
-        end_pos=end_pos,
-        duration_ms=duration_ms,
-    )
+    # For rotation-based animation, we don't pair endpoints
+    # because rotation handles block matching automatically
+    if rotation_plane is not None:
+        return _RotationTween(
+            start_rel=start_rel,
+            end_rel=end_rel,
+            start_pos=start_pos,
+            end_pos=end_pos,
+            duration_ms=duration_ms,
+            rotation_plane=rotation_plane,
+            rotation_steps=rotation_steps,
+        )
+    else:
+        # Use endpoint pairing for linear interpolation
+        return _RotationTween(
+            start_rel=start_rel,
+            end_rel=_pair_endpoints(start_rel, end_rel),
+            start_pos=start_pos,
+            end_pos=end_pos,
+            duration_ms=duration_ms,
+            rotation_plane=None,
+            rotation_steps=0,
+        )
 
 
 @dataclass
@@ -127,6 +243,7 @@ class PieceRotationAnimator2D:
     _prev_shape_name: str | None = None
     _prev_pos: Coord2F = tuple()
     _prev_visible: bool = False
+    _prev_rotation: int | None = None
 
     def reset(self) -> None:
         self._tween = None
@@ -135,6 +252,7 @@ class PieceRotationAnimator2D:
         self._prev_shape_name = None
         self._prev_pos = tuple()
         self._prev_visible = False
+        self._prev_rotation = None
 
     def _rel_blocks(self, piece: ActivePiece2D) -> tuple[CoordF, ...]:
         return tuple(
@@ -163,6 +281,7 @@ class PieceRotationAnimator2D:
         curr_pos = (float(piece.pos[0]), float(piece.pos[1]))
         curr_cells = tuple((float(x), float(y)) for x, y in piece.cells())
         curr_visible = _visible_along_gravity(curr_cells, self.gravity_axis)
+        curr_rotation = piece.rotation
 
         shape_changed = (
             self._prev_shape_name is not None and curr_shape != self._prev_shape_name
@@ -184,12 +303,20 @@ class PieceRotationAnimator2D:
                     if self._tween is not None
                     else self._prev_pos
                 )
+                # Calculate rotation steps for 2D (always in plane 0, gravity_axis)
+                rotation_steps = 0
+                if self._prev_rotation is not None:
+                    rotation_steps = (curr_rotation - self._prev_rotation) % 4
+                    if rotation_steps > 2:
+                        rotation_steps -= 4  # Handle counter-clockwise
                 self._tween = _build_tween(
                     start_rel,
                     curr_rel,
                     start_pos=start_pos,
                     end_pos=curr_pos,
                     duration_ms=self.duration_ms,
+                    rotation_plane=(0, self.gravity_axis),
+                    rotation_steps=rotation_steps,
                 )
             else:
                 self._tween = None
@@ -210,6 +337,7 @@ class PieceRotationAnimator2D:
         self._prev_shape_name = curr_shape
         self._prev_pos = curr_pos
         self._prev_visible = curr_visible
+        self._prev_rotation = curr_rotation
 
     def overlay_cells(
         self,
@@ -290,12 +418,17 @@ class PieceRotationAnimatorND:
                     if self._tween is not None
                     else self._prev_pos
                 )
+                # Extract rotation plane from piece if available
+                rotation_plane = piece.last_rotation_plane if piece else None
+                rotation_steps = piece.last_rotation_steps if piece else 0
                 self._tween = _build_tween(
                     start_rel,
                     curr_rel,
                     start_pos=start_pos,
                     end_pos=curr_pos,
                     duration_ms=self.duration_ms,
+                    rotation_plane=rotation_plane,
+                    rotation_steps=rotation_steps,
                 )
             else:
                 self._tween = None

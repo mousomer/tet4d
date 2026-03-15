@@ -82,7 +82,9 @@ COLOR_MAP = {
 _ASSIST_OVERLAY_OPACITY_SCALE = 0.3
 
 ActiveOverlay4D = tuple[tuple[tuple[float, float, float, float], ...], int]
-VisibleLayerCell = tuple[tuple[float, float, float], int, bool, bool]
+# VisibleLayerCell: (cell3_coords, color_id, is_active, is_overlay, scale)
+# scale: 1.0 = full size, 0.0 = invisible, used for 4D layer transitions
+VisibleLayerCell = tuple[tuple[float, float, float], int, bool, bool, float]
 LockedLayerCells = dict[int, tuple[VisibleLayerCell, ...]]
 AxisMapEntry = tuple[int, int]
 AxisMap4D = tuple[AxisMapEntry, AxisMapEntry, AxisMapEntry, AxisMapEntry]
@@ -413,6 +415,7 @@ def _build_cell_faces(
     dims3: Cell3,
     zoom: float,
     active: bool,
+    scale: float = 1.0,
 ) -> list[Face]:
     return build_cube_faces(
         cell=cell,
@@ -420,6 +423,7 @@ def _build_cell_faces(
         project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
         active=active,
+        scale=scale,
     )
 
 
@@ -447,7 +451,7 @@ def _locked_cells_by_layer(
         if layer_idx is None or not _in_bounds_layer_cell(layer_idx, cell3, basis):
             continue
         cells_by_layer.setdefault(layer_idx, []).append(
-            ((cell3[0], cell3[1], cell3[2]), cell_id, False, False)
+            ((cell3[0], cell3[1], cell3[2]), cell_id, False, False, 1.0)
         )
     return {layer: tuple(cells) for layer, cells in cells_by_layer.items()}
 
@@ -487,10 +491,25 @@ def _overlay_active_layer_cells(
     cells: list[VisibleLayerCell] = []
     for coord4 in mapped_overlay:
         layer_value, cell3 = _map_coord_to_layer_cell3(coord4, dims4=dims4, basis=basis)
-        if abs(layer_value - layer_index) >= 0.5:
+
+        # Calculate distance from this layer
+        layer_distance = abs(layer_value - layer_index)
+
+        # Show block on adjacent layers with gradual scaling for smooth transitions
+        # Block is full size (scale=1.0) when centered on layer (distance=0)
+        # Block shrinks linearly as it moves away (scale=0.0 at distance=1.0)
+        # This creates the visual effect of blocks "emerging" and "eating up" during 4D rotations
+        if layer_distance >= 1.0:
             continue
+
+        # Linear scaling: scale = 1.0 - distance
+        # At distance 0.0: scale = 1.0 (full size)
+        # At distance 0.5: scale = 0.5 (half size)
+        # At distance 1.0: scale = 0.0 (invisible, filtered out above)
+        scale = 1.0 - layer_distance
+
         if _in_bounds_layer_cell(layer_index, cell3, basis):
-            cells.append((cell3, overlay_color, True, True))
+            cells.append((cell3, overlay_color, True, True, scale))
     return cells
 
 
@@ -510,7 +529,7 @@ def _piece_active_layer_cells(
         if cell_layer is None or cell_layer != layer_index:
             continue
         if _in_bounds_layer_cell(layer_index, cell3, basis):
-            cells.append((cell3, piece_id, True, False))
+            cells.append((cell3, piece_id, True, False, 1.0))
     return cells
 
 
@@ -598,7 +617,7 @@ def _layer_faces(
 ) -> tuple[list[Face], list[Face]]:
     solid_faces: list[Face] = []
     overlay_faces: list[Face] = []
-    for coord3, cell_id, is_active, is_overlay in _layer_cells(
+    for coord3, cell_id, is_active, is_overlay, scale in _layer_cells(
         state,
         layer_index,
         locked_by_layer,
@@ -613,6 +632,7 @@ def _layer_faces(
             dims3=dims3,
             zoom=zoom,
             active=is_active,
+            scale=scale,
         )
         if is_overlay:
             overlay_faces.extend(cell_faces)

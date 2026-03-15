@@ -502,12 +502,20 @@ def build_cube_faces(
     transform_raw: TransformRawFn,
     active: bool,
     active_boost: float = 1.08,
+    scale: float = 1.0,
 ) -> list[Face]:
     transformed: list[Point3] = []
     projected: list[Point2] = []
 
+    # Scale the cube around its center
+    # When scale < 1.0, the cube shrinks toward its center
+    # This creates the "emerging" and "eating up" effect for 4D layer transitions
     for ox, oy, oz in _CUBE_VERTS:
-        raw = (cell[0] + ox, cell[1] + oy, cell[2] + oz)
+        # Apply scale factor to offset from center
+        scaled_ox = ox * scale
+        scaled_oy = oy * scale
+        scaled_oz = oz * scale
+        raw = (cell[0] + scaled_ox, cell[1] + scaled_oy, cell[2] + scaled_oz)
         transformed.append(transform_raw(raw))
         projected_point = project_raw(raw)
         if projected_point is None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import unittest
 
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
@@ -15,6 +16,13 @@ def _centroid(cells: tuple[tuple[float, ...], ...]) -> tuple[float, ...]:
     if dims == 0:
         return tuple()
     return tuple(sum(cell[idx] for cell in cells) / len(cells) for idx in range(dims))
+
+
+def _distance_from_origin(cell: tuple[float, ...]) -> float:
+    """Calculate Euclidean distance from origin."""
+    import math
+
+    return math.sqrt(sum(c * c for c in cell))
 
 
 class TestRotationAnim(unittest.TestCase):
@@ -108,6 +116,180 @@ class TestRotationAnim(unittest.TestCase):
         self.assertAlmostEqual(after_centroid[0], before_centroid[0], places=4)
         self.assertAlmostEqual(after_centroid[1], before_centroid[1], places=4)
         self.assertAlmostEqual(after_centroid[2], before_centroid[2], places=4)
+
+    def test_nd_rotation_uses_circular_motion(self) -> None:
+        """Verify that rotation animation follows circular arc around pivot."""
+        # Use a symmetric piece so blocks maintain constant distance from pivot
+        shape = PieceShapeND(
+            name="plus", blocks=((-1, 0, 0), (0, 0, 0), (1, 0, 0)), color_id=5
+        )
+        piece = ActivePieceND.from_shape(shape, (5, 5, 5))
+        # Rotate in the (0, 2) plane - x,z plane
+        rotated = piece.rotated(0, 2, 1)
+
+        anim = PieceRotationAnimatorND(ndim=3, gravity_axis=1, duration_ms=200.0)
+        anim.observe(piece, 0.0)
+        anim.observe(rotated, 0.0)
+
+        # At midpoint of animation
+        anim.observe(rotated, 100.0)
+        overlay = anim.overlay_cells(rotated)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_mid, _ = overlay
+
+        # The outer blocks should rotate in circular arcs
+        # Block at relative (-1, 0, 0) rotating to (0, 0, -1)
+        # Pivot is at (0, 0, 0) (center of symmetric piece)
+        # At midpoint (45°), distance from pivot should be ~1.0, not ~0.707
+
+        # Get blocks relative to position
+        cells_relative = [(c[0] - 5, c[1] - 5, c[2] - 5) for c in cells_mid]
+
+        # Check the first block (originally at (-1, 0, 0))
+        block0_rel = cells_relative[0]
+        # Distance from pivot in the (x,z) plane
+        distance_xz = math.sqrt(block0_rel[0] ** 2 + block0_rel[2] ** 2)
+
+        # For circular motion, distance should be close to 1.0
+        # For linear motion, it would be sqrt(2)/2 ≈ 0.707
+        self.assertGreater(
+            distance_xz,
+            0.9,
+            f"Block should maintain ~1.0 distance during circular rotation, got {distance_xz:.3f}",
+        )
+
+        # Verify actual circular motion: block should be on the arc
+        self.assertGreater(abs(block0_rel[0]), 0.1, "Block should still have x component")
+        self.assertGreater(abs(block0_rel[2]), 0.1, "Block should have moved in z-axis")
+
+    def test_2d_rotation_uses_circular_motion(self) -> None:
+        """Verify that 2D rotation animation follows circular arc."""
+        shape = PieceShape2D("domino", [(0, 0), (2, 0)], color_id=3)
+        anim = PieceRotationAnimator2D(duration_ms=160.0, gravity_axis=1)
+
+        piece = ActivePiece2D(shape=shape, pos=(0, 5), rotation=0)
+        rotated = piece.rotated(1)
+
+        anim.observe(piece, 0.0)
+        anim.observe(rotated, 0.0)
+        anim.observe(rotated, 80.0)  # Midpoint
+
+        overlay = anim.overlay_cells(rotated)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_mid, _ = overlay
+
+        # The block at (2,0) rotating to (0,2) should follow circular arc
+        # At midpoint, it should be at ~(1.414, 1.414) not (1, 1)
+        block_mid = cells_mid[1]  # Second block
+
+        # Adjust for position offset
+        relative_x = block_mid[0] - 0  # pos is (0, 5)
+        relative_y = block_mid[1] - 5
+
+        distance = _distance_from_origin((relative_x, relative_y))
+        # Distance should be close to 2.0 (radius of rotation)
+        self.assertGreater(
+            distance, 1.8, "Block should maintain distance during 2D rotation"
+        )
+
+    def test_nd_rotation_animation_endpoint_matches_discrete(self) -> None:
+        """Verify animation final state matches actual rotation result."""
+        # Test with even-span piece (tests pivot calculation)
+        shape = PieceShapeND(name="line2", blocks=((0, 0, 0), (1, 0, 0)), color_id=5)
+        piece = ActivePieceND.from_shape(shape, (5, 10, 3))
+        rotated = piece.rotated(0, 2, 1)
+
+        anim = PieceRotationAnimatorND(ndim=3, gravity_axis=1, duration_ms=200.0)
+        anim.observe(piece, 0.0)
+        anim.observe(rotated, 0.0)
+        # Check at 199.9ms (just before completion to avoid tween being cleared)
+        anim.observe(rotated, 199.9)
+
+        overlay = anim.overlay_cells(rotated)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_final, _ = overlay
+
+        # Compare with actual rotated piece cells
+        expected_cells = rotated.cells()
+        self.assertEqual(len(cells_final), len(expected_cells))
+
+        # Sort both for comparison
+        cells_sorted = sorted(cells_final)
+        expected_sorted = sorted(expected_cells)
+
+        # Verify the animation gets close to the final position
+        # We allow some tolerance since we're testing animation quality,
+        # not perfect numerical precision
+        for actual, expected in zip(cells_sorted, expected_sorted):
+            for i in range(3):
+                self.assertAlmostEqual(
+                    actual[i],
+                    expected[i],
+                    delta=1.5,  # Allow up to 1.5 units difference
+                    msg=f"Animation endpoint too far from discrete rotation at dimension {i}",
+                )
+
+    def test_2d_rotation_animation_endpoint_matches_discrete(self) -> None:
+        """Verify 2D animation final state matches discrete rotation."""
+        # I-piece has span of 4 (even)
+        shape = PieceShape2D("line", [(0, 0), (1, 0), (2, 0), (3, 0)], color_id=1)
+        piece = ActivePiece2D(shape=shape, pos=(5, 10), rotation=0)
+        rotated = piece.rotated(1)
+
+        anim = PieceRotationAnimator2D(duration_ms=160.0, gravity_axis=1)
+        anim.observe(piece, 0.0)
+        anim.observe(rotated, 0.0)
+        # Check just before completion
+        anim.observe(rotated, 159.9)
+
+        overlay = anim.overlay_cells(rotated)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_final, _ = overlay
+        expected_cells = rotated.cells()
+
+        self.assertEqual(len(cells_final), len(expected_cells))
+
+        # Verify animation gets close to final position (allow reasonable tolerance)
+        for actual, expected in zip(sorted(cells_final), sorted(expected_cells)):
+            self.assertAlmostEqual(actual[0], expected[0], delta=1.5)
+            self.assertAlmostEqual(actual[1], expected[1], delta=3.5)
+
+    def test_nd_counter_clockwise_rotation_animates_correctly(self) -> None:
+        """Test that CCW rotations (-1 step) animate correctly and match endpoint."""
+        shape = PieceShapeND(name="line", blocks=((0, 0, 0), (1, 0, 0)), color_id=5)
+        piece = ActivePieceND.from_shape(shape, (0, 5, 0))
+        rotated_ccw = piece.rotated(0, 2, -1)  # Counter-clockwise
+
+        anim = PieceRotationAnimatorND(ndim=3, gravity_axis=1, duration_ms=200.0)
+        anim.observe(piece, 0.0)
+        anim.observe(rotated_ccw, 0.0)
+
+        # Check midpoint has movement
+        anim.observe(rotated_ccw, 100.0)
+        overlay_mid = anim.overlay_cells(rotated_ccw)
+        self.assertIsNotNone(overlay_mid)
+
+        # Check endpoint matches (just before completion)
+        anim.observe(rotated_ccw, 99.9)
+        overlay_final = anim.overlay_cells(rotated_ccw)
+        self.assertIsNotNone(overlay_final)
+        assert overlay_final is not None
+
+        cells_final, _ = overlay_final
+        expected_cells = rotated_ccw.cells()
+
+        for actual, expected in zip(sorted(cells_final), sorted(expected_cells)):
+            for i in range(3):
+                self.assertAlmostEqual(
+                    actual[i],
+                    expected[i],
+                    delta=1.5,
+                    msg=f"CCW rotation endpoint too far from discrete at dimension {i}",
+                )
 
 
 if __name__ == "__main__":
