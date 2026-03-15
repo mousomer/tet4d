@@ -15,6 +15,8 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 )
 from tet4d.ui.pygame.runtime_ui.loop_runner_nd import process_game_events
 
+from .launch.topology_lab_menu import run_explorer_playground
+from .topology_lab.app import build_explorer_playground_launch
 from .front2d_input import handle_game_keydown
 from .front2d_frame import _configure_game_loop
 from .front2d_loop import run_game_loop
@@ -23,7 +25,7 @@ from .front2d_session import LoopContext2D, create_initial_state
 from .front2d_setup import (
     GameSettings,
     MenuState,
-    config_from_settings,
+    build_play_menu_config,
     run_menu,
 )
 
@@ -48,6 +50,27 @@ def run() -> None:
             break
 
         cfg = _config_from_settings(settings)
+
+        if cfg.exploration_mode:
+            explorer_screen = open_display(
+                display_settings,
+                caption="Explorer 2D Playground",
+            )
+            launch = build_explorer_playground_launch(
+                dimension=2,
+                explorer_profile=cfg.explorer_topology_profile,
+                display_settings=display_settings,
+                fonts_2d=fonts,
+                entry_source="explorer",
+                source_settings=settings,
+            )
+            run_explorer_playground(
+                explorer_screen,
+                fonts,
+                launch=launch,
+            )
+            display_settings = capture_windowed_display_settings(display_settings)
+            continue
 
         board_px_w = cfg.width * CELL_SIZE
         board_px_h = cfg.height * CELL_SIZE
@@ -83,7 +106,7 @@ def run() -> None:
     sys.exit()
 
 
-_config_from_settings = config_from_settings
+_config_from_settings = build_play_menu_config
 
 
 def main(argv=None) -> None:

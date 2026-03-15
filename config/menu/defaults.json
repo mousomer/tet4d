@@ -22,6 +22,8 @@
     "2d": {
       "width": 10,
       "height": 20,
+      "explorer_width": 8,
+      "explorer_height": 8,
       "piece_set_index": 0,
       "random_mode_index": 0,
       "game_seed": 1337,
@@ -43,6 +45,9 @@
       "width": 6,
       "height": 18,
       "depth": 6,
+      "explorer_width": 8,
+      "explorer_height": 8,
+      "explorer_depth": 8,
       "piece_set_index": 0,
       "random_mode_index": 0,
       "game_seed": 1337,
@@ -64,6 +69,10 @@
       "height": 20,
       "depth": 6,
       "fourth": 4,
+      "explorer_width": 8,
+      "explorer_height": 8,
+      "explorer_depth": 8,
+      "explorer_fourth": 8,
       "piece_set_index": 0,
       "random_mode_index": 0,
       "game_seed": 1337,
@@ -82,3 +91,4 @@
     }
   }
 }
+

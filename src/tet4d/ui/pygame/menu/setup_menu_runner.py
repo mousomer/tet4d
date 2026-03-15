@@ -47,6 +47,7 @@ def run_setup_menu_loop(
     draw_frame: Callable[[pygame.Surface, Any, list[FieldSpec]], None],
     run_dry_run: Callable[[Any], None] | None = None,
     on_start_saved: Callable[[Any], None] | None = None,
+    after_load: Callable[[Any], None] | None = None,
 ) -> Any | None:
     clock = pygame.time.Clock()
     load_active_profile_bindings()
@@ -57,6 +58,8 @@ def run_setup_menu_loop(
     else:
         state.bindings_status = msg
         state.bindings_status_error = True
+    if after_load is not None:
+        after_load(state)
 
     while state.running and not state.start_game:
         clock.tick(60)

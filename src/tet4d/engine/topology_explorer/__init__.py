@@ -13,21 +13,47 @@ from .glue_model import (
     movement_steps_for_dimension,
     tangent_axes_for_boundary,
 )
-from .glue_validate import validate_explorer_topology_profile
+from .glue_validate import (
+    validate_explorer_topology_profile,
+    validate_topology_bijection,
+    validate_topology_structure,
+)
 from .movement_graph import build_movement_graph, neighbors_for_cell
+from .transport_resolver import (
+    BLOCKED_MOVE,
+    CELLWISE_DEFORMATION,
+    DirectedBoundarySeam,
+    PLAIN_TRANSLATION,
+    RIGID_TRANSFORM,
+    CellStepResult,
+    ExplorerTransportFrameTransform,
+    ExplorerTransportResolver,
+    PieceStepResult,
+    build_explorer_transport_resolver,
+)
 
 __all__ = [
     "AXIS_NAMES",
     "SIDE_NEG",
     "SIDE_POS",
     "BoundaryRef",
+    "BLOCKED_MOVE",
     "BoundaryTransform",
     "BoundaryTraversal",
+    "CELLWISE_DEFORMATION",
+    "CellStepResult",
+    "DirectedBoundarySeam",
     "ExplorerTopologyProfile",
+    "ExplorerTransportFrameTransform",
+    "ExplorerTransportResolver",
     "GluingDescriptor",
     "MoveStep",
+    "PLAIN_TRANSLATION",
+    "PieceStepResult",
+    "RIGID_TRANSFORM",
     "axis_name",
     "boundary_label",
+    "build_explorer_transport_resolver",
     "build_movement_graph",
     "map_boundary_exit",
     "move_cell",
@@ -35,4 +61,6 @@ __all__ = [
     "neighbors_for_cell",
     "tangent_axes_for_boundary",
     "validate_explorer_topology_profile",
+    "validate_topology_bijection",
+    "validate_topology_structure",
 ]

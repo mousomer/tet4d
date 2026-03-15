@@ -16,7 +16,7 @@ from tet4d.engine.gameplay.topology_designer import (
 from tet4d.engine.runtime.project_config import topology_profiles_file_default_path
 from tet4d.engine.runtime.settings_schema import read_json_object_or_empty, write_json_object
 
-_TOPOLOGY_DIMENSIONS = (3, 4)
+_TOPOLOGY_DIMENSIONS = (2, 3, 4)
 _DEFAULT_GRAVITY_AXIS = 1
 
 
@@ -82,7 +82,7 @@ def load_topology_profile(
 ) -> TopologyProfileState:
     normalized_mode = normalize_topology_gameplay_mode(gameplay_mode)
     if dimension not in _TOPOLOGY_DIMENSIONS:
-        raise ValueError("dimension must be 3 or 4 for topology lab profiles")
+        raise ValueError("dimension must be 2, 3, or 4 for topology lab profiles")
     payload = _load_payload(root_dir=root_dir)
     raw_profile = (
         payload.get("topology_profiles", {})
@@ -104,7 +104,7 @@ def save_topology_profile(
 ) -> tuple[bool, str]:
     normalized_mode = normalize_topology_gameplay_mode(profile.gameplay_mode)
     if profile.dimension not in _TOPOLOGY_DIMENSIONS:
-        return False, "dimension must be 3 or 4 for topology lab profiles"
+        return False, "dimension must be 2, 3, or 4 for topology lab profiles"
     payload = _load_payload(root_dir=root_dir)
     topology_profiles = payload.setdefault("topology_profiles", {})
     if not isinstance(topology_profiles, dict):

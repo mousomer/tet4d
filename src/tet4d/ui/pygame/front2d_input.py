@@ -43,6 +43,19 @@ def system_decision_for_key(key: int) -> str | None:
 
 
 def gameplay_action_for_key_2d(state: GameState, key: int) -> str | None:
+    if state.config.exploration_mode:
+        explorer_action = match_bound_action(
+            key, EXPLORER_KEYS_2D, ("move_up", "move_down")
+        )
+        # Preserve arrow-key vertical traversal for older saved 2D explorer
+        # bindings that predate the dedicated explorer group.
+        if explorer_action is None and key == pygame.K_UP:
+            explorer_action = "move_up"
+        elif explorer_action is None and key == pygame.K_DOWN:
+            explorer_action = "move_down"
+        if explorer_action is not None:
+            return explorer_action
+
     action_order = [
         "move_x_neg",
         "move_x_pos",
@@ -54,9 +67,7 @@ def gameplay_action_for_key_2d(state: GameState, key: int) -> str | None:
     gameplay_action = match_bound_action(key, KEYS_2D, tuple(action_order))
     if gameplay_action is not None:
         return gameplay_action
-    if not state.config.exploration_mode:
-        return None
-    return match_bound_action(key, EXPLORER_KEYS_2D, ("move_up", "move_down"))
+    return None
 
 
 def overlay_action_for_key_2d(key: int) -> str | None:

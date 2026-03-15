@@ -80,7 +80,9 @@ def map_boundary_exit(
     coord: Coord,
     step: MoveStep,
 ) -> BoundaryTraversal | None:
-    validate_explorer_topology_profile(profile, dims=tuple(int(value) for value in dims))
+    validate_explorer_topology_profile(
+        profile, dims=tuple(int(value) for value in dims)
+    )
     if not coord_in_bounds(coord, dims):
         raise ValueError("coord must be in bounds")
     if step.axis >= len(dims):
@@ -131,7 +133,9 @@ def move_cell(
     coord: Coord,
     step: MoveStep,
 ) -> Coord | None:
-    validate_explorer_topology_profile(profile, dims=tuple(int(value) for value in dims))
+    validate_explorer_topology_profile(
+        profile, dims=tuple(int(value) for value in dims)
+    )
     if not coord_in_bounds(coord, dims):
         raise ValueError("coord must be in bounds")
     if step.axis >= len(dims):

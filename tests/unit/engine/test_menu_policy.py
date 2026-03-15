@@ -54,7 +54,7 @@ class TestMenuPolicy(unittest.TestCase):
                 if kind == "item"
             )
         )
-        self.assertTrue(
+        self.assertFalse(
             any(
                 row_key == "game_topology_advanced"
                 for kind, _label, row_key in rows
@@ -79,18 +79,31 @@ class TestMenuPolicy(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(headers))
 
-    def test_setup_fields_include_topology_mode_per_dimension(self) -> None:
+    def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
             attrs = {attr for _label, attr, _min_val, _max_val in fields}
             self.assertIn("topology_mode", attrs)
-            if dimension == 2:
-                self.assertIn("topology_profile_index", attrs)
-            else:
-                self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("exploration_mode", attrs)
             self.assertNotIn("topology_advanced", attrs)
             self.assertNotIn("random_mode_index", attrs)
             self.assertNotIn("game_seed", attrs)
+
+    def test_explorer_setup_fields_hide_topology_editor_rows(self) -> None:
+        for dimension in (2, 3, 4):
+            fields = menu_config.setup_fields_for_settings(
+                dimension,
+                piece_set_max=5,
+                topology_profile_max=5,
+                topology_advanced=True,
+                exploration_mode=True,
+            )
+            attrs = {attr for _label, attr, _min_val, _max_val in fields}
+            self.assertNotIn("topology_mode", attrs)
+            self.assertNotIn("topology_advanced", attrs)
+            self.assertNotIn("topology_profile_index", attrs)
+            self.assertNotIn("exploration_mode", attrs)
 
     def test_setup_hints_defined_for_all_dimensions(self) -> None:
         for dimension in (2, 3, 4):
@@ -180,7 +193,19 @@ class TestMenuPolicy(unittest.TestCase):
             item["action_id"] for item in play_items if item["type"] == "action"
         }
         self.assertTrue(
-            {"play_2d", "play_3d", "play_4d", "topology_lab"}.issubset(play_actions)
+            {"play_2d", "play_3d", "play_4d", "play_last_custom_topology", "topology_lab"}.issubset(play_actions)
+        )
+
+    def test_play_menu_is_minimal_launcher(self) -> None:
+        launcher_play = menu_config.menu_definition("launcher_play")
+        detached_item = next(
+            item for item in launcher_play["items"] if item.get("action_id") == "topology_lab"
+        )
+        self.assertEqual(detached_item["label"], "Open Explorer Playground")
+        self.assertIn("Minimal play launcher", menu_config.launcher_subtitles()["launcher_play"])
+        self.assertIn(
+            "play_last_custom_topology",
+            {item["action_id"] for item in launcher_play["items"] if item["type"] == "action"},
         )
 
     def test_launcher_route_actions_cover_launcher_routes(self) -> None:

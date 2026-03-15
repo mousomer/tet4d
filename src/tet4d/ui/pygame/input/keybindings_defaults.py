@@ -256,8 +256,8 @@ def default_explorer_bindings_for_profile(
     if profile == PROFILE_FULL:
         return (
             {
-                "move_up": (pygame.K_KP1,),
-                "move_down": (pygame.K_KP3,),
+                "move_up": (pygame.K_UP, pygame.K_KP1),
+                "move_down": (pygame.K_DOWN, pygame.K_KP3),
             },
             {
                 "move_up": (pygame.K_KP1,),
@@ -270,8 +270,8 @@ def default_explorer_bindings_for_profile(
         )
     return (
         {
-            "move_up": (pygame.K_PAGEUP,),
-            "move_down": (pygame.K_PAGEDOWN,),
+            "move_up": (pygame.K_UP, pygame.K_PAGEUP),
+            "move_down": (pygame.K_DOWN, pygame.K_PAGEDOWN),
         },
         {
             "move_up": (pygame.K_PAGEUP,),

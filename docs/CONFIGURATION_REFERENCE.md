@@ -427,8 +427,8 @@ Parameters:
 - `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741915`
-- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741913`
+- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741915`
+- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741913`
 - `profiles.full.explorer.d3.move_down[]`: array[`int`]; examples: `1073741915`
 - `profiles.full.explorer.d3.move_up[]`: array[`int`]; examples: `1073741913`
 - `profiles.full.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
@@ -504,8 +504,8 @@ Parameters:
 - `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
-- `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
+- `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.macbook.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.macbook.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
@@ -581,8 +581,8 @@ Parameters:
 - `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
 - `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
 - `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741902`
-- `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741899`
+- `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
+- `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.small.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.small.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
@@ -728,6 +728,8 @@ Parameters:
 - `settings.2d.bot_speed_level`: `7` (`int`)
 - `settings.2d.challenge_layers`: `0` (`int`)
 - `settings.2d.exploration_mode`: `0` (`int`)
+- `settings.2d.explorer_height`: `8` (`int`)
+- `settings.2d.explorer_width`: `8` (`int`)
 - `settings.2d.game_seed`: `1337` (`int`)
 - `settings.2d.height`: `20` (`int`)
 - `settings.2d.kick_level_index`: `0` (`int`)
@@ -747,6 +749,9 @@ Parameters:
 - `settings.3d.challenge_layers`: `0` (`int`)
 - `settings.3d.depth`: `6` (`int`)
 - `settings.3d.exploration_mode`: `0` (`int`)
+- `settings.3d.explorer_depth`: `8` (`int`)
+- `settings.3d.explorer_height`: `8` (`int`)
+- `settings.3d.explorer_width`: `8` (`int`)
 - `settings.3d.game_seed`: `1337` (`int`)
 - `settings.3d.height`: `18` (`int`)
 - `settings.3d.kick_level_index`: `0` (`int`)
@@ -765,6 +770,10 @@ Parameters:
 - `settings.4d.challenge_layers`: `0` (`int`)
 - `settings.4d.depth`: `6` (`int`)
 - `settings.4d.exploration_mode`: `0` (`int`)
+- `settings.4d.explorer_depth`: `8` (`int`)
+- `settings.4d.explorer_fourth`: `8` (`int`)
+- `settings.4d.explorer_height`: `8` (`int`)
+- `settings.4d.explorer_width`: `8` (`int`)
 - `settings.4d.fourth`: `4` (`int`)
 - `settings.4d.game_seed`: `1337` (`int`)
 - `settings.4d.height`: `20` (`int`)
@@ -795,7 +804,7 @@ Parameters:
 - `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
 - `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Select a dimension or jump to topology controls."` (`string`)
+- `launcher_subtitles.launcher_play`: `"Minimal play launcher: safe presets, last custom topology, or open E...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, or launch Tutorials; then adjust Settings, Controls,...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Select a guided tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
@@ -826,7 +835,7 @@ Parameters:
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
 - `settings_category_docs[]`: array[`object`]
-- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D (game seed, random type, advance...`
+- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D (game seed, random type, and adv...`
 - `settings_category_docs[].id`: varies (`string`); examples: `"audio"`, `"display"`, `"gameplay"`
 - `settings_category_docs[].label`: varies (`string`); examples: `"Audio"`, `"Display"`, `"Gameplay"`
 - `settings_category_metrics.analytics.action_count`: `1` (`int`)
@@ -846,11 +855,11 @@ Parameters:
 - `settings_category_metrics.display.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.display.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay.action_count`: `0` (`int`)
-- `settings_category_metrics.gameplay.field_count`: `5` (`int`)
+- `settings_category_metrics.gameplay.field_count`: `4` (`int`)
 - `settings_category_metrics.gameplay.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.gameplay.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay_setup.action_count`: `2` (`int`)
-- `settings_category_metrics.gameplay_setup.field_count`: `9` (`int`)
+- `settings_category_metrics.gameplay_setup.field_count`: `8` (`int`)
 - `settings_category_metrics.gameplay_setup.mode_specific`: `true` (`bool`)
 - `settings_category_metrics.gameplay_setup.top_level`: `false` (`bool`)
 - `settings_category_metrics.profiles.action_count`: `6` (`int`)
@@ -882,9 +891,9 @@ Parameters:
 - `setup_fields.4d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth (z)"`
 - `setup_fields.4d[].max`: varies (`int, string`); examples: `16`, `30`, `12`
 - `setup_fields.4d[].min`: varies (`int`); examples: `6`, `12`, `4`
-- `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
-- `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
-- `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type and Advanced topology."`
+- `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
+- `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
+- `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `ui_copy.bot_options.hints[]`: array[`string`]; examples: `"Left/Right adjust values   Up/Down select"`, `"F5 save   F8 reset defaults   Esc back   Q quit"`
 - `ui_copy.bot_options.reset_confirm_enter`: `"Press Enter on Reset defaults again to confirm"` (`string`)
 - `ui_copy.bot_options.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
@@ -912,7 +921,7 @@ Parameters:
 - `ui_copy.setup_menu.bindings_hint_template`: `"L = load keys, S = save keys ({bindings_file_hint})"` (`string`)
 - `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Esc back   Q quit"` (`string`)
 - `ui_copy.setup_menu.subtitle_2d`: `"Use Up/Down to select, Left/Right to change, Enter to start, Esc bac...` (`string`)
-- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Random ...` (`string`)
+- `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Setup k...` (`string`)
 - `ui_copy.setup_menu.title_2d`: `"2D setup"` (`string`)
 - `ui_copy.setup_menu.title_template`: `"{dimension}D setup"` (`string`)
 
@@ -1105,6 +1114,7 @@ Entries:
 ### `config/project/io_paths.json`
 Top-level keys: `paths`, `version`
 Parameters:
+- `paths.explorer_topology_experiments_file_default`: `"state/topology/explorer_experiments.json"` (`string`)
 - `paths.explorer_topology_preview_file_default`: `"state/topology/explorer_preview.json"` (`string`)
 - `paths.explorer_topology_profiles_file_default`: `"state/topology/explorer_profiles.json"` (`string`)
 - `paths.keybindings_dir`: `"keybindings"` (`string`)
@@ -1243,7 +1253,7 @@ Parameters:
 - `manifest_id`: `"drift_protection"` (`string`)
 - `schema_version`: `1` (`int`)
 - `thin_wrapper_budgets[]`: array[`object`]
-- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `720`, `24`, `120`
+- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `840`, `24`, `160`
 - `thin_wrapper_budgets[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
 - `thin_wrapper_budgets[].role`: varies (`string`); examples: `"compatibility launcher wrapper"`, `"thin 2D launcher shim"`, `"thin 3D launcher shim"`
 - `tutorial_copy_contract.forbidden_prefixes[]`: array[`string`]; examples: `"Goal:"`, `"Action:"`
@@ -1534,7 +1544,7 @@ Parameters:
 ### `config/topology/lab_menu.json`
 Top-level keys: `hints`, `rows`, `status_copy`, `subtitle`, `title`, `version`
 Parameters:
-- `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter triggers Save/Export/Back"`
+- `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter plays from Play tool or triggers Save/Export/Back"`
 - `rows[]`: array[`object`]
 - `rows[].key`: varies (`string`); examples: `"gameplay_mode"`, `"dimension"`, `"preset"`
 - `rows[].label`: varies (`string`); examples: `"Game Type"`, `"Dimension"`, `"Preset"`
@@ -1544,8 +1554,8 @@ Parameters:
 - `status_copy.save_failed`: `"Failed saving topology profile: {message}"` (`string`)
 - `status_copy.saved`: `"Saved topology profile for {mode_label} {dimension}D"` (`string`)
 - `status_copy.updated`: `"Topology profile updated (not saved yet)"` (`string`)
-- `subtitle`: `"Mode-aware topology editor for Normal Game and Explorer Mode"` (`string`)
-- `title`: `"Topology Lab"` (`string`)
+- `subtitle`: `"Scene-first explorer playground for live traversal, presets, sandbox...` (`string`)
+- `title`: `"Explorer Playground"` (`string`)
 - `version`: `1` (`int`)
 
 ### `config/tutorial/lessons.json`

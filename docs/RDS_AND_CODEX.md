@@ -44,13 +44,32 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 
 ## Contributor workflow
 
+This workflow is intentionally strict on source-file write safety and full-gate sequencing, but pragmatic on patch size: medium localized patches are preferred when they are easier to review and keep stable.
+
 1. Read relevant RDS sections before code changes.
 2. For restructuring/behavior changes, define short plan + acceptance criteria.
 3. Prefer existing helpers/APIs; avoid wheel reinvention.
-4. Keep keybindings/settings/tutorial structure config-backed (non-Python).
-5. Use runtime sanitization helpers for user/external strings.
-6. Keep tunable thresholds in canonical config (avoid magic numbers).
-7. Update docs in the same change when behavior/governance changes:
+4. Prefer medium-sized localized patches over ultra-narrow patch fragmentation. Split patches only when a broader patch becomes tool-rejected or hard to review.
+5. For staged UI/architecture migrations, do not treat partial progress as completion. A task is not complete if central settings still require round-tripping to another menu, the old control surface remains primary, the new state is not the canonical source of truth, or stated acceptance criteria are only partially met.
+6. Use additive migration first for large changes: add new modules first, route one flow to them, verify, and only then remove old paths. Do not attempt broad destructive replacement in one step.
+7. Choose the edit method deliberately:
+   - use `apply_patch` for localized code edits when the target context was read immediately before editing,
+   - use one deterministic scripted rewrite for broad doc rewrites, generated maintenance docs, or files already edited in the current batch,
+   - treat patch-tool rejection as a signal to change edit method, not as a blocker.
+6. Do not retry wide drifting patches repeatedly once the exact target text has shifted. After one rejected `apply_patch` attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.
+7. Do not use patch-first behavior on dirty/generated maintenance files when the edit is a section rewrite; go straight to a deterministic rewrite.
+9. Source-file write safety rules:
+   - do not use ad hoc multiline PowerShell `-replace` for source-file rewrites,
+   - do not use BOM-producing `Set-Content -Encoding UTF8` flows for Python/source files,
+   - non-patch source rewrites must preserve UTF-8 without BOM and avoid literal escape-text insertion.
+10. After any non-patch source rewrite, run a touched-file hygiene pass before broader tests:
+   - encoding sanity,
+   - no literal escape artifacts like `` `r`n ``,
+   - focused lint on the touched files.
+11. Keep keybindings/settings/tutorial structure config-backed (non-Python).
+12. Use runtime sanitization helpers for user/external strings.
+13. Keep tunable thresholds in canonical config (avoid magic numbers).
+14. Update docs in the same change when behavior/governance changes:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
      are maintained by `tools/governance/generate_maintenance_docs.py`)
@@ -59,7 +78,8 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
-8. Keep contract files synchronized and valid:
+13. At the end of staged migration work, provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.
+14. Keep contract files synchronized and valid:
    - `config/project/policy/manifests/canonical_maintenance.json`
    - `config/project/policy/manifests/context_router_manifest.json`
    - `config/project/policy/manifests/project_policy.json`
@@ -85,6 +105,11 @@ Fast staged local validation before the full gate:
 ```
 
 Use `verify_focus.sh` for focused lint/tests and maintenance-doc checks while a batch is in progress. It does not replace `./scripts/verify.sh` before commit/push.
+
+Full-gate policy:
+
+1. Never run `./scripts/verify.sh` and `./scripts/ci_check.sh` in parallel.
+2. Default sequence is focused checks first, then `./scripts/verify.sh`, then `./scripts/ci_check.sh` only when wrapper confirmation or pre-push parity is needed.
 
 For governance/contract changes, additionally run:
 

@@ -99,6 +99,10 @@ CANONICAL_OWNERS: dict[str, tuple[tuple[str, str], ...]] = {
         ("src/tet4d/ui/pygame/front3d_render.py", "3D render adapter"),
         ("src/tet4d/ui/pygame/front4d_render.py", "4D render adapter"),
         (
+            "src/tet4d/ui/pygame/topology_lab",
+            "explorer topology lab editor helpers",
+        ),
+        (
             "src/tet4d/ui/pygame/runtime_ui",
             "bootstrap, pause/help, tutorial overlay, shared loop helpers",
         ),
@@ -150,6 +154,7 @@ CANONICAL_OWNERS_FOR_CURRENT_STATE: dict[str, tuple[str, ...]] = {
         "src/tet4d/ui/pygame/front4d_game.py",
         "src/tet4d/ui/pygame/front3d_render.py",
         "src/tet4d/ui/pygame/front4d_render.py",
+        "src/tet4d/ui/pygame/topology_lab/*",
         "src/tet4d/ui/pygame/runtime_ui/*",
         "src/tet4d/ui/pygame/menu/*",
         "src/tet4d/ui/pygame/launch/* (with settings_hub_model.py owning settings model/layout, settings_hub_actions.py owning settings mutations/text-entry, and launcher_settings.py owning orchestration/view)",

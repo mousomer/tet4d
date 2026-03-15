@@ -16,13 +16,27 @@ from .pieces_nd import (
     normalize_piece_set_4d,  # backward-compatible parameter support
 )
 from ..runtime.score_analyzer import new_analysis_session_id
+from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
+from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
 from ..runtime.runtime_config import (
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
 from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
+from ..core.rules.piece_placement import (
+    CandidatePiecePlacement,
+    build_candidate_piece_placement,
+    commit_piece_placement,
+    validate_candidate_piece_placement,
+)
 from ..core.step.reducer import step_nd as core_step_nd
+from ..topology_explorer import ExplorerTopologyProfile
+from ..topology_explorer.transport_resolver import (
+    ExplorerTransportResolver,
+    build_explorer_transport_resolver,
+)
+from .explorer_runtime_nd import move_piece_via_explorer_glue, piece_cells_in_bounds
 from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -55,6 +69,75 @@ def _resolve_piece_set_id(
     return normalize_piece_set_for_dimension(ndim, selected_piece_set)
 
 
+def _normalize_explorer_transport_nd(
+    config,
+    *,
+    ndim: int,
+) -> ExplorerTransportResolver | None:
+    profile = config.explorer_topology_profile
+    transport = config.explorer_transport
+    if profile is not None and profile.dimension != ndim:
+        raise ValueError("explorer_topology_profile dimension must match dims")
+    if transport is not None and profile is None:
+        raise ValueError("explorer_transport requires explorer_topology_profile")
+    if profile is None:
+        return transport
+    expected_dims = tuple(int(value) for value in config.dims)
+    if transport is None:
+        return build_explorer_transport_resolver(profile, expected_dims)
+    if transport.dims != expected_dims:
+        raise ValueError("explorer_transport dims must match board dims")
+    return transport
+
+
+def _resolve_explorer_rigid_play_enabled_nd(config) -> bool | None:
+    enabled = config.explorer_rigid_play_enabled
+    if enabled is not None:
+        return bool(enabled)
+    profile = config.explorer_topology_profile
+    if profile is None:
+        return None
+    resolver = config.explorer_transport
+    if resolver is not None and not hasattr(resolver, "resolve_piece_step"):
+        return True
+    return resolve_rigid_play_enabled(
+        profile,
+        dims=tuple(int(value) for value in config.dims),
+        resolver=config.explorer_transport,
+    )
+
+
+def _uses_explorer_piece_transport_nd(config) -> bool:
+    return config.explorer_topology_profile is not None
+
+
+def _piece_cells_in_play_bounds_nd(
+    piece: ActivePieceND,
+    *,
+    dims: Coord,
+    gravity_axis: int,
+) -> tuple[Coord, ...] | None:
+    cells = tuple(piece.cells())
+    for coord in cells:
+        for axis in range(len(dims)):
+            value = int(coord[axis])
+            if axis == int(gravity_axis):
+                if value >= int(dims[axis]):
+                    return None
+                continue
+            if value < 0 or value >= int(dims[axis]):
+                return None
+    return cells
+
+
+def _piece_has_cells_above_gravity_nd(
+    piece: ActivePieceND,
+    *,
+    gravity_axis: int,
+) -> bool:
+    return any(int(coord[int(gravity_axis)]) < 0 for coord in piece.cells())
+
+
 @dataclass
 class GameConfigND:
     dims: Coord = (10, 20, 6)
@@ -63,6 +146,9 @@ class GameConfigND:
     topology_mode: str = TOPOLOGY_BOUNDED
     wrap_gravity_axis: bool = False
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None
+    explorer_topology_profile: ExplorerTopologyProfile | None = None
+    explorer_transport: ExplorerTransportResolver | None = None
+    explorer_rigid_play_enabled: bool | None = None
     piece_set_id: str | None = None
     piece_set_4d: str = PIECE_SET_4D_STANDARD
     kick_level: str = "off"
@@ -96,6 +182,8 @@ class GameConfigND:
         self.kick_level = normalize_kick_level_name(self.kick_level)
 
         ndim = len(self.dims)
+        self.explorer_transport = _normalize_explorer_transport_nd(self, ndim=ndim)
+        self.explorer_rigid_play_enabled = _resolve_explorer_rigid_play_enabled_nd(self)
         self.piece_set_id = _resolve_piece_set_id(
             ndim=ndim,
             piece_set_id=self.piece_set_id,
@@ -228,11 +316,10 @@ class GameStateND:
 
     def spawn_new_piece(self) -> None:
         shape = self.draw_next_piece_shape()
-        self.current_piece = ActivePieceND.from_shape(
-            shape, self._spawn_pos_for_shape(shape)
-        )
-        if not self._can_exist(self.current_piece):
+        candidate = ActivePieceND.from_shape(shape, self._spawn_pos_for_shape(shape))
+        if not self._can_exist(candidate):
             self.game_over = True
+        self.current_piece = candidate
 
     def _shape_fits_board(self, shape: PieceShapeND) -> bool:
         for axis in range(self.config.ndim):
@@ -243,6 +330,14 @@ class GameStateND:
         return True
 
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
+        if self.config.exploration_mode and _uses_explorer_piece_transport_nd(self.config):
+            return piece_cells_in_bounds(piece, dims=self.config.dims)
+        if _uses_explorer_piece_transport_nd(self.config):
+            return _piece_cells_in_play_bounds_nd(
+                piece,
+                dims=self.config.dims,
+                gravity_axis=self.config.gravity_axis,
+            )
         return map_piece_cells(
             self.topology_policy,
             piece.cells(),
@@ -264,17 +359,51 @@ class GameStateND:
 
     # --- Validation and locking ---
 
-    def _can_exist(self, piece: ActivePieceND) -> bool:
-        mapped_cells = self._mapped_piece_cells(piece)
-        if mapped_cells is None:
+    def _placement_ignore_cells(
+        self,
+        *,
+        allow_self_overlap: bool = False,
+    ) -> tuple[Coord, ...]:
+        if not allow_self_overlap or self.current_piece is None:
+            return ()
+        return self.current_piece_cells_mapped(include_above=True)
+
+    def _candidate_placement(
+        self,
+        piece: ActivePieceND,
+    ) -> CandidatePiecePlacement[ActivePieceND] | None:
+        return build_candidate_piece_placement(piece, self._mapped_piece_cells(piece))
+
+    def _can_place_candidate(
+        self,
+        candidate: CandidatePiecePlacement[ActivePieceND] | None,
+        *,
+        allow_self_overlap: bool = False,
+    ) -> bool:
+        return validate_candidate_piece_placement(
+            candidate,
+            self.board.cells,
+            ignore_cells=self._placement_ignore_cells(
+                allow_self_overlap=allow_self_overlap
+            ),
+        )
+
+    def _can_exist_after_motion(self, piece: ActivePieceND) -> bool:
+        return self._can_place_candidate(
+            self._candidate_placement(piece),
+            allow_self_overlap=True,
+        )
+
+    def _try_commit_candidate_piece(self, piece: ActivePieceND) -> bool:
+        candidate = self._candidate_placement(piece)
+        if not self._can_place_candidate(candidate, allow_self_overlap=True):
             return False
-        g = self.config.gravity_axis
-        for coord in mapped_cells:
-            if coord[g] < 0:
-                continue
-            if coord in self.board.cells:
-                return False
+        assert candidate is not None
+        commit_piece_placement(self, candidate)
         return True
+
+    def _can_exist(self, piece: ActivePieceND) -> bool:
+        return self._can_place_candidate(self._candidate_placement(piece))
 
     def lock_current_piece(self) -> int:
         if self.current_piece is None:
@@ -325,15 +454,49 @@ class GameStateND:
     def try_move(self, delta: Sequence[int]) -> bool:
         if self.current_piece is None:
             return False
-        candidate = self.current_piece.moved(delta)
-        if self._can_exist(candidate):
-            self.current_piece = candidate
-            return True
-        return False
+        if (
+            _uses_explorer_piece_transport_nd(self.config)
+            and not _piece_has_cells_above_gravity_nd(
+                self.current_piece,
+                gravity_axis=self.config.gravity_axis,
+            )
+        ):
+            non_zero = [
+                (axis, int(value))
+                for axis, value in enumerate(delta)
+                if int(value) != 0
+            ]
+            if len(non_zero) == 1 and abs(non_zero[0][1]) == 1:
+                axis, step = non_zero[0]
+                return self.try_move_axis(axis, step)
+        return self._try_commit_candidate_piece(self.current_piece.moved(delta))
 
     def try_move_axis(self, axis: int, delta: int) -> bool:
         if not (0 <= axis < self.config.ndim):
             raise ValueError("axis out of bounds")
+        if self.current_piece is None:
+            return False
+        if (
+            _uses_explorer_piece_transport_nd(self.config)
+            and not _piece_has_cells_above_gravity_nd(
+                self.current_piece,
+                gravity_axis=self.config.gravity_axis,
+            )
+        ):
+            if self.config.explorer_transport is None:
+                raise ValueError("explorer transport must exist when explorer topology is active")
+            candidate = move_piece_via_explorer_glue(
+                self.current_piece,
+                transport=self.config.explorer_transport,
+                axis=axis,
+                delta=delta,
+                movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                    self.config.explorer_rigid_play_enabled
+                ),
+            )
+            if candidate is None:
+                return False
+            return self._try_commit_candidate_piece(candidate)
         vector = [0] * self.config.ndim
         vector[axis] = delta
         return self.try_move(vector)
@@ -351,11 +514,10 @@ class GameStateND:
             kick_level=self.config.kick_level,
             plane_offsets_for_level=rotation_kick_candidate_offsets,
             move_piece=lambda piece, delta: piece.moved(delta),
-            can_place=self._can_exist,
+            can_place=self._can_exist_after_motion,
         )
         if resolved is not None:
-            self.current_piece = resolved
-            return True
+            return self._try_commit_candidate_piece(resolved)
         return False
 
     def hard_drop(self) -> None:

@@ -40,6 +40,35 @@ class TestTopologyExplorerStore(unittest.TestCase):
 
             loaded = load_explorer_topology_profile(3, root_dir=root)
             untouched = load_explorer_topology_profile(4, root_dir=root)
+            also_empty_2d = load_explorer_topology_profile(2, root_dir=root)
+            self.assertEqual(loaded, profile)
+            self.assertEqual(untouched.gluings, ())
+            self.assertEqual(also_empty_2d.gluings, ())
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_round_trip_persists_profile_per_dimension_including_2d(self) -> None:
+        root = (
+            state_dir_path() / "pytest_temp" / f"topology_explorer_store_2d_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = ExplorerTopologyProfile(
+                dimension=2,
+                gluings=(
+                    GluingDescriptor(
+                        glue_id="wrap_x",
+                        source=BoundaryRef(2, 0, "-"),
+                        target=BoundaryRef(2, 0, "+"),
+                        transform=BoundaryTransform(permutation=(0,), signs=(1,)),
+                    ),
+                ),
+            )
+            ok, message = save_explorer_topology_profile(profile, root_dir=root)
+            self.assertTrue(ok, message)
+
+            loaded = load_explorer_topology_profile(2, root_dir=root)
+            untouched = load_explorer_topology_profile(3, root_dir=root)
             self.assertEqual(loaded, profile)
             self.assertEqual(untouched.gluings, ())
         finally:

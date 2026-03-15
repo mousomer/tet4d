@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional, Tuple
 
 import pygame
@@ -36,13 +36,17 @@ from tet4d.ai.playbot.types import (
 from tet4d.engine.gameplay.speed_curve import gravity_interval_ms
 from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
 from tet4d.engine.gameplay.topology_designer import (
-    GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
-    export_topology_profile_state,
     resolve_topology_designer_selection,
+)
+from tet4d.engine.runtime.topology_explorer_runtime import (
+    resolve_direct_explorer_launch_profile,
+)
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
 )
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
@@ -143,6 +147,11 @@ class MenuState:
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)
     rebind_conflict_mode: str = "replace"
     run_dry_run: bool = False
+    numeric_text_mode: bool = False
+    numeric_text_attr_name: str = ""
+    numeric_text_label: str = ""
+    numeric_text_buffer: str = ""
+    numeric_text_replace_on_type: bool = False
 
 
 def menu_fields_for_settings(
@@ -156,6 +165,20 @@ def menu_fields_for_settings(
         piece_set_max=piece_set_max,
         topology_profile_max=topology_profile_max,
         topology_advanced=bool(settings.topology_advanced),
+        exploration_mode=bool(settings.exploration_mode),
+    )
+
+
+def _freeze_play_menu_state(state: MenuState) -> None:
+    state.settings.exploration_mode = 0
+
+
+def _play_menu_settings(settings: GameSettingsND) -> GameSettingsND:
+    return replace(
+        settings,
+        exploration_mode=0,
+        topology_advanced=0,
+        topology_profile_index=0,
     )
 
 
@@ -279,12 +302,8 @@ def draw_menu(
 
 
 def _run_dry_run(state: MenuState, dimension: int) -> None:
-    if bool(state.settings.exploration_mode):
-        state.bindings_status = "Dry-run is disabled in exploration mode"
-        state.bindings_status_error = False
-        return
     report = run_dry_run_nd(
-        build_config(state.settings, dimension),
+        build_play_menu_config(state.settings, dimension),
         planner_profile=bot_planner_profile_from_index(
             state.settings.bot_profile_index
         ),
@@ -298,22 +317,14 @@ def _run_dry_run(state: MenuState, dimension: int) -> None:
 
 
 def _export_topology_profile(state: MenuState, dimension: int) -> None:
-    if bool(state.settings.topology_advanced) and dimension >= 3:
-        gameplay_mode = (
-            GAMEPLAY_MODE_EXPLORER
-            if bool(state.settings.exploration_mode)
-            else GAMEPLAY_MODE_NORMAL
-        )
-        profile = load_topology_profile(gameplay_mode, dimension)
-        export_topology_profile_state(profile=profile, gravity_axis=1)
-        return
-    topology_mode = topology_mode_from_index(state.settings.topology_mode)
+    safe_settings = _play_menu_settings(state.settings)
+    topology_mode = topology_mode_from_index(safe_settings.topology_mode)
     export_resolved_topology_profile(
         dimension=dimension,
         gravity_axis=1,
         topology_mode=topology_mode,
-        topology_advanced=bool(state.settings.topology_advanced),
-        profile_index=state.settings.topology_profile_index,
+        topology_advanced=False,
+        profile_index=0,
     )
 
 
@@ -336,31 +347,45 @@ def run_menu(
         on_start_saved=lambda current_state: _export_topology_profile(
             current_state, dimension
         ),
+        after_load=_freeze_play_menu_state,
     )
 
 
-def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
+def build_config(
+    settings: GameSettingsND,
+    dimension: int,
+    *,
+    explorer_topology_profile_override=None,
+) -> GameConfigND:
     piece_set_id = _piece_set_index_to_id(dimension, settings.piece_set_index)
     topology_mode = topology_mode_from_index(settings.topology_mode)
     exploration_enabled = bool(settings.exploration_mode)
-    if bool(settings.topology_advanced) and dimension >= 3:
-        gameplay_mode = (
-            GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
-        )
-        topology_profile = load_topology_profile(gameplay_mode, dimension)
+    explorer_topology_profile = None
+    if bool(settings.topology_advanced) and dimension >= 3 and not exploration_enabled:
+        topology_profile = load_topology_profile(GAMEPLAY_MODE_NORMAL, dimension)
         resolved_mode = topology_profile.topology_mode
         topology_edge_rules = topology_profile.edge_rules
     else:
-        resolved_mode, topology_edge_rules, _profile = resolve_topology_designer_selection(
-            dimension=dimension,
-            gravity_axis=1,
-            topology_mode=topology_mode,
-            topology_advanced=bool(settings.topology_advanced),
-            profile_index=settings.topology_profile_index,
-            gameplay_mode=(
-                GAMEPLAY_MODE_EXPLORER if exploration_enabled else GAMEPLAY_MODE_NORMAL
-            ),
-        )
+        if exploration_enabled:
+            resolved_mode, topology_edge_rules, explorer_topology_profile = (
+                resolve_direct_explorer_launch_profile(
+                    dimension=dimension,
+                    gravity_axis=1,
+                    topology_mode=topology_mode,
+                    explorer_topology_profile_override=explorer_topology_profile_override,
+                )
+            )
+        else:
+            resolved_mode, topology_edge_rules, _legacy_profile = (
+                resolve_topology_designer_selection(
+                    dimension=dimension,
+                    gravity_axis=1,
+                    topology_mode=topology_mode,
+                    topology_advanced=bool(settings.topology_advanced),
+                    profile_index=settings.topology_profile_index,
+                    gameplay_mode=GAMEPLAY_MODE_NORMAL,
+                )
+            )
     dims = [settings.width, settings.height]
     if dimension >= 3:
         dims.append(settings.depth)
@@ -368,12 +393,20 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
         dims.append(settings.fourth)
     if exploration_enabled:
         dims = list(minimal_exploration_dims_nd(dimension, piece_set_id))
+    explorer_transport = None
+    if explorer_topology_profile is not None:
+        explorer_transport = build_explorer_transport_resolver(
+            explorer_topology_profile,
+            tuple(dims),
+        )
     return GameConfigND(
         dims=tuple(dims),
         gravity_axis=1,
         speed_level=settings.speed_level,
         topology_mode=resolved_mode,
         topology_edge_rules=topology_edge_rules,
+        explorer_topology_profile=explorer_topology_profile,
+        explorer_transport=explorer_transport,
         piece_set_id=piece_set_id,
         kick_level=_kick_level_name(settings.kick_level_index),
         rng_mode=_random_mode_index_to_id(settings.random_mode_index),
@@ -383,6 +416,12 @@ def build_config(settings: GameSettingsND, dimension: int) -> GameConfigND:
     )
 
 
+def build_play_menu_config(
+    settings: GameSettingsND,
+    dimension: int,
+) -> GameConfigND:
+    return build_config(_play_menu_settings(settings), dimension)
+
+
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
     return gravity_interval_ms(cfg.speed_level, dimension=max(2, cfg.ndim))
-

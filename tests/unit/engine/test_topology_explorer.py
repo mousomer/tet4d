@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest import mock
 
 from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.glue_model import (
@@ -10,13 +11,17 @@ from tet4d.engine.topology_explorer.glue_model import (
 )
 from tet4d.engine.topology_explorer.glue_validate import (
     validate_explorer_topology_profile,
+    validate_topology_bijection,
 )
 from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
+    explorer_presets_for_dimension,
     klein_bottle_profile_2d,
     mobius_strip_profile_2d,
     pair_boundaries,
+    swap_xw_profile_4d,
+    swapped_xz_profile_3d,
     torus_profile_2d,
 )
 
@@ -73,6 +78,26 @@ class TestTopologyExplorer(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_explorer_topology_profile(profile, dims=(4, 5, 6))
 
+    def test_validate_topology_bijection_rejects_board_dependent_extent_mismatch(
+        self,
+    ) -> None:
+        profile = ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                pair_boundaries(
+                    dimension=3,
+                    source_axis=0,
+                    source_side="-",
+                    target_axis=2,
+                    target_side="+",
+                    glue_id="bad",
+                    transform=BoundaryTransform(permutation=(0, 1), signs=(1, 1)),
+                ),
+            ),
+        )
+        with self.assertRaises(ValueError):
+            validate_topology_bijection(profile, dims=(4, 5, 6))
+
     def test_torus_wrap_maps_across_x_boundary(self) -> None:
         profile = torus_profile_2d()
         self.assertEqual(
@@ -117,6 +142,110 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertEqual(traversal.target_boundary.label, "x-")
         self.assertEqual(traversal.target_coord, (0, 1))
         self.assertEqual(traversal.entry_step.label, "x+")
+
+    def test_cross_axis_gluing_roundtrips_in_3d_and_4d(self) -> None:
+        cases = (
+            (
+                "swap_xz_3d",
+                swapped_xz_profile_3d(),
+                (4, 4, 4),
+                (0, 1, 2),
+                MoveStep(axis=0, delta=-1),
+                MoveStep(axis=2, delta=1),
+                (2, 1, 3),
+                "z+",
+            ),
+            (
+                "swap_xw_4d",
+                swap_xw_profile_4d(),
+                (4, 4, 4, 4),
+                (0, 1, 2, 3),
+                MoveStep(axis=0, delta=-1),
+                MoveStep(axis=3, delta=1),
+                (1, 3, 1, 3),
+                "w+",
+            ),
+        )
+
+        for label, profile, dims, origin, exit_step, reverse_step, expected, target_boundary in cases:
+            with self.subTest(case=label):
+                traversal = map_boundary_exit(
+                    profile,
+                    dims=dims,
+                    coord=origin,
+                    step=exit_step,
+                )
+                self.assertIsNotNone(traversal)
+                assert traversal is not None
+                self.assertEqual(traversal.target_boundary.label, target_boundary)
+                self.assertEqual(traversal.target_coord, expected)
+                self.assertEqual(
+                    move_cell(profile, dims=dims, coord=origin, step=exit_step),
+                    expected,
+                )
+                self.assertEqual(
+                    move_cell(profile, dims=dims, coord=expected, step=reverse_step),
+                    origin,
+                )
+
+    def test_2d_presets_include_classic_surface_examples(self) -> None:
+        presets = explorer_presets_for_dimension(2)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("torus_2d", preset_ids)
+        self.assertIn("mobius_2d", preset_ids)
+        self.assertIn("klein_2d", preset_ids)
+        self.assertIn("projective_2d", preset_ids)
+        self.assertIn("sphere_2d", preset_ids)
+        unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
+        self.assertIn("projective_2d", unsafe_ids)
+        self.assertIn("sphere_2d", unsafe_ids)
+
+
+    def test_3d_presets_include_unsafe_projective_and_sphere(self) -> None:
+        presets = explorer_presets_for_dimension(3)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("projective_3d", preset_ids)
+        self.assertIn("sphere_3d", preset_ids)
+        unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
+        self.assertIn("projective_3d", unsafe_ids)
+        self.assertIn("sphere_3d", unsafe_ids)
+
+
+    def test_4d_presets_include_full_wrap_and_twist(self) -> None:
+        presets = explorer_presets_for_dimension(4)
+        preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("full_wrap_4d", preset_ids)
+        self.assertIn("twist_y_4d", preset_ids)
+        self.assertIn("projective_4d", preset_ids)
+        self.assertIn("sphere_4d", preset_ids)
+        full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_4d")
+        self.assertEqual(full_wrap.profile.dimension, 4)
+        self.assertEqual(len(full_wrap.profile.gluings), 4)
+
+
+    def test_unsafe_projective_and_sphere_presets_validate_for_preview_dims(self) -> None:
+        for dimension, projective_id, sphere_id in (
+            (2, "projective_2d", "sphere_2d"),
+            (3, "projective_3d", "sphere_3d"),
+            (4, "projective_4d", "sphere_4d"),
+        ):
+            presets = {preset.preset_id: preset for preset in explorer_presets_for_dimension(dimension)}
+            for preset_id in (projective_id, sphere_id):
+                preset = presets[preset_id]
+                validated = validate_explorer_topology_profile(
+                    preset.profile, dims=tuple(4 for _ in range(dimension))
+                )
+                self.assertEqual(validated.dimension, dimension)
+
+
+    def test_build_movement_graph_validates_profile_once(self) -> None:
+        profile = mobius_strip_profile_2d()
+        with mock.patch(
+            "tet4d.engine.topology_explorer.movement_graph.validate_explorer_topology_profile",
+            return_value=profile,
+        ) as validate_profile:
+            build_movement_graph(profile, dims=(4, 3))
+        validate_profile.assert_called_once_with(profile, dims=(4, 3))
 
     def test_klein_bottle_graph_keeps_four_neighbors_per_cell(self) -> None:
         profile = klein_bottle_profile_2d()

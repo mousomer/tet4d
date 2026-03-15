@@ -1,6 +1,6 @@
 # Cleanup Master Plan
 
-Status date: 2026-03-07
+Status date: 2026-03-09
 
 This ledger tracks the remaining cleanup from the current live codebase. Code is
 the source of truth. Docs/manifests are updated after code changes land.
@@ -34,7 +34,7 @@ behavior. Structural work means:
 | 10 | Release/packaging cleanup | Mostly complete | Installer workflows exist and are green; keep as a watch item. |
 | 11 | Stop minifying operational code | Watch | No broad formatting issue found in current Python sources; enforce readability drift only. |
 | 12 | Docs/manifests sync last | Complete for this batch | Code changes are now reflected in backlog/state/RDS/generated maintenance docs. |
-| 13 | Explorer topology engine | Active | Phase 1 kernel is complete; Phase 2 runtime-owned explorer profile storage, legacy bridge, and preview export are now in place while live gameplay/UI remain on the legacy topology model. |
+| 13 | Explorer topology engine | Active | Phase 1 kernel, Phase 2 runtime/store/preview integration, Phases 3-4 direct 2D/3D/4D explorer gluing editors, Phase 5 live explorer gameplay/runtime migration, Phase 6 diagnostics/basis-arrow previews, Phase 7 scene-first topology playground integration, Phase 8 runtime-owned bridge shrink, Phase 9 shared launch-contract unification, and Phase 10 setup-side unification are complete. The current shell now has an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- controls, and 3D/4D scene-camera support in Navigate. Remaining work is limited to richer visual polish plus final compatibility-bridge deletion. |
 
 ## Domain Ledger
 
@@ -152,9 +152,10 @@ behavior. Structural work means:
 
 | Field | Value |
 | --- | --- |
-| Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py` for runtime-owned storage/preview integration |
-| Current duplicate owners | Legacy explorer edge-rule profiles in `src/tet4d/engine/gameplay/topology_designer.py` remain as the live runtime model until the GUI/lab rewrite lands |
+| Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_preview.py`, and `src/tet4d/engine/runtime/topology_explorer_runtime.py` for runtime-owned storage/preview/setup-export integration; the legacy bridge remains an implementation detail behind that runtime layer, and the canonical spatial frontend is the explorer scene under `src/tet4d/ui/pygame/topology_lab/` |
+| Current duplicate owners | Legacy explorer edge-rule profiles remain only as a runtime-internal compatibility/export bridge; live Explorer 2D/3D/4D launch, runtime, scene-first lab editing, sandboxing, and play-preview all target the general gluing model directly |
 | Migration status | Active |
 | Equivalence tests | `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_explorer_store.py`, `tests/unit/engine/test_topology_explorer_preview.py`, `tests/unit/engine/test_topology_lab_menu.py` |
-| Deletion checkpoint | Remove the legacy bridge after the topology lab edits and stores general gluing profiles directly |
+| Deletion checkpoint | Remove the legacy bridge after explicit compatibility export/preview no longer depend on legacy edge-rule conversion; keep the graphical explorer scene as the primary interface and treat side panels as supporting editors only |
+
 

@@ -34,16 +34,18 @@ Score analyzer logging toggle and telemetry output settings.
 
 ## 2D settings
 ### Gameplay Setup
-Dimension-specific board size, piece set, random mode/seed, challenge layers, and speed level.
+Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
 - `settings.2d.width`: `10`; integer; min: 4
 - `settings.2d.height`: `20`; integer; min: 8
+- `settings.2d.explorer_width`: `8`
+- `settings.2d.explorer_height`: `8`
 - `settings.2d.piece_set_index`: `0`; integer; min: 0; default option: Classic Tetrominoes; choices: 0=Classic Tetrominoes, 1=Random Cells, 2=Debug Rectangles
 - `settings.2d.challenge_layers`: `0`; integer; min: 0
 - `settings.2d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.2d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, advanced topology toggle, and advanced gameplay tuning).
+Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
 - `settings.2d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -64,17 +66,20 @@ Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
 
 ## 3D settings
 ### Gameplay Setup
-Dimension-specific board size, piece set, random mode/seed, challenge layers, and speed level.
+Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
 - `settings.3d.width`: `6`; integer; min: 4
 - `settings.3d.height`: `18`; integer; min: 8
 - `settings.3d.depth`: `6`; integer; min: 2
+- `settings.3d.explorer_width`: `8`
+- `settings.3d.explorer_height`: `8`
+- `settings.3d.explorer_depth`: `8`
 - `settings.3d.piece_set_index`: `0`; integer; min: 0; default option: True 3D; choices: 0=True 3D, 1=Embedded 2D, 2=Random Cells 3D, 3=Debug Rectangles 3D
 - `settings.3d.challenge_layers`: `0`; integer; min: 0
 - `settings.3d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, advanced topology toggle, and advanced gameplay tuning).
+Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
 - `settings.3d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -94,18 +99,22 @@ Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
 
 ## 4D settings
 ### Gameplay Setup
-Dimension-specific board size, piece set, random mode/seed, challenge layers, and speed level.
+Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
 - `settings.4d.width`: `10`; integer; min: 4
 - `settings.4d.height`: `20`; integer; min: 8
 - `settings.4d.depth`: `6`; integer; min: 2
 - `settings.4d.fourth`: `4`; integer; min: 1
+- `settings.4d.explorer_width`: `8`
+- `settings.4d.explorer_height`: `8`
+- `settings.4d.explorer_depth`: `8`
+- `settings.4d.explorer_fourth`: `8`
 - `settings.4d.piece_set_index`: `0`; integer; min: 0; default option: True 4D (5-cell); choices: 0=True 4D (5-cell), 1=True 4D (6-cell), 2=True 4D (7-cell), 3=True 4D (8-cell), 4=Embedded 3D, 5=Embedded 2D, 6=Random Cells 4D, 7=Debug Rectangles 4D
 - `settings.4d.challenge_layers`: `0`; integer; min: 0
 - `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, advanced topology toggle, and advanced gameplay tuning).
+Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
 - `settings.4d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all

@@ -81,13 +81,16 @@ This design is based on:
 ```text
 Main Menu
 |-- Play
-|   |-- 2D
-|   |-- 3D
-|   |-- 4D
-|   |-- Tutorials
-|   `-- Topology Lab
+|   |-- Play 2D
+|   |-- Play 3D
+|   |-- Play 4D
+|   |-- Play Last Custom Topology
+|   `-- Open Explorer Playground
 |-- Continue
-|   `-- Launch last used mode setup
+|-- Tutorials
+|   |-- Play 2D Tutorial
+|   |-- Play 3D Tutorial
+|   `-- Play 4D Tutorial
 |-- Settings
 |   |-- Audio
 |   |-- Display
@@ -138,11 +141,11 @@ Pause Menu
 3. 4D setup must expose at least: width, height, depth, w, speed, 4D piece set.
 4. Setup screens must include piece set source options (native, embedded lower-dimensional, random-cell, debug).
 5. Setup screens must use the same layout skeleton and footer shortcuts.
-6. Setup screens must expose topology preset selector:
+6. Setup screens must expose the safe topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
-8. Setup screens keep dimension-specific topology mode and topology profile selection.
-9. Shared settings hub owns `Random type`, `Topology advanced`, and kick permissiveness (`kick_level`) for all modes.
-10. `Topology profile` remains in setup and stays hidden unless shared `Topology advanced` is enabled.
+8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
+9. Shared settings hub owns `Random type` and kick permissiveness (`kick_level`) for all modes; it must not advertise full custom-topology editing.
+10. `Play Last Custom Topology` and `Open Explorer Playground` are the direct launcher routes into custom topology play/edit flows.
 11. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 
 ## 5. Layout and Readability Requirements
@@ -349,7 +352,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
-3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced topology`), and analytics controls.
+3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced gameplay`), and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -391,7 +394,7 @@ Stabilization details:
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 21. Launcher and pause menu trees now run through one generic graph runtime (`src/tet4d/ui/pygame/menu/menu_runner.py`) with per-surface action registries.
 22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
-23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` + `Topology Lab` remain under `Play` as config-defined entries.
+23. Top-level IA remains unchanged (`Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`) while `Tutorials` is a separate root submenu and `Play` stays minimal (`Play 2D/3D/4D`, `Play Last Custom Topology`, `Open Explorer Playground`).
 24. Launcher subtitles and route-action mapping are config-driven in
     `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
     no launcher subtitle copy or route-label mapping remains hardcoded in `front.py`.
@@ -489,7 +492,7 @@ Execution artifact:
 
 1. Topology Lab now edits separate topology profiles for `(gameplay mode, dimension)` rather than one shared 3D/4D profile bucket.
 2. Required pairs are `normal/3d`, `explorer/3d`, `normal/4d`, and `explorer/4d`.
-3. Lab entry flow must expose both `Game Type` (`Normal Game`, `Explorer Mode`) and `Dimension` (`3D`, `4D`).
+3. Lab entry flow must expose a gameplay-path chooser plus `Dimension` (`3D`, `4D`); the primary value must read as `Explorer Playground`, while `Normal Game` must be labeled as a legacy-compatibility branch rather than a peer modern editor mode.
 4. In `Normal Game`, gravity-axis `Y` boundaries are visually locked and any attempted seam touching `Y+` or `Y-` must be rejected immediately by engine-owned validation.
 5. In `Explorer Mode`, `Y` boundaries are selectable and may be wrapped or inverted subject to the general bijection rules.
-6. 3D/4D setup screens no longer expose `topology_profile_index`; advanced topology selection for those modes belongs to Topology Lab only.
+6. Ordinary 2D/3D/4D play setup screens no longer expose `topology_profile_index` or other custom-topology editor rows; custom topology selection belongs to the Explorer Playground only.

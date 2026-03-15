@@ -4,6 +4,10 @@ from collections.abc import Callable, Mapping
 
 import pygame
 
+from tet4d.engine.gameplay.explorer_movement_policy import (
+    explorer_movement_policy_from_rigid_play_enabled,
+)
+from tet4d.engine.gameplay.explorer_runtime_nd import move_piece_via_explorer_glue
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.input.view_controls import viewer_relative_move_axis_delta
@@ -70,6 +74,18 @@ _ROTATION_ACTION_TO_LOCAL_AXES = {
     "rotate_zw_neg": ("z", "w", -1),
 }
 AxisOverride = tuple[int, int] | tuple[int, int, int]
+
+
+def _uses_explorer_piece_transport(cfg: GameConfigND) -> bool:
+    return cfg.explorer_topology_profile is not None
+
+
+def _piece_has_cells_above_gravity(state: GameStateND) -> bool:
+    piece = state.current_piece
+    if piece is None:
+        return False
+    gravity_axis = int(state.config.gravity_axis)
+    return any(int(coord[gravity_axis]) < 0 for coord in piece.cells())
 
 
 def system_key_action(key: int) -> str | None:
@@ -206,11 +222,7 @@ def _rotation_override_from_view(
         cfg=cfg,
         viewer_axes_by_label=viewer_axes_by_label,
     )
-    w_axis = (
-        viewer_axes_by_label.get("w")
-        if viewer_axes_by_label is not None
-        else None
-    )
+    w_axis = viewer_axes_by_label.get("w") if viewer_axes_by_label is not None else None
     if w_axis is None:
         w_axis = (3, 1)
     w_world_axis, w_world_sign = int(w_axis[0]), int(w_axis[1])
@@ -248,17 +260,91 @@ def _apply_action_override(
     return True
 
 
-def _candidate_from_axis_override(
+def _translated_or_explorer_candidate(
+    state: GameStateND,
+    *,
     piece: object,
+    axis: int,
+    delta: int,
+) -> object | None:
+    mapped_axis = int(axis)
+    mapped_delta = int(delta)
+    if not (0 <= mapped_axis < int(state.config.ndim)):
+        return None
+    if _uses_explorer_piece_transport(state.config) and not _piece_has_cells_above_gravity(state):
+        transport = state.config.explorer_transport
+        if transport is None:
+            return None
+        return move_piece_via_explorer_glue(
+            piece,
+            transport=transport,
+            axis=mapped_axis,
+            delta=mapped_delta,
+            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                state.config.explorer_rigid_play_enabled
+            ),
+        )
+    vector = [0] * int(state.config.ndim)
+    vector[mapped_axis] = mapped_delta
+    return piece.moved(tuple(vector))
+
+
+def _base_move_spec_for_action(
+    action: str,
+    *,
+    gravity_axis: int,
+) -> tuple[int, int] | None:
+    move_vectors = {
+        "move_x_neg": (0, -1),
+        "move_x_pos": (0, 1),
+        "move_up": (gravity_axis, -1),
+        "move_down": (gravity_axis, 1),
+        "move_z_neg": (2, -1),
+        "move_z_pos": (2, 1),
+        "move_w_neg": (3, -1),
+        "move_w_pos": (3, 1),
+    }
+    return move_vectors.get(action)
+
+
+def _base_rotation_spec_for_action(
+    action: str,
+    *,
+    gravity_axis: int,
+) -> tuple[int, int, int] | None:
+    rotation_specs = {
+        "rotate_xy_pos": (0, gravity_axis, 1),
+        "rotate_xy_neg": (0, gravity_axis, -1),
+        "rotate_xz_pos": (0, 2, 1),
+        "rotate_xz_neg": (0, 2, -1),
+        "rotate_yz_pos": (gravity_axis, 2, 1),
+        "rotate_yz_neg": (gravity_axis, 2, -1),
+        "rotate_xw_pos": (0, 3, 1),
+        "rotate_xw_neg": (0, 3, -1),
+        "rotate_yw_pos": (gravity_axis, 3, 1),
+        "rotate_yw_neg": (gravity_axis, 3, -1),
+        "rotate_zw_pos": (2, 3, 1),
+        "rotate_zw_neg": (2, 3, -1),
+    }
+    return rotation_specs.get(action)
+
+
+def _candidate_from_axis_override(
+    state: GameStateND,
     *,
     override: AxisOverride,
-    ndim: int,
-) -> object:
+) -> object | None:
+    piece = state.current_piece
+    if piece is None:
+        return None
     if len(override) == 2:
         axis, delta = int(override[0]), int(override[1])
-        vector = [0] * int(ndim)
-        vector[axis] = delta
-        return piece.moved(tuple(vector))
+        return _translated_or_explorer_candidate(
+            state,
+            piece=piece,
+            axis=axis,
+            delta=delta,
+        )
     axis_a, axis_b, direction = (
         int(override[0]),
         int(override[1]),
@@ -276,42 +362,21 @@ def _candidate_for_base_nd_action(
         return None
     gravity_axis = int(state.config.gravity_axis)
     if action == "soft_drop":
-        vector = [0] * int(state.config.ndim)
-        vector[gravity_axis] = 1
-        return piece.moved(tuple(vector))
-    move_vectors = {
-        "move_x_neg": (0, -1),
-        "move_x_pos": (0, 1),
-        "move_up": (gravity_axis, -1),
-        "move_down": (gravity_axis, 1),
-        "move_z_neg": (2, -1),
-        "move_z_pos": (2, 1),
-        "move_w_neg": (3, -1),
-        "move_w_pos": (3, 1),
-    }
-    move_spec = move_vectors.get(action)
+        return _translated_or_explorer_candidate(
+            state,
+            piece=piece,
+            axis=gravity_axis,
+            delta=1,
+        )
+    move_spec = _base_move_spec_for_action(action, gravity_axis=gravity_axis)
     if move_spec is not None:
-        axis, delta = move_spec
-        if not (0 <= int(axis) < int(state.config.ndim)):
-            return None
-        vector = [0] * int(state.config.ndim)
-        vector[int(axis)] = int(delta)
-        return piece.moved(tuple(vector))
-    rotation_specs = {
-        "rotate_xy_pos": (0, gravity_axis, 1),
-        "rotate_xy_neg": (0, gravity_axis, -1),
-        "rotate_xz_pos": (0, 2, 1),
-        "rotate_xz_neg": (0, 2, -1),
-        "rotate_yz_pos": (gravity_axis, 2, 1),
-        "rotate_yz_neg": (gravity_axis, 2, -1),
-        "rotate_xw_pos": (0, 3, 1),
-        "rotate_xw_neg": (0, 3, -1),
-        "rotate_yw_pos": (gravity_axis, 3, 1),
-        "rotate_yw_neg": (gravity_axis, 3, -1),
-        "rotate_zw_pos": (2, 3, 1),
-        "rotate_zw_neg": (2, 3, -1),
-    }
-    rotation_spec = rotation_specs.get(action)
+        return _translated_or_explorer_candidate(
+            state,
+            piece=piece,
+            axis=int(move_spec[0]),
+            delta=int(move_spec[1]),
+        )
+    rotation_spec = _base_rotation_spec_for_action(action, gravity_axis=gravity_axis)
     if rotation_spec is None:
         return None
     axis_a, axis_b, direction = rotation_spec
@@ -324,10 +389,9 @@ def _candidate_for_base_nd_action(
 
 
 def _candidate_from_action_override(
+    state: GameStateND,
     *,
-    piece: object,
     action: str,
-    ndim: int,
     axis_overrides_by_action: Mapping[str, AxisOverride] | None,
 ) -> object | None:
     if axis_overrides_by_action is None:
@@ -335,18 +399,20 @@ def _candidate_from_action_override(
     override = axis_overrides_by_action.get(action)
     if override is None:
         return None
-    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+    return _candidate_from_axis_override(state, override=override)
 
 
 def _candidate_from_rotation_override(
     *,
-    piece: object,
+    state: GameStateND,
     action: str,
     cfg: GameConfigND,
-    ndim: int,
     yaw_deg_for_view_movement: float | None,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
 ) -> object | None:
+    piece = state.current_piece
+    if piece is None:
+        return None
     override = _rotation_override_from_view(
         action=action,
         cfg=cfg,
@@ -355,17 +421,19 @@ def _candidate_from_rotation_override(
     )
     if override is None:
         return None
-    return _candidate_from_axis_override(piece, override=override, ndim=ndim)
+    return _candidate_from_axis_override(state, override=override)
 
 
 def _viewer_relative_move_candidate(
     *,
-    piece: object,
+    state: GameStateND,
     action: str,
-    ndim: int,
     yaw_deg_for_view_movement: float | None,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None,
 ) -> tuple[object | None, bool]:
+    piece = state.current_piece
+    if piece is None:
+        return None, False
     if yaw_deg_for_view_movement is None:
         return None, False
     intent = _VIEWER_RELATIVE_INTENT_BY_ACTION.get(action)
@@ -383,11 +451,15 @@ def _viewer_relative_move_candidate(
         if target_axis is not None:
             mapped_axis = int(target_axis[0])
             mapped_delta = int(local_delta) * int(target_axis[1])
-    if not (0 <= mapped_axis < int(ndim)):
-        return None, True
-    vector = [0] * int(ndim)
-    vector[mapped_axis] = mapped_delta
-    return piece.moved(tuple(vector)), True
+    return (
+        _translated_or_explorer_candidate(
+            state,
+            piece=piece,
+            axis=mapped_axis,
+            delta=mapped_delta,
+        ),
+        True,
+    )
 
 
 def can_apply_nd_gameplay_action_with_view(
@@ -403,29 +475,25 @@ def can_apply_nd_gameplay_action_with_view(
         return False
     if action == "hard_drop":
         return True
-    ndim = int(state.config.ndim)
     candidate = _candidate_from_action_override(
-        piece=piece,
+        state,
         action=action,
-        ndim=ndim,
         axis_overrides_by_action=axis_overrides_by_action,
     )
     if candidate is not None:
         return bool(state._can_exist(candidate))
     candidate = _candidate_from_rotation_override(
-        piece=piece,
+        state=state,
         action=action,
         cfg=state.config,
-        ndim=ndim,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
         viewer_axes_by_label=viewer_axes_by_label,
     )
     if candidate is not None:
         return bool(state._can_exist(candidate))
     candidate, is_view_relative = _viewer_relative_move_candidate(
-        piece=piece,
+        state=state,
         action=action,
-        ndim=ndim,
         yaw_deg_for_view_movement=yaw_deg_for_view_movement,
         viewer_axes_by_label=viewer_axes_by_label,
     )

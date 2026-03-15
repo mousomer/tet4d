@@ -460,6 +460,8 @@ def maybe_record_leaderboard_session(
     kick_level: str,
     exploration_mode: bool,
 ) -> bool:
+    if exploration_mode:
+        return False
     qualifies, rank = leaderboard_entry_would_enter(
         dimension=dimension,
         score=score,
@@ -504,3 +506,4 @@ __all__ = [
     "prompt_leaderboard_player_name",
     "run_leaderboard_menu",
 ]
+

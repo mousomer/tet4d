@@ -471,11 +471,19 @@ def _overlay_active_layer_cells(
 ) -> list[VisibleLayerCell]:
     dims4 = state.config.dims
     overlay_cells, overlay_color = active_overlay
-    mapped_overlay = map_overlay_cells(
-        state.topology_policy,
-        overlay_cells,
-        allow_above_gravity=False,
-    )
+    if (
+        state.config.exploration_mode
+        and state.config.explorer_topology_profile is not None
+    ):
+        mapped_overlay = tuple(
+            tuple(float(value) for value in coord) for coord in overlay_cells
+        )
+    else:
+        mapped_overlay = map_overlay_cells(
+            state.topology_policy,
+            overlay_cells,
+            allow_above_gravity=False,
+        )
     cells: list[VisibleLayerCell] = []
     for coord4 in mapped_overlay:
         layer_value, cell3 = _map_coord_to_layer_cell3(coord4, dims4=dims4, basis=basis)
@@ -1044,6 +1052,7 @@ def handle_view_key(
         is not None
     )
 
+
 def _collect_cleared_ghost_cells(
     state: GameStateND,
 ) -> tuple[tuple[tuple[int, ...], tuple[int, int, int]], ...]:
@@ -1066,6 +1075,3 @@ def spawn_clear_animation_if_needed(
     if not ghost_cells:
         return None, state.lines_cleared
     return ClearAnimation4D(ghost_cells=tuple(ghost_cells)), state.lines_cleared
-
-
-

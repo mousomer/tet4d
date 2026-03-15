@@ -6,8 +6,17 @@ from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.pieces2d import PieceShape2D, ActivePiece2D
 from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
+from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
+    mobius_strip_profile_2d,
+    projective_plane_profile_2d,
+)
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 from tet4d.engine.core.rules.scoring import score_for_clear
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 
 
 class TestGame2D(unittest.TestCase):
@@ -281,6 +290,262 @@ class TestGame2D(unittest.TestCase):
         self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
         self.assertEqual(len(mapped), len(set(mapped)))
 
+    def test_explorer_glue_runtime_wraps_live_2d_movement(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(3, 3), rotation=0)
+
+        state.try_move(1, 0)
+
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False),
+            ((0, 3),),
+        )
+
+    def test_explorer_glue_runtime_wraps_live_2d_movement_in_actual_play(self):
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        dot = PieceShape2D("dot", [(0, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=dot, pos=(3, 3), rotation=0)
+
+        state.try_move(1, 0)
+
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False),
+            ((0, 3),),
+        )
+
+    def test_actual_play_with_explorer_profile_spawns_piece_without_game_over(self):
+        cfg = GameConfig(
+            width=10,
+            height=20,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+
+        self.assertIsNotNone(state.current_piece)
+        self.assertFalse(state.game_over)
+        self.assertTrue(any(y < 0 for _x, y in state.current_piece.cells()))
+
+    def test_explorer_interior_translation_preserves_rotation_frame_2d(self):
+        normal_cfg = GameConfig(width=10, height=10)
+        explorer_cfg = GameConfig(
+            width=10,
+            height=10,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        line = PieceShape2D("I", [(-1, 0), (0, 0), (1, 0), (2, 0)], color_id=3)
+        normal_state = GameState(config=normal_cfg, board=BoardND((10, 10)))
+        explorer_state = GameState(config=explorer_cfg, board=BoardND((10, 10)))
+        normal_state.board.cells.clear()
+        explorer_state.board.cells.clear()
+        normal_state.current_piece = ActivePiece2D(shape=line, pos=(5, 4), rotation=1)
+        explorer_state.current_piece = ActivePiece2D(shape=line, pos=(5, 4), rotation=1)
+
+        normal_state.try_move(-1, 0)
+        explorer_state.try_move(-1, 0)
+
+        self.assertEqual(
+            explorer_state.current_piece.rotation, normal_state.current_piece.rotation
+        )
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.shape.blocks)),
+            tuple(sorted(normal_state.current_piece.shape.blocks)),
+        )
+
+        normal_state.try_rotate(1)
+        explorer_state.try_rotate(1)
+
+        self.assertEqual(
+            explorer_state.current_piece.rotation, normal_state.current_piece.rotation
+        )
+        self.assertEqual(
+            explorer_state.current_piece.pos, normal_state.current_piece.pos
+        )
+        self.assertEqual(
+            explorer_state.current_piece_cells_mapped(include_above=False),
+            normal_state.current_piece_cells_mapped(include_above=False),
+        )
+
+    def test_explorer_mobius_seam_uses_shared_rigid_transform_2d(self):
+        cfg = GameConfig(
+            width=6,
+            height=6,
+            exploration_mode=True,
+            explorer_topology_profile=mobius_strip_profile_2d(),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("domino", [(0, 0), (0, 1)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=shape, pos=(0, 1), rotation=0)
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertEqual(expected.kind, "rigid_transform")
+        self.assertIsNotNone(expected.frame_transform)
+        state.try_move(-1, 0)
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+        self.assertEqual(
+            state.current_piece.pos,
+            expected.frame_transform.apply_absolute((0, 1)),
+        )
+        self.assertEqual(
+            tuple(sorted(state.current_piece.shape.blocks)),
+            tuple(
+                sorted(
+                    expected.frame_transform.apply_linear(block)
+                    for block in shape.blocks
+                )
+            ),
+        )
+
+    def test_projective_auto_mode_allows_cellwise_seam_move_for_non_flat_piece(self):
+        cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=True,
+            explorer_topology_profile=projective_plane_profile_2d(),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("pair2", [(0, 0), (1, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=shape, pos=(0, 0), rotation=0)
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertFalse(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        state.try_move(-1, 0)
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
+    def test_torus_chart_split_wrap_is_allowed_in_rigid_mode(self):
+        cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(1,)),
+            explorer_rigid_play_enabled=True,
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("domino", [(0, 0), (0, 1)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=shape, pos=(0, 0), rotation=0)
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=1, delta=-1),
+        )
+
+        self.assertTrue(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertTrue(expected.rigidly_coherent)
+        state.try_move(0, -1)
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_2d(self):
+        cases = (
+            (
+                "main_2d",
+                GameConfig(width=6, height=6),
+                PieceShape2D("dot", [(0, 0)], color_id=5),
+                (4, 3),
+                [((3, 3),), ((2, 3),), ((1, 3),)],
+            ),
+            (
+                "explorer_2d",
+                GameConfig(
+                    width=6,
+                    height=6,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2, wrapped_axes=(0,)
+                    ),
+                ),
+                PieceShape2D("dot", [(0, 0)], color_id=5),
+                (1, 3),
+                [((0, 3),), ((5, 3),), ((4, 3),)],
+            ),
+            (
+                "main_2d_multicell",
+                GameConfig(width=8, height=8),
+                PieceShape2D("L", [(-1, 0), (0, 0), (1, 0), (1, 1)], color_id=6),
+                (4, 3),
+                [
+                    ((2, 3), (3, 3), (4, 3), (4, 4)),
+                    ((1, 3), (2, 3), (3, 3), (3, 4)),
+                    ((0, 3), (1, 3), (2, 3), (2, 4)),
+                ],
+            ),
+            (
+                "explorer_2d_multicell",
+                GameConfig(
+                    width=8,
+                    height=8,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2, wrapped_axes=(0,)
+                    ),
+                ),
+                PieceShape2D("L", [(-1, 0), (0, 0), (1, 0), (1, 1)], color_id=6),
+                (4, 3),
+                [
+                    ((2, 3), (3, 3), (4, 3), (4, 4)),
+                    ((1, 3), (2, 3), (3, 3), (3, 4)),
+                    ((0, 3), (1, 3), (2, 3), (2, 4)),
+                ],
+            ),
+        )
+        for label, cfg, shape, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+                state.board.cells.clear()
+                state.current_piece = ActivePiece2D(
+                    shape=shape,
+                    pos=start_pos,
+                    rotation=0,
+                )
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move(-1, 0),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                )
+
     def test_invert_topology_rotation_uses_topology_mapping_with_kicks(self):
         cfg = GameConfig(
             width=4,
@@ -315,6 +580,43 @@ class TestGame2D(unittest.TestCase):
         self.assertEqual(state.current_piece.rotation, before_rotation)
         self.assertEqual(tuple(sorted(state.current_piece.cells())), before_cells)
 
+    def test_atomic_move_ignores_current_piece_source_cells(self):
+        state = self.make_empty_state(width=5, height=5)
+        state.board.cells.clear()
+        domino = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=2)
+        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 1), rotation=0)
+        for coord in state.current_piece.cells():
+            state.board.cells[coord] = 9
+
+        state.try_move(1, 0)
+
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), ((2, 1), (3, 1)))
+
+    def test_atomic_rotation_ignores_current_piece_source_cells(self):
+        state = self.make_empty_state(width=5, height=5)
+        state.board.cells.clear()
+        domino = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=2)
+        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 1), rotation=0)
+        for coord in state.current_piece.cells():
+            state.board.cells[coord] = 9
+
+        state.try_rotate(1)
+
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), ((1, 1), (1, 2)))
+
+    def test_atomic_move_still_rejects_genuine_collision(self):
+        state = self.make_empty_state(width=5, height=5)
+        state.board.cells.clear()
+        domino = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=2)
+        state.current_piece = ActivePiece2D(shape=domino, pos=(1, 1), rotation=0)
+        for coord in state.current_piece.cells():
+            state.board.cells[coord] = 9
+        state.board.cells[(3, 1)] = 4
+        before = tuple(sorted(state.current_piece.cells()))
+
+        state.try_move(1, 0)
+
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), before)
 
 
 if __name__ == "__main__":

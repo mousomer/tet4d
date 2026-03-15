@@ -6,36 +6,166 @@
       "id": "plan_with_acceptance",
       "category": "process",
       "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
-      "source_docs": ["AGENTS.md", "docs/RDS_AND_CODEX.md"],
-      "enforced_by": ["code_review"]
+      "source_docs": [
+        "AGENTS.md",
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
     },
     {
       "id": "rds_backlog_state_sync",
       "category": "process",
       "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
-      "source_docs": ["AGENTS.md", "docs/RDS_AND_CODEX.md"],
-      "enforced_by": ["code_review"]
+      "source_docs": [
+        "AGENTS.md",
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
     },
     {
       "id": "verification_required",
       "category": "verification",
       "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
-      "source_docs": ["AGENTS.md", "config/project/policy/manifests/project_policy.json"],
-      "enforced_by": ["scripts/verify.sh", "scripts/ci_check.sh"]
+      "source_docs": [
+        "AGENTS.md",
+        "config/project/policy/manifests/project_policy.json"
+      ],
+      "enforced_by": [
+        "scripts/verify.sh",
+        "scripts/ci_check.sh"
+      ]
     },
     {
       "id": "loc_delta_preference",
       "category": "process",
       "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
-      "source_docs": ["AGENTS.md"],
-      "enforced_by": ["code_review", "tools/governance/check_risk_gates.py"]
+      "source_docs": [
+        "AGENTS.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "tools/governance/check_risk_gates.py"
+      ]
     },
     {
       "id": "quiet_test_default",
       "category": "process",
       "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
-      "source_docs": ["AGENTS.md"],
-      "enforced_by": ["code_review", "scripts/verify.sh", "tools/governance/check_risk_gates.py"]
+      "source_docs": [
+        "AGENTS.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify.sh",
+        "tools/governance/check_risk_gates.py"
+      ]
+    },
+    {
+      "id": "medium_patch_preference",
+      "category": "process",
+      "statement": "Prefer medium-sized localized patches over ultra-narrow patch fragmentation; split only when a broader patch becomes hard to review or tool-rejected.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "edit_method_selection",
+      "category": "process",
+      "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "source_write_safety",
+      "category": "process",
+      "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "post_write_hygiene",
+      "category": "verification",
+      "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify_focus.sh"
+      ]
+    },
+    {
+      "id": "serialized_full_gates",
+      "category": "verification",
+      "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify.sh",
+        "scripts/ci_check.sh"
+      ]
+    },
+    {
+      "id": "single_patch_retry_limit",
+      "category": "process",
+      "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "staged_migration_honesty",
+      "category": "process",
+      "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
+    },
+    {
+      "id": "additive_migration_first",
+      "category": "process",
+      "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review",
+        "scripts/verify_focus.sh"
+      ]
+    },
+    {
+      "id": "delta_report_required",
+      "category": "process",
+      "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
+      "source_docs": [
+        "docs/RDS_AND_CODEX.md"
+      ],
+      "enforced_by": [
+        "code_review"
+      ]
     }
   ]
 }

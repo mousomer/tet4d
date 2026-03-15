@@ -113,7 +113,9 @@ class GluingDescriptor:
         if self.source == self.target:
             raise ValueError("source and target boundaries must be distinct")
         if self.transform.tangent_dimension != self.source.dimension - 1:
-            raise ValueError("transform tangent dimension must match boundary tangent rank")
+            raise ValueError(
+                "transform tangent dimension must match boundary tangent rank"
+            )
         object.__setattr__(self, "glue_id", glue_id)
         object.__setattr__(self, "enabled", bool(self.enabled))
 
@@ -128,7 +130,9 @@ class ExplorerTopologyProfile:
         gluings = tuple(self.gluings)
         for glue in gluings:
             if glue.source.dimension != dimension or glue.target.dimension != dimension:
-                raise ValueError("all boundaries in a profile must match profile dimension")
+                raise ValueError(
+                    "all boundaries in a profile must match profile dimension"
+                )
         object.__setattr__(self, "dimension", dimension)
         object.__setattr__(self, "gluings", gluings)
 

@@ -64,7 +64,6 @@ def _handle_unified_enter(
         "display_fullscreen",
         "analytics_score_logging",
         "game_random_mode",
-        "game_topology_advanced",
     }:
         state.pending_reset_confirm = False
         _adjust_unified_with_arrows(state, pygame.K_RIGHT)

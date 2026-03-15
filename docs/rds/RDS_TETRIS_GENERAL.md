@@ -77,8 +77,9 @@ Cross-cutting requirements are defined in:
 2. `topology_advanced=1` enables profile-based per-axis/per-edge overrides.
 3. Profile source file is `config/topology/designer_presets.json`.
 4. Profile output export path defaults to `state/topology/selected_profile.json`.
-5. Gravity-axis wrapping remains disabled unless explicitly enabled in engine config.
-6. Deterministic replay rule still applies to `(seed, topology mode/profile, input stream)`.
+5. Ordinary play launcher/setup surfaces remain preset-only for the migrated path; custom topology editing and custom-topology launch live in the Explorer Playground / last-custom route.
+6. Gravity-axis wrapping remains disabled unless explicitly enabled in engine config.
+7. Deterministic replay rule still applies to `(seed, topology mode/profile, input stream)`.
 
 ### 3.3 Shared piece-local transform rules
 
@@ -88,6 +89,10 @@ Cross-cutting requirements are defined in:
 4. Odd active-plane spans rotate around the center cell.
 5. Even active-plane spans rotate around the between-cells axis or plane.
 6. Deterministic local re-anchoring after rotation is allowed as long as gameplay, bot planning, tutorials, and animation all consume the same canonical transform math.
+7. Explorer-runtime piece transport must classify single-step outcomes as `plain_translation`, `rigid_transform`, or `cellwise_deformation` before mutating active-piece frame state.
+8. `plain_translation` must preserve the existing piece-local frame and any rotation metadata exactly; ordinary movement must not rebase the piece origin through generic min-corner normalization.
+9. `rigid_transform` outcomes may reframe the piece only through an explicit signed-permutation piece-frame transform that preserves coherent later rotations.
+10. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame.
 
 ### 3.4 Shared rotation-kick rules
 
@@ -123,6 +128,16 @@ Cross-cutting requirements are defined in:
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
 19. Advanced gameplay settings expose kick permissiveness (`kick_level`).
+20. Ordinary play launcher/setup surfaces must stay minimal for topology: safe preset selection only, plus launcher routes to `Play Last Custom Topology` and `Open Explorer Playground` for custom topology work.
+21. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
+22. The Explorer Playground shell must expose an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- value controls, and synchronized 2D coordinate-plane projections as the default 3D/4D primary visualization: `3D` uses `xy/xz/yz`, `4D` uses `xy/xz/xw/yz/yw/zw`, all panels share one canonical selected-cell/topology/move-preview/seam-focus state, and hidden coordinates must stay explicit in every panel. Free-camera 3D/4D views may remain optional debug-only helpers, but they must not remain the primary Explorer Playground interface.
+23. The Explorer Playground shell must be able to compile and export a parallel experiment pack from the current draft plus the active dimension's preset family, persist that pack under `state/topology/`, and surface a recommended next topology directly in the shell.
+24. For the migrated Explorer Playground path, explorer rendering, topology visualization, and explorer-side selection/probe highlighting must consume the engine/runtime-owned `TopologyPlaygroundState`; retained UI-local mirrors may remain only as additive compatibility paths during migration, not as the sole source for that path.
+25. For the migrated core gluing workflow, explorer-side boundary picks, seam picks, and linked transform-editor slot selection must update the engine/runtime-owned `TopologyPlaygroundState` selected boundary, selected seam, and normalized gluing draft immediately; one full seam edit must complete without round-tripping to another menu.
+26. The `Analysis View` pane must be clearly labeled as a secondary research/diagnostics surface; core seam authoring remains in the graphical explorer plus linked transform editor/action workspace and must not depend on row-based analysis controls. Explorer preset changes plus save/export/experiment/back administrative commands may live there, but duplicate copies must not compete with the action workspace, and read-only seam-context rows must look read-only rather than editable.
+27. The explorer tool-ribbon play toggle must be labeled as a mode/toggle rather than an immediate launch, and the probe/sandbox footer movement grid must identify whether it moves the probe or the sandbox piece.
+28. Invalid explorer topology / board-size pairings must remain attached to the current canonical draft topology across explorer entry, preview, sandbox, and play-launch surfaces; the playground may mark the topology invalid and block incompatible actions, but it must not silently substitute a fallback topology or drop the seam.
+29. The Explorer Playground must surface one coherent runtime-derived playability signal for the current topology before launch, explicitly distinguishing validity, cellwise explorer usability, rigid playability, and the reason the current topology is invalid or explorer-only; this signal must be derived from canonical runtime state rather than preset labels or UI-only guesses.
 
 ### 4.1 Soft piece-rotation animation requirements
 
@@ -276,7 +291,7 @@ Expected test categories:
 8. Scoring behavior is verified by automated tests, matches defined tables, and scales clear rewards by cleared layer size using square-root weighting.
 9. Audio can be muted/unmuted and volume-controlled from settings.
 10. Fullscreen toggling preserves correct menu and game layout state.
-11. Topology presets are selectable in setup menus and persisted in menu settings.
+11. Safe topology presets are selectable in ordinary play setup menus and persisted in menu settings; custom topology launch routes through the Explorer Playground / last-custom path.
 12. `kick_level` is persisted, participates in score multiplier calculation, and leaves leaderboard ordering unchanged.
 
 ## 10. Backlog Status
@@ -345,7 +360,7 @@ Remaining follow-up:
 19. Planned: keep continuous CI/stability watch and revisit optional sub-splits only if module scope grows.
 20. Closed: advanced boundary-warping designer baseline implemented:
 21. per-axis/per-edge profile overrides via `config/topology/designer_presets.json`,
-22. setup-gated by `topology_advanced` toggle and `topology_profile_index`,
+22. custom topology editing/launch now lives in the Explorer Playground / last-custom path while ordinary setup remains preset-only,
 23. deterministic profile export provided at `state/topology/selected_profile.json`.
 24. Closed: 4D view `xw` / `zw` camera turns are implemented with keybinding + test coverage, preserving deterministic gameplay/replay behavior.
 25. Closed: setup-menu render/value dedup extraction (`BKL-P2-007`) completed by routing 3D setup through the shared ND setup module (`src/tet4d/ui/pygame/frontend_nd_setup.py`) with ND state creation and gameplay/input routing owned separately by `frontend_nd_state.py` and `frontend_nd_input.py`.
@@ -402,8 +417,13 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 ### 11.6.1 Current engine staging note
 
 1. A new exploratory kernel now exists under `src/tet4d/engine/topology_explorer/` for general boundary gluings, signed-permutation transforms, boundary-crossing movement, and movement-graph compilation.
-2. This kernel is not yet the active gameplay/runtime topology path; live play still uses the existing bounded/wrap/invert explorer topology model until a later integration batch switches explorer-mode runtime and lab preview onto the new engine-owned model.
-3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`; the current Topology Lab can export a general-gluing preview only when its legacy explorer edge rules are representable as a true paired-boundary gluing.
+2. Live Explorer gameplay/runtime for 2D, 3D, and 4D now routes through that gluing engine; Normal Game remains on the legacy bounded/wrap/invert topology path.
+3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`.
+4. Explorer 2D, Explorer 3D, and Explorer 4D Topology Lab now edit general gluing profiles directly through those runtime owners and use the graphical explorer scene as the primary spatial frontend, with boundary-card selection, tangent transform controls, basis-arrow overlays, and engine-backed probe traversal supporting live seam editing inside that scene-first shell.
+5. Explorer preset libraries now include explicitly marked unsafe `Projective` / `Sphere` families for 2D/3D/4D; legality remains engine-owned in `src/tet4d/engine/topology_explorer/glue_validate.py`, not UI-owned.
+6. The legacy bridge remains only for non-advanced explorer setup/export compatibility and future deletion once those paths stop depending on legacy edge-rule conversion.
+7. A canonical engine/runtime playground-state contract now exists under `src/tet4d/engine/runtime/topology_playground_state.py`; later UI migration stages consume that state, while retained UI-local state paths remain additive compatibility debt until the consumer switch is complete.
+8. The migrated Explorer Playground shell now surfaces a canonical playability analysis from that runtime state, explicitly showing validity, explorer usability, rigid playability, and launch context before `Play This Topology`.
 
 ### 11.7 Test requirements (for future implementation)
 
@@ -412,5 +432,6 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 3. Clear-rule tests: region clears are deterministic and invariant to iteration order.
 4. Replay tests: same input stream yields same final state per geometry profile.
 5. Bot dry-run tests: no geometry profile may generate invalid/zero-sized placements.
+
 
 

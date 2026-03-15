@@ -12,6 +12,9 @@ from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     GluingDescriptor,
 )
+from tet4d.engine.runtime.topology_explorer_preview import (
+    export_explorer_topology_preview,
+)
 
 
 def explorer_profile_from_legacy_profile(
@@ -49,4 +52,37 @@ def explorer_profile_from_legacy_profile(
     return ExplorerTopologyProfile(dimension=profile.dimension, gluings=tuple(gluings))
 
 
-__all__ = ["explorer_profile_from_legacy_profile"]
+def explorer_profile_from_edge_rules(
+    *,
+    dimension: int,
+    topology_mode: str,
+    edge_rules: tuple[tuple[str, str], ...],
+) -> ExplorerTopologyProfile:
+    return explorer_profile_from_legacy_profile(
+        TopologyProfileState(
+            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
+            dimension=int(dimension),
+            topology_mode=str(topology_mode),
+            edge_rules=tuple((str(neg), str(pos)) for neg, pos in edge_rules),
+        )
+    )
+
+
+def export_explorer_preview_from_legacy_profile(
+    profile: TopologyProfileState,
+    *,
+    dims: tuple[int, ...],
+    source: str,
+) -> tuple[bool, str, str | None]:
+    return export_explorer_topology_preview(
+        explorer_profile_from_legacy_profile(profile),
+        dims=dims,
+        source=source,
+    )
+
+
+__all__ = [
+    "explorer_profile_from_edge_rules",
+    "explorer_profile_from_legacy_profile",
+    "export_explorer_preview_from_legacy_profile",
+]

@@ -1072,7 +1072,6 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     required_shared_row_keys = {
         "game_seed",
         "game_random_mode",
-        "game_topology_advanced",
         "gameplay_advanced",
     }
     hub_keys = _settings_hub_row_keys(menu_payload)

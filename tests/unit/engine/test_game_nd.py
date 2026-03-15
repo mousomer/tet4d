@@ -15,7 +15,16 @@ from tet4d.engine.gameplay.pieces_nd import (
     PieceShapeND,
 )
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
+from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
+    projective_space_profile_3d,
+    swap_xw_profile_4d,
+)
 from tet4d.engine.core.rules.scoring import score_for_clear
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 
 
 class TestGameND(unittest.TestCase):
@@ -256,6 +265,309 @@ class TestGameND(unittest.TestCase):
 
         self.assertFalse(state._can_exist(state.current_piece))
 
+    def test_explorer_glue_runtime_wraps_live_nd_movement(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(3, 3, 2))
+
+        self.assertTrue(state.try_move_axis(0, 1))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
+        )
+
+    def test_explorer_glue_runtime_wraps_live_nd_movement_in_actual_play(self):
+        cfg = GameConfigND(
+            dims=(4, 8, 4),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        dot = PieceShapeND("dot", ((0, 0, 0),), color_id=9)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(3, 3, 2))
+
+        self.assertTrue(state.try_move_axis(0, 1))
+        self.assertEqual(
+            state.current_piece_cells_mapped(include_above=False), ((0, 3, 2),)
+        )
+
+    def test_actual_play_with_explorer_profile_spawns_piece_without_game_over(self):
+        cfg = GameConfigND(
+            dims=(6, 12, 6),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+
+        self.assertIsNotNone(state.current_piece)
+        self.assertFalse(state.game_over)
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in state.current_piece.cells())
+        )
+
+    def test_explorer_interior_translation_preserves_rotation_frame_nd(self):
+        normal_cfg = GameConfigND(dims=(10, 10, 10), gravity_axis=1)
+        explorer_cfg = GameConfigND(
+            dims=(10, 10, 10),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+        )
+        shape = PieceShapeND(
+            "el3",
+            ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+            color_id=5,
+        )
+        seeded_piece = ActivePieceND.from_shape(shape, pos=(5, 4, 5)).rotated(0, 2, 1)
+        normal_state = GameStateND(config=normal_cfg, board=BoardND(normal_cfg.dims))
+        explorer_state = GameStateND(
+            config=explorer_cfg, board=BoardND(explorer_cfg.dims)
+        )
+        normal_state.board.cells.clear()
+        explorer_state.board.cells.clear()
+        normal_state.current_piece = seeded_piece
+        explorer_state.current_piece = seeded_piece
+
+        self.assertTrue(normal_state.try_move_axis(0, -1))
+        self.assertTrue(explorer_state.try_move_axis(0, -1))
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.rel_blocks)),
+            tuple(sorted(normal_state.current_piece.rel_blocks)),
+        )
+
+        self.assertTrue(normal_state.try_rotate(1, 2, 1))
+        self.assertTrue(explorer_state.try_rotate(1, 2, 1))
+        self.assertEqual(
+            explorer_state.current_piece.pos, normal_state.current_piece.pos
+        )
+        self.assertEqual(
+            tuple(sorted(explorer_state.current_piece.rel_blocks)),
+            tuple(sorted(normal_state.current_piece.rel_blocks)),
+        )
+        self.assertEqual(
+            explorer_state.current_piece_cells_mapped(include_above=False),
+            normal_state.current_piece_cells_mapped(include_above=False),
+        )
+
+    def test_explorer_cross_axis_seam_uses_shared_rigid_transform_4d(self):
+        cfg = GameConfigND(
+            dims=(4, 4, 4, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=swap_xw_profile_4d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("pair4", ((0, 0, 0, 0), (0, 1, 0, 0)), color_id=7)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 1, 2, 1))
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertEqual(expected.kind, "rigid_transform")
+        self.assertIsNotNone(expected.frame_transform)
+        self.assertTrue(state.try_move_axis(0, -1))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+        self.assertEqual(
+            tuple(sorted(state.current_piece.rel_blocks)),
+            tuple(
+                sorted(
+                    expected.frame_transform.apply_linear(block)
+                    for block in shape.blocks
+                )
+            ),
+        )
+
+    def test_projective_auto_mode_allows_cellwise_seam_move_for_non_flat_piece(self):
+        cfg = GameConfigND(
+            dims=(4, 4, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=projective_space_profile_3d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("pair3", ((0, 0, 0), (1, 0, 0)), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 0, 0))
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertFalse(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertTrue(state.try_move_axis(0, -1))
+
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_3d(self):
+        cases = (
+            (
+                "main_3d",
+                GameConfigND(dims=(6, 8, 6), gravity_axis=1),
+                PieceShapeND("dot", ((0, 0, 0),), color_id=9),
+                (4, 3, 2),
+                [((3, 3, 2),), ((2, 3, 2),), ((1, 3, 2),)],
+            ),
+            (
+                "explorer_3d",
+                GameConfigND(
+                    dims=(6, 8, 6),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=3, wrapped_axes=(0,)
+                    ),
+                ),
+                PieceShapeND("dot", ((0, 0, 0),), color_id=9),
+                (1, 3, 2),
+                [((0, 3, 2),), ((5, 3, 2),), ((4, 3, 2),)],
+            ),
+            (
+                "main_3d_multicell",
+                GameConfigND(dims=(8, 8, 8), gravity_axis=1),
+                PieceShapeND(
+                    "el3",
+                    ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+                    color_id=5,
+                ),
+                (4, 3, 4),
+                [
+                    ((2, 3, 4), (3, 3, 4), (4, 3, 4), (4, 4, 4)),
+                    ((1, 3, 4), (2, 3, 4), (3, 3, 4), (3, 4, 4)),
+                    ((0, 3, 4), (1, 3, 4), (2, 3, 4), (2, 4, 4)),
+                ],
+            ),
+            (
+                "explorer_3d_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8),
+                    gravity_axis=1,
+                    speed_level=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el3",
+                    ((-1, 0, 0), (0, 0, 0), (1, 0, 0), (1, 1, 0)),
+                    color_id=5,
+                ),
+                (4, 3, 4),
+                [
+                    ((2, 3, 4), (3, 3, 4), (4, 3, 4), (4, 4, 4)),
+                    ((1, 3, 4), (2, 3, 4), (3, 3, 4), (3, 4, 4)),
+                    ((0, 3, 4), (1, 3, 4), (2, 3, 4), (2, 4, 4)),
+                ],
+            ),
+        )
+        for label, cfg, shape, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+                state.board.cells.clear()
+                state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move_axis(0, -1),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                    result_assertion=lambda case, result, _index: case.assertTrue(
+                        result
+                    ),
+                )
+
+    def test_repeated_translation_contract_matches_main_and_explorer_4d_w_axis(self):
+        cases = (
+            (
+                "main_4d_w",
+                GameConfigND(dims=(6, 8, 6, 4), gravity_axis=1),
+                PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7),
+                (2, 3, 2, 1),
+                [((2, 3, 2, 2),), ((2, 3, 2, 3),)],
+            ),
+            (
+                "explorer_4d_w",
+                GameConfigND(
+                    dims=(6, 8, 6, 4),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=4, wrapped_axes=(3,)
+                    ),
+                ),
+                PieceShapeND("dot", ((0, 0, 0, 0),), color_id=7),
+                (2, 3, 2, 2),
+                [((2, 3, 2, 3),), ((2, 3, 2, 0),), ((2, 3, 2, 1),)],
+            ),
+            (
+                "main_4d_w_multicell",
+                GameConfigND(dims=(8, 8, 8, 6), gravity_axis=1),
+                PieceShapeND(
+                    "el4",
+                    ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)),
+                    color_id=8,
+                ),
+                (4, 3, 4, 2),
+                [
+                    ((3, 3, 4, 3), (4, 3, 4, 3), (5, 3, 4, 3), (5, 3, 4, 4)),
+                    ((3, 3, 4, 4), (4, 3, 4, 4), (5, 3, 4, 4), (5, 3, 4, 5)),
+                ],
+            ),
+            (
+                "explorer_4d_w_multicell",
+                GameConfigND(
+                    dims=(8, 8, 8, 6),
+                    gravity_axis=1,
+                    exploration_mode=True,
+                ),
+                PieceShapeND(
+                    "el4",
+                    ((-1, 0, 0, 0), (0, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 1)),
+                    color_id=8,
+                ),
+                (4, 3, 4, 2),
+                [
+                    ((3, 3, 4, 3), (4, 3, 4, 3), (5, 3, 4, 3), (5, 3, 4, 4)),
+                    ((3, 3, 4, 4), (4, 3, 4, 4), (5, 3, 4, 4), (5, 3, 4, 5)),
+                ],
+            ),
+        )
+        for label, cfg, shape, start_pos, expected in cases:
+            with self.subTest(mode=label):
+                state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+                state.board.cells.clear()
+                state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
+                assert_repeated_translation_progress(
+                    self,
+                    step=lambda: state.try_move_axis(3, 1),
+                    signature=lambda: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
+                    expected_signatures=expected,
+                    label=label,
+                    result_assertion=lambda case, result, _index: case.assertTrue(
+                        result
+                    ),
+                )
+
     def test_invert_all_mirrors_other_wrapped_axis_3d(self):
         cfg = GameConfigND(
             dims=(4, 8, 4),
@@ -350,7 +662,9 @@ class TestGameND(unittest.TestCase):
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertTrue(state.try_rotate(0, 3, 1))
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
     def test_4d_xw_rotation_can_kick_at_w_edge(self):
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, kick_level="standard")
@@ -382,6 +696,21 @@ class TestGameND(unittest.TestCase):
         self.assertFalse(state.try_rotate(0, 3, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
+
+    def test_atomic_move_ignores_current_piece_source_cells(self):
+        cfg = GameConfigND(dims=(5, 5, 5), gravity_axis=1)
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        pair = PieceShapeND("pair", ((0, 0, 0), (1, 0, 0)), color_id=2)
+        state.current_piece = ActivePieceND.from_shape(pair, pos=(1, 1, 1))
+        for coord in state.current_piece.cells():
+            state.board.cells[coord] = 9
+
+        self.assertTrue(state.try_move((1, 0, 0)))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((2, 1, 1), (3, 1, 1)),
+        )
 
 
 if __name__ == "__main__":
