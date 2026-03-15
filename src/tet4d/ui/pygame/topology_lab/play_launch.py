@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pygame
 
-from tet4d.engine.gameplay import exploration_mode
 from tet4d.engine.runtime.topology_playground_launch import (
     build_gameplay_config_from_topology_playground_state,
 )

@@ -16,6 +16,7 @@ search_repo_text() {
     rg -n -I --hidden \
       --glob '!**/.git/**' \
       --glob '!**/.venv/**' \
+      --glob '!**/.idea/**' \
       --glob '!**/__pycache__/**' \
       --glob '!**/.pytest_cache/**' \
       --glob '!**/.pytest_tmp/**' \
@@ -36,6 +37,7 @@ search_repo_text() {
   grep -RInE \
     --exclude-dir=.git \
     --exclude-dir=.venv \
+    --exclude-dir=.idea \
     --exclude-dir=__pycache__ \
     --exclude-dir=.pytest_cache \
     --exclude-dir=.pytest_tmp \

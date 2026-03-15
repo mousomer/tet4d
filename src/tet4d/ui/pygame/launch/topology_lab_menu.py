@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pygame
 
-from tet4d.engine.gameplay import exploration_mode
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
 )
