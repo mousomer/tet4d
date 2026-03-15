@@ -1784,7 +1784,12 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertNotIn("play_preview", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
-        self.assertEqual(labels, {"play_preview": "Play This Topology"})
+
+        self.assertIn("play_preview", labels)
+        self.assertEqual(labels["play_preview"], "Play This Topology")
+        self.assertIn("explore_preview", labels)
+        self.assertEqual(labels["explore_preview"], "Explore This Topology")
+
         self.assertNotIn("save_profile", labels)
         self.assertNotIn("export", labels)
         self.assertNotIn("experiments", labels)

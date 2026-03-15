@@ -31,9 +31,7 @@ from tet4d.engine.topology_explorer.presets import (
 )
 from tet4d.ui.pygame import frontend_nd_input
 from tet4d.ui.pygame.keybindings import EXPLORER_KEYS_3D, KEYS_3D
-from tet4d.ui.pygame.topology_lab.play_launch import (
-    launch_playground_state_gameplay,
-)
+from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
 
 
 class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
@@ -285,9 +283,11 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 return_caption="Explorer Playground",
                 fonts_2d=fonts_2d,
                 display_settings=display_settings,
+                exploration_mode=False,
             )
 
-        build_cfg.assert_called_once_with(state)
+        build_cfg.assert_called_once_with(state, exploration_mode=False)
+
         run_game.assert_called_once_with(screen, cfg, fonts_2d, display_settings)
         capture_display.assert_called_once_with(display_settings)
         open_display.assert_called_once_with("captured", caption="Explorer Playground")
@@ -319,9 +319,91 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 fonts_nd,
                 return_caption="Explorer Playground",
                 display_settings=None,
+                exploration_mode=False,
             )
 
-        build_cfg.assert_called_once_with(state)
+        build_cfg.assert_called_once_with(state, exploration_mode=False)
+        run_2d.assert_not_called()
+        run_3d.assert_not_called()
+        run_4d.assert_called_once_with(screen, cfg, fonts_nd)
+        self.assertIs(returned_screen, screen)
+        self.assertIsNone(returned_display)
+
+    def test_launch_exploration_routes_2d_state_to_front2d(self) -> None:
+        state = default_topology_playground_state(
+            dimension=2,
+            axis_sizes=(8, 16),
+        )
+        screen = object()
+        fonts_nd = object()
+        fonts_2d = object()
+        display_settings = object()
+        cfg = object()
+        reopened_screen = object()
+
+        with (
+            mock.patch(
+                "tet4d.ui.pygame.topology_lab.play_launch."
+                "build_gameplay_config_from_topology_playground_state",
+                return_value=cfg,
+            ) as build_cfg,
+            mock.patch("tet4d.ui.pygame.front2d_game.run_game_loop") as run_game,
+            mock.patch(
+                "tet4d.ui.pygame.runtime_ui.app_runtime."
+                "capture_windowed_display_settings",
+                return_value="captured",
+            ) as capture_display,
+            mock.patch(
+                "tet4d.ui.pygame.runtime_ui.app_runtime.open_display",
+                return_value=reopened_screen,
+            ) as open_display,
+        ):
+            returned_screen, returned_display = launch_playground_state_gameplay(
+                state,
+                screen,
+                fonts_nd,
+                return_caption="Explorer Playground",
+                fonts_2d=fonts_2d,
+                display_settings=display_settings,
+                exploration_mode=True,
+            )
+
+        build_cfg.assert_called_once_with(state, exploration_mode=True)
+        run_game.assert_called_once_with(screen, cfg, fonts_2d, display_settings)
+        capture_display.assert_called_once_with(display_settings)
+        open_display.assert_called_once_with("captured", caption="Explorer Playground")
+        self.assertIs(returned_screen, reopened_screen)
+        self.assertEqual(returned_display, "captured")
+
+    def test_launch_exploration_routes_4d_state_to_front4d(self) -> None:
+        state = default_topology_playground_state(
+            dimension=4,
+            axis_sizes=(8, 16, 6, 4),
+        )
+        screen = object()
+        fonts_nd = object()
+        cfg = object()
+
+        with (
+            mock.patch(
+                "tet4d.ui.pygame.topology_lab.play_launch."
+                "build_gameplay_config_from_topology_playground_state",
+                return_value=cfg,
+            ) as build_cfg,
+            mock.patch("tet4d.ui.pygame.front2d_game.run_game_loop") as run_2d,
+            mock.patch("tet4d.ui.pygame.front3d_game.run_game_loop") as run_3d,
+            mock.patch("tet4d.ui.pygame.front4d_game.run_game_loop") as run_4d,
+        ):
+            returned_screen, returned_display = launch_playground_state_gameplay(
+                state,
+                screen,
+                fonts_nd,
+                return_caption="Explorer Playground",
+                display_settings=None,
+                exploration_mode=True,
+            )
+
+        build_cfg.assert_called_once_with(state, exploration_mode=True)
         run_2d.assert_not_called()
         run_3d.assert_not_called()
         run_4d.assert_called_once_with(screen, cfg, fonts_nd)
