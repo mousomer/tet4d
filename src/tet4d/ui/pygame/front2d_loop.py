@@ -11,6 +11,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from . import front2d_frame, front2d_results
 from .front2d_session import LoopContext2D
 from .front2d_setup import (
+    load_animation_settings_for_mode as _load_animation_settings_for_mode,
     load_overlay_transparency_for_runtime_2d as _load_overlay_transparency_for_runtime_2d,
     load_speedup_settings_for_mode as _load_speedup_settings_for_mode,
 )
@@ -52,12 +53,17 @@ def run_game_loop(
 
     overlay_transparency = _load_overlay_transparency_for_runtime_2d()
     auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_mode("2d")
+    rotation_animation_duration_ms, translation_animation_duration_ms = (
+        _load_animation_settings_for_mode("2d")
+    )
     loop = LoopContext2D.create(
         cfg,
         bot_mode=bot_mode,
         bot_speed_level=bot_speed_level,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
+        rotation_animation_duration_ms=rotation_animation_duration_ms,
+        translation_animation_duration_ms=translation_animation_duration_ms,
         overlay_transparency=overlay_transparency,
         tutorial_lesson_id=tutorial_lesson_id,
     )

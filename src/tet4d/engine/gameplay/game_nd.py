@@ -239,6 +239,9 @@ class GameStateND:
     analysis_session_id: str = field(default_factory=new_analysis_session_id)
     analysis_seq: int = 0
     last_score_analysis: dict[str, object] | None = None
+    _pending_translation_animation: bool = field(
+        default=False, init=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         self.topology_policy = self.config.topology_policy()
@@ -357,6 +360,11 @@ class GameStateND:
         gravity_axis = self.config.gravity_axis
         return tuple(coord for coord in mapped if coord[gravity_axis] >= 0)
 
+    def consume_translation_animation_hint(self) -> bool:
+        pending = bool(self._pending_translation_animation)
+        self._pending_translation_animation = False
+        return pending
+
     # --- Validation and locking ---
 
     def _placement_ignore_cells(
@@ -451,7 +459,9 @@ class GameStateND:
 
     # --- Movement and rotation ---
 
-    def try_move(self, delta: Sequence[int]) -> bool:
+    def try_move(
+        self, delta: Sequence[int], *, animate_translation: bool = False
+    ) -> bool:
         if self.current_piece is None:
             return False
         if (
@@ -468,10 +478,17 @@ class GameStateND:
             ]
             if len(non_zero) == 1 and abs(non_zero[0][1]) == 1:
                 axis, step = non_zero[0]
-                return self.try_move_axis(axis, step)
-        return self._try_commit_candidate_piece(self.current_piece.moved(delta))
+                return self.try_move_axis(
+                    axis, step, animate_translation=animate_translation
+                )
+        moved = self._try_commit_candidate_piece(self.current_piece.moved(delta))
+        if moved and animate_translation:
+            self._pending_translation_animation = True
+        return moved
 
-    def try_move_axis(self, axis: int, delta: int) -> bool:
+    def try_move_axis(
+        self, axis: int, delta: int, *, animate_translation: bool = False
+    ) -> bool:
         if not (0 <= axis < self.config.ndim):
             raise ValueError("axis out of bounds")
         if self.current_piece is None:
@@ -496,10 +513,13 @@ class GameStateND:
             )
             if candidate is None:
                 return False
-            return self._try_commit_candidate_piece(candidate)
+            moved = self._try_commit_candidate_piece(candidate)
+            if moved and animate_translation:
+                self._pending_translation_animation = True
+            return moved
         vector = [0] * self.config.ndim
         vector[axis] = delta
-        return self.try_move(vector)
+        return self.try_move(vector, animate_translation=animate_translation)
 
     def try_rotate(self, axis_a: int, axis_b: int, delta_steps: int = 1) -> bool:
         if self.current_piece is None:

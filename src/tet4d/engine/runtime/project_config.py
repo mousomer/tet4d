@@ -49,7 +49,9 @@ _DEFAULT_CONSTANTS = {
         "projection_lattice_max": 96,
     },
     "animation": {
-        "piece_rotation_duration_ms": 150.0,
+        "piece_rotation_duration_ms_2d": 300.0,
+        "piece_rotation_duration_ms_nd": 300.0,
+        "piece_translation_duration_ms": 120.0,
         "clear_effect_duration_ms_2d": 320.0,
         "clear_effect_duration_ms_3d": 360.0,
         "clear_effect_duration_ms_4d": 380.0,

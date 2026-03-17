@@ -58,10 +58,14 @@ class _AxisCaptureState:
         self.config = cfg
         self.game_over = False
         self.moves: list[tuple[int, int]] = []
+        self.translation_hints: list[bool] = []
         self.rotations: list[tuple[int, int, int]] = []
 
-    def try_move_axis(self, axis: int, delta: int) -> None:
+    def try_move_axis(
+        self, axis: int, delta: int, *, animate_translation: bool = False
+    ) -> None:
         self.moves.append((axis, delta))
+        self.translation_hints.append(bool(animate_translation))
 
     def try_rotate(self, axis_a: int, axis_b: int, direction: int) -> None:
         self.rotations.append((axis_a, axis_b, direction))
@@ -105,6 +109,7 @@ class TestNdRouting(unittest.TestCase):
         )
         self.assertEqual(result, "continue")
         self.assertEqual(state.moves, [(1, 1)])
+        self.assertEqual(state.translation_hints, [True])
 
     def test_viewer_relative_routing_uses_yaw_for_3d(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
@@ -118,6 +123,7 @@ class TestNdRouting(unittest.TestCase):
 
         self.assertEqual(result, "continue")
         self.assertEqual(state.moves, [(2, 1)])
+        self.assertEqual(state.translation_hints, [True])
 
         state.moves.clear()
         result_away = frontend_nd_input.route_nd_keydown(

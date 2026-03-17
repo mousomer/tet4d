@@ -192,6 +192,9 @@ class GameState:
     analysis_session_id: str = field(default_factory=new_analysis_session_id)
     analysis_seq: int = 0
     last_score_analysis: dict[str, object] | None = None
+    _pending_translation_animation: bool = field(
+        default=False, init=False, repr=False
+    )
 
     def __post_init__(self):
         self.topology_policy = self.config.topology_policy()
@@ -265,6 +268,11 @@ class GameState:
         max_y = max(block[1] for block in shape.blocks)
         span_y = max_y - min_y + 1
         return span_x <= self.config.width and span_y <= self.config.height
+
+    def consume_translation_animation_hint(self) -> bool:
+        pending = bool(self._pending_translation_animation)
+        self._pending_translation_animation = False
+        return pending
 
     def _mapped_piece_cells(
         self, piece: ActivePiece2D
@@ -409,7 +417,7 @@ class GameState:
 
     # --- Movement / rotation helpers ---
 
-    def try_move(self, dx: int, dy: int):
+    def try_move(self, dx: int, dy: int, *, animate_translation: bool = False):
         if self.current_piece is None:
             return
         if (
@@ -428,9 +436,14 @@ class GameState:
                 ),
             )
             if moved is not None:
-                self._try_commit_candidate_piece(moved)
+                if self._try_commit_candidate_piece(moved) and animate_translation:
+                    self._pending_translation_animation = True
             return
-        self._try_commit_candidate_piece(self.current_piece.moved(dx, dy))
+        if (
+            self._try_commit_candidate_piece(self.current_piece.moved(dx, dy))
+            and animate_translation
+        ):
+            self._pending_translation_animation = True
 
     def try_rotate(self, delta_steps: int):
         if self.current_piece is None:

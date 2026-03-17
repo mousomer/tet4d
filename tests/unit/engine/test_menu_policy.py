@@ -346,3 +346,107 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
+
+    def test_unified_gameplay_summary_includes_animation_durations(self) -> None:
+        state = SimpleNamespace(
+            kick_level_index=2,
+            auto_speedup_enabled=1,
+            lines_per_level=14,
+            rotation_animation_duration_ms_2d=300,
+            rotation_animation_duration_ms_nd=340,
+            translation_animation_duration_ms=120,
+            text_mode_row_key="",
+            text_mode_buffer="",
+        )
+        summary = settings_hub_model._unified_value_text(state, "gameplay_advanced")
+        self.assertIn("Standard", summary)
+        self.assertIn("rot2d 300 ms", summary)
+        self.assertIn("rotnd 340 ms", summary)
+        self.assertIn("move 120 ms", summary)
+
+    def test_reset_unified_settings_restores_animation_defaults(self) -> None:
+        state = SimpleNamespace(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            overlay_transparency=0.4,
+            game_seed=999,
+            random_mode_index=1,
+            topology_advanced=1,
+            kick_level_index=2,
+            auto_speedup_enabled=0,
+            lines_per_level=22,
+            rotation_animation_duration_ms_2d=40,
+            rotation_animation_duration_ms_nd=60,
+            translation_animation_duration_ms=60,
+            score_logging_enabled=True,
+            pending_reset_confirm=False,
+            saved=False,
+            status="",
+            status_error=False,
+        )
+        screen = object()
+        with (
+            mock.patch.object(settings_hub_actions, "_audio_defaults", return_value=AudioSettings()),
+            mock.patch.object(settings_hub_actions, "_display_defaults", return_value=DisplaySettings()),
+            mock.patch.object(
+                settings_hub_actions,
+                "default_display_settings",
+                return_value={"overlay_transparency": 0.25},
+            ),
+            mock.patch.object(settings_hub_actions, "_analytics_defaults", return_value=False),
+            mock.patch.object(settings_hub_actions, "_sync_audio_preview"),
+            mock.patch.object(settings_hub_actions, "_sync_analytics_preview"),
+            mock.patch.object(settings_hub_actions, "apply_display_mode", return_value=screen),
+            mock.patch.object(settings_hub_actions, "play_sfx"),
+        ):
+            settings_hub_actions._reset_unified_settings(screen, state)
+
+        self.assertEqual(
+            state.rotation_animation_duration_ms_2d,
+            settings_hub_model._ROTATION_ANIMATION_DURATION_2D_DEFAULT,
+        )
+        self.assertEqual(
+            state.rotation_animation_duration_ms_nd,
+            settings_hub_model._ROTATION_ANIMATION_DURATION_ND_DEFAULT,
+        )
+        self.assertEqual(
+            state.translation_animation_duration_ms,
+            settings_hub_model._TRANSLATION_ANIMATION_DURATION_DEFAULT,
+        )
+
+    def test_advanced_gameplay_adjusts_animation_rows(self) -> None:
+        state = SimpleNamespace(
+            kick_level_index=0,
+            auto_speedup_enabled=1,
+            lines_per_level=10,
+            rotation_animation_duration_ms_2d=300,
+            rotation_animation_duration_ms_nd=340,
+            translation_animation_duration_ms=120,
+            saved=True,
+            status="",
+            status_error=False,
+        )
+        self.assertTrue(
+            settings_hub_actions._adjust_advanced_gameplay_value(
+                state,
+                "rotation_animation_duration_ms_2d",
+                -1,
+            )
+        )
+        self.assertEqual(state.rotation_animation_duration_ms_2d, 280)
+        self.assertTrue(
+            settings_hub_actions._adjust_advanced_gameplay_value(
+                state,
+                "rotation_animation_duration_ms_nd",
+                1,
+            )
+        )
+        self.assertEqual(state.rotation_animation_duration_ms_nd, 360)
+        self.assertTrue(
+            settings_hub_actions._adjust_advanced_gameplay_value(
+                state,
+                "translation_animation_duration_ms",
+                1,
+            )
+        )
+        self.assertEqual(state.translation_animation_duration_ms, 140)

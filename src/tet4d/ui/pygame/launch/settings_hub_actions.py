@@ -3,9 +3,11 @@ from __future__ import annotations
 import pygame
 
 from tet4d.engine.runtime.menu_settings_state import (
+    ANIMATION_DURATION_MS_STEP,
     DEFAULT_GAME_SEED,
     GAME_SEED_STEP,
     OVERLAY_TRANSPARENCY_STEP,
+    clamp_animation_duration_ms,
     clamp_game_seed,
     clamp_overlay_transparency,
     default_display_settings,
@@ -37,7 +39,10 @@ from .settings_hub_model import (
     _NUMERIC_TEXT_MAX_LENGTH,
     _RANDOM_MODE_DEFAULT,
     _RANDOM_MODE_LABELS,
+    _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
+    _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
     _TOPOLOGY_ADVANCED_DEFAULT,
+    _TRANSLATION_ANIMATION_DURATION_DEFAULT,
     _UnifiedSettingsState,
     _analytics_defaults,
     _audio_defaults,
@@ -179,6 +184,9 @@ def _save_unified_settings(
         int(state.kick_level_index),
         int(state.auto_speedup_enabled),
         int(state.lines_per_level),
+        int(state.rotation_animation_duration_ms_2d),
+        int(state.rotation_animation_duration_ms_nd),
+        int(state.translation_animation_duration_ms),
     )
     if ok_audio and ok_display and ok_analytics and ok_game_seed and ok_gameplay_shared:
         state.original_audio = _clone_audio_settings(state.audio_settings)
@@ -190,6 +198,15 @@ def _save_unified_settings(
         state.original_kick_level_index = int(state.kick_level_index)
         state.original_auto_speedup_enabled = int(state.auto_speedup_enabled)
         state.original_lines_per_level = int(state.lines_per_level)
+        state.original_rotation_animation_duration_ms_2d = int(
+            state.rotation_animation_duration_ms_2d
+        )
+        state.original_rotation_animation_duration_ms_nd = int(
+            state.rotation_animation_duration_ms_nd
+        )
+        state.original_translation_animation_duration_ms = int(
+            state.translation_animation_duration_ms
+        )
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
         state.saved = True
         _set_unified_status(state, "Saved audio/display/gameplay/analytics settings")
@@ -222,6 +239,9 @@ def _reset_unified_settings(
     state.kick_level_index = _KICK_LEVEL_DEFAULT
     state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
     state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
+    state.rotation_animation_duration_ms_2d = _ROTATION_ANIMATION_DURATION_2D_DEFAULT
+    state.rotation_animation_duration_ms_nd = _ROTATION_ANIMATION_DURATION_ND_DEFAULT
+    state.translation_animation_duration_ms = _TRANSLATION_ANIMATION_DURATION_DEFAULT
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
@@ -350,17 +370,11 @@ def _adjust_advanced_gameplay_value(
     enter_pressed: bool = False,
 ) -> bool:
     if row_key == "kick_level_index":
-        max_index = max(0, len(_KICK_LEVEL_LABELS) - 1)
-        if max_index == 0:
-            return False
-        if delta_sign == 0:
-            if not enter_pressed:
-                return False
-            next_index = int(state.kick_level_index) + 1
-        else:
-            next_index = int(state.kick_level_index) + int(delta_sign)
-        state.kick_level_index = max(0, min(max_index, next_index))
-        return True
+        return _adjust_kick_level_index(
+            state,
+            delta_sign,
+            enter_pressed=enter_pressed,
+        )
     if row_key == "auto_speedup_enabled":
         if delta_sign == 0 and not enter_pressed:
             return False
@@ -374,7 +388,68 @@ def _adjust_advanced_gameplay_value(
             default=_LINES_PER_LEVEL_DEFAULT,
         )
         return True
+    if row_key == "rotation_animation_duration_ms_2d":
+        return _adjust_animation_duration_value(
+            state,
+            "rotation_animation_duration_ms_2d",
+            delta_sign,
+            default_value=_ROTATION_ANIMATION_DURATION_2D_DEFAULT,
+        )
+    if row_key == "rotation_animation_duration_ms_nd":
+        return _adjust_animation_duration_value(
+            state,
+            "rotation_animation_duration_ms_nd",
+            delta_sign,
+            default_value=_ROTATION_ANIMATION_DURATION_ND_DEFAULT,
+        )
+    if row_key == "translation_animation_duration_ms":
+        return _adjust_animation_duration_value(
+            state,
+            "translation_animation_duration_ms",
+            delta_sign,
+            default_value=_TRANSLATION_ANIMATION_DURATION_DEFAULT,
+        )
     return False
+
+
+def _adjust_kick_level_index(
+    state: _UnifiedSettingsState,
+    delta_sign: int,
+    *,
+    enter_pressed: bool,
+) -> bool:
+    max_index = max(0, len(_KICK_LEVEL_LABELS) - 1)
+    if max_index == 0:
+        return False
+    if delta_sign == 0:
+        if not enter_pressed:
+            return False
+        next_index = int(state.kick_level_index) + 1
+    else:
+        next_index = int(state.kick_level_index) + int(delta_sign)
+    state.kick_level_index = max(0, min(max_index, next_index))
+    return True
+
+
+def _adjust_animation_duration_value(
+    state: _UnifiedSettingsState,
+    attribute_name: str,
+    delta_sign: int,
+    *,
+    default_value: int,
+) -> bool:
+    if delta_sign == 0:
+        return False
+    setattr(
+        state,
+        attribute_name,
+        clamp_animation_duration_ms(
+            int(getattr(state, attribute_name))
+            + int(delta_sign) * int(ANIMATION_DURATION_MS_STEP),
+            default=default_value,
+        ),
+    )
+    return True
 
 
 def _mark_advanced_gameplay_updated(state: _UnifiedSettingsState) -> None:

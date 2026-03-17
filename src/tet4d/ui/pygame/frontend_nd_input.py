@@ -108,16 +108,20 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     cfg = state.config
     ndim = cfg.ndim
     gameplay_handlers = {
-        "move_x_neg": lambda: state.try_move_axis(0, -1),
-        "move_x_pos": lambda: state.try_move_axis(0, 1),
-        "move_up": lambda: state.try_move_axis(cfg.gravity_axis, -1),
-        "move_down": lambda: state.try_move_axis(cfg.gravity_axis, 1),
+        "move_x_neg": lambda: state.try_move_axis(0, -1, animate_translation=True),
+        "move_x_pos": lambda: state.try_move_axis(0, 1, animate_translation=True),
+        "move_up": lambda: state.try_move_axis(
+            cfg.gravity_axis, -1, animate_translation=True
+        ),
+        "move_down": lambda: state.try_move_axis(
+            cfg.gravity_axis, 1, animate_translation=True
+        ),
         "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
         "hard_drop": state.hard_drop,
         "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
         "rotate_xy_neg": lambda: state.try_rotate(0, cfg.gravity_axis, -1),
-        "move_z_neg": lambda: state.try_move_axis(2, -1),
-        "move_z_pos": lambda: state.try_move_axis(2, 1),
+        "move_z_neg": lambda: state.try_move_axis(2, -1, animate_translation=True),
+        "move_z_pos": lambda: state.try_move_axis(2, 1, animate_translation=True),
         "rotate_xz_pos": lambda: state.try_rotate(0, 2, 1),
         "rotate_xz_neg": lambda: state.try_rotate(0, 2, -1),
         "rotate_yz_pos": lambda: state.try_rotate(cfg.gravity_axis, 2, 1),
@@ -126,8 +130,12 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
     if ndim >= 4:
         gameplay_handlers.update(
             {
-                "move_w_neg": lambda: state.try_move_axis(3, -1),
-                "move_w_pos": lambda: state.try_move_axis(3, 1),
+                "move_w_neg": lambda: state.try_move_axis(
+                    3, -1, animate_translation=True
+                ),
+                "move_w_pos": lambda: state.try_move_axis(
+                    3, 1, animate_translation=True
+                ),
                 "rotate_xw_pos": lambda: state.try_rotate(0, 3, 1),
                 "rotate_xw_neg": lambda: state.try_rotate(0, 3, -1),
                 "rotate_yw_pos": lambda: state.try_rotate(cfg.gravity_axis, 3, 1),
@@ -253,7 +261,7 @@ def _apply_action_override(
 ) -> bool:
     if len(override) == 2:
         axis, delta = override
-        state.try_move_axis(int(axis), int(delta))
+        state.try_move_axis(int(axis), int(delta), animate_translation=True)
         return True
     axis_a, axis_b, delta = override
     state.try_rotate(int(axis_a), int(axis_b), int(delta))
@@ -540,9 +548,14 @@ def apply_nd_gameplay_action_with_view(
                     state.try_move_axis(
                         int(mapped_axis),
                         int(local_delta) * int(mapped_sign),
+                        animate_translation=True,
                     )
                     return True
-            state.try_move_axis(int(local_axis), int(local_delta))
+            state.try_move_axis(
+                int(local_axis),
+                int(local_delta),
+                animate_translation=True,
+            )
             return True
     return apply_nd_gameplay_action(state, action)
 

@@ -84,6 +84,8 @@ class LoopContext2D:
         bot_speed_level: int = 7,
         auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT,
         lines_per_level: int = _LINES_PER_LEVEL_DEFAULT,
+        rotation_animation_duration_ms: int | float | None = None,
+        translation_animation_duration_ms: int | float | None = None,
         overlay_transparency: float | None = None,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext2D":
@@ -101,6 +103,18 @@ class LoopContext2D:
             cfg=cfg,
             state=state,
             bot=PlayBotController(mode=bot_mode),
+            rotation_anim=PieceRotationAnimator2D(
+                duration_ms=(
+                    float(rotation_animation_duration_ms)
+                    if rotation_animation_duration_ms is not None
+                    else PieceRotationAnimator2D().duration_ms
+                ),
+                translation_duration_ms=(
+                    float(translation_animation_duration_ms)
+                    if translation_animation_duration_ms is not None
+                    else PieceRotationAnimator2D().translation_duration_ms
+                ),
+            ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
             base_speed_level=int(cfg.speed_level),

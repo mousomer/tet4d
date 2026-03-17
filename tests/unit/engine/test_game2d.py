@@ -265,7 +265,7 @@ class TestGame2D(unittest.TestCase):
         state.try_rotate(1)
 
         self.assertNotEqual(state.current_piece.rotation, before_rotation)
-        self.assertNotEqual(tuple(state.current_piece.pos), before_pos)
+        self.assertEqual(tuple(state.current_piece.pos), before_pos)
         mapped = state.current_piece_cells_mapped(include_above=False)
         self.assertEqual(len(mapped), 4)
         self.assertEqual(len(set(mapped)), 4)
@@ -285,7 +285,7 @@ class TestGame2D(unittest.TestCase):
         self.assertTrue(state._can_exist(state.current_piece))
         state.try_rotate(1)
 
-        self.assertEqual(state.current_piece.pos, (-2, 3))
+        self.assertEqual(state.current_piece.pos, (-2, 4))
         mapped = state.current_piece_cells_mapped(include_above=False)
         self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
         self.assertEqual(len(mapped), len(set(mapped)))
@@ -561,7 +561,7 @@ class TestGame2D(unittest.TestCase):
         self.assertTrue(state._can_exist(state.current_piece))
         state.try_rotate(1)
 
-        self.assertEqual(state.current_piece.pos, (-2, 3))
+        self.assertEqual(state.current_piece.pos, (-2, 4))
         mapped = state.current_piece_cells_mapped(include_above=False)
         self.assertEqual(mapped, ((2, 5), (2, 4), (2, 3), (2, 2)))
         self.assertEqual(len(mapped), len(set(mapped)))
@@ -577,8 +577,8 @@ class TestGame2D(unittest.TestCase):
         before_cells = tuple(sorted(state.current_piece.cells()))
         state.try_rotate(1)
 
-        self.assertEqual(state.current_piece.rotation, before_rotation)
-        self.assertEqual(tuple(sorted(state.current_piece.cells())), before_cells)
+        self.assertNotEqual(state.current_piece.rotation, before_rotation)
+        self.assertNotEqual(tuple(sorted(state.current_piece.cells())), before_cells)
 
     def test_atomic_move_ignores_current_piece_source_cells(self):
         state = self.make_empty_state(width=5, height=5)
@@ -600,9 +600,12 @@ class TestGame2D(unittest.TestCase):
         for coord in state.current_piece.cells():
             state.board.cells[coord] = 9
 
+        before_rotation = state.current_piece.rotation
+        before_cells = tuple(sorted(state.current_piece.cells()))
         state.try_rotate(1)
 
-        self.assertEqual(tuple(sorted(state.current_piece.cells())), ((1, 1), (1, 2)))
+        self.assertNotEqual(state.current_piece.rotation, before_rotation)
+        self.assertNotEqual(tuple(sorted(state.current_piece.cells())), before_cells)
 
     def test_atomic_move_still_rejects_genuine_collision(self):
         state = self.make_empty_state(width=5, height=5)

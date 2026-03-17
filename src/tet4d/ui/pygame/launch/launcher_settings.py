@@ -50,6 +50,12 @@ from .settings_hub_model import (
 
 def _draw_gradient(surface: pygame.Surface) -> None:
     draw_vertical_gradient(surface, BG_TOP, BG_BOTTOM)
+
+
+def _format_animation_duration(value: int) -> str:
+    return "Off" if int(value) <= 0 else f"{int(value)} ms"
+
+
 def _handle_unified_enter(
     screen: pygame.Surface,
     fonts,
@@ -118,11 +124,14 @@ def _draw_advanced_gameplay_menu(
 
     rows = (
         ("kick_level_index", "Kick permissiveness"),
+        ("rotation_animation_duration_ms_2d", "2D rotation animation"),
+        ("rotation_animation_duration_ms_nd", "ND rotation animation"),
+        ("translation_animation_duration_ms", "Translation animation"),
         ("auto_speedup_enabled", "Auto speed-up by clears"),
         ("lines_per_level", "Lines per level"),
     )
-    panel_w = min(760, max(380, width - 40))
-    panel_h = 268
+    panel_w = min(760, max(420, width - 40))
+    panel_h = 436
     panel_x = (width - panel_w) // 2
     panel_y = 170
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
@@ -140,6 +149,18 @@ def _draw_advanced_gameplay_menu(
         if row_key == "kick_level_index":
             safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
             value = _KICK_LEVEL_LABELS[safe_index]
+        elif row_key == "rotation_animation_duration_ms_2d":
+            value = _format_animation_duration(
+                int(state.rotation_animation_duration_ms_2d)
+            )
+        elif row_key == "rotation_animation_duration_ms_nd":
+            value = _format_animation_duration(
+                int(state.rotation_animation_duration_ms_nd)
+            )
+        elif row_key == "translation_animation_duration_ms":
+            value = _format_animation_duration(
+                int(state.translation_animation_duration_ms)
+            )
         elif row_key == "auto_speedup_enabled":
             value = "ON" if int(state.auto_speedup_enabled) else "OFF"
         else:
@@ -163,7 +184,14 @@ def run_advanced_gameplay_menu(
     state: _UnifiedSettingsState,
 ) -> pygame.Surface:
     selected = 0
-    row_keys = ("kick_level_index", "auto_speedup_enabled", "lines_per_level")
+    row_keys = (
+        "kick_level_index",
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+        "auto_speedup_enabled",
+        "lines_per_level",
+    )
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -453,4 +481,3 @@ def run_settings_hub_menu(
         display_settings=final_display,
         keep_running=keep_running,
     )
-

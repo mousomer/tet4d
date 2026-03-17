@@ -6,6 +6,7 @@ from .menu_config import default_settings_payload
 from .project_config import menu_settings_file_path, state_dir_path
 from .settings_schema import (
     RuntimeSettingDefaults,
+    clamp_animation_duration_ms,
     clamp_game_seed,
     clamp_lines_per_level,
     clamp_overlay_transparency,
@@ -14,6 +15,9 @@ from .settings_schema import (
     mode_key_for_dimension,
 )
 from .menu_settings.sections import (
+    ANIMATION_DURATION_MS_MAX,
+    ANIMATION_DURATION_MS_MIN,
+    ANIMATION_DURATION_MS_STEP,
     GAME_SEED_MAX,
     GAME_SEED_MIN,
     GAME_SEED_STEP,
@@ -305,12 +309,28 @@ def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
     )
 
 
+def mode_animation_settings(mode_key: str) -> tuple[int, int]:
+    settings = mode_shared_gameplay_settings(mode_key)
+    rotation_key = (
+        "rotation_animation_duration_ms_2d"
+        if normalize_mode_key(mode_key) == "2d"
+        else "rotation_animation_duration_ms_nd"
+    )
+    return (
+        int(settings[rotation_key]),
+        int(settings["translation_animation_duration_ms"]),
+    )
+
+
 def save_shared_gameplay_settings(
     random_mode_index: int,
     topology_advanced: int,
     kick_level_index: int,
     auto_speedup_enabled: int,
     lines_per_level: int,
+    rotation_animation_duration_ms_2d: int,
+    rotation_animation_duration_ms_nd: int,
+    translation_animation_duration_ms: int,
 ) -> tuple[bool, str]:
     payload = _load_payload()
     raw_values = {
@@ -319,6 +339,9 @@ def save_shared_gameplay_settings(
         "kick_level_index": int(kick_level_index),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
+        "rotation_animation_duration_ms_2d": int(rotation_animation_duration_ms_2d),
+        "rotation_animation_duration_ms_nd": int(rotation_animation_duration_ms_nd),
+        "translation_animation_duration_ms": int(translation_animation_duration_ms),
     }
     for mode_key, mode_settings in iter_all_mode_settings(payload):
         defaults = default_mode_shared_gameplay_settings(mode_key)
@@ -337,6 +360,9 @@ def save_global_game_seed(seed: int) -> tuple[bool, str]:
 
 
 __all__ = [
+    "ANIMATION_DURATION_MS_MAX",
+    "ANIMATION_DURATION_MS_MIN",
+    "ANIMATION_DURATION_MS_STEP",
     "DEFAULT_GAME_SEED",
     "DEFAULT_OVERLAY_TRANSPARENCY",
     "DEFAULT_WINDOWED_SIZE",
@@ -349,6 +375,7 @@ __all__ = [
     "STATE_DIR",
     "STATE_FILE",
     "apply_saved_menu_settings",
+    "clamp_animation_duration_ms",
     "clamp_game_seed",
     "clamp_lines_per_level",
     "clamp_overlay_transparency",
@@ -364,6 +391,7 @@ __all__ = [
     "get_overlay_transparency",
     "load_app_settings_payload",
     "load_menu_settings",
+    "mode_animation_settings",
     "mode_shared_gameplay_settings",
     "mode_speedup_settings",
     "reset_menu_settings_to_defaults",

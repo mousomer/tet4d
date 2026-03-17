@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 from ..core.piece_transform import (
     canonicalize_blocks_2d,
     canonicalize_blocks_nd,
+    rotation_pivot_2d,
     rotate_blocks_2d,
-    rotate_blocks_nd_continuous,
 )
 from ..runtime.project_config import project_constant_float
 
@@ -18,11 +18,34 @@ if TYPE_CHECKING:
 
 CoordF = tuple[float, ...]
 Coord2F = tuple[float, float]
-_DEFAULT_ROTATION_DURATION_MS = project_constant_float(
-    ("animation", "piece_rotation_duration_ms"),
-    150.0,
-    min_value=60.0,
-    max_value=3400.0,
+
+
+@dataclass(frozen=True)
+class RigidPieceOverlay2D:
+    cells: tuple[Coord2F, ...]
+    color_id: int
+    rel_blocks: tuple[Coord2F, ...]
+    pos: Coord2F
+    pivot: Coord2F
+    angle_deg: float
+_DEFAULT_ROTATION_DURATION_MS_2D = project_constant_float(
+    ("animation", "piece_rotation_duration_ms_2d"),
+    300.0,
+    min_value=0.0,
+    max_value=600.0,
+)
+_DEFAULT_ROTATION_DURATION_MS_ND = project_constant_float(
+    ("animation", "piece_rotation_duration_ms_nd"),
+    300.0,
+    min_value=0.0,
+    max_value=600.0,
+)
+_DEFAULT_ROTATION_TWEEN_DURATION_MS = _DEFAULT_ROTATION_DURATION_MS_2D
+_DEFAULT_TRANSLATION_DURATION_MS = project_constant_float(
+    ("animation", "piece_translation_duration_ms"),
+    120.0,
+    min_value=0.0,
+    max_value=600.0,
 )
 
 
@@ -61,10 +84,12 @@ class _RotationTween:
     end_rel: tuple[CoordF, ...]
     start_pos: CoordF
     end_pos: CoordF
-    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
+    duration_ms: float = _DEFAULT_ROTATION_TWEEN_DURATION_MS
     elapsed_ms: float = 0.0
     rotation_plane: tuple[int, int] | None = None
     rotation_steps: int = 0
+    rigid_rotation: bool = False
+    rotation_pivot: Coord2F | None = None
 
     @property
     def done(self) -> bool:
@@ -82,6 +107,8 @@ class _RotationTween:
     def interpolated_rel(self) -> tuple[CoordF, ...]:
         """Interpolate using rotation-based or linear interpolation."""
         if self.rotation_plane is not None and self.rotation_steps != 0:
+            if self.rigid_rotation:
+                return self._interpolated_rel_rigid_rotation()
             return self._interpolated_rel_rotational()
         else:
             return self._interpolated_rel_linear()
@@ -179,9 +206,69 @@ class _RotationTween:
 
         return tuple(result)
 
+    def _interpolated_rel_rigid_rotation(self) -> tuple[CoordF, ...]:
+        import math
+
+        if self.rotation_plane is None:
+            return self._interpolated_rel_linear()
+        axis_a, axis_b = self.rotation_plane
+        pivot = self.rotation_pivot
+        if pivot is None:
+            return self._interpolated_rel_rotational()
+        pivot_a, pivot_b = pivot
+        reference_idx = self._reference_rotation_index(axis_a, axis_b, pivot_a, pivot_b)
+        if reference_idx is None:
+            return self._interpolated_rel_linear()
+        start_block = self.start_rel[reference_idx]
+        end_block = self.end_rel[reference_idx]
+        start_angle = math.atan2(start_block[axis_b] - pivot_b, start_block[axis_a] - pivot_a)
+        end_angle = math.atan2(end_block[axis_b] - pivot_b, end_block[axis_a] - pivot_a)
+        angle_diff = end_angle - start_angle
+        if angle_diff > math.pi:
+            angle_diff -= 2 * math.pi
+        elif angle_diff < -math.pi:
+            angle_diff += 2 * math.pi
+        current_angle = angle_diff * _smoothstep01(self.progress)
+        cos_theta = math.cos(current_angle)
+        sin_theta = math.sin(current_angle)
+        result: list[CoordF] = []
+        for start in self.start_rel:
+            rel_a = start[axis_a] - pivot_a
+            rel_b = start[axis_b] - pivot_b
+            rotated_a = rel_a * cos_theta - rel_b * sin_theta
+            rotated_b = rel_a * sin_theta + rel_b * cos_theta
+            block = list(start)
+            block[axis_a] = rotated_a + pivot_a
+            block[axis_b] = rotated_b + pivot_b
+            result.append(tuple(block))
+        return tuple(result)
+
+    def _reference_rotation_index(
+        self,
+        axis_a: int,
+        axis_b: int,
+        pivot_a: float,
+        pivot_b: float,
+    ) -> int | None:
+        best_idx: int | None = None
+        best_radius_sq = 0.0
+        for idx, start in enumerate(self.start_rel):
+            rel_a = start[axis_a] - pivot_a
+            rel_b = start[axis_b] - pivot_b
+            radius_sq = (rel_a * rel_a) + (rel_b * rel_b)
+            if radius_sq > best_radius_sq + 1e-9:
+                best_radius_sq = radius_sq
+                best_idx = idx
+        return best_idx
+
     def interpolated_pos(self) -> CoordF:
         eased = _smoothstep01(self.progress)
         return _lerp_coord(self.start_pos, self.end_pos, eased)
+
+    def interpolated_rotation_deg(self) -> float:
+        if not self.rigid_rotation:
+            return 0.0
+        return 90.0 * float(self.rotation_steps) * _smoothstep01(self.progress)
 
 
 def _visible_along_gravity(cells: tuple[CoordF, ...], gravity_axis: int) -> bool:
@@ -197,6 +284,8 @@ def _build_tween(
     duration_ms: float,
     rotation_plane: tuple[int, int] | None = None,
     rotation_steps: int = 0,
+    rigid_rotation: bool = False,
+    rotation_pivot: Coord2F | None = None,
 ) -> _RotationTween:
     if not start_rel or len(start_rel) != len(end_rel):
         return _RotationTween(
@@ -207,6 +296,8 @@ def _build_tween(
             duration_ms=duration_ms,
             rotation_plane=rotation_plane,
             rotation_steps=rotation_steps,
+            rigid_rotation=rigid_rotation,
+            rotation_pivot=rotation_pivot,
         )
     # For rotation-based animation, we don't pair endpoints
     # because rotation handles block matching automatically
@@ -219,6 +310,8 @@ def _build_tween(
             duration_ms=duration_ms,
             rotation_plane=rotation_plane,
             rotation_steps=rotation_steps,
+            rigid_rotation=rigid_rotation,
+            rotation_pivot=rotation_pivot,
         )
     else:
         # Use endpoint pairing for linear interpolation
@@ -230,12 +323,15 @@ def _build_tween(
             duration_ms=duration_ms,
             rotation_plane=None,
             rotation_steps=0,
+            rigid_rotation=False,
+            rotation_pivot=None,
         )
 
 
 @dataclass
 class PieceRotationAnimator2D:
-    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
+    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS_2D
+    translation_duration_ms: float = _DEFAULT_TRANSLATION_DURATION_MS
     gravity_axis: int = 1
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, int], ...] | None = None
@@ -265,7 +361,82 @@ class PieceRotationAnimator2D:
             rotate_blocks_2d(piece.shape.blocks, piece.rotation)
         )
 
-    def observe(self, piece: ActivePiece2D | None, dt_ms: float) -> None:
+    def _start_rotation_tween(
+        self,
+        *,
+        curr_rel: tuple[CoordF, ...],
+        curr_pos: Coord2F,
+        curr_rotation: int,
+    ) -> None:
+        start_rel = (
+            self._tween.interpolated_rel()
+            if self._tween is not None
+            else self._prev_rel
+        )
+        start_pos = (
+            self._tween.interpolated_pos()
+            if self._tween is not None
+            else self._prev_pos
+        )
+        rotation_steps = 0
+        if self._prev_rotation is not None:
+            rotation_steps = (curr_rotation - self._prev_rotation) % 4
+            if rotation_steps > 2:
+                rotation_steps -= 4
+        rotation_pivot = (
+            self._tween.rotation_pivot
+            if self._tween is not None and self._tween.rigid_rotation
+            else rotation_pivot_2d(
+                tuple((int(round(block[0])), int(round(block[1]))) for block in self._prev_rel)
+            )
+        )
+        self._tween = _build_tween(
+            start_rel,
+            curr_rel,
+            start_pos=start_pos,
+            end_pos=curr_pos,
+            duration_ms=self.duration_ms,
+            rotation_plane=(0, self.gravity_axis),
+            rotation_steps=rotation_steps,
+            rigid_rotation=True,
+            rotation_pivot=rotation_pivot,
+        )
+
+    def _start_translation_tween(
+        self,
+        *,
+        curr_rel: tuple[CoordF, ...],
+        curr_pos: Coord2F,
+    ) -> None:
+        self._tween = _build_tween(
+            self._prev_rel,
+            curr_rel,
+            start_pos=self._prev_pos,
+            end_pos=curr_pos,
+            duration_ms=self.translation_duration_ms,
+        )
+
+    def _shift_active_tween(self, curr_pos: Coord2F) -> None:
+        if self._tween is None:
+            return
+        delta_x = curr_pos[0] - self._prev_pos[0]
+        delta_y = curr_pos[1] - self._prev_pos[1]
+        self._tween.start_pos = (
+            self._tween.start_pos[0] + delta_x,
+            self._tween.start_pos[1] + delta_y,
+        )
+        self._tween.end_pos = (
+            self._tween.end_pos[0] + delta_x,
+            self._tween.end_pos[1] + delta_y,
+        )
+
+    def observe(
+        self,
+        piece: ActivePiece2D | None,
+        dt_ms: float,
+        *,
+        animate_translation: bool = False,
+    ) -> None:
         if self._tween is not None:
             self._tween.step(dt_ms)
             if self._tween.done:
@@ -289,48 +460,32 @@ class PieceRotationAnimator2D:
         rel_changed = self._prev_rel_sig is not None and curr_sig != self._prev_rel_sig
         pos_changed = self._prev_pos != tuple() and curr_pos != self._prev_pos
 
+        should_animate_rotation = (
+            curr_visible and self._prev_visible and float(self.duration_ms) > 0.0
+        )
+        should_animate_translation = (
+            animate_translation
+            and curr_visible
+            and self._prev_visible
+            and float(self.translation_duration_ms) > 0.0
+        )
+
         if shape_changed:
             self._tween = None
         elif rel_changed:
-            if curr_visible and self._prev_visible:
-                start_rel = (
-                    self._tween.interpolated_rel()
-                    if self._tween is not None
-                    else self._prev_rel
-                )
-                start_pos = (
-                    self._tween.interpolated_pos()
-                    if self._tween is not None
-                    else self._prev_pos
-                )
-                # Calculate rotation steps for 2D (always in plane 0, gravity_axis)
-                rotation_steps = 0
-                if self._prev_rotation is not None:
-                    rotation_steps = (curr_rotation - self._prev_rotation) % 4
-                    if rotation_steps > 2:
-                        rotation_steps -= 4  # Handle counter-clockwise
-                self._tween = _build_tween(
-                    start_rel,
-                    curr_rel,
-                    start_pos=start_pos,
-                    end_pos=curr_pos,
-                    duration_ms=self.duration_ms,
-                    rotation_plane=(0, self.gravity_axis),
-                    rotation_steps=rotation_steps,
+            if should_animate_rotation:
+                self._start_rotation_tween(
+                    curr_rel=curr_rel,
+                    curr_pos=curr_pos,
+                    curr_rotation=curr_rotation,
                 )
             else:
                 self._tween = None
-        elif pos_changed and self._tween is not None:
-            delta_x = curr_pos[0] - self._prev_pos[0]
-            delta_y = curr_pos[1] - self._prev_pos[1]
-            self._tween.start_pos = (
-                self._tween.start_pos[0] + delta_x,
-                self._tween.start_pos[1] + delta_y,
-            )
-            self._tween.end_pos = (
-                self._tween.end_pos[0] + delta_x,
-                self._tween.end_pos[1] + delta_y,
-            )
+        elif pos_changed:
+            if self._tween is not None:
+                self._shift_active_tween(curr_pos)
+            elif should_animate_translation:
+                self._start_translation_tween(curr_rel=curr_rel, curr_pos=curr_pos)
 
         self._prev_rel_sig = curr_sig
         self._prev_rel = curr_rel
@@ -350,12 +505,41 @@ class PieceRotationAnimator2D:
         cells = tuple((px + block[0], py + block[1]) for block in rel)
         return cells, int(piece.shape.color_id)
 
+    def overlay_state(
+        self,
+        piece: ActivePiece2D | None,
+    ) -> tuple[tuple[Coord2F, ...], int] | RigidPieceOverlay2D | None:
+        overlay = self.overlay_cells(piece)
+        if (
+            piece is None
+            or overlay is None
+            or self._tween is None
+            or not self._tween.rigid_rotation
+            or self._tween.rotation_pivot is None
+        ):
+            return overlay
+        rel_blocks = tuple(
+            (float(block[0]), float(block[1])) for block in self._tween.start_rel
+        )
+        pos = tuple(float(value) for value in self._tween.interpolated_pos())
+        if len(pos) != 2:
+            return overlay
+        return RigidPieceOverlay2D(
+            cells=overlay[0],
+            color_id=int(piece.shape.color_id),
+            rel_blocks=rel_blocks,
+            pos=(pos[0], pos[1]),
+            pivot=self._tween.rotation_pivot,
+            angle_deg=self._tween.interpolated_rotation_deg(),
+        )
+
 
 @dataclass
 class PieceRotationAnimatorND:
     ndim: int
     gravity_axis: int
-    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS
+    duration_ms: float = _DEFAULT_ROTATION_DURATION_MS_ND
+    translation_duration_ms: float = _DEFAULT_TRANSLATION_DURATION_MS
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, ...], ...] | None = None
     _prev_rel: tuple[CoordF, ...] = tuple()
@@ -379,7 +563,13 @@ class PieceRotationAnimatorND:
     def _rel_signature(self, piece: ActivePieceND) -> tuple[tuple[int, ...], ...]:
         return canonicalize_blocks_nd(piece.rel_blocks)
 
-    def observe(self, piece: ActivePieceND | None, dt_ms: float) -> None:
+    def observe(
+        self,
+        piece: ActivePieceND | None,
+        dt_ms: float,
+        *,
+        animate_translation: bool = False,
+    ) -> None:
         if self._tween is not None:
             self._tween.step(dt_ms)
             if self._tween.done:
@@ -407,7 +597,11 @@ class PieceRotationAnimatorND:
         if shape_changed:
             self._tween = None
         elif rel_changed:
-            if curr_visible and self._prev_visible:
+            if (
+                curr_visible
+                and self._prev_visible
+                and float(self.duration_ms) > 0.0
+            ):
                 start_rel = (
                     self._tween.interpolated_rel()
                     if self._tween is not None
@@ -432,6 +626,20 @@ class PieceRotationAnimatorND:
                 )
             else:
                 self._tween = None
+        elif pos_changed and self._tween is None:
+            if (
+                animate_translation
+                and curr_visible
+                and self._prev_visible
+                and float(self.translation_duration_ms) > 0.0
+            ):
+                self._tween = _build_tween(
+                    self._prev_rel,
+                    curr_rel,
+                    start_pos=self._prev_pos,
+                    end_pos=curr_pos,
+                    duration_ms=self.translation_duration_ms,
+                )
         elif pos_changed and self._tween is not None:
             delta = tuple(curr_pos[idx] - self._prev_pos[idx] for idx in range(self.ndim))
             self._tween.start_pos = tuple(
@@ -459,4 +667,3 @@ class PieceRotationAnimatorND:
         for block in rel:
             cells.append(tuple(pos[idx] + block[idx] for idx in range(self.ndim)))
         return tuple(cells), int(piece.shape.color_id)
-

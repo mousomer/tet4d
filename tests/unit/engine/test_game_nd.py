@@ -678,7 +678,6 @@ class TestGameND(unittest.TestCase):
         )
         state.current_piece = ActivePieceND.from_shape(shape, pos=(2, 2, 2, 3))
 
-        before_pos = tuple(state.current_piece.pos)
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertTrue(state.try_rotate(0, 3, 1))
         # New rotation algorithm doesn't re-center, so rotation succeeds in-place

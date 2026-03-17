@@ -127,7 +127,7 @@ Cross-cutting requirements are defined in:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
-19. Advanced gameplay settings expose kick permissiveness (`kick_level`).
+19. Advanced gameplay settings expose kick permissiveness (`kick_level`) plus shared piece motion animation durations for rotation and deliberate translation tweens.
 20. Ordinary play launcher/setup surfaces must stay minimal for topology: safe preset selection only, plus launcher routes to `Play Last Custom Topology` and `Open Explorer Playground` for custom topology work.
 21. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
 22. The Explorer Playground shell must expose an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- value controls, and synchronized 2D coordinate-plane projections as the default 3D/4D primary visualization: `3D` uses `xy/xz/yz`, `4D` uses `xy/xz/xw/yz/yw/zw`, all panels share one canonical selected-cell/topology/move-preview/seam-focus state, and hidden coordinates must stay explicit in every panel. Free-camera 3D/4D views may remain optional debug-only helpers, but they must not remain the primary Explorer Playground interface.
@@ -143,13 +143,21 @@ Cross-cutting requirements are defined in:
 
 1. The visual transition for a successful rotation should be eased and short (`120-180 ms` target).
 2. Gameplay state (collision, lock, scoring) remains discrete and deterministic; animation is presentation-only.
-3. If a new rotation arrives during an active rotation animation, either:
-4. start from the current interpolated pose and retarget cleanly, or
-5. queue one pending turn and consume it immediately after the current turn ends.
-6. No visible jitter or one-frame reversion to the previous orientation is allowed.
-7. The same animation path must be used for manual input and bot-triggered rotations.
-8. Headless/dry-run paths must skip visual tween logic entirely.
-9. Rotation overlay rendering must use the same topology-aware mapping path as active-piece rendering in all modes (2D/3D/4D), including exploration mode.
+3. In `2D`, rotation presentation must be a rigid whole-piece turn around the discrete rotation pivot, not a per-cell slide/morph between start and end cells.
+4. If a new rotation arrives during an active rotation animation, either:
+5. start from the current interpolated pose and retarget cleanly, or
+6. queue one pending turn and consume it immediately after the current turn ends.
+7. No visible jitter or one-frame reversion to the previous orientation is allowed.
+8. The same animation path must be used for manual input and bot-triggered rotations.
+9. Headless/dry-run paths must skip visual tween logic entirely.
+10. Rotation overlay rendering must use the same topology-aware mapping path as active-piece rendering in all modes (2D/3D/4D), including exploration mode.
+
+### 4.2 Deliberate translation animation requirements
+
+1. Successful deliberate piece translations may use a short eased visual tween; gameplay state remains discrete and deterministic.
+2. Translation tweening applies only to deliberate move inputs or equivalent bot/explorer single-step moves, not to gravity ticks, soft-drop streaming, or hard drop.
+3. Translation tweening must reuse the same active-piece overlay path as rotation tweening so mapped cells stay topology-correct in all modes.
+4. Shared settings must expose separate persisted durations for `2D rotation`, `ND rotation` (shared by 3D/4D), and deliberate-translation tweens, stored in integer milliseconds and allowing `0` to disable each tween.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -432,6 +440,3 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 3. Clear-rule tests: region clears are deterministic and invariant to iteration order.
 4. Replay tests: same input stream yields same final state per geometry profile.
 5. Bot dry-run tests: no geometry profile may generate invalid/zero-sized placements.
-
-
-

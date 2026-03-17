@@ -4,6 +4,24 @@ Generated: 2026-02-18
 Updated: 2026-03-14  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
+Current sub-batch (2026-03-17): piece translation tweening + split rotation-speed settings.
+- Root cause: gameplay only rendered eased rotation overlays; deliberate piece translations still snapped instantly on some ND view-relative paths, and users could not tune 2D rotation separately from ND rotation in the shared settings hub.
+- Fix strategy: extended the existing active-piece overlay tween path so it can animate pure deliberate translations without touching discrete gameplay state, fixed ND view-relative/override movement routing so deliberate 4D translations emit animation hints, split persisted rotation durations into separate `2D` and `ND` settings, and routed 2D/3D/4D loop construction through those saved settings instead of static animator defaults.
+- Updated shared settings/config/docs contracts:
+  - `config/menu/defaults.json`
+  - `config/schema/menu_settings.schema.json`
+  - `config/project/constants.json`
+  - `src/tet4d/engine/runtime/project_config.py`
+  - `docs/rds/RDS_TETRIS_GENERAL.md`
+  - `docs/rds/RDS_MENU_STRUCTURE.md`
+- Added focused regression coverage for:
+  - 2D/ND translation tween overlays and zero-duration disable behavior
+  - translation-to-rotation continuity
+  - shared gameplay settings round-trip/clamp coverage for separate `2D`/`ND` rotation durations plus shared translation duration
+  - settings-hub summary/reset/advanced-row adjustments for the split motion controls
+  - ND key-routing paths that use view-relative or override-based movement
+  - rigid `2D` whole-piece rotation animation so midpoint frames preserve the piece shape instead of cell-morphing
+
 Current sub-batch (2026-03-14): topology playground cleanup pass 2.
 - Root cause: even after the ownership split and pass-1 ambiguity cleanup, the migrated explorer shell still exposed mixed tool/action concepts (`create`/`probe`/`play mode`), let non-edit surfaces reach seam-edit controls, and still carried compatibility behavior where retained shell snapshots could backstop probe-unavailable or stale play-launch paths.
 - Fix strategy: collapsed the live explorer surface to four canonical modes (`Edit`, `Inspect`, `Sandbox`, `Play`), restricted scene action bars and transform-editor interactivity to the owning mode, removed probe-unavailable shell-fallback dependence from `src/tet4d/ui/pygame/topology_lab/scene_state.py`, and stopped `Play This Topology` from rebuilding explorer launch state from drifted dirty shell fields.

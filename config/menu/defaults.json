@@ -39,6 +39,9 @@
       "speed_level": 1,
       "auto_speedup_enabled": 1,
       "lines_per_level": 10,
+      "rotation_animation_duration_ms_2d": 300,
+      "rotation_animation_duration_ms_nd": 300,
+      "translation_animation_duration_ms": 120,
       "kick_level_index": 0
     },
     "3d": {
@@ -62,6 +65,9 @@
       "speed_level": 1,
       "auto_speedup_enabled": 1,
       "lines_per_level": 10,
+      "rotation_animation_duration_ms_2d": 300,
+      "rotation_animation_duration_ms_nd": 300,
+      "translation_animation_duration_ms": 120,
       "kick_level_index": 0
     },
     "4d": {
@@ -87,8 +93,10 @@
       "speed_level": 1,
       "auto_speedup_enabled": 1,
       "lines_per_level": 10,
+      "rotation_animation_duration_ms_2d": 300,
+      "rotation_animation_duration_ms_nd": 300,
+      "translation_animation_duration_ms": 120,
       "kick_level_index": 0
     }
   }
 }
-

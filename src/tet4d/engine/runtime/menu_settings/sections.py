@@ -11,6 +11,7 @@ from ..settings_sanitize import (
 )
 from ..settings_schema import (
     MODE_KEYS,
+    clamp_animation_duration_ms,
     clamp_game_seed,
     clamp_lines_per_level,
     clamp_toggle_index,
@@ -25,6 +26,9 @@ _SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, int], ...] = (
     ("kick_level_index", None, 0),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
     ("lines_per_level", clamp_lines_per_level, 10),
+    ("rotation_animation_duration_ms_2d", clamp_animation_duration_ms, 300),
+    ("rotation_animation_duration_ms_nd", clamp_animation_duration_ms, 300),
+    ("translation_animation_duration_ms", clamp_animation_duration_ms, 120),
 )
 
 
@@ -34,6 +38,9 @@ OVERLAY_TRANSPARENCY_STEP = _settings_schema.OVERLAY_TRANSPARENCY_STEP
 GAME_SEED_MIN = _settings_schema.GAME_SEED_MIN
 GAME_SEED_MAX = _settings_schema.GAME_SEED_MAX
 GAME_SEED_STEP = _settings_schema.GAME_SEED_STEP
+ANIMATION_DURATION_MS_MIN = _settings_schema.ANIMATION_DURATION_MS_MIN
+ANIMATION_DURATION_MS_MAX = _settings_schema.ANIMATION_DURATION_MS_MAX
+ANIMATION_DURATION_MS_STEP = _settings_schema.ANIMATION_DURATION_MS_STEP
 
 
 def clamp_kick_level_index(value: Any, *, default: int = 0) -> int:

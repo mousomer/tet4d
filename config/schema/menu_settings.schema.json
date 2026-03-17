@@ -172,6 +172,9 @@
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
+            "rotation_animation_duration_ms_2d",
+            "rotation_animation_duration_ms_nd",
+            "translation_animation_duration_ms",
             "kick_level_index",
             "challenge_layers",
             "exploration_mode"
@@ -218,6 +221,21 @@
               "type": "integer",
               "minimum": 0
             },
+            "rotation_animation_duration_ms_2d": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "rotation_animation_duration_ms_nd": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "translation_animation_duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
             "challenge_layers": {
               "type": "integer",
               "minimum": 0
@@ -253,6 +271,9 @@
             "game_seed",
             "topology_mode",
             "topology_advanced",
+            "rotation_animation_duration_ms_2d",
+            "rotation_animation_duration_ms_nd",
+            "translation_animation_duration_ms",
             "kick_level_index",
             "challenge_layers",
             "exploration_mode"
@@ -299,6 +320,21 @@
               "minimum": 0,
               "maximum": 1
             },
+            "rotation_animation_duration_ms_2d": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "rotation_animation_duration_ms_nd": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "translation_animation_duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
             "challenge_layers": {
               "type": "integer",
               "minimum": 0
@@ -335,6 +371,9 @@
             "game_seed",
             "topology_mode",
             "topology_advanced",
+            "rotation_animation_duration_ms_2d",
+            "rotation_animation_duration_ms_nd",
+            "translation_animation_duration_ms",
             "kick_level_index",
             "challenge_layers",
             "exploration_mode"
@@ -384,6 +423,21 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 1
+            },
+            "rotation_animation_duration_ms_2d": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "rotation_animation_duration_ms_nd": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
+            },
+            "translation_animation_duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600
             },
             "challenge_layers": {
               "type": "integer",

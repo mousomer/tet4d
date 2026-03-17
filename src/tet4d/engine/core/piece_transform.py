@@ -146,6 +146,34 @@ def rotate_point_2d(x: int, y: int, steps_cw: int) -> Coord2D:
 
 
 @lru_cache(maxsize=4096)
+def _rotation_pivot_2d_cached(blocks: Blocks2D) -> tuple[float, float]:
+    if not blocks:
+        return 0.0, 0.0
+    (min_x, min_y), (max_x, max_y) = _block_axis_bounds_cached(blocks)
+    span_x = max_x - min_x
+    span_y = max_y - min_y
+    x_even = (span_x % 2) == 0
+    y_even = (span_y % 2) == 0
+    if x_even == y_even:
+        return (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
+    center_mass_x = sum(x for x, y in blocks) / len(blocks)
+    center_mass_y = sum(y for x, y in blocks) / len(blocks)
+    min_dist_sq = float("inf")
+    pivot_block = blocks[0]
+    for block in blocks:
+        dist_sq = (block[0] - center_mass_x) ** 2 + (block[1] - center_mass_y) ** 2
+        if dist_sq < min_dist_sq:
+            min_dist_sq = dist_sq
+            pivot_block = block
+    return float(pivot_block[0]), float(pivot_block[1])
+
+
+def rotation_pivot_2d(blocks: Iterable[Sequence[int]]) -> tuple[float, float]:
+    coords = _coerce_blocks_2d(blocks)
+    return _rotation_pivot_2d_cached(coords)
+
+
+@lru_cache(maxsize=4096)
 def _rotate_blocks_2d_cached(blocks: Blocks2D, steps_cw: int) -> Blocks2D:
     steps = steps_cw % _QUARTER_TURNS
     if not blocks or steps == 0:
@@ -153,40 +181,8 @@ def _rotate_blocks_2d_cached(blocks: Blocks2D, steps_cw: int) -> Blocks2D:
 
     rotated = blocks
     for _ in range(steps):
-        (min_x, min_y), (max_x, max_y) = _block_axis_bounds_cached(rotated)
-        span_x = max_x - min_x
-        span_y = max_y - min_y
-
-        # Determine rotation pivot based on bounding box parity
-        x_even = (span_x % 2) == 0
-        y_even = (span_y % 2) == 0
-
-        if x_even == y_even:
-            # Case 1 & 2: Both odd or both even - use geometric center
-            # Odd: center is at middle cell (integer coords)
-            # Even: center is at corner between cells (half-integer coords)
-            pivot_x = (min_x + max_x) / 2.0
-            pivot_y = (min_y + max_y) / 2.0
-        else:
-            # Case 3: Mixed parity - find block closest to center of mass
-            center_mass_x = sum(x for x, y in rotated) / len(rotated)
-            center_mass_y = sum(y for x, y in rotated) / len(rotated)
-
-            # Find closest block to center of mass
-            min_dist_sq = float('inf')
-            pivot_block = rotated[0]
-            for block in rotated:
-                dist_sq = (block[0] - center_mass_x) ** 2 + (block[1] - center_mass_y) ** 2
-                if dist_sq < min_dist_sq:
-                    min_dist_sq = dist_sq
-                    pivot_block = block
-
-            # Rotate around the center of the chosen block
-            pivot_x = float(pivot_block[0])
-            pivot_y = float(pivot_block[1])
-
+        pivot_x, pivot_y = _rotation_pivot_2d_cached(rotated)
         # Apply rotation around pivot (CW rotation: (x,y) -> (y, -x))
-        import math
         rotated_coords: list[Coord2D] = []
         for x, y in rotated:
             # Translate to pivot origin
@@ -398,8 +394,6 @@ def rotate_blocks_nd_continuous(
     b_values = [b[axis_b] for b in coords_raw]
     min_a, max_a = min(a_values), max(a_values)
     min_b, max_b = min(b_values), max(b_values)
-    span_a = max_a - min_a
-
     # Calculate geometric center for smooth rotation
     # This is the true bounding box center, used as pivot
     pivot_a = (min_a + max_a) / 2.0

@@ -500,7 +500,7 @@ class PlayBotController:
         if piece.pos[0] != target_x:
             delta = 1 if target_x > piece.pos[0] else -1
             before_pos = piece.pos
-            state.try_move(delta, 0)
+            state.try_move(delta, 0, animate_translation=True)
             if (
                 state.current_piece is not None
                 and state.current_piece.pos != before_pos
@@ -603,7 +603,7 @@ class PlayBotController:
             if current_val == target_val:
                 continue
             step = 1 if target_val > current_val else -1
-            return state.try_move_axis(axis, step)
+            return state.try_move_axis(axis, step, animate_translation=True)
         return False
 
     def play_one_piece_2d(self, state: GameState) -> bool:
@@ -669,4 +669,3 @@ class PlayBotController:
             return
         if self._should_auto_step(dt_ms):
             self._step_piece_nd(state)
-

@@ -522,11 +522,17 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn("random_mode_index", settings)
         self.assertIn("topology_advanced", settings)
         self.assertIn("kick_level_index", settings)
+        self.assertIn("rotation_animation_duration_ms_2d", settings)
+        self.assertIn("rotation_animation_duration_ms_nd", settings)
+        self.assertIn("translation_animation_duration_ms", settings)
         self.assertIn(settings["auto_speedup_enabled"], (0, 1))
         self.assertIn(settings["random_mode_index"], (0, 1))
         self.assertIn(settings["topology_advanced"], (0, 1))
         self.assertGreaterEqual(settings["kick_level_index"], 0)
         self.assertGreaterEqual(settings["lines_per_level"], 1)
+        self.assertGreaterEqual(settings["rotation_animation_duration_ms_2d"], 0)
+        self.assertGreaterEqual(settings["rotation_animation_duration_ms_nd"], 0)
+        self.assertGreaterEqual(settings["translation_animation_duration_ms"], 0)
 
     def test_save_shared_gameplay_settings_updates_all_modes(self) -> None:
         ok, msg = menu_settings_state.save_shared_gameplay_settings(
@@ -535,6 +541,9 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             kick_level_index=2,
             auto_speedup_enabled=0,
             lines_per_level=17,
+            rotation_animation_duration_ms_2d=340,
+            rotation_animation_duration_ms_nd=360,
+            translation_animation_duration_ms=140,
         )
         self.assertTrue(ok, msg)
         payload = menu_settings_state.load_app_settings_payload()
@@ -545,6 +554,12 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             self.assertEqual(mode_settings["kick_level_index"], 2)
             self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
             self.assertEqual(mode_settings["lines_per_level"], 17)
+            self.assertEqual(mode_settings["rotation_animation_duration_ms_2d"], 340)
+            self.assertEqual(mode_settings["rotation_animation_duration_ms_nd"], 360)
+            self.assertEqual(mode_settings["translation_animation_duration_ms"], 140)
+        self.assertEqual(menu_settings_state.mode_animation_settings("2d"), (340, 140))
+        self.assertEqual(menu_settings_state.mode_animation_settings("3d"), (360, 140))
+        self.assertEqual(menu_settings_state.mode_animation_settings("4d"), (360, 140))
 
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()
@@ -570,6 +585,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
 
     def test_settings_schema_clamp_helpers(self) -> None:
         from tet4d.engine.runtime.settings_schema import (
+            clamp_animation_duration_ms,
             clamp_lines_per_level,
             clamp_game_seed,
             clamp_overlay_transparency,
@@ -585,8 +601,9 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertEqual(clamp_toggle_index(-1, default=1), 0)
         self.assertEqual(clamp_lines_per_level(-9, default=10), 1)
         self.assertEqual(clamp_lines_per_level(999, default=10), 50)
+        self.assertEqual(clamp_animation_duration_ms(-1, default=120), 0)
+        self.assertEqual(clamp_animation_duration_ms(999, default=120), 600)
         self.assertEqual(
             sanitize_text("ok\x00bad\nsafe", max_length=32),
             "okbadsafe",
         )
-

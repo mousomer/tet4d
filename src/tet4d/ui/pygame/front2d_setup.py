@@ -13,6 +13,7 @@ from tet4d.ai.playbot.types import (
 from tet4d.engine.runtime.menu_settings_state import (
     default_mode_shared_gameplay_settings,
     get_overlay_transparency,
+    mode_animation_settings,
     mode_speedup_settings,
 )
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
@@ -137,6 +138,10 @@ def random_mode_label(index: int) -> str:
 
 def load_speedup_settings_for_mode(mode_key: str) -> tuple[int, int]:
     return mode_speedup_settings(mode_key)
+
+
+def load_animation_settings_for_mode(mode_key: str) -> tuple[int, int]:
+    return mode_animation_settings(mode_key)
 
 
 def kick_level_name(index: int) -> str:

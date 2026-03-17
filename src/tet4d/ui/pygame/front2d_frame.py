@@ -252,8 +252,12 @@ def _run_game_frame_2d(
         loop.clear_anim_elapsed_ms,
         clear_anim_duration_ms,
     )
-    loop.rotation_anim.observe(loop.state.current_piece, dt)
-    active_overlay = loop.rotation_anim.overlay_cells(loop.state.current_piece)
+    loop.rotation_anim.observe(
+        loop.state.current_piece,
+        dt,
+        animate_translation=loop.state.consume_translation_animation_hint(),
+    )
+    active_overlay = loop.rotation_anim.overlay_state(loop.state.current_piece)
     draw_game_frame(
         screen,
         loop.cfg,

@@ -23,6 +23,9 @@ GAME_SEED_MAX = 999_999_999
 GAME_SEED_STEP = 1
 LINES_PER_LEVEL_MIN = 1
 LINES_PER_LEVEL_MAX = 50
+ANIMATION_DURATION_MS_MIN = 0
+ANIMATION_DURATION_MS_MAX = 600
+ANIMATION_DURATION_MS_STEP = 20
 
 MIN_WINDOW_WIDTH = 640
 MIN_WINDOW_HEIGHT = 480
@@ -168,6 +171,18 @@ def clamp_lines_per_level(
     else:
         numeric = int(value)
     return max(LINES_PER_LEVEL_MIN, min(LINES_PER_LEVEL_MAX, numeric))
+
+
+def clamp_animation_duration_ms(
+    value: object,
+    *,
+    default: int,
+) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(ANIMATION_DURATION_MS_MIN, min(ANIMATION_DURATION_MS_MAX, numeric))
 
 
 def normalize_windowed_size(

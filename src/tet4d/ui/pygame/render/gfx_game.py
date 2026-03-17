@@ -10,6 +10,8 @@ from tet4d.engine.gameplay.api import (
     map_overlay_cells_gameplay,
 )
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.rotation_anim import RigidPieceOverlay2D
+from tet4d.engine.gameplay.topology import TOPOLOGY_BOUNDED
 from tet4d.engine.runtime.menu_config import ui_copy_section
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode
@@ -64,7 +66,7 @@ class ClearEffect2D:
     progress: float  # 0.0 .. 1.0
 
 
-ActiveOverlay2D = tuple[tuple[tuple[float, float], ...], int]
+ActiveOverlay2D = tuple[tuple[tuple[float, float], ...], int] | RigidPieceOverlay2D
 
 
 def init_fonts() -> GfxFonts:
@@ -645,6 +647,11 @@ def _draw_active_piece_cells(
     *,
     overlay: ActiveOverlay2D | None,
 ) -> None:
+    if isinstance(overlay, RigidPieceOverlay2D):
+        if _can_draw_rigid_overlay_2d(state):
+            _draw_rigid_piece_overlay(surface, overlay, board_offset)
+            return
+        overlay = (overlay.cells, overlay.color_id)
     if overlay is not None:
         raw_cells, color_id = overlay
         if (
@@ -678,6 +685,73 @@ def _draw_active_piece_cells(
     for x, y in state.current_piece_cells_mapped(include_above=False):
         if 0 <= x < width_cells and 0 <= y < height_cells:
             _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
+
+
+def _can_draw_rigid_overlay_2d(state: GameState) -> bool:
+    if getattr(state.config, "exploration_mode", False):
+        return False
+    if getattr(state.config, "explorer_topology_profile", None) is not None:
+        return False
+    return getattr(state.config, "topology_mode", TOPOLOGY_BOUNDED) == TOPOLOGY_BOUNDED
+
+
+def _draw_rigid_piece_overlay(
+    surface: pygame.Surface,
+    overlay: RigidPieceOverlay2D,
+    board_offset: tuple[int, int],
+) -> None:
+    if not overlay.rel_blocks:
+        return
+    base_surface = _piece_overlay_surface(overlay)
+    rotated_surface = pygame.transform.rotozoom(
+        base_surface,
+        float(overlay.angle_deg),
+        1.0,
+    )
+    pivot_world = (
+        board_offset[0] + (overlay.pos[0] + overlay.pivot[0]) * CELL_SIZE,
+        board_offset[1] + (overlay.pos[1] + overlay.pivot[1]) * CELL_SIZE,
+    )
+    rotated_rect = rotated_surface.get_rect(
+        center=(
+            round(pivot_world[0]),
+            round(pivot_world[1]),
+        )
+    )
+    surface.blit(rotated_surface, rotated_rect.topleft)
+
+
+def _piece_overlay_surface(
+    overlay: RigidPieceOverlay2D,
+) -> pygame.Surface:
+    pivot_x, pivot_y = overlay.pivot
+    max_extent = float(CELL_SIZE)
+    for block_x, block_y in overlay.rel_blocks:
+        rel_px_x = (block_x - pivot_x) * CELL_SIZE
+        rel_px_y = (block_y - pivot_y) * CELL_SIZE
+        corners = (
+            (rel_px_x, rel_px_y),
+            (rel_px_x + CELL_SIZE, rel_px_y),
+            (rel_px_x, rel_px_y + CELL_SIZE),
+            (rel_px_x + CELL_SIZE, rel_px_y + CELL_SIZE),
+        )
+        for corner_x, corner_y in corners:
+            max_extent = max(max_extent, abs(corner_x), abs(corner_y))
+    radius = int(round(max_extent + CELL_SIZE))
+    size = max(CELL_SIZE * 2, (radius * 2) + 4)
+    pivot_center = (size / 2.0, size / 2.0)
+    sprite = pygame.Surface((size, size), pygame.SRCALPHA)
+    color = color_for_cell(int(overlay.color_id))
+    for block_x, block_y in overlay.rel_blocks:
+        rect = pygame.Rect(
+            round(pivot_center[0] + ((block_x - pivot_x) * CELL_SIZE) + 1),
+            round(pivot_center[1] + ((block_y - pivot_y) * CELL_SIZE) + 1),
+            CELL_SIZE - 2,
+            CELL_SIZE - 2,
+        )
+        pygame.draw.rect(sprite, color, rect)
+        pygame.draw.rect(sprite, (255, 255, 255), rect, 2)
+    return sprite
 
 
 def draw_board(

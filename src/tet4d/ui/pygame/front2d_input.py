@@ -80,14 +80,14 @@ def overlay_action_for_key_2d(key: int) -> str | None:
 
 def apply_2d_gameplay_action(state: GameState, action: str) -> None:
     handlers = {
-        "move_x_neg": lambda: state.try_move(-1, 0),
-        "move_x_pos": lambda: state.try_move(1, 0),
+        "move_x_neg": lambda: state.try_move(-1, 0, animate_translation=True),
+        "move_x_pos": lambda: state.try_move(1, 0, animate_translation=True),
         "rotate_xy_pos": lambda: state.try_rotate(+1),
         "rotate_xy_neg": lambda: state.try_rotate(-1),
         "hard_drop": state.hard_drop,
         "soft_drop": lambda: state.try_move(0, 1),
-        "move_up": lambda: state.try_move(0, -1),
-        "move_down": lambda: state.try_move(0, 1),
+        "move_up": lambda: state.try_move(0, -1, animate_translation=True),
+        "move_down": lambda: state.try_move(0, 1, animate_translation=True),
     }
     handler = handlers.get(action)
     if handler is not None:

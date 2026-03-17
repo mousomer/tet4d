@@ -144,7 +144,7 @@ Pause Menu
 6. Setup screens must expose the safe topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
 8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
-9. Shared settings hub owns `Random type` and kick permissiveness (`kick_level`) for all modes; it must not advertise full custom-topology editing.
+9. Shared settings hub owns `Random type`, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; it must not advertise full custom-topology editing.
 10. `Play Last Custom Topology` and `Open Explorer Playground` are the direct launcher routes into custom topology play/edit flows.
 11. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 

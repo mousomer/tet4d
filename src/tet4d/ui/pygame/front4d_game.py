@@ -21,6 +21,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     OVERLAY_TRANSPARENCY_STEP,
     clamp_overlay_transparency,
     get_display_settings,
+    mode_animation_settings,
 )
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.tutorial.api import (
@@ -371,6 +372,8 @@ class LoopContext4D(PanelDragMixin):
         bot_mode: BotMode = BotMode.OFF,
         overlay_transparency: float | None = None,
         bot_speed_level: int = 7,
+        rotation_animation_duration_ms: int | float | None = None,
+        translation_animation_duration_ms: int | float | None = None,
         tutorial_lesson_id: str | None = None,
     ) -> "LoopContext4D":
         _apply_tutorial_board_profile_4d(
@@ -392,7 +395,22 @@ class LoopContext4D(PanelDragMixin):
             mouse_orbit=MouseOrbitState(),
             bot=PlayBotController(mode=bot_mode),
             rotation_anim=PieceRotationAnimatorND(
-                ndim=4, gravity_axis=cfg.gravity_axis
+                ndim=4,
+                gravity_axis=cfg.gravity_axis,
+                duration_ms=(
+                    float(rotation_animation_duration_ms)
+                    if rotation_animation_duration_ms is not None
+                    else PieceRotationAnimatorND(
+                        ndim=4, gravity_axis=cfg.gravity_axis
+                    ).duration_ms
+                ),
+                translation_duration_ms=(
+                    float(translation_animation_duration_ms)
+                    if translation_animation_duration_ms is not None
+                    else PieceRotationAnimatorND(
+                        ndim=4, gravity_axis=cfg.gravity_axis
+                    ).translation_duration_ms
+                ),
             ),
             overlay_transparency=clamp_overlay_transparency(
                 overlay_transparency,
@@ -589,11 +607,16 @@ def run_game_loop(
         if isinstance(display_payload, dict)
         else default_overlay
     )
+    rotation_animation_duration_ms, translation_animation_duration_ms = (
+        mode_animation_settings("4d")
+    )
     loop = LoopContext4D.create(
         cfg,
         bot_mode=bot_mode,
         overlay_transparency=overlay_transparency,
         bot_speed_level=bot_speed_level,
+        rotation_animation_duration_ms=rotation_animation_duration_ms,
+        translation_animation_duration_ms=translation_animation_duration_ms,
         tutorial_lesson_id=tutorial_lesson_id,
     )
     setattr(
@@ -713,7 +736,6 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
 
 
 

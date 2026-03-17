@@ -46,6 +46,15 @@ _AUTO_SPEEDUP_DEFAULT = int(
 _LINES_PER_LEVEL_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["lines_per_level"]
 )
+_ROTATION_ANIMATION_DURATION_2D_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["rotation_animation_duration_ms_2d"]
+)
+_ROTATION_ANIMATION_DURATION_ND_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["rotation_animation_duration_ms_nd"]
+)
+_TRANSLATION_ANIMATION_DURATION_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["translation_animation_duration_ms"]
+)
 _NUMERIC_TEXT_EDIT_ROWS = {
     "display_width",
     "display_height",
@@ -73,6 +82,9 @@ class _UnifiedSettingsState:
     kick_level_index: int
     auto_speedup_enabled: int
     lines_per_level: int
+    rotation_animation_duration_ms_2d: int
+    rotation_animation_duration_ms_nd: int
+    translation_animation_duration_ms: int
     score_logging_enabled: bool
     original_audio: AudioSettings
     original_display: DisplaySettings
@@ -83,6 +95,9 @@ class _UnifiedSettingsState:
     original_kick_level_index: int
     original_auto_speedup_enabled: int
     original_lines_per_level: int
+    original_rotation_animation_duration_ms_2d: int
+    original_rotation_animation_duration_ms_nd: int
+    original_translation_animation_duration_ms: int
     original_score_logging_enabled: bool
     selected: int = 0
     status: str = ""
@@ -193,8 +208,20 @@ def _text_mode_numeric_value(state: _UnifiedSettingsState, row_key: str) -> int 
 
 
 def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
+    def _duration_text(value: int) -> str:
+        return "Off" if int(value) <= 0 else f"{int(value)} ms"
+
     if _is_unified_text_mode(state) and row_key == state.text_mode_row_key:
         return f"{state.text_mode_buffer}_"
+    if row_key == "gameplay_advanced":
+        kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
+        mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
+        return (
+            f"{_KICK_LEVEL_LABELS[kick_index]} / {mode_text} / {int(state.lines_per_level)}"
+            f" / rot2d {_duration_text(int(state.rotation_animation_duration_ms_2d))}"
+            f" / rotnd {_duration_text(int(state.rotation_animation_duration_ms_nd))}"
+            f" / move {_duration_text(int(state.translation_animation_duration_ms))}"
+        )
     static_values = {
         "audio_master": f"{int(state.audio_settings.master_volume * 100)}%",
         "audio_sfx": f"{int(state.audio_settings.sfx_volume * 100)}%",
@@ -219,10 +246,6 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         return _RANDOM_MODE_LABELS[safe_index]
     if row_key == "game_topology_advanced":
         return "ON" if int(state.topology_advanced) else "OFF"
-    if row_key == "gameplay_advanced":
-        kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-        mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        return f"{_KICK_LEVEL_LABELS[kick_index]} / {mode_text} / {int(state.lines_per_level)}"
     return ""
 
 
@@ -245,6 +268,15 @@ def build_unified_settings_state(
     kick_level_index = int(mode_gameplay["kick_level_index"])
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
+    rotation_animation_duration_ms_2d = int(
+        mode_gameplay["rotation_animation_duration_ms_2d"]
+    )
+    rotation_animation_duration_ms_nd = int(
+        mode_gameplay["rotation_animation_duration_ms_nd"]
+    )
+    translation_animation_duration_ms = int(
+        mode_gameplay["translation_animation_duration_ms"]
+    )
     return _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
@@ -255,6 +287,9 @@ def build_unified_settings_state(
         kick_level_index=kick_level_index,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
+        rotation_animation_duration_ms_2d=rotation_animation_duration_ms_2d,
+        rotation_animation_duration_ms_nd=rotation_animation_duration_ms_nd,
+        translation_animation_duration_ms=translation_animation_duration_ms,
         score_logging_enabled=score_logging_enabled,
         original_audio=_clone_audio_settings(audio_settings),
         original_display=_clone_display_settings(display_settings),
@@ -265,5 +300,8 @@ def build_unified_settings_state(
         original_kick_level_index=kick_level_index,
         original_auto_speedup_enabled=auto_speedup_enabled,
         original_lines_per_level=lines_per_level,
+        original_rotation_animation_duration_ms_2d=rotation_animation_duration_ms_2d,
+        original_rotation_animation_duration_ms_nd=rotation_animation_duration_ms_nd,
+        original_translation_animation_duration_ms=translation_animation_duration_ms,
         original_score_logging_enabled=score_logging_enabled,
     )

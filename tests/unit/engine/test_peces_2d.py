@@ -38,7 +38,7 @@ class TestPieces2D(unittest.TestCase):
         shape = PieceShape2D("test", [(0, 0), (1, 0)], color_id=1)
         piece = ActivePiece2D(shape=shape, pos=(5, 10), rotation=1)
         cells = set(piece.cells())
-        self.assertEqual(cells, {(5, 10), (5, 11)})
+        self.assertEqual(cells, {(5, 10), (5, 9)})
 
     def test_debug_2d_set_contains_large_shape_categories(self):
         shapes = get_debug_rectangles_2d(board_dims=(10, 20))

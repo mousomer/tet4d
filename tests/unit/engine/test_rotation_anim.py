@@ -8,6 +8,7 @@ from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.rotation_anim import (
     PieceRotationAnimator2D,
     PieceRotationAnimatorND,
+    RigidPieceOverlay2D,
 )
 
 
@@ -23,6 +24,10 @@ def _distance_from_origin(cell: tuple[float, ...]) -> float:
     import math
 
     return math.sqrt(sum(c * c for c in cell))
+
+
+def _pairwise_distance(cell_a: tuple[float, ...], cell_b: tuple[float, ...]) -> float:
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(cell_a, cell_b)))
 
 
 class TestRotationAnim(unittest.TestCase):
@@ -55,9 +60,44 @@ class TestRotationAnim(unittest.TestCase):
                 for cell in cells_mid
             )
         )
+        self.assertAlmostEqual(_pairwise_distance(cells_mid[0], cells_mid[1]), 1.0, places=4)
+
+        rigid_state = anim.overlay_state(visible_rot)
+        self.assertIsInstance(rigid_state, RigidPieceOverlay2D)
+        assert isinstance(rigid_state, RigidPieceOverlay2D)
+        self.assertAlmostEqual(rigid_state.angle_deg, 45.0, delta=6.0)
 
         anim.observe(visible_rot, 200.0)
         self.assertIsNone(anim.overlay_cells(visible_rot))
+
+    def test_2d_translation_tween_tracks_manual_move(self) -> None:
+        shape = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=3)
+        piece = ActivePiece2D(shape=shape, pos=(4, 5), rotation=0)
+        moved = piece.moved(1, 0)
+        anim = PieceRotationAnimator2D(duration_ms=160.0, translation_duration_ms=120.0)
+
+        anim.observe(piece, 0.0)
+        anim.observe(moved, 0.0, animate_translation=True)
+        anim.observe(moved, 60.0)
+
+        overlay = anim.overlay_cells(moved)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_mid, _ = overlay
+        self.assertTrue(
+            any(abs(cell[0] - round(cell[0])) > 1e-4 for cell in cells_mid)
+        )
+        self.assertTrue(all(abs(cell[1] - round(cell[1])) < 1e-4 for cell in cells_mid))
+
+    def test_2d_translation_tween_disabled_at_zero_duration(self) -> None:
+        shape = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=3)
+        piece = ActivePiece2D(shape=shape, pos=(4, 5), rotation=0)
+        moved = piece.moved(1, 0)
+        anim = PieceRotationAnimator2D(duration_ms=160.0, translation_duration_ms=0.0)
+
+        anim.observe(piece, 0.0)
+        anim.observe(moved, 0.0, animate_translation=True)
+        self.assertIsNone(anim.overlay_cells(moved))
 
     def test_nd_rotation_tween_tracks_piece_translation(self) -> None:
         shape = PieceShapeND(
@@ -87,6 +127,58 @@ class TestRotationAnim(unittest.TestCase):
         centroid_after = _centroid(cells_after)
 
         self.assertAlmostEqual(centroid_after[1] - centroid_before[1], 1.0, places=3)
+
+    def test_nd_translation_tween_tracks_manual_move(self) -> None:
+        shape = PieceShapeND(
+            name="domino3d",
+            blocks=((0, 0, 0), (1, 0, 0)),
+            color_id=4,
+        )
+        piece = ActivePieceND.from_shape(shape, (2, 4, 1))
+        moved = piece.moved((1, 0, 0))
+        anim = PieceRotationAnimatorND(
+            ndim=3,
+            gravity_axis=1,
+            duration_ms=200.0,
+            translation_duration_ms=120.0,
+        )
+
+        anim.observe(piece, 0.0)
+        anim.observe(moved, 0.0, animate_translation=True)
+        anim.observe(moved, 60.0)
+
+        overlay = anim.overlay_cells(moved)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_mid, _ = overlay
+        centroid_mid = _centroid(cells_mid)
+        self.assertAlmostEqual(centroid_mid[0], 3.0, delta=0.6)
+        self.assertAlmostEqual(centroid_mid[1], 4.0, delta=1e-4)
+        self.assertAlmostEqual(centroid_mid[2], 1.0, delta=1e-4)
+
+    def test_rotation_after_translation_restarts_from_interpolated_pose(self) -> None:
+        shape = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=3)
+        piece = ActivePiece2D(shape=shape, pos=(2, 5), rotation=0)
+        moved = piece.moved(1, 0)
+        rotated = moved.rotated(1)
+        anim = PieceRotationAnimator2D(duration_ms=160.0, translation_duration_ms=120.0)
+
+        anim.observe(piece, 0.0)
+        anim.observe(moved, 0.0, animate_translation=True)
+        anim.observe(moved, 60.0)
+        before = anim.overlay_cells(moved)
+        self.assertIsNotNone(before)
+        assert before is not None
+        before_centroid = _centroid(before[0])
+
+        anim.observe(rotated, 0.0)
+        after = anim.overlay_cells(rotated)
+        self.assertIsNotNone(after)
+        assert after is not None
+        after_centroid = _centroid(after[0])
+
+        self.assertAlmostEqual(after_centroid[0], before_centroid[0], places=4)
+        self.assertAlmostEqual(after_centroid[1], before_centroid[1], places=4)
 
     def test_nd_rotation_retarget_keeps_continuity(self) -> None:
         shape = PieceShapeND(
