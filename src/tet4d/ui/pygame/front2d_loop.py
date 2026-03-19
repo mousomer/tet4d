@@ -8,6 +8,8 @@ from tet4d.engine.runtime.project_config import project_constant_float
 from tet4d.ui.pygame.render.gfx_game import GfxFonts
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
+from tet4d.engine.runtime import menu_settings_state
+
 from . import front2d_frame, front2d_results
 from .front2d_session import LoopContext2D
 from .front2d_setup import (
@@ -56,12 +58,14 @@ def run_game_loop(
     rotation_animation_duration_ms, translation_animation_duration_ms = (
         _load_animation_settings_for_mode("2d")
     )
+    rotation_animation_mode = menu_settings_state.mode_rotation_animation_mode("2d")
     loop = LoopContext2D.create(
         cfg,
         bot_mode=bot_mode,
         bot_speed_level=bot_speed_level,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
+        rotation_animation_mode=rotation_animation_mode,
         rotation_animation_duration_ms=rotation_animation_duration_ms,
         translation_animation_duration_ms=translation_animation_duration_ms,
         overlay_transparency=overlay_transparency,

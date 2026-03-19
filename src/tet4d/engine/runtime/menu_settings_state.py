@@ -309,6 +309,12 @@ def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
     )
 
 
+def mode_rotation_animation_mode(mode_key: str) -> str:
+    from tet4d.engine.gameplay.rotation_anim import ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION
+    settings = mode_shared_gameplay_settings(mode_key)
+    return str(settings.get("rotation_animation_mode", ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION))
+
+
 def mode_animation_settings(mode_key: str) -> tuple[int, int]:
     settings = mode_shared_gameplay_settings(mode_key)
     rotation_key = (

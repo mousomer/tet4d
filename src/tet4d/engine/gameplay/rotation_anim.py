@@ -18,6 +18,12 @@ if TYPE_CHECKING:
 
 CoordF = tuple[float, ...]
 Coord2F = tuple[float, float]
+ROTATION_ANIMATION_MODE_CELLWISE_SLIDING = "cellwise_sliding"
+ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION = "rigid_piece_rotation"
+
+
+def _uses_rigid_piece_rotation(rotation_animation_mode: str) -> bool:
+    return rotation_animation_mode == ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION
 
 
 @dataclass(frozen=True)
@@ -333,6 +339,7 @@ class PieceRotationAnimator2D:
     duration_ms: float = _DEFAULT_ROTATION_DURATION_MS_2D
     translation_duration_ms: float = _DEFAULT_TRANSLATION_DURATION_MS
     gravity_axis: int = 1
+    rotation_animation_mode: str = ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, int], ...] | None = None
     _prev_rel: tuple[CoordF, ...] = tuple()
@@ -383,22 +390,25 @@ class PieceRotationAnimator2D:
             rotation_steps = (curr_rotation - self._prev_rotation) % 4
             if rotation_steps > 2:
                 rotation_steps -= 4
-        rotation_pivot = (
-            self._tween.rotation_pivot
-            if self._tween is not None and self._tween.rigid_rotation
-            else rotation_pivot_2d(
-                tuple((int(round(block[0])), int(round(block[1]))) for block in self._prev_rel)
+        rigid_rotation = _uses_rigid_piece_rotation(self.rotation_animation_mode)
+        rotation_pivot = None
+        if rigid_rotation:
+            rotation_pivot = (
+                self._tween.rotation_pivot
+                if self._tween is not None and self._tween.rigid_rotation
+                else rotation_pivot_2d(
+                    tuple((int(round(block[0])), int(round(block[1]))) for block in self._prev_rel)
+                )
             )
-        )
         self._tween = _build_tween(
             start_rel,
             curr_rel,
             start_pos=start_pos,
             end_pos=curr_pos,
             duration_ms=self.duration_ms,
-            rotation_plane=(0, self.gravity_axis),
-            rotation_steps=rotation_steps,
-            rigid_rotation=True,
+            rotation_plane=(0, self.gravity_axis) if rigid_rotation else None,
+            rotation_steps=rotation_steps if rigid_rotation else 0,
+            rigid_rotation=rigid_rotation,
             rotation_pivot=rotation_pivot,
         )
 
@@ -540,6 +550,7 @@ class PieceRotationAnimatorND:
     gravity_axis: int
     duration_ms: float = _DEFAULT_ROTATION_DURATION_MS_ND
     translation_duration_ms: float = _DEFAULT_TRANSLATION_DURATION_MS
+    rotation_animation_mode: str = ROTATION_ANIMATION_MODE_CELLWISE_SLIDING
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, ...], ...] | None = None
     _prev_rel: tuple[CoordF, ...] = tuple()

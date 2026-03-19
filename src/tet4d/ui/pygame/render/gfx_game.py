@@ -1,6 +1,7 @@
 # tetris_nd/gfx_pygame.py
 
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
@@ -638,6 +639,108 @@ def _draw_cell_float(
         pygame.draw.rect(surface, (255, 255, 255), rect, 2)
 
 
+def _clamp_channel(value: float) -> int:
+    return max(0, min(255, int(round(value))))
+
+
+def _shade_color(
+    color: tuple[int, int, int],
+    *,
+    delta: float = 0.0,
+    scale: float = 1.0,
+) -> tuple[int, int, int]:
+    return tuple(
+        _clamp_channel((channel * scale) + delta) for channel in color
+    )
+
+
+def _draw_styled_piece_cell(
+    surface: pygame.Surface,
+    rect: pygame.Rect,
+    color: tuple[int, int, int],
+) -> None:
+    shadow_rect = rect.move(2, 2)
+    pygame.draw.rect(surface, (0, 0, 0, 70), shadow_rect, border_radius=3)
+    pygame.draw.rect(surface, color, rect, border_radius=3)
+    highlight = _shade_color(color, delta=30.0)
+    bevel = _shade_color(color, scale=0.65)
+    pygame.draw.line(
+        surface,
+        highlight,
+        (rect.left + 2, rect.top + 1),
+        (rect.right - 3, rect.top + 1),
+        2,
+    )
+    pygame.draw.line(
+        surface,
+        highlight,
+        (rect.left + 1, rect.top + 2),
+        (rect.left + 1, rect.bottom - 3),
+        2,
+    )
+    pygame.draw.line(
+        surface,
+        bevel,
+        (rect.left + 2, rect.bottom - 2),
+        (rect.right - 3, rect.bottom - 2),
+        2,
+    )
+    pygame.draw.line(
+        surface,
+        bevel,
+        (rect.right - 2, rect.top + 2),
+        (rect.right - 2, rect.bottom - 3),
+        2,
+    )
+    pygame.draw.rect(surface, (255, 255, 255, 210), rect, 1, border_radius=3)
+
+
+@lru_cache(maxsize=128)
+def _piece_overlay_surface_cached(
+    rel_blocks: tuple[tuple[float, float], ...],
+    pivot: tuple[float, float],
+    color_id: int,
+) -> tuple[pygame.Surface, tuple[float, float]]:
+    pivot_x, pivot_y = pivot
+    shadow_margin = 6
+    max_extent = float(CELL_SIZE)
+    for block_x, block_y in rel_blocks:
+        rel_px_x = (block_x - pivot_x) * CELL_SIZE
+        rel_px_y = (block_y - pivot_y) * CELL_SIZE
+        corners = (
+            (rel_px_x, rel_px_y),
+            (rel_px_x + CELL_SIZE, rel_px_y),
+            (rel_px_x, rel_px_y + CELL_SIZE),
+            (rel_px_x + CELL_SIZE, rel_px_y + CELL_SIZE),
+        )
+        for corner_x, corner_y in corners:
+            max_extent = max(max_extent, abs(corner_x), abs(corner_y))
+    radius = int(round(max_extent + CELL_SIZE + shadow_margin))
+    size = max((CELL_SIZE * 2) + (shadow_margin * 2), (radius * 2) + 4)
+    pivot_center = (size / 2.0, size / 2.0)
+    sprite = pygame.Surface((size, size), pygame.SRCALPHA)
+    color = color_for_cell(color_id)
+    for block_x, block_y in rel_blocks:
+        rect = pygame.Rect(
+            round(pivot_center[0] + ((block_x - pivot_x) * CELL_SIZE) + 1),
+            round(pivot_center[1] + ((block_y - pivot_y) * CELL_SIZE) + 1),
+            CELL_SIZE - 2,
+            CELL_SIZE - 2,
+        )
+        _draw_styled_piece_cell(sprite, rect, color)
+    return sprite, pivot_center
+
+
+def _piece_overlay_surface(
+    overlay: RigidPieceOverlay2D,
+) -> tuple[pygame.Surface, tuple[float, float]]:
+    return _piece_overlay_surface_cached(
+        tuple((float(block_x), float(block_y)) for block_x, block_y in overlay.rel_blocks),
+        (float(overlay.pivot[0]), float(overlay.pivot[1])),
+        int(overlay.color_id),
+    )
+
+
 def _draw_active_piece_cells(
     surface: pygame.Surface,
     state: GameState,
@@ -702,9 +805,9 @@ def _draw_rigid_piece_overlay(
 ) -> None:
     if not overlay.rel_blocks:
         return
-    base_surface = _piece_overlay_surface(overlay)
+    piece_surface, local_pivot = _piece_overlay_surface(overlay)
     rotated_surface = pygame.transform.rotozoom(
-        base_surface,
+        piece_surface,
         float(overlay.angle_deg),
         1.0,
     )
@@ -712,46 +815,17 @@ def _draw_rigid_piece_overlay(
         board_offset[0] + (overlay.pos[0] + overlay.pivot[0]) * CELL_SIZE,
         board_offset[1] + (overlay.pos[1] + overlay.pivot[1]) * CELL_SIZE,
     )
+    unrotated_rect = piece_surface.get_rect(
+        center=(round(pivot_world[0]), round(pivot_world[1]))
+    )
+    pivot_screen = (
+        unrotated_rect.left + float(local_pivot[0]),
+        unrotated_rect.top + float(local_pivot[1]),
+    )
     rotated_rect = rotated_surface.get_rect(
-        center=(
-            round(pivot_world[0]),
-            round(pivot_world[1]),
-        )
+        center=(round(pivot_screen[0]), round(pivot_screen[1]))
     )
     surface.blit(rotated_surface, rotated_rect.topleft)
-
-
-def _piece_overlay_surface(
-    overlay: RigidPieceOverlay2D,
-) -> pygame.Surface:
-    pivot_x, pivot_y = overlay.pivot
-    max_extent = float(CELL_SIZE)
-    for block_x, block_y in overlay.rel_blocks:
-        rel_px_x = (block_x - pivot_x) * CELL_SIZE
-        rel_px_y = (block_y - pivot_y) * CELL_SIZE
-        corners = (
-            (rel_px_x, rel_px_y),
-            (rel_px_x + CELL_SIZE, rel_px_y),
-            (rel_px_x, rel_px_y + CELL_SIZE),
-            (rel_px_x + CELL_SIZE, rel_px_y + CELL_SIZE),
-        )
-        for corner_x, corner_y in corners:
-            max_extent = max(max_extent, abs(corner_x), abs(corner_y))
-    radius = int(round(max_extent + CELL_SIZE))
-    size = max(CELL_SIZE * 2, (radius * 2) + 4)
-    pivot_center = (size / 2.0, size / 2.0)
-    sprite = pygame.Surface((size, size), pygame.SRCALPHA)
-    color = color_for_cell(int(overlay.color_id))
-    for block_x, block_y in overlay.rel_blocks:
-        rect = pygame.Rect(
-            round(pivot_center[0] + ((block_x - pivot_x) * CELL_SIZE) + 1),
-            round(pivot_center[1] + ((block_y - pivot_y) * CELL_SIZE) + 1),
-            CELL_SIZE - 2,
-            CELL_SIZE - 2,
-        )
-        pygame.draw.rect(sprite, color, rect)
-        pygame.draw.rect(sprite, (255, 255, 255), rect, 2)
-    return sprite
 
 
 def draw_board(
