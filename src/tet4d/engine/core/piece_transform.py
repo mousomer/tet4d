@@ -146,6 +146,34 @@ def rotate_point_2d(x: int, y: int, steps_cw: int) -> Coord2D:
 
 
 @lru_cache(maxsize=4096)
+def _rotation_pivot_2d_cached(blocks: Blocks2D) -> tuple[float, float]:
+    if not blocks:
+        return 0.0, 0.0
+    (min_x, min_y), (max_x, max_y) = _block_axis_bounds_cached(blocks)
+    span_x = max_x - min_x
+    span_y = max_y - min_y
+    x_even = (span_x % 2) == 0
+    y_even = (span_y % 2) == 0
+    if x_even == y_even:
+        return (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
+    center_mass_x = sum(x for x, y in blocks) / len(blocks)
+    center_mass_y = sum(y for x, y in blocks) / len(blocks)
+    min_dist_sq = float("inf")
+    pivot_block = blocks[0]
+    for block in blocks:
+        dist_sq = (block[0] - center_mass_x) ** 2 + (block[1] - center_mass_y) ** 2
+        if dist_sq < min_dist_sq:
+            min_dist_sq = dist_sq
+            pivot_block = block
+    return float(pivot_block[0]), float(pivot_block[1])
+
+
+def rotation_pivot_2d(blocks: Iterable[Sequence[int]]) -> tuple[float, float]:
+    coords = _coerce_blocks_2d(blocks)
+    return _rotation_pivot_2d_cached(coords)
+
+
+@lru_cache(maxsize=4096)
 def _rotate_blocks_2d_cached(blocks: Blocks2D, steps_cw: int) -> Blocks2D:
     steps = steps_cw % _QUARTER_TURNS
     if not blocks or steps == 0:
