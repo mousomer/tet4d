@@ -39,8 +39,10 @@ from .settings_hub_model import (
     _NUMERIC_TEXT_MAX_LENGTH,
     _RANDOM_MODE_DEFAULT,
     _RANDOM_MODE_LABELS,
+    _ROTATION_ANIMATION_MODE_DEFAULT,
     _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
     _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
+    _ROTATION_ANIMATION_MODE_VALUES,
     _TOPOLOGY_ADVANCED_DEFAULT,
     _TRANSLATION_ANIMATION_DURATION_DEFAULT,
     _UnifiedSettingsState,
@@ -179,14 +181,15 @@ def _save_unified_settings(
     )
     ok_game_seed, msg_game_seed = save_global_game_seed(int(state.game_seed))
     ok_gameplay_shared, msg_gameplay_shared = save_shared_gameplay_settings(
-        int(state.random_mode_index),
-        int(state.topology_advanced),
-        int(state.kick_level_index),
-        int(state.auto_speedup_enabled),
-        int(state.lines_per_level),
-        int(state.rotation_animation_duration_ms_2d),
-        int(state.rotation_animation_duration_ms_nd),
-        int(state.translation_animation_duration_ms),
+        random_mode_index=int(state.random_mode_index),
+        topology_advanced=int(state.topology_advanced),
+        kick_level_index=int(state.kick_level_index),
+        auto_speedup_enabled=int(state.auto_speedup_enabled),
+        lines_per_level=int(state.lines_per_level),
+        rotation_animation_mode=str(state.rotation_animation_mode),
+        rotation_animation_duration_ms_2d=int(state.rotation_animation_duration_ms_2d),
+        rotation_animation_duration_ms_nd=int(state.rotation_animation_duration_ms_nd),
+        translation_animation_duration_ms=int(state.translation_animation_duration_ms),
     )
     if ok_audio and ok_display and ok_analytics and ok_game_seed and ok_gameplay_shared:
         state.original_audio = _clone_audio_settings(state.audio_settings)
@@ -198,6 +201,7 @@ def _save_unified_settings(
         state.original_kick_level_index = int(state.kick_level_index)
         state.original_auto_speedup_enabled = int(state.auto_speedup_enabled)
         state.original_lines_per_level = int(state.lines_per_level)
+        state.original_rotation_animation_mode = str(state.rotation_animation_mode)
         state.original_rotation_animation_duration_ms_2d = int(
             state.rotation_animation_duration_ms_2d
         )
@@ -239,6 +243,7 @@ def _reset_unified_settings(
     state.kick_level_index = _KICK_LEVEL_DEFAULT
     state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
     state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
+    state.rotation_animation_mode = _ROTATION_ANIMATION_MODE_DEFAULT
     state.rotation_animation_duration_ms_2d = _ROTATION_ANIMATION_DURATION_2D_DEFAULT
     state.rotation_animation_duration_ms_nd = _ROTATION_ANIMATION_DURATION_ND_DEFAULT
     state.translation_animation_duration_ms = _TRANSLATION_ANIMATION_DURATION_DEFAULT
@@ -375,41 +380,38 @@ def _adjust_advanced_gameplay_value(
             delta_sign,
             enter_pressed=enter_pressed,
         )
-    if row_key == "auto_speedup_enabled":
-        if delta_sign == 0 and not enter_pressed:
-            return False
-        state.auto_speedup_enabled = 0 if int(state.auto_speedup_enabled) else 1
-        return True
-    if row_key == "lines_per_level":
-        if delta_sign == 0:
-            return False
-        state.lines_per_level = clamp_lines_per_level(
-            int(state.lines_per_level) + int(delta_sign),
-            default=_LINES_PER_LEVEL_DEFAULT,
-        )
-        return True
-    if row_key == "rotation_animation_duration_ms_2d":
+    duration_defaults = {
+        "rotation_animation_duration_ms_2d": _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
+        "rotation_animation_duration_ms_nd": _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
+        "translation_animation_duration_ms": _TRANSLATION_ANIMATION_DURATION_DEFAULT,
+    }
+    if row_key in duration_defaults:
         return _adjust_animation_duration_value(
             state,
-            "rotation_animation_duration_ms_2d",
+            row_key,
             delta_sign,
-            default_value=_ROTATION_ANIMATION_DURATION_2D_DEFAULT,
+            default_value=int(duration_defaults[row_key]),
         )
-    if row_key == "rotation_animation_duration_ms_nd":
-        return _adjust_animation_duration_value(
+    handlers = {
+        "auto_speedup_enabled": lambda: _toggle_advanced_auto_speedup(
             state,
-            "rotation_animation_duration_ms_nd",
-            delta_sign,
-            default_value=_ROTATION_ANIMATION_DURATION_ND_DEFAULT,
-        )
-    if row_key == "translation_animation_duration_ms":
-        return _adjust_animation_duration_value(
+            delta_sign=delta_sign,
+            enter_pressed=enter_pressed,
+        ),
+        "lines_per_level": lambda: _adjust_advanced_lines_per_level(
             state,
-            "translation_animation_duration_ms",
-            delta_sign,
-            default_value=_TRANSLATION_ANIMATION_DURATION_DEFAULT,
-        )
-    return False
+            delta_sign=delta_sign,
+        ),
+        "rotation_animation_mode": lambda: _adjust_rotation_animation_mode_value(
+            state,
+            delta_sign=delta_sign,
+            enter_pressed=enter_pressed,
+        ),
+    }
+    handler = handlers.get(row_key)
+    if handler is None:
+        return False
+    return bool(handler())
 
 
 def _adjust_kick_level_index(
@@ -428,6 +430,52 @@ def _adjust_kick_level_index(
     else:
         next_index = int(state.kick_level_index) + int(delta_sign)
     state.kick_level_index = max(0, min(max_index, next_index))
+    return True
+
+
+def _toggle_advanced_auto_speedup(
+    state: _UnifiedSettingsState,
+    *,
+    delta_sign: int,
+    enter_pressed: bool,
+) -> bool:
+    if delta_sign == 0 and not enter_pressed:
+        return False
+    state.auto_speedup_enabled = 0 if int(state.auto_speedup_enabled) else 1
+    return True
+
+
+def _adjust_advanced_lines_per_level(
+    state: _UnifiedSettingsState,
+    *,
+    delta_sign: int,
+) -> bool:
+    if delta_sign == 0:
+        return False
+    state.lines_per_level = clamp_lines_per_level(
+        int(state.lines_per_level) + int(delta_sign),
+        default=_LINES_PER_LEVEL_DEFAULT,
+    )
+    return True
+
+
+def _adjust_rotation_animation_mode_value(
+    state: _UnifiedSettingsState,
+    *,
+    delta_sign: int,
+    enter_pressed: bool,
+) -> bool:
+    if delta_sign == 0 and not enter_pressed:
+        return False
+    current_mode = str(state.rotation_animation_mode)
+    try:
+        current_index = _ROTATION_ANIMATION_MODE_VALUES.index(current_mode)
+    except ValueError:
+        current_index = 0
+    step = 1 if delta_sign == 0 else int(delta_sign)
+    state.rotation_animation_mode = _ROTATION_ANIMATION_MODE_VALUES[
+        (current_index + step) % len(_ROTATION_ANIMATION_MODE_VALUES)
+    ]
     return True
 
 

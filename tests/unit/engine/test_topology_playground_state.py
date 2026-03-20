@@ -16,8 +16,13 @@ from tet4d.engine.runtime.topology_playground_state import (
     PRESET_SOURCE_DESIGNER,
     PRESET_SOURCE_EXPLORER,
     TOOL_PROBE,
+    TOOL_SANDBOX,
+    TOOL_PLAY,
     TRANSPORT_OWNER_EXPLORER,
     TRANSPORT_OWNER_LEGACY,
+    WORKSPACE_EDITOR,
+    WORKSPACE_PLAY,
+    WORKSPACE_SANDBOX,
     TopologyPlaygroundGluingDraft,
     TopologyPlaygroundGravityMode,
     TopologyPlaygroundLaunchSettings,
@@ -35,6 +40,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundState,
     TopologyPlaygroundTopologyConfig,
     default_topology_playground_state,
+    workspace_for_tool,
 )
 from tet4d.engine.topology_explorer import (
     BoundaryRef,
@@ -199,14 +205,34 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertIsInstance(canonical, TopologyPlaygroundCanonicalOwnershipState)
         self.assertEqual(canonical.axis_sizes, (6, 12, 6))
         self.assertIsInstance(editor, TopologyPlaygroundEditorOwnershipState)
+        self.assertEqual(editor.workspace, WORKSPACE_EDITOR)
         self.assertEqual(editor.active_tool, TOOL_PROBE)
         self.assertIsInstance(inspector, TopologyPlaygroundInspectorOwnershipState)
         self.assertIs(inspector.probe_state, state.probe_state)
         self.assertIsInstance(sandbox, TopologyPlaygroundSandboxOwnershipState)
+        self.assertEqual(sandbox.workspace, WORKSPACE_SANDBOX)
         self.assertIs(sandbox.sandbox_piece_state, state.sandbox_piece_state)
         self.assertIsInstance(derived, TopologyPlaygroundDerivedOwnershipState)
         self.assertIs(derived.transport_policy, state.transport_policy)
         self.assertIs(derived.gravity_mode, state.gravity_mode)
+
+    def test_workspace_model_maps_legacy_tools_into_editor_sandbox_play(self) -> None:
+        self.assertEqual(workspace_for_tool(TOOL_PROBE), WORKSPACE_EDITOR)
+        self.assertEqual(workspace_for_tool("inspect_boundary"), WORKSPACE_EDITOR)
+        self.assertEqual(workspace_for_tool(TOOL_SANDBOX), WORKSPACE_SANDBOX)
+        self.assertEqual(workspace_for_tool(TOOL_PLAY), WORKSPACE_PLAY)
+
+    def test_active_workspace_property_tracks_canonical_workspace_model(self) -> None:
+        state = default_topology_playground_state(
+            dimension=3,
+            axis_sizes=(6, 12, 6),
+            active_tool=TOOL_PROBE,
+        )
+        self.assertEqual(state.active_workspace, WORKSPACE_EDITOR)
+        state.active_tool = TOOL_SANDBOX
+        self.assertEqual(state.active_workspace, WORKSPACE_SANDBOX)
+        state.active_tool = TOOL_PLAY
+        self.assertEqual(state.active_workspace, WORKSPACE_PLAY)
 
     def test_probe_state_preserves_unavailable_inspect_state(self) -> None:
         legacy_profile = default_topology_profile_state(

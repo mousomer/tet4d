@@ -16,8 +16,8 @@ def apply_action_2d(state: GameState2DLike, action: Action) -> bool:
         Action.MOVE_LEFT: lambda: state.try_move(-1, 0),
         Action.MOVE_RIGHT: lambda: state.try_move(1, 0),
         Action.SOFT_DROP: lambda: state.try_move(0, 1),
-        Action.ROTATE_CW: lambda: state.try_rotate(+1),
-        Action.ROTATE_CCW: lambda: state.try_rotate(-1),
+        Action.ROTATE_POSITIVE: lambda: state.try_rotate(+1),
+        Action.ROTATE_NEGATIVE: lambda: state.try_rotate(-1),
     }
     handler = action_handlers.get(action)
     if handler is not None:

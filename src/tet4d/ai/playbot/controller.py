@@ -118,7 +118,7 @@ def _rotation_neighbors(
                     blocks,
                     axis_a=axis_a,
                     axis_b=axis_b,
-                    steps_cw=delta,
+                    quarter_turns=delta,
                 )
             )
             yield rotated, (axis_a, axis_b, delta)

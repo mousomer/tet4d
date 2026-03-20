@@ -1,7 +1,5 @@
-# tetris_nd/gfx_pygame.py
-
+import math
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
@@ -12,7 +10,6 @@ from tet4d.engine.gameplay.api import (
 )
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.rotation_anim import RigidPieceOverlay2D
-from tet4d.engine.gameplay.topology import TOPOLOGY_BOUNDED
 from tet4d.engine.runtime.menu_config import ui_copy_section
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode
@@ -617,28 +614,6 @@ def _draw_locked_cells(
     surface.blit(overlay, (ox, oy))
 
 
-def _draw_cell_float(
-    surface: pygame.Surface,
-    x: float,
-    y: float,
-    cell_id: int,
-    board_offset: tuple[int, int],
-    *,
-    outline: bool,
-) -> None:
-    ox, oy = board_offset
-    rect = pygame.Rect(
-        round(ox + x * CELL_SIZE + 1),
-        round(oy + y * CELL_SIZE + 1),
-        CELL_SIZE - 2,
-        CELL_SIZE - 2,
-    )
-    color = color_for_cell(cell_id)
-    pygame.draw.rect(surface, color, rect)
-    if outline:
-        pygame.draw.rect(surface, (255, 255, 255), rect, 2)
-
-
 def _clamp_channel(value: float) -> int:
     return max(0, min(255, int(round(value))))
 
@@ -654,91 +629,295 @@ def _shade_color(
     )
 
 
-def _draw_styled_piece_cell(
+def _rotated_cell_quad_points(
+    *,
+    center_cell: tuple[float, float],
+    angle_deg: float,
+) -> tuple[tuple[float, float], ...]:
+    half_extent = float(CELL_SIZE - 2) / (2.0 * float(CELL_SIZE))
+    angle_rad = math.radians(float(angle_deg))
+    cos_t = math.cos(angle_rad)
+    sin_t = math.sin(angle_rad)
+    cx, cy = center_cell
+    points: list[tuple[float, float]] = []
+    for local_x, local_y in (
+        (-half_extent, -half_extent),
+        (half_extent, -half_extent),
+        (half_extent, half_extent),
+        (-half_extent, half_extent),
+    ):
+        points.append(
+            (
+                cx + (local_x * cos_t) - (local_y * sin_t),
+                cy + (local_x * sin_t) + (local_y * cos_t),
+            )
+        )
+    return tuple(points)
+
+
+def _polygon_area(points: Sequence[tuple[float, float]]) -> float:
+    if len(points) < 3:
+        return 0.0
+    area = 0.0
+    for idx, (x0, y0) in enumerate(points):
+        x1, y1 = points[(idx + 1) % len(points)]
+        area += (x0 * y1) - (x1 * y0)
+    return area / 2.0
+
+
+def _line_rect_intersection(
+    point_a: tuple[float, float],
+    point_b: tuple[float, float],
+    *,
+    axis: int,
+    boundary: float,
+) -> tuple[float, float]:
+    delta = point_b[axis] - point_a[axis]
+    if abs(delta) <= 1e-9:
+        result = list(point_a)
+        result[axis] = boundary
+        return (float(result[0]), float(result[1]))
+    t = (boundary - point_a[axis]) / delta
+    return (
+        float(point_a[0] + ((point_b[0] - point_a[0]) * t)),
+        float(point_a[1] + ((point_b[1] - point_a[1]) * t)),
+    )
+
+
+def _clip_polygon_against_edge(
+    points: Sequence[tuple[float, float]],
+    *,
+    is_inside,
+    intersection,
+) -> tuple[tuple[float, float], ...]:
+    if not points:
+        return tuple()
+    output: list[tuple[float, float]] = []
+    prev = tuple(points[-1])
+    prev_inside = bool(is_inside(prev))
+    for current in points:
+        current_pt = tuple(current)
+        current_inside = bool(is_inside(current_pt))
+        if current_inside:
+            if not prev_inside:
+                output.append(tuple(intersection(prev, current_pt)))
+            output.append(current_pt)
+        elif prev_inside:
+            output.append(tuple(intersection(prev, current_pt)))
+        prev = current_pt
+        prev_inside = current_inside
+    return tuple(output)
+
+
+def _clip_polygon_to_rect(
+    points: Sequence[tuple[float, float]],
+    *,
+    xmin: float,
+    xmax: float,
+    ymin: float,
+    ymax: float,
+) -> tuple[tuple[float, float], ...]:
+    clipped = tuple(tuple(point) for point in points)
+    clipped = _clip_polygon_against_edge(
+        clipped,
+        is_inside=lambda point: point[0] >= xmin - 1e-9,
+        intersection=lambda a, b: _line_rect_intersection(a, b, axis=0, boundary=xmin),
+    )
+    clipped = _clip_polygon_against_edge(
+        clipped,
+        is_inside=lambda point: point[0] <= xmax + 1e-9,
+        intersection=lambda a, b: _line_rect_intersection(a, b, axis=0, boundary=xmax),
+    )
+    clipped = _clip_polygon_against_edge(
+        clipped,
+        is_inside=lambda point: point[1] >= ymin - 1e-9,
+        intersection=lambda a, b: _line_rect_intersection(a, b, axis=1, boundary=ymin),
+    )
+    clipped = _clip_polygon_against_edge(
+        clipped,
+        is_inside=lambda point: point[1] <= ymax + 1e-9,
+        intersection=lambda a, b: _line_rect_intersection(a, b, axis=1, boundary=ymax),
+    )
+    if len(clipped) < 3 or abs(_polygon_area(clipped)) <= 1e-9:
+        return tuple()
+    return clipped
+
+
+def _overlay_axis_offsets_2d(
+    state: GameState,
+    *,
+    axis: int,
+) -> tuple[float, ...]:
+    policy = state.topology_policy
+    edge_rules = policy.edge_rules or tuple()
+    if axis >= len(policy.dims) or axis >= len(edge_rules):
+        return (0.0,)
+    neg_behavior, pos_behavior = edge_rules[axis]
+    if neg_behavior == "bounded" and pos_behavior == "bounded":
+        return (0.0,)
+    size = float(policy.dims[axis])
+    return (-size, 0.0, size)
+
+
+def _map_fragment_polygon_2d(
+    state: GameState,
+    points: Sequence[tuple[float, float]],
+) -> tuple[tuple[float, float], ...]:
+    if (
+        state.config.exploration_mode
+        and state.config.explorer_topology_profile is not None
+    ):
+        return tuple((float(x), float(y)) for x, y in points)
+    return tuple(
+        tuple(float(value) for value in coord)
+        for coord in map_overlay_cells_gameplay(
+            state.topology_policy,
+            points,
+            allow_above_gravity=False,
+        )
+    )
+
+
+def _localize_fragment_axis_2d(
+    *,
+    original_value: float,
+    mapped_value: float,
+    offset: float,
+    size: float,
+    wraps: bool,
+) -> float:
+    if not wraps:
+        return float(mapped_value - offset)
+    candidates = [float(mapped_value + (size * step)) for step in (-2, -1, 0, 1, 2)]
+    best = min(candidates, key=lambda candidate: abs(candidate - original_value))
+    return float(best - offset)
+
+
+def _localize_mapped_fragment_2d(
+    state: GameState,
+    *,
+    original_points: Sequence[tuple[float, float]],
+    mapped_points: Sequence[tuple[float, float]],
+    offset_x: float,
+    offset_y: float,
+) -> tuple[tuple[float, float], ...]:
+    edge_rules = state.topology_policy.edge_rules or tuple()
+    wraps_x = len(edge_rules) > 0 and (
+        edge_rules[0][0] != "bounded" or edge_rules[0][1] != "bounded"
+    )
+    wraps_y = len(edge_rules) > 1 and (
+        edge_rules[1][0] != "bounded" or edge_rules[1][1] != "bounded"
+    )
+    size_x = float(state.topology_policy.dims[0])
+    size_y = float(state.topology_policy.dims[1])
+    localized: list[tuple[float, float]] = []
+    for (orig_x, orig_y), (mapped_x, mapped_y) in zip(original_points, mapped_points):
+        localized.append(
+            (
+                _localize_fragment_axis_2d(
+                    original_value=float(orig_x),
+                    mapped_value=float(mapped_x),
+                    offset=float(offset_x),
+                    size=size_x,
+                    wraps=wraps_x,
+                ),
+                _localize_fragment_axis_2d(
+                    original_value=float(orig_y),
+                    mapped_value=float(mapped_y),
+                    offset=float(offset_y),
+                    size=size_y,
+                    wraps=wraps_y,
+                ),
+            )
+        )
+    return tuple(localized)
+
+
+def _to_screen_points_2d(
+    board_offset: tuple[int, int],
+    points: Sequence[tuple[float, float]],
+) -> tuple[tuple[float, float], ...]:
+    ox, oy = board_offset
+    return tuple(
+        (
+            float(ox) + (float(x) * CELL_SIZE),
+            float(oy) + (float(y) * CELL_SIZE),
+        )
+        for x, y in points
+    )
+
+
+def _draw_styled_piece_quad(
     surface: pygame.Surface,
-    rect: pygame.Rect,
+    points: tuple[tuple[float, float], ...],
     color: tuple[int, int, int],
 ) -> None:
-    shadow_rect = rect.move(2, 2)
-    pygame.draw.rect(surface, (0, 0, 0, 70), shadow_rect, border_radius=3)
-    pygame.draw.rect(surface, color, rect, border_radius=3)
+    if len(points) < 3:
+        return
+    shadow_points = tuple((x + 2.0, y + 2.0) for x, y in points)
+    pygame.draw.polygon(surface, (0, 0, 0, 70), shadow_points)
+    pygame.draw.polygon(surface, color, points)
+    if len(points) != 4:
+        pygame.draw.polygon(surface, (255, 255, 255, 210), points, 1)
+        return
     highlight = _shade_color(color, delta=30.0)
     bevel = _shade_color(color, scale=0.65)
-    pygame.draw.line(
-        surface,
-        highlight,
-        (rect.left + 2, rect.top + 1),
-        (rect.right - 3, rect.top + 1),
-        2,
-    )
-    pygame.draw.line(
-        surface,
-        highlight,
-        (rect.left + 1, rect.top + 2),
-        (rect.left + 1, rect.bottom - 3),
-        2,
-    )
-    pygame.draw.line(
-        surface,
-        bevel,
-        (rect.left + 2, rect.bottom - 2),
-        (rect.right - 3, rect.bottom - 2),
-        2,
-    )
-    pygame.draw.line(
-        surface,
-        bevel,
-        (rect.right - 2, rect.top + 2),
-        (rect.right - 2, rect.bottom - 3),
-        2,
-    )
-    pygame.draw.rect(surface, (255, 255, 255, 210), rect, 1, border_radius=3)
+    pygame.draw.line(surface, highlight, points[0], points[1], 2)
+    pygame.draw.line(surface, highlight, points[0], points[3], 2)
+    pygame.draw.line(surface, bevel, points[3], points[2], 2)
+    pygame.draw.line(surface, bevel, points[1], points[2], 2)
+    pygame.draw.polygon(surface, (255, 255, 255, 210), points, 1)
 
 
-@lru_cache(maxsize=128)
-def _piece_overlay_surface_cached(
-    rel_blocks: tuple[tuple[float, float], ...],
-    pivot: tuple[float, float],
+def _draw_overlay_cell_boxes_2d(
+    surface: pygame.Surface,
+    state: GameState,
+    cells: Sequence[tuple[float, float]],
     color_id: int,
-) -> tuple[pygame.Surface, tuple[float, float]]:
-    pivot_x, pivot_y = pivot
-    shadow_margin = 6
-    max_extent = float(CELL_SIZE)
-    for block_x, block_y in rel_blocks:
-        rel_px_x = (block_x - pivot_x) * CELL_SIZE
-        rel_px_y = (block_y - pivot_y) * CELL_SIZE
-        corners = (
-            (rel_px_x, rel_px_y),
-            (rel_px_x + CELL_SIZE, rel_px_y),
-            (rel_px_x, rel_px_y + CELL_SIZE),
-            (rel_px_x + CELL_SIZE, rel_px_y + CELL_SIZE),
+    board_offset: tuple[int, int],
+    *,
+    width_cells: int,
+    height_cells: int,
+    angle_deg: float,
+) -> None:
+    if not cells:
+        return
+    color = color_for_cell(int(color_id))
+    x_offsets = _overlay_axis_offsets_2d(state, axis=0)
+    y_offsets = _overlay_axis_offsets_2d(state, axis=1)
+    for x, y in cells:
+        raw_quad = _rotated_cell_quad_points(
+            center_cell=(float(x) + 0.5, float(y) + 0.5),
+            angle_deg=float(angle_deg),
         )
-        for corner_x, corner_y in corners:
-            max_extent = max(max_extent, abs(corner_x), abs(corner_y))
-    radius = int(round(max_extent + CELL_SIZE + shadow_margin))
-    size = max((CELL_SIZE * 2) + (shadow_margin * 2), (radius * 2) + 4)
-    pivot_center = (size / 2.0, size / 2.0)
-    sprite = pygame.Surface((size, size), pygame.SRCALPHA)
-    color = color_for_cell(color_id)
-    for block_x, block_y in rel_blocks:
-        rect = pygame.Rect(
-            round(pivot_center[0] + ((block_x - pivot_x) * CELL_SIZE) + 1),
-            round(pivot_center[1] + ((block_y - pivot_y) * CELL_SIZE) + 1),
-            CELL_SIZE - 2,
-            CELL_SIZE - 2,
-        )
-        _draw_styled_piece_cell(sprite, rect, color)
-    return sprite, pivot_center
-
-
-def _piece_overlay_surface(
-    overlay: RigidPieceOverlay2D,
-) -> tuple[pygame.Surface, tuple[float, float]]:
-    return _piece_overlay_surface_cached(
-        tuple((float(block_x), float(block_y)) for block_x, block_y in overlay.rel_blocks),
-        (float(overlay.pivot[0]), float(overlay.pivot[1])),
-        int(overlay.color_id),
-    )
+        for offset_x in x_offsets:
+            for offset_y in y_offsets:
+                clipped = _clip_polygon_to_rect(
+                    raw_quad,
+                    xmin=float(offset_x),
+                    xmax=float(offset_x + width_cells),
+                    ymin=float(offset_y),
+                    ymax=float(offset_y + height_cells),
+                )
+                if not clipped:
+                    continue
+                mapped = _map_fragment_polygon_2d(state, clipped)
+                if len(mapped) < 3 or abs(_polygon_area(mapped)) <= 1e-9:
+                    continue
+                localized = _localize_mapped_fragment_2d(
+                    state,
+                    original_points=clipped,
+                    mapped_points=mapped,
+                    offset_x=float(offset_x),
+                    offset_y=float(offset_y),
+                )
+                if abs(_polygon_area(localized)) <= 1e-9:
+                    continue
+                _draw_styled_piece_quad(
+                    surface,
+                    _to_screen_points_2d(board_offset, localized),
+                    color,
+                )
 
 
 def _draw_active_piece_cells(
@@ -751,35 +930,27 @@ def _draw_active_piece_cells(
     overlay: ActiveOverlay2D | None,
 ) -> None:
     if isinstance(overlay, RigidPieceOverlay2D):
-        if _can_draw_rigid_overlay_2d(state):
-            _draw_rigid_piece_overlay(surface, overlay, board_offset)
-            return
-        overlay = (overlay.cells, overlay.color_id)
+        _draw_rigid_piece_overlay(
+            surface,
+            state,
+            overlay,
+            board_offset,
+            width_cells=width_cells,
+            height_cells=height_cells,
+        )
+        return
     if overlay is not None:
         raw_cells, color_id = overlay
-        if (
-            state.config.exploration_mode
-            and state.config.explorer_topology_profile is not None
-        ):
-            mapped_overlay = tuple(
-                tuple(float(value) for value in coord) for coord in raw_cells
-            )
-        else:
-            mapped_overlay = map_overlay_cells_gameplay(
-                state.topology_policy,
-                raw_cells,
-                allow_above_gravity=False,
-            )
-        for x, y in mapped_overlay:
-            if 0.0 <= x < width_cells and 0.0 <= y < height_cells:
-                _draw_cell_float(
-                    surface,
-                    x,
-                    y,
-                    color_id,
-                    board_offset,
-                    outline=True,
-                )
+        _draw_overlay_cell_boxes_2d(
+            surface,
+            state,
+            raw_cells,
+            color_id,
+            board_offset,
+            width_cells=width_cells,
+            height_cells=height_cells,
+            angle_deg=0.0,
+        )
         return
 
     if state.current_piece is None:
@@ -790,42 +961,25 @@ def _draw_active_piece_cells(
             _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
 
 
-def _can_draw_rigid_overlay_2d(state: GameState) -> bool:
-    if getattr(state.config, "exploration_mode", False):
-        return False
-    if getattr(state.config, "explorer_topology_profile", None) is not None:
-        return False
-    return getattr(state.config, "topology_mode", TOPOLOGY_BOUNDED) == TOPOLOGY_BOUNDED
-
-
 def _draw_rigid_piece_overlay(
     surface: pygame.Surface,
+    state: GameState,
     overlay: RigidPieceOverlay2D,
     board_offset: tuple[int, int],
+    *,
+    width_cells: int,
+    height_cells: int,
 ) -> None:
-    if not overlay.rel_blocks:
-        return
-    piece_surface, local_pivot = _piece_overlay_surface(overlay)
-    rotated_surface = pygame.transform.rotozoom(
-        piece_surface,
-        float(overlay.angle_deg),
-        1.0,
+    _draw_overlay_cell_boxes_2d(
+        surface,
+        state,
+        overlay.cells,
+        overlay.color_id,
+        board_offset,
+        width_cells=width_cells,
+        height_cells=height_cells,
+        angle_deg=float(overlay.angle_deg),
     )
-    pivot_world = (
-        board_offset[0] + (overlay.pos[0] + overlay.pivot[0]) * CELL_SIZE,
-        board_offset[1] + (overlay.pos[1] + overlay.pivot[1]) * CELL_SIZE,
-    )
-    unrotated_rect = piece_surface.get_rect(
-        center=(round(pivot_world[0]), round(pivot_world[1]))
-    )
-    pivot_screen = (
-        unrotated_rect.left + float(local_pivot[0]),
-        unrotated_rect.top + float(local_pivot[1]),
-    )
-    rotated_rect = rotated_surface.get_rect(
-        center=(round(pivot_screen[0]), round(pivot_screen[1]))
-    )
-    surface.blit(rotated_surface, rotated_rect.topleft)
 
 
 def draw_board(

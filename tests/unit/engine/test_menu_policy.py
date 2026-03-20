@@ -269,6 +269,8 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertGreaterEqual(len(labels["game_random_mode"]), 2)
         self.assertIn("game_kick_level", labels)
         self.assertGreaterEqual(len(labels["game_kick_level"]), 2)
+        self.assertIn("game_rotation_animation_mode", labels)
+        self.assertEqual(len(labels["game_rotation_animation_mode"]), 2)
 
     def test_build_unified_settings_state_uses_persisted_analytics_state(self) -> None:
         with (
@@ -349,6 +351,7 @@ class TestMenuPolicy(unittest.TestCase):
 
     def test_unified_gameplay_summary_includes_animation_durations(self) -> None:
         state = SimpleNamespace(
+            rotation_animation_mode="rigid_piece_rotation",
             kick_level_index=2,
             auto_speedup_enabled=1,
             lines_per_level=14,
@@ -359,6 +362,7 @@ class TestMenuPolicy(unittest.TestCase):
             text_mode_buffer="",
         )
         summary = settings_hub_model._unified_value_text(state, "gameplay_advanced")
+        self.assertIn("Rigid piece rotation", summary)
         self.assertIn("Standard", summary)
         self.assertIn("rot2d 300 ms", summary)
         self.assertIn("rotnd 340 ms", summary)
@@ -375,6 +379,7 @@ class TestMenuPolicy(unittest.TestCase):
             kick_level_index=2,
             auto_speedup_enabled=0,
             lines_per_level=22,
+            rotation_animation_mode="cellwise_sliding",
             rotation_animation_duration_ms_2d=40,
             rotation_animation_duration_ms_nd=60,
             translation_animation_duration_ms=60,
@@ -413,12 +418,17 @@ class TestMenuPolicy(unittest.TestCase):
             state.translation_animation_duration_ms,
             settings_hub_model._TRANSLATION_ANIMATION_DURATION_DEFAULT,
         )
+        self.assertEqual(
+            state.rotation_animation_mode,
+            settings_hub_model._ROTATION_ANIMATION_MODE_DEFAULT,
+        )
 
     def test_advanced_gameplay_adjusts_animation_rows(self) -> None:
         state = SimpleNamespace(
             kick_level_index=0,
             auto_speedup_enabled=1,
             lines_per_level=10,
+            rotation_animation_mode="rigid_piece_rotation",
             rotation_animation_duration_ms_2d=300,
             rotation_animation_duration_ms_nd=340,
             translation_animation_duration_ms=120,
@@ -450,3 +460,11 @@ class TestMenuPolicy(unittest.TestCase):
             )
         )
         self.assertEqual(state.translation_animation_duration_ms, 140)
+        self.assertTrue(
+            settings_hub_actions._adjust_advanced_gameplay_value(
+                state,
+                "rotation_animation_mode",
+                1,
+            )
+        )
+        self.assertEqual(state.rotation_animation_mode, "cellwise_sliding")

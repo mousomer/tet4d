@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,7 @@ from ..core.piece_transform import (
     canonicalize_blocks_2d,
     canonicalize_blocks_nd,
     rotation_pivot_2d,
+    rotate_point_2d,
     rotate_blocks_2d,
 )
 from ..runtime.project_config import project_constant_float
@@ -30,9 +32,6 @@ def _uses_rigid_piece_rotation(rotation_animation_mode: str) -> bool:
 class RigidPieceOverlay2D:
     cells: tuple[Coord2F, ...]
     color_id: int
-    rel_blocks: tuple[Coord2F, ...]
-    pos: Coord2F
-    pivot: Coord2F
     angle_deg: float
 _DEFAULT_ROTATION_DURATION_MS_2D = project_constant_float(
     ("animation", "piece_rotation_duration_ms_2d"),
@@ -58,6 +57,17 @@ _DEFAULT_TRANSLATION_DURATION_MS = project_constant_float(
 def _smoothstep01(t: float) -> float:
     clamped = max(0.0, min(1.0, float(t)))
     return clamped * clamped * (3.0 - (2.0 * clamped))
+
+
+def _screen_full_turn_angle_deg(rotation_steps: int) -> float:
+    basis_x, basis_y = rotate_point_2d(1, 0, quarter_turns=rotation_steps)
+    return math.degrees(math.atan2(float(basis_y), float(basis_x)))
+
+
+def _screen_rotation_angle_deg(rotation_steps: int, progress: float) -> float:
+    # Derive visual angle from the discrete transform contract instead of a
+    # separate sign convention so rigid render motion cannot drift.
+    return _screen_full_turn_angle_deg(rotation_steps) * _smoothstep01(progress)
 
 
 def _distance_sq(a: CoordF, b: CoordF) -> float:
@@ -135,8 +145,6 @@ class _RotationTween:
         - Odd×Odd or Even×Even: rotate around geometric center
         - Even×Odd or Odd×Even: rotate around block closest to center of mass
         """
-        import math
-
         eased = _smoothstep01(self.progress)
         axis_a, axis_b = self.rotation_plane  # type: ignore
 
@@ -213,8 +221,6 @@ class _RotationTween:
         return tuple(result)
 
     def _interpolated_rel_rigid_rotation(self) -> tuple[CoordF, ...]:
-        import math
-
         if self.rotation_plane is None:
             return self._interpolated_rel_linear()
         axis_a, axis_b = self.rotation_plane
@@ -225,16 +231,9 @@ class _RotationTween:
         reference_idx = self._reference_rotation_index(axis_a, axis_b, pivot_a, pivot_b)
         if reference_idx is None:
             return self._interpolated_rel_linear()
-        start_block = self.start_rel[reference_idx]
-        end_block = self.end_rel[reference_idx]
-        start_angle = math.atan2(start_block[axis_b] - pivot_b, start_block[axis_a] - pivot_a)
-        end_angle = math.atan2(end_block[axis_b] - pivot_b, end_block[axis_a] - pivot_a)
-        angle_diff = end_angle - start_angle
-        if angle_diff > math.pi:
-            angle_diff -= 2 * math.pi
-        elif angle_diff < -math.pi:
-            angle_diff += 2 * math.pi
-        current_angle = angle_diff * _smoothstep01(self.progress)
+        current_angle = math.radians(
+            _screen_rotation_angle_deg(self.rotation_steps, self.progress)
+        )
         cos_theta = math.cos(current_angle)
         sin_theta = math.sin(current_angle)
         result: list[CoordF] = []
@@ -274,7 +273,7 @@ class _RotationTween:
     def interpolated_rotation_deg(self) -> float:
         if not self.rigid_rotation:
             return 0.0
-        return 90.0 * float(self.rotation_steps) * _smoothstep01(self.progress)
+        return _screen_rotation_angle_deg(self.rotation_steps, self.progress)
 
 
 def _visible_along_gravity(cells: tuple[CoordF, ...], gravity_axis: int) -> bool:
@@ -525,21 +524,11 @@ class PieceRotationAnimator2D:
             or overlay is None
             or self._tween is None
             or not self._tween.rigid_rotation
-            or self._tween.rotation_pivot is None
         ):
-            return overlay
-        rel_blocks = tuple(
-            (float(block[0]), float(block[1])) for block in self._tween.start_rel
-        )
-        pos = tuple(float(value) for value in self._tween.interpolated_pos())
-        if len(pos) != 2:
             return overlay
         return RigidPieceOverlay2D(
             cells=overlay[0],
             color_id=int(piece.shape.color_id),
-            rel_blocks=rel_blocks,
-            pos=(pos[0], pos[1]),
-            pivot=self._tween.rotation_pivot,
             angle_deg=self._tween.interpolated_rotation_deg(),
         )
 

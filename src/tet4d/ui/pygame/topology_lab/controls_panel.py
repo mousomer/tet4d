@@ -926,6 +926,7 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
                 _RowSpec("piece_set", "Piece Set"),
                 _RowSpec("speed_level", "Speed"),
                 _RowSpec("rigid_play_mode", "Play Transport"),
+                _RowSpec("sandbox_neighbor_search", "Sandbox Neighbor Search"),
                 _RowSpec("explorer_preset", "Explorer Preset"),
                 _RowSpec("playability_summary", "Topology Status"),
                 _RowSpec("playability_validity", "Validity"),
@@ -1019,6 +1020,41 @@ def _explorer_piece_set_label(state: _TopologyLabState) -> str:
     if state.dimension == 2:
         return piece_set_2d_label_gameplay(piece_set_id)
     return piece_set_label_gameplay(piece_set_id)
+
+
+def _sandbox_neighbor_search_enabled(state: _TopologyLabState) -> bool:
+    ensure_piece_sandbox(state)
+    assert state.sandbox is not None
+    return bool(state.sandbox.neighbor_search_enabled)
+
+
+def _sandbox_neighbor_search_value_text(state: _TopologyLabState) -> str:
+    return "On" if _sandbox_neighbor_search_enabled(state) else "Off"
+
+
+def _set_sandbox_neighbor_search_enabled(
+    state: _TopologyLabState,
+    *,
+    enabled: bool,
+) -> None:
+    ensure_piece_sandbox(state)
+    assert state.sandbox is not None
+    state.sandbox.neighbor_search_enabled = bool(enabled)
+    if canonical_playground_state(state) is not None:
+        sync_canonical_playground_state(state)
+    _set_status(
+        state,
+        "Sandbox neighbor-search enabled"
+        if enabled
+        else "Sandbox neighbor-search disabled",
+    )
+
+
+def _toggle_sandbox_neighbor_search(state: _TopologyLabState) -> None:
+    _set_sandbox_neighbor_search_enabled(
+        state,
+        enabled=not _sandbox_neighbor_search_enabled(state),
+    )
 
 
 def _set_explorer_piece_set_index(state: _TopologyLabState, step: int) -> None:
@@ -1145,6 +1181,7 @@ _EXPLORER_SCALAR_ROW_VALUE_GETTERS = {
     "piece_set": _explorer_piece_set_label,
     "speed_level": lambda state: str(_ensure_play_settings(state).speed_level),
     "rigid_play_mode": _rigid_play_mode_value_text,
+    "sandbox_neighbor_search": _sandbox_neighbor_search_value_text,
     "explorer_preset": _explorer_preset_value_text,
     "playability_summary": _playability_summary_value_text,
     "playability_validity": _playability_validity_value_text,
@@ -1771,6 +1808,9 @@ def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -
         return True
     if key == "rigid_play_mode":
         _set_explorer_rigid_play_mode(state, step)
+        return True
+    if key == "sandbox_neighbor_search":
+        _toggle_sandbox_neighbor_search(state)
         return True
     if key == "explorer_glue":
         _set_explorer_draft_slot(state, step)

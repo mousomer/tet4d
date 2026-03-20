@@ -9,9 +9,11 @@ class Action(Enum):
     MOVE_RIGHT = auto()
     SOFT_DROP = auto()
     HARD_DROP = auto()
-    ROTATE_CW = auto()
-    ROTATE_CCW = auto()
+    ROTATE_POSITIVE = auto()
+    ROTATE_NEGATIVE = auto()
     NONE = auto()  # no user input, just gravity tick
+    ROTATE_CW = ROTATE_POSITIVE
+    ROTATE_CCW = ROTATE_NEGATIVE
 
 
 class GameConfig2DLike(Protocol):

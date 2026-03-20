@@ -30,7 +30,7 @@
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
         "Enter on width/height/seed to type large numeric values",
-        "Gameplay -> Advanced gameplay... controls kick permissiveness, 2D/ND rotation tween speeds, translation tween speed, auto speed-up, and lines-per-level",
+        "Gameplay -> Advanced gameplay... controls rotation mode, kick permissiveness, 2D/ND rotation tween speeds, translation tween speed, auto speed-up, and lines-per-level",
         "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
@@ -335,6 +335,10 @@
       "Light",
       "Standard",
       "Forgiving"
+    ],
+    "game_rotation_animation_mode": [
+      "Cell sliding",
+      "Rigid piece rotation"
     ]
   },
   "bot_options_rows": [

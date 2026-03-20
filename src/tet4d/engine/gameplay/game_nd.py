@@ -33,10 +33,14 @@ from ..core.rules.piece_placement import (
 from ..core.step.reducer import step_nd as core_step_nd
 from ..topology_explorer import ExplorerTopologyProfile
 from ..topology_explorer.transport_resolver import (
+    ExplorerTransportFrameTransform,
     ExplorerTransportResolver,
     build_explorer_transport_resolver,
 )
-from .explorer_runtime_nd import move_piece_via_explorer_glue, piece_cells_in_bounds
+from .explorer_runtime_nd import (
+    move_piece_via_explorer_glue_with_frame,
+    piece_cells_in_bounds,
+)
 from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
 from .topology import (
     TOPOLOGY_BOUNDED,
@@ -136,6 +140,30 @@ def _piece_has_cells_above_gravity_nd(
     gravity_axis: int,
 ) -> bool:
     return any(int(coord[int(gravity_axis)]) < 0 for coord in piece.cells())
+
+
+def _identity_piece_frame(ndim: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    return tuple(range(ndim)), tuple(1 for _ in range(ndim))
+
+
+def _compose_piece_frame(
+    *,
+    ndim: int,
+    permutation: tuple[int, ...],
+    signs: tuple[int, ...],
+    frame_transform: ExplorerTransportFrameTransform | None,
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    if frame_transform is None or frame_transform.is_identity_linear():
+        return permutation, signs
+    composed_permutation = [0] * ndim
+    composed_signs = [1] * ndim
+    for source_axis, intermediate_axis in enumerate(permutation):
+        target_axis = int(frame_transform.permutation[intermediate_axis])
+        composed_permutation[source_axis] = target_axis
+        composed_signs[source_axis] = (
+            int(signs[source_axis]) * int(frame_transform.signs[intermediate_axis])
+        )
+    return tuple(composed_permutation), tuple(composed_signs)
 
 
 @dataclass
@@ -242,6 +270,10 @@ class GameStateND:
     _pending_translation_animation: bool = field(
         default=False, init=False, repr=False
     )
+    _piece_frame_permutation: tuple[int, ...] = field(
+        default=(), init=False, repr=False
+    )
+    _piece_frame_signs: tuple[int, ...] = field(default=(), init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.topology_policy = self.config.topology_policy()
@@ -249,6 +281,7 @@ class GameStateND:
             self.board = BoardND(self.config.dims)
         if self.board.dims != self.config.dims:
             raise ValueError("board dims must match config dims")
+        self._reset_piece_frame()
         if not self.next_bag:
             self._refill_bag()
         if self.current_piece is None:
@@ -322,6 +355,7 @@ class GameStateND:
         candidate = ActivePieceND.from_shape(shape, self._spawn_pos_for_shape(shape))
         if not self._can_exist(candidate):
             self.game_over = True
+        self._reset_piece_frame()
         self.current_piece = candidate
 
     def _shape_fits_board(self, shape: PieceShapeND) -> bool:
@@ -331,6 +365,29 @@ class GameStateND:
             if span > self.config.dims[axis]:
                 return False
         return True
+
+    def _reset_piece_frame(self) -> None:
+        permutation, signs = _identity_piece_frame(self.config.ndim)
+        self._piece_frame_permutation = permutation
+        self._piece_frame_signs = signs
+
+    def _compose_current_piece_frame(
+        self,
+        frame_transform: ExplorerTransportFrameTransform | None,
+    ) -> None:
+        permutation, signs = _compose_piece_frame(
+            ndim=self.config.ndim,
+            permutation=self._piece_frame_permutation,
+            signs=self._piece_frame_signs,
+            frame_transform=frame_transform,
+        )
+        self._piece_frame_permutation = permutation
+        self._piece_frame_signs = signs
+
+    def _gravity_step(self) -> tuple[int, int]:
+        axis = int(self._piece_frame_permutation[self.config.gravity_axis])
+        delta = int(self._piece_frame_signs[self.config.gravity_axis])
+        return axis, delta
 
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
         if self.config.exploration_mode and _uses_explorer_piece_transport_nd(self.config):
@@ -502,7 +559,13 @@ class GameStateND:
         ):
             if self.config.explorer_transport is None:
                 raise ValueError("explorer transport must exist when explorer topology is active")
-            candidate = move_piece_via_explorer_glue(
+            # Gameplay-critical fall/lock decisions must be based on this same
+            # transported candidate path. If the explorer move commits here,
+            # later gravity ticks must also inherit the transported local frame
+            # so sphere-like seam crossings continue along the canonical
+            # post-transport "down" direction instead of reusing the launch
+            # axis from stale shell assumptions.
+            move_result = move_piece_via_explorer_glue_with_frame(
                 self.current_piece,
                 transport=self.config.explorer_transport,
                 axis=axis,
@@ -511,9 +574,11 @@ class GameStateND:
                     self.config.explorer_rigid_play_enabled
                 ),
             )
-            if candidate is None:
+            if move_result is None:
                 return False
-            moved = self._try_commit_candidate_piece(candidate)
+            moved = self._try_commit_candidate_piece(move_result.piece)
+            if moved:
+                self._compose_current_piece_frame(move_result.frame_transform)
             if moved and animate_translation:
                 self._pending_translation_animation = True
             return moved
@@ -541,8 +606,10 @@ class GameStateND:
         return False
 
     def hard_drop(self) -> None:
-        g = self.config.gravity_axis
-        run_hard_drop(self, try_advance=lambda: self.try_move_axis(g, 1))
+        run_hard_drop(
+            self,
+            try_advance=lambda: self.try_move_axis(*self._gravity_step()),
+        )
 
     # --- Time step ---
 
@@ -550,10 +617,9 @@ class GameStateND:
         if self.config.exploration_mode or self.game_over or self.current_piece is None:
             return
 
-        g = self.config.gravity_axis
         advance_or_lock_and_respawn(
             self,
-            try_advance=lambda: self.try_move_axis(g, 1),
+            try_advance=lambda: self.try_move_axis(*self._gravity_step()),
         )
 
     def step(self) -> None:

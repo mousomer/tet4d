@@ -22,6 +22,10 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundSandboxPieceState as RuntimeTopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState as RuntimeTopologyPlaygroundState,
     TopologyPlaygroundTopologyConfig as RuntimeTopologyPlaygroundTopologyConfig,
+    WORKSPACE_EDITOR,
+    WORKSPACE_PLAY,
+    WORKSPACE_SANDBOX,
+    workspace_for_tool as runtime_workspace_for_tool,
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
 from tet4d.engine.topology_explorer.presets import explorer_presets_for_dimension
@@ -431,6 +435,10 @@ def canonical_tool_name(tool: str) -> str:
         return _CANONICAL_TOOL_BY_NAME[str(tool)]
     except KeyError as exc:
         raise ValueError(f"unsupported topology lab tool: {tool}") from exc
+
+
+def active_workspace_name(state: TopologyPlaygroundState) -> str:
+    return runtime_workspace_for_tool(state.active_tool)
 
 
 def tool_is_edit(tool: str) -> bool:
@@ -996,6 +1004,11 @@ def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
 
 
 def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
+    # TODO[BKL-TOPOLOGY-PLAYGROUND-STAGE2]: retire retained top-level
+    # Inspect/Edit labels from the primary toolbar once the Editor workspace
+    # fully owns both safe probe behavior and explicit edit tools. The runtime
+    # workspace contract is already editor/sandbox/play even though the shell
+    # still exposes subtools.
     state.active_tool = canonical_tool_name(tool)
     state.pending_source_index = None
     state.hovered_boundary_index = None
@@ -1031,6 +1044,10 @@ __all__ = [
     "TOPOLOGY_LAB_TOOLS",
     "TopologyLabState",
     "TopologyPlaygroundState",
+    "WORKSPACE_EDITOR",
+    "WORKSPACE_PLAY",
+    "WORKSPACE_SANDBOX",
+    "active_workspace_name",
     "canonical_playground_state",
     "canonical_tool_name",
     "current_explorer_draft",

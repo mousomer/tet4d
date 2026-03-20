@@ -85,14 +85,16 @@ Cross-cutting requirements are defined in:
 
 1. Piece-local coordinates are occupied-cell offsets from a deterministic piece origin, not a fixed pivot cell.
 2. Piece rotation semantics are owned by `src/tet4d/engine/core/piece_transform.py` and reused by gameplay, AI, tutorials, and rotation animation.
-3. A 90-degree piece rotation must rotate occupied cells around the center of the active bounding box in the active rotation plane.
-4. Odd active-plane spans rotate around the center cell.
-5. Even active-plane spans rotate around the between-cells axis or plane.
-6. Deterministic local re-anchoring after rotation is allowed as long as gameplay, bot planning, tutorials, and animation all consume the same canonical transform math.
-7. Explorer-runtime piece transport must classify single-step outcomes as `plain_translation`, `rigid_transform`, or `cellwise_deformation` before mutating active-piece frame state.
-8. `plain_translation` must preserve the existing piece-local frame and any rotation metadata exactly; ordinary movement must not rebase the piece origin through generic min-corner normalization.
-9. `rigid_transform` outcomes may reframe the piece only through an explicit signed-permutation piece-frame transform that preserves coherent later rotations.
-10. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame.
+3. A piece rotation is specified as a signed quarter-turn count in the active rotation plane; positive and negative turns are canonical, while raw `CW`/`CCW` wording is legacy-only and must not be the source-of-truth contract.
+4. A 90-degree piece rotation must rotate occupied cells around the center of the active bounding box in the active rotation plane.
+5. For XY gameplay on the screen, visual angle wording may differ from math-axis intuition because screen `y` increases downward; gameplay, animation, and tests must all follow the same canonical signed-turn helper instead of duplicating `CW`/`CCW` lore.
+6. Odd active-plane spans rotate around the center cell.
+7. Even active-plane spans rotate around the between-cells axis or plane.
+8. Deterministic local re-anchoring after rotation is allowed as long as gameplay, bot planning, tutorials, and animation all consume the same canonical transform math.
+9. Explorer-runtime piece transport must classify single-step outcomes as `plain_translation`, `rigid_transform`, or `cellwise_deformation` before mutating active-piece frame state.
+10. `plain_translation` must preserve the existing piece-local frame and any rotation metadata exactly; ordinary movement must not rebase the piece origin through generic min-corner normalization.
+11. `rigid_transform` outcomes may reframe the piece only through an explicit signed-permutation piece-frame transform that preserves coherent later rotations.
+12. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame.
 
 ### 3.4 Shared rotation-kick rules
 
@@ -127,7 +129,7 @@ Cross-cutting requirements are defined in:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
 17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
 18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
-19. Advanced gameplay settings expose kick permissiveness (`kick_level`) plus shared piece motion animation durations for rotation and deliberate translation tweens.
+19. Advanced gameplay settings expose a shared rotation animation mode selector (`cellwise_sliding` vs `rigid_piece_rotation`), kick permissiveness (`kick_level`), and shared piece motion animation durations for rotation and deliberate translation tweens across 2D/3D/4D.
 20. Ordinary play launcher/setup surfaces must stay minimal for topology: safe preset selection only, plus launcher routes to `Play Last Custom Topology` and `Open Explorer Playground` for custom topology work.
 21. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
 22. The Explorer Playground shell must expose an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- value controls, and synchronized 2D coordinate-plane projections as the default 3D/4D primary visualization: `3D` uses `xy/xz/yz`, `4D` uses `xy/xz/xw/yz/yw/zw`, all panels share one canonical selected-cell/topology/move-preview/seam-focus state, and hidden coordinates must stay explicit in every panel. Free-camera 3D/4D views may remain optional debug-only helpers, but they must not remain the primary Explorer Playground interface.
@@ -138,19 +140,26 @@ Cross-cutting requirements are defined in:
 27. The explorer tool-ribbon play toggle must be labeled as a mode/toggle rather than an immediate launch, and the probe/sandbox footer movement grid must identify whether it moves the probe or the sandbox piece.
 28. Invalid explorer topology / board-size pairings must remain attached to the current canonical draft topology across explorer entry, preview, sandbox, and play-launch surfaces; the playground may mark the topology invalid and block incompatible actions, but it must not silently substitute a fallback topology or drop the seam.
 29. The Explorer Playground must surface one coherent runtime-derived playability signal for the current topology before launch, explicitly distinguishing validity, cellwise explorer usability, rigid playability, and the reason the current topology is invalid or explorer-only; this signal must be derived from canonical runtime state rather than preset labels or UI-only guesses.
+30. The internal Explorer Playground workspace model must be centered on `editor`, `sandbox`, and `play`; legacy `Inspect` and `Edit` labels may remain as compatibility tool names during migration, but they are editor-scoped behaviors rather than the long-term top-level architecture.
+31. Movement targets must be workspace-specific: `editor` moves only the editor probe/selection, `sandbox` moves only the sandbox piece, and `play` moves only the gameplay piece.
+32. Sandbox neighbor-search must be explicit runtime/menu state rather than hidden ND-only behavior; the playground must support sandbox piece experimentation with that overlay both enabled and disabled.
+33. On the live `Play This Topology` path, move acceptance, continued fall eligibility, support/grounded checks, lock decisions, and active-piece rendering inputs must all derive from the same canonical post-transport gameplay state rather than retained shell snapshots, panel-owned selection state, or projection-only coordinates.
+34. Explorer Playground helper text/panel selection must be keyed to the canonical workspace model (`editor` / `sandbox` / `play`) even while legacy tool labels remain visible during migration.
 
 ### 4.1 Soft piece-rotation animation requirements
 
 1. The visual transition for a successful rotation should be eased and short (`120-180 ms` target).
 2. Gameplay state (collision, lock, scoring) remains discrete and deterministic; animation is presentation-only.
-3. In `2D`, rotation presentation must be a rigid whole-piece turn around the discrete rotation pivot, not a per-cell slide/morph between start and end cells.
+3. In `2D`, rigid rotation presentation must be drawn as rotated cell boxes sharing one angle around the discrete rotation pivot, not a precomposed sprite or a per-cell slide/morph between start and end cells.
 4. If a new rotation arrives during an active rotation animation, either:
 5. start from the current interpolated pose and retarget cleanly, or
 6. queue one pending turn and consume it immediately after the current turn ends.
 7. No visible jitter or one-frame reversion to the previous orientation is allowed.
 8. The same animation path must be used for manual input and bot-triggered rotations.
 9. Headless/dry-run paths must skip visual tween logic entirely.
-10. Rotation overlay rendering must use the same topology-aware mapping path as active-piece rendering in all modes (2D/3D/4D), including exploration mode.
+10. Rotation overlay rendering must use the same topology-aware mapping path as active-piece rendering in all modes (2D/3D/4D), including exploration mode and wrapped/custom-topology play.
+11. Any rigid-rotation visual angle must be derived from the discrete signed quarter-turn transform contract, not from an independent CW/CCW sign convention in renderer code.
+12. When a rigid `2D` rotating cell box straddles a topology seam, rendering must clip and map the visible fragments so partial geometry appears in each affected destination grid region instead of disappearing or drawing as one unsplit quad.
 
 ### 4.2 Deliberate translation animation requirements
 
@@ -158,6 +167,7 @@ Cross-cutting requirements are defined in:
 2. Translation tweening applies only to deliberate move inputs or equivalent bot/explorer single-step moves, not to gravity ticks, soft-drop streaming, or hard drop.
 3. Translation tweening must reuse the same active-piece overlay path as rotation tweening so mapped cells stay topology-correct in all modes.
 4. Shared settings must expose separate persisted durations for `2D rotation`, `ND rotation` (shared by 3D/4D), and deliberate-translation tweens, stored in integer milliseconds and allowing `0` to disable each tween.
+5. When a tweened `2D` translating cell box straddles a topology seam, rendering must clip and map the visible fragments so partial geometry appears in each affected destination grid region rather than snapping to one unsplit destination cell.
 
 ## 5. Controls and Keybinding Requirements
 
@@ -432,6 +442,8 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 6. The legacy bridge remains only for non-advanced explorer setup/export compatibility and future deletion once those paths stop depending on legacy edge-rule conversion.
 7. A canonical engine/runtime playground-state contract now exists under `src/tet4d/engine/runtime/topology_playground_state.py`; later UI migration stages consume that state, while retained UI-local state paths remain additive compatibility debt until the consumer switch is complete.
 8. The migrated Explorer Playground shell now surfaces a canonical playability analysis from that runtime state, explicitly showing validity, explorer usability, rigid playability, and launch context before `Play This Topology`.
+9. Stage-1 workspace freeze now treats `editor` / `sandbox` / `play` as the canonical internal workspace identifiers, keeps legacy `Inspect` / `Edit` as editor-scoped compatibility labels only, and exposes sandbox neighbor-search plus workspace helper scaffolding explicitly in the migrated shell.
+10. Live-path regression coverage now pins `3D`/`4D` bottom-boundary traversal on the direct play-launch runtime, so false-lock regressions are checked against canonical transported gameplay state rather than helper-only geometry paths.
 
 ### 11.7 Test requirements (for future implementation)
 

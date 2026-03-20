@@ -21,6 +21,21 @@ def _validate_ndim(ndim: int) -> None:
         raise ValueError("ndim must be >= 2")
 
 
+def _resolve_quarter_turns(
+    quarter_turns: int | None,
+    *,
+    steps_cw: int | None = None,
+) -> int:
+    if quarter_turns is None:
+        if steps_cw is None:
+            raise TypeError("quarter_turns is required")
+        return int(steps_cw)
+    resolved = int(quarter_turns)
+    if steps_cw is not None and int(steps_cw) != resolved:
+        raise ValueError("quarter_turns and steps_cw must match when both are provided")
+    return resolved
+
+
 def _coerce_blocks_nd(blocks: Iterable[Sequence[int]]) -> BlocksND:
     coords = tuple(tuple(int(value) for value in block) for block in blocks)
     if not coords:
@@ -134,8 +149,14 @@ def normalize_blocks_nd(blocks: Iterable[Sequence[int]]) -> BlocksND:
     return canonicalize_blocks_nd(_normalize_axes_preserve_order(coords, axes=range(ndim)))
 
 
-def rotate_point_2d(x: int, y: int, steps_cw: int) -> Coord2D:
-    steps = steps_cw % _QUARTER_TURNS
+def rotate_point_2d(
+    x: int,
+    y: int,
+    quarter_turns: int | None = None,
+    *,
+    steps_cw: int | None = None,
+) -> Coord2D:
+    steps = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw) % _QUARTER_TURNS
     if steps == 0:
         return x, y
     if steps == 1:
@@ -174,21 +195,21 @@ def rotation_pivot_2d(blocks: Iterable[Sequence[int]]) -> tuple[float, float]:
 
 
 @lru_cache(maxsize=4096)
-def _rotate_blocks_2d_cached(blocks: Blocks2D, steps_cw: int) -> Blocks2D:
-    steps = steps_cw % _QUARTER_TURNS
+def _rotate_blocks_2d_cached(blocks: Blocks2D, quarter_turns: int) -> Blocks2D:
+    steps = quarter_turns % _QUARTER_TURNS
     if not blocks or steps == 0:
         return blocks
 
     rotated = blocks
     for _ in range(steps):
         pivot_x, pivot_y = _rotation_pivot_2d_cached(rotated)
-        # Apply rotation around pivot (CW rotation: (x,y) -> (y, -x))
+        # Apply one positive quarter-turn around the canonical pivot.
         rotated_coords: list[Coord2D] = []
         for x, y in rotated:
             # Translate to pivot origin
             rel_x = x - pivot_x
             rel_y = y - pivot_y
-            # Rotate 90° CW: (x, y) -> (y, -x)
+            # In the repo's screen-aligned x/y frame, a positive quarter-turn is (x, y) -> (y, -x).
             new_rel_x = rel_y
             new_rel_y = -rel_x
             # Translate back and round to integers
@@ -200,16 +221,24 @@ def _rotate_blocks_2d_cached(blocks: Blocks2D, steps_cw: int) -> Blocks2D:
     return rotated
 
 
-def rotate_blocks_2d(blocks: Iterable[Sequence[int]], steps_cw: int) -> Blocks2D:
+def rotate_blocks_2d(
+    blocks: Iterable[Sequence[int]],
+    quarter_turns: int | None = None,
+    *,
+    steps_cw: int | None = None,
+) -> Blocks2D:
     coords = _coerce_blocks_2d(blocks)
-    return _rotate_blocks_2d_cached(coords, steps_cw % _QUARTER_TURNS)
+    turns = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw)
+    return _rotate_blocks_2d_cached(coords, turns % _QUARTER_TURNS)
 
 
 def rotate_point_nd(
     point: Sequence[int],
     axis_a: int,
     axis_b: int,
-    steps_cw: int,
+    quarter_turns: int | None = None,
+    *,
+    steps_cw: int | None = None,
 ) -> CoordND:
     ndim = len(point)
     _validate_ndim(ndim)
@@ -218,7 +247,7 @@ def rotate_point_nd(
     if not (0 <= axis_a < ndim and 0 <= axis_b < ndim):
         raise ValueError("rotation axis out of bounds")
 
-    steps = steps_cw % _QUARTER_TURNS
+    steps = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw) % _QUARTER_TURNS
     coords = [int(value) for value in point]
     a_val = coords[axis_a]
     b_val = coords[axis_b]
@@ -244,9 +273,9 @@ def _rotate_blocks_nd_cached(
     blocks: BlocksND,
     axis_a: int,
     axis_b: int,
-    steps_cw: int,
+    quarter_turns: int,
 ) -> BlocksND:
-    steps = steps_cw % _QUARTER_TURNS
+    steps = quarter_turns % _QUARTER_TURNS
     if not blocks or steps == 0:
         return blocks
 
@@ -295,7 +324,7 @@ def _rotate_blocks_nd_cached(
             # Translate to pivot origin (in rotation plane)
             rel_a = coord[axis_a] - pivot_a
             rel_b = coord[axis_b] - pivot_b
-            # Rotate 90° CW: (a, b) -> (b, -a)
+            # Apply one positive quarter-turn in the active rotation plane.
             new_rel_a = rel_b
             new_rel_b = -rel_a
             # Translate back and round to integers
@@ -318,7 +347,9 @@ def rotate_blocks_nd(
     blocks: Iterable[Sequence[int]],
     axis_a: int,
     axis_b: int,
-    steps_cw: int,
+    quarter_turns: int | None = None,
+    *,
+    steps_cw: int | None = None,
 ) -> BlocksND:
     coords = _coerce_blocks_nd(blocks)
     if not coords:
@@ -329,7 +360,8 @@ def rotate_blocks_nd(
         raise ValueError("rotation axes must be different")
     if not (0 <= axis_a < ndim and 0 <= axis_b < ndim):
         raise ValueError("rotation axis out of bounds")
-    return _rotate_blocks_nd_cached(coords, axis_a, axis_b, steps_cw % _QUARTER_TURNS)
+    turns = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw)
+    return _rotate_blocks_nd_cached(coords, axis_a, axis_b, turns % _QUARTER_TURNS)
 
 
 def _calculate_rotation_pivot(
@@ -410,10 +442,7 @@ def rotate_blocks_nd_continuous(
         a_rel = coord[axis_a] - pivot_a
         b_rel = coord[axis_b] - pivot_b
 
-        # Apply clockwise rotation (note: standard rotation matrix)
-        # For CW rotation in screen coords: (x,y) -> (y, -x)
-        # But we use standard math rotation which is CCW
-        # The discrete algorithm effectively does CW, so we negate the angle
+        # Apply the standard rotation matrix; callers choose the signed angle.
         new_a = a_rel * cos_theta - b_rel * sin_theta
         new_b = a_rel * sin_theta + b_rel * cos_theta
 
@@ -496,7 +525,7 @@ def enumerate_orientations_nd(
                         blocks,
                         axis_a=axis_a,
                         axis_b=axis_b,
-                        steps_cw=step,
+                        quarter_turns=step,
                     )
                 )
                 rotated_canonical = canonicalize_blocks_nd(rotated)

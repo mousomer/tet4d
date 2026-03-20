@@ -1,8 +1,26 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-14  
+Updated: 2026-03-20  
 Scope: active open backlog, governance watchlist, and current change footprint.
+
+Current sub-batch (2026-03-20): spherical play false-lock repro and runtime fix.
+- Root cause: Stage 1 covered traced bottom-boundary continuation families, but spherical play still locked pieces on the first post-seam gravity tick because gameplay preserved the original global gravity axis instead of the transported local piece frame. That made the real follow-up fall step use the wrong world axis and collapse/block otherwise continuing sphere moves.
+- Fix strategy: corrected the status language, added live-path `3D` / `4D` sphere regressions from exact gameplay repros, traced the divergence to `GameStateND` gravity continuation after seam moves, and patched ND explorer gameplay to carry the transported piece frame forward so later gravity ticks follow canonical post-seam "down".
+
+Current sub-batch (2026-03-20): topology playground restructure Stage 1.
+- Root cause: the migrated playground still treated legacy `Inspect` / `Edit` tool labels as the architectural center, sandbox neighbor-search remained implicit shell behavior, and the reported `Play This Topology` bottom-boundary false-lock defect was not pinned by live-path runtime tests.
+- Fix strategy: froze the internal workspace model around `editor` / `sandbox` / `play`, kept legacy tool names only as compatibility labels inside that model, made sandbox neighbor-search explicit state in runtime/menu/helper surfaces, added workspace-keyed helper scaffolding, and added live-path `3D` / `4D` play-launch regressions that assert traced continuation/lock behavior from canonical transported gameplay state. Those tests did not close the separate spherical false-lock repro, which remained open for a follow-up runtime fix.
+- Focused Stage-1 coverage now lives in `tests/unit/engine/test_topology_playground_state.py`, `tests/unit/engine/test_topology_playground_launch.py`, `tests/unit/engine/test_topology_playground_sandbox.py`, `tests/unit/engine/test_topology_lab_menu.py`, and `tests/unit/engine/test_topology_lab_state_ownership.py`.
+
+Current sub-batch (2026-03-19): shared rotation-mode menu exposure and ND wiring.
+- Root cause: both rotation animation paths existed in runtime code, but the selector was hidden behind a fallback-only `2D` setting path and never modeled in persisted shared gameplay settings or threaded into `3D`/`4D` loop construction.
+- Fix strategy: promoted `rotation_animation_mode` to a real shared gameplay setting in defaults/schema/sanitization, exposed it in `Advanced gameplay`, wired `3D`/`4D` loop creation through the same saved selector already used by `2D`, and updated generated configuration/user-settings references plus focused regression coverage.
+- Follow-up correctness fix: flipped the rigid `2D` sprite rotation sign so positive gameplay turns animate in the same visible direction as the discrete piece transform, and tightened the rigid render regression to assert the positive-turn direction.
+- Follow-up rendering fix: replaced the bounded-only rigid `2D` sprite overlay with topology-aware rotated cell boxes drawn from mapped overlay cell centers, so wrapped/custom-topology play now uses the same rigid render path instead of silently falling back to sliding upright cells.
+- Drift-prevention follow-up: rigid rotation angle now derives from the canonical discrete `rotate_point_2d(...)` contract, and focused render coverage now checks visible positive/negative turn geometry in both bounded and wrapped topology modes instead of only comparing helper values to themselves.
+- Seam-rendering follow-up: rigid rotating `2D` cell boxes now clip against seam windows in board-space and map each visible fragment through the topology policy, so boundary-crossing cells render partial geometry in the correct wrapped destination cells instead of as one unsplit quad.
+- Translation seam follow-up: non-rigid `2D` active-piece overlays now reuse that same seam-clipped cell-box renderer with zero rotation, so deliberate translation tweens and cellwise sliding rotation tweens also show partial boundary fragments in the correct wrapped destination cells.
 
 Current sub-batch (2026-03-17): piece translation tweening + split rotation-speed settings.
 - Root cause: gameplay only rendered eased rotation overlays; deliberate piece translations still snapped instantly on some ND view-relative paths, and users could not tune 2D rotation separately from ND rotation in the shared settings hub.
@@ -371,7 +389,7 @@ Lesson A1 Movement:
 
 Lesson A2 Rotation:
 
-1. Rotate CW/CCW.
+1. Rotate with positive/negative quarter-turn inputs.
 2. Wall-kick demonstration (if supported).
 
 Lesson A3 Clear a line:
@@ -805,6 +823,7 @@ Current sub-batch (2026-03-04): CI compliance hardening + governance preflight.
 - Stabilized sanitation inputs for local/context artifacts:
   - `.gitignore` now ignores `context-*.instructions.md`
   - `scripts/check_git_sanitation_repo.sh` now excludes `context-*.instructions.md`
+  - local `.claude/` worktree sandboxes and VCS metadata `.git` files are excluded from repo-content absolute-path scanning
 - Added single-command CI preflight:
   - `scripts/ci_preflight.sh`
   - runs sanitation/policy checks + canonical `ci_check` pipeline.

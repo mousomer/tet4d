@@ -90,6 +90,19 @@ class TestFront4DRender(unittest.TestCase):
         self.assertEqual(loop.state.config.dims, (8, 20, 7, 6))
         self.assertEqual(loop.state.board.dims, (8, 20, 7, 6))
 
+    def test_loop_context_accepts_rotation_animation_mode(self) -> None:
+        cfg = GameConfigND(dims=(8, 20, 7, 6), gravity_axis=1, speed_level=1)
+
+        loop = front4d_game.LoopContext4D.create(
+            cfg,
+            rotation_animation_mode="rigid_piece_rotation",
+        )
+
+        self.assertEqual(
+            loop.rotation_anim.rotation_animation_mode,
+            "rigid_piece_rotation",
+        )
+
     def test_projection_cache_key_changes_when_w_size_changes(self) -> None:
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
         basis_small = front4d_render._basis_for_view(view, (6, 12, 6, 3))
@@ -329,5 +342,4 @@ class TestFront4DRender(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 

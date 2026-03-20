@@ -53,6 +53,7 @@ Shared run controls across 2D/3D/4D (game seed, random type, and advanced gamepl
 - `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
 - `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.2d.lines_per_level`: `10`
+- `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.2d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.2d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.2d.translation_animation_duration_ms`: `120`; integer; range: 0..600
@@ -89,6 +90,7 @@ Shared run controls across 2D/3D/4D (game seed, random type, and advanced gamepl
 - `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.3d.lines_per_level`: `10`
+- `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.3d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.3d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.3d.translation_animation_duration_ms`: `120`; integer; range: 0..600
@@ -127,6 +129,7 @@ Shared run controls across 2D/3D/4D (game seed, random type, and advanced gamepl
 - `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.4d.lines_per_level`: `10`
+- `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.4d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.4d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.4d.translation_animation_duration_ms`: `120`; integer; range: 0..600

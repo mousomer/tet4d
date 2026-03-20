@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 import pygame
 
+from tet4d.engine.gameplay.rotation_anim import (
+    ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
+    ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+)
 from tet4d.engine.runtime.menu_config import (
     settings_hub_layout_rows,
     settings_option_labels,
@@ -33,6 +37,16 @@ BG_BOTTOM = (4, 7, 20)
 _SETTINGS_OPTION_LABELS = settings_option_labels()
 _RANDOM_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_random_mode"])
 _KICK_LEVEL_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_kick_level"])
+_ROTATION_ANIMATION_MODE_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["game_rotation_animation_mode"]
+)
+_ROTATION_ANIMATION_MODE_VALUES = (
+    ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
+    ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+)
+_ROTATION_ANIMATION_MODE_LABEL_BY_VALUE = dict(
+    zip(_ROTATION_ANIMATION_MODE_VALUES, _ROTATION_ANIMATION_MODE_LABELS)
+)
 _SETTINGS_HUB_COPY = ui_copy_section("settings_hub")
 _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS = default_mode_shared_gameplay_settings("2d")
 _RANDOM_MODE_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["random_mode_index"])
@@ -45,6 +59,9 @@ _AUTO_SPEEDUP_DEFAULT = int(
 )
 _LINES_PER_LEVEL_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["lines_per_level"]
+)
+_ROTATION_ANIMATION_MODE_DEFAULT = str(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["rotation_animation_mode"]
 )
 _ROTATION_ANIMATION_DURATION_2D_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["rotation_animation_duration_ms_2d"]
@@ -82,6 +99,7 @@ class _UnifiedSettingsState:
     kick_level_index: int
     auto_speedup_enabled: int
     lines_per_level: int
+    rotation_animation_mode: str
     rotation_animation_duration_ms_2d: int
     rotation_animation_duration_ms_nd: int
     translation_animation_duration_ms: int
@@ -95,6 +113,7 @@ class _UnifiedSettingsState:
     original_kick_level_index: int
     original_auto_speedup_enabled: int
     original_lines_per_level: int
+    original_rotation_animation_mode: str
     original_rotation_animation_duration_ms_2d: int
     original_rotation_animation_duration_ms_nd: int
     original_translation_animation_duration_ms: int
@@ -216,8 +235,10 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
     if row_key == "gameplay_advanced":
         kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
         mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
+        rotation_mode_label = rotation_animation_mode_label(state.rotation_animation_mode)
         return (
-            f"{_KICK_LEVEL_LABELS[kick_index]} / {mode_text} / {int(state.lines_per_level)}"
+            f"{rotation_mode_label} / {_KICK_LEVEL_LABELS[kick_index]} / {mode_text}"
+            f" / {int(state.lines_per_level)}"
             f" / rot2d {_duration_text(int(state.rotation_animation_duration_ms_2d))}"
             f" / rotnd {_duration_text(int(state.rotation_animation_duration_ms_nd))}"
             f" / move {_duration_text(int(state.translation_animation_duration_ms))}"
@@ -249,6 +270,10 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
     return ""
 
 
+def rotation_animation_mode_label(value: str) -> str:
+    return _ROTATION_ANIMATION_MODE_LABEL_BY_VALUE.get(str(value), str(value))
+
+
 def build_unified_settings_state(
     *,
     audio_settings: AudioSettings,
@@ -268,6 +293,7 @@ def build_unified_settings_state(
     kick_level_index = int(mode_gameplay["kick_level_index"])
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
+    rotation_animation_mode = str(mode_gameplay["rotation_animation_mode"])
     rotation_animation_duration_ms_2d = int(
         mode_gameplay["rotation_animation_duration_ms_2d"]
     )
@@ -287,6 +313,7 @@ def build_unified_settings_state(
         kick_level_index=kick_level_index,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
+        rotation_animation_mode=rotation_animation_mode,
         rotation_animation_duration_ms_2d=rotation_animation_duration_ms_2d,
         rotation_animation_duration_ms_nd=rotation_animation_duration_ms_nd,
         translation_animation_duration_ms=translation_animation_duration_ms,
@@ -300,6 +327,7 @@ def build_unified_settings_state(
         original_kick_level_index=kick_level_index,
         original_auto_speedup_enabled=auto_speedup_enabled,
         original_lines_per_level=lines_per_level,
+        original_rotation_animation_mode=rotation_animation_mode,
         original_rotation_animation_duration_ms_2d=rotation_animation_duration_ms_2d,
         original_rotation_animation_duration_ms_nd=rotation_animation_duration_ms_nd,
         original_translation_animation_duration_ms=translation_animation_duration_ms,

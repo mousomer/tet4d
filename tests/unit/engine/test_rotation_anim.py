@@ -3,12 +3,14 @@ from __future__ import annotations
 import math
 import unittest
 
+from tet4d.engine.core.piece_transform import rotate_point_2d
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.rotation_anim import (
     PieceRotationAnimator2D,
     PieceRotationAnimatorND,
     RigidPieceOverlay2D,
+    _screen_rotation_angle_deg,
 )
 
 
@@ -31,6 +33,14 @@ def _pairwise_distance(cell_a: tuple[float, ...], cell_b: tuple[float, ...]) -> 
 
 
 class TestRotationAnim(unittest.TestCase):
+    def test_screen_rotation_angle_matches_discrete_turn_basis(self) -> None:
+        for steps in (-1, 1, 2):
+            angle_rad = math.radians(_screen_rotation_angle_deg(steps, 1.0))
+            rotated_basis = (math.cos(angle_rad), math.sin(angle_rad))
+            expected_basis = rotate_point_2d(1, 0, quarter_turns=steps)
+            self.assertAlmostEqual(rotated_basis[0], float(expected_basis[0]), places=7)
+            self.assertAlmostEqual(rotated_basis[1], float(expected_basis[1]), places=7)
+
     def test_2d_rotation_tween_visible_only(self) -> None:
         shape = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=3)
         anim = PieceRotationAnimator2D(duration_ms=160.0)
@@ -65,7 +75,11 @@ class TestRotationAnim(unittest.TestCase):
         rigid_state = anim.overlay_state(visible_rot)
         self.assertIsInstance(rigid_state, RigidPieceOverlay2D)
         assert isinstance(rigid_state, RigidPieceOverlay2D)
-        self.assertAlmostEqual(rigid_state.angle_deg, 45.0, delta=6.0)
+        self.assertAlmostEqual(
+            rigid_state.angle_deg,
+            _screen_rotation_angle_deg(1, 0.5),
+            delta=6.0,
+        )
 
         anim.observe(visible_rot, 200.0)
         self.assertIsNone(anim.overlay_cells(visible_rot))
@@ -350,29 +364,29 @@ class TestRotationAnim(unittest.TestCase):
             self.assertAlmostEqual(actual[0], expected[0], delta=1.5)
             self.assertAlmostEqual(actual[1], expected[1], delta=3.5)
 
-    def test_nd_counter_clockwise_rotation_animates_correctly(self) -> None:
-        """Test that CCW rotations (-1 step) animate correctly and match endpoint."""
+    def test_nd_negative_rotation_animates_correctly(self) -> None:
+        """Test that negative signed turns animate correctly and match endpoint."""
         shape = PieceShapeND(name="line", blocks=((0, 0, 0), (1, 0, 0)), color_id=5)
         piece = ActivePieceND.from_shape(shape, (0, 5, 0))
-        rotated_ccw = piece.rotated(0, 2, -1)  # Counter-clockwise
+        rotated_negative = piece.rotated(0, 2, -1)
 
         anim = PieceRotationAnimatorND(ndim=3, gravity_axis=1, duration_ms=200.0)
         anim.observe(piece, 0.0)
-        anim.observe(rotated_ccw, 0.0)
+        anim.observe(rotated_negative, 0.0)
 
         # Check midpoint has movement
-        anim.observe(rotated_ccw, 100.0)
-        overlay_mid = anim.overlay_cells(rotated_ccw)
+        anim.observe(rotated_negative, 100.0)
+        overlay_mid = anim.overlay_cells(rotated_negative)
         self.assertIsNotNone(overlay_mid)
 
         # Check endpoint matches (just before completion)
-        anim.observe(rotated_ccw, 99.9)
-        overlay_final = anim.overlay_cells(rotated_ccw)
+        anim.observe(rotated_negative, 99.9)
+        overlay_final = anim.overlay_cells(rotated_negative)
         self.assertIsNotNone(overlay_final)
         assert overlay_final is not None
 
         cells_final, _ = overlay_final
-        expected_cells = rotated_ccw.cells()
+        expected_cells = rotated_negative.cells()
 
         for actual, expected in zip(sorted(cells_final), sorted(expected_cells)):
             for i in range(3):
@@ -380,7 +394,7 @@ class TestRotationAnim(unittest.TestCase):
                     actual[i],
                     expected[i],
                     delta=1.5,
-                    msg=f"CCW rotation endpoint too far from discrete at dimension {i}",
+                    msg=f"negative-turn endpoint too far from discrete at dimension {i}",
                 )
 
 

@@ -105,8 +105,39 @@ class TestTopologyPlaygroundSandbox(unittest.TestCase):
         self.assertTrue(state.sandbox_piece_state.enabled)
         self.assertIsNotNone(state.sandbox_piece_state.origin)
         self.assertIsNotNone(state.sandbox_piece_state.local_blocks)
+        self.assertTrue(state.sandbox_piece_state.neighbor_search_enabled)
         self.assertEqual(state.sandbox_piece_state.trace, ())
         self.assertEqual(state.sandbox_piece_state.seam_crossings, ())
+
+    def test_explicit_neighbor_search_flag_survives_runtime_state_normalization(self) -> None:
+        state = self._explorer_state(
+            3,
+            axis_sizes=(4, 4, 4),
+            explorer_profile=axis_wrap_profile(dimension=3, wrapped_axes=(0,)),
+            origin=(1, 1, 1),
+            local_blocks=((0, 0, 0),),
+        )
+        state.sandbox_piece_state.neighbor_search_enabled = False
+
+        topology_playground_sandbox.ensure_piece_sandbox_state(state)
+
+        self.assertFalse(state.sandbox_piece_state.neighbor_search_enabled)
+
+    def test_sandbox_moves_still_work_when_neighbor_search_is_disabled(self) -> None:
+        state = self._state_2d()
+        state.sandbox_piece_state = TopologyPlaygroundSandboxPieceState(
+            enabled=True,
+            piece_index=0,
+            origin=(3, 1),
+            local_blocks=((0, 0),),
+            neighbor_search_enabled=False,
+        )
+
+        ok, message = move_sandbox_piece(state, "x+")
+
+        self.assertTrue(ok, message)
+        self.assertEqual(state.sandbox_piece_state.origin, (0, 1))
+        self.assertFalse(state.sandbox_piece_state.neighbor_search_enabled)
 
     def test_move_records_seam_crossing_in_canonical_state(self) -> None:
         state = self._state_2d()

@@ -31,11 +31,12 @@ Run this from repo root before pushing:
 ## Hygiene rules for CI stability
 
 1. Do not commit local context artifacts (for example `context-*.instructions.md`).
-2. Do not commit absolute filesystem paths in docs/config/manifests.
-3. Keep policy manifests synchronized:
+2. Local agent/worktree metadata (for example `.claude/` sandboxes or `.git` pointer files) is not project source and should be ignored by repo-content sanitation scans.
+3. Do not commit absolute filesystem paths in docs/config/manifests.
+4. Keep policy manifests synchronized:
    - `config/project/policy/manifests/project_policy.json`
    - `config/project/policy/manifests/policy_registry.json`
-4. Treat policy warnings as debt to reduce in follow-up batches.
+5. Treat policy warnings as debt to reduce in follow-up batches.
 
 ## Merge policy
 

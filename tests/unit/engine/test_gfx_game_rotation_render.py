@@ -15,7 +15,8 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.gameplay.rotation_anim import _RotationTween
+from tet4d.engine.gameplay.topology import TOPOLOGY_WRAP_ALL
+from tet4d.engine.gameplay.rotation_anim import _RotationTween, _screen_rotation_angle_deg
 from tet4d.ui.pygame import front2d_frame, front2d_loop
 from tet4d.ui.pygame.front2d_session import LoopContext2D
 from tet4d.ui.pygame.keybindings import KEYS_2D
@@ -34,15 +35,25 @@ class TestGfxGameRotationRender(unittest.TestCase):
         pygame.quit()
 
     @staticmethod
-    def _rotation_key() -> int:
-        keys = KEYS_2D["rotate_xy_pos"]
+    def _rotation_key(action_id: str = "rotate_xy_pos") -> int:
+        keys = KEYS_2D[action_id]
         if not keys:
-            raise AssertionError("missing 2D rotation key")
+            raise AssertionError(f"missing 2D rotation key for {action_id}")
         return int(keys[0])
 
     @staticmethod
-    def _create_loop(mode_name: str) -> LoopContext2D:
-        cfg = GameConfig(width=10, height=20, gravity_axis=1, speed_level=1)
+    def _create_loop(
+        mode_name: str,
+        *,
+        topology_mode: str = "bounded",
+    ) -> LoopContext2D:
+        cfg = GameConfig(
+            width=10,
+            height=20,
+            gravity_axis=1,
+            speed_level=1,
+            topology_mode=topology_mode,
+        )
         loop = LoopContext2D.create(
             cfg,
             rotation_animation_mode=mode_name,
@@ -63,9 +74,12 @@ class TestGfxGameRotationRender(unittest.TestCase):
     def _render_mid_rotation_frame(
         cls,
         mode_name: str,
-    ) -> tuple[bytes, list[pygame.Rect], list[dict[str, object]]]:
+        *,
+        action_id: str = "rotate_xy_pos",
+        topology_mode: str = "bounded",
+    ) -> tuple[bytes, list[pygame.Rect], list[dict[str, object]], list[dict[str, object]]]:
         screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
-        loop = cls._create_loop(mode_name)
+        loop = cls._create_loop(mode_name, topology_mode=topology_mode)
         piece = loop.state.current_piece
         if piece is None:
             raise AssertionError("expected active piece")
@@ -88,7 +102,10 @@ class TestGfxGameRotationRender(unittest.TestCase):
             )
 
         result = loop.keydown_handler(
-            pygame.event.Event(pygame.KEYDOWN, {"key": cls._rotation_key()})
+            pygame.event.Event(
+                pygame.KEYDOWN,
+                {"key": cls._rotation_key(action_id)},
+            )
         )
         if result != "continue":
             raise AssertionError(f"unexpected keydown result: {result}")
@@ -103,8 +120,10 @@ class TestGfxGameRotationRender(unittest.TestCase):
             )
 
         screen_piece_rects: list[pygame.Rect] = []
+        polygon_calls: list[dict[str, object]] = []
         rotozoom_calls: list[dict[str, object]] = []
         original_rect = gfx_game.pygame.draw.rect
+        original_polygon = gfx_game.pygame.draw.polygon
         original_rotozoom = gfx_game.pygame.transform.rotozoom
 
         def record_rect(surface, color, rect, width=0, *args, **kwargs):
@@ -119,6 +138,25 @@ class TestGfxGameRotationRender(unittest.TestCase):
             ):
                 screen_piece_rects.append(rect.copy())
             return original_rect(surface, color, rect, width, *args, **kwargs)
+
+        def record_polygon(surface, color, points, width=0, *args, **kwargs):
+            numeric_points = tuple((float(x), float(y)) for x, y in points)
+            expanded_board = board_rect.inflate(gfx_game.CELL_SIZE, gfx_game.CELL_SIZE)
+            if (
+                surface is screen
+                and tuple(color)[:3] == piece_color
+                and width == 0
+                and numeric_points
+                and all(expanded_board.collidepoint(point) for point in numeric_points)
+            ):
+                polygon_calls.append(
+                    {
+                        "color": tuple(color),
+                        "points": numeric_points,
+                        "width": int(width),
+                    }
+                )
+            return original_polygon(surface, color, points, width, *args, **kwargs)
 
         def record_rotozoom(surface, angle, scale):
             rotozoom_calls.append(
@@ -135,6 +173,7 @@ class TestGfxGameRotationRender(unittest.TestCase):
 
         with (
             patch.object(gfx_game.pygame.draw, "rect", side_effect=record_rect),
+            patch.object(gfx_game.pygame.draw, "polygon", side_effect=record_polygon),
             patch.object(
                 gfx_game.pygame.transform,
                 "rotozoom",
@@ -150,33 +189,70 @@ class TestGfxGameRotationRender(unittest.TestCase):
                 clear_anim_duration_ms=320.0,
             )
 
-        return pygame.image.tobytes(screen, "RGBA"), screen_piece_rects, rotozoom_calls
+        return (
+            pygame.image.tobytes(screen, "RGBA"),
+            screen_piece_rects,
+            polygon_calls,
+            rotozoom_calls,
+        )
 
-    def test_rigid_midframe_uses_rotated_piece_surface_path(self) -> None:
-        frame_bytes, screen_piece_rects, rotozoom_calls = self._render_mid_rotation_frame(
+    @staticmethod
+    def _assert_rigid_polygon_turn_direction(
+        polygon_calls: list[dict[str, object]],
+        *,
+        action_id: str,
+    ) -> None:
+        if not polygon_calls:
+            raise AssertionError("expected rigid polygon calls")
+        expected_sign = -1 if action_id == "rotate_xy_pos" else 1
+        for call in polygon_calls:
+            points = call["points"]
+            delta_y = float(points[1][1]) - float(points[0][1])
+            if expected_sign < 0:
+                if not delta_y < 0.0:
+                    raise AssertionError(
+                        f"expected top edge to rise for {action_id}, got delta_y={delta_y}"
+                    )
+            else:
+                if not delta_y > 0.0:
+                    raise AssertionError(
+                        f"expected top edge to fall for {action_id}, got delta_y={delta_y}"
+                    )
+
+    @staticmethod
+    def _assert_upright_polygon_boxes(
+        polygon_calls: list[dict[str, object]],
+    ) -> None:
+        if not polygon_calls:
+            raise AssertionError("expected upright polygon calls")
+        for call in polygon_calls:
+            points = call["points"]
+            if len(points) != 4:
+                raise AssertionError(f"expected quads for upright boxes, got {len(points)} points")
+            top_delta_y = abs(float(points[1][1]) - float(points[0][1]))
+            left_delta_x = abs(float(points[3][0]) - float(points[0][0]))
+            if top_delta_y > 1e-6:
+                raise AssertionError(f"expected flat top edge, got delta_y={top_delta_y}")
+            if left_delta_x > 1e-6:
+                raise AssertionError(f"expected vertical left edge, got delta_x={left_delta_x}")
+
+    def test_rigid_midframe_uses_rotated_cell_box_path(self) -> None:
+        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = self._render_mid_rotation_frame(
             "rigid_piece_rotation"
         )
         self.assertTrue(frame_bytes)
         self.assertFalse(screen_piece_rects)
-        self.assertEqual(len(rotozoom_calls), 1)
-        call = rotozoom_calls[0]
-        self.assertEqual(call["scale"], 1.0)
-        self.assertGreater(abs(float(call["angle"])), 1.0)
-        self.assertLess(abs(float(call["angle"])), 89.0)
-        width, height = call["size"]
-        self.assertGreater(width, gfx_game.CELL_SIZE)
-        self.assertGreater(height, gfx_game.CELL_SIZE)
-        self.assertTrue(int(call["flags"]) & int(pygame.SRCALPHA))
-        alphas = call["rgba"][3::4]
-        self.assertTrue(any(alpha == 0 for alpha in alphas))
-        self.assertTrue(any(alpha > 0 for alpha in alphas))
+        self.assertFalse(rotozoom_calls)
+        self.assertGreaterEqual(len(polygon_calls), 3)
+        self.assertTrue(all(len(call["points"]) == 4 for call in polygon_calls))
+        self._assert_rigid_polygon_turn_direction(
+            polygon_calls,
+            action_id="rotate_xy_pos",
+        )
 
-    def test_rigid_rotozoom_angle_is_positive_for_forward_rotation(self) -> None:
-        """rotozoom(+deg) = CCW on screen, matching rotate_xy_pos (steps_cw=1 = CCW-screen)."""
-        _, _, rotozoom_calls = self._render_mid_rotation_frame("rigid_piece_rotation")
-        self.assertEqual(len(rotozoom_calls), 1)
-        angle = float(rotozoom_calls[0]["angle"])
-        self.assertGreater(angle, 0.0, "forward rotation must use a positive rotozoom angle (CCW-screen)")
+    def test_rigid_overlay_angle_matches_discrete_positive_turn(self) -> None:
+        expected_angle = math.degrees(math.atan2(-1.0, 0.0)) * 0.5
+        self.assertAlmostEqual(_screen_rotation_angle_deg(1, 0.5), expected_angle)
 
     def test_rigid_cell_positions_match_rotozoom_angle(self) -> None:
         """_interpolated_rel_rigid_rotation and interpolated_rotation_deg agree."""
@@ -204,9 +280,8 @@ class TestGfxGameRotationRender(unittest.TestCase):
         angle_deg = tween.interpolated_rotation_deg()
         # The intermediate cell positions from the rigid fallback path.
         cells = tween.interpolated_rel()
-        # Recompute the expected positions from angle_deg using the same convention.
-        # rotozoom(+deg) = CCW-screen; standard math CCW by -deg in y-up = CCW-screen.
-        angle_rad = -math.radians(angle_deg)
+        # Recompute the expected positions from the canonical screen-angle helper.
+        angle_rad = math.radians(angle_deg)
         cos_t = math.cos(angle_rad)
         sin_t = math.sin(angle_rad)
         expected = []
@@ -221,23 +296,136 @@ class TestGfxGameRotationRender(unittest.TestCase):
             self.assertAlmostEqual(cx, ex, places=10)
             self.assertAlmostEqual(cy, ey, places=10)
 
-    def test_cellwise_midframe_uses_upright_per_cell_path(self) -> None:
-        frame_bytes, screen_piece_rects, rotozoom_calls = self._render_mid_rotation_frame(
+    def test_cellwise_midframe_uses_upright_cell_box_path(self) -> None:
+        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = self._render_mid_rotation_frame(
             "cellwise_sliding"
         )
         self.assertTrue(frame_bytes)
-        self.assertTrue(screen_piece_rects)
-        self.assertEqual(len(screen_piece_rects), 3)
+        self.assertFalse(screen_piece_rects)
+        self.assertGreaterEqual(len(polygon_calls), 3)
+        self._assert_upright_polygon_boxes(polygon_calls)
         self.assertFalse(rotozoom_calls)
 
     def test_midframe_rigid_and_cellwise_frames_differ(self) -> None:
-        rigid_frame, _rigid_rects, _rigid_rotozoom = self._render_mid_rotation_frame(
+        rigid_frame, _rigid_rects, _rigid_polygons, _rigid_rotozoom = self._render_mid_rotation_frame(
             "rigid_piece_rotation"
         )
-        cellwise_frame, _cellwise_rects, _cellwise_rotozoom = (
+        cellwise_frame, _cellwise_rects, _cellwise_polygons, _cellwise_rotozoom = (
             self._render_mid_rotation_frame("cellwise_sliding")
         )
         self.assertNotEqual(rigid_frame, cellwise_frame)
+
+    def test_rigid_negative_turn_geometry_matches_discrete_turn(self) -> None:
+        _frame, screen_piece_rects, polygon_calls, rotozoom_calls = (
+            self._render_mid_rotation_frame(
+                "rigid_piece_rotation",
+                action_id="rotate_xy_neg",
+            )
+        )
+        self.assertFalse(screen_piece_rects)
+        self.assertFalse(rotozoom_calls)
+        self._assert_rigid_polygon_turn_direction(
+            polygon_calls,
+            action_id="rotate_xy_neg",
+        )
+
+    def test_rigid_wrap_topology_uses_rotated_cell_box_path(self) -> None:
+        _frame, screen_piece_rects, polygon_calls, rotozoom_calls = (
+            self._render_mid_rotation_frame(
+                "rigid_piece_rotation",
+                topology_mode=TOPOLOGY_WRAP_ALL,
+            )
+        )
+        self.assertFalse(screen_piece_rects)
+        self.assertGreaterEqual(len(polygon_calls), 3)
+        self.assertFalse(rotozoom_calls)
+        self._assert_rigid_polygon_turn_direction(
+            polygon_calls,
+            action_id="rotate_xy_pos",
+        )
+
+    def test_rigid_wrap_seam_cell_renders_partial_fragments_on_both_sides(self) -> None:
+        screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
+        loop = self._create_loop(
+            "rigid_piece_rotation",
+            topology_mode=TOPOLOGY_WRAP_ALL,
+        )
+        piece = loop.state.current_piece
+        assert piece is not None
+        piece_color = gfx_game.color_for_cell(piece.shape.color_id)
+        board_offset, _panel_offset = gfx_game.compute_game_layout(screen, loop.cfg)
+        board_right_px = board_offset[0] + (loop.cfg.width * gfx_game.CELL_SIZE)
+
+        overlay = gfx_game.RigidPieceOverlay2D(
+            cells=((9.82, 6.0),),
+            color_id=piece.shape.color_id,
+            angle_deg=45.0,
+        )
+        polygon_calls: list[tuple[tuple[float, float], ...]] = []
+        original_polygon = gfx_game.pygame.draw.polygon
+
+        def record_polygon(surface, color, points, width=0, *args, **kwargs):
+            numeric_points = tuple((float(x), float(y)) for x, y in points)
+            if surface is screen and tuple(color)[:3] == piece_color and width == 0:
+                polygon_calls.append(numeric_points)
+            return original_polygon(surface, color, points, width, *args, **kwargs)
+
+        with patch.object(gfx_game.pygame.draw, "polygon", side_effect=record_polygon):
+            gfx_game.draw_board(
+                screen,
+                loop.state,
+                board_offset,
+                active_piece_overlay=overlay,
+            )
+
+        self.assertGreaterEqual(len(polygon_calls), 2)
+        fragment_min_x = [min(point[0] for point in polygon) for polygon in polygon_calls]
+        fragment_max_x = [max(point[0] for point in polygon) for polygon in polygon_calls]
+        self.assertTrue(
+            any(max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2) for max_x in fragment_max_x)
+        )
+        self.assertTrue(
+            any(min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2) for min_x in fragment_min_x)
+        )
+
+    def test_cellwise_wrap_seam_cell_renders_partial_fragments_on_both_sides(self) -> None:
+        screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
+        loop = self._create_loop(
+            "cellwise_sliding",
+            topology_mode=TOPOLOGY_WRAP_ALL,
+        )
+        piece = loop.state.current_piece
+        assert piece is not None
+        piece_color = gfx_game.color_for_cell(piece.shape.color_id)
+        board_offset, _panel_offset = gfx_game.compute_game_layout(screen, loop.cfg)
+        board_right_px = board_offset[0] + (loop.cfg.width * gfx_game.CELL_SIZE)
+
+        polygon_calls: list[tuple[tuple[float, float], ...]] = []
+        original_polygon = gfx_game.pygame.draw.polygon
+
+        def record_polygon(surface, color, points, width=0, *args, **kwargs):
+            numeric_points = tuple((float(x), float(y)) for x, y in points)
+            if surface is screen and tuple(color)[:3] == piece_color and width == 0:
+                polygon_calls.append(numeric_points)
+            return original_polygon(surface, color, points, width, *args, **kwargs)
+
+        with patch.object(gfx_game.pygame.draw, "polygon", side_effect=record_polygon):
+            gfx_game.draw_board(
+                screen,
+                loop.state,
+                board_offset,
+                active_piece_overlay=(((9.82, 6.0),), piece.shape.color_id),
+            )
+
+        self.assertGreaterEqual(len(polygon_calls), 2)
+        fragment_min_x = [min(point[0] for point in polygon) for polygon in polygon_calls]
+        fragment_max_x = [max(point[0] for point in polygon) for polygon in polygon_calls]
+        self.assertTrue(
+            any(max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2) for max_x in fragment_max_x)
+        )
+        self.assertTrue(
+            any(min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2) for min_x in fragment_min_x)
+        )
 
     def test_saved_rotation_mode_reaches_live_2d_render_loop(self) -> None:
         screen = pygame.Surface((640, 480), pygame.SRCALPHA)

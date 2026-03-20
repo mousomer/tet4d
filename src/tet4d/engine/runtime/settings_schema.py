@@ -13,6 +13,10 @@ MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = ("off", "edge", "full", "helper")
 BOT_MODE_NAMES = ("off", "assist", "auto", "learn", "step")
 BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
+ROTATION_ANIMATION_MODE_NAMES = (
+    "cellwise_sliding",
+    "rigid_piece_rotation",
+)
 
 OVERLAY_TRANSPARENCY_MIN = 0.0
 OVERLAY_TRANSPARENCY_MAX = 0.90
@@ -234,7 +238,7 @@ def derive_runtime_setting_defaults(
 
 
 def sync_runtime_bot_budget(
-    settings: dict[str, dict[str, int]],
+    settings: dict[str, dict[str, Any]],
     *,
     runtime_budget_for_mode_fn: Callable[[str], int],
 ) -> None:
@@ -314,14 +318,28 @@ def validate_defaults_payload(
     )
 
     settings_raw = require_object(payload["settings"], path="defaults.settings")
-    settings: dict[str, dict[str, int]] = {}
+    settings: dict[str, dict[str, Any]] = {}
     for mode_key in MODE_KEYS:
         mode_settings = require_object(
             settings_raw.get(mode_key), path=f"defaults.settings.{mode_key}"
         )
-        cleaned: dict[str, int] = {}
+        cleaned: dict[str, Any] = {}
         for attr, value in mode_settings.items():
-            cleaned[str(attr)] = require_int(
+            attr_name = str(attr)
+            if attr_name == "rotation_animation_mode":
+                normalized_mode = as_non_empty_string(
+                    value,
+                    path=f"defaults.settings.{mode_key}.{attr}",
+                ).lower()
+                if normalized_mode not in ROTATION_ANIMATION_MODE_NAMES:
+                    raise RuntimeError(
+                        "defaults.settings."
+                        f"{mode_key}.{attr} must be one of: "
+                        + ", ".join(ROTATION_ANIMATION_MODE_NAMES)
+                    )
+                cleaned[attr_name] = normalized_mode
+                continue
+            cleaned[attr_name] = require_int(
                 value,
                 path=f"defaults.settings.{mode_key}.{attr}",
             )

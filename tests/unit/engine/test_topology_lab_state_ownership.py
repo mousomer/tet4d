@@ -147,6 +147,24 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         self.assertEqual(kwargs["probe_coord"], (2, 3))
         self.assertEqual(kwargs["probe_path"], ((2, 3),))
 
+    def test_sandbox_neighbor_search_toggle_hides_focus_overlay_but_keeps_sandbox_active(self) -> None:
+        state = self._state()
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        select_sandbox_projection_coord(state, (2, 3))
+        topology_lab_menu.ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.neighbor_search_enabled = False
+
+        lines = topology_lab_menu._workspace_preview_lines(
+            state,
+            preview=self._preview(),
+            preview_error=None,
+        )
+
+        self.assertIn("Sandbox neighbor-search: off", lines)
+        self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
+
     def test_canonical_topology_state_survives_tool_switches(self) -> None:
         state = self._state(dimension=3)
         topology_lab_menu._sync_canonical_playground_state(state)

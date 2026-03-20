@@ -274,7 +274,7 @@ def rotate_blocks_for_action(
             blocks,
             axis_a=axis_a,
             axis_b=axis_b,
-            steps_cw=steps,
+            quarter_turns=steps,
         )
     )
 
@@ -570,6 +570,9 @@ def sandbox_lines(state: TopologyPlaygroundState) -> list[str]:
         f"Set: {shape.label}",
         f"Origin: {list(sandbox.origin or ())}",
         f"Cells: {len(sandbox_cells(state))}",
+        "Neighbor-search: on"
+        if sandbox.neighbor_search_enabled
+        else "Neighbor-search: off",
         "Status: valid" if valid else f"Status: invalid ({message})",
     ]
     seam_crossings = _trace_tuple(sandbox.seam_crossings)

@@ -190,7 +190,7 @@ class ActivePiece2D:
 
     shape: PieceShape2D
     pos: Tuple[int, int]  # (x, y) of the piece origin on board
-    rotation: int = 0  # 0,1,2,3 -> 0°,90°,180°,270° CW
+    rotation: int = 0  # signed quarter-turn count in the canonical x/y plane
 
     def cells(self) -> List[Tuple[int, int]]:
         """

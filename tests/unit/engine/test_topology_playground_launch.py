@@ -11,6 +11,7 @@ from tet4d.engine.gameplay.api import (
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 from tet4d.engine.runtime import topology_playground_launch
 from tet4d.engine.runtime.topology_explorer_preview import advance_explorer_probe
@@ -27,6 +28,9 @@ from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     projective_plane_profile_2d,
     projective_space_profile_3d,
+    projective_space_profile_4d,
+    sphere_profile_3d,
+    sphere_profile_4d,
     swap_xw_profile_4d,
 )
 from tet4d.ui.pygame import frontend_nd_input
@@ -35,6 +39,15 @@ from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gam
 
 
 class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
+    @staticmethod
+    def _playground_cfg_nd(*, dimension: int, dims: tuple[int, ...], profile):
+        state = default_topology_playground_state(
+            dimension=dimension,
+            axis_sizes=dims,
+        )
+        state.topology_config.explorer_profile = profile
+        return build_gameplay_config_from_topology_playground_state(state)
+
     def test_module_stays_ui_free(self) -> None:
         source = inspect.getsource(topology_playground_launch)
         self.assertNotIn("pygame", source)
@@ -244,6 +257,128 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "Explorer gameplay mode"):
             build_gameplay_config_from_topology_playground_state(state)
+
+    def test_3d_play_continues_after_bottom_boundary_traversal_on_live_path(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=projective_space_profile_3d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("dot3", ((0, 0, 0),), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 3, 0))
+
+        first = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=1, delta=1),
+        )
+        self.assertIsNotNone(first.moved_cells)
+        self.assertTrue(state.try_move_axis(1, 1))
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells)))
+
+        second = cfg.explorer_transport.resolve_piece_step(
+            tuple(state.current_piece.cells()),
+            MoveStep(axis=1, delta=1),
+        )
+        self.assertIsNotNone(second.moved_cells)
+        state.step_gravity()
+
+        self.assertFalse(state.game_over)
+        self.assertFalse(state.board.cells)
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(second.moved_cells)),
+        )
+
+    def test_4d_play_continues_after_bottom_boundary_traversal_on_live_path(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=4,
+            dims=(4, 4, 4, 4),
+            profile=projective_space_profile_4d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("dot4", ((0, 0, 0, 0),), color_id=6)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 3, 0, 0))
+
+        first = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=1, delta=1),
+        )
+        self.assertIsNotNone(first.moved_cells)
+        self.assertTrue(state.try_move_axis(1, 1))
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells)))
+
+        second = cfg.explorer_transport.resolve_piece_step(
+            tuple(state.current_piece.cells()),
+            MoveStep(axis=1, delta=1),
+        )
+        self.assertIsNotNone(second.moved_cells)
+        state.step_gravity()
+
+        self.assertFalse(state.game_over)
+        self.assertFalse(state.board.cells)
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(second.moved_cells)),
+        )
+
+    def test_3d_sphere_play_keeps_falling_after_seam_reframes_gravity(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=sphere_profile_3d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("sphere_domino3", ((0, 0, 0), (0, 0, 1)), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(3, 3, 0))
+
+        self.assertTrue(state.try_move_axis(1, 1))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((3, 2, 0), (3, 3, 0)),
+        )
+
+        state.step_gravity()
+
+        self.assertFalse(state.game_over)
+        self.assertFalse(state.board.cells)
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((2, 2, 0), (2, 3, 0)),
+        )
+
+    def test_4d_sphere_play_keeps_falling_after_seam_reframes_gravity(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=4,
+            dims=(4, 4, 4, 4),
+            profile=sphere_profile_4d(),
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND(
+            "sphere_tri4",
+            ((0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 0)),
+            color_id=6,
+        )
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(3, 3, 1, 0))
+
+        self.assertTrue(state.try_move_axis(1, 1))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((3, 2, 2, 0), (3, 3, 1, 0), (3, 3, 2, 0)),
+        )
+
+        state.step_gravity()
+
+        self.assertFalse(state.game_over)
+        self.assertFalse(state.board.cells)
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            ((2, 2, 2, 0), (2, 3, 1, 0), (2, 3, 2, 0)),
+        )
 
 
 class TestTopologyLabPlayLaunch(unittest.TestCase):

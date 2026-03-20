@@ -342,6 +342,19 @@ class TestFront3DSetupDedup(unittest.TestCase):
         self.assertEqual(loop.state.config.dims, (6, 18, 6))
         self.assertEqual(loop.state.board.dims, (6, 18, 6))
 
+    def test_loop_context_accepts_rotation_animation_mode(self) -> None:
+        cfg = GameConfigND(dims=(6, 18, 6), gravity_axis=1, speed_level=1)
+
+        loop = front3d_game.LoopContext3D.create(
+            cfg,
+            rotation_animation_mode="rigid_piece_rotation",
+        )
+
+        self.assertEqual(
+            loop.rotation_anim.rotation_animation_mode,
+            "rigid_piece_rotation",
+        )
+
     def test_build_config_matches_shared_nd_builder(self) -> None:
         settings = frontend_nd_setup.GameSettingsND(
             width=6,

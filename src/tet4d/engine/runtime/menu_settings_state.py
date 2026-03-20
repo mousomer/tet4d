@@ -283,14 +283,14 @@ def get_global_game_seed() -> int:
     return global_game_seed_from_payload(_load_payload(), default=DEFAULT_GAME_SEED)
 
 
-def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
+def default_mode_shared_gameplay_settings(mode_key: str) -> dict[str, Any]:
     normalized_mode = normalize_mode_key(mode_key)
     defaults = _default_settings_payload()
     mode_settings = mode_settings_view(defaults.get("settings"), normalized_mode)
     return coerce_shared_gameplay_settings(mode_settings)
 
 
-def mode_shared_gameplay_settings(mode_key: str) -> dict[str, int]:
+def mode_shared_gameplay_settings(mode_key: str) -> dict[str, Any]:
     normalized_mode = normalize_mode_key(mode_key)
     payload = _load_payload()
     defaults = default_mode_shared_gameplay_settings(normalized_mode)
@@ -310,9 +310,8 @@ def mode_speedup_settings(mode_key: str) -> tuple[int, int]:
 
 
 def mode_rotation_animation_mode(mode_key: str) -> str:
-    from tet4d.engine.gameplay.rotation_anim import ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION
     settings = mode_shared_gameplay_settings(mode_key)
-    return str(settings.get("rotation_animation_mode", ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION))
+    return str(settings["rotation_animation_mode"])
 
 
 def mode_animation_settings(mode_key: str) -> tuple[int, int]:
@@ -334,6 +333,7 @@ def save_shared_gameplay_settings(
     kick_level_index: int,
     auto_speedup_enabled: int,
     lines_per_level: int,
+    rotation_animation_mode: str,
     rotation_animation_duration_ms_2d: int,
     rotation_animation_duration_ms_nd: int,
     translation_animation_duration_ms: int,
@@ -345,6 +345,7 @@ def save_shared_gameplay_settings(
         "kick_level_index": int(kick_level_index),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
+        "rotation_animation_mode": str(rotation_animation_mode),
         "rotation_animation_duration_ms_2d": int(rotation_animation_duration_ms_2d),
         "rotation_animation_duration_ms_nd": int(rotation_animation_duration_ms_nd),
         "translation_animation_duration_ms": int(translation_animation_duration_ms),

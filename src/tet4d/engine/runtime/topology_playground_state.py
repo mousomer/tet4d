@@ -13,6 +13,11 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
 
+# Legacy tool ids remain while the shell migrates to the new top-level
+# workspace model. The long-term architectural contract is:
+# - editor: safe probe/selection plus explicit edit tools
+# - sandbox: piece experimentation only
+# - play: gameplay launch/preview only
 TOOL_INSPECT = "inspect_boundary"
 TOOL_EDIT = "edit_transform"
 TOOL_SANDBOX = "piece_sandbox"
@@ -20,6 +25,14 @@ TOOL_PLAY = "play_preview"
 TOOL_NAVIGATE = TOOL_INSPECT
 TOOL_CREATE = TOOL_EDIT
 TOOL_PROBE = TOOL_INSPECT
+WORKSPACE_EDITOR = "editor"
+WORKSPACE_SANDBOX = "sandbox"
+WORKSPACE_PLAY = "play"
+TOPOLOGY_PLAYGROUND_WORKSPACES = (
+    WORKSPACE_EDITOR,
+    WORKSPACE_SANDBOX,
+    WORKSPACE_PLAY,
+)
 TOPOLOGY_PLAYGROUND_TOOLS = (
     TOOL_EDIT,
     TOOL_INSPECT,
@@ -34,6 +47,12 @@ _CANONICAL_TOOL_BY_NAME = {
     "probe": TOOL_INSPECT,
     "piece_sandbox": TOOL_SANDBOX,
     "play_preview": TOOL_PLAY,
+}
+_WORKSPACE_BY_TOOL = {
+    TOOL_EDIT: WORKSPACE_EDITOR,
+    TOOL_INSPECT: WORKSPACE_EDITOR,
+    TOOL_SANDBOX: WORKSPACE_SANDBOX,
+    TOOL_PLAY: WORKSPACE_PLAY,
 }
 
 TRANSPORT_OWNER_LEGACY = "legacy_topology"
@@ -100,6 +119,11 @@ PresetSource = Literal[
     "designer",
     "explorer",
     "fallback",
+]
+TopologyWorkspace = Literal[
+    "editor",
+    "sandbox",
+    "play",
 ]
 
 _VALID_DIMENSIONS = frozenset((2, 3, 4))
@@ -357,6 +381,7 @@ class TopologyPlaygroundSandboxPieceState:
     piece_index: int = 0
     origin: Coord | None = None
     local_blocks: tuple[Coord, ...] | None = None
+    neighbor_search_enabled: bool = True
     trace: tuple[str, ...] = ()
     seam_crossings: tuple[str, ...] = ()
     invalid_message: str = ""
@@ -382,6 +407,7 @@ class TopologyPlaygroundSandboxPieceState:
                 )
                 for block in self.local_blocks
             )
+        self.neighbor_search_enabled = bool(self.neighbor_search_enabled)
         self.trace = tuple(str(entry) for entry in self.trace)
         self.seam_crossings = tuple(str(entry) for entry in self.seam_crossings)
         self.invalid_message = str(self.invalid_message)
@@ -558,6 +584,7 @@ class TopologyPlaygroundCanonicalOwnershipState:
 
 @dataclass(frozen=True)
 class TopologyPlaygroundEditorOwnershipState:
+    workspace: TopologyWorkspace
     selected_boundary: BoundaryRef | None
     selected_gluing: str | None
     active_tool: str
@@ -570,6 +597,7 @@ class TopologyPlaygroundInspectorOwnershipState:
 
 @dataclass(frozen=True)
 class TopologyPlaygroundSandboxOwnershipState:
+    workspace: TopologyWorkspace
     sandbox_piece_state: TopologyPlaygroundSandboxPieceState
 
 
@@ -658,6 +686,9 @@ class TopologyPlaygroundState:
         assert self.topology_config.explorer_profile is not None
         return self.topology_config.explorer_profile
 
+    @property
+    def active_workspace(self) -> TopologyWorkspace:
+        return workspace_for_tool(self.active_tool)
 
     @property
     def canonical_state(self) -> TopologyPlaygroundCanonicalOwnershipState:
@@ -674,6 +705,7 @@ class TopologyPlaygroundState:
     @property
     def editor_state(self) -> TopologyPlaygroundEditorOwnershipState:
         return TopologyPlaygroundEditorOwnershipState(
+            workspace=WORKSPACE_EDITOR,
             selected_boundary=self.selected_boundary,
             selected_gluing=self.selected_gluing,
             active_tool=self.active_tool,
@@ -688,6 +720,7 @@ class TopologyPlaygroundState:
     @property
     def sandbox_state(self) -> TopologyPlaygroundSandboxOwnershipState:
         return TopologyPlaygroundSandboxOwnershipState(
+            workspace=WORKSPACE_SANDBOX,
             sandbox_piece_state=self.sandbox_piece_state,
         )
 
@@ -806,6 +839,11 @@ def _normalize_active_tool(tool: str) -> str:
         raise ValueError(f"unsupported topology playground tool: {tool}") from exc
 
 
+def workspace_for_tool(tool: str) -> TopologyWorkspace:
+    normalized_tool = _normalize_active_tool(tool)
+    return _WORKSPACE_BY_TOOL[normalized_tool]
+
+
 __all__ = [
     "EXPLORER_USABILITY_BLOCKED",
     "EXPLORER_USABILITY_CELLWISE",
@@ -833,6 +871,7 @@ __all__ = [
     "TOOL_PLAY",
     "TOOL_PROBE",
     "TOOL_SANDBOX",
+    "TOPOLOGY_PLAYGROUND_WORKSPACES",
     "TOPOLOGY_VALIDITY_INVALID",
     "TOPOLOGY_VALIDITY_UNKNOWN",
     "TOPOLOGY_VALIDITY_VALID",
@@ -856,7 +895,12 @@ __all__ = [
     "TopologyPlaygroundState",
     "TopologyPlaygroundTopologyConfig",
     "TopologyPlaygroundTransportPolicy",
+    "TopologyWorkspace",
+    "WORKSPACE_EDITOR",
+    "WORKSPACE_PLAY",
+    "WORKSPACE_SANDBOX",
     "build_transport_policy",
     "default_gravity_mode_for_gameplay",
     "default_topology_playground_state",
+    "workspace_for_tool",
 ]

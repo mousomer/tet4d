@@ -14,7 +14,9 @@ search_repo_text() {
   local pattern="$1"
   if rg_usable; then
     rg -n -I --hidden \
+      --glob '!**/.git' \
       --glob '!**/.git/**' \
+      --glob '!**/.claude/**' \
       --glob '!**/.venv/**' \
       --glob '!**/.idea/**' \
       --glob '!**/__pycache__/**' \
@@ -35,7 +37,9 @@ search_repo_text() {
     return
   fi
   grep -RInE \
+    --exclude=.git \
     --exclude-dir=.git \
+    --exclude-dir=.claude \
     --exclude-dir=.venv \
     --exclude-dir=.idea \
     --exclude-dir=__pycache__ \

@@ -45,6 +45,7 @@ from .settings_hub_model import (
     _unified_value_text,
     _validate_unified_layout_against_policy,
     build_unified_settings_state,
+    rotation_animation_mode_label,
 )
 
 
@@ -102,8 +103,6 @@ def _handle_unified_enter(
         state.running = False
     return screen
 
-
-
 def _draw_advanced_gameplay_menu(
     screen: pygame.Surface,
     fonts,
@@ -123,6 +122,7 @@ def _draw_advanced_gameplay_menu(
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
 
     rows = (
+        ("rotation_animation_mode", "Rotation animation mode"),
         ("kick_level_index", "Kick permissiveness"),
         ("rotation_animation_duration_ms_2d", "2D rotation animation"),
         ("rotation_animation_duration_ms_nd", "ND rotation animation"),
@@ -149,6 +149,8 @@ def _draw_advanced_gameplay_menu(
         if row_key == "kick_level_index":
             safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
             value = _KICK_LEVEL_LABELS[safe_index]
+        elif row_key == "rotation_animation_mode":
+            value = rotation_animation_mode_label(state.rotation_animation_mode)
         elif row_key == "rotation_animation_duration_ms_2d":
             value = _format_animation_duration(
                 int(state.rotation_animation_duration_ms_2d)
@@ -185,6 +187,7 @@ def run_advanced_gameplay_menu(
 ) -> pygame.Surface:
     selected = 0
     row_keys = (
+        "rotation_animation_mode",
         "kick_level_index",
         "rotation_animation_duration_ms_2d",
         "rotation_animation_duration_ms_nd",

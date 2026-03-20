@@ -938,7 +938,48 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("board_z", row_keys)
         self.assertIn("board_w", row_keys)
         self.assertIn("piece_set", row_keys)
-        self.assertIn("speed_level", row_keys)
+        self.assertIn("sandbox_neighbor_search", row_keys)
+
+    def test_helper_lines_scaffold_editor_workspace(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+
+        lines = topology_lab_menu._hint_lines_for_state(state)
+
+        self.assertTrue(any("Editor workspace:" in line for line in lines))
+        self.assertTrue(any("probe/selection only" in line for line in lines))
+
+    def test_helper_lines_scaffold_sandbox_workspace_with_explicit_neighbor_state(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+
+        lines = topology_lab_menu._hint_lines_for_state(state)
+
+        self.assertTrue(any("Sandbox workspace:" in line for line in lines))
+        self.assertTrue(any("neighbor-search overlay is explicit" in line for line in lines))
+
+    def test_helper_lines_scaffold_play_workspace(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
+
+        lines = topology_lab_menu._hint_lines_for_state(state)
+
+        self.assertTrue(any("Play workspace:" in line for line in lines))
+        self.assertTrue(any("canonical gameplay runtime" in line for line in lines))
+
+    def test_sandbox_neighbor_search_row_toggles_canonical_state_explicitly(self) -> None:
+        state = self._explorer_state(3)
+        row = next(
+            candidate
+            for candidate in topology_lab_menu._rows_for_state(state)
+            if candidate.key == "sandbox_neighbor_search"
+        )
+
+        self.assertEqual(topology_lab_menu._row_value_text(state, row), "On")
+        topology_lab_menu._adjust_row(state, row, 1)
+        self.assertEqual(topology_lab_menu._row_value_text(state, row), "Off")
+        assert state.canonical_state is not None
+        self.assertFalse(state.canonical_state.sandbox_piece_state.neighbor_search_enabled)
 
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
@@ -2593,7 +2634,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Selected boundary: x+", lines)
         self.assertIn("Hover boundary: z-", lines)
         self.assertIn("Selected seam: glue_001", lines)
-        self.assertIn("Mode: Inspect", lines)
+        self.assertIn("Workspace: Editor", lines)
+        self.assertIn("Tool focus: Inspect tool", lines)
 
     def test_workspace_preview_lines_fall_back_to_hovered_glue(self) -> None:
         state = self._explorer_state(3)
@@ -2647,7 +2689,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             lines,
         )
         self.assertIn(
-            "Pane: Analysis View   Tab/Shift+Tab switch pane   E/I/B/P choose mode   Enter plays from Play",
+            "Pane: Analysis View   Tab/Shift+Tab switch pane   E/I/B/P choose tool   Enter plays from Play",
             lines,
         )
         self.assertIn(

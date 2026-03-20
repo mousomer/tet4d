@@ -738,6 +738,7 @@ Parameters:
 - `settings.2d.random_mode_index`: `0` (`int`)
 - `settings.2d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.2d.rotation_animation_duration_ms_nd`: `300` (`int`)
+- `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.2d.speed_level`: `1` (`int`)
 - `settings.2d.topology_advanced`: `0` (`int`)
 - `settings.2d.topology_mode`: `0` (`int`)
@@ -763,6 +764,7 @@ Parameters:
 - `settings.3d.random_mode_index`: `0` (`int`)
 - `settings.3d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.3d.rotation_animation_duration_ms_nd`: `300` (`int`)
+- `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.3d.speed_level`: `1` (`int`)
 - `settings.3d.topology_advanced`: `0` (`int`)
 - `settings.3d.topology_mode`: `0` (`int`)
@@ -789,6 +791,7 @@ Parameters:
 - `settings.4d.random_mode_index`: `0` (`int`)
 - `settings.4d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.4d.rotation_animation_duration_ms_nd`: `300` (`int`)
+- `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.4d.speed_level`: `1` (`int`)
 - `settings.4d.topology_advanced`: `0` (`int`)
 - `settings.4d.topology_mode`: `0` (`int`)
@@ -882,6 +885,7 @@ Parameters:
 - `settings_hub_rows[]`: array[`string`]; examples: `"Audio"`, `"Display"`, `"Gameplay"`
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
 - `settings_option_labels.game_random_mode[]`: array[`string`]; examples: `"Fixed seed"`, `"True random"`
+- `settings_option_labels.game_rotation_animation_mode[]`: array[`string`]; examples: `"Cell sliding"`, `"Rigid piece rotation"`
 - `settings_split_rules.max_top_level_actions`: `2` (`int`)
 - `settings_split_rules.max_top_level_fields`: `5` (`int`)
 - `settings_split_rules.split_when_mode_specific`: `true` (`bool`)
@@ -923,7 +927,7 @@ Parameters:
 - `ui_copy.launcher.escape_hint_quit`: `"Q quit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
-- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Gameplay -> Advanced gameplay... controls kick permissiveness, 2D/ND...`
+- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Gameplay -> Advanced gameplay... controls rotation mode, kick permis...`
 - `ui_copy.settings_hub.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Top-level categories: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)

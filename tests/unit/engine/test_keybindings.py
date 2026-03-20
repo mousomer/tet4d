@@ -525,11 +525,16 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn("rotation_animation_duration_ms_2d", settings)
         self.assertIn("rotation_animation_duration_ms_nd", settings)
         self.assertIn("translation_animation_duration_ms", settings)
+        self.assertIn("rotation_animation_mode", settings)
         self.assertIn(settings["auto_speedup_enabled"], (0, 1))
         self.assertIn(settings["random_mode_index"], (0, 1))
         self.assertIn(settings["topology_advanced"], (0, 1))
         self.assertGreaterEqual(settings["kick_level_index"], 0)
         self.assertGreaterEqual(settings["lines_per_level"], 1)
+        self.assertIn(
+            settings["rotation_animation_mode"],
+            ("cellwise_sliding", "rigid_piece_rotation"),
+        )
         self.assertGreaterEqual(settings["rotation_animation_duration_ms_2d"], 0)
         self.assertGreaterEqual(settings["rotation_animation_duration_ms_nd"], 0)
         self.assertGreaterEqual(settings["translation_animation_duration_ms"], 0)
@@ -541,6 +546,7 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             kick_level_index=2,
             auto_speedup_enabled=0,
             lines_per_level=17,
+            rotation_animation_mode="cellwise_sliding",
             rotation_animation_duration_ms_2d=340,
             rotation_animation_duration_ms_nd=360,
             translation_animation_duration_ms=140,
@@ -554,12 +560,17 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             self.assertEqual(mode_settings["kick_level_index"], 2)
             self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
             self.assertEqual(mode_settings["lines_per_level"], 17)
+            self.assertEqual(mode_settings["rotation_animation_mode"], "cellwise_sliding")
             self.assertEqual(mode_settings["rotation_animation_duration_ms_2d"], 340)
             self.assertEqual(mode_settings["rotation_animation_duration_ms_nd"], 360)
             self.assertEqual(mode_settings["translation_animation_duration_ms"], 140)
         self.assertEqual(menu_settings_state.mode_animation_settings("2d"), (340, 140))
         self.assertEqual(menu_settings_state.mode_animation_settings("3d"), (360, 140))
         self.assertEqual(menu_settings_state.mode_animation_settings("4d"), (360, 140))
+        self.assertEqual(
+            menu_settings_state.mode_rotation_animation_mode("3d"),
+            "cellwise_sliding",
+        )
 
     def test_load_menu_settings_sanitizes_invalid_profile_and_mode(self) -> None:
         payload = menu_settings_state._default_settings_payload()

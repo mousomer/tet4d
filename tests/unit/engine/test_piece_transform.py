@@ -30,7 +30,7 @@ class TestPieceTransform(unittest.TestCase):
         After rotation, the line should be centered at y=0.5 (which rounds to y=0,1,2,3 after rounding).
         """
         blocks = ((-1, 0), (0, 0), (1, 0), (2, 0))
-        # After CW rotation around center (0.5, 0):
+        # After one positive quarter-turn around center (0.5, 0):
         # Original positions relative to center:
         #   (-1, 0) -> (-1.5, 0) -> rotates to (0, 1.5) -> rounds to (0, 2)
         #   (0, 0)  -> (-0.5, 0) -> rotates to (0, 0.5) -> rounds to (0, 0)
@@ -128,8 +128,8 @@ class TestPieceTransform(unittest.TestCase):
                 f"4 rotations should be identity for {blocks}",
             )
 
-    def test_rotate_blocks_2d_cw_then_ccw_is_identity(self) -> None:
-        """Verify that CW rotation followed by CCW rotation returns to original."""
+    def test_rotate_blocks_2d_positive_then_negative_turn_is_identity(self) -> None:
+        """Verify that a positive turn followed by a negative turn returns to original."""
         test_cases = [
             ((0, 0), (1, 0)),
             ((0, 0), (1, 0), (2, 0)),
@@ -138,12 +138,12 @@ class TestPieceTransform(unittest.TestCase):
         ]
         for blocks in test_cases:
             original = canonicalize_blocks_2d(blocks)
-            rotated_cw = rotate_blocks_2d(blocks, 1)
-            rotated_back = rotate_blocks_2d(rotated_cw, -1)
+            rotated_positive = rotate_blocks_2d(blocks, 1)
+            rotated_back = rotate_blocks_2d(rotated_positive, -1)
             self.assertEqual(
                 canonicalize_blocks_2d(rotated_back),
                 original,
-                f"CW+CCW should be identity for {blocks}",
+                f"positive+negative turns should be identity for {blocks}",
             )
 
     def test_rotate_blocks_nd_four_rotations_is_identity(self) -> None:
@@ -176,8 +176,8 @@ class TestPieceTransform(unittest.TestCase):
                     f"4 rotations should be identity for {blocks} in plane ({axis_a},{axis_b})",
                 )
 
-    def test_rotate_blocks_nd_cw_then_ccw_is_identity(self) -> None:
-        """Verify that CW rotation followed by CCW rotation returns to original in ND."""
+    def test_rotate_blocks_nd_positive_then_negative_turn_is_identity(self) -> None:
+        """Verify that a positive turn followed by a negative turn returns to original in ND."""
         test_cases = [
             ((0, 0, 0), (1, 0, 0)),
             ((0, 0, 0), (1, 0, 0), (0, 0, 1), (1, 0, 1)),
@@ -190,12 +190,17 @@ class TestPieceTransform(unittest.TestCase):
             for axis_a, axis_b in rotation_planes:
                 if axis_a >= ndim or axis_b >= ndim:
                     continue
-                rotated_cw = rotate_blocks_nd(blocks, axis_a, axis_b, 1)
-                rotated_back = rotate_blocks_nd(rotated_cw, axis_a, axis_b, -1)
+                rotated_positive = rotate_blocks_nd(blocks, axis_a, axis_b, 1)
+                rotated_back = rotate_blocks_nd(
+                    rotated_positive,
+                    axis_a,
+                    axis_b,
+                    -1,
+                )
                 self.assertEqual(
                     canonicalize_blocks_nd(rotated_back),
                     original,
-                    f"CW+CCW should be identity for {blocks} in plane ({axis_a},{axis_b})",
+                    f"positive+negative turns should be identity for {blocks} in plane ({axis_a},{axis_b})",
                 )
 
 

@@ -694,6 +694,7 @@ _MODE_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "topology_profile_index",
             "auto_speedup_enabled",
             "lines_per_level",
+            "rotation_animation_mode",
             "rotation_animation_duration_ms_2d",
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",

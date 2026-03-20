@@ -49,11 +49,11 @@ def test_api_new_state_2d_is_deterministic_for_same_seed_and_actions() -> None:
     cfg = api.GameConfig(width=8, height=16, speed_level=3)
     actions = (
         api.Action.MOVE_LEFT,
-        api.Action.ROTATE_CW,
+        api.Action.ROTATE_POSITIVE,
         api.Action.MOVE_RIGHT,
         api.Action.SOFT_DROP,
         api.Action.NONE,
-        api.Action.ROTATE_CCW,
+        api.Action.ROTATE_NEGATIVE,
         api.Action.SOFT_DROP,
         api.Action.NONE,
     )

@@ -672,7 +672,7 @@ class ActivePieceND:
             self.rel_blocks,
             axis_a=axis_a,
             axis_b=axis_b,
-            steps_cw=delta_steps,
+            quarter_turns=delta_steps,
         )
         return ActivePieceND(
             shape=self.shape,

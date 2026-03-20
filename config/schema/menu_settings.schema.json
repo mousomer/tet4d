@@ -172,6 +172,7 @@
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
+            "rotation_animation_mode",
             "rotation_animation_duration_ms_2d",
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
@@ -220,6 +221,13 @@
             "topology_profile_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "rotation_animation_mode": {
+              "type": "string",
+              "enum": [
+                "cellwise_sliding",
+                "rigid_piece_rotation"
+              ]
             },
             "rotation_animation_duration_ms_2d": {
               "type": "integer",
@@ -271,6 +279,7 @@
             "game_seed",
             "topology_mode",
             "topology_advanced",
+            "rotation_animation_mode",
             "rotation_animation_duration_ms_2d",
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
@@ -319,6 +328,13 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 1
+            },
+            "rotation_animation_mode": {
+              "type": "string",
+              "enum": [
+                "cellwise_sliding",
+                "rigid_piece_rotation"
+              ]
             },
             "rotation_animation_duration_ms_2d": {
               "type": "integer",
@@ -371,6 +387,7 @@
             "game_seed",
             "topology_mode",
             "topology_advanced",
+            "rotation_animation_mode",
             "rotation_animation_duration_ms_2d",
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
@@ -423,6 +440,13 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 1
+            },
+            "rotation_animation_mode": {
+              "type": "string",
+              "enum": [
+                "cellwise_sliding",
+                "rigid_piece_rotation"
+              ]
             },
             "rotation_animation_duration_ms_2d": {
               "type": "integer",

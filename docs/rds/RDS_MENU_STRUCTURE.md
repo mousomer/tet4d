@@ -144,7 +144,7 @@ Pause Menu
 6. Setup screens must expose the safe topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
 8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
-9. Shared settings hub owns `Random type`, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; it must not advertise full custom-topology editing.
+9. Shared settings hub owns `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the hub must not advertise full custom-topology editing.
 10. `Play Last Custom Topology` and `Open Explorer Playground` are the direct launcher routes into custom topology play/edit flows.
 11. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 
@@ -331,6 +331,8 @@ Manual tests:
 14. Runtime side-panel rendering should use shared adapter:
 15. `draw_unified_game_side_panel(...)` in `src/tet4d/ui/pygame/render/panel_utils.py`.
 16. Help/Controls includes simple arrow-diagram previews for translation and rotation.
+17. Explorer Playground helper/status scaffolding must be keyed to the canonical workspace model (`editor`, `sandbox`, `play`) rather than treating legacy `Inspect` / `Edit` labels as the primary top-level structure.
+18. Explorer Playground sandbox helper/status content must surface neighbor-search as explicit `on` / `off` state instead of hiding it as dimension-specific behavior.
 
 ## 12. Stabilization Additions (Completed)
 
@@ -352,7 +354,7 @@ Manual tests:
 Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu includes `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`, and`Quit`.
-3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced gameplay`), and analytics controls.
+3. `Settings` submenu unifies audio, display, gameplay (`Game seed`, `Random type`, `Advanced gameplay` with rotation mode + motion controls), and analytics controls.
 4. `Bot` submenu centralizes bot mode/algorithm/profile/speed/budget with per-dimension selection.
 5. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 6. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.

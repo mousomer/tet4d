@@ -48,7 +48,7 @@ def test_replay_2d_record_and_payload_roundtrip() -> None:
     cfg = api.GameConfig(width=8, height=16, speed_level=2, kick_level="light")
     actions = (
         api.Action.MOVE_LEFT,
-        api.Action.ROTATE_CW,
+        api.Action.ROTATE_POSITIVE,
         api.Action.SOFT_DROP,
         api.Action.NONE,
     )
@@ -69,11 +69,11 @@ def test_replay_2d_playback_matches_direct_api_execution() -> None:
     cfg = api.GameConfig(width=8, height=16, speed_level=2)
     actions = (
         api.Action.MOVE_LEFT,
-        api.Action.ROTATE_CW,
+        api.Action.ROTATE_POSITIVE,
         api.Action.SOFT_DROP,
         api.Action.MOVE_RIGHT,
         api.Action.NONE,
-        api.Action.ROTATE_CCW,
+        api.Action.ROTATE_NEGATIVE,
     )
     script = record_replay_2d(config=cfg, seed=101, actions=actions)
 

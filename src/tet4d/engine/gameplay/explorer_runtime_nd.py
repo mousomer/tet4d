@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 
 from tet4d.engine.core.model import BoardND, Coord
 from tet4d.engine.core.rules.piece_placement import (
@@ -21,6 +22,12 @@ from tet4d.engine.topology_explorer.transport_resolver import (
     ExplorerTransportFrameTransform,
     ExplorerTransportResolver,
 )
+
+
+@dataclass(frozen=True)
+class ExplorerPieceMoveResultND:
+    piece: ActivePieceND
+    frame_transform: ExplorerTransportFrameTransform | None = None
 
 
 def _apply_frame_transform(
@@ -62,6 +69,63 @@ def _resolved_movement_policy(
     return explorer_movement_policy_from_rigid_play_enabled(rigid_play_enabled)
 
 
+def _coherent_piece_frame_transform(
+    step_result,
+) -> ExplorerTransportFrameTransform | None:
+    if step_result.frame_transform is not None:
+        return step_result.frame_transform
+    if not step_result.rigidly_coherent or not step_result.cell_steps:
+        return None
+    return step_result.cell_steps[0].piece_frame_transform
+
+
+def move_piece_via_explorer_glue_with_frame(
+    piece: ActivePieceND,
+    *,
+    transport: ExplorerTransportResolver,
+    axis: int,
+    delta: int,
+    movement_policy: ExplorerMovementPolicy | None = None,
+    rigid_play_enabled: bool | None = True,
+) -> ExplorerPieceMoveResultND | None:
+    step = MoveStep(axis=int(axis), delta=int(delta))
+    policy = _resolved_movement_policy(
+        movement_policy=movement_policy,
+        rigid_play_enabled=rigid_play_enabled,
+    )
+    step_result = transport.resolve_piece_step(piece.cells(), step)
+    if step_result.kind == BLOCKED_MOVE:
+        return None
+    frame_transform = _coherent_piece_frame_transform(step_result)
+    if policy == CELLWISE_FREE:
+        assert step_result.moved_cells is not None
+        use_exact_cells = step_result.kind == CELLWISE_DEFORMATION or any(
+            cell_step.traversal is not None for cell_step in step_result.cell_steps
+        )
+        if use_exact_cells:
+            return ExplorerPieceMoveResultND(
+                piece=_piece_from_exact_cells(piece, step_result.moved_cells),
+                frame_transform=frame_transform,
+            )
+        assert step_result.frame_transform is not None
+        return ExplorerPieceMoveResultND(
+            piece=_apply_frame_transform(piece, step_result.frame_transform),
+            frame_transform=frame_transform,
+        )
+    if step_result.kind == CELLWISE_DEFORMATION and not step_result.rigidly_coherent:
+        return None
+    if step_result.frame_transform is None:
+        assert step_result.moved_cells is not None
+        return ExplorerPieceMoveResultND(
+            piece=_piece_from_exact_cells(piece, step_result.moved_cells),
+            frame_transform=frame_transform,
+        )
+    return ExplorerPieceMoveResultND(
+        piece=_apply_frame_transform(piece, step_result.frame_transform),
+        frame_transform=frame_transform,
+    )
+
+
 def move_piece_via_explorer_glue(
     piece: ActivePieceND,
     *,
@@ -71,29 +135,15 @@ def move_piece_via_explorer_glue(
     movement_policy: ExplorerMovementPolicy | None = None,
     rigid_play_enabled: bool | None = True,
 ) -> ActivePieceND | None:
-    step = MoveStep(axis=int(axis), delta=int(delta))
-    policy = _resolved_movement_policy(
+    result = move_piece_via_explorer_glue_with_frame(
+        piece,
+        transport=transport,
+        axis=axis,
+        delta=delta,
         movement_policy=movement_policy,
         rigid_play_enabled=rigid_play_enabled,
     )
-    step_result = transport.resolve_piece_step(piece.cells(), step)
-    if step_result.kind == BLOCKED_MOVE:
-        return None
-    if policy == CELLWISE_FREE:
-        assert step_result.moved_cells is not None
-        use_exact_cells = step_result.kind == CELLWISE_DEFORMATION or any(
-            cell_step.traversal is not None for cell_step in step_result.cell_steps
-        )
-        if use_exact_cells:
-            return _piece_from_exact_cells(piece, step_result.moved_cells)
-        assert step_result.frame_transform is not None
-        return _apply_frame_transform(piece, step_result.frame_transform)
-    if step_result.kind == CELLWISE_DEFORMATION and not step_result.rigidly_coherent:
-        return None
-    if step_result.frame_transform is None:
-        assert step_result.moved_cells is not None
-        return _piece_from_exact_cells(piece, step_result.moved_cells)
-    return _apply_frame_transform(piece, step_result.frame_transform)
+    return None if result is None else result.piece
 
 
 def piece_cells_in_bounds(
@@ -128,5 +178,6 @@ def can_piece_exist_explorer(
 __all__ = [
     "can_piece_exist_explorer",
     "move_piece_via_explorer_glue",
+    "move_piece_via_explorer_glue_with_frame",
     "piece_cells_in_bounds",
 ]

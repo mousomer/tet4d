@@ -42,6 +42,7 @@ assets/help/rotation_keys.gif
 
 # Local workspace/Codex policy artifacts (not part of public project source)
 .policy/
+.claude/
 .workspace_policy_version.json
 config/project/policy_manifest.json
 scripts/check_git_sanitation.sh

@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from tet4d.engine.gameplay.rotation_anim import (
+    ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
+    ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+)
+
 from .. import settings_schema as _settings_schema
 from ..runtime_config import kick_level_names
 from ..settings_sanitize import (
@@ -20,12 +25,21 @@ from .store import mode_settings_view
 
 _MODE_KEYS = set(MODE_KEYS)
 _KICK_LEVEL_NAMES = kick_level_names()
-_SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, int], ...] = (
+_ROTATION_ANIMATION_MODE_VALUES = (
+    ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
+    ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+)
+_SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, Any], ...] = (
     ("random_mode_index", clamp_toggle_index, 0),
     ("topology_advanced", clamp_toggle_index, 0),
     ("kick_level_index", None, 0),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
     ("lines_per_level", clamp_lines_per_level, 10),
+    (
+        "rotation_animation_mode",
+        None,
+        ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+    ),
     ("rotation_animation_duration_ms_2d", clamp_animation_duration_ms, 300),
     ("rotation_animation_duration_ms_nd", clamp_animation_duration_ms, 300),
     ("translation_animation_duration_ms", clamp_animation_duration_ms, 120),
@@ -59,17 +73,34 @@ def normalize_mode_key(mode_key: str) -> str:
     return normalized
 
 
+def normalize_rotation_animation_mode(
+    value: Any,
+    *,
+    default: str = ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
+) -> str:
+    normalized = str(value).strip().lower()
+    if normalized not in _ROTATION_ANIMATION_MODE_VALUES:
+        return str(default)
+    return normalized
+
+
 def coerce_shared_gameplay_settings(
     raw: dict[str, Any],
     *,
-    defaults: dict[str, int] | None = None,
-) -> dict[str, int]:
-    normalized: dict[str, int] = {}
+    defaults: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
     for setting_name, clamp_fn, fallback in _SHARED_GAMEPLAY_SPECS:
-        default_value = defaults[setting_name] if defaults is not None else int(fallback)
+        default_value = defaults[setting_name] if defaults is not None else fallback
         if setting_name == "kick_level_index":
             normalized[setting_name] = int(
                 clamp_kick_level_index(raw.get(setting_name), default=default_value)
+            )
+            continue
+        if setting_name == "rotation_animation_mode":
+            normalized[setting_name] = normalize_rotation_animation_mode(
+                raw.get(setting_name),
+                default=str(default_value),
             )
             continue
         normalized[setting_name] = int(
@@ -125,7 +156,7 @@ def mode_shared_gameplay_settings_from_payload(
     payload: dict[str, Any],
     *,
     mode_key: str,
-    defaults: dict[str, int],
-) -> dict[str, int]:
+    defaults: dict[str, Any],
+) -> dict[str, Any]:
     mode_settings = mode_settings_view(payload.get("settings"), mode_key)
     return coerce_shared_gameplay_settings(mode_settings, defaults=defaults)

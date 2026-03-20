@@ -22,6 +22,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     clamp_overlay_transparency,
     get_display_settings,
     mode_animation_settings,
+    mode_rotation_animation_mode,
 )
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.tutorial.api import (
@@ -372,6 +373,7 @@ class LoopContext4D(PanelDragMixin):
         bot_mode: BotMode = BotMode.OFF,
         overlay_transparency: float | None = None,
         bot_speed_level: int = 7,
+        rotation_animation_mode: str | None = None,
         rotation_animation_duration_ms: int | float | None = None,
         translation_animation_duration_ms: int | float | None = None,
         tutorial_lesson_id: str | None = None,
@@ -410,6 +412,13 @@ class LoopContext4D(PanelDragMixin):
                     else PieceRotationAnimatorND(
                         ndim=4, gravity_axis=cfg.gravity_axis
                     ).translation_duration_ms
+                ),
+                rotation_animation_mode=(
+                    str(rotation_animation_mode)
+                    if rotation_animation_mode is not None
+                    else PieceRotationAnimatorND(
+                        ndim=4, gravity_axis=cfg.gravity_axis
+                    ).rotation_animation_mode
                 ),
             ),
             overlay_transparency=clamp_overlay_transparency(
@@ -610,11 +619,13 @@ def run_game_loop(
     rotation_animation_duration_ms, translation_animation_duration_ms = (
         mode_animation_settings("4d")
     )
+    rotation_animation_mode = mode_rotation_animation_mode("4d")
     loop = LoopContext4D.create(
         cfg,
         bot_mode=bot_mode,
         overlay_transparency=overlay_transparency,
         bot_speed_level=bot_speed_level,
+        rotation_animation_mode=rotation_animation_mode,
         rotation_animation_duration_ms=rotation_animation_duration_ms,
         translation_animation_duration_ms=translation_animation_duration_ms,
         tutorial_lesson_id=tutorial_lesson_id,
@@ -736,7 +747,6 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
 
 
 

@@ -83,6 +83,10 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     select_projection_coord as _select_projection_coord,
     sync_canonical_playground_state as _sync_canonical_playground_state,
     update_explorer_draft as _update_explorer_draft,
+    WORKSPACE_EDITOR,
+    WORKSPACE_PLAY,
+    WORKSPACE_SANDBOX,
+    active_workspace_name as _active_workspace_name,
 )
 from tet4d.ui.pygame.topology_lab.state_ownership import (
     current_sandbox_focus_coord as _current_sandbox_focus_coord,
@@ -141,6 +145,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _scene_pane_active,
     _select_explorer_draft_slot,
     _selectable_row_indexes,
+    _sandbox_neighbor_search_enabled,
     _set_active_pane_from_target,
     _set_status,
     _sync_explorer_state,
@@ -345,6 +350,8 @@ def _sandbox_scene_payload(
 
 def _active_workspace_coord(state: _TopologyLabState) -> tuple[int, ...] | None:
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            return None
         return _current_sandbox_focus_coord(state)
     if tool_is_inspect(state.active_tool):
         return _current_probe_coord(state)
@@ -353,6 +360,8 @@ def _active_workspace_coord(state: _TopologyLabState) -> tuple[int, ...] | None:
 
 def _active_workspace_path(state: _TopologyLabState) -> list[tuple[int, ...]]:
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            return []
         return _current_sandbox_focus_path(state)
     if tool_is_inspect(state.active_tool):
         return _current_probe_path(state)
@@ -361,6 +370,8 @@ def _active_workspace_path(state: _TopologyLabState) -> list[tuple[int, ...]]:
 
 def _active_workspace_trace(state: _TopologyLabState) -> list[str]:
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            return []
         return _current_sandbox_focus_trace(state)
     if tool_is_inspect(state.active_tool):
         return _current_probe_trace(state)
@@ -371,6 +382,8 @@ def _active_workspace_frame(
     state: _TopologyLabState,
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            return _current_probe_frame(state)
         return _current_sandbox_focus_frame(state)
     return _current_probe_frame(state)
 
@@ -421,14 +434,20 @@ def _draw_explorer_scene(
 
 
 def _workspace_selection_lines(state: _TopologyLabState) -> list[str]:
+    workspace_name = _active_workspace_name(state)
+    workspace_label = {
+        WORKSPACE_EDITOR: "Editor",
+        WORKSPACE_SANDBOX: "Sandbox",
+        WORKSPACE_PLAY: "Play",
+    }[workspace_name]
     if tool_is_edit(state.active_tool):
-        mode_label = "Edit"
+        tool_label = "Edit tool"
     elif tool_is_inspect(state.active_tool):
-        mode_label = "Inspect"
+        tool_label = "Inspect tool"
     elif tool_is_sandbox(state.active_tool):
-        mode_label = "Sandbox"
+        tool_label = "Sandbox controls"
     else:
-        mode_label = "Play"
+        tool_label = "Play launch"
     lines = [f"Pane: {PANE_LABELS.get(state.active_pane, state.active_pane)}"]
     selected_boundary_index = _current_selected_boundary_index(state)
     if selected_boundary_index is not None:
@@ -442,7 +461,8 @@ def _workspace_selection_lines(state: _TopologyLabState) -> list[str]:
         lines.append(f"Selected seam: {selected_glue_id}")
     elif state.hovered_glue_id:
         lines.append(f"Hover seam: {state.hovered_glue_id}")
-    lines.append(f"Mode: {mode_label}")
+    lines.append(f"Workspace: {workspace_label}")
+    lines.append(f"Tool focus: {tool_label}")
     return lines
 
 
@@ -470,6 +490,8 @@ def _workspace_camera_lines(state: _TopologyLabState) -> list[str]:
 
 def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            return ["Sandbox neighbor-search: off"]
         focus_coord = _current_sandbox_focus_coord(state)
         lines = [
             f"Sandbox focus: {list(focus_coord)}",
@@ -488,6 +510,29 @@ def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
     ]
     lines.extend(f"  {line}" for line in _current_probe_trace(state)[-3:])
     return lines
+
+
+def _workspace_helper_lines(state: _TopologyLabState) -> tuple[str, ...]:
+    workspace_name = _active_workspace_name(state)
+    if workspace_name == WORKSPACE_EDITOR:
+        return (
+            "Editor workspace: probe movement is always safe; seam mutation stays behind the explicit Edit tool.",
+            "Editor movement target is the editor probe/selection only; it never moves the sandbox or gameplay piece.",
+        )
+    if workspace_name == WORKSPACE_SANDBOX:
+        neighbor_text = (
+            "on"
+            if _sandbox_neighbor_search_enabled(state)
+            else "off"
+        )
+        return (
+            "Sandbox workspace: piece controls, spawn/reset, and transport experiments stay separate from topology editing.",
+            f"Sandbox neighbor-search overlay is explicit and currently {neighbor_text}.",
+        )
+    return (
+        "Play workspace: launch and preview use the canonical gameplay runtime, not retained shell or scene state.",
+        "Play movement target is the gameplay piece only; editor probe and sandbox piece state stay separate.",
+    )
 
 
 def _workspace_experiment_lines(state: _TopologyLabState) -> list[str]:
@@ -879,6 +924,9 @@ def _handle_projection_cell_target(
         return False
     coord = tuple(int(value) for value in tuple(target.value))
     if tool_is_sandbox(state.active_tool):
+        if not _sandbox_neighbor_search_enabled(state):
+            _set_status(state, "Sandbox neighbor-search is disabled")
+            return True
         selected = _select_sandbox_projection_coord(state, coord)
         if selected is not None:
             _set_status(state, f"Sandbox focus {list(selected)}")
@@ -1024,7 +1072,7 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
     lines = [
         "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
         "Graphical explorer is the primary editor; Analysis View is optional secondary research and diagnostics.",
-        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   E/I/B/P choose mode   Enter plays from Play",
+        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   E/I/B/P choose tool   Enter plays from Play",
         "F8 resets the current dimension's Explorer play settings to the configured defaults",
         *move_lines,
     ]
@@ -1042,21 +1090,10 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
             "Projection sync: selecting a cell in any panel updates all visible slices "
             "and movement previews together"
         )
+    lines.extend(_workspace_helper_lines(state))
     if tool_is_sandbox(state.active_tool):
         lines.append(
             "Sandbox tool: movement keys and the footer grid move the piece, gameplay rotation keys rotate it, Space or ] next piece, [ previous piece, 0 resets"
-        )
-    elif tool_is_inspect(state.active_tool):
-        lines.append(
-            "Inspect mode: movement keys and the footer grid move the cellwise inspector only; it never launches or edits seams"
-        )
-    elif tool_is_play(state.active_tool):
-        lines.append(
-            "Play mode: the scene action bar only launches the current canonical topology; edit and inspect controls stay in their own modes"
-        )
-    else:
-        lines.append(
-            "Edit mode: boundary picks, seam slots, transform permutations, and Apply/Remove stay here; other modes do not expose seam mutation controls"
         )
     lines.append(
         "Scene action bar is mode-owned: Apply/Remove only in Edit, Reset only in Inspect, sandbox piece controls only in Sandbox, and launch only in Play"
