@@ -4,6 +4,10 @@ Generated: 2026-02-18
 Updated: 2026-03-20  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
+Current sub-batch (2026-03-20): GitHub Actions Node 24 workflow migration.
+- Root cause: hosted CI passed, but GitHub annotated the workflow because `actions/checkout@v4` and `actions/setup-python@v5` still ran on deprecated Node 20 JavaScript action runtimes.
+- Fix strategy: bumped the repo workflows to `actions/checkout@v5` and `actions/setup-python@v6`, which are the Node 24-compatible action lines, then reran local verification before rechecking hosted CI.
+
 Current sub-batch (2026-03-20): spherical play false-lock repro and runtime fix.
 - Root cause: Stage 1 covered traced bottom-boundary continuation families, but spherical play still locked pieces on the first post-seam gravity tick because gameplay preserved the original global gravity axis instead of the transported local piece frame. That made the real follow-up fall step use the wrong world axis and collapse/block otherwise continuing sphere moves.
 - Fix strategy: corrected the status language, added live-path `3D` / `4D` sphere regressions from exact gameplay repros, traced the divergence to `GameStateND` gravity continuation after seam moves, and patched ND explorer gameplay to carry the transported piece frame forward so later gravity ticks follow canonical post-seam "down".

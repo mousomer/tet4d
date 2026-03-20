@@ -13,8 +13,8 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "${{ matrix.python-version }}"
       - name: Install dependencies
@@ -38,8 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: dry-run-matrix
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
       - name: Install dependencies
@@ -63,4 +63,3 @@ jobs:
             state/bench/policy_analysis.json
             state/bench/policy_analysis.csv
           if-no-files-found: error
-
