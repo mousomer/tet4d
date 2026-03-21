@@ -84,6 +84,16 @@ class TestTopologyLabMenu(unittest.TestCase):
             ),
         )
 
+    def _fonts(self) -> SimpleNamespace:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        return SimpleNamespace(
+            title_font=pygame.font.Font(None, 36),
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 22),
+        )
+
     def test_rows_lock_y_boundaries_in_normal_mode(self) -> None:
         profile = default_topology_profile_state(
             dimension=3,
@@ -937,23 +947,136 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_rows_include_play_settings_for_3d_explorer(self) -> None:
         state = self._explorer_state(3)
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("editor_tool", row_keys)
+        self.assertIn("editor_trace", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
         self.assertIn("piece_set", row_keys)
         self.assertIn("speed_level", row_keys)
-        self.assertNotIn("editor_trace", row_keys)
         self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_rows_include_play_settings_for_4d_explorer(self) -> None:
         state = self._explorer_state(4)
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("editor_trace", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
         self.assertIn("board_w", row_keys)
         self.assertIn("piece_set", row_keys)
         self.assertNotIn("sandbox_neighbor_search", row_keys)
+
+    def test_sandbox_rows_expose_neighbors_only_in_sandbox_workspace(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+
+        row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+
+        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("editor_tool", row_keys)
+        self.assertNotIn("editor_trace", row_keys)
+
+    def test_editor_trace_row_toggles_editor_owned_trace_state(self) -> None:
+        state = self._explorer_state(3)
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "editor_trace"
+        )
+
+        self.assertTrue(topology_lab_menu._probe_trace_visible(state))
+
+        handled = topology_lab_menu._adjust_row(state, row, 1)
+
+        self.assertTrue(handled)
+        self.assertEqual(
+            topology_lab_menu._active_workspace_name(state),
+            topology_lab_menu.WORKSPACE_EDITOR,
+        )
+        self.assertFalse(topology_lab_menu._probe_trace_visible(state))
+        self.assertIn("Editor trace hidden", state.status)
+
+    def test_sandbox_neighbors_row_toggles_sandbox_owned_neighbor_state(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.neighbor_search_enabled = False
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "sandbox_neighbor_search"
+        )
+
+        handled = topology_lab_menu._adjust_row(state, row, 1)
+
+        self.assertTrue(handled)
+        self.assertEqual(
+            topology_lab_menu._active_workspace_name(state),
+            topology_lab_menu.WORKSPACE_SANDBOX,
+        )
+        self.assertTrue(state.sandbox.neighbor_search_enabled)
+        self.assertIn("neighbor-search enabled", state.status)
+
+    def test_workspace_layout_keeps_helper_external_to_scene_and_editor_panels(self) -> None:
+        (
+            tool_rect,
+            top_rect,
+            editor_rect,
+            helper_rect,
+            _helper_controls_rect,
+            action_rect,
+        ) = topology_lab_menu._explorer_workspace_layout(
+            panel_x=40,
+            panel_y=160,
+            panel_w=1040,
+            panel_h=620,
+            menu_w=460,
+        )
+
+        self.assertGreater(helper_rect.left, top_rect.right)
+        self.assertEqual(helper_rect.top, top_rect.top)
+        self.assertEqual(helper_rect.bottom, editor_rect.bottom)
+        self.assertEqual(tool_rect.width, 1040 - 460 - 30)
+        self.assertLess(action_rect.right, helper_rect.left)
+
+    def test_draw_menu_keeps_editor_context_rows_visible(self) -> None:
+        screen = pygame.Surface((1280, 900))
+        fonts = self._fonts()
+        state = self._explorer_state(3)
+
+        topology_lab_menu._draw_menu(screen, fonts, state)
+
+        row_targets = {
+            target.value: target
+            for target in state.mouse_targets
+            if target.kind == "row_select"
+        }
+        self.assertIn("editor_tool", row_targets)
+        self.assertIn("editor_trace", row_targets)
+        self.assertGreater(row_targets["editor_trace"].rect.width, 300)
+        self.assertLess(row_targets["editor_trace"].rect.bottom, screen.get_height())
+
+    def test_draw_menu_keeps_sandbox_context_rows_visible(self) -> None:
+        screen = pygame.Surface((1280, 900))
+        fonts = self._fonts()
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+
+        topology_lab_menu._draw_menu(screen, fonts, state)
+
+        row_targets = {
+            target.value: target
+            for target in state.mouse_targets
+            if target.kind == "row_select"
+        }
+        self.assertIn("sandbox_neighbor_search", row_targets)
+        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 300)
+        self.assertLess(
+            row_targets["sandbox_neighbor_search"].rect.bottom,
+            screen.get_height(),
+        )
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -1566,15 +1689,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertNotEqual(state.explorer_profile, original)
 
     def test_probe_footer_labels_change_with_active_tool(self) -> None:
-        pygame.init()
-        if not pygame.font.get_init():
-            pygame.font.init()
         screen = pygame.Surface((640, 480))
-        fonts = SimpleNamespace(
-            title_font=pygame.font.Font(None, 36),
-            menu_font=pygame.font.Font(None, 28),
-            hint_font=pygame.font.Font(None, 22),
-        )
+        fonts = self._fonts()
         state = self._explorer_state(2)
         area = pygame.Rect(0, 0, 240, 60)
         with patch.object(
@@ -1588,7 +1704,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                 area=area,
                 preview={},
             )
-            self.assertEqual(draw_controls.call_args.kwargs["title"], "Inspect moves")
+            self.assertEqual(
+                draw_controls.call_args.kwargs["title"], "Editor probe moves"
+            )
             self.assertEqual(
                 draw_controls.call_args.kwargs["active_color"], (56, 92, 130)
             )
@@ -1812,6 +1930,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertNotIn("back", labels)
         self.assertIn("apply_glue", labels)
         self.assertIn("remove_glue", labels)
+        self.assertNotIn("editor_trace", labels)
         self.assertNotIn("play_preview", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
@@ -1821,6 +1940,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
         self.assertIn("sandbox_spawn", labels)
+        self.assertNotIn("sandbox_neighbor_search", labels)
         self.assertNotIn("play_preview", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
@@ -2662,7 +2782,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Hover boundary: z-", lines)
         self.assertIn("Selected seam: glue_001", lines)
         self.assertIn("Workspace: Editor", lines)
-        self.assertIn("Tool focus: Inspect tool", lines)
+        self.assertIn("Tool focus: Probe tool", lines)
 
     def test_workspace_preview_lines_fall_back_to_hovered_glue(self) -> None:
         state = self._explorer_state(3)
@@ -2873,15 +2993,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIsNone(state.canonical_state.selected_gluing)
 
     def test_draw_workspace_uses_canonical_scene_snapshot(self) -> None:
-        pygame.init()
-        if not pygame.font.get_init():
-            pygame.font.init()
         screen = pygame.Surface((1280, 900))
-        fonts = SimpleNamespace(
-            title_font=pygame.font.Font(None, 36),
-            menu_font=pygame.font.Font(None, 28),
-            hint_font=pygame.font.Font(None, 22),
-        )
+        fonts = self._fonts()
         state = self._explorer_state(3)
         state.scene_boundaries = topology_lab_menu.boundaries_for_dimension(3)
         state.scene_preview_dims = (11, 12, 13)
@@ -2937,8 +3050,18 @@ class TestTopologyLabMenu(unittest.TestCase):
         preview_kwargs = draw_preview.call_args.kwargs
         self.assertEqual(preview_kwargs["title"], "Explorer 3D keys")
         self.assertTrue(preview_kwargs["lines"])
+        self.assertTrue(preview_kwargs["lines"][0].startswith("Context:"))
+        self.assertTrue(
+            all(
+                line.startswith(("Context:", "Move: ", "Rotate: ", "      ", "        "))
+                for line in preview_kwargs["lines"]
+            )
+        )
         self.assertFalse(
             any("Selected boundary:" in line for line in preview_kwargs["lines"])
+        )
+        self.assertFalse(
+            any("Workspace:" in line for line in preview_kwargs["lines"])
         )
 
     def test_explorer_entry_scene_glue_path_creates_draft_and_enters_edit(self) -> None:

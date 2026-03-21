@@ -110,6 +110,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     TOOL_SANDBOX,
     TopologyLabState,
     WORKSPACE_EDITOR,
+    WORKSPACE_SANDBOX,
     active_workspace_name,
     canonical_playground_state,
     current_editor_tool,
@@ -924,14 +925,24 @@ def _reset_probe(state: _TopologyLabState) -> None:
 
 def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
     if _uses_general_explorer_editor(state):
-        rows = [
-            _RowSpec("gameplay_mode", "Workspace Path"),
-            _RowSpec("dimension", "Dimension"),
-            _RowSpec("board_x", "Board X"),
-            _RowSpec("board_y", "Board Y"),
-        ]
-        if active_workspace_name(state) == WORKSPACE_EDITOR:
-            rows.insert(1, _RowSpec("editor_tool", "Editor Tool"))
+        workspace_name = active_workspace_name(state)
+        rows = [_RowSpec("gameplay_mode", "Workspace Path")]
+        if workspace_name == WORKSPACE_EDITOR:
+            rows.extend(
+                (
+                    _RowSpec("editor_tool", "Editor Tool"),
+                    _RowSpec("editor_trace", "Trace"),
+                )
+            )
+        elif workspace_name == WORKSPACE_SANDBOX:
+            rows.append(_RowSpec("sandbox_neighbor_search", "Neighbors"))
+        rows.extend(
+            (
+                _RowSpec("dimension", "Dimension"),
+                _RowSpec("board_x", "Board X"),
+                _RowSpec("board_y", "Board Y"),
+            )
+        )
         if state.dimension >= 3:
             rows.append(_RowSpec("board_z", "Board Z"))
         if state.dimension >= 4:
@@ -999,8 +1010,8 @@ def _mode_value_text(state: _TopologyLabState) -> str:
 def _editor_tool_value_text(state: _TopologyLabState) -> str:
     editor_tool = current_editor_tool(state)
     if editor_tool == TOOL_EDIT:
-        return "Edit / Apply"
-    return "Probe / Select"
+        return "Edit"
+    return "Probe"
 
 
 def _editor_trace_value_text(state: _TopologyLabState) -> str:

@@ -336,11 +336,11 @@ Manual tests:
 19. Explorer Playground helper/status scaffolding must be keyed to the canonical workspace model (`editor`, `sandbox`, `play`) rather than treating legacy `Inspect` / `Edit` labels as the primary top-level structure.
 20. Editor-tool selection must live in contextual secondary controls or compatibility shortcuts; selecting an Editor tool must not mutate topology until an explicit apply/place/toggle action is invoked.
 21. The legacy Inspect dot is the Editor probe/dot. Its movement and trace must stay consistent across seam traversal and across `2D`, `3D`, and `4D`.
-22. Editor trace visibility must be an explicit `on` / `off` button on the Explorer panel, and disabling trace must not hide or disable the editor probe itself.
-23. Explorer Playground sandbox helper/status content must surface neighbor-search as explicit `on` / `off` state instead of hiding it as dimension-specific behavior. Neighbor markers must appear as small dots only when that control is enabled.
+22. Editor trace visibility must be an explicit `Trace` contextual control owned by `Editor`, and disabling trace must not hide or disable the editor probe itself.
+23. Explorer Playground sandbox helper/status content must surface neighbor-search as explicit `Neighbors` `on` / `off` state owned by `Sandbox` instead of hiding it as dimension-specific behavior. Neighbor markers must appear as small dots only when that control is enabled.
 24. Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and `4D`, and sandbox projection focus must stay coupled to a visible sandbox cell so the `3D`/`4D` piece remains on-screen after entry and movement.
 25. In `3D` and `4D`, projected sandbox piece cells must render as full box-shaped piece cells rather than as neighbor-style dots.
-26. Explorer Playground must keep an explicit right-side helper panel visible in the shell outside the explorer viewport, and that panel must stay concise: minimal workspace-aware movement keys, minimal rotation keys, and at most one short current-context line rather than a full status dump.
+26. Explorer Playground must keep an explicit right-side helper panel visible in the shell outside the explorer viewport, and that panel must stay concise: minimal movement keys, minimal rotation keys, and at most one short current workspace/tool context line rather than a full status dump or shadow menu.
 27. Neighbor dots must remain visually distinct from sandbox piece cells and must disappear entirely when the explicit `Neighbor` control is off.
 28. Menu items and critical workspace controls in the Explorer shell must be fully visible and readable; clipped or partially hidden controls are layout regressions.
 

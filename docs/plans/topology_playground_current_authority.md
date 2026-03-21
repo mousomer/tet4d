@@ -21,6 +21,8 @@ historical background unless a future task explicitly reactivates them.
 
 - Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
   `Play`.
+- The current Explorer-shell pass is control-surface normalization and
+  manifest/doc drift prevention, not a new semantic redesign.
 - Direct explorer entry opens in `Sandbox` by default. This is the accepted
   startup contract unless a future task explicitly changes it.
 - `Inspect` is no longer a top-level workspace. It survives only as an
@@ -51,9 +53,9 @@ historical background unless a future task explicitly reactivates them.
   `4D`.
 - Probe movement, trace, and edit targeting must stay aligned to the same
   canonical seam-aware Editor probe state in every supported dimension.
-- Editor trace visibility must be controlled by an explicit `on` / `off` button
-  on the Explorer panel. Toggling trace must not disable probe movement or hide
-  the probe/dot itself.
+- Editor trace visibility must be controlled by an explicit `Trace` contextual
+  control owned by `Editor`, not by a floating or global Explorer exception.
+  Toggling trace must not disable probe movement or hide the probe/dot itself.
 - Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and
   `4D`.
 - Switching from `Sandbox` to `Editor` must not discard or silently rebuild the
@@ -67,10 +69,17 @@ historical background unless a future task explicitly reactivates them.
   piece, and must remain visually distinct from sandbox piece cells. This
   current neighbor-marker behavior is canonical and replaces older sandbox
   neighbor assumptions.
+- Sandbox neighbor-search visibility must be controlled by an explicit
+  `Neighbors` contextual control owned by `Sandbox`, not by a floating or
+  global Explorer exception.
 - Menu items and critical controls must remain fully visible; clipped, hidden,
   or unreadable items are regressions.
-- The helper panel with translation and rotation keys must stay visible outside
-  the main Explorer panel / viewport, not embedded inside it.
+- The helper panel must stay visible outside the main Explorer panel / viewport
+  and remain minimal: translation keys, rotation keys, and at most one short
+  current workspace/tool context line.
+- Explorer-facing behavior-changing controls must not be ad hoc. They belong to
+  workspace selection, workspace tool selection, workspace-owned contextual
+  controls, helper display options, or status-only display.
 
 ## Still transitional
 
@@ -84,8 +93,9 @@ historical background unless a future task explicitly reactivates them.
   retirement or an explicit long-term support decision.
 - `src/tet4d/ui/pygame/launch/topology_lab_menu.py` still carries structural
   decomposition debt.
-- Helper/menu/readability cleanup is not fully done; only the current critical
-  Explorer-shell failures have been stabilized.
+- Helper/menu/readability cleanup is still active, but the remaining debt is
+  shell/control normalization and readability rather than a semantic workspace
+  redesign.
 - Unsafe-topology cross-surface drift still exists in some paths, especially
   where sandbox behavior is stricter than gameplay or preview-invalid
   dimension-pairing behavior remains confusing.
@@ -111,6 +121,8 @@ historical background unless a future task explicitly reactivates them.
 
 ## Current active priorities
 
+- Finish workspace-first Explorer control normalization so no user-facing
+  Explorer behavior still hangs off a shell exception.
 - Continue focused Editor/Explorer stabilization where seam-aware probe/trace,
   helper/menu readability, or workspace isolation still regress.
 - Continue removing legacy internal naming and compatibility mirrors only where

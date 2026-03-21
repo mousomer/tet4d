@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
-
 import pygame
 
 from tet4d.engine.gameplay.topology_designer import (
@@ -582,7 +580,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         lines = topology_lab_menu._hint_lines_for_state(state)
 
         self.assertTrue(any("Sandbox workspace:" in line for line in lines))
-        self.assertTrue(any("neighbor-search overlay is explicit" in line for line in lines))
+        self.assertTrue(any("Sandbox Neighbors:" in line for line in lines))
 
     def test_helper_lines_scaffold_play_workspace(self) -> None:
         state = self._explorer_state(3)
@@ -618,7 +616,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("Move Y:") for line in lines))
         self.assertIn(
-            "Analysis view (secondary): Adjust settings, switch the Editor tool, and run Save/Export/Experiments/Back here   Status rows only report the current seam context",
+            "Analysis view (secondary): adjust settings, workspace-owned contextual controls, and Save/Export/Experiments/Back here   Status rows only report the current seam context",
             lines,
         )
 
@@ -632,7 +630,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
             topology_lab_menu._action_buttons_for_state(state),
         )
 
-    def test_workspace_draw_exposes_editor_trace_toggle_on_explorer_panel(self) -> None:
+    def test_draw_menu_keeps_editor_trace_as_controls_row_not_scene_action(self) -> None:
         pygame.init()
         if not pygame.font.get_init():
             pygame.font.init()
@@ -644,44 +642,25 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         )
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_EDIT)
-        with (
-            patch.object(topology_lab_menu, "draw_tool_ribbon", return_value=[]),
-            patch.object(topology_lab_menu, "_draw_explorer_scene", return_value=[]),
-            patch.object(topology_lab_menu, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_menu, "draw_action_buttons", return_value=[]),
-        ):
-            hits = topology_lab_menu._draw_explorer_workspace(
-                screen,
-                fonts,
-                state,
-                panel_x=40,
-                panel_y=160,
-                panel_w=1040,
-                panel_h=620,
-                menu_w=460,
-            )
-        trace_hit = next(
-            hit for hit in hits if hit.kind == "action" and hit.value == "editor_trace"
-        )
-        tool_rect, _top_rect, _editor_rect, helper_rect, _probe_rect, action_rect = (
-            topology_lab_menu._explorer_workspace_layout(
-                panel_x=40,
-                panel_y=160,
-                panel_w=1040,
-                panel_h=620,
-                menu_w=460,
-            )
-        )
-        self.assertGreaterEqual(trace_hit.rect.x, tool_rect.x)
-        self.assertLess(trace_hit.rect.right, helper_rect.x)
-        self.assertLessEqual(trace_hit.rect.bottom, tool_rect.bottom + 1)
-        self.assertGreater(helper_rect.x, action_rect.right)
-        self.assertNotEqual(
-            screen.get_at(trace_hit.rect.center),
-            screen.get_at((helper_rect.centerx, helper_rect.centery)),
-        )
+        topology_lab_menu._draw_menu(screen, fonts, state)
 
-    def test_workspace_draw_exposes_neighbor_toggle_on_explorer_panel(self) -> None:
+        row_hits = [
+            hit
+            for hit in state.mouse_targets
+            if hit.kind == "row_select" and hit.value == "editor_trace"
+        ]
+        action_hits = [
+            hit
+            for hit in state.mouse_targets
+            if hit.kind == "action" and hit.value == "editor_trace"
+        ]
+
+        self.assertEqual(len(row_hits), 1)
+        self.assertFalse(action_hits)
+        self.assertGreater(row_hits[0].rect.width, 300)
+        self.assertLess(row_hits[0].rect.bottom, screen.get_height())
+
+    def test_draw_menu_keeps_neighbors_as_controls_row_not_scene_action(self) -> None:
         pygame.init()
         if not pygame.font.get_init():
             pygame.font.init()
@@ -693,44 +672,23 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         )
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
-        with (
-            patch.object(topology_lab_menu, "draw_tool_ribbon", return_value=[]),
-            patch.object(topology_lab_menu, "_draw_explorer_scene", return_value=[]),
-            patch.object(topology_lab_menu, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_menu, "draw_action_buttons", return_value=[]),
-        ):
-            hits = topology_lab_menu._draw_explorer_workspace(
-                screen,
-                fonts,
-                state,
-                panel_x=40,
-                panel_y=160,
-                panel_w=1040,
-                panel_h=620,
-                menu_w=460,
-            )
-        neighbor_hit = next(
+        topology_lab_menu._draw_menu(screen, fonts, state)
+
+        row_hits = [
             hit
-            for hit in hits
+            for hit in state.mouse_targets
+            if hit.kind == "row_select" and hit.value == "sandbox_neighbor_search"
+        ]
+        action_hits = [
+            hit
+            for hit in state.mouse_targets
             if hit.kind == "action" and hit.value == "sandbox_neighbor_search"
-        )
-        tool_rect, _top_rect, _editor_rect, helper_rect, _probe_rect, action_rect = (
-            topology_lab_menu._explorer_workspace_layout(
-                panel_x=40,
-                panel_y=160,
-                panel_w=1040,
-                panel_h=620,
-                menu_w=460,
-            )
-        )
-        self.assertGreaterEqual(neighbor_hit.rect.x, tool_rect.x)
-        self.assertLess(neighbor_hit.rect.right, helper_rect.x)
-        self.assertLessEqual(neighbor_hit.rect.bottom, tool_rect.bottom + 1)
-        self.assertGreater(helper_rect.x, action_rect.right)
-        self.assertNotEqual(
-            screen.get_at(neighbor_hit.rect.center),
-            screen.get_at((helper_rect.centerx, helper_rect.centery)),
-        )
+        ]
+
+        self.assertEqual(len(row_hits), 1)
+        self.assertFalse(action_hits)
+        self.assertGreater(row_hits[0].rect.width, 300)
+        self.assertLess(row_hits[0].rect.bottom, screen.get_height())
 
     def test_sandbox_neighbor_toggle_computes_real_neighbor_cells(self) -> None:
         state = self._explorer_state(2)
@@ -787,7 +745,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
             lines,
         )
         self.assertIn(
-            "Analysis view (secondary): Adjust settings, switch the Editor tool, and run Save/Export/Experiments/Back here   Status rows only report the current seam context",
+            "Analysis view (secondary): adjust settings, workspace-owned contextual controls, and Save/Export/Experiments/Back here   Status rows only report the current seam context",
             lines,
         )
         self.assertTrue(any(line.startswith("Projection sync:") for line in lines))
