@@ -242,12 +242,14 @@ def _draw_selected_cell(
     cell_size: int,
     axes: tuple[int, int],
     selected_coord: tuple[int, ...],
+    active_tool: str | None = None,
 ) -> None:
     rect = _cell_rect(board_rect, cell_size, _pair_coord(selected_coord, axes)).inflate(
         -4, -4
     )
     pygame.draw.rect(surface, _SELECTED, rect, 2, border_radius=5)
-    pygame.draw.circle(surface, _SELECTED, rect.center, max(3, cell_size // 6))
+    if active_tool != _SANDBOX_TOOL:
+        pygame.draw.circle(surface, _SELECTED, rect.center, max(3, cell_size // 6))
 
 
 def _draw_probe_path(
@@ -263,20 +265,33 @@ def _draw_probe_path(
 ) -> None:
     points: list[tuple[int, int]] = []
     for coord in probe_path or ():
-        if not _coord_matches_slice(
-            coord,
-            dimension=dimension,
-            axes=axes,
-            selected_coord=selected_coord,
-            slab_radius=slab_radius,
-        ):
-            continue
         rect = _cell_rect(board_rect, cell_size, _pair_coord(coord, axes))
         points.append(rect.center)
     if len(points) >= 2:
         pygame.draw.lines(surface, (88, 170, 214), False, points[-8:], 2)
     for point in points[-8:-1]:
         pygame.draw.circle(surface, (120, 146, 176), point, max(3, cell_size // 7))
+
+
+def _draw_neighbor_markers(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    cell_size: int,
+    axes: tuple[int, int],
+    neighbor_markers: Iterable[Sequence[int]] | None,
+) -> None:
+    centers: list[tuple[int, int]] = []
+    seen: set[tuple[int, int]] = set()
+    for coord in neighbor_markers or ():
+        rect = _cell_rect(board_rect, cell_size, _pair_coord(coord, axes))
+        if rect.center in seen:
+            continue
+        seen.add(rect.center)
+        centers.append(rect.center)
+    for point in centers:
+        pygame.draw.circle(surface, (120, 146, 176), point, max(3, cell_size // 7))
+        pygame.draw.circle(surface, (200, 214, 238), point, max(1, cell_size // 10))
 
 
 def _draw_sandbox_cells(
@@ -294,20 +309,28 @@ def _draw_sandbox_cells(
     if not sandbox_cells:
         return
     fill = _SANDBOX if sandbox_valid or sandbox_valid is None else _INVALID
+    outline = tuple(max(0, channel - 56) for channel in fill)
+    # ND projection panels often use smaller cell sizes than the 2D board.
+    # Keep the sandbox footprint nearly full-cell there so it reads as a box,
+    # not a dot.
+    padding = 1 if cell_size <= 14 else 2
+    radius = 1 if cell_size <= 14 else 3
+    outline_width = 1 if cell_size <= 14 else 2
     for coord in sandbox_cells:
-        if not _coord_matches_slice(
-            coord,
-            dimension=dimension,
-            axes=axes,
-            selected_coord=selected_coord,
-            slab_radius=slab_radius,
+        if len(coord) != dimension:
+            continue
+        pair = _pair_coord(coord, axes)
+        if not (
+            0 <= pair[0] < int(board_rect.width // cell_size)
+            and 0 <= pair[1] < int(board_rect.height // cell_size)
         ):
             continue
-        rect = _cell_rect(board_rect, cell_size, _pair_coord(coord, axes)).inflate(
-            -4, -4
+        rect = _cell_rect(board_rect, cell_size, pair).inflate(
+            -(padding * 2),
+            -(padding * 2),
         )
-        pygame.draw.rect(surface, fill, rect, border_radius=4)
-        pygame.draw.rect(surface, (18, 20, 26), rect, 1, border_radius=4)
+        pygame.draw.rect(surface, fill, rect, border_radius=radius)
+        pygame.draw.rect(surface, outline, rect, outline_width, border_radius=radius)
 
 
 def _step_preview_color(
@@ -843,6 +866,7 @@ def _draw_projection_panel(
     dimension: int,
     selected_coord: tuple[int, ...],
     probe_path: Iterable[Sequence[int]] | None,
+    neighbor_markers: Iterable[Sequence[int]] | None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None,
     sandbox_valid: bool | None,
     slab_radius: int,
@@ -893,6 +917,13 @@ def _draw_projection_panel(
         probe_path=probe_path,
         slab_radius=slab_radius,
     )
+    _draw_neighbor_markers(
+        surface,
+        board_rect=board_rect,
+        cell_size=cell_size,
+        axes=panel.axes,
+        neighbor_markers=neighbor_markers,
+    )
     _draw_sandbox_cells(
         surface,
         board_rect=board_rect,
@@ -910,18 +941,10 @@ def _draw_projection_panel(
         cell_size=cell_size,
         axes=panel.axes,
         selected_coord=selected_coord,
+        active_tool=active_tool,
     )
-    if active_tool == _SANDBOX_TOOL and piece_steps:
-        legend = _draw_piece_step_previews(
-            surface,
-            board_rect=board_rect,
-            cell_size=cell_size,
-            axes=panel.axes,
-            selected_coord=selected_coord,
-            piece_steps=piece_steps,
-            dimension=dimension,
-            slab_radius=slab_radius,
-        )
+    if active_tool == _SANDBOX_TOOL:
+        legend = []
     else:
         legend = _draw_cell_step_previews(
             surface,
@@ -954,6 +977,7 @@ def _draw_projection_panels(
     dimension: int,
     selected_coord: tuple[int, ...],
     probe_path: Iterable[Sequence[int]] | None,
+    neighbor_markers: Iterable[Sequence[int]] | None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None,
     sandbox_valid: bool | None,
     sandbox_message: str,
@@ -976,6 +1000,7 @@ def _draw_projection_panels(
             dimension=dimension,
             selected_coord=selected_coord,
             probe_path=probe_path,
+            neighbor_markers=neighbor_markers,
             sandbox_cells=sandbox_cells,
             sandbox_valid=sandbox_valid,
             slab_radius=slab_radius,
@@ -1025,6 +1050,7 @@ def draw_projection_scene(
     selected_boundary_index: int | None = None,
     probe_coord: tuple[int, ...] | None = None,
     probe_path: Iterable[Sequence[int]] | None = None,
+    neighbor_markers: Iterable[Sequence[int]] | None = None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
@@ -1059,11 +1085,7 @@ def draw_projection_scene(
         dims=dims,
         coord=selected_coord,
     )
-    piece_steps = _resolve_piece_previews(
-        profile=profile,
-        dims=dims,
-        sandbox_cells=sandbox_cells,
-    )
+    piece_steps: tuple[tuple[str, PieceStepResult], ...] = ()
     focused_glue_id = highlighted_glue_id or selected_glue_id
     panels, info_rect = _layout_projection_panels(
         area,
@@ -1080,6 +1102,7 @@ def draw_projection_scene(
             dimension=dimension,
             selected_coord=selected_coord,
             probe_path=probe_path,
+            neighbor_markers=neighbor_markers,
             sandbox_cells=sandbox_cells,
             sandbox_valid=sandbox_valid,
             sandbox_message=sandbox_message,

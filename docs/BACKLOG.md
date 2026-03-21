@@ -4,13 +4,66 @@ Generated: 2026-02-18
 Updated: 2026-03-20  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
+Topology-playground note: current architecture authority lives in
+`docs/plans/topology_playground_current_authority.md`. Older topology-playground
+batch entries below are historical change footprint, not active architecture
+instructions.
+
+Current sub-batch (2026-03-20): topology-playground manifest reconciliation and current-authority refresh.
+- Root cause: current repo guidance was drifting across older migration manifests, newer Stage 1 / Stage 2 accepted direction, and batch-specific prompts, which left future Codex runs at risk of mixing historical `Inspect` / `Edit` or pre-generalized false-lock assumptions with the live `Editor` / `Sandbox` / `Play` and Play drop-policy contracts.
+- Fix strategy: added `docs/plans/topology_playground_current_authority.md` as the single current authority for topology-playground architecture, aligned `CURRENT_STATE.md`, this backlog, and the relevant RDS files to that contract, and marked older topology-playground manifests/audits as historical or superseded background instead of active instructions.
+
+Current sub-batch (2026-03-21): topology-playground manifest archive unification.
+- Root cause: several old topology-playground manifests still read like active unfinished instructions, and other plan files still pointed at those older manifests or audits as migration-status authority.
+- Fix strategy: moved the old topology-playground manifest set under `docs/history/topology_playground/`, left redirect stubs at the old paths, preserved still-live cleanup debt in `docs/plans/topology_playground_current_authority.md`, and made the precedence rule explicit: newer task instructions and the current-authority manifest override archived manifests, with ask-first escalation for severe mismatches.
+
+Current sub-batch (2026-03-21): Explorer stabilization guidance clarification.
+- Root cause: the active instruction layer already implied the intended Explorer behavior, but it did not state the current user-facing expectations bluntly enough around probe/dot consistency, trace control placement, dimension parity, sandbox default piece visibility, neighbor-dot gating, menu readability, and helper-panel placement.
+- Fix strategy: updated the current-authority manifest, `RDS_TETRIS_GENERAL`, `RDS_MENU_STRUCTURE`, and current-state notes so those expectations are explicit: the legacy Inspect dot is the Editor probe/dot, probe and trace consistency are required in `2D` / `3D` / `4D`, trace must be toggled by an Explorer-panel button, Sandbox must show a piece by default in `3D` / `4D` as well as `2D`, neighbor dots appear only when `neighbor search` is pressed, menu items must remain fully visible, and the translation/rotation helper panel must remain outside the main Explorer panel.
+
+Current sub-batch (2026-03-21): Explorer stabilization implementation pass.
+- Root cause: even after the guidance refresh, the live explorer still hid `3D` / `4D` sandbox cells and some projected trace state behind exact hidden-slice matching, sandbox neighbor-search still reused the Editor trace overlay path instead of explicit marker dots, and the current shell sizing still left some control rows tighter than intended.
+- Fix strategy: projected Editor trace and sandbox-piece overlays directly in `3D` / `4D` projection panels so they stay visible across hidden-axis changes, split sandbox neighbor markers into explicit small-dot overlays gated only by the `neighbor search` control, stopped the Editor probe from reinterpreting later moves through a seam-rotated local frame, tightened the visual main-panel/helper split, widened the current control-row/layout budget, and added focused regressions covering canonical post-seam probe stepping, hidden-slice sandbox visibility, projected `4D` trace visibility, dot-only neighbor markers, and sandbox-overlay routing.
+
+Current sub-batch (2026-03-21): Explorer helper/footer visibility and menu crowding follow-up.
+- Root cause: the previous helper-panel toggle hit targets existed in tests but were still being painted underneath the helper body in the live shell, and the same trace/neighbor toggles still duplicated as long analysis-list rows that kept the menu column unnecessarily crowded.
+- Fix strategy: reserved a real helper footer so the visible `Trace` / `Neighbor` toggle paints after the helper body, removed those duplicate analysis-list rows so the Explorer-panel toggle is the authoritative control surface, widened the analysis column/workspace split for the remaining long labels, and added tests that assert the helper toggle is actually painted in the footer rather than only existing as a hidden hit target.
+
+Current sub-batch (2026-03-21): Explorer-panel toggle placement and real sandbox neighbor dots.
+- Root cause: the user-facing control still belonged in the explorer panel rather than the external helper, and the sandbox neighbor overlay was still deriving from the sandbox focus path instead of actual reachable neighboring cells.
+- Fix strategy: moved the `Trace` / `Neighbor` toggle into the explorer panel header while leaving the helper keys-only and external, changed sandbox neighbor mode to render real reachable neighbor cells as small dots in `2D` / `3D` / `4D`, aligned `3D` / `4D` sandbox cell fills with the same filled-cell display logic used in `2D`, and added focused regressions covering panel-local toggle placement, real neighbor-cell computation, and projected `3D` / `4D` neighbor-dot rendering.
+
+Current sub-batch (2026-03-21): Sandbox ND projection overlay cleanup.
+- Root cause: even after the whole-piece neighbor fix, sandbox mode in `3D` / `4D` still painted the old whole-piece move-preview overlay for every legal sandbox move, which made the piece and surrounding cells look dotted and made `Neighbor` off remove only part of the clutter.
+- Fix strategy: removed sandbox move-preview rendering from the ND projection scene entirely so sandbox mode now paints only filled piece cells plus optional whole-piece neighbor dots, and added a focused regression asserting that ND sandbox mode does not paint neighbor cells when `Neighbor` is off.
+
+Current sub-batch (2026-03-21): Sandbox ND neighbor completion and box-footprint follow-up.
+- Root cause: the ND projection renderer still truncated visible sandbox neighbor markers to the last `12` projected points, which dropped legitimate `3D` / `4D` directions, and the fixed `-4` inset on ND sandbox fills left those cells looking like dots instead of boxes at smaller projection-panel cell sizes.
+- Fix strategy: removed the ND neighbor-marker truncation so every visible projected neighbor dot renders, deduplicated per-panel marker centers instead of silently dropping earlier directions, enlarged ND sandbox cell fills into outlined box footprints, removed the sandbox-mode center dot from the selected ND cell, and added focused regressions covering many-marker projection completeness plus ND box-footprint rendering.
+
+Current sub-batch (2026-03-21): Sandbox ND box-shape tightening.
+- Root cause: even after the first ND box-footprint pass, the projection-cell inset and corner rounding were still loose enough that some `3D` / `4D` sandbox cells read visually as rounded dots instead of boxes.
+- Fix strategy: tightened the ND sandbox inset to near-full-cell fill on smaller projection cells, reduced the corner radius, preserved a visible outline, and strengthened the render regression so both side-edge and top-edge points of the projected sandbox cell must paint.
+
+Current sub-batch (2026-03-20): topology playground Editor unification Stage 2.
+- Root cause: the migrated playground already carried internal `editor` / `sandbox` / `play` ownership, but the visible shell still centered the old `Inspect` / `Edit` split, Editor movement remained effectively inspect-only, and Explorer entry still defaulted to a competing top-level Sandbox-first posture.
+- Fix strategy: promoted the primary workspace ribbon to `Editor` / `Sandbox` / `Play`, added remembered Editor-tool state, routed Editor movement and projection selection through the safe probe contract even while the Edit tool is active, kept topology mutation behind explicit actions, and added focused regressions for workspace routing, helper copy, probe safety, explicit mutation, and workspace isolation.
+
+Current sub-batch (2026-03-20): Explorer workspace regression stabilization after Editor unification.
+- Root cause: after the Stage-2 workspace unification, several shell paths still treated Editor probe/trace as inspect-only, Sandbox projection focus and movement framing still depended too heavily on neighbor-overlay state, and the new workspace-first shell had regressed the explicit helper panel and some action/menu discoverability.
+- Fix strategy: kept the Editor probe substrate active for both Probe and Edit, added explicit Editor trace on/off state plus action/control-row exposure, made Sandbox focus/anchor fall back to an actual visible piece cell so `3D`/`4D` rendering survives entry and movement even when neighbor overlay is off, narrowed the external helper to minimal movement/rotation guidance plus short context, widened the analysis column for current long labels, and added focused regressions for trace toggling, edit-mode probe continuity, sandbox visible-cell anchoring, helper-panel placement/content, scene rendering, and current menu readability.
+
 Current sub-batch (2026-03-20): GitHub Actions Node 24 workflow migration.
 - Root cause: hosted CI passed, but GitHub annotated the workflow because `actions/checkout@v4` and `actions/setup-python@v5` still ran on deprecated Node 20 JavaScript action runtimes.
 - Fix strategy: bumped the repo workflows to `actions/checkout@v5` and `actions/setup-python@v6`, which are the Node 24-compatible action lines, then reran local verification before rechecking hosted CI.
 
-Current sub-batch (2026-03-20): spherical play false-lock repro and runtime fix.
-- Root cause: Stage 1 covered traced bottom-boundary continuation families, but spherical play still locked pieces on the first post-seam gravity tick because gameplay preserved the original global gravity axis instead of the transported local piece frame. That made the real follow-up fall step use the wrong world axis and collapse/block otherwise continuing sphere moves.
-- Fix strategy: corrected the status language, added live-path `3D` / `4D` sphere regressions from exact gameplay repros, traced the divergence to `GameStateND` gravity continuation after seam moves, and patched ND explorer gameplay to carry the transported piece frame forward so later gravity ticks follow canonical post-seam "down".
+Current sub-batch (2026-03-20): non-trivial `Y`-seam Play coverage hardening.
+- Root cause: the core runtime split was already in place, but focused Play regressions still did not pin `twisted_y_3d`, `twisted_y_4d`, a custom cross-axis `Y` seam, rotation-near-seam behavior, or input/playbot parity around the explicit drop helpers.
+- Fix strategy: extracted reusable launch-path invariant assertions for grounded/drop, hard-drop parity, and translation-vs-drop legality; added focused twisted/custom/rotation regressions; and added targeted input/playbot parity checks without changing runtime semantics.
+
+Current sub-batch (2026-03-20): non-trivial `Y`-seam Play drop/lock semantics.
+- Root cause: Stage 1 added useful workspace scaffolding and partial continuation tests, but Play still conflated generic explorer seam transport with drop legality. `ND` gravity/soft-drop/hard-drop could continue through gravity-axis seams just because deliberate transport existed, while `2D` soft drop diverged from gravity/hard drop on the same projective seam family.
+- Fix strategy: corrected the status/design language, added live-path spherical and projective regressions from the real playground launch path, split deliberate translation from gravity/soft-drop/hard-drop intents in gameplay runtime, based grounded/lock on one legal Play drop step, preserved legal sideways bottom-layer entry, and aligned hard drop with repeated drop legality across `2D` and `ND`.
 
 Current sub-batch (2026-03-20): topology playground restructure Stage 1.
 - Root cause: the migrated playground still treated legacy `Inspect` / `Edit` tool labels as the architectural center, sandbox neighbor-search remained implicit shell behavior, and the reported `Play This Topology` bottom-boundary false-lock defect was not pinned by live-path runtime tests.
@@ -46,8 +99,9 @@ Current sub-batch (2026-03-17): piece translation tweening + split rotation-spee
 
 Current sub-batch (2026-03-14): topology playground cleanup pass 2.
 - Root cause: even after the ownership split and pass-1 ambiguity cleanup, the migrated explorer shell still exposed mixed tool/action concepts (`create`/`probe`/`play mode`), let non-edit surfaces reach seam-edit controls, and still carried compatibility behavior where retained shell snapshots could backstop probe-unavailable or stale play-launch paths.
-- Fix strategy: collapsed the live explorer surface to four canonical modes (`Edit`, `Inspect`, `Sandbox`, `Play`), restricted scene action bars and transform-editor interactivity to the owning mode, removed probe-unavailable shell-fallback dependence from `src/tet4d/ui/pygame/topology_lab/scene_state.py`, and stopped `Play This Topology` from rebuilding explorer launch state from drifted dirty shell fields.
-- Updated `CURRENT_STATE.md` and `docs/plans/topology_playground_ownership_audit.md` to mark pass-2 mode ownership as the live baseline and to narrow the remaining compatibility debt to isolated non-explorer mirrors plus explicit legacy normal-mode helpers.
+- Fix strategy: collapsed the then-live explorer surface to four intermediate modes (`Edit`, `Inspect`, `Sandbox`, `Play`), restricted scene action bars and transform-editor interactivity to the owning mode, removed probe-unavailable shell-fallback dependence from `src/tet4d/ui/pygame/topology_lab/scene_state.py`, and stopped `Play This Topology` from rebuilding explorer launch state from drifted dirty shell fields.
+- Historical note: this four-mode cleanup was an intermediate implementation step. It was superseded on 2026-03-20 by the accepted `Editor` / `Sandbox` / `Play` top-level workspace model recorded in `docs/plans/topology_playground_current_authority.md`.
+- Updated `CURRENT_STATE.md` and `docs/history/topology_playground/topology_playground_ownership_audit.md` to mark pass-2 mode ownership as the live baseline and to narrow the remaining compatibility debt to isolated non-explorer mirrors plus explicit legacy normal-mode helpers.
 - Added focused regressions in `tests/unit/engine/test_topology_lab_menu.py`, `tests/unit/engine/test_topology_lab_state_ownership.py`, `tests/unit/engine/test_topology_lab_app.py`, `tests/unit/engine/test_topology_playground_state.py`, and `tests/unit/engine/test_topology_playground_launch.py` covering mode-owned action bars, read-only inspect behavior, sandbox/play no-longer-editing paths, canonical-only play launch, and inspector/sandbox ownership continuity.
 
 Current sub-batch (2026-03-14): explorer play-launch gameplay/runtime fix.
@@ -63,7 +117,7 @@ Current sub-batch (2026-03-14): topology playground dimension-cycle sandbox-stat
 
 Current sub-batch (2026-03-13): topology playground ownership and mode-boundary cleanup.
 - Root cause: after the semantics pass, the live playground still mixed canonical runtime state with UI-local transients in one shell surface, and sandbox reused inspector probe selection/path/frame for projection clicks, overlays, and footer controls. That made mode ownership hard to audit and kept sandbox/inspector leakage alive even though movement semantics were already correct.
-- Fix strategy: documented the live surface in `docs/plans/topology_playground_ownership_audit.md`, exposed explicit canonical/editor/inspector/sandbox/derived ownership views from `src/tet4d/engine/runtime/topology_playground_state.py`, added `src/tet4d/ui/pygame/topology_lab/state_ownership.py` for UI-side transient buckets, and rewired `src/tet4d/ui/pygame/launch/topology_lab_menu.py` so sandbox uses sandbox-local projection focus/path/frame while inspector probe state remains isolated.
+- Fix strategy: documented the live surface in `docs/history/topology_playground/topology_playground_ownership_audit.md`, exposed explicit canonical/editor/inspector/sandbox/derived ownership views from `src/tet4d/engine/runtime/topology_playground_state.py`, added `src/tet4d/ui/pygame/topology_lab/state_ownership.py` for UI-side transient buckets, and rewired `src/tet4d/ui/pygame/launch/topology_lab_menu.py` so sandbox uses sandbox-local projection focus/path/frame while inspector probe state remains isolated.
 - Added focused regressions in `tests/unit/engine/test_topology_playground_state.py` and `tests/unit/engine/test_topology_lab_state_ownership.py`, plus the existing menu/sandbox suites, covering inspector/sandbox transient isolation, sandbox overlay routing, and canonical-state survival across tool switches.
 
 Current sub-batch (2026-03-13): topology-lab explorer defaults + dimension round-trip reset semantics.
