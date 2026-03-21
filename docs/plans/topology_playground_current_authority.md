@@ -1,7 +1,7 @@
 # Topology Playground Current Authority
 
 Status: active current-authority manifest  
-Last updated: 2026-03-20
+Last updated: 2026-03-21
 
 Use this file first for topology-playground architecture and migration-state
 questions. Older topology-playground manifests, stage plans, and audits are
@@ -35,6 +35,9 @@ historical background unless a future task explicitly reactivates them.
   mean neighbor-search.
 - Play is a separate gameplay workspace. Translation legality and drop legality
   are distinct on non-trivial `Y`-seam topologies.
+- Play move classes remain explicit: deliberate translation, rotation, gravity
+  tick, soft drop, and hard drop must not collapse back into one generic
+  seam-transport rule.
 - Play groundedness and lock are based on whether one legal drop continuation
   exists under the Play drop policy, not on generic seam adjacency or generic
   transport reachability.

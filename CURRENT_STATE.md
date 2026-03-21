@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-20  
-Branch: `true-animations`  
-Worktree expectation: dirty only when an active batch is in progress
+Last updated: 2026-03-21  
+Branch: `master`  
+Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
 
@@ -32,6 +32,8 @@ not a historical ledger. Long historical migration detail belongs in
 - Explorer Playground workspace stabilization follow-up (2026-03-20): Editor probe/dot and trace now stay live even while the Edit tool is active, Editor trace is an explicit on/off control, Sandbox focus/anchor now tracks a visible piece cell so `3D`/`4D` piece rendering survives entry and movement even when neighbor overlay is off, and the migrated shell now shows an explicit external right-side helper keyed to minimal movement/rotation guidance plus short workspace context.
 - Manifest reconciliation and current-authority refresh (2026-03-20): `docs/plans/topology_playground_current_authority.md` is now the single current topology-playground architecture authority, while older topology-playground manifests/plans/audits are explicitly marked historical or supporting background.
 - Topology-explorer clean-CI lock follow-up (2026-03-21): the committed shell/runtime contract now matches the accepted sandbox-first explorer entry and current neighbor-marker model in a clean clone as well as the dirty worktree. Workspace switching back to `Editor` preserves the remembered sandbox/topology situation, scene wrappers expose the current neighbor-marker render seam directly, and the focused topology-lab menu/projection tests now pin the current shell labels and workspace behavior instead of older Editor-first assumptions.
+- Local branch integration follow-up (2026-03-21): the later local topology-explorer/gameplay work is now integrated on top of the released branch line. Historical topology-playground plan stubs were further demoted toward archive status, play move intents are now owned explicitly in `src/tet4d/engine/gameplay/play_move_intents.py`, and matching gameplay/input/playbot/launch coverage now rides on that explicit translation-vs-drop intent split without reopening the settled topology-playground architecture contract.
+- Release follow-up (2026-03-21): the integrated branch state shipped first as `0.6` and then as patch release `0.6.1`; `master`, `origin/master`, and the current local checkout now align on the `0.6.1` release state.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.

@@ -11,6 +11,9 @@ This repository contains:
 Primary Python entrypoints live under `cli/` (`cli/front*.py`).
 Root `front.py` is the compatibility wrapper entrypoint.
 All modes share core logic under `src/tet4d/engine/`.
+Custom topology editing and custom-topology play now flow through the Explorer
+Playground shell, whose top-level workspaces are `Editor`, `Sandbox`, and
+`Play`.
 
 Boundary topology presets are available in setup menus:
 - `bounded` (default)

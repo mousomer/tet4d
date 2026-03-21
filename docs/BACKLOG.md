@@ -1,13 +1,21 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-20  
+Updated: 2026-03-21  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 Topology-playground note: current architecture authority lives in
 `docs/plans/topology_playground_current_authority.md`. Older topology-playground
 batch entries below are historical change footprint, not active architecture
 instructions.
+
+Current sub-batch (2026-03-21): local branch integration after `0.6`.
+- Root cause: after the verified `0.6` release was cut from a clean clone, the original local branch still contained additional gameplay/runtime/topology-lab work plus further demotion of older topology-playground plan files, leaving the shipped branch line and the local architecture/documentation state temporarily out of sync.
+- Fix strategy: committed the remaining local branch changes, rebased them cleanly onto the released `true-animations` head, kept the settled topology-playground workspace/drop-policy contract intact, and re-verified the integrated branch before fast-forwarding both `true-animations` and `master`.
+
+Current sub-batch (2026-03-21): `0.6.1` patch release.
+- Root cause: retagging the published `0.6` release would have broken release reproducibility after the integrated post-release branch work landed.
+- Fix strategy: bumped the package/release version to `0.6.1`, updated the changelog, reran the local release gate, published `v0.6.1`, and let the tag-triggered packaging workflow attach the new installer set to the new release instead of mutating `v0.6`.
 
 Current sub-batch (2026-03-20): topology-playground manifest reconciliation and current-authority refresh.
 - Root cause: current repo guidance was drifting across older migration manifests, newer Stage 1 / Stage 2 accepted direction, and batch-specific prompts, which left future Codex runs at risk of mixing historical `Inspect` / `Edit` or pre-generalized false-lock assumptions with the live `Editor` / `Sandbox` / `Play` and Play drop-policy contracts.
