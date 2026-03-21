@@ -2122,7 +2122,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(topology_lab_menu._current_probe_coord(state), (1, 2, 3, 0))
         self.assertEqual(topology_lab_menu._current_probe_path(state), [(1, 2, 3, 0)])
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
-        self.assertIn("Editor target", state.status)
+        self.assertEqual(state.status, "Selected cell [1, 2, 3, 0]")
 
     def test_edit_tool_keeps_editor_movement_safe_and_leaves_sandbox_origin_unchanged(self) -> None:
         state = self._explorer_state(2)
