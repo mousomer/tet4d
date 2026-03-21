@@ -1588,7 +1588,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 area=area,
                 preview={},
             )
-            self.assertEqual(draw_controls.call_args.kwargs["title"], "Editor movement")
+            self.assertEqual(draw_controls.call_args.kwargs["title"], "Inspect moves")
             self.assertEqual(
                 draw_controls.call_args.kwargs["active_color"], (56, 92, 130)
             )
@@ -1601,10 +1601,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 area=area,
                 preview={},
             )
-            self.assertEqual(draw_controls.call_args.kwargs["title"], "Editor movement")
-            self.assertEqual(
-                draw_controls.call_args.kwargs["active_color"], (56, 92, 130)
-            )
+            draw_controls.assert_not_called()
             draw_controls.reset_mock()
             topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
             topology_lab_menu._draw_probe_controls_if_needed(
