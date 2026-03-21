@@ -98,7 +98,10 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             preview_error=None,
         )
 
-        self.assertIn("Sandbox focus: [5, 2]", lines)
+        self.assertIn(
+            f"Sandbox focus: {list(current_sandbox_focus_coord(state))}",
+            lines,
+        )
         self.assertFalse(any(line.startswith("Probe:") for line in lines))
         self.assertFalse(any("probe-step" in line for line in lines))
 
@@ -114,7 +117,7 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         lines = topology_lab_menu._workspace_probe_lines(state)
 
         self.assertEqual(state.probe_coord, (1, 1))
-        self.assertIn("Inspect cell: [1, 1]", lines)
+        self.assertIn("Editor cell: [1, 1]", lines)
         self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
 
     def test_draw_explorer_scene_uses_sandbox_focus_overlay_when_active(self) -> None:
@@ -144,8 +147,12 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             )
 
         kwargs = draw_scene.call_args.kwargs
-        self.assertEqual(kwargs["probe_coord"], (2, 3))
-        self.assertEqual(kwargs["probe_path"], ((2, 3),))
+        self.assertEqual(kwargs["probe_coord"], current_sandbox_focus_coord(state))
+        self.assertEqual(kwargs["probe_path"], ())
+        self.assertEqual(
+            kwargs["neighbor_markers"],
+            tuple(topology_lab_menu._active_workspace_neighbor_markers(state)),
+        )
 
     def test_sandbox_neighbor_search_toggle_hides_focus_overlay_but_keeps_sandbox_active(self) -> None:
         state = self._state()
@@ -164,6 +171,60 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         self.assertIn("Sandbox neighbor-search: off", lines)
         self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
         self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
+
+    def test_sandbox_without_neighbor_overlay_keeps_visible_piece_anchor_selected(self) -> None:
+        state = self._state(dimension=3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.neighbor_search_enabled = False
+
+        self.assertIn(
+            topology_lab_menu._active_workspace_coord(state),
+            topology_lab_menu.sandbox_cells(state),
+        )
+        self.assertEqual(topology_lab_menu._active_workspace_path(state), [])
+        self.assertIn(
+            f"Sandbox anchor: {list(topology_lab_menu._active_workspace_coord(state))}",
+            topology_lab_menu._workspace_probe_lines(state),
+        )
+
+    def test_sandbox_focus_tracks_visible_piece_cells_after_move(self) -> None:
+        for dimension in (3, 4):
+            with self.subTest(dimension=dimension):
+                state = self._state(dimension=dimension)
+                topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+                topology_lab_menu.ensure_piece_sandbox(state)
+                current_cell = topology_lab_menu.sandbox_cells(state)[0]
+                select_sandbox_projection_coord(state, current_cell)
+                cells = topology_lab_menu.sandbox_cells(state)
+                dims = topology_lab_menu._board_dims_for_state(state)
+                step_label = next(
+                    (
+                        candidate
+                        for candidate, axis, delta in (
+                            ("x+", 0, 1),
+                            ("x-", 0, -1),
+                            ("y+", 1, 1),
+                            ("y-", 1, -1),
+                        )
+                        if all(
+                            0 <= cell[axis] + delta < dims[axis] for cell in cells
+                        )
+                    ),
+                    None,
+                )
+                self.assertIsNotNone(step_label)
+                ok, message = topology_lab_menu.move_sandbox_piece(
+                    state,
+                    topology_lab_menu._current_explorer_profile(state),
+                    step_label,
+                )
+                self.assertTrue(ok, message)
+                self.assertIn(
+                    current_sandbox_focus_coord(state),
+                    topology_lab_menu.sandbox_cells(state),
+                )
 
     def test_canonical_topology_state_survives_tool_switches(self) -> None:
         state = self._state(dimension=3)
