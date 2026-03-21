@@ -3,6 +3,18 @@
 ## 2026-03-21
 
 ### Release
+1. Published `tet4d 0.6.1` as the patch follow-up to `animations_and_sandbox`.
+
+### Changed
+1. The integrated local topology-explorer and gameplay follow-up branch state is now the canonical `master` / `true-animations` release state.
+
+### Fixed
+1. Folded the post-`0.6` local branch integration changes into the released branch line instead of leaving them only in a dirty local checkout.
+2. Re-synchronized maintenance docs and the remaining stale topology-lab menu expectation against the integrated branch state before release.
+
+## 2026-03-21
+
+### Release
 1. Published `tet4d 0.6` from the `animations_and_sandbox` release line.
 
 ### Added
