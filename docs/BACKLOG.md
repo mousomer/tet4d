@@ -45,6 +45,10 @@ Current sub-batch (2026-03-21): Sandbox ND box-shape tightening.
 - Root cause: even after the first ND box-footprint pass, the projection-cell inset and corner rounding were still loose enough that some `3D` / `4D` sandbox cells read visually as rounded dots instead of boxes.
 - Fix strategy: tightened the ND sandbox inset to near-full-cell fill on smaller projection cells, reduced the corner radius, preserved a visible outline, and strengthened the render regression so both side-edge and top-edge points of the projected sandbox cell must paint.
 
+Current sub-batch (2026-03-21): Sandbox ND behavior lock pass.
+- Root cause: the live fix existed in code and tests, but the active manifest/RDS wording still did not pin one critical visual rule tightly enough: in `3D` / `4D`, sandbox piece cells must read as full boxes and neighbor dots must remain a separate overlay.
+- Fix strategy: tightened the current-authority manifest plus the durable RDS files so ND sandbox piece cells are explicitly required to render as box-shaped piece cells, while neighbor dots remain distinct and toggle-gated behavior.
+
 Current sub-batch (2026-03-20): topology playground Editor unification Stage 2.
 - Root cause: the migrated playground already carried internal `editor` / `sandbox` / `play` ownership, but the visible shell still centered the old `Inspect` / `Edit` split, Editor movement remained effectively inspect-only, and Explorer entry still defaulted to a competing top-level Sandbox-first posture.
 - Fix strategy: promoted the primary workspace ribbon to `Editor` / `Sandbox` / `Play`, added remembered Editor-tool state, routed Editor movement and projection selection through the safe probe contract even while the Edit tool is active, kept topology mutation behind explicit actions, and added focused regressions for workspace routing, helper copy, probe safety, explicit mutation, and workspace isolation.

@@ -1,0 +1,139 @@
+# Topology Playground Current Authority
+
+Status: active current-authority manifest  
+Last updated: 2026-03-20
+
+Use this file first for topology-playground architecture and migration-state
+questions. Older topology-playground manifests, stage plans, and audits are
+historical background unless a future task explicitly reactivates them.
+
+## Instruction precedence
+
+- This manifest and any newer user or developer instruction for the current
+  task take precedence over archived topology-playground manifests.
+- If an archived manifest conflicts with this file, follow this file.
+- If a newer instruction severely conflicts with this file or with current code
+  reality, stop and ask first before implementation.
+- Once that mismatch is clarified, update this manifest and any affected
+  archive-note stubs in the same batch so the repo stays coherent.
+
+## Accepted architecture now
+
+- Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
+  `Play`.
+- `Inspect` is no longer a top-level workspace. It survives only as an
+  Editor-internal non-mutating probe/selection flow.
+- `Edit` is no longer a top-level workspace. It survives only as an
+  Editor-internal explicit mutation flow.
+- Editor movement is always non-mutating, even when an edit-capable Editor tool
+  is active.
+- Probe movement, trace, and edit targeting must derive from the same canonical
+  seam-aware Editor probe state.
+- Sandbox is a separate piece-experimentation workspace. It does not implicitly
+  mean neighbor-search.
+- Play is a separate gameplay workspace. Translation legality and drop legality
+  are distinct on non-trivial `Y`-seam topologies.
+- Play groundedness and lock are based on whether one legal drop continuation
+  exists under the Play drop policy, not on generic seam adjacency or generic
+  transport reachability.
+- Hard drop must match repeated legal drop continuation.
+
+## Current Explorer stabilization expectations
+
+- The legacy Inspect "dot" is the Editor probe/dot. Its movement must stay
+  consistent before and after seam traversal.
+- The Editor probe/dot and its trace must work consistently in `2D`, `3D`, and
+  `4D`.
+- Probe movement, trace, and edit targeting must stay aligned to the same
+  canonical seam-aware Editor probe state in every supported dimension.
+- Editor trace visibility must be controlled by an explicit `on` / `off` button
+  on the Explorer panel. Toggling trace must not disable probe movement or hide
+  the probe/dot itself.
+- Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and
+  `4D`.
+- In `3D` and `4D`, projected sandbox piece cells must render as full piece
+  boxes, not as neighbor-style dots.
+- Neighbor markers must appear as small dots in `2D`, `3D`, and `4D` only when
+  the Explorer `neighbor search` control is explicitly enabled. Neighbor
+  markers must not appear by default, must not replace or hide the sandbox
+  piece, and must remain visually distinct from sandbox piece cells.
+- Menu items and critical controls must remain fully visible; clipped, hidden,
+  or unreadable items are regressions.
+- The helper panel with translation and rotation keys must stay visible outside
+  the main Explorer panel / viewport, not embedded inside it.
+
+## Still transitional
+
+- Some internal legacy `Inspect` / `Edit` / `inspector` naming still remains as
+  compatibility debt in code, audits, and tests.
+- Some dimension-specific Editor probe/camera behavior still rides on older
+  helper layers while the migrated shell consumes canonical runtime state.
+- Retained UI-local shadow ownership and shell snapshot fallbacks still exist
+  for some legacy or non-migrated paths.
+- Legacy normal-mode rows and resolved-profile export still need explicit
+  retirement or an explicit long-term support decision.
+- `src/tet4d/ui/pygame/launch/topology_lab_menu.py` still carries structural
+  decomposition debt.
+- Helper/menu/readability cleanup is not fully done; only the current critical
+  Explorer-shell failures have been stabilized.
+- Unsafe-topology cross-surface drift still exists in some paths, especially
+  where sandbox behavior is stricter than gameplay or preview-invalid
+  dimension-pairing behavior remains confusing.
+- Some topology families still need focused Play drop-policy regression
+  coverage beyond the currently pinned live-path cases.
+
+## Superseded assumptions
+
+- `Inspect` / `Edit` are not the primary visible top-level workspaces anymore.
+- Sandbox is not implicitly neighbor mode and must not be documented or treated
+  as such.
+- Generic explorer seam transport must not determine Play drop legality.
+- Earlier Stage-1 continuation coverage did not fully fix the old spherical
+  false-lock family; any wording that implies that is superseded.
+- Older intermediate cleanup states, including the temporary four-mode
+  `Edit` / `Inspect` / `Sandbox` / `Play` shell, are historical implementation
+  steps rather than the current architecture.
+
+## Current active priorities
+
+- Continue focused Editor/Explorer stabilization where seam-aware probe/trace,
+  helper/menu readability, or workspace isolation still regress.
+- Continue removing legacy internal naming and compatibility mirrors only where
+  that cleanup is grounded by tests and the current architecture contract.
+- Continue migrating or deleting retained UI-local shadow ownership and other
+  non-migrated shell fallbacks.
+- Decide and document whether legacy normal-mode rows and resolved-profile
+  export stay supported or are retired.
+- Continue reducing structural risk in
+  `src/tet4d/ui/pygame/launch/topology_lab_menu.py`.
+- Continue focused Play regression coverage for non-trivial `Y`-seam topology
+  families and related launch/runtime invariants.
+- Continue unsafe-topology contract cleanup where sandbox/gameplay/preview still
+  disagree on valid transport behavior.
+- Keep launcher/setup surfaces minimal for topology and keep custom-topology
+  editing/play flowing through the Explorer Playground shell.
+
+## Explicit non-goals for the next implementation phases
+
+- Do not silently reopen the settled `Editor` / `Sandbox` / `Play` workspace
+  split.
+- Do not silently reopen the settled Play drop-policy distinction between
+  deliberate translation and drop continuation unless a regression proves it
+  wrong.
+- Do not redesign Sandbox beyond focused visibility/framing, neighbor-toggle,
+  or coupling fixes required by current regressions.
+- Do not treat historical manifests as active execution authority.
+- Do not silently leave the authority file stale after a task changes accepted
+  topology-playground direction.
+
+## Historical references
+
+These files remain useful for background, but they are not the current
+authority:
+
+- `docs/history/topology_playground/tet4d_topology_playground_restructure_plan_codex.md`
+- `docs/history/topology_playground/tet4d_spherical_false_lock_fix_manifest.md`
+- `docs/history/topology_playground/topology_playground_migration.md`
+- `docs/history/topology_playground/explorer_playground_unification.md`
+- `docs/history/topology_playground/topology_playground_reality_audit.md`
+- `docs/history/topology_playground/topology_playground_ownership_audit.md`

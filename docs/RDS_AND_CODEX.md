@@ -9,7 +9,12 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 1. Policy manifests and contracts under `config/project/policy/manifests/`.
 2. Policy docs under `docs/policies/`.
 3. RDS specs under `docs/rds/`.
-4. Active execution plan and checkpoint state:
+4. For topology-playground migration/state questions, current authority lives in:
+   - `docs/plans/topology_playground_current_authority.md`
+   - archived topology-playground manifests are historical background only
+   - newer user/developer instructions override archived manifests
+   - if a newer instruction severely conflicts with the current authority or code reality, ask first and update the manifest layer in the same batch
+5. Active execution plan and checkpoint state:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md`
 
@@ -135,3 +140,6 @@ CI preflight (recommended before push):
 - Historical/active stage details belong in:
   - `docs/BACKLOG.md` (change footprint)
   - `CURRENT_STATE.md` (restart handoff)
+- Topology-playground historical manifests now live under
+  `docs/history/topology_playground/`; they are archive material, not active
+  authority.

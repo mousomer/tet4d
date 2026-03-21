@@ -23,6 +23,8 @@ Primary sources:
 - RDS + workflow: `docs/RDS_AND_CODEX.md`
 - Architecture boundary contract: `docs/ARCHITECTURE_CONTRACT.md`
 - Current restart handoff / progress snapshot: `CURRENT_STATE.md`
+- Topology-playground current authority:
+  `docs/plans/topology_playground_current_authority.md`
 - Policy docs: `docs/policies/`
 - Policy index: `docs/policies/INDEX.md`
 - Policy pack root: `config/project/policy/pack.json`
@@ -53,10 +55,18 @@ Before editing, load context in this order as applicable:
 
 1. Read this `AGENTS.md`.
 2. Read `CURRENT_STATE.md` first for any long-running refactor, restart handoff, architecture cleanup, or staged migration task.
-3. Read `docs/RDS_AND_CODEX.md` for workflow rules and relevant RDS references.
-4. Read the task-relevant RDS files before editing gameplay logic.
-5. Read `docs/ARCHITECTURE_CONTRACT.md` before architecture refactors, folder moves, or boundary-sensitive changes.
-6. Read relevant policy files when the task touches:
+3. For any topology-playground task, read
+   `docs/plans/topology_playground_current_authority.md` before older
+   topology-playground manifests or audits.
+   If this file conflicts with archived topology-playground manifests, follow
+   the current-authority file.
+   If a newer user/developer instruction severely conflicts with the
+   current-authority file or with current code reality, stop and ask first,
+   then update the manifest layer in the same batch if the direction changes.
+4. Read `docs/RDS_AND_CODEX.md` for workflow rules and relevant RDS references.
+5. Read the task-relevant RDS files before editing gameplay logic.
+6. Read `docs/ARCHITECTURE_CONTRACT.md` before architecture refactors, folder moves, or boundary-sensitive changes.
+7. Read relevant policy files when the task touches:
    - sanitization,
    - constants/config,
    - governance/tooling,
@@ -96,6 +106,10 @@ For any restructuring or governance-affecting update:
 7. Track LOC delta for every change and, unless delivering a new feature, prefer changes that reduce LOC.
 8. Follow formatting and line-length policy across scripts and text files.
 9. Default verification runs should use quiet mode; use verbose output only when diagnosing failures or flakes.
+10. For topology-playground tasks, current-authority guidance and newer task
+    instructions override archived manifests; if that precedence exposes a
+    severe mismatch, ask first and update the manifest/history notes in the
+    same batch before claiming completion.
 
 Do not claim a governance update is complete if docs, manifests, metrics, or validation were left stale.
 
