@@ -1702,7 +1702,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         ]
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_INSPECT)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
         assert state.sandbox is not None
         self.assertEqual(state.sandbox.origin, (0, 0, 0))
         self.assertEqual(state.sandbox.local_blocks, ((0, 0, 0), (1, 0, 0)))
