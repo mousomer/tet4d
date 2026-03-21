@@ -105,6 +105,19 @@ def _draw_probe_path(
         pygame.draw.circle(surface, (120, 146, 176), center, max(3, cell_size // 7))
 
 
+def _draw_neighbor_markers(
+    surface: pygame.Surface,
+    *,
+    board: pygame.Rect,
+    cell_size: int,
+    preview_dims: tuple[int, ...],
+    neighbor_markers: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None,
+) -> None:
+    for center in _probe_centers(board, cell_size, preview_dims, neighbor_markers):
+        pygame.draw.circle(surface, (120, 146, 176), center, max(3, cell_size // 7))
+        pygame.draw.circle(surface, (200, 214, 238), center, max(1, cell_size // 10))
+
+
 def _draw_probe(
     surface: pygame.Surface,
     *,
@@ -224,6 +237,7 @@ def draw_scene(
     selected_boundary_index: int | None = None,
     probe_coord: tuple[int, ...] | None = None,
     probe_path: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None = None,
+    neighbor_markers: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None = None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
@@ -247,6 +261,13 @@ def draw_scene(
         cell_size=cell_size,
         preview_dims=preview_dims,
         probe_path=probe_path,
+    )
+    _draw_neighbor_markers(
+        surface,
+        board=board,
+        cell_size=cell_size,
+        preview_dims=preview_dims,
+        neighbor_markers=neighbor_markers,
     )
     _draw_probe(
         surface,

@@ -39,6 +39,10 @@ TOPOLOGY_PLAYGROUND_TOOLS = (
     TOOL_SANDBOX,
     TOOL_PLAY,
 )
+_EDITOR_TOOLS = (
+    TOOL_EDIT,
+    TOOL_INSPECT,
+)
 _CANONICAL_TOOL_BY_NAME = {
     "navigate": TOOL_INSPECT,
     "inspect_boundary": TOOL_INSPECT,
@@ -332,6 +336,7 @@ class TopologyPlaygroundProbeState:
     coord: Coord | None = None
     path: tuple[Coord, ...] = ()
     trace: tuple[str, ...] = ()
+    show_trace: bool = True
     highlighted_gluing: str | None = None
     frame_permutation: tuple[int, ...] | None = None
     frame_signs: tuple[int, ...] | None = None
@@ -367,6 +372,7 @@ class TopologyPlaygroundProbeState:
         self.coord = coord
         self.path = tuple(normalized_path)
         self.trace = tuple(str(entry) for entry in self.trace)
+        self.show_trace = bool(self.show_trace)
         self.highlighted_gluing = (
             None if self.highlighted_gluing is None else str(self.highlighted_gluing)
         )
@@ -585,6 +591,7 @@ class TopologyPlaygroundCanonicalOwnershipState:
 @dataclass(frozen=True)
 class TopologyPlaygroundEditorOwnershipState:
     workspace: TopologyWorkspace
+    probe_state: TopologyPlaygroundProbeState
     selected_boundary: BoundaryRef | None
     selected_gluing: str | None
     active_tool: str
@@ -615,6 +622,7 @@ class TopologyPlaygroundState:
     selected_boundary: BoundaryRef | None = None
     selected_gluing: str | None = None
     active_tool: str = TOOL_EDIT
+    editor_tool: str = TOOL_EDIT
     probe_state: TopologyPlaygroundProbeState = field(
         default_factory=TopologyPlaygroundProbeState
     )
@@ -649,10 +657,13 @@ class TopologyPlaygroundState:
             None if self.selected_gluing is None else str(self.selected_gluing)
         )
         self.active_tool = _normalize_active_tool(self.active_tool)
+        self.editor_tool = _normalize_editor_tool(self.editor_tool)
         if self.active_tool not in TOPOLOGY_PLAYGROUND_TOOLS:
             raise ValueError(
                 f"unsupported topology playground tool: {self.active_tool}"
             )
+        if workspace_for_tool(self.active_tool) == WORKSPACE_EDITOR:
+            self.editor_tool = self.active_tool
         if self.gravity_mode is None:
             self.gravity_mode = default_gravity_mode_for_gameplay(
                 self.topology_config.gameplay_mode
@@ -706,9 +717,10 @@ class TopologyPlaygroundState:
     def editor_state(self) -> TopologyPlaygroundEditorOwnershipState:
         return TopologyPlaygroundEditorOwnershipState(
             workspace=WORKSPACE_EDITOR,
+            probe_state=self.probe_state,
             selected_boundary=self.selected_boundary,
             selected_gluing=self.selected_gluing,
-            active_tool=self.active_tool,
+            active_tool=self.editor_tool,
         )
 
     @property
@@ -793,6 +805,7 @@ def default_topology_playground_state(
     gameplay_mode: str = GAMEPLAY_MODE_EXPLORER,
     gravity_axis: int = 1,
     active_tool: str = TOOL_EDIT,
+    editor_tool: str = TOOL_EDIT,
 ) -> TopologyPlaygroundState:
     normalized_dimension = _normalize_dimension(dimension)
     if not (0 <= int(gravity_axis) < normalized_dimension):
@@ -828,6 +841,11 @@ def default_topology_playground_state(
         axis_sizes=resolved_axis_sizes,
         topology_config=topology_config,
         active_tool=_normalize_active_tool(active_tool),
+        editor_tool=(
+            _normalize_active_tool(active_tool)
+            if workspace_for_tool(active_tool) == WORKSPACE_EDITOR
+            else _normalize_editor_tool(editor_tool)
+        ),
         preset_metadata=preset_metadata,
     )
 
@@ -837,6 +855,13 @@ def _normalize_active_tool(tool: str) -> str:
         return _CANONICAL_TOOL_BY_NAME[str(tool)]
     except KeyError as exc:
         raise ValueError(f"unsupported topology playground tool: {tool}") from exc
+
+
+def _normalize_editor_tool(tool: str) -> str:
+    normalized_tool = _normalize_active_tool(tool)
+    if normalized_tool not in _EDITOR_TOOLS:
+        raise ValueError(f"unsupported editor tool: {tool}")
+    return normalized_tool
 
 
 def workspace_for_tool(tool: str) -> TopologyWorkspace:

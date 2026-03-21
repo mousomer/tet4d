@@ -31,6 +31,7 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology Playground Editor unification Stage 2 is now live for the migrated shell: the visible top-level workspace model is `Editor` / `Sandbox` / `Play`, Editor keeps its own remembered tool state, movement in Editor always updates the safe probe/selection target, and topology mutation stays behind explicit Editor-tool actions.
 - Explorer Playground workspace stabilization follow-up (2026-03-20): Editor probe/dot and trace now stay live even while the Edit tool is active, Editor trace is an explicit on/off control, Sandbox focus/anchor now tracks a visible piece cell so `3D`/`4D` piece rendering survives entry and movement even when neighbor overlay is off, and the migrated shell now shows an explicit external right-side helper keyed to minimal movement/rotation guidance plus short workspace context.
 - Manifest reconciliation and current-authority refresh (2026-03-20): `docs/plans/topology_playground_current_authority.md` is now the single current topology-playground architecture authority, while older topology-playground manifests/plans/audits are explicitly marked historical or supporting background.
+- Topology-explorer clean-CI lock follow-up (2026-03-21): the committed shell/runtime contract now matches the accepted sandbox-first explorer entry and current neighbor-marker model in a clean clone as well as the dirty worktree. Workspace switching back to `Editor` preserves the remembered sandbox/topology situation, scene wrappers expose the current neighbor-marker render seam directly, and the focused topology-lab menu/projection tests now pin the current shell labels and workspace behavior instead of older Editor-first assumptions.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -59,12 +60,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 2.97` (`low`)
+- `tech_debt.score = 3.09` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.89`
-2. `code_balance = 1.07`
+1. `delivery_size_pressure = 1.90`
+2. `code_balance = 1.19`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -302,14 +303,14 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `2856` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `2860` real LOC
 2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1926` real LOC
 3. `scripts/arch_metrics.py`: `1869` real LOC
-4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1370` real LOC
+4. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1578` real LOC
+5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
 7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1039` real LOC
-8. `tools/governance/generate_configuration_reference.py`: `982` real LOC
+8. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1012` real LOC
 
 Thin-wrapper budgets:
 

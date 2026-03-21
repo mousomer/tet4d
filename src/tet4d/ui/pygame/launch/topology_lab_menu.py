@@ -7,6 +7,8 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
+    build_explorer_transport_resolver,
+    movement_steps_for_dimension,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     explorer_probe_options,
@@ -64,28 +66,30 @@ from tet4d.ui.pygame.topology_lab import (
     set_active_tool,
     step_scene_camera,
     tool_is_edit,
-    tool_is_inspect,
-    tool_is_play,
     tool_is_sandbox,
     transform_preview_label,
     update_hover_target,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
     current_explorer_draft as _current_explorer_draft,
+    current_editor_tool as _current_editor_tool,
     current_explorer_profile as _current_explorer_profile,
     current_highlighted_glue_id as _current_highlighted_glue_id,
     current_probe_coord as _current_probe_coord,
-    current_probe_frame as _current_probe_frame,
     current_probe_path as _current_probe_path,
     current_probe_trace as _current_probe_trace,
     current_selected_boundary_index as _current_selected_boundary_index,
     current_selected_glue_id as _current_selected_glue_id,
+    probe_trace_visible as _probe_trace_visible,
     select_projection_coord as _select_projection_coord,
+    set_active_workspace as _set_active_workspace,
+    set_probe_trace_visible as _set_probe_trace_visible,
     sync_canonical_playground_state as _sync_canonical_playground_state,
     update_explorer_draft as _update_explorer_draft,
     WORKSPACE_EDITOR,
     WORKSPACE_PLAY,
     WORKSPACE_SANDBOX,
+    WORKSPACE_LABELS,
     active_workspace_name as _active_workspace_name,
 )
 from tet4d.ui.pygame.topology_lab.state_ownership import (
@@ -150,6 +154,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _set_status,
     _sync_explorer_state,
     _toggle_explorer_sign,
+    _toggle_sandbox_neighbor_search,
     _uses_general_explorer_editor,
 )
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
@@ -161,7 +166,7 @@ _HIGHLIGHT_COLOR = (255, 224, 128)
 _MUTED_COLOR = (192, 200, 228)
 _DISABLED_COLOR = (130, 138, 168)
 _ANALYSIS_PANE_TITLE = "Analysis View (secondary)"
-_SCENE_PANE_TITLE = "Explorer Editor (primary)"
+_SCENE_PANE_TITLE = "Explorer Workspace (primary)"
 
 # Re-exported compatibility surface kept for tests while menu cleanup stays
 # in flight.
@@ -179,6 +184,7 @@ _COMPAT_EXPORTS = (
     TOOL_PROBE,
     TOOL_SANDBOX,
     boundaries_for_dimension,
+    set_active_tool,
     _sync_canonical_playground_state,
     _apply_sandbox_shortcut_step,
     _cycle_dimension,
@@ -274,10 +280,11 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
 
 
 def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str], ...]:
-    if tool_is_play(state.active_tool):
+    workspace_name = _active_workspace_name(state)
+    if workspace_name == WORKSPACE_PLAY:
         return (("play_preview", "Play This Topology"),
                 ("explore_preview", "Explore This Topology"),)
-    if tool_is_sandbox(state.active_tool):
+    if workspace_name == WORKSPACE_SANDBOX:
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
         return (
@@ -291,12 +298,9 @@ def _action_buttons_for_state(state: _TopologyLabState) -> tuple[tuple[str, str]
             ),
             ("sandbox_reset", "Reset"),
         )
-    if tool_is_inspect(state.active_tool):
-        return (("inspect_reset", "Reset Inspect"),)
-    return (
-        ("apply_glue", "Apply"),
-        ("remove_glue", "Remove"),
-    )
+    if _current_editor_tool(state) == TOOL_INSPECT:
+        return (("inspect_reset", "Reset Probe"),)
+    return (("apply_glue", "Apply"), ("remove_glue", "Remove"))
 
 
 def _explorer_workspace_layout(
@@ -306,33 +310,86 @@ def _explorer_workspace_layout(
     panel_w: int,
     panel_h: int,
     menu_w: int,
-) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+) -> tuple[
+    pygame.Rect,
+    pygame.Rect,
+    pygame.Rect,
+    pygame.Rect,
+    pygame.Rect,
+    pygame.Rect,
+]:
     workspace_x = panel_x + menu_w + 18
     workspace_w = panel_w - menu_w - 30
     header_h = 26
     tool_h = 34
-    top_h = max(180, min(300, int(panel_h * 0.36)))
-    editor_h = max(190, min(250, int(panel_h * 0.24)))
     actions_h = 38
     gap = 12
+    helper_w = max(176, int(workspace_w * 0.28))
+    helper_w = min(helper_w, max(176, workspace_w - gap - 320))
+    main_w = workspace_w - helper_w - gap
+    if main_w < 280:
+        helper_w = max(160, workspace_w - gap - 280)
+        main_w = workspace_w - helper_w - gap
+    if main_w < 240:
+        helper_w = max(144, workspace_w - gap - 240)
+        main_w = workspace_w - helper_w - gap
     tool_rect = pygame.Rect(workspace_x, panel_y + 14 + header_h, workspace_w, tool_h)
-    top_rect = pygame.Rect(workspace_x, tool_rect.bottom + gap, workspace_w, top_h)
-    editor_rect = pygame.Rect(workspace_x, top_rect.bottom + gap, workspace_w, editor_h)
-    preview_rect = pygame.Rect(
-        workspace_x,
-        editor_rect.bottom + gap,
-        workspace_w,
-        max(110, panel_y + panel_h - (editor_rect.bottom + gap) - 56),
-    )
     action_rect = pygame.Rect(
         workspace_x,
         panel_y + panel_h - actions_h - 16,
-        workspace_w,
+        main_w,
         actions_h,
     )
-    if preview_rect.bottom > action_rect.y - gap:
-        preview_rect.height = max(88, action_rect.y - gap - preview_rect.y)
-    return tool_rect, top_rect, editor_rect, preview_rect, action_rect
+    content_y = tool_rect.bottom + gap
+    content_h = max(320, action_rect.y - gap - content_y)
+    top_h = max(212, min(332, int(content_h * 0.6)))
+    editor_y = content_y + top_h + gap
+    editor_h = max(170, content_y + content_h - editor_y)
+    top_rect = pygame.Rect(workspace_x, content_y, main_w, top_h)
+    editor_rect = pygame.Rect(workspace_x, editor_y, main_w, editor_h)
+    helper_rect = pygame.Rect(top_rect.right + gap, content_y, helper_w, content_h)
+    helper_controls_rect = pygame.Rect(
+        helper_rect.x + 10,
+        helper_rect.bottom - 92,
+        helper_rect.width - 20,
+        78,
+    )
+    return (
+        tool_rect,
+        top_rect,
+        editor_rect,
+        helper_rect,
+        helper_controls_rect,
+        action_rect,
+    )
+
+
+def _draw_workspace_toggle_button(
+    screen: pygame.Surface,
+    fonts,
+    *,
+    rect: pygame.Rect,
+    label: str,
+    active: bool,
+    action: str,
+) -> TopologyLabHitTarget:
+    fill = (78, 116, 92) if active else (58, 66, 94)
+    outline = (132, 214, 160) if active else (118, 132, 172)
+    pygame.draw.rect(screen, fill, rect, border_radius=8)
+    pygame.draw.rect(screen, outline, rect, 1, border_radius=8)
+    text = fonts.hint_font.render(
+        fit_text(fonts.hint_font, label, rect.width - 10),
+        True,
+        _TEXT_COLOR,
+    )
+    screen.blit(
+        text,
+        (
+            rect.centerx - text.get_width() // 2,
+            rect.centery - text.get_height() // 2,
+        ),
+    )
+    return TopologyLabHitTarget("action", action, rect.copy())
 
 
 def _sandbox_scene_payload(
@@ -348,23 +405,64 @@ def _sandbox_scene_payload(
     return sandbox_cells_payload, sandbox_ok, sandbox_message
 
 
+def _sandbox_anchor_coord(state: _TopologyLabState) -> tuple[int, ...] | None:
+    cells = sandbox_cells(state)
+    if cells:
+        return tuple(int(value) for value in cells[0])
+    ensure_piece_sandbox(state)
+    if state.sandbox is not None and state.sandbox.origin is not None:
+        return tuple(int(value) for value in state.sandbox.origin)
+    return _current_sandbox_focus_coord(state)
+
+
 def _active_workspace_coord(state: _TopologyLabState) -> tuple[int, ...] | None:
     if tool_is_sandbox(state.active_tool):
-        if not _sandbox_neighbor_search_enabled(state):
-            return None
-        return _current_sandbox_focus_coord(state)
-    if tool_is_inspect(state.active_tool):
+        if _sandbox_neighbor_search_enabled(state):
+            return _current_sandbox_focus_coord(state)
+        return _sandbox_anchor_coord(state)
+    if _active_workspace_name(state) == WORKSPACE_EDITOR:
         return _current_probe_coord(state)
     return None
 
 
 def _active_workspace_path(state: _TopologyLabState) -> list[tuple[int, ...]]:
-    if tool_is_sandbox(state.active_tool):
-        if not _sandbox_neighbor_search_enabled(state):
-            return []
-        return _current_sandbox_focus_path(state)
-    if tool_is_inspect(state.active_tool):
+    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(state):
         return _current_probe_path(state)
+    return []
+
+
+def _active_workspace_neighbor_markers(state: _TopologyLabState) -> list[tuple[int, ...]]:
+    if tool_is_sandbox(state.active_tool) and _sandbox_neighbor_search_enabled(state):
+        profile = _current_explorer_profile(state)
+        if profile is None:
+            return []
+        try:
+            resolver = build_explorer_transport_resolver(
+                profile,
+                _board_dims_for_state(state),
+            )
+        except ValueError:
+            return []
+        piece_cells = tuple(
+            tuple(int(value) for value in coord)
+            for coord in (sandbox_cells(state) or ())
+        )
+        if not piece_cells:
+            return []
+        markers: list[tuple[int, ...]] = []
+        seen: set[tuple[int, ...]] = set()
+        occupied = set(piece_cells)
+        for step in movement_steps_for_dimension(state.dimension):
+            result = resolver.resolve_piece_step(piece_cells, step)
+            if result.moved_cells is None:
+                continue
+            for coord in result.moved_cells:
+                target = tuple(int(value) for value in coord)
+                if target in occupied or target in seen:
+                    continue
+                seen.add(target)
+                markers.append(target)
+        return markers
     return []
 
 
@@ -373,7 +471,7 @@ def _active_workspace_trace(state: _TopologyLabState) -> list[str]:
         if not _sandbox_neighbor_search_enabled(state):
             return []
         return _current_sandbox_focus_trace(state)
-    if tool_is_inspect(state.active_tool):
+    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(state):
         return _current_probe_trace(state)
     return []
 
@@ -382,10 +480,8 @@ def _active_workspace_frame(
     state: _TopologyLabState,
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
     if tool_is_sandbox(state.active_tool):
-        if not _sandbox_neighbor_search_enabled(state):
-            return _current_probe_frame(state)
         return _current_sandbox_focus_frame(state)
-    return _current_probe_frame(state)
+    return tuple(range(state.dimension)), tuple(1 for _ in range(state.dimension))
 
 
 def _draw_explorer_scene(
@@ -420,6 +516,7 @@ def _draw_explorer_scene(
         selected_boundary_index=_current_selected_boundary_index(state),
         probe_coord=_active_workspace_coord(state),
         probe_path=tuple(_active_workspace_path(state)),
+        neighbor_markers=tuple(_active_workspace_neighbor_markers(state)),
         sandbox_cells=sandbox_cells_payload,
         sandbox_valid=sandbox_ok,
         sandbox_message=sandbox_message,
@@ -435,15 +532,11 @@ def _draw_explorer_scene(
 
 def _workspace_selection_lines(state: _TopologyLabState) -> list[str]:
     workspace_name = _active_workspace_name(state)
-    workspace_label = {
-        WORKSPACE_EDITOR: "Editor",
-        WORKSPACE_SANDBOX: "Sandbox",
-        WORKSPACE_PLAY: "Play",
-    }[workspace_name]
-    if tool_is_edit(state.active_tool):
-        tool_label = "Edit tool"
-    elif tool_is_inspect(state.active_tool):
-        tool_label = "Inspect tool"
+    workspace_label = WORKSPACE_LABELS[workspace_name]
+    if workspace_name == WORKSPACE_EDITOR:
+        tool_label = (
+            "Edit tool" if _current_editor_tool(state) == TOOL_EDIT else "Inspect tool"
+        )
     elif tool_is_sandbox(state.active_tool):
         tool_label = "Sandbox controls"
     else:
@@ -489,9 +582,14 @@ def _workspace_camera_lines(state: _TopologyLabState) -> list[str]:
 
 
 def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
-    if tool_is_sandbox(state.active_tool):
+    workspace_name = _active_workspace_name(state)
+    if workspace_name == WORKSPACE_SANDBOX:
         if not _sandbox_neighbor_search_enabled(state):
-            return ["Sandbox neighbor-search: off"]
+            anchor = _sandbox_anchor_coord(state)
+            lines = ["Sandbox neighbor-search: off"]
+            if anchor is not None:
+                lines.append(f"Sandbox anchor: {list(anchor)}")
+            return lines
         focus_coord = _current_sandbox_focus_coord(state)
         lines = [
             f"Sandbox focus: {list(focus_coord)}",
@@ -499,16 +597,18 @@ def _workspace_probe_lines(state: _TopologyLabState) -> list[str]:
         ]
         lines.extend(f"  {line}" for line in _current_sandbox_focus_trace(state)[-3:])
         return lines
-    if not tool_is_inspect(state.active_tool):
+    if workspace_name != WORKSPACE_EDITOR:
         return []
     probe_coord = _current_probe_coord(state)
     if probe_coord is None:
         return []
     lines = [
-        f"Inspect cell: {list(probe_coord)}",
-        f"Inspect steps: {max(0, len(_current_probe_path(state)) - 1)}",
+        f"Editor cell: {list(probe_coord)}",
+        f"Editor trace: {'on' if _probe_trace_visible(state) else 'off'}",
     ]
-    lines.extend(f"  {line}" for line in _current_probe_trace(state)[-3:])
+    if _probe_trace_visible(state):
+        lines.append(f"Editor steps: {max(0, len(_current_probe_path(state)) - 1)}")
+        lines.extend(f"  {line}" for line in _active_workspace_trace(state)[-3:])
     return lines
 
 
@@ -518,6 +618,7 @@ def _workspace_helper_lines(state: _TopologyLabState) -> tuple[str, ...]:
         return (
             "Editor workspace: probe movement is always safe; seam mutation stays behind the explicit Edit tool.",
             "Editor movement target is the editor probe/selection only; it never moves the sandbox or gameplay piece.",
+            f"Editor trace visibility is explicit and currently {'on' if _probe_trace_visible(state) else 'off'}.",
         )
     if workspace_name == WORKSPACE_SANDBOX:
         neighbor_text = (
@@ -533,6 +634,73 @@ def _workspace_helper_lines(state: _TopologyLabState) -> tuple[str, ...]:
         "Play workspace: launch and preview use the canonical gameplay runtime, not retained shell or scene state.",
         "Play movement target is the gameplay piece only; editor probe and sandbox piece state stay separate.",
     )
+
+
+def _workspace_guidance_lines(state: _TopologyLabState) -> list[str]:
+    def _binding_text(bindings, action: str) -> str:
+        return format_key_tuple(bindings.get(action, ()))
+
+    def _compact_lines(prefix: str, parts: list[str]) -> list[str]:
+        lines: list[str] = []
+        for index in range(0, len(parts), 2):
+            label = prefix if not lines else " " * len(prefix)
+            lines.append(label + "  ".join(parts[index : index + 2]))
+        return lines
+
+    gameplay = _gameplay_bindings_for_dimension(state.dimension)
+    explorer = _explorer_bindings_for_dimension(state.dimension)
+    workspace_name = _active_workspace_name(state)
+    if workspace_name == WORKSPACE_EDITOR:
+        context = (
+            "Context: Editor / Edit. Movement updates the canonical probe only."
+            if _current_editor_tool(state) == TOOL_EDIT
+            else "Context: Editor / Probe. Movement updates the canonical probe only."
+        )
+    elif workspace_name == WORKSPACE_SANDBOX:
+        neighbor_text = "on" if _sandbox_neighbor_search_enabled(state) else "off"
+        context = (
+            "Context: Sandbox. Piece movement and rotation stay local."
+            f" Neighbor: {neighbor_text}."
+        )
+    else:
+        context = (
+            "Context: Play launch. Use the action bar to start gameplay from this"
+            " draft."
+        )
+    move_parts = [
+        f"X {_binding_text(gameplay, 'move_x_neg')} / {_binding_text(gameplay, 'move_x_pos')}",
+        f"Y {_binding_text(explorer, 'move_up')} / {_binding_text(explorer, 'move_down')}",
+    ]
+    if state.dimension >= 3:
+        move_parts.append(
+            f"Z {_binding_text(gameplay, 'move_z_neg')} / {_binding_text(gameplay, 'move_z_pos')}"
+        )
+    if state.dimension >= 4:
+        move_parts.append(
+            f"W {_binding_text(gameplay, 'move_w_neg')} / {_binding_text(gameplay, 'move_w_pos')}"
+        )
+    rotate_parts = [
+        f"XY {_binding_text(gameplay, 'rotate_xy_pos')} / {_binding_text(gameplay, 'rotate_xy_neg')}",
+    ]
+    if state.dimension >= 3:
+        rotate_parts.extend(
+            [
+                f"XZ {_binding_text(gameplay, 'rotate_xz_pos')} / {_binding_text(gameplay, 'rotate_xz_neg')}",
+                f"YZ {_binding_text(gameplay, 'rotate_yz_pos')} / {_binding_text(gameplay, 'rotate_yz_neg')}",
+            ]
+        )
+    if state.dimension >= 4:
+        rotate_parts.extend(
+            [
+                f"XW {_binding_text(gameplay, 'rotate_xw_pos')} / {_binding_text(gameplay, 'rotate_xw_neg')}",
+                f"YW {_binding_text(gameplay, 'rotate_yw_pos')} / {_binding_text(gameplay, 'rotate_yw_neg')}",
+                f"ZW {_binding_text(gameplay, 'rotate_zw_pos')} / {_binding_text(gameplay, 'rotate_zw_neg')}",
+            ]
+        )
+    lines = [context]
+    lines.extend(_compact_lines("Move: ", move_parts))
+    lines.extend(_compact_lines("Rotate: ", rotate_parts))
+    return lines
 
 
 def _workspace_experiment_lines(state: _TopologyLabState) -> list[str]:
@@ -583,18 +751,15 @@ def _draw_probe_controls_if_needed(
     area: pygame.Rect,
     preview: dict[str, object] | None,
 ) -> list[TopologyLabHitTarget]:
-    if preview is None or (
-        not tool_is_inspect(state.active_tool) and not tool_is_sandbox(state.active_tool)
-    ):
+    workspace_name = _active_workspace_name(state)
+    if preview is None or workspace_name not in {WORKSPACE_EDITOR, WORKSPACE_SANDBOX}:
         return []
     profile = _current_explorer_profile(state)
     assert profile is not None
-    title = (
-        "Sandbox piece moves" if tool_is_sandbox(state.active_tool) else "Inspect moves"
-    )
-    active_color = (
-        (78, 116, 92) if tool_is_sandbox(state.active_tool) else (56, 92, 130)
-    )
+    if workspace_name == WORKSPACE_EDITOR and _current_editor_tool(state) != TOOL_INSPECT:
+        return []
+    title = "Sandbox piece moves" if workspace_name == WORKSPACE_SANDBOX else "Inspect moves"
+    active_color = (78, 116, 92) if workspace_name == WORKSPACE_SANDBOX else (56, 92, 130)
     frame_permutation, frame_signs = _active_workspace_frame(state)
     return draw_probe_controls(
         screen,
@@ -628,7 +793,7 @@ def _draw_explorer_workspace(
     assert profile is not None
     draft = _current_explorer_draft(state)
     assert draft is not None
-    tool_rect, top_rect, editor_rect, preview_rect, action_rect = (
+    tool_rect, top_rect, editor_rect, helper_rect, _probe_rect, action_rect = (
         _explorer_workspace_layout(
             panel_x=panel_x,
             panel_y=panel_y,
@@ -637,14 +802,38 @@ def _draw_explorer_workspace(
             menu_w=menu_w,
         )
     )
+    header_gap = 10
+    toggle_w = min(136, max(112, top_rect.width // 3))
+    main_tool_rect = pygame.Rect(tool_rect.x, tool_rect.y, top_rect.width, tool_rect.height)
+    ribbon_rect = pygame.Rect(
+        main_tool_rect.x,
+        main_tool_rect.y,
+        max(72, main_tool_rect.width - toggle_w - header_gap),
+        main_tool_rect.height,
+    )
+    toggle_rect = pygame.Rect(
+        ribbon_rect.right + header_gap,
+        main_tool_rect.y + (main_tool_rect.height - 28) // 2,
+        min(toggle_w, main_tool_rect.right - (ribbon_rect.right + header_gap)),
+        28,
+    )
+    main_panel_rect = pygame.Rect(
+        main_tool_rect.x - 8,
+        main_tool_rect.y - 8,
+        top_rect.width + 16,
+        action_rect.bottom - main_tool_rect.y + 16,
+    )
     workspace_focus_rect = pygame.Rect(
-        tool_rect.x - 8,
-        panel_y + 12,
-        tool_rect.width + 16,
-        action_rect.bottom - panel_y,
+        main_panel_rect.x,
+        main_panel_rect.y,
+        main_panel_rect.width,
+        main_panel_rect.height,
     )
     focus_color = _HIGHLIGHT_COLOR if _scene_pane_active(state) else (92, 108, 144)
+    pygame.draw.rect(screen, (16, 20, 34), main_panel_rect, border_radius=12)
     pygame.draw.rect(screen, focus_color, workspace_focus_rect, 2, border_radius=10)
+    pygame.draw.rect(screen, (16, 20, 34), helper_rect, border_radius=12)
+    pygame.draw.rect(screen, (96, 112, 152), helper_rect, 1, border_radius=12)
     scene_header = fonts.hint_font.render(
         _SCENE_PANE_TITLE,
         True,
@@ -652,14 +841,16 @@ def _draw_explorer_workspace(
     )
     screen.blit(scene_header, (tool_rect.x + 2, panel_y + 18))
     hits = draw_tool_ribbon(
-        screen, fonts, area=tool_rect, active_tool=state.active_tool
+        screen,
+        fonts,
+        area=ribbon_rect,
+        active_workspace=_active_workspace_name(state),
     )
-
     boundaries = _explorer_boundaries(state)
     source_boundary = boundaries[draft.source_index]
     target_boundary = boundaries[draft.target_index]
     active_glue_ids = _explorer_active_glue_ids(state)
-    preview, preview_error = _explorer_preview_payload(state)
+    preview, _preview_error = _explorer_preview_payload(state)
     basis_arrows = list(state.scene_basis_arrows)
     preview_dims = state.scene_preview_dims or _board_dims_for_state(state)
     sandbox_cells_payload, sandbox_ok, sandbox_message = _sandbox_scene_payload(state)
@@ -703,29 +894,42 @@ def _draw_explorer_workspace(
             actions=_action_buttons_for_state(state),
         )
     )
+    if _active_workspace_name(state) == WORKSPACE_EDITOR:
+        hits.append(
+            _draw_workspace_toggle_button(
+                screen,
+                fonts,
+                rect=toggle_rect,
+                label="Trace: On" if _probe_trace_visible(state) else "Trace: Off",
+                active=_probe_trace_visible(state),
+                action="editor_trace",
+            )
+        )
+    elif _active_workspace_name(state) == WORKSPACE_SANDBOX:
+        hits.append(
+            _draw_workspace_toggle_button(
+                screen,
+                fonts,
+                rect=toggle_rect,
+                label=(
+                    "Neighbor: On"
+                    if _sandbox_neighbor_search_enabled(state)
+                    else "Neighbor: Off"
+                ),
+                active=_sandbox_neighbor_search_enabled(state),
+                action="sandbox_neighbor_search",
+            )
+        )
 
     _ensure_probe_state(state)
-    preview_lines = _workspace_preview_lines(state, preview, preview_error)
-    probe_area = pygame.Rect(
-        preview_rect.x + 10, preview_rect.bottom - 74, preview_rect.width - 20, 60
-    )
-    preview_body_rect = preview_rect.copy()
-    preview_body_rect.height = max(32, preview_rect.height - 78)
+    helper_lines = _workspace_guidance_lines(state)
+    preview_body_rect = helper_rect.inflate(-10, -10)
     draw_preview_panel(
         screen,
         fonts,
         area=preview_body_rect,
-        title=f"Explorer {state.dimension}D status + preview",
-        lines=preview_lines,
-    )
-    hits.extend(
-        _draw_probe_controls_if_needed(
-            screen,
-            fonts,
-            state=state,
-            area=probe_area,
-            preview=preview,
-        )
+        title=f"Explorer {state.dimension}D keys",
+        lines=helper_lines,
     )
     return hits
 
@@ -750,6 +954,16 @@ def _handle_standard_action(state: _TopologyLabState, action: str) -> bool:
     }
     handler = handlers.get(action)
     if handler is None:
+        if action == "editor_trace":
+            _set_probe_trace_visible(state, not _probe_trace_visible(state))
+            _set_status(
+                state,
+                f"Editor trace {'shown' if _probe_trace_visible(state) else 'hidden'}",
+            )
+            return True
+        if action == "sandbox_neighbor_search":
+            _toggle_sandbox_neighbor_search(state)
+            return True
         return False
     handler(state)
     return True
@@ -810,8 +1024,8 @@ def _handle_mouse_editor_target(
         _set_selected_row_by_key(state, "explorer_preset")
         play_sfx("menu_move")
         return True
-    if target.kind == "tool_mode":
-        set_active_tool(state, str(target.value))
+    if target.kind == "workspace_mode":
+        _set_active_workspace(state, str(target.value))
         play_sfx("menu_move")
         return True
     if not tool_is_edit(state.active_tool):
@@ -923,7 +1137,8 @@ def _handle_projection_cell_target(
     if target.kind != "projection_cell" or not _uses_general_explorer_editor(state):
         return False
     coord = tuple(int(value) for value in tuple(target.value))
-    if tool_is_sandbox(state.active_tool):
+    workspace_name = _active_workspace_name(state)
+    if workspace_name == WORKSPACE_SANDBOX:
         if not _sandbox_neighbor_search_enabled(state):
             _set_status(state, "Sandbox neighbor-search is disabled")
             return True
@@ -932,7 +1147,7 @@ def _handle_projection_cell_target(
             _set_status(state, f"Sandbox focus {list(selected)}")
             play_sfx("menu_move")
         return True
-    if not tool_is_inspect(state.active_tool):
+    if workspace_name != WORKSPACE_EDITOR:
         return False
     selected = _select_projection_coord(state, coord)
     if selected is not None:
@@ -985,7 +1200,7 @@ def _dispatch_mouse_target(
         return _handle_mouse_boundary_target(state, target, button)
     if target.kind in {
         "preset_step",
-        "tool_mode",
+        "workspace_mode",
         "glue_slot",
         "perm_select",
         "sign_toggle",
@@ -1002,7 +1217,7 @@ def _handle_scene_camera_event(
     if (
         not _uses_general_explorer_editor(state)
         or not _scene_pane_active(state)
-        or not tool_is_inspect(state.active_tool)
+        or _active_workspace_name(state) != WORKSPACE_EDITOR
     ):
         return False
     if event.type == pygame.MOUSEWHEEL:
@@ -1072,17 +1287,17 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
     lines = [
         "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
         "Graphical explorer is the primary editor; Analysis View is optional secondary research and diagnostics.",
-        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   E/I/B/P choose tool   Enter plays from Play",
+        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   E/I choose Editor tool   B Sandbox   P Play   Enter plays from Play",
         "F8 resets the current dimension's Explorer play settings to the configured defaults",
         *move_lines,
     ]
     if _controls_pane_active(state):
         lines.append(
-            "Analysis view (secondary): Adjust settings and run Save/Export/Experiments/Back here   Status rows only report the current seam context"
+            "Analysis view (secondary): Adjust settings, switch the Editor tool, and run Save/Export/Experiments/Back here   Status rows only report the current seam context"
         )
     else:
         lines.append(
-            "Explorer editor (primary): Edit owns seam picks and transform changes; Inspect owns local cellwise traversal and read-only seam context"
+            "Explorer workspace (primary): the right-side helper shows movement/tool guidance, Editor movement always updates the safe probe/selection target, and Edit still requires explicit Apply/Remove"
         )
     availability = scene_camera_availability(state.dimension)
     if availability.enabled:
@@ -1096,7 +1311,7 @@ def _hint_lines_for_state(state: _TopologyLabState) -> tuple[str, ...]:
             "Sandbox tool: movement keys and the footer grid move the piece, gameplay rotation keys rotate it, Space or ] next piece, [ previous piece, 0 resets"
         )
     lines.append(
-        "Scene action bar is mode-owned: Apply/Remove only in Edit, Reset only in Inspect, sandbox piece controls only in Sandbox, and launch only in Play"
+        "Scene action bar is workspace-owned: Editor shows Reset Probe or Apply/Remove plus explicit trace control, Sandbox shows piece controls, and Play shows launch actions"
     )
     lines.append(
         "Explorer Preset is adjusted from Analysis View   Transform editor only shows the current preset while editing the draft transform"
@@ -1155,9 +1370,11 @@ def _draw_control_rows(
             hi = pygame.Surface((row_rect.width, row_rect.height), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, row_rect.topleft)
+        label_width = max(252, min(row_rect.width - 132, int(menu_w * 0.74)))
+        value_width = max(116, row_rect.width - label_width - 56)
         label_text = row.label + (" (locked)" if row.disabled else "")
         label = fonts.menu_font.render(
-            fit_text(fonts.menu_font, label_text, max(160, menu_w // 2 - 10)),
+            fit_text(fonts.menu_font, label_text, label_width),
             True,
             color,
         )
@@ -1165,7 +1382,7 @@ def _draw_control_rows(
             fit_text(
                 fonts.menu_font,
                 _row_value_text(state, row),
-                max(160, menu_w // 2 - 70),
+                value_width,
             ),
             True,
             value_color,
@@ -1205,7 +1422,7 @@ def _draw_control_rows(
             screen.blit(value, (value_x, y))
         else:
             screen.blit(value, (value_right - value.get_width(), y))
-        y += 38
+        y += row_height + 2
 
 
 def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
@@ -1235,19 +1452,19 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     selected_row = _selected_row_index(state, selectable)
 
     if _uses_general_explorer_editor(state):
-        panel_w = min(1120, max(520, width - 40))
-        panel_h = min(height - 190, max(620, 120 + len(rows) * 38))
+        panel_w = min(1200, max(560, width - 32))
+        panel_h = min(height - 154, max(640, 132 + len(rows) * 36))
     else:
         panel_w = min(820, max(420, width - 40))
-        panel_h = min(height - 210, 80 + len(rows) * 38)
+        panel_h = min(height - 178, 92 + len(rows) * 36)
     panel_x = (width - panel_w) // 2
-    panel_y = max(150, (height - panel_h) // 2)
+    panel_y = max(126, (height - panel_h) // 2)
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
     if _uses_general_explorer_editor(state):
-        menu_w = min(360, max(260, panel_w - 340))
+        menu_w = min(536, max(372, panel_w - 416))
         separator_x = panel_x + menu_w + 8
         pygame.draw.line(
             screen,

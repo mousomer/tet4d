@@ -52,6 +52,16 @@ PANE_LABELS = {
     PANE_CONTROLS: "Analysis View",
     PANE_SCENE: "Explorer Editor",
 }
+TOPOLOGY_LAB_WORKSPACES = (
+    WORKSPACE_EDITOR,
+    WORKSPACE_SANDBOX,
+    WORKSPACE_PLAY,
+)
+WORKSPACE_LABELS = {
+    WORKSPACE_EDITOR: "Editor",
+    WORKSPACE_SANDBOX: "Sandbox",
+    WORKSPACE_PLAY: "Play",
+}
 TOPOLOGY_LAB_TOOLS = (
     TOOL_EDIT,
     TOOL_INSPECT,
@@ -117,10 +127,12 @@ class TopologyPlaygroundState:
     mouse_targets: list[Any] | None = None
     probe_coord: tuple[int, ...] | None = None
     probe_trace: list[str] | None = None
+    probe_show_trace: bool = True
     probe_path: list[tuple[int, ...]] | None = None
     probe_frame_permutation: tuple[int, ...] | None = None
     probe_frame_signs: tuple[int, ...] | None = None
     active_tool: str = TOOL_EDIT
+    editor_tool: str = TOOL_EDIT
     active_pane: str = PANE_CONTROLS
     hovered_boundary_index: int | None = None
     hovered_glue_id: str | None = None
@@ -326,6 +338,7 @@ def _runtime_probe_state_from_ui(
         coord=coord,
         path=path,
         trace=trace,
+        show_trace=bool(state.probe_show_trace),
         highlighted_gluing=state.highlighted_glue_id,
         frame_permutation=frame_permutation,
         frame_signs=frame_signs,
@@ -441,6 +454,10 @@ def active_workspace_name(state: TopologyPlaygroundState) -> str:
     return runtime_workspace_for_tool(state.active_tool)
 
 
+def current_editor_tool(state: TopologyPlaygroundState) -> str:
+    return canonical_tool_name(state.editor_tool)
+
+
 def tool_is_edit(tool: str) -> bool:
     return canonical_tool_name(tool) == TOOL_EDIT
 
@@ -474,8 +491,11 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
         rigid_play_mode=str(runtime_state.launch_settings.rigid_play_mode),
     )
     _remember_play_settings(state, settings, dimension=runtime_state.dimension)
+    state.active_tool = runtime_state.active_tool
+    state.editor_tool = runtime_state.editor_state.active_tool
     state.probe_coord = runtime_state.probe_state.coord
     state.probe_trace = list(runtime_state.probe_state.trace)
+    state.probe_show_trace = bool(runtime_state.probe_state.show_trace)
     state.probe_path = list(runtime_state.probe_state.path)
     state.probe_frame_permutation = runtime_state.probe_state.frame_permutation
     state.probe_frame_signs = runtime_state.probe_state.frame_signs
@@ -522,6 +542,7 @@ def sync_canonical_playground_state(state: TopologyPlaygroundState) -> None:
         ),
         selected_gluing=state.selected_glue_id,
         active_tool=state.active_tool,
+        editor_tool=state.editor_tool,
         probe_state=_runtime_probe_state_from_ui(state),
         sandbox_piece_state=_runtime_sandbox_state_from_ui(state),
         launch_settings=_runtime_launch_settings_from_ui(state),
@@ -818,6 +839,13 @@ def current_probe_trace(state: TopologyPlaygroundState) -> list[str]:
     return list(state.probe_trace or ())
 
 
+def probe_trace_visible(state: TopologyPlaygroundState) -> bool:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        return bool(runtime_state.probe_state.show_trace)
+    return bool(state.probe_show_trace)
+
+
 def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
@@ -872,6 +900,7 @@ def replace_probe_state(
                 coord=normalized_coord,
                 path=normalized_path,
                 trace=normalized_trace,
+                show_trace=probe_trace_visible(state),
                 highlighted_gluing=normalized_highlight,
                 frame_permutation=normalized_permutation,
                 frame_signs=normalized_signs,
@@ -880,10 +909,31 @@ def replace_probe_state(
         return
     state.probe_coord = normalized_coord
     state.probe_trace = list(normalized_trace)
+    state.probe_show_trace = probe_trace_visible(state)
     state.probe_path = list(normalized_path)
     state.probe_frame_permutation = normalized_permutation
     state.probe_frame_signs = normalized_signs
     state.highlighted_glue_id = normalized_highlight
+    if uses_general_explorer_editor(state):
+        sync_canonical_playground_state(state)
+
+
+def set_probe_trace_visible(
+    state: TopologyPlaygroundState,
+    enabled: bool,
+) -> None:
+    normalized_enabled = bool(enabled)
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        _replace_canonical_state(
+            state,
+            probe_state=replace(
+                runtime_state.probe_state,
+                show_trace=normalized_enabled,
+            ),
+        )
+        return
+    state.probe_show_trace = normalized_enabled
     if uses_general_explorer_editor(state):
         sync_canonical_playground_state(state)
 
@@ -955,6 +1005,7 @@ def ensure_probe_state(state: TopologyPlaygroundState) -> None:
         state.probe_coord = tuple(0 for _ in range(state.dimension))
     if state.probe_trace is None:
         state.probe_trace = []
+    state.probe_show_trace = bool(state.probe_show_trace)
     if state.probe_path is None:
         state.probe_path = [state.probe_coord]
     elif not state.probe_path:
@@ -1004,12 +1055,10 @@ def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
 
 
 def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
-    # TODO[BKL-TOPOLOGY-PLAYGROUND-STAGE2]: retire retained top-level
-    # Inspect/Edit labels from the primary toolbar once the Editor workspace
-    # fully owns both safe probe behavior and explicit edit tools. The runtime
-    # workspace contract is already editor/sandbox/play even though the shell
-    # still exposes subtools.
-    state.active_tool = canonical_tool_name(tool)
+    normalized_tool = canonical_tool_name(tool)
+    if normalized_tool in {TOOL_EDIT, TOOL_INSPECT}:
+        state.editor_tool = normalized_tool
+    state.active_tool = normalized_tool
     state.pending_source_index = None
     state.hovered_boundary_index = None
     state.hovered_glue_id = None
@@ -1021,6 +1070,20 @@ def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
         state.sandbox.enabled = True
     if canonical_playground_state(state) is not None:
         sync_canonical_playground_state(state)
+
+
+def set_active_workspace(state: TopologyPlaygroundState, workspace: str) -> None:
+    workspace_name = str(workspace)
+    if workspace_name == WORKSPACE_EDITOR:
+        set_active_tool(state, state.editor_tool)
+        return
+    if workspace_name == WORKSPACE_SANDBOX:
+        set_active_tool(state, TOOL_SANDBOX)
+        return
+    if workspace_name == WORKSPACE_PLAY:
+        set_active_tool(state, TOOL_PLAY)
+        return
+    raise ValueError(f"unsupported topology lab workspace: {workspace}")
 
 
 def cycle_active_pane(state: TopologyPlaygroundState, step: int) -> None:
@@ -1042,14 +1105,17 @@ __all__ = [
     "TOOL_PROBE",
     "TOOL_SANDBOX",
     "TOPOLOGY_LAB_TOOLS",
+    "TOPOLOGY_LAB_WORKSPACES",
     "TopologyLabState",
     "TopologyPlaygroundState",
     "WORKSPACE_EDITOR",
+    "WORKSPACE_LABELS",
     "WORKSPACE_PLAY",
     "WORKSPACE_SANDBOX",
     "active_workspace_name",
     "canonical_playground_state",
     "canonical_tool_name",
+    "current_editor_tool",
     "current_explorer_draft",
     "current_explorer_profile",
     "current_highlighted_glue_id",
@@ -1058,6 +1124,7 @@ __all__ = [
     "current_probe_frame",
     "current_probe_path",
     "current_probe_trace",
+    "probe_trace_visible",
     "current_selected_boundary_index",
     "current_selected_glue_id",
     "cycle_active_pane",
@@ -1071,7 +1138,9 @@ __all__ = [
     "replace_probe_state",
     "select_projection_coord",
     "reset_probe_state",
+    "set_probe_trace_visible",
     "set_active_tool",
+    "set_active_workspace",
     "set_highlighted_glue_id",
     "set_selected_boundary_index",
     "set_selected_glue_id",

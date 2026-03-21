@@ -36,6 +36,27 @@ def _coord_in_bounds(
     )
 
 
+def _sandbox_visible_cells(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
+    dims = playground_dims_for_state(state)
+    sandbox = state.sandbox
+    if sandbox is None or sandbox.origin is None or sandbox.local_blocks is None:
+        return ()
+    origin = _normalize_coord(state.dimension, sandbox.origin)
+    if origin is None or not _coord_in_bounds(origin, dims):
+        return ()
+    cells: list[tuple[int, ...]] = []
+    for block in sandbox.local_blocks:
+        normalized_block = _normalize_coord(state.dimension, block)
+        if normalized_block is None:
+            continue
+        cell = tuple(
+            origin[axis] + normalized_block[axis] for axis in range(state.dimension)
+        )
+        if _coord_in_bounds(cell, dims):
+            cells.append(cell)
+    return tuple(cells)
+
+
 def _normalize_path(
     dimension: int,
     dims: tuple[int, ...],
@@ -76,6 +97,9 @@ def _normalize_frame(
 
 def _default_focus_coord(state: TopologyLabState) -> tuple[int, ...]:
     dims = playground_dims_for_state(state)
+    sandbox_cells = _sandbox_visible_cells(state)
+    if sandbox_cells:
+        return sandbox_cells[0]
     if state.sandbox is not None and state.sandbox.origin is not None:
         origin = _normalize_coord(state.dimension, state.sandbox.origin)
         if origin is not None and _coord_in_bounds(origin, dims):
@@ -197,10 +221,16 @@ def ownership_snapshot(state: TopologyLabState) -> TopologyLabOwnershipSnapshot:
 
 def current_sandbox_focus_coord(state: TopologyLabState) -> tuple[int, ...]:
     dims = playground_dims_for_state(state)
+    sandbox_cells = _sandbox_visible_cells(state)
     current = _normalize_coord(
         state.dimension,
         getattr(state, "sandbox_focus_coord", None),
     )
+    if current is not None and _coord_in_bounds(current, dims):
+        if not sandbox_cells or current in sandbox_cells:
+            return current
+    if sandbox_cells:
+        return sandbox_cells[0]
     if current is not None and _coord_in_bounds(current, dims):
         return current
     return _default_focus_coord(state)

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-03-21
+
+### Release
+1. Published `tet4d 0.6` from the `animations_and_sandbox` release line.
+
+### Added
+1. Shared rotation-animation mode is now a first-class gameplay setting across `2D`, `3D`, and `4D`.
+2. The topology playground now has one current-authority manifest for the accepted `Editor` / `Sandbox` / `Play` architecture and the current Play drop-policy contract.
+
+### Changed
+1. Explorer/topology-playground entry now opens in `Sandbox` by default, while switching back to `Editor` preserves the remembered sandbox/topology situation.
+2. Explorer shell controls are now workspace-scoped: explicit Editor trace visibility, explicit sandbox neighbor search, and an external minimal movement/rotation helper.
+3. `3D` / `4D` sandbox rendering now follows the same visible-piece contract as `2D`, with full piece boxes and toggle-gated neighbor dots.
+4. GitHub Actions now use the Node 24-compatible `actions/checkout@v5` and `actions/setup-python@v6` lines.
+
+### Fixed
+1. Editor probe movement, trace, and projection targeting now stay aligned across seam traversal.
+2. `3D` / `4D` sandbox piece visibility no longer depends on neighbor overlays or hidden-slice exact matches.
+3. ND sandbox neighbor markers now render all visible legal neighbor dots without truncating early projected cells.
+4. Clean-clone CI and the topology-explorer shell/tests are now aligned, so the accepted sandbox-first/current-neighbor contract is reproducible outside the dirty local worktree.
+
 ## 2026-03-07
 
 ### Release
