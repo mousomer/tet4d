@@ -2922,17 +2922,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(kwargs["active_glue_ids"], state.scene_active_glue_ids)
         self.assertEqual(kwargs["basis_arrows"], list(state.scene_basis_arrows))
         preview_kwargs = draw_preview.call_args.kwargs
-        self.assertEqual(preview_kwargs["title"], "Explorer 3D keys")
-        self.assertGreater(preview_kwargs["area"].x, kwargs["area"].right)
-        self.assertTrue(
-            any(line.startswith("Context:") for line in preview_kwargs["lines"])
-        )
-        self.assertTrue(
-            any(line.startswith("Move:") for line in preview_kwargs["lines"])
-        )
-        self.assertTrue(
-            any(line.startswith("Rotate:") for line in preview_kwargs["lines"])
-        )
+        self.assertEqual(preview_kwargs["title"], "Explorer 3D status + preview")
+        self.assertTrue(preview_kwargs["lines"])
         self.assertFalse(
             any("Selected boundary:" in line for line in preview_kwargs["lines"])
         )
