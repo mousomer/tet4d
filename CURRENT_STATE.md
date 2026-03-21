@@ -59,12 +59,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.10` (`low`)
+- `tech_debt.score = 2.97` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.91`
-2. `code_balance = 1.19`
+1. `delivery_size_pressure = 1.89`
+2. `code_balance = 1.07`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -303,13 +303,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `2856` real LOC
-2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1972` real LOC
+2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1932` real LOC
 3. `scripts/arch_metrics.py`: `1869` real LOC
-4. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1576` real LOC
-5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+5. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1370` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
 7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1039` real LOC
-8. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1012` real LOC
+8. `tools/governance/generate_configuration_reference.py`: `982` real LOC
 
 Thin-wrapper budgets:
 
