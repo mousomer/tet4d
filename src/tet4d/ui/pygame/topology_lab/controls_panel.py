@@ -111,7 +111,6 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_explorer_profile,
     current_play_settings,
     current_probe_coord,
-    current_probe_frame,
     current_probe_path,
     current_probe_trace,
     current_selected_boundary_index,
