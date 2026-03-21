@@ -1,7 +1,8 @@
 # Topology Explorer Functional Audit
 
 Status date: 2026-03-12
-Status source of truth: [`docs/plans/topology_playground_reality_audit.md`](docs/plans/topology_playground_reality_audit.md)
+Status source of truth: [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
+Historical migration audit: [`docs/plans/topology_playground_reality_audit.md`](topology_playground_reality_audit.md)
 UI-state source of truth:
 - [`docs/plans/topology_explorer_menu_audit.md`](docs/plans/topology_explorer_menu_audit.md)
 - [`docs/plans/topology_explorer_menu_cleanup_pass1.md`](docs/plans/topology_explorer_menu_cleanup_pass1.md)

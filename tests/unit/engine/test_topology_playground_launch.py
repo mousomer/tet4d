@@ -9,8 +9,9 @@ from tet4d.engine.gameplay.api import (
     piece_set_options_for_dimension_gameplay,
 )
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.gameplay.game2d import GameConfig
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 from tet4d.engine.runtime import topology_playground_launch
@@ -23,7 +24,14 @@ from tet4d.engine.runtime.topology_playground_state import (
     RIGID_PLAY_MODE_ON,
     default_topology_playground_state,
 )
-from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer import (
+    BoundaryRef,
+    BoundaryTransform,
+    ExplorerTopologyProfile,
+    GluingDescriptor,
+    MoveStep,
+)
+from tet4d.engine.topology_explorer.glue_model import SIDE_POS
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     projective_plane_profile_2d,
@@ -32,13 +40,30 @@ from tet4d.engine.topology_explorer.presets import (
     sphere_profile_3d,
     sphere_profile_4d,
     swap_xw_profile_4d,
+    twisted_y_profile_3d,
+    twisted_y_profile_4d,
 )
+from tet4d.ui.pygame.front2d_input import apply_2d_gameplay_action
 from tet4d.ui.pygame import frontend_nd_input
 from tet4d.ui.pygame.keybindings import EXPLORER_KEYS_3D, KEYS_3D
 from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
 
 
 class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
+    @staticmethod
+    def _custom_cross_axis_y_profile_3d() -> ExplorerTopologyProfile:
+        return ExplorerTopologyProfile(
+            dimension=3,
+            gluings=(
+                GluingDescriptor(
+                    glue_id="custom_yz",
+                    source=BoundaryRef(dimension=3, axis=1, side=SIDE_POS),
+                    target=BoundaryRef(dimension=3, axis=2, side=SIDE_POS),
+                    transform=BoundaryTransform(permutation=(0, 1), signs=(1, 1)),
+                ),
+            ),
+        )
+
     @staticmethod
     def _playground_cfg_nd(*, dimension: int, dims: tuple[int, ...], profile):
         state = default_topology_playground_state(
@@ -47,6 +72,99 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         )
         state.topology_config.explorer_profile = profile
         return build_gameplay_config_from_topology_playground_state(state)
+
+    @staticmethod
+    def _playground_cfg_2d(*, dims: tuple[int, int], profile):
+        state = default_topology_playground_state(
+            dimension=2,
+            axis_sizes=dims,
+        )
+        state.topology_config.explorer_profile = profile
+        return build_gameplay_config_from_topology_playground_state(state)
+
+    @staticmethod
+    def _nd_state(
+        *,
+        cfg: GameConfigND,
+        shape: PieceShapeND,
+        pos: tuple[int, ...],
+    ) -> GameStateND:
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(shape, pos=pos)
+        return state
+
+    @staticmethod
+    def _locked_cells_nd(
+        shape: PieceShapeND,
+        pos: tuple[int, ...],
+    ) -> dict[tuple[int, ...], int]:
+        piece = ActivePieceND.from_shape(shape, pos=pos)
+        return {tuple(coord): shape.color_id for coord in piece.cells()}
+
+    def _assert_grounded_iff_no_legal_drop_step_nd(
+        self,
+        *,
+        cfg: GameConfigND,
+        shape: PieceShapeND,
+        pos: tuple[int, ...],
+        expected_locked_cells: dict[tuple[int, ...], int],
+    ) -> None:
+        drop_state = self._nd_state(cfg=cfg, shape=shape, pos=pos)
+        can_drop = drop_state.try_soft_drop()
+
+        gravity_state = self._nd_state(cfg=cfg, shape=shape, pos=pos)
+        gravity_state.step_gravity()
+
+        if can_drop:
+            self.assertFalse(gravity_state.board.cells)
+            self.assertEqual(
+                tuple(sorted(gravity_state.current_piece.cells())),
+                tuple(sorted(drop_state.current_piece.cells())),
+            )
+            return
+
+        self.assertEqual(gravity_state.board.cells, expected_locked_cells)
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in gravity_state.current_piece.cells())
+        )
+
+    def _assert_hard_drop_matches_repeated_drop_nd(
+        self,
+        *,
+        cfg: GameConfigND,
+        shape: PieceShapeND,
+        pos: tuple[int, ...],
+    ) -> None:
+        repeated_state = self._nd_state(cfg=cfg, shape=shape, pos=pos)
+        while repeated_state.try_soft_drop():
+            pass
+        repeated_state.lock_current_piece()
+        if not repeated_state.game_over:
+            repeated_state.spawn_new_piece()
+
+        hard_drop_state = self._nd_state(cfg=cfg, shape=shape, pos=pos)
+        hard_drop_state.hard_drop()
+
+        self.assertEqual(hard_drop_state.board.cells, repeated_state.board.cells)
+
+    def _assert_sideways_legality_does_not_imply_drop_legality_nd(
+        self,
+        *,
+        cfg: GameConfigND,
+        shape: PieceShapeND,
+        pos: tuple[int, ...],
+        axis: int,
+        delta: int,
+        expected_cells_after_translation: tuple[tuple[int, ...], ...],
+    ) -> None:
+        state = self._nd_state(cfg=cfg, shape=shape, pos=pos)
+        self.assertTrue(state.try_move_axis(axis, delta))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected_cells_after_translation)),
+        )
+        self.assertFalse(state.try_soft_drop())
 
     def test_module_stays_ui_free(self) -> None:
         source = inspect.getsource(topology_playground_launch)
@@ -324,7 +442,7 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             tuple(sorted(second.moved_cells)),
         )
 
-    def test_3d_sphere_play_keeps_falling_after_seam_reframes_gravity(self) -> None:
+    def test_3d_sphere_play_does_not_continue_drop_through_y_seam(self) -> None:
         cfg = self._playground_cfg_nd(
             dimension=3,
             dims=(4, 4, 4),
@@ -344,13 +462,18 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         state.step_gravity()
 
         self.assertFalse(state.game_over)
-        self.assertFalse(state.board.cells)
         self.assertEqual(
-            tuple(sorted(state.current_piece.cells())),
-            ((2, 2, 0), (2, 3, 0)),
+            state.board.cells,
+            {
+                (3, 2, 0): shape.color_id,
+                (3, 3, 0): shape.color_id,
+            },
+        )
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in state.current_piece.cells())
         )
 
-    def test_4d_sphere_play_keeps_falling_after_seam_reframes_gravity(self) -> None:
+    def test_4d_sphere_play_does_not_continue_drop_through_y_seam(self) -> None:
         cfg = self._playground_cfg_nd(
             dimension=4,
             dims=(4, 4, 4, 4),
@@ -374,10 +497,180 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         state.step_gravity()
 
         self.assertFalse(state.game_over)
+        self.assertEqual(
+            state.board.cells,
+            {
+                (3, 2, 2, 0): shape.color_id,
+                (3, 3, 1, 0): shape.color_id,
+                (3, 3, 2, 0): shape.color_id,
+            },
+        )
+        self.assertTrue(
+            any(coord[cfg.gravity_axis] < 0 for coord in state.current_piece.cells())
+        )
+
+    def test_3d_sphere_play_allows_side_entry_into_bottom_layer_before_lock(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=sphere_profile_3d(),
+        )
+        shape = PieceShapeND("sphere_vertical", ((0, 0, 0), (0, 1, 0)), color_id=4)
+        self._assert_sideways_legality_does_not_imply_drop_legality_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(2, 2, 0),
+            axis=0,
+            delta=1,
+            expected_cells_after_translation=((3, 2, 0), (3, 3, 0)),
+        )
+
+        state = self._nd_state(cfg=cfg, shape=shape, pos=(2, 2, 0))
+        self.assertTrue(state.try_move_axis(0, 1))
+        state.step_gravity()
+
+        self.assertEqual(
+            state.board.cells,
+            {
+                (3, 2, 0): shape.color_id,
+                (3, 3, 0): shape.color_id,
+            },
+        )
+
+    def test_2d_projective_soft_drop_stays_grounded_when_y_seam_is_drop_illegal(
+        self,
+    ) -> None:
+        cfg = self._playground_cfg_2d(
+            dims=(4, 4),
+            profile=projective_plane_profile_2d(),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("dot", [(0, 0)], color_id=3)
+        state.current_piece = ActivePiece2D(shape, pos=(1, 3), rotation=0)
+
+        apply_2d_gameplay_action(state, "soft_drop")
+
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), ((1, 3),))
         self.assertFalse(state.board.cells)
+
+    def test_2d_projective_hard_drop_matches_repeated_drop_legality(self) -> None:
+        cfg = self._playground_cfg_2d(
+            dims=(4, 4),
+            profile=projective_plane_profile_2d(),
+        )
+        shape = PieceShape2D("dot", [(0, 0)], color_id=3)
+
+        soft_state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        soft_state.board.cells.clear()
+        soft_state.current_piece = ActivePiece2D(shape, pos=(1, 3), rotation=0)
+        apply_2d_gameplay_action(soft_state, "soft_drop")
+        soft_state.hard_drop()
+
+        hard_state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        hard_state.board.cells.clear()
+        hard_state.current_piece = ActivePiece2D(shape, pos=(1, 3), rotation=0)
+        hard_state.hard_drop()
+
+        expected_board = {(1, 3): shape.color_id}
+        self.assertEqual(soft_state.board.cells, expected_board)
+        self.assertEqual(hard_state.board.cells, expected_board)
+
+    def test_3d_twisted_y_play_grounds_from_drop_legality(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=twisted_y_profile_3d(),
+        )
+        shape = PieceShapeND("twist_dot3", ((0, 0, 0),), color_id=7)
+        expected_locked_cells = self._locked_cells_nd(shape, (0, 3, 0))
+
+        self._assert_grounded_iff_no_legal_drop_step_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0),
+            expected_locked_cells=expected_locked_cells,
+        )
+        self._assert_hard_drop_matches_repeated_drop_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0),
+        )
+
+    def test_4d_twisted_y_play_grounds_from_drop_legality(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=4,
+            dims=(4, 4, 4, 4),
+            profile=twisted_y_profile_4d(),
+        )
+        shape = PieceShapeND("twist_dot4", ((0, 0, 0, 0),), color_id=8)
+        expected_locked_cells = self._locked_cells_nd(shape, (0, 3, 0, 0))
+
+        self._assert_grounded_iff_no_legal_drop_step_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0, 0),
+            expected_locked_cells=expected_locked_cells,
+        )
+        self._assert_hard_drop_matches_repeated_drop_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0, 0),
+        )
+
+    def test_custom_cross_axis_y_seam_translation_remains_distinct_from_drop(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=self._custom_cross_axis_y_profile_3d(),
+        )
+        shape = PieceShapeND("custom_dot3", ((0, 0, 0),), color_id=9)
+
+        move_state = self._nd_state(cfg=cfg, shape=shape, pos=(0, 3, 0))
+        self.assertTrue(move_state.try_move_axis(1, 1))
+        self.assertEqual(tuple(sorted(move_state.current_piece.cells())), ((0, 0, 3),))
+
+        self._assert_grounded_iff_no_legal_drop_step_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0),
+            expected_locked_cells=self._locked_cells_nd(shape, (0, 3, 0)),
+        )
+        self._assert_hard_drop_matches_repeated_drop_nd(
+            cfg=cfg,
+            shape=shape,
+            pos=(0, 3, 0),
+        )
+
+    def test_rotation_near_twisted_y_seam_does_not_create_drop_continuation(self) -> None:
+        cfg = self._playground_cfg_nd(
+            dimension=3,
+            dims=(4, 4, 4),
+            profile=twisted_y_profile_3d(),
+        )
+        shape = PieceShapeND(
+            "twist_line_x",
+            ((-1, 0, 0), (0, 0, 0), (1, 0, 0)),
+            color_id=6,
+        )
+        state = self._nd_state(cfg=cfg, shape=shape, pos=(1, 2, 0))
+
+        self.assertTrue(state.try_rotate(0, 1, 1))
         self.assertEqual(
             tuple(sorted(state.current_piece.cells())),
-            ((2, 2, 2, 0), (2, 3, 1, 0), (2, 3, 2, 0)),
+            ((1, 1, 0), (1, 2, 0), (1, 3, 0)),
+        )
+        self.assertFalse(state.try_soft_drop())
+
+        rotated_shape = PieceShapeND(
+            "twist_line_y",
+            ((0, -1, 0), (0, 0, 0), (0, 1, 0)),
+            color_id=6,
+        )
+        self._assert_hard_drop_matches_repeated_drop_nd(
+            cfg=cfg,
+            shape=rotated_shape,
+            pos=(1, 2, 0),
         )
 
 

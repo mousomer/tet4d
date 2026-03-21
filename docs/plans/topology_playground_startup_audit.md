@@ -1,7 +1,8 @@
 # Topology Playground Startup Audit
 
 Status date: 2026-03-11
-Source of truth for migration status: [`docs/plans/topology_playground_reality_audit.md`](docs/plans/topology_playground_reality_audit.md)
+Source of truth for migration status: [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
+Archived migration audit: [`docs/plans/topology_playground_reality_audit.md`](topology_playground_reality_audit.md)
 Scope: audit and instrumentation only; no optimization or path deletion in this thread.
 
 ## Goal

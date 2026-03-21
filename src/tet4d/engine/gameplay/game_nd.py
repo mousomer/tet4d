@@ -31,7 +31,7 @@ from ..core.rules.piece_placement import (
     validate_candidate_piece_placement,
 )
 from ..core.step.reducer import step_nd as core_step_nd
-from ..topology_explorer import ExplorerTopologyProfile
+from ..topology_explorer import ExplorerTopologyProfile, MoveStep
 from ..topology_explorer.transport_resolver import (
     ExplorerTransportFrameTransform,
     ExplorerTransportResolver,
@@ -47,6 +47,14 @@ from .topology import (
     TopologyPolicy,
     map_piece_cells,
     normalize_topology_mode,
+)
+from .play_move_intents import (
+    GRAVITY_INTENT,
+    HARD_DROP_INTENT,
+    SOFT_DROP_INTENT,
+    TRANSLATION_INTENT,
+    crosses_gravity_seam,
+    is_drop_intent,
 )
 from ..core.model import Coord
 
@@ -535,16 +543,57 @@ class GameStateND:
             ]
             if len(non_zero) == 1 and abs(non_zero[0][1]) == 1:
                 axis, step = non_zero[0]
-                return self.try_move_axis(
-                    axis, step, animate_translation=animate_translation
+                return self._move_axis_with_intent(
+                    axis,
+                    step,
+                    intent=TRANSLATION_INTENT,
+                    animate_translation=animate_translation,
                 )
         moved = self._try_commit_candidate_piece(self.current_piece.moved(delta))
         if moved and animate_translation:
             self._pending_translation_animation = True
         return moved
 
-    def try_move_axis(
-        self, axis: int, delta: int, *, animate_translation: bool = False
+    def _explorer_move_result_for_intent(
+        self,
+        *,
+        axis: int,
+        delta: int,
+        intent: str,
+    ):
+        if self.current_piece is None:
+            return None
+        if self.config.explorer_transport is None:
+            raise ValueError("explorer transport must exist when explorer topology is active")
+        if is_drop_intent(intent):
+            if axis != self.config.gravity_axis or delta != 1:
+                raise ValueError("drop intents must use the configured gravity step")
+            step_result = self.config.explorer_transport.resolve_piece_step(
+                self.current_piece.cells(),
+                MoveStep(axis=axis, delta=delta),
+            )
+            if crosses_gravity_seam(
+                step_result,
+                gravity_axis=self.config.gravity_axis,
+            ):
+                return None
+        return move_piece_via_explorer_glue_with_frame(
+            self.current_piece,
+            transport=self.config.explorer_transport,
+            axis=axis,
+            delta=delta,
+            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                self.config.explorer_rigid_play_enabled
+            ),
+        )
+
+    def _move_axis_with_intent(
+        self,
+        axis: int,
+        delta: int,
+        *,
+        intent: str,
+        animate_translation: bool = False,
     ) -> bool:
         if not (0 <= axis < self.config.ndim):
             raise ValueError("axis out of bounds")
@@ -557,34 +606,49 @@ class GameStateND:
                 gravity_axis=self.config.gravity_axis,
             )
         ):
-            if self.config.explorer_transport is None:
-                raise ValueError("explorer transport must exist when explorer topology is active")
-            # Gameplay-critical fall/lock decisions must be based on this same
-            # transported candidate path. If the explorer move commits here,
-            # later gravity ticks must also inherit the transported local frame
-            # so sphere-like seam crossings continue along the canonical
-            # post-transport "down" direction instead of reusing the launch
-            # axis from stale shell assumptions.
-            move_result = move_piece_via_explorer_glue_with_frame(
-                self.current_piece,
-                transport=self.config.explorer_transport,
+            move_result = self._explorer_move_result_for_intent(
                 axis=axis,
                 delta=delta,
-                movement_policy=explorer_movement_policy_from_rigid_play_enabled(
-                    self.config.explorer_rigid_play_enabled
-                ),
+                intent=intent,
             )
             if move_result is None:
                 return False
             moved = self._try_commit_candidate_piece(move_result.piece)
-            if moved:
+            if moved and intent == TRANSLATION_INTENT:
                 self._compose_current_piece_frame(move_result.frame_transform)
             if moved and animate_translation:
                 self._pending_translation_animation = True
             return moved
         vector = [0] * self.config.ndim
         vector[axis] = delta
-        return self.try_move(vector, animate_translation=animate_translation)
+        moved = self._try_commit_candidate_piece(self.current_piece.moved(vector))
+        if moved and animate_translation:
+            self._pending_translation_animation = True
+        return moved
+
+    def try_move_axis(
+        self, axis: int, delta: int, *, animate_translation: bool = False
+    ) -> bool:
+        return self._move_axis_with_intent(
+            axis,
+            delta,
+            intent=TRANSLATION_INTENT,
+            animate_translation=animate_translation,
+        )
+
+    def try_soft_drop(self) -> bool:
+        return self._move_axis_with_intent(
+            self.config.gravity_axis,
+            1,
+            intent=SOFT_DROP_INTENT,
+        )
+
+    def try_gravity_step(self) -> bool:
+        return self._move_axis_with_intent(
+            self.config.gravity_axis,
+            1,
+            intent=GRAVITY_INTENT,
+        )
 
     def try_rotate(self, axis_a: int, axis_b: int, delta_steps: int = 1) -> bool:
         if self.current_piece is None:
@@ -608,7 +672,11 @@ class GameStateND:
     def hard_drop(self) -> None:
         run_hard_drop(
             self,
-            try_advance=lambda: self.try_move_axis(*self._gravity_step()),
+            try_advance=lambda: self._move_axis_with_intent(
+                self.config.gravity_axis,
+                1,
+                intent=HARD_DROP_INTENT,
+            ),
         )
 
     # --- Time step ---
@@ -619,7 +687,7 @@ class GameStateND:
 
         advance_or_lock_and_respawn(
             self,
-            try_advance=lambda: self.try_move_axis(*self._gravity_step()),
+            try_advance=self.try_gravity_step,
         )
 
     def step(self) -> None:

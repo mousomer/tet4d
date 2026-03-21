@@ -60,6 +60,7 @@ class _AxisCaptureState:
         self.moves: list[tuple[int, int]] = []
         self.translation_hints: list[bool] = []
         self.rotations: list[tuple[int, int, int]] = []
+        self.soft_drop_calls = 0
 
     def try_move_axis(
         self, axis: int, delta: int, *, animate_translation: bool = False
@@ -72,6 +73,9 @@ class _AxisCaptureState:
 
     def hard_drop(self) -> None:
         return None
+
+    def try_soft_drop(self) -> None:
+        self.soft_drop_calls += 1
 
 
 class TestNdRouting(unittest.TestCase):
@@ -110,6 +114,20 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(result, "continue")
         self.assertEqual(state.moves, [(1, 1)])
         self.assertEqual(state.translation_hints, [True])
+
+    def test_soft_drop_routes_to_drop_handler_instead_of_translation_handler(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+
+        result = frontend_nd_input.route_nd_keydown(
+            _key_for(KEYS_3D, "soft_drop"),
+            state,
+        )
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(state.moves, [])
+        self.assertEqual(state.translation_hints, [])
+        self.assertEqual(state.soft_drop_calls, 1)
 
     def test_viewer_relative_routing_uses_yaw_for_3d(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)

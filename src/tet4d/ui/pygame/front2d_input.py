@@ -85,7 +85,9 @@ def apply_2d_gameplay_action(state: GameState, action: str) -> None:
         "rotate_xy_pos": lambda: state.try_rotate(+1),
         "rotate_xy_neg": lambda: state.try_rotate(-1),
         "hard_drop": state.hard_drop,
-        "soft_drop": lambda: state.try_move(0, 1),
+        "soft_drop": (
+            state.try_soft_drop if hasattr(state, "try_soft_drop") else lambda: state.try_move(0, 1)
+        ),
         "move_up": lambda: state.try_move(0, -1, animate_translation=True),
         "move_down": lambda: state.try_move(0, 1, animate_translation=True),
     }

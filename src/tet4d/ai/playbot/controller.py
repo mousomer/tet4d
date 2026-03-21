@@ -443,7 +443,7 @@ class PlayBotController:
             self._soft_drop_count_2d = 0
             return True
         before_pos = piece.pos
-        state.try_move(0, 1)
+        state.try_soft_drop()
         moved_piece = state.current_piece
         if moved_piece is not None and moved_piece.pos != before_pos:
             if allow_hard_drop:
@@ -513,14 +513,13 @@ class PlayBotController:
     def _soft_drop_or_lock_nd(
         self, state: GameStateND, *, allow_hard_drop: bool
     ) -> bool:
-        gravity_axis = state.config.gravity_axis
         threshold = max(0, int(self.hard_drop_after_soft_drops))
         if allow_hard_drop and threshold > 0 and self._soft_drop_count_nd >= threshold:
             state.hard_drop()
             self._piece_token = None
             self._soft_drop_count_nd = 0
             return True
-        if state.try_move_axis(gravity_axis, 1):
+        if state.try_soft_drop():
             if allow_hard_drop:
                 self._soft_drop_count_nd += 1
             else:

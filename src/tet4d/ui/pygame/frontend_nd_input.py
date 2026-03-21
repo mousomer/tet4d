@@ -116,7 +116,11 @@ def apply_nd_gameplay_action(state: GameStateND, action: str) -> bool:
         "move_down": lambda: state.try_move_axis(
             cfg.gravity_axis, 1, animate_translation=True
         ),
-        "soft_drop": lambda: state.try_move_axis(cfg.gravity_axis, 1),
+        "soft_drop": (
+            state.try_soft_drop
+            if hasattr(state, "try_soft_drop")
+            else lambda: state.try_move_axis(cfg.gravity_axis, 1)
+        ),
         "hard_drop": state.hard_drop,
         "rotate_xy_pos": lambda: state.try_rotate(0, cfg.gravity_axis, 1),
         "rotate_xy_neg": lambda: state.try_rotate(0, cfg.gravity_axis, -1),

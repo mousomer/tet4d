@@ -20,7 +20,7 @@ from ..runtime.runtime_config import (
     rotation_kick_candidate_offsets,
 )
 from ..core.rotation_kicks import resolve_rotated_piece
-from ..core.rules.lifecycle import run_hard_drop
+from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
 from ..core.rules.piece_placement import (
     CandidatePiecePlacement,
     build_candidate_piece_placement,
@@ -33,13 +33,21 @@ from .explorer_runtime_2d import (
     piece_cells_in_bounds_2d,
 )
 from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
+from .play_move_intents import (
+    GRAVITY_INTENT,
+    HARD_DROP_INTENT,
+    SOFT_DROP_INTENT,
+    TRANSLATION_INTENT,
+    crosses_gravity_seam,
+    is_drop_intent,
+)
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
     map_piece_cells,
     normalize_topology_mode,
 )
-from ..topology_explorer import ExplorerTopologyProfile
+from ..topology_explorer import ExplorerTopologyProfile, MoveStep
 from ..topology_explorer.transport_resolver import (
     ExplorerTransportResolver,
     build_explorer_transport_resolver,
@@ -417,33 +425,82 @@ class GameState:
 
     # --- Movement / rotation helpers ---
 
-    def try_move(self, dx: int, dy: int, *, animate_translation: bool = False):
+    def _explorer_move_for_intent(
+        self,
+        *,
+        dx: int,
+        dy: int,
+        intent: str,
+    ) -> ActivePiece2D | None:
         if self.current_piece is None:
-            return
+            return None
+        if self.config.explorer_transport is None:
+            raise ValueError("explorer transport must exist when explorer topology is active")
+        if is_drop_intent(intent):
+            if (dx, dy) != (0, 1):
+                raise ValueError("drop intents must use the configured gravity step")
+            step_result = self.config.explorer_transport.resolve_piece_step(
+                self.current_piece.cells(),
+                MoveStep(axis=self.config.gravity_axis, delta=1),
+            )
+            if crosses_gravity_seam(
+                step_result,
+                gravity_axis=self.config.gravity_axis,
+            ):
+                return None
+        return move_piece_via_explorer_glue_2d(
+            self.current_piece,
+            transport=self.config.explorer_transport,
+            dx=dx,
+            dy=dy,
+            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
+                self.config.explorer_rigid_play_enabled
+            ),
+        )
+
+    def _try_move_with_intent(
+        self,
+        dx: int,
+        dy: int,
+        *,
+        intent: str,
+        animate_translation: bool = False,
+    ) -> bool:
+        if self.current_piece is None:
+            return False
         if (
             _uses_explorer_piece_transport_2d(self.config)
             and not _piece_has_cells_above_gravity_2d(self.current_piece)
         ):
-            if self.config.explorer_transport is None:
-                raise ValueError("explorer transport must exist when explorer topology is active")
-            moved = move_piece_via_explorer_glue_2d(
-                self.current_piece,
-                transport=self.config.explorer_transport,
+            moved = self._explorer_move_for_intent(
                 dx=dx,
                 dy=dy,
-                movement_policy=explorer_movement_policy_from_rigid_play_enabled(
-                    self.config.explorer_rigid_play_enabled
-                ),
+                intent=intent,
             )
-            if moved is not None:
-                if self._try_commit_candidate_piece(moved) and animate_translation:
-                    self._pending_translation_animation = True
-            return
-        if (
-            self._try_commit_candidate_piece(self.current_piece.moved(dx, dy))
-            and animate_translation
-        ):
+            if moved is None:
+                return False
+            committed = self._try_commit_candidate_piece(moved)
+            if committed and animate_translation:
+                self._pending_translation_animation = True
+            return committed
+        moved = self._try_commit_candidate_piece(self.current_piece.moved(dx, dy))
+        if moved and animate_translation:
             self._pending_translation_animation = True
+        return moved
+
+    def try_move(self, dx: int, dy: int, *, animate_translation: bool = False) -> bool:
+        return self._try_move_with_intent(
+            dx,
+            dy,
+            intent=TRANSLATION_INTENT,
+            animate_translation=animate_translation,
+        )
+
+    def try_soft_drop(self) -> bool:
+        return self._try_move_with_intent(0, 1, intent=SOFT_DROP_INTENT)
+
+    def try_gravity_step(self) -> bool:
+        return self._try_move_with_intent(0, 1, intent=GRAVITY_INTENT)
 
     def try_rotate(self, delta_steps: int):
         if self.current_piece is None:
@@ -466,10 +523,22 @@ class GameState:
             self._try_commit_candidate_piece(resolved)
 
     def hard_drop(self):
-        def _try_advance() -> bool:
-            return self._try_commit_candidate_piece(self.current_piece.moved(0, 1))
+        run_hard_drop(
+            self,
+            try_advance=lambda: self._try_move_with_intent(
+                0,
+                1,
+                intent=HARD_DROP_INTENT,
+            ),
+        )
 
-        run_hard_drop(self, try_advance=_try_advance)
+    def step_gravity(self) -> None:
+        if self.config.exploration_mode or self.current_piece is None:
+            return
+        advance_or_lock_and_respawn(
+            self,
+            try_advance=self.try_gravity_step,
+        )
 
     # --- Main step function ---
 

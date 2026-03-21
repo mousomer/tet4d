@@ -22,7 +22,7 @@ def pick_target(
     pos: tuple[int, int],
 ) -> TopologyLabHitTarget | None:
     priority = {
-        "tool_mode": 0,
+        "workspace_mode": 0,
         "action": 1,
         "row_step": 2,
         "projection_cell": 3,

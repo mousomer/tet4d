@@ -56,6 +56,8 @@ from tet4d.engine.topology_explorer.presets import (
 )
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.keybindings import (
+    CAMERA_KEYS_3D,
+    CAMERA_KEYS_4D,
     EXPLORER_KEYS_2D,
     EXPLORER_KEYS_3D,
     EXPLORER_KEYS_4D,
@@ -104,15 +106,20 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     TOOL_EDIT,
     TOOL_INSPECT,
     TOOL_PLAY,
+    TOOL_PROBE,
     TOOL_SANDBOX,
     TopologyLabState,
+    WORKSPACE_EDITOR,
+    active_workspace_name,
     canonical_playground_state,
+    current_editor_tool,
     current_explorer_draft,
     current_explorer_profile,
     current_play_settings,
     current_probe_coord,
     current_probe_path,
     current_probe_trace,
+    probe_trace_visible,
     current_selected_boundary_index,
     current_selected_glue_id,
     cycle_active_pane,
@@ -125,11 +132,11 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     replace_probe_state,
     reset_probe_state,
     set_active_tool,
+    set_probe_trace_visible,
     set_highlighted_glue_id,
     set_selected_boundary_index,
     set_selected_glue_id,
     sync_canonical_playground_state,
-    tool_is_inspect,
     update_explorer_draft,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
@@ -151,7 +158,7 @@ class _RowSpec:
 
 _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
     GAMEPLAY_MODE_NORMAL: TOOL_EDIT,
-    GAMEPLAY_MODE_EXPLORER: TOOL_SANDBOX,
+    GAMEPLAY_MODE_EXPLORER: TOOL_EDIT,
 }
 _TopologyLabState = TopologyLabState
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
@@ -163,7 +170,11 @@ _TOOL_SHORTCUT_KEYS = {
     pygame.K_g: TOOL_EDIT,
     pygame.K_t: TOOL_EDIT,
 }
-_PROBE_MOVEMENT_TOOLS = {TOOL_INSPECT}
+_PROBE_MOVEMENT_TOOLS = {TOOL_INSPECT, TOOL_EDIT}
+_EDITOR_TOOL_SEQUENCE = (
+    TOOL_PROBE,
+    TOOL_EDIT,
+)
 _SANDBOX_STEP_KEYS = {
     pygame.K_LEFT: "x-",
     pygame.K_RIGHT: "x+",
@@ -222,6 +233,14 @@ def _gameplay_bindings_for_dimension(dimension: int):
     if int(dimension) == 3:
         return KEYS_3D
     return KEYS_4D
+
+
+def _camera_bindings_for_dimension(dimension: int):
+    if int(dimension) == 3:
+        return CAMERA_KEYS_3D
+    if int(dimension) == 4:
+        return CAMERA_KEYS_4D
+    return {}
 
 
 def _explorer_action_to_step_label(action: str) -> str | None:
@@ -871,7 +890,7 @@ def _reset_probe(state: _TopologyLabState) -> None:
     if profile is None:
         reset_probe_state(state)
         _set_status(
-            state, f"Inspect reset to {list(current_probe_coord(state) or ())}"
+            state, f"Editor probe reset to {list(current_probe_coord(state) or ())}"
         )
         return
     try:
@@ -888,7 +907,7 @@ def _reset_probe(state: _TopologyLabState) -> None:
             frame_permutation=tuple(range(state.dimension)),
             frame_signs=tuple(1 for _ in range(state.dimension)),
         )
-        _set_status(state, f"Inspect reset to {list(probe_coord)}")
+        _set_status(state, f"Editor probe reset to {list(probe_coord)}")
         return
     except ValueError as exc:
         replace_probe_state(
@@ -911,6 +930,8 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
             _RowSpec("board_x", "Board X"),
             _RowSpec("board_y", "Board Y"),
         ]
+        if active_workspace_name(state) == WORKSPACE_EDITOR:
+            rows.insert(1, _RowSpec("editor_tool", "Editor Tool"))
         if state.dimension >= 3:
             rows.append(_RowSpec("board_z", "Board Z"))
         if state.dimension >= 4:
@@ -920,7 +941,6 @@ def _rows_for_state(state: _TopologyLabState) -> tuple[_RowSpec, ...]:
                 _RowSpec("piece_set", "Piece Set"),
                 _RowSpec("speed_level", "Speed"),
                 _RowSpec("rigid_play_mode", "Play Transport"),
-                _RowSpec("sandbox_neighbor_search", "Sandbox Neighbor Search"),
                 _RowSpec("explorer_preset", "Explorer Preset"),
                 _RowSpec("playability_summary", "Topology Status"),
                 _RowSpec("playability_validity", "Validity"),
@@ -974,6 +994,17 @@ def _mode_value_text(state: _TopologyLabState) -> str:
     if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
         return "Explorer Playground"
     return "Normal Game (legacy compat)"
+
+
+def _editor_tool_value_text(state: _TopologyLabState) -> str:
+    editor_tool = current_editor_tool(state)
+    if editor_tool == TOOL_EDIT:
+        return "Edit / Apply"
+    return "Probe / Select"
+
+
+def _editor_trace_value_text(state: _TopologyLabState) -> str:
+    return "On" if probe_trace_visible(state) else "Off"
 
 
 def _explorer_preset_index(state: _TopologyLabState) -> int:
@@ -1172,6 +1203,8 @@ def _explorer_draft_boundary_value_text(
 
 
 _EXPLORER_SCALAR_ROW_VALUE_GETTERS = {
+    "editor_tool": _editor_tool_value_text,
+    "editor_trace": _editor_trace_value_text,
     "piece_set": _explorer_piece_set_label,
     "speed_level": lambda state: str(_ensure_play_settings(state).speed_level),
     "rigid_play_mode": _rigid_play_mode_value_text,
@@ -1790,30 +1823,46 @@ def _run_experiments(state: _TopologyLabState) -> None:
         play_sfx("menu_confirm")
 
 
+def _cycle_editor_tool_row(state: _TopologyLabState, step: int) -> None:
+    current_index = _EDITOR_TOOL_SEQUENCE.index(current_editor_tool(state))
+    set_active_tool(
+        state,
+        _EDITOR_TOOL_SEQUENCE[
+            (current_index + step) % len(_EDITOR_TOOL_SEQUENCE)
+        ],
+    )
+
+
+def _toggle_editor_trace_row(state: _TopologyLabState) -> None:
+    set_probe_trace_visible(state, not probe_trace_visible(state))
+    _set_status(
+        state,
+        "Editor trace shown" if probe_trace_visible(state) else "Editor trace hidden",
+    )
+
+
 def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -> bool:
-    if key == "piece_set":
-        _set_explorer_piece_set_index(state, step)
+    if key == "editor_tool":
+        _cycle_editor_tool_row(state, step)
         return True
-    if key == "speed_level":
-        _set_explorer_speed_level(state, step)
+    if key == "editor_trace":
+        _toggle_editor_trace_row(state)
         return True
-    if key == "explorer_preset":
-        _cycle_explorer_preset(state, step)
-        return True
-    if key == "rigid_play_mode":
-        _set_explorer_rigid_play_mode(state, step)
-        return True
-    if key == "sandbox_neighbor_search":
-        _toggle_sandbox_neighbor_search(state)
-        return True
-    if key == "explorer_glue":
-        _set_explorer_draft_slot(state, step)
+    simple_handlers = {
+        "piece_set": lambda: _set_explorer_piece_set_index(state, step),
+        "speed_level": lambda: _set_explorer_speed_level(state, step),
+        "explorer_preset": lambda: _cycle_explorer_preset(state, step),
+        "rigid_play_mode": lambda: _set_explorer_rigid_play_mode(state, step),
+        "sandbox_neighbor_search": lambda: _toggle_sandbox_neighbor_search(state),
+        "explorer_glue": lambda: _set_explorer_draft_slot(state, step),
+        "explorer_permutation": lambda: _cycle_explorer_permutation(state, step),
+    }
+    handler = simple_handlers.get(key)
+    if handler is not None:
+        handler()
         return True
     if key in {"explorer_source", "explorer_target"}:
         _cycle_explorer_boundary(state, is_source=(key == "explorer_source"), step=step)
-        return True
-    if key == "explorer_permutation":
-        _cycle_explorer_permutation(state, step)
         return True
     return False
 
@@ -2048,8 +2097,15 @@ def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
     if (
         not _uses_general_explorer_editor(state)
         or not _scene_pane_active(state)
-        or not tool_is_inspect(state.active_tool)
+        or state.active_tool not in _PROBE_MOVEMENT_TOOLS
     ):
+        return False
+    camera_bindings = _camera_bindings_for_dimension(state.dimension)
+    if not camera_bindings or match_bound_action(
+        key,
+        camera_bindings,
+        tuple(camera_bindings),
+    ) is None:
         return False
     return handle_scene_camera_key(state.dimension, key, state.scene_camera)
 

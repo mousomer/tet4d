@@ -2,8 +2,10 @@
 
 Status date: 2026-03-11
 Scope: R3 startup/load optimization pass 1 only.
-Source audits:
-- [`docs/plans/topology_playground_reality_audit.md`](docs/plans/topology_playground_reality_audit.md)
+Current topology-playground authority:
+- [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
+Historical/source audits:
+- [`docs/plans/topology_playground_reality_audit.md`](topology_playground_reality_audit.md)
 - [`docs/plans/topology_playground_startup_audit.md`](docs/plans/topology_playground_startup_audit.md)
 
 ## Short Plan

@@ -29,6 +29,7 @@ from tet4d.ai.playbot.types import (
     BotPlannerProfile,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.topology_explorer.presets import twisted_y_profile_3d
 
 
 class TestPlaybot(unittest.TestCase):
@@ -70,6 +71,25 @@ class TestPlaybot(unittest.TestCase):
             state.current_piece is not before_piece
             or state.lines_cleared > before_lines
         )
+
+    def test_nd_controller_soft_drop_obeys_twisted_y_drop_policy(self) -> None:
+        cfg = GameConfigND(
+            dims=(4, 4, 4),
+            gravity_axis=1,
+            explorer_topology_profile=twisted_y_profile_3d(),
+            piece_set_id=PIECE_SET_3D_DEBUG,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+        state.board.cells.clear()
+        dot = PieceShapeND("twist_dot3", ((0, 0, 0),), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(dot, pos=(0, 3, 0))
+
+        bot = PlayBotController(mode=BotMode.AUTO, action_interval_ms=0)
+
+        self.assertTrue(bot._soft_drop_or_lock_nd(state, allow_hard_drop=False))
+        self.assertEqual(state.board.cells, {(0, 3, 0): dot.color_id})
+        self.assertIsNotNone(state.current_piece)
+        self.assertTrue(any(coord[1] < 0 for coord in state.current_piece.cells()))
 
     def test_auto_tick_is_incremental_soft_drop_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
@@ -413,4 +433,3 @@ class TestPlaybot(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

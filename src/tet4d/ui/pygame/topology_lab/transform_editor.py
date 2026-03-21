@@ -68,7 +68,7 @@ def draw_transform_editor(
 ) -> list[TopologyLabHitTarget]:
     pygame.draw.rect(surface, (18, 22, 38), area, border_radius=10)
     pygame.draw.rect(surface, (76, 84, 112), area, 1, border_radius=10)
-    title_text = "Transform editor" if editable else "Transform (Edit mode)"
+    title_text = "Transform editor" if editable else "Transform preview"
     title = fonts.hint_font.render(title_text, True, (220, 228, 250))
     surface.blit(title, (area.x + 10, area.y + 10))
     label = fonts.hint_font.render(
@@ -175,7 +175,11 @@ def draw_action_buttons(
             area.x + index * (button_w + 8), area.y, button_w, area.height
         )
         _draw_button(
-            surface, rect=rect, text=label, color=_BUTTON_BG, font=fonts.hint_font
+            surface,
+            rect=rect,
+            text=fit_text(fonts.hint_font, label, rect.width - 10),
+            color=_BUTTON_BG,
+            font=fonts.hint_font,
         )
         hits.append(TopologyLabHitTarget("action", action, rect.copy()))
     return hits

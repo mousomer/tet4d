@@ -116,6 +116,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
                 coord=(1, 2, 3),
                 path=((0, 2, 3), (1, 2, 3)),
                 trace=("x+: [0, 2, 3] -> [1, 2, 3]",),
+                show_trace=False,
                 highlighted_gluing=glue.glue_id,
                 frame_permutation=(2, 1, 0),
                 frame_signs=(1, -1, 1),
@@ -174,6 +175,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertEqual(state.selected_gluing, "glue_001")
         self.assertEqual(state.active_tool, TOOL_PROBE)
         self.assertEqual(state.probe_state.coord, (1, 2, 3))
+        self.assertFalse(state.probe_state.show_trace)
         self.assertEqual(state.probe_state.frame_permutation, (2, 1, 0))
         self.assertEqual(state.probe_state.frame_signs, (1, -1, 1))
         self.assertEqual(state.sandbox_piece_state.origin, (3, 5, 2))
@@ -207,6 +209,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertIsInstance(editor, TopologyPlaygroundEditorOwnershipState)
         self.assertEqual(editor.workspace, WORKSPACE_EDITOR)
         self.assertEqual(editor.active_tool, TOOL_PROBE)
+        self.assertIs(editor.probe_state, state.probe_state)
         self.assertIsInstance(inspector, TopologyPlaygroundInspectorOwnershipState)
         self.assertIs(inspector.probe_state, state.probe_state)
         self.assertIsInstance(sandbox, TopologyPlaygroundSandboxOwnershipState)
@@ -231,8 +234,10 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertEqual(state.active_workspace, WORKSPACE_EDITOR)
         state.active_tool = TOOL_SANDBOX
         self.assertEqual(state.active_workspace, WORKSPACE_SANDBOX)
+        self.assertEqual(state.editor_state.active_tool, TOOL_PROBE)
         state.active_tool = TOOL_PLAY
         self.assertEqual(state.active_workspace, WORKSPACE_PLAY)
+        self.assertEqual(state.editor_state.active_tool, TOOL_PROBE)
 
     def test_probe_state_preserves_unavailable_inspect_state(self) -> None:
         legacy_profile = default_topology_profile_state(
@@ -257,6 +262,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertIsNone(state.probe_state.coord)
         self.assertEqual(state.probe_state.path, ())
         self.assertEqual(state.probe_state.trace, ("Probe unavailable",))
+        self.assertTrue(state.probe_state.show_trace)
 
     def test_normal_mode_defaults_to_legacy_transport_policy(self) -> None:
         legacy_profile = default_topology_profile_state(
