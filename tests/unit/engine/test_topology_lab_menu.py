@@ -943,7 +943,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("piece_set", row_keys)
         self.assertIn("speed_level", row_keys)
         self.assertNotIn("editor_trace", row_keys)
-        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_rows_include_play_settings_for_4d_explorer(self) -> None:
         state = self._explorer_state(4)
@@ -953,7 +953,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("board_z", row_keys)
         self.assertIn("board_w", row_keys)
         self.assertIn("piece_set", row_keys)
-        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -1588,7 +1588,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 area=area,
                 preview={},
             )
-            self.assertEqual(draw_controls.call_args.kwargs["title"], "Inspect moves")
+            self.assertEqual(draw_controls.call_args.kwargs["title"], "Editor movement")
             self.assertEqual(
                 draw_controls.call_args.kwargs["active_color"], (56, 92, 130)
             )
@@ -1601,7 +1601,10 @@ class TestTopologyLabMenu(unittest.TestCase):
                 area=area,
                 preview={},
             )
-            draw_controls.assert_not_called()
+            self.assertEqual(draw_controls.call_args.kwargs["title"], "Editor movement")
+            self.assertEqual(
+                draw_controls.call_args.kwargs["active_color"], (56, 92, 130)
+            )
             draw_controls.reset_mock()
             topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
             topology_lab_menu._draw_probe_controls_if_needed(
@@ -1681,10 +1684,15 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(state.explorer_draft.slot_index, 0)
         self.assertEqual(state.explorer_draft.source_index, 0)
 
-    def test_mouse_workspace_mode_select_keeps_sandbox_tool(self) -> None:
+    def test_mouse_workspace_mode_select_preserves_sandbox_state(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.origin = (0, 0, 0)
+        state.sandbox.local_blocks = ((0, 0, 0), (1, 0, 0))
+        topology_lab_menu._sync_canonical_playground_state(state)
         state.mouse_targets = [
             topology_lab_menu.TopologyLabHitTarget(
                 kind="workspace_mode",
@@ -1694,7 +1702,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         ]
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_INSPECT)
+        assert state.sandbox is not None
+        self.assertEqual(state.sandbox.origin, (0, 0, 0))
+        self.assertEqual(state.sandbox.local_blocks, ((0, 0, 0), (1, 0, 0)))
 
     def test_pick_target_prefers_glue_hit_over_boundary_hit(self) -> None:
         boundary = topology_lab_menu.TopologyLabHitTarget(
@@ -2114,7 +2125,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(topology_lab_menu._current_probe_coord(state), (1, 2, 3, 0))
         self.assertEqual(topology_lab_menu._current_probe_path(state), [(1, 2, 3, 0)])
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
-        self.assertIn("Selected cell", state.status)
+        self.assertIn("Editor target", state.status)
 
     def test_edit_tool_keeps_editor_movement_safe_and_leaves_sandbox_origin_unchanged(self) -> None:
         state = self._explorer_state(2)
@@ -2650,7 +2661,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Hover boundary: z-", lines)
         self.assertIn("Selected seam: glue_001", lines)
         self.assertIn("Workspace: Editor", lines)
-        self.assertIn("Tool focus: Inspect tool", lines)
+        self.assertIn("Tool focus: Probe tool", lines)
 
     def test_workspace_preview_lines_fall_back_to_hovered_glue(self) -> None:
         state = self._explorer_state(3)
@@ -2923,8 +2934,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(kwargs["active_glue_ids"], state.scene_active_glue_ids)
         self.assertEqual(kwargs["basis_arrows"], list(state.scene_basis_arrows))
         preview_kwargs = draw_preview.call_args.kwargs
-        self.assertEqual(preview_kwargs["title"], "Explorer 3D status + preview")
+        self.assertEqual(preview_kwargs["title"], "Explorer 3D keys")
         self.assertTrue(preview_kwargs["lines"])
+        self.assertTrue(any(line.startswith("Move: ") for line in preview_kwargs["lines"]))
         self.assertFalse(
             any("Selected boundary:" in line for line in preview_kwargs["lines"])
         )

@@ -49,6 +49,10 @@ Current sub-batch (2026-03-21): Sandbox ND behavior lock pass.
 - Root cause: the live fix existed in code and tests, but the active manifest/RDS wording still did not pin one critical visual rule tightly enough: in `3D` / `4D`, sandbox piece cells must read as full boxes and neighbor dots must remain a separate overlay.
 - Fix strategy: tightened the current-authority manifest plus the durable RDS files so ND sandbox piece cells are explicitly required to render as box-shaped piece cells, while neighbor dots remain distinct and toggle-gated behavior.
 
+Current sub-batch (2026-03-21): Explorer-entry contract and current-neighbor test lock.
+- Root cause: the accepted live shell behavior had drifted away from several committed clean-branch tests, which still assumed Editor-first explorer entry, legacy editor-tool restoration on workspace switching, or older neighbor-marker assumptions that no longer match the current sandbox-first shell.
+- Fix strategy: locked the authority file to the accepted behavior that direct explorer entry opens in `Sandbox`, switching to `Editor` preserves the current remembered topology/sandbox situation, and the current neighbor-marker behavior is canonical; then aligned the focused topology-lab launch/menu/projection tests and committed the ND scene-wrapper seam needed by those tests.
+
 Current sub-batch (2026-03-20): topology playground Editor unification Stage 2.
 - Root cause: the migrated playground already carried internal `editor` / `sandbox` / `play` ownership, but the visible shell still centered the old `Inspect` / `Edit` split, Editor movement remained effectively inspect-only, and Explorer entry still defaulted to a competing top-level Sandbox-first posture.
 - Fix strategy: promoted the primary workspace ribbon to `Editor` / `Sandbox` / `Play`, added remembered Editor-tool state, routed Editor movement and projection selection through the safe probe contract even while the Edit tool is active, kept topology mutation behind explicit actions, and added focused regressions for workspace routing, helper copy, probe safety, explicit mutation, and workspace isolation.

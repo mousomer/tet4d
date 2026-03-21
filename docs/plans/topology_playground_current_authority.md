@@ -21,6 +21,8 @@ historical background unless a future task explicitly reactivates them.
 
 - Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
   `Play`.
+- Direct explorer entry opens in `Sandbox` by default. This is the accepted
+  startup contract unless a future task explicitly changes it.
 - `Inspect` is no longer a top-level workspace. It survives only as an
   Editor-internal non-mutating probe/selection flow.
 - `Edit` is no longer a top-level workspace. It survives only as an
@@ -51,12 +53,17 @@ historical background unless a future task explicitly reactivates them.
   the probe/dot itself.
 - Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and
   `4D`.
+- Switching from `Sandbox` to `Editor` must not discard or silently rebuild the
+  current sandbox/topology situation. The same remembered topology state must
+  remain available after the workspace switch.
 - In `3D` and `4D`, projected sandbox piece cells must render as full piece
   boxes, not as neighbor-style dots.
 - Neighbor markers must appear as small dots in `2D`, `3D`, and `4D` only when
   the Explorer `neighbor search` control is explicitly enabled. Neighbor
   markers must not appear by default, must not replace or hide the sandbox
-  piece, and must remain visually distinct from sandbox piece cells.
+  piece, and must remain visually distinct from sandbox piece cells. This
+  current neighbor-marker behavior is canonical and replaces older sandbox
+  neighbor assumptions.
 - Menu items and critical controls must remain fully visible; clipped, hidden,
   or unreadable items are regressions.
 - The helper panel with translation and rotation keys must stay visible outside
@@ -87,6 +94,11 @@ historical background unless a future task explicitly reactivates them.
 - `Inspect` / `Edit` are not the primary visible top-level workspaces anymore.
 - Sandbox is not implicitly neighbor mode and must not be documented or treated
   as such.
+- Older Explorer-entry assumptions that the shell should open directly into
+  `Editor` / `Edit` are superseded.
+- Older Sandbox assumptions that workspace switching should restore a legacy
+  editor-tool posture instead of preserving the current remembered situation
+  are superseded.
 - Generic explorer seam transport must not determine Play drop legality.
 - Earlier Stage-1 continuation coverage did not fully fix the old spherical
   false-lock family; any wording that implies that is superseded.
