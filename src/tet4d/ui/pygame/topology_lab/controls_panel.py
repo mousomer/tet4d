@@ -820,12 +820,13 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
         if probe_coord is None:
             _set_status(
                 state,
-                "Inspect mode is unavailable until the current gluing fits the board dimensions",
+                "Editor probe is unavailable until the current gluing fits the board dimensions",
                 is_error=True,
             )
             return
         start = probe_coord
-        frame_permutation, frame_signs = current_probe_frame(state)
+        frame_permutation = tuple(range(state.dimension))
+        frame_signs = tuple(1 for _ in range(state.dimension))
         try:
             target, result = advance_explorer_probe(
                 profile,
@@ -850,20 +851,14 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
             path.append(start)
         if target != start:
             path.append(target)
-        next_frame_permutation = tuple(
-            int(value) for value in result.get("frame_permutation", frame_permutation)
-        )
-        next_frame_signs = tuple(
-            int(value) for value in result.get("frame_signs", frame_signs)
-        )
         replace_probe_state(
             state,
             coord=target,
             trace=trace[-6:],
             path=path[-20:],
             highlighted_glue_id=highlighted_glue_id,
-            frame_permutation=next_frame_permutation,
-            frame_signs=next_frame_signs,
+            frame_permutation=frame_permutation,
+            frame_signs=frame_signs,
         )
         _set_status(
             state,
