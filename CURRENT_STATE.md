@@ -302,7 +302,7 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `2849` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `2848` real LOC
 2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1926` real LOC
 3. `scripts/arch_metrics.py`: `1869` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
