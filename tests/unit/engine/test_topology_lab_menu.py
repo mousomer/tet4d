@@ -787,7 +787,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         apply_probe_step.assert_not_called()
         apply_sandbox_step.assert_not_called()
         handle_camera.assert_not_called()
-        cycle_piece.assert_not_called()
+        self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
+        cycle_piece.assert_called_once_with(state, 1)
 
     def test_sandbox_tool_space_cycles_piece_without_mode_leakage(self) -> None:
         state = self._explorer_state(2)
