@@ -943,7 +943,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("piece_set", row_keys)
         self.assertIn("speed_level", row_keys)
         self.assertNotIn("editor_trace", row_keys)
-        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_rows_include_play_settings_for_4d_explorer(self) -> None:
         state = self._explorer_state(4)
@@ -953,7 +953,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("board_z", row_keys)
         self.assertIn("board_w", row_keys)
         self.assertIn("piece_set", row_keys)
-        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
