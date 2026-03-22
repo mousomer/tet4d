@@ -6,8 +6,8 @@ Current topology-playground authority:
 - [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
 Historical/source audits:
 - `docs/history/topology_playground/topology_playground_reality_audit.md`
-- [`docs/plans/topology_playground_startup_audit.md`](docs/plans/topology_playground_startup_audit.md)
-- [`docs/plans/topology_playground_startup_optimization_pass1.md`](docs/plans/topology_playground_startup_optimization_pass1.md)
+- [`docs/history/topology_playground/topology_playground_startup_audit.md`](docs/history/topology_playground/topology_playground_startup_audit.md)
+- [`docs/history/topology_playground/topology_playground_startup_optimization_pass1.md`](docs/history/topology_playground/topology_playground_startup_optimization_pass1.md)
 
 ## Short Plan
 

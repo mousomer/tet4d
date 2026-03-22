@@ -144,7 +144,7 @@ targets instead:
 
 ## 2026-03-12 Menu Audit Note
 
-- Menu audit completed in [`docs/plans/topology_explorer_menu_audit.md`](docs/plans/topology_explorer_menu_audit.md).
+- Menu audit completed in [`docs/history/topology_playground/topology_explorer_menu_audit.md`](docs/history/topology_playground/topology_explorer_menu_audit.md).
 - Main duplicated areas: `Save` / `Export` / `Experiments` / `Back` exist in both Analysis View rows and the workspace action bar; `Explorer Preset` exists in both the Analysis View row and transform-editor preset arrows; `Play This Topology` is exposed as both a tool-like mode and a direct launch action.
 - Main partial/misleading areas: `Game Type` still mixes the live canonical explorer shell with the retained legacy compatibility editor, the transform-editor preset pill is button-styled but inert, and read-only analysis rows still look like ordinary editable menu rows.
 - Recommended next cleanup direction: isolate or hide legacy-only rows from the primary shell, remove duplicated command affordances, and clarify command-vs-tool labeling before any broader UI cleanup.
@@ -153,7 +153,7 @@ targets instead:
 ## 2026-03-12 Unsafe Topology Audit Note
 
 - Unsafe-topology correctness is now tracked in
-  [`docs/plans/unsafe_topology_correctness_audit.md`](docs/plans/unsafe_topology_correctness_audit.md).
+  [`docs/history/topology_playground/unsafe_topology_correctness_audit.md`](docs/history/topology_playground/unsafe_topology_correctness_audit.md).
 - This does not reopen completed migration stages. The migrated canonical-state
   route and direct play-launch route remain the current status authority.
 - The new audit's main finding is cross-surface contract drift, not stage

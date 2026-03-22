@@ -208,18 +208,18 @@ Current sub-batch (2026-03-12): topology playability signaling pass 1.
 - Added `src/tet4d/engine/runtime/topology_playability_signal.py` and extended `src/tet4d/engine/runtime/topology_playground_state.py` so the canonical playground state now derives one runtime-owned playability analysis covering validity, explorer usability, rigid playability, summary text, and reason strings.
 - Updated `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/launch/topology_lab_menu.py` so Analysis View rows plus the workspace status/preview panel now expose explicit `Validity`, `Explorer`, `Rigid Play`, and `Why` messaging before `Play This Topology`.
 - Added focused regressions in `tests/unit/engine/test_topology_playability_signal.py` and `tests/unit/engine/test_topology_lab_menu.py` covering valid rigid-playable, valid explorer-only/non-rigid, and invalid topology states.
-- Added [`docs/plans/topology_playability_signaling_pass1.md`](docs/plans/topology_playability_signaling_pass1.md) as the implementation note for this signaling stage.
+- Added [`docs/history/topology_playground/topology_playability_signaling_pass1.md`](docs/history/topology_playground/topology_playability_signaling_pass1.md) as the implementation note for this signaling stage.
 
 Current sub-batch (2026-03-12): unsafe topology correctness fix pass 1.
 - Aligned sandbox seam acceptance in `src/tet4d/engine/runtime/topology_playground_sandbox.py` with gameplay transport semantics by reusing `classify_explorer_piece_move(...)`, so sandbox now accepts `plain_translation` and `rigid_transform` seam moves while continuing to block `cellwise_deformation`.
 - Split explorer validation in `src/tet4d/engine/topology_explorer/glue_validate.py` into topology-structure and board-bijection checks, while `src/tet4d/engine/runtime/topology_playground_launch.py` now validates the canonical explorer profile against the active board dimensions before gameplay launch; non-bijective unsafe preset / board-size pairings now fail explicitly as `unsupported for current board dimensions ...`.
 - Preserved invalid topology as the canonical draft state in `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/app.py`: explorer/launcher entry and manual seam apply now keep the current topology definition, surface the invalid state explicitly, and no longer swap in fallback presets or silently drop the seam.
 - Added focused regressions in `tests/unit/engine/test_topology_lab_app.py`, `tests/unit/engine/test_topology_lab_menu.py`, `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_playground_sandbox.py`, and `tests/unit/engine/test_unsafe_topology_correctness.py` covering canonical invalid-state preservation, cross-axis glue roundtrips, safe bounded/wrap baselines, Projective cellwise traversal, sandbox/gameplay rigid-transport parity, and invalid Sphere dimension handling.
-- Added [`docs/plans/unsafe_topology_correctness_fix_pass1.md`](docs/plans/unsafe_topology_correctness_fix_pass1.md) as the implementation note for this narrow correctness stage.
+- Added [`docs/history/topology_playground/unsafe_topology_correctness_fix_pass1.md`](docs/history/topology_playground/unsafe_topology_correctness_fix_pass1.md) as the implementation note for this narrow correctness stage.
 
 
 Current sub-batch (2026-03-12): unsafe topology correctness audit.
-- Added [`docs/plans/unsafe_topology_correctness_audit.md`](docs/plans/unsafe_topology_correctness_audit.md) as the diagnostic authority for unsafe / quotient topology behavior across preview, probe, sandbox, and play launch.
+- Added [`docs/history/topology_playground/unsafe_topology_correctness_audit.md`](docs/history/topology_playground/unsafe_topology_correctness_audit.md) as the diagnostic authority for unsafe / quotient topology behavior across preview, probe, sandbox, and play launch.
 - Reproduced two separate blocker classes:
   - preview-valid point connectivity that is not always rigid-piece-safe in play
   - sandbox rejecting `rigid_transform` seam moves that gameplay already accepts
@@ -703,7 +703,7 @@ Current sub-batch (2026-03-08): explorer topology engine Phase 1 kernel.
 
 - Added `src/tet4d/engine/topology_explorer/` as the canonical engine-owned explorer topology package for general boundary gluing descriptors, signed-permutation tangent transforms, boundary-crossing mapping, movement-graph compilation, and basic quotient-topology presets.
 - Added focused kernel regression coverage in `tests/unit/engine/test_topology_explorer.py` for transform inversion, duplicate-boundary rejection, discrete bijection failure, torus-style wrapping, Mobius-style twisting, and graph compilation.
-- Documented the staged rollout and explicit non-goals in `docs/plans/explorer_topology_phase1.md` and updated `docs/plans/cleanup_master_plan.md` so the live runtime remains on the existing per-edge explorer topology path until a later integration batch proves parity.
+- Documented the staged rollout and explicit non-goals in `docs/history/topology_playground/explorer_topology_phase1.md` and updated `docs/plans/cleanup_master_plan.md` so the live runtime remains on the existing per-edge explorer topology path until a later integration batch proves parity.
 - Validation:
   - focused `ruff check` passed
   - focused pytest (`test_topology_explorer.py`) passed
