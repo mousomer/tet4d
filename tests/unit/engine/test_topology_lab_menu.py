@@ -155,6 +155,27 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(row_keys.count("y_pos"), 1)
         self.assertNotIn("z_neg", row_keys)
 
+    def test_explorer_rows_do_not_expose_legacy_topology_menu_labels(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+
+        rows = topology_lab_menu._rows_for_state(state)
+        labels = [row.label for row in rows]
+        keys = [row.key for row in rows]
+
+        self.assertIn("Path", labels)
+        self.assertNotIn("Workspace Path", labels)
+        self.assertNotIn("Legacy Topology", labels)
+        self.assertNotIn("preset", keys)
+        self.assertNotIn("topology_mode", keys)
+
+    def test_explorer_helper_lines_do_not_advertise_legacy_menu_surface(self) -> None:
+        state = self._explorer_state(3)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        joined = " ".join(lines)
+        self.assertNotIn("Legacy compatibility", joined)
+        self.assertNotIn("legacy-normal-mode", joined)
+
     def test_cycle_edge_rule_blocks_normal_y_wrap(self) -> None:
         profile = default_topology_profile_state(
             dimension=3,

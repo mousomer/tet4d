@@ -267,6 +267,7 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertIn("launcher_tutorials", subtitles)
         self.assertIn("launcher_tutorials_interactive", subtitles)
         self.assertIn("launcher_settings_root", subtitles)
+        self.assertIn("launcher_settings_advanced", subtitles)
         self.assertIn("default", subtitles)
         self.assertTrue(
             all(isinstance(text, str) and text for text in subtitles.values())
@@ -302,7 +303,33 @@ class TestMenuPolicy(unittest.TestCase):
             labels,
             ["Game", "Display", "Audio", "Controls", "Profiles", "Advanced"],
         )
-        self.assertTrue(all(item["type"] == "action" for item in settings_menu["items"]))
+        self.assertEqual(
+            [item["type"] for item in settings_menu["items"]],
+            ["action", "action", "action", "action", "action", "submenu"],
+        )
+        self.assertEqual(settings_menu["items"][-1]["menu_id"], "launcher_settings_advanced")
+
+    def test_advanced_settings_contains_legacy_topology_editor_menu(self) -> None:
+        advanced_menu = menu_config.menu_definition("launcher_settings_advanced")
+        self.assertEqual(
+            [item["label"] for item in advanced_menu["items"]],
+            ["Advanced gameplay", "Legacy Topology Editor Menu"],
+        )
+        self.assertEqual(
+            [item["action_id"] for item in advanced_menu["items"]],
+            ["settings_advanced", "settings_legacy_topology_editor"],
+        )
+
+    def test_topology_playground_has_no_legacy_topology_entry(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        topology_item = next(
+            item for item in root_items if item.get("action_id") == "topology_lab"
+        )
+        self.assertEqual(topology_item["type"], "action")
+        self.assertNotIn("menu_id", topology_item)
+        reachable = set(menu_config.reachable_action_ids(menu_config.launcher_menu_id()))
+        self.assertIn("settings_legacy_topology_editor", reachable)
+        self.assertNotIn("legacy_topology_editor_menu", reachable)
 
     def test_controls_settings_and_reference_use_distinct_destinations(self) -> None:
         tutorials = menu_config.menu_definition("launcher_tutorials")

@@ -561,31 +561,40 @@ def _menu_action_topology_lab(
     fonts_2d=None,
 ) -> bool:
     mode = state.last_mode if state.last_mode in {"2d", "3d", "4d"} else "2d"
-    start_dimension = int(mode[0])
     launch = build_explorer_playground_launch(
-        dimension=start_dimension,
-        explorer_profile=load_runtime_explorer_topology_profile(start_dimension),
+        dimension=int(mode[0]),
+        explorer_profile=load_runtime_explorer_topology_profile(int(mode[0])),
         display_settings=session.display_settings,
         fonts_2d=fonts_2d,
         gameplay_mode="explorer",
         entry_source="launcher",
         source_settings=_mode_settings_snapshot(mode),
     )
-    ok, msg = run_explorer_playground(
-        session.screen,
-        fonts_nd,
-        launch=launch,
-    )
+    ok, msg = run_explorer_playground(session.screen, fonts_nd, launch=launch)
     _persist_session_status(state, session)
     state.status = msg
     state.status_error = not ok
     return not session.running
 
+def _menu_action_legacy_topology_editor(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+) -> bool:
+    mode = state.last_mode if state.last_mode in {"2d", "3d", "4d"} else "2d"
+    launch = build_explorer_playground_launch(
+        dimension=int(mode[0]),
+        gameplay_mode="normal",
+        entry_source="launcher",
+    )
+    ok, msg = run_explorer_playground(session.screen, fonts_nd, launch=launch)
+    _persist_session_status(state, session)
+    state.status = msg
+    state.status_error = not ok
+    return not session.running
 
 def _mode_settings_snapshot(mode: str) -> SimpleNamespace:
-    if mode not in {"2d", "3d", "4d"}:
-        mode = "2d"
-    return mode_settings_snapshot_for_dimension(int(mode[0]))
+    return mode_settings_snapshot_for_dimension(int((mode if mode in {"2d", "3d", "4d"} else "2d")[0]))
 
 
 def _menu_action_play_last_custom_topology(
@@ -700,6 +709,10 @@ def _build_action_registry(
     register(
         "topology_lab",
         lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d),
+    )
+    register(
+        "settings_legacy_topology_editor",
+        lambda: _menu_action_legacy_topology_editor(state, session, fonts_nd),
     )
     for action_id, mode in (
         ("tutorial_2d", "2d"),

@@ -105,6 +105,8 @@ Main Menu
 |   |-- Controls
 |   |-- Profiles
 |   `-- Advanced
+|       |-- Advanced gameplay
+|       `-- Legacy Topology Editor Menu
 `-- Quit
 ```
 
@@ -135,11 +137,14 @@ Pause Menu
 8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
 9. Shared settings hub owns `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the hub must not advertise full custom-topology editing.
 10. `Play Last Custom Topology` and the root `Topology Playground` action are the direct launcher routes into custom topology play/edit flows.
-11. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
-12. `Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
+11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
+12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings -> Advanced`.
+13. `Explorer` / `Path` UI must not expose or route to the legacy topology editor/menu.
+14. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
+15. `Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
     sibling destinations.
-13. `Settings -> Controls` is for persistent input configuration only; controls
+16. `Settings -> Controls` is for persistent input configuration only; controls
     reference/help content must stay under `Tutorials` or another explicit
     learning/reference surface.
 
@@ -513,7 +518,7 @@ Execution artifact:
 
 1. Topology Lab now edits separate topology profiles for `(gameplay mode, dimension)` rather than one shared 3D/4D profile bucket.
 2. Required pairs are `normal/3d`, `explorer/3d`, `normal/4d`, and `explorer/4d`.
-3. Lab entry flow must expose a gameplay-path chooser plus `Dimension` (`3D`, `4D`); the primary value must read as `Explorer Playground`, while `Normal Game` must be labeled as a legacy-compatibility branch rather than a peer modern editor mode.
+3. `Topology Playground` is the direct modern `Explorer Playground` route. The old `Normal Game` topology menu is a legacy-only compatibility surface reached through `Settings -> Advanced -> Legacy Topology Editor Menu`, not through the modern playground entry.
 4. In `Normal Game`, gravity-axis `Y` boundaries are visually locked and any attempted seam touching `Y+` or `Y-` must be rejected immediately by engine-owned validation.
 5. In `Explorer Mode`, `Y` boundaries are selectable and may be wrapped or inverted subject to the general bijection rules.
 6. Any retained `Normal Game` row-adjustment support must stay narrow and must not compete visually or structurally with the Explorer Playground editor controls. Legacy row layout/value presentation should stay with the normal menu row/value helpers, and legacy export should not require a separate legacy-support module once direct export orchestration can live elsewhere.

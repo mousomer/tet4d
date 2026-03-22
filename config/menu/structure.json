@@ -9,6 +9,7 @@
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
     "launcher_settings_root": "Open game, display, audio, controls, profiles, or advanced settings.",
+    "launcher_settings_advanced": "Open advanced gameplay tuning or the legacy topology editor compatibility menu.",
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {},
@@ -220,9 +221,24 @@
           "action_id": "settings_profiles"
         },
         {
-          "type": "action",
+          "type": "submenu",
           "label": "Advanced",
+          "menu_id": "launcher_settings_advanced"
+        }
+      ]
+    },
+    "launcher_settings_advanced": {
+      "title": "Advanced",
+      "items": [
+        {
+          "type": "action",
+          "label": "Advanced gameplay",
           "action_id": "settings_advanced"
+        },
+        {
+          "type": "action",
+          "label": "Legacy Topology Editor Menu",
+          "action_id": "settings_legacy_topology_editor"
         }
       ]
     },

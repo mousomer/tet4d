@@ -9,7 +9,10 @@ from unittest.mock import Mock, patch
 import pygame
 
 from cli import front
-from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
+from tet4d.engine.gameplay.topology_designer import (
+    GAMEPLAY_MODE_EXPLORER,
+    GAMEPLAY_MODE_NORMAL,
+)
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
@@ -143,6 +146,38 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertEqual(launch.dimension, 3)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
+
+    def test_legacy_topology_editor_action_is_settings_only_legacy_launch(self) -> None:
+        state = front.MainMenuState(last_mode="4d")
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+
+        with (
+            patch.object(front, "_persist_session_status"),
+            patch.object(
+                front,
+                "run_explorer_playground",
+                return_value=(True, "Legacy topology editor closed"),
+            ) as run_playground,
+        ):
+            close = front._menu_action_legacy_topology_editor(
+                state,
+                session,
+                object(),
+            )
+
+        self.assertFalse(close)
+        self.assertEqual(state.status, "Legacy topology editor closed")
+        self.assertFalse(state.status_error)
+        run_playground.assert_called_once()
+        launch = run_playground.call_args.kwargs["launch"]
+        self.assertEqual(launch.dimension, 4)
+        self.assertEqual(launch.entry_source, "launcher")
+        self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_NORMAL)
 
     def test_topology_lab_launcher_entry_uses_explorer_config_dims_in_live_state(
         self,

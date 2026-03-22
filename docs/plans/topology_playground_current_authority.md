@@ -22,6 +22,12 @@ reactivates them.
 
 - Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
   `Play`.
+- `Topology Playground` is the modern current editing flow.
+- The old menu-only topology setup/editor is legacy compatibility only.
+- The legacy topology editor is not part of `Topology Playground`, `Explorer`,
+  or `Path`.
+- The legacy topology editor is reachable only through
+  `Settings -> Advanced -> Legacy Topology Editor Menu`.
 - Direct explorer entry opens in `Sandbox` by default. This is the accepted
   startup contract unless a future task explicitly changes it.
 - `Inspect` is not a top-level workspace. It survives only as an
@@ -222,6 +228,11 @@ contract is stable.
 - Keep canonical runtime state as the only explorer-path input authority.
 - Keep launcher/setup surfaces minimal for topology and keep custom-topology
   editing/play flowing through the Explorer Playground shell.
+- Keep `Topology Playground` as a direct modern launcher entry with no
+  modern-vs-legacy submenu split.
+- Keep the legacy topology editor/menu out of `Topology Playground`,
+  `Explorer`, and `Path`; expose it only through
+  `Settings -> Advanced -> Legacy Topology Editor Menu`.
 - Keep the direct playground entrypoint available via
   `python -m tet4d.ui.pygame.topology_lab` in addition to the launcher path.
 - Update manifests/docs in the same pass as code changes, prevent drift, and

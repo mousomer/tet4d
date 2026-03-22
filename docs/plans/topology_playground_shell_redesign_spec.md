@@ -62,6 +62,11 @@ section labels:
 - `Profiles`
 - `Advanced`
 
+The `Advanced` submenu is the compatibility bucket for:
+
+- `Advanced gameplay`
+- `Legacy Topology Editor Menu`
+
 Placement rules for this frozen launcher contract:
 
 - `Help / FAQ` must stay reachable from the learning/support surface rather
@@ -71,6 +76,11 @@ Placement rules for this frozen launcher contract:
   legend/reference surface.
 - `Leaderboard` and `Bot` must not return to the root layer and must not live
   under `Settings`; they belong to play-adjacent flow instead.
+- `Topology Playground` is a direct modern entry. It must not open a submenu
+  that splits modern and legacy topology editing.
+- `Legacy Topology Editor Menu` is a backward-compatibility surface under
+  `Settings -> Advanced`; it must not appear inside `Topology Playground`,
+  `Explorer`, or `Path`.
 
 ## Topology playground shell contract
 

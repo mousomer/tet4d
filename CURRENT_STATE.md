@@ -33,6 +33,7 @@ not a historical ledger. Long historical migration detail belongs in
 - Visible shell redesign phase lock (2026-03-22): the active topology-playground phase is now the frozen visible shell redesign rather than stable-shell cleanup. The launcher first layer is being reduced to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, and `Quit`; the playground shell is being frozen around a compact top bar, contextual left sidebar, larger center workspace, small right helper, and compact bottom strip; and deeper `controls_panel.py` / `scene_state.py` simplification is explicitly deferred until this visible shell contract is stable.
 - Visible shell contract freeze follow-up (2026-03-22): the shell wording is now explicitly the visible-shell redesign wording rather than the older stable-shell-cleanup wording. The compact top bar keeps `Topology Playground`, `Editor` / `Sandbox` / `Play`, and the short validity-chip contract `Valid` / `Needs Fix` / `Unsafe`; the right helper stays keys-only plus at most one short workspace/tool line; and the bottom strip is constrained to compact status chips plus compact action buttons instead of prose hints.
 - Launcher IA clarification pass (2026-03-22): `Tutorials` now stays a first-class learning/support destination with an explicit internal split between `Interactive Tutorials`, `How to Play`, `Controls Reference`, and `Help / FAQ`, while `Settings` now names `Game`, `Display`, `Audio`, `Controls`, `Profiles`, and `Advanced` without collapsing controls reference into controls settings or burying help under `Settings`.
+- Topology Playground legacy-placement regression correction (2026-03-22): the root `Topology Playground` launcher action is again the direct modern playground entry only, while the old menu-only topology setup/editor is explicitly legacy-only and now lives only at `Settings -> Advanced -> Legacy Topology Editor Menu`.
 - Launcher play-adjacent placement correction (2026-03-22): `Leaderboard` and `Bot` are no longer launcher-root or `Settings` entries in the visible-shell contract; they now live in the play-adjacent launcher flow while `Settings` stays focused on persistent preferences.
 - Visible-shell probe contract amendment (2026-03-22): Editor `Probe` now explicitly owns a large dot render in `2D` / `3D` / `4D` plus an optional `Probe Neighbors` dot overlay derived from canonical probe state, while Sandbox keeps its separate `Neighbors` control and box-shaped piece rendering. This amendment is part of the same frozen visible-shell phase and does not reopen deeper module simplification.
 - Projection probe-glyph reuse follow-up (2026-03-22): the shared `3D` / `4D` projection renderer now reuses the existing `2D` probe, trace, and probe-neighbor glyph helpers instead of maintaining a second copy of that circle/dot drawing logic, keeping the canonical probe visual language aligned across dimensions without a deeper scene-module rewrite.
@@ -318,7 +319,7 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3180` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3197` real LOC
 2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1658` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
@@ -329,7 +330,7 @@ Top 8 live Python hotspots by real LOC:
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 823/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 836/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
