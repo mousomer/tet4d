@@ -98,8 +98,6 @@ def draw_probe_path_glyphs(
 ) -> None:
     if len(centers) >= 2:
         pygame.draw.lines(surface, (88, 170, 214), False, centers, 2)
-    for center in centers[:-1]:
-        pygame.draw.circle(surface, (120, 146, 176), center, max(3, cell_size // 7))
 
 
 def _draw_probe_path(
