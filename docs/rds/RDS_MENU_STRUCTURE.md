@@ -436,7 +436,7 @@ Stabilization details:
 1. Closed (`BKL-P2-006`): help/menu information architecture restructure is complete.
 2. Closed (`BKL-P2-006`): help content synchronization with live keybindings/settings across launcher and pause is complete.
 3. Execution plan for `BKL-P2-006` is documented in:
-4. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+4. `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 5. Required execution milestones for `BKL-P2-006`:
 6. Closed (`M1`): help-topic registry + action-topic mapping contract implemented via:
 7. `config/help/topics.json`, `config/help/action_map.json`,
@@ -511,7 +511,7 @@ Execution status:
 5. Completed (`R3/R4`): help/controls discoverability and compact-window regression protections remain enforced by existing layout/help policy and tests.
 
 Execution artifact:
-1. Detailed execution plan lives in `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
+1. Detailed execution plan lives in `docs/history/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
 
 
 ## 17. Topology Lab Mode Split (2026-03-08)

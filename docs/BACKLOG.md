@@ -8,6 +8,9 @@ Topology-playground note: current architecture authority lives in
 `docs/plans/topology_playground_current_authority.md`. Older topology-playground
 batch entries below are historical change footprint, not active architecture
 instructions.
+Active topology-playground plan docs:
+`docs/plans/topology_playground_current_authority.md` and
+`docs/plans/topology_playground_shell_redesign_spec.md`.
 
 Current sub-batch (2026-03-22): frozen visible shell redesign for launcher + topology playground.
 - Root cause: the settled topology-playground architecture was stable, but the visible shell still exposed the older stable-shell-cleanup framing: the launcher root stayed too crowded, the playground still led with oversized explanatory copy and always-visible diagnostics, and the default controls surface still mixed contextual controls with cross-workspace status/admin rows.
@@ -16,7 +19,7 @@ Current sub-batch (2026-03-22): frozen visible shell redesign for launcher + top
 - Current IA wording follow-up for the same sub-batch: keep `Tutorials` and `Help / FAQ` explicitly distinct inside one learning/support branch, split `Controls Reference` from `Settings -> Controls`, and keep the root launcher flat by routing short section labels into the existing shared settings/help/keybindings surfaces instead of adding new top-level entries.
 - Placement correction in the same sub-batch: keep `Leaderboard` and `Bot` out of `Settings` as well as out of the root, and route them through the play-adjacent launcher flow instead of treating `Settings` as an overflow bucket.
 - Regression correction in the same sub-batch: keep `Topology Playground` as the direct modern editor/playground entry, remove any legacy topology setup/menu split from that path, and isolate the backward-compatibility editor at `Settings -> Advanced -> Legacy Topology Editor Menu`.
-- Archive cleanup in the same sub-batch: retire the older explorer-topology phase docs, menu/startup audits, playability-signaling pass, and unsafe-topology correctness plan set into `docs/history/topology_playground/`, leaving only redirect stubs under `docs/plans/` and keeping active authority in `topology_playground_current_authority.md` plus `topology_playground_shell_redesign_spec.md`.
+- Archive cleanup in the same sub-batch: retire the older explorer-topology phase docs, menu/startup audits, playability-signaling pass, and unsafe-topology correctness plan set into `docs/history/topology_playground/`, while keeping active authority in `topology_playground_current_authority.md` plus `topology_playground_shell_redesign_spec.md`.
 - Probe-surface clarification in the same sub-batch: the simplified `3D` / `4D` probe surface is intentional. The current shell only needs a movable probe plus concise full translation-key guidance, so the older per-panel ND movement-preview legends remain removed while the shared 2D probe glyph language stays canonical.
 - Direct-run ergonomics in the same sub-batch: keep direct Topology Playground launch available through the unified CLI wrapper via `cli/front.py --topology-playground [2|3|4]`, retain `python -m tet4d.ui.pygame.topology_lab [2|3|4]` only as a thin compatibility delegate, and pin clean unsupported-dimension handling in tracked launcher-route tests.
 
@@ -50,7 +53,7 @@ Current sub-batch (2026-03-20): topology-playground manifest reconciliation and 
 
 Current sub-batch (2026-03-21): topology-playground manifest archive unification.
 - Root cause: several old topology-playground manifests still read like active unfinished instructions, and other plan files still pointed at those older manifests or audits as migration-status authority.
-- Fix strategy: moved the old topology-playground manifest set under `docs/history/topology_playground/`, left redirect stubs at the old paths, preserved still-live cleanup debt in `docs/plans/topology_playground_current_authority.md`, and made the precedence rule explicit: newer task instructions and the current-authority manifest override archived manifests, with ask-first escalation for severe mismatches.
+- Fix strategy: moved the old topology-playground manifest set under `docs/history/topology_playground/`, preserved still-live cleanup debt in `docs/plans/topology_playground_current_authority.md`, and made the precedence rule explicit: newer task instructions and the current-authority manifest override archived manifests, with ask-first escalation for severe mismatches.
 
 Current sub-batch (2026-03-21): Explorer stabilization guidance clarification.
 - Root cause: the active instruction layer already implied the intended Explorer behavior, but it did not state the current user-facing expectations bluntly enough around probe/dot consistency, trace control placement, dimension parity, sandbox default piece visibility, neighbor-dot gating, menu readability, and helper-panel placement.

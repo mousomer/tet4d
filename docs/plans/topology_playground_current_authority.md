@@ -13,10 +13,12 @@ The active plan layer is intentionally small:
 - `docs/plans/topology_playground_current_authority.md`
 - `docs/plans/topology_playground_shell_redesign_spec.md`
 
+See `docs/plans/README.md` for the active-plan versus reference-doc split
+across the whole directory.
+
 The older explorer-topology phase docs, menu audits/cleanup plans, startup
 audits/optimization passes, playability-signaling pass, and unsafe-topology
-correctness plans now live under `docs/history/topology_playground/`. The
-matching `docs/plans/` paths are redirect stubs only.
+correctness plans now live under `docs/history/topology_playground/`.
 
 ## Instruction precedence
 
@@ -26,7 +28,7 @@ matching `docs/plans/` paths are redirect stubs only.
 - If a newer instruction severely conflicts with this file or with current code
   reality, stop and reconcile first.
 - Once that mismatch is clarified, update this manifest and any affected
-  archive-note stubs in the same batch so the repo stays coherent.
+  archive notes in the same batch so the repo stays coherent.
 
 ## Accepted architecture now
 
