@@ -63,6 +63,16 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
             ),
         )
 
+    def test_projection_info_panel_uses_probe_label_for_probe_and_legacy_alias(self) -> None:
+        self.assertEqual(
+            projection_scene._mode_label_for_tool(topology_lab_menu.TOOL_PROBE),
+            "Probe",
+        )
+        self.assertEqual(
+            projection_scene._mode_label_for_tool("inspect_boundary"),
+            "Probe",
+        )
+
     def _assert_sandbox_cells_render(
         self,
         *,
@@ -209,7 +219,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
             probe_coord=(0, 0, 0, 0),
             target_value=(1, 2, 0, 0),
             extra_kwargs={
-                "active_tool": "inspect_boundary",
+                "active_tool": topology_lab_menu.TOOL_PROBE,
                 "probe_path": ((1, 2, 4, 2), (2, 2, 4, 2)),
             },
         )
@@ -274,7 +284,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     basis_arrows=(),
                     preview_dims=preview_dims,
                     profile=profile,
-                    active_tool="inspect_boundary",
+                    active_tool=topology_lab_menu.TOOL_PROBE,
                     probe_coord=probe_coord,
                 )
                 draw_scene(control, fonts, **common_kwargs)
@@ -566,7 +576,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
     def test_helper_lines_scaffold_editor_workspace(self) -> None:
         state = self._explorer_state(3)
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
 
         lines = topology_lab_menu._hint_lines_for_state(state)
 

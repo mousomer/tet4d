@@ -25,6 +25,13 @@ from .common import (
     axis_color,
     boundary_fill_color,
 )
+from .scene_state import (
+    TOOL_EDIT,
+    TOOL_PLAY,
+    TOOL_PROBE,
+    TOOL_SANDBOX,
+    canonical_tool_name,
+)
 
 _BACKGROUND = (18, 22, 38)
 _BORDER = (76, 84, 112)
@@ -669,12 +676,7 @@ def _draw_info_panel(
 ) -> None:
     pygame.draw.rect(surface, _BACKGROUND, rect, border_radius=10)
     pygame.draw.rect(surface, _BORDER, rect, 1, border_radius=10)
-    mode_label = {
-        "edit_transform": "Edit",
-        "inspect_boundary": "Inspect",
-        "piece_sandbox": "Sandbox",
-        "play_preview": "Play",
-    }.get(str(active_tool or ""), "Inspect")
+    mode_label = _mode_label_for_tool(active_tool)
     lines = [
         "Projection sync",
         f"Selected cell: {list(selected_coord)}",
@@ -699,6 +701,19 @@ def _draw_info_panel(
         )
         surface.blit(text, (rect.x + 8, y_pos))
         y_pos += text.get_height() + 4
+
+
+def _mode_label_for_tool(active_tool: str | None) -> str:
+    try:
+        normalized_tool = canonical_tool_name(active_tool or TOOL_PROBE)
+    except ValueError:
+        normalized_tool = TOOL_PROBE
+    return {
+        TOOL_EDIT: "Edit",
+        TOOL_PROBE: "Probe",
+        TOOL_SANDBOX: "Sandbox",
+        TOOL_PLAY: "Play",
+    }.get(normalized_tool, "Probe")
 
 
 def _selected_projection_coord(

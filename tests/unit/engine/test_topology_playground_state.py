@@ -39,6 +39,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState,
     TopologyPlaygroundTopologyConfig,
+    canonical_tool_name,
     default_topology_playground_state,
     workspace_for_tool,
 )
@@ -219,11 +220,14 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertIs(derived.transport_policy, state.transport_policy)
         self.assertIs(derived.gravity_mode, state.gravity_mode)
 
-    def test_workspace_model_maps_legacy_tools_into_editor_sandbox_play(self) -> None:
+    def test_workspace_model_maps_probe_and_legacy_alias_into_editor_sandbox_play(
+        self,
+    ) -> None:
         self.assertEqual(workspace_for_tool(TOOL_PROBE), WORKSPACE_EDITOR)
         self.assertEqual(workspace_for_tool("inspect_boundary"), WORKSPACE_EDITOR)
         self.assertEqual(workspace_for_tool(TOOL_SANDBOX), WORKSPACE_SANDBOX)
         self.assertEqual(workspace_for_tool(TOOL_PLAY), WORKSPACE_PLAY)
+        self.assertEqual(canonical_tool_name("inspect_boundary"), TOOL_PROBE)
 
     def test_active_workspace_property_tracks_canonical_workspace_model(self) -> None:
         state = default_topology_playground_state(

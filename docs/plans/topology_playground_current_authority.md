@@ -1,7 +1,7 @@
 # Topology Playground Current Authority
 
 Status: active current-authority manifest  
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 
 Use this file first for topology-playground architecture and migration-state
 questions. Older topology-playground manifests, stage plans, and audits are
@@ -49,6 +49,9 @@ historical background unless a future task explicitly reactivates them.
 
 - The legacy Inspect "dot" is the Editor probe/dot. Its movement must stay
   consistent before and after seam traversal.
+- Internal cleanup should prefer `Editor` / `Probe` / workspace-owned naming in
+  new shell helpers. Retained legacy inspect naming is limited to accepting the
+  serialized/input token `inspect_boundary` at compatibility boundaries.
 - The Editor probe/dot and its trace must work consistently in `2D`, `3D`, and
   `4D`.
 - Probe movement, trace, and edit targeting must stay aligned to the same
@@ -77,22 +80,41 @@ historical background unless a future task explicitly reactivates them.
 - The helper panel must stay visible outside the main Explorer panel / viewport
   and remain minimal: translation keys, rotation keys, and at most one short
   current workspace/tool context line.
+- Visible tool wording should prefer `Probe` for the non-mutating Editor probe
+  flow; retaining visible `Inspect` copy is no longer the active direction.
 - Explorer-facing behavior-changing controls must not be ad hoc. They belong to
   workspace selection, workspace tool selection, workspace-owned contextual
   controls, helper display options, or status-only display.
 
 ## Still transitional
 
-- Some internal legacy `Inspect` / `Edit` / `inspector` naming still remains as
-  compatibility debt in code, audits, and tests.
+- Safe internal legacy cleanup is now partially complete: workspace-shell
+  copy/layout/helper routing is extracted to
+  `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`, and contextual
+  controls-row ownership is extracted to
+  `src/tet4d/ui/pygame/topology_lab/controls_panel_rows.py`. Shell-facing row
+  values, playability/status formatting, and preview/context labels are now
+  isolated in
+  `src/tet4d/ui/pygame/topology_lab/controls_panel_values.py`, while
+  probe-readiness and pane-state selectors now live in
+  `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
+- Remaining legacy inspect compatibility is now boundary-only: runtime tool
+  normalization still accepts the serialized/input token
+  `inspect_boundary` and maps it onto the canonical internal `probe` tool id so
+  older saved state/input callers continue to load.
 - Some dimension-specific Editor probe/camera behavior still rides on older
   helper layers while the migrated shell consumes canonical runtime state.
 - Retained UI-local shadow ownership and shell snapshot fallbacks still exist
   for some legacy or non-migrated paths.
 - Legacy normal-mode rows and resolved-profile export still need explicit
   retirement or an explicit long-term support decision.
-- `src/tet4d/ui/pygame/launch/topology_lab_menu.py` still carries structural
-  decomposition debt.
+- `src/tet4d/ui/pygame/launch/topology_lab_menu.py` is materially smaller after
+  the shell-helper extraction, `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`
+  no longer depends on private helpers from
+  `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, but
+  `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
+  `src/tet4d/ui/pygame/topology_lab/scene_state.py` still carry follow-up
+  decomposition and compatibility-alias debt.
 - Helper/menu/readability cleanup is still active, but the remaining debt is
   shell/control normalization and readability rather than a semantic workspace
   redesign.
@@ -132,7 +154,10 @@ historical background unless a future task explicitly reactivates them.
 - Decide and document whether legacy normal-mode rows and resolved-profile
   export stay supported or are retired.
 - Continue reducing structural risk in
-  `src/tet4d/ui/pygame/launch/topology_lab_menu.py`.
+  `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
+  `src/tet4d/ui/pygame/topology_lab/scene_state.py` now that
+  `src/tet4d/ui/pygame/launch/topology_lab_menu.py` is no longer the primary
+  mixed-responsibility shell hotspot.
 - Continue focused Play regression coverage for non-trivial `Y`-seam topology
   families and related launch/runtime invariants.
 - Continue unsafe-topology contract cleanup where sandbox/gameplay/preview still

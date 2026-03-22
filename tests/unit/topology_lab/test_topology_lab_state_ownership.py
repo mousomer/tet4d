@@ -9,6 +9,7 @@ from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import TopologyLabHitTarget
+from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPlaygroundSettings,
     replace_play_settings,
@@ -129,7 +130,9 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         boundaries = topology_lab_menu.boundaries_for_dimension(2)
         active_glue_ids = {boundary.label: "free" for boundary in boundaries}
 
-        with patch.object(topology_lab_menu, "draw_scene_2d", return_value=[]) as draw_scene:
+        with patch.object(
+            topology_lab_workspace_shell, "draw_scene_2d", return_value=[]
+        ) as draw_scene:
             topology_lab_menu._draw_explorer_scene(
                 pygame.Surface((320, 240)),
                 fonts=None,
@@ -235,7 +238,6 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         expected_launch_settings = state.canonical_state.launch_settings
 
         for tool in (
-            topology_lab_menu.TOOL_INSPECT,
             topology_lab_menu.TOOL_SANDBOX,
             topology_lab_menu.TOOL_PLAY,
             topology_lab_menu.TOOL_PROBE,

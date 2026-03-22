@@ -32,6 +32,7 @@ from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
+from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 
 class TestTopologyLabMenu(unittest.TestCase):
     def _explorer_state(self, dimension: int) -> topology_lab_menu._TopologyLabState:
@@ -593,7 +594,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             3,
             gameplay_mode=GAMEPLAY_MODE_EXPLORER,
         )
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         target = topology_lab_menu.TopologyLabHitTarget(
             kind="boundary_pick",
             value=4,
@@ -647,7 +648,7 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_inspect_tool_routes_4d_w_translation_without_switching_tool(self) -> None:
         state = self._explorer_state(4)
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         state.active_pane = topology_lab_menu.PANE_SCENE
         move_w_neg = KEYS_4D["move_w_neg"][0]
         with patch.object(
@@ -655,7 +656,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         ) as apply_step:
             topology_lab_menu._dispatch_key(state, move_w_neg)
         apply_step.assert_called_once_with(state, "w-")
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_INSPECT)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_PROBE)
 
     def test_sandbox_tool_routes_4d_w_translation_without_switching_tool(self) -> None:
         state = self._explorer_state(4)
@@ -1594,7 +1595,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self,
     ) -> None:
         state = self._explorer_state(3)
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         state.active_pane = topology_lab_menu.PANE_CONTROLS
         topology_lab_menu._set_selected_row_by_key(state, "explorer_preset")
         target = topology_lab_menu.TopologyLabHitTarget(
@@ -1694,7 +1695,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         state = self._explorer_state(2)
         area = pygame.Rect(0, 0, 240, 60)
         with patch.object(
-            topology_lab_menu, "draw_probe_controls", return_value=[]
+            topology_lab_workspace_shell, "draw_probe_controls", return_value=[]
         ) as draw_controls:
             topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
             topology_lab_menu._draw_probe_controls_if_needed(
@@ -1749,7 +1750,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         ]
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (5, 5), 3)
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_INSPECT)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_PROBE)
         self.assertIsNone(state.pending_source_index)
         self.assertEqual(state.selected_boundary_index, 4)
 
@@ -1767,7 +1768,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         ]
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (5, 5), 3)
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_INSPECT)
+        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_PROBE)
         self.assertEqual(state.selected_glue_id, state.explorer_profile.gluings[0].glue_id)
 
     def test_mouse_glue_slot_selects_existing_glue(self) -> None:
@@ -1934,7 +1935,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertNotIn("play_preview", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         labels = dict(topology_lab_menu._action_buttons_for_state(state))
-        self.assertIn("inspect_reset", labels)
+        self.assertIn("editor_probe_reset", labels)
         self.assertNotIn("apply_glue", labels)
         self.assertNotIn("experiments", labels)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
@@ -2082,13 +2083,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIsNotNone(state.scene_preview_error)
         self.assertTrue(state.status_error)
 
-    def test_inspect_reset_action_restores_center_and_clears_trace(self) -> None:
+    def test_editor_probe_reset_action_restores_center_and_clears_trace(self) -> None:
         state = self._explorer_state(2)
         state.active_tool = topology_lab_menu.TOOL_PROBE
         state.probe_coord = (0, 0)
         state.probe_trace = ["x-: [0, 0] -> [5, 0]"]
         state.probe_path = [(0, 0), (5, 0)]
-        topology_lab_menu._activate_action(state, "inspect_reset")
+        topology_lab_menu._activate_action(state, "editor_probe_reset")
         dims = topology_lab_menu._board_dims_for_state(state)
         self.assertEqual(state.probe_coord, tuple(max(0, size // 2) for size in dims))
         self.assertEqual(state.probe_trace, [])
@@ -2235,7 +2236,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_projection_cell_pick_updates_shared_probe_selection(self) -> None:
         state = self._explorer_state(4)
         state.active_pane = topology_lab_menu.PANE_SCENE
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_INSPECT)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         target = topology_lab_menu.TopologyLabHitTarget(
             "projection_cell",
             (1, 2, 3, 0),
@@ -3021,13 +3022,13 @@ class TestTopologyLabMenu(unittest.TestCase):
             patch.object(
                 topology_lab_controls_panel, "compile_explorer_topology_preview"
             ) as compile_preview,
-            patch.object(topology_lab_menu, "draw_tool_ribbon", return_value=[]),
+            patch.object(topology_lab_workspace_shell, "draw_tool_ribbon", return_value=[]),
             patch.object(
-                topology_lab_menu, "_draw_explorer_scene", return_value=[]
+                topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
-            patch.object(topology_lab_menu, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_menu, "draw_action_buttons", return_value=[]),
-            patch.object(topology_lab_menu, "draw_preview_panel") as draw_preview,
+            patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
+            patch.object(topology_lab_workspace_shell, "draw_action_buttons", return_value=[]),
+            patch.object(topology_lab_workspace_shell, "draw_preview_panel") as draw_preview,
             patch.object(
                 topology_lab_menu, "_draw_probe_controls_if_needed", return_value=[]
             ),
@@ -3041,6 +3042,11 @@ class TestTopologyLabMenu(unittest.TestCase):
                 panel_w=1040,
                 panel_h=620,
                 menu_w=460,
+                analysis_pane_title=topology_lab_menu._ANALYSIS_PANE_TITLE,
+                scene_pane_title=topology_lab_menu._SCENE_PANE_TITLE,
+                text_color=topology_lab_menu._TEXT_COLOR,
+                muted_color=topology_lab_menu._MUTED_COLOR,
+                highlight_color=topology_lab_menu._HIGHLIGHT_COLOR,
             )
         compile_preview.assert_not_called()
         kwargs = draw_scene.call_args.kwargs

@@ -9,11 +9,21 @@ from tet4d.engine.gameplay.topology_designer import (
     designer_profiles_for_dimension,
 )
 from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
+from tet4d.engine.runtime.topology_explorer_preview import (
+    recommended_explorer_probe_coord,
+)
 from tet4d.engine.runtime.topology_playground_state import (
     PRESET_SOURCE_CUSTOM,
     PRESET_SOURCE_DESIGNER,
     PRESET_SOURCE_EXPLORER,
     RIGID_PLAY_MODE_AUTO,
+    TOOL_CREATE,
+    TOOL_EDIT,
+    TOOL_NAVIGATE,
+    TOOL_PLAY,
+    TOOL_PROBE,
+    TOOL_SANDBOX,
+    TOPOLOGY_PLAYGROUND_TOOLS,
     TopologyPlaygroundGluingDraft as RuntimeTopologyPlaygroundGluingDraft,
     TopologyPlaygroundLaunchSettings as RuntimeTopologyPlaygroundLaunchSettings,
     TopologyPlaygroundPresetMetadata as RuntimeTopologyPlaygroundPresetMetadata,
@@ -25,6 +35,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     WORKSPACE_EDITOR,
     WORKSPACE_PLAY,
     WORKSPACE_SANDBOX,
+    canonical_tool_name as runtime_canonical_tool_name,
     workspace_for_tool as runtime_workspace_for_tool,
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
@@ -38,13 +49,6 @@ from .common import (
 )
 from .interaction_audit import ExplorerInteractionAudit
 
-TOOL_INSPECT = "inspect_boundary"
-TOOL_EDIT = "edit_transform"
-TOOL_SANDBOX = "piece_sandbox"
-TOOL_PLAY = "play_preview"
-TOOL_NAVIGATE = TOOL_INSPECT
-TOOL_CREATE = TOOL_EDIT
-TOOL_PROBE = TOOL_INSPECT
 PANE_CONTROLS = "controls"
 PANE_SCENE = "scene"
 TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
@@ -62,26 +66,12 @@ WORKSPACE_LABELS = {
     WORKSPACE_SANDBOX: "Sandbox",
     WORKSPACE_PLAY: "Play",
 }
-TOPOLOGY_LAB_TOOLS = (
-    TOOL_EDIT,
-    TOOL_INSPECT,
-    TOOL_SANDBOX,
-    TOOL_PLAY,
-)
+TOPOLOGY_LAB_TOOLS = TOPOLOGY_PLAYGROUND_TOOLS
 TOOL_LABELS = {
     TOOL_EDIT: "Edit",
-    TOOL_INSPECT: "Inspect",
+    TOOL_PROBE: "Probe",
     TOOL_SANDBOX: "Sandbox",
     TOOL_PLAY: "Play",
-}
-_CANONICAL_TOOL_BY_NAME = {
-    "navigate": TOOL_INSPECT,
-    "inspect_boundary": TOOL_INSPECT,
-    "create_gluing": TOOL_EDIT,
-    "edit_transform": TOOL_EDIT,
-    "probe": TOOL_INSPECT,
-    "piece_sandbox": TOOL_SANDBOX,
-    "play_preview": TOOL_PLAY,
 }
 
 
@@ -444,10 +434,7 @@ def _remember_play_settings(
 
 
 def canonical_tool_name(tool: str) -> str:
-    try:
-        return _CANONICAL_TOOL_BY_NAME[str(tool)]
-    except KeyError as exc:
-        raise ValueError(f"unsupported topology lab tool: {tool}") from exc
+    return runtime_canonical_tool_name(tool)
 
 
 def active_workspace_name(state: TopologyPlaygroundState) -> str:
@@ -462,8 +449,8 @@ def tool_is_edit(tool: str) -> bool:
     return canonical_tool_name(tool) == TOOL_EDIT
 
 
-def tool_is_inspect(tool: str) -> bool:
-    return canonical_tool_name(tool) == TOOL_INSPECT
+def tool_is_probe(tool: str) -> bool:
+    return canonical_tool_name(tool) == TOOL_PROBE
 
 
 def tool_is_sandbox(tool: str) -> bool:
@@ -515,6 +502,14 @@ def uses_general_explorer_editor(state: TopologyPlaygroundState) -> bool:
         3,
         4,
     )
+
+
+def controls_pane_active(state: TopologyPlaygroundState) -> bool:
+    return state.active_pane == PANE_CONTROLS
+
+
+def scene_pane_active(state: TopologyPlaygroundState) -> bool:
+    return state.active_pane == PANE_SCENE
 
 
 def sync_canonical_playground_state(state: TopologyPlaygroundState) -> None:
@@ -990,12 +985,11 @@ def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]
     return normalized
 
 
-def ensure_probe_state(state: TopologyPlaygroundState) -> None:
-    runtime_state = canonical_playground_state(state)
-    if runtime_state is not None:
-        sync_shell_state_from_canonical(state)
-        return
-    dims = playground_dims_for_state(state)
+def _sync_probe_shell_snapshot(
+    state: TopologyPlaygroundState,
+    *,
+    dims: tuple[int, ...],
+) -> None:
     if state.probe_coord is None or len(state.probe_coord) != state.dimension:
         state.probe_coord = tuple(0 for _ in range(state.dimension))
     if any(
@@ -1006,9 +1000,7 @@ def ensure_probe_state(state: TopologyPlaygroundState) -> None:
     if state.probe_trace is None:
         state.probe_trace = []
     state.probe_show_trace = bool(state.probe_show_trace)
-    if state.probe_path is None:
-        state.probe_path = [state.probe_coord]
-    elif not state.probe_path:
+    if state.probe_path is None or not state.probe_path:
         state.probe_path = [state.probe_coord]
     elif state.probe_path[-1] != state.probe_coord:
         state.probe_path = [state.probe_coord]
@@ -1021,6 +1013,69 @@ def ensure_probe_state(state: TopologyPlaygroundState) -> None:
     )
     if canonical_playground_state(state) is not None:
         sync_canonical_playground_state(state)
+
+
+def _set_probe_unavailable(
+    state: TopologyPlaygroundState,
+    *,
+    message: str,
+) -> None:
+    replace_probe_state(
+        state,
+        coord=None,
+        trace=[f"Probe unavailable: {message}"],
+        path=[],
+        highlighted_glue_id=None,
+        frame_permutation=tuple(range(state.dimension)),
+        frame_signs=tuple(1 for _ in range(state.dimension)),
+    )
+
+
+def _set_recommended_probe_coord(
+    state: TopologyPlaygroundState,
+    *,
+    profile: ExplorerTopologyProfile,
+    dims: tuple[int, ...],
+) -> None:
+    try:
+        probe_coord = recommended_explorer_probe_coord(profile, dims=dims)
+    except ValueError as exc:
+        _set_probe_unavailable(state, message=str(exc))
+        return
+    replace_probe_state(
+        state,
+        coord=probe_coord,
+        trace=[],
+        path=[probe_coord],
+        highlighted_glue_id=None,
+        frame_permutation=tuple(range(state.dimension)),
+        frame_signs=tuple(1 for _ in range(state.dimension)),
+    )
+
+
+def ensure_probe_state(state: TopologyPlaygroundState) -> None:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        sync_shell_state_from_canonical(state)
+    profile = current_explorer_profile(state)
+    probe_coord = current_probe_coord(state)
+    probe_path = current_probe_path(state)
+    needs_default = (
+        probe_coord is None or len(probe_coord) != state.dimension or not probe_path
+    )
+    dims = playground_dims_for_state(state)
+    _sync_probe_shell_snapshot(state, dims=dims)
+    if profile is None:
+        return
+    if state.scene_preview_error is not None:
+        _set_probe_unavailable(state, message=state.scene_preview_error)
+        return
+    probe_coord = current_probe_coord(state)
+    probe_out_of_bounds = probe_coord is not None and any(
+        value < 0 or value >= dims[index] for index, value in enumerate(probe_coord)
+    )
+    if probe_coord is None or needs_default or probe_out_of_bounds:
+        _set_recommended_probe_coord(state, profile=profile, dims=dims)
 
 
 def reset_probe_state(state: TopologyPlaygroundState) -> None:
@@ -1056,7 +1111,7 @@ def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
 
 def set_active_tool(state: TopologyPlaygroundState, tool: str) -> None:
     normalized_tool = canonical_tool_name(tool)
-    if normalized_tool in {TOOL_EDIT, TOOL_INSPECT}:
+    if normalized_tool in {TOOL_EDIT, TOOL_PROBE}:
         state.editor_tool = normalized_tool
     state.active_tool = normalized_tool
     state.pending_source_index = None
@@ -1098,7 +1153,6 @@ __all__ = [
     "PANE_SCENE",
     "TOOL_CREATE",
     "TOOL_EDIT",
-    "TOOL_INSPECT",
     "TOOL_LABELS",
     "TOOL_NAVIGATE",
     "TOOL_PLAY",
@@ -1115,6 +1169,7 @@ __all__ = [
     "active_workspace_name",
     "canonical_playground_state",
     "canonical_tool_name",
+    "controls_pane_active",
     "current_editor_tool",
     "current_explorer_draft",
     "current_explorer_profile",
@@ -1138,6 +1193,7 @@ __all__ = [
     "replace_probe_state",
     "select_projection_coord",
     "reset_probe_state",
+    "scene_pane_active",
     "set_probe_trace_visible",
     "set_active_tool",
     "set_active_workspace",
@@ -1147,7 +1203,7 @@ __all__ = [
     "sync_canonical_playground_state",
     "sync_shell_state_from_canonical",
     "tool_is_edit",
-    "tool_is_inspect",
+    "tool_is_probe",
     "tool_is_play",
     "tool_is_sandbox",
     "update_explorer_draft",

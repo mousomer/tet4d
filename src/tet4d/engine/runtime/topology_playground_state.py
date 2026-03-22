@@ -13,18 +13,18 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
 
-# Legacy tool ids remain while the shell migrates to the new top-level
-# workspace model. The long-term architectural contract is:
+# Canonical tool ids now follow the settled Probe-first Editor model.
+# Older serialized/input aliases are accepted only through
+# `canonical_tool_name(...)`.
 # - editor: safe probe/selection plus explicit edit tools
 # - sandbox: piece experimentation only
 # - play: gameplay launch/preview only
-TOOL_INSPECT = "inspect_boundary"
+TOOL_PROBE = "probe"
 TOOL_EDIT = "edit_transform"
 TOOL_SANDBOX = "piece_sandbox"
 TOOL_PLAY = "play_preview"
-TOOL_NAVIGATE = TOOL_INSPECT
+TOOL_NAVIGATE = TOOL_PROBE
 TOOL_CREATE = TOOL_EDIT
-TOOL_PROBE = TOOL_INSPECT
 WORKSPACE_EDITOR = "editor"
 WORKSPACE_SANDBOX = "sandbox"
 WORKSPACE_PLAY = "play"
@@ -35,26 +35,26 @@ TOPOLOGY_PLAYGROUND_WORKSPACES = (
 )
 TOPOLOGY_PLAYGROUND_TOOLS = (
     TOOL_EDIT,
-    TOOL_INSPECT,
+    TOOL_PROBE,
     TOOL_SANDBOX,
     TOOL_PLAY,
 )
 _EDITOR_TOOLS = (
     TOOL_EDIT,
-    TOOL_INSPECT,
+    TOOL_PROBE,
 )
 _CANONICAL_TOOL_BY_NAME = {
-    "navigate": TOOL_INSPECT,
-    "inspect_boundary": TOOL_INSPECT,
+    "navigate": TOOL_PROBE,
+    "inspect_boundary": TOOL_PROBE,
+    TOOL_PROBE: TOOL_PROBE,
     "create_gluing": TOOL_EDIT,
     "edit_transform": TOOL_EDIT,
-    "probe": TOOL_INSPECT,
     "piece_sandbox": TOOL_SANDBOX,
     "play_preview": TOOL_PLAY,
 }
 _WORKSPACE_BY_TOOL = {
     TOOL_EDIT: WORKSPACE_EDITOR,
-    TOOL_INSPECT: WORKSPACE_EDITOR,
+    TOOL_PROBE: WORKSPACE_EDITOR,
     TOOL_SANDBOX: WORKSPACE_SANDBOX,
     TOOL_PLAY: WORKSPACE_PLAY,
 }
@@ -850,11 +850,15 @@ def default_topology_playground_state(
     )
 
 
-def _normalize_active_tool(tool: str) -> str:
+def canonical_tool_name(tool: str) -> str:
     try:
         return _CANONICAL_TOOL_BY_NAME[str(tool)]
     except KeyError as exc:
         raise ValueError(f"unsupported topology playground tool: {tool}") from exc
+
+
+def _normalize_active_tool(tool: str) -> str:
+    return canonical_tool_name(tool)
 
 
 def _normalize_editor_tool(tool: str) -> str:
@@ -891,7 +895,6 @@ __all__ = [
     "RIGID_PLAYABILITY_UNKNOWN",
     "TOOL_CREATE",
     "TOOL_EDIT",
-    "TOOL_INSPECT",
     "TOOL_NAVIGATE",
     "TOOL_PLAY",
     "TOOL_PROBE",
@@ -925,6 +928,7 @@ __all__ = [
     "WORKSPACE_PLAY",
     "WORKSPACE_SANDBOX",
     "build_transport_policy",
+    "canonical_tool_name",
     "default_gravity_mode_for_gameplay",
     "default_topology_playground_state",
     "workspace_for_tool",

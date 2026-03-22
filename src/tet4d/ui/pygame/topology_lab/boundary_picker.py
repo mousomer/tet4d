@@ -11,7 +11,7 @@ from .scene_state import (
     set_selected_boundary_index,
     set_selected_glue_id,
     tool_is_edit,
-    tool_is_inspect,
+    tool_is_probe,
     update_explorer_draft,
     uses_general_explorer_editor,
 )
@@ -154,7 +154,7 @@ def apply_boundary_pick(state: TopologyLabState, boundary_index: int) -> str | N
     state.hovered_boundary_index = boundary_index
     if tool_is_edit(state.active_tool):
         return _handle_edit_pick(state, boundary_index)
-    if tool_is_inspect(state.active_tool):
+    if tool_is_probe(state.active_tool):
         _select_boundary_only(state, boundary_index)
         return f"Boundary {_BOUNDARY_LABELS[boundary_index]} selected"
     return None

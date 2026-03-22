@@ -1,13 +1,21 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-21  
+Updated: 2026-03-22  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 Topology-playground note: current architecture authority lives in
 `docs/plans/topology_playground_current_authority.md`. Older topology-playground
 batch entries below are historical change footprint, not active architecture
 instructions.
+
+Current sub-batch (2026-03-22): Explorer probe-naming finalization + inspect alias retirement.
+- Root cause: after the first shell-helper extraction, the main remaining coupling sat between `src/tet4d/ui/pygame/topology_lab/workspace_shell.py` and private helper logic still living in `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, while `src/tet4d/ui/pygame/topology_lab/scene_state.py` and the runtime state layer still centered the retained `inspect_boundary` alias more than the desired Probe-facing internal model.
+- Fix strategy: extract shell-facing row values/playability/context formatting into `src/tet4d/ui/pygame/topology_lab/controls_panel_values.py`, move probe-readiness plus pane-state selectors into `src/tet4d/ui/pygame/topology_lab/scene_state.py`, rewire `workspace_shell.py` and `topology_lab_menu.py` onto those stable seams, switch the canonical internal tool id to `probe`, retire `TOOL_INSPECT` / `tool_is_inspect(...)` from the active topology-lab surface, keep `inspect_boundary` only as compatibility-normalization input, and deliberately change the projection info-path wording to `Probe` with focused tests.
+
+Current sub-batch (2026-03-21): Explorer internal cleanup and decomposition under the stabilized shell contract.
+- Root cause: after the workspace/control-shell contract was stabilized, the main remaining risk shifted from architecture drift to concentrated UI complexity plus lingering internal `Inspect` / `Edit` residue, especially inside `src/tet4d/ui/pygame/launch/topology_lab_menu.py` and `src/tet4d/ui/pygame/topology_lab/controls_panel.py`.
+- Fix strategy: extract workspace-shell copy/layout/helper logic into `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`, extract contextual row ownership into `src/tet4d/ui/pygame/topology_lab/controls_panel_rows.py`, switch safe internal probe-facing action/tool routing from legacy inspect wording to probe/editor wording without changing visible behavior, and update the current-authority/docs layer in the same batch so later Codex runs treat the retained `inspect_boundary` alias as explicit compatibility debt rather than an active design direction.
 
 Current sub-batch (2026-03-21): local branch integration after `0.6`.
 - Root cause: after the verified `0.6` release was cut from a clean clone, the original local branch still contained additional gameplay/runtime/topology-lab work plus further demotion of older topology-playground plan files, leaving the shipped branch line and the local architecture/documentation state temporarily out of sync.

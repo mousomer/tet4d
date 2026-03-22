@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-21  
+Last updated: 2026-03-22  
 Branch: `master`  
 Worktree expectation: clean unless an active batch is in progress
 
@@ -31,6 +31,9 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology Playground Editor unification Stage 2 is now live for the migrated shell: the visible top-level workspace model is `Editor` / `Sandbox` / `Play`, Editor keeps its own remembered tool state, movement in Editor always updates the safe probe/selection target, and topology mutation stays behind explicit Editor-tool actions.
 - Explorer Playground workspace stabilization follow-up (2026-03-20): Editor probe/dot and trace now stay live even while the Edit tool is active, Editor trace is an explicit on/off control, Sandbox focus/anchor now tracks a visible piece cell so `3D`/`4D` piece rendering survives entry and movement even when neighbor overlay is off, and the migrated shell now shows an explicit external right-side helper keyed to minimal movement/rotation guidance plus short workspace context.
 - Explorer control-surface normalization pass (2026-03-21): the active shell objective is now explicit authority-guided cleanup rather than semantic redesign. `Trace` belongs to Editor contextual controls, `Neighbors` belongs to Sandbox contextual controls, the external helper must stay minimal, and code/docs/manifests must land together so the accepted workspace shell does not drift again.
+- Explorer internal cleanup and decomposition pass (2026-03-21): workspace-shell copy/layout/helper routing now lives in `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`, contextual row ownership now lives in `src/tet4d/ui/pygame/topology_lab/controls_panel_rows.py`, probe-facing action ids now use explicit Probe naming internally, and the then-remaining `inspect_boundary` / `TOOL_INSPECT` seam was demoted to explicit compatibility debt rather than preferred terminology.
+- Explorer compatibility-seam retirement pass (2026-03-22): shell-facing row values/playability/context formatting now live in `src/tet4d/ui/pygame/topology_lab/controls_panel_values.py`, `workspace_shell.py` now consumes stable scene/value helpers instead of private helpers from `controls_panel.py`, probe-readiness plus pane-state selectors now live in `scene_state.py`, and that intermediate pass narrowed legacy inspect naming to a smaller compatibility surface before the final Probe-naming cleanup.
+- Explorer probe-naming finalization pass (2026-03-22): canonical runtime/UI tool normalization now uses the internal tool id `probe`, the legacy serialized/input token `inspect_boundary` is accepted only at compatibility-normalization boundaries, the `TOOL_INSPECT` / `tool_is_inspect(...)` export surface is retired from the active topology-lab flow, and projection info-panel wording now deliberately says `Probe`.
 - Manifest reconciliation and current-authority refresh (2026-03-20): `docs/plans/topology_playground_current_authority.md` is now the single current topology-playground architecture authority, while older topology-playground manifests/plans/audits are explicitly marked historical or supporting background.
 - Topology-explorer clean-CI lock follow-up (2026-03-21): the committed shell/runtime contract now matches the accepted sandbox-first explorer entry and current neighbor-marker model in a clean clone as well as the dirty worktree. Workspace switching back to `Editor` preserves the remembered sandbox/topology situation, scene wrappers expose the current neighbor-marker render seam directly, and the focused topology-lab menu/projection tests now pin the current shell labels and workspace behavior instead of older Editor-first assumptions.
 - Local branch integration follow-up (2026-03-21): the later local topology-explorer/gameplay work is now integrated on top of the released branch line. Historical topology-playground plan stubs were further demoted toward archive status, play move intents are now owned explicitly in `src/tet4d/engine/gameplay/play_move_intents.py`, and matching gameplay/input/playbot/launch coverage now rides on that explicit translation-vs-drop intent split without reopening the settled topology-playground architecture contract.
@@ -59,15 +62,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 174` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 181` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.10` (`low`)
+- `tech_debt.score = 3.11` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.91`
+1. `delivery_size_pressure = 1.92`
 2. `code_balance = 1.19`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -152,7 +155,7 @@ Dominant remaining pressure:
 - Mode/action simplification pass 2 follow-up is now live on the migrated explorer path: the scene-first workspace no longer exposes `Edit` / `Inspect` as peer top-level modes. Instead, `Editor` owns both safe probe/select flow and explicit edit flow, `Sandbox` owns piece experimentation, and `Play` owns launch/preview only.
 - Legacy-consumer retirement follow-up (2026-03-12): the migrated probe/highlight path now writes canonical playground probe state through `src/tet4d/ui/pygame/topology_lab/scene_state.py` helpers, `src/tet4d/ui/pygame/topology_lab/controls_panel.py` delegates normal-mode rows and resolved-profile export to `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`, and the unused `run_topology_lab_menu(...)` alias has been removed after caller audit found no remaining `src/` callers.
 - Compatibility-debt retirement pass 2 is now live on the migrated explorer path: `src/tet4d/ui/pygame/topology_lab/scene_state.py` no longer relies on retained shell snapshots for probe-unavailable fallback, the direct play-launch path no longer re-syncs stale dirty shell fields before launch, and canonical runtime probe/play state remains authoritative on the explorer path.
-- Remaining compatibility debt after this pass: retained shell snapshot fields in `src/tet4d/ui/pygame/topology_lab/scene_state.py` are still kept only as non-explorer compatibility mirrors, while normal-mode legacy rows and resolved-profile export remain intentionally isolated in `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`.
+- Remaining compatibility debt after this pass: retained shell snapshot fields in `src/tet4d/ui/pygame/topology_lab/scene_state.py` are still kept only as non-explorer compatibility mirrors, normal-mode legacy rows and resolved-profile export remain intentionally isolated in `src/tet4d/ui/pygame/topology_lab/legacy_panel_support.py`, and the legacy inspect naming seam is now limited to accepting the serialized/input token `inspect_boundary` through runtime tool normalization for older saved state/input callers.
 - Stage 8 is now live: the shell's `Play This Topology` action launches directly from the current in-memory playground draft state, with no secondary conversion menu on the migrated path.
 - The migrated play-launch path now bypasses the older shell-snapshot `build_explorer_playground_config(...)` helper and instead routes through `src/tet4d/engine/runtime/topology_playground_launch.py` plus `src/tet4d/ui/pygame/topology_lab/play_launch.py`, so gameplay launch now reads the canonical `TopologyPlaygroundState` directly.
 - Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` without reintroducing full topology editing into launcher UI.
@@ -179,7 +182,7 @@ Stage 4 live playground settings remain available on the current explorer-entry 
 - Old configuration panels are intentionally still present for later-stage consolidation; this batch does not remove them.
 - The remaining explorer topology work now includes the rest of the retained consumer migration plus later structural consolidation:
   1. migrate the remaining retained analysis/edit-panel consumers from `src/tet4d/ui/pygame/topology_lab/scene_state.py` onto `src/tet4d/engine/runtime/topology_playground_state.py`
-  2. further structural decomposition of `src/tet4d/ui/pygame/launch/topology_lab_menu.py`
+  2. further structural decomposition of `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and compatibility cleanup in `src/tet4d/ui/pygame/topology_lab/scene_state.py`
   3. migration of additional retained panel responsibilities into the canonical playground state
 
 ## What This Batch Changed
@@ -306,14 +309,14 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `2964` real LOC
-2. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1983` real LOC
-3. `scripts/arch_metrics.py`: `1869` real LOC
-4. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1509` real LOC
-5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-6. `tools/governance/validate_project_contracts.py`: `1177` real LOC
-7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1039` real LOC
-8. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1012` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `2970` real LOC
+2. `scripts/arch_metrics.py`: `1869` real LOC
+3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1525` real LOC
+4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+5. `tools/governance/validate_project_contracts.py`: `1177` real LOC
+6. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1058` real LOC
+7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1052` real LOC
+8. `tools/governance/generate_configuration_reference.py`: `982` real LOC
 
 Thin-wrapper budgets:
 
