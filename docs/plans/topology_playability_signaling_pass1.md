@@ -5,7 +5,7 @@ Status sources of truth:
 - [`docs/plans/topology_playground_current_authority.md`](topology_playground_current_authority.md)
 - [`docs/plans/unsafe_topology_correctness_fix_pass1.md`](unsafe_topology_correctness_fix_pass1.md)
 - supporting context only: [`docs/plans/topology_explorer_functional_audit.md`](topology_explorer_functional_audit.md)
-- archived migration audit: [`docs/history/topology_playground/topology_playground_reality_audit.md`](../history/topology_playground/topology_playground_reality_audit.md)
+- archived migration audit: `docs/history/topology_playground/topology_playground_reality_audit.md`
 
 ## Scope
 

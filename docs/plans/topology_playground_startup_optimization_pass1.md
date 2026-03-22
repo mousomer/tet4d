@@ -5,7 +5,7 @@ Scope: R3 startup/load optimization pass 1 only.
 Current topology-playground authority:
 - [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
 Historical/source audits:
-- [`docs/history/topology_playground/topology_playground_reality_audit.md`](../history/topology_playground/topology_playground_reality_audit.md)
+- `docs/history/topology_playground/topology_playground_reality_audit.md`
 - [`docs/plans/topology_playground_startup_audit.md`](docs/plans/topology_playground_startup_audit.md)
 
 ## Short Plan

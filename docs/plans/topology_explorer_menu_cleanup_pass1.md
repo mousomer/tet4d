@@ -3,8 +3,8 @@
 Status date: 2026-03-12
 Status source of truth: [`docs/plans/topology_explorer_menu_audit.md`](docs/plans/topology_explorer_menu_audit.md)
 Current migration status authority: [`docs/plans/topology_playground_current_authority.md`](docs/plans/topology_playground_current_authority.md)
-Historical migration audit: [`docs/history/topology_playground/topology_playground_reality_audit.md`](../history/topology_playground/topology_playground_reality_audit.md)
-Historical design intent only: [`docs/history/topology_playground/topology_playground_migration.md`](../history/topology_playground/topology_playground_migration.md)
+Historical migration audit: `docs/history/topology_playground/topology_playground_reality_audit.md`
+Historical design intent only: `docs/history/topology_playground/topology_playground_migration.md`
 
 ## Scope
 
