@@ -6,6 +6,8 @@ from tet4d.engine.gameplay.api import (
     piece_set_label_gameplay,
     piece_set_options_for_dimension_gameplay,
 )
+from tet4d.engine.gameplay.topology_designer import designer_profiles_for_dimension
+from tet4d.engine.gameplay.topology import topology_mode_label
 from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.runtime.topology_playground_state import (
     RIGID_PLAY_MODE_OFF,
@@ -22,7 +24,6 @@ from tet4d.engine.topology_explorer.presets import (
     explorer_presets_for_dimension,
 )
 
-from . import legacy_normal_mode_support
 from .app import build_explorer_playground_settings
 from .common import (
     boundaries_for_dimension,
@@ -60,6 +61,11 @@ _PLAYABILITY_RIGID_LABELS = {
     "unknown": "Unknown",
     "rigid_playable": "Rigid-playable",
     "not_rigid_playable": "Not rigid-playable",
+}
+_LEGACY_EDGE_LABELS = {
+    "bounded": "Bounded",
+    "wrap": "Wrap",
+    "invert": "Invert",
 }
 
 
@@ -392,12 +398,21 @@ def _explorer_row_value_text(state: TopologyLabState, row: _RowSpec) -> str | No
 
 
 def _legacy_row_value_text(state: TopologyLabState, row: _RowSpec) -> str | None:
-    return legacy_normal_mode_support.legacy_row_value_text(
-        state,
-        key=row.key,
-        axis=row.axis,
-        side=row.side,
-    )
+    if row.key == "preset":
+        profiles = designer_profiles_for_dimension(state.dimension, state.gameplay_mode)
+        preset_id = state.profile.preset_id
+        if not preset_id:
+            return profiles[0].label
+        for profile in profiles:
+            if profile.profile_id == preset_id:
+                return profile.label
+        return profiles[0].label
+    if row.key == "topology_mode":
+        return topology_mode_label(state.profile.topology_mode)
+    if row.axis is not None and row.side is not None:
+        value = state.profile.edge_rules[row.axis][row.side]
+        return _LEGACY_EDGE_LABELS.get(value, str(value).title())
+    return None
 
 
 def _row_value_text(state: TopologyLabState, row: _RowSpec) -> str:

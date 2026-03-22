@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from . import legacy_normal_mode_support
+from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
+
 from .scene_state import (
     TopologyLabState,
     WORKSPACE_EDITOR,
@@ -40,6 +41,7 @@ _STATUS_ROW_KEYS = frozenset(
         "analysis_transform",
     }
 )
+_LEGACY_AXIS_LABELS = {"x": "X", "y": "Y", "z": "Z", "w": "W"}
 
 
 def _workspace_context_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
@@ -98,17 +100,30 @@ def _legacy_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
     rows = [
         _RowSpec("gameplay_mode", "Workspace Path"),
         _RowSpec("dimension", "Dimension"),
+        _RowSpec("preset", "Legacy Preset"),
+        _RowSpec("topology_mode", "Legacy Topology"),
     ]
-    rows.extend(
-        _RowSpec(
-            spec.key,
-            spec.label,
-            axis=spec.axis,
-            side=spec.side,
-            disabled=spec.disabled,
+    for axis_name in tuple("xyzw"[: state.dimension]):
+        axis = "xyzw".index(axis_name)
+        disabled = axis_name == "y" and state.gameplay_mode == GAMEPLAY_MODE_NORMAL
+        rows.append(
+            _RowSpec(
+                f"{axis_name}_neg",
+                f"{_LEGACY_AXIS_LABELS[axis_name]}-",
+                axis=axis,
+                side=0,
+                disabled=disabled,
+            )
         )
-        for spec in legacy_normal_mode_support.legacy_row_specs(state)
-    )
+        rows.append(
+            _RowSpec(
+                f"{axis_name}_pos",
+                f"{_LEGACY_AXIS_LABELS[axis_name]}+",
+                axis=axis,
+                side=1,
+                disabled=disabled,
+            )
+        )
     rows.extend(
         (
             _RowSpec("save_profile", "Save Legacy Profile"),
