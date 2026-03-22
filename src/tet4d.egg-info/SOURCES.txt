@@ -210,7 +210,6 @@ src/tet4d/ui/pygame/topology_lab/controls_panel.py
 src/tet4d/ui/pygame/topology_lab/copy.py
 src/tet4d/ui/pygame/topology_lab/explorer_tools.py
 src/tet4d/ui/pygame/topology_lab/interaction_audit.py
-src/tet4d/ui/pygame/topology_lab/legacy_normal_mode_support.py
 src/tet4d/ui/pygame/topology_lab/piece_sandbox.py
 src/tet4d/ui/pygame/topology_lab/play_launch.py
 src/tet4d/ui/pygame/topology_lab/preview.py

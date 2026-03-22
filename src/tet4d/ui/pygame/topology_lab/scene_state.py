@@ -457,10 +457,9 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     if runtime_state is None:
         return
     # Retained shell fields stay as synchronized compatibility projections for
-    # legacy readers, diagnostics, and transitional tests. Canonical runtime
-    # state remains the input authority via current_* selectors.
-    state.explorer_profile = runtime_state.explorer_profile
-    state.explorer_draft = _ui_draft_from_runtime(runtime_state)
+    # the still-live shell/runtime bridge only. Canonical runtime state remains
+    # the input authority via current_* selectors, and only a narrowed subset of
+    # shell mirrors still sync here for explicit compatibility readers/tests.
     settings = ExplorerPlaygroundSettings(
         board_dims=tuple(int(value) for value in runtime_state.axis_sizes),
         piece_set_index=int(runtime_state.launch_settings.piece_set_index),
@@ -472,20 +471,12 @@ def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     _remember_play_settings(state, settings, dimension=runtime_state.dimension)
     state.active_tool = runtime_state.active_tool
     state.editor_tool = runtime_state.editor_state.active_tool
-    state.probe_coord = runtime_state.probe_state.coord
-    state.probe_trace = list(runtime_state.probe_state.trace)
-    state.probe_show_trace = bool(runtime_state.probe_state.show_trace)
-    state.probe_path = list(runtime_state.probe_state.path)
-    state.probe_frame_permutation = runtime_state.probe_state.frame_permutation
-    state.probe_frame_signs = runtime_state.probe_state.frame_signs
-    state.highlighted_glue_id = runtime_state.probe_state.highlighted_gluing
+    state.explorer_profile = runtime_state.explorer_profile
+    state.explorer_draft = _ui_draft_from_runtime(runtime_state)
     sandbox_state = runtime_state.sandbox_piece_state
     state.sandbox = (
         sandbox_state if _sandbox_visible_in_shell(state, sandbox_state) else None
     )
-    state.selected_boundary_index = _boundary_index(runtime_state.selected_boundary)
-    state.selected_glue_id = runtime_state.selected_gluing
-    state.dirty = bool(runtime_state.dirty)
 
 
 def uses_general_explorer_editor(state: TopologyPlaygroundState) -> bool:

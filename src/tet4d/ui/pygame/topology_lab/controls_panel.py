@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 import pygame
+from dataclasses import dataclass
 
+from tet4d.engine.gameplay.topology import (
+    EDGE_BEHAVIOR_OPTIONS,
+    default_edge_rules_for_mode,
+    topology_mode_from_index,
+)
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     GAMEPLAY_MODE_NORMAL,
     TOPOLOGY_GAMEPLAY_MODE_OPTIONS,
     TopologyProfileState,
+    designer_profiles_for_dimension,
+    export_topology_profile_state,
+    profile_state_from_preset,
     topology_gameplay_mode_label,
+    validate_topology_profile_state,
 )
 from tet4d.engine.gameplay.api import (
     piece_set_2d_options_gameplay,
@@ -59,7 +69,6 @@ from tet4d.ui.pygame.keybindings import (
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
-from . import legacy_normal_mode_support
 from .interaction_audit import (
     record_interaction_handler,
     record_interaction_phase,
@@ -184,6 +193,13 @@ _RIGID_PLAY_MODE_SEQUENCE = (
 )
 
 
+@dataclass(frozen=True)
+class _LegacyRowAdjustment:
+    handled: bool
+    profile: TopologyProfileState | None = None
+    error: str | None = None
+
+
 def _explorer_bindings_for_dimension(dimension: int):
     if int(dimension) == 2:
         return EXPLORER_KEYS_2D
@@ -240,6 +256,122 @@ def _configured_explorer_play_settings_for_dimension(
         dimension=dimension,
         source_settings=mode_settings_snapshot_for_dimension(dimension),
     )
+
+
+def _legacy_preset_profiles(state: _TopologyLabState):
+    return designer_profiles_for_dimension(state.dimension, state.gameplay_mode)
+
+
+def _legacy_preset_index(state: _TopologyLabState) -> int:
+    profiles = _legacy_preset_profiles(state)
+    preset_id = state.profile.preset_id
+    if not preset_id:
+        return 0
+    for idx, profile in enumerate(profiles):
+        if profile.profile_id == preset_id:
+            return idx
+    return 0
+
+
+def _legacy_profile_from_preset(
+    state: _TopologyLabState,
+    step: int,
+) -> TopologyProfileState:
+    profiles = _legacy_preset_profiles(state)
+    idx = (_legacy_preset_index(state) + step) % len(profiles)
+    return profile_state_from_preset(
+        dimension=state.dimension,
+        gravity_axis=1,
+        gameplay_mode=state.gameplay_mode,
+        preset_index=idx,
+        topology_mode=state.profile.topology_mode,
+    )
+
+
+def _legacy_profile_from_topology_mode(
+    state: _TopologyLabState,
+    step: int,
+) -> TopologyProfileState:
+    options = tuple(topology_mode_from_index(idx) for idx in range(3))
+    current = state.profile.topology_mode
+    idx = options.index(current)
+    next_mode = options[(idx + step) % len(options)]
+    rules = default_edge_rules_for_mode(
+        state.dimension,
+        1,
+        mode=next_mode,
+        wrap_gravity_axis=(state.gameplay_mode == GAMEPLAY_MODE_EXPLORER),
+    )
+    return validate_topology_profile_state(
+        gameplay_mode=state.gameplay_mode,
+        dimension=state.dimension,
+        gravity_axis=1,
+        topology_mode=next_mode,
+        edge_rules=rules,
+        preset_id=None,
+    )
+
+
+def _legacy_profile_from_edge_rule(
+    state: _TopologyLabState,
+    *,
+    axis: int,
+    side: int,
+    step: int,
+) -> TopologyProfileState:
+    current = state.profile.edge_rules[axis][side]
+    idx = EDGE_BEHAVIOR_OPTIONS.index(current)
+    next_value = EDGE_BEHAVIOR_OPTIONS[(idx + step) % len(EDGE_BEHAVIOR_OPTIONS)]
+    rules = [tuple(axis_rule) for axis_rule in state.profile.edge_rules]
+    axis_rule = list(rules[axis])
+    axis_rule[side] = next_value
+    rules[axis] = tuple(axis_rule)
+    return validate_topology_profile_state(
+        gameplay_mode=state.gameplay_mode,
+        dimension=state.dimension,
+        gravity_axis=1,
+        topology_mode=state.profile.topology_mode,
+        edge_rules=tuple(rules),
+        preset_id=None,
+    )
+
+
+def _resolve_legacy_row_adjustment(
+    state: _TopologyLabState,
+    *,
+    key: str,
+    axis: int | None,
+    side: int | None,
+    disabled: bool,
+    step: int,
+    locked_message: str,
+) -> _LegacyRowAdjustment:
+    try:
+        if key == "preset":
+            return _LegacyRowAdjustment(
+                handled=True,
+                profile=_legacy_profile_from_preset(state, step),
+            )
+        if key == "topology_mode":
+            return _LegacyRowAdjustment(
+                handled=True,
+                profile=_legacy_profile_from_topology_mode(state, step),
+            )
+        if axis is not None and side is not None:
+            if disabled:
+                return _LegacyRowAdjustment(handled=True, error=locked_message)
+            return _LegacyRowAdjustment(
+                handled=True,
+                profile=_legacy_profile_from_edge_rule(
+                    state,
+                    axis=axis,
+                    side=side,
+                    step=step,
+                ),
+            )
+    except ValueError as exc:
+        return _LegacyRowAdjustment(handled=True, error=str(exc))
+    return _LegacyRowAdjustment(handled=False)
 
 
 def _reset_explorer_play_settings_to_defaults(state: _TopologyLabState) -> None:
@@ -899,7 +1031,7 @@ def _apply_legacy_row_adjustment(
     disabled: bool,
     step: int,
 ) -> bool:
-    result = legacy_normal_mode_support.adjust_legacy_row(
+    result = _resolve_legacy_row_adjustment(
         state,
         key=key,
         axis=axis,
@@ -1235,20 +1367,22 @@ def _run_export(state: _TopologyLabState) -> None:
             dimension=state.dimension,
             gameplay_mode=state.gameplay_mode,
         ):
-            result = legacy_normal_mode_support.export_legacy_profile(state.profile)
-        if not result.ok:
+            ok, message, _path = export_topology_profile_state(
+                profile=state.profile,
+                gravity_axis=1,
+            )
+        if not ok:
             _set_status(
                 state,
-                str(_LAB_STATUS_COPY["export_error"]).format(message=result.error),
+                str(_LAB_STATUS_COPY["export_error"]).format(message=message),
                 is_error=True,
             )
             return
 
-        status_lines = [
-            str(_LAB_STATUS_COPY["export_ok"]).format(message=message)
-            for message in result.status_lines
-        ]
-        _set_status(state, " | ".join(status_lines))
+        _set_status(
+            state,
+            str(_LAB_STATUS_COPY["export_ok"]).format(message=message),
+        )
         play_sfx("menu_confirm")
 
 
