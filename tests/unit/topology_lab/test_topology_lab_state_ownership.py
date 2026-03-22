@@ -12,7 +12,11 @@ from tet4d.ui.pygame.topology_lab import TopologyLabHitTarget
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPlaygroundSettings,
+    current_probe_coord,
+    current_probe_path,
+    current_probe_trace,
     replace_play_settings,
+    replace_probe_state,
 )
 from tet4d.ui.pygame.topology_lab.state_ownership import (
     current_sandbox_focus_coord,
@@ -49,9 +53,13 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
 
     def test_ownership_snapshot_separates_inspector_and_sandbox_transients(self) -> None:
         state = self._state()
-        state.probe_coord = (1, 0)
-        state.probe_trace = ["probe-step"]
-        state.probe_path = [(1, 0)]
+        replace_probe_state(
+            state,
+            coord=(1, 0),
+            trace=["probe-step"],
+            path=[(1, 0)],
+            highlighted_glue_id=None,
+        )
         select_sandbox_projection_coord(state, (3, 2))
 
         snapshot = ownership_snapshot(state)
@@ -66,9 +74,13 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
 
     def test_projection_click_in_sandbox_does_not_overwrite_inspector_probe_state(self) -> None:
         state = self._state()
-        state.probe_coord = (1, 0)
-        state.probe_trace = ["probe-step"]
-        state.probe_path = [(1, 0)]
+        replace_probe_state(
+            state,
+            coord=(1, 0),
+            trace=["probe-step"],
+            path=[(1, 0)],
+            highlighted_glue_id=None,
+        )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         target = TopologyLabHitTarget(
             kind="projection_cell",
@@ -79,17 +91,21 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         handled = topology_lab_menu._handle_projection_cell_target(state, target)
 
         self.assertTrue(handled)
-        self.assertEqual(state.probe_coord, (1, 0))
-        self.assertEqual(state.probe_trace, ["probe-step"])
-        self.assertEqual(state.probe_path, [(1, 0)])
+        self.assertEqual(current_probe_coord(state), (1, 0))
+        self.assertEqual(current_probe_trace(state), ["probe-step"])
+        self.assertEqual(current_probe_path(state), [(1, 0)])
         self.assertEqual(getattr(state, "sandbox_focus_coord", None), (4, 1))
         self.assertEqual(getattr(state, "sandbox_focus_path", None), [(4, 1)])
 
     def test_workspace_preview_lines_hide_inspector_probe_trace_in_sandbox_mode(self) -> None:
         state = self._state()
-        state.probe_coord = (1, 1)
-        state.probe_trace = ["probe-step"]
-        state.probe_path = [(1, 1)]
+        replace_probe_state(
+            state,
+            coord=(1, 1),
+            trace=["probe-step"],
+            path=[(1, 1)],
+            highlighted_glue_id=None,
+        )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         select_sandbox_projection_coord(state, (5, 2))
 
@@ -108,23 +124,32 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
 
     def test_switching_back_to_probe_restores_inspector_state_after_sandbox_focus_change(self) -> None:
         state = self._state()
-        state.probe_coord = (1, 1)
-        state.probe_trace = ["probe-step"]
-        state.probe_path = [(1, 1)]
+        replace_probe_state(
+            state,
+            coord=(1, 1),
+            trace=["probe-step"],
+            path=[(1, 1)],
+            highlighted_glue_id=None,
+        )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         select_sandbox_projection_coord(state, (6, 0))
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
 
         lines = topology_lab_menu._workspace_probe_lines(state)
 
-        self.assertEqual(state.probe_coord, (1, 1))
+        self.assertEqual(current_probe_coord(state), (1, 1))
         self.assertIn("Editor cell: [1, 1]", lines)
         self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
 
     def test_draw_explorer_scene_uses_sandbox_focus_overlay_when_active(self) -> None:
         state = self._state()
-        state.probe_coord = (0, 0)
-        state.probe_path = [(0, 0)]
+        replace_probe_state(
+            state,
+            coord=(0, 0),
+            trace=[],
+            path=[(0, 0)],
+            highlighted_glue_id=None,
+        )
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         select_sandbox_projection_coord(state, (2, 3))
         boundaries = topology_lab_menu.boundaries_for_dimension(2)

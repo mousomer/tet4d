@@ -507,4 +507,5 @@ Execution artifact:
 3. Lab entry flow must expose a gameplay-path chooser plus `Dimension` (`3D`, `4D`); the primary value must read as `Explorer Playground`, while `Normal Game` must be labeled as a legacy-compatibility branch rather than a peer modern editor mode.
 4. In `Normal Game`, gravity-axis `Y` boundaries are visually locked and any attempted seam touching `Y+` or `Y-` must be rejected immediately by engine-owned validation.
 5. In `Explorer Mode`, `Y` boundaries are selectable and may be wrapped or inverted subject to the general bijection rules.
-6. Ordinary 2D/3D/4D play setup screens no longer expose `topology_profile_index` or other custom-topology editor rows; custom topology selection belongs to the Explorer Playground only.
+6. Any retained `Normal Game` profile rows or resolved-profile export support must stay behind a clearly named transitional legacy-support seam and must not compete visually or structurally with the Explorer Playground editor controls.
+7. Ordinary 2D/3D/4D play setup screens no longer expose `topology_profile_index` or other custom-topology editor rows; custom topology selection belongs to the Explorer Playground only.

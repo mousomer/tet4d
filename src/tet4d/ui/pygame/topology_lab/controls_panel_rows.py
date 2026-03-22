@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from . import legacy_panel_support
+from . import legacy_normal_mode_support
 from .scene_state import (
     TopologyLabState,
     WORKSPACE_EDITOR,
@@ -107,7 +107,7 @@ def _legacy_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
             side=spec.side,
             disabled=spec.disabled,
         )
-        for spec in legacy_panel_support.legacy_row_specs(state)
+        for spec in legacy_normal_mode_support.legacy_row_specs(state)
     )
     rows.extend(
         (
@@ -154,4 +154,3 @@ def _row_supports_step_adjustment(row: _RowSpec) -> bool:
 
 def _row_is_status_display(row: _RowSpec) -> bool:
     return row.key in _STATUS_ROW_KEYS
-

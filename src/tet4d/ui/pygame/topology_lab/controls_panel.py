@@ -59,7 +59,7 @@ from tet4d.ui.pygame.keybindings import (
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
-from . import legacy_panel_support
+from . import legacy_normal_mode_support
 from .interaction_audit import (
     record_interaction_handler,
     record_interaction_phase,
@@ -130,6 +130,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     replace_play_settings,
     replace_probe_state,
     reset_probe_state,
+    set_dirty,
     set_active_tool,
     set_probe_trace_visible,
     set_highlighted_glue_id,
@@ -789,7 +790,7 @@ def _set_topology_status_after_refresh(
 
 
 def _mark_updated(state: _TopologyLabState) -> None:
-    state.dirty = True
+    set_dirty(state, True)
     if _uses_general_explorer_editor(state):
         with record_interaction_phase(
             state,
@@ -840,7 +841,7 @@ def _apply_profile(state: _TopologyLabState, profile: TopologyProfileState) -> N
 def _reset_to_mode_dimension(state: _TopologyLabState) -> None:
     _sync_profile(state)
     _sync_explorer_state(state)
-    state.dirty = False
+    set_dirty(state, False)
     _set_status(state, "")
 
 
@@ -867,7 +868,7 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
             state.play_settings_by_dimension[previous_dimension] = previous_settings
         idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
         state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
-        state.dirty = True
+        set_dirty(state, True)
         state.sandbox = None
         setattr(state, "sandbox_focus_coord", None)
         setattr(state, "sandbox_focus_trace", [])
@@ -898,7 +899,7 @@ def _apply_legacy_row_adjustment(
     disabled: bool,
     step: int,
 ) -> bool:
-    result = legacy_panel_support.adjust_legacy_row(
+    result = legacy_normal_mode_support.adjust_legacy_row(
         state,
         key=key,
         axis=axis,
@@ -1163,7 +1164,7 @@ def _save_profile(state: _TopologyLabState) -> tuple[bool, str]:
     else:
         ok, message = save_topology_profile(state.profile)
     if ok:
-        state.dirty = False
+        set_dirty(state, False)
         _set_status(
             state,
             str(_LAB_STATUS_COPY["saved"]).format(
@@ -1234,7 +1235,7 @@ def _run_export(state: _TopologyLabState) -> None:
             dimension=state.dimension,
             gameplay_mode=state.gameplay_mode,
         ):
-            result = legacy_panel_support.export_legacy_profile(state.profile)
+            result = legacy_normal_mode_support.export_legacy_profile(state.profile)
         if not result.ok:
             _set_status(
                 state,

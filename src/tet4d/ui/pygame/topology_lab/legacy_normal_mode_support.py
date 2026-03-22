@@ -1,3 +1,5 @@
+"""Transitional Normal Game compatibility rows and resolved-profile export."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -6,7 +6,17 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundState as RuntimeTopologyPlaygroundState,
 )
 
-from .scene_state import TopologyLabState, playground_dims_for_state
+from .scene_state import (
+    TopologyLabState,
+    current_highlighted_glue_id,
+    current_probe_coord,
+    current_probe_frame,
+    current_probe_path,
+    current_probe_trace,
+    current_selected_boundary_index,
+    current_selected_glue_id,
+    playground_dims_for_state,
+)
 
 _UNSET = object()
 
@@ -165,25 +175,23 @@ class TopologyLabOwnershipSnapshot:
 
 
 def ownership_snapshot(state: TopologyLabState) -> TopologyLabOwnershipSnapshot:
+    probe_frame_permutation, probe_frame_signs = current_probe_frame(state)
     return TopologyLabOwnershipSnapshot(
         canonical_state=state.canonical_state,
         editor=TopologyLabEditorOwnershipState(
-            selected_boundary_index=state.selected_boundary_index,
-            selected_glue_id=state.selected_glue_id,
+            selected_boundary_index=current_selected_boundary_index(state),
+            selected_glue_id=current_selected_glue_id(state),
             hovered_boundary_index=state.hovered_boundary_index,
             hovered_glue_id=state.hovered_glue_id,
             pending_source_index=state.pending_source_index,
         ),
         inspector=TopologyLabInspectorOwnershipState(
-            probe_coord=state.probe_coord,
-            probe_trace=tuple(str(entry) for entry in (state.probe_trace or ())),
-            probe_path=tuple(
-                tuple(int(value) for value in entry)
-                for entry in (state.probe_path or ())
-            ),
-            probe_frame_permutation=state.probe_frame_permutation,
-            probe_frame_signs=state.probe_frame_signs,
-            highlighted_glue_id=state.highlighted_glue_id,
+            probe_coord=current_probe_coord(state),
+            probe_trace=tuple(current_probe_trace(state)),
+            probe_path=tuple(current_probe_path(state)),
+            probe_frame_permutation=probe_frame_permutation,
+            probe_frame_signs=probe_frame_signs,
+            highlighted_glue_id=current_highlighted_glue_id(state),
         ),
         sandbox=TopologyLabSandboxOwnershipState(
             piece_state=state.sandbox,

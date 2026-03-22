@@ -24,6 +24,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _sync_explorer_state,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_play_settings,
     ensure_probe_state as _ensure_probe_state,
     replace_explorer_profile,
     replace_play_settings,
@@ -38,7 +39,7 @@ def _initialize_explicit_explorer_startup(
     initial_explorer_profile: ExplorerTopologyProfile,
 ) -> None:
     state.active_pane = PANE_SCENE
-    if state.play_settings is None:
+    if current_play_settings(state) is None:
         replace_play_settings(
             state,
             build_explorer_playground_settings(dimension=state.dimension),
@@ -73,7 +74,7 @@ def _initial_topology_lab_state(
         profile=load_topology_profile(mode, dimension),
         play_settings=play_settings,
     )
-    if mode == GAMEPLAY_MODE_EXPLORER and state.play_settings is None:
+    if mode == GAMEPLAY_MODE_EXPLORER and current_play_settings(state) is None:
         replace_play_settings(
             state,
             build_explorer_playground_settings(dimension=dimension),
@@ -88,7 +89,7 @@ def _initial_topology_lab_state(
     _sync_explorer_state(state)
     if mode == GAMEPLAY_MODE_EXPLORER:
         state.active_pane = PANE_SCENE
-        if state.play_settings is None:
+        if current_play_settings(state) is None:
             replace_play_settings(
                 state,
                 build_explorer_playground_settings(dimension=dimension),

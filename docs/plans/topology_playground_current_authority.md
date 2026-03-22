@@ -104,10 +104,16 @@ historical background unless a future task explicitly reactivates them.
   older saved state/input callers continue to load.
 - Some dimension-specific Editor probe/camera behavior still rides on older
   helper layers while the migrated shell consumes canonical runtime state.
-- Retained UI-local shadow ownership and shell snapshot fallbacks still exist
-  for some legacy or non-migrated paths.
-- Legacy normal-mode rows and resolved-profile export still need explicit
-  retirement or an explicit long-term support decision.
+- Retained shell projections in
+  `src/tet4d/ui/pygame/topology_lab/scene_state.py` are now limited to
+  synchronized compatibility views for legacy readers, diagnostics, and
+  transitional tests. Canonical runtime selectors are the only accepted
+  explorer-path input authority.
+- Legacy normal-mode rows and resolved-profile export are kept temporarily
+  through the narrowly named transitional module
+  `src/tet4d/ui/pygame/topology_lab/legacy_normal_mode_support.py`; that seam
+  is legacy-only and must not regain authority over the Explorer Playground
+  flow.
 - `src/tet4d/ui/pygame/launch/topology_lab_menu.py` is materially smaller after
   the shell-helper extraction, `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`
   no longer depends on private helpers from
@@ -149,10 +155,10 @@ historical background unless a future task explicitly reactivates them.
   helper/menu readability, or workspace isolation still regress.
 - Continue removing legacy internal naming and compatibility mirrors only where
   that cleanup is grounded by tests and the current architecture contract.
-- Continue migrating or deleting retained UI-local shadow ownership and other
-  non-migrated shell fallbacks.
-- Decide and document whether legacy normal-mode rows and resolved-profile
-  export stay supported or are retired.
+- Continue deleting retained synchronized shell projections once the remaining
+  legacy readers and diagnostics paths are migrated.
+- Retire `legacy_normal_mode_support.py` only when the legacy Normal Game rows
+  and resolved-profile export are actually deleted or deliberately rehomed.
 - Continue reducing structural risk in
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` now that

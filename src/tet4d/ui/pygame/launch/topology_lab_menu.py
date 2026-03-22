@@ -52,6 +52,7 @@ from tet4d.ui.pygame.topology_lab import (
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
     controls_pane_active as _controls_pane_active,
+    current_dirty as _current_dirty,
     current_explorer_draft as _current_explorer_draft,
     current_explorer_profile as _current_explorer_profile,
     current_probe_coord as _current_probe_coord,
@@ -904,7 +905,7 @@ def _handle_pending_play_preview(
 
 
 def _finalize_topology_lab_result(state: _TopologyLabState) -> tuple[bool, str]:
-    if state.dirty:
+    if _current_dirty(state):
         ok, message = _save_profile(state)
         return ok, message
     if state.status:

@@ -63,7 +63,7 @@ def topology_note_text(state: Any) -> str:
             "For 3D and 4D, the primary scene now uses synchronized 2D coordinate-plane projections with explicit hidden-coordinate slices so selection and sandbox movement stay readable across panels."
         )
     return (
-        "Legacy compatibility surface: retained Normal Game profile rows and the resolved-profile export bridge live here. "
+        "Legacy compatibility surface: retained Normal Game rows and the resolved-profile export bridge remain isolated here through the transitional legacy-normal-mode support seam. "
         "Use Explorer Playground for the current seam editor, sandbox workflow, and direct play launch. "
         f"{topology_profile_note(state.gameplay_mode)}"
     )

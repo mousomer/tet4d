@@ -198,7 +198,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         with (
             patch.object(
-                topology_lab_controls_panel.legacy_panel_support,
+                topology_lab_controls_panel.legacy_normal_mode_support,
                 "export_topology_profile_state",
                 return_value=(True, "legacy exported", None),
             ) as export_legacy,
@@ -912,8 +912,10 @@ class TestTopologyLabMenu(unittest.TestCase):
             for index, preset in enumerate(presets)
             if preset.preset_id == "projective_2d"
         )
-        state.explorer_profile = presets[unsafe_index].profile
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            presets[unsafe_index].profile,
+        )
         label = topology_lab_menu._explorer_preset_value_text(state)
         self.assertIn("[unsafe]", label)
 
@@ -926,7 +928,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 return_value=(True, "preview exported", None),
             ) as export_preview,
             patch.object(
-                topology_lab_controls_panel.legacy_panel_support,
+                topology_lab_controls_panel.legacy_normal_mode_support,
                 "export_topology_profile_state",
                 return_value=(True, "legacy exported", None),
             ) as export_legacy,
@@ -1308,7 +1310,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 return_value=(True, "preview exported", None),
             ) as export_preview,
             patch.object(
-                topology_lab_controls_panel.legacy_panel_support,
+                topology_lab_controls_panel.legacy_normal_mode_support,
                 "export_topology_profile_state",
                 return_value=(True, "legacy exported", None),
             ) as export_legacy,
@@ -1365,7 +1367,7 @@ class TestTopologyLabMenu(unittest.TestCase):
                 return_value=(True, "preview exported", None),
             ) as export_preview,
             patch.object(
-                topology_lab_controls_panel.legacy_panel_support,
+                topology_lab_controls_panel.legacy_normal_mode_support,
                 "export_topology_profile_state",
                 return_value=(True, "legacy exported", None),
             ) as export_legacy,
@@ -1377,18 +1379,20 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_preview_lines_show_engine_owned_warnings(self) -> None:
         state = self._explorer_state(3)
-        state.explorer_profile = ExplorerTopologyProfile(
-            dimension=3,
-            gluings=(
-                GluingDescriptor(
-                    glue_id="twist",
-                    source=BoundaryRef(dimension=3, axis=0, side="-"),
-                    target=BoundaryRef(dimension=3, axis=0, side="+"),
-                    transform=BoundaryTransform(permutation=(0, 1), signs=(-1, 1)),
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            ExplorerTopologyProfile(
+                dimension=3,
+                gluings=(
+                    GluingDescriptor(
+                        glue_id="twist",
+                        source=BoundaryRef(dimension=3, axis=0, side="-"),
+                        target=BoundaryRef(dimension=3, axis=0, side="+"),
+                        transform=BoundaryTransform(permutation=(0, 1), signs=(-1, 1)),
+                    ),
                 ),
             ),
         )
-        topology_lab_menu._sync_canonical_playground_state(state)
         topology_lab_menu._refresh_explorer_scene_state(state)
         lines = topology_lab_menu._explorer_sidebar_lines(state)
         self.assertIn("  Warnings", lines)
@@ -1398,18 +1402,20 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_preview_lines_show_engine_owned_arrow_basis(self) -> None:
         state = self._explorer_state(3)
-        state.explorer_profile = ExplorerTopologyProfile(
-            dimension=3,
-            gluings=(
-                GluingDescriptor(
-                    glue_id="swap",
-                    source=BoundaryRef(dimension=3, axis=0, side="-"),
-                    target=BoundaryRef(dimension=3, axis=2, side="+"),
-                    transform=BoundaryTransform(permutation=(1, 0), signs=(1, -1)),
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            ExplorerTopologyProfile(
+                dimension=3,
+                gluings=(
+                    GluingDescriptor(
+                        glue_id="swap",
+                        source=BoundaryRef(dimension=3, axis=0, side="-"),
+                        target=BoundaryRef(dimension=3, axis=2, side="+"),
+                        transform=BoundaryTransform(permutation=(1, 0), signs=(1, -1)),
+                    ),
                 ),
             ),
         )
-        topology_lab_menu._sync_canonical_playground_state(state)
         topology_lab_menu._refresh_explorer_scene_state(state)
         lines = topology_lab_menu._explorer_sidebar_lines(state)
         self.assertIn("  Arrow basis", lines)
@@ -1421,8 +1427,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         self,
     ) -> None:
         state = self._explorer_state(2)
-        state.explorer_profile = projective_plane_profile_2d()
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            projective_plane_profile_2d(),
+        )
         topology_lab_menu._refresh_explorer_scene_state(state)
 
         rows = topology_lab_menu._rows_for_state(state)
@@ -1457,11 +1465,14 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_playability_preview_lines_show_invalid_topology_state(self) -> None:
         state = self._explorer_state(2)
-        state.play_settings = topology_lab_menu.ExplorerPlaygroundSettings(
-            board_dims=(5, 4)
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(5, 4)),
         )
-        state.explorer_profile = sphere_profile_2d()
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            sphere_profile_2d(),
+        )
         topology_lab_menu._refresh_explorer_scene_state(state)
 
         lines = topology_lab_menu._workspace_preview_lines(
@@ -2127,11 +2138,14 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_launch_play_preview_3d_invalid_preview_blocks_runtime(self) -> None:
         state = self._explorer_state(3)
-        state.play_settings = topology_lab_menu.ExplorerPlaygroundSettings(
-            board_dims=(4, 5, 6)
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(4, 5, 6)),
         )
-        state.explorer_profile = self._invalid_explorer_profile(3)
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            self._invalid_explorer_profile(3),
+        )
         topology_lab_menu._refresh_explorer_scene_state(state)
         self.assertIsNotNone(state.scene_preview_error)
         screen = pygame.Surface((640, 480))
@@ -2761,10 +2775,9 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_workspace_preview_lines_include_hover_and_selected_glue(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
-        state.selected_boundary_index = 1
+        topology_lab_controls_panel.set_selected_boundary_index(state, 1)
         state.hovered_boundary_index = 4
-        state.selected_glue_id = "glue_001"
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.set_selected_glue_id(state, "glue_001")
         lines = topology_lab_menu._workspace_preview_lines(
             state,
             preview={
@@ -2854,10 +2867,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         self,
     ) -> None:
         state = self._explorer_state(3)
-        state.play_settings = topology_lab_menu.ExplorerPlaygroundSettings(
-            board_dims=(4, 5, 6)
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(4, 5, 6)),
         )
-        topology_lab_menu._sync_canonical_playground_state(state)
         topology_lab_menu._refresh_explorer_scene_state(state)
 
         topology_lab_menu._update_explorer_draft(
@@ -2893,8 +2906,10 @@ class TestTopologyLabMenu(unittest.TestCase):
             target=BoundaryRef(dimension=3, axis=2, side="+"),
             transform=BoundaryTransform(permutation=(1, 0), signs=(-1, 1)),
         )
-        state.explorer_profile = ExplorerTopologyProfile(dimension=3, gluings=(glue,))
-        topology_lab_menu._sync_canonical_playground_state(state)
+        topology_lab_controls_panel.replace_explorer_profile(
+            state,
+            ExplorerTopologyProfile(dimension=3, gluings=(glue,)),
+        )
         state.mouse_targets = [
             topology_lab_menu.TopologyLabHitTarget(
                 kind="glue_pick",

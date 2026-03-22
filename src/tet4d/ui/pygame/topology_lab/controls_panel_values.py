@@ -22,7 +22,7 @@ from tet4d.engine.topology_explorer.presets import (
     explorer_presets_for_dimension,
 )
 
-from . import legacy_panel_support
+from . import legacy_normal_mode_support
 from .app import build_explorer_playground_settings
 from .common import (
     boundaries_for_dimension,
@@ -392,7 +392,7 @@ def _explorer_row_value_text(state: TopologyLabState, row: _RowSpec) -> str | No
 
 
 def _legacy_row_value_text(state: TopologyLabState, row: _RowSpec) -> str | None:
-    return legacy_panel_support.legacy_row_value_text(
+    return legacy_normal_mode_support.legacy_row_value_text(
         state,
         key=row.key,
         axis=row.axis,

@@ -685,7 +685,7 @@ def _hint_lines_for_state(state) -> tuple[str, ...]:
     if not _uses_general_explorer_editor(state):
         return (
             *_LAB_HINTS,
-            "Legacy compatibility: Normal Game keeps the retained profile rows and export bridge; Explorer Playground is the primary editor.",
+            "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Explorer Playground is the primary editor.",
         )
     gameplay = _gameplay_bindings_for_dimension(state.dimension)
     explorer = _explorer_bindings_for_dimension(state.dimension)
