@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 
 from .scene_state import (
+    PANE_CONTROLS,
     TopologyLabState,
     WORKSPACE_EDITOR,
     WORKSPACE_SANDBOX,
@@ -48,8 +49,9 @@ def _workspace_context_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
     workspace_name = active_workspace_name(state)
     if workspace_name == WORKSPACE_EDITOR:
         return (
-            _RowSpec("editor_tool", "Editor Tool"),
+            _RowSpec("editor_tool", "Tool"),
             _RowSpec("editor_trace", "Trace"),
+            _RowSpec("editor_probe_neighbors", "Probe Neighbors"),
         )
     if workspace_name == WORKSPACE_SANDBOX:
         return (_RowSpec("sandbox_neighbor_search", "Neighbors"),)
@@ -70,7 +72,7 @@ def _board_dimension_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
 
 
 def _explorer_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
-    rows = [_RowSpec("gameplay_mode", "Workspace Path")]
+    rows = [_RowSpec("gameplay_mode", "Path")]
     rows.extend(_workspace_context_rows(state))
     rows.extend(_board_dimension_rows(state))
     rows.extend(
@@ -136,6 +138,8 @@ def _legacy_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
 
 def _rows_for_state(state: TopologyLabState) -> tuple[_RowSpec, ...]:
     if uses_general_explorer_editor(state):
+        if state.active_pane != PANE_CONTROLS:
+            return _workspace_context_rows(state)
         return _explorer_rows(state)
     return _legacy_rows(state)
 

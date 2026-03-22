@@ -53,8 +53,8 @@ PANE_CONTROLS = "controls"
 PANE_SCENE = "scene"
 TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
 PANE_LABELS = {
-    PANE_CONTROLS: "Analysis View",
-    PANE_SCENE: "Explorer Editor",
+    PANE_CONTROLS: "Diagnostics",
+    PANE_SCENE: "Workspace",
 }
 TOPOLOGY_LAB_WORKSPACES = (
     WORKSPACE_EDITOR,
@@ -116,6 +116,7 @@ class TopologyPlaygroundState:
     dirty: bool = False
     mouse_targets: list[Any] | None = None
     probe_show_trace: bool = True
+    probe_show_neighbors: bool = False
     probe_frame_permutation: tuple[int, ...] | None = None
     probe_frame_signs: tuple[int, ...] | None = None
     active_tool: str = TOOL_EDIT
@@ -327,6 +328,7 @@ def _runtime_probe_state_from_ui(
         path=path,
         trace=trace,
         show_trace=probe_trace_visible(state),
+        show_neighbors=probe_neighbors_visible(state),
         highlighted_gluing=highlighted_gluing,
         frame_permutation=frame_permutation,
         frame_signs=frame_signs,
@@ -855,6 +857,13 @@ def probe_trace_visible(state: TopologyPlaygroundState) -> bool:
     return bool(state.probe_show_trace)
 
 
+def probe_neighbors_visible(state: TopologyPlaygroundState) -> bool:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        return bool(runtime_state.probe_state.show_neighbors)
+    return bool(state.probe_show_neighbors)
+
+
 def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
@@ -913,6 +922,7 @@ def replace_probe_state(
                 path=normalized_path,
                 trace=normalized_trace,
                 show_trace=probe_trace_visible(state),
+                show_neighbors=probe_neighbors_visible(state),
                 highlighted_gluing=normalized_highlight,
                 frame_permutation=normalized_permutation,
                 frame_signs=normalized_signs,
@@ -920,6 +930,7 @@ def replace_probe_state(
         )
         return
     state.probe_show_trace = probe_trace_visible(state)
+    state.probe_show_neighbors = probe_neighbors_visible(state)
     state.probe_frame_permutation = normalized_permutation
     state.probe_frame_signs = normalized_signs
     state.highlighted_glue_id = normalized_highlight
@@ -941,6 +952,26 @@ def set_probe_trace_visible(
         )
         return
     state.probe_show_trace = normalized_enabled
+    if uses_general_explorer_editor(state):
+        sync_canonical_playground_state(state)
+
+
+def set_probe_neighbors_visible(
+    state: TopologyPlaygroundState,
+    enabled: bool,
+) -> None:
+    normalized_enabled = bool(enabled)
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        _replace_canonical_state(
+            state,
+            probe_state=replace(
+                runtime_state.probe_state,
+                show_neighbors=normalized_enabled,
+            ),
+        )
+        return
+    state.probe_show_neighbors = normalized_enabled
     if uses_general_explorer_editor(state):
         sync_canonical_playground_state(state)
 
@@ -999,6 +1030,7 @@ def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]
 
 def _normalize_probe_support_state(state: TopologyPlaygroundState) -> None:
     state.probe_show_trace = bool(state.probe_show_trace)
+    state.probe_show_neighbors = bool(state.probe_show_neighbors)
     state.probe_frame_permutation, state.probe_frame_signs = (
         _normalize_probe_frame_value(
             state.dimension,
@@ -1172,6 +1204,7 @@ __all__ = [
     "current_probe_frame",
     "current_probe_path",
     "current_probe_trace",
+    "probe_neighbors_visible",
     "probe_trace_visible",
     "current_selected_boundary_index",
     "current_selected_glue_id",
@@ -1187,6 +1220,7 @@ __all__ = [
     "select_projection_coord",
     "reset_probe_state",
     "scene_pane_active",
+    "set_probe_neighbors_visible",
     "set_probe_trace_visible",
     "set_active_tool",
     "set_active_workspace",

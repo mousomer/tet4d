@@ -439,10 +439,12 @@ def run_settings_hub_menu(
     *,
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
+    initial_row_key: str | None = None,
 ) -> SettingsHubResult:
     state = build_unified_settings_state(
         audio_settings=audio_settings,
         display_settings=display_settings,
+        initial_row_key=initial_row_key,
     )
     ok_layout, msg_layout = _validate_unified_layout_against_policy()
     if not ok_layout:

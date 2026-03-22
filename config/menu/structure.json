@@ -4,9 +4,11 @@
     "pause": "pause_root"
   },
   "launcher_subtitles": {
-    "launcher_root": "Play, continue, or launch Tutorials; then adjust Settings, Controls, Help, and Bot options.",
-    "launcher_play": "Minimal play launcher: safe presets, last custom topology, or open Explorer Playground.",
-    "launcher_tutorials": "Select a guided tutorial pack.",
+    "launcher_root": "Play, continue, open Tutorials, or jump straight into the Topology Playground.",
+    "launcher_play": "Play a standard run, reopen the last custom topology, or use play-adjacent tools.",
+    "launcher_tutorials": "Choose guided learning, controls reference, or support.",
+    "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
+    "launcher_settings_root": "Open game, display, audio, controls, profiles, or advanced settings.",
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {},
@@ -30,7 +32,7 @@
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
         "Enter on width/height/seed to type large numeric values",
-        "Gameplay -> Advanced gameplay... controls rotation mode, kick permissiveness, 2D/ND rotation tween speeds, translation tween speed, auto speed-up, and lines-per-level",
+        "Game -> Advanced gameplay... controls rotation mode, kick permissiveness, 2D/ND rotation tween speeds, translation tween speed, auto speed-up, and lines-per-level",
         "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
@@ -94,28 +96,13 @@
         },
         {
           "type": "action",
+          "label": "Topology Playground",
+          "action_id": "topology_lab"
+        },
+        {
+          "type": "submenu",
           "label": "Settings",
-          "action_id": "settings"
-        },
-        {
-          "type": "action",
-          "label": "Controls",
-          "action_id": "keybindings"
-        },
-        {
-          "type": "action",
-          "label": "Help",
-          "action_id": "help"
-        },
-        {
-          "type": "action",
-          "label": "Leaderboard",
-          "action_id": "leaderboard"
-        },
-        {
-          "type": "action",
-          "label": "Bot",
-          "action_id": "bot_options"
+          "menu_id": "launcher_settings_root"
         },
         {
           "type": "action",
@@ -149,13 +136,43 @@
         },
         {
           "type": "action",
-          "label": "Open Explorer Playground",
-          "action_id": "topology_lab"
+          "label": "Bot",
+          "action_id": "bot_options"
+        },
+        {
+          "type": "action",
+          "label": "Leaderboard",
+          "action_id": "leaderboard"
         }
       ]
     },
     "launcher_tutorials": {
       "title": "Tutorials",
+      "items": [
+        {
+          "type": "submenu",
+          "label": "Interactive Tutorials",
+          "menu_id": "launcher_tutorials_interactive"
+        },
+        {
+          "type": "action",
+          "label": "How to Play",
+          "action_id": "tutorial_how_to_play"
+        },
+        {
+          "type": "action",
+          "label": "Controls Reference",
+          "action_id": "tutorial_controls_reference"
+        },
+        {
+          "type": "action",
+          "label": "Help / FAQ",
+          "action_id": "help"
+        }
+      ]
+    },
+    "launcher_tutorials_interactive": {
+      "title": "Interactive Tutorials",
       "items": [
         {
           "type": "action",
@@ -171,6 +188,41 @@
           "type": "action",
           "label": "Play 4D Tutorial",
           "action_id": "tutorial_4d"
+        }
+      ]
+    },
+    "launcher_settings_root": {
+      "title": "Settings",
+      "items": [
+        {
+          "type": "action",
+          "label": "Game",
+          "action_id": "settings"
+        },
+        {
+          "type": "action",
+          "label": "Display",
+          "action_id": "settings_display"
+        },
+        {
+          "type": "action",
+          "label": "Audio",
+          "action_id": "settings_audio"
+        },
+        {
+          "type": "action",
+          "label": "Controls",
+          "action_id": "keybindings"
+        },
+        {
+          "type": "action",
+          "label": "Profiles",
+          "action_id": "settings_profiles"
+        },
+        {
+          "type": "action",
+          "label": "Advanced",
+          "action_id": "settings_advanced"
         }
       ]
     },
@@ -228,7 +280,7 @@
   "settings_hub_rows": [
     "Audio",
     "Display",
-    "Gameplay",
+    "Game",
     "Analytics",
     "Back"
   ],
@@ -283,7 +335,7 @@
     },
     {
       "kind": "header",
-      "label": "Gameplay"
+      "label": "Game"
     },
     {
       "kind": "item",
@@ -555,8 +607,8 @@
     },
     {
       "id": "gameplay",
-      "label": "Gameplay",
-      "description": "Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning)."
+      "label": "Game",
+      "description": "Shared run controls across 2D/3D/4D, including seed and random-type selection."
     },
     {
       "id": "analytics",
@@ -567,6 +619,16 @@
       "id": "profiles",
       "label": "Profiles",
       "description": "Keybinding profile selection, creation, rename, delete, save, and load."
+    },
+    {
+      "id": "controls",
+      "label": "Controls",
+      "description": "Persistent input configuration, including keybindings, controller mapping, and input preferences."
+    },
+    {
+      "id": "advanced",
+      "label": "Advanced",
+      "description": "Advanced gameplay tuning such as rotation mode, kick permissiveness, animation timings, and lines-per-level."
     },
     {
       "id": "bot",
@@ -598,7 +660,7 @@
       "top_level": true
     },
     "gameplay": {
-      "field_count": 4,
+      "field_count": 2,
       "action_count": 0,
       "mode_specific": false,
       "top_level": true
@@ -613,6 +675,18 @@
       "field_count": 3,
       "action_count": 6,
       "mode_specific": true,
+      "top_level": false
+    },
+    "controls": {
+      "field_count": 4,
+      "action_count": 4,
+      "mode_specific": false,
+      "top_level": false
+    },
+    "advanced": {
+      "field_count": 7,
+      "action_count": 0,
+      "mode_specific": false,
       "top_level": false
     },
     "bot": {
@@ -633,7 +707,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type.",
-      "Use Play -> Open Explorer Playground or Play Last Custom Topology for custom topology.",
+      "Use Topology Playground or Play Last Custom Topology for custom topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
@@ -641,7 +715,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type.",
-      "Use Play -> Open Explorer Playground or Play Last Custom Topology for custom topology.",
+      "Use Topology Playground or Play Last Custom Topology for custom topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ],
@@ -649,7 +723,7 @@
       "Esc = back, Q = quit",
       "F7 dry-run verify (bot, no graphics)",
       "Use Main Menu -> Settings for Random type.",
-      "Use Play -> Open Explorer Playground or Play Last Custom Topology for custom topology.",
+      "Use Topology Playground or Play Last Custom Topology for custom topology.",
       "Use Main Menu -> Bot Options / Keybindings for shared controls.",
       "Controls are shown in-game on the side panel."
     ]

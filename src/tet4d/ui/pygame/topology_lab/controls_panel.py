@@ -129,6 +129,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_probe_coord,
     current_probe_path,
     current_probe_trace,
+    probe_neighbors_visible,
     ensure_probe_state as _ensure_probe_state,
     probe_trace_visible,
     cycle_active_pane,
@@ -141,6 +142,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     reset_probe_state,
     set_dirty,
     set_active_tool,
+    set_probe_neighbors_visible,
     set_probe_trace_visible,
     set_highlighted_glue_id,
     set_selected_boundary_index,
@@ -1475,12 +1477,27 @@ def _toggle_editor_trace_row(state: _TopologyLabState) -> None:
     )
 
 
+def _toggle_editor_probe_neighbors_row(state: _TopologyLabState) -> None:
+    set_probe_neighbors_visible(state, not probe_neighbors_visible(state))
+    _set_status(
+        state,
+        (
+            "Editor probe neighbors shown"
+            if probe_neighbors_visible(state)
+            else "Editor probe neighbors hidden"
+        ),
+    )
+
+
 def _adjust_explorer_scalar_row(state: _TopologyLabState, key: str, step: int) -> bool:
     if key == "editor_tool":
         _cycle_editor_tool_row(state, step)
         return True
     if key == "editor_trace":
         _toggle_editor_trace_row(state)
+        return True
+    if key == "editor_probe_neighbors":
+        _toggle_editor_probe_neighbors_row(state)
         return True
     simple_handlers = {
         "piece_set": lambda: _set_explorer_piece_set_index(state, step),

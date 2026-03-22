@@ -337,6 +337,7 @@ class TopologyPlaygroundProbeState:
     path: tuple[Coord, ...] = ()
     trace: tuple[str, ...] = ()
     show_trace: bool = True
+    show_neighbors: bool = False
     highlighted_gluing: str | None = None
     frame_permutation: tuple[int, ...] | None = None
     frame_signs: tuple[int, ...] | None = None
@@ -373,6 +374,7 @@ class TopologyPlaygroundProbeState:
         self.path = tuple(normalized_path)
         self.trace = tuple(str(entry) for entry in self.trace)
         self.show_trace = bool(self.show_trace)
+        self.show_neighbors = bool(self.show_neighbors)
         self.highlighted_gluing = (
             None if self.highlighted_gluing is None else str(self.highlighted_gluing)
         )

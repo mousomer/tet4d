@@ -4,14 +4,18 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 1. Launcher and Menus
 
-- Unified launcher: `Play`,`Continue`,`Settings`,`Controls`,`Help`,`Bot`,`Quit`.
-- Pause `Settings` reuses the same shared settings hub as launcher (`Audio`,`Display`,`Analytics`,`Save`,`Reset`,`Back`).
+- Unified launcher root: `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`,`Quit`.
+- `Tutorials` is the learning/support branch: `Interactive Tutorials`,`How to Play`,`Controls Reference`,`Help / FAQ`.
+- `Settings` is the configuration branch: `Game`,`Display`,`Audio`,`Controls`,`Profiles`,`Advanced`.
+- `Controls Reference` is a help/reference surface, while `Settings -> Controls` is persistent input configuration.
+- `Leaderboard` and `Bot` are play-adjacent launcher entries under `Play`, not root destinations and not `Settings` entries.
+- Pause `Settings` reuses the same shared settings hub as launcher (`Audio`,`Display`,`Game`,`Analytics`,`Save`,`Reset`,`Back`).
 - Settings hub rows are fully config-driven from `config/menu/structure.json` (`settings_hub_layout_rows`).
 - Shared `Settings` menu (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, save/reset.
-  - Gameplay: random type, topology advanced, and advanced gameplay controls
-    including kick permissiveness, auto speed-up, and lines-per-level.
+  - Game: random type and game seed.
+  - Advanced: advanced gameplay controls including rotation mode, kick permissiveness, auto speed-up, and lines-per-level.
   - Analytics: score-analyzer logging toggle, save/reset.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/ui/pygame/frontend_nd_setup.py`) with gameplay/input routing kept separately in `src/tet4d/ui/pygame/frontend_nd_state.py` and `src/tet4d/ui/pygame/frontend_nd_input.py`.
@@ -207,6 +211,3 @@ User-facing feature map for the shipped `tet4d` experience.
   - `packaging/scripts/build_windows.ps1`
 - CI packaging matrix is available in `.github/workflows/release-packaging.yml`.
 - Packaging guidance and output artifact conventions are documented in `docs/RELEASE_INSTALLERS.md`.
-
-
-

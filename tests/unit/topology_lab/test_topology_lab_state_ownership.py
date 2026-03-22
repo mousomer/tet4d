@@ -15,6 +15,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_probe_coord,
     current_probe_path,
     current_probe_trace,
+    probe_neighbors_visible,
     replace_play_settings,
     replace_probe_state,
 )
@@ -181,6 +182,44 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             kwargs["neighbor_markers"],
             tuple(topology_lab_menu._active_workspace_neighbor_markers(state)),
         )
+
+    def test_editor_probe_neighbor_overlay_uses_editor_probe_without_hiding_probe(self) -> None:
+        state = self._state()
+        replace_probe_state(
+            state,
+            coord=(1, 1),
+            trace=["probe-step"],
+            path=[(1, 1)],
+            highlighted_glue_id=None,
+        )
+        topology_lab_menu._set_probe_neighbors_visible(state, True)
+        boundaries = topology_lab_menu.boundaries_for_dimension(2)
+        active_glue_ids = {boundary.label: "free" for boundary in boundaries}
+
+        with patch.object(
+            topology_lab_workspace_shell, "draw_scene_2d", return_value=[]
+        ) as draw_scene:
+            topology_lab_menu._draw_explorer_scene(
+                pygame.Surface((320, 240)),
+                fonts=None,
+                state=state,
+                area=pygame.Rect(0, 0, 100, 100),
+                boundaries=boundaries,
+                source_boundary=boundaries[0],
+                target_boundary=boundaries[1],
+                active_glue_ids=active_glue_ids,
+                basis_arrows=[],
+                preview_dims=topology_lab_menu._board_dims_for_state(state),
+                sandbox_cells_payload=None,
+                sandbox_ok=None,
+                sandbox_message="",
+            )
+
+        kwargs = draw_scene.call_args.kwargs
+        self.assertTrue(probe_neighbors_visible(state))
+        self.assertEqual(kwargs["probe_coord"], current_probe_coord(state))
+        self.assertTrue(kwargs["neighbor_markers"])
+        self.assertEqual(kwargs["probe_path"], tuple(current_probe_path(state)))
 
     def test_sandbox_neighbor_search_toggle_hides_focus_overlay_but_keeps_sandbox_active(self) -> None:
         state = self._state()

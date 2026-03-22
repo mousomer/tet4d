@@ -37,6 +37,8 @@ reactivates them.
 - Probe movement, trace, and edit targeting must derive from the same canonical
   seam-aware Editor probe state.
 - `Trace` is an Editor-owned contextual control.
+- `Probe Neighbors` is a distinct Editor-owned contextual visualization option
+  derived from canonical probe state.
 - `Neighbors` is a Sandbox-owned contextual control.
 - Explorer behavior-changing controls must not be ad hoc. They belong to
   workspace selection, workspace tool selection, workspace-owned contextual
@@ -68,10 +70,15 @@ reactivates them.
   consistent before and after seam traversal.
 - The Editor probe/dot and its trace must work consistently in `2D`, `3D`, and
   `4D`.
-- Probe movement, trace, and edit targeting must stay aligned to the same
-  canonical seam-aware Editor probe state in every supported dimension.
+- Probe movement, trace, edit targeting, and probe-neighbor overlay derivation
+  must stay aligned to the same canonical seam-aware Editor probe state in
+  every supported dimension.
 - Toggling `Trace` must not disable probe movement or hide the probe/dot
   itself.
+- The Editor probe must render as a dot, not as a sandbox-style box, in `2D`,
+  `3D`, and `4D`.
+- `Probe Neighbors`, when enabled, must render as smaller subordinate dots
+  around the main probe and must not hide the probe/dot itself.
 - Visible tool wording should prefer `Probe` for the non-mutating Editor probe
   flow.
 
@@ -88,6 +95,8 @@ reactivates them.
   the Explorer `neighbor search` control is explicitly enabled.
 - Neighbor markers must not appear by default, must not replace or hide the
   sandbox piece, and must remain visually distinct from sandbox piece cells.
+- Sandbox `Neighbors` and Editor `Probe Neighbors` are distinct overlays with
+  distinct ownership and must stay documented and implemented separately.
 
 ### Shell invariants
 
@@ -101,22 +110,23 @@ reactivates them.
 
 ## Current phase focus
 
-The current topology-playground phase is no longer shell control-surface
-normalization. The shell contract is already stabilized.
+The current topology-playground phase is the frozen visible shell redesign.
 
-The current phase is:
+This phase is intentionally limited to:
 
-- compatibility-seam retirement,
-- shadow-state retirement,
-- continued reduction of giant-module risk,
-- and manifest/doc drift prevention under a stable Explorer shell.
+- launcher first-layer menu cleanup,
+- topology-playground shell layout/copy cleanup,
+- diagnostics demotion behind secondary surfaces,
+- and manifest/doc/test drift prevention while the visible shell contract is
+  being frozen.
 
-This means future work should focus on:
-- deleting retained synchronized shell projections once their readers are gone,
-- narrowing or retiring transitional legacy seams,
-- reducing compatibility mirrors and stale aliases,
-- continuing structural cleanup in the remaining large topology-lab modules,
-- while keeping runtime authority canonical and visible shell behavior stable.
+This phase must preserve the settled architecture rules above.
+It must not reopen the accepted `Editor` / `Sandbox` / `Play` workspace model,
+the accepted sandbox-first entry path, the canonical runtime-selector authority,
+or the settled Play drop-policy contract.
+
+Structural module simplification remains deferred until the visible shell
+contract is stable.
 
 ## Still transitional
 
@@ -151,7 +161,8 @@ This means future work should focus on:
   presentation, or export orchestration.
 - `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` still carry follow-up
-  decomposition and compatibility debt.
+  decomposition and compatibility debt, but that work is explicitly deferred
+  until after the visible shell redesign is stable.
 - Unsafe-topology cross-surface drift still exists in some paths, especially
   where sandbox behavior is stricter than gameplay or preview-invalid
   dimension-pairing behavior remains confusing.
@@ -181,24 +192,20 @@ This means future work should focus on:
 
 ## Current active priorities
 
-- Continue deleting retained synchronized shell projections once their live
-  readers, compatibility tests, and diagnostics paths are migrated, without
-  reopening already retired probe-shadow-state seams in `scene_state.py`.
+- Freeze the visible launcher first layer to `Play`, `Continue`, `Tutorials`,
+- `Topology Playground`, `Settings`, and `Quit`.
+- Keep `Tutorials` as the learning/support umbrella without collapsing
+  tutorials, help, and controls reference into one ambiguous surface.
+- Keep `Settings -> Controls` for persistent input configuration only, and keep
+  controls reference/help reachable through the `Tutorials` learning/support
+  surface rather than burying help inside `Settings`.
+- Keep `Leaderboard` and `Bot` out of the launcher root and out of
+  `Settings`; they belong to play-adjacent launch/setup flow instead.
+- Freeze the topology-playground visible shell around the compact top bar,
+  contextual left sidebar, larger center workspace, small right helper, and
+  compact bottom strip.
+- Remove or demote old default-primary verbose status and diagnostic wording.
 - Keep canonical runtime state as the only explorer-path input authority.
-- Keep legacy Normal Game adjustment logic narrow inside `controls_panel.py`;
-  do not let it become a new generic legacy bucket.
-- Continue reducing structural risk in
-  `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
-  `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
-- Continue removing legacy compatibility mirrors and stale aliases only where
-  cleanup is grounded by tests and the current architecture contract.
-- Reassess tool-routing and shell-cache surfaces (`active_tool`,
-  `editor_tool`, `play_settings`, `sandbox`) only as explicit cache/routing
-  work rather than by reintroducing shadow runtime state.
-- Continue focused Play regression coverage for non-trivial `Y`-seam topology
-  families and related launch/runtime invariants.
-- Continue unsafe-topology contract cleanup where sandbox/gameplay/preview still
-  disagree on valid transport behavior.
 - Keep launcher/setup surfaces minimal for topology and keep custom-topology
   editing/play flowing through the Explorer Playground shell.
 - Update manifests/docs in the same pass as code changes, prevent drift, and
@@ -211,6 +218,8 @@ This means future work should focus on:
 - Do not silently reopen the settled Play drop-policy distinction between
   deliberate translation and drop continuation unless a regression proves it
   wrong.
+- Do not start deeper `controls_panel.py` or `scene_state.py` simplification as
+  the goal of the visible-shell pass.
 - Do not redesign Sandbox beyond focused visibility/framing, neighbor-toggle,
   or coupling fixes required by current regressions.
 - Do not treat historical manifests as active execution authority.
