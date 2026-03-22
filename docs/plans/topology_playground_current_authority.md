@@ -8,6 +8,16 @@ questions. Older topology-playground manifests, stage plans, audits, and
 historical summaries are background only unless a future task explicitly
 reactivates them.
 
+The active plan layer is intentionally small:
+
+- `docs/plans/topology_playground_current_authority.md`
+- `docs/plans/topology_playground_shell_redesign_spec.md`
+
+The older explorer-topology phase docs, menu audits/cleanup plans, startup
+audits/optimization passes, playability-signaling pass, and unsafe-topology
+correctness plans now live under `docs/history/topology_playground/`. The
+matching `docs/plans/` paths are redirect stubs only.
+
 ## Instruction precedence
 
 - This manifest and any newer user or developer instruction for the current

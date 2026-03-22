@@ -1,15 +1,7 @@
 # Explorer Topology Phase 6
 
-## Goal
-Add engine-owned diagnostics to explorer topology previews without changing movement semantics.
+Archived note: this plan moved to
+`docs/history/topology_playground/explorer_topology_phase6.md`.
 
-## Implemented
-1. `compile_explorer_topology_preview()` now emits derived warning strings.
-2. Warnings currently cover disconnected movement graphs, orientation-reversing seam transforms, and cross-axis seam pairings.
-3. `compile_explorer_topology_preview()` also exports engine-owned tangent-basis arrow mappings for each gluing, including signed axis-pair transforms.
-4. Topology Lab renders both warnings and the arrow-basis mapping directly from the preview payload.
-
-## Non-goals
-- no legality changes
-- no new UI-only validation rules
-- no live gameplay routing changes
+Current topology-playground authority lives in
+`docs/plans/topology_playground_current_authority.md`.
