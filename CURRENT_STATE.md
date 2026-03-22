@@ -31,10 +31,13 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology Playground Editor unification Stage 2 is now live for the migrated shell: the visible top-level workspace model is `Editor` / `Sandbox` / `Play`, Editor keeps its own remembered tool state, movement in Editor always updates the safe probe/selection target, and topology mutation stays behind explicit Editor-tool actions.
 - Explorer Playground workspace stabilization follow-up (2026-03-20): Editor probe/dot and trace now stay live even while the Edit tool is active, Editor trace is an explicit on/off control, Sandbox focus/anchor now tracks a visible piece cell so `3D`/`4D` piece rendering survives entry and movement even when neighbor overlay is off, and the migrated shell now shows an explicit external right-side helper keyed to minimal movement/rotation guidance plus short workspace context.
 - Visible shell redesign phase lock (2026-03-22): the active topology-playground phase is now the frozen visible shell redesign rather than stable-shell cleanup. The launcher first layer is being reduced to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, and `Quit`; the playground shell is being frozen around a compact top bar, contextual left sidebar, larger center workspace, small right helper, and compact bottom strip; and deeper `controls_panel.py` / `scene_state.py` simplification is explicitly deferred until this visible shell contract is stable.
+- Visible shell contract freeze follow-up (2026-03-22): the shell wording is now explicitly the visible-shell redesign wording rather than the older stable-shell-cleanup wording. The compact top bar keeps `Topology Playground`, `Editor` / `Sandbox` / `Play`, and the short validity-chip contract `Valid` / `Needs Fix` / `Unsafe`; the right helper stays keys-only plus at most one short workspace/tool line; and the bottom strip is constrained to compact status chips plus compact action buttons instead of prose hints.
 - Launcher IA clarification pass (2026-03-22): `Tutorials` now stays a first-class learning/support destination with an explicit internal split between `Interactive Tutorials`, `How to Play`, `Controls Reference`, and `Help / FAQ`, while `Settings` now names `Game`, `Display`, `Audio`, `Controls`, `Profiles`, and `Advanced` without collapsing controls reference into controls settings or burying help under `Settings`.
 - Launcher play-adjacent placement correction (2026-03-22): `Leaderboard` and `Bot` are no longer launcher-root or `Settings` entries in the visible-shell contract; they now live in the play-adjacent launcher flow while `Settings` stays focused on persistent preferences.
 - Visible-shell probe contract amendment (2026-03-22): Editor `Probe` now explicitly owns a large dot render in `2D` / `3D` / `4D` plus an optional `Probe Neighbors` dot overlay derived from canonical probe state, while Sandbox keeps its separate `Neighbors` control and box-shaped piece rendering. This amendment is part of the same frozen visible-shell phase and does not reopen deeper module simplification.
 - Projection probe-glyph reuse follow-up (2026-03-22): the shared `3D` / `4D` projection renderer now reuses the existing `2D` probe, trace, and probe-neighbor glyph helpers instead of maintaining a second copy of that circle/dot drawing logic, keeping the canonical probe visual language aligned across dimensions without a deeper scene-module rewrite.
+- Probe guidance simplification follow-up (2026-03-22): the reduced `3D` / `4D` projection surface is intentional for the visible-shell phase. The shell now relies on the movable probe plus concise full translation-key guidance rather than the older per-panel movement-preview legends, and the shared probe trace visual language is now the connecting line without intermediate path dots.
+- Direct topology-lab CLI follow-up (2026-03-22): direct Topology Playground launch is now available through the unified launcher wrapper via `cli/front.py --topology-playground [2|3|4]`, while `src/tet4d/ui/pygame/topology_lab/__main__.py` remains as a thin compatibility delegate for `python -m tet4d.ui.pygame.topology_lab [2|3|4]` with the same dimension validation.
 - Explorer internal cleanup and decomposition pass (2026-03-21): workspace-shell copy/layout/helper routing now lives in `src/tet4d/ui/pygame/topology_lab/workspace_shell.py`, contextual row ownership now lives in `src/tet4d/ui/pygame/topology_lab/controls_panel_rows.py`, probe-facing action ids now use explicit Probe naming internally, and the then-remaining `inspect_boundary` / `TOOL_INSPECT` seam was demoted to explicit compatibility debt rather than preferred terminology.
 - Explorer compatibility-seam retirement pass (2026-03-22): shell-facing row values/playability/context formatting now live in `src/tet4d/ui/pygame/topology_lab/controls_panel_values.py`, `workspace_shell.py` now consumes stable scene/value helpers instead of private helpers from `controls_panel.py`, probe-readiness plus pane-state selectors now live in `scene_state.py`, and that intermediate pass narrowed legacy inspect naming to a smaller compatibility surface before the final Probe-naming cleanup.
 - Explorer probe-naming finalization pass (2026-03-22): canonical runtime/UI tool normalization now uses the internal tool id `probe`, the legacy serialized/input token `inspect_boundary` is accepted only at compatibility-normalization boundaries, the `TOOL_INSPECT` / `tool_is_inspect(...)` export surface is retired from the active topology-lab flow, and projection info-panel wording now deliberately says `Probe`.
@@ -68,7 +71,7 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 183` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 184` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -76,7 +79,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.92`
+1. `delivery_size_pressure = 1.93`
 2. `code_balance = 1.19`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -315,18 +318,18 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3165` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3180` real LOC
 2. `scripts/arch_metrics.py`: `1869` real LOC
 3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1658` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 5. `tools/governance/validate_project_contracts.py`: `1177` real LOC
 6. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1073` real LOC
-7. `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `1053` real LOC
+7. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `989` real LOC
 8. `tools/governance/generate_configuration_reference.py`: `982` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 805/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 823/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

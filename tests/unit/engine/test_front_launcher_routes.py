@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+import io
+from contextlib import redirect_stdout
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -11,9 +13,46 @@ from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
+from tet4d.ui.pygame.topology_lab import entrypoint as topology_lab_entrypoint
 
 
 class TestFrontLauncherRoutes(unittest.TestCase):
+    def test_parse_topology_playground_cli_defaults_dimension_when_flag_has_no_value(
+        self,
+    ) -> None:
+        args = front._parse_cli_args(["--topology-playground"])
+
+        self.assertEqual(args.topology_playground, "2")
+
+    def test_parse_topology_playground_dimension_accepts_supported_values(self) -> None:
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("2"), 2)
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("3"), 3)
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("4"), 4)
+
+    def test_parse_topology_playground_dimension_rejects_invalid_values_cleanly(
+        self,
+    ) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer), self.assertRaises(SystemExit) as raised:
+            topology_lab_entrypoint.parse_topology_playground_dimension("foo")
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn("Unsupported dimension: foo. Use 2, 3, or 4.", buffer.getvalue())
+
+    def test_parse_topology_playground_dimension_rejects_unsupported_numbers_cleanly(
+        self,
+    ) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer), self.assertRaises(SystemExit) as raised:
+            topology_lab_entrypoint.parse_topology_playground_dimension("5")
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn("Unsupported dimension: 5. Use 2, 3, or 4.", buffer.getvalue())
+
+    def test_main_can_launch_topology_playground_directly_from_cli_option(self) -> None:
+        with patch.object(front, "run_direct_topology_playground") as run_direct:
+            front.main(["--topology-playground", "3"])
+
+        run_direct.assert_called_once_with(3)
+
     def _run_live_topology_lab_launcher_action(
         self,
         *,

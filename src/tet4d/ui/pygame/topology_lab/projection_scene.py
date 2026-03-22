@@ -490,8 +490,6 @@ def _draw_info_panel(
     active_tool: str | None,
     sandbox_valid: bool | None,
     sandbox_message: str,
-    cell_legend: Sequence[str],
-    piece_legend: Sequence[str],
 ) -> None:
     pygame.draw.rect(surface, _BACKGROUND, rect, border_radius=10)
     pygame.draw.rect(surface, _BORDER, rect, 1, border_radius=10)
@@ -507,10 +505,6 @@ def _draw_info_panel(
         lines.append("Sandbox: " + ("valid" if sandbox_valid else "rejected"))
     if sandbox_message:
         lines.append(sandbox_message)
-    if piece_legend:
-        lines.append("Moves: " + "  ".join(piece_legend[:3]))
-    elif cell_legend:
-        lines.append("Neighbors: " + "  ".join(cell_legend[:3]))
     y_pos = rect.y + 10
     for index, line in enumerate(lines):
         text = fonts.hint_font.render(
@@ -824,8 +818,6 @@ def _draw_projection_panels(
             active_tool=active_tool,
             sandbox_valid=sandbox_valid,
             sandbox_message=sandbox_message,
-            cell_legend=[],
-            piece_legend=[],
         )
     return hits
 
@@ -857,14 +849,7 @@ def draw_projection_scene(
 ) -> list[TopologyLabHitTarget]:
     dims = tuple(int(value) for value in preview_dims)
     selected_coord = _selected_projection_coord(dimension, probe_coord)
-    _draw_projection_heading(
-        surface,
-        fonts,
-        area=area,
-        dimension=dimension,
-        selected_coord=selected_coord,
-    )
-    header_height = 70 if dimension == 4 else 64
+    header_height = 54 if dimension == 4 else 48
     ribbon_rect = pygame.Rect(area.x, area.y, area.width, header_height)
     hits = _draw_projection_ribbon(
         surface,
@@ -890,7 +875,7 @@ def draw_projection_scene(
             surface,
             fonts,
             panels=panels,
-            info_rect=info_rect,
+            info_rect=None,
             dims=dims,
             dimension=dimension,
             selected_coord=selected_coord,

@@ -76,7 +76,7 @@ from .state_ownership import (
     current_sandbox_focus_path as _current_sandbox_focus_path,
     current_sandbox_focus_trace as _current_sandbox_focus_trace,
 )
-from .transform_editor import draw_action_buttons, draw_transform_editor
+from .transform_editor import draw_transform_editor
 from .camera_controls import scene_camera_availability
 
 
@@ -150,16 +150,16 @@ def _explorer_workspace_layout(
     workspace_w = panel_w - menu_w - 30
     header_h = 0
     tool_h = 0
-    actions_h = 34
+    actions_h = 36
     gap = 12
-    helper_w = max(168, int(workspace_w * 0.2))
-    helper_w = min(helper_w, max(168, workspace_w - gap - 420))
+    helper_w = max(148, int(workspace_w * 0.16))
+    helper_w = min(helper_w, max(148, workspace_w - gap - 500))
     main_w = workspace_w - helper_w - gap
-    if main_w < 360:
-        helper_w = max(152, workspace_w - gap - 360)
+    if main_w < 420:
+        helper_w = max(144, workspace_w - gap - 420)
         main_w = workspace_w - helper_w - gap
-    if main_w < 320:
-        helper_w = max(144, workspace_w - gap - 320)
+    if main_w < 360:
+        helper_w = max(136, workspace_w - gap - 360)
         main_w = workspace_w - helper_w - gap
     tool_rect = pygame.Rect(workspace_x, panel_y + 14 + header_h, workspace_w, tool_h)
     action_rect = pygame.Rect(
@@ -168,9 +168,9 @@ def _explorer_workspace_layout(
         main_w,
         actions_h,
     )
-    content_y = panel_y + 16
-    content_h = max(320, action_rect.y - gap - content_y)
-    editor_h = 148
+    content_y = panel_y + 12
+    content_h = max(340, action_rect.y - gap - content_y)
+    editor_h = 132
     top_h = max(260, content_h - editor_h - gap)
     editor_y = content_y + top_h + gap
     top_rect = pygame.Rect(workspace_x, content_y, main_w, top_h)
@@ -517,8 +517,8 @@ def _workspace_guidance_lines(state) -> list[str]:
             ]
         )
     lines = [context]
-    lines.extend(_compact_lines("Move: ", move_parts))
-    lines.extend(_compact_lines("Rotate: ", rotate_parts))
+    lines.extend(_compact_lines("Move ", move_parts))
+    lines.extend(_compact_lines("Turn ", rotate_parts))
     return lines
 
 
@@ -703,14 +703,6 @@ def _draw_explorer_workspace(
                 signs=draft.signs,
             )
         )
-    hits.extend(
-        draw_action_buttons(
-            screen,
-            fonts,
-            area=action_rect,
-            actions=_action_buttons_for_state(state),
-        )
-    )
     _ensure_probe_state(state)
     helper_lines = _workspace_guidance_lines(state)
     preview_body_rect = helper_rect.inflate(-10, -10)
@@ -730,37 +722,10 @@ def _hint_lines_for_state(state) -> tuple[str, ...]:
             *_LAB_HINTS,
             "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Explorer Playground is the primary editor.",
         )
-    gameplay = _gameplay_bindings_for_dimension(state.dimension)
-    explorer = _explorer_bindings_for_dimension(state.dimension)
-    pane_label = PANE_LABELS.get(state.active_pane, state.active_pane.title())
-    move_lines = [
-        f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",
-        f"Move Y: {format_key_tuple(explorer.get('move_up', ()))} / {format_key_tuple(explorer.get('move_down', ()))}",
-    ]
-    if state.dimension >= 3:
-        move_lines.append(
-            f"Move Z: {format_key_tuple(gameplay.get('move_z_neg', ()))} / {format_key_tuple(gameplay.get('move_z_pos', ()))}"
-        )
-    if state.dimension >= 4:
-        move_lines.append(
-            f"Move W: {format_key_tuple(gameplay.get('move_w_neg', ()))} / {format_key_tuple(gameplay.get('move_w_pos', ()))}"
-        )
-    lines = [
-        f"Pane: {pane_label}   Tab diagnostics   E/I tool   B Sandbox   P Play",
-        "F8 resets the current dimension's playground defaults",
-        *move_lines,
-    ]
+    lines = list(_workspace_helper_lines(state))
     if _controls_pane_active(state):
-        lines.append("Diagnostics are secondary; workspace controls stay primary.")
-    else:
-        lines.append("Workspace is primary; helper stays keys-only.")
+        lines.append(PANE_LABELS.get(state.active_pane, state.active_pane.title()))
     availability = scene_camera_availability(state.dimension)
     if availability.enabled:
-        lines.append(
-            "Projection sync: selecting a cell in any panel updates all visible slices "
-            "and movement previews together"
-        )
-    lines.extend(_workspace_helper_lines(state))
-    if tool_is_sandbox(state.active_tool):
-        lines.append("Sandbox tool: movement moves the piece; rotation keys rotate it.")
+        lines.append(f"{state.dimension}D synced")
     return tuple(lines)

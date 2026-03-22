@@ -73,10 +73,16 @@ reactivates them.
 - Probe movement, trace, edit targeting, and probe-neighbor overlay derivation
   must stay aligned to the same canonical seam-aware Editor probe state in
   every supported dimension.
+- The reduced default probe guidance in `3D` / `4D` is intentional for this
+  phase: the shell only needs to make probe movement possible and show the full
+  translation keys. The older per-panel movement-preview legends are not
+  required by the current visible-shell contract.
 - Toggling `Trace` must not disable probe movement or hide the probe/dot
   itself.
 - The Editor probe must render as a dot, not as a sandbox-style box, in `2D`,
   `3D`, and `4D`.
+- The probe trace visual language is now the connecting trace line itself; the
+  old intermediate path dots are intentionally removed across dimensions.
 - `Probe Neighbors`, when enabled, must render as smaller subordinate dots
   around the main probe and must not hide the probe/dot itself.
 - Visible tool wording should prefer `Probe` for the non-mutating Editor probe
@@ -110,12 +116,17 @@ reactivates them.
 
 ## Current phase focus
 
-The current topology-playground phase is the frozen visible shell redesign.
+The current topology-playground phase is the frozen visible-shell redesign
+phase.
 
 This phase is intentionally limited to:
 
 - launcher first-layer menu cleanup,
-- topology-playground shell layout/copy cleanup,
+- topology-playground visible-shell redesign around a compact global top bar,
+  contextual left sidebar, materially larger center workspace, small external
+  key helper, and compact bottom strip,
+- visible-shell wording cleanup including the `Valid` / `Needs Fix` /
+  `Unsafe` status-chip contract,
 - diagnostics demotion behind secondary surfaces,
 - and manifest/doc/test drift prevention while the visible shell contract is
   being frozen.
@@ -204,10 +215,15 @@ contract is stable.
 - Freeze the topology-playground visible shell around the compact top bar,
   contextual left sidebar, larger center workspace, small right helper, and
   compact bottom strip.
+- Freeze the visible-shell render contract so Editor probe rendering stays a
+  large circle in `2D`, `3D`, and `4D`, probe neighbors stay subordinate dots,
+  and sandbox cells remain box-shaped.
 - Remove or demote old default-primary verbose status and diagnostic wording.
 - Keep canonical runtime state as the only explorer-path input authority.
 - Keep launcher/setup surfaces minimal for topology and keep custom-topology
   editing/play flowing through the Explorer Playground shell.
+- Keep the direct playground entrypoint available via
+  `python -m tet4d.ui.pygame.topology_lab` in addition to the launcher path.
 - Update manifests/docs in the same pass as code changes, prevent drift, and
   keep local CI-equivalent checks green.
 

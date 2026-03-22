@@ -102,6 +102,17 @@ def _playability_validity_value_text(state: TopologyLabState) -> str:
     return _PLAYABILITY_VALIDITY_LABELS.get(analysis.validity, "Unknown")
 
 
+def _playability_shell_chip_text(state: TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    if analysis.validity == "invalid":
+        return "Needs Fix"
+    if analysis.rigid_playability == "not_rigid_playable":
+        return "Unsafe"
+    if analysis.validity == "valid":
+        return "Valid"
+    return "Needs Fix"
+
+
 def _playability_explorer_value_text(state: TopologyLabState) -> str:
     analysis = _current_playability_analysis(state)
     return _PLAYABILITY_EXPLORER_LABELS.get(
@@ -447,6 +458,7 @@ __all__ = [
     "_explorer_presets",
     "_explorer_transform_label",
     "_playability_panel_lines",
+    "_playability_shell_chip_text",
     "_playability_status_text",
     "_row_value_text",
     "_sandbox_neighbor_search_enabled",

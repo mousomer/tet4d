@@ -11,6 +11,13 @@ def _parse_cli_args(argv=None):
         prog=Path(__file__).name,
         description="tet4d unified launcher",
     )
+    parser.add_argument(
+        "--topology-playground",
+        nargs="?",
+        const="2",
+        metavar="DIM",
+        help="launch Topology Playground directly for dimension 2, 3, or 4",
+    )
     return parser.parse_known_args(argv)[0]
 
 
@@ -30,6 +37,10 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+from tet4d.ui.pygame.topology_lab.entrypoint import (
+    parse_topology_playground_dimension,
+    run_direct_topology_playground,
+)
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
@@ -899,6 +910,13 @@ def run() -> None:
 
 
 def main(argv=None):
+    parsed_args = _parse_cli_args(sys.argv[1:] if argv is None else argv)
+    direct_dimension = parse_topology_playground_dimension(
+        parsed_args.topology_playground
+    )
+    if direct_dimension is not None:
+        run_direct_topology_playground(direct_dimension)
+        return
     if argv is None:
         if _PREPARSED_ARGS is None:
             _parse_cli_args(sys.argv[1:])

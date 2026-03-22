@@ -32,6 +32,7 @@ from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
+from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 
@@ -1106,9 +1107,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("editor_tool", row_targets)
         self.assertIn("editor_trace", row_targets)
         self.assertIn("editor_probe_neighbors", row_targets)
-        self.assertGreater(row_targets["editor_trace"].rect.width, 300)
+        self.assertGreater(row_targets["editor_trace"].rect.width, 240)
         self.assertLess(row_targets["editor_trace"].rect.bottom, screen.get_height())
-        self.assertGreater(row_targets["editor_probe_neighbors"].rect.width, 300)
+        self.assertGreater(row_targets["editor_probe_neighbors"].rect.width, 240)
         self.assertLess(
             row_targets["editor_probe_neighbors"].rect.bottom,
             screen.get_height(),
@@ -1128,7 +1129,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             if target.kind == "row_select"
         }
         self.assertIn("sandbox_neighbor_search", row_targets)
-        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 300)
+        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 240)
         self.assertLess(
             row_targets["sandbox_neighbor_search"].rect.bottom,
             screen.get_height(),
@@ -1535,6 +1536,10 @@ class TestTopologyLabMenu(unittest.TestCase):
             "Play: Play uses cellwise seam transport automatically for this topology.",
             lines,
         )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Unsafe",
+        )
 
     def test_playability_preview_lines_show_invalid_topology_state(self) -> None:
         state = self._explorer_state(2)
@@ -1559,6 +1564,19 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Preview unavailable until the topology validates.", lines)
         self.assertTrue(
             any("unsupported for current board dimensions" in line for line in lines)
+        )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Needs Fix",
+        )
+
+    def test_valid_playability_maps_to_valid_shell_chip(self) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu._refresh_explorer_scene_state(state)
+
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Valid",
         )
 
     def test_remove_explorer_glue_drops_selected_gluing(self) -> None:
@@ -2998,7 +3016,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_hint_lines_do_not_expose_camera_in_2d(self) -> None:
         state = self._explorer_state(2)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertFalse(any(line.startswith("Projection sync:") for line in lines))
+        self.assertFalse(any("synced" in line for line in lines))
 
     def test_sync_explorer_state_populates_canonical_scene_snapshot(self) -> None:
         state = topology_lab_menu._TopologyLabState(
@@ -3231,7 +3249,6 @@ class TestTopologyLabMenu(unittest.TestCase):
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
             patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_workspace_shell, "draw_action_buttons", return_value=[]),
             patch.object(topology_lab_workspace_shell, "draw_preview_panel") as draw_preview,
             patch.object(
                 topology_lab_menu, "_draw_probe_controls_if_needed", return_value=[]
@@ -3263,7 +3280,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn(preview_kwargs["lines"][0], {"Edit", "Probe", "Play"})
         self.assertTrue(
             all(
-                line.startswith(("Move: ", "Rotate: ", "      ", "        "))
+                line.startswith(("Move ", "Turn ", "     "))
                 or line in {"Edit", "Probe", "Play"}
                 for line in preview_kwargs["lines"]
             )

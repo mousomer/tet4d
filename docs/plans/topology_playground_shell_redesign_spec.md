@@ -76,11 +76,59 @@ Placement rules for this frozen launcher contract:
 
 Default visible structure:
 
-- Top bar: compact title, workspace tabs, small validity indicator.
+- Top bar: compact global title, workspace tabs, and one short validity chip.
 - Left sidebar: contextual controls only for the active workspace.
 - Center area: the primary working surface and the largest region on screen.
 - Right helper: a small external key-hint block only.
 - Bottom strip: compact status plus compact action shortcuts/buttons only.
+
+Frozen screen hierarchy:
+
+- center workspace is the dominant region
+- top bar is compact and global
+- left sidebar is workspace-contextual only
+- bottom strip is compact status/actions only
+- right helper is a small external key-hint block only
+
+Top bar:
+
+- title: `Topology Playground`
+- tabs: `Editor` / `Sandbox` / `Play`
+- validity chip wording: `Valid` / `Needs Fix` / `Unsafe`
+- no prose header
+- no diagnostic rows
+
+Left sidebar:
+
+- `Editor`: `Tool`, `Trace`, optional `Probe Neighbors`, edit actions only when
+  directly relevant, diagnostics collapsed
+- `Sandbox`: sandbox piece controls, sandbox `Neighbors`, sandbox actions,
+  diagnostics collapsed
+- `Play`: play/launch controls, play-specific setup/status, diagnostics
+  collapsed
+
+Center workspace:
+
+- larger than the side surfaces by default
+- `3D` and `4D` projection working surfaces should be enlarged relative to the
+  earlier shell
+- remove nonessential chrome that compresses the scene
+
+Right helper:
+
+- translation keys
+- rotation keys
+- at most one short workspace/tool context line
+- no prose
+- no duplicate controls
+- no diagnostics
+
+Bottom strip:
+
+- compact status chips on the left
+- compact action buttons on the right
+- no long status rows
+- no prose
 
 Default view removals or demotions:
 
@@ -127,6 +175,9 @@ Default view removals or demotions:
 
 - The Editor probe renders as a probe dot in `2D`, `3D`, and `4D`; it must not
   reuse sandbox-piece box semantics.
+- The canonical visible probe glyph is one large circle in the active cell.
+- The shared probe trace visual language is the connecting trace line itself;
+  intermediate path dots are intentionally removed in this redesign pass.
 - The Editor owns an optional `Probe Neighbors` overlay that renders canonical
   adjacent probe targets as smaller subordinate dots around the main probe.
 - Toggling `Probe Neighbors` must not hide the main probe dot.
@@ -135,6 +186,12 @@ Default view removals or demotions:
 - Sandbox piece cells must continue to render as boxes, while sandbox neighbor
   markers and Editor probe-neighbor markers both render as dots with distinct
   visual roles.
+- The same probe glyph language must be reused in `2D`, `3D` projections, and
+  `4D` projections; Editor probe or probe-neighbor markers must not regress
+  into box rendering in any supported dimension.
+- The `3D` / `4D` default shell does not need the older per-panel movement-
+  preview legends. For this phase, the accepted probe guidance is simply: the
+  probe can move, and the helper must expose the full translation keys.
 
 ## Deferred work
 

@@ -3,39 +3,21 @@ from __future__ import annotations
 
 import sys
 
-from tet4d.ui.pygame.render.font_profiles import init_fonts
-from tet4d.ui.pygame.runtime_ui.app_runtime import (
-    DisplaySettings,
-    initialize_runtime,
-    open_display,
+from tet4d.ui.pygame.topology_lab.entrypoint import (
+    parse_topology_playground_dimension,
+    run_direct_topology_playground,
 )
-from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+
+
+def _parse_dimension(argv: list[str]) -> int:
+    if len(argv) <= 1:
+        return 2
+    return parse_topology_playground_dimension(argv[1]) or 2
 
 
 def main() -> None:
-    dimension = 2
-    if len(sys.argv) > 1:
-        dimension = int(sys.argv[1])
-    if dimension not in (2, 3, 4):
-        print(f"Unsupported dimension: {dimension}. Use 2, 3, or 4.")
-        sys.exit(1)
-
-    runtime = initialize_runtime(sync_audio_state=False)
-    display_settings = DisplaySettings(
-        fullscreen=runtime.display_settings.fullscreen,
-        windowed_size=runtime.display_settings.windowed_size,
-    )
-    fonts = init_fonts()
-    screen = open_display(
-        display_settings,
-        caption=f"Explorer {dimension}D Playground",
-    )
-    run_explorer_playground(
-        screen,
-        fonts,
-        dimension=dimension,
-        display_settings=display_settings,
-    )
+    dimension = _parse_dimension(sys.argv)
+    run_direct_topology_playground(dimension)
 
 
 if __name__ == "__main__":

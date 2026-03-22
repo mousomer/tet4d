@@ -297,7 +297,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 panels, _info_rect = projection_scene._layout_projection_panels(
                     area,
                     dimension=dimension,
-                    header_height=(70 if dimension == 4 else 64) + 10,
+                    header_height=(54 if dimension == 4 else 48) + 10,
                 )
                 xy_panel = next(panel for panel in panels if panel.axes == (0, 1))
                 board_rect, cell_size = projection_scene._panel_grid_rect(
@@ -405,7 +405,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 panels, _ = projection_scene._layout_projection_panels(
                     area,
                     dimension=dimension,
-                    header_height=(70 if dimension == 4 else 64) + 10,
+                    header_height=(54 if dimension == 4 else 48) + 10,
                 )
                 xy_panel = next(panel for panel in panels if panel.axes == (0, 1))
                 board_rect, cell_size = projection_scene._panel_grid_rect(
@@ -461,7 +461,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 panels, _info_rect = projection_scene._layout_projection_panels(
                     area,
                     dimension=dimension,
-                    header_height=(70 if dimension == 4 else 64) + 10,
+                    header_height=(54 if dimension == 4 else 48) + 10,
                 )
                 xy_panel = next(panel for panel in panels if panel.axes == (0, 1))
                 board_rect, cell_size = projection_scene._panel_grid_rect(
@@ -527,7 +527,7 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 panels, _ = projection_scene._layout_projection_panels(
                     area,
                     dimension=dimension,
-                    header_height=(70 if dimension == 4 else 64) + 10,
+                    header_height=(54 if dimension == 4 else 48) + 10,
                 )
                 xy_panel = next(panel for panel in panels if panel.axes == (0, 1))
                 board_rect, cell_size = projection_scene._panel_grid_rect(
@@ -580,8 +580,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         lines = topology_lab_menu._hint_lines_for_state(state)
 
-        self.assertTrue(any(line == "Editor | Probe" for line in lines))
-        self.assertTrue(any(line.startswith("Pane: Workspace") for line in lines))
+        self.assertEqual(lines[0], "Editor | Probe")
+        self.assertIn("3D synced", lines)
+        self.assertLessEqual(len(lines), 3)
 
     def test_helper_lines_scaffold_sandbox_workspace_with_explicit_neighbor_state(self) -> None:
         state = self._explorer_state(3)
@@ -589,8 +590,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         lines = topology_lab_menu._hint_lines_for_state(state)
 
-        self.assertTrue(any(line == "Sandbox" for line in lines))
-        self.assertTrue(any(line.startswith("Neighbors ") for line in lines))
+        self.assertEqual(lines[0], "Sandbox")
+        self.assertIn("Neighbors on", lines)
+        self.assertLessEqual(len(lines), 3)
 
     def test_helper_lines_scaffold_play_workspace(self) -> None:
         state = self._explorer_state(3)
@@ -598,8 +600,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         lines = topology_lab_menu._hint_lines_for_state(state)
 
-        self.assertTrue(any(line == "Play" for line in lines))
-        self.assertTrue(any("Launch from current draft" == line for line in lines))
+        self.assertEqual(lines[0], "Play")
+        self.assertIn("Launch from current draft", lines)
+        self.assertLessEqual(len(lines), 3)
 
     def test_sandbox_neighbor_toggle_action_updates_canonical_state_explicitly(self) -> None:
         state = self._explorer_state(3)
@@ -616,12 +619,10 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         state = self._explorer_state(4)
         state.active_pane = topology_lab_menu.PANE_CONTROLS
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn("Pane: Diagnostics   Tab diagnostics   E/I tool   B Sandbox   P Play", lines)
-        self.assertTrue(any(line.startswith("Move Y:") for line in lines))
-        self.assertIn(
-            "Diagnostics are secondary; workspace controls stay primary.",
-            lines,
-        )
+        self.assertTrue(lines[0].startswith("Editor | "))
+        self.assertIn("Diagnostics", lines)
+        self.assertIn("4D synced", lines)
+        self.assertFalse(any(line.startswith("Move ") for line in lines))
 
     def test_editor_trace_action_toggles_trace_without_hiding_probe(self) -> None:
         state = self._explorer_state(3)
@@ -671,7 +672,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         self.assertEqual(len(row_hits), 1)
         self.assertFalse(action_hits)
-        self.assertGreater(row_hits[0].rect.width, 300)
+        self.assertGreater(row_hits[0].rect.width, 240)
         self.assertLess(row_hits[0].rect.bottom, screen.get_height())
 
     def test_draw_menu_keeps_editor_probe_neighbors_as_controls_row_not_scene_action(
@@ -703,7 +704,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         self.assertEqual(len(row_hits), 1)
         self.assertFalse(action_hits)
-        self.assertGreater(row_hits[0].rect.width, 300)
+        self.assertGreater(row_hits[0].rect.width, 240)
         self.assertLess(row_hits[0].rect.bottom, screen.get_height())
 
     def test_draw_menu_keeps_neighbors_as_controls_row_not_scene_action(self) -> None:
@@ -733,7 +734,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         self.assertEqual(len(row_hits), 1)
         self.assertFalse(action_hits)
-        self.assertGreater(row_hits[0].rect.width, 300)
+        self.assertGreater(row_hits[0].rect.width, 240)
         self.assertLess(row_hits[0].rect.bottom, screen.get_height())
 
     def test_sandbox_neighbor_toggle_computes_real_neighbor_cells(self) -> None:
@@ -799,32 +800,24 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         state = self._explorer_state(4)
         state.active_pane = topology_lab_menu.PANE_CONTROLS
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn(
-            "Pane: Diagnostics   Tab diagnostics   E/I tool   B Sandbox   P Play",
-            lines,
-        )
-        self.assertIn(
-            "Diagnostics are secondary; workspace controls stay primary.",
-            lines,
-        )
-        self.assertTrue(any(line.startswith("Projection sync:") for line in lines))
+        self.assertTrue(lines[0].startswith("Editor | "))
+        self.assertIn("Diagnostics", lines)
+        self.assertIn("4D synced", lines)
+        self.assertLessEqual(len(lines), 4)
 
     def test_hint_lines_change_for_scene_pane(self) -> None:
         state = self._explorer_state(3)
         state.active_pane = topology_lab_menu.PANE_SCENE
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertTrue(
-            any(line == "Workspace is primary; helper stays keys-only." for line in lines)
-        )
+        self.assertTrue(lines[0].startswith("Editor | "))
+        self.assertIn("3D synced", lines)
+        self.assertLessEqual(len(lines), 3)
 
     def test_sandbox_hint_lines_restore_space_as_next_piece(self) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertIn(
-            "Sandbox tool: movement moves the piece; rotation keys rotate it.",
-            lines,
-        )
+        self.assertEqual(lines, ("Sandbox", "Neighbors on", "3D synced"))
 
 
 if __name__ == "__main__":

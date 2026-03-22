@@ -35,6 +35,7 @@ from tet4d.ui.pygame.topology_lab import (
     apply_glue_pick,
     boundaries_for_dimension,
     cycle_sandbox_piece,
+    draw_action_buttons,
     ensure_piece_sandbox,
     handle_scene_camera_mouse_event,
     move_sandbox_piece,
@@ -82,7 +83,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel_values import (
     _explorer_active_glue_ids,
     _explorer_boundaries,
     _explorer_piece_set_label,
-    _playability_validity_value_text,
+    _playability_shell_chip_text,
     _explorer_preset_value_text,
     _explorer_preview_payload,
     _explorer_transform_label,
@@ -748,35 +749,44 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     screen.blit(panel, (panel_x, panel_y))
 
     if _uses_general_explorer_editor(state):
-        top_bar_h = 52
+        top_bar_h = 46
         bottom_bar_h = 44
         content_y = panel_y + top_bar_h + 8
         content_h = panel_h - top_bar_h - bottom_bar_h - 16
-        menu_w = 332 if _scene_pane_active(state) else 392
+        menu_w = 290 if _scene_pane_active(state) else 350
         top_bar_rect = pygame.Rect(panel_x + 10, panel_y + 10, panel_w - 20, top_bar_h)
         pygame.draw.rect(screen, (16, 20, 34), top_bar_rect, border_radius=10)
         pygame.draw.rect(screen, (96, 112, 152), top_bar_rect, 1, border_radius=10)
         title = fonts.hint_font.render("Topology Playground", True, _TEXT_COLOR)
-        screen.blit(title, (top_bar_rect.x + 14, top_bar_rect.y + 15))
+        screen.blit(title, (top_bar_rect.x + 14, top_bar_rect.y + 12))
         state.mouse_targets = draw_tool_ribbon(
             screen,
             fonts,
-            area=pygame.Rect(top_bar_rect.x + 220, top_bar_rect.y + 10, 280, 30),
+            area=pygame.Rect(top_bar_rect.x + 214, top_bar_rect.y + 8, 286, 30),
             active_workspace=_active_workspace_name(state),
         )
-        validity_text = _playability_validity_value_text(state)
+        validity_text = _playability_shell_chip_text(state)
         validity_color = (
             (120, 214, 140)
             if validity_text == "Valid"
-            else (238, 158, 116) if validity_text == "Invalid" else _MUTED_COLOR
+            else (224, 92, 92) if validity_text == "Unsafe" else (238, 158, 116)
         )
-        validity_label = fonts.hint_font.render("Validity", True, _MUTED_COLOR)
-        validity_surf = fonts.hint_font.render(validity_text, True, validity_color)
-        validity_x = top_bar_rect.right - max(
-            validity_label.get_width(), validity_surf.get_width()
-        ) - 18
-        screen.blit(validity_label, (validity_x, top_bar_rect.y + 7))
-        screen.blit(validity_surf, (validity_x, top_bar_rect.y + 22))
+        chip_text = fonts.hint_font.render(validity_text, True, validity_color)
+        chip_rect = pygame.Rect(
+            top_bar_rect.right - chip_text.get_width() - 38,
+            top_bar_rect.y + 8,
+            chip_text.get_width() + 22,
+            28,
+        )
+        pygame.draw.rect(screen, (22, 28, 48), chip_rect, border_radius=14)
+        pygame.draw.rect(screen, validity_color, chip_rect, 1, border_radius=14)
+        screen.blit(
+            chip_text,
+            (
+                chip_rect.x + (chip_rect.width - chip_text.get_width()) // 2,
+                chip_rect.y + (chip_rect.height - chip_text.get_height()) // 2,
+            ),
+        )
         separator_x = panel_x + menu_w + 8
         pygame.draw.line(
             screen,
@@ -797,7 +807,7 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
             border_radius=10,
         )
         controls_header = fonts.hint_font.render(
-            _ANALYSIS_PANE_TITLE if _controls_pane_active(state) else "Context",
+            _ANALYSIS_PANE_TITLE if _controls_pane_active(state) else _SCENE_PANE_TITLE,
             True,
             _HIGHLIGHT_COLOR if _controls_pane_active(state) else _MUTED_COLOR,
         )
@@ -846,22 +856,46 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         )
         pygame.draw.rect(screen, (16, 20, 34), bottom_rect, border_radius=10)
         pygame.draw.rect(screen, (96, 112, 152), bottom_rect, 1, border_radius=10)
-        hint_text = fit_text(fonts.hint_font, _hint_lines_for_state(state)[0], 420)
-        hint_surf = fonts.hint_font.render(hint_text, True, _MUTED_COLOR)
-        screen.blit(hint_surf, (bottom_rect.x + 12, bottom_rect.y + 11))
-        if state.status:
-            status_color = (
-                (255, 150, 150) if state.status_error else (170, 240, 170)
+        chip_labels = list(_hint_lines_for_state(state))
+        chip_x = bottom_rect.x + 10
+        for label in chip_labels[:3]:
+            chip_width = min(190, max(56, fonts.hint_font.size(label)[0] + 18))
+            chip_rect = pygame.Rect(chip_x, bottom_rect.y + 8, chip_width, 24)
+            pygame.draw.rect(screen, (22, 28, 48), chip_rect, border_radius=12)
+            pygame.draw.rect(screen, (82, 96, 132), chip_rect, 1, border_radius=12)
+            chip_text = fonts.hint_font.render(
+                fit_text(fonts.hint_font, label, chip_rect.width - 12),
+                True,
+                _MUTED_COLOR,
             )
-            status_text = fit_text(fonts.hint_font, state.status, panel_w - 220)
-            status_surf = fonts.hint_font.render(status_text, True, status_color)
             screen.blit(
-                status_surf,
+                chip_text,
                 (
-                    panel_x + panel_w - status_surf.get_width() - 24,
-                    panel_y + panel_h - 43,
+                    chip_rect.x + (chip_rect.width - chip_text.get_width()) // 2,
+                    chip_rect.y + (chip_rect.height - chip_text.get_height()) // 2,
                 ),
             )
+            chip_x = chip_rect.right + 8
+        actions = _action_buttons_for_state(state)
+        action_count = max(1, len(actions))
+        action_area_w = min(
+            bottom_rect.width // 2,
+            action_count * 96 + max(0, action_count - 1) * 8,
+        )
+        action_rect = pygame.Rect(
+            bottom_rect.right - action_area_w - 10,
+            bottom_rect.y + 6,
+            action_area_w,
+            28,
+        )
+        state.mouse_targets.extend(
+            draw_action_buttons(
+                screen,
+                fonts,
+                area=action_rect,
+                actions=actions,
+            )
+        )
 
 
 def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:

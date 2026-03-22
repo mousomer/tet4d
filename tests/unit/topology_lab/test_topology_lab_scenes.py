@@ -14,6 +14,7 @@ from tet4d.engine.topology_explorer import (
 )
 from tet4d.ui.pygame.topology_lab.arrow_overlay import _glue_style
 from tet4d.ui.pygame.topology_lab import projection_scene
+from tet4d.ui.pygame.topology_lab import scene2d
 from tet4d.ui.pygame.topology_lab.projection_scene import (
     projection_hidden_label,
     projection_pairs_for_dimension,
@@ -278,6 +279,30 @@ class TestTopologyLabScenes(unittest.TestCase):
             cell_size=40,
         )
 
+    def test_editor_probe_draws_as_circle_in_2d_scene(self) -> None:
+        surface = pygame.Surface((240, 240))
+        board_rect = pygame.Rect(20, 20, 160, 160)
+        expected_center = pygame.Rect(60, 60, 40, 40).center
+
+        with (
+            mock.patch.object(scene2d.pygame.draw, "rect") as draw_rect,
+            mock.patch.object(scene2d, "draw_probe_center_glyph") as draw_probe_center_glyph,
+        ):
+            scene2d._draw_probe(
+                surface,
+                board=board_rect,
+                cell_size=40,
+                preview_dims=(4, 4),
+                probe_coord=(1, 1),
+            )
+
+        draw_rect.assert_not_called()
+        draw_probe_center_glyph.assert_called_once_with(
+            surface,
+            center=expected_center,
+            cell_size=40,
+        )
+
     def test_sandbox_focus_and_cells_keep_box_semantics_in_projection_scene(self) -> None:
         surface = pygame.Surface((240, 240))
         board_rect = pygame.Rect(20, 20, 160, 160)
@@ -365,6 +390,29 @@ class TestTopologyLabScenes(unittest.TestCase):
             centers=expected_centers,
             cell_size=40,
         )
+
+    def test_probe_trace_path_renders_as_line_without_intermediate_dots(self) -> None:
+        surface = pygame.Surface((240, 240))
+        centers = [(20, 20), (60, 20), (60, 60)]
+
+        with (
+            mock.patch.object(projection_scene.pygame.draw, "lines") as draw_lines,
+            mock.patch.object(projection_scene.pygame.draw, "circle") as draw_circle,
+        ):
+            projection_scene.draw_probe_path_glyphs(
+                surface,
+                centers=centers,
+                cell_size=40,
+            )
+
+        draw_lines.assert_called_once_with(
+            surface,
+            (88, 170, 214),
+            False,
+            centers,
+            2,
+        )
+        draw_circle.assert_not_called()
 
 
 if __name__ == "__main__":

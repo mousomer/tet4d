@@ -157,6 +157,8 @@ Pause Menu
 8. larger center workspace
 9. small right helper
 10. compact bottom strip
+11. top-bar validity chip wording `Valid` / `Needs Fix` / `Unsafe`
+12. no prose header or default-primary diagnostic rows
 
 ### 5.2 Visual hierarchy
 
@@ -344,6 +346,7 @@ Manual tests:
 26. Explorer Playground must keep an explicit right-side helper panel visible in the shell outside the explorer viewport, and that panel must stay concise: minimal movement keys, minimal rotation keys, and at most one short current workspace/tool context line rather than a full status dump or shadow menu.
 27. Neighbor dots must remain visually distinct from sandbox piece cells and must disappear entirely when the explicit `Neighbor` control is off.
 28. Menu items and critical workspace controls in the Explorer shell must be fully visible and readable; clipped or partially hidden controls are layout regressions.
+29. The bottom strip is a compact shell footer for short status chips and right-aligned action buttons only; it must not reintroduce explanatory prose or long status rows.
 
 ## 12. Stabilization Additions (Completed)
 
