@@ -54,8 +54,11 @@ reactivates them.
 - Hard drop must match repeated legal drop continuation.
 - Canonical runtime selectors are the only accepted explorer-path input
   authority.
+- `explorer_profile` and `explorer_draft` are no longer synchronized shell
+  projections on the migrated path. Canonical runtime state owns both; the raw
+  shell fields survive only as fallback storage when canonical state is absent.
 - Retained shell fields, where still present, are synchronized compatibility
-  projections only. They are not truth sources.
+  projections or true shell-owned caches only. They are not truth sources.
 
 ## Accepted invariants
 
@@ -123,11 +126,23 @@ This means future work should focus on:
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` are compatibility-only.
   They may still back explicit compatibility readers/tests, diagnostics, or
   retained shell consumers, but they must not regain explorer-path input
-  authority. Boundary/seam selection, highlighted-glue mirrors, and the probe
-  shell mirror trio (`probe_coord`, `probe_trace`, `probe_path`) are no longer
-  canonical-to-shell sync outputs; canonical selectors own those seams now, and
-  the probe trio survives only as fallback compatibility storage when canonical
-  state is absent.
+  authority. `explorer_profile` and `explorer_draft` are retired as
+  canonical-to-shell sync outputs; boundary/seam selection, highlighted-glue
+  mirrors, and the former probe shell mirror trio (`probe_coord`,
+  `probe_trace`, `probe_path`) are also retired as canonical-to-shell sync
+  outputs. Canonical selectors own those seams now, while the raw
+  profile/draft fields survive only as fallback compatibility storage when
+  canonical state is absent; the probe trio no longer exists as retained shell
+  storage on the migrated path.
+- Remaining shell-owned cache/projection classification after this pass:
+  `play_settings` remains a true shell-owned per-dimension launch-settings
+  cache mirrored into canonical launch settings; `sandbox` remains a live
+  shell-owned scene/render cache over canonical sandbox piece state;
+  `active_tool` and `editor_tool` remain live shell-owned workspace/tool caches
+  that synchronize immediately into canonical state for menu/input/render
+  routing. No retained probe fallback-storage seam remains after this pass; any
+  later cache retirement work would need a separate routing/cache reassessment
+  rather than another probe-shadow-state cleanup.
 - The former transitional seam
   `src/tet4d/ui/pygame/topology_lab/legacy_normal_mode_support.py` is retired.
   Legacy Normal Game row adjustment now lives as a narrow private helper path
@@ -167,7 +182,8 @@ This means future work should focus on:
 ## Current active priorities
 
 - Continue deleting retained synchronized shell projections once their live
-  readers, compatibility tests, and diagnostics paths are migrated.
+  readers, compatibility tests, and diagnostics paths are migrated, without
+  reopening already retired probe-shadow-state seams in `scene_state.py`.
 - Keep canonical runtime state as the only explorer-path input authority.
 - Keep legacy Normal Game adjustment logic narrow inside `controls_panel.py`;
   do not let it become a new generic legacy bucket.
@@ -176,6 +192,9 @@ This means future work should focus on:
   `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
 - Continue removing legacy compatibility mirrors and stale aliases only where
   cleanup is grounded by tests and the current architecture contract.
+- Reassess tool-routing and shell-cache surfaces (`active_tool`,
+  `editor_tool`, `play_settings`, `sandbox`) only as explicit cache/routing
+  work rather than by reintroducing shadow runtime state.
 - Continue focused Play regression coverage for non-trivial `Y`-seam topology
   families and related launch/runtime invariants.
 - Continue unsafe-topology contract cleanup where sandbox/gameplay/preview still

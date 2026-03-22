@@ -560,9 +560,6 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
     if not _uses_general_explorer_editor(state):
         state.explorer_profile = None
         state.explorer_draft = None
-        state.probe_coord = None
-        state.probe_trace = None
-        state.probe_path = None
         state.canonical_state = None
         state.hovered_boundary_index = None
         state.hovered_glue_id = None
