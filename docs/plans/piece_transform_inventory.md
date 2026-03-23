@@ -1,3 +1,9 @@
+Role: reference
+Status: reference
+Source of truth: none
+Supersedes: none
+Last updated: 2026-03-22
+
 # Piece Transform Inventory
 
 Status: audited on 2026-03-07 against current `master`.

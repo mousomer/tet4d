@@ -1,15 +1,28 @@
 # Cleanup Master Plan
 
-Status date: 2026-03-09
+Role: ledger
+Status: active
+Source of truth: this file for broad structural cleanup sequencing
+Supersedes: none
+Last updated: 2026-03-22
 
-This ledger tracks the remaining cleanup from the current live codebase. Code is
-the source of truth. Docs/manifests are updated after code changes land.
+## Purpose
 
-## Structural stage rule
+Track the remaining structural cleanup program for the live codebase.
 
-Unless a stage explicitly authorizes a semantic change, cleanup stages in this
-ledger must not change gameplay, replay, tutorial, scoring, or packaging
-behavior. Structural work means:
+Code is the source of truth.
+Docs and manifests are synchronized after code changes land.
+
+This file is not the topology-playground architecture authority and is not the
+visible-shell spec.
+
+## Structural work rule
+
+Unless a stage explicitly authorizes semantic change, cleanup work in this
+ledger must not change gameplay, replay, tutorial, scoring, packaging, or
+accepted product behavior.
+
+Structural work means:
 
 1. identify a canonical owner
 2. migrate callers
@@ -17,145 +30,56 @@ behavior. Structural work means:
 4. delete duplicates
 5. sync docs/manifests after code is correct
 
-## Stage Status Summary
+## Scope boundary
 
-| Stage | Domain | Status | Notes |
+This ledger owns broad cleanup sequencing across the repo.
+It does not own:
+
+- topology-playground architecture precedence
+- topology-playground visible-shell contract
+- launcher/menu IA wording
+- batch history
+
+## Active cleanup domains
+
+| Domain | Canonical owner | Status | Exit condition |
 | --- | --- | --- | --- |
-| 0 | Cleanup ledger | Complete | This file is the canonical cleanup ledger. |
-| 1 | Narrow `engine.api` | Complete | `engine.api` now keeps stable engine contracts only; raw piece-transform helpers are no longer re-exported. |
-| 2 | Canonical piece transforms | Complete | Canonical owner is `src/tet4d/engine/core/piece_transform.py`. |
-| 3 | 2D/ND gameplay orchestration dedup | Partial | Shared lock-analysis / score-bookkeeping plus lock-and-respawn / hard-drop lifecycle are now centralized; bag refill and spawn-position logic remain mode-specific. |
-| 4 | Split `cli/front2d.py` | Complete | `cli/front2d.py` is a thin launcher shim. |
-| 5 | Runtime/settings ownership cleanup | Partial | Runtime storage ownership is mostly cleaned up; `menu_settings_state.py` remains a stable facade and `menu_structure_schema.py` is now a thinner facade over `runtime/menu_structure/`. |
-| 6 | Remove keybinding persistence leakage from UI | Complete | Runtime-owned keybinding storage now owns JSON/path/profile file behavior. |
-| 7 | Remove remaining `pygame` contamination from engine | Complete | Live code has `pygame_imports_non_test = 0`. |
-| 8 | Unify launcher/bootstrap behavior | Mostly complete | `front.py` is already a thin compatibility wrapper; monitor for drift only. |
-| 9 | Unify install/build authority | Complete | Editable install from `pyproject.toml` is now the single documented contract for dev/CI/local verification. |
-| 10 | Release/packaging cleanup | Mostly complete | Installer workflows exist and are green; keep as a watch item. |
-| 11 | Stop minifying operational code | Watch | No broad formatting issue found in current Python sources; enforce readability drift only. |
-| 12 | Docs/manifests sync last | Complete for this batch | Code changes are now reflected in backlog/state/RDS/generated maintenance docs. |
-| 13 | Explorer topology engine | Active | Phase 1 kernel, Phase 2 runtime/store/preview integration, Phases 3-4 direct 2D/3D/4D explorer gluing editors, Phase 5 live explorer gameplay/runtime migration, Phase 6 diagnostics/basis-arrow previews, Phase 7 scene-first topology playground integration, Phase 8 runtime-owned bridge shrink, Phase 9 shared launch-contract unification, and Phase 10 setup-side unification are complete. The current shell now has an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- controls, and 3D/4D scene-camera support in Navigate. Remaining work is limited to richer visual polish plus final compatibility-bridge deletion. |
+| Gameplay orchestration dedup | `engine/core/rules/lifecycle.py`, `engine/gameplay/lock_flow.py` | active | duplicated lock/drop orchestration in mode files is reduced as far as net deletion justifies |
+| Runtime/settings ownership cleanup | `engine/runtime/menu_settings_state.py` facade over runtime submodules | active | facade pressure stays bounded or is narrowed further by real seam extraction |
+| Launcher/bootstrap drift watch | `front.py` compatibility wrapper plus `cli/front*.py` | watch | no material duplication returns |
+| Packaging/release drift watch | packaging scripts/workflows | watch | installer and release authority remain coherent |
+| Explorer topology engine cleanup | `engine/topology_explorer/` plus runtime store/preview/runtime owners | active | legacy bridge is removable without breaking explicit compatibility paths |
+| Docs/manifests sync discipline | code first, then state/backlog/generated docs/relevant RDS | active | drift checks remain green and narrative duplication is reduced |
 
-## Domain Ledger
+## Explorer topology engine note
 
-### Engine public API
+The explorer topology engine now has an established canonical owner set:
 
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/api.py` |
-| Current duplicate owners | Raw transform helpers re-exported from `src/tet4d/engine/core/piece_transform.py` through `engine.api` |
-| Migration status | Complete |
-| Equivalence tests | `tests/unit/engine/test_engine_api_determinism.py`, `tests/unit/engine/test_replay_module.py` |
-| Deletion checkpoint | Remove low-level transform re-exports once all callers use `engine.core.piece_transform` directly |
+- pure gluing semantics in `src/tet4d/engine/topology_explorer/`
+- runtime-owned storage/preview/integration in the runtime explorer modules
+- graphical explorer scene under `src/tet4d/ui/pygame/topology_lab/`
 
-### Piece transforms
+Remaining cleanup is limited to:
 
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/core/piece_transform.py` |
-| Current duplicate owners | None in live code |
-| Migration status | Complete |
-| Equivalence tests | `tests/unit/engine/test_piece_transform.py`, `docs/plans/piece_transform_inventory.md` |
-| Deletion checkpoint | Closed |
+- final compatibility-bridge deletion when justified,
+- narrower supporting-editor cleanup,
+- avoiding reintroduction of legacy edge-rule ownership.
 
-### Gameplay orchestration
+## Watch items
 
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/core/rules/lifecycle.py` for lock/respawn/drop flow plus `src/tet4d/engine/gameplay/lock_flow.py` for lock-analysis / score bookkeeping |
-| Current duplicate owners | `src/tet4d/engine/gameplay/game2d.py`, `src/tet4d/engine/gameplay/game_nd.py` |
-| Migration status | Active |
-| Equivalence tests | `tests/unit/engine/test_game2d.py`, `tests/unit/engine/test_game_nd.py`, `tests/unit/engine/test_score_analyzer.py` |
-| Deletion checkpoint | Remove duplicated lock-analysis plus lock-and-respawn / hard-drop flow from 2D/ND mode files; leave bag refill and spawn-position logic mode-specific unless a net-deletion shared owner emerges |
+These are not active redesign programs, but they still need drift monitoring:
 
-### 2D launcher
+- launcher/bootstrap thin-wrapper discipline
+- packaging/release authority discipline
+- readability drift in operational code
+- doc/manifold duplication returning after future batches
 
-| Field | Value |
-| --- | --- |
-| Canonical owner | `cli/front2d.py` as thin launcher over `src/tet4d/ui/pygame/front2d_game.py` |
-| Current duplicate owners | None material |
-| Migration status | Complete |
-| Equivalence tests | 2D launcher/runtime regression slices in `tests/unit/engine/` |
-| Deletion checkpoint | Closed |
+## Completion rule
 
-### Runtime settings
+A cleanup item is complete only when:
 
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/runtime/menu_settings_state.py` facade over `runtime/menu_settings/` |
-| Current duplicate owners | Minor glue remains in the facade |
-| Migration status | Partial |
-| Equivalence tests | `tests/unit/engine/test_keybindings.py`, settings persistence suites |
-| Deletion checkpoint | Further split only if hotspot pressure grows again |
-
-### Keybinding persistence
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/runtime/keybinding_store.py` |
-| Current duplicate owners | None for file/path/json ownership in live code |
-| Migration status | Complete |
-| Equivalence tests | `tests/unit/engine/test_keybindings.py`, pause/menu keybinding flows |
-| Deletion checkpoint | UI keybinding module no longer reads/writes JSON or resolves profile paths directly |
-
-### Engine/UI boundary
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | Import boundary scripts + current package split |
-| Current duplicate owners | None in live code |
-| Migration status | Complete |
-| Equivalence tests | `scripts/arch_metrics.py`, `scripts/check_architecture_boundaries.sh`, `scripts/check_engine_core_purity.sh` |
-| Deletion checkpoint | Closed; keep zero-budget enforcement |
-
-### Launcher/bootstrap
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | `front.py` compatibility wrapper plus `cli/front*.py` |
-| Current duplicate owners | No critical duplication left |
-| Migration status | Mostly complete |
-| Equivalence tests | launcher route tests and release smoke paths |
-| Deletion checkpoint | Keep as watch item unless bootstrap drift returns |
-
-### Install/build authority
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | `pyproject.toml` editable install contract |
-| Current duplicate owners | None in active docs/scripts/workflows |
-| Migration status | Complete |
-| Equivalence tests | `scripts/bootstrap_env.sh`, CI workflows, verify import checks |
-| Deletion checkpoint | Remove `requirements.txt` authority and update docs/scripts to the editable-install path only |
-
-### Packaging/release
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | `pyproject.toml` version + packaging scripts/workflows |
-| Current duplicate owners | None material |
-| Migration status | Mostly complete |
-| Equivalence tests | packaging workflows and release installers |
-| Deletion checkpoint | Watch only unless install-contract drift returns |
-
-### Docs/manifests
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | Code first, then `CURRENT_STATE.md`, `docs/BACKLOG.md`, generated maintenance docs, relevant RDS |
-| Current duplicate owners | Manual narrative and generated maintenance sections |
-| Migration status | Complete for this batch |
-| Equivalence tests | `tools/governance/generate_maintenance_docs.py --check`, contract validation |
-| Deletion checkpoint | Docs/manifests updated after code cleanup is complete |
-
-### Explorer topology engine
-
-| Field | Value |
-| --- | --- |
-| Canonical owner | `src/tet4d/engine/topology_explorer/` for pure gluing semantics plus `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_preview.py`, and `src/tet4d/engine/runtime/topology_explorer_runtime.py` for runtime-owned storage/preview/setup-export integration; the legacy bridge remains an implementation detail behind that runtime layer, and the canonical spatial frontend is the explorer scene under `src/tet4d/ui/pygame/topology_lab/` |
-| Current duplicate owners | Legacy explorer edge-rule profiles remain only as a runtime-internal compatibility/export bridge; live Explorer 2D/3D/4D launch, runtime, scene-first lab editing, sandboxing, and play-preview all target the general gluing model directly |
-| Migration status | Active |
-| Equivalence tests | `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_explorer_store.py`, `tests/unit/engine/test_topology_explorer_preview.py`, `tests/unit/engine/test_topology_lab_menu.py` |
-| Deletion checkpoint | Remove the legacy bridge after explicit compatibility export/preview no longer depend on legacy edge-rule conversion; keep the graphical explorer scene as the primary interface and treat side panels as supporting editors only |
-
-
+- canonical owner is explicit,
+- duplicate behavior has been removed or reduced,
+- focused equivalence coverage exists,
+- lower-precedence docs are synchronized,
+- no historical or compatibility layer silently retains live authority.

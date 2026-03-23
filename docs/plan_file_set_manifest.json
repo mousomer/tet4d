@@ -1,0 +1,17 @@
+{
+  "active": [
+    "docs/plans/README.md",
+    "docs/plans/plan_authority_map.md",
+    "docs/plans/topology_playground_current_authority.md",
+    "docs/plans/topology_playground_shell_redesign_spec.md",
+    "docs/plans/topology_playground_debt_register.md",
+    "docs/plans/cleanup_master_plan.md"
+  ],
+  "reference": [
+    "docs/plans/piece_transform_extraction.md",
+    "docs/plans/piece_transform_inventory.md"
+  ],
+  "history": [
+    "docs/history/topology_playground/topology_explorer_latency_pass1.md"
+  ]
+}

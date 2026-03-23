@@ -1,47 +1,47 @@
 # Topology Playground Current Authority
 
-Status: active current-authority manifest  
+Role: authority
+Status: active
+Source of truth: this file
+Supersedes: older topology-playground manifests and stage plans
 Last updated: 2026-03-22
 
-Use this file first for topology-playground architecture and migration-state
-questions. Older topology-playground manifests, stage plans, audits, and
-historical summaries are background only unless a future task explicitly
-reactivates them.
+## Purpose
 
-The active plan layer is intentionally small:
+Use this file first for topology-playground architecture, precedence,
+ownership, invariants, and non-goals.
 
-- `docs/plans/topology_playground_current_authority.md`
-- `docs/plans/topology_playground_shell_redesign_spec.md`
+Older topology-playground manifests, stage plans, audits, and historical
+summaries are background only unless a future task explicitly reactivates them.
 
-See `docs/plans/README.md` for the active-plan versus reference-doc split
-across the whole directory.
+Visible-shell detail belongs in
+`docs/plans/topology_playground_shell_redesign_spec.md`.
 
-The older explorer-topology phase docs, menu audits/cleanup plans, startup
-audits/optimization passes, playability-signaling pass, and unsafe-topology
-correctness plans now live under `docs/history/topology_playground/`.
+Transitional debt belongs in
+`docs/plans/topology_playground_debt_register.md`.
 
 ## Instruction precedence
 
-- This manifest and any newer user or developer instruction for the current
-  task take precedence over archived topology-playground manifests.
+- This file and any newer user or developer instruction for the current task
+  take precedence over archived topology-playground manifests.
 - If an archived manifest conflicts with this file, follow this file.
 - If a newer instruction severely conflicts with this file or with current code
   reality, stop and reconcile first.
-- Once that mismatch is clarified, update this manifest and any affected
-  archive notes in the same batch so the repo stays coherent.
+- Once a mismatch is clarified, update this file and any affected lower-
+  precedence docs in the same batch.
 
-## Accepted architecture now
+## Accepted architecture
 
-- Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
-  `Play`.
+- Visible and canonical top-level playground workspaces are `Editor`,
+  `Sandbox`, and `Play`.
 - `Topology Playground` is the modern current editing flow.
+- Direct playground entry opens in `Sandbox` by default unless a future task
+  explicitly changes that contract.
 - The old menu-only topology setup/editor is legacy compatibility only.
 - The legacy topology editor is not part of `Topology Playground`, `Explorer`,
   or `Path`.
 - The legacy topology editor is reachable only through
   `Settings -> Advanced -> Legacy Topology Editor Menu`.
-- Direct explorer entry opens in `Sandbox` by default. This is the accepted
-  startup contract unless a future task explicitly changes it.
 - `Inspect` is not a top-level workspace. It survives only as an
   Editor-internal non-mutating probe/selection flow.
 - `Edit` is not a top-level workspace. It survives only as an Editor-internal
@@ -55,14 +55,11 @@ correctness plans now live under `docs/history/topology_playground/`.
 - Probe movement, trace, and edit targeting must derive from the same canonical
   seam-aware Editor probe state.
 - `Trace` is an Editor-owned contextual control.
-- `Probe Neighbors` is a distinct Editor-owned contextual visualization option
-  derived from canonical probe state.
+- `Probe Neighbors` is a distinct Editor-owned overlay derived from canonical
+  probe state.
 - `Neighbors` is a Sandbox-owned contextual control.
-- Explorer behavior-changing controls must not be ad hoc. They belong to
-  workspace selection, workspace tool selection, workspace-owned contextual
-  controls, helper display options, or status-only display.
-- Sandbox is a separate piece-experimentation workspace. It does not
-  implicitly mean neighbor-search.
+- Sandbox is a separate piece-experimentation workspace. It does not implicitly
+  mean neighbor-search.
 - Play is a separate gameplay workspace. Translation legality and drop legality
   are distinct on non-trivial `Y`-seam topologies.
 - Play move classes remain explicit: deliberate translation, rotation, gravity
@@ -74,172 +71,83 @@ correctness plans now live under `docs/history/topology_playground/`.
 - Hard drop must match repeated legal drop continuation.
 - Canonical runtime selectors are the only accepted explorer-path input
   authority.
-- `explorer_profile` and `explorer_draft` are no longer synchronized shell
-  projections on the migrated path. Canonical runtime state owns both; the raw
-  shell fields survive only as fallback storage when canonical state is absent.
+- `explorer_profile` and `explorer_draft` are canonical-runtime-owned on the
+  migrated path. Any retained raw shell fields are fallback compatibility
+  storage only when canonical state is absent.
 - Retained shell fields, where still present, are synchronized compatibility
   projections or true shell-owned caches only. They are not truth sources.
 
 ## Accepted invariants
 
-### Editor / Probe invariants
+### Editor / Probe
 
-- The legacy Inspect "dot" is the Editor probe/dot. Its movement must stay
-  consistent before and after seam traversal.
+- The legacy Inspect dot is the Editor probe/dot.
 - The Editor probe/dot and its trace must work consistently in `2D`, `3D`, and
   `4D`.
-- Probe movement, trace, edit targeting, and probe-neighbor overlay derivation
-  must stay aligned to the same canonical seam-aware Editor probe state in
-  every supported dimension.
-- The reduced default probe guidance in `3D` / `4D` is intentional for this
-  phase: the shell only needs to make probe movement possible and show the full
-  translation keys. The older per-panel movement-preview legends are not
-  required by the current visible-shell contract.
+- Probe movement, trace, edit targeting, and probe-neighbor derivation must
+  stay aligned to the same canonical seam-aware Editor probe state in every
+  supported dimension.
 - Toggling `Trace` must not disable probe movement or hide the probe/dot
   itself.
-- The Editor probe must render as a dot, not as a sandbox-style box, in `2D`,
-  `3D`, and `4D`.
-- The probe trace visual language is now the connecting trace line itself; the
-  old intermediate path dots are intentionally removed across dimensions.
+- The Editor probe must render as a dot rather than as sandbox-style box
+  geometry in `2D`, `3D`, and `4D`.
+- The probe trace visual language is the connecting trace line itself.
+  Intermediate path dots are intentionally removed.
 - `Probe Neighbors`, when enabled, must render as smaller subordinate dots
   around the main probe and must not hide the probe/dot itself.
 - Visible tool wording should prefer `Probe` for the non-mutating Editor probe
   flow.
 
-### Sandbox invariants
+### Sandbox
 
 - Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and
   `4D`.
 - Switching from `Sandbox` to `Editor` must not discard or silently rebuild the
-  current sandbox/topology situation. The same remembered topology state must
-  remain available after the workspace switch.
+  current sandbox/topology situation.
 - In `3D` and `4D`, projected sandbox piece cells must render as full piece
   boxes, not as neighbor-style dots.
-- Neighbor markers must appear as small dots in `2D`, `3D`, and `4D` only when
-  the Explorer `neighbor search` control is explicitly enabled.
+- Neighbor markers must appear as small dots only when the explicit sandbox
+  neighbor control is enabled.
 - Neighbor markers must not appear by default, must not replace or hide the
   sandbox piece, and must remain visually distinct from sandbox piece cells.
 - Sandbox `Neighbors` and Editor `Probe Neighbors` are distinct overlays with
   distinct ownership and must stay documented and implemented separately.
 
-### Shell invariants
+### Shell-level invariants
 
 - Menu items and critical controls must remain fully visible; clipped, hidden,
   or unreadable items are regressions.
-- The helper panel must stay visible outside the main Explorer panel / viewport
-  and remain minimal: translation keys, rotation keys, and at most one short
-  current workspace/tool context line.
+- The helper panel must stay visible outside the main explorer panel / viewport
+  and remain minimal.
 - Helper content is not a second menu and must not become a shadow control
   surface.
 
-## Current phase focus
+## Current phase
 
 The current topology-playground phase is the frozen visible-shell redesign
 phase.
 
 This phase is intentionally limited to:
 
-- launcher first-layer menu cleanup,
-- topology-playground visible-shell redesign around a compact global top bar,
-  contextual left sidebar, materially larger center workspace, small external
-  key helper, and compact bottom strip,
-- visible-shell wording cleanup including the `Valid` / `Needs Fix` /
-  `Unsafe` status-chip contract,
+- launcher first-layer cleanup,
+- topology-playground visible-shell redesign,
+- visible wording cleanup,
 - diagnostics demotion behind secondary surfaces,
-- and manifest/doc/test drift prevention while the visible shell contract is
-  being frozen.
+- manifest/doc/test drift prevention while the shell contract is being frozen.
 
 This phase must preserve the settled architecture rules above.
 It must not reopen the accepted `Editor` / `Sandbox` / `Play` workspace model,
-the accepted sandbox-first entry path, the canonical runtime-selector authority,
-or the settled Play drop-policy contract.
+the accepted sandbox-first entry path, the canonical runtime-selector
+authority, or the settled Play drop-policy contract.
 
 Structural module simplification remains deferred until the visible shell
 contract is stable.
 
-## Still transitional
-
-- Some dimension-specific Editor probe/camera behavior still rides on older
-  helper layers while the migrated shell consumes canonical runtime state.
-- Remaining synchronized shell projections in
-  `src/tet4d/ui/pygame/topology_lab/scene_state.py` are compatibility-only.
-  They may still back explicit compatibility readers/tests, diagnostics, or
-  retained shell consumers, but they must not regain explorer-path input
-  authority. `explorer_profile` and `explorer_draft` are retired as
-  canonical-to-shell sync outputs; boundary/seam selection, highlighted-glue
-  mirrors, and the former probe shell mirror trio (`probe_coord`,
-  `probe_trace`, `probe_path`) are also retired as canonical-to-shell sync
-  outputs. Canonical selectors own those seams now, while the raw
-  profile/draft fields survive only as fallback compatibility storage when
-  canonical state is absent; the probe trio no longer exists as retained shell
-  storage on the migrated path.
-- Remaining shell-owned cache/projection classification after this pass:
-  `play_settings` remains a true shell-owned per-dimension launch-settings
-  cache mirrored into canonical launch settings; `sandbox` remains a live
-  shell-owned scene/render cache over canonical sandbox piece state;
-  `active_tool` and `editor_tool` remain live shell-owned workspace/tool caches
-  that synchronize immediately into canonical state for menu/input/render
-  routing. No retained probe fallback-storage seam remains after this pass; any
-  later cache retirement work would need a separate routing/cache reassessment
-  rather than another probe-shadow-state cleanup.
-- The former transitional seam
-  `src/tet4d/ui/pygame/topology_lab/legacy_normal_mode_support.py` is retired.
-  Legacy Normal Game row adjustment now lives as a narrow private helper path
-  inside `controls_panel.py`; it must not expand back into a generic legacy
-  bucket or reclaim authority over Explorer flow, row layout, row value
-  presentation, or export orchestration.
-- `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and
-  `src/tet4d/ui/pygame/topology_lab/scene_state.py` still carry follow-up
-  decomposition and compatibility debt, but that work is explicitly deferred
-  until after the visible shell redesign is stable.
-- Unsafe-topology cross-surface drift still exists in some paths, especially
-  where sandbox behavior is stricter than gameplay or preview-invalid
-  dimension-pairing behavior remains confusing.
-- Some topology families still need focused Play drop-policy regression
-  coverage beyond the currently pinned live-path cases.
-- Historical docs may still mention removed legacy paths. Those references are
-  documentation debt, not active authority.
-
-## Superseded assumptions
-
-- `Inspect` / `Edit` are not the primary visible top-level workspaces anymore.
-- Sandbox is not implicitly neighbor mode and must not be documented or treated
-  as such.
-- Older Explorer-entry assumptions that the shell should open directly into
-  `Editor` / `Edit` are superseded.
-- Older Sandbox assumptions that workspace switching should restore a legacy
-  editor-tool posture instead of preserving the current remembered situation are
-  superseded.
-- Generic explorer seam transport must not determine Play drop legality.
-- Earlier Stage-1 continuation coverage did not fully fix the old spherical
-  false-lock family; any wording that implies that is superseded.
-- Older intermediate cleanup states, including the temporary four-mode
-  `Edit` / `Inspect` / `Sandbox` / `Play` shell, are historical implementation
-  steps rather than the current architecture.
-- Retained shell fields are not active runtime truth, even when they are still
-  synchronized for compatibility.
-
 ## Current active priorities
 
-- Freeze the visible launcher first layer to `Play`, `Continue`, `Tutorials`,
-- `Topology Playground`, `Settings`, and `Quit`.
-- Keep `Tutorials` as the learning/support umbrella without collapsing
-  tutorials, help, and controls reference into one ambiguous surface.
-- Keep `Settings -> Controls` for persistent input configuration only, and keep
-  controls reference/help reachable through the `Tutorials` learning/support
-  surface rather than burying help inside `Settings`.
-- Keep `Leaderboard` and `Bot` out of the launcher root and out of
-  `Settings`; they belong to play-adjacent launch/setup flow instead.
-- Freeze the topology-playground visible shell around the compact top bar,
-  contextual left sidebar, larger center workspace, small right helper, and
-  compact bottom strip.
-- Freeze the visible-shell render contract so Editor probe rendering stays a
-  large circle in `2D`, `3D`, and `4D`, probe neighbors stay subordinate dots,
-  and sandbox cells remain box-shaped.
-- Remove or demote old default-primary verbose status and diagnostic wording.
 - Keep canonical runtime state as the only explorer-path input authority.
 - Keep launcher/setup surfaces minimal for topology and keep custom-topology
-  editing/play flowing through the Explorer Playground shell.
+  editing/play flowing through the playground shell.
 - Keep `Topology Playground` as a direct modern launcher entry with no
   modern-vs-legacy submenu split.
 - Keep the legacy topology editor/menu out of `Topology Playground`,
@@ -250,24 +158,20 @@ contract is stable.
 - Update manifests/docs in the same pass as code changes, prevent drift, and
   keep local CI-equivalent checks green.
 
-## Explicit non-goals for the next implementation phases
+## Explicit non-goals
 
 - Do not silently reopen the settled `Editor` / `Sandbox` / `Play` workspace
   split.
 - Do not silently reopen the settled Play drop-policy distinction between
   deliberate translation and drop continuation unless a regression proves it
   wrong.
-- Do not start deeper `controls_panel.py` or `scene_state.py` simplification as
-  the goal of the visible-shell pass.
-- Do not redesign Sandbox beyond focused visibility/framing, neighbor-toggle,
-  or coupling fixes required by current regressions.
-- Do not treat historical manifests as active execution authority.
 - Do not let retained shell projections or transitional legacy helpers drift
   back into truth ownership.
-- Do not silently leave the authority file stale after a task changes accepted
+- Do not treat historical manifests as active execution authority.
+- Do not silently leave this file stale after a task changes accepted
   topology-playground direction.
 
-## Mandatory execution rules for future passes
+## Mandatory execution rules
 
 - Update documentation and manifests in the same pass as code changes.
 - Prevent drift between code, tests, manifests, generated docs, and status
@@ -277,14 +181,8 @@ contract is stable.
 - If a full local CI command cannot run, state exactly why and run the nearest
   equivalent checks.
 
-## Historical references
+## Background pointer
 
-These files remain useful for background, but they are not the current
-authority:
-
-- `docs/history/topology_playground/tet4d_topology_playground_restructure_plan_codex.md`
-- `docs/history/topology_playground/tet4d_spherical_false_lock_fix_manifest.md`
-- `docs/history/topology_playground/topology_playground_migration.md`
-- `docs/history/topology_playground/explorer_playground_unification.md`
-- `docs/history/topology_playground/topology_playground_reality_audit.md`
-- `docs/history/topology_playground/topology_playground_ownership_audit.md`
+Historical topology-playground plans, audits, and retired execution notes live
+under `docs/history/topology_playground/`.
+They are background only unless explicitly reactivated.

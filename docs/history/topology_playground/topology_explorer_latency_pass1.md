@@ -1,3 +1,14 @@
+Role: reference
+Status: historical
+Source of truth: none
+Supersedes: none
+Last updated: 2026-03-22
+
+Historical note:
+This file records a completed latency-reduction pass.
+It is useful background, but it is not active planning authority and does not
+belong in `docs/plans/`.
+
 # Topology Explorer Latency Reduction Pass 1
 
 Status date: 2026-03-12
@@ -32,7 +43,7 @@ This pass only reduces the concrete migrated-path latency hot spots called out b
 Measurement basis for the post-change numbers below:
 - 4D migrated explorer path
 - explicit empty explorer profile
-- default uild_explorer_playground_settings(...) board sizes
+- default \build_explorer_playground_settings(...) board sizes
 - same interaction-timing hooks used by the functional audit
 
 Measured after this pass:
@@ -50,7 +61,7 @@ Measured after this pass:
 ## What Still Remains Slow
 
 - First 4D preview compile on explorer entry.
-- 4D topology-mutation rebuilds for Board X/Y/Z/W, Explorer Preset, Apply, and Remove; these still block on synchronous uild_movement_graph(...) work.
+- 4D topology-mutation rebuilds for Board X/Y/Z/W, Explorer Preset, Apply, and Remove; these still block on synchronous \build_movement_graph(...) work.
 - Unsafe preset families still pay the same compile cost and can still leave the preview invalid on unsupported board sizes.
 
 ## Next Latency Stage
