@@ -169,11 +169,8 @@ class TestMenuPolicy(unittest.TestCase):
                 "Play",
                 "Continue",
                 "Tutorials",
+                "Topology Playground",
                 "Settings",
-                "Controls",
-                "Help",
-                "Leaderboard",
-                "Bot",
                 "Quit",
             ],
         )
@@ -193,20 +190,54 @@ class TestMenuPolicy(unittest.TestCase):
             item["action_id"] for item in play_items if item["type"] == "action"
         }
         self.assertTrue(
-            {"play_2d", "play_3d", "play_4d", "play_last_custom_topology", "topology_lab"}.issubset(play_actions)
+            {
+                "play_2d",
+                "play_3d",
+                "play_4d",
+                "play_last_custom_topology",
+                "bot_options",
+                "leaderboard",
+            }.issubset(play_actions)
         )
+        self.assertNotIn("topology_lab", play_actions)
 
     def test_play_menu_is_minimal_launcher(self) -> None:
         launcher_play = menu_config.menu_definition("launcher_play")
-        detached_item = next(
-            item for item in launcher_play["items"] if item.get("action_id") == "topology_lab"
+        self.assertIn(
+            "play-adjacent tools",
+            menu_config.launcher_subtitles()["launcher_play"],
         )
-        self.assertEqual(detached_item["label"], "Open Explorer Playground")
-        self.assertIn("Minimal play launcher", menu_config.launcher_subtitles()["launcher_play"])
         self.assertIn(
             "play_last_custom_topology",
-            {item["action_id"] for item in launcher_play["items"] if item["type"] == "action"},
+            {
+                item["action_id"]
+                for item in launcher_play["items"]
+                if item["type"] == "action"
+            },
         )
+        self.assertIn(
+            "bot_options",
+            {
+                item["action_id"]
+                for item in launcher_play["items"]
+                if item["type"] == "action"
+            },
+        )
+        self.assertIn(
+            "leaderboard",
+            {
+                item["action_id"]
+                for item in launcher_play["items"]
+                if item["type"] == "action"
+            },
+        )
+
+    def test_topology_playground_is_root_launcher_entry(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        topology_item = next(
+            item for item in root_items if item.get("action_id") == "topology_lab"
+        )
+        self.assertEqual(topology_item["label"], "Topology Playground")
 
     def test_launcher_route_actions_cover_launcher_routes(self) -> None:
         pending = [menu_config.launcher_menu_id()]
@@ -233,10 +264,127 @@ class TestMenuPolicy(unittest.TestCase):
         subtitles = menu_config.launcher_subtitles()
         self.assertIn("launcher_root", subtitles)
         self.assertIn("launcher_play", subtitles)
+        self.assertIn("launcher_tutorials", subtitles)
+        self.assertIn("launcher_tutorials_interactive", subtitles)
+        self.assertIn("launcher_settings_root", subtitles)
+        self.assertIn("launcher_settings_advanced", subtitles)
         self.assertIn("default", subtitles)
         self.assertTrue(
             all(isinstance(text, str) and text for text in subtitles.values())
         )
+
+    def test_tutorials_menu_structure_matches_learning_support_split(self) -> None:
+        tutorials = menu_config.menu_definition("launcher_tutorials")
+        labels = [item["label"] for item in tutorials["items"]]
+        self.assertEqual(
+            labels,
+            [
+                "Interactive Tutorials",
+                "How to Play",
+                "Controls Reference",
+                "Help / FAQ",
+            ],
+        )
+        interactive = tutorials["items"][0]
+        self.assertEqual(interactive["type"], "submenu")
+        self.assertEqual(interactive["menu_id"], "launcher_tutorials_interactive")
+
+        interactive_menu = menu_config.menu_definition("launcher_tutorials_interactive")
+        interactive_actions = [item["action_id"] for item in interactive_menu["items"]]
+        self.assertEqual(
+            interactive_actions,
+            ["tutorial_2d", "tutorial_3d", "tutorial_4d"],
+        )
+
+    def test_settings_menu_structure_matches_requested_sections(self) -> None:
+        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        labels = [item["label"] for item in settings_menu["items"]]
+        self.assertEqual(
+            labels,
+            ["Game", "Display", "Audio", "Controls", "Profiles", "Advanced"],
+        )
+        self.assertEqual(
+            [item["type"] for item in settings_menu["items"]],
+            ["action", "action", "action", "action", "action", "submenu"],
+        )
+        self.assertEqual(settings_menu["items"][-1]["menu_id"], "launcher_settings_advanced")
+
+    def test_advanced_settings_contains_legacy_topology_editor_menu(self) -> None:
+        advanced_menu = menu_config.menu_definition("launcher_settings_advanced")
+        self.assertEqual(
+            [item["label"] for item in advanced_menu["items"]],
+            ["Advanced gameplay", "Legacy Topology Editor Menu"],
+        )
+        self.assertEqual(
+            [item["action_id"] for item in advanced_menu["items"]],
+            ["settings_advanced", "settings_legacy_topology_editor"],
+        )
+
+    def test_topology_playground_has_no_legacy_topology_entry(self) -> None:
+        root_items = menu_config.menu_items(menu_config.launcher_menu_id())
+        topology_item = next(
+            item for item in root_items if item.get("action_id") == "topology_lab"
+        )
+        self.assertEqual(topology_item["type"], "action")
+        self.assertNotIn("menu_id", topology_item)
+        reachable = set(menu_config.reachable_action_ids(menu_config.launcher_menu_id()))
+        self.assertIn("settings_legacy_topology_editor", reachable)
+        self.assertNotIn("legacy_topology_editor_menu", reachable)
+
+    def test_controls_settings_and_reference_use_distinct_destinations(self) -> None:
+        tutorials = menu_config.menu_definition("launcher_tutorials")
+        controls_reference = next(
+            item
+            for item in tutorials["items"]
+            if item["label"] == "Controls Reference"
+        )
+        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        controls_settings = next(
+            item for item in settings_menu["items"] if item["label"] == "Controls"
+        )
+        self.assertEqual(controls_reference["action_id"], "tutorial_controls_reference")
+        self.assertEqual(controls_settings["action_id"], "keybindings")
+        self.assertNotEqual(
+            controls_reference["action_id"], controls_settings["action_id"]
+        )
+
+    def test_help_is_available_from_tutorials_not_only_settings(self) -> None:
+        tutorials = menu_config.menu_definition("launcher_tutorials")
+        tutorial_actions = {
+            item["action_id"] for item in tutorials["items"] if item["type"] == "action"
+        }
+        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_labels = [item["label"] for item in settings_menu["items"]]
+        self.assertIn("help", tutorial_actions)
+        self.assertNotIn("Help", settings_labels)
+
+    def test_leaderboard_is_play_adjacent_not_in_settings(self) -> None:
+        play_menu = menu_config.menu_definition("launcher_play")
+        play_actions = {
+            item["action_id"] for item in play_menu["items"] if item["type"] == "action"
+        }
+        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_actions = {
+            item["action_id"]
+            for item in settings_menu["items"]
+            if item["type"] == "action"
+        }
+        self.assertIn("leaderboard", play_actions)
+        self.assertNotIn("leaderboard", settings_actions)
+
+    def test_bot_is_play_adjacent_not_in_settings(self) -> None:
+        play_menu = menu_config.menu_definition("launcher_play")
+        play_actions = {
+            item["action_id"] for item in play_menu["items"] if item["type"] == "action"
+        }
+        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_actions = {
+            item["action_id"]
+            for item in settings_menu["items"]
+            if item["type"] == "action"
+        }
+        self.assertIn("bot_options", play_actions)
+        self.assertNotIn("bot_options", settings_actions)
 
     def test_branding_copy_is_config_driven(self) -> None:
         branding = menu_config.branding_copy()

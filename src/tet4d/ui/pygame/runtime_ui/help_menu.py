@@ -273,6 +273,25 @@ def _topics_for_state(
     return (_fallback_topic(),)
 
 
+def _set_initial_topic(
+    state: _HelpState,
+    *,
+    context_label: str,
+    topic_id: str | None,
+) -> None:
+    if not topic_id:
+        return
+    clean_topic_id = str(topic_id).strip().lower()
+    if not clean_topic_id:
+        return
+    topics = _topics_for_state(state, context_label)
+    topic_ids = [str(topic.get("id", "")).strip().lower() for topic in topics]
+    if clean_topic_id not in topic_ids:
+        return
+    state.page = topic_ids.index(clean_topic_id)
+    state.subpage = 0
+
+
 def _current_topic(
     state: _HelpState, context_label: str
 ) -> tuple[dict[str, Any], tuple[dict[str, Any], ...]]:
@@ -828,9 +847,15 @@ def run_help_menu(
     *,
     dimension: int = 2,
     context_label: str = "Launcher",
+    initial_topic_id: str | None = None,
     on_escape_back: Callable[[], None] | None = None,
 ) -> pygame.Surface:
     state = _HelpState(dimension=max(2, min(4, int(dimension))))
+    _set_initial_topic(
+        state,
+        context_label=context_label,
+        topic_id=initial_topic_id,
+    )
     clock = pygame.time.Clock()
 
     while state.running:

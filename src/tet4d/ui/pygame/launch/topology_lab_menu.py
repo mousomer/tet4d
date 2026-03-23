@@ -35,6 +35,7 @@ from tet4d.ui.pygame.topology_lab import (
     apply_glue_pick,
     boundaries_for_dimension,
     cycle_sandbox_piece,
+    draw_action_buttons,
     ensure_piece_sandbox,
     handle_scene_camera_mouse_event,
     move_sandbox_piece,
@@ -59,9 +60,11 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_probe_path as _current_probe_path,
     ensure_probe_state as _ensure_probe_state,
     playground_dims_for_state as _board_dims_for_state,
+    probe_neighbors_visible as _probe_neighbors_visible,
     probe_trace_visible as _probe_trace_visible,
     scene_pane_active as _scene_pane_active,
     select_projection_coord as _select_projection_coord,
+    set_probe_neighbors_visible as _set_probe_neighbors_visible,
     set_active_workspace as _set_active_workspace,
     set_probe_trace_visible as _set_probe_trace_visible,
     sync_canonical_playground_state as _sync_canonical_playground_state,
@@ -74,14 +77,13 @@ from tet4d.ui.pygame.topology_lab.state_ownership import (
     select_sandbox_projection_coord as _select_sandbox_projection_coord,
 )
 from tet4d.ui.pygame.topology_lab.copy import (
-    LAB_SUBTITLE as _LAB_SUBTITLE,
-    display_title_for_state as _display_title_for_state,
-    topology_note_text as _topology_note_text,
+    display_title_for_state as _copy_display_title_for_state,
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_values import (
     _explorer_active_glue_ids,
     _explorer_boundaries,
     _explorer_piece_set_label,
+    _playability_shell_chip_text,
     _explorer_preset_value_text,
     _explorer_preview_payload,
     _explorer_transform_label,
@@ -126,6 +128,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
     _rows_for_state,
     _selectable_row_indexes,
 )
+from tet4d.ui.pygame.topology_lab.explorer_tools import draw_tool_ribbon
 from tet4d.ui.pygame.topology_lab.workspace_shell import (
     _action_buttons_for_state,
     _active_workspace_coord,
@@ -147,8 +150,12 @@ _TEXT_COLOR = (232, 232, 240)
 _HIGHLIGHT_COLOR = (255, 224, 128)
 _MUTED_COLOR = (192, 200, 228)
 _DISABLED_COLOR = (130, 138, 168)
-_ANALYSIS_PANE_TITLE = "Analysis View (secondary)"
-_SCENE_PANE_TITLE = "Explorer Workspace (primary)"
+_ANALYSIS_PANE_TITLE = "Diagnostics"
+_SCENE_PANE_TITLE = "Workspace"
+
+
+def _display_title_for_state(state: _TopologyLabState) -> str:
+    return _copy_display_title_for_state(state)
 
 # Re-exported compatibility surface kept for tests while menu cleanup stays
 # in flight.
@@ -302,6 +309,15 @@ def _handle_standard_action(state: _TopologyLabState, action: str) -> bool:
                 f"Editor trace {'shown' if _probe_trace_visible(state) else 'hidden'}",
             )
             return True
+        if action == "editor_probe_neighbors":
+            _set_probe_neighbors_visible(state, not _probe_neighbors_visible(state))
+            _set_status(
+                state,
+                "Editor probe neighbors shown"
+                if _probe_neighbors_visible(state)
+                else "Editor probe neighbors hidden",
+            )
+            return True
         if action == "sandbox_neighbor_search":
             _toggle_sandbox_neighbor_search(state)
             return True
@@ -437,9 +453,11 @@ def _handle_mouse_boundary_target(
     boundary_index = int(target.value)
     draft = _current_explorer_draft(state)
     if _uses_general_explorer_editor(state) and draft is not None:
-        active_row = _rows_for_state(state)[
-            _selectable_row_indexes(state)[state.selected]
-        ].key
+        selectable = _selectable_row_indexes(state)
+        active_row = None
+        if selectable:
+            selected = max(0, min(state.selected, len(selectable) - 1))
+            active_row = _rows_for_state(state)[selectable[selected]].key
         if active_row in {"explorer_source", "explorer_target"}:
             _update_explorer_draft(
                 state,
@@ -623,7 +641,6 @@ def _draw_control_rows(
     menu_w: int,
     selected_row: int,
 ) -> None:
-    state.mouse_targets = []
     y = panel_y + (48 if _uses_general_explorer_editor(state) else 16)
     for idx, row in enumerate(rows):
         is_status_row = _row_is_status_display(row)
@@ -713,54 +730,75 @@ def _draw_control_rows(
 def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
     draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
     width, height = screen.get_size()
-    title = fonts.title_font.render(_display_title_for_state(state), True, _TEXT_COLOR)
-    subtitle_text = fit_text(fonts.hint_font, _LAB_SUBTITLE, width - 28)
-    subtitle = fonts.hint_font.render(subtitle_text, True, _MUTED_COLOR)
-    note_text = fit_text(fonts.hint_font, _topology_note_text(state), width - 28)
-    note = fonts.hint_font.render(note_text, True, _HIGHLIGHT_COLOR)
-    title_y = 42
-    screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(
-        subtitle,
-        ((width - subtitle.get_width()) // 2, title_y + title.get_height() + 6),
-    )
-    screen.blit(
-        note,
-        (
-            (width - note.get_width()) // 2,
-            title_y + title.get_height() + subtitle.get_height() + 14,
-        ),
-    )
+    state.mouse_targets = []
 
     rows = _rows_for_state(state)
     selectable = _selectable_row_indexes(state)
     selected_row = _selected_row_index(state, selectable)
 
     if _uses_general_explorer_editor(state):
-        panel_w = min(1200, max(560, width - 32))
-        panel_h = min(height - 154, max(640, 132 + len(rows) * 36))
+        panel_w = min(1320, max(860, width - 24))
+        panel_h = min(height - 24, max(660, height - 24))
     else:
         panel_w = min(820, max(420, width - 40))
         panel_h = min(height - 178, 92 + len(rows) * 36)
     panel_x = (width - panel_w) // 2
-    panel_y = max(126, (height - panel_h) // 2)
+    panel_y = max(12, (height - panel_h) // 2)
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
     if _uses_general_explorer_editor(state):
-        menu_w = min(568, max(392, panel_w - 392))
+        top_bar_h = 46
+        bottom_bar_h = 44
+        content_y = panel_y + top_bar_h + 8
+        content_h = panel_h - top_bar_h - bottom_bar_h - 16
+        menu_w = 290 if _scene_pane_active(state) else 350
+        top_bar_rect = pygame.Rect(panel_x + 10, panel_y + 10, panel_w - 20, top_bar_h)
+        pygame.draw.rect(screen, (16, 20, 34), top_bar_rect, border_radius=10)
+        pygame.draw.rect(screen, (96, 112, 152), top_bar_rect, 1, border_radius=10)
+        title = fonts.hint_font.render("Topology Playground", True, _TEXT_COLOR)
+        screen.blit(title, (top_bar_rect.x + 14, top_bar_rect.y + 12))
+        state.mouse_targets = draw_tool_ribbon(
+            screen,
+            fonts,
+            area=pygame.Rect(top_bar_rect.x + 214, top_bar_rect.y + 8, 286, 30),
+            active_workspace=_active_workspace_name(state),
+        )
+        validity_text = _playability_shell_chip_text(state)
+        validity_color = (
+            (120, 214, 140)
+            if validity_text == "Valid"
+            else (224, 92, 92) if validity_text == "Unsafe" else (238, 158, 116)
+        )
+        chip_text = fonts.hint_font.render(validity_text, True, validity_color)
+        chip_rect = pygame.Rect(
+            top_bar_rect.right - chip_text.get_width() - 38,
+            top_bar_rect.y + 8,
+            chip_text.get_width() + 22,
+            28,
+        )
+        pygame.draw.rect(screen, (22, 28, 48), chip_rect, border_radius=14)
+        pygame.draw.rect(screen, validity_color, chip_rect, 1, border_radius=14)
+        screen.blit(
+            chip_text,
+            (
+                chip_rect.x + (chip_rect.width - chip_text.get_width()) // 2,
+                chip_rect.y + (chip_rect.height - chip_text.get_height()) // 2,
+            ),
+        )
         separator_x = panel_x + menu_w + 8
         pygame.draw.line(
             screen,
             (100, 116, 156),
-            (separator_x, panel_y + 14),
-            (separator_x, panel_y + panel_h - 14),
+            (separator_x, content_y + 4),
+            (separator_x, content_y + content_h - 4),
             1,
         )
         controls_rect = pygame.Rect(
-            panel_x + 10, panel_y + 10, menu_w - 12, panel_h - 20
+            panel_x + 10, content_y, menu_w - 12, content_h
         )
+        pygame.draw.rect(screen, (18, 22, 38), controls_rect, border_radius=10)
         pygame.draw.rect(
             screen,
             (236, 212, 128) if _controls_pane_active(state) else (84, 96, 132),
@@ -769,13 +807,15 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
             border_radius=10,
         )
         controls_header = fonts.hint_font.render(
-            _ANALYSIS_PANE_TITLE,
+            _ANALYSIS_PANE_TITLE if _controls_pane_active(state) else _SCENE_PANE_TITLE,
             True,
             _HIGHLIGHT_COLOR if _controls_pane_active(state) else _MUTED_COLOR,
         )
-        screen.blit(controls_header, (panel_x + 22, panel_y + 18))
+        screen.blit(controls_header, (controls_rect.x + 14, controls_rect.y + 10))
     else:
         menu_w = panel_w
+        content_y = panel_y
+        content_h = panel_h
 
     _draw_control_rows(
         screen,
@@ -783,7 +823,7 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         state=state,
         rows=rows,
         panel_x=panel_x,
-        panel_y=panel_y,
+        panel_y=content_y,
         menu_w=menu_w,
         selected_row=selected_row,
     )
@@ -795,9 +835,9 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
                 fonts,
                 state,
                 panel_x=panel_x,
-                panel_y=panel_y,
+                panel_y=content_y,
                 panel_w=panel_w,
-                panel_h=panel_h,
+                panel_h=content_h,
                 menu_w=menu_w,
                 analysis_pane_title=_ANALYSIS_PANE_TITLE,
                 scene_pane_title=_SCENE_PANE_TITLE,
@@ -807,17 +847,55 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
             )
         )
 
-    hint_y = panel_y + panel_h + 10
-    for hint in _hint_lines_for_state(state):
-        hint_text = fit_text(fonts.hint_font, hint, width - 24)
-        hint_surf = fonts.hint_font.render(hint_text, True, _MUTED_COLOR)
-        screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
-        hint_y += hint_surf.get_height() + 3
-    if state.status:
-        status_color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = fit_text(fonts.hint_font, state.status, width - 24)
-        status_surf = fonts.hint_font.render(status_text, True, status_color)
-        screen.blit(status_surf, ((width - status_surf.get_width()) // 2, hint_y + 2))
+    if _uses_general_explorer_editor(state):
+        bottom_rect = pygame.Rect(
+            panel_x + 10,
+            panel_y + panel_h - 54,
+            panel_w - 20,
+            40,
+        )
+        pygame.draw.rect(screen, (16, 20, 34), bottom_rect, border_radius=10)
+        pygame.draw.rect(screen, (96, 112, 152), bottom_rect, 1, border_radius=10)
+        chip_labels = list(_hint_lines_for_state(state))
+        chip_x = bottom_rect.x + 10
+        for label in chip_labels[:3]:
+            chip_width = min(190, max(56, fonts.hint_font.size(label)[0] + 18))
+            chip_rect = pygame.Rect(chip_x, bottom_rect.y + 8, chip_width, 24)
+            pygame.draw.rect(screen, (22, 28, 48), chip_rect, border_radius=12)
+            pygame.draw.rect(screen, (82, 96, 132), chip_rect, 1, border_radius=12)
+            chip_text = fonts.hint_font.render(
+                fit_text(fonts.hint_font, label, chip_rect.width - 12),
+                True,
+                _MUTED_COLOR,
+            )
+            screen.blit(
+                chip_text,
+                (
+                    chip_rect.x + (chip_rect.width - chip_text.get_width()) // 2,
+                    chip_rect.y + (chip_rect.height - chip_text.get_height()) // 2,
+                ),
+            )
+            chip_x = chip_rect.right + 8
+        actions = _action_buttons_for_state(state)
+        action_count = max(1, len(actions))
+        action_area_w = min(
+            bottom_rect.width // 2,
+            action_count * 96 + max(0, action_count - 1) * 8,
+        )
+        action_rect = pygame.Rect(
+            bottom_rect.right - action_area_w - 10,
+            bottom_rect.y + 6,
+            action_area_w,
+            28,
+        )
+        state.mouse_targets.extend(
+            draw_action_buttons(
+                screen,
+                fonts,
+                area=action_rect,
+                actions=actions,
+            )
+        )
 
 
 def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:

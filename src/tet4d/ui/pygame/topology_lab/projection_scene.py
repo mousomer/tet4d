@@ -8,15 +8,8 @@ from typing import Iterable, Sequence
 import pygame
 
 from tet4d.engine.topology_explorer import (
-    BLOCKED_MOVE,
-    CELLWISE_DEFORMATION,
-    RIGID_TRANSFORM,
     BoundaryRef,
-    CellStepResult,
     ExplorerTopologyProfile,
-    PieceStepResult,
-    build_explorer_transport_resolver,
-    movement_steps_for_dimension,
 )
 from tet4d.ui.pygame.ui_utils import fit_text
 
@@ -24,6 +17,11 @@ from .common import (
     TopologyLabHitTarget,
     axis_color,
     boundary_fill_color,
+)
+from .scene2d import (
+    draw_probe_center_glyph,
+    draw_probe_neighbor_glyphs,
+    draw_probe_path_glyphs,
 )
 from .scene_state import (
     TOOL_EDIT,
@@ -41,7 +39,6 @@ _MUTED = (168, 178, 208)
 _SELECTED = (112, 240, 255)
 _SANDBOX = (236, 198, 92)
 _INVALID = (220, 92, 92)
-_DEFORMATION = (214, 122, 228)
 _PANEL_GAP = 10
 _RIBBON_GAP = 6
 _HEADER_HEIGHT = 22
@@ -254,9 +251,10 @@ def _draw_selected_cell(
     rect = _cell_rect(board_rect, cell_size, _pair_coord(selected_coord, axes)).inflate(
         -4, -4
     )
-    pygame.draw.rect(surface, _SELECTED, rect, 2, border_radius=5)
-    if active_tool != _SANDBOX_TOOL:
-        pygame.draw.circle(surface, _SELECTED, rect.center, max(3, cell_size // 6))
+    if active_tool == _SANDBOX_TOOL:
+        pygame.draw.rect(surface, _SELECTED, rect, 2, border_radius=5)
+        return
+    draw_probe_center_glyph(surface, center=rect.center, cell_size=cell_size)
 
 
 def _draw_probe_path(
@@ -274,10 +272,7 @@ def _draw_probe_path(
     for coord in probe_path or ():
         rect = _cell_rect(board_rect, cell_size, _pair_coord(coord, axes))
         points.append(rect.center)
-    if len(points) >= 2:
-        pygame.draw.lines(surface, (88, 170, 214), False, points[-8:], 2)
-    for point in points[-8:-1]:
-        pygame.draw.circle(surface, (120, 146, 176), point, max(3, cell_size // 7))
+    draw_probe_path_glyphs(surface, centers=points[-10:], cell_size=cell_size)
 
 
 def _draw_neighbor_markers(
@@ -296,9 +291,7 @@ def _draw_neighbor_markers(
             continue
         seen.add(rect.center)
         centers.append(rect.center)
-    for point in centers:
-        pygame.draw.circle(surface, (120, 146, 176), point, max(3, cell_size // 7))
-        pygame.draw.circle(surface, (200, 214, 238), point, max(1, cell_size // 10))
+    draw_probe_neighbor_glyphs(surface, centers=centers, cell_size=cell_size)
 
 
 def _draw_sandbox_cells(
@@ -338,122 +331,6 @@ def _draw_sandbox_cells(
         )
         pygame.draw.rect(surface, fill, rect, border_radius=radius)
         pygame.draw.rect(surface, outline, rect, outline_width, border_radius=radius)
-
-
-def _step_preview_color(
-    step_axis: int,
-    traversal_glue_id: str | None,
-) -> tuple[int, int, int]:
-    base = axis_color(step_axis)
-    if traversal_glue_id is None:
-        return base
-    return tuple(min(255, channel + 34) for channel in base)
-
-
-def _draw_cell_step_previews(
-    surface: pygame.Surface,
-    *,
-    board_rect: pygame.Rect,
-    cell_size: int,
-    axes: tuple[int, int],
-    selected_coord: tuple[int, ...],
-    cell_steps: tuple[CellStepResult, ...],
-    focused_glue_id: str | None,
-    dimension: int,
-    slab_radius: int,
-) -> list[str]:
-    legend: list[str] = []
-    source_rect = _cell_rect(board_rect, cell_size, _pair_coord(selected_coord, axes))
-    for step_result in cell_steps:
-        step_label = step_result.step.label
-        if step_result.target is None:
-            legend.append(f"{step_label} blocked")
-            continue
-        traversal = step_result.traversal
-        legend.append(
-            f"{step_label} -> {list(step_result.target)}"
-            + (f" via {traversal.glue_id}" if traversal is not None else "")
-        )
-        if not _coord_matches_slice(
-            step_result.target,
-            dimension=dimension,
-            axes=axes,
-            selected_coord=selected_coord,
-            slab_radius=slab_radius,
-        ):
-            continue
-        target_rect = _cell_rect(
-            board_rect, cell_size, _pair_coord(step_result.target, axes)
-        ).inflate(-6, -6)
-        color = _step_preview_color(
-            step_result.step.axis,
-            None if traversal is None else traversal.glue_id,
-        )
-        width = 3 if traversal is not None else 2
-        pygame.draw.line(surface, color, source_rect.center, target_rect.center, width)
-        pygame.draw.rect(surface, color, target_rect, width, border_radius=4)
-        if traversal is not None:
-            seam_color = _SELECTED
-            if traversal.glue_id == focused_glue_id:
-                seam_color = (255, 226, 120)
-            pygame.draw.circle(
-                surface,
-                seam_color,
-                target_rect.center,
-                max(4, cell_size // 7),
-            )
-    return legend
-
-
-def _piece_result_style(
-    result: PieceStepResult,
-) -> tuple[tuple[int, int, int], str]:
-    if result.kind == BLOCKED_MOVE:
-        return _INVALID, "blocked"
-    if result.kind == CELLWISE_DEFORMATION:
-        if result.rigidly_coherent:
-            return _SELECTED, "rigid/chart-split"
-        return _DEFORMATION, "cellwise"
-    if result.kind == RIGID_TRANSFORM:
-        return _SELECTED, "rigid"
-    return (126, 214, 146), "free"
-
-
-def _draw_piece_step_previews(
-    surface: pygame.Surface,
-    *,
-    board_rect: pygame.Rect,
-    cell_size: int,
-    axes: tuple[int, int],
-    selected_coord: tuple[int, ...],
-    piece_steps: tuple[tuple[str, PieceStepResult], ...],
-    dimension: int,
-    slab_radius: int,
-) -> list[str]:
-    legend: list[str] = []
-    for step_label, result in piece_steps:
-        color, status = _piece_result_style(result)
-        legend.append(f"{step_label} {status}")
-        if result.moved_cells is None:
-            continue
-        visible_cells = [
-            coord
-            for coord in result.moved_cells
-            if _coord_matches_slice(
-                coord,
-                dimension=dimension,
-                axes=axes,
-                selected_coord=selected_coord,
-                slab_radius=slab_radius,
-            )
-        ]
-        for coord in visible_cells:
-            rect = _cell_rect(board_rect, cell_size, _pair_coord(coord, axes)).inflate(
-                -7,
-                -7,
-            )
-            pygame.draw.rect(surface, color, rect, 2, border_radius=4)
-    return legend
 
 
 def _boundary_edge_rect(
@@ -603,64 +480,6 @@ def _focus_boundaries_for_glue(
     return ()
 
 
-def _resolve_cell_previews(
-    *,
-    profile: ExplorerTopologyProfile | None,
-    dims: tuple[int, ...],
-    coord: tuple[int, ...],
-) -> tuple[CellStepResult, ...]:
-    if profile is None:
-        return ()
-    try:
-        resolver = build_explorer_transport_resolver(profile, dims)
-    except ValueError:
-        return ()
-    return tuple(
-        resolver.resolve_cell_step(coord, step)
-        for step in movement_steps_for_dimension(profile.dimension)
-    )
-
-
-def _resolve_piece_previews(
-    *,
-    profile: ExplorerTopologyProfile | None,
-    dims: tuple[int, ...],
-    sandbox_cells: tuple[tuple[int, ...], ...] | None,
-) -> tuple[tuple[str, PieceStepResult], ...]:
-    if profile is None or not sandbox_cells:
-        return ()
-    try:
-        resolver = build_explorer_transport_resolver(profile, dims)
-    except ValueError:
-        return ()
-    previews: list[tuple[str, PieceStepResult]] = []
-    for step in movement_steps_for_dimension(profile.dimension):
-        previews.append((step.label, resolver.resolve_piece_step(sandbox_cells, step)))
-    return tuple(previews)
-
-
-def _draw_projection_legend(
-    surface: pygame.Surface,
-    fonts,
-    *,
-    panel_rect: pygame.Rect,
-    lines: Sequence[str],
-    color: tuple[int, int, int] = _MUTED,
-) -> None:
-    if not lines:
-        return
-    y_pos = panel_rect.bottom - 8
-    for line in reversed(tuple(lines)[:3]):
-        text = fonts.hint_font.render(
-            fit_text(fonts.hint_font, line, panel_rect.width - 16),
-            True,
-            color,
-        )
-        y_pos -= text.get_height()
-        surface.blit(text, (panel_rect.x + 8, y_pos))
-        y_pos -= 2
-
-
 def _draw_info_panel(
     surface: pygame.Surface,
     fonts,
@@ -671,8 +490,6 @@ def _draw_info_panel(
     active_tool: str | None,
     sandbox_valid: bool | None,
     sandbox_message: str,
-    cell_legend: Sequence[str],
-    piece_legend: Sequence[str],
 ) -> None:
     pygame.draw.rect(surface, _BACKGROUND, rect, border_radius=10)
     pygame.draw.rect(surface, _BORDER, rect, 1, border_radius=10)
@@ -688,10 +505,6 @@ def _draw_info_panel(
         lines.append("Sandbox: " + ("valid" if sandbox_valid else "rejected"))
     if sandbox_message:
         lines.append(sandbox_message)
-    if piece_legend:
-        lines.append("Moves: " + "  ".join(piece_legend[:3]))
-    elif cell_legend:
-        lines.append("Neighbors: " + "  ".join(cell_legend[:3]))
     y_pos = rect.y + 10
     for index, line in enumerate(lines):
         text = fonts.hint_font.render(
@@ -886,11 +699,8 @@ def _draw_projection_panel(
     sandbox_valid: bool | None,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
-    cell_steps: tuple[CellStepResult, ...],
-    piece_steps: tuple[tuple[str, PieceStepResult], ...],
     active_tool: str | None,
-    focused_glue_id: str | None,
-) -> tuple[list[TopologyLabHitTarget], list[str]]:
+) -> list[TopologyLabHitTarget]:
     hits = [TopologyLabHitTarget(_PANEL_KIND, panel.label, panel.rect.copy())]
     _draw_panel_frame(
         surface,
@@ -958,28 +768,7 @@ def _draw_projection_panel(
         selected_coord=selected_coord,
         active_tool=active_tool,
     )
-    if active_tool == _SANDBOX_TOOL:
-        legend = []
-    else:
-        legend = _draw_cell_step_previews(
-            surface,
-            board_rect=board_rect,
-            cell_size=cell_size,
-            axes=panel.axes,
-            selected_coord=selected_coord,
-            cell_steps=cell_steps,
-            focused_glue_id=focused_glue_id,
-            dimension=dimension,
-            slab_radius=slab_radius,
-        )
-    _draw_projection_legend(
-        surface,
-        fonts,
-        panel_rect=panel.rect,
-        lines=legend,
-        color=_MUTED,
-    )
-    return hits, legend
+    return hits
 
 
 def _draw_projection_panels(
@@ -998,16 +787,12 @@ def _draw_projection_panels(
     sandbox_message: str,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
-    cell_steps: tuple[CellStepResult, ...],
-    piece_steps: tuple[tuple[str, PieceStepResult], ...],
     active_tool: str | None,
     focused_glue_id: str | None,
 ) -> list[TopologyLabHitTarget]:
     hits: list[TopologyLabHitTarget] = []
-    cell_legend_for_info: list[str] = []
-    piece_legend_for_info: list[str] = []
     for panel in panels:
-        panel_hits, legend = _draw_projection_panel(
+        panel_hits = _draw_projection_panel(
             surface,
             fonts,
             panel=panel,
@@ -1020,16 +805,9 @@ def _draw_projection_panels(
             sandbox_valid=sandbox_valid,
             slab_radius=slab_radius,
             focus_boundaries=focus_boundaries,
-            cell_steps=cell_steps,
-            piece_steps=piece_steps,
             active_tool=active_tool,
-            focused_glue_id=focused_glue_id,
         )
         hits.extend(panel_hits)
-        if active_tool == _SANDBOX_TOOL and legend and not piece_legend_for_info:
-            piece_legend_for_info = legend
-        if active_tool != _SANDBOX_TOOL and legend and not cell_legend_for_info:
-            cell_legend_for_info = legend
     if info_rect is not None:
         _draw_info_panel(
             surface,
@@ -1040,8 +818,6 @@ def _draw_projection_panels(
             active_tool=active_tool,
             sandbox_valid=sandbox_valid,
             sandbox_message=sandbox_message,
-            cell_legend=cell_legend_for_info,
-            piece_legend=piece_legend_for_info,
         )
     return hits
 
@@ -1073,14 +849,7 @@ def draw_projection_scene(
 ) -> list[TopologyLabHitTarget]:
     dims = tuple(int(value) for value in preview_dims)
     selected_coord = _selected_projection_coord(dimension, probe_coord)
-    _draw_projection_heading(
-        surface,
-        fonts,
-        area=area,
-        dimension=dimension,
-        selected_coord=selected_coord,
-    )
-    header_height = 70 if dimension == 4 else 64
+    header_height = 54 if dimension == 4 else 48
     ribbon_rect = pygame.Rect(area.x, area.y, area.width, header_height)
     hits = _draw_projection_ribbon(
         surface,
@@ -1095,12 +864,6 @@ def draw_projection_scene(
         selected_glue_id=selected_glue_id,
         highlighted_glue_id=highlighted_glue_id,
     )
-    cell_steps = _resolve_cell_previews(
-        profile=profile,
-        dims=dims,
-        coord=selected_coord,
-    )
-    piece_steps: tuple[tuple[str, PieceStepResult], ...] = ()
     focused_glue_id = highlighted_glue_id or selected_glue_id
     panels, info_rect = _layout_projection_panels(
         area,
@@ -1112,7 +875,7 @@ def draw_projection_scene(
             surface,
             fonts,
             panels=panels,
-            info_rect=info_rect,
+            info_rect=None,
             dims=dims,
             dimension=dimension,
             selected_coord=selected_coord,
@@ -1126,8 +889,6 @@ def draw_projection_scene(
                 profile,
                 glue_id=focused_glue_id,
             ),
-            cell_steps=cell_steps,
-            piece_steps=piece_steps,
             active_tool=active_tool,
             focused_glue_id=focused_glue_id,
         )

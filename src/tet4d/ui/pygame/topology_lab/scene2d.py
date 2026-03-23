@@ -90,6 +90,16 @@ def _probe_centers(
     return centers
 
 
+def draw_probe_path_glyphs(
+    surface: pygame.Surface,
+    *,
+    centers: list[tuple[int, int]],
+    cell_size: int,
+) -> None:
+    if len(centers) >= 2:
+        pygame.draw.lines(surface, (88, 170, 214), False, centers, 2)
+
+
 def _draw_probe_path(
     surface: pygame.Surface,
     *,
@@ -98,11 +108,22 @@ def _draw_probe_path(
     preview_dims: tuple[int, ...],
     probe_path: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None,
 ) -> None:
-    centers = _probe_centers(board, cell_size, preview_dims, probe_path)
-    if len(centers) >= 2:
-        pygame.draw.lines(surface, (88, 170, 214), False, centers, 2)
-    for center in centers[:-1]:
+    draw_probe_path_glyphs(
+        surface,
+        centers=_probe_centers(board, cell_size, preview_dims, probe_path),
+        cell_size=cell_size,
+    )
+
+
+def draw_probe_neighbor_glyphs(
+    surface: pygame.Surface,
+    *,
+    centers: list[tuple[int, int]],
+    cell_size: int,
+) -> None:
+    for center in centers:
         pygame.draw.circle(surface, (120, 146, 176), center, max(3, cell_size // 7))
+        pygame.draw.circle(surface, (200, 214, 238), center, max(1, cell_size // 10))
 
 
 def _draw_neighbor_markers(
@@ -113,9 +134,21 @@ def _draw_neighbor_markers(
     preview_dims: tuple[int, ...],
     neighbor_markers: tuple[tuple[int, ...], ...] | list[tuple[int, ...]] | None,
 ) -> None:
-    for center in _probe_centers(board, cell_size, preview_dims, neighbor_markers):
-        pygame.draw.circle(surface, (120, 146, 176), center, max(3, cell_size // 7))
-        pygame.draw.circle(surface, (200, 214, 238), center, max(1, cell_size // 10))
+    draw_probe_neighbor_glyphs(
+        surface,
+        centers=_probe_centers(board, cell_size, preview_dims, neighbor_markers),
+        cell_size=cell_size,
+    )
+
+
+def draw_probe_center_glyph(
+    surface: pygame.Surface,
+    *,
+    center: tuple[int, int],
+    cell_size: int,
+) -> None:
+    pygame.draw.circle(surface, (112, 240, 255), center, max(5, cell_size // 4))
+    pygame.draw.circle(surface, (12, 18, 26), center, max(2, cell_size // 7))
 
 
 def _draw_probe(
@@ -133,8 +166,7 @@ def _draw_probe(
     if not (0 <= x < preview_dims[0] and 0 <= y < preview_dims[1]):
         return
     probe = _cell_rect(board, cell_size, (x, y))
-    pygame.draw.circle(surface, (112, 240, 255), probe.center, max(5, cell_size // 4))
-    pygame.draw.circle(surface, (12, 18, 26), probe.center, max(2, cell_size // 7))
+    draw_probe_center_glyph(surface, center=probe.center, cell_size=cell_size)
 
 
 def _draw_boundary_edges(

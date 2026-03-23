@@ -289,7 +289,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             or (
                 "F7 dry-run verify (bot, no graphics)",
                 "Use Main Menu -> Settings for Random type.",
-                "Use Play -> Open Explorer Playground or Play Last Custom Topology for custom topology.",
+                "Use Topology Playground or Play Last Custom Topology for custom topology.",
                 "Use Main Menu -> Bot Options / Keybindings for shared controls.",
             ),
             bindings_status=current_state.bindings_status,

@@ -44,8 +44,8 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.2d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.2d.speed_level`: `1`; integer; range: 1..10
 
-### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
+### Game
+Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.2d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -82,8 +82,8 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.3d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.speed_level`: `1`; integer; range: 1..10
 
-### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
+### Game
+Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.3d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -121,8 +121,8 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.speed_level`: `1`; integer; range: 1..10
 
-### Gameplay
-Shared run controls across 2D/3D/4D (game seed, random type, and advanced gameplay tuning).
+### Game
+Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.4d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all

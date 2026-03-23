@@ -85,7 +85,7 @@ def draw_transform_editor(
     _draw_read_only_display(
         surface,
         rect=preset_rect,
-        title="Preset (Analysis View)",
+        title="Preset",
         text=preset_label,
         font=fonts.hint_font,
     )

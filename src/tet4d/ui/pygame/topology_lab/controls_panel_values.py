@@ -43,6 +43,7 @@ from .scene_state import (
     current_selected_boundary_index,
     current_selected_glue_id,
     playground_dims_for_state,
+    probe_neighbors_visible,
     probe_trace_visible,
     uses_general_explorer_editor,
 )
@@ -99,6 +100,17 @@ def _playability_summary_value_text(state: TopologyLabState) -> str:
 def _playability_validity_value_text(state: TopologyLabState) -> str:
     analysis = _current_playability_analysis(state)
     return _PLAYABILITY_VALIDITY_LABELS.get(analysis.validity, "Unknown")
+
+
+def _playability_shell_chip_text(state: TopologyLabState) -> str:
+    analysis = _current_playability_analysis(state)
+    if analysis.validity == "invalid":
+        return "Needs Fix"
+    if analysis.rigid_playability == "not_rigid_playable":
+        return "Unsafe"
+    if analysis.validity == "valid":
+        return "Valid"
+    return "Needs Fix"
 
 
 def _playability_explorer_value_text(state: TopologyLabState) -> str:
@@ -337,6 +349,10 @@ def _editor_trace_value_text(state: TopologyLabState) -> str:
     return "On" if probe_trace_visible(state) else "Off"
 
 
+def _editor_probe_neighbors_value_text(state: TopologyLabState) -> str:
+    return "On" if probe_neighbors_visible(state) else "Off"
+
+
 def _analysis_boundary_value_text(state: TopologyLabState) -> str:
     selected_boundary_index = current_selected_boundary_index(state)
     if selected_boundary_index is None:
@@ -359,6 +375,7 @@ def _explorer_draft_boundary_value_text(
 _EXPLORER_SCALAR_ROW_VALUE_GETTERS = {
     "editor_tool": _editor_tool_value_text,
     "editor_trace": _editor_trace_value_text,
+    "editor_probe_neighbors": _editor_probe_neighbors_value_text,
     "piece_set": _explorer_piece_set_label,
     "speed_level": lambda state: str(_play_settings_or_defaults(state).speed_level),
     "rigid_play_mode": _rigid_play_mode_value_text,
@@ -441,6 +458,7 @@ __all__ = [
     "_explorer_presets",
     "_explorer_transform_label",
     "_playability_panel_lines",
+    "_playability_shell_chip_text",
     "_playability_status_text",
     "_row_value_text",
     "_sandbox_neighbor_search_enabled",

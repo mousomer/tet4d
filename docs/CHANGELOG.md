@@ -184,9 +184,9 @@
 10. 4D render profiling tool:
     - `tools/profile_4d_render.py`
 11. Gap-closure execution plan artifact:
-    - `docs/plans/PLAN_4D_RENDER_GAPS_2026-02-19.md`
+    - `docs/history/plans/PLAN_4D_RENDER_GAPS_2026-02-19.md`
 12. Dead-code/dedup cleanup planning artifact:
-    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+    - `docs/history/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
 13. Help/menu restructure `M1` artifacts:
     - `config/help/topics.json`
     - `config/help/action_map.json`
@@ -415,28 +415,28 @@
     - `docs/rds/RDS_MENU_STRUCTURE.md`
 15. Added active backlog follow-up for unreferenced-helper cleanup and setup-menu deduplication (`BKL-P2-007`) in:
     - `docs/BACKLOG.md`
-    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+    - `docs/history/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
 16. Updated `BKL-P2-007` scope after cleanup completion:
     - unreferenced-helper removal marked complete,
     - remaining scope narrowed to setup-menu render/value deduplication.
 17. Added sourced help/menu restructuring report and phased execution plan:
-    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 18. Updated `docs/rds/RDS_MENU_STRUCTURE.md` research basis with ARIA APG, Microsoft menu/flyout guidance, Material menu guidance, and content-structure references.
 19. Expanded `BKL-P2-006` with concrete execution milestones and linked plan artifact in `docs/BACKLOG.md`.
 20. Refreshed `docs/GUIDELINES_RESEARCH.md` to reflect current open gaps and current web-guideline source set.
 21. Added implementation-status update for help/menu restructure plan (`M1` done; `M2`-`M4` pending):
-    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 22. Updated menu/help RDS and backlog to record `M1` completion and keep remaining phases explicit:
     - `docs/rds/RDS_MENU_STRUCTURE.md`
     - `docs/BACKLOG.md`
 23. Updated help/menu planning/backlog status to mark `M2` complete and keep `M3`-`M4` open:
-    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
     - `docs/BACKLOG.md`
     - `docs/rds/RDS_MENU_STRUCTURE.md`
     - `docs/RDS_AND_CODEX.md`
     - `docs/rds/RDS_TETRIS_GENERAL.md`
 24. Updated help/menu planning + RDS/backlog status to mark `M3` complete and keep `M4` open:
-    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
     - `docs/BACKLOG.md`
     - `docs/rds/RDS_MENU_STRUCTURE.md`
     - `docs/RDS_AND_CODEX.md`
@@ -444,7 +444,7 @@
     - `docs/help/HELP_INDEX.md`
     - `docs/FEATURE_MAP.md`
 25. Updated help/menu planning + RDS/backlog status to mark `M4` complete:
-    - `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+    - `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
     - `docs/BACKLOG.md`
     - `docs/rds/RDS_MENU_STRUCTURE.md`
     - `docs/rds/RDS_TETRIS_GENERAL.md`
@@ -456,12 +456,12 @@
     - `docs/rds/RDS_TETRIS_GENERAL.md`
     - `docs/RDS_AND_CODEX.md`
     - `docs/GUIDELINES_RESEARCH.md`
-    - `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+    - `docs/history/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
 27. Updated 4D RDS/backlog to capture the `xw`/`zw` board-slot permutation requirement and closure:
     - `docs/rds/RDS_4D_TETRIS.md`
     - `docs/BACKLOG.md`
 28. Added and completed basis-decomposition implementation plan for 4D `xw`/`zw` rotations:
-    - `docs/plans/PLAN_4D_VIEW_BASIS_DECOMPOSITION_2026-02-19.md`
+    - `docs/history/plans/PLAN_4D_VIEW_BASIS_DECOMPOSITION_2026-02-19.md`
 29. Updated 4D RDS and backlog to replace superseded panel-permutation semantics with basis-driven decomposition semantics:
     - `docs/rds/RDS_4D_TETRIS.md`
     - `docs/BACKLOG.md`
@@ -470,7 +470,7 @@
     - `docs/rds/RDS_4D_TETRIS.md`
     - `docs/FEATURE_MAP.md`
 31. Added regression-fix execution plan artifact:
-    - `docs/plans/PLAN_4D_REGRESSION_FIXES_2026-02-19.md`
+    - `docs/history/plans/PLAN_4D_REGRESSION_FIXES_2026-02-19.md`
 32. Keybinding editor section model now splits gameplay actions into `Gameplay / Translation` and `Gameplay / Rotation` (no slice section).
 33. Help live-key rendering now mirrors the same split (`System`, `Gameplay / Translation`, `Gameplay / Rotation`, `Camera / View`).
 34. Side-panel control helpers now hide exploration-only translation rows unless exploration mode is active.
@@ -585,6 +585,6 @@
 7. Help index and asset manifest updated to document arrow-diagram renderer as the primary guide source.
 8. README/help docs updated for exploration mode, `F1` gameplay help access, and icon-based control guidance.
 9. Added rehaul planning artifacts for next menu/keybinding pass:
-   - `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
+   - `docs/history/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
    - RDS/backlog updates for `BKL-P1-005` (macbook no-keypad camera defaults) and `BKL-P1-006` (menu rehaul v2).
 10. Updated RDS/feature docs to reflect implemented menu IA and no-keypad macbook camera defaults.

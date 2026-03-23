@@ -32,6 +32,7 @@ from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
+from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 
@@ -154,6 +155,27 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(row_keys.count("y_pos"), 1)
         self.assertNotIn("z_neg", row_keys)
 
+    def test_explorer_rows_do_not_expose_legacy_topology_menu_labels(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+
+        rows = topology_lab_menu._rows_for_state(state)
+        labels = [row.label for row in rows]
+        keys = [row.key for row in rows]
+
+        self.assertIn("Path", labels)
+        self.assertNotIn("Workspace Path", labels)
+        self.assertNotIn("Legacy Topology", labels)
+        self.assertNotIn("preset", keys)
+        self.assertNotIn("topology_mode", keys)
+
+    def test_explorer_helper_lines_do_not_advertise_legacy_menu_surface(self) -> None:
+        state = self._explorer_state(3)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        joined = " ".join(lines)
+        self.assertNotIn("Legacy compatibility", joined)
+        self.assertNotIn("legacy-normal-mode", joined)
+
     def test_cycle_edge_rule_blocks_normal_y_wrap(self) -> None:
         profile = default_topology_profile_state(
             dimension=3,
@@ -230,6 +252,7 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_analysis_rows_demote_row_based_seam_editing_for_2d(self) -> None:
         state = self._explorer_state(2)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         rows = topology_lab_menu._rows_for_state(state)
         row_keys = [row.key for row in rows]
         self.assertIn("analysis_boundary", row_keys)
@@ -247,6 +270,7 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_analysis_status_rows_are_display_only(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         rows = topology_lab_menu._rows_for_state(state)
         selectable_keys = [
             rows[index].key
@@ -960,6 +984,7 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_analysis_rows_demote_row_based_seam_editing_for_3d(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("analysis_transform", row_keys)
         self.assertNotIn("explorer_source", row_keys)
@@ -969,9 +994,11 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_rows_include_play_settings_for_3d_explorer(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("editor_tool", row_keys)
         self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
@@ -981,8 +1008,10 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_rows_include_play_settings_for_4d_explorer(self) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
@@ -1019,6 +1048,26 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertFalse(topology_lab_menu._probe_trace_visible(state))
         self.assertIn("Editor trace hidden", state.status)
+
+    def test_editor_probe_neighbors_row_toggles_editor_owned_probe_overlay(self) -> None:
+        state = self._explorer_state(3)
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "editor_probe_neighbors"
+        )
+
+        self.assertFalse(topology_lab_menu._probe_neighbors_visible(state))
+
+        handled = topology_lab_menu._adjust_row(state, row, 1)
+
+        self.assertTrue(handled)
+        self.assertEqual(
+            topology_lab_menu._active_workspace_name(state),
+            topology_lab_menu.WORKSPACE_EDITOR,
+        )
+        self.assertTrue(topology_lab_menu._probe_neighbors_visible(state))
+        self.assertIn("Editor probe neighbors shown", state.status)
 
     def test_sandbox_neighbors_row_toggles_sandbox_owned_neighbor_state(self) -> None:
         state = self._explorer_state(3)
@@ -1078,8 +1127,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         }
         self.assertIn("editor_tool", row_targets)
         self.assertIn("editor_trace", row_targets)
-        self.assertGreater(row_targets["editor_trace"].rect.width, 300)
+        self.assertIn("editor_probe_neighbors", row_targets)
+        self.assertGreater(row_targets["editor_trace"].rect.width, 240)
         self.assertLess(row_targets["editor_trace"].rect.bottom, screen.get_height())
+        self.assertGreater(row_targets["editor_probe_neighbors"].rect.width, 240)
+        self.assertLess(
+            row_targets["editor_probe_neighbors"].rect.bottom,
+            screen.get_height(),
+        )
 
     def test_draw_menu_keeps_sandbox_context_rows_visible(self) -> None:
         screen = pygame.Surface((1280, 900))
@@ -1095,7 +1150,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             if target.kind == "row_select"
         }
         self.assertIn("sandbox_neighbor_search", row_targets)
-        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 300)
+        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 240)
         self.assertLess(
             row_targets["sandbox_neighbor_search"].rect.bottom,
             screen.get_height(),
@@ -1361,6 +1416,7 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_analysis_rows_demote_row_based_seam_editing_for_4d(self) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("analysis_transform", row_keys)
         self.assertNotIn("explorer_source", row_keys)
@@ -1465,6 +1521,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         self,
     ) -> None:
         state = self._explorer_state(2)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         topology_lab_controls_panel.replace_explorer_profile(
             state,
             projective_plane_profile_2d(),
@@ -1500,6 +1557,10 @@ class TestTopologyLabMenu(unittest.TestCase):
             "Play: Play uses cellwise seam transport automatically for this topology.",
             lines,
         )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Unsafe",
+        )
 
     def test_playability_preview_lines_show_invalid_topology_state(self) -> None:
         state = self._explorer_state(2)
@@ -1524,6 +1585,19 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Preview unavailable until the topology validates.", lines)
         self.assertTrue(
             any("unsupported for current board dimensions" in line for line in lines)
+        )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Needs Fix",
+        )
+
+    def test_valid_playability_maps_to_valid_shell_chip(self) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu._refresh_explorer_scene_state(state)
+
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Valid",
         )
 
     def test_remove_explorer_glue_drops_selected_gluing(self) -> None:
@@ -1561,10 +1635,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         targets = state.mouse_targets or []
         self.assertTrue(any(target.kind == "boundary_pick" for target in targets))
         self.assertTrue(
-            any(
-                target.kind == "row_step" and target.value == ("explorer_preset", 1)
-                for target in targets
-            )
+            any(target.kind == "workspace_mode" for target in targets)
         )
         self.assertFalse(any(target.kind == "preset_step" for target in targets))
         self.assertTrue(any(target.kind == "glue_slot" for target in targets))
@@ -1607,7 +1678,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             state,
             topology_lab_menu.build_explorer_playground_settings(dimension=3),
         )
-        state.active_pane = topology_lab_menu.PANE_SCENE
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         before = topology_lab_menu._board_dims_for_state(state)
         topology_lab_menu._draw_menu(screen, fonts, state)
         minus_target = next(
@@ -2456,6 +2527,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             initial_tool=launch.initial_tool,
             play_settings=launch.settings_snapshot,
         )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("dimension", row_keys)
         self.assertIn("board_x", row_keys)
@@ -2825,6 +2897,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             initial_tool=launch.initial_tool,
             play_settings=launch.settings_snapshot,
         )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         initial_dims = topology_lab_menu._board_dims_for_state(state)
         topology_lab_menu._draw_menu(screen, fonts, state)
         minus_target = next(
@@ -2964,7 +3037,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_hint_lines_do_not_expose_camera_in_2d(self) -> None:
         state = self._explorer_state(2)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertFalse(any(line.startswith("Projection sync:") for line in lines))
+        self.assertFalse(any("synced" in line for line in lines))
 
     def test_sync_explorer_state_populates_canonical_scene_snapshot(self) -> None:
         state = topology_lab_menu._TopologyLabState(
@@ -3197,7 +3270,6 @@ class TestTopologyLabMenu(unittest.TestCase):
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
             patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_workspace_shell, "draw_action_buttons", return_value=[]),
             patch.object(topology_lab_workspace_shell, "draw_preview_panel") as draw_preview,
             patch.object(
                 topology_lab_menu, "_draw_probe_controls_if_needed", return_value=[]
@@ -3224,12 +3296,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(kwargs["active_glue_ids"], state.scene_active_glue_ids)
         self.assertEqual(kwargs["basis_arrows"], list(state.scene_basis_arrows))
         preview_kwargs = draw_preview.call_args.kwargs
-        self.assertEqual(preview_kwargs["title"], "Explorer 3D keys")
+        self.assertEqual(preview_kwargs["title"], "Keys")
         self.assertTrue(preview_kwargs["lines"])
-        self.assertTrue(preview_kwargs["lines"][0].startswith("Context:"))
+        self.assertIn(preview_kwargs["lines"][0], {"Edit", "Probe", "Play"})
         self.assertTrue(
             all(
-                line.startswith(("Context:", "Move: ", "Rotate: ", "      ", "        "))
+                line.startswith(("Move ", "Turn ", "     "))
+                or line in {"Edit", "Probe", "Play"}
                 for line in preview_kwargs["lines"]
             )
         )

@@ -1,19 +1,61 @@
 from __future__ import annotations
 
 import unittest
+import io
+from contextlib import redirect_stdout
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pygame
 
 from cli import front
-from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_EXPLORER
+from tet4d.engine.gameplay.topology_designer import (
+    GAMEPLAY_MODE_EXPLORER,
+    GAMEPLAY_MODE_NORMAL,
+)
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
+from tet4d.ui.pygame.topology_lab import entrypoint as topology_lab_entrypoint
 
 
 class TestFrontLauncherRoutes(unittest.TestCase):
+    def test_parse_topology_playground_cli_defaults_dimension_when_flag_has_no_value(
+        self,
+    ) -> None:
+        args = front._parse_cli_args(["--topology-playground"])
+
+        self.assertEqual(args.topology_playground, "2")
+
+    def test_parse_topology_playground_dimension_accepts_supported_values(self) -> None:
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("2"), 2)
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("3"), 3)
+        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("4"), 4)
+
+    def test_parse_topology_playground_dimension_rejects_invalid_values_cleanly(
+        self,
+    ) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer), self.assertRaises(SystemExit) as raised:
+            topology_lab_entrypoint.parse_topology_playground_dimension("foo")
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn("Unsupported dimension: foo. Use 2, 3, or 4.", buffer.getvalue())
+
+    def test_parse_topology_playground_dimension_rejects_unsupported_numbers_cleanly(
+        self,
+    ) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer), self.assertRaises(SystemExit) as raised:
+            topology_lab_entrypoint.parse_topology_playground_dimension("5")
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn("Unsupported dimension: 5. Use 2, 3, or 4.", buffer.getvalue())
+
+    def test_main_can_launch_topology_playground_directly_from_cli_option(self) -> None:
+        with patch.object(front, "run_direct_topology_playground") as run_direct:
+            front.main(["--topology-playground", "3"])
+
+        run_direct.assert_called_once_with(3)
+
     def _run_live_topology_lab_launcher_action(
         self,
         *,
@@ -104,6 +146,38 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertEqual(launch.dimension, 3)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
+
+    def test_legacy_topology_editor_action_is_settings_only_legacy_launch(self) -> None:
+        state = front.MainMenuState(last_mode="4d")
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+
+        with (
+            patch.object(front, "_persist_session_status"),
+            patch.object(
+                front,
+                "run_explorer_playground",
+                return_value=(True, "Legacy topology editor closed"),
+            ) as run_playground,
+        ):
+            close = front._menu_action_legacy_topology_editor(
+                state,
+                session,
+                object(),
+            )
+
+        self.assertFalse(close)
+        self.assertEqual(state.status, "Legacy topology editor closed")
+        self.assertFalse(state.status_error)
+        run_playground.assert_called_once()
+        launch = run_playground.call_args.kwargs["launch"]
+        self.assertEqual(launch.dimension, 4)
+        self.assertEqual(launch.entry_source, "launcher")
+        self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_NORMAL)
 
     def test_topology_lab_launcher_entry_uses_explorer_config_dims_in_live_state(
         self,

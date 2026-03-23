@@ -74,8 +74,17 @@ class TestHelpMenu(unittest.TestCase):
                     self.assertGreaterEqual(state.subpage, 0)
                     self.assertGreater(screen.get_bounding_rect().width, 0)
 
+    def test_initial_topic_selection_targets_requested_topic(self) -> None:
+        state = help_menu._HelpState(dimension=4)
+        help_menu._set_initial_topic(
+            state,
+            context_label="Launcher",
+            topic_id="key_reference",
+        )
+        topic, _topics = help_menu._current_topic(state, "Launcher")
+        self.assertEqual(topic["id"], "key_reference")
+
 
 if __name__ == "__main__":
     unittest.main()
-
 

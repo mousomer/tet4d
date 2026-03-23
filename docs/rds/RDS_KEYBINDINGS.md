@@ -242,11 +242,11 @@ Both menu contexts must expose the same keybinding profile actions:
 
 ### 5.8 Dedicated keybindings setup menu
 
-1. Main menu must include a top-level `Controls` entry that opens keybindings setup.
-2. Pause menu must include the same `Controls` entry.
-3. Both entries open the same editor component and behavior.
+1. Launcher `Settings -> Controls` must open the keybindings/input-configuration surface.
+2. Pause menu must include a `Controls` entry that opens the same keybindings surface.
+3. Controls reference/help content must stay separate from controls settings; reference belongs under launcher `Tutorials` / help surfaces, not under keybinding setup.
 4. User can test bindings in a lightweight input-preview subpanel before leaving menu.
-5. Main-menu keybinding scope list must present `General` separately from dimension-specific scopes (`2D`,`3D`,`4D`).
+5. Keybinding scope list must present `General` separately from dimension-specific scopes (`2D`,`3D`,`4D`).
 6. `General` scope is for shared/system actions and should not be merged into a combined "all bindings" default view.
 
 ### 5.9 Default conflict policy for shipped layouts

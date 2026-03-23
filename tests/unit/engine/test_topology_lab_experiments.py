@@ -24,6 +24,7 @@ class TestTopologyLabExperiments(unittest.TestCase):
 
     def test_explorer_rows_include_experiment_pack(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("experiments", row_keys)
 

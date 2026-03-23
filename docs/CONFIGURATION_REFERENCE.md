@@ -816,9 +816,12 @@ Parameters:
 - `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
 - `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Minimal play launcher: safe presets, last custom topology, or open E...` (`string`)
-- `launcher_subtitles.launcher_root`: `"Play, continue, or launch Tutorials; then adjust Settings, Controls,...` (`string`)
-- `launcher_subtitles.launcher_tutorials`: `"Select a guided tutorial pack."` (`string`)
+- `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
+- `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
+- `launcher_subtitles.launcher_settings_advanced`: `"Open advanced gameplay tuning or the legacy topology editor compatib...` (`string`)
+- `launcher_subtitles.launcher_settings_root`: `"Open game, display, audio, controls, profiles, or advanced settings."` (`string`)
+- `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
+- `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
 - `menu_entrypoints.pause`: `"pause_root"` (`string`)
 - `menus.launcher_play.items[]`: array[`object`]
@@ -827,16 +830,33 @@ Parameters:
 - `menus.launcher_play.items[].type`: varies (`string`); examples: `"action"`
 - `menus.launcher_play.title`: `"Choose Mode"` (`string`)
 - `menus.launcher_root.items[]`: array[`object`]
-- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"settings"`, `"keybindings"`
+- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"quit"`
 - `menus.launcher_root.items[].label`: varies (`string`); examples: `"Play"`, `"Continue"`, `"Tutorials"`
-- `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`
+- `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`, `"launcher_settings_root"`
 - `menus.launcher_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
 - `menus.launcher_root.title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
+- `menus.launcher_settings_advanced.items[]`: array[`object`]
+- `menus.launcher_settings_advanced.items[].action_id`: varies (`string`); examples: `"settings_advanced"`, `"settings_legacy_topology_editor"`
+- `menus.launcher_settings_advanced.items[].label`: varies (`string`); examples: `"Advanced gameplay"`, `"Legacy Topology Editor Menu"`
+- `menus.launcher_settings_advanced.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_settings_advanced.title`: `"Advanced"` (`string`)
+- `menus.launcher_settings_root.items[]`: array[`object`]
+- `menus.launcher_settings_root.items[].action_id`: varies (`string`); examples: `"settings"`, `"settings_display"`, `"settings_audio"`
+- `menus.launcher_settings_root.items[].label`: varies (`string`); examples: `"Game"`, `"Display"`, `"Audio"`
+- `menus.launcher_settings_root.items[].menu_id`: `"launcher_settings_advanced"` (`string`)
+- `menus.launcher_settings_root.items[].type`: varies (`string`); examples: `"action"`, `"submenu"`
+- `menus.launcher_settings_root.title`: `"Settings"` (`string`)
 - `menus.launcher_tutorials.items[]`: array[`object`]
-- `menus.launcher_tutorials.items[].action_id`: varies (`string`); examples: `"tutorial_2d"`, `"tutorial_3d"`, `"tutorial_4d"`
-- `menus.launcher_tutorials.items[].label`: varies (`string`); examples: `"Play 2D Tutorial"`, `"Play 3D Tutorial"`, `"Play 4D Tutorial"`
-- `menus.launcher_tutorials.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_tutorials.items[].action_id`: varies (`string`); examples: `"tutorial_how_to_play"`, `"tutorial_controls_reference"`, `"help"`
+- `menus.launcher_tutorials.items[].label`: varies (`string`); examples: `"Interactive Tutorials"`, `"How to Play"`, `"Controls Reference"`
+- `menus.launcher_tutorials.items[].menu_id`: `"launcher_tutorials_interactive"` (`string`)
+- `menus.launcher_tutorials.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
 - `menus.launcher_tutorials.title`: `"Tutorials"` (`string`)
+- `menus.launcher_tutorials_interactive.items[]`: array[`object`]
+- `menus.launcher_tutorials_interactive.items[].action_id`: varies (`string`); examples: `"tutorial_2d"`, `"tutorial_3d"`, `"tutorial_4d"`
+- `menus.launcher_tutorials_interactive.items[].label`: varies (`string`); examples: `"Play 2D Tutorial"`, `"Play 3D Tutorial"`, `"Play 4D Tutorial"`
+- `menus.launcher_tutorials_interactive.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_tutorials_interactive.title`: `"Interactive Tutorials"` (`string`)
 - `menus.pause_root.items[]`: array[`object`]
 - `menus.pause_root.items[].action_id`: varies (`string`); examples: `"resume"`, `"restart"`, `"settings"`
 - `menus.pause_root.items[].label`: varies (`string`); examples: `"Resume"`, `"Restart Run"`, `"Settings"`
@@ -847,9 +867,13 @@ Parameters:
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
 - `settings_category_docs[]`: array[`object`]
-- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D (game seed, random type, and adv...`
+- `settings_category_docs[].description`: varies (`string`); examples: `"Master volume, SFX volume, mute toggle, and persistence behavior."`, `"Fullscreen/windowed mode, window size, locked-cell transparency base...`, `"Shared run controls across 2D/3D/4D, including seed and random-type ...`
 - `settings_category_docs[].id`: varies (`string`); examples: `"audio"`, `"display"`, `"gameplay"`
-- `settings_category_docs[].label`: varies (`string`); examples: `"Audio"`, `"Display"`, `"Gameplay"`
+- `settings_category_docs[].label`: varies (`string`); examples: `"Audio"`, `"Display"`, `"Game"`
+- `settings_category_metrics.advanced.action_count`: `0` (`int`)
+- `settings_category_metrics.advanced.field_count`: `7` (`int`)
+- `settings_category_metrics.advanced.mode_specific`: `false` (`bool`)
+- `settings_category_metrics.advanced.top_level`: `false` (`bool`)
 - `settings_category_metrics.analytics.action_count`: `1` (`int`)
 - `settings_category_metrics.analytics.field_count`: `1` (`int`)
 - `settings_category_metrics.analytics.mode_specific`: `false` (`bool`)
@@ -862,12 +886,16 @@ Parameters:
 - `settings_category_metrics.bot.field_count`: `6` (`int`)
 - `settings_category_metrics.bot.mode_specific`: `true` (`bool`)
 - `settings_category_metrics.bot.top_level`: `false` (`bool`)
+- `settings_category_metrics.controls.action_count`: `4` (`int`)
+- `settings_category_metrics.controls.field_count`: `4` (`int`)
+- `settings_category_metrics.controls.mode_specific`: `false` (`bool`)
+- `settings_category_metrics.controls.top_level`: `false` (`bool`)
 - `settings_category_metrics.display.action_count`: `2` (`int`)
 - `settings_category_metrics.display.field_count`: `5` (`int`)
 - `settings_category_metrics.display.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.display.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay.action_count`: `0` (`int`)
-- `settings_category_metrics.gameplay.field_count`: `4` (`int`)
+- `settings_category_metrics.gameplay.field_count`: `2` (`int`)
 - `settings_category_metrics.gameplay.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.gameplay.top_level`: `true` (`bool`)
 - `settings_category_metrics.gameplay_setup.action_count`: `2` (`int`)
@@ -882,7 +910,7 @@ Parameters:
 - `settings_hub_layout_rows[].kind`: varies (`string`); examples: `"header"`, `"item"`
 - `settings_hub_layout_rows[].label`: varies (`string`); examples: `"Audio"`, `"Master volume"`, `"SFX volume"`
 - `settings_hub_layout_rows[].row_key`: varies (`string`); examples: `"audio_master"`, `"audio_sfx"`, `"audio_mute"`
-- `settings_hub_rows[]`: array[`string`]; examples: `"Audio"`, `"Display"`, `"Gameplay"`
+- `settings_hub_rows[]`: array[`string`]; examples: `"Audio"`, `"Display"`, `"Game"`
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
 - `settings_option_labels.game_random_mode[]`: array[`string`]; examples: `"Fixed seed"`, `"True random"`
 - `settings_option_labels.game_rotation_animation_mode[]`: array[`string`]; examples: `"Cell sliding"`, `"Rigid piece rotation"`
@@ -927,7 +955,7 @@ Parameters:
 - `ui_copy.launcher.escape_hint_quit`: `"Q quit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
-- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Gameplay -> Advanced gameplay... controls rotation mode, kick permis...`
+- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game -> Advanced gameplay... controls rotation mode, kick permissive...`
 - `ui_copy.settings_hub.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Top-level categories: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)

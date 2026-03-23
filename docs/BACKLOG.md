@@ -8,10 +8,20 @@ Topology-playground note: current architecture authority lives in
 `docs/plans/topology_playground_current_authority.md`. Older topology-playground
 batch entries below are historical change footprint, not active architecture
 instructions.
+Active topology-playground plan docs:
+`docs/plans/topology_playground_current_authority.md` and
+`docs/plans/topology_playground_shell_redesign_spec.md`.
 
-Current sub-batch (2026-03-22): fallback probe-storage retirement + final shell-cache classification.
-- Root cause: after probe-mirror retirement and profile/draft projection retirement, the only remaining meaningful probe shadow-state seam was the fallback-only raw probe trio (`probe_coord`, `probe_trace`, `probe_path`), and the remaining retained shell fields still needed an explicit final classification so later work does not mistake them for hidden truth sources.
-- Fix strategy: delete the retained raw probe trio from `scene_state.py`, route remaining probe reads/writes and tests through canonical probe selectors/helpers, document that no probe fallback-storage seam remains on the migrated path, and classify the remaining retained shell fields as true shell-owned caches (`play_settings`, `sandbox`, `active_tool`, `editor_tool`) rather than deferred probe compatibility storage.
+Current sub-batch (2026-03-22): frozen visible shell redesign for launcher + topology playground.
+- Root cause: the settled topology-playground architecture was stable, but the visible shell still exposed the older stable-shell-cleanup framing: the launcher root stayed too crowded, the playground still led with oversized explanatory copy and always-visible diagnostics, and the default controls surface still mixed contextual controls with cross-workspace status/admin rows.
+- Fix strategy: freeze a visible-shell spec first, update current-authority/current-state/RDS/backlog wording to make the visible-shell redesign the active phase, move the launcher root to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, `Quit`, demote diagnostics from the default-primary playground view, land the compact top-bar/sidebar/workspace/helper/bottom-strip shell, restore the Editor probe as a large dot with a distinct Editor-owned `Probe Neighbors` dot overlay while keeping Sandbox `Neighbors` separate, update focused tests and generated config docs, and explicitly defer deeper `controls_panel.py` / `scene_state.py` simplification until a later pass.
+- Visible-shell wording freeze in the same sub-batch: replace the old stable-shell-cleanup phrasing in the live authority docs with explicit visible-shell redesign wording, freeze the short top-bar status-chip language to `Valid` / `Needs Fix` / `Unsafe`, and pin the bottom strip as chips/actions-only rather than prose hints.
+- Current IA wording follow-up for the same sub-batch: keep `Tutorials` and `Help / FAQ` explicitly distinct inside one learning/support branch, split `Controls Reference` from `Settings -> Controls`, and keep the root launcher flat by routing short section labels into the existing shared settings/help/keybindings surfaces instead of adding new top-level entries.
+- Placement correction in the same sub-batch: keep `Leaderboard` and `Bot` out of `Settings` as well as out of the root, and route them through the play-adjacent launcher flow instead of treating `Settings` as an overflow bucket.
+- Regression correction in the same sub-batch: keep `Topology Playground` as the direct modern editor/playground entry, remove any legacy topology setup/menu split from that path, and isolate the backward-compatibility editor at `Settings -> Advanced -> Legacy Topology Editor Menu`.
+- Archive cleanup in the same sub-batch: retire the older explorer-topology phase docs, menu/startup audits, playability-signaling pass, and unsafe-topology correctness plan set into `docs/history/topology_playground/`, while keeping active authority in `topology_playground_current_authority.md` plus `topology_playground_shell_redesign_spec.md`.
+- Probe-surface clarification in the same sub-batch: the simplified `3D` / `4D` probe surface is intentional. The current shell only needs a movable probe plus concise full translation-key guidance, so the older per-panel ND movement-preview legends remain removed while the shared 2D probe glyph language stays canonical.
+- Direct-run ergonomics in the same sub-batch: keep direct Topology Playground launch available through the unified CLI wrapper via `cli/front.py --topology-playground [2|3|4]`, retain `python -m tet4d.ui.pygame.topology_lab [2|3|4]` only as a thin compatibility delegate, and pin clean unsupported-dimension handling in tracked launcher-route tests.
 
 Current sub-batch (2026-03-22): Explorer profile/draft projection retirement + remaining shell-cache reassessment.
 - Root cause: after probe-mirror retirement, the next concentrated shadow-state debt was the still-synchronized `explorer_profile` / `explorer_draft` shell projection family plus an unclear boundary around which remaining shell-owned fields were true caches versus compatibility leftovers.
@@ -43,7 +53,7 @@ Current sub-batch (2026-03-20): topology-playground manifest reconciliation and 
 
 Current sub-batch (2026-03-21): topology-playground manifest archive unification.
 - Root cause: several old topology-playground manifests still read like active unfinished instructions, and other plan files still pointed at those older manifests or audits as migration-status authority.
-- Fix strategy: moved the old topology-playground manifest set under `docs/history/topology_playground/`, left redirect stubs at the old paths, preserved still-live cleanup debt in `docs/plans/topology_playground_current_authority.md`, and made the precedence rule explicit: newer task instructions and the current-authority manifest override archived manifests, with ask-first escalation for severe mismatches.
+- Fix strategy: moved the old topology-playground manifest set under `docs/history/topology_playground/`, preserved still-live cleanup debt in `docs/plans/topology_playground_current_authority.md`, and made the precedence rule explicit: newer task instructions and the current-authority manifest override archived manifests, with ask-first escalation for severe mismatches.
 
 Current sub-batch (2026-03-21): Explorer stabilization guidance clarification.
 - Root cause: the active instruction layer already implied the intended Explorer behavior, but it did not state the current user-facing expectations bluntly enough around probe/dot consistency, trace control placement, dimension parity, sandbox default piece visibility, neighbor-dot gating, menu readability, and helper-panel placement.
@@ -201,18 +211,18 @@ Current sub-batch (2026-03-12): topology playability signaling pass 1.
 - Added `src/tet4d/engine/runtime/topology_playability_signal.py` and extended `src/tet4d/engine/runtime/topology_playground_state.py` so the canonical playground state now derives one runtime-owned playability analysis covering validity, explorer usability, rigid playability, summary text, and reason strings.
 - Updated `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/launch/topology_lab_menu.py` so Analysis View rows plus the workspace status/preview panel now expose explicit `Validity`, `Explorer`, `Rigid Play`, and `Why` messaging before `Play This Topology`.
 - Added focused regressions in `tests/unit/engine/test_topology_playability_signal.py` and `tests/unit/engine/test_topology_lab_menu.py` covering valid rigid-playable, valid explorer-only/non-rigid, and invalid topology states.
-- Added [`docs/plans/topology_playability_signaling_pass1.md`](docs/plans/topology_playability_signaling_pass1.md) as the implementation note for this signaling stage.
+- Added [`docs/history/topology_playground/topology_playability_signaling_pass1.md`](docs/history/topology_playground/topology_playability_signaling_pass1.md) as the implementation note for this signaling stage.
 
 Current sub-batch (2026-03-12): unsafe topology correctness fix pass 1.
 - Aligned sandbox seam acceptance in `src/tet4d/engine/runtime/topology_playground_sandbox.py` with gameplay transport semantics by reusing `classify_explorer_piece_move(...)`, so sandbox now accepts `plain_translation` and `rigid_transform` seam moves while continuing to block `cellwise_deformation`.
 - Split explorer validation in `src/tet4d/engine/topology_explorer/glue_validate.py` into topology-structure and board-bijection checks, while `src/tet4d/engine/runtime/topology_playground_launch.py` now validates the canonical explorer profile against the active board dimensions before gameplay launch; non-bijective unsafe preset / board-size pairings now fail explicitly as `unsupported for current board dimensions ...`.
 - Preserved invalid topology as the canonical draft state in `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/app.py`: explorer/launcher entry and manual seam apply now keep the current topology definition, surface the invalid state explicitly, and no longer swap in fallback presets or silently drop the seam.
 - Added focused regressions in `tests/unit/engine/test_topology_lab_app.py`, `tests/unit/engine/test_topology_lab_menu.py`, `tests/unit/engine/test_topology_explorer.py`, `tests/unit/engine/test_topology_playground_sandbox.py`, and `tests/unit/engine/test_unsafe_topology_correctness.py` covering canonical invalid-state preservation, cross-axis glue roundtrips, safe bounded/wrap baselines, Projective cellwise traversal, sandbox/gameplay rigid-transport parity, and invalid Sphere dimension handling.
-- Added [`docs/plans/unsafe_topology_correctness_fix_pass1.md`](docs/plans/unsafe_topology_correctness_fix_pass1.md) as the implementation note for this narrow correctness stage.
+- Added [`docs/history/topology_playground/unsafe_topology_correctness_fix_pass1.md`](docs/history/topology_playground/unsafe_topology_correctness_fix_pass1.md) as the implementation note for this narrow correctness stage.
 
 
 Current sub-batch (2026-03-12): unsafe topology correctness audit.
-- Added [`docs/plans/unsafe_topology_correctness_audit.md`](docs/plans/unsafe_topology_correctness_audit.md) as the diagnostic authority for unsafe / quotient topology behavior across preview, probe, sandbox, and play launch.
+- Added [`docs/history/topology_playground/unsafe_topology_correctness_audit.md`](docs/history/topology_playground/unsafe_topology_correctness_audit.md) as the diagnostic authority for unsafe / quotient topology behavior across preview, probe, sandbox, and play launch.
 - Reproduced two separate blocker classes:
   - preview-valid point connectivity that is not always rigid-piece-safe in play
   - sandbox rejecting `rigid_transform` seam moves that gameplay already accepts
@@ -256,7 +266,7 @@ Stage 7 is now live: the graphical explorer is the primary editor, and the forme
 Remaining legacy-only blockers on this surface: retained shell fields in `src/tet4d/ui/pygame/topology_lab/scene_state.py` still survive as synchronized compatibility projections for legacy readers/diagnostics, while normal-mode legacy rows plus resolved-profile export still exist intentionally through `src/tet4d/ui/pygame/topology_lab/legacy_normal_mode_support.py`.
 Stage 8 is now live: the shell action is explicitly `Play This Topology`, and play launch uses the current in-memory playground draft directly without a secondary conversion menu on the migrated path.
 - The migrated play-launch path now bypasses the older shell-snapshot `build_explorer_playground_config(...)` helper and instead routes through `src/tet4d/engine/runtime/topology_playground_launch.py` plus `src/tet4d/ui/pygame/topology_lab/play_launch.py`, which derive gameplay launch directly from the canonical `TopologyPlaygroundState`.
-Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Open Explorer Playground` while leaving topology complexity in the playground shell.
+Stage 9 is now live: ordinary play menus and launcher settings surfaces are now preset-only for topology, keeping safe preset launches plus `Play Last Custom Topology` and `Topology Playground` while leaving topology complexity in the playground shell.
 Explorer experiment packs now live in the Explorer Playground: the current draft and preset family export as a shared comparison batch with an in-shell recommendation for what to try next.
 
 Stage 4 live playground settings on top of the Stage 3 explorer-side topology editing path.
@@ -696,7 +706,7 @@ Current sub-batch (2026-03-08): explorer topology engine Phase 1 kernel.
 
 - Added `src/tet4d/engine/topology_explorer/` as the canonical engine-owned explorer topology package for general boundary gluing descriptors, signed-permutation tangent transforms, boundary-crossing mapping, movement-graph compilation, and basic quotient-topology presets.
 - Added focused kernel regression coverage in `tests/unit/engine/test_topology_explorer.py` for transform inversion, duplicate-boundary rejection, discrete bijection failure, torus-style wrapping, Mobius-style twisting, and graph compilation.
-- Documented the staged rollout and explicit non-goals in `docs/plans/explorer_topology_phase1.md` and updated `docs/plans/cleanup_master_plan.md` so the live runtime remains on the existing per-edge explorer topology path until a later integration batch proves parity.
+- Documented the staged rollout and explicit non-goals in `docs/history/topology_playground/explorer_topology_phase1.md` and updated `docs/plans/cleanup_master_plan.md` so the live runtime remains on the existing per-edge explorer topology path until a later integration batch proves parity.
 - Validation:
   - focused `ruff check` passed
   - focused pytest (`test_topology_explorer.py`) passed
