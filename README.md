@@ -4,23 +4,49 @@ Usage guide for the 2D/3D/4D Tetris project.
 
 ## What this is
 
-This repository contains:
-- Unified launcher wrapper (`front.py`)
-- Direct mode launchers under `cli/` (`cli/front2d.py`, `cli/front3d.py`, `cli/front4d.py`)
+This is a 2D/3D/4D Tetris game written in Python. Currently, it contains a main launcher for the entire suite, dedicated 2D/3D/4D game launchers, Tutorials, and a Topology Explorer Playground, which is my main development effort right now.
 
-Primary Python entrypoints live under `cli/` (`cli/front*.py`).
-Root `front.py` is the compatibility wrapper entrypoint.
-All modes share core logic under `src/tet4d/engine/`.
-Custom topology editing and custom-topology play now flow through the Explorer
-Playground shell, whose top-level workspaces are `Editor`, `Sandbox`, and
-`Play`.
+4d game:
+![4D game mode](img.png)
+
+4d topology designer:
+![4d sandbox projections](img_1.png)
+
+
+## Entry Points
+
+`python front.py` — Root Wrapper, main launcher.
+
+Use optional usage: front.py [--frontend {main,2d,3d,4d,front}]
+to get directly to 2d/3d/4d game modes.
+
+**Examples:**
+```sh
+python front.py                      # launches main unified launcher
+python front.py --frontend 4d        # launches 4D mode directly
+python front.py --mode 3d            # alias form
+```
+
+Use front.py --topology-playground [DIM]
+to launch the Topology Playground directly.
+
+```
+  Examples:
+  python cli/front.py                          # normal game launcher
+  python cli/front.py --topology-playground    # topology playground, dim 2
+  python cli/front.py --topology-playground 3  # topology playground, dim 3
+  python cli/front.py --topology-playground 4  # topology playground, dim 4
+```
+ 
 
 Boundary topology presets are available in setup menus:
 - `bounded` (default)
 - `wrap_all`
 - `invert_all`
 
-Gravity-axis wrapping is disabled by default.
+Gravity-axis wrapping is disabled by default on Game Mode. Topology explorer, available through the topology playground, enables full wrapping including the Y axis.
+![Moving a piece across the ecges in 4D sphere topology](img_2.png)
+
 Advanced topology designer controls are available per mode:
 - `Topology advanced` (toggle)
 - `Topology profile` (loaded from `config/topology/designer_presets.json`)
