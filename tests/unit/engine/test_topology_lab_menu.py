@@ -40,7 +40,7 @@ from tet4d.ui.pygame.topology_lab import scene_preview_state as topology_lab_sce
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
 from tet4d.ui.pygame.topology_lab import shell_layout as topology_lab_shell_layout
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
-from tet4d.ui.pygame.ui_utils import text_fits
+from tet4d.ui.pygame.ui_utils import text_fits, wrap_text_lines
 
 class TestTopologyLabMenu(unittest.TestCase):
     def _current_explorer_profile(
@@ -439,6 +439,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         joined = " ".join(lines)
         self.assertNotIn("Legacy compatibility", joined)
         self.assertNotIn("legacy-normal-mode", joined)
+        self.assertNotIn(
+            "Legacy",
+            topology_lab_workspace_shell._workspace_helper_context(state),
+        )
+        helper_sections = topology_lab_workspace_shell._workspace_helper_sections(state)
+        self.assertEqual(helper_sections[0][0], "Move")
+        self.assertEqual(helper_sections[1][0], "Rotate")
 
     def test_cycle_edge_rule_blocks_normal_y_wrap(self) -> None:
         profile = default_topology_profile_state(
@@ -1523,7 +1530,10 @@ class TestTopologyLabMenu(unittest.TestCase):
             "Reset",
         ):
             with self.subTest(label=label):
-                self.assertTrue(text_fits(fonts.hint_font, label, button_w - 10))
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
 
     def test_compact_shell_layout_keeps_required_top_bar_text_visible_at_960_width(
         self,
@@ -1554,7 +1564,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         for label in ("Editor", "Sandbox", "Play"):
             with self.subTest(label=label):
-                self.assertTrue(text_fits(fonts.hint_font, label, button_w - 10))
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
 
     def test_row_text_budgets_fit_compact_controls_lane(self) -> None:
         budgets = topology_lab_shell_layout.topology_lab_row_text_budgets(
@@ -1563,6 +1576,38 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertLessEqual(budgets.label_width + budgets.value_width + 48, 268)
         self.assertGreaterEqual(budgets.value_width, 56)
+
+    def test_compact_controls_lane_wraps_required_row_text_without_overflow(self) -> None:
+        fonts = self._fonts()
+        state = self._explorer_state(4)
+        rows = topology_lab_menu._rows_for_state(state)
+        budgets = topology_lab_shell_layout.topology_lab_row_text_budgets(
+            menu_w=296,
+            row_rect_width=268,
+        )
+        required_labels = {
+            "Topology Preset",
+            "Probe Neighbors",
+            "Board W",
+        }
+        checked = 0
+        for row in rows:
+            if row.label not in required_labels:
+                continue
+            checked += 1
+            label_lines = wrap_text_lines(fonts.menu_font, row.label, budgets.label_width)
+            value_lines = wrap_text_lines(
+                fonts.menu_font,
+                topology_lab_control_values._row_value_text(state, row),
+                budgets.value_width,
+            )
+            with self.subTest(label=row.label):
+                self.assertGreater(len(label_lines), 0)
+                for line in label_lines:
+                    self.assertTrue(text_fits(fonts.menu_font, line, budgets.label_width))
+                for line in value_lines:
+                    self.assertTrue(text_fits(fonts.menu_font, line, budgets.value_width))
+        self.assertEqual(checked, len(required_labels))
 
     def test_workspace_layout_preserves_readable_helper_width_in_compact_shell(self) -> None:
         (
@@ -1580,7 +1625,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             menu_w=296,
         )
 
-        self.assertGreaterEqual(helper_rect.width, 176)
+        self.assertGreaterEqual(helper_rect.width, 208)
         self.assertGreaterEqual(top_rect.width, 340)
 
     def test_shell_layout_stays_within_viewport_on_narrow_supported_width(self) -> None:
@@ -1616,7 +1661,96 @@ class TestTopologyLabMenu(unittest.TestCase):
             menu_w=248,
         )
         self.assertGreater(helper_rect.left, top_rect.right)
-        self.assertGreaterEqual(helper_rect.width, 144)
+        self.assertGreaterEqual(helper_rect.width, 160)
+
+    def test_compact_helper_lane_wraps_workspace_guidance_lines(self) -> None:
+        fonts = self._fonts()
+        state = self._explorer_state(4)
+        (
+            _tool_rect,
+            _top_rect,
+            _editor_rect,
+            helper_rect,
+            _helper_controls_rect,
+            _action_rect,
+        ) = topology_lab_menu._explorer_workspace_layout(
+            panel_x=12,
+            panel_y=80,
+            panel_w=936,
+            panel_h=620,
+            menu_w=296,
+        )
+        body_width = helper_rect.width - 20
+        context_width = body_width - 24
+        row_label_width = max(24, min(34, body_width // 5))
+        row_value_width = max(48, body_width - 24 - row_label_width)
+        context = topology_lab_workspace_shell._workspace_helper_context(state)
+        self.assertTrue(text_fits(fonts.hint_font, context, context_width))
+        sections = topology_lab_workspace_shell._workspace_helper_sections(state)
+        self.assertGreater(len(sections), 0)
+        for title, rows in sections:
+            with self.subTest(title=title):
+                self.assertTrue(text_fits(fonts.hint_font, title.upper(), body_width - 20))
+            for label, keys in rows:
+                with self.subTest(label=label, keys=keys):
+                    self.assertTrue(text_fits(fonts.hint_font, label, row_label_width))
+                    wrapped = wrap_text_lines(fonts.hint_font, keys, row_value_width)
+                    self.assertGreater(len(wrapped), 0)
+                    for wrapped_line in wrapped:
+                        self.assertTrue(
+                            text_fits(fonts.hint_font, wrapped_line, row_value_width)
+                        )
+
+    def test_workspace_helper_uses_current_dimension_bindings(self) -> None:
+        state = self._explorer_state(4)
+        sections = dict(topology_lab_workspace_shell._workspace_helper_sections(state))
+        gameplay = topology_lab_workspace_shell._gameplay_bindings_for_dimension(4)
+        explorer = topology_lab_workspace_shell._explorer_bindings_for_dimension(4)
+        self.assertIn(
+            (
+                "X",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['move_x_neg'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['move_x_pos'])}"
+                ),
+            ),
+            sections["Move"],
+        )
+        self.assertIn(
+            (
+                "Y",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(explorer['move_up'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(explorer['move_down'])}"
+                ),
+            ),
+            sections["Move"],
+        )
+        self.assertIn(
+            (
+                "ZW",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['rotate_zw_pos'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['rotate_zw_neg'])}"
+                ),
+            ),
+            sections["Rotate"],
+        )
+
+    def test_workspace_action_buttons_wrap_long_labels_within_button_budget(self) -> None:
+        fonts = self._fonts()
+        area = pygame.Rect(0, 0, 520, 36)
+        actions = (
+            ("play_preview", "Play This Topology"),
+            ("explore_preview", "Explore This Topology"),
+        )
+        button_w = max(76, (area.width - (len(actions) - 1) * 8) // len(actions))
+        for _action, label in actions:
+            with self.subTest(label=label):
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -3779,7 +3913,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
             patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_workspace_shell, "draw_preview_panel") as draw_preview,
+            patch.object(
+                topology_lab_workspace_shell, "_draw_workspace_helper_panel"
+            ) as draw_helper,
             patch.object(
                 topology_lab_menu, "_draw_probe_controls_if_needed", return_value=[]
             ),
@@ -3804,23 +3940,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(kwargs["preview_dims"], state.scene_preview_dims)
         self.assertEqual(kwargs["active_glue_ids"], state.scene_active_glue_ids)
         self.assertEqual(kwargs["basis_arrows"], list(state.scene_basis_arrows))
-        preview_kwargs = draw_preview.call_args.kwargs
-        self.assertEqual(preview_kwargs["title"], "Keys")
-        self.assertTrue(preview_kwargs["lines"])
-        self.assertIn(preview_kwargs["lines"][0], {"Edit", "Probe", "Play"})
-        self.assertTrue(
-            all(
-                line.startswith(("Move ", "Turn ", "     "))
-                or line in {"Edit", "Probe", "Play"}
-                for line in preview_kwargs["lines"]
-            )
-        )
-        self.assertFalse(
-            any("Selected boundary:" in line for line in preview_kwargs["lines"])
-        )
-        self.assertFalse(
-            any("Workspace:" in line for line in preview_kwargs["lines"])
-        )
+        helper_kwargs = draw_helper.call_args.kwargs
+        self.assertEqual(helper_kwargs["state"], state)
+        self.assertGreater(helper_kwargs["area"].width, 0)
+        self.assertGreater(helper_kwargs["area"].height, 0)
 
     def test_explorer_entry_scene_glue_path_creates_draft_and_enters_edit(self) -> None:
         profile = ExplorerTopologyProfile(dimension=3, gluings=())

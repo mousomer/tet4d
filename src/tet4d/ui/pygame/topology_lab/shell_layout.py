@@ -148,8 +148,9 @@ def build_topology_lab_shell_layout(
         panel_w - 20,
         40,
     )
+    min_hint_lane_w = 180
     action_area_w = min(
-        bottom_rect.width // 2,
+        max(96, bottom_rect.width - min_hint_lane_w - 20),
         max(96, action_count * 96 + max(0, action_count - 1) * 8),
     )
     action_rect = pygame.Rect(

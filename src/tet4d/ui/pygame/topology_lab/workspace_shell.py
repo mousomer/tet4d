@@ -37,7 +37,7 @@ from .piece_sandbox import (
     sandbox_lines,
     sandbox_validity,
 )
-from .preview import build_preview_lines, draw_preview_panel, draw_probe_controls
+from .preview import build_preview_lines, draw_probe_controls
 from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
 from .scene4d import draw_scene as draw_scene_4d
@@ -78,6 +78,7 @@ from .state_ownership import (
 )
 from .transform_editor import draw_transform_editor
 from .camera_controls import scene_camera_availability
+from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
 
 
 def draw_tool_ribbon(surface: pygame.Surface, fonts, *, area: pygame.Rect, active_workspace: str):
@@ -152,15 +153,15 @@ def _explorer_workspace_layout(
     tool_h = 0
     actions_h = 36
     gap = 12
-    helper_min = 148 if workspace_w < 520 else 176
-    helper_w = max(helper_min, int(workspace_w * 0.24))
-    helper_w = min(helper_w, max(helper_min, workspace_w - gap - 360))
+    helper_min = 168 if workspace_w < 520 else 208
+    helper_w = max(helper_min, int(workspace_w * 0.29))
+    helper_w = min(helper_w, max(helper_min, workspace_w - gap - 340))
     main_w = workspace_w - helper_w - gap
     if main_w < 400:
-        helper_w = max(helper_min, workspace_w - gap - 400)
+        helper_w = max(helper_min, workspace_w - gap - 390)
         main_w = workspace_w - helper_w - gap
     if main_w < 340:
-        helper_w = max(144, workspace_w - gap - 340)
+        helper_w = max(160, workspace_w - gap - 340)
         main_w = workspace_w - helper_w - gap
     tool_rect = pygame.Rect(workspace_x, panel_y + 14 + header_h, workspace_w, tool_h)
     action_rect = pygame.Rect(
@@ -467,60 +468,197 @@ def _workspace_helper_lines(state) -> tuple[str, ...]:
 
 
 def _workspace_guidance_lines(state) -> list[str]:
-    def _binding_text(bindings, action: str) -> str:
-        return format_key_tuple(bindings.get(action, ()))
+    lines = [_workspace_helper_context(state)]
+    for title, rows in _workspace_helper_sections(state):
+        lines.append(title)
+        lines.extend(f"  {label} {keys}" for label, keys in rows)
+    return lines
 
-    def _compact_lines(prefix: str, parts: list[str]) -> list[str]:
-        lines: list[str] = []
-        for index in range(0, len(parts), 2):
-            label = prefix if not lines else " " * len(prefix)
-            lines.append(label + "  ".join(parts[index : index + 2]))
-        return lines
 
-    gameplay = _gameplay_bindings_for_dimension(state.dimension)
-    explorer = _explorer_bindings_for_dimension(state.dimension)
+def _binding_text(bindings, action: str) -> str:
+    return format_key_tuple(bindings.get(action, ()))
+
+
+def _workspace_helper_context(state) -> str:
     workspace_name = _active_workspace_name(state)
     if workspace_name == WORKSPACE_EDITOR:
-        context = "Edit" if _current_editor_tool(state) == TOOL_EDIT else "Probe"
-    elif workspace_name == WORKSPACE_SANDBOX:
-        neighbor_text = "on" if _sandbox_neighbor_search_enabled(state) else "off"
-        context = f"Sandbox | Neighbors {neighbor_text}"
-    else:
-        context = "Play"
-    move_parts = [
-        f"X {_binding_text(gameplay, 'move_x_neg')} / {_binding_text(gameplay, 'move_x_pos')}",
-        f"Y {_binding_text(explorer, 'move_up')} / {_binding_text(explorer, 'move_down')}",
+        tool_label = "Edit" if _current_editor_tool(state) == TOOL_EDIT else "Probe"
+        return f"Editor · {tool_label}"
+    if workspace_name == WORKSPACE_SANDBOX:
+        neighbor_text = "On" if _sandbox_neighbor_search_enabled(state) else "Off"
+        return f"Sandbox · Neighbors {neighbor_text}"
+    return "Play · Current Draft"
+
+
+def _workspace_helper_sections(
+    state,
+) -> tuple[tuple[str, tuple[tuple[str, str], ...]], ...]:
+    gameplay = _gameplay_bindings_for_dimension(state.dimension)
+    explorer = _explorer_bindings_for_dimension(state.dimension)
+    movement_rows = [
+        (
+            "X",
+            (
+                f"{_binding_text(gameplay, 'move_x_neg')} / "
+                f"{_binding_text(gameplay, 'move_x_pos')}"
+            ),
+        ),
+        (
+            "Y",
+            (
+                f"{_binding_text(explorer, 'move_up')} / "
+                f"{_binding_text(explorer, 'move_down')}"
+            ),
+        ),
     ]
     if state.dimension >= 3:
-        move_parts.append(
-            f"Z {_binding_text(gameplay, 'move_z_neg')} / {_binding_text(gameplay, 'move_z_pos')}"
+        movement_rows.append(
+            (
+                "Z",
+                (
+                    f"{_binding_text(gameplay, 'move_z_neg')} / "
+                    f"{_binding_text(gameplay, 'move_z_pos')}"
+                ),
+            )
         )
     if state.dimension >= 4:
-        move_parts.append(
-            f"W {_binding_text(gameplay, 'move_w_neg')} / {_binding_text(gameplay, 'move_w_pos')}"
+        movement_rows.append(
+            (
+                "W",
+                (
+                    f"{_binding_text(gameplay, 'move_w_neg')} / "
+                    f"{_binding_text(gameplay, 'move_w_pos')}"
+                ),
+            )
         )
-    rotate_parts = [
-        f"XY {_binding_text(gameplay, 'rotate_xy_pos')} / {_binding_text(gameplay, 'rotate_xy_neg')}",
+    rotation_rows = [
+        (
+            "XY",
+            (
+                f"{_binding_text(gameplay, 'rotate_xy_pos')} / "
+                f"{_binding_text(gameplay, 'rotate_xy_neg')}"
+            ),
+        ),
     ]
     if state.dimension >= 3:
-        rotate_parts.extend(
+        rotation_rows.extend(
             [
-                f"XZ {_binding_text(gameplay, 'rotate_xz_pos')} / {_binding_text(gameplay, 'rotate_xz_neg')}",
-                f"YZ {_binding_text(gameplay, 'rotate_yz_pos')} / {_binding_text(gameplay, 'rotate_yz_neg')}",
+                (
+                    "XZ",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_xz_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_xz_neg')}"
+                    ),
+                ),
+                (
+                    "YZ",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_yz_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_yz_neg')}"
+                    ),
+                ),
             ]
         )
     if state.dimension >= 4:
-        rotate_parts.extend(
+        rotation_rows.extend(
             [
-                f"XW {_binding_text(gameplay, 'rotate_xw_pos')} / {_binding_text(gameplay, 'rotate_xw_neg')}",
-                f"YW {_binding_text(gameplay, 'rotate_yw_pos')} / {_binding_text(gameplay, 'rotate_yw_neg')}",
-                f"ZW {_binding_text(gameplay, 'rotate_zw_pos')} / {_binding_text(gameplay, 'rotate_zw_neg')}",
+                (
+                    "XW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_xw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_xw_neg')}"
+                    ),
+                ),
+                (
+                    "YW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_yw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_yw_neg')}"
+                    ),
+                ),
+                (
+                    "ZW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_zw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_zw_neg')}"
+                    ),
+                ),
             ]
         )
-    lines = [context]
-    lines.extend(_compact_lines("Move ", move_parts))
-    lines.extend(_compact_lines("Turn ", rotate_parts))
-    return lines
+    return (
+        ("Move", tuple(movement_rows)),
+        ("Rotate", tuple(rotation_rows)),
+    )
+
+
+def _draw_workspace_helper_panel(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    area: pygame.Rect,
+    state,
+) -> None:
+    card_rect = area.copy()
+    pygame.draw.rect(surface, (18, 22, 38), card_rect, border_radius=10)
+    pygame.draw.rect(surface, (76, 84, 112), card_rect, 1, border_radius=10)
+    y = card_rect.y + 10
+    title = fit_text(fonts.hint_font, "Controls", card_rect.width - 20)
+    title_surf = fonts.hint_font.render(title, True, (220, 228, 250))
+    surface.blit(title_surf, (card_rect.x + 10, y))
+    y += title_surf.get_height() + 8
+
+    context_text = fit_text(fonts.hint_font, _workspace_helper_context(state), card_rect.width - 24)
+    context_surf = fonts.hint_font.render(context_text, True, (226, 234, 252))
+    context_rect = pygame.Rect(card_rect.x + 10, y, card_rect.width - 20, 24)
+    pygame.draw.rect(surface, (28, 36, 58), context_rect, border_radius=12)
+    pygame.draw.rect(surface, (82, 96, 132), context_rect, 1, border_radius=12)
+    surface.blit(
+        context_surf,
+        (
+            context_rect.x + (context_rect.width - context_surf.get_width()) // 2,
+            context_rect.y + (context_rect.height - context_surf.get_height()) // 2,
+        ),
+    )
+    y += context_rect.height + 10
+
+    row_label_width = max(24, min(34, card_rect.width // 5))
+    row_value_width = max(48, card_rect.width - 24 - row_label_width)
+    for section_title, rows in _workspace_helper_sections(state):
+        heading = fit_text(fonts.hint_font, section_title.upper(), card_rect.width - 20)
+        heading_surf = fonts.hint_font.render(heading, True, (150, 164, 202))
+        surface.blit(heading_surf, (card_rect.x + 10, y))
+        y += heading_surf.get_height() + 6
+        for label, keys in rows:
+            label_surf = fonts.hint_font.render(label, True, (232, 238, 252))
+            key_lines = wrap_text_lines(fonts.hint_font, keys, row_value_width)
+            row_height = max(
+                24,
+                len(key_lines) * (fonts.hint_font.get_linesize() + 1) + 8,
+            )
+            row_rect = pygame.Rect(card_rect.x + 8, y, card_rect.width - 16, row_height)
+            pygame.draw.rect(surface, (22, 28, 48), row_rect, border_radius=8)
+            label_rect = pygame.Rect(
+                row_rect.x + 6,
+                row_rect.y + 4,
+                row_label_width,
+                row_rect.height - 8,
+            )
+            pygame.draw.rect(surface, (54, 66, 98), label_rect, border_radius=7)
+            surface.blit(
+                label_surf,
+                (
+                    label_rect.x + (label_rect.width - label_surf.get_width()) // 2,
+                    label_rect.y + (label_rect.height - label_surf.get_height()) // 2,
+                ),
+            )
+            key_x = label_rect.right + 8
+            key_y = row_rect.y + 4
+            for wrapped in key_lines:
+                key_surf = fonts.hint_font.render(wrapped, True, (204, 214, 236))
+                surface.blit(key_surf, (key_x, key_y))
+                key_y += fonts.hint_font.get_linesize() + 1
+            y += row_rect.height + 6
+        y += 4
 
 
 def _workspace_experiment_lines(state) -> list[str]:
@@ -705,14 +843,12 @@ def _draw_explorer_workspace(
             )
         )
     _ensure_probe_state(state)
-    helper_lines = _workspace_guidance_lines(state)
     preview_body_rect = helper_rect.inflate(-10, -10)
-    draw_preview_panel(
+    _draw_workspace_helper_panel(
         screen,
         fonts,
         area=preview_body_rect,
-        title="Keys",
-        lines=helper_lines,
+        state=state,
     )
     return hits
 

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-03-29  
+Last updated: 2026-03-30  
 Branch: `master`  
 Worktree expectation: clean unless an active batch is in progress
 
@@ -41,8 +41,13 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground local preview cache follow-up (2026-03-29): explorer preview compilation now uses a versioned repo-local on-disk cache keyed by effective `(profile, dims)` signature under `state/topology/cache/explorer_preview`, so repeated identical preview/signaling work can reuse cached movement-graph payloads across runs while corrupt or version-stale cache entries safely fall back to recompute.
 - Topology-explorer movement-graph speedup follow-up (2026-03-29): the graph builder now uses a graph-specific fast path instead of calling the fully general cell-step resolver for every cell edge. Interior moves now use direct coordinate arithmetic, boundary exits reuse precomputed seam lookups, and identical `(profile, dims)` graph builds now reuse an in-process memoized row set before preview payload assembly.
 - Topology-playground persistent cache completion follow-up (2026-03-29): the same versioned topology cache file now persists preview payloads, serialized movement-graph rows, and rigid-playability analysis together by effective topology signature, so repeat runs can reuse the full preview/signaling artifact stack rather than only the summary preview payload. Advanced gameplay now also exposes `Measure topology cache` and `Clear topology cache` actions for the persistent topology cache set, while clear also flushes the current process movement-graph and resolver memos.
+- Topology-playground/menu visibility follow-up (2026-03-30): compact control rows in both `Topology Playground` and `Advanced gameplay` now use wrap-aware label/value rendering instead of single-line truncation-only rendering, shared action buttons plus workspace tabs now wrap instead of hard truncating long labels, and the external helper lane now reserves a wider minimum width on supported compact shells so wrapped helper lines stay readable instead of collapsing into an overly narrow sidebar.
+- Topology-playground helper-panel redesign follow-up (2026-03-30): the right helper no longer renders as a generic wrapped hint stack. It now presents a minimal `Controls` card with one short workspace/tool context line plus dedicated `Move` and `Rotate` sections populated from the live current keybinding maps for the active dimension, keeping the helper easy to scan without reintroducing diagnostics or duplicate menu controls.
 - Topology-playground sandbox-neighbor mouse-toggle follow-up (2026-03-29): the Sandbox `Neighbors` control row now toggles directly on mouse click in the modern shell instead of only selecting the row, and focused `3D` / `4D` workspace coverage now pins that click path so neighbor markers can be disabled without relying on keyboard row adjustment.
 - Topology-playground sandbox-move latency fix follow-up (2026-03-30): Sandbox movement in `AUTO` rigid-play mode no longer forces a fresh full rigid-playability scan while the canonical analysis is still in the deferred `analyzing` state, so `4D` Sandbox moves now reuse the pending analysis state instead of stalling for seconds per move.
+- Topology-playground compact-footer action fit follow-up (2026-03-30): the compact shell footer now reserves enough action-lane width for the six-button Sandbox action set so labels such as `Next Piece` and `Show Path` stay visible under the current compact-width layout contract and CI text-fit checks.
+- Topology-playground seam-edit help follow-up (2026-03-30): the current `Editor` seam workflow is now documented both as a dedicated `docs/help/TOPOLOGY_PLAYGROUND_SEAM_EDITING.md` guide and as a runtime help topic available through the existing launcher/pause help flow, with wording aligned to the live source-boundary -> target-boundary -> transform -> `Apply` implementation.
+- Topology-playground exploration return-menu follow-up (2026-03-30): topology-playground-launched `Explore This Topology` now treats the gameplay `menu` action as a direct return to the main playground shell instead of opening the generic independent pause menu first, while ordinary launcher gameplay keeps the existing pause flow.
 - Governance policy consolidation prune follow-up (2026-03-29): `config/project/policy/governance.json` and `config/project/policy/code_rules.json` are now the sole runtime policy sources for governance checks, `tools/governance/validate_governance.py` remains the unified policy gate used by `scripts/verify.sh`, and the older manifest pack is retained only as contract and inventory compatibility rather than as an execution fallback.
 - Shared rotation animation mode is now a first-class shared gameplay setting rather than a hidden fallback.
 - Advanced gameplay now exposes the mode selector directly, and `2D`/`3D`/`4D` runtime loop construction all load the persisted mode through `menu_settings_state.mode_rotation_animation_mode(...)`.
@@ -96,11 +101,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.28` (`low`)
+- `tech_debt.score = 3.29` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.97`
+1. `delivery_size_pressure = 1.98`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -339,12 +344,12 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3669` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3788` real LOC
 2. `scripts/arch_metrics.py`: `1887` real LOC
 3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1592` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1090` real LOC
-6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1035` real LOC
+6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1052` real LOC
 7. `tools/governance/generate_configuration_reference.py`: `982` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `962` real LOC
 

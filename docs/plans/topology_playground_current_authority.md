@@ -64,6 +64,9 @@ Transitional debt belongs in
   mean neighbor-search.
 - Play is a separate gameplay workspace. Translation legality and drop legality
   are distinct on non-trivial `Y`-seam topologies.
+- Topology-playground-launched `Explore This Topology` uses the gameplay
+  `menu` action as a direct return-to-playground transition rather than
+  opening the generic independent gameplay pause menu.
 - Play move classes remain explicit: deliberate translation, rotation, gravity
   tick, soft drop, and hard drop must not collapse back into one generic
   seam-transport rule.

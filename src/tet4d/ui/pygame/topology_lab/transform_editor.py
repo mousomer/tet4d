@@ -3,7 +3,7 @@ from __future__ import annotations
 import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
-from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
 
 _BUTTON_BG = (38, 44, 70)
 _BUTTON_ACTIVE = (86, 98, 146)
@@ -24,14 +24,21 @@ def _draw_button(
 ) -> None:
     pygame.draw.rect(surface, color, rect, border_radius=8)
     pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
-    text_surf = font.render(fit_text(font, text, rect.width - 10), True, _BUTTON_TEXT)
-    surface.blit(
-        text_surf,
-        (
-            rect.centerx - text_surf.get_width() // 2,
-            rect.centery - text_surf.get_height() // 2,
-        ),
-    )
+    wrapped = wrap_text_lines(font, text, rect.width - 10)
+    lines = wrapped[:2] if wrapped else ("",)
+    line_gap = 2
+    total_text_h = len(lines) * font.get_height() + max(0, len(lines) - 1) * line_gap
+    y = rect.centery - total_text_h // 2
+    for line in lines:
+        text_surf = font.render(line, True, _BUTTON_TEXT)
+        surface.blit(
+            text_surf,
+            (
+                rect.centerx - text_surf.get_width() // 2,
+                y,
+            ),
+        )
+        y += font.get_height() + line_gap
 
 
 def _draw_read_only_display(

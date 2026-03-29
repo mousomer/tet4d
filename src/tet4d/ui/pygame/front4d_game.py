@@ -593,6 +593,7 @@ def run_game_loop(
     bot_profile_index: int = 1,
     bot_budget_ms: int = 36,
     tutorial_lesson_id: str | None = None,
+    pause_menu_runner=None,
 ) -> bool:
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
@@ -674,7 +675,7 @@ def run_game_loop(
         loop=loop,
         gravity_interval_from_config=gravity_interval_ms_from_config,
         pause_dimension=4,
-        run_pause_menu=run_pause_menu,
+        run_pause_menu=run_pause_menu if pause_menu_runner is None else pause_menu_runner,
         run_help_menu=lambda target, active_fonts, dim, ctx, on_escape_back=None: run_help_menu(
             target,
             active_fonts,
@@ -747,8 +748,6 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
-
 
 
 

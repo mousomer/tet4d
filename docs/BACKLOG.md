@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-29  
+Updated: 2026-03-30  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -108,12 +108,24 @@ Completed on 2026-03-29:
   topology cache now retains preview payloads, movement-graph rows, and rigid
   playability analysis on disk, and Advanced gameplay exposes cache measure
   plus cache clear actions for that persistent cache set
+- topology-playground/layout visibility pass so compact sidebar rows and
+  Advanced gameplay rows now wrap label/value text instead of obscuring it,
+  shared action buttons/workspace tabs now wrap instead of hard truncating,
+  and the external helper lane keeps a wider readable budget on supported
+  compact shells
+- topology-playground helper-panel redesign so the right helper now renders as
+  a minimal structured controls card with one short workspace/tool context
+  line plus movement and rotation keys pulled from the current active
+  keybindings for the active dimension
 - topology-playground sandbox-neighbor row click fix so the modern shell now
   toggles Sandbox `Neighbors` directly on mouse click in `3D` / `4D` instead
   of requiring keyboard row adjustment to disable the overlay
 - topology-playground sandbox auto-move latency fix so Sandbox moves no longer
   force a full rigid-playability rescan while the canonical analysis is still
   pending in `AUTO` mode
+- topology-playground compact footer action-lane sizing fix so the six-button
+  Sandbox footer keeps labels like `Next Piece` and `Show Path` visible under
+  the compact shell layout tested in CI
 - topology-playground authority/spec/status/menu alignment around the settled
   modern `Topology Playground` contract and legacy-editor placement
 - topology-playground shell-layout extraction plus deterministic cross-surface
@@ -124,6 +136,12 @@ Completed on 2026-03-29:
   same-signature reuse and profiler-script repair
 - topology-playground compact-shell readability pass for sidebar/helper width
   allocation and wrapped helper copy
+- topology-playground seam-edit help pass so the current Editor seam workflow
+  is now documented both in `docs/help/TOPOLOGY_PLAYGROUND_SEAM_EDITING.md`
+  and in the shared launcher/pause help topic registry
+- topology-playground exploration return-menu fix so `Explore This Topology`
+  now exits directly back to the main playground shell on `menu` instead of
+  opening the generic independent gameplay pause menu first
 - final governance-pack prune after unified manifest cutover, including
   maintenance-doc regeneration and local gate re-verification
 
@@ -140,6 +158,10 @@ Current batch:
 - persistent topology cache coverage for preview payloads, movement-graph
   rows, and rigid-playability analysis plus Advanced-menu cache
   measure/clear actions
+- wrap-aware compact row rendering for Topology Playground controls and
+  Advanced gameplay settings plus a wider helper-lane budget
+- minimal structured helper-panel rendering sourced from live current
+  movement/rotation keybindings instead of a generic wrapped hint stack
 - compact-shell layout rebalance for control rows and helper lane readability
 - profiler-script repair for the current topology-playground startup path
 - focused playability/menu tests plus authority/status doc synchronization

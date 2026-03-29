@@ -28,6 +28,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 22. Compact help-window policy (reduced non-critical detail first; controls stay available)
 23. Launcher learning/support routing (`Tutorials`,`How to Play`,`Controls Reference`,`Help / FAQ`)
 24. Launcher/pause parity entry points (`Settings`,`Keybindings`,`Help`,`Bot Options`,`Quit`)
+25. Topology Playground seam editing in `Editor` mode (`docs/help/TOPOLOGY_PLAYGROUND_SEAM_EDITING.md`)
 
 ## Control diagrams
 
@@ -48,6 +49,7 @@ Canonical help index for launcher, pause menu, and in-game helper surfaces.
 15. `config/help/topics.json` + `config/help/action_map.json`
 16. `config/help/content/runtime_help_content.json` (runtime help copy templates used by `runtime_ui/help_menu.py`)
 17. `config/help/layout/runtime_help_layout.json` (runtime help layout/placement rules used by `runtime_ui/help_menu.py`)
+18. `docs/help/TOPOLOGY_PLAYGROUND_SEAM_EDITING.md`
 
 ## Maintenance rule
 

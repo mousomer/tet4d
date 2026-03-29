@@ -85,6 +85,26 @@ class TestHelpMenu(unittest.TestCase):
         topic, _topics = help_menu._current_topic(state, "Launcher")
         self.assertEqual(topic["id"], "key_reference")
 
+    def test_topology_playground_seam_topic_renders_current_edit_flow(self) -> None:
+        state = help_menu._HelpState(dimension=4)
+        help_menu._set_initial_topic(
+            state,
+            context_label="Launcher",
+            topic_id="topology_playground_seams",
+        )
+        topic, topics = help_menu._current_topic(state, "Launcher")
+        lines = help_menu._topic_text_lines(
+            topic=topic,
+            state=state,
+            context_label="Launcher",
+            topics=topics,
+            compact=False,
+        )
+        text = "\n".join(lines)
+        self.assertIn("Open Topology Playground, switch to Editor, and set Tool to Edit.", text)
+        self.assertIn("Press Apply to commit the seam.", text)
+        self.assertIn("Press Remove only after the seam is selected.", text)
+
     def test_help_header_text_fits_compact_window_budget(self) -> None:
         screen = pygame.Surface((640, 420), pygame.SRCALPHA)
         frame_rect, header_rect, _content_rect, footer_rect = help_menu._help_layout_zones(

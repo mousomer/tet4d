@@ -149,7 +149,7 @@ from tet4d.ui.pygame.topology_lab.shell_layout import (
     build_topology_lab_shell_layout,
     topology_lab_row_text_budgets,
 )
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text, wrap_text_lines
 
 _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
@@ -667,7 +667,19 @@ def _draw_control_rows(
     for idx, row in enumerate(rows):
         is_status_row = _row_is_status_display(row)
         selected = idx == selected_row and not is_status_row
-        row_height = fonts.menu_font.get_height() + 10
+        label_text = row.label + (" (locked)" if row.disabled else "")
+        value_text = _row_value_text(state, row)
+        budgets = topology_lab_row_text_budgets(
+            menu_w=menu_w,
+            row_rect_width=menu_w - 28,
+        )
+        label_lines = wrap_text_lines(fonts.menu_font, label_text, budgets.label_width)
+        value_lines = wrap_text_lines(fonts.menu_font, value_text, budgets.value_width)
+        line_count = max(len(label_lines), len(value_lines), 1)
+        row_height = line_count * fonts.menu_font.get_height() + max(
+            10,
+            8 + (line_count - 1) * 3,
+        )
         row_rect = pygame.Rect(panel_x + 14, y - 4, menu_w - 28, row_height)
         if not is_status_row:
             state.mouse_targets.append(
@@ -694,35 +706,32 @@ def _draw_control_rows(
             hi = pygame.Surface((row_rect.width, row_rect.height), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, row_rect.topleft)
-        budgets = topology_lab_row_text_budgets(
-            menu_w=menu_w,
-            row_rect_width=row_rect.width,
-        )
-        label_text = row.label + (" (locked)" if row.disabled else "")
-        label = fonts.menu_font.render(
-            fit_text(fonts.menu_font, label_text, budgets.label_width),
-            True,
-            color,
-        )
-        value = fonts.menu_font.render(
-            fit_text(
-                fonts.menu_font,
-                _row_value_text(state, row),
-                budgets.value_width,
-            ),
-            True,
-            value_color,
-        )
-        screen.blit(label, (panel_x + 22, y))
+        label_y = y
+        for line in label_lines:
+            label = fonts.menu_font.render(line, True, color)
+            screen.blit(label, (panel_x + 22, label_y))
+            label_y += fonts.menu_font.get_height() + 3
         value_right = panel_x + menu_w - 22
         if _row_supports_step_adjustment(row):
             button_size = 18
+            button_y = row_rect.y + max(1, (row_rect.height - (row_height - 2)) // 2)
             plus_rect = pygame.Rect(
-                value_right - button_size, y - 1, button_size, row_height - 2
+                value_right - button_size,
+                button_y,
+                button_size,
+                row_height - 2,
             )
-            value_x = plus_rect.x - 8 - value.get_width()
+            value_width = (
+                max(fonts.menu_font.size(line)[0] for line in value_lines)
+                if value_lines
+                else 0
+            )
+            value_x = plus_rect.x - 8 - value_width
             minus_rect = pygame.Rect(
-                value_x - 8 - button_size, y - 1, button_size, row_height - 2
+                value_x - 8 - button_size,
+                button_y,
+                button_size,
+                row_height - 2,
             )
             for step_value, glyph, button_rect in (
                 (-1, "-", minus_rect),
@@ -745,9 +754,17 @@ def _draw_control_rows(
                 state.mouse_targets.append(
                     TopologyLabHitTarget("row_step", (row.key, step_value), button_rect)
                 )
-            screen.blit(value, (value_x, y))
+            value_y = y
+            for line in value_lines:
+                value = fonts.menu_font.render(line, True, value_color)
+                screen.blit(value, (value_x, value_y))
+                value_y += fonts.menu_font.get_height() + 3
         else:
-            screen.blit(value, (value_right - value.get_width(), y))
+            value_y = y
+            for line in value_lines:
+                value = fonts.menu_font.render(line, True, value_color)
+                screen.blit(value, (value_right - value.get_width(), value_y))
+                value_y += fonts.menu_font.get_height() + 3
         y += row_height + 2
 
 
