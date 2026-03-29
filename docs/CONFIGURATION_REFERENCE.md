@@ -387,7 +387,7 @@ Parameters:
 ### `config/keybindings/defaults.json`
 Top-level keys: `disabled_keys_2d`, `profiles`, `version`
 Parameters:
-- `disabled_keys_2d[]`: array[`int`]; examples: `101`, `97`, `115`
+- `disabled_keys_2d[]`: array[`int`]; examples: `113`, `101`, `119`
 - `profiles.full.camera.d3.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.full.camera.d3.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.full.camera.d3.overlay_alpha_inc[]`: array[`int`]; examples: `93`
@@ -395,75 +395,75 @@ Parameters:
 - `profiles.full.camera.d3.pitch_pos[]`: array[`int`]; examples: `54`
 - `profiles.full.camera.d3.reset[]`: array[`int`]; examples: `48`
 - `profiles.full.camera.d3.yaw_fine_neg[]`: array[`int`]; examples: `49`
-- `profiles.full.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `52`
-- `profiles.full.camera.d3.yaw_neg[]`: array[`int`]; examples: `50`
-- `profiles.full.camera.d3.yaw_pos[]`: array[`int`]; examples: `51`
+- `profiles.full.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `50`
+- `profiles.full.camera.d3.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.full.camera.d3.yaw_pos[]`: array[`int`]; examples: `52`
 - `profiles.full.camera.d3.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.full.camera.d3.zoom_out[]`: array[`int`]; examples: `55`
-- `profiles.full.camera.d4.cycle_projection[]`: array[`int`]; examples: `1073741913`
+- `profiles.full.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`, `1073741913`
 - `profiles.full.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.full.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.full.camera.d4.pitch_neg[]`: array[`int`]; examples: `55`
-- `profiles.full.camera.d4.pitch_pos[]`: array[`int`]; examples: `56`
-- `profiles.full.camera.d4.reset[]`: array[`int`]; examples: `1073741915`
+- `profiles.full.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
+- `profiles.full.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.full.camera.d4.reset[]`: array[`int`]; examples: `48`, `1073741915`
 - `profiles.full.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
 - `profiles.full.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.full.camera.d4.view_zw_neg[]`: array[`int`]; examples: `51`
-- `profiles.full.camera.d4.view_zw_pos[]`: array[`int`]; examples: `52`
+- `profiles.full.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`, `1073741910`
+- `profiles.full.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`, `1073741911`
 - `profiles.full.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `1073741919`
 - `profiles.full.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `1073741921`
-- `profiles.full.camera.d4.yaw_neg[]`: array[`int`]; examples: `53`
-- `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
-- `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
-- `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
-- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741915`
-- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741913`
-- `profiles.full.explorer.d3.move_down[]`: array[`int`]; examples: `1073741915`
-- `profiles.full.explorer.d3.move_up[]`: array[`int`]; examples: `1073741913`
-- `profiles.full.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
-- `profiles.full.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
-- `profiles.full.game.d2.hard_drop[]`: array[`int`]; examples: `1073741922`
-- `profiles.full.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741916`
-- `profiles.full.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `122`
-- `profiles.full.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `120`
-- `profiles.full.game.d2.soft_drop[]`: array[`int`]; examples: `1073741917`
-- `profiles.full.game.d3.hard_drop[]`: array[`int`]; examples: `1073741922`
-- `profiles.full.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741916`
-- `profiles.full.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741920`
-- `profiles.full.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741914`
-- `profiles.full.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.full.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.full.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.full.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.full.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.full.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `122`
-- `profiles.full.game.d3.soft_drop[]`: array[`int`]; examples: `1073741917`
-- `profiles.full.game.d4.hard_drop[]`: array[`int`]; examples: `1073741922`
-- `profiles.full.game.d4.move_w_neg[]`: array[`int`]; examples: `1073741908`
-- `profiles.full.game.d4.move_w_pos[]`: array[`int`]; examples: `1073741909`
-- `profiles.full.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741916`
-- `profiles.full.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741918`
-- `profiles.full.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741920`
-- `profiles.full.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741914`
-- `profiles.full.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
-- `profiles.full.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `114`
-- `profiles.full.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.full.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.full.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.full.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.full.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `103`
-- `profiles.full.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `102`
-- `profiles.full.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.full.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `122`
-- `profiles.full.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `98`
-- `profiles.full.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `118`
-- `profiles.full.game.d4.soft_drop[]`: array[`int`]; examples: `1073741917`
+- `profiles.full.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
+- `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
+- `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`, `1073741915`
+- `profiles.full.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`, `1073741913`
+- `profiles.full.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`, `1073741915`
+- `profiles.full.explorer.d3.move_up[]`: array[`int`]; examples: `1073741899`, `1073741913`
+- `profiles.full.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`, `1073741915`
+- `profiles.full.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`, `1073741913`
+- `profiles.full.game.d2.hard_drop[]`: array[`int`]; examples: `32`, `1073741922`
+- `profiles.full.game.d2.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`, `1073741916`
+- `profiles.full.game.d2.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`, `1073741918`
+- `profiles.full.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.full.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.full.game.d2.soft_drop[]`: array[`int`]; examples: `115`, `1073741905`, `1073741917`
+- `profiles.full.game.d3.hard_drop[]`: array[`int`]; examples: `32`, `1073741922`
+- `profiles.full.game.d3.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`, `1073741916`
+- `profiles.full.game.d3.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`, `1073741918`
+- `profiles.full.game.d3.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`, `1073741920`
+- `profiles.full.game.d3.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`, `1073741914`
+- `profiles.full.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.full.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.full.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.full.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.full.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.full.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `98`
+- `profiles.full.game.d3.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`, `1073741917`
+- `profiles.full.game.d4.hard_drop[]`: array[`int`]; examples: `32`, `1073741922`
+- `profiles.full.game.d4.move_w_neg[]`: array[`int`]; examples: `113`, `1073741908`
+- `profiles.full.game.d4.move_w_pos[]`: array[`int`]; examples: `101`, `1073741909`
+- `profiles.full.game.d4.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`, `1073741916`
+- `profiles.full.game.d4.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`, `1073741918`
+- `profiles.full.game.d4.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`, `1073741920`
+- `profiles.full.game.d4.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`, `1073741914`
+- `profiles.full.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `121`
+- `profiles.full.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `117`
+- `profiles.full.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.full.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.full.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.full.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.full.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `104`
+- `profiles.full.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `106`
+- `profiles.full.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.full.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `98`
+- `profiles.full.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `110`
+- `profiles.full.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `109`
+- `profiles.full.game.d4.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`, `1073741917`
 - `profiles.full.system.help[]`: array[`int`]; examples: `1073741882`
-- `profiles.full.system.menu[]`: array[`int`]; examples: `109`, `1073741891`
+- `profiles.full.system.menu[]`: array[`int`]; examples: `112`, `1073741891`
 - `profiles.full.system.quit[]`: array[`int`]; examples: `27`
-- `profiles.full.system.restart[]`: array[`int`]; examples: `121`
+- `profiles.full.system.restart[]`: array[`int`]; examples: `120`
 - `profiles.full.system.toggle_grid[]`: array[`int`]; examples: `99`
 - `profiles.macbook.camera.d3.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.macbook.camera.d3.overlay_alpha_dec[]`: array[`int`]; examples: `91`
@@ -472,27 +472,27 @@ Parameters:
 - `profiles.macbook.camera.d3.pitch_pos[]`: array[`int`]; examples: `54`
 - `profiles.macbook.camera.d3.reset[]`: array[`int`]; examples: `48`
 - `profiles.macbook.camera.d3.yaw_fine_neg[]`: array[`int`]; examples: `49`
-- `profiles.macbook.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `52`
-- `profiles.macbook.camera.d3.yaw_neg[]`: array[`int`]; examples: `50`
-- `profiles.macbook.camera.d3.yaw_pos[]`: array[`int`]; examples: `51`
+- `profiles.macbook.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `50`
+- `profiles.macbook.camera.d3.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.macbook.camera.d3.yaw_pos[]`: array[`int`]; examples: `52`
 - `profiles.macbook.camera.d3.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.macbook.camera.d3.zoom_out[]`: array[`int`]; examples: `55`
-- `profiles.macbook.camera.d4.cycle_projection[]`: array[`int`]; examples: `112`
+- `profiles.macbook.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.macbook.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.macbook.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.macbook.camera.d4.pitch_neg[]`: array[`int`]; examples: `55`
-- `profiles.macbook.camera.d4.pitch_pos[]`: array[`int`]; examples: `56`
-- `profiles.macbook.camera.d4.reset[]`: array[`int`]; examples: `8`
+- `profiles.macbook.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
+- `profiles.macbook.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.macbook.camera.d4.reset[]`: array[`int`]; examples: `48`
 - `profiles.macbook.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
 - `profiles.macbook.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.macbook.camera.d4.view_zw_neg[]`: array[`int`]; examples: `51`
-- `profiles.macbook.camera.d4.view_zw_pos[]`: array[`int`]; examples: `52`
+- `profiles.macbook.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
+- `profiles.macbook.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
 - `profiles.macbook.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
 - `profiles.macbook.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
-- `profiles.macbook.camera.d4.yaw_neg[]`: array[`int`]; examples: `53`
-- `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
-- `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
-- `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.macbook.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
+- `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
 - `profiles.macbook.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.macbook.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
@@ -500,47 +500,47 @@ Parameters:
 - `profiles.macbook.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.macbook.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.macbook.game.d2.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.macbook.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.macbook.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.macbook.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `113`
-- `profiles.macbook.game.d2.soft_drop[]`: array[`int`]; examples: `1073741905`
+- `profiles.macbook.game.d2.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.macbook.game.d2.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.macbook.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.macbook.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.macbook.game.d2.soft_drop[]`: array[`int`]; examples: `115`, `1073741905`
 - `profiles.macbook.game.d3.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.macbook.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.macbook.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741906`
-- `profiles.macbook.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741905`
-- `profiles.macbook.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.macbook.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.macbook.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.macbook.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.macbook.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.macbook.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `122`
+- `profiles.macbook.game.d3.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.macbook.game.d3.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.macbook.game.d3.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`
+- `profiles.macbook.game.d3.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`
+- `profiles.macbook.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.macbook.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.macbook.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.macbook.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.macbook.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.macbook.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `98`
 - `profiles.macbook.game.d3.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.macbook.game.d4.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.macbook.game.d4.move_w_neg[]`: array[`int`]; examples: `44`
-- `profiles.macbook.game.d4.move_w_pos[]`: array[`int`]; examples: `46`
-- `profiles.macbook.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.macbook.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.macbook.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741906`
-- `profiles.macbook.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741905`
-- `profiles.macbook.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
-- `profiles.macbook.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `114`
-- `profiles.macbook.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.macbook.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.macbook.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.macbook.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.macbook.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `103`
-- `profiles.macbook.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `102`
-- `profiles.macbook.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.macbook.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `122`
-- `profiles.macbook.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `98`
-- `profiles.macbook.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `118`
+- `profiles.macbook.game.d4.move_w_neg[]`: array[`int`]; examples: `113`
+- `profiles.macbook.game.d4.move_w_pos[]`: array[`int`]; examples: `101`
+- `profiles.macbook.game.d4.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.macbook.game.d4.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.macbook.game.d4.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`
+- `profiles.macbook.game.d4.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`
+- `profiles.macbook.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `121`
+- `profiles.macbook.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `117`
+- `profiles.macbook.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.macbook.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.macbook.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.macbook.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.macbook.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `104`
+- `profiles.macbook.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `106`
+- `profiles.macbook.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.macbook.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `98`
+- `profiles.macbook.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `110`
+- `profiles.macbook.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `109`
 - `profiles.macbook.game.d4.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.macbook.system.help[]`: array[`int`]; examples: `9`
-- `profiles.macbook.system.menu[]`: array[`int`]; examples: `109`, `1073741891`
+- `profiles.macbook.system.menu[]`: array[`int`]; examples: `112`, `1073741891`
 - `profiles.macbook.system.quit[]`: array[`int`]; examples: `27`
-- `profiles.macbook.system.restart[]`: array[`int`]; examples: `121`
+- `profiles.macbook.system.restart[]`: array[`int`]; examples: `120`
 - `profiles.macbook.system.toggle_grid[]`: array[`int`]; examples: `99`
 - `profiles.small.camera.d3.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.small.camera.d3.overlay_alpha_dec[]`: array[`int`]; examples: `91`
@@ -549,27 +549,27 @@ Parameters:
 - `profiles.small.camera.d3.pitch_pos[]`: array[`int`]; examples: `54`
 - `profiles.small.camera.d3.reset[]`: array[`int`]; examples: `48`
 - `profiles.small.camera.d3.yaw_fine_neg[]`: array[`int`]; examples: `49`
-- `profiles.small.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `52`
-- `profiles.small.camera.d3.yaw_neg[]`: array[`int`]; examples: `50`
-- `profiles.small.camera.d3.yaw_pos[]`: array[`int`]; examples: `51`
+- `profiles.small.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `50`
+- `profiles.small.camera.d3.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.small.camera.d3.yaw_pos[]`: array[`int`]; examples: `52`
 - `profiles.small.camera.d3.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.small.camera.d3.zoom_out[]`: array[`int`]; examples: `55`
-- `profiles.small.camera.d4.cycle_projection[]`: array[`int`]; examples: `1073741913`
+- `profiles.small.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.small.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.small.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.small.camera.d4.pitch_neg[]`: array[`int`]; examples: `55`
-- `profiles.small.camera.d4.pitch_pos[]`: array[`int`]; examples: `56`
-- `profiles.small.camera.d4.reset[]`: array[`int`]; examples: `1073741915`
+- `profiles.small.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
+- `profiles.small.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.small.camera.d4.reset[]`: array[`int`]; examples: `48`
 - `profiles.small.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
 - `profiles.small.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.small.camera.d4.view_zw_neg[]`: array[`int`]; examples: `51`
-- `profiles.small.camera.d4.view_zw_pos[]`: array[`int`]; examples: `52`
-- `profiles.small.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `1073741919`
-- `profiles.small.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `1073741921`
-- `profiles.small.camera.d4.yaw_neg[]`: array[`int`]; examples: `53`
-- `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
-- `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
-- `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.small.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
+- `profiles.small.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
+- `profiles.small.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
+- `profiles.small.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
+- `profiles.small.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
+- `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
 - `profiles.small.explorer.d2.move_up[]`: array[`int`]; examples: `1073741906`, `1073741899`
 - `profiles.small.explorer.d3.move_down[]`: array[`int`]; examples: `1073741902`
@@ -577,47 +577,47 @@ Parameters:
 - `profiles.small.explorer.d4.move_down[]`: array[`int`]; examples: `1073741902`
 - `profiles.small.explorer.d4.move_up[]`: array[`int`]; examples: `1073741899`
 - `profiles.small.game.d2.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.small.game.d2.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.small.game.d2.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.small.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `1073741906`, `113`
-- `profiles.small.game.d2.soft_drop[]`: array[`int`]; examples: `1073741905`
+- `profiles.small.game.d2.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.small.game.d2.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.small.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.small.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.small.game.d2.soft_drop[]`: array[`int`]; examples: `115`, `1073741905`
 - `profiles.small.game.d3.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.small.game.d3.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.small.game.d3.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d3.move_z_neg[]`: array[`int`]; examples: `1073741906`
-- `profiles.small.game.d3.move_z_pos[]`: array[`int`]; examples: `1073741905`
-- `profiles.small.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.small.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.small.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.small.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.small.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.small.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `122`
+- `profiles.small.game.d3.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.small.game.d3.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.small.game.d3.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`
+- `profiles.small.game.d3.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`
+- `profiles.small.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.small.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.small.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.small.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.small.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.small.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `98`
 - `profiles.small.game.d3.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.small.game.d4.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.small.game.d4.move_w_neg[]`: array[`int`]; examples: `110`
-- `profiles.small.game.d4.move_w_pos[]`: array[`int`]; examples: `47`
-- `profiles.small.game.d4.move_x_neg[]`: array[`int`]; examples: `1073741904`
-- `profiles.small.game.d4.move_x_pos[]`: array[`int`]; examples: `1073741903`
-- `profiles.small.game.d4.move_z_neg[]`: array[`int`]; examples: `1073741906`
-- `profiles.small.game.d4.move_z_pos[]`: array[`int`]; examples: `1073741905`
-- `profiles.small.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
-- `profiles.small.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `114`
-- `profiles.small.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.small.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.small.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.small.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.small.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `103`
-- `profiles.small.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `102`
-- `profiles.small.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.small.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `122`
-- `profiles.small.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `98`
-- `profiles.small.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `118`
+- `profiles.small.game.d4.move_w_neg[]`: array[`int`]; examples: `113`
+- `profiles.small.game.d4.move_w_pos[]`: array[`int`]; examples: `101`
+- `profiles.small.game.d4.move_x_neg[]`: array[`int`]; examples: `97`, `1073741904`
+- `profiles.small.game.d4.move_x_pos[]`: array[`int`]; examples: `100`, `1073741903`
+- `profiles.small.game.d4.move_z_neg[]`: array[`int`]; examples: `119`, `1073741906`
+- `profiles.small.game.d4.move_z_pos[]`: array[`int`]; examples: `115`, `1073741905`
+- `profiles.small.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `121`
+- `profiles.small.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `117`
+- `profiles.small.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.small.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.small.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.small.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.small.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `104`
+- `profiles.small.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `106`
+- `profiles.small.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.small.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `98`
+- `profiles.small.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `110`
+- `profiles.small.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `109`
 - `profiles.small.game.d4.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.small.system.help[]`: array[`int`]; examples: `1073741882`
-- `profiles.small.system.menu[]`: array[`int`]; examples: `109`, `1073741891`
+- `profiles.small.system.menu[]`: array[`int`]; examples: `112`, `1073741891`
 - `profiles.small.system.quit[]`: array[`int`]; examples: `27`
-- `profiles.small.system.restart[]`: array[`int`]; examples: `121`
+- `profiles.small.system.restart[]`: array[`int`]; examples: `120`
 - `profiles.small.system.toggle_grid[]`: array[`int`]; examples: `99`
 - `profiles.tiny.camera.d3.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.tiny.camera.d3.overlay_alpha_dec[]`: array[`int`]; examples: `91`
@@ -626,27 +626,27 @@ Parameters:
 - `profiles.tiny.camera.d3.pitch_pos[]`: array[`int`]; examples: `54`
 - `profiles.tiny.camera.d3.reset[]`: array[`int`]; examples: `48`
 - `profiles.tiny.camera.d3.yaw_fine_neg[]`: array[`int`]; examples: `49`
-- `profiles.tiny.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `52`
-- `profiles.tiny.camera.d3.yaw_neg[]`: array[`int`]; examples: `50`
-- `profiles.tiny.camera.d3.yaw_pos[]`: array[`int`]; examples: `51`
+- `profiles.tiny.camera.d3.yaw_fine_pos[]`: array[`int`]; examples: `50`
+- `profiles.tiny.camera.d3.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.tiny.camera.d3.yaw_pos[]`: array[`int`]; examples: `52`
 - `profiles.tiny.camera.d3.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.tiny.camera.d3.zoom_out[]`: array[`int`]; examples: `55`
-- `profiles.tiny.camera.d4.cycle_projection[]`: array[`int`]; examples: `112`
+- `profiles.tiny.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.tiny.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.tiny.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.tiny.camera.d4.pitch_neg[]`: array[`int`]; examples: `55`
-- `profiles.tiny.camera.d4.pitch_pos[]`: array[`int`]; examples: `56`
-- `profiles.tiny.camera.d4.reset[]`: array[`int`]; examples: `8`
+- `profiles.tiny.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
+- `profiles.tiny.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.tiny.camera.d4.reset[]`: array[`int`]; examples: `48`
 - `profiles.tiny.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
 - `profiles.tiny.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.tiny.camera.d4.view_zw_neg[]`: array[`int`]; examples: `51`
-- `profiles.tiny.camera.d4.view_zw_pos[]`: array[`int`]; examples: `52`
+- `profiles.tiny.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
+- `profiles.tiny.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
 - `profiles.tiny.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
 - `profiles.tiny.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
-- `profiles.tiny.camera.d4.yaw_neg[]`: array[`int`]; examples: `53`
-- `profiles.tiny.camera.d4.yaw_pos[]`: array[`int`]; examples: `54`
-- `profiles.tiny.camera.d4.zoom_in[]`: array[`int`]; examples: `48`
-- `profiles.tiny.camera.d4.zoom_out[]`: array[`int`]; examples: `57`
+- `profiles.tiny.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
+- `profiles.tiny.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.tiny.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
+- `profiles.tiny.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.tiny.explorer.d2.move_down[]`: array[`int`]; examples: `107`
 - `profiles.tiny.explorer.d2.move_up[]`: array[`int`]; examples: `105`
 - `profiles.tiny.explorer.d3.move_down[]`: array[`int`]; examples: `107`
@@ -654,47 +654,47 @@ Parameters:
 - `profiles.tiny.explorer.d4.move_down[]`: array[`int`]; examples: `107`
 - `profiles.tiny.explorer.d4.move_up[]`: array[`int`]; examples: `105`
 - `profiles.tiny.game.d2.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.tiny.game.d2.move_x_neg[]`: array[`int`]; examples: `106`
-- `profiles.tiny.game.d2.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.tiny.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.tiny.game.d2.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
+- `profiles.tiny.game.d2.move_x_neg[]`: array[`int`]; examples: `97`
+- `profiles.tiny.game.d2.move_x_pos[]`: array[`int`]; examples: `100`
+- `profiles.tiny.game.d2.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.tiny.game.d2.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.tiny.game.d2.soft_drop[]`: array[`int`]; examples: `115`
 - `profiles.tiny.game.d3.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.tiny.game.d3.move_x_neg[]`: array[`int`]; examples: `106`
-- `profiles.tiny.game.d3.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d3.move_z_neg[]`: array[`int`]; examples: `117`
-- `profiles.tiny.game.d3.move_z_pos[]`: array[`int`]; examples: `111`
-- `profiles.tiny.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.tiny.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.tiny.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.tiny.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.tiny.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.tiny.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `122`
+- `profiles.tiny.game.d3.move_x_neg[]`: array[`int`]; examples: `97`
+- `profiles.tiny.game.d3.move_x_pos[]`: array[`int`]; examples: `100`
+- `profiles.tiny.game.d3.move_z_neg[]`: array[`int`]; examples: `119`
+- `profiles.tiny.game.d3.move_z_pos[]`: array[`int`]; examples: `115`
+- `profiles.tiny.game.d3.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.tiny.game.d3.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.tiny.game.d3.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.tiny.game.d3.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.tiny.game.d3.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.tiny.game.d3.rotate_yz_pos[]`: array[`int`]; examples: `98`
 - `profiles.tiny.game.d3.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.tiny.game.d4.hard_drop[]`: array[`int`]; examples: `32`
-- `profiles.tiny.game.d4.move_w_neg[]`: array[`int`]; examples: `44`
-- `profiles.tiny.game.d4.move_w_pos[]`: array[`int`]; examples: `46`
-- `profiles.tiny.game.d4.move_x_neg[]`: array[`int`]; examples: `106`
-- `profiles.tiny.game.d4.move_x_pos[]`: array[`int`]; examples: `108`
-- `profiles.tiny.game.d4.move_z_neg[]`: array[`int`]; examples: `117`
-- `profiles.tiny.game.d4.move_z_pos[]`: array[`int`]; examples: `111`
-- `profiles.tiny.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `116`
-- `profiles.tiny.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `114`
-- `profiles.tiny.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `119`
-- `profiles.tiny.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `113`
-- `profiles.tiny.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `115`
-- `profiles.tiny.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `97`
-- `profiles.tiny.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `103`
-- `profiles.tiny.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `102`
-- `profiles.tiny.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `120`
-- `profiles.tiny.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `122`
-- `profiles.tiny.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `98`
-- `profiles.tiny.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `118`
+- `profiles.tiny.game.d4.move_w_neg[]`: array[`int`]; examples: `113`
+- `profiles.tiny.game.d4.move_w_pos[]`: array[`int`]; examples: `101`
+- `profiles.tiny.game.d4.move_x_neg[]`: array[`int`]; examples: `97`
+- `profiles.tiny.game.d4.move_x_pos[]`: array[`int`]; examples: `100`
+- `profiles.tiny.game.d4.move_z_neg[]`: array[`int`]; examples: `119`
+- `profiles.tiny.game.d4.move_z_pos[]`: array[`int`]; examples: `115`
+- `profiles.tiny.game.d4.rotate_xw_neg[]`: array[`int`]; examples: `121`
+- `profiles.tiny.game.d4.rotate_xw_pos[]`: array[`int`]; examples: `117`
+- `profiles.tiny.game.d4.rotate_xy_neg[]`: array[`int`]; examples: `114`
+- `profiles.tiny.game.d4.rotate_xy_pos[]`: array[`int`]; examples: `116`
+- `profiles.tiny.game.d4.rotate_xz_neg[]`: array[`int`]; examples: `102`
+- `profiles.tiny.game.d4.rotate_xz_pos[]`: array[`int`]; examples: `103`
+- `profiles.tiny.game.d4.rotate_yw_neg[]`: array[`int`]; examples: `104`
+- `profiles.tiny.game.d4.rotate_yw_pos[]`: array[`int`]; examples: `106`
+- `profiles.tiny.game.d4.rotate_yz_neg[]`: array[`int`]; examples: `118`
+- `profiles.tiny.game.d4.rotate_yz_pos[]`: array[`int`]; examples: `98`
+- `profiles.tiny.game.d4.rotate_zw_neg[]`: array[`int`]; examples: `110`
+- `profiles.tiny.game.d4.rotate_zw_pos[]`: array[`int`]; examples: `109`
 - `profiles.tiny.game.d4.soft_drop[]`: array[`int`]; examples: `1073742049`, `1073742053`
 - `profiles.tiny.system.help[]`: array[`int`]; examples: `9`
-- `profiles.tiny.system.menu[]`: array[`int`]; examples: `109`, `1073741891`
+- `profiles.tiny.system.menu[]`: array[`int`]; examples: `112`, `1073741891`
 - `profiles.tiny.system.quit[]`: array[`int`]; examples: `27`
-- `profiles.tiny.system.restart[]`: array[`int`]; examples: `121`
+- `profiles.tiny.system.restart[]`: array[`int`]; examples: `120`
 - `profiles.tiny.system.toggle_grid[]`: array[`int`]; examples: `99`
 - `version`: `1` (`int`)
 

@@ -4,1063 +4,430 @@
     "small": {
       "game": {
         "d2": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "soft_drop": [
-            1073741905
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            1073741906,
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "soft_drop": [115, 1073741905],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116]
         },
         "d3": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "move_z_neg": [
-            1073741906
-          ],
-          "move_z_pos": [
-            1073741905
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "move_z_neg": [119, 1073741906],
+          "move_z_pos": [115, 1073741905],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98]
         },
         "d4": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "move_z_neg": [
-            1073741906
-          ],
-          "move_z_pos": [
-            1073741905
-          ],
-          "move_w_neg": [
-            110
-          ],
-          "move_w_pos": [
-            47
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ],
-          "rotate_xw_pos": [
-            114
-          ],
-          "rotate_xw_neg": [
-            116
-          ],
-          "rotate_yw_pos": [
-            102
-          ],
-          "rotate_yw_neg": [
-            103
-          ],
-          "rotate_zw_pos": [
-            118
-          ],
-          "rotate_zw_neg": [
-            98
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "move_z_neg": [119, 1073741906],
+          "move_z_pos": [115, 1073741905],
+          "move_w_neg": [113],
+          "move_w_pos": [101],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98],
+          "rotate_xw_neg": [121],
+          "rotate_xw_pos": [117],
+          "rotate_yw_neg": [104],
+          "rotate_yw_pos": [106],
+          "rotate_zw_neg": [110],
+          "rotate_zw_pos": [109]
         }
       },
       "camera": {
         "d3": {
-          "yaw_fine_neg": [
-            49
-          ],
-          "yaw_neg": [
-            50
-          ],
-          "yaw_pos": [
-            51
-          ],
-          "yaw_fine_pos": [
-            52
-          ],
-          "pitch_neg": [
-            53
-          ],
-          "pitch_pos": [
-            54
-          ],
-          "zoom_out": [
-            55
-          ],
-          "zoom_in": [
-            56
-          ],
-          "cycle_projection": [
-            57
-          ],
-          "reset": [
-            48
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "yaw_fine_neg": [49],
+          "yaw_fine_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         },
         "d4": {
-          "view_xw_neg": [
-            49
-          ],
-          "view_xw_pos": [
-            50
-          ],
-          "view_zw_neg": [
-            51
-          ],
-          "view_zw_pos": [
-            52
-          ],
-          "yaw_neg": [
-            53
-          ],
-          "yaw_pos": [
-            54
-          ],
-          "pitch_neg": [
-            55
-          ],
-          "pitch_pos": [
-            56
-          ],
-          "zoom_out": [
-            57
-          ],
-          "zoom_in": [
-            48
-          ],
-          "yaw_fine_neg": [
-            1073741919
-          ],
-          "yaw_fine_pos": [
-            1073741921
-          ],
-          "cycle_projection": [
-            1073741913
-          ],
-          "reset": [
-            1073741915
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "view_xw_neg": [49],
+          "view_xw_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "view_zw_neg": [59],
+          "view_zw_pos": [39],
+          "yaw_fine_neg": [45],
+          "yaw_fine_pos": [61],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         }
       },
       "system": {
-        "quit": [
-          27
-        ],
-        "menu": [
-          109,
-          1073741891
-        ],
-        "restart": [
-          121
-        ],
-        "toggle_grid": [
-          99
-        ],
-        "help": [
-          1073741882
-        ]
+        "quit": [27],
+        "menu": [112, 1073741891],
+        "restart": [120],
+        "toggle_grid": [99],
+        "help": [1073741882]
       },
       "explorer": {
         "d2": {
-          "move_up": [
-            1073741906,
-            1073741899
-          ],
-          "move_down": [
-            1073741905,
-            1073741902
-          ]
+          "move_up": [1073741906, 1073741899],
+          "move_down": [1073741905, 1073741902]
         },
         "d3": {
-          "move_up": [
-            1073741899
-          ],
-          "move_down": [
-            1073741902
-          ]
+          "move_up": [1073741899],
+          "move_down": [1073741902]
         },
         "d4": {
-          "move_up": [
-            1073741899
-          ],
-          "move_down": [
-            1073741902
-          ]
+          "move_up": [1073741899],
+          "move_down": [1073741902]
         }
       }
     },
     "full": {
       "game": {
         "d2": {
-          "move_x_neg": [
-            1073741916
-          ],
-          "move_x_pos": [
-            1073741918
-          ],
-          "soft_drop": [
-            1073741917
-          ],
-          "hard_drop": [
-            1073741922
-          ],
-          "rotate_xy_pos": [
-            1073741906,
-            120
-          ],
-          "rotate_xy_neg": [
-            122
-          ]
+          "move_x_neg": [97, 1073741904, 1073741916],
+          "move_x_pos": [100, 1073741903, 1073741918],
+          "soft_drop": [115, 1073741905, 1073741917],
+          "hard_drop": [32, 1073741922],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116]
         },
         "d3": {
-          "move_x_neg": [
-            1073741916
-          ],
-          "move_x_pos": [
-            1073741918
-          ],
-          "move_z_neg": [
-            1073741920
-          ],
-          "move_z_pos": [
-            1073741914
-          ],
-          "soft_drop": [
-            1073741917
-          ],
-          "hard_drop": [
-            1073741922
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ]
+          "move_x_neg": [97, 1073741904, 1073741916],
+          "move_x_pos": [100, 1073741903, 1073741918],
+          "move_z_neg": [119, 1073741906, 1073741920],
+          "move_z_pos": [115, 1073741905, 1073741914],
+          "soft_drop": [1073742049, 1073742053, 1073741917],
+          "hard_drop": [32, 1073741922],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98]
         },
         "d4": {
-          "move_x_neg": [
-            1073741916
-          ],
-          "move_x_pos": [
-            1073741918
-          ],
-          "move_z_neg": [
-            1073741920
-          ],
-          "move_z_pos": [
-            1073741914
-          ],
-          "move_w_neg": [
-            1073741908
-          ],
-          "move_w_pos": [
-            1073741909
-          ],
-          "soft_drop": [
-            1073741917
-          ],
-          "hard_drop": [
-            1073741922
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ],
-          "rotate_xw_pos": [
-            114
-          ],
-          "rotate_xw_neg": [
-            116
-          ],
-          "rotate_yw_pos": [
-            102
-          ],
-          "rotate_yw_neg": [
-            103
-          ],
-          "rotate_zw_pos": [
-            118
-          ],
-          "rotate_zw_neg": [
-            98
-          ]
+          "move_x_neg": [97, 1073741904, 1073741916],
+          "move_x_pos": [100, 1073741903, 1073741918],
+          "move_z_neg": [119, 1073741906, 1073741920],
+          "move_z_pos": [115, 1073741905, 1073741914],
+          "move_w_neg": [113, 1073741908],
+          "move_w_pos": [101, 1073741909],
+          "soft_drop": [1073742049, 1073742053, 1073741917],
+          "hard_drop": [32, 1073741922],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98],
+          "rotate_xw_neg": [121],
+          "rotate_xw_pos": [117],
+          "rotate_yw_neg": [104],
+          "rotate_yw_pos": [106],
+          "rotate_zw_neg": [110],
+          "rotate_zw_pos": [109]
         }
       },
       "camera": {
         "d3": {
-          "yaw_fine_neg": [
-            49
-          ],
-          "yaw_neg": [
-            50
-          ],
-          "yaw_pos": [
-            51
-          ],
-          "yaw_fine_pos": [
-            52
-          ],
-          "pitch_neg": [
-            53
-          ],
-          "pitch_pos": [
-            54
-          ],
-          "zoom_out": [
-            55
-          ],
-          "zoom_in": [
-            56
-          ],
-          "cycle_projection": [
-            57
-          ],
-          "reset": [
-            48
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "yaw_fine_neg": [49],
+          "yaw_fine_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         },
         "d4": {
-          "view_xw_neg": [
-            49
-          ],
-          "view_xw_pos": [
-            50
-          ],
-          "view_zw_neg": [
-            51
-          ],
-          "view_zw_pos": [
-            52
-          ],
-          "yaw_neg": [
-            53
-          ],
-          "yaw_pos": [
-            54
-          ],
-          "pitch_neg": [
-            55
-          ],
-          "pitch_pos": [
-            56
-          ],
-          "zoom_out": [
-            57
-          ],
-          "zoom_in": [
-            48
-          ],
-          "yaw_fine_neg": [
-            1073741919
-          ],
-          "yaw_fine_pos": [
-            1073741921
-          ],
-          "cycle_projection": [
-            1073741913
-          ],
-          "reset": [
-            1073741915
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "view_xw_neg": [49],
+          "view_xw_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57, 1073741913],
+          "reset": [48, 1073741915],
+          "view_zw_neg": [59, 1073741910],
+          "view_zw_pos": [39, 1073741911],
+          "yaw_fine_neg": [1073741919],
+          "yaw_fine_pos": [1073741921],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         }
       },
       "system": {
-        "quit": [
-          27
-        ],
-        "menu": [
-          109,
-          1073741891
-        ],
-        "restart": [
-          121
-        ],
-        "toggle_grid": [
-          99
-        ],
-        "help": [
-          1073741882
-        ]
+        "quit": [27],
+        "menu": [112, 1073741891],
+        "restart": [120],
+        "toggle_grid": [99],
+        "help": [1073741882]
       },
       "explorer": {
         "d2": {
-          "move_up": [
-            1073741906,
-            1073741913
-          ],
-          "move_down": [
-            1073741905,
-            1073741915
-          ]
+          "move_up": [1073741906, 1073741899, 1073741913],
+          "move_down": [1073741905, 1073741902, 1073741915]
         },
         "d3": {
-          "move_up": [
-            1073741913
-          ],
-          "move_down": [
-            1073741915
-          ]
+          "move_up": [1073741899, 1073741913],
+          "move_down": [1073741902, 1073741915]
         },
         "d4": {
-          "move_up": [
-            1073741899
-          ],
-          "move_down": [
-            1073741902
-          ]
+          "move_up": [1073741899, 1073741913],
+          "move_down": [1073741902, 1073741915]
         }
       }
     },
     "macbook": {
       "game": {
         "d2": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "soft_drop": [
-            1073741905
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            1073741906,
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "soft_drop": [115, 1073741905],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116]
         },
         "d3": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "move_z_neg": [
-            1073741906
-          ],
-          "move_z_pos": [
-            1073741905
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "move_z_neg": [119, 1073741906],
+          "move_z_pos": [115, 1073741905],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98]
         },
         "d4": {
-          "move_x_neg": [
-            1073741904
-          ],
-          "move_x_pos": [
-            1073741903
-          ],
-          "move_z_neg": [
-            1073741906
-          ],
-          "move_z_pos": [
-            1073741905
-          ],
-          "move_w_neg": [
-            44
-          ],
-          "move_w_pos": [
-            46
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ],
-          "rotate_xw_pos": [
-            114
-          ],
-          "rotate_xw_neg": [
-            116
-          ],
-          "rotate_yw_pos": [
-            102
-          ],
-          "rotate_yw_neg": [
-            103
-          ],
-          "rotate_zw_pos": [
-            118
-          ],
-          "rotate_zw_neg": [
-            98
-          ]
+          "move_x_neg": [97, 1073741904],
+          "move_x_pos": [100, 1073741903],
+          "move_z_neg": [119, 1073741906],
+          "move_z_pos": [115, 1073741905],
+          "move_w_neg": [113],
+          "move_w_pos": [101],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98],
+          "rotate_xw_neg": [121],
+          "rotate_xw_pos": [117],
+          "rotate_yw_neg": [104],
+          "rotate_yw_pos": [106],
+          "rotate_zw_neg": [110],
+          "rotate_zw_pos": [109]
         }
       },
       "camera": {
         "d3": {
-          "yaw_fine_neg": [
-            49
-          ],
-          "yaw_neg": [
-            50
-          ],
-          "yaw_pos": [
-            51
-          ],
-          "yaw_fine_pos": [
-            52
-          ],
-          "pitch_neg": [
-            53
-          ],
-          "pitch_pos": [
-            54
-          ],
-          "zoom_out": [
-            55
-          ],
-          "zoom_in": [
-            56
-          ],
-          "cycle_projection": [
-            57
-          ],
-          "reset": [
-            48
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "yaw_fine_neg": [49],
+          "yaw_fine_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         },
         "d4": {
-          "view_xw_neg": [
-            49
-          ],
-          "view_xw_pos": [
-            50
-          ],
-          "view_zw_neg": [
-            51
-          ],
-          "view_zw_pos": [
-            52
-          ],
-          "yaw_neg": [
-            53
-          ],
-          "yaw_pos": [
-            54
-          ],
-          "pitch_neg": [
-            55
-          ],
-          "pitch_pos": [
-            56
-          ],
-          "zoom_out": [
-            57
-          ],
-          "zoom_in": [
-            48
-          ],
-          "yaw_fine_neg": [
-            45
-          ],
-          "yaw_fine_pos": [
-            61
-          ],
-          "cycle_projection": [
-            112
-          ],
-          "reset": [
-            8
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "view_xw_neg": [49],
+          "view_xw_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "view_zw_neg": [59],
+          "view_zw_pos": [39],
+          "yaw_fine_neg": [45],
+          "yaw_fine_pos": [61],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         }
       },
       "system": {
-        "quit": [
-          27
-        ],
-        "menu": [
-          109,
-          1073741891
-        ],
-        "restart": [
-          121
-        ],
-        "toggle_grid": [
-          99
-        ],
-        "help": [
-          9
-        ]
+        "quit": [27],
+        "menu": [112, 1073741891],
+        "restart": [120],
+        "toggle_grid": [99],
+        "help": [9]
       },
       "explorer": {
         "d2": {
-          "move_up": [
-            1073741906,
-            1073741899
-          ],
-          "move_down": [
-            1073741905,
-            1073741902
-          ]
+          "move_up": [1073741906, 1073741899],
+          "move_down": [1073741905, 1073741902]
         },
         "d3": {
-          "move_up": [
-            1073741899
-          ],
-          "move_down": [
-            1073741902
-          ]
+          "move_up": [1073741899],
+          "move_down": [1073741902]
         },
         "d4": {
-          "move_up": [
-            1073741899
-          ],
-          "move_down": [
-            1073741902
-          ]
+          "move_up": [1073741899],
+          "move_down": [1073741902]
         }
       }
     },
     "tiny": {
       "game": {
         "d2": {
-          "move_x_neg": [
-            106
-          ],
-          "move_x_pos": [
-            108
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ]
+          "move_x_neg": [97],
+          "move_x_pos": [100],
+          "soft_drop": [115],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116]
         },
         "d3": {
-          "move_x_neg": [
-            106
-          ],
-          "move_x_pos": [
-            108
-          ],
-          "move_z_neg": [
-            117
-          ],
-          "move_z_pos": [
-            111
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ]
+          "move_x_neg": [97],
+          "move_x_pos": [100],
+          "move_z_neg": [119],
+          "move_z_pos": [115],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98]
         },
         "d4": {
-          "move_x_neg": [
-            106
-          ],
-          "move_x_pos": [
-            108
-          ],
-          "move_z_neg": [
-            117
-          ],
-          "move_z_pos": [
-            111
-          ],
-          "move_w_neg": [
-            44
-          ],
-          "move_w_pos": [
-            46
-          ],
-          "soft_drop": [
-            1073742049,
-            1073742053
-          ],
-          "hard_drop": [
-            32
-          ],
-          "rotate_xy_pos": [
-            113
-          ],
-          "rotate_xy_neg": [
-            119
-          ],
-          "rotate_xz_pos": [
-            97
-          ],
-          "rotate_xz_neg": [
-            115
-          ],
-          "rotate_yz_pos": [
-            122
-          ],
-          "rotate_yz_neg": [
-            120
-          ],
-          "rotate_xw_pos": [
-            114
-          ],
-          "rotate_xw_neg": [
-            116
-          ],
-          "rotate_yw_pos": [
-            102
-          ],
-          "rotate_yw_neg": [
-            103
-          ],
-          "rotate_zw_pos": [
-            118
-          ],
-          "rotate_zw_neg": [
-            98
-          ]
+          "move_x_neg": [97],
+          "move_x_pos": [100],
+          "move_z_neg": [119],
+          "move_z_pos": [115],
+          "move_w_neg": [113],
+          "move_w_pos": [101],
+          "soft_drop": [1073742049, 1073742053],
+          "hard_drop": [32],
+          "rotate_xy_neg": [114],
+          "rotate_xy_pos": [116],
+          "rotate_xz_neg": [102],
+          "rotate_xz_pos": [103],
+          "rotate_yz_neg": [118],
+          "rotate_yz_pos": [98],
+          "rotate_xw_neg": [121],
+          "rotate_xw_pos": [117],
+          "rotate_yw_neg": [104],
+          "rotate_yw_pos": [106],
+          "rotate_zw_neg": [110],
+          "rotate_zw_pos": [109]
         }
       },
       "camera": {
         "d3": {
-          "yaw_fine_neg": [
-            49
-          ],
-          "yaw_neg": [
-            50
-          ],
-          "yaw_pos": [
-            51
-          ],
-          "yaw_fine_pos": [
-            52
-          ],
-          "pitch_neg": [
-            53
-          ],
-          "pitch_pos": [
-            54
-          ],
-          "zoom_out": [
-            55
-          ],
-          "zoom_in": [
-            56
-          ],
-          "cycle_projection": [
-            57
-          ],
-          "reset": [
-            48
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "yaw_fine_neg": [49],
+          "yaw_fine_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         },
         "d4": {
-          "view_xw_neg": [
-            49
-          ],
-          "view_xw_pos": [
-            50
-          ],
-          "view_zw_neg": [
-            51
-          ],
-          "view_zw_pos": [
-            52
-          ],
-          "yaw_neg": [
-            53
-          ],
-          "yaw_pos": [
-            54
-          ],
-          "pitch_neg": [
-            55
-          ],
-          "pitch_pos": [
-            56
-          ],
-          "zoom_out": [
-            57
-          ],
-          "zoom_in": [
-            48
-          ],
-          "yaw_fine_neg": [
-            45
-          ],
-          "yaw_fine_pos": [
-            61
-          ],
-          "cycle_projection": [
-            112
-          ],
-          "reset": [
-            8
-          ],
-          "overlay_alpha_dec": [
-            91
-          ],
-          "overlay_alpha_inc": [
-            93
-          ]
+          "view_xw_neg": [49],
+          "view_xw_pos": [50],
+          "yaw_neg": [51],
+          "yaw_pos": [52],
+          "pitch_neg": [53],
+          "pitch_pos": [54],
+          "zoom_out": [55],
+          "zoom_in": [56],
+          "cycle_projection": [57],
+          "reset": [48],
+          "view_zw_neg": [59],
+          "view_zw_pos": [39],
+          "yaw_fine_neg": [45],
+          "yaw_fine_pos": [61],
+          "overlay_alpha_dec": [91],
+          "overlay_alpha_inc": [93]
         }
       },
       "system": {
-        "quit": [
-          27
-        ],
-        "menu": [
-          109,
-          1073741891
-        ],
-        "restart": [
-          121
-        ],
-        "toggle_grid": [
-          99
-        ],
-        "help": [
-          9
-        ]
+        "quit": [27],
+        "menu": [112, 1073741891],
+        "restart": [120],
+        "toggle_grid": [99],
+        "help": [9]
       },
       "explorer": {
         "d2": {
-          "move_up": [
-            105
-          ],
-          "move_down": [
-            107
-          ]
+          "move_up": [105],
+          "move_down": [107]
         },
         "d3": {
-          "move_up": [
-            105
-          ],
-          "move_down": [
-            107
-          ]
+          "move_up": [105],
+          "move_down": [107]
         },
         "d4": {
-          "move_up": [
-            105
-          ],
-          "move_down": [
-            107
-          ]
+          "move_up": [105],
+          "move_down": [107]
         }
       }
     }
   },
   "disabled_keys_2d": [
+    113,
     101,
-    97,
-    115,
-    100,
-    114,
-    116,
+    119,
     102,
     103,
     118,
     98,
+    121,
+    117,
+    104,
+    106,
+    110,
+    109,
     49,
     50,
     51,
@@ -1071,13 +438,11 @@
     56,
     57,
     48,
-    110,
-    47,
-    44,
-    46,
     91,
     93,
     59,
-    39
+    39,
+    45,
+    61
   ]
 }

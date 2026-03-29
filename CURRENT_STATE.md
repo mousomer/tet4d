@@ -47,6 +47,7 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground sandbox-move latency fix follow-up (2026-03-30): Sandbox movement in `AUTO` rigid-play mode no longer forces a fresh full rigid-playability scan while the canonical analysis is still in the deferred `analyzing` state, so `4D` Sandbox moves now reuse the pending analysis state instead of stalling for seconds per move.
 - Topology-playground compact-footer action fit follow-up (2026-03-30): the compact shell footer now reserves enough action-lane width for the six-button Sandbox action set so labels such as `Next Piece` and `Show Path` stay visible under the current compact-width layout contract and CI text-fit checks.
 - Topology-playground seam-edit help follow-up (2026-03-30): the current `Editor` seam workflow is now documented both as a dedicated `docs/help/TOPOLOGY_PLAYGROUND_SEAM_EDITING.md` guide and as a runtime help topic available through the existing launcher/pause help flow, with wording aligned to the live source-boundary -> target-boundary -> transform -> `Apply` implementation.
+- Keybinding defaults redesign follow-up (2026-03-30): the canonical built-in keybinding defaults now use a compact standard-first gameplay movement cluster, a fixed negative-left / positive-right rotation ladder (`RT FG VB YU HJ NM`), shared 3D/4D number-row camera core positions for yaw/pitch/zoom/cycle/reset, an explicit 4D reset on `0`, and deconflicted system defaults (`P` / `F10` menu, `X` restart) so the shipped layouts remain conflict-safe without changing saved user profiles.
 - Topology-playground exploration return-menu follow-up (2026-03-30): topology-playground-launched `Explore This Topology` now treats the gameplay `menu` action as a direct return to the main playground shell instead of opening the generic independent pause menu first, while ordinary launcher gameplay keeps the existing pause flow.
 - Governance policy consolidation prune follow-up (2026-03-29): `config/project/policy/governance.json` and `config/project/policy/code_rules.json` are now the sole runtime policy sources for governance checks, `tools/governance/validate_governance.py` remains the unified policy gate used by `scripts/verify.sh`, and the older manifest pack is retained only as contract and inventory compatibility rather than as an execution fallback.
 - Shared rotation animation mode is now a first-class shared gameplay setting rather than a hidden fallback.
@@ -344,7 +345,7 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3788` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3789` real LOC
 2. `scripts/arch_metrics.py`: `1887` real LOC
 3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1592` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC

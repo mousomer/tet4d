@@ -106,9 +106,9 @@ class TestKeybindingProfiles(unittest.TestCase):
 
     def test_numeric_camera_defaults(self) -> None:
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_neg"), (pygame.K_1,))
-        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_neg"), (pygame.K_2,))
-        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_pos"), (pygame.K_3,))
-        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_pos"), (pygame.K_4,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_pos"), (pygame.K_2,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_neg"), (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_pos"), (pygame.K_4,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("pitch_neg"), (pygame.K_5,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("pitch_pos"), (pygame.K_6,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("zoom_out"), (pygame.K_7,))
@@ -127,14 +127,26 @@ class TestKeybindingProfiles(unittest.TestCase):
         )
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_neg"), (pygame.K_1,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_xw_pos"), (pygame.K_2,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_neg"), (pygame.K_3,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_pos"), (pygame.K_4,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_neg"), (pygame.K_5,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_pos"), (pygame.K_6,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_neg"), (pygame.K_7,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_pos"), (pygame.K_8,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_out"), (pygame.K_9,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_in"), (pygame.K_0,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_neg"), (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_pos"), (pygame.K_4,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_neg"), (pygame.K_5,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_pos"), (pygame.K_6,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_out"), (pygame.K_7,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_in"), (pygame.K_8,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("cycle_projection"), (pygame.K_9,)
+        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("reset"), (pygame.K_0,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("view_zw_neg"), (pygame.K_SEMICOLON,)
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("view_zw_pos"), (pygame.K_QUOTE,)
+        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_fine_neg"), (pygame.K_MINUS,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("yaw_fine_pos"), (pygame.K_EQUALS,)
+        )
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D.get("overlay_alpha_dec"),
             (pygame.K_LEFTBRACKET,),
@@ -235,26 +247,24 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertIn(rotation_key, keybindings.KEYS_4D["rotate_zw_neg"])
 
     def test_small_profile_rotation_ladder_defaults(self) -> None:
-        self.assertEqual(
-            keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_UP, pygame.K_q)
-        )
-        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_w,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xy_pos"], (pygame.K_q,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xy_neg"], (pygame.K_w,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xz_pos"], (pygame.K_a,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xz_neg"], (pygame.K_s,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_yz_pos"], (pygame.K_z,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_yz_neg"], (pygame.K_x,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xw_pos"], (pygame.K_r,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_xw_neg"], (pygame.K_t,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_yw_pos"], (pygame.K_f,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_yw_neg"], (pygame.K_g,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_zw_pos"], (pygame.K_v,))
-        self.assertEqual(keybindings.KEYS_4D["rotate_zw_neg"], (pygame.K_b,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_r,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_t,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xy_neg"], (pygame.K_r,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xy_pos"], (pygame.K_t,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xz_neg"], (pygame.K_f,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xz_pos"], (pygame.K_g,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yz_neg"], (pygame.K_v,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yz_pos"], (pygame.K_b,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xw_neg"], (pygame.K_y,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_xw_pos"], (pygame.K_u,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yw_neg"], (pygame.K_h,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_yw_pos"], (pygame.K_j,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_zw_neg"], (pygame.K_n,))
+        self.assertEqual(keybindings.KEYS_4D["rotate_zw_pos"], (pygame.K_m,))
 
     def test_small_profile_4d_w_movement_defaults(self) -> None:
-        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_n,))
-        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_SLASH,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_e,))
 
     def test_small_profile_2d_explorer_defaults_include_arrow_aliases(self) -> None:
         self.assertEqual(
@@ -273,77 +283,102 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertTrue(ok, msg)
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_neg"], (pygame.K_1,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_pos"], (pygame.K_2,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_neg"], (pygame.K_3,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_4,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["view_zw_neg"], (pygame.K_SEMICOLON,)
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_QUOTE,)
+        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_neg"], (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_pos"], (pygame.K_4,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_MINUS,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_EQUALS,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_p,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_BACKSPACE,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_9,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0,))
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["overlay_alpha_dec"], (pygame.K_LEFTBRACKET,)
         )
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["overlay_alpha_inc"], (pygame.K_RIGHTBRACKET,)
         )
-        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_COMMA,))
-        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_PERIOD,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_e,))
         self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
 
-    def test_tiny_profile_uses_no_arrow_gameplay_defaults(self) -> None:
+    def test_tiny_profile_uses_compact_standard_gameplay_defaults(self) -> None:
         ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_TINY)
         self.assertTrue(ok, msg)
         ok, msg = keybindings.load_active_profile_bindings()
         self.assertTrue(ok, msg)
 
-        self.assertEqual(keybindings.KEYS_2D["move_x_neg"], (pygame.K_j,))
-        self.assertEqual(keybindings.KEYS_2D["move_x_pos"], (pygame.K_l,))
+        self.assertEqual(keybindings.KEYS_2D["move_x_neg"], (pygame.K_a,))
+        self.assertEqual(keybindings.KEYS_2D["move_x_pos"], (pygame.K_d,))
         self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_up"], (pygame.K_i,))
         self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_down"], (pygame.K_k,))
-        self.assertEqual(
-            keybindings.KEYS_2D["soft_drop"],
-            (pygame.K_LSHIFT, pygame.K_RSHIFT),
-        )
-        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_q,))
-        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_w,))
+        self.assertEqual(keybindings.KEYS_2D["soft_drop"], (pygame.K_s,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_neg"], (pygame.K_r,))
+        self.assertEqual(keybindings.KEYS_2D["rotate_xy_pos"], (pygame.K_t,))
 
-        self.assertEqual(keybindings.KEYS_3D["move_z_neg"], (pygame.K_u,))
-        self.assertEqual(keybindings.KEYS_3D["move_z_pos"], (pygame.K_o,))
+        self.assertEqual(keybindings.KEYS_3D["move_z_neg"], (pygame.K_w,))
+        self.assertEqual(keybindings.KEYS_3D["move_z_pos"], (pygame.K_s,))
         self.assertEqual(keybindings.EXPLORER_KEYS_3D["move_up"], (pygame.K_i,))
         self.assertEqual(keybindings.EXPLORER_KEYS_3D["move_down"], (pygame.K_k,))
 
-        self.assertEqual(keybindings.KEYS_4D["move_z_neg"], (pygame.K_u,))
-        self.assertEqual(keybindings.KEYS_4D["move_z_pos"], (pygame.K_o,))
+        self.assertEqual(keybindings.KEYS_4D["move_z_neg"], (pygame.K_w,))
+        self.assertEqual(keybindings.KEYS_4D["move_z_pos"], (pygame.K_s,))
         self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_up"], (pygame.K_i,))
         self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_down"], (pygame.K_k,))
-        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_COMMA,))
-        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_PERIOD,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_q,))
+        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_e,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_MINUS,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_EQUALS,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_p,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_BACKSPACE,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_9,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0,))
         self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
 
-    def test_full_profile_uses_keypad_style_w_and_numeric_camera(self) -> None:
+    def test_full_profile_preserves_keypad_aliases_with_shared_camera_layout(self) -> None:
         ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_FULL)
         self.assertTrue(ok, msg)
         ok, msg = keybindings.load_active_profile_bindings()
         self.assertTrue(ok, msg)
-        self.assertEqual(keybindings.KEYS_4D["move_w_neg"], (pygame.K_KP_DIVIDE,))
-        self.assertEqual(keybindings.KEYS_4D["move_w_pos"], (pygame.K_KP_MULTIPLY,))
-        self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_up"], (pygame.K_UP, pygame.K_KP1))
-        self.assertEqual(keybindings.EXPLORER_KEYS_2D["move_down"], (pygame.K_DOWN, pygame.K_KP3))
-        self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_up"], (pygame.K_PAGEUP,))
-        self.assertEqual(keybindings.EXPLORER_KEYS_4D["move_down"], (pygame.K_PAGEDOWN,))
+        self.assertEqual(
+            keybindings.KEYS_4D["move_w_neg"], (pygame.K_q, pygame.K_KP_DIVIDE)
+        )
+        self.assertEqual(
+            keybindings.KEYS_4D["move_w_pos"], (pygame.K_e, pygame.K_KP_MULTIPLY)
+        )
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_2D["move_up"],
+            (pygame.K_UP, pygame.K_PAGEUP, pygame.K_KP1),
+        )
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_2D["move_down"],
+            (pygame.K_DOWN, pygame.K_PAGEDOWN, pygame.K_KP3),
+        )
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_4D["move_up"], (pygame.K_PAGEUP, pygame.K_KP1)
+        )
+        self.assertEqual(
+            keybindings.EXPLORER_KEYS_4D["move_down"], (pygame.K_PAGEDOWN, pygame.K_KP3)
+        )
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_neg"], (pygame.K_1,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_xw_pos"], (pygame.K_2,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_neg"], (pygame.K_3,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_4,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["view_zw_neg"],
+            (pygame.K_SEMICOLON, pygame.K_KP_MINUS),
+        )
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["view_zw_pos"],
+            (pygame.K_QUOTE, pygame.K_KP_PLUS),
+        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_neg"], (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_pos"], (pygame.K_4,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_KP7,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_pos"], (pygame.K_KP9,))
         self.assertEqual(
-            keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_KP1,)
+            keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_9, pygame.K_KP1)
         )
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_KP3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0, pygame.K_KP3))
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["overlay_alpha_dec"], (pygame.K_LEFTBRACKET,)
         )
@@ -352,7 +387,7 @@ class TestKeybindingProfiles(unittest.TestCase):
         )
 
     def test_system_defaults_are_deconflicted_from_rotation_ladder(self) -> None:
-        self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_y,))
+        self.assertEqual(keybindings.SYSTEM_KEYS["restart"], (pygame.K_x,))
         self.assertEqual(keybindings.SYSTEM_KEYS["toggle_grid"], (pygame.K_c,))
         gameplay_keys_4d = {
             key for keys in keybindings.KEYS_4D.values() for key in keys
@@ -362,8 +397,28 @@ class TestKeybindingProfiles(unittest.TestCase):
 
     def test_system_menu_default_includes_f10(self) -> None:
         menu_keys = keybindings.SYSTEM_KEYS["menu"]
-        self.assertIn(pygame.K_m, menu_keys)
+        self.assertIn(pygame.K_p, menu_keys)
         self.assertIn(pygame.K_F10, menu_keys)
+
+    def test_4d_camera_core_positions_match_3d_layout(self) -> None:
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["yaw_neg"], (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_neg"], (pygame.K_3,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["yaw_pos"], (pygame.K_4,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_pos"], (pygame.K_4,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["pitch_neg"], (pygame.K_5,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_neg"], (pygame.K_5,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["pitch_pos"], (pygame.K_6,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_pos"], (pygame.K_6,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["zoom_out"], (pygame.K_7,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["zoom_out"], (pygame.K_7,))
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["zoom_in"], (pygame.K_8,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["zoom_in"], (pygame.K_8,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_3D["cycle_projection"], (pygame.K_9,)
+        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"][0], pygame.K_9)
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["reset"], (pygame.K_0,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"][0], pygame.K_0)
 
 
 class TestMenuSettingsPersistence(unittest.TestCase):

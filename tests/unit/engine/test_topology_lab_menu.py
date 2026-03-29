@@ -32,7 +32,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.ui.pygame import frontend_nd_setup
-from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
+from tet4d.ui.pygame.keybindings import KEYS_2D, KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
 from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
@@ -1014,12 +1014,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         state.active_pane = topology_lab_menu.PANE_SCENE
+        rotate_xy = KEYS_2D["rotate_xy_pos"][0]
         with patch.object(
             topology_lab_controls_panel,
             "rotate_sandbox_piece_action",
             return_value=(True, "sandbox rotated"),
         ) as rotate_action:
-            topology_lab_menu._dispatch_key(state, pygame.K_q)
+            topology_lab_menu._dispatch_key(state, rotate_xy)
         rotate_action.assert_called_once_with(
             state, state.explorer_profile, "rotate_xy_pos"
         )

@@ -142,6 +142,10 @@ Completed on 2026-03-29:
 - topology-playground exploration return-menu fix so `Explore This Topology`
   now exits directly back to the main playground shell on `menu` instead of
   opening the generic independent gameplay pause menu first
+- built-in keybinding defaults redesign so shipped movement uses a compact
+  standard-first cluster, rotation uses the fixed `RT FG VB YU HJ NM` ladder,
+  and 3D/4D camera defaults now share the same core number-row layout with an
+  explicit 4D reset on `0`
 - final governance-pack prune after unified manifest cutover, including
   maintenance-doc regeneration and local gate re-verification
 
