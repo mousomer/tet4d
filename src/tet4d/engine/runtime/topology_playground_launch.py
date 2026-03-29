@@ -74,6 +74,7 @@ def build_gameplay_config_from_topology_playground_state(
             state.explorer_profile,
             dims=axis_sizes,
             rigid_play_mode=state.launch_settings.rigid_play_mode,
+            analysis=state.playability_analysis,
             resolver=explorer_transport,
         ),
         rng_mode=random_mode_id_from_index(state.launch_settings.random_mode_index),

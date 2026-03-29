@@ -10,6 +10,7 @@ from tet4d.ui.pygame.runtime_ui.help_menu import (
     help_topic_action_rows,
     paginate_help_lines,
 )
+from tet4d.ui.pygame.ui_utils import text_fits
 
 
 class TestHelpMenu(unittest.TestCase):
@@ -84,7 +85,30 @@ class TestHelpMenu(unittest.TestCase):
         topic, _topics = help_menu._current_topic(state, "Launcher")
         self.assertEqual(topic["id"], "key_reference")
 
+    def test_help_header_text_fits_compact_window_budget(self) -> None:
+        screen = pygame.Surface((640, 420), pygame.SRCALPHA)
+        frame_rect, header_rect, _content_rect, footer_rect = help_menu._help_layout_zones(
+            screen, self.fonts
+        )
+        self.assertGreater(frame_rect.width, 0)
+        self.assertGreater(footer_rect.width, 0)
+
+        title_text = help_menu._format_help_line(
+            help_menu._HELP_TITLE_TEMPLATE,
+            context_label="Pause Menu",
+            dimension=4,
+            help_key="F1",
+        )
+        subtitle_text = help_menu._format_help_line(
+            help_menu._HELP_SUBTITLE_COMPACT_TEMPLATE,
+            context_label="Pause Menu",
+            dimension=4,
+            help_key="F1",
+        )
+        title_budget = max(40, header_rect.width - (help_menu._HELP_CONTENT_PAD_X * 2))
+        self.assertTrue(text_fits(self.fonts.title_font, title_text, title_budget))
+        self.assertTrue(text_fits(self.fonts.hint_font, subtitle_text, title_budget))
+
 
 if __name__ == "__main__":
     unittest.main()
-

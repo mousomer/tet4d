@@ -18,11 +18,13 @@ from tet4d.engine.topology_explorer.transport_resolver import (
 from .topology_playground_state import (
     EXPLORER_USABILITY_BLOCKED,
     EXPLORER_USABILITY_CELLWISE,
+    PLAYABILITY_STATUS_ANALYZING,
     PLAYABILITY_STATUS_BLOCKED,
     PLAYABILITY_STATUS_PLAYABLE,
     PLAYABILITY_STATUS_WARNING,
     RIGID_PLAYABILITY_BLOCKED,
     RIGID_PLAYABILITY_PLAYABLE,
+    RIGID_PLAYABILITY_UNKNOWN,
     RIGID_PLAY_MODE_AUTO,
     RIGID_PLAY_MODE_OFF,
     RIGID_PLAY_MODE_ON,
@@ -150,11 +152,35 @@ def _invalid_analysis(
     )
 
 
+def _valid_pending_analysis(
+    *,
+    preview: dict[str, object] | None,
+    warnings: tuple[str, ...],
+) -> TopologyPlaygroundPlayabilityAnalysis:
+    return TopologyPlaygroundPlayabilityAnalysis(
+        status=PLAYABILITY_STATUS_ANALYZING,
+        validity=TOPOLOGY_VALIDITY_VALID,
+        explorer_usability=EXPLORER_USABILITY_CELLWISE,
+        rigid_playability=RIGID_PLAYABILITY_UNKNOWN,
+        summary="Valid. Cellwise explorable. Rigid play analysis pending.",
+        validity_reason="Current topology validates for the active board dimensions.",
+        explorer_reason=(
+            "Explorer/probe follows the validated single-cell traversal graph."
+        ),
+        rigid_reason=(
+            "Rigid transport is still being analyzed for the current topology."
+        ),
+        warnings=warnings,
+        movement_summary=_movement_summary_from_preview(preview),
+    )
+
+
 def derive_topology_playability_analysis(
     state: TopologyPlaygroundState,
     *,
     preview: dict[str, object] | None = None,
     preview_error: str | None = None,
+    include_rigid_scan: bool = True,
 ) -> TopologyPlaygroundPlayabilityAnalysis:
     profile = state.explorer_profile
     dims = tuple(int(value) for value in state.axis_sizes)
@@ -169,6 +195,9 @@ def derive_topology_playability_analysis(
 
     if preview_error is not None:
         return _invalid_analysis(str(preview_error), preview=preview)
+
+    if not include_rigid_scan:
+        return _valid_pending_analysis(preview=preview, warnings=warnings)
 
     failure = _first_rigid_transport_failure(profile, dims=dims)
     if failure is None:
@@ -265,11 +294,13 @@ def update_topology_playability_analysis(
     *,
     preview: dict[str, object] | None = None,
     preview_error: str | None = None,
+    include_rigid_scan: bool = True,
 ) -> TopologyPlaygroundPlayabilityAnalysis:
     analysis = derive_topology_playability_analysis(
         state,
         preview=preview,
         preview_error=preview_error,
+        include_rigid_scan=include_rigid_scan,
     )
     state.playability_analysis = analysis
     return analysis

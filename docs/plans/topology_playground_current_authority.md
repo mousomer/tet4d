@@ -86,10 +86,20 @@ Transitional debt belongs in
 - The shell keeps a compact top bar, contextual operational left sidebar,
   larger center workspace, readable minimal right helper, and compact bottom
   strip.
+- The top bar contains only `Topology Playground`, `Editor` / `Sandbox` /
+  `Play`, the validity chip `Valid` / `Needs Fix` / `Unsafe`, and the current
+  dimension chip.
+- The left sidebar inventory is the accepted per-workspace contract from the
+  shell spec, including the shared `Dimension` / `Trace` /
+  optional `Probe Neighbors` requirements and the explicit `Editor`,
+  `Sandbox`, and `Play` row sets.
 - Diagnostics remain secondary surfaces and do not replace the default
   workspace sidebar.
 - The helper remains minimal in scope, not a second menu, and does not surface
   diagnostics.
+- `Play Transport` and adjacent playability wording may temporarily show an
+  analyzing/pending state while rigid transport analysis completes, without
+  changing the accepted shell layout or chip contract.
 
 ## Accepted rendering invariants
 
@@ -149,6 +159,8 @@ This phase is intentionally limited to:
 - doc/manifold/test drift prevention for the settled shell contract
 - preserving canonical runtime-selector authority while trimming retained UI
   complexity
+- deferring and caching expensive rigid playability analysis so first-frame
+  readiness does not wait on the full rigid scan
 
 Primary refactor targets in this phase:
 
@@ -165,6 +177,9 @@ settled Play drop-policy contract.
 
 - Keep canonical runtime state as the only explorer-path input authority.
 - Preserve the frozen visible shell while simplifying its implementation.
+- Keep preview compile immediate, but defer and cache rigid playability
+  analysis by effective preview signature so same-signature refreshes reuse the
+  last full result.
 - Keep `Topology Playground` as a direct modern launcher entry with no
   modern-vs-legacy submenu split.
 - Keep the legacy topology editor/menu out of `Topology Playground`,

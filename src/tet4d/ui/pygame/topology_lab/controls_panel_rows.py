@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 
 from .scene_state import (
-    PANE_CONTROLS,
     TopologyLabState,
     WORKSPACE_EDITOR,
     WORKSPACE_SANDBOX,
@@ -46,24 +45,19 @@ _LEGACY_AXIS_LABELS = {"x": "X", "y": "Y", "z": "Z", "w": "W"}
 
 
 def _workspace_context_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
+    rows = [
+        _RowSpec("dimension", "Dimension"),
+        _RowSpec("editor_trace", "Trace"),
+        _RowSpec("editor_probe_neighbors", "Probe Neighbors"),
+    ]
     workspace_name = active_workspace_name(state)
     if workspace_name == WORKSPACE_EDITOR:
-        return (
-            _RowSpec("editor_tool", "Tool"),
-            _RowSpec("editor_trace", "Trace"),
-            _RowSpec("editor_probe_neighbors", "Probe Neighbors"),
-        )
-    if workspace_name == WORKSPACE_SANDBOX:
-        return (_RowSpec("sandbox_neighbor_search", "Neighbors"),)
-    return ()
+        rows.append(_RowSpec("editor_tool", "Tool"))
+    return tuple(rows)
 
 
 def _board_dimension_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
-    rows = [
-        _RowSpec("dimension", "Dimension"),
-        _RowSpec("board_x", "Board X"),
-        _RowSpec("board_y", "Board Y"),
-    ]
+    rows = [_RowSpec("board_x", "Board X"), _RowSpec("board_y", "Board Y")]
     if state.dimension >= 3:
         rows.append(_RowSpec("board_z", "Board Z"))
     if state.dimension >= 4:
@@ -72,27 +66,24 @@ def _board_dimension_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
 
 
 def _explorer_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
-    rows = [_RowSpec("gameplay_mode", "Path")]
-    rows.extend(_workspace_context_rows(state))
-    rows.extend(_board_dimension_rows(state))
+    workspace_name = active_workspace_name(state)
+    rows = list(_workspace_context_rows(state))
+    if workspace_name == WORKSPACE_EDITOR:
+        rows.extend(_board_dimension_rows(state))
+        rows.append(_RowSpec("explorer_preset", "Topology Preset"))
+        return tuple(rows)
+    if workspace_name == WORKSPACE_SANDBOX:
+        rows.extend(
+            (
+                _RowSpec("piece_set", "Piece Set"),
+                _RowSpec("sandbox_neighbor_search", "Neighbors"),
+            )
+        )
+        return tuple(rows)
     rows.extend(
         (
-            _RowSpec("piece_set", "Piece Set"),
             _RowSpec("speed_level", "Speed"),
             _RowSpec("rigid_play_mode", "Play Transport"),
-            _RowSpec("explorer_preset", "Explorer Preset"),
-            _RowSpec("playability_summary", "Topology Status"),
-            _RowSpec("playability_validity", "Validity"),
-            _RowSpec("playability_explorer", "Explorer"),
-            _RowSpec("playability_rigid", "Rigid Play"),
-            _RowSpec("playability_reason", "Why"),
-            _RowSpec("analysis_boundary", "Selected Boundary"),
-            _RowSpec("analysis_glue", "Selected Seam"),
-            _RowSpec("analysis_transform", "Draft Transform"),
-            _RowSpec("save_profile", "Save Profile"),
-            _RowSpec("export", "Export Explorer Preview"),
-            _RowSpec("experiments", "Build Experiment Pack"),
-            _RowSpec("back", "Back"),
         )
     )
     return tuple(rows)
@@ -138,8 +129,6 @@ def _legacy_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
 
 def _rows_for_state(state: TopologyLabState) -> tuple[_RowSpec, ...]:
     if uses_general_explorer_editor(state):
-        if state.active_pane != PANE_CONTROLS:
-            return _workspace_context_rows(state)
         return _explorer_rows(state)
     return _legacy_rows(state)
 

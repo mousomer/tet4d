@@ -116,6 +116,7 @@ Full-gate policy:
 
 1. Never run `./scripts/verify.sh` and `./scripts/ci_check.sh` in parallel.
 2. Default sequence is focused checks first, then `./scripts/verify.sh`, then `./scripts/ci_check.sh` only when wrapper confirmation or pre-push parity is needed.
+3. When local test or CI-style commands need Python, use the current repo virtualenv interpreter when one is available rather than an ambient system Python.
 
 For governance/contract changes, additionally run:
 

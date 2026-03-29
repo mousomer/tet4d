@@ -36,6 +36,7 @@ _DEFAULT_IO_PATHS = {
         "topology_profiles_file_default": "state/topology/profiles.json",
         "explorer_topology_profiles_file_default": "state/topology/explorer_profiles.json",
         "explorer_topology_preview_file_default": "state/topology/explorer_preview.json",
+        "explorer_topology_preview_cache_dir": "state/topology/cache/explorer_preview",
         "explorer_topology_experiments_file_default": "state/topology/explorer_experiments.json",
         "tutorial_progress_file_default": "state/tutorial/progress.json",
     },
@@ -487,6 +488,26 @@ def explorer_topology_preview_file_default_path(
     return _resolve_state_path_for_root(
         rel,
         default_relative="state/topology/explorer_preview.json",
+        root_dir=root,
+    )
+
+
+def explorer_topology_preview_cache_dir_relative() -> str:
+    return _path_value(
+        "explorer_topology_preview_cache_dir",
+        default_relative="state/topology/cache/explorer_preview",
+        required_prefix=state_dir_relative(),
+    )
+
+
+def explorer_topology_preview_cache_dir_path(
+    *, root_dir: Path | None = None
+) -> Path:
+    root = PROJECT_ROOT if root_dir is None else root_dir
+    rel = explorer_topology_preview_cache_dir_relative()
+    return _resolve_state_path_for_root(
+        rel,
+        default_relative="state/topology/cache/explorer_preview",
         root_dir=root,
     )
 

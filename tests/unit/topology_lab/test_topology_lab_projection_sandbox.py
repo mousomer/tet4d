@@ -737,6 +737,39 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertGreater(row_hits[0].rect.width, 240)
         self.assertLess(row_hits[0].rect.bottom, screen.get_height())
 
+    def test_sandbox_neighbors_row_click_toggles_off_in_nd(self) -> None:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+        screen = pygame.Surface((1280, 900))
+        fonts = SimpleNamespace(
+            title_font=pygame.font.Font(None, 36),
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 22),
+        )
+        for dimension in (3, 4):
+            with self.subTest(dimension=dimension):
+                state = self._explorer_state(dimension)
+                topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+                topology_lab_menu._draw_menu(screen, fonts, state)
+                row_hit = next(
+                    hit
+                    for hit in state.mouse_targets
+                    if hit.kind == "row_select"
+                    and hit.value == "sandbox_neighbor_search"
+                )
+
+                handled = topology_lab_menu._handle_row_mouse_target(state, row_hit)
+
+                self.assertTrue(handled)
+                self.assertFalse(
+                    topology_lab_controls_panel._sandbox_neighbor_search_enabled(state)
+                )
+                self.assertEqual(
+                    topology_lab_menu._active_workspace_neighbor_markers(state),
+                    [],
+                )
+
     def test_sandbox_neighbor_toggle_computes_real_neighbor_cells(self) -> None:
         state = self._explorer_state(2)
         topology_lab_controls_panel.replace_play_settings(

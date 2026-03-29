@@ -34,6 +34,8 @@ from tet4d.engine.gameplay.pieces_nd import (
     piece_set_label,
 )
 from tet4d.engine.runtime.topology_playground_state import (
+    PLAYABILITY_STATUS_ANALYZING,
+    RIGID_PLAY_MODE_AUTO,
     TRANSPORT_OWNER_EXPLORER,
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState,
@@ -369,11 +371,22 @@ def _apply_exact_cells_to_sandbox(
 def _resolve_sandbox_movement_policy(
     state: TopologyPlaygroundState,
 ) -> ExplorerMovementPolicy:
+    analysis = state.playability_analysis
+    if (
+        str(state.launch_settings.rigid_play_mode) == RIGID_PLAY_MODE_AUTO
+        and analysis.validity == "valid"
+        and analysis.status == PLAYABILITY_STATUS_ANALYZING
+    ):
+        # Sandbox movement should stay responsive while the deferred rigid scan
+        # is still pending; use the current cellwise-safe mode until analysis
+        # completes instead of forcing a fresh full rigid-playability scan here.
+        return explorer_movement_policy_from_rigid_play_enabled(False)
     return explorer_movement_policy_from_rigid_play_enabled(
         resolve_rigid_play_enabled(
             state.explorer_profile,
             dims=state.axis_sizes,
             rigid_play_mode=state.launch_settings.rigid_play_mode,
+            analysis=analysis,
         )
     )
 

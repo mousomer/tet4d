@@ -131,7 +131,7 @@ class TestTopologyLabInteractionAudit(unittest.TestCase):
         batch = {
             "experiment_count": 2,
             "valid_experiment_count": 2,
-            "recommendation": {"label": "Wrap X,Y,Z", "reason": "demo"},
+            "recommendation": {"label": "3-Torus", "reason": "demo"},
         }
 
         with (

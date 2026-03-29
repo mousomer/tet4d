@@ -15,6 +15,7 @@ from tet4d.engine.runtime.topology_playability_signal import (
 from tet4d.engine.runtime.topology_playground_state import (
     EXPLORER_USABILITY_BLOCKED,
     EXPLORER_USABILITY_CELLWISE,
+    PLAYABILITY_STATUS_ANALYZING,
     PLAYABILITY_STATUS_BLOCKED,
     PLAYABILITY_STATUS_PLAYABLE,
     PLAYABILITY_STATUS_WARNING,
@@ -123,6 +124,31 @@ class TestTopologyPlayabilitySignal(unittest.TestCase):
         )
         self.assertIn("Rigid transport fails", analysis.rigid_reason)
         self.assertIn("single-cell traversal", analysis.explorer_reason)
+
+    def test_valid_topology_can_publish_pending_rigid_analysis_state(self) -> None:
+        state = self._state(
+            2,
+            axis_sizes=(4, 4),
+            explorer_profile=projective_plane_profile_2d(),
+        )
+        preview = compile_explorer_topology_preview(
+            state.explorer_profile,
+            dims=state.axis_sizes,
+            source="playability_signal_test",
+        )
+
+        analysis = derive_topology_playability_analysis(
+            state,
+            preview=preview,
+            include_rigid_scan=False,
+        )
+
+        self.assertEqual(analysis.status, PLAYABILITY_STATUS_ANALYZING)
+        self.assertEqual(analysis.validity, TOPOLOGY_VALIDITY_VALID)
+        self.assertEqual(analysis.explorer_usability, EXPLORER_USABILITY_CELLWISE)
+        self.assertEqual(analysis.rigid_playability, "unknown")
+        self.assertIn("pending", analysis.summary.lower())
+        self.assertIn("being analyzed", analysis.rigid_reason)
 
     def test_invalid_sphere_dims_are_not_explorable_or_rigid_playable(self) -> None:
         state = self._state(

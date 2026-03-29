@@ -26,7 +26,7 @@ Run this from repo root before pushing:
    - `scripts/check_policy_compliance_repo.sh`
 2. Main pipeline:
    - `./scripts/ci_check.sh` (delegates to `./scripts/verify.sh`)
-3. If needed, isolate failing unit/module checks with `pytest -q` and fix root cause.
+3. If needed, isolate failing unit/module checks with the current repo virtualenv interpreter when available, for example `.venv/bin/python -m pytest -q`, and fix root cause.
 
 ## Hygiene rules for CI stability
 
@@ -37,7 +37,8 @@ Run this from repo root before pushing:
    - `config/project/policy/governance.json`
    - `config/project/policy/code_rules.json`
    - `config/project/policy/manifests/canonical_maintenance.json`
-5. Treat policy warnings as debt to reduce in follow-up batches.
+5. Prefer the current repo virtualenv for local pytest, verify, and CI-style runs whenever it is available.
+6. Treat policy warnings as debt to reduce in follow-up batches.
 
 ## Merge policy
 

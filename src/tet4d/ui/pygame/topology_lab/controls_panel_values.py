@@ -59,7 +59,7 @@ _PLAYABILITY_EXPLORER_LABELS = {
     "not_explorable": "Not explorable",
 }
 _PLAYABILITY_RIGID_LABELS = {
-    "unknown": "Unknown",
+    "unknown": "Analyzing",
     "rigid_playable": "Rigid-playable",
     "not_rigid_playable": "Not rigid-playable",
 }
@@ -131,20 +131,30 @@ def _resolved_rigid_play_enabled(state: TopologyLabState) -> bool:
     if profile is None:
         return True
     settings = _play_settings_or_defaults(state)
+    analysis = _current_playability_analysis(state)
+    if (
+        settings.rigid_play_mode not in (RIGID_PLAY_MODE_OFF, RIGID_PLAY_MODE_ON)
+        and analysis.rigid_playability == "unknown"
+        and analysis.validity == "valid"
+    ):
+        return False
     return resolve_rigid_play_enabled(
         profile,
         dims=playground_dims_for_state(state),
         rigid_play_mode=settings.rigid_play_mode,
-        analysis=_current_playability_analysis(state),
+        analysis=analysis,
     )
 
 
 def _rigid_play_mode_value_text(state: TopologyLabState) -> str:
     mode = _play_settings_or_defaults(state).rigid_play_mode
+    analysis = _current_playability_analysis(state)
     if mode == RIGID_PLAY_MODE_ON:
         return "Rigid (Forced)"
     if mode == RIGID_PLAY_MODE_OFF:
         return "Cellwise (Forced)"
+    if analysis.status == "analyzing":
+        return "Auto (Analyzing)"
     return "Auto (Rigid)" if _resolved_rigid_play_enabled(state) else "Auto (Cellwise)"
 
 
@@ -175,6 +185,8 @@ def _playability_launch_note_text(state: TopologyLabState) -> str:
         return (
             "Play uses cellwise seam transport because the user forced cellwise play."
         )
+    if analysis.status == "analyzing":
+        return "Play transport is being analyzed and will finalize after the first frame."
     if analysis.summary:
         return (
             "Play uses rigid transport automatically for this topology."

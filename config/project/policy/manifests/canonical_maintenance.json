@@ -189,19 +189,17 @@
     {
       "file": "docs/BACKLOG.md",
       "must_contain": [
-        "## 3. Active Open Backlog / TODO",
-        "## 5. Change Footprint",
-        "[BKL-P3-001]",
-        "Cadence:",
-        "Trigger:",
-        "Done criteria:"
+        "## Current Authority",
+        "## Active Work",
+        "Current sub-batch",
+        "Acceptance bar:",
+        "## Governance Watchlist",
+        "## Recent Completed Work",
+        "## Historical Milestones"
       ],
       "must_not_contain": [
         "No currently open gaps",
         "126 passed"
-      ],
-      "must_match_regex": [
-        "\\[BKL-P3-\\d{3}\\]"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",
@@ -236,7 +234,8 @@
         "do not treat partial progress as completion",
         "add new modules first, route one flow to them, verify, and only then remove old paths",
         "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers",
-        "config/project/policy/governance.json"
+        "config/project/policy/governance.json",
+        "use the current repo virtualenv interpreter when one is available"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",
@@ -255,6 +254,14 @@
       "must_not_contain": [
         "run_module_or_command",
         "require_module ruff ruff"
+      ]
+    },
+    {
+      "file": "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+      "must_contain": [
+        "./scripts/ci_check.sh",
+        ".venv/bin/python -m pytest -q",
+        "Prefer the current repo virtualenv for local pytest, verify, and CI-style runs whenever it is available."
       ]
     },
     {

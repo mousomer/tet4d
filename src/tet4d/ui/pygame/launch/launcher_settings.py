@@ -15,6 +15,7 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 from .settings_hub_actions import (
     _adjust_unified_with_arrows,
     _apply_unified_numeric_text_value,
+    _format_cache_bytes,
     _handle_advanced_gameplay_event,
     _handle_unified_text_input,
     _is_unified_text_mode,
@@ -55,6 +56,53 @@ def _draw_gradient(surface: pygame.Surface) -> None:
 
 def _format_animation_duration(value: int) -> str:
     return "Off" if int(value) <= 0 else f"{int(value)} ms"
+
+
+def _format_topology_cache_measure_value(state: _UnifiedSettingsState) -> str:
+    total_bytes = state.topology_cache_size_bytes
+    if total_bytes is None:
+        return "Enter"
+    return (
+        f"{int(state.topology_cache_file_count)} files / "
+        f"{_format_cache_bytes(int(total_bytes))}"
+    )
+
+
+_ADVANCED_GAMEPLAY_ROWS = (
+    ("rotation_animation_mode", "Rotation animation mode"),
+    ("kick_level_index", "Kick permissiveness"),
+    ("rotation_animation_duration_ms_2d", "2D rotation animation"),
+    ("rotation_animation_duration_ms_nd", "ND rotation animation"),
+    ("translation_animation_duration_ms", "Translation animation"),
+    ("auto_speedup_enabled", "Auto speed-up by clears"),
+    ("lines_per_level", "Lines per level"),
+    ("topology_cache_measure", "Measure topology cache"),
+    ("topology_cache_clear", "Clear topology cache"),
+)
+
+
+def _advanced_gameplay_value_text(
+    state: _UnifiedSettingsState,
+    row_key: str,
+) -> str:
+    if row_key == "kick_level_index":
+        safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
+        return _KICK_LEVEL_LABELS[safe_index]
+    if row_key == "rotation_animation_mode":
+        return rotation_animation_mode_label(state.rotation_animation_mode)
+    if row_key == "rotation_animation_duration_ms_2d":
+        return _format_animation_duration(int(state.rotation_animation_duration_ms_2d))
+    if row_key == "rotation_animation_duration_ms_nd":
+        return _format_animation_duration(int(state.rotation_animation_duration_ms_nd))
+    if row_key == "translation_animation_duration_ms":
+        return _format_animation_duration(int(state.translation_animation_duration_ms))
+    if row_key == "auto_speedup_enabled":
+        return "ON" if int(state.auto_speedup_enabled) else "OFF"
+    if row_key == "topology_cache_measure":
+        return _format_topology_cache_measure_value(state)
+    if row_key == "topology_cache_clear":
+        return "Enter"
+    return str(int(state.lines_per_level))
 
 
 def _handle_unified_enter(
@@ -121,17 +169,8 @@ def _draw_advanced_gameplay_menu(
     screen.blit(title, ((width - title.get_width()) // 2, 60))
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
 
-    rows = (
-        ("rotation_animation_mode", "Rotation animation mode"),
-        ("kick_level_index", "Kick permissiveness"),
-        ("rotation_animation_duration_ms_2d", "2D rotation animation"),
-        ("rotation_animation_duration_ms_nd", "ND rotation animation"),
-        ("translation_animation_duration_ms", "Translation animation"),
-        ("auto_speedup_enabled", "Auto speed-up by clears"),
-        ("lines_per_level", "Lines per level"),
-    )
     panel_w = min(760, max(420, width - 40))
-    panel_h = 436
+    panel_h = 552
     panel_x = (width - panel_w) // 2
     panel_y = 170
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
@@ -139,34 +178,14 @@ def _draw_advanced_gameplay_menu(
     screen.blit(panel, (panel_x, panel_y))
 
     line_y = panel_y + 28
-    for idx, (row_key, label) in enumerate(rows):
+    for idx, (row_key, label) in enumerate(_ADVANCED_GAMEPLAY_ROWS):
         is_selected = idx == selected
         color = HIGHLIGHT_COLOR if is_selected else TEXT_COLOR
         if is_selected:
             hi = pygame.Surface((panel_w - 28, 44), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, line_y - 5))
-        if row_key == "kick_level_index":
-            safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-            value = _KICK_LEVEL_LABELS[safe_index]
-        elif row_key == "rotation_animation_mode":
-            value = rotation_animation_mode_label(state.rotation_animation_mode)
-        elif row_key == "rotation_animation_duration_ms_2d":
-            value = _format_animation_duration(
-                int(state.rotation_animation_duration_ms_2d)
-            )
-        elif row_key == "rotation_animation_duration_ms_nd":
-            value = _format_animation_duration(
-                int(state.rotation_animation_duration_ms_nd)
-            )
-        elif row_key == "translation_animation_duration_ms":
-            value = _format_animation_duration(
-                int(state.translation_animation_duration_ms)
-            )
-        elif row_key == "auto_speedup_enabled":
-            value = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        else:
-            value = str(int(state.lines_per_level))
+        value = _advanced_gameplay_value_text(state, row_key)
         label_surf = fonts.menu_font.render(label, True, color)
         value_surf = fonts.menu_font.render(value, True, color)
         screen.blit(label_surf, (panel_x + 22, line_y))
@@ -186,15 +205,7 @@ def run_advanced_gameplay_menu(
     state: _UnifiedSettingsState,
 ) -> pygame.Surface:
     selected = 0
-    row_keys = (
-        "rotation_animation_mode",
-        "kick_level_index",
-        "rotation_animation_duration_ms_2d",
-        "rotation_animation_duration_ms_nd",
-        "translation_animation_duration_ms",
-        "auto_speedup_enabled",
-        "lines_per_level",
-    )
+    row_keys = tuple(row_key for row_key, _label in _ADVANCED_GAMEPLAY_ROWS)
     running = True
     clock = pygame.time.Clock()
     while running:

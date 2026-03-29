@@ -101,18 +101,16 @@ Must not contain:
 
 - prose header copy
 - default-primary diagnostic rows
-- redundant helper text
 
 ### Left sidebar
 
-The left sidebar is the default operational surface.
-It is contextual by workspace and remains primary over diagnostics.
+All sidebar cases include:
 
-Global rules:
-
-- show operational controls for the active workspace
-- keep diagnostics collapsed, secondary, or on separate surfaces
-- do not replace workspace controls with read-only diagnostic copy
+- `Dimension`
+- `Trace`
+- optional `Probe Neighbors`
+- edit actions only when directly relevant
+- diagnostics collapsed or secondary
 
 `Editor` sidebar:
 
@@ -120,9 +118,13 @@ Global rules:
 - `Tool`
 - `Trace`
 - optional `Probe Neighbors`
-- board-axis size controls
+- `Board X`
+- `Board Y`
+- `Board Z` (if dim = `3D` or `4D`)
+- `Board W` (if dim = `4D`)
 - `Topology Preset`
 - edit actions only when directly relevant
+- diagnostics collapsed or secondary
 
 `Sandbox` sidebar:
 
@@ -130,12 +132,17 @@ Global rules:
 - sandbox `Neighbors`
 - sandbox `Piece Set`
 - sandbox actions
+- diagnostics collapsed or secondary
 
 `Play` sidebar:
 
-- speed
-- play transport / launch controls
-- play-specific setup or status rows
+- `Speed`
+- `Play Transport`
+- play / launch controls
+- play-specific setup/status
+- diagnostics collapsed or secondary
+- temporary `analyzing` wording for rigid transport is allowed so long as it
+  stays within the existing `Play Transport` / play-status shell slots
 
 ### Center workspace
 
@@ -227,7 +234,7 @@ true:
 - top bar contains only title, tabs, validity chip, and dimension chip
 - no default prose header is visible
 - no default-primary diagnostics rows are visible
-- left sidebar remains contextual and operational by workspace
+- left sidebar matches the accepted per-workspace inventory
 - center workspace is visually dominant
 - right helper contains only movement/rotation keys plus at most one short
   context line

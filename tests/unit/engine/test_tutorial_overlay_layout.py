@@ -11,6 +11,7 @@ if importlib.util.find_spec("pygame") is None:  # pragma: no cover - env guard
 import pygame
 
 from tet4d.ui.pygame.runtime_ui import tutorial_overlay
+from tet4d.ui.pygame.ui_utils import text_fits
 
 
 class TestTutorialOverlayLayout(unittest.TestCase):
@@ -208,6 +209,37 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 self.assertGreaterEqual(rect.top, 0)
                 self.assertLessEqual(rect.right, screen.get_width())
                 self.assertLessEqual(rect.bottom, screen.get_height())
+
+    def test_overlay_required_lines_fit_compact_panel_budget(self) -> None:
+        fonts = SimpleNamespace(
+            menu_font=pygame.font.Font(None, 28),
+            hint_font=pygame.font.Font(None, 24),
+        )
+        width = 960
+        _x, _y, panel_w = tutorial_overlay._panel_base_geometry(
+            width=width,
+            dimension=2,
+        )
+        text_w = max(120, panel_w - 18)
+        lines = tutorial_overlay._overlay_lines_running(
+            {
+                "lesson_title": "Tutorial",
+                "progress_text": "Step 3/10",
+                "segment_title": "Rotation Basics",
+                "step_text": "Rotate around the obstacle and settle the piece",
+                "step_hint": "Use staged turn keys, then translate back into place",
+                "key_prompts": ["move_x_neg"],
+            },
+            dimension=2,
+        )
+
+        for idx, (line, _color, _bold) in enumerate(lines):
+            font = fonts.menu_font if idx == 0 else fonts.hint_font
+            wrapped = tutorial_overlay._wrap_text_line(font, line, max_width=text_w)
+            self.assertGreater(len(wrapped), 0)
+            for wrapped_line in wrapped:
+                with self.subTest(line=wrapped_line):
+                    self.assertTrue(text_fits(font, wrapped_line, text_w))
 
 
 if __name__ == "__main__":

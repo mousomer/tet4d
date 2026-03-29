@@ -148,6 +148,21 @@
         ]
       },
       {
+        "id": "current_venv_for_tests_and_ci",
+        "category": "verification",
+        "statement": "When running pytest, verify, or CI wrapper commands locally, use the current repository virtualenv interpreter when one is available instead of an ambient system Python.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md",
+          "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
+        ],
+        "enforced_by": [
+          "scripts/verify.sh",
+          "scripts/verify_focus.sh",
+          "scripts/ci_check.sh",
+          "code_review"
+        ]
+      },
+      {
         "id": "single_patch_retry_limit",
         "category": "process",
         "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",

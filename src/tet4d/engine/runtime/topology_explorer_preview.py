@@ -7,7 +7,15 @@ from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_dims as configured_preview_dims,
     explorer_topology_preview_file_default_path,
 )
-from tet4d.engine.runtime.settings_schema import write_json_object
+from tet4d.engine.runtime.settings_schema import (
+    write_json_object,
+)
+from tet4d.engine.runtime.topology_cache import (
+    TOPOLOGY_CACHE_VERSION,
+    merge_topology_cache_entry,
+    read_cached_graph_rows,
+    read_topology_cache_entry,
+)
 from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     MoveStep,
@@ -17,12 +25,18 @@ from tet4d.engine.topology_explorer import (
     tangent_axes_for_boundary,
     validate_explorer_topology_profile,
 )
-from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
+from tet4d.engine.topology_explorer.movement_graph import (
+    movement_graph_from_rows,
+    movement_graph_rows,
+    serialize_movement_graph_rows,
+)
 from tet4d.engine.topology_explorer.transport_resolver import (
     CellStepResult,
     build_explorer_transport_resolver,
 )
 from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
+
+_PREVIEW_LOCAL_CACHE_VERSION = TOPOLOGY_CACHE_VERSION
 
 
 def preview_dims_for_dimension(dimension: int) -> tuple[int, ...]:
@@ -249,7 +263,7 @@ def _signed_axis_label(axis: int, sign: int) -> str:
     return f"{prefix}{axis_name(axis)}"
 
 
-def _basis_arrow_payload(profile: ExplorerTopologyProfile) -> list[dict[str, object]]:
+def basis_arrow_payload(profile: ExplorerTopologyProfile) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for glue in profile.gluings:
         source_axes = tangent_axes_for_boundary(glue.source)
@@ -341,11 +355,66 @@ def _sample_traversals(
     return samples
 
 
+def _preview_payload_for_source(
+    payload: dict[str, object],
+    *,
+    source: str,
+) -> dict[str, object]:
+    preview = dict(payload)
+    preview["source"] = str(source)
+    return preview
+
+
+def _read_cached_preview_payload(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    source: str,
+    root_dir: Path | None = None,
+) -> dict[str, object] | None:
+    entry = read_topology_cache_entry(
+        profile,
+        dims=dims,
+        cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
+        root_dir=root_dir,
+    )
+    if entry is None:
+        return None
+    payload = entry.get("preview")
+    if not isinstance(payload, dict) or not payload:
+        return None
+    return _preview_payload_for_source(payload, source=source)
+
+
+def _write_cached_preview_payload(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    payload: dict[str, object],
+    graph_rows=None,
+    root_dir: Path | None = None,
+) -> None:
+    merge_topology_cache_entry(
+        profile,
+        dims=dims,
+        cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
+        root_dir=root_dir,
+        preview=payload,
+        graph_rows=serialize_movement_graph_rows(
+            movement_graph_rows(profile, dims=dims)
+            if graph_rows is None
+            else graph_rows
+        ),
+    )
+
+
 def compile_explorer_topology_preview(
     profile: ExplorerTopologyProfile,
     *,
     dims: tuple[int, ...],
     source: str = "stored_profile",
+    root_dir: Path | None = None,
+    use_local_cache: bool = True,
 ) -> dict[str, object]:
     with record_active_interaction_phase(
         "preview_compile",
@@ -354,7 +423,25 @@ def compile_explorer_topology_preview(
         glue_count=len(profile.gluings),
         source=source,
     ):
-        graph = build_movement_graph(profile, dims=dims)
+        normalized_dims = tuple(int(value) for value in dims)
+        if use_local_cache:
+            cached = _read_cached_preview_payload(
+                profile,
+                dims=normalized_dims,
+                source=source,
+                root_dir=root_dir,
+            )
+            if cached is not None:
+                return cached
+        graph_rows = read_cached_graph_rows(
+            profile,
+            dims=normalized_dims,
+            cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
+            root_dir=root_dir,
+        )
+        if graph_rows is None:
+            graph_rows = movement_graph_rows(profile, dims=normalized_dims)
+        graph = movement_graph_from_rows(graph_rows)
         degree_histogram = Counter(len(edges) for edges in graph.values())
         traversal_count = sum(
             1
@@ -363,14 +450,14 @@ def compile_explorer_topology_preview(
             if edge.traversal is not None
         )
         component_count = _component_count(graph)
-        return {
+        payload = {
             "version": 1,
             "source": str(source),
             "dimension": profile.dimension,
             "dims": [int(value) for value in dims],
             "glue_count": len(profile.gluings),
             "gluings": _glue_payload(profile),
-            "basis_arrows": _basis_arrow_payload(profile),
+            "basis_arrows": basis_arrow_payload(profile),
             "movement_graph": {
                 "cell_count": len(graph),
                 "directed_edge_count": sum(len(edges) for edges in graph.values()),
@@ -385,6 +472,18 @@ def compile_explorer_topology_preview(
             "warnings": _preview_warnings(profile, component_count=component_count),
             "axes": [axis_name(index) for index in range(profile.dimension)],
         }
+        if use_local_cache:
+            try:
+                _write_cached_preview_payload(
+                    profile,
+                    dims=normalized_dims,
+                    payload=payload,
+                    graph_rows=graph_rows,
+                    root_dir=root_dir,
+                )
+            except OSError:
+                pass
+        return payload
 
 
 def _preview_payload_for_export(
@@ -408,7 +507,12 @@ def export_explorer_topology_preview(
     payload = (
         _preview_payload_for_export(preview_payload, source=source)
         if preview_payload is not None
-        else compile_explorer_topology_preview(profile, dims=dims, source=source)
+        else compile_explorer_topology_preview(
+            profile,
+            dims=dims,
+            source=source,
+            root_dir=root_dir,
+        )
     )
     destination = explorer_topology_preview_file_default_path(root_dir=root_dir)
     try:
@@ -420,6 +524,7 @@ def export_explorer_topology_preview(
 
 __all__ = [
     "advance_explorer_probe",
+    "basis_arrow_payload",
     "compile_explorer_topology_preview",
     "explorer_probe_options",
     "recommended_explorer_probe_coord",

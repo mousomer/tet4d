@@ -164,7 +164,17 @@ Pause Menu
 9. small right helper
 10. compact bottom strip
 11. top-bar validity chip wording `Valid` / `Needs Fix` / `Unsafe`
-12. no prose header or default-primary diagnostic rows
+12. top bar contains only `Topology Playground`, `Editor` / `Sandbox` /
+    `Play`, the validity chip, and the current dimension chip
+13. no prose header or default-primary diagnostic rows
+14. Explorer Playground left sidebar follows the accepted shell inventory:
+    all workspaces include `Dimension`, `Trace`, optional `Probe Neighbors`,
+    edit actions only when directly relevant, and diagnostics collapsed or
+    secondary; `Editor` additionally includes `Tool`, `Board X`, `Board Y`,
+    optional `Board Z`, optional `Board W`, and `Topology Preset`; `Sandbox`
+    includes sandbox piece controls, `Neighbors`, `Piece Set`, and sandbox
+    actions; `Play` includes `Speed`, `Play Transport`, play / launch
+    controls, and play-specific setup/status
 
 ### 5.2 Visual hierarchy
 

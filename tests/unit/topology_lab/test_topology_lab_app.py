@@ -54,7 +54,7 @@ class TestTopologyLabApp(unittest.TestCase):
         self.assertEqual(launch.entry_source, "explorer")
         self.assertIs(launch.explorer_profile, profile)
 
-    def test_build_launcher_launch_defaults_to_edit_for_launcher_entry(self) -> None:
+    def test_build_launcher_launch_defaults_to_sandbox_for_launcher_entry(self) -> None:
         profile = ExplorerTopologyProfile(dimension=4, gluings=())
         launch = build_explorer_playground_launch(
             dimension=4,
@@ -63,7 +63,7 @@ class TestTopologyLabApp(unittest.TestCase):
         )
         self.assertEqual(launch.dimension, 4)
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
-        self.assertEqual(launch.initial_tool, TOOL_EDIT)
+        self.assertEqual(launch.initial_tool, TOOL_SANDBOX)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertIs(launch.explorer_profile, profile)
 

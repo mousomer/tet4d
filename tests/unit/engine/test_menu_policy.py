@@ -616,3 +616,56 @@ class TestMenuPolicy(unittest.TestCase):
             )
         )
         self.assertEqual(state.rotation_animation_mode, "cellwise_sliding")
+
+    def test_measure_topology_cache_updates_status_without_dirtying_settings(self) -> None:
+        state = SimpleNamespace(
+            topology_cache_file_count=0,
+            topology_cache_size_bytes=None,
+            status="",
+            status_error=False,
+            saved=True,
+        )
+        with (
+            mock.patch.object(
+                settings_hub_actions,
+                "topology_cache_usage",
+                return_value=(3, 2048),
+            ),
+            mock.patch.object(settings_hub_actions, "play_sfx"),
+        ):
+            self.assertTrue(settings_hub_actions._measure_topology_cache(state))
+        self.assertEqual(state.topology_cache_file_count, 3)
+        self.assertEqual(state.topology_cache_size_bytes, 2048)
+        self.assertIn("3 files", state.status)
+        self.assertTrue(state.saved)
+
+    def test_clear_topology_cache_action_clears_disk_and_runtime_caches(self) -> None:
+        state = SimpleNamespace(
+            topology_cache_file_count=4,
+            topology_cache_size_bytes=4096,
+            status="",
+            status_error=False,
+            saved=True,
+        )
+        with (
+            mock.patch.object(
+                settings_hub_actions,
+                "clear_topology_cache",
+                return_value=(4, 4096),
+            ),
+            mock.patch.object(
+                settings_hub_actions.movement_graph_module._build_movement_graph_rows,
+                "cache_clear",
+            ) as clear_graph_cache,
+            mock.patch.object(
+                settings_hub_actions.build_explorer_transport_resolver,
+                "cache_clear",
+            ) as clear_resolver_cache,
+            mock.patch.object(settings_hub_actions, "play_sfx"),
+        ):
+            self.assertTrue(settings_hub_actions._clear_topology_cache_action(state))
+        clear_graph_cache.assert_called_once_with()
+        clear_resolver_cache.assert_called_once_with()
+        self.assertEqual(state.topology_cache_file_count, 0)
+        self.assertEqual(state.topology_cache_size_bytes, 0)
+        self.assertIn("Cleared topology cache", state.status)

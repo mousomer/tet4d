@@ -127,6 +127,8 @@ class _UnifiedSettingsState:
     text_mode_replace_on_type: bool = False
     saved: bool = False
     running: bool = True
+    topology_cache_file_count: int = 0
+    topology_cache_size_bytes: int | None = None
 
 
 _UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = settings_hub_layout_rows()

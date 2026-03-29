@@ -12,14 +12,26 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_dims,
+    explorer_topology_preview_cache_dir_path,
     explorer_topology_preview_file_default_path,
     state_dir_path,
+)
+from tet4d.engine.runtime.topology_cache import (
+    clear_topology_cache,
+    read_cached_graph_rows,
+    read_cached_playability_analysis,
+    topology_cache_usage,
+    write_cached_playability_analysis,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.engine.runtime.topology_explorer_bridge import (
     explorer_profile_from_legacy_profile,
     export_explorer_preview_from_legacy_profile,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
+    _PREVIEW_LOCAL_CACHE_VERSION,
     advance_explorer_probe,
     compile_explorer_topology_preview,
     explorer_probe_options,
@@ -27,6 +39,11 @@ from tet4d.engine.runtime.topology_explorer_preview import (
     recommended_explorer_probe_coord,
 )
 from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.movement_graph import (
+    build_movement_graph,
+    movement_graph_from_rows,
+    movement_graph_rows,
+)
 from tet4d.engine.topology_explorer.presets import (
     mobius_strip_profile_2d,
     sphere_profile_2d,
@@ -151,13 +168,13 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                 return_value=profile,
             ) as validate_profile,
             mock.patch(
-                "tet4d.engine.runtime.topology_explorer_preview.build_movement_graph",
-            ) as build_graph,
+                "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+            ) as graph_rows,
         ):
             coord = recommended_explorer_probe_coord(profile, dims=(6, 6))
         self.assertEqual(coord, (3, 3))
         validate_profile.assert_called_once_with(profile, dims=(6, 6))
-        build_graph.assert_not_called()
+        graph_rows.assert_not_called()
 
     def test_advance_probe_reports_boundary_traversal_message(self) -> None:
         coord, result = advance_explorer_probe(
@@ -250,6 +267,196 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             assert path is not None
             payload = path.read_text(encoding="utf-8")
             self.assertIn('"source": "topology_lab_2d_mvp"', payload)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_compile_preview_reuses_local_cache_for_same_signature(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_preview_local_cache_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            preview = compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="local_cache_seed",
+                root_dir=root,
+            )
+            cache_dir = explorer_topology_preview_cache_dir_path(root_dir=root)
+            self.assertTrue(cache_dir.exists())
+            with mock.patch(
+                "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                side_effect=AssertionError("cache miss"),
+            ):
+                cached = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="local_cache_hit",
+                    root_dir=root,
+                )
+            self.assertEqual(cached["source"], "local_cache_hit")
+            self.assertEqual(cached["movement_graph"], preview["movement_graph"])
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_compile_preview_recomputes_when_cache_version_changes(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_preview_versioned_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="local_cache_seed",
+                root_dir=root,
+            )
+            with (
+                mock.patch(
+                    "tet4d.engine.runtime.topology_explorer_preview._PREVIEW_LOCAL_CACHE_VERSION",
+                    _PREVIEW_LOCAL_CACHE_VERSION + 1,
+                ),
+                mock.patch(
+                    "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                    wraps=movement_graph_rows,
+                ) as build_graph,
+            ):
+                preview = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="local_cache_version_bump",
+                    root_dir=root,
+                )
+            build_graph.assert_called_once_with(profile, dims=(6, 6))
+            self.assertEqual(preview["source"], "local_cache_version_bump")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_compile_preview_falls_back_after_corrupt_local_cache(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_preview_corrupt_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="local_cache_seed",
+                root_dir=root,
+            )
+            cache_file = next(
+                explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
+            )
+            cache_file.write_text("{not-json", encoding="utf-8")
+            with mock.patch(
+                "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                wraps=movement_graph_rows,
+            ) as build_graph:
+                preview = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="local_cache_rebuild",
+                    root_dir=root,
+                )
+            build_graph.assert_called_once_with(profile, dims=(6, 6))
+            self.assertEqual(preview["source"], "local_cache_rebuild")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_compile_preview_persists_graph_rows_in_cache(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_graph_rows_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="graph_rows_seed",
+                root_dir=root,
+            )
+            rows = read_cached_graph_rows(profile, dims=(6, 6), root_dir=root)
+            self.assertIsNotNone(rows)
+            assert rows is not None
+            self.assertEqual(
+                movement_graph_from_rows(rows),
+                build_movement_graph(profile, dims=(6, 6)),
+            )
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_playability_analysis_roundtrips_through_topology_cache(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_playability_cache_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="playability_seed",
+                root_dir=root,
+            )
+            analysis = TopologyPlaygroundPlayabilityAnalysis(
+                status="playable",
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability="rigid_playable",
+                summary="cached analysis",
+                rigid_reason="Rigid transport is ready.",
+            )
+            write_cached_playability_analysis(
+                profile,
+                dims=(6, 6),
+                analysis=analysis,
+                root_dir=root,
+            )
+            cached = read_cached_playability_analysis(
+                profile,
+                dims=(6, 6),
+                root_dir=root,
+            )
+            self.assertEqual(cached, analysis)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_clear_topology_cache_removes_persisted_files(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_cache_clear_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="cache_clear_seed",
+                root_dir=root,
+            )
+            file_count, total_bytes = topology_cache_usage(root_dir=root)
+            self.assertGreater(file_count, 0)
+            self.assertGreater(total_bytes, 0)
+            cleared_count, cleared_bytes = clear_topology_cache(root_dir=root)
+            self.assertEqual(cleared_count, file_count)
+            self.assertEqual(cleared_bytes, total_bytes)
+            self.assertEqual(topology_cache_usage(root_dir=root), (0, 0))
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

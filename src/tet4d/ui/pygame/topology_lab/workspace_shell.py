@@ -152,14 +152,15 @@ def _explorer_workspace_layout(
     tool_h = 0
     actions_h = 36
     gap = 12
-    helper_w = max(148, int(workspace_w * 0.16))
-    helper_w = min(helper_w, max(148, workspace_w - gap - 500))
+    helper_min = 148 if workspace_w < 520 else 176
+    helper_w = max(helper_min, int(workspace_w * 0.24))
+    helper_w = min(helper_w, max(helper_min, workspace_w - gap - 360))
     main_w = workspace_w - helper_w - gap
-    if main_w < 420:
-        helper_w = max(144, workspace_w - gap - 420)
+    if main_w < 400:
+        helper_w = max(helper_min, workspace_w - gap - 400)
         main_w = workspace_w - helper_w - gap
-    if main_w < 360:
-        helper_w = max(136, workspace_w - gap - 360)
+    if main_w < 340:
+        helper_w = max(144, workspace_w - gap - 340)
         main_w = workspace_w - helper_w - gap
     tool_rect = pygame.Rect(workspace_x, panel_y + 14 + header_h, workspace_w, tool_h)
     action_rect = pygame.Rect(

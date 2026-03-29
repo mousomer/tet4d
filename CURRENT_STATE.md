@@ -31,7 +31,18 @@ not a historical ledger. Long historical migration detail belongs in
 ## Active Batch Note
 
 - Governance/planning layer consolidation (2026-03-29): documentation routing is now being compacted around `docs/DOCUMENTATION_MAP.md` as the only docs routing authority, `docs/README.md` is being reduced to a landing page, recent planning-adjacent audits are moving under `docs/plans/audits/`, and the older security/config policy plan is being retired to history while `config/project/policy/governance.json` plus `config/project/policy/code_rules.json` remain the compact top-level governance surface.
-- Topology-playground doc authority alignment (2026-03-29): the accepted visible shell is now documented consistently across the active authority/spec/status/menu files. `Topology Playground` is the direct modern shell entry, the legacy topology editor remains reachable only through `Settings -> Advanced -> Legacy Topology Editor Menu`, the visible workspace model remains `Editor` / `Sandbox` / `Play`, the right helper remains keys-first and diagnostics-free, and the next phase is shell-preserving implementation simplification centered on `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
+- Topology-playground doc authority alignment (2026-03-29): the accepted visible shell is now documented consistently across the active authority/spec/status/menu files. `Topology Playground` is the direct modern shell entry, the legacy topology editor remains reachable only through `Settings -> Advanced -> Legacy Topology Editor Menu`, the visible workspace model remains `Editor` / `Sandbox` / `Play`, the top bar stays limited to title/tabs/validity/dimension, the left sidebar stays limited to the accepted per-workspace inventories with diagnostics secondary, the right helper remains keys-first and diagnostics-free, and the next phase is shell-preserving implementation simplification centered on `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
+- Topology-playground shell-layout + text-visibility guard pass (2026-03-29): the shell now computes top-bar, footer, and control-row text budgets through explicit internal layout helpers rather than only inline geometry, and focused visibility coverage now checks compact-window required text for the Topology Playground shell, pause/settings/help surfaces, tutorial overlays, and gameplay side-panel bounds without introducing screenshot-based tests or changing the frozen shell contract.
+- Topology-playground state/write seam cleanup follow-up (2026-03-29): preview compile/cache refresh now lives in a dedicated `scene_preview_state.py` helper instead of remaining mixed into `controls_panel.py`, and `scene_state.py` now routes canonical-state writes through a narrower shared runtime-state acquisition path so play-settings/profile/draft/selection/probe toggles keep one explicit fallback-versus-canonical mutation contract.
+- Topology-playground runtime latency follow-up (2026-03-29): the scene refresh path now splits cheap immediate preview/validity sync from deferred rigid playability analysis, same-signature rigid-analysis results are cached alongside preview signatures, explicit play launch forces any still-pending rigid analysis once at launch time, and the visible `Play Transport` wording tolerates a temporary analyzing state without reopening the frozen shell contract.
+- Topology-playground readability follow-up (2026-03-29): compact-shell sizing now gives the left sidebar and right helper less brittle width budgets, helper copy wraps instead of collapsing into early ellipses, and focused visibility tests now pin 960px-class top-bar fit, compact control-row text budgets, and a minimum readable helper lane.
+- Topology-playground explorer board-size floor follow-up (2026-03-29): explorer-mode board height can now be lowered to `6` instead of stopping at `8`, and focused menu coverage now pins the new minimum without changing the settled workspace or shell layout contract.
+- Topology-playground torus preset follow-up (2026-03-29): the all-wrap explorer presets now surface as explicit torus presets in every supported dimension, with `2D` keeping `Torus` and the existing `3D` / `4D` full-wrap compatibility ids now labeling the user-facing presets as `3-Torus` and `4-Torus`.
+- Topology-playground local preview cache follow-up (2026-03-29): explorer preview compilation now uses a versioned repo-local on-disk cache keyed by effective `(profile, dims)` signature under `state/topology/cache/explorer_preview`, so repeated identical preview/signaling work can reuse cached movement-graph payloads across runs while corrupt or version-stale cache entries safely fall back to recompute.
+- Topology-explorer movement-graph speedup follow-up (2026-03-29): the graph builder now uses a graph-specific fast path instead of calling the fully general cell-step resolver for every cell edge. Interior moves now use direct coordinate arithmetic, boundary exits reuse precomputed seam lookups, and identical `(profile, dims)` graph builds now reuse an in-process memoized row set before preview payload assembly.
+- Topology-playground persistent cache completion follow-up (2026-03-29): the same versioned topology cache file now persists preview payloads, serialized movement-graph rows, and rigid-playability analysis together by effective topology signature, so repeat runs can reuse the full preview/signaling artifact stack rather than only the summary preview payload. Advanced gameplay now also exposes `Measure topology cache` and `Clear topology cache` actions for the persistent topology cache set, while clear also flushes the current process movement-graph and resolver memos.
+- Topology-playground sandbox-neighbor mouse-toggle follow-up (2026-03-29): the Sandbox `Neighbors` control row now toggles directly on mouse click in the modern shell instead of only selecting the row, and focused `3D` / `4D` workspace coverage now pins that click path so neighbor markers can be disabled without relying on keyboard row adjustment.
+- Topology-playground sandbox-move latency fix follow-up (2026-03-30): Sandbox movement in `AUTO` rigid-play mode no longer forces a fresh full rigid-playability scan while the canonical analysis is still in the deferred `analyzing` state, so `4D` Sandbox moves now reuse the pending analysis state instead of stalling for seconds per move.
 - Governance policy consolidation prune follow-up (2026-03-29): `config/project/policy/governance.json` and `config/project/policy/code_rules.json` are now the sole runtime policy sources for governance checks, `tools/governance/validate_governance.py` remains the unified policy gate used by `scripts/verify.sh`, and the older manifest pack is retained only as contract and inventory compatibility rather than as an execution fallback.
 - Shared rotation animation mode is now a first-class shared gameplay setting rather than a hidden fallback.
 - Advanced gameplay now exposes the mode selector directly, and `2D`/`3D`/`4D` runtime loop construction all load the persisted mode through `menu_settings_state.mode_rotation_animation_mode(...)`.
@@ -81,16 +92,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 184` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 189` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.12` (`low`)
+- `tech_debt.score = 3.28` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.93`
-2. `code_balance = 1.19`
+1. `delivery_size_pressure = 1.97`
+2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -194,7 +205,7 @@ Dominant remaining pressure:
 - Dimension-cycle sandbox follow-up (2026-03-14): changing Explorer Playground dimensions now clears stale sandbox transients from the previous dimension before canonical-state rebuild, so retained sandbox origin/local-block payloads no longer crash the migrated explorer shell during dimension changes.
 - The ND launcher no longer treats Explorer Playground status messages as app-exit flags; `src/tet4d/ui/pygame/launch/launcher_nd_runner.py` now returns to the launcher menu after the playground closes unless the launcher callback itself explicitly requests exit.
 - Startup optimization pass 1 is now live for the audited explorer-entry route: explicit Explorer launches skip the stored explorer-profile refresh, launch validation and default probe placement no longer build extra movement graphs, and representative first-frame readiness improved from `137.5/555.5/6890.3 ms` to `64.6/215.9/2326.1 ms` for `2D/3D/4D` launches while startup movement-graph builds fell from `4` to `1`.
-- Remaining startup hotspot after that pass: the one required preview compile inside `_refresh_explorer_scene_state(...)`, especially in `4D`; the new playability signal now piggybacks on that canonical refresh using the live preview plus a lightweight rigid-transport scan, while the heavier experiment-pack analysis still remains deferred.
+- Remaining startup hotspot after that pass was the one required preview compile inside `_refresh_explorer_scene_state(...)`, especially in `4D`. The next latency pass now keeps preview compile immediate but defers the rigid transport scan off the first frame, caches the full rigid-analysis result by effective preview signature, and leaves the heavier experiment-pack analysis deferred.
 
 Stage 4 live playground settings remain available on the current explorer-entry shell: the playground exposes the dimension selector, board-axis size editors, and explorer preset selector, and those changes now refresh the migrated explorer scene through the engine/runtime-owned canonical state while retained UI-local shell fields remain compatibility debt for later cleanup.
 - In one shell, the player can change presets, adjust board size, move and rotate the sandbox piece, glue/edit seams, and launch play from the current draft.
@@ -328,12 +339,12 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3212` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3669` real LOC
 2. `scripts/arch_metrics.py`: `1887` real LOC
-3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1658` real LOC
+3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1592` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1073` real LOC
-6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1011` real LOC
+5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1090` real LOC
+6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1035` real LOC
 7. `tools/governance/generate_configuration_reference.py`: `982` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `962` real LOC
 

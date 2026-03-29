@@ -1129,7 +1129,7 @@ Parameters:
 - `status_order.skewed`: `2` (`int`)
 - `status_order.watch`: `1` (`int`)
 - `tracked_leaf_folders[]`: array[`object`]
-- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`
+- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`, `0.97`
 - `tracked_leaf_folders[].baseline_status`: varies (`string`); examples: `"balanced"`
 - `tracked_leaf_folders[].path`: varies (`string`); examples: `"src/tet4d/engine/runtime/menu_settings"`, `"src/tet4d/engine/runtime/menu_structure"`, `"src/tet4d/engine/runtime/score_analysis"`
 - `tracked_leaf_folders[].profile`: varies (`string`); examples: `"micro_leaf"`, `"tests_leaf"`
@@ -1147,6 +1147,7 @@ Entries:
 Top-level keys: `paths`, `version`
 Parameters:
 - `paths.explorer_topology_experiments_file_default`: `"state/topology/explorer_experiments.json"` (`string`)
+- `paths.explorer_topology_preview_cache_dir`: `"state/topology/cache/explorer_preview"` (`string`)
 - `paths.explorer_topology_preview_file_default`: `"state/topology/explorer_preview.json"` (`string`)
 - `paths.explorer_topology_profiles_file_default`: `"state/topology/explorer_profiles.json"` (`string`)
 - `paths.keybindings_dir`: `"keybindings"` (`string`)
@@ -1344,7 +1345,6 @@ Parameters:
 - `content_rules[]`: array[`object`]
 - `content_rules[].file`: varies (`string`); examples: `"docs/policies/INDEX.md"`, `"README.md"`, `"docs/FEATURE_MAP.md"`
 - `content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
-- `content_rules[].must_match_regex[]`: array[`string`]; examples: `"\\[BKL-P3-\\d{3}\\]"`
 - `content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"126 passed"`, `"No active open gaps"`
 - `content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"\\b\\d+\\s+passed\\b"`, `"\\[[\\s\\d%]+\\]"`, `"\\btetris_nd\\b"`
 - `description`: `"Machine-checked source-of-truth rules for docs/tests/help/backlog/RD...` (`string`)

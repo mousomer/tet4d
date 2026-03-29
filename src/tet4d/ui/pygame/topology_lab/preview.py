@@ -3,7 +3,7 @@ from __future__ import annotations
 import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
-from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
 
 _BLOCKED_BUTTON_COLOR = (74, 84, 118)
 _BUTTON_TEXT = (232, 236, 248)
@@ -54,12 +54,13 @@ def draw_preview_panel(
     y = area.y + 18 + title_surf.get_height()
     for index, line in enumerate(lines):
         color = (220, 228, 250) if index == 0 else (188, 198, 228)
-        text = fit_text(fonts.hint_font, line, area.width - 20)
-        surf = fonts.hint_font.render(text, True, color)
-        if y + surf.get_height() > area.bottom - 8:
-            break
-        surface.blit(surf, (area.x + 10, y))
-        y += surf.get_height() + 4
+        wrapped_lines = wrap_text_lines(fonts.hint_font, line, area.width - 20)
+        for wrapped in wrapped_lines:
+            surf = fonts.hint_font.render(wrapped, True, color)
+            if y + surf.get_height() > area.bottom - 8:
+                return
+            surface.blit(surf, (area.x + 10, y))
+            y += surf.get_height() + 4
 
 
 def draw_probe_controls(

@@ -368,8 +368,8 @@ def explorer_presets_for_dimension(
             ),
             ExplorerTopologyPreset(
                 preset_id="full_wrap_3d",
-                label="Wrap X,Y,Z",
-                description="Wrap every 3D axis with identity transforms.",
+                label="3-Torus",
+                description="Wrap every 3D axis with identity transforms to form a 3-torus.",
                 profile=full_wrap_profile_3d(),
             ),
             ExplorerTopologyPreset(
@@ -410,8 +410,8 @@ def explorer_presets_for_dimension(
             ),
             ExplorerTopologyPreset(
                 preset_id="full_wrap_4d",
-                label="Wrap X,Y,Z,W",
-                description="Wrap every 4D axis with identity transforms.",
+                label="4-Torus",
+                description="Wrap every 4D axis with identity transforms to form a 4-torus.",
                 profile=full_wrap_profile_4d(),
             ),
             ExplorerTopologyPreset(

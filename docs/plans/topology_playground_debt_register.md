@@ -30,6 +30,20 @@ That belongs in `topology_playground_shell_redesign_spec.md`.
 | Play drop-policy coverage remains incomplete for some topology families | gameplay tests | active | focused regressions pin remaining non-trivial families |
 | Historical docs may still mention removed legacy paths | docs layer | active | stale references are removed or moved to history |
 
+## Recent progress
+
+- 2026-03-29: extracted shell layout / text-budget helpers for the current
+  Topology Playground top bar, footer, and control rows in a shell-preserving
+  pass; added deterministic compact-window text-visibility coverage for the
+  shell plus pause/settings/help/tutorial/gameplay support surfaces.
+- 2026-03-29: extracted preview compile/cache refresh out of
+  `controls_panel.py` into `scene_preview_state.py` and narrowed
+  `scene_state.py` canonical write routing around one shared runtime-state
+  acquisition helper.
+- This progress narrows layout/visibility drift risk, but it does not retire
+  the deeper ownership and compatibility debt still centered on
+  `controls_panel.py` and `scene_state.py`.
+
 ## Deferred decomposition rule
 
 The following work is explicitly deferred unless it preserves the already-

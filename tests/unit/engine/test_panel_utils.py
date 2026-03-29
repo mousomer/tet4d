@@ -2,16 +2,30 @@ from __future__ import annotations
 
 import unittest
 
+import pygame
+
 from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from tet4d.ui.pygame.render.panel_utils import (
     _append_stats_group,
+    _compute_controls_rect,
     _stats_group_rows,
     _join_sections,
     _merge_summary_into_main_group,
 )
+from tet4d.ui.pygame.ui_utils import text_fits, wrap_text_lines
 
 
 class TestPanelUtils(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        pygame.quit()
+
     def test_merge_summary_into_existing_main_group(self) -> None:
         groups = [("Main", ("A\tpause menu\t",)), ("Translation", ("B\tmove x\t",))]
         merged = _merge_summary_into_main_group(
@@ -88,6 +102,39 @@ class TestPanelUtils(unittest.TestCase):
                 [name for name, _ in groups],
                 ["Main", "Translation", "Rotation", "Camera", "Stats"],
             )
+
+    def test_side_panel_controls_rect_stays_inside_panel(self) -> None:
+        panel_rect = pygame.Rect(1040, 20, 200, 680)
+        controls_rect = _compute_controls_rect(
+            panel_rect=panel_rect,
+            controls_top=120,
+            reserve_bottom=26,
+        )
+        self.assertGreaterEqual(controls_rect.left, panel_rect.left)
+        self.assertGreaterEqual(controls_rect.top, 120)
+        self.assertLessEqual(controls_rect.right, panel_rect.right)
+        self.assertLessEqual(controls_rect.bottom, panel_rect.bottom - 26)
+
+    def test_side_panel_summary_lines_fit_standard_panel_width(self) -> None:
+        panel_font = pygame.font.Font(None, 20)
+        # draw_grouped_control_helper renders summary rows inside a box with 10px
+        # horizontal margin on a panel-width-constrained lane.
+        max_width = 200 - 24
+        for line in ("2D Tetris", "Score: 123456", "Lines: 99", "Speed level: 10"):
+            with self.subTest(line=line):
+                self.assertTrue(text_fits(panel_font, line, max_width))
+
+    def test_wrap_text_lines_preserve_words_within_budget(self) -> None:
+        font = pygame.font.Font(None, 22)
+        wrapped = wrap_text_lines(
+            font,
+            "Move X Left / Right  Move Y Up / Down",
+            max_width=130,
+        )
+        self.assertGreater(len(wrapped), 1)
+        for line in wrapped:
+            with self.subTest(line=line):
+                self.assertTrue(text_fits(font, line, 130))
 
 
 if __name__ == "__main__":

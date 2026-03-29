@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 from unittest import mock
 
+import tet4d.engine.topology_explorer.movement_graph as movement_graph_module
 from tet4d.engine.topology_explorer.glue_map import map_boundary_exit, move_cell
 from tet4d.engine.topology_explorer.glue_model import (
     BoundaryTransform,
@@ -13,7 +14,10 @@ from tet4d.engine.topology_explorer.glue_validate import (
     validate_explorer_topology_profile,
     validate_topology_bijection,
 )
-from tet4d.engine.topology_explorer.movement_graph import build_movement_graph
+from tet4d.engine.topology_explorer.movement_graph import (
+    build_movement_graph,
+    neighbors_for_cell,
+)
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     explorer_presets_for_dimension,
@@ -204,8 +208,11 @@ class TestTopologyExplorer(unittest.TestCase):
     def test_3d_presets_include_unsafe_projective_and_sphere(self) -> None:
         presets = explorer_presets_for_dimension(3)
         preset_ids = {preset.preset_id for preset in presets}
+        self.assertIn("full_wrap_3d", preset_ids)
         self.assertIn("projective_3d", preset_ids)
         self.assertIn("sphere_3d", preset_ids)
+        full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_3d")
+        self.assertEqual(full_wrap.label, "3-Torus")
         unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
         self.assertIn("projective_3d", unsafe_ids)
         self.assertIn("sphere_3d", unsafe_ids)
@@ -219,6 +226,7 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertIn("projective_4d", preset_ids)
         self.assertIn("sphere_4d", preset_ids)
         full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_4d")
+        self.assertEqual(full_wrap.label, "4-Torus")
         self.assertEqual(full_wrap.profile.dimension, 4)
         self.assertEqual(len(full_wrap.profile.gluings), 4)
 
@@ -240,12 +248,42 @@ class TestTopologyExplorer(unittest.TestCase):
 
     def test_build_movement_graph_validates_profile_once(self) -> None:
         profile = mobius_strip_profile_2d()
+        movement_graph_module._build_movement_graph_rows.cache_clear()
         with mock.patch(
             "tet4d.engine.topology_explorer.movement_graph.validate_explorer_topology_profile",
             return_value=profile,
         ) as validate_profile:
             build_movement_graph(profile, dims=(4, 3))
         validate_profile.assert_called_once_with(profile, dims=(4, 3))
+
+    def test_build_movement_graph_reuses_cached_rows_for_same_signature(self) -> None:
+        profile = mobius_strip_profile_2d()
+        dims = (5, 4)
+        movement_graph_module._build_movement_graph_rows.cache_clear()
+        with mock.patch(
+            "tet4d.engine.topology_explorer.movement_graph.validate_explorer_topology_profile",
+            return_value=profile,
+        ) as validate_profile:
+            build_movement_graph(profile, dims=dims)
+            build_movement_graph(profile, dims=dims)
+        validate_profile.assert_called_once_with(profile, dims=dims)
+
+    def test_build_movement_graph_matches_cell_neighbors_for_representative_presets(
+        self,
+    ) -> None:
+        cases = (
+            (torus_profile_2d(), (4, 4), ((0, 0), (3, 1))),
+            (swapped_xz_profile_3d(), (4, 4, 4), ((0, 1, 2), (3, 2, 0))),
+            (swap_xw_profile_4d(), (4, 4, 4, 4), ((0, 1, 2, 3), (3, 0, 1, 2))),
+        )
+        for profile, dims, coords in cases:
+            with self.subTest(dimension=profile.dimension, dims=dims):
+                graph = build_movement_graph(profile, dims=dims)
+                for coord in coords:
+                    self.assertEqual(
+                        graph[coord],
+                        neighbors_for_cell(profile, dims=dims, coord=coord),
+                    )
 
     def test_klein_bottle_graph_keeps_four_neighbors_per_cell(self) -> None:
         profile = klein_bottle_profile_2d()

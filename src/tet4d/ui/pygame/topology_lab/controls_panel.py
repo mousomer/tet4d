@@ -25,16 +25,13 @@ from tet4d.engine.gameplay.api import (
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     advance_explorer_probe,
-    compile_explorer_topology_preview,
+    compile_explorer_topology_preview as _compile_explorer_topology_preview,
     export_explorer_topology_preview,
 )
 from tet4d.engine.runtime.topology_explorer_runtime import (
     compile_runtime_explorer_experiments,
     export_runtime_explorer_experiments,
     load_runtime_explorer_topology_profile,
-)
-from tet4d.engine.runtime.topology_playability_signal import (
-    update_topology_playability_analysis,
 )
 from tet4d.engine.runtime.topology_explorer_store import save_explorer_topology_profile
 from tet4d.engine.runtime.topology_profile_store import (
@@ -93,9 +90,14 @@ from tet4d.ui.pygame.topology_lab.camera_controls import (
 from tet4d.ui.pygame.topology_lab.common import (
     ExplorerGlueDraft,
     TopologyLabHitTarget,
-    boundaries_for_dimension,
     default_draft_for_dimension,
     permutation_options_for_dimension,
+)
+from tet4d.ui.pygame.topology_lab.scene_preview_state import (
+    ensure_explorer_playability_analysis as _ensure_explorer_playability_analysis,
+    clear_explorer_scene_state as _clear_explorer_scene_state_impl,
+    preview_signature_for_state as _preview_signature_for_state_impl,
+    refresh_explorer_scene_state as _refresh_explorer_scene_state_impl,
 )
 from tet4d.ui.pygame.topology_lab.copy import (
     LAB_STATUS_COPY as _LAB_STATUS_COPY,
@@ -111,7 +113,6 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPlaygroundSettings,
-    ExplorerPreviewCompileArtifacts,
     ExplorerPreviewCompileSignature,
     PANE_CONTROLS,
     PANE_SCENE,
@@ -193,6 +194,10 @@ _RIGID_PLAY_MODE_SEQUENCE = (
     RIGID_PLAY_MODE_ON,
     RIGID_PLAY_MODE_OFF,
 )
+
+
+def compile_explorer_topology_preview(*args, **kwargs):
+    return _compile_explorer_topology_preview(*args, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -463,99 +468,17 @@ def _uses_general_explorer_editor(state: _TopologyLabState) -> bool:
 
 
 def _clear_explorer_scene_state(state: _TopologyLabState) -> None:
-    state.scene_boundaries = ()
-    state.scene_preview_dims = ()
-    state.scene_active_glue_ids = {}
-    state.scene_basis_arrows = ()
-    state.scene_preview = None
-    state.scene_preview_error = None
-    state.scene_preview_signature = None
-    state.scene_preview_cache = None
-    state.experiment_batch = None
+    _clear_explorer_scene_state_impl(state)
 
 
 def _preview_signature_for_state(
     state: _TopologyLabState,
 ) -> ExplorerPreviewCompileSignature | None:
-    profile = current_explorer_profile(state)
-    if profile is None:
-        return None
-    # Tool, pane, piece set, and speed only affect live UI state; preview compile
-    # output is driven by the effective explorer profile plus board dimensions.
-    return ExplorerPreviewCompileSignature(
-        profile=profile,
-        dims=tuple(int(value) for value in _board_dims_for_state(state)),
-    )
-
-
-def _compile_explorer_preview_payload(
-    signature: ExplorerPreviewCompileSignature,
-) -> tuple[dict[str, object] | None, str | None]:
-    try:
-        return (
-            compile_explorer_topology_preview(
-                signature.profile,
-                dims=signature.dims,
-                source="topology_lab_live_preview",
-            ),
-            None,
-        )
-    except ValueError as exc:
-        return None, str(exc)
-
-
-def _preview_compile_artifacts(
-    state: _TopologyLabState,
-    *,
-    signature: ExplorerPreviewCompileSignature,
-) -> ExplorerPreviewCompileArtifacts:
-    cached = state.scene_preview_cache
-    if cached is not None and cached.signature == signature:
-        return cached
-    preview, preview_error = _compile_explorer_preview_payload(signature)
-    artifacts = ExplorerPreviewCompileArtifacts(
-        signature=signature,
-        preview=preview,
-        preview_error=preview_error,
-    )
-    state.scene_preview_cache = artifacts
-    return artifacts
+    return _preview_signature_for_state_impl(state)
 
 
 def _refresh_explorer_scene_state(state: _TopologyLabState) -> None:
-    if not _uses_general_explorer_editor(state):
-        _clear_explorer_scene_state(state)
-        return
-    signature = _preview_signature_for_state(state)
-    if signature is None:
-        _clear_explorer_scene_state(state)
-        return
-    boundaries = boundaries_for_dimension(signature.profile.dimension)
-    preview_artifacts = _preview_compile_artifacts(state, signature=signature)
-    active_glue_ids = {boundary.label: "free" for boundary in boundaries}
-    for glue in signature.profile.gluings:
-        active_glue_ids[glue.source.label] = glue.glue_id
-        active_glue_ids[glue.target.label] = glue.glue_id
-    state.scene_boundaries = boundaries
-    state.scene_preview_dims = signature.dims
-    state.scene_active_glue_ids = active_glue_ids
-    state.scene_preview = preview_artifacts.preview
-    state.scene_preview_error = preview_artifacts.preview_error
-    state.scene_basis_arrows = (
-        ()
-        if preview_artifacts.preview is None
-        else tuple(preview_artifacts.preview.get("basis_arrows", ()))
-    )
-    if state.scene_preview_signature != signature:
-        state.experiment_batch = None
-    state.scene_preview_signature = signature
-    runtime_state = canonical_playground_state(state)
-    if runtime_state is not None:
-        update_topology_playability_analysis(
-            runtime_state,
-            preview=state.scene_preview,
-            preview_error=state.scene_preview_error,
-        )
+    _refresh_explorer_scene_state_impl(state)
 
 
 def _sync_explorer_state(state: _TopologyLabState) -> None:
@@ -840,7 +763,7 @@ def _set_explorer_board_dim(state: _TopologyLabState, axis: int, step: int) -> N
     ):
         settings = _ensure_play_settings(state)
         previous_signature = _preview_signature_for_state(state)
-        mins = (4, 8, 2, 1)
+        mins = (4, 6, 2, 1)
         max_size = 40
         dims = list(settings.board_dims)
         while len(dims) < state.dimension:
@@ -1823,6 +1746,13 @@ def _launch_play_preview(
                 is_error=True,
             )
             return screen, display_settings
+        with record_interaction_phase(
+            state,
+            "playability_analysis",
+            source="play_preview_launch",
+            dimension=state.dimension,
+        ):
+            _ensure_explorer_playability_analysis(state)
         try:
             with record_interaction_phase(
                 state,
