@@ -6,7 +6,7 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 
 ## Source-of-truth order
 
-1. Policy manifests and contracts under `config/project/policy/manifests/`.
+1. Unified policy manifests in `config/project/policy/` plus domain contracts under `config/project/policy/manifests/`.
 2. Policy docs under `docs/policies/`.
 3. RDS specs under `docs/rds/`.
 4. For topology-playground migration/state questions, current authority lives in:
@@ -27,12 +27,12 @@ that are now tracked in `CURRENT_STATE.md` and `docs/BACKLOG.md`.
 - `docs/policies/POLICY_FORMATTING.md`
 - `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`
 - `docs/policies/CI_COMPLIANCE_RUNBOOK.md`
-- `config/project/policy/pack.json`
-- `config/project/policy/manifests/project_policy.json`
-- `config/project/policy/manifests/contributor_directives.json`
-- `config/project/policy/manifests/risk_gates.json`
+- `config/project/policy/governance.json`
+- `config/project/policy/code_rules.json`
 - `config/project/policy/manifests/canonical_maintenance.json`
-- `config/project/policy/manifests/context_router_manifest.json`
+- `config/project/policy/manifests/secret_scan.json`
+- `config/project/policy/manifests/replay_manifest.json`
+- `config/project/policy/manifests/help_assets_manifest.json`
 
 ## RDS index
 
@@ -79,15 +79,16 @@ This workflow is intentionally strict on source-file write safety and full-gate 
    - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
      are maintained by `tools/governance/generate_maintenance_docs.py`)
    - drift-protection contracts and thin-wrapper budgets in
-     `config/project/policy/manifests/drift_protection.json`
+     `config/project/policy/governance.json`
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
 13. At the end of staged migration work, provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.
 14. Keep contract files synchronized and valid:
+   - `config/project/policy/governance.json`
+   - `config/project/policy/code_rules.json`
    - `config/project/policy/manifests/canonical_maintenance.json`
-   - `config/project/policy/manifests/context_router_manifest.json`
-   - `config/project/policy/manifests/project_policy.json`
+   - `config/project/policy/manifests/secret_scan.json`
 
 ## Testing instructions
 

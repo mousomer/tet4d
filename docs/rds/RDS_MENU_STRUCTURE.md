@@ -1,9 +1,10 @@
 # Menu Structure RDS
 
-Status: Active v0.8 (Verified 2026-02-21)  
-Author: Omer + Codex  
-Date: 2026-02-20  
-Target Runtime: Python 3.11-3.14 + `pygame-ce`
+Role: rds
+Status: active
+Scope: launcher, settings, pause-menu, and topology-playground menu IA
+Canonical owner: this file
+Last verified: 2026-03-29
 
 ## 1. Scope
 
@@ -75,7 +76,7 @@ This design is based on:
 9. Content-structure guidance for scannable support docs and front-loaded headings.  
    Reference: [ONS Structuring Content](https://service-manual.ons.gov.uk/content/writing-for-users/structuring-content)
 
-## 4. Target Information Architecture
+## 4. Current Information Architecture
 
 ### 4.1 Global top-level menu map
 
@@ -156,7 +157,7 @@ Pause Menu
 2. Header (screen title + current section)
 3. Content panel (focusable options)
 4. Footer (shortcut hints + status messages)
-5. The frozen Topology Playground shell uses:
+5. The accepted Topology Playground shell uses:
 6. compact top bar
 7. contextual left sidebar
 8. larger center workspace
@@ -471,9 +472,12 @@ Stabilization details:
 36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
 37. Closed (`BKL-P2-023`): Topology Lab interactive workflow is implemented with config-backed copy/layout (`config/topology/lab_menu.json`) and runtime save/export actions (`src/tet4d/ui/pygame/launch/topology_lab_menu.py`).
 
-## 16. Menu Rehaul v2 (Core IA Implemented, `BKL-P1-006`)
+## 16. Menu Rehaul v2 (Implemented Background, `BKL-P1-006`)
 
-Research-driven goals for the next rehaul pass:
+This section is historical background for the menu rehaul that produced the
+current IA. It does not override the current IA above.
+
+Research-driven goals for the rehaul pass:
 1. reduce first-time navigation friction and menu depth,
 2. keep high-frequency actions and state visibility in one place,
 3. preserve keyboard-only predictability and pause/launcher parity,
@@ -486,7 +490,7 @@ Guideline basis (re-validated 2026-02-20):
 4. Apple HIG menu guidance (`short list of top-level choices`, `grouping and separators`) for scanability.
 5. Game Accessibility Guidelines (`clear language`, `remember settings`, `easy start`) for player-facing friction reduction.
 
-Target IA delta:
+Implemented IA delta:
 1. Replace broad top-level labels with intent labels:
 2. `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, `Quit`.
 3. Keep dimension selection under `Play`, keep `Tutorials` as the learning/support umbrella, and keep custom-topology editing under `Topology Playground` without adding extra root clutter.
@@ -514,12 +518,17 @@ Execution artifact:
 1. Detailed execution plan lives in `docs/history/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
 
 
-## 17. Topology Lab Mode Split (2026-03-08)
+## 17. Topology Playground Routing And Legacy Split
 
-1. Topology Lab now edits separate topology profiles for `(gameplay mode, dimension)` rather than one shared 3D/4D profile bucket.
-2. Required pairs are `normal/3d`, `explorer/3d`, `normal/4d`, and `explorer/4d`.
-3. `Topology Playground` is the direct modern `Explorer Playground` route. The old `Normal Game` topology menu is a legacy-only compatibility surface reached through `Settings -> Advanced -> Legacy Topology Editor Menu`, not through the modern playground entry.
-4. In `Normal Game`, gravity-axis `Y` boundaries are visually locked and any attempted seam touching `Y+` or `Y-` must be rejected immediately by engine-owned validation.
-5. In `Explorer Mode`, `Y` boundaries are selectable and may be wrapped or inverted subject to the general bijection rules.
-6. Any retained `Normal Game` row-adjustment support must stay narrow and must not compete visually or structurally with the Explorer Playground editor controls. Legacy row layout/value presentation should stay with the normal menu row/value helpers, and legacy export should not require a separate legacy-support module once direct export orchestration can live elsewhere.
-7. Ordinary 2D/3D/4D play setup screens no longer expose `topology_profile_index` or other custom-topology editor rows; custom topology selection belongs to the Explorer Playground only.
+1. `Topology Playground` is the direct modern playground route.
+2. The old menu-only topology editor is a legacy-only compatibility surface
+   reached through `Settings -> Advanced -> Legacy Topology Editor Menu`, not
+   through the modern playground entry.
+3. Visible and canonical top-level workspaces in the modern playground are
+   `Editor`, `Sandbox`, and `Play`.
+4. Direct playground entry opens in `Sandbox` by default.
+5. Ordinary 2D/3D/4D play setup screens do not expose custom-topology editor
+   rows; custom topology editing belongs to the modern Topology Playground.
+6. The right helper in the modern playground is keys-first and minimal, not a
+   second menu, and diagnostics stay on secondary surfaces rather than
+   replacing the operational sidebar.

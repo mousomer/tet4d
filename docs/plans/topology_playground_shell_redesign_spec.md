@@ -2,15 +2,20 @@
 
 Role: spec
 Status: frozen
-Source of truth: this file for the current visible-shell pass
+Source of truth: this file for the accepted visible-shell contract
 Supersedes: older shell-cleanup wording and playground shell notes
-Last updated: 2026-03-22
+Last updated: 2026-03-29
 
 ## Purpose
 
-Freeze the visible-shell redesign for the launcher and topology playground
-without reopening settled topology-playground architecture or starting deeper
-module simplification.
+Define the accepted modern Topology Playground shell contract.
+
+This file is normative for visible shell layout, helper scope, diagnostics
+placement, launcher routing related to the playground, and the probe/sandbox
+rendering contract.
+
+This file does not reopen runtime authority, Play semantics, or a second shell
+redesign pass.
 
 Architecture authority remains in
 `docs/plans/topology_playground_current_authority.md`.
@@ -23,72 +28,65 @@ This spec must preserve:
 - direct playground entry opening in `Sandbox`
 - canonical runtime selectors as the only explorer-path input authority
 - current Play drop-policy semantics
-- deferred deeper `controls_panel.py` / `scene_state.py` simplification
+- the legacy topology editor as a legacy-only path outside `Topology
+  Playground`, `Explorer`, and `Path`
+- the frozen probe/sandbox render distinction
 
-## Launcher contract
+This spec must not be used to:
 
-The main launcher first layer must be exactly:
+- redesign the visible shell again
+- move the legacy topology editor back into the modern playground flow
+- reopen runtime ownership of topology-playground state
+- change probe rendering from the accepted dot-based contract
 
-1. `Play`
-2. `Continue`
-3. `Tutorials`
-4. `Topology Playground`
-5. `Settings`
-6. `Quit`
+## Launcher routing contract
 
-The `Play` submenu remains the minimal play-adjacent launch surface for:
+The launcher/menu IA authority lives in `docs/rds/RDS_MENU_STRUCTURE.md`.
+This spec defines the required Topology Playground routing and shell placement
+constraints that the menu IA must preserve.
 
-- `Play 2D`
-- `Play 3D`
-- `Play 4D`
-- `Play Last Custom Topology`
-- leaderboard access
-- bot configuration
+### Modern routing
 
-The `Tutorials` submenu remains the learning/support surface with this split:
+- `Topology Playground` is the direct launcher entry to the modern
+  topology-editing shell.
+- `Topology Playground` must not open a submenu that splits modern and legacy
+  topology editing.
+- The old menu-only topology editor is legacy compatibility only.
+- The old menu-only topology editor is not part of `Topology Playground`,
+  `Explorer`, or `Path`.
+- The old menu-only topology editor is reachable only through
+  `Settings -> Advanced -> Legacy Topology Editor Menu`.
 
-- `Interactive Tutorials`
-- `How to Play`
-- `Controls Reference`
-- `Help / FAQ`
-
-The `Settings` submenu remains the configuration surface with short labels:
-
-- `Game`
-- `Display`
-- `Audio`
-- `Controls`
-- `Profiles`
-- `Advanced`
-
-The `Advanced` submenu is the compatibility bucket for:
-
-- `Advanced gameplay`
-- `Legacy Topology Editor Menu`
-
-### Launcher placement rules
+### Adjacent launcher rules
 
 - `Help / FAQ` must stay reachable from the learning/support surface rather
   than only through `Settings`.
 - `Controls Reference` must remain distinct from `Settings -> Controls`.
 - `Settings -> Controls` means persistent input configuration, not help or
   legend/reference content.
-- `Leaderboard` and `Bot` must not return to the root layer and must not live
-  under `Settings`.
-- `Topology Playground` is a direct modern entry and must not open a submenu
-  that splits modern and legacy topology editing.
-- `Legacy Topology Editor Menu` must not appear inside `Topology Playground`,
-  `Explorer`, or `Path`.
+- `Leaderboard` and `Bot` must not return to the launcher root and must not
+  live under `Settings`.
 
-## Topology-playground visible shell contract
+## Workspace model
+
+- Visible and canonical top-level workspaces are `Editor`, `Sandbox`, and
+  `Play`.
+- Direct playground entry opens in `Sandbox` by default.
+- `Probe` is the canonical Editor concept for the non-mutating tool flow.
+- `Trace` is Editor-owned.
+- `Probe Neighbors` is Editor-owned.
+- `Neighbors` is Sandbox-owned.
+- `Inspect` and `Edit` are not peer top-level workspaces.
+
+## Visible shell contract
 
 Default visible structure:
 
-- top bar: compact global title, workspace tabs, one short validity chip
-- left sidebar: contextual controls only for the active workspace
-- center area: primary working surface and largest region on screen
-- right helper: small external key-hint block only
-- bottom strip: compact status plus compact action shortcuts/buttons only
+- compact top bar
+- contextual operational left sidebar
+- larger center workspace
+- readable minimal helper on the right
+- compact bottom strip
 
 ### Top bar
 
@@ -97,60 +95,78 @@ Must contain only:
 - title: `Topology Playground`
 - tabs: `Editor` / `Sandbox` / `Play`
 - validity chip: `Valid` / `Needs Fix` / `Unsafe`
+- current dimension chip
 
 Must not contain:
 
 - prose header copy
 - default-primary diagnostic rows
+- redundant helper text
 
 ### Left sidebar
 
+The left sidebar is the default operational surface.
+It is contextual by workspace and remains primary over diagnostics.
+
+Global rules:
+
+- show operational controls for the active workspace
+- keep diagnostics collapsed, secondary, or on separate surfaces
+- do not replace workspace controls with read-only diagnostic copy
+
 `Editor` sidebar:
+
+- `Dimension`
 - `Tool`
 - `Trace`
 - optional `Probe Neighbors`
+- board-axis size controls
+- `Topology Preset`
 - edit actions only when directly relevant
-- diagnostics collapsed or secondary
 
 `Sandbox` sidebar:
+
 - sandbox piece controls
 - sandbox `Neighbors`
+- sandbox `Piece Set`
 - sandbox actions
-- diagnostics collapsed or secondary
 
 `Play` sidebar:
-- play / launch controls
-- play-specific setup/status
-- diagnostics collapsed or secondary
+
+- speed
+- play transport / launch controls
+- play-specific setup or status rows
 
 ### Center workspace
 
-- Must remain visually dominant.
-- `3D` and `4D` projection working surfaces should be enlarged relative to the
+- The center workspace is the dominant visual region.
+- `3D` and `4D` projection work surfaces should remain larger than in the
   older shell.
-- Nonessential chrome that compresses the scene should be removed.
+- Nonessential chrome that compresses the scene should remain removed.
 
 ### Right helper
 
-Must contain only:
+The helper is minimal in scope, not arbitrarily minimal in width.
 
-- translation keys
+It must fully show:
+
+- translation or movement keys
 - rotation keys
 - at most one short workspace/tool context line
 
-Must not contain:
+It must not contain:
 
-- prose
-- duplicate controls
 - diagnostics
+- duplicate controls
+- prose blocks
 - shadow-menu behavior
 
 ### Bottom strip
 
 Must contain only:
 
-- compact status chips on the left
-- compact action buttons on the right
+- compact status chips
+- compact action buttons
 
 Must not contain:
 
@@ -158,71 +174,90 @@ Must not contain:
 - prose hints
 - mixed cross-workspace scaffolding
 
-## Wording contract
+## Diagnostics contract
 
-- `Analysis View` -> `Diagnostics`
-- `Explorer Workspace` -> `Workspace`
-- `Workspace Path` -> `Path` or hidden behind diagnostics
-- `Editor Tool` -> `Tool`
-- Keep `Editor`, `Sandbox`, and `Play` as the workspace labels.
-- Keep internal Probe/Edit semantics intact.
-- Expose `Probe` / `Edit` only where the Editor tool choice is directly
-  relevant.
+- Diagnostics are secondary surfaces only.
+- Diagnostics do not replace the default workspace sidebar.
+- Default left-sidebar content remains operational and contextual by
+  workspace.
+- Read-only diagnostics may live behind a diagnostics pane, secondary rows, or
+  other secondary surfaces.
 
-## Diagnostics demotion rules
+## Rendering contract
 
-- Diagnostics and advanced state may remain available, but they must not be the
-  default-primary surface.
-- If retained in this pass, they should live behind the diagnostics pane,
-  secondary rows, or secondary surfaces.
-- Workspace-owned contextual controls remain primary; read-only diagnostics do
-  not.
+- probe = one large circle in `2D`, `3D`, and `4D`
+- probe neighbors = dots
+- sandbox cells = boxes
 
-## Probe / neighbor visible contract
+More specifically:
 
-- The Editor probe renders as a probe dot in `2D`, `3D`, and `4D`.
-- The canonical visible probe glyph is one large circle in the active cell.
+- The Editor probe renders as a large dot rather than sandbox-style box
+  geometry.
 - The shared probe trace visual language is the connecting trace line itself.
   Intermediate path dots are intentionally removed.
-- The Editor owns an optional `Probe Neighbors` overlay that renders canonical
-  adjacent probe targets as smaller subordinate dots around the main probe.
-- Toggling `Probe Neighbors` must not hide the main probe dot.
-- Sandbox `Neighbors` stays separate and remains a Sandbox-owned control.
-- Sandbox piece cells must continue to render as boxes.
-- Sandbox neighbor markers and Editor probe-neighbor markers both render as
-  dots, but with distinct visual roles.
+- `Probe Neighbors`, when enabled, render as smaller subordinate dots around
+  the main probe.
+- Toggling `Probe Neighbors` must not hide the main probe.
+- Sandbox `Neighbors` stays separate and remains Sandbox-owned.
+- Sandbox piece cells must continue to render as boxes in `2D`, `3D`, and
+  `4D`.
+- Sandbox neighbor markers render as dots only when the explicit Sandbox
+  control is enabled.
 - The same probe glyph language must be reused in `2D`, `3D`, and `4D`.
-- The default `3D` / `4D` shell does not need the older per-panel movement-
-  preview legends; the helper must expose full translation keys.
+
+## Helper wording and visible wording contract
+
+- Keep `Editor`, `Sandbox`, and `Play` as the visible workspace labels.
+- Prefer visible `Probe` wording over legacy `Inspect` wording.
+- Keep `Tool` as the short Editor tool label where the tool choice is directly
+  relevant.
+- Prefer `Diagnostics` over older analysis-heavy wording on secondary surfaces.
+- The right helper should stay keys-first with at most one short context line.
 
 ## Acceptance checklist
 
-The frozen visible-shell pass is acceptable only when all of the following are
+The accepted shell contract is satisfied only when all of the following remain
 true:
 
-- launcher root is exactly `Play`, `Continue`, `Tutorials`, `Topology
-  Playground`, `Settings`, `Quit`
+- launcher root is `Play`, `Continue`, `Tutorials`, `Topology Playground`,
+  `Settings`, `Quit`
 - `Topology Playground` is a direct modern entry
 - legacy topology editor placement is only `Settings -> Advanced -> Legacy
   Topology Editor Menu`
-- top bar contains only title, tabs, and one validity chip
+- top bar contains only title, tabs, validity chip, and dimension chip
 - no default prose header is visible
 - no default-primary diagnostics rows are visible
-- left sidebar content is contextual to the active workspace
+- left sidebar remains contextual and operational by workspace
 - center workspace is visually dominant
-- right helper contains only keys plus at most one short context line
+- right helper contains only movement/rotation keys plus at most one short
+  context line
+- helper fully shows those key groups rather than clipping them into
+  unreadability
+- helper is not a second menu
+- diagnostics remain secondary surfaces
 - bottom strip contains only chips/actions
 - clipped or unreadable labels are absent at supported window sizes
-- Editor probe renders as a large dot
+- Editor probe renders as one large dot
 - probe neighbors render as subordinate dots
 - sandbox cells render as boxes
 - sandbox neighbor markers render as dots only when enabled
 
-## Deferred work
+## Next phase boundary
 
-Explicitly deferred until after this visible-shell contract is stable:
+The visible-shell redesign and panel-correction work are landed.
 
-- deeper `controls_panel.py` decomposition
-- deeper `scene_state.py` decomposition
+The next phase is implementation simplification around the frozen shell,
+without changing the accepted shell contract above.
+
+Primary refactor targets:
+
+- `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
+- `src/tet4d/ui/pygame/topology_lab/scene_state.py`
+
+## Explicitly deferred work
+
+- deeper `controls_panel.py` simplification beyond shell-preserving cleanup
+- deeper `scene_state.py` simplification beyond shell-preserving cleanup
 - runtime authority redesign
 - Play semantic redesign
+- any new visible-shell redesign pass

@@ -4,7 +4,7 @@ Role: ledger
 Status: active
 Source of truth: this file for active topology-playground follow-up debt
 Supersedes: ad hoc transitional-debt sections previously embedded in authority notes
-Last updated: 2026-03-22
+Last updated: 2026-03-29
 
 ## Purpose
 
@@ -23,7 +23,7 @@ That belongs in `topology_playground_shell_redesign_spec.md`.
 | --- | --- | --- | --- |
 | Compatibility-only shell projections remain in the migrated path | `src/tet4d/ui/pygame/topology_lab/scene_state.py` | active | all live readers move to canonical selectors or true caches only |
 | Remaining shell-owned cache classification is still concentrated and easy to misread | `scene_state.py`, `workspace_shell.py`, related shell helpers | active | cache/projection boundaries are explicit and narrow |
-| `controls_panel.py` remains too large and mixed-responsibility | `src/tet4d/ui/pygame/topology_lab/controls_panel.py` | deferred | visible shell is stable and targeted decomposition can proceed without contract churn |
+| `controls_panel.py` remains too large and mixed-responsibility | `src/tet4d/ui/pygame/topology_lab/controls_panel.py` | active | shell-preserving simplification narrows ownership without changing the frozen shell |
 | `scene_state.py` still carries compatibility and projection debt | `src/tet4d/ui/pygame/topology_lab/scene_state.py` | deferred | live shell consumes narrower canonical seams |
 | Some dimension-specific probe/camera behavior still relies on older helper layers | topology-lab scene/helper modules | active | all probe/camera behavior routes through stable canonical seams |
 | Unsafe-topology cross-surface drift still exists in some paths | sandbox / gameplay / preview integration | active | sandbox, preview, and gameplay contracts agree on supported vs unsupported cases |
@@ -32,11 +32,11 @@ That belongs in `topology_playground_shell_redesign_spec.md`.
 
 ## Deferred decomposition rule
 
-The following work is explicitly deferred until the visible shell contract is
-stable:
+The following work is explicitly deferred unless it preserves the already-
+settled visible shell contract:
 
-- deeper `controls_panel.py` decomposition
-- deeper `scene_state.py` decomposition
+- deeper `controls_panel.py` simplification that changes the frozen shell
+- deeper `scene_state.py` simplification that changes the frozen shell
 - any cache/routing simplification that would reopen authority boundaries
 - broad cleanup motivated only by module size rather than by a specific stable
   seam
@@ -59,8 +59,8 @@ Use these rules when touching retained shell state:
 
 - keep canonical runtime state as the only explorer-path input authority
 - keep retained caches/projections from drifting back into truth ownership
-- freeze the visible shell first
-- defer structural cleanup until after the shell contract stops moving
+- simplify `controls_panel.py` while preserving the frozen shell contract
+- simplify `scene_state.py` while preserving the frozen shell contract
 - remove stale legacy-path references from active docs
 
 ## Exit condition for this ledger

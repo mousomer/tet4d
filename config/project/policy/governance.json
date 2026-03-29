@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "project_name": "tet4d",
+  "description": "Unified governance manifest for repo policy, architecture budgets, risk gates, and drift controls.",
+  "verification_command": "./scripts/verify.sh",
+  "ci_entrypoint": "./scripts/ci_check.sh",
+  "design_sources": [
+    "docs/RDS_AND_CODEX.md",
+    "docs/rds/"
+  ],
+  "contracts": {
+    "canonical_maintenance": "config/project/policy/manifests/canonical_maintenance.json",
+    "secret_scan": "config/project/policy/manifests/secret_scan.json",
+    "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
+    "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
+  },
+  "menu_simplification_manifest_rule": {
+    "rule_id": "menu-simplification-common-settings",
+    "statement": "Menus must stay simple; any feature common to 2D/3D/4D menus must live in the shared settings menu unless a very strong mode-specific reason is documented, with custom topology editing owned by the Explorer Playground.",
+    "default_action": "centralize_common_features_in_settings_hub",
+    "exception_bar": "very_strong_documented_reason_required"
+  },
+  "contributor_directives": {
+    "required_ci_enforced_ids": [
+      "verification_required",
+      "loc_delta_preference",
+      "quiet_test_default"
+    ],
+    "directives": [
+      {
+        "id": "plan_with_acceptance",
+        "category": "process",
+        "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
+        "source_docs": [
+          "AGENTS.md",
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "rds_backlog_state_sync",
+        "category": "process",
+        "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
+        "source_docs": [
+          "AGENTS.md",
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "verification_required",
+        "category": "verification",
+        "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
+        "source_docs": [
+          "AGENTS.md",
+          "config/project/policy/governance.json"
+        ],
+        "enforced_by": [
+          "scripts/verify.sh",
+          "scripts/ci_check.sh"
+        ]
+      },
+      {
+        "id": "loc_delta_preference",
+        "category": "process",
+        "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
+        "source_docs": [
+          "AGENTS.md"
+        ],
+        "enforced_by": [
+          "code_review",
+          "tools/governance/validate_governance.py"
+        ]
+      },
+      {
+        "id": "quiet_test_default",
+        "category": "process",
+        "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
+        "source_docs": [
+          "AGENTS.md"
+        ],
+        "enforced_by": [
+          "code_review",
+          "scripts/verify.sh",
+          "tools/governance/validate_governance.py"
+        ]
+      },
+      {
+        "id": "medium_patch_preference",
+        "category": "process",
+        "statement": "Prefer medium-sized localized patches over ultra-narrow patch fragmentation; split only when a broader patch becomes hard to review or tool-rejected.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "edit_method_selection",
+        "category": "process",
+        "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "source_write_safety",
+        "category": "process",
+        "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "post_write_hygiene",
+        "category": "verification",
+        "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review",
+          "scripts/verify_focus.sh"
+        ]
+      },
+      {
+        "id": "serialized_full_gates",
+        "category": "verification",
+        "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review",
+          "scripts/verify.sh",
+          "scripts/ci_check.sh"
+        ]
+      },
+      {
+        "id": "single_patch_retry_limit",
+        "category": "process",
+        "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "staged_migration_honesty",
+        "category": "process",
+        "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      },
+      {
+        "id": "additive_migration_first",
+        "category": "process",
+        "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review",
+          "scripts/verify_focus.sh"
+        ]
+      },
+      {
+        "id": "delta_report_required",
+        "category": "process",
+        "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
+        "source_docs": [
+          "docs/RDS_AND_CODEX.md"
+        ],
+        "enforced_by": [
+          "code_review"
+        ]
+      }
+    ]
+  },
+  "risk_gates": {
+    "dependency_policy": {
+      "pyproject_path": "pyproject.toml",
+      "require_pip_check": true,
+      "blocked_dependencies": [
+        "pycrypto",
+        "python-jose"
+      ]
+    },
+    "security_ownership": {
+      "enabled": true,
+      "sensitive_globs": [
+        "tools/governance/scan_secrets.py",
+        "config/project/policy/manifests/secret_scan.json",
+        "scripts/check_policy_compliance.sh",
+        "scripts/check_git_sanitation.sh",
+        "tools/governance/validate_project_contracts.py"
+      ],
+      "min_sensitive_files": 5,
+      "min_distinct_authors_per_file": 1,
+      "max_files_below_min_authors": 0,
+      "target_min_distinct_authors_per_file": 2,
+      "max_files_below_target_authors_warn": 5
+    }
+  },
+  "architecture": {
+    "schema_version": 1,
+    "arch_stage": 900,
+    "source_roots": [
+      "src/tet4d",
+      "tests",
+      "tools",
+      "scripts"
+    ],
+    "boundary_scripts": [
+      "scripts/check_architecture_boundaries.sh",
+      "scripts/check_engine_core_purity.sh"
+    ],
+    "forbidden_reverse_imports": [
+      {
+        "from": "tet4d.engine",
+        "to": "tet4d.ui"
+      },
+      {
+        "from": "tet4d.engine",
+        "to": "tet4d.ai"
+      },
+      {
+        "from": "tet4d.engine",
+        "to": "tet4d.replay"
+      },
+      {
+        "from": "tet4d.engine",
+        "to": "tools"
+      }
+    ],
+    "zero_budgets": {
+      "engine_core_purity_violations": 0,
+      "engine_core_to_non_core_imports": 0,
+      "engine_to_ui_imports": 0,
+      "engine_to_ai_imports": 0,
+      "pygame_imports_in_non_test": 0
+    },
+    "classification": {
+      "non_code_segments": [
+        "docs",
+        "doc",
+        "assets",
+        "inputs",
+        "outputs",
+        "config",
+        "configs",
+        "notebooks",
+        "benchmarks",
+        "packaging",
+        "migrations",
+        "schema",
+        "scripts",
+        "tools",
+        "data"
+      ],
+      "test_segments": [
+        "test",
+        "tests"
+      ],
+      "class_overrides": {
+        "tests/unit/engine": "tests_lenient",
+        "src/tet4d/engine/core/rng": "micro_core_leaf",
+        "src/tet4d/engine/core/step": "micro_core_leaf",
+        "src/tet4d/replay": "micro_feature_leaf",
+        "src/tet4d/engine/runtime/menu_settings": "micro_feature_leaf",
+        "src/tet4d/engine/runtime/menu_structure": "micro_feature_leaf",
+        "src/tet4d/engine/runtime/score_analysis": "micro_feature_leaf"
+      },
+      "gate_overrides": {
+        "tests/unit/engine": true
+      }
+    },
+    "class_gate_eligibility": {
+      "code_default": true,
+      "tests_lenient": true,
+      "non_code_exempt": false,
+      "micro_core_leaf": true,
+      "micro_feature_leaf": true
+    },
+    "class_to_profile": {
+      "code_default": "default_leaf",
+      "tests_lenient": "tests_leaf",
+      "non_code_exempt": "non_code_exempt",
+      "micro_core_leaf": "micro_leaf",
+      "micro_feature_leaf": "micro_leaf"
+    },
+    "backlog": {
+      "mode": "tet4d_bkl",
+      "default_priority": "P2"
+    },
+    "long_term_goals": {
+      "keybinding_retention": {
+        "required_scopes": [
+          "general",
+          "2d",
+          "3d",
+          "4d",
+          "all"
+        ],
+        "target_pressure_max": 0.0
+      },
+      "menu_simplification": {
+        "target_simplification_score_min": 0.65
+      }
+    }
+  },
+  "tech_debt_budget": {
+    "schema_version": 1,
+    "gate_mode": "non_regression_baseline",
+    "score_epsilon": 0.03,
+    "status_order": {
+      "low": 0,
+      "moderate": 1,
+      "high": 2,
+      "critical": 3
+    },
+    "baseline": {
+      "arch_stage": 755,
+      "score": 15.06,
+      "status": "low"
+    },
+    "scoring": {
+      "component_weights": {
+        "backlog_priority": 0.27,
+        "backlog_bug": 0.16,
+        "ci_gate": 0.2,
+        "code_balance": 0.12,
+        "keybinding_retention": 0.2,
+        "menu_simplification": 0.05,
+        "delivery_size_pressure": 0.005
+      },
+      "priority_weights": {
+        "P1": 5,
+        "P2": 3,
+        "P3": 1
+      },
+      "normalization": {
+        "priority_points_cap": 40,
+        "bug_items_cap": 6,
+        "ci_issue_cap": 6
+      },
+      "delivery_size": {
+        "loc_unit": 12500,
+        "file_unit": 78,
+        "source_root_weights": {
+          "src/tet4d": 1.0,
+          "tests": 0.35,
+          "tools": 0.2,
+          "scripts": 0.2,
+          "other": 0.1
+        }
+      },
+      "bug_keywords": [
+        "bug",
+        "regression",
+        "correctness",
+        "broken",
+        "failure",
+        "ci",
+        "alert"
+      ]
+    }
+  },
+  "drift_protection": {
+    "schema_version": 1,
+    "manifest_id": "drift_protection",
+    "hotspot_scan": {
+      "roots": [
+        "src",
+        "cli",
+        "tests",
+        "tools",
+        "scripts"
+      ],
+      "top_n": 8
+    },
+    "thin_wrapper_budgets": [
+      {
+        "path": "cli/front.py",
+        "max_real_loc": 840,
+        "role": "compatibility launcher wrapper"
+      },
+      {
+        "path": "cli/front2d.py",
+        "max_real_loc": 24,
+        "role": "thin 2D launcher shim"
+      },
+      {
+        "path": "cli/front3d.py",
+        "max_real_loc": 24,
+        "role": "thin 3D launcher shim"
+      },
+      {
+        "path": "cli/front4d.py",
+        "max_real_loc": 24,
+        "role": "thin 4D launcher shim"
+      },
+      {
+        "path": "src/tet4d/engine/api.py",
+        "max_real_loc": 160,
+        "role": "small engine compatibility facade"
+      },
+      {
+        "path": "src/tet4d/ui/pygame/front2d_game.py",
+        "max_real_loc": 180,
+        "role": "2D orchestration entrypoint"
+      }
+    ],
+    "tutorial_copy_contract": {
+      "lessons_path": "config/tutorial/lessons.json",
+      "overlay_path": "src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py",
+      "forbidden_prefixes": [
+        "Goal:",
+        "Action:"
+      ],
+      "required_overlay_tokens": [
+        "Do this:",
+        "Tip:",
+        "USE:"
+      ]
+    }
+  }
+}

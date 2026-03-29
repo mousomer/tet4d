@@ -11,6 +11,9 @@
     "docs/plans/piece_transform_extraction.md",
     "docs/plans/piece_transform_inventory.md"
   ],
+  "audit": [
+    "docs/plans/audits/dead_code_vulture_report_2026-03-24.md"
+  ],
   "history": [
     "docs/history/topology_playground/topology_explorer_latency_pass1.md"
   ]

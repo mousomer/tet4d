@@ -10,7 +10,7 @@ manifests, or implementation archaeology.
 
 Every file in `docs/plans/` should begin with these fields:
 
-- `Role:` `authority` | `spec` | `ledger` | `reference`
+- `Role:` `authority` | `spec` | `ledger` | `reference` | `audit`
 - `Status:` `active` | `frozen` | `reference`
 - `Source of truth:` `<path>` or `none`
 - `Supersedes:` `<path list>` or `none`
@@ -22,6 +22,8 @@ Meaning:
 - `ledger`: active cleanup/debt/status tracking for unfinished work.
 - `reference`: useful background that may inform active work but does not
   control execution.
+- `audit`: recent planning-adjacent analysis or inventory material that
+  informs active work but does not define authority.
 
 ## General planning layer
 
@@ -86,6 +88,19 @@ Current reference files:
 Reference files do not control execution when they conflict with an active
 authority/spec document.
 
+## Audit files
+
+Audit files may remain near active planning only when they are recent enough
+to inform current work and are explicitly labeled as `Role: audit`.
+
+Current audit files:
+
+- `audits/dead_code_vulture_report_2026-03-24.md`
+
+Recent audits live under:
+
+- `docs/plans/audits/`
+
 ## Retirement rule
 
 Move a file out of `docs/plans/` and into history when any of the following
@@ -109,8 +124,9 @@ When documents disagree, precedence is:
 2. owning active `authority` document
 3. owning active or frozen `spec` document
 4. active `ledger` documents
-5. `reference` documents
-6. historical documents
+5. recent `audit` documents
+6. `reference` documents
+7. historical documents
 
 If a lower-precedence file conflicts with a higher-precedence file, update or
 move the lower-precedence file in the same batch.
@@ -124,6 +140,7 @@ A file belongs here only if it is one of:
 - current authority,
 - current frozen spec,
 - active debt/cleanup ledger,
-- explicitly retained reference.
+- explicitly retained reference,
+- recent planning-adjacent audit.
 
 Everything else belongs in history.

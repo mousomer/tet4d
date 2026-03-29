@@ -72,7 +72,7 @@ _LEGACY_EDGE_LABELS = {
 
 def _mode_value_text(state: TopologyLabState) -> str:
     if state.gameplay_mode == "explorer":
-        return "Explorer Playground"
+        return "Topology Playground"
     return "Normal Game (legacy compat)"
 
 

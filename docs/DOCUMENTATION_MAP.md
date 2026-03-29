@@ -11,10 +11,10 @@ Use it to answer two questions first:
 
 ### 1. Entry and routing
 
-These files tell readers where truth lives.
+These files help readers enter the docs layer.
 
-- `docs/README.md`
-- `docs/DOCUMENTATION_MAP.md`
+- `docs/README.md` (landing page only)
+- `docs/DOCUMENTATION_MAP.md` (routing and ownership authority)
 
 ### 2. Architecture and structure
 
@@ -32,6 +32,7 @@ or debt ledgers.
 - `docs/plans/plan_authority_map.md`
 - `docs/plans/cleanup_master_plan.md`
 - domain-specific active plan files under `docs/plans/`
+- recent planning-adjacent audits under `docs/plans/audits/`
 
 ### 4. Current execution state
 
@@ -53,7 +54,9 @@ These files define contributor process, policy, and verification workflow.
 
 - `docs/RDS_AND_CODEX.md`
 - `docs/policies/*`
-- policy manifests under `config/project/policy/manifests/`
+- top-level governance in `config/project/policy/governance.json` and
+  `config/project/policy/code_rules.json`
+- domain-specific contracts under `config/project/policy/manifests/`
 
 ### 7. Generated references
 
@@ -139,6 +142,9 @@ Owns open work and current change footprint.
 It is not the product contract.
 
 ## Reader shortcuts
+
+- If you need the docs entrypoint only: use `docs/README.md`.
+- If you need routing or precedence: use `docs/DOCUMENTATION_MAP.md`.
 
 - If you need the current repo architecture: start with
   `docs/ARCHITECTURE_CONTRACT.md`.

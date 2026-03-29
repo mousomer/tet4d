@@ -1395,7 +1395,7 @@ def _run_experiments(state: _TopologyLabState) -> None:
         if not _uses_general_explorer_editor(state):
             _set_status(
                 state,
-                "Experiment packs are only available in Explorer Playground",
+                "Experiment packs are only available in Topology Playground",
                 is_error=True,
             )
             return

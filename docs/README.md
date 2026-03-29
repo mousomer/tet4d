@@ -1,45 +1,25 @@
 # Documentation Index
 
-This repository documentation is unified into exactly three sections.
+Start with `docs/DOCUMENTATION_MAP.md`.
+It is the routing and ownership authority for this repository's documentation.
 
-## 1. Project structure and documentation
+Use this file only as a short landing page.
+Do not treat it as a second taxonomy or precedence map.
 
-- `docs/PROJECT_STRUCTURE.md`
-- `docs/FEATURE_MAP.md`
-- `docs/CONFIGURATION_REFERENCE.md`
-- `docs/USER_SETTINGS_REFERENCE.md`
-- `docs/CHANGELOG.md`
-- `docs/RELEASE_INSTALLERS.md`
+## Common starting points
 
-## 2. README.md for usage
+- Routing and ownership: `docs/DOCUMENTATION_MAP.md`
+- Contributor workflow and verification: `docs/RDS_AND_CODEX.md`
+- Current execution state: `CURRENT_STATE.md`, `docs/BACKLOG.md`
+- Active planning: `docs/plans/README.md`
+- Durable product contracts: `docs/rds/README.md`
+- Policies and governance: `docs/policies/INDEX.md`, `config/project/policy/governance.json`, `config/project/policy/code_rules.json`
+- Generated references: `docs/CONFIGURATION_REFERENCE.md`, `docs/USER_SETTINGS_REFERENCE.md`
+- Release/help docs: `docs/RELEASE_CHECKLIST.md`, `docs/RELEASE_INSTALLERS.md`, `docs/help/HELP_INDEX.md`
 
-- `README.md`
+## Notes
 
-## 3. RDS files and other instructions for CODEX
-
-- `docs/RDS_AND_CODEX.md`
-- `docs/BACKLOG.md` (canonical open TODO/backlog tracking)
-- `docs/SECURITY_AND_CONFIG_PLAN.md` (repo-level secret and config externalization policy)
-- `config/project/policy/manifests/canonical_maintenance.json` (machine-checked maintenance contract)
-- `config/project/io_paths.json` (externalized repo I/O path defaults)
-- `config/project/constants.json` (externalized shared constants)
-- `config/project/policy/manifests/secret_scan.json` (secret scan policy patterns/excludes)
-- `config/help/topics.json` (help-topic registry)
-- `config/help/action_map.json` (action-to-help-topic mapping contract)
-- `tools/governance/validate_project_contracts.py` (contract validator used by CI)
-- `tools/governance/scan_secrets.py` (secret pattern scanner used by local CI/CI)
-- `config/schema/` (canonical persisted-data schemas)
-- `docs/migrations/` (migration ledgers)
-- `config/project/policy/manifests/replay_manifest.json` (replay-contract manifest)
-- `docs/help/HELP_INDEX.md` (canonical help index)
-- `docs/RELEASE_CHECKLIST.md` (release gate checklist)
-- `docs/rds/RDS_TETRIS_GENERAL.md`
-- `docs/rds/RDS_KEYBINDINGS.md`
-- `docs/rds/RDS_MENU_STRUCTURE.md`
-- `docs/rds/RDS_PLAYBOT.md`
-- `docs/rds/RDS_SCORE_ANALYZER.md`
-- `docs/rds/RDS_PACKAGING.md`
-- `docs/rds/RDS_FILE_FETCH_LIBRARY.md`
-- `docs/rds/RDS_2D_TETRIS.md`
-- `docs/rds/RDS_3D_TETRIS.md`
-- `docs/rds/RDS_4D_TETRIS.md`
+- Repo usage and setup instructions live in the root `README.md`.
+- Domain-specific manifest contracts remain under
+  `config/project/policy/manifests/`.
+- Historical or retired material lives under `docs/history/`.

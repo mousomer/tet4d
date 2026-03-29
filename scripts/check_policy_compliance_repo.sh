@@ -23,8 +23,8 @@ required_files=(
   "docs/policies/POLICY_STRING_SANITATION.md"
   "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
   "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
-  "config/project/policy/pack.json"
-  "config/project/policy/manifests/project_policy.json"
+  "config/project/policy/governance.json"
+  "config/project/policy/code_rules.json"
   "scripts/ci_preflight.sh"
   "scripts/verify.sh"
 )

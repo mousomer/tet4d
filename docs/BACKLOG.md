@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-22  
+Updated: 2026-03-29  
 Scope: active open backlog, governance watchlist, and current change footprint.
 
 Topology-playground note: current architecture authority lives in
@@ -11,6 +11,23 @@ instructions.
 Active topology-playground plan docs:
 `docs/plans/topology_playground_current_authority.md` and
 `docs/plans/topology_playground_shell_redesign_spec.md`.
+
+Current sub-batch (2026-03-29): compact governance + planning layer consolidation.
+- Root cause: docs routing, plans taxonomy, recent audits, and legacy policy-plan carryovers had drifted into a larger and harder-to-manage surface than the unified governance pack and compact plan layer were supposed to provide.
+- Fix strategy: make `docs/DOCUMENTATION_MAP.md` the only documentation routing authority, reduce `docs/README.md` to a landing page, add `audit` as an explicit plans role with recent reports under `docs/plans/audits/`, align the active topology debt ledger with the already-settled shell-preserving simplification phase, and retire `docs/SECURITY_AND_CONFIG_PLAN.md` to redirect-only status while keeping live policy truth in `config/project/policy/governance.json`, `config/project/policy/code_rules.json`, and the domain-specific manifest contracts.
+
+Current sub-batch (2026-03-29): topology-playground doc authority/spec/status/menu alignment.
+- Root cause: the accepted modern Topology Playground shell contract had already landed in code and focused tests, but the active authority/spec/status/menu docs still mixed in older shell-freeze phrasing and stale menu-IA wording.
+- Fix strategy: align `docs/plans/topology_playground_shell_redesign_spec.md`, `docs/plans/topology_playground_current_authority.md`, `CURRENT_STATE.md`, this backlog, and `docs/rds/RDS_MENU_STRUCTURE.md` around one settled contract: direct modern `Topology Playground` entry, legacy topology editor only at `Settings -> Advanced -> Legacy Topology Editor Menu`, visible workspaces `Editor` / `Sandbox` / `Play`, compact shell layout, minimal helper, diagnostics as secondary surfaces only, probe-as-large-dot and sandbox-cells-as-boxes rendering, and next-phase simplification focused on `controls_panel.py` plus `scene_state.py`.
+- Remaining unfinished topology-playground work after this alignment pass:
+  1. shell-preserving simplification of `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
+  2. shell-preserving simplification of `src/tet4d/ui/pygame/topology_lab/scene_state.py`
+  3. continued compatibility-debt reduction without reopening runtime authority or redesigning the shell
+
+Current sub-batch (2026-03-29): final governance-pack prune after unified manifest cutover.
+- Root cause: runtime governance had already moved to `config/project/policy/governance.json` and `config/project/policy/code_rules.json`, but the repo still carried deleted-in-place legacy pack metadata, validator branches, and contract references that implied the old manifests were still authoritative.
+- Fix strategy: simplify `tools/governance/validate_project_contracts.py` to the unified sources, update canonical maintenance and contributor docs to the new authority set, remove the legacy execution manifests and unused context-router contract, regenerate the maintenance/config references, and re-run the full local gate.
+- Follow-up doc-manifest sync in the same window: imported `docs/docs_structure_batch_manifest.json` from the reduced policy-test pack because `docs/plan_file_set_manifest.json` already matched the reference set while this repo was missing the companion docs-structure manifest entirely.
 
 Current sub-batch (2026-03-22): frozen visible shell redesign for launcher + topology playground.
 - Root cause: the settled topology-playground architecture was stable, but the visible shell still exposed the older stable-shell-cleanup framing: the launcher root stayed too crowded, the playground still led with oversized explanatory copy and always-visible diagnostics, and the default controls surface still mixed contextual controls with cross-workspace status/admin rows.
@@ -687,6 +704,18 @@ Acceptance:
 3. Do not add cinematic tutorial sequences; keep interactive and fast.
 
 ## 5. Change Footprint (Current Batch)
+
+Current sub-batch (2026-03-29): unified governance pack consolidation.
+
+- Added `config/project/policy/governance.json` and `config/project/policy/code_rules.json` as the active consolidated governance and code-rule sources.
+- Added `tools/governance/validate_governance.py` and rewired `scripts/verify.sh` plus `scripts/verify_focus.sh --docs` to use the unified governance gate.
+- Updated the existing governance rule checkers and architecture budget readers to prefer the unified manifests while retaining legacy manifest fallback during the compatibility window.
+- Updated governance docs/state references so repo policy guidance points at the unified manifests first and treats the older manifest pack as compatibility inventory rather than the primary execution surface.
+
+Current sub-batch (2026-03-29): unified governance runtime prune.
+
+- Removed the remaining runtime fallback reads from the governance rule checkers and architecture budget readers so execution now requires `config/project/policy/governance.json` and `config/project/policy/code_rules.json`.
+- Kept the legacy manifest pack on disk only as compatibility inventory and contract material for the later final-prune batch instead of letting runtime enforcement continue to consume it implicitly.
 
 Current sub-batch (2026-03-10): explorer playground experiment packs and recommendation loop.
 

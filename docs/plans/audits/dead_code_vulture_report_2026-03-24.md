@@ -1,9 +1,10 @@
-# Dead Code Report — Vulture 2026-03-24
-
-Role: audit report
+Role: audit
 Status: reference
 Source of truth: vulture 2.15 run against `src/` on 2026-03-24
+Supersedes: none
 Last updated: 2026-03-24
+
+# Dead Code Report — Vulture 2026-03-24
 
 ## Summary
 
@@ -118,121 +119,3 @@ is confirmed decommissioned.
 | `engine/topology_explorer/transport_resolver.py` | 460 | method `seam_for_boundary` | 5 | |
 
 **Subtotal: 5 LOC**
-
-### Engine — tutorial
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `engine/tutorial/events.py` | 9 | variable `EVENT_HINT_SHOWN` | 1 | |
-| `engine/tutorial/manager.py` | 168 | method `clear_predicates` | 2 | |
-| `engine/tutorial/runtime.py` | 119 | function `_is_translation_step` | 4 | |
-| `engine/tutorial/runtime.py` | 125 | function `_is_rotation_step` | 4 | |
-
-**Subtotal: 11 LOC**
-
-### UI — pygame misc
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `ui/pygame/frontend_nd_setup.py` | 57 | variable `RANDOM_MODE_FIXED_INDEX` | 1 | |
-| `ui/pygame/frontend_nd_setup.py` | 58 | variable `RANDOM_MODE_TRUE_RANDOM_INDEX` | 1 | |
-| `ui/pygame/projection3d.py` | 77 | function `clear_projection_lattice_cache` | 2 | |
-| `ui/pygame/projection3d.py` | 81 | function `projection_lattice_cache_keys` | 2 | |
-| `ui/pygame/projection3d.py` | 85 | function `projection_lattice_cache_size` | 2 | |
-
-**Subtotal: 8 LOC**
-
-### UI — pygame render
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `ui/pygame/render/control_icons.py` | 65 | function `clear_action_icon_cache` | 2 | |
-| `ui/pygame/render/control_icons.py` | 69 | function `action_icon_cache_size` | 2 | |
-| `ui/pygame/render/front3d_cell_render.py` | 64 | function `overlay_alpha_label` | 3 | |
-
-**Subtotal: 7 LOC**
-
-### UI — settings hub (snapshot-for-cancel pattern)
-
-These `original_*` attributes store pre-edit values for cancel/revert. They may be
-**intentionally unused at read time** (stored only for cancel paths). Verify the
-cancel flow is actually wired before removing.
-
-| File | Lines | Items | LOC |
-|------|-------|-------|-----|
-| `ui/pygame/launch/settings_hub_actions.py` | 195–213 | 11 `original_*` attributes | ~17 |
-| `ui/pygame/launch/settings_hub_model.py` | 107–120 | 12 `original_*` variables | ~14 |
-
-**Subtotal: ~31 LOC — verify cancel flow before touching**
-
-### UI — runtime UI
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `ui/pygame/runtime_ui/loop_runner_nd.py` | 40 | function `_load_animation_settings_for_dimension` | 3 | |
-| `ui/pygame/runtime_ui/pause_menu.py` | 487 | function `_pause_menu_keydown` | 13 | |
-
-**Subtotal: 16 LOC**
-
-### UI — topology lab launcher
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `ui/pygame/launch/topology_lab_menu.py` | 257 | function `_explorer_sidebar_lines` | 26 | |
-
-**Subtotal: 26 LOC**
-
-### UI — topology lab core
-
-| File | Line | Item | LOC | Notes |
-|------|------|------|-----|-------|
-| `ui/pygame/topology_lab/camera_controls.py` | 24 | variable `mouse_hint` | 1 | |
-| `ui/pygame/topology_lab/camera_controls.py` | 25 | variable `key_hint` | 1 | |
-| `ui/pygame/topology_lab/controls_panel.py` | 662 | function `_explorer_slot_label` | 7 | |
-| `ui/pygame/topology_lab/controls_panel.py` | 972 | function `_reset_to_mode_dimension` | 5 | |
-| `ui/pygame/topology_lab/controls_panel.py` | 1052 | function `_cycle_preset` | 9 | |
-| `ui/pygame/topology_lab/controls_panel.py` | 1094 | function `_cycle_topology_mode` | 9 | |
-| `ui/pygame/topology_lab/piece_sandbox.py` | 75 | function `_rotate_blocks_for_action` | 7 | |
-| `ui/pygame/topology_lab/projection_scene.py` | 173 | function `_coord_matches_slice` | ~5 | |
-| `ui/pygame/topology_lab/projection_scene.py` | 541 | function `_draw_projection_heading` | 30 | |
-| `ui/pygame/topology_lab/state_ownership.py` | 132–174 | ~10 unused dataclass/NamedTuple fields | ~15 | Part of in-progress restructure |
-
-**Subtotal: ~89 LOC**
-
----
-
-## LOC summary
-
-| Category | LOC | Notes |
-|----------|-----|-------|
-| 100% confidence | 4 | Safe to remove |
-| AI / playbot | 45 | `__getattr__` likely false positive (~20 LOC) |
-| Engine — core | 37 | |
-| Engine — gameplay | 75 | 28 LOC likely false positives (frontend bridge) |
-| Engine — help | 26 | |
-| Engine — runtime API | ~60 | **Likely all false positives** (frontend bridge) |
-| Engine — runtime other | 11 | |
-| Engine — topology explorer | 5 | |
-| Engine — tutorial | 11 | |
-| UI — misc | 8 | |
-| UI — render | 7 | |
-| UI — settings hub | ~31 | Verify cancel flow first |
-| UI — runtime UI | 16 | |
-| UI — topology lab launcher | 26 | |
-| UI — topology lab core | ~89 | |
-| **Total** | **~475** | |
-| After excluding likely false positives | **~335** | Excluding frontend bridge (~60 LOC) + `__getattr__` (~20 LOC) |
-
----
-
-## Recommended removal order
-
-1. **100% confidence variables** (4 LOC) — zero risk.
-2. **Topology lab dead helpers** in `controls_panel.py`, `projection_scene.py`,
-   `topology_lab_menu.py` (~89 LOC) — self-contained, no cross-module risk.
-3. **Tutorial dead items** (`events.py`, `manager.py`, `runtime.py`) (11 LOC).
-4. **Engine core orphans** (`piece_transform.py`, `board.py`, `rng`) (37 LOC).
-5. **Help system cache/validate functions** (26 LOC).
-6. **Confirm cancel flow** before removing `original_*` settings hub fields (~31 LOC).
-7. **Confirm frontend bridge is live** before touching any `*_runtime` functions in
-   `api.py` files (~60 LOC).

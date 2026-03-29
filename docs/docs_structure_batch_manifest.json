@@ -1,0 +1,13 @@
+{
+  "replacements": [
+    "docs/README.md",
+    "docs/RDS_AND_CODEX.md",
+    "CURRENT_STATE.md",
+    "docs/rds/RDS_MENU_STRUCTURE.md",
+    "docs/rds/RDS_TETRIS_GENERAL.md"
+  ],
+  "notes": [
+    "These are patch-ready replacements for existing tracked files.",
+    "Two new files were already added directly on the branch earlier: docs/DOCUMENTATION_MAP.md and docs/rds/README.md."
+  ]
+}

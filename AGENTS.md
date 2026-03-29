@@ -27,21 +27,17 @@ Primary sources:
   `docs/plans/topology_playground_current_authority.md`
 - Policy docs: `docs/policies/`
 - Policy index: `docs/policies/INDEX.md`
-- Policy pack root: `config/project/policy/pack.json`
-- Policy manifest: `config/project/policy/manifests/project_policy.json`
-- Contributor directives manifest: `config/project/policy/manifests/contributor_directives.json`
-- Risk gates manifest: `config/project/policy/manifests/risk_gates.json`
+- Unified governance manifest: `config/project/policy/governance.json`
+- Unified code-rules manifest: `config/project/policy/code_rules.json`
 - Canonical maintenance contract:
   - `config/project/policy/manifests/canonical_maintenance.json`
   - `tools/governance/validate_project_contracts.py`
   - `tools/governance/check_risk_gates.py`
-- Context router:
-  - `config/project/policy/manifests/context_router_manifest.json`
 
 Supporting governance / metrics sources:
 
 - Tech debt budgets:
-  - `config/project/policy/manifests/tech_debt_budgets.json`
+  - `config/project/policy/governance.json` (`tech_debt_budget`)
 - Canonical machine-readable debt backlog:
   - `config/project/backlog_debt.json`
 - Backlog / scope tracking:

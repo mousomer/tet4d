@@ -260,7 +260,7 @@ def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
     settings = _ensure_play_settings(state)
     dims = list(_board_dims_for_state(state))
     lines = [
-        f"Explorer Playground {state.dimension}D",
+        f"Topology Playground {state.dimension}D",
         "Presets, board size, seam editing, sandbox play, and launch all happen in this shell.",
         f"Board: {dims}",
         f"Piece set: {_explorer_piece_set_label(state)}",
@@ -772,11 +772,33 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
             else (224, 92, 92) if validity_text == "Unsafe" else (238, 158, 116)
         )
         chip_text = fonts.hint_font.render(validity_text, True, validity_color)
+        dimension_text = f"{state.dimension}D"
+        dimension_label = fonts.hint_font.render(dimension_text, True, _MUTED_COLOR)
+        dimension_rect = pygame.Rect(
+            top_bar_rect.right
+            - dimension_label.get_width()
+            - 88
+            - chip_text.get_width(),
+            top_bar_rect.y + 8,
+            dimension_label.get_width() + 22,
+            28,
+        )
         chip_rect = pygame.Rect(
             top_bar_rect.right - chip_text.get_width() - 38,
             top_bar_rect.y + 8,
             chip_text.get_width() + 22,
             28,
+        )
+        pygame.draw.rect(screen, (22, 28, 48), dimension_rect, border_radius=14)
+        pygame.draw.rect(screen, (82, 96, 132), dimension_rect, 1, border_radius=14)
+        screen.blit(
+            dimension_label,
+            (
+                dimension_rect.x
+                + (dimension_rect.width - dimension_label.get_width()) // 2,
+                dimension_rect.y
+                + (dimension_rect.height - dimension_label.get_height()) // 2,
+            ),
         )
         pygame.draw.rect(screen, (22, 28, 48), chip_rect, border_radius=14)
         pygame.draw.rect(screen, validity_color, chip_rect, 1, border_radius=14)

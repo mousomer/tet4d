@@ -4,15 +4,17 @@ Role: authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-03-22
+Last updated: 2026-03-29
 
 ## Purpose
 
 Use this file first for topology-playground architecture, precedence,
-ownership, invariants, and non-goals.
+ownership, accepted invariants, current phase boundaries, and explicit
+non-goals.
 
 Older topology-playground manifests, stage plans, audits, and historical
-summaries are background only unless a future task explicitly reactivates them.
+summaries are background only unless a future task explicitly reactivates
+them.
 
 Visible-shell detail belongs in
 `docs/plans/topology_playground_shell_redesign_spec.md`.
@@ -77,7 +79,19 @@ Transitional debt belongs in
 - Retained shell fields, where still present, are synchronized compatibility
   projections or true shell-owned caches only. They are not truth sources.
 
-## Accepted invariants
+## Accepted visible-shell invariants
+
+- The accepted visible shell is the frozen shell defined in
+  `docs/plans/topology_playground_shell_redesign_spec.md`.
+- The shell keeps a compact top bar, contextual operational left sidebar,
+  larger center workspace, readable minimal right helper, and compact bottom
+  strip.
+- Diagnostics remain secondary surfaces and do not replace the default
+  workspace sidebar.
+- The helper remains minimal in scope, not a second menu, and does not surface
+  diagnostics.
+
+## Accepted rendering invariants
 
 ### Editor / Probe
 
@@ -89,7 +103,7 @@ Transitional debt belongs in
   supported dimension.
 - Toggling `Trace` must not disable probe movement or hide the probe/dot
   itself.
-- The Editor probe must render as a dot rather than as sandbox-style box
+- The Editor probe must render as a large dot rather than as sandbox-style box
   geometry in `2D`, `3D`, and `4D`.
 - The probe trace visual language is the connecting trace line itself.
   Intermediate path dots are intentionally removed.
@@ -113,41 +127,44 @@ Transitional debt belongs in
 - Sandbox `Neighbors` and Editor `Probe Neighbors` are distinct overlays with
   distinct ownership and must stay documented and implemented separately.
 
-### Shell-level invariants
+### Shell-level readability
 
 - Menu items and critical controls must remain fully visible; clipped, hidden,
   or unreadable items are regressions.
 - The helper panel must stay visible outside the main explorer panel / viewport
-  and remain minimal.
-- Helper content is not a second menu and must not become a shadow control
-  surface.
+  and remain readable enough to fully show movement and rotation keys plus at
+  most one short workspace/tool context line.
 
 ## Current phase
 
-The current topology-playground phase is the frozen visible-shell redesign
-phase.
+The visible-shell redesign and panel-correction pass are landed.
+
+The current topology-playground phase is shell-preserving implementation
+simplification around the frozen visible shell.
 
 This phase is intentionally limited to:
 
-- launcher first-layer cleanup,
-- topology-playground visible-shell redesign,
-- visible wording cleanup,
-- diagnostics demotion behind secondary surfaces,
-- manifest/doc/test drift prevention while the shell contract is being frozen.
+- structural simplification around the accepted shell
+- compatibility cleanup that preserves the accepted shell
+- doc/manifold/test drift prevention for the settled shell contract
+- preserving canonical runtime-selector authority while trimming retained UI
+  complexity
+
+Primary refactor targets in this phase:
+
+- `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
+- `src/tet4d/ui/pygame/topology_lab/scene_state.py`
 
 This phase must preserve the settled architecture rules above.
 It must not reopen the accepted `Editor` / `Sandbox` / `Play` workspace model,
-the accepted sandbox-first entry path, the canonical runtime-selector
-authority, or the settled Play drop-policy contract.
-
-Structural module simplification remains deferred until the visible shell
-contract is stable.
+the accepted sandbox-first entry path, the current helper/diagnostics contract,
+the canonical runtime-selector authority, the probe rendering contract, or the
+settled Play drop-policy contract.
 
 ## Current active priorities
 
 - Keep canonical runtime state as the only explorer-path input authority.
-- Keep launcher/setup surfaces minimal for topology and keep custom-topology
-  editing/play flowing through the playground shell.
+- Preserve the frozen visible shell while simplifying its implementation.
 - Keep `Topology Playground` as a direct modern launcher entry with no
   modern-vs-legacy submenu split.
 - Keep the legacy topology editor/menu out of `Topology Playground`,
@@ -162,9 +179,9 @@ contract is stable.
 
 - Do not silently reopen the settled `Editor` / `Sandbox` / `Play` workspace
   split.
-- Do not silently reopen the settled Play drop-policy distinction between
-  deliberate translation and drop continuation unless a regression proves it
-  wrong.
+- Do not redesign the visible shell in this phase.
+- Do not move the legacy topology editor back into the modern playground flow.
+- Do not change the accepted probe rendering contract.
 - Do not let retained shell projections or transitional legacy helpers drift
   back into truth ownership.
 - Do not treat historical manifests as active execution authority.

@@ -88,12 +88,9 @@
       "config/project/io_paths.json",
       "config/project/constants.json",
       "config/project/folder_balance_budgets.json",
-      "config/project/policy/manifests/tech_debt_budgets.json",
       "config/project/backlog_debt.json",
       "config/project/policy/manifests/secret_scan.json",
-      "config/project/policy/manifests/canonical_maintenance.json",
-      "config/project/policy/manifests/architecture_metrics.json",
-      "config/project/policy/manifests/drift_protection.json"
+      "config/project/policy/manifests/canonical_maintenance.json"
     ],
     "ci_scripts": [
       "scripts/bootstrap_env.sh",
@@ -138,16 +135,8 @@
       "docs/policies/POLICY_FORMATTING.md",
       "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
       "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
-      "config/project/policy/pack.json",
-      "config/project/policy/manifests/project_policy.json",
-      "config/project/policy/manifests/policy_registry.json",
-      "config/project/policy/manifests/context_router_manifest.json",
-      "config/project/policy/manifests/contributor_directives.json",
-      "config/project/policy/manifests/risk_gates.json",
-      "config/project/policy/manifests/policy_runtime_rules.json",
-      "config/project/policy/manifests/wheel_reuse_rules.json",
-      "config/project/policy/manifests/loc_guidance.json",
-      "config/project/policy/manifests/dedup_dead_code_rules.json",
+      "config/project/policy/governance.json",
+      "config/project/policy/code_rules.json",
       ".githooks/pre-push"
     ],
     "packaging_scripts": [
@@ -161,15 +150,12 @@
     {
       "file": "docs/policies/INDEX.md",
       "must_contain": [
-        "config/project/policy/manifests/contributor_directives.json",
-        "config/project/policy/manifests/risk_gates.json",
-        "config/project/policy/manifests/policy_runtime_rules.json",
-        "config/project/policy/manifests/wheel_reuse_rules.json",
-        "config/project/policy/manifests/loc_guidance.json",
-        "config/project/policy/manifests/dedup_dead_code_rules.json",
-        "config/project/policy/manifests/policy_registry.json",
-        "config/project/policy/manifests/drift_protection.json",
-        "config/project/policy/manifests/project_policy.json",
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
+        "config/project/policy/manifests/canonical_maintenance.json",
+        "config/project/policy/manifests/secret_scan.json",
+        "config/project/policy/manifests/replay_manifest.json",
+        "config/project/policy/manifests/help_assets_manifest.json",
         "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
         "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
       ]
@@ -243,14 +229,14 @@
         "RDS index",
         "Testing instructions",
         "scripts/ci_preflight.sh",
-        "config/project/policy/manifests/contributor_directives.json",
         "docs/BACKLOG.md",
         "docs/rds/RDS_PACKAGING.md",
         "docs/CONFIGURATION_REFERENCE.md",
         "docs/USER_SETTINGS_REFERENCE.md",
         "do not treat partial progress as completion",
         "add new modules first, route one flow to them, verify, and only then remove old paths",
-        "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers"
+        "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers",
+        "config/project/policy/governance.json"
       ],
       "must_not_match_regex": [
         "\\b\\d+\\s+passed\\b",
@@ -276,11 +262,12 @@
       "must_contain": [
         "docs/RDS_AND_CODEX.md",
         "docs/policies/",
-        "config/project/policy/manifests/contributor_directives.json",
         "config/project/policy/manifests/canonical_maintenance.json",
         "tools/governance/validate_project_contracts.py",
         "./scripts/verify.sh",
-        "config/project/io_paths.json"
+        "config/project/io_paths.json",
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json"
       ]
     },
     {
@@ -298,14 +285,9 @@
         "#!/usr/bin/env bash",
         "set -euo pipefail",
         "CODEX_MODE=\"${CODEX_MODE:-0}\"",
-        "run_step \"contracts\"",
+        "run_step \"governance\"",
         "run_step \"maintenance_docs\"",
-        "run_step \"drift_protection\"",
-        "run_step \"risk_gates\"",
-        "run_step \"policy_runtime_rules\"",
-        "run_step \"wheel_reuse_rules\"",
-        "run_step \"loc_guidance\"",
-        "run_step \"dedup_dead_code_rules\"",
+        "tools/governance/validate_governance.py",
         "echo \"verify: OK\"",
         "check_architecture_metrics_soft_gate.sh"
       ]
@@ -325,37 +307,6 @@
       ]
     },
     {
-      "file": "config/project/policy/manifests/project_policy.json",
-      "must_contain": [
-        "\"project_name\": \"tet4d\"",
-        "\"verification_command\": \"./scripts/verify.sh\"",
-        "\"ci_entrypoint\": \"./scripts/ci_check.sh\"",
-        "\"contract_validation\": \"python3 tools/governance/validate_project_contracts.py\"",
-        "\"secret_scan\": \"python3 tools/governance/scan_secrets.py\"",
-        "\"policy_id\": \"workspace-github-sanitation-and-security\"",
-        "\"policy_source\": \"workspace/policy-kit\"",
-        "\"enforcement\"",
-        "\"scripts/check_policy_template_drift.sh\"",
-        "\"extended_enforcement\"",
-        "\"scripts/check_policy_compliance_repo.sh\"",
-        "\"scripts/check_git_sanitation_repo.sh\"",
-        "\"risk_gates\"",
-        "\"tools/governance/check_risk_gates.py\"",
-        "\"policy_runtime_rules\"",
-        "\"tools/governance/check_policy_runtime_rules.py\"",
-        "\"wheel_reuse_rules\"",
-        "\"tools/governance/check_wheel_reuse_rules.py\"",
-        "\"loc_guidance\"",
-        "\"tools/governance/check_loc_guidance.py\"",
-        "\"dedup_dead_code_rules\"",
-        "\"tools/governance/check_dedup_dead_code_rules.py\""
-      ],
-      "must_match_regex": [
-        "\\\"policy_version\\\"\\s*:\\s*\\\"1\\.1\\.\\d+\\\"",
-        "\\\"policy_source_path\\\"\\s*:\\s*\\\"(\\$\\{HOME\\}/workspace/policy-kit|/[^\\\"\\n]+)\\\""
-      ]
-    },
-    {
       "file": ".github/workflows/ci.yml",
       "must_contain": [
         "SDL_VIDEODRIVER: dummy",
@@ -371,12 +322,14 @@
     {
       "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
       "must_contain": [
-        "## 2. Secret scanning policy",
+        "compatibility redirect only",
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
         "config/project/policy/manifests/secret_scan.json",
         "tools/governance/scan_secrets.py",
-        "## 3. Path/config externalization policy",
         "config/project/io_paths.json",
-        "config/project/constants.json"
+        "config/project/constants.json",
+        "docs/history/plans/security_and_config_externalization_plan.md"
       ]
     },
     {
@@ -434,20 +387,6 @@
       ]
     },
     {
-      "file": "config/project/policy/manifests/tech_debt_budgets.json",
-      "must_contain": [
-        "\"schema_version\"",
-        "\"gate_mode\"",
-        "\"score_epsilon\"",
-        "\"baseline\"",
-        "\"scoring\"",
-        "\"component_weights\"",
-        "\"priority_weights\"",
-        "\"delivery_size_pressure\"",
-        "\"delivery_size\""
-      ]
-    },
-    {
       "file": "config/project/backlog_debt.json",
       "must_contain": [
         "\"schema_version\"",
@@ -461,7 +400,7 @@
         "evaluate_architecture_metric_budget_overages",
         "evaluate_folder_balance_gate",
         "evaluate_tech_debt_gate",
-        "config/project/policy/manifests/tech_debt_budgets.json"
+        "config/project/policy/governance.json"
       ]
     },
     {
@@ -611,7 +550,8 @@
       "file": "scripts/check_policy_compliance_repo.sh",
       "must_contain": [
         "AGENTS.md",
-        "config/project/policy/manifests/project_policy.json",
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
         "python3 tools/governance/validate_project_contracts.py",
         "python3 tools/governance/scan_secrets.py",
         "scripts/check_engine_core_purity.sh",
@@ -659,7 +599,8 @@
       ],
       "must_contain": [
         "docs/CONFIGURATION_REFERENCE.md",
-        "docs/USER_SETTINGS_REFERENCE.md"
+        "docs/USER_SETTINGS_REFERENCE.md",
+        "config/project/policy/governance.json"
       ]
     },
     {
@@ -828,7 +769,7 @@
         "scripts/arch_metrics.py",
         "scripts/check_architecture_metric_budgets.sh",
         "config/project/folder_balance_budgets.json",
-        "config/project/policy/manifests/tech_debt_budgets.json",
+        "config/project/policy/governance.json",
         "tools/governance/folder_balance_budget.py",
         "tools/governance/tech_debt_budget.py"
       ],

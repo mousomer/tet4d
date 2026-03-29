@@ -129,7 +129,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             patch.object(
                 front,
                 "run_explorer_playground",
-                return_value=(True, "Explorer playground saved"),
+                return_value=(True, "Topology Playground saved"),
             ) as run_playground,
         ):
             close = front._menu_action_topology_lab(
@@ -139,13 +139,14 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             )
 
         self.assertFalse(close)
-        self.assertEqual(state.status, "Explorer playground saved")
+        self.assertEqual(state.status, "Topology Playground saved")
         self.assertFalse(state.status_error)
         run_playground.assert_called_once()
         launch = run_playground.call_args.kwargs["launch"]
         self.assertEqual(launch.dimension, 3)
         self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
+        self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
 
     def test_legacy_topology_editor_action_is_settings_only_legacy_launch(self) -> None:
         state = front.MainMenuState(last_mode="4d")

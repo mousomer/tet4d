@@ -11,14 +11,14 @@ from .scene_state import uses_general_explorer_editor
 
 def _safe_lab_payload() -> dict[str, Any]:
     fallback = {
-        "title": "Explorer Playground",
-        "subtitle": "Scene-first explorer playground with synchronized 2D coordinate-plane projections for live traversal, presets, sandbox play, and seam editing.",
+        "title": "Topology Playground",
+        "subtitle": "Scene-first topology playground with synchronized 2D coordinate-plane projections for live traversal, presets, sandbox play, and seam editing.",
         "hints": (
             "Up/Down select row",
             "Left/Right change values",
             "Enter triggers Save/Export/Back",
             "Normal Game locks Y boundaries",
-            "Explorer Playground keeps presets, board size, seam editing, and play on one screen",
+            "Topology Playground keeps presets, board size, seam editing, and play on one screen",
         ),
         "status_copy": {
             "saved": "Saved topology profile for {mode_label} {dimension}D",
@@ -52,19 +52,19 @@ LAB_STATUS_COPY = dict(_LAB_COPY["status_copy"])
 
 def display_title_for_state(state: Any) -> str:
     if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
-        return f"Explorer Playground {state.dimension}D"
+        return f"Topology Playground {state.dimension}D"
     return f"{LAB_TITLE} (Legacy Compatibility)"
 
 
 def topology_note_text(state: Any) -> str:
     if uses_general_explorer_editor(state):
         return (
-            f"Explorer Playground {state.dimension}D is the live shell for seam editing, inspect traversal, piece movement, and play from the current draft topology. "
+            f"Topology Playground {state.dimension}D is the live shell for seam editing, inspect traversal, piece movement, and play from the current draft topology. "
             "For 3D and 4D, the primary scene now uses synchronized 2D coordinate-plane projections with explicit hidden-coordinate slices so selection and sandbox movement stay readable across panels."
         )
     return (
         "Legacy compatibility surface: retained Normal Game rows and the resolved-profile export bridge remain isolated here through the transitional legacy-normal-mode support seam. "
-        "Use Explorer Playground for the current seam editor, sandbox workflow, and direct play launch. "
+        "Use Topology Playground for the current seam editor, sandbox workflow, and direct play launch. "
         f"{topology_profile_note(state.gameplay_mode)}"
     )
 

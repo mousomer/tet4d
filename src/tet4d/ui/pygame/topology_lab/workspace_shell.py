@@ -720,7 +720,7 @@ def _hint_lines_for_state(state) -> tuple[str, ...]:
     if not _uses_general_explorer_editor(state):
         return (
             *_LAB_HINTS,
-            "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Explorer Playground is the primary editor.",
+            "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Topology Playground is the primary editor.",
         )
     lines = list(_workspace_helper_lines(state))
     if _controls_pane_active(state):

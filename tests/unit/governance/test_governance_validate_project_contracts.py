@@ -11,71 +11,33 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def test_policy_registry_sync_passes(tmp_path: Path, monkeypatch) -> None:
-    policy_path = tmp_path / "project_policy.json"
-    registry_path = tmp_path / "policy_registry.json"
-    payload = {
-        "policy_pack": {
-            "registry_manifest": "config/project/policy/manifests/policy_registry.json",
-            "policies": [
-                {"id": "formatting", "source": "docs/policies/POLICY_FORMATTING.md"}
-            ],
-            "contracts": [
-                {
-                    "id": "canonical_maintenance",
-                    "path": "config/project/policy/manifests/canonical_maintenance.json",
-                    "validated_by": "tools/governance/validate_project_contracts.py",
-                }
-            ],
-        }
-    }
-    _write_json(policy_path, payload)
+def test_policy_index_sync_detects_missing_unified_contract_token(
+    tmp_path: Path, monkeypatch
+) -> None:
+    governance_path = tmp_path / "config" / "project" / "policy" / "governance.json"
     _write_json(
-        registry_path,
+        governance_path,
         {
-            "policies": payload["policy_pack"]["policies"],
-            "contracts": payload["policy_pack"]["contracts"],
-        },
-    )
-    monkeypatch.setattr(contracts, "PROJECT_POLICY_PATH", policy_path)
-    monkeypatch.setattr(contracts, "POLICY_REGISTRY_PATH", registry_path)
-    issues = contracts._validate_policy_registry_sync()
-    assert issues == []
-
-
-def test_policy_registry_sync_detects_drift(tmp_path: Path, monkeypatch) -> None:
-    policy_path = tmp_path / "project_policy.json"
-    registry_path = tmp_path / "policy_registry.json"
-    _write_json(
-        policy_path,
-        {
-            "policy_pack": {
-                "registry_manifest": "config/project/policy/manifests/policy_registry.json",
-                "policies": [
-                    {"id": "formatting", "source": "docs/policies/POLICY_FORMATTING.md"}
-                ],
-                "contracts": [
-                    {
-                        "id": "canonical_maintenance",
-                        "path": "config/project/policy/manifests/canonical_maintenance.json",
-                        "validated_by": "tools/governance/validate_project_contracts.py",
-                    }
-                ],
+            "contracts": {
+                "canonical_maintenance": "config/project/policy/manifests/canonical_maintenance.json",
+                "secret_scan": "config/project/policy/manifests/secret_scan.json",
             }
         },
     )
-    _write_json(
-        registry_path,
-        {
-            "policies": [],
-            "contracts": [],
-        },
+    index_path = tmp_path / "docs" / "policies" / "INDEX.md"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(
+        "config/project/policy/governance.json\nconfig/project/policy/code_rules.json\n",
+        encoding="utf-8",
     )
-    monkeypatch.setattr(contracts, "PROJECT_POLICY_PATH", policy_path)
-    monkeypatch.setattr(contracts, "POLICY_REGISTRY_PATH", registry_path)
-    issues = contracts._validate_policy_registry_sync()
+
+    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", governance_path)
+    monkeypatch.setattr(contracts, "POLICY_INDEX_PATH", index_path)
+
+    issues = contracts._validate_policy_index_sync()
+
     assert issues
-    assert any("out of sync" in issue.message for issue in issues)
+    assert any("canonical_maintenance.json" in issue.message for issue in issues)
 
 
 def test_policy_manifest_string_safety_detects_path_like_literals(
@@ -83,19 +45,16 @@ def test_policy_manifest_string_safety_detects_path_like_literals(
 ) -> None:
     policy_root = tmp_path / "config" / "project" / "policy"
     manifests_dir = policy_root / "manifests"
-    _write_json(policy_root / "pack.json", {"version": "test"})
+    path_like_literal = r"value:[ \t]*\n[ \t]*" + "C:" + r"\\temp"
+    _write_json(policy_root / "governance.json", {"schema_version": 1})
+    _write_json(policy_root / "code_rules.json", {"schema_version": 1})
     _write_json(
-        manifests_dir / "wheel_reuse_rules.json",
-        {
-            "rules": [
-                {
-                    "id": "test",
-                    "forbidden_regex": [r"value:[ \\t]*\n[ \\t]*t:" + r"\s*"],
-                }
-            ]
-        },
+        manifests_dir / "help_assets_manifest.json",
+        {"rules": [{"id": "test", "example": path_like_literal}]},
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", policy_root / "governance.json")
+    monkeypatch.setattr(contracts, "CODE_RULES_PATH", policy_root / "code_rules.json")
     monkeypatch.setattr(contracts, "POLICY_MANIFEST_DIR", manifests_dir)
     issues = contracts._validate_policy_manifest_string_safety()
     assert issues
@@ -107,19 +66,23 @@ def test_policy_manifest_string_safety_allows_clean_manifests(
 ) -> None:
     policy_root = tmp_path / "config" / "project" / "policy"
     manifests_dir = policy_root / "manifests"
-    _write_json(policy_root / "pack.json", {"version": "test"})
+    _write_json(policy_root / "governance.json", {"schema_version": 1})
+    _write_json(policy_root / "code_rules.json", {"schema_version": 1})
     _write_json(
-        manifests_dir / "wheel_reuse_rules.json",
+        manifests_dir / "help_assets_manifest.json",
         {"rules": [{"id": "test", "forbidden_regex": [r"value:[ \t]*\n[ \t]*x"]}]},
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", policy_root / "governance.json")
+    monkeypatch.setattr(contracts, "CODE_RULES_PATH", policy_root / "code_rules.json")
     monkeypatch.setattr(contracts, "POLICY_MANIFEST_DIR", manifests_dir)
     issues = contracts._validate_policy_manifest_string_safety()
     assert issues == []
 
-def test_contributor_directives_include_staged_migration_contract() -> None:
-    payload = json.loads(contracts.CONTRIBUTOR_DIRECTIVES_PATH.read_text(encoding="utf-8"))
-    directives = payload["directives"]
+
+def test_governance_directives_include_staged_migration_contract() -> None:
+    payload = json.loads(contracts.GOVERNANCE_PATH.read_text(encoding="utf-8"))
+    directives = payload["contributor_directives"]["directives"]
     directive_ids = {item["id"] for item in directives}
     assert {
         "staged_migration_honesty",
@@ -142,4 +105,3 @@ def test_rds_and_codex_rule_requires_control_contract_tokens() -> None:
         "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers"
         in must_contain
     )
-

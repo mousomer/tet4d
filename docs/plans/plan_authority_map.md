@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file for planning-document ownership and precedence
 Supersedes: ad hoc ownership notes spread across active planning docs
-Last updated: 2026-03-22
+Last updated: 2026-03-29
 
 ## Purpose
 
@@ -24,6 +24,7 @@ planning redirection notes.
 | Topology-playground visible shell contract | `topology_playground_shell_redesign_spec.md` |
 | Topology-playground transitional debt | `topology_playground_debt_register.md` |
 | Domain reference material retained in active plans | reference files only |
+| Recent planning-adjacent audits | `audits/*` |
 | Completed one-off pass notes | history only |
 
 ## Conflict rule
@@ -35,8 +36,9 @@ When documents disagree, precedence is:
 3. owning active `authority` document
 4. owning active or frozen `spec` document
 5. active `ledger` documents
-6. `reference` documents
-7. historical documents
+6. recent `audit` documents
+7. `reference` documents
+8. historical documents
 
 If a lower-precedence file conflicts with a higher-precedence file, fix the
 lower-precedence file in the same batch.

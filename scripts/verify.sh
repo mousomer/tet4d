@@ -124,15 +124,9 @@ run_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
 
-run_step "contracts"      "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+run_step "governance"     "$PYTHON_BIN" tools/governance/validate_governance.py
 run_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
 run_step "maintenance_docs" "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
-run_step "drift_protection" "$PYTHON_BIN" tools/governance/check_drift_protection.py
-run_step "risk_gates"     "$PYTHON_BIN" tools/governance/check_risk_gates.py
-run_step "policy_runtime_rules" "$PYTHON_BIN" tools/governance/check_policy_runtime_rules.py
-run_step "wheel_reuse_rules" "$PYTHON_BIN" tools/governance/check_wheel_reuse_rules.py
-run_step "loc_guidance"   "$PYTHON_BIN" tools/governance/check_loc_guidance.py
-run_step "dedup_dead_code_rules" "$PYTHON_BIN" tools/governance/check_dedup_dead_code_rules.py
 run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 

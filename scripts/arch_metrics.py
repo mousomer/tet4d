@@ -11,14 +11,29 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 TARGET_SRC_ROOT = REPO_ROOT / "src/tet4d"
 SRC_LAYOUT_ROOT = REPO_ROOT / "src"
 FOLDER_BALANCE_BUDGETS_PATH = REPO_ROOT / "config/project/folder_balance_budgets.json"
-TECH_DEBT_BUDGETS_PATH = (
-    REPO_ROOT / "config/project/policy/manifests/tech_debt_budgets.json"
-)
+GOVERNANCE_PATH = REPO_ROOT / "config/project/policy/governance.json"
 BACKLOG_DEBT_PATH = REPO_ROOT / "config/project/backlog_debt.json"
 MENU_STRUCTURE_PATH = REPO_ROOT / "config/menu/structure.json"
-ARCH_METRICS_CONFIG_PATH = (
-    REPO_ROOT / "config/project/policy/manifests/architecture_metrics.json"
-)
+
+
+def _initial_governance_payload() -> dict[str, Any] | None:
+    if not GOVERNANCE_PATH.exists():
+        return None
+    payload = json.loads(GOVERNANCE_PATH.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) else None
+
+
+def _initial_arch_stage() -> int:
+    payload = _initial_governance_payload()
+    if not isinstance(payload, dict):
+        return 900
+    architecture = payload.get("architecture")
+    if not isinstance(architecture, dict):
+        return 900
+    raw = architecture.get("arch_stage", 900)
+    return raw if isinstance(raw, int) else 900
+
+
 POLICY_KIT_DIR = Path(
     __import__("os").environ.get(
         "POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit")
@@ -195,7 +210,7 @@ TECH_DEBT_STATUS_ORDER = {
     "high": 2,
     "critical": 3,
 }
-ARCH_STAGE = 900
+ARCH_STAGE = _initial_arch_stage()
 
 
 def _py_files(root: Path) -> list[Path]:
@@ -517,12 +532,21 @@ def _folder_balance_gate_config() -> dict[str, Any] | None:
 
 
 def _tech_debt_gate_config() -> dict[str, Any] | None:
-    return _read_json_if_exists(TECH_DEBT_BUDGETS_PATH)
+    governance = _read_json_if_exists(GOVERNANCE_PATH)
+    if isinstance(governance, dict):
+        tech_debt_budget = governance.get("tech_debt_budget")
+        if isinstance(tech_debt_budget, dict):
+            return tech_debt_budget
+    return None
 
 
 def _architecture_metrics_config() -> dict[str, Any]:
-    data = _read_json_if_exists(ARCH_METRICS_CONFIG_PATH)
-    return data if isinstance(data, dict) else {}
+    governance = _read_json_if_exists(GOVERNANCE_PATH)
+    if isinstance(governance, dict):
+        architecture = governance.get("architecture")
+        if isinstance(architecture, dict):
+            return architecture
+    return {}
 
 
 def _metric_source_roots() -> list[Path]:

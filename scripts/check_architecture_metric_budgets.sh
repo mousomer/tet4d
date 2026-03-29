@@ -34,6 +34,18 @@ from tools.governance.architecture_metric_budget import (
 from tools.governance.folder_balance_budget import evaluate_folder_balance_gate
 from tools.governance.tech_debt_budget import evaluate_tech_debt_gate
 
+
+def _load_tech_debt_cfg() -> dict | None:
+    governance_path = Path("config/project/policy/governance.json")
+    if governance_path.exists():
+        governance = json.loads(governance_path.read_text(encoding="utf-8"))
+        if isinstance(governance, dict):
+            tech_debt_budget = governance.get("tech_debt_budget")
+            if isinstance(tech_debt_budget, dict):
+                return tech_debt_budget
+    return None
+
+
 path = Path(sys.argv[1])
 metrics = json.loads(path.read_text(encoding="utf-8"))
 violations = evaluate_architecture_metric_budget_overages(metrics)
@@ -43,9 +55,8 @@ if gate_cfg_path.exists():
     gate_cfg = json.loads(gate_cfg_path.read_text(encoding="utf-8"))
     violations.extend(evaluate_folder_balance_gate(metrics, gate_cfg))
 
-tech_debt_cfg_path = Path("config/project/policy/manifests/tech_debt_budgets.json")
-if tech_debt_cfg_path.exists():
-    tech_debt_cfg = json.loads(tech_debt_cfg_path.read_text(encoding="utf-8"))
+tech_debt_cfg = _load_tech_debt_cfg()
+if tech_debt_cfg is not None:
     violations.extend(evaluate_tech_debt_gate(metrics, tech_debt_cfg))
 
 if violations:

@@ -28,23 +28,12 @@ Coverage:
 - `config/project/folder_balance_budgets.json`
 - `config/project/format_allowlist.txt`
 - `config/project/io_paths.json`
-- `config/project/policy/manifests/architecture_metrics.json`
+- `config/project/policy/code_rules.json`
+- `config/project/policy/governance.json`
 - `config/project/policy/manifests/canonical_maintenance.json`
-- `config/project/policy/manifests/context_router_manifest.json`
-- `config/project/policy/manifests/contributor_directives.json`
-- `config/project/policy/manifests/dedup_dead_code_rules.json`
-- `config/project/policy/manifests/drift_protection.json`
 - `config/project/policy/manifests/help_assets_manifest.json`
-- `config/project/policy/manifests/loc_guidance.json`
-- `config/project/policy/manifests/policy_registry.json`
-- `config/project/policy/manifests/policy_runtime_rules.json`
-- `config/project/policy/manifests/project_policy.json`
 - `config/project/policy/manifests/replay_manifest.json`
-- `config/project/policy/manifests/risk_gates.json`
 - `config/project/policy/manifests/secret_scan.json`
-- `config/project/policy/manifests/tech_debt_budgets.json`
-- `config/project/policy/manifests/wheel_reuse_rules.json`
-- `config/project/policy/pack.json`
 - `config/topology/designer_presets.json`
 - `config/topology/lab_menu.json`
 - `config/tutorial/lessons.json`
@@ -1173,37 +1162,177 @@ Parameters:
 - `paths.tutorial_progress_file_default`: `"state/tutorial/progress.json"` (`string`)
 - `version`: `1` (`int`)
 
-### `config/project/policy/manifests/architecture_metrics.json`
-Top-level keys: `arch_stage`, `backlog`, `class_gate_eligibility`, `class_to_profile`, `classification`, `long_term_goals`, `schema_version`, `source_roots`
+### `config/project/policy/code_rules.json`
+Top-level keys: `dead_code`, `description`, `loc_guidance`, `magic_numbers`, `sanitation`, `schema_version`, `wheel_reuse`
 Parameters:
-- `arch_stage`: `900` (`int`)
-- `backlog.default_priority`: `"P2"` (`string`)
-- `backlog.mode`: `"tet4d_bkl"` (`string`)
-- `class_gate_eligibility.code_default`: `true` (`bool`)
-- `class_gate_eligibility.micro_core_leaf`: `true` (`bool`)
-- `class_gate_eligibility.micro_feature_leaf`: `true` (`bool`)
-- `class_gate_eligibility.non_code_exempt`: `false` (`bool`)
-- `class_gate_eligibility.tests_lenient`: `true` (`bool`)
-- `class_to_profile.code_default`: `"default_leaf"` (`string`)
-- `class_to_profile.micro_core_leaf`: `"micro_leaf"` (`string`)
-- `class_to_profile.micro_feature_leaf`: `"micro_leaf"` (`string`)
-- `class_to_profile.non_code_exempt`: `"non_code_exempt"` (`string`)
-- `class_to_profile.tests_lenient`: `"tests_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/engine/core/rng`: `"micro_core_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/engine/core/step`: `"micro_core_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/engine/runtime/menu_settings`: `"micro_feature_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/engine/runtime/menu_structure`: `"micro_feature_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/engine/runtime/score_analysis`: `"micro_feature_leaf"` (`string`)
-- `classification.class_overrides.src/tet4d/replay`: `"micro_feature_leaf"` (`string`)
-- `classification.class_overrides.tests/unit/engine`: `"tests_lenient"` (`string`)
-- `classification.gate_overrides.tests/unit/engine`: `true` (`bool`)
-- `classification.non_code_segments[]`: array[`string`]; examples: `"docs"`, `"doc"`, `"assets"`
-- `classification.test_segments[]`: array[`string`]; examples: `"test"`, `"tests"`
-- `long_term_goals.keybinding_retention.required_scopes[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
-- `long_term_goals.keybinding_retention.target_pressure_max`: `0.0` (`float`)
-- `long_term_goals.menu_simplification.target_simplification_score_min`: `0.65` (`float`)
+- `dead_code.duplicate_functions.advisory_scope_globs[]`: array[`string`]; examples: `"src/tet4d/engine/runtime/*.py"`
+- `dead_code.duplicate_functions.enabled`: `true` (`bool`)
+- `dead_code.duplicate_functions.exclude_function_names[]`: array[`string`]; examples: `"main"`
+- `dead_code.duplicate_functions.max_allowed_duplicates_per_signature`: `1` (`int`)
+- `dead_code.duplicate_functions.min_body_lines`: `12` (`int`)
+- `dead_code.duplicate_functions.strict_scope_globs[]`: array[`string`]; examples: `"tools/governance/*.py"`
+- `dead_code.forbidden_paths[]`: array[`string`]; examples: `"tetris_nd/"`
+- `dead_code.todo_rule.ignore_globs[]`: array[`string`]; examples: `"tools/governance/check_dedup_dead_code_rules.py"`, `"tests/**/*.py"`
+- `dead_code.todo_rule.required_backlog_regex`: `"\\[BKL-[^\\]]+\\]"` (`string`)
+- `dead_code.todo_rule.scope_globs[]`: array[`string`]; examples: `"src/**/*.py"`, `"tools/**/*.py"`, `"scripts/**/*.py"`
+- `dead_code.todo_rule.token_regex`: `"\\b(?:TODO|FIXME)\\b"` (`string`)
+- `description`: `"Unified code rule manifest for sanitation, magic numbers, wheel reus...` (`string`)
+- `loc_guidance.batch_type_env_var`: `"LOC_GUIDANCE_BATCH_TYPE"` (`string`)
+- `loc_guidance.buckets.src`: `"src/"` (`string`)
+- `loc_guidance.buckets.tests`: `"tests/"` (`string`)
+- `loc_guidance.buckets.tools_scripts`: `"tools/|scripts/"` (`string`)
+- `loc_guidance.default_batch_type`: `"mixed"` (`string`)
+- `loc_guidance.include_extensions[]`: array[`string`]; examples: `".py"`
+- `loc_guidance.mode`: `"soft_warning"` (`string`)
+- `loc_guidance.thresholds.bugfix.src`: `250` (`int`)
+- `loc_guidance.thresholds.bugfix.tests`: `150` (`int`)
+- `loc_guidance.thresholds.bugfix.tools_scripts`: `120` (`int`)
+- `loc_guidance.thresholds.feature.src`: `500` (`int`)
+- `loc_guidance.thresholds.feature.tests`: `250` (`int`)
+- `loc_guidance.thresholds.feature.tools_scripts`: `150` (`int`)
+- `loc_guidance.thresholds.governance.src`: `0` (`int`)
+- `loc_guidance.thresholds.governance.tests`: `80` (`int`)
+- `loc_guidance.thresholds.governance.tools_scripts`: `200` (`int`)
+- `loc_guidance.thresholds.mixed.src`: `300` (`int`)
+- `loc_guidance.thresholds.mixed.tests`: `180` (`int`)
+- `loc_guidance.thresholds.mixed.tools_scripts`: `120` (`int`)
+- `loc_guidance.thresholds.refactor_only.src`: `0` (`int`)
+- `loc_guidance.thresholds.refactor_only.tests`: `0` (`int`)
+- `loc_guidance.thresholds.refactor_only.tools_scripts`: `0` (`int`)
+- `magic_numbers.entrypoints[]`: array[`object`]
+- `magic_numbers.entrypoints[].forbidden_regex[]`: array[`empty, string`]; examples: `"\\b999_?999_?999\\b"`, `"\\b0\\.85\\b"`
+- `magic_numbers.entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
+- `magic_numbers.entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed"`, `"clamp_overlay_transparency"`, `"clamp_lines_per_level"`
+- `magic_numbers.entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
+- `sanitation.entrypoints[]`: array[`object`]
+- `sanitation.entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`, `"src/tet4d/ui/pygame/launch/leaderboard_menu.py"`
+- `sanitation.entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"append_numeric_text"`, `"parse_numeric_text"`, `"_sanitize_profile_name"`
+- `sanitation.entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
+- `sanitation.entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `schema_version`: `1` (`int`)
-- `source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"tests"`, `"tools"`
+- `wheel_reuse.exception_marker`: `"Wheel Exception:"` (`string`)
+- `wheel_reuse.rules[]`: array[`object`]
+- `wheel_reuse.rules[].ast_detectors[]`: array[`empty, string`]; examples: `"custom_bool_parser"`, `"custom_numeric_text_parser"`
+- `wheel_reuse.rules[].description`: varies (`string`); examples: `"Prefer stdlib or existing repo helpers for parsing and validation ra...`, `"Do not duplicate local sanitization and normalization pipelines wher...`, `"Use existing project config, path, and JSON helper flows before intr...`
+- `wheel_reuse.rules[].forbidden_regex[]`: array[`string`]; examples: `"\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)"`, `"if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\("`, `"if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("`
+- `wheel_reuse.rules[].id`: varies (`string`); examples: `"parsing_validation_reuse"`, `"normalization_reuse"`, `"path_and_config_reuse"`
+- `wheel_reuse.rules[].prefer_symbols[]`: array[`string`]; examples: `"tet4d.engine.runtime.settings_schema"`, `"sanitize_text_runtime"`, `"append_numeric_text"`
+- `wheel_reuse.rules[].scope_globs[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/launch/*.py"`, `"src/tet4d/ui/pygame/menu/*.py"`, `"src/tet4d/engine/tutorial/*.py"`
+
+### `config/project/policy/governance.json`
+Top-level keys: `architecture`, `ci_entrypoint`, `contracts`, `contributor_directives`, `description`, `design_sources`, `drift_protection`, `menu_simplification_manifest_rule`, `project_name`, `risk_gates`, `schema_version`, `tech_debt_budget`, `verification_command`
+Parameters:
+- `architecture.arch_stage`: `900` (`int`)
+- `architecture.backlog.default_priority`: `"P2"` (`string`)
+- `architecture.backlog.mode`: `"tet4d_bkl"` (`string`)
+- `architecture.boundary_scripts[]`: array[`string`]; examples: `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`
+- `architecture.class_gate_eligibility.code_default`: `true` (`bool`)
+- `architecture.class_gate_eligibility.micro_core_leaf`: `true` (`bool`)
+- `architecture.class_gate_eligibility.micro_feature_leaf`: `true` (`bool`)
+- `architecture.class_gate_eligibility.non_code_exempt`: `false` (`bool`)
+- `architecture.class_gate_eligibility.tests_lenient`: `true` (`bool`)
+- `architecture.class_to_profile.code_default`: `"default_leaf"` (`string`)
+- `architecture.class_to_profile.micro_core_leaf`: `"micro_leaf"` (`string`)
+- `architecture.class_to_profile.micro_feature_leaf`: `"micro_leaf"` (`string`)
+- `architecture.class_to_profile.non_code_exempt`: `"non_code_exempt"` (`string`)
+- `architecture.class_to_profile.tests_lenient`: `"tests_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/engine/core/rng`: `"micro_core_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/engine/core/step`: `"micro_core_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/engine/runtime/menu_settings`: `"micro_feature_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/engine/runtime/menu_structure`: `"micro_feature_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/engine/runtime/score_analysis`: `"micro_feature_leaf"` (`string`)
+- `architecture.classification.class_overrides.src/tet4d/replay`: `"micro_feature_leaf"` (`string`)
+- `architecture.classification.class_overrides.tests/unit/engine`: `"tests_lenient"` (`string`)
+- `architecture.classification.gate_overrides.tests/unit/engine`: `true` (`bool`)
+- `architecture.classification.non_code_segments[]`: array[`string`]; examples: `"docs"`, `"doc"`, `"assets"`
+- `architecture.classification.test_segments[]`: array[`string`]; examples: `"test"`, `"tests"`
+- `architecture.forbidden_reverse_imports[]`: array[`object`]
+- `architecture.forbidden_reverse_imports[].from`: varies (`string`); examples: `"tet4d.engine"`
+- `architecture.forbidden_reverse_imports[].to`: varies (`string`); examples: `"tet4d.ui"`, `"tet4d.ai"`, `"tet4d.replay"`
+- `architecture.long_term_goals.keybinding_retention.required_scopes[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
+- `architecture.long_term_goals.keybinding_retention.target_pressure_max`: `0.0` (`float`)
+- `architecture.long_term_goals.menu_simplification.target_simplification_score_min`: `0.65` (`float`)
+- `architecture.schema_version`: `1` (`int`)
+- `architecture.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"tests"`, `"tools"`
+- `architecture.zero_budgets.engine_core_purity_violations`: `0` (`int`)
+- `architecture.zero_budgets.engine_core_to_non_core_imports`: `0` (`int`)
+- `architecture.zero_budgets.engine_to_ai_imports`: `0` (`int`)
+- `architecture.zero_budgets.engine_to_ui_imports`: `0` (`int`)
+- `architecture.zero_budgets.pygame_imports_in_non_test`: `0` (`int`)
+- `ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
+- `contracts.canonical_maintenance`: `"config/project/policy/manifests/canonical_maintenance.json"` (`string`)
+- `contracts.help_assets_manifest`: `"config/project/policy/manifests/help_assets_manifest.json"` (`string`)
+- `contracts.replay_manifest`: `"config/project/policy/manifests/replay_manifest.json"` (`string`)
+- `contracts.secret_scan`: `"config/project/policy/manifests/secret_scan.json"` (`string`)
+- `contributor_directives.directives[]`: array[`object`]
+- `contributor_directives.directives[].category`: varies (`string`); examples: `"process"`, `"verification"`
+- `contributor_directives.directives[].enforced_by[]`: array[`string`]; examples: `"code_review"`, `"scripts/verify.sh"`, `"scripts/ci_check.sh"`
+- `contributor_directives.directives[].id`: varies (`string`); examples: `"plan_with_acceptance"`, `"rds_backlog_state_sync"`, `"verification_required"`
+- `contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"AGENTS.md"`, `"docs/RDS_AND_CODEX.md"`, `"config/project/policy/governance.json"`
+- `contributor_directives.directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope o...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
+- `contributor_directives.required_ci_enforced_ids[]`: array[`string`]; examples: `"verification_required"`, `"loc_delta_preference"`, `"quiet_test_default"`
+- `description`: `"Unified governance manifest for repo policy, architecture budgets, r...` (`string`)
+- `design_sources[]`: array[`string`]; examples: `"docs/RDS_AND_CODEX.md"`, `"docs/rds/"`
+- `drift_protection.hotspot_scan.roots[]`: array[`string`]; examples: `"src"`, `"cli"`, `"tests"`
+- `drift_protection.hotspot_scan.top_n`: `8` (`int`)
+- `drift_protection.manifest_id`: `"drift_protection"` (`string`)
+- `drift_protection.schema_version`: `1` (`int`)
+- `drift_protection.thin_wrapper_budgets[]`: array[`object`]
+- `drift_protection.thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `840`, `24`, `160`
+- `drift_protection.thin_wrapper_budgets[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
+- `drift_protection.thin_wrapper_budgets[].role`: varies (`string`); examples: `"compatibility launcher wrapper"`, `"thin 2D launcher shim"`, `"thin 3D launcher shim"`
+- `drift_protection.tutorial_copy_contract.forbidden_prefixes[]`: array[`string`]; examples: `"Goal:"`, `"Action:"`
+- `drift_protection.tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
+- `drift_protection.tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
+- `drift_protection.tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
+- `menu_simplification_manifest_rule.default_action`: `"centralize_common_features_in_settings_hub"` (`string`)
+- `menu_simplification_manifest_rule.exception_bar`: `"very_strong_documented_reason_required"` (`string`)
+- `menu_simplification_manifest_rule.rule_id`: `"menu-simplification-common-settings"` (`string`)
+- `menu_simplification_manifest_rule.statement`: `"Menus must stay simple; any feature common to 2D/3D/4D menus must li...` (`string`)
+- `project_name`: `"tet4d"` (`string`)
+- `risk_gates.dependency_policy.blocked_dependencies[]`: array[`string`]; examples: `"pycrypto"`, `"python-jose"`
+- `risk_gates.dependency_policy.pyproject_path`: `"pyproject.toml"` (`string`)
+- `risk_gates.dependency_policy.require_pip_check`: `true` (`bool`)
+- `risk_gates.security_ownership.enabled`: `true` (`bool`)
+- `risk_gates.security_ownership.max_files_below_min_authors`: `0` (`int`)
+- `risk_gates.security_ownership.max_files_below_target_authors_warn`: `5` (`int`)
+- `risk_gates.security_ownership.min_distinct_authors_per_file`: `1` (`int`)
+- `risk_gates.security_ownership.min_sensitive_files`: `5` (`int`)
+- `risk_gates.security_ownership.sensitive_globs[]`: array[`string`]; examples: `"tools/governance/scan_secrets.py"`, `"config/project/policy/manifests/secret_scan.json"`, `"scripts/check_policy_compliance.sh"`
+- `risk_gates.security_ownership.target_min_distinct_authors_per_file`: `2` (`int`)
+- `schema_version`: `1` (`int`)
+- `tech_debt_budget.baseline.arch_stage`: `755` (`int`)
+- `tech_debt_budget.baseline.score`: `15.06` (`float`)
+- `tech_debt_budget.baseline.status`: `"low"` (`string`)
+- `tech_debt_budget.gate_mode`: `"non_regression_baseline"` (`string`)
+- `tech_debt_budget.schema_version`: `1` (`int`)
+- `tech_debt_budget.score_epsilon`: `0.03` (`float`)
+- `tech_debt_budget.scoring.bug_keywords[]`: array[`string`]; examples: `"bug"`, `"regression"`, `"correctness"`
+- `tech_debt_budget.scoring.component_weights.backlog_bug`: `0.16` (`float`)
+- `tech_debt_budget.scoring.component_weights.backlog_priority`: `0.27` (`float`)
+- `tech_debt_budget.scoring.component_weights.ci_gate`: `0.2` (`float`)
+- `tech_debt_budget.scoring.component_weights.code_balance`: `0.12` (`float`)
+- `tech_debt_budget.scoring.component_weights.delivery_size_pressure`: `0.005` (`float`)
+- `tech_debt_budget.scoring.component_weights.keybinding_retention`: `0.2` (`float`)
+- `tech_debt_budget.scoring.component_weights.menu_simplification`: `0.05` (`float`)
+- `tech_debt_budget.scoring.delivery_size.file_unit`: `78` (`int`)
+- `tech_debt_budget.scoring.delivery_size.loc_unit`: `12500` (`int`)
+- `tech_debt_budget.scoring.delivery_size.source_root_weights.other`: `0.1` (`float`)
+- `tech_debt_budget.scoring.delivery_size.source_root_weights.scripts`: `0.2` (`float`)
+- `tech_debt_budget.scoring.delivery_size.source_root_weights.src/tet4d`: `1.0` (`float`)
+- `tech_debt_budget.scoring.delivery_size.source_root_weights.tests`: `0.35` (`float`)
+- `tech_debt_budget.scoring.delivery_size.source_root_weights.tools`: `0.2` (`float`)
+- `tech_debt_budget.scoring.normalization.bug_items_cap`: `6` (`int`)
+- `tech_debt_budget.scoring.normalization.ci_issue_cap`: `6` (`int`)
+- `tech_debt_budget.scoring.normalization.priority_points_cap`: `40` (`int`)
+- `tech_debt_budget.scoring.priority_weights.P1`: `5` (`int`)
+- `tech_debt_budget.scoring.priority_weights.P2`: `3` (`int`)
+- `tech_debt_budget.scoring.priority_weights.P3`: `1` (`int`)
+- `tech_debt_budget.status_order.critical`: `3` (`int`)
+- `tech_debt_budget.status_order.high`: `2` (`int`)
+- `tech_debt_budget.status_order.low`: `0` (`int`)
+- `tech_debt_budget.status_order.moderate`: `1` (`int`)
+- `verification_command`: `"./scripts/verify.sh"` (`string`)
 
 ### `config/project/policy/manifests/canonical_maintenance.json`
 Top-level keys: `canonical_candidates`, `content_rules`, `description`, `required_paths`, `schema_version`, `title`
@@ -1214,8 +1343,8 @@ Parameters:
 - `canonical_candidates[].status`: varies (`string`); examples: `"connected"`
 - `content_rules[]`: array[`object`]
 - `content_rules[].file`: varies (`string`); examples: `"docs/policies/INDEX.md"`, `"README.md"`, `"docs/FEATURE_MAP.md"`
-- `content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy/manifests/contributor_directives.json"`, `"config/project/policy/manifests/risk_gates.json"`, `"config/project/policy/manifests/policy_runtime_rules.json"`
-- `content_rules[].must_match_regex[]`: array[`string`]; examples: `"\\[BKL-P3-\\d{3}\\]"`, `"\\\"policy_version\\\"\\s*:\\s*\\\"1\\.1\\.\\d+\\\""`, `"\\\"policy_source_path\\\"\\s*:\\s*\\\"(\\$\\{HOME\\}/workspace/poli...`
+- `content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
+- `content_rules[].must_match_regex[]`: array[`string`]; examples: `"\\[BKL-P3-\\d{3}\\]"`
 - `content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"126 passed"`, `"No active open gaps"`
 - `content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"\\b\\d+\\s+passed\\b"`, `"\\[[\\s\\d%]+\\]"`, `"\\btetris_nd\\b"`
 - `description`: `"Machine-checked source-of-truth rules for docs/tests/help/backlog/RD...` (`string`)
@@ -1235,75 +1364,6 @@ Parameters:
 - `schema_version`: `1` (`int`)
 - `title`: `"tet4d canonical maintenance contract"` (`string`)
 
-### `config/project/policy/manifests/context_router_manifest.json`
-Top-level keys: `contexts`, `defaults`, `id`, `purpose`, `routing_rules`, `schema_version`
-Parameters:
-- `contexts[]`: array[`object`]
-- `contexts[].description`: varies (`string`); examples: `"Runtime/library source code only. Excludes tests, configs, docs."`, `"Unit/integration tests and replay harness code. Excludes large golde...`, `"Build system, packaging, entrypoints, CI build steps and specs."`
-- `contexts[].exclude_globs[]`: array[`empty, string`]; examples: `"**/__pycache__/**"`, `"**/*.pyc"`, `"**/.pytest_cache/**"`
-- `contexts[].id`: varies (`string`); examples: `"code"`, `"tests"`, `"build_packaging"`
-- `contexts[].include_globs[]`: array[`empty, string`]; examples: `"src/**"`, `"cli/**"`, `"tools/**"`
-- `contexts[].priority`: varies (`int`); examples: `10`, `20`, `30`
-- `contexts[].title`: varies (`string`); examples: `"Code context"`, `"Test context"`, `"Build & Packaging context"`
-- `contexts[].tool_hints[]`: array[`string`]; examples: `"git status --porcelain=v1"`, `"git diff"`, `"git diff --staged"`
-- `contexts[].tool_required`: varies (`bool`); examples: `true`
-- `defaults.ignore_generated`: `true` (`bool`)
-- `defaults.ignore_vendor`: `true` (`bool`)
-- `defaults.max_files`: `200` (`int`)
-- `defaults.max_total_bytes`: `2000000` (`int`)
-- `defaults.prefer_tracked_files`: `true` (`bool`)
-- `id`: `"tet4d-context-router"` (`string`)
-- `purpose`: `"Codex context routing: define context types, their repo scope, and r...` (`string`)
-- `routing_rules[]`: array[`object`]
-- `routing_rules[].include_contexts_ordered[]`: array[`string`]; examples: `"code"`, `"policy_contracts"`, `"build_packaging"`
-- `routing_rules[].when_task_tags_any[]`: array[`string`]; examples: `"refactor"`, `"bugfix"`, `"feature"`
-- `schema_version`: `"1.0.0"` (`string`)
-
-### `config/project/policy/manifests/contributor_directives.json`
-Top-level keys: `directives`, `manifest_id`, `schema_version`
-Parameters:
-- `directives[]`: array[`object`]
-- `directives[].category`: varies (`string`); examples: `"process"`, `"verification"`
-- `directives[].enforced_by[]`: array[`string`]; examples: `"code_review"`, `"scripts/verify.sh"`, `"scripts/ci_check.sh"`
-- `directives[].id`: varies (`string`); examples: `"plan_with_acceptance"`, `"rds_backlog_state_sync"`, `"verification_required"`
-- `directives[].source_docs[]`: array[`string`]; examples: `"AGENTS.md"`, `"docs/RDS_AND_CODEX.md"`, `"config/project/policy/manifests/project_policy.json"`
-- `directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope o...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
-- `manifest_id`: `"contributor_directives"` (`string`)
-- `schema_version`: `1` (`int`)
-
-### `config/project/policy/manifests/dedup_dead_code_rules.json`
-Top-level keys: `duplicate_functions`, `forbidden_paths`, `manifest_id`, `schema_version`, `todo_backlog_rule`
-Parameters:
-- `duplicate_functions.advisory_scope_globs[]`: array[`string`]; examples: `"src/tet4d/engine/runtime/*.py"`
-- `duplicate_functions.enabled`: `true` (`bool`)
-- `duplicate_functions.exclude_function_names[]`: array[`string`]; examples: `"main"`
-- `duplicate_functions.max_allowed_duplicates_per_signature`: `1` (`int`)
-- `duplicate_functions.min_body_lines`: `12` (`int`)
-- `duplicate_functions.strict_scope_globs[]`: array[`string`]; examples: `"tools/governance/*.py"`
-- `forbidden_paths[]`: array[`string`]; examples: `"tetris_nd/"`
-- `manifest_id`: `"dedup_dead_code_rules"` (`string`)
-- `schema_version`: `1` (`int`)
-- `todo_backlog_rule.ignore_globs[]`: array[`string`]; examples: `"tools/governance/check_dedup_dead_code_rules.py"`, `"tests/**/*.py"`
-- `todo_backlog_rule.required_backlog_regex`: `"\\[BKL-[^\\]]+\\]"` (`string`)
-- `todo_backlog_rule.scope_globs[]`: array[`string`]; examples: `"src/**/*.py"`, `"tools/**/*.py"`, `"scripts/**/*.py"`
-- `todo_backlog_rule.token_regex`: `"\\b(?:TODO|FIXME)\\b"` (`string`)
-
-### `config/project/policy/manifests/drift_protection.json`
-Top-level keys: `hotspot_scan`, `manifest_id`, `schema_version`, `thin_wrapper_budgets`, `tutorial_copy_contract`
-Parameters:
-- `hotspot_scan.roots[]`: array[`string`]; examples: `"src"`, `"cli"`, `"tests"`
-- `hotspot_scan.top_n`: `8` (`int`)
-- `manifest_id`: `"drift_protection"` (`string`)
-- `schema_version`: `1` (`int`)
-- `thin_wrapper_budgets[]`: array[`object`]
-- `thin_wrapper_budgets[].max_real_loc`: varies (`int`); examples: `840`, `24`, `160`
-- `thin_wrapper_budgets[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
-- `thin_wrapper_budgets[].role`: varies (`string`); examples: `"compatibility launcher wrapper"`, `"thin 2D launcher shim"`, `"thin 3D launcher shim"`
-- `tutorial_copy_contract.forbidden_prefixes[]`: array[`string`]; examples: `"Goal:"`, `"Action:"`
-- `tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
-- `tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
-- `tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
-
 ### `config/project/policy/manifests/help_assets_manifest.json`
 Top-level keys: `assets`, `icon_map`, `renderer`, `source_pack`, `version`
 Parameters:
@@ -1316,100 +1376,6 @@ Parameters:
 - `renderer`: `"tet4d.ui.pygame.render.control_icons.draw_action_icon"` (`string`)
 - `source_pack`: `"assets/help/icons/transform/svg"` (`string`)
 - `version`: `2` (`int`)
-
-### `config/project/policy/manifests/loc_guidance.json`
-Top-level keys: `batch_type_env_var`, `buckets`, `default_batch_type`, `include_extensions`, `manifest_id`, `mode`, `schema_version`, `thresholds`
-Parameters:
-- `batch_type_env_var`: `"LOC_GUIDANCE_BATCH_TYPE"` (`string`)
-- `buckets.src`: `"src/"` (`string`)
-- `buckets.tests`: `"tests/"` (`string`)
-- `buckets.tools_scripts`: `"tools/|scripts/"` (`string`)
-- `default_batch_type`: `"mixed"` (`string`)
-- `include_extensions[]`: array[`string`]; examples: `".py"`
-- `manifest_id`: `"loc_guidance"` (`string`)
-- `mode`: `"soft_warning"` (`string`)
-- `schema_version`: `1` (`int`)
-- `thresholds.bugfix.src`: `250` (`int`)
-- `thresholds.bugfix.tests`: `150` (`int`)
-- `thresholds.bugfix.tools_scripts`: `120` (`int`)
-- `thresholds.feature.src`: `500` (`int`)
-- `thresholds.feature.tests`: `250` (`int`)
-- `thresholds.feature.tools_scripts`: `150` (`int`)
-- `thresholds.governance.src`: `0` (`int`)
-- `thresholds.governance.tests`: `80` (`int`)
-- `thresholds.governance.tools_scripts`: `200` (`int`)
-- `thresholds.mixed.src`: `300` (`int`)
-- `thresholds.mixed.tests`: `180` (`int`)
-- `thresholds.mixed.tools_scripts`: `120` (`int`)
-- `thresholds.refactor_only.src`: `0` (`int`)
-- `thresholds.refactor_only.tests`: `0` (`int`)
-- `thresholds.refactor_only.tools_scripts`: `0` (`int`)
-
-### `config/project/policy/manifests/policy_registry.json`
-Top-level keys: `contracts`, `docs_index`, `manifest_id`, `policies`, `schema_version`
-Parameters:
-- `contracts[]`: array[`object`]
-- `contracts[].id`: varies (`string`); examples: `"canonical_maintenance"`, `"tech_debt_budget"`, `"architecture_metrics"`
-- `contracts[].path`: varies (`string`); examples: `"config/project/policy/manifests/canonical_maintenance.json"`, `"config/project/policy/manifests/tech_debt_budgets.json"`, `"config/project/policy/manifests/architecture_metrics.json"`
-- `contracts[].validated_by`: varies (`string`); examples: `"tools/governance/validate_project_contracts.py"`, `"scripts/check_architecture_metrics_soft_gate.sh"`, `"scripts/arch_metrics.py"`
-- `docs_index`: `"docs/policies/INDEX.md"` (`string`)
-- `manifest_id`: `"policy_registry"` (`string`)
-- `policies[]`: array[`object`]
-- `policies[].enforced_by[]`: array[`string`]; examples: `"scripts/check_policy_compliance.sh"`, `"scripts/verify.sh"`, `"tools/governance/generate_configuration_reference.py --check"`
-- `policies[].id`: varies (`string`); examples: `"no_reinventing_wheel"`, `"string_sanitation"`, `"no_magic_numbers"`
-- `policies[].owner`: varies (`string`); examples: `"governance"`
-- `policies[].source`: varies (`string`); examples: `"docs/policies/POLICY_NO_REINVENTING_WHEEL.md"`, `"docs/policies/POLICY_STRING_SANITATION.md"`, `"docs/policies/POLICY_NO_MAGIC_NUMBERS.md"`
-- `policies[].type`: varies (`string`); examples: `"governance"`, `"safety"`
-- `schema_version`: `1` (`int`)
-
-### `config/project/policy/manifests/policy_runtime_rules.json`
-Top-level keys: `magic_numbers`, `manifest_id`, `sanitation`, `schema_version`
-Parameters:
-- `magic_numbers.config_backed_entrypoints[]`: array[`object`]
-- `magic_numbers.config_backed_entrypoints[].forbidden_regex[]`: array[`empty, string`]; examples: `"\\b999_?999_?999\\b"`, `"\\b0\\.85\\b"`
-- `magic_numbers.config_backed_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/engine/runtime/settings_schema.py"`
-- `magic_numbers.config_backed_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"clamp_game_seed"`, `"clamp_overlay_transparency"`, `"clamp_lines_per_level"`
-- `magic_numbers.config_backed_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
-- `manifest_id`: `"policy_runtime_rules"` (`string`)
-- `sanitation.text_entrypoints[]`: array[`object`]
-- `sanitation.text_entrypoints[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_actions.py"`, `"src/tet4d/ui/pygame/menu/keybindings_menu.py"`, `"src/tet4d/ui/pygame/launch/leaderboard_menu.py"`
-- `sanitation.text_entrypoints[].required_all_tokens[]`: array[`string`]; examples: `"append_numeric_text"`, `"parse_numeric_text"`, `"_sanitize_profile_name"`
-- `sanitation.text_entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
-- `sanitation.text_entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
-- `schema_version`: `1` (`int`)
-
-### `config/project/policy/manifests/project_policy.json`
-Top-level keys: `ci_entrypoint`, `contract_validation`, `design_sources`, `enforcement`, `extended_enforcement`, `menu_simplification_manifest_rule`, `policy_id`, `policy_pack`, `policy_source`, `policy_source_path`, `policy_version`, `project_name`, `secret_scan`, `verification_command`
-Parameters:
-- `ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
-- `contract_validation`: `"python3 tools/governance/validate_project_contracts.py"` (`string`)
-- `design_sources[]`: array[`string`]; examples: `"docs/RDS_AND_CODEX.md"`, `"docs/rds/"`
-- `enforcement[]`: array[`string`]; examples: `"scripts/check_policy_compliance.sh"`, `"scripts/check_git_sanitation.sh"`, `"scripts/check_policy_template_drift.sh"`
-- `extended_enforcement[]`: array[`string`]; examples: `"scripts/check_policy_compliance_repo.sh"`, `"scripts/check_git_sanitation_repo.sh"`, `"scripts/check_architecture_metrics_soft_gate.sh"`
-- `menu_simplification_manifest_rule.default_action`: `"centralize_common_features_in_settings_hub"` (`string`)
-- `menu_simplification_manifest_rule.exception_bar`: `"very_strong_documented_reason_required"` (`string`)
-- `menu_simplification_manifest_rule.rule_id`: `"menu-simplification-common-settings"` (`string`)
-- `menu_simplification_manifest_rule.statement`: `"Menus must stay simple; any feature common to 2D/3D/4D menus must li...` (`string`)
-- `policy_id`: `"workspace-github-sanitation-and-security"` (`string`)
-- `policy_pack.contracts[]`: array[`object`]
-- `policy_pack.contracts[].id`: varies (`string`); examples: `"canonical_maintenance"`, `"tech_debt_budget"`, `"architecture_metrics"`
-- `policy_pack.contracts[].path`: varies (`string`); examples: `"config/project/policy/manifests/canonical_maintenance.json"`, `"config/project/policy/manifests/tech_debt_budgets.json"`, `"config/project/policy/manifests/architecture_metrics.json"`
-- `policy_pack.contracts[].validated_by`: varies (`string`); examples: `"tools/governance/validate_project_contracts.py"`, `"scripts/check_architecture_metrics_soft_gate.sh"`, `"scripts/arch_metrics.py"`
-- `policy_pack.docs_index`: `"docs/policies/INDEX.md"` (`string`)
-- `policy_pack.policies[]`: array[`object`]
-- `policy_pack.policies[].enforced_by[]`: array[`string`]; examples: `"scripts/check_policy_compliance.sh"`, `"scripts/verify.sh"`, `"tools/governance/generate_configuration_reference.py --check"`
-- `policy_pack.policies[].id`: varies (`string`); examples: `"no_reinventing_wheel"`, `"string_sanitation"`, `"no_magic_numbers"`
-- `policy_pack.policies[].owner`: varies (`string`); examples: `"governance"`
-- `policy_pack.policies[].source`: varies (`string`); examples: `"docs/policies/POLICY_NO_REINVENTING_WHEEL.md"`, `"docs/policies/POLICY_STRING_SANITATION.md"`, `"docs/policies/POLICY_NO_MAGIC_NUMBERS.md"`
-- `policy_pack.policies[].type`: varies (`string`); examples: `"governance"`, `"safety"`
-- `policy_pack.registry_manifest`: `"config/project/policy/manifests/policy_registry.json"` (`string`)
-- `policy_pack.version`: `"2026-02-28"` (`string`)
-- `policy_source`: `"workspace/policy-kit"` (`string`)
-- `policy_source_path`: `"${HOME}/workspace/policy-kit"` (`string`)
-- `policy_version`: `"1.1.4"` (`string`)
-- `project_name`: `"tet4d"` (`string`)
-- `secret_scan`: `"python3 tools/governance/scan_secrets.py"` (`string`)
-- `verification_command`: `"./scripts/verify.sh"` (`string`)
 
 ### `config/project/policy/manifests/replay_manifest.json`
 Top-level keys: `description`, `golden_dir`, `notes`, `suites`, `version`
@@ -1425,23 +1391,6 @@ Parameters:
 - `suites[].test_file`: `"tests/unit/engine/test_gameplay_replay.py"` (`string`)
 - `version`: `1` (`int`)
 
-### `config/project/policy/manifests/risk_gates.json`
-Top-level keys: `contributor_directives`, `dependency_policy`, `manifest_id`, `schema_version`, `security_ownership`
-Parameters:
-- `contributor_directives.required_ci_enforced_ids[]`: array[`string`]; examples: `"verification_required"`, `"loc_delta_preference"`, `"quiet_test_default"`
-- `dependency_policy.blocked_dependencies[]`: array[`string`]; examples: `"pycrypto"`, `"python-jose"`
-- `dependency_policy.pyproject_path`: `"pyproject.toml"` (`string`)
-- `dependency_policy.require_pip_check`: `true` (`bool`)
-- `manifest_id`: `"risk_gates"` (`string`)
-- `schema_version`: `1` (`int`)
-- `security_ownership.enabled`: `true` (`bool`)
-- `security_ownership.max_files_below_min_authors`: `0` (`int`)
-- `security_ownership.max_files_below_target_authors_warn`: `5` (`int`)
-- `security_ownership.min_distinct_authors_per_file`: `1` (`int`)
-- `security_ownership.min_sensitive_files`: `5` (`int`)
-- `security_ownership.sensitive_globs[]`: array[`string`]; examples: `"tools/governance/scan_secrets.py"`, `"config/project/policy/manifests/secret_scan.json"`, `"scripts/check_policy_compliance.sh"`
-- `security_ownership.target_min_distinct_authors_per_file`: `2` (`int`)
-
 ### `config/project/policy/manifests/secret_scan.json`
 Top-level keys: `allowlist`, `exclude_dirs`, `exclude_globs`, `max_file_bytes`, `patterns`, `scan_roots`, `version`
 Parameters:
@@ -1454,72 +1403,6 @@ Parameters:
 - `patterns[].regex`: varies (`string`); examples: `"AKIA[0-9A-Z]{16}"`, `"gh[pousr]_[A-Za-z0-9]{20,}"`, `"github_pat_[A-Za-z0-9_]{70,}"`
 - `scan_roots[]`: array[`string`]; examples: `"."`
 - `version`: `1` (`int`)
-
-### `config/project/policy/manifests/tech_debt_budgets.json`
-Top-level keys: `baseline`, `gate_mode`, `schema_version`, `score_epsilon`, `scoring`, `status_order`
-Parameters:
-- `baseline.arch_stage`: `755` (`int`)
-- `baseline.score`: `15.06` (`float`)
-- `baseline.status`: `"low"` (`string`)
-- `gate_mode`: `"non_regression_baseline"` (`string`)
-- `schema_version`: `1` (`int`)
-- `score_epsilon`: `0.03` (`float`)
-- `scoring.bug_keywords[]`: array[`string`]; examples: `"bug"`, `"regression"`, `"correctness"`
-- `scoring.component_weights.backlog_bug`: `0.16` (`float`)
-- `scoring.component_weights.backlog_priority`: `0.27` (`float`)
-- `scoring.component_weights.ci_gate`: `0.2` (`float`)
-- `scoring.component_weights.code_balance`: `0.12` (`float`)
-- `scoring.component_weights.delivery_size_pressure`: `0.005` (`float`)
-- `scoring.component_weights.keybinding_retention`: `0.2` (`float`)
-- `scoring.component_weights.menu_simplification`: `0.05` (`float`)
-- `scoring.delivery_size.file_unit`: `78` (`int`)
-- `scoring.delivery_size.loc_unit`: `12500` (`int`)
-- `scoring.delivery_size.source_root_weights.other`: `0.1` (`float`)
-- `scoring.delivery_size.source_root_weights.scripts`: `0.2` (`float`)
-- `scoring.delivery_size.source_root_weights.src/tet4d`: `1.0` (`float`)
-- `scoring.delivery_size.source_root_weights.tests`: `0.35` (`float`)
-- `scoring.delivery_size.source_root_weights.tools`: `0.2` (`float`)
-- `scoring.normalization.bug_items_cap`: `6` (`int`)
-- `scoring.normalization.ci_issue_cap`: `6` (`int`)
-- `scoring.normalization.priority_points_cap`: `40` (`int`)
-- `scoring.priority_weights.P1`: `5` (`int`)
-- `scoring.priority_weights.P2`: `3` (`int`)
-- `scoring.priority_weights.P3`: `1` (`int`)
-- `status_order.critical`: `3` (`int`)
-- `status_order.high`: `2` (`int`)
-- `status_order.low`: `0` (`int`)
-- `status_order.moderate`: `1` (`int`)
-
-### `config/project/policy/manifests/wheel_reuse_rules.json`
-Top-level keys: `exception_marker`, `manifest_id`, `rules`, `schema_version`
-Parameters:
-- `exception_marker`: `"Wheel Exception:"` (`string`)
-- `manifest_id`: `"wheel_reuse_rules"` (`string`)
-- `rules[]`: array[`object`]
-- `rules[].ast_detectors[]`: array[`empty, string`]; examples: `"custom_bool_parser"`, `"custom_numeric_text_parser"`
-- `rules[].description`: varies (`string`); examples: `"Prefer stdlib or existing repo helpers for parsing/validation rather...`, `"Do not duplicate local sanitization/normalization pipelines where sh...`, `"Use existing project config/path and JSON helper flows before introd...`
-- `rules[].forbidden_regex[]`: array[`string`]; examples: `"\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)"`, `"if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\("`, `"if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("`
-- `rules[].id`: varies (`string`); examples: `"parsing_validation_reuse"`, `"normalization_reuse"`, `"path_and_config_reuse"`
-- `rules[].prefer_symbols[]`: array[`string`]; examples: `"tet4d.engine.runtime.settings_schema"`, `"sanitize_text_runtime"`, `"append_numeric_text"`
-- `rules[].scope_globs[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/launch/*.py"`, `"src/tet4d/ui/pygame/menu/*.py"`, `"src/tet4d/engine/tutorial/*.py"`
-- `schema_version`: `1` (`int`)
-
-### `config/project/policy/pack.json`
-Top-level keys: `components`, `constraints`, `context_router_manifest`, `entrypoints`, `pack_version`, `policy_id`, `project_name`
-Parameters:
-- `components[]`: array[`object`]
-- `components[].context_id`: varies (`string`); examples: `"policy_contracts"`, `"tests"`, `"assets_fixtures"`
-- `components[].id`: varies (`string`); examples: `"project_policy"`, `"policy_registry"`, `"canonical_maintenance"`
-- `components[].path`: varies (`string`); examples: `"config/project/policy/manifests/project_policy.json"`, `"config/project/policy/manifests/policy_registry.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
-- `constraints.allowed_module_prefixes[]`: array[`string`]; examples: `"tet4d."`
-- `constraints.forbidden_module_prefixes[]`: array[`string`]; examples: `"tetris_nd."`
-- `constraints.forbidden_paths[]`: array[`string`]; examples: `"tetris_nd/"`
-- `context_router_manifest`: `"config/project/policy/manifests/context_router_manifest.json"` (`string`)
-- `entrypoints.ci`: `"./scripts/ci_check.sh"` (`string`)
-- `entrypoints.verify`: `"./scripts/verify.sh"` (`string`)
-- `pack_version`: `"0.1.0"` (`string`)
-- `policy_id`: `"tet4d-governance-pack"` (`string`)
-- `project_name`: `"tet4d"` (`string`)
 
 ### `config/topology/designer_presets.json`
 Top-level keys: `profiles`, `version`

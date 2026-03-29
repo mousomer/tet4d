@@ -2516,6 +2516,22 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
         self.assertEqual(state.active_tool, launch.initial_tool)
 
+    def test_launcher_entry_defaults_to_scene_pane_and_sandbox_tool(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=3,
+            entry_source="launcher",
+        )
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
+        self.assertEqual(state.active_tool, launch.initial_tool)
+
     def test_explorer_entry_rows_include_adjustable_board_controls(self) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(
             dimension=3, entry_source="explorer"

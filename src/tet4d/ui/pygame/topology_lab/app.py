@@ -260,7 +260,12 @@ def build_explorer_playground_launch(
     )
     tool = initial_tool
     if tool is None:
-        tool = TOOL_SANDBOX if entry_source == "explorer" else TOOL_EDIT
+        tool = (
+            TOOL_SANDBOX
+            if mode == GAMEPLAY_MODE_EXPLORER
+            and entry_source in {"explorer", "launcher"}
+            else TOOL_EDIT
+        )
     snapshot = settings_snapshot or build_explorer_playground_settings(
         dimension=int(dimension),
         source_settings=source_settings,
@@ -274,7 +279,7 @@ def build_explorer_playground_launch(
         if validation_error is not None:
             startup_notice = (
                 "Stored explorer topology is invalid for the current board size; "
-                "opening Explorer Playground with the current draft for repair."
+                "opening Topology Playground with the current draft for repair."
             )
     return ExplorerPlaygroundLaunch(
         dimension=int(dimension),
