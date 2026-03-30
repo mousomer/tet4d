@@ -3,7 +3,12 @@ from __future__ import annotations
 import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
-from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
+from tet4d.ui.pygame.ui_utils import (
+    draw_centered_wrapped_text,
+    draw_fitted_text_line,
+    draw_panel_frame,
+    wrap_text_lines,
+)
 
 _BLOCKED_BUTTON_COLOR = (74, 84, 118)
 _BUTTON_TEXT = (232, 236, 248)
@@ -47,10 +52,21 @@ def draw_preview_panel(
     title: str,
     lines: list[str],
 ) -> None:
-    pygame.draw.rect(surface, (18, 22, 38), area, border_radius=10)
-    pygame.draw.rect(surface, (76, 84, 112), area, 1, border_radius=10)
-    title_surf = fonts.hint_font.render(title, True, (220, 228, 250))
-    surface.blit(title_surf, (area.x + 10, area.y + 10))
+    draw_panel_frame(
+        surface,
+        rect=area,
+        fill_color=(18, 22, 38),
+        border_color=(76, 84, 112),
+    )
+    title_surf = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=title,
+        color=(220, 228, 250),
+        max_width=area.width - 20,
+        x=area.x + 10,
+        y=area.y + 10,
+    )
     y = area.y + 18 + title_surf.get_height()
     for index, line in enumerate(lines):
         color = (220, 228, 250) if index == 0 else (188, 198, 228)
@@ -75,12 +91,15 @@ def draw_probe_controls(
     hits: list[TopologyLabHitTarget] = []
     if not step_options:
         return hits
-    title_surf = fonts.hint_font.render(
-        fit_text(fonts.hint_font, title, area.width - 4),
-        True,
-        active_color,
+    title_surf = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=title,
+        color=active_color,
+        max_width=area.width - 4,
+        x=area.x + 2,
+        y=area.y,
     )
-    surface.blit(title_surf, (area.x + 2, area.y))
     buttons_area = area.copy()
     buttons_area.y += title_surf.get_height() + 6
     buttons_area.height = max(24, area.height - title_surf.get_height() - 6)
@@ -102,15 +121,14 @@ def draw_probe_controls(
         color = _BLOCKED_BUTTON_COLOR if blocked else active_color
         pygame.draw.rect(surface, color, rect, border_radius=8)
         pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
-        text_surf = fonts.hint_font.render(
-            str(option.get("step", "?")), True, _BUTTON_TEXT
-        )
-        surface.blit(
-            text_surf,
-            (
-                rect.centerx - text_surf.get_width() // 2,
-                rect.centery - text_surf.get_height() // 2,
-            ),
+        draw_centered_wrapped_text(
+            surface,
+            rect=rect,
+            font=fonts.hint_font,
+            text=str(option.get("step", "?")),
+            color=_BUTTON_TEXT,
+            max_lines=1,
+            text_width_padding=6,
         )
         hits.append(
             TopologyLabHitTarget("probe_step", str(option.get("step", "")), rect.copy())

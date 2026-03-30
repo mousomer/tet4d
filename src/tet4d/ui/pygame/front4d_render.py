@@ -936,7 +936,6 @@ def _draw_side_panel(
         bot_lines=bot_lines,
         analysis_lines=analysis_lines,
         game_over=state.game_over,
-        min_controls_h=150,
         meter_label="Locked-cell transparency",
         meter_value=float(overlay_transparency),
         meter_hint="Camera control",

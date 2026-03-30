@@ -3,7 +3,11 @@ from __future__ import annotations
 import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
-from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
+from tet4d.ui.pygame.ui_utils import (
+    draw_fitted_text_line,
+    draw_centered_wrapped_text,
+    draw_panel_frame,
+)
 
 _BUTTON_BG = (38, 44, 70)
 _BUTTON_ACTIVE = (86, 98, 146)
@@ -24,21 +28,13 @@ def _draw_button(
 ) -> None:
     pygame.draw.rect(surface, color, rect, border_radius=8)
     pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
-    wrapped = wrap_text_lines(font, text, rect.width - 10)
-    lines = wrapped[:2] if wrapped else ("",)
-    line_gap = 2
-    total_text_h = len(lines) * font.get_height() + max(0, len(lines) - 1) * line_gap
-    y = rect.centery - total_text_h // 2
-    for line in lines:
-        text_surf = font.render(line, True, _BUTTON_TEXT)
-        surface.blit(
-            text_surf,
-            (
-                rect.centerx - text_surf.get_width() // 2,
-                y,
-            ),
-        )
-        y += font.get_height() + line_gap
+    draw_centered_wrapped_text(
+        surface,
+        rect=rect,
+        font=font,
+        text=text,
+        color=_BUTTON_TEXT,
+    )
 
 
 def _draw_read_only_display(
@@ -49,14 +45,31 @@ def _draw_read_only_display(
     text: str,
     font,
 ) -> None:
-    pygame.draw.rect(surface, _DISPLAY_BG, rect, border_radius=8)
-    pygame.draw.rect(surface, _DISPLAY_BORDER, rect, 1, border_radius=8)
-    caption = font.render(
-        fit_text(font, title, rect.width - 12), True, _DISPLAY_CAPTION
+    draw_panel_frame(
+        surface,
+        rect=rect,
+        fill_color=_DISPLAY_BG,
+        border_color=_DISPLAY_BORDER,
+        border_radius=8,
     )
-    surface.blit(caption, (rect.x + 8, rect.y + 5))
-    value = font.render(fit_text(font, text, rect.width - 12), True, _DISPLAY_TEXT)
-    surface.blit(value, (rect.x + 8, rect.bottom - value.get_height() - 5))
+    draw_fitted_text_line(
+        surface,
+        font=font,
+        text=title,
+        color=_DISPLAY_CAPTION,
+        max_width=rect.width - 12,
+        x=rect.x + 8,
+        y=rect.y + 5,
+    )
+    draw_fitted_text_line(
+        surface,
+        font=font,
+        text=text,
+        color=_DISPLAY_TEXT,
+        max_width=rect.width - 12,
+        x=rect.x + 8,
+        y=rect.bottom - font.get_height() - 5,
+    )
 
 
 def draw_transform_editor(
@@ -73,17 +86,31 @@ def draw_transform_editor(
     selected_permutation_index: int,
     signs: tuple[int, ...],
 ) -> list[TopologyLabHitTarget]:
-    pygame.draw.rect(surface, (18, 22, 38), area, border_radius=10)
-    pygame.draw.rect(surface, (76, 84, 112), area, 1, border_radius=10)
-    title_text = "Transform editor" if editable else "Transform preview"
-    title = fonts.hint_font.render(title_text, True, (220, 228, 250))
-    surface.blit(title, (area.x + 10, area.y + 10))
-    label = fonts.hint_font.render(
-        fit_text(fonts.hint_font, transform_label, area.width - 20),
-        True,
-        (188, 198, 228),
+    draw_panel_frame(
+        surface,
+        rect=area,
+        fill_color=(18, 22, 38),
+        border_color=(76, 84, 112),
     )
-    surface.blit(label, (area.x + 10, area.y + 10 + title.get_height() + 6))
+    title_text = "Transform editor" if editable else "Transform preview"
+    title = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=title_text,
+        color=(220, 228, 250),
+        max_width=area.width - 20,
+        x=area.x + 10,
+        y=area.y + 10,
+    )
+    draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=transform_label,
+        color=(188, 198, 228),
+        max_width=area.width - 20,
+        x=area.x + 10,
+        y=area.y + 10 + title.get_height() + 6,
+    )
 
     hits: list[TopologyLabHitTarget] = []
     y = area.y + 54
@@ -184,7 +211,7 @@ def draw_action_buttons(
         _draw_button(
             surface,
             rect=rect,
-            text=fit_text(fonts.hint_font, label, rect.width - 10),
+            text=label,
             color=_BUTTON_BG,
             font=fonts.hint_font,
         )

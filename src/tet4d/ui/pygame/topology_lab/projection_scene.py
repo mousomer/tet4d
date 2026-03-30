@@ -11,7 +11,7 @@ from tet4d.engine.topology_explorer import (
     BoundaryRef,
     ExplorerTopologyProfile,
 )
-from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import draw_fitted_text_line, draw_panel_frame
 
 from .common import (
     TopologyLabHitTarget,
@@ -117,35 +117,6 @@ def _panel_grid_rect(
     board = pygame.Rect(0, 0, cell * cols, cell * rows)
     board.center = (content.centerx, content.centery + 2)
     return board, cell
-
-
-def _draw_panel_frame(
-    surface: pygame.Surface,
-    fonts,
-    *,
-    panel: _ProjectionPanel,
-    selected_coord: tuple[int, ...],
-    slab_radius: int,
-) -> None:
-    pygame.draw.rect(surface, _BACKGROUND, panel.rect, border_radius=10)
-    pygame.draw.rect(surface, _BORDER, panel.rect, 1, border_radius=10)
-    title = fonts.hint_font.render(panel.label, True, _TEXT)
-    hidden = fonts.hint_font.render(
-        fit_text(
-            fonts.hint_font,
-            projection_hidden_label(
-                len(selected_coord),
-                panel.axes,
-                selected_coord,
-                slab_radius=slab_radius,
-            ),
-            panel.rect.width - 16,
-        ),
-        True,
-        _MUTED,
-    )
-    surface.blit(title, (panel.rect.x + 8, panel.rect.y + 6))
-    surface.blit(hidden, (panel.rect.x + 8, panel.rect.y + 8 + title.get_height()))
 
 
 def _draw_grid(
@@ -491,8 +462,12 @@ def _draw_info_panel(
     sandbox_valid: bool | None,
     sandbox_message: str,
 ) -> None:
-    pygame.draw.rect(surface, _BACKGROUND, rect, border_radius=10)
-    pygame.draw.rect(surface, _BORDER, rect, 1, border_radius=10)
+    draw_panel_frame(
+        surface,
+        rect=rect,
+        fill_color=_BACKGROUND,
+        border_color=_BORDER,
+    )
     mode_label = _mode_label_for_tool(active_tool)
     lines = [
         "Projection sync",
@@ -507,12 +482,15 @@ def _draw_info_panel(
         lines.append(sandbox_message)
     y_pos = rect.y + 10
     for index, line in enumerate(lines):
-        text = fonts.hint_font.render(
-            fit_text(fonts.hint_font, line, rect.width - 16),
-            True,
-            _TEXT if index == 0 else _MUTED,
+        text = draw_fitted_text_line(
+            surface,
+            font=fonts.hint_font,
+            text=line,
+            color=_TEXT if index == 0 else _MUTED,
+            max_width=rect.width - 16,
+            x=rect.x + 8,
+            y=y_pos,
         )
-        surface.blit(text, (rect.x + 8, y_pos))
         y_pos += text.get_height() + 4
 
 
@@ -546,27 +524,26 @@ def _draw_projection_heading(
     dimension: int,
     selected_coord: tuple[int, ...],
 ) -> None:
-    title = fonts.hint_font.render(
-        f"{dimension}D synchronized projections",
-        True,
-        _TEXT,
+    title = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=f"{dimension}D synchronized projections",
+        color=_TEXT,
+        max_width=area.width - 12,
+        x=area.x,
+        y=area.y - fonts.hint_font.get_height() - 4,
     )
-    subtitle = fonts.hint_font.render(
-        fit_text(
-            fonts.hint_font,
-            (
-                f"Selected {list(selected_coord)}  hidden slices stay explicit "
-                "in every panel"
-            ),
-            area.width - 12,
+    draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=(
+            f"Selected {list(selected_coord)}  hidden slices stay explicit "
+            "in every panel"
         ),
-        True,
-        _MUTED,
-    )
-    surface.blit(title, (area.x, area.y - title.get_height() - 4))
-    surface.blit(
-        subtitle,
-        (area.x + title.get_width() + 10, area.y - subtitle.get_height() - 4),
+        color=_MUTED,
+        max_width=max(40, area.width - title.get_width() - 22),
+        x=area.x + title.get_width() + 10,
+        y=area.y - fonts.hint_font.get_height() - 4,
     )
 
 
@@ -643,8 +620,12 @@ def _draw_projection_ribbon(
     selected_glue_id: str | None,
     highlighted_glue_id: str | None,
 ) -> list[TopologyLabHitTarget]:
-    pygame.draw.rect(surface, (16, 20, 34), area, border_radius=10)
-    pygame.draw.rect(surface, _BORDER, area, 1, border_radius=10)
+    draw_panel_frame(
+        surface,
+        rect=area,
+        fill_color=(16, 20, 34),
+        border_color=_BORDER,
+    )
     boundary_area = pygame.Rect(
         area.x + _RIBBON_PADDING,
         area.y + _RIBBON_PADDING,
@@ -702,12 +683,34 @@ def _draw_projection_panel(
     active_tool: str | None,
 ) -> list[TopologyLabHitTarget]:
     hits = [TopologyLabHitTarget(_PANEL_KIND, panel.label, panel.rect.copy())]
-    _draw_panel_frame(
+    draw_panel_frame(
         surface,
-        fonts,
-        panel=panel,
-        selected_coord=selected_coord,
-        slab_radius=slab_radius,
+        rect=panel.rect,
+        fill_color=_BACKGROUND,
+        border_color=_BORDER,
+    )
+    title = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=panel.label,
+        color=_TEXT,
+        max_width=panel.rect.width - 16,
+        x=panel.rect.x + 8,
+        y=panel.rect.y + 6,
+    )
+    draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text=projection_hidden_label(
+            len(selected_coord),
+            panel.axes,
+            selected_coord,
+            slab_radius=slab_radius,
+        ),
+        color=_MUTED,
+        max_width=panel.rect.width - 16,
+        x=panel.rect.x + 8,
+        y=panel.rect.y + 8 + title.get_height(),
     )
     board_rect, cell_size = _panel_grid_rect(panel.rect, dims, panel.axes)
     _draw_grid(

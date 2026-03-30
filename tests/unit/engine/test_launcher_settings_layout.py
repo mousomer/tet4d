@@ -8,7 +8,7 @@ from tet4d.ui.pygame.launch import launcher_settings
 from tet4d.ui.pygame.launch import settings_hub_model
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.ui_utils import text_fits
+from tet4d.ui.pygame.ui_utils import text_fits, wrapped_label_value_layout
 
 
 class TestLauncherSettingsLayout(unittest.TestCase):
@@ -47,11 +47,11 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                 continue
             value = launcher_settings._unified_value_text(state, row_key)
             label_lines, value_lines, _row_height = (
-                launcher_settings._wrapped_settings_row_layout(
+                wrapped_label_value_layout(
                     fonts.menu_font,
                     label=label,
                     value=value,
-                    panel_w=panel_w,
+                    total_width=panel_w,
                 )
             )
             value_draw_width = (
@@ -87,11 +87,11 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         value_width = int(panel_w * 0.34)
         for row_key, label in launcher_settings._ADVANCED_GAMEPLAY_ROWS:
             value = launcher_settings._advanced_gameplay_value_text(state, row_key)
-            label_lines, value_lines, _row_height = launcher_settings._wrapped_settings_row_layout(
+            label_lines, value_lines, _row_height = wrapped_label_value_layout(
                 fonts.menu_font,
                 label=label,
                 value=value,
-                panel_w=panel_w,
+                total_width=panel_w,
             )
             with self.subTest(label=label):
                 self.assertGreater(len(label_lines), 0)

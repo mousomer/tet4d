@@ -30,7 +30,6 @@ from .controls_panel_values import (
     _playability_panel_lines,
     _sandbox_neighbor_search_enabled,
 )
-from .explorer_tools import draw_tool_ribbon as _shared_draw_tool_ribbon
 from .piece_sandbox import (
     ensure_piece_sandbox,
     sandbox_cells,
@@ -78,18 +77,14 @@ from .state_ownership import (
 )
 from .transform_editor import draw_transform_editor
 from .camera_controls import scene_camera_availability
-from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
-
-
-def draw_tool_ribbon(surface: pygame.Surface, fonts, *, area: pygame.Rect, active_workspace: str):
-    return _shared_draw_tool_ribbon(
-        surface,
-        fonts,
-        area=area,
-        active_workspace=active_workspace,
-    )
-
-
+from tet4d.ui.pygame.ui_utils import (
+    draw_centered_chip,
+    draw_fitted_text_line,
+    draw_panel_frame,
+    draw_wrapped_label_value_lines,
+    wrap_text_lines,
+    wrapped_row_height,
+)
 def _explorer_bindings_for_dimension(dimension: int):
     if int(dimension) == 2:
         return EXPLORER_KEYS_2D
@@ -599,42 +594,52 @@ def _draw_workspace_helper_panel(
     state,
 ) -> None:
     card_rect = area.copy()
-    pygame.draw.rect(surface, (18, 22, 38), card_rect, border_radius=10)
-    pygame.draw.rect(surface, (76, 84, 112), card_rect, 1, border_radius=10)
+    draw_panel_frame(
+        surface,
+        rect=card_rect,
+        fill_color=(18, 22, 38),
+        border_color=(76, 84, 112),
+    )
     y = card_rect.y + 10
-    title = fit_text(fonts.hint_font, "Controls", card_rect.width - 20)
-    title_surf = fonts.hint_font.render(title, True, (220, 228, 250))
-    surface.blit(title_surf, (card_rect.x + 10, y))
+    title_surf = draw_fitted_text_line(
+        surface,
+        font=fonts.hint_font,
+        text="Controls",
+        color=(220, 228, 250),
+        max_width=card_rect.width - 20,
+        x=card_rect.x + 10,
+        y=y,
+    )
     y += title_surf.get_height() + 8
 
-    context_text = fit_text(fonts.hint_font, _workspace_helper_context(state), card_rect.width - 24)
-    context_surf = fonts.hint_font.render(context_text, True, (226, 234, 252))
     context_rect = pygame.Rect(card_rect.x + 10, y, card_rect.width - 20, 24)
-    pygame.draw.rect(surface, (28, 36, 58), context_rect, border_radius=12)
-    pygame.draw.rect(surface, (82, 96, 132), context_rect, 1, border_radius=12)
-    surface.blit(
-        context_surf,
-        (
-            context_rect.x + (context_rect.width - context_surf.get_width()) // 2,
-            context_rect.y + (context_rect.height - context_surf.get_height()) // 2,
-        ),
+    draw_centered_chip(
+        surface,
+        rect=context_rect,
+        font=fonts.hint_font,
+        text=_workspace_helper_context(state),
+        text_color=(226, 234, 252),
+        fill_color=(28, 36, 58),
+        border_color=(82, 96, 132),
     )
     y += context_rect.height + 10
 
     row_label_width = max(24, min(34, card_rect.width // 5))
     row_value_width = max(48, card_rect.width - 24 - row_label_width)
     for section_title, rows in _workspace_helper_sections(state):
-        heading = fit_text(fonts.hint_font, section_title.upper(), card_rect.width - 20)
-        heading_surf = fonts.hint_font.render(heading, True, (150, 164, 202))
-        surface.blit(heading_surf, (card_rect.x + 10, y))
+        heading_surf = draw_fitted_text_line(
+            surface,
+            font=fonts.hint_font,
+            text=section_title.upper(),
+            color=(150, 164, 202),
+            max_width=card_rect.width - 20,
+            x=card_rect.x + 10,
+            y=y,
+        )
         y += heading_surf.get_height() + 6
         for label, keys in rows:
-            label_surf = fonts.hint_font.render(label, True, (232, 238, 252))
             key_lines = wrap_text_lines(fonts.hint_font, keys, row_value_width)
-            row_height = max(
-                24,
-                len(key_lines) * (fonts.hint_font.get_linesize() + 1) + 8,
-            )
+            row_height = max(24, wrapped_row_height(fonts.hint_font, len(key_lines)))
             row_rect = pygame.Rect(card_rect.x + 8, y, card_rect.width - 16, row_height)
             pygame.draw.rect(surface, (22, 28, 48), row_rect, border_radius=8)
             label_rect = pygame.Rect(
@@ -643,20 +648,29 @@ def _draw_workspace_helper_panel(
                 row_label_width,
                 row_rect.height - 8,
             )
-            pygame.draw.rect(surface, (54, 66, 98), label_rect, border_radius=7)
-            surface.blit(
-                label_surf,
-                (
-                    label_rect.x + (label_rect.width - label_surf.get_width()) // 2,
-                    label_rect.y + (label_rect.height - label_surf.get_height()) // 2,
-                ),
+            draw_centered_chip(
+                surface,
+                rect=label_rect,
+                font=fonts.hint_font,
+                text=label,
+                text_color=(232, 238, 252),
+                fill_color=(54, 66, 98),
+                border_color=(54, 66, 98),
+                border_radius=7,
+                text_width_padding=4,
             )
-            key_x = label_rect.right + 8
-            key_y = row_rect.y + 4
-            for wrapped in key_lines:
-                key_surf = fonts.hint_font.render(wrapped, True, (204, 214, 236))
-                surface.blit(key_surf, (key_x, key_y))
-                key_y += fonts.hint_font.get_linesize() + 1
+            draw_wrapped_label_value_lines(
+                surface,
+                font=fonts.hint_font,
+                label_lines=tuple(),
+                value_lines=key_lines,
+                label_x=label_rect.right + 8,
+                value_right=label_rect.right + 8 + row_value_width,
+                top_y=row_rect.y + 4,
+                label_color=(204, 214, 236),
+                value_color=(204, 214, 236),
+                line_gap=1,
+            )
             y += row_rect.height + 6
         y += 4
 
@@ -751,10 +765,6 @@ def _draw_explorer_workspace(
     panel_w: int,
     panel_h: int,
     menu_w: int,
-    analysis_pane_title: str,
-    scene_pane_title: str,
-    text_color: tuple[int, int, int],
-    muted_color: tuple[int, int, int],
     highlight_color: tuple[int, int, int],
 ) -> list[TopologyLabHitTarget]:
     profile = _current_explorer_profile(state)

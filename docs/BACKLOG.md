@@ -119,6 +119,30 @@ Completed on 2026-03-29:
   a minimal structured controls card with one short workspace/tool context
   line plus movement and rotation keys pulled from the current active
   keybindings for the active dimension
+- topology-playground text-layout dedup so shared wrapped-text primitives now
+  handle row sizing plus centered compact-label rendering for launcher
+  settings rows, Topology Playground rows, workspace tabs, and transform /
+  action buttons instead of keeping near-duplicate wrapping logic in each
+  caller
+- topology-playground row-render dedup so launcher settings and Topology
+  Playground control rows now share the same selection-highlight and wrapped
+  label/value text renderer instead of maintaining parallel drawing loops
+- topology-playground panel/text dedup so helper/preview cards and centered
+  launcher title/status/hint lines now reuse shared framed-panel and fitted
+  centered-text helpers instead of repeating local drawing boilerplate
+- topology-playground compact-chip dedup so top-bar validity/dimension chips
+  and footer helper chips now reuse one shared centered chip renderer instead
+  of repeating local fit-center-border badge drawing logic
+- topology-playground fitted-text cleanup so remaining shell title/header and
+  compact control-label callers now route through the shared fitted-text
+  helpers instead of keeping local fit-text render boilerplate
+- topology-playground duplicate-panel cleanup so local framed-panel and
+  fitted-text helpers in projection/transform surfaces now use the existing
+  shared pygame UI primitives instead of keeping separate caller-local
+  drawing helpers
+- topology-playground dead-code cleanup so the shared side-panel and modern
+  explorer-workspace paths no longer carry unused parameters, and the current
+  `vulture` sweep is back to clean high-confidence results
 - topology-playground sandbox-neighbor row click fix so the modern shell now
   toggles Sandbox `Neighbors` directly on mouse click in `3D` / `4D` instead
   of requiring keyboard row adjustment to disable the overlay
@@ -170,6 +194,20 @@ Current batch:
   Advanced gameplay settings plus a wider helper-lane budget
 - minimal structured helper-panel rendering sourced from live current
   movement/rotation keybindings instead of a generic wrapped hint stack
+- shared wrapped-text primitives for compact rows and centered button labels
+  reused across launcher settings and Topology Playground surfaces
+- shared highlighted row renderer for launcher settings and Topology
+  Playground wrapped label/value rows
+- shared framed-card and centered fitted-text helpers reused by helper/preview
+  cards and launcher title/status/hint lines
+- shared centered chip helper reused by Topology Playground top-bar and footer
+  badge rendering
+- further adoption of shared fitted-text helpers across Topology Playground
+  shell title/header and compact control labels
+- replacement of remaining caller-local projection/transform panel helpers
+  with the existing shared pygame UI primitives
+- removal of dead shared-panel and explorer-workspace parameters confirmed by
+  `vulture`
 - compact-shell layout rebalance for control rows and helper lane readability
 - profiler-script repair for the current topology-playground startup path
 - focused playability/menu tests plus authority/status doc synchronization

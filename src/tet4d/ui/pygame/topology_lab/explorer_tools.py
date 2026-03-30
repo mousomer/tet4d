@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pygame
 
-from tet4d.ui.pygame.ui_utils import wrap_text_lines
+from tet4d.ui.pygame.ui_utils import draw_centered_wrapped_text
 
 from .common import TopologyLabHitTarget
 from .scene_state import (
@@ -38,22 +38,13 @@ def draw_tool_ribbon(
         color = (86, 98, 146) if workspace == active_workspace else (38, 44, 70)
         pygame.draw.rect(surface, color, rect, border_radius=8)
         pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
-        lines = wrap_text_lines(
-            fonts.hint_font,
-            WORKSPACE_LABELS[workspace],
-            rect.width - 10,
-        )[:2]
-        line_gap = 2
-        total_h = len(lines) * fonts.hint_font.get_height() + max(0, len(lines) - 1) * line_gap
-        y = rect.centery - total_h // 2
-        for line in lines:
-            surf = fonts.hint_font.render(
-                line,
-                True,
-                (232, 236, 248),
-            )
-            surface.blit(surf, (rect.centerx - surf.get_width() // 2, y))
-            y += fonts.hint_font.get_height() + line_gap
+        draw_centered_wrapped_text(
+            surface,
+            rect=rect,
+            font=fonts.hint_font,
+            text=WORKSPACE_LABELS[workspace],
+            color=(232, 236, 248),
+        )
         hits.append(TopologyLabHitTarget("workspace_mode", workspace, rect.copy()))
     return hits
 

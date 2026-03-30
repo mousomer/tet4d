@@ -3909,7 +3909,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             patch.object(
                 topology_lab_controls_panel, "compile_explorer_topology_preview"
             ) as compile_preview,
-            patch.object(topology_lab_workspace_shell, "draw_tool_ribbon", return_value=[]),
+            patch.object(topology_lab_menu, "draw_tool_ribbon", return_value=[]),
             patch.object(
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
@@ -3930,10 +3930,6 @@ class TestTopologyLabMenu(unittest.TestCase):
                 panel_w=1040,
                 panel_h=620,
                 menu_w=460,
-                analysis_pane_title=topology_lab_menu._ANALYSIS_PANE_TITLE,
-                scene_pane_title=topology_lab_menu._SCENE_PANE_TITLE,
-                text_color=topology_lab_menu._TEXT_COLOR,
-                muted_color=topology_lab_menu._MUTED_COLOR,
                 highlight_color=topology_lab_menu._HIGHLIGHT_COLOR,
             )
         compile_preview.assert_not_called()

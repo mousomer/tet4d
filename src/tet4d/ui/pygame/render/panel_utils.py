@@ -151,7 +151,6 @@ def draw_unified_game_side_panel(
     bot_lines: Sequence[str] = (),
     analysis_lines: Sequence[str] = (),
     game_over: bool = False,
-    min_controls_h: int = 140,
     meter_label: str | None = None,
     meter_value: float | None = None,
     meter_hint: str | None = None,

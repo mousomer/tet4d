@@ -10,7 +10,13 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     normalize_display_settings,
 )
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text, wrap_text_lines
+from tet4d.ui.pygame.ui_utils import (
+    draw_fitted_text_line,
+    draw_selection_highlight,
+    draw_wrapped_label_value_lines,
+    draw_vertical_gradient,
+    wrapped_label_value_layout,
+)
 
 from .settings_hub_actions import (
     _adjust_unified_with_arrows,
@@ -48,12 +54,6 @@ from .settings_hub_model import (
     build_unified_settings_state,
     rotation_animation_mode_label,
 )
-
-
-def _draw_gradient(surface: pygame.Surface) -> None:
-    draw_vertical_gradient(surface, BG_TOP, BG_BOTTOM)
-
-
 def _format_animation_duration(value: int) -> str:
     return "Off" if int(value) <= 0 else f"{int(value)} ms"
 
@@ -103,34 +103,32 @@ def _advanced_gameplay_value_text(
     if row_key == "topology_cache_clear":
         return "Enter"
     return str(int(state.lines_per_level))
-
-
-def _wrapped_settings_row_layout(
-    font: pygame.font.Font,
+def _draw_wrapped_settings_row(
+    screen: pygame.Surface,
     *,
-    label: str,
-    value: str,
+    fonts,
+    panel_x: int,
     panel_w: int,
-) -> tuple[tuple[str, ...], tuple[str, ...], int]:
-    value_width = int(panel_w * 0.34) if value else 0
-    value_lines = (
-        wrap_text_lines(font, value, value_width)
-        if value
-        else tuple()
+    line_y: int,
+    label_lines: tuple[str, ...],
+    value_lines: tuple[str, ...],
+    row_height: int,
+    color: tuple[int, int, int],
+    selected: bool,
+) -> None:
+    row_rect = pygame.Rect(panel_x + 14, line_y - 5, panel_w - 28, row_height)
+    if selected:
+        draw_selection_highlight(screen, rect=row_rect)
+    draw_wrapped_label_value_lines(
+        screen,
+        font=fonts.menu_font,
+        label_lines=label_lines,
+        value_lines=value_lines,
+        label_x=panel_x + 22,
+        value_right=panel_x + panel_w - 22,
+        top_y=line_y,
+        label_color=color,
     )
-    value_draw_width = (
-        max(font.size(line)[0] for line in value_lines)
-        if value_lines
-        else 0
-    )
-    label_width = max(
-        80,
-        panel_w - 44 - value_draw_width - 10 if value_draw_width > 0 else panel_w - 44,
-    )
-    label_lines = wrap_text_lines(font, label, label_width)
-    line_count = max(len(label_lines), len(value_lines), 1)
-    row_height = line_count * font.get_height() + max(10, 8 + (line_count - 1) * 3)
-    return label_lines, value_lines, row_height
 
 
 def _handle_unified_enter(
@@ -186,24 +184,38 @@ def _draw_advanced_gameplay_menu(
     *,
     selected: int,
 ) -> None:
-    _draw_gradient(screen)
+    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
     width, _height = screen.get_size()
     title_text = "Advanced gameplay"
     subtitle_text = (
         "Up/Down select   Left/Right adjust   Enter toggle/cycle   Esc back   Q quit"
     )
-    title = fonts.title_font.render(title_text, True, TEXT_COLOR)
-    subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
-    screen.blit(title, ((width - title.get_width()) // 2, 60))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
+    draw_fitted_text_line(
+        screen,
+        font=fonts.title_font,
+        text=title_text,
+        color=TEXT_COLOR,
+        max_width=width - 28,
+        center_x=width // 2,
+        y=60,
+    )
+    draw_fitted_text_line(
+        screen,
+        font=fonts.hint_font,
+        text=subtitle_text,
+        color=MUTED_COLOR,
+        max_width=width - 28,
+        center_x=width // 2,
+        y=108,
+    )
 
     panel_w = min(760, max(420, width - 40))
     required_content_h = sum(
-        _wrapped_settings_row_layout(
+        wrapped_label_value_layout(
             fonts.menu_font,
             label=label,
             value=_advanced_gameplay_value_text(state, row_key),
-            panel_w=panel_w,
+            total_width=panel_w,
         )[2]
         + 8
         for row_key, label in _ADVANCED_GAMEPLAY_ROWS
@@ -221,37 +233,37 @@ def _draw_advanced_gameplay_menu(
         is_selected = idx == selected
         color = HIGHLIGHT_COLOR if is_selected else TEXT_COLOR
         value = _advanced_gameplay_value_text(state, row_key)
-        label_lines, value_lines, row_height = _wrapped_settings_row_layout(
+        label_lines, value_lines, row_height = wrapped_label_value_layout(
             fonts.menu_font,
             label=label,
             value=value,
-            panel_w=panel_w,
+            total_width=panel_w,
         )
-        row_rect = pygame.Rect(panel_x + 14, line_y - 5, panel_w - 28, row_height)
-        if is_selected:
-            hi = pygame.Surface((row_rect.width, row_rect.height), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, row_rect.topleft)
-        label_y = line_y
-        for line in label_lines:
-            label_surf = fonts.menu_font.render(line, True, color)
-            screen.blit(label_surf, (panel_x + 22, label_y))
-            label_y += fonts.menu_font.get_height() + 3
-        value_y = line_y
-        for line in value_lines:
-            value_surf = fonts.menu_font.render(line, True, color)
-            screen.blit(
-                value_surf,
-                (panel_x + panel_w - value_surf.get_width() - 22, value_y),
-            )
-            value_y += fonts.menu_font.get_height() + 3
+        _draw_wrapped_settings_row(
+            screen,
+            fonts=fonts,
+            panel_x=panel_x,
+            panel_w=panel_w,
+            line_y=line_y,
+            label_lines=label_lines,
+            value_lines=value_lines,
+            row_height=row_height,
+            color=color,
+            selected=is_selected,
+        )
         line_y += row_height + row_gap
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = fit_text(fonts.hint_font, state.status, width - 28)
-        status = fonts.hint_font.render(status_text, True, color)
-        screen.blit(status, ((width - status.get_width()) // 2, panel_y + panel_h + 18))
+        draw_fitted_text_line(
+            screen,
+            font=fonts.hint_font,
+            text=state.status,
+            color=color,
+            max_width=width - 28,
+            center_x=width // 2,
+            y=panel_y + panel_h + 18,
+        )
 
 
 def run_advanced_gameplay_menu(
@@ -285,26 +297,31 @@ def run_advanced_gameplay_menu(
 def _draw_unified_settings_menu(
     screen: pygame.Surface, fonts, state: _UnifiedSettingsState
 ) -> None:
-    _draw_gradient(screen)
+    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
     width, height = screen.get_size()
-    title = fonts.title_font.render(_SETTINGS_HUB_COPY["title"], True, TEXT_COLOR)
+    title = draw_fitted_text_line(
+        screen,
+        font=fonts.title_font,
+        text=_SETTINGS_HUB_COPY["title"],
+        color=TEXT_COLOR,
+        max_width=width - 28,
+        center_x=width // 2,
+        y=44,
+    )
     categories = ", ".join(_configured_top_level_labels())
-    subtitle_text = fit_text(
-        fonts.hint_font,
-        _SETTINGS_HUB_COPY["subtitle_categories_template"].format(
+    subtitle = draw_fitted_text_line(
+        screen,
+        font=fonts.hint_font,
+        text=_SETTINGS_HUB_COPY["subtitle_categories_template"].format(
             categories=categories
         ),
-        width - 28,
-    )
-    subtitle = fonts.hint_font.render(
-        subtitle_text,
-        True,
-        MUTED_COLOR,
+        color=MUTED_COLOR,
+        max_width=width - 28,
+        center_x=width // 2,
+        y=44 + title.get_height() + 8,
     )
     title_y = 44
     subtitle_y = title_y + title.get_height() + 8
-    screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
 
     panel_w = min(700, max(360, width - 40))
     line_h = fonts.hint_font.get_height() + 3
@@ -319,11 +336,11 @@ def _draw_unified_settings_menu(
     )
     header_step_default = fonts.hint_font.get_height() + 10
     item_heights_default = [
-        _wrapped_settings_row_layout(
+        wrapped_label_value_layout(
             fonts.menu_font,
             label=label,
             value=_unified_value_text(state, row_key),
-            panel_w=panel_w,
+            total_width=panel_w,
         )[2]
         for kind, label, row_key in _UNIFIED_SETTINGS_ROWS
         if kind == "item"
@@ -355,15 +372,19 @@ def _draw_unified_settings_menu(
     selected_row_idx = _UNIFIED_SELECTABLE[state.selected]
     y = panel_y + 14
     panel_bottom = panel_y + panel_h - 8
-    label_left = panel_x + 22
-    label_right = panel_x + panel_w - 22
     for idx, (row_kind, label, row_key) in enumerate(_UNIFIED_SETTINGS_ROWS):
         if y > panel_bottom:
             break
         if row_kind == "header":
-            header_text = fit_text(fonts.hint_font, label, panel_w - 44)
-            header = fonts.hint_font.render(header_text, True, (182, 206, 255))
-            screen.blit(header, (panel_x + 22, y + 3))
+            draw_fitted_text_line(
+                screen,
+                font=fonts.hint_font,
+                text=label,
+                color=(182, 206, 255),
+                max_width=panel_w - 44,
+                x=panel_x + 22,
+                y=y + 3,
+            )
             y += header_step
             continue
 
@@ -371,35 +392,25 @@ def _draw_unified_settings_menu(
             break
         selected = idx == selected_row_idx
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        if selected:
-            value = _unified_value_text(state, row_key)
-            label_lines, value_lines, row_height = _wrapped_settings_row_layout(
-                fonts.menu_font,
-                label=label,
-                value=value,
-                panel_w=panel_w,
-            )
-            hi = pygame.Surface((panel_w - 28, row_height), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, y - 4))
-        else:
-            value = _unified_value_text(state, row_key)
-            label_lines, value_lines, row_height = _wrapped_settings_row_layout(
-                fonts.menu_font,
-                label=label,
-                value=value,
-                panel_w=panel_w,
-            )
-        label_y = y
-        for line in label_lines:
-            label_surf = fonts.menu_font.render(line, True, color)
-            screen.blit(label_surf, (label_left, label_y))
-            label_y += fonts.menu_font.get_height() + 3
-        value_y = y
-        for line in value_lines:
-            value_surf = fonts.menu_font.render(line, True, color)
-            screen.blit(value_surf, (label_right - value_surf.get_width(), value_y))
-            value_y += fonts.menu_font.get_height() + 3
+        value = _unified_value_text(state, row_key)
+        label_lines, value_lines, row_height = wrapped_label_value_layout(
+            fonts.menu_font,
+            label=label,
+            value=value,
+            total_width=panel_w,
+        )
+        _draw_wrapped_settings_row(
+            screen,
+            fonts=fonts,
+            panel_x=panel_x,
+            panel_w=panel_w,
+            line_y=y,
+            label_lines=label_lines,
+            value_lines=value_lines,
+            row_height=row_height,
+            color=color,
+            selected=selected,
+        )
         y += row_height + max(6, item_step - row_height)
 
     hints = tuple(_SETTINGS_HUB_COPY["hints"])
@@ -407,16 +418,28 @@ def _draw_unified_settings_menu(
     max_hint_lines = max(0, (height - hy - 6) // max(1, line_h))
     hint_budget = max(0, max_hint_lines - (1 if state.status else 0))
     for line in hints[:hint_budget]:
-        line_text = fit_text(fonts.hint_font, line, width - 28)
-        surf = fonts.hint_font.render(line_text, True, MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
+        surf = draw_fitted_text_line(
+            screen,
+            font=fonts.hint_font,
+            text=line,
+            color=MUTED_COLOR,
+            max_width=width - 28,
+            center_x=width // 2,
+            y=hy,
+        )
         hy += surf.get_height() + 3
 
     if state.status and hy + line_h <= height - 6:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = fit_text(fonts.hint_font, state.status, width - 28)
-        surf = fonts.hint_font.render(status_text, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
+        draw_fitted_text_line(
+            screen,
+            font=fonts.hint_font,
+            text=state.status,
+            color=color,
+            max_width=width - 28,
+            center_x=width // 2,
+            y=hy + 2,
+        )
 
 
 
