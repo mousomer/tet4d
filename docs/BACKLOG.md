@@ -36,7 +36,9 @@ Current sub-batch (2026-03-29): shell-preserving topology-playground cleanup.
   4. keep the shell-layout/text-visibility contract intact across Topology
      Playground, pause/settings/help, tutorial overlays, and gameplay side
      panels
-  5. continue compatibility-debt reduction without reopening runtime authority,
+  5. keep diagnostics explicitly secondary rather than default-primary in any
+     future topology-playground shell follow-up
+  6. continue compatibility-debt reduction without reopening runtime authority,
      launcher IA, or the frozen visible shell
 
 - Acceptance bar:

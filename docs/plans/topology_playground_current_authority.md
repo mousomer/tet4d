@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-03-29
+Last updated: 2026-03-30
 
 ## Purpose
 
@@ -183,6 +183,8 @@ settled Play drop-policy contract.
 - Keep preview compile immediate, but defer and cache rigid playability
   analysis by effective preview signature so same-signature refreshes reuse the
   last full result.
+- In future shell follow-up work, keep diagnostics explicitly secondary and do
+  not let them drift back into default-primary sidebar content.
 - Keep `Topology Playground` as a direct modern launcher entry with no
   modern-vs-legacy submenu split.
 - Keep the legacy topology editor/menu out of `Topology Playground`,
