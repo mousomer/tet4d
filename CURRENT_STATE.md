@@ -43,7 +43,17 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground persistent cache completion follow-up (2026-03-29): the same versioned topology cache file now persists preview payloads, serialized movement-graph rows, and rigid-playability analysis together by effective topology signature, so repeat runs can reuse the full preview/signaling artifact stack rather than only the summary preview payload. Advanced gameplay now also exposes `Measure topology cache` and `Clear topology cache` actions for the persistent topology cache set, while clear also flushes the current process movement-graph and resolver memos.
 - Topology-playground/menu visibility follow-up (2026-03-30): compact control rows in both `Topology Playground` and `Advanced gameplay` now use wrap-aware label/value rendering instead of single-line truncation-only rendering, shared action buttons plus workspace tabs now wrap instead of hard truncating long labels, and the external helper lane now reserves a wider minimum width on supported compact shells so wrapped helper lines stay readable instead of collapsing into an overly narrow sidebar.
 - Topology-playground helper-panel redesign follow-up (2026-03-30): the right helper no longer renders as a generic wrapped hint stack. It now presents a minimal `Controls` card with one short workspace/tool context line plus dedicated `Move` and `Rotate` sections populated from the live current keybinding maps for the active dimension, keeping the helper easy to scan without reintroducing diagnostics or duplicate menu controls.
-- Keybinding authority unification follow-up (2026-03-30): keybinding action/group/editor/helper structure now lives in `config/keybindings/catalog.json` instead of being split across Python constants, menu structure docs, and a separate help-action layout file. Built-in preset defaults remain in `config/keybindings/defaults.json`, user profile files remain the mutable override layer, and runtime help/editor/control surfaces now read the same catalog-backed metadata plus the same resolved live binding map.
+- Keybinding authority unification follow-up (2026-03-30): keybinding action/group/editor/helper structure now lives in `config/keybindings/catalog.json` instead of being split across Python constants, menu structure docs, and a separate help-action layout file. Built-in preset defaults remain in `config/keybindings/defaults.json`, user profile files remain the mutable override layer, the keybindings menu scope-section copy is now catalog-backed instead of UI-local, and runtime help/editor/control surfaces now read the same catalog-backed metadata plus the same resolved live binding map.
+- Keybinding contract-hardening follow-up (2026-03-30): shipped defaults and persisted profile payloads are now validated against the same catalog-backed action/group/dimension contract before runtime use, invalid saved profile payloads now fail cleanly instead of being silently filtered through partial group application, and contributor docs now include a dedicated config-first keybinding editing guide.
+- Keybinding runtime-ownership completion follow-up (2026-03-30): mutable live keybinding maps now live under `src/tet4d/engine/runtime/keybinding_runtime_state.py` instead of being constructed and mutated directly in the pygame adapter, built-in defaults now enforce full required-action coverage, saved payloads now carry an explicit schema version, custom saved profiles remain allowed as partial overrides, and the repo now includes a dedicated `./scripts/check_keybinding_contract.sh` focused validation path for keybinding config work.
+- Keybinding runtime accessor cleanup follow-up (2026-03-30): engine/runtime now exposes narrow keybinding accessors through `src/tet4d/engine/runtime/api.py`, and UI callers that only needed active-profile or grouped runtime binding reads now consume those runtime accessors directly instead of depending on the wider `src/tet4d/ui/pygame/keybindings.py` adapter surface.
+- Keybinding short-guide follow-up (2026-03-30): repo docs now include `docs/SHORT_KEYBINDINGS_GUIDE.md`, a shorter task-oriented guide for direct keybinding config edits with concrete catalog/defaults examples, while the longer `docs/KEYBINDINGS_EDITING.md` remains the full contract reference.
+- Keybinding key-name config follow-up (2026-03-30): shipped defaults and saved keybinding payloads may now use readable key-name strings such as `"g"` and `"space"` in addition to integer keycodes, with store-level validation normalizing them to canonical `pygame` keycodes before runtime use.
+- Keybinding stale-source cleanup follow-up (2026-03-30): the dead legacy `src/tet4d/ui/pygame/input/keybindings_defaults.py` fallback source is removed, startup now deletes the obsolete `keybindings/profiles/small/` built-in directory if it exists, and the canonical shipped keybinding truth remains only the catalog/defaults-plus-runtime-store path.
+- Keybinding round-trip contract repair follow-up (2026-03-30): the runtime/store key-token parser now accepts the keypad operator token names that the serializer writes into built-in profile files, built-in `full` 4D bindings round-trip cleanly again, and invalid custom profile files now fail load instead of being silently overwritten during normal active-profile initialization.
+- Topology-playground keybinding seam follow-up (2026-03-30): helper-panel movement/rotation labels plus movement/camera shortcut matching in the playground now read the canonical runtime binding groups instead of direct `KEYS_*` / `EXPLORER_KEYS_*` / `CAMERA_KEYS_*` adapter globals, so the playground stays aligned with the active runtime keybinding state.
+- Settings-help contract follow-up (2026-03-30): the runtime help screen’s settings summary now derives from the active `settings_sections` contract rather than the older parallel `settings_category_docs` list, so retired categories like `Advanced`, `Profiles`, `Controls`, and `Bot Options` no longer drift back into live help copy after launcher/settings IA changes.
+- Keybinding contract-check follow-up (2026-03-30): the focused `./scripts/check_keybinding_contract.sh` gate now also covers the runtime-seam consumers in menu navigation and tutorial overlays, and `src/tet4d.egg-info/SOURCES.txt` has been regenerated so the deleted legacy keybinding defaults file no longer appears in the packaged source manifest.
 - Topology-playground text-layout dedup follow-up (2026-03-30): shared wrapped-text primitives now centralize multi-line row sizing and centered compact-label rendering in `src/tet4d/ui/pygame/ui_utils.py`, so Topology Playground control rows, launcher settings rows, workspace tabs, and transform/action buttons now reuse the same layout math instead of maintaining near-duplicate wrapping code at each callsite.
 - Topology-playground row-render dedup follow-up (2026-03-30): the shared pygame UI helpers now also centralize selection-highlight drawing plus wrapped label/value row text rendering, so launcher settings and Topology Playground control rows no longer keep parallel per-surface loops for the same highlighted multi-line row presentation.
 - Config-reference/theme follow-up (2026-03-30): `config/ui/theme.json` now participates in the generated configuration-reference contract, focused project-config coverage now pins theme color fallback and validation behavior, and topology-playground color reads now stay lazy at the `pygame` UI seam instead of binding the theme once at `ui_utils.py` import time.
@@ -54,6 +64,8 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground dead-code cleanup follow-up (2026-03-30): the shared side-panel path no longer exposes an unused `min_controls_h` parameter, the modern explorer workspace shell no longer accepts stale unused title/color arguments, and `vulture src tests scripts tools --min-confidence 80` is clean again after removing those defunct callsite parameters.
 - Launcher settings split fix follow-up (2026-03-30): the launcher `Settings` menu no longer reopens the full bundled settings hub for `Game`, `Display`, and `Audio`. Those entries now open filtered category-specific settings screens, while `Advanced gameplay` continues to use the broader gameplay/advanced path and focused coverage now pins both the row filtering and launcher dispatch contract.
 - Launcher settings IA follow-up (2026-03-30): the top-level launcher settings menu no longer has an `Advanced` submenu. `Legacy Topology Editor Menu` now sits directly on the main settings list, and the old `Game -> Advanced gameplay...` sub-flow is retired so its shared gameplay tuning rows now render directly as an inline `Advanced gameplay` section inside the game settings screen itself.
+- Launcher settings config-authority follow-up (2026-03-30): menu structure now owns settings section titles/subtitles/header membership/row ownership plus launcher `Game`/`Display`/`Audio` route targets in `config/menu/structure.json`, top-level settings category policy now derives from that same section contract instead of the older category-metrics path, invalid section header/row references now fail config validation instead of silently degrading filtered settings screens, launcher/settings Python no longer keeps private section or route maps for that IA, and governance now fails if those hardcoded maps are reintroduced.
+- Menu-structure editing guide follow-up (2026-03-30): repo docs now include a dedicated `docs/MENU_STRUCTURE_EDITING.md` guide covering config-first menu graph/settings-section edits, current validation rules, and the expected verification flow, and the docs routing plus menu-structure RDS references now point contributors to that guide instead of leaving menu editing knowledge implicit.
 - Dead-code pruning follow-up (2026-03-30): another small set of unreferenced helpers and stale compatibility leftovers is now removed, including the unused topology-lab `_COMPAT_EXPORTS` tuple, the unused `tool_is_play(...)` export seam, dead internal core/gameplay helpers, and a few unused playbot/help/settings helpers, reducing non-runtime surface area without changing live behavior.
 - Vulture bucket-1 pruning follow-up (2026-03-30): the current high-confidence UI/tooling sweep no longer carries stale topology-lab imports, unused workspace/helper card functions, unused camera-hint fields, orphaned projection/control-icon cache debug helpers, or dead pause/governance helpers, and the non-test `vulture src cli scripts tools --min-confidence 80` pass is again limited to the remaining verify-first surfaces rather than obvious internal leftovers.
 - Dead-wrapper retirement follow-up (2026-03-30): the old topology-lab preview/sidebar/probe-control compatibility helpers and a small set of row-adjustment wrapper functions are now retired entirely instead of being kept alive through test-only seams, and the matching defunct tests were removed or rewritten to assert real owner modules rather than reconstructed dead wrapper behavior.
@@ -116,15 +128,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 188` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 198` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.30` (`low`)
+- `tech_debt.score = 3.31` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.99`
+1. `delivery_size_pressure = 2.00`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -363,18 +375,18 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3623` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3645` real LOC
 2. `scripts/arch_metrics.py`: `1887` real LOC
-3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1553` real LOC
+3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1542` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1087` real LOC
-6. `tools/governance/generate_configuration_reference.py`: `985` real LOC
-7. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `967` real LOC
-8. `src/tet4d/ui/pygame/render/gfx_game.py`: `962` real LOC
+6. `tools/governance/validate_project_contracts.py`: `1067` real LOC
+7. `tools/governance/generate_configuration_reference.py`: `985` real LOC
+8. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `967` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 838/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 835/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

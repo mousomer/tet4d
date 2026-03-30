@@ -18,11 +18,13 @@ from .menu_structure.policy import (
 )
 from .menu_structure.settings_parse import (
     parse_keybinding_category_docs,
+    parse_launcher_settings_routes,
     parse_pause_copy,
     parse_settings_category_docs,
     parse_settings_category_metrics,
     parse_settings_hub_layout_rows,
     parse_settings_option_labels,
+    parse_settings_sections,
     parse_settings_split_rules,
     parse_setup_fields,
     parse_setup_hints,
@@ -62,6 +64,25 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     settings_docs = parse_settings_category_docs(payload)
+    settings_hub_layout_rows = parse_settings_hub_layout_rows(
+        payload.get("settings_hub_layout_rows")
+    )
+    settings_sections = parse_settings_sections(
+        payload,
+        layout_rows=settings_hub_layout_rows,
+    )
+    launcher_settings_menu = menus.get("launcher_settings_root", {})
+    launcher_settings_items = launcher_settings_menu.get("items", ())
+    launcher_settings_action_ids = {
+        str(item["action_id"])
+        for item in launcher_settings_items
+        if isinstance(item, dict) and item.get("type") == "action"
+    }
+    launcher_settings_routes = parse_launcher_settings_routes(
+        payload,
+        settings_sections=settings_sections,
+        launcher_settings_action_ids=launcher_settings_action_ids,
+    )
     validated = {
         "menus": menus,
         "menu_entrypoints": entrypoints,
@@ -73,9 +94,9 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
             payload.get("settings_hub_rows"),
             path="structure.settings_hub_rows",
         ),
-        "settings_hub_layout_rows": parse_settings_hub_layout_rows(
-            payload.get("settings_hub_layout_rows")
-        ),
+        "settings_hub_layout_rows": settings_hub_layout_rows,
+        "settings_sections": settings_sections,
+        "launcher_settings_routes": launcher_settings_routes,
         "bot_options_rows": string_tuple(
             payload.get("bot_options_rows"),
             path="structure.bot_options_rows",

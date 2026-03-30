@@ -133,6 +133,44 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
         scopes_obj.get("order"),
         path="keybindings.catalog.scopes.order",
     )
+    menu_sections_obj = _require_object(
+        scopes_obj.get("menu_sections"),
+        path="keybindings.catalog.scopes.menu_sections",
+    )
+    menu_sections: dict[str, dict[str, str]] = {}
+    for scope_name, raw_entry in menu_sections_obj.items():
+        clean_scope = _require_string(
+            scope_name,
+            path="keybindings.catalog.scopes.menu_sections keys",
+            non_empty=True,
+        ).lower()
+        entry = _require_object(
+            raw_entry,
+            path=f"keybindings.catalog.scopes.menu_sections.{clean_scope}",
+        )
+        menu_sections[clean_scope] = {
+            "title": _require_string(
+                entry.get("title"),
+                path=f"keybindings.catalog.scopes.menu_sections.{clean_scope}.title",
+                non_empty=True,
+            ),
+            "description": _require_string(
+                entry.get("description"),
+                path=(
+                    "keybindings.catalog.scopes.menu_sections."
+                    f"{clean_scope}.description"
+                ),
+                non_empty=True,
+            ),
+        }
+    missing_scope_sections = tuple(
+        scope for scope in scopes if scope not in {"all"} and scope not in menu_sections
+    )
+    if missing_scope_sections:
+        raise RuntimeError(
+            "keybindings.catalog.scopes.menu_sections missing configured scopes: "
+            + ", ".join(missing_scope_sections)
+        )
 
     groups: dict[str, dict[str, Any]] = {}
     for group_name, raw_group in groups_obj.items():
@@ -365,6 +403,7 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "version": version,
         "scopes": scopes,
+        "scope_menu_sections": menu_sections,
         "groups": groups,
         "editor": {"gameplay_buckets": gameplay_buckets},
         "reference_groups": {
@@ -384,6 +423,17 @@ def keybinding_catalog_payload() -> dict[str, Any]:
 
 def binding_scope_order() -> tuple[str, ...]:
     return tuple(keybinding_catalog_payload()["scopes"])
+
+
+def binding_scope_menu_sections() -> dict[str, dict[str, str]]:
+    sections = keybinding_catalog_payload()["scope_menu_sections"]
+    return {
+        scope: {
+            "title": str(entry["title"]),
+            "description": str(entry["description"]),
+        }
+        for scope, entry in sections.items()
+    }
 
 
 def binding_group_docs() -> dict[str, dict[str, str]]:
@@ -417,6 +467,22 @@ def binding_action_ids() -> tuple[str, ...]:
     actions = keybinding_catalog_payload()["actions"]
     ordered = sorted(actions.items(), key=lambda item: _action_sort_key(item[0]))
     return tuple(action for action, _entry in ordered)
+
+
+def binding_action_contracts() -> dict[str, dict[str, object]]:
+    actions = keybinding_catalog_payload()["actions"]
+    return {
+        action: {
+            "group": str(entry["group"]),
+            "dimensions": tuple(int(dimension) for dimension in entry["dimensions"]),
+            "gameplay_bucket": (
+                None
+                if entry.get("gameplay_bucket") is None
+                else str(entry["gameplay_bucket"])
+            ),
+        }
+        for action, entry in actions.items()
+    }
 
 
 def binding_action_label(action: str) -> str:

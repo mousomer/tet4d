@@ -49,7 +49,7 @@ Implementation references:
 1. `config/keybindings/catalog.json` is the single structural source of truth for:
 2. action ids
 3. group labels/descriptions
-4. editor scope order and gameplay bucket labels
+4. editor scope order, scope-section menu copy, and gameplay bucket labels
 5. helper/control panel membership and ordering
 6. help live-key group headings/order
 7. `config/keybindings/defaults.json` is the single shipped-defaults source of truth for built-in presets.
@@ -57,6 +57,24 @@ Implementation references:
 9. Reset-to-defaults restores from preserved built-in defaults; it must not derive defaults from UI code.
 10. Gameplay, camera/view, topology playground, tutorials, help, controls reference, and the keybinding editor must all read the same resolved live action->keys map after preset load plus user overrides.
 11. Help/control/editor surfaces may format or filter the live bindings for context, but must not maintain independent binding structure ownership outside the catalog.
+12. `catalog.json`, `defaults.json`, and persisted profile payloads must validate against the same action/group/dimension contract before runtime use.
+13. Built-in profiles in `config/keybindings/defaults.json` must be complete for all required actions in their declared groups/dimensions.
+14. Persisted custom profiles may remain partial override payloads, but malformed or unsupported-schema payloads must fail cleanly.
+15. The key-token parser must accept every key-name form the runtime serializer writes back to disk, including keypad token names.
+16. Built-in shipped profile files may self-heal when stale or invalid against the current defaults contract, but invalid custom profile files must report failure rather than being silently overwritten.
+
+### 2.4 Direct config editing workflow
+
+1. Edit `config/keybindings/catalog.json` for structural metadata:
+2. action ids
+3. group ownership
+4. dimension applicability
+5. labels/descriptions
+6. menu/helper grouping and section copy
+7. Edit `config/keybindings/defaults.json` for shipped built-in key assignments only.
+8. Do not use Python as a second structural source of truth for keybinding menu sections, helper grouping, or action metadata.
+9. Direct-edit workflow reference: `docs/KEYBINDINGS_EDITING.md`.
+10. Focused contract check: `./scripts/check_keybinding_contract.sh`.
 
 ## 3. Shared System Keys (all dimensions)
 

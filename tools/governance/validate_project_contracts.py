@@ -837,6 +837,44 @@ def _settings_hub_row_keys(menu_payload: dict[str, object]) -> set[str]:
     return keys
 
 
+def _settings_hub_header_labels(menu_payload: dict[str, object]) -> set[str]:
+    labels: set[str] = set()
+    layout = menu_payload.get("settings_hub_layout_rows")
+    if not isinstance(layout, list):
+        return labels
+    for entry in layout:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("kind") != "header":
+            continue
+        label = entry.get("label")
+        if isinstance(label, str) and label:
+            labels.add(label)
+    return labels
+
+
+def _launcher_settings_action_ids(menu_payload: dict[str, object]) -> set[str]:
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        return set()
+    launcher_settings = menus.get("launcher_settings_root")
+    if not isinstance(launcher_settings, dict):
+        return set()
+    items = launcher_settings.get("items")
+    if not isinstance(items, list):
+        return set()
+    action_ids: set[str] = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") != "action":
+            continue
+        action_id = item.get("action_id")
+        if isinstance(action_id, str) and action_id:
+            action_ids.add(action_id)
+    return action_ids
+
+
 def _setup_field_attrs(menu_payload: dict[str, object]) -> set[str]:
     attrs: set[str] = set()
     setup_fields = menu_payload.get("setup_fields")
@@ -919,6 +957,215 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     return issues
 
 
+def _menu_structure_banned_literals() -> tuple[tuple[Path, str, str], ...]:
+    return (
+        (
+            PROJECT_ROOT / "cli/front.py",
+            "_SETTINGS_HUB_ROUTE =",
+            "cli/front.py must not hardcode launcher settings routes; use config/menu/structure.json",
+        ),
+        (
+            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+            "_CATEGORY_ID_BY_HEADER_LABEL =",
+            "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json",
+        ),
+        (
+            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+            "_CATEGORY_IDS_BY_FILTER =",
+            "settings_hub_model.py must not hardcode settings section filters; use config/menu/structure.json",
+        ),
+        (
+            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+            "_FOOTER_ROW_KEYS =",
+            "settings_hub_model.py must not hardcode settings footer row ownership; use config/menu/structure.json",
+        ),
+        (
+            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+            "_TOP_LEVEL_HEADER_LABELS =",
+            "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json",
+        ),
+    )
+
+
+def _validate_settings_section_membership(
+    *,
+    menu_rel: str,
+    settings_sections: dict[str, object],
+    hub_headers: set[str],
+    hub_row_keys: set[str],
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for section_id, raw_section in settings_sections.items():
+        if not isinstance(raw_section, dict):
+            continue
+        headers = raw_section.get("headers")
+        if isinstance(headers, list):
+            for header in headers:
+                if isinstance(header, str) and header and header not in hub_headers:
+                    issues.append(
+                        ValidationIssue(
+                            "content",
+                            f"{menu_rel} settings_sections.{section_id}.headers references unknown hub header: {header}",
+                        )
+                    )
+        row_keys = raw_section.get("row_keys")
+        if isinstance(row_keys, list):
+            for row_key in row_keys:
+                if isinstance(row_key, str) and row_key and row_key not in hub_row_keys:
+                    issues.append(
+                        ValidationIssue(
+                            "content",
+                            f"{menu_rel} settings_sections.{section_id}.row_keys references unknown hub row: {row_key}",
+                        )
+                    )
+    return issues
+
+
+def _validate_launcher_settings_routes_contract(
+    *,
+    menu_rel: str,
+    settings_sections: dict[str, object],
+    launcher_settings_routes: dict[str, object],
+    launcher_settings_action_ids: set[str],
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for action_id, raw_route in launcher_settings_routes.items():
+        if action_id not in launcher_settings_action_ids:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{menu_rel} launcher_settings_routes.{action_id} must match an action in launcher_settings_root",
+                )
+            )
+            continue
+        if not isinstance(raw_route, dict):
+            continue
+        section_id = raw_route.get("section_id")
+        if not isinstance(section_id, str) or section_id not in settings_sections:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{menu_rel} launcher_settings_routes.{action_id}.section_id must reference an existing settings section",
+                )
+            )
+            continue
+        initial_row_key = raw_route.get("initial_row_key")
+        section = settings_sections.get(section_id)
+        section_row_keys = (
+            set(section.get("row_keys", [])) if isinstance(section, dict) else set()
+        )
+        if (
+            not isinstance(initial_row_key, str)
+            or initial_row_key not in section_row_keys
+        ):
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{menu_rel} launcher_settings_routes.{action_id}.initial_row_key must belong to section {section_id}",
+                )
+            )
+    return issues
+
+
+def _validate_menu_structure_banned_literals() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for path, literal, message in _menu_structure_banned_literals():
+        text = path.read_text(encoding="utf-8")
+        if literal in text:
+            issues.append(ValidationIssue("drift", message))
+    return issues
+
+
+def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    menu_rel = "config/menu/structure.json"
+    menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
+    if not isinstance(menu_payload, dict):
+        return issues
+
+    settings_sections = menu_payload.get("settings_sections")
+    if not isinstance(settings_sections, dict) or not settings_sections:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{menu_rel} must define non-empty settings_sections",
+            )
+        )
+
+    launcher_settings_routes = menu_payload.get("launcher_settings_routes")
+    if not isinstance(launcher_settings_routes, dict) or not launcher_settings_routes:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{menu_rel} must define non-empty launcher_settings_routes",
+            )
+        )
+
+    hub_headers = _settings_hub_header_labels(menu_payload)
+    hub_row_keys = _settings_hub_row_keys(menu_payload)
+    launcher_settings_action_ids = _launcher_settings_action_ids(menu_payload)
+    if isinstance(settings_sections, dict):
+        issues.extend(
+            _validate_settings_section_membership(
+                menu_rel=menu_rel,
+                settings_sections=settings_sections,
+                hub_headers=hub_headers,
+                hub_row_keys=hub_row_keys,
+            )
+        )
+    if isinstance(launcher_settings_routes, dict) and isinstance(
+        settings_sections, dict
+    ):
+        issues.extend(
+            _validate_launcher_settings_routes_contract(
+                menu_rel=menu_rel,
+                settings_sections=settings_sections,
+                launcher_settings_routes=launcher_settings_routes,
+                launcher_settings_action_ids=launcher_settings_action_ids,
+            )
+        )
+    issues.extend(_validate_menu_structure_banned_literals())
+    return issues
+
+
+def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    try:
+        from tet4d.engine.runtime.keybinding_store import (
+            load_keybinding_defaults_payload,
+        )
+        from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
+    except Exception as exc:
+        issues.append(
+            ValidationIssue(
+                "import",
+                f"failed loading keybinding contract validators: {exc}",
+            )
+        )
+        return issues
+
+    try:
+        load_keybinding_defaults_payload()
+    except Exception as exc:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"config/keybindings/defaults.json must satisfy the keybinding catalog contract: {exc}",
+            )
+        )
+
+    try:
+        binding_action_ids()
+    except Exception as exc:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"config/keybindings/catalog.json must be a valid keybinding catalog: {exc}",
+            )
+        )
+    return issues
+
+
 def validate_manifest() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     manifest = _load_manifest()
@@ -933,6 +1180,8 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_policy_index_sync())
     issues.extend(_validate_policy_manifest_string_safety())
     issues.extend(_validate_menu_simplification_rule())
+    issues.extend(_validate_menu_structure_single_source_of_truth())
+    issues.extend(_validate_keybinding_single_source_of_truth())
     _load_code_rules(issues)
     return issues
 

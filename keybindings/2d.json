@@ -1,9 +1,19 @@
 {
-  "defaults_version": 1,
-  "dimension": 2,
-  "profile": "small",
   "bindings": {
+    "explorer": {
+      "move_down": [
+        "down",
+        "page down"
+      ],
+      "move_up": [
+        "up",
+        "page up"
+      ]
+    },
     "game": {
+      "hard_drop": [
+        "space"
+      ],
       "move_x_neg": [
         "a",
         "left"
@@ -12,47 +22,38 @@
         "d",
         "right"
       ],
-      "soft_drop": [
-        "s",
-        "down"
-      ],
-      "hard_drop": [
-        "space"
-      ],
       "rotate_xy_neg": [
         "r"
       ],
       "rotate_xy_pos": [
         "t"
-      ]
-    },
-    "explorer": {
-      "move_up": [
-        "up",
-        "page up"
       ],
-      "move_down": [
-        "down",
-        "page down"
+      "soft_drop": [
+        "s",
+        "down"
       ]
     },
     "system": {
-      "quit": [
-        "escape"
+      "help": [
+        "f1"
       ],
       "menu": [
         "p",
         "f10"
+      ],
+      "quit": [
+        "escape"
       ],
       "restart": [
         "x"
       ],
       "toggle_grid": [
         "c"
-      ],
-      "help": [
-        "f1"
       ]
     }
-  }
+  },
+  "defaults_version": 1,
+  "dimension": 2,
+  "profile": "small",
+  "schema_version": 2
 }

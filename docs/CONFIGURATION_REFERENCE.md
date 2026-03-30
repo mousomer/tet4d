@@ -645,6 +645,14 @@ Parameters:
 - `reference_groups.headings.system`: `"General / System"` (`string`)
 - `reference_groups.live_order[]`: array[`string`]; examples: `"system"`, `"game_translation"`, `"game_rotation"`
 - `reference_groups.runtime_order[]`: array[`string`]; examples: `"system"`, `"game"`, `"explorer"`
+- `scopes.menu_sections.2d.description`: `"2D gameplay controls."` (`string`)
+- `scopes.menu_sections.2d.title`: `"2D Keybindings"` (`string`)
+- `scopes.menu_sections.3d.description`: `"3D gameplay and camera/view controls."` (`string`)
+- `scopes.menu_sections.3d.title`: `"3D Keybindings"` (`string`)
+- `scopes.menu_sections.4d.description`: `"4D gameplay and camera/view controls."` (`string`)
+- `scopes.menu_sections.4d.title`: `"4D Keybindings"` (`string`)
+- `scopes.menu_sections.general.description`: `"System actions shared across 2D/3D/4D."` (`string`)
+- `scopes.menu_sections.general.title`: `"General Keybindings"` (`string`)
 - `scopes.order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `version`: `1` (`int`)
 
@@ -1053,12 +1061,18 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/menu/structure.json`
-Top-level keys: `bot_options_rows`, `branding`, `launcher_route_actions`, `launcher_subtitles`, `menu_entrypoints`, `menus`, `pause_copy`, `pause_menu_actions`, `pause_menu_rows`, `settings_category_docs`, `settings_category_metrics`, `settings_hub_layout_rows`, `settings_hub_rows`, `settings_option_labels`, `settings_split_rules`, `setup_fields`, `setup_hints`, `ui_copy`
+Top-level keys: `bot_options_rows`, `branding`, `launcher_route_actions`, `launcher_settings_routes`, `launcher_subtitles`, `menu_entrypoints`, `menus`, `pause_copy`, `pause_menu_actions`, `pause_menu_rows`, `settings_category_docs`, `settings_category_metrics`, `settings_hub_layout_rows`, `settings_hub_rows`, `settings_option_labels`, `settings_sections`, `settings_split_rules`, `setup_fields`, `setup_hints`, `ui_copy`
 Parameters:
 - `bot_options_rows[]`: array[`string`]; examples: `"Dimension"`, `"Playbot mode"`, `"Bot algorithm"`
 - `branding.game_title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
 - `branding.signature_author`: `"Omer M. Moussaffi (mousomer@gmail.com)"` (`string`)
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
+- `launcher_settings_routes.settings.initial_row_key`: `"game_seed"` (`string`)
+- `launcher_settings_routes.settings.section_id`: `"gameplay"` (`string`)
+- `launcher_settings_routes.settings_audio.initial_row_key`: `"audio_master"` (`string`)
+- `launcher_settings_routes.settings_audio.section_id`: `"audio"` (`string`)
+- `launcher_settings_routes.settings_display.initial_row_key`: `"display_fullscreen"` (`string`)
+- `launcher_settings_routes.settings_display.section_id`: `"display"` (`string`)
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
@@ -1151,6 +1165,18 @@ Parameters:
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
 - `settings_option_labels.game_random_mode[]`: array[`string`]; examples: `"Fixed seed"`, `"True random"`
 - `settings_option_labels.game_rotation_animation_mode[]`: array[`string`]; examples: `"Cell sliding"`, `"Rigid piece rotation"`
+- `settings_sections.audio.headers[]`: array[`string`]; examples: `"Audio"`
+- `settings_sections.audio.row_keys[]`: array[`string`]; examples: `"audio_master"`, `"audio_sfx"`, `"audio_mute"`
+- `settings_sections.audio.subtitle`: `"Master volume, SFX volume, mute, save, reset, and back."` (`string`)
+- `settings_sections.audio.title`: `"Audio settings"` (`string`)
+- `settings_sections.display.headers[]`: array[`string`]; examples: `"Display"`
+- `settings_sections.display.row_keys[]`: array[`string`]; examples: `"display_fullscreen"`, `"display_width"`, `"display_height"`
+- `settings_sections.display.subtitle`: `"Fullscreen, window size, overlay transparency, apply, save, reset, a...` (`string`)
+- `settings_sections.display.title`: `"Display settings"` (`string`)
+- `settings_sections.gameplay.headers[]`: array[`string`]; examples: `"Game"`, `"Advanced gameplay"`, `"Analytics"`
+- `settings_sections.gameplay.row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"rotation_animation_mode"`
+- `settings_sections.gameplay.subtitle`: `"Seed, random type, analytics, advanced gameplay, save, reset, and ba...` (`string`)
+- `settings_sections.gameplay.title`: `"Game settings"` (`string`)
 - `settings_split_rules.max_top_level_actions`: `2` (`int`)
 - `settings_split_rules.max_top_level_fields`: `5` (`int`)
 - `settings_split_rules.split_when_mode_specific`: `true` (`bool`)
@@ -1192,7 +1218,7 @@ Parameters:
 - `ui_copy.launcher.escape_hint_quit`: `"Q quit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
-- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game -> Advanced gameplay... opens a lower-panel submenu for rotatio...`
+- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game settings inline advanced gameplay and analytics in one section ...`
 - `ui_copy.settings_hub.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Top-level categories: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)

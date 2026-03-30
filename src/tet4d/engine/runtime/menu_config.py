@@ -195,6 +195,44 @@ def settings_hub_layout_rows() -> tuple[tuple[str, str, str], ...]:
     return tuple((row["kind"], row["label"], row["row_key"]) for row in rows)
 
 
+def settings_sections() -> dict[str, dict[str, Any]]:
+    return deepcopy(_structure_payload()["settings_sections"])
+
+
+def settings_section(section_id: str) -> dict[str, Any]:
+    clean_section_id = as_non_empty_string(section_id, path="section_id").lower()
+    section = _structure_payload()["settings_sections"].get(clean_section_id)
+    if not isinstance(section, dict):
+        raise KeyError(f"Unknown settings section: {clean_section_id}")
+    return deepcopy(section)
+
+
+def settings_help_entries() -> tuple[dict[str, str], ...]:
+    entries: list[dict[str, str]] = []
+    for category in settings_top_level_categories():
+        section = settings_section(str(category["id"]))
+        entries.append(
+            {
+                "id": str(category["id"]),
+                "label": str(category["label"]),
+                "description": str(section["subtitle"]),
+            }
+        )
+    return tuple(entries)
+
+
+def launcher_settings_routes() -> dict[str, dict[str, str]]:
+    return deepcopy(_structure_payload()["launcher_settings_routes"])
+
+
+def launcher_settings_route(action_id: str) -> dict[str, str]:
+    clean_action_id = as_non_empty_string(action_id, path="action_id").lower()
+    route = _structure_payload()["launcher_settings_routes"].get(clean_action_id)
+    if not isinstance(route, dict):
+        raise KeyError(f"Unknown launcher settings action: {clean_action_id}")
+    return deepcopy(route)
+
+
 def settings_option_labels() -> dict[str, tuple[str, ...]]:
     return deepcopy(_structure_payload().get("settings_option_labels", {}))
 
@@ -315,17 +353,27 @@ def settings_category_metrics() -> dict[str, dict[str, Any]]:
 
 def settings_top_level_categories() -> tuple[dict[str, str], ...]:
     payload = _structure_payload()
-    docs: tuple[dict[str, str], ...] = payload["settings_category_docs"]
-    metrics: dict[str, dict[str, Any]] = payload.get("settings_category_metrics", {})
-    if not metrics:
-        fallback_rows = set(payload["settings_hub_rows"])
-        return tuple(entry for entry in docs if entry["label"] in fallback_rows)
-    top_level_ids = {
-        category_id
-        for category_id, entry in metrics.items()
-        if bool(entry.get("top_level"))
-    }
-    return tuple(entry for entry in docs if entry["id"] in top_level_ids)
+    sections: dict[str, dict[str, Any]] = payload["settings_sections"]
+    layout_rows: tuple[dict[str, str], ...] = payload["settings_hub_layout_rows"]
+    layout_header_order = [
+        row["label"] for row in layout_rows if row["kind"] == "header"
+    ]
+    header_index = {label: idx for idx, label in enumerate(layout_header_order)}
+    top_level: list[dict[str, str]] = []
+    for section_id, section in sections.items():
+        headers = tuple(str(label) for label in section["headers"])
+        if not headers:
+            continue
+        first_header = headers[0]
+        top_level.append(
+            {
+                "id": str(section_id),
+                "label": first_header,
+                "title": str(section["title"]),
+            }
+        )
+    top_level.sort(key=lambda entry: header_index.get(entry["label"], 10**9))
+    return tuple(top_level)
 
 
 def setup_hints_for_dimension(dimension: int) -> tuple[str, ...]:

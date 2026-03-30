@@ -4,10 +4,12 @@ from typing import Any
 
 import pygame
 
+from tet4d.engine.runtime.api import (
+    runtime_binding_groups_for_dimension_runtime as runtime_binding_groups_for_dimension,
+)
 from tet4d.engine.tutorial.api import tutorial_runtime_overlay_payload_runtime
 from tet4d.ui.pygame import front3d_render, front4d_render
 from tet4d.ui.pygame.input.key_display import format_key_tuple
-from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 from tet4d.ui.pygame.ui_utils import fit_text
 
 _PANEL_BG = (8, 12, 28, 190)
@@ -531,4 +533,3 @@ def draw_tutorial_overlay(
         line_surf = _render_line(font, draw_text, color, bold=bold)
         screen.blit(line_surf, (panel_rect.x + 9, y))
         y += int(row["row_h"])
-

@@ -27,7 +27,34 @@ Current sub-batch (2026-03-29): shell-preserving topology-playground cleanup.
 
 Parallel governance/runtime follow-up (2026-03-30): keybinding authority
 unification around `config/keybindings/catalog.json`, so help/editor/control
-group structure no longer drifts away from the live runtime binding map.
+group structure and keybindings section-menu copy no longer drift away from
+the live runtime binding map.
+
+Parallel contract-hardening follow-up (2026-03-30): keybinding defaults and
+saved profile payloads now need one catalog-backed validator so direct config
+edits and persisted overrides fail fast on stale action/group/dimension
+references instead of degrading silently at runtime.
+
+Parallel runtime-ownership follow-up (2026-03-30): the remaining keybinding
+mutable-state seam needs to live under engine/runtime rather than the pygame
+adapter, while built-in defaults gain full required-action coverage checks,
+saved payloads gain explicit schema versioning, and config-only keybinding
+work gets a focused contract-check script.
+
+Parallel runtime-accessor follow-up (2026-03-30): UI callers that only need
+live grouped bindings or active-profile reads should consume narrow
+engine/runtime accessors instead of importing the broader pygame keybinding
+adapter.
+
+Parallel topology-playground keybinding follow-up (2026-03-30): playground
+helper and shortcut surfaces should keep reading runtime binding groups rather
+than reintroducing direct adapter-global ownership in topology UI modules.
+
+Parallel help/menu-contract follow-up (2026-03-30): runtime settings help
+should stay sourced from `settings_sections` rather than the older parallel
+`settings_category_docs` list, and the focused keybinding contract script
+should continue covering every runtime-seam consumer moved off the pygame
+adapter.
 
 - Open work:
   1. continue structural simplification of
@@ -154,6 +181,43 @@ Completed on 2026-03-29:
   Topology Editor Menu` moves up to the main settings level, and the old
   `Game -> Advanced gameplay...` sub-flow is retired in favor of an inline
   `Advanced gameplay` section inside the game settings screen
+- launcher settings config-authority cleanup so settings section
+  titles/subtitles/header membership/row ownership and launcher category
+  routes now live in `config/menu/structure.json`, top-level settings policy
+  now derives from that same section contract, bad section header/row
+  references now fail validation instead of degrading filtered settings
+  screens, and launcher/settings Python is reduced to validated
+  config-driven rendering and dispatch
+- repo documentation follow-up so menu graph and filtered settings edits now
+  have a dedicated contributor guide in `docs/MENU_STRUCTURE_EDITING.md`,
+  with docs routing and menu-structure RDS copy updated to match the current
+  config-first contract
+- keybinding contract-hardening follow-up so `config/keybindings/defaults.json`
+  and saved profile payloads are now validated against the same
+  catalog-backed action/group/dimension contract, and direct config edits now
+  have a dedicated contributor guide in `docs/KEYBINDINGS_EDITING.md`
+- keybinding runtime-ownership completion so mutable live keybinding maps now
+  sit in `src/tet4d/engine/runtime/keybinding_runtime_state.py`, built-in
+  defaults enforce complete required-action coverage, payloads now carry an
+  explicit schema version, partial custom profile overrides remain allowed by
+  contract, and `./scripts/check_keybinding_contract.sh` now provides the
+  focused validation path for direct keybinding config work
+- keybinding runtime-accessor cleanup so engine/runtime now exports narrow
+  keybinding read accessors and the help/tutorial/control/setup callers that
+  only need runtime grouped bindings or active-profile reads no longer depend
+  on the wider pygame keybinding adapter
+- keybinding docs follow-up so contributors now have both the full
+  `docs/KEYBINDINGS_EDITING.md` contract guide and a shorter
+  `docs/SHORT_KEYBINDINGS_GUIDE.md` checklist for common direct config edits
+- keybinding config-format follow-up so defaults and saved payloads now accept
+  readable key-name strings in addition to integer keycodes, with the store
+  normalizing them before runtime use and docs explaining the allowed forms
+- keybinding stale-source cleanup so dead legacy defaults code is removed and
+  the obsolete `keybindings/profiles/small/` built-in directory is purged at
+  startup instead of silently coexisting with the canonical root `keybindings/*.json`
+- keybinding round-trip repair so every serialized keypad token written by the
+  runtime is accepted again at load/validation time, and invalid custom
+  profiles now surface a hard load failure instead of broad silent overwrite
 - dead-code pruning follow-up so another small set of unreferenced helpers and
   stale compatibility leftovers now drops out of playbot, core, gameplay,
   help, settings, and topology-lab code without changing live behavior

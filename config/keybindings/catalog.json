@@ -1,7 +1,25 @@
 {
   "version": 1,
   "scopes": {
-    "order": ["general", "2d", "3d", "4d", "all"]
+    "order": ["general", "2d", "3d", "4d", "all"],
+    "menu_sections": {
+      "general": {
+        "title": "General Keybindings",
+        "description": "System actions shared across 2D/3D/4D."
+      },
+      "2d": {
+        "title": "2D Keybindings",
+        "description": "2D gameplay controls."
+      },
+      "3d": {
+        "title": "3D Keybindings",
+        "description": "3D gameplay and camera/view controls."
+      },
+      "4d": {
+        "title": "4D Keybindings",
+        "description": "4D gameplay and camera/view controls."
+      }
+    }
   },
   "groups": {
     "system": {

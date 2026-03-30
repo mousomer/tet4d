@@ -38,6 +38,7 @@ from tet4d.engine.runtime.topology_profile_store import (
     load_topology_profile,
     save_topology_profile,
 )
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.engine.runtime.topology_playground_state import (
     RIGID_PLAY_MODE_AUTO,
     RIGID_PLAY_MODE_OFF,
@@ -54,16 +55,6 @@ from tet4d.engine.topology_explorer.presets import (
     explorer_presets_for_dimension,
 )
 from tet4d.ui.pygame.input.key_dispatch import match_bound_action
-from tet4d.ui.pygame.keybindings import (
-    CAMERA_KEYS_3D,
-    CAMERA_KEYS_4D,
-    EXPLORER_KEYS_2D,
-    EXPLORER_KEYS_3D,
-    EXPLORER_KEYS_4D,
-    KEYS_2D,
-    KEYS_3D,
-    KEYS_4D,
-)
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
 from .interaction_audit import (
@@ -207,28 +198,28 @@ class _LegacyRowAdjustment:
     error: str | None = None
 
 
+def _binding_groups_for_dimension(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
+    return {
+        str(group_name): {
+            str(action): tuple(int(key) for key in keys)
+            for action, keys in dict(binding_map).items()
+        }
+        for group_name, binding_map in runtime_binding_groups_for_dimension_runtime(
+            int(dimension)
+        ).items()
+    }
+
+
 def _explorer_bindings_for_dimension(dimension: int):
-    if int(dimension) == 2:
-        return EXPLORER_KEYS_2D
-    if int(dimension) == 3:
-        return EXPLORER_KEYS_3D
-    return EXPLORER_KEYS_4D
+    return _binding_groups_for_dimension(dimension).get("explorer", {})
 
 
 def _gameplay_bindings_for_dimension(dimension: int):
-    if int(dimension) == 2:
-        return KEYS_2D
-    if int(dimension) == 3:
-        return KEYS_3D
-    return KEYS_4D
+    return _binding_groups_for_dimension(dimension).get("game", {})
 
 
 def _camera_bindings_for_dimension(dimension: int):
-    if int(dimension) == 3:
-        return CAMERA_KEYS_3D
-    if int(dimension) == 4:
-        return CAMERA_KEYS_4D
-    return {}
+    return _binding_groups_for_dimension(dimension).get("camera", {})
 
 
 def _explorer_action_to_step_label(action: str) -> str | None:

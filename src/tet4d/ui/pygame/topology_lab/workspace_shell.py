@@ -2,20 +2,13 @@ from __future__ import annotations
 
 import pygame
 
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.engine.runtime.topology_explorer_preview import explorer_probe_options
 from tet4d.engine.topology_explorer import (
     build_explorer_transport_resolver,
     movement_steps_for_dimension,
 )
 from tet4d.ui.pygame.input.key_display import format_key_tuple
-from tet4d.ui.pygame.keybindings import (
-    EXPLORER_KEYS_2D,
-    EXPLORER_KEYS_3D,
-    EXPLORER_KEYS_4D,
-    KEYS_2D,
-    KEYS_3D,
-    KEYS_4D,
-)
 
 from .common import TopologyLabHitTarget
 from .copy import LAB_HINTS as _LAB_HINTS
@@ -85,20 +78,26 @@ from tet4d.ui.pygame.ui_utils import (
     wrap_text_lines,
     wrapped_row_height,
 )
+
+
+def _binding_groups_for_dimension(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
+    return {
+        str(group_name): {
+            str(action): tuple(int(key) for key in keys)
+            for action, keys in dict(binding_map).items()
+        }
+        for group_name, binding_map in runtime_binding_groups_for_dimension_runtime(
+            int(dimension)
+        ).items()
+    }
+
+
 def _explorer_bindings_for_dimension(dimension: int):
-    if int(dimension) == 2:
-        return EXPLORER_KEYS_2D
-    if int(dimension) == 3:
-        return EXPLORER_KEYS_3D
-    return EXPLORER_KEYS_4D
+    return _binding_groups_for_dimension(dimension).get("explorer", {})
 
 
 def _gameplay_bindings_for_dimension(dimension: int):
-    if int(dimension) == 2:
-        return KEYS_2D
-    if int(dimension) == 3:
-        return KEYS_3D
-    return KEYS_4D
+    return _binding_groups_for_dimension(dimension).get("game", {})
 
 
 def _action_buttons_for_state(state) -> tuple[tuple[str, str], ...]:

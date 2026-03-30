@@ -2,10 +2,6 @@ LICENSE
 NOTICE
 README.md
 pyproject.toml
-docs/plans/explorer_topology_phase3.md
-docs/plans/explorer_topology_phase4.md
-docs/plans/explorer_topology_phase7.md
-docs/plans/explorer_topology_phase8.md
 scripts/verify_focus.sh
 src/tet4d/__init__.py
 src/tet4d.egg-info/PKG-INFO
@@ -61,6 +57,7 @@ src/tet4d/engine/gameplay/lock_flow.py
 src/tet4d/engine/gameplay/pieces2d.py
 src/tet4d/engine/gameplay/pieces_nd.py
 src/tet4d/engine/gameplay/pieces_shared.py
+src/tet4d/engine/gameplay/play_move_intents.py
 src/tet4d/engine/gameplay/rotation_anim.py
 src/tet4d/engine/gameplay/scoring_bonus.py
 src/tet4d/engine/gameplay/speed_curve.py
@@ -69,6 +66,7 @@ src/tet4d/engine/gameplay/topology_designer.py
 src/tet4d/engine/runtime/__init__.py
 src/tet4d/engine/runtime/api.py
 src/tet4d/engine/runtime/help_topics.py
+src/tet4d/engine/runtime/keybinding_runtime_state.py
 src/tet4d/engine/runtime/keybinding_store.py
 src/tet4d/engine/runtime/leaderboard.py
 src/tet4d/engine/runtime/menu_config.py
@@ -82,6 +80,7 @@ src/tet4d/engine/runtime/score_analyzer.py
 src/tet4d/engine/runtime/score_analyzer_features.py
 src/tet4d/engine/runtime/settings_sanitize.py
 src/tet4d/engine/runtime/settings_schema.py
+src/tet4d/engine/runtime/topology_cache.py
 src/tet4d/engine/runtime/topology_explorer_audit.py
 src/tet4d/engine/runtime/topology_explorer_bridge.py
 src/tet4d/engine/runtime/topology_explorer_experiments.py
@@ -157,7 +156,6 @@ src/tet4d/ui/pygame/input/__init__.py
 src/tet4d/ui/pygame/input/camera_mouse.py
 src/tet4d/ui/pygame/input/key_dispatch.py
 src/tet4d/ui/pygame/input/key_display.py
-src/tet4d/ui/pygame/input/keybindings_defaults.py
 src/tet4d/ui/pygame/input/view_controls.py
 src/tet4d/ui/pygame/launch/__init__.py
 src/tet4d/ui/pygame/launch/bot_options_menu.py
@@ -201,13 +199,17 @@ src/tet4d/ui/pygame/runtime_ui/pause_menu.py
 src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py
 src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py
 src/tet4d/ui/pygame/topology_lab/__init__.py
+src/tet4d/ui/pygame/topology_lab/__main__.py
 src/tet4d/ui/pygame/topology_lab/app.py
 src/tet4d/ui/pygame/topology_lab/arrow_overlay.py
 src/tet4d/ui/pygame/topology_lab/boundary_picker.py
 src/tet4d/ui/pygame/topology_lab/camera_controls.py
 src/tet4d/ui/pygame/topology_lab/common.py
 src/tet4d/ui/pygame/topology_lab/controls_panel.py
+src/tet4d/ui/pygame/topology_lab/controls_panel_rows.py
+src/tet4d/ui/pygame/topology_lab/controls_panel_values.py
 src/tet4d/ui/pygame/topology_lab/copy.py
+src/tet4d/ui/pygame/topology_lab/entrypoint.py
 src/tet4d/ui/pygame/topology_lab/explorer_tools.py
 src/tet4d/ui/pygame/topology_lab/interaction_audit.py
 src/tet4d/ui/pygame/topology_lab/piece_sandbox.py
@@ -217,9 +219,12 @@ src/tet4d/ui/pygame/topology_lab/projection_scene.py
 src/tet4d/ui/pygame/topology_lab/scene2d.py
 src/tet4d/ui/pygame/topology_lab/scene3d.py
 src/tet4d/ui/pygame/topology_lab/scene4d.py
+src/tet4d/ui/pygame/topology_lab/scene_preview_state.py
 src/tet4d/ui/pygame/topology_lab/scene_state.py
+src/tet4d/ui/pygame/topology_lab/shell_layout.py
 src/tet4d/ui/pygame/topology_lab/state_ownership.py
 src/tet4d/ui/pygame/topology_lab/transform_editor.py
+src/tet4d/ui/pygame/topology_lab/workspace_shell.py
 tests/test_leveling.py
 tests/unit/engine/test_topology_explorer.py
 tests/unit/engine/test_topology_explorer_preview.py

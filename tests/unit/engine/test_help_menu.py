@@ -4,6 +4,7 @@ import unittest
 
 import pygame
 
+from tet4d.engine.runtime import menu_config
 from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.runtime_ui import help_menu
 from tet4d.ui.pygame.runtime_ui.help_menu import (
@@ -74,6 +75,18 @@ class TestHelpMenu(unittest.TestCase):
                     help_menu._draw_help(screen, self.fonts, state, context)
                     self.assertGreaterEqual(state.subpage, 0)
                     self.assertGreater(screen.get_bounding_rect().width, 0)
+
+    def test_settings_help_lines_follow_active_settings_sections(self) -> None:
+        lines: list[str] = []
+        help_menu._extend_settings_lines(lines, compact=False)
+        text = "\n".join(lines)
+        active_labels = {entry["label"] for entry in menu_config.settings_help_entries()}
+        for label in active_labels:
+            with self.subTest(label=label):
+                self.assertIn(label, text)
+        for retired in ("Advanced", "Controls", "Profiles", "Bot Options"):
+            with self.subTest(retired=retired):
+                self.assertNotIn(retired, text)
 
     def test_initial_topic_selection_targets_requested_topic(self) -> None:
         state = help_menu._HelpState(dimension=4)

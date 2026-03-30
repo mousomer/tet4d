@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import unittest
+from pathlib import Path
 
 try:
     import pygame
@@ -9,7 +11,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment gua
         "pygame-ce is required for keybinding menu model tests"
     ) from exc
 
-from tet4d.ui.pygame.menu.keybindings_menu_model import rows_for_scope
+from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU, rows_for_scope
 from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 
 
@@ -93,3 +95,20 @@ class TestKeybindingsMenuModel(unittest.TestCase):
                 _expected_scope_bindings(scope),
                 msg=f"scope binding rows drifted for {scope}",
             )
+
+    def test_section_menu_copy_is_catalog_driven(self) -> None:
+        payload = json.loads(
+            (
+                Path(__file__).resolve().parents[3]
+                / "config"
+                / "keybindings"
+                / "catalog.json"
+            ).read_text(encoding="utf-8")
+        )
+        scope_copy = payload["scopes"]["menu_sections"]
+        expected = tuple(
+            (scope, scope_copy[scope]["title"], scope_copy[scope]["description"])
+            for scope in payload["scopes"]["order"]
+            if scope in scope_copy
+        )
+        self.assertEqual(SECTION_MENU, expected)

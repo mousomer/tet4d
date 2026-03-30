@@ -42,7 +42,7 @@ from tet4d.engine.runtime.menu_config import (
     setup_fields_for_settings,
     setup_hints_for_dimension,
 )
-from tet4d.ui.pygame.keybindings import active_key_profile
+from tet4d.engine.runtime.api import active_key_profile_runtime
 from tet4d.ui.pygame.menu.menu_controls import FieldSpec
 from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
 from tet4d.ui.pygame.render.gfx_game import GfxFonts, draw_menu
@@ -82,7 +82,7 @@ class MenuState:
     start_game: bool = False
     bindings_status: str = ""
     bindings_status_error: bool = False
-    active_profile: str = field(default_factory=active_key_profile)
+    active_profile: str = field(default_factory=active_key_profile_runtime)
     rebind_mode: bool = False
     rebind_index: int = 0
     rebind_targets: list[tuple[str, str]] = field(default_factory=list)

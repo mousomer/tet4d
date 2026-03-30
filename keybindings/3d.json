@@ -1,9 +1,55 @@
 {
-  "defaults_version": 1,
-  "dimension": 3,
-  "profile": "small",
   "bindings": {
+    "camera": {
+      "cycle_projection": [
+        "9"
+      ],
+      "overlay_alpha_dec": [
+        "["
+      ],
+      "overlay_alpha_inc": [
+        "]"
+      ],
+      "pitch_neg": [
+        "5"
+      ],
+      "pitch_pos": [
+        "6"
+      ],
+      "reset": [
+        "0"
+      ],
+      "yaw_fine_neg": [
+        "1"
+      ],
+      "yaw_fine_pos": [
+        "2"
+      ],
+      "yaw_neg": [
+        "3"
+      ],
+      "yaw_pos": [
+        "4"
+      ],
+      "zoom_in": [
+        "8"
+      ],
+      "zoom_out": [
+        "7"
+      ]
+    },
+    "explorer": {
+      "move_down": [
+        "page down"
+      ],
+      "move_up": [
+        "page up"
+      ]
+    },
     "game": {
+      "hard_drop": [
+        "space"
+      ],
       "move_x_neg": [
         "a",
         "left"
@@ -19,13 +65,6 @@
       "move_z_pos": [
         "s",
         "down"
-      ],
-      "soft_drop": [
-        "left shift",
-        "right shift"
-      ],
-      "hard_drop": [
-        "space"
       ],
       "rotate_xy_neg": [
         "r"
@@ -44,71 +83,33 @@
       ],
       "rotate_yz_pos": [
         "b"
-      ]
-    },
-    "explorer": {
-      "move_up": [
-        "page up"
       ],
-      "move_down": [
-        "page down"
-      ]
-    },
-    "camera": {
-      "yaw_fine_neg": [
-        "1"
-      ],
-      "yaw_fine_pos": [
-        "2"
-      ],
-      "yaw_neg": [
-        "3"
-      ],
-      "yaw_pos": [
-        "4"
-      ],
-      "pitch_neg": [
-        "5"
-      ],
-      "pitch_pos": [
-        "6"
-      ],
-      "zoom_out": [
-        "7"
-      ],
-      "zoom_in": [
-        "8"
-      ],
-      "cycle_projection": [
-        "9"
-      ],
-      "reset": [
-        "0"
-      ],
-      "overlay_alpha_dec": [
-        "["
-      ],
-      "overlay_alpha_inc": [
-        "]"
+      "soft_drop": [
+        "left shift",
+        "right shift"
       ]
     },
     "system": {
-      "quit": [
-        "escape"
+      "help": [
+        "f1"
       ],
       "menu": [
         "p",
         "f10"
+      ],
+      "quit": [
+        "escape"
       ],
       "restart": [
         "x"
       ],
       "toggle_grid": [
         "c"
-      ],
-      "help": [
-        "f1"
       ]
     }
-  }
+  },
+  "defaults_version": 1,
+  "dimension": 3,
+  "profile": "small",
+  "schema_version": 2
 }

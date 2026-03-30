@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pygame
 
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.ui.pygame.front3d_render import Camera3D
 from tet4d.ui.pygame.front4d_render import LayerView3D, handle_view_key
 from tet4d.ui.pygame.input.camera_mouse import (
@@ -12,7 +13,6 @@ from tet4d.ui.pygame.input.camera_mouse import (
     mouse_wheel_delta,
 )
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
-from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D
 
 
 SceneCamera = Camera3D | LayerView3D | None
@@ -59,10 +59,19 @@ def ensure_mouse_orbit_state(orbit: object | None) -> MouseOrbitState:
     return MouseOrbitState()
 
 
+def _camera_bindings_for_dimension(dimension: int) -> dict[str, tuple[int, ...]]:
+    groups = runtime_binding_groups_for_dimension_runtime(int(dimension))
+    binding_map = groups.get("camera", {})
+    return {
+        str(action): tuple(int(key) for key in keys)
+        for action, keys in dict(binding_map).items()
+    }
+
+
 def _handle_camera_key_3d(key: int, camera: Camera3D) -> bool:
     action = dispatch_bound_action(
         key,
-        CAMERA_KEYS_3D,
+        _camera_bindings_for_dimension(3),
         {
             'yaw_fine_neg': lambda: camera.start_yaw_turn(-15.0),
             'yaw_neg': lambda: camera.start_yaw_turn(-90.0),

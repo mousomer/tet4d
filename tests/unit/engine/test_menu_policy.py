@@ -1,16 +1,26 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest import mock
 
 from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config
+from tet4d.engine.runtime.menu_structure_schema import validate_structure_payload
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 
 class TestMenuPolicy(unittest.TestCase):
+    @staticmethod
+    def _structure_payload() -> dict[str, object]:
+        path = (
+            Path(__file__).resolve().parents[3] / "config" / "menu" / "structure.json"
+        )
+        return json.loads(path.read_text(encoding="utf-8"))
+
     def test_settings_split_metrics_cover_documented_categories(self) -> None:
         docs = menu_config.settings_category_docs()
         metrics = menu_config.settings_category_metrics()
@@ -23,6 +33,10 @@ class TestMenuPolicy(unittest.TestCase):
         hub_rows = set(menu_config.settings_hub_rows())
         for entry in top_level:
             self.assertIn(entry["label"], hub_rows)
+        self.assertEqual(
+            [entry["label"] for entry in top_level],
+            ["Audio", "Display", "Game"],
+        )
 
     def test_launcher_settings_layout_matches_policy(self) -> None:
         ok, message = settings_hub_model._validate_unified_layout_against_policy()
@@ -90,6 +104,72 @@ class TestMenuPolicy(unittest.TestCase):
             if kind == "header"
         }
         self.assertTrue(expected.issubset(headers))
+
+    def test_settings_sections_define_filtered_hub_contract(self) -> None:
+        audio = menu_config.settings_section("audio")
+        display = menu_config.settings_section("display")
+        gameplay = menu_config.settings_section("gameplay")
+        self.assertEqual(tuple(audio["headers"]), ("Audio",))
+        self.assertEqual(tuple(display["headers"]), ("Display",))
+        self.assertEqual(
+            tuple(gameplay["headers"]),
+            ("Game", "Advanced gameplay", "Analytics"),
+        )
+        self.assertIn("game_seed", gameplay["row_keys"])
+        self.assertIn("rotation_animation_mode", gameplay["row_keys"])
+        self.assertIn("analytics_score_logging", gameplay["row_keys"])
+        self.assertIn("save", gameplay["row_keys"])
+        self.assertIn("reset", gameplay["row_keys"])
+        self.assertIn("back", gameplay["row_keys"])
+
+    def test_launcher_settings_routes_are_config_driven(self) -> None:
+        gameplay_route = menu_config.launcher_settings_route("settings")
+        audio_route = menu_config.launcher_settings_route("settings_audio")
+        display_route = menu_config.launcher_settings_route("settings_display")
+
+        self.assertEqual(
+            gameplay_route,
+            {"section_id": "gameplay", "initial_row_key": "game_seed"},
+        )
+        self.assertEqual(
+            audio_route,
+            {"section_id": "audio", "initial_row_key": "audio_master"},
+        )
+        self.assertEqual(
+            display_route,
+            {"section_id": "display", "initial_row_key": "display_fullscreen"},
+        )
+        settings_actions = {
+            item["action_id"]
+            for item in menu_config.menu_definition("launcher_settings_root")["items"]
+            if item["type"] == "action"
+        }
+        self.assertTrue(
+            set(menu_config.launcher_settings_routes()).issubset(settings_actions)
+        )
+
+    def test_settings_sections_fail_validation_on_unknown_layout_header(self) -> None:
+        payload = self._structure_payload()
+        payload["settings_sections"]["audio"]["headers"] = ["Missing Header"]
+        with self.assertRaisesRegex(RuntimeError, "unknown layout headers"):
+            validate_structure_payload(payload)
+
+    def test_settings_sections_fail_validation_on_unknown_layout_row_key(self) -> None:
+        payload = self._structure_payload()
+        payload["settings_sections"]["audio"]["row_keys"] = ["missing_row"]
+        with self.assertRaisesRegex(RuntimeError, "unknown layout row keys"):
+            validate_structure_payload(payload)
+
+    def test_launcher_settings_routes_fail_validation_on_unknown_action(self) -> None:
+        payload = self._structure_payload()
+        payload["launcher_settings_routes"]["settings_audo"] = {
+            "section_id": "audio",
+            "initial_row_key": "audio_master",
+        }
+        with self.assertRaisesRegex(
+            RuntimeError, "unknown launcher settings action"
+        ):
+            validate_structure_payload(payload)
 
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):

@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 import pygame
-from tet4d.ui.pygame.keybindings import PROFILE_TINY, active_key_profile
+from tet4d.engine.runtime.api import (
+    active_key_profile_runtime as active_key_profile,
+    profile_tiny_runtime as profile_tiny,
+)
+
+PROFILE_TINY = profile_tiny()
 
 
 _TINY_NAV_ALIASES: dict[int, int] = {

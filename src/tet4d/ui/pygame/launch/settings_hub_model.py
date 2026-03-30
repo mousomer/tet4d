@@ -11,6 +11,7 @@ from tet4d.engine.gameplay.rotation_anim import (
 from tet4d.engine.runtime.menu_config import (
     settings_hub_layout_rows,
     settings_option_labels,
+    settings_section,
     settings_top_level_categories,
     ui_copy_section,
 )
@@ -140,20 +141,6 @@ _SELECTABLE_INDEX_BY_ROW_KEY = {
     for selectable_idx, row_idx in enumerate(_UNIFIED_SELECTABLE)
     for _kind, _label, row_key in (_UNIFIED_SETTINGS_ROWS[row_idx],)
 }
-_CATEGORY_ID_BY_HEADER_LABEL = {
-    "Audio": "audio",
-    "Display": "display",
-    "Game": "gameplay",
-    "Advanced gameplay": "gameplay",
-    "Analytics": "analytics",
-}
-_CATEGORY_IDS_BY_FILTER = {
-    "audio": frozenset({"audio"}),
-    "display": frozenset({"display"}),
-    "gameplay": frozenset({"gameplay", "analytics"}),
-}
-_FOOTER_ROW_KEYS = frozenset({"save", "reset", "back"})
-_TOP_LEVEL_HEADER_LABELS = frozenset({"Audio", "Display", "Game", "Analytics"})
 
 
 def _configured_top_level_labels() -> tuple[str, ...]:
@@ -162,10 +149,11 @@ def _configured_top_level_labels() -> tuple[str, ...]:
 
 
 def _layout_top_level_labels() -> tuple[str, ...]:
+    expected = frozenset(_configured_top_level_labels())
     return tuple(
         label
         for row_kind, label, _row_key in _UNIFIED_SETTINGS_ROWS
-        if row_kind == "header" and label in _TOP_LEVEL_HEADER_LABELS
+        if row_kind == "header" and label in expected
     )
 
 
@@ -184,22 +172,19 @@ def settings_rows_for_category(
     category_id: str | None = None,
 ) -> tuple[tuple[str, str, str], ...]:
     clean_category = str(category_id).strip().lower() if category_id else ""
-    visible_categories = _CATEGORY_IDS_BY_FILTER.get(clean_category)
-    if visible_categories is None:
+    if not clean_category:
         return _UNIFIED_SETTINGS_ROWS
+    section = settings_section(clean_category)
+    visible_headers = frozenset(str(label) for label in section["headers"])
+    visible_row_keys = frozenset(str(row_key) for row_key in section["row_keys"])
 
     filtered_rows: list[tuple[str, str, str]] = []
-    active_header_category = ""
     for row_kind, label, row_key in _UNIFIED_SETTINGS_ROWS:
         if row_kind == "header":
-            active_header_category = _CATEGORY_ID_BY_HEADER_LABEL.get(label, "")
-            if active_header_category in visible_categories:
+            if label in visible_headers:
                 filtered_rows.append((row_kind, label, row_key))
             continue
-        if row_key in _FOOTER_ROW_KEYS:
-            filtered_rows.append((row_kind, label, row_key))
-            continue
-        if active_header_category in visible_categories:
+        if row_key in visible_row_keys:
             filtered_rows.append((row_kind, label, row_key))
     return tuple(filtered_rows)
 
@@ -223,22 +208,15 @@ def selectable_index_by_row_key_for_rows(
 
 def settings_title_for_category(category_id: str | None = None) -> str:
     clean_category = str(category_id).strip().lower() if category_id else ""
-    titles = {
-        "audio": "Audio settings",
-        "display": "Display settings",
-        "gameplay": "Game settings",
-    }
-    return titles.get(clean_category, _SETTINGS_HUB_COPY["title"])
+    if not clean_category:
+        return _SETTINGS_HUB_COPY["title"]
+    return str(settings_section(clean_category)["title"])
 
 
 def settings_subtitle_for_category(category_id: str | None = None) -> str:
     clean_category = str(category_id).strip().lower() if category_id else ""
-    if clean_category == "audio":
-        return "Master volume, SFX volume, mute, save, reset, and back."
-    if clean_category == "display":
-        return "Fullscreen, window size, overlay transparency, apply, save, reset, and back."
-    if clean_category == "gameplay":
-        return "Seed, random type, analytics, advanced gameplay, save, reset, and back."
+    if clean_category:
+        return str(settings_section(clean_category)["subtitle"])
     categories = ", ".join(_configured_top_level_labels())
     return _SETTINGS_HUB_COPY["subtitle_categories_template"].format(
         categories=categories

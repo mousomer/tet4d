@@ -54,6 +54,8 @@ from .settings_hub_model import (
     settings_subtitle_for_category,
     settings_title_for_category,
 )
+
+
 def _draw_wrapped_settings_row(
     screen: pygame.Surface,
     *,

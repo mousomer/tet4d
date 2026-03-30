@@ -16,6 +16,8 @@ from ..help_text import (
     help_value_template,
 )
 from .help_topics import help_action_topic_registry, help_topics_for_context
+from .keybinding_runtime_state import KEYBINDING_STATE
+from .keybinding_store import PROFILE_TINY
 from .menu_config import (
     bot_defaults_by_mode,
     bot_options_rows,
@@ -146,6 +148,22 @@ def help_action_panel_specs_runtime(*args: Any, **kwargs: Any):
 
 def help_topic_media_rule_runtime(*args: Any, **kwargs: Any):
     return help_topic_media_rule(*args, **kwargs)
+
+
+def active_key_profile_runtime() -> str:
+    return KEYBINDING_STATE.active_profile
+
+
+def runtime_binding_groups_for_dimension_runtime(dimension: int):
+    return KEYBINDING_STATE.runtime_binding_groups_for_dimension(dimension)
+
+
+def binding_actions_for_dimension_runtime(dimension: int):
+    return KEYBINDING_STATE.binding_actions_for_dimension(dimension)
+
+
+def profile_tiny_runtime() -> str:
+    return PROFILE_TINY
 
 
 __all__ = [name for name in globals() if name.endswith("_runtime")]

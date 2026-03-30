@@ -11,8 +11,8 @@ from tet4d.engine.help_text import (
     help_action_layout_payload,
     help_action_panel_specs,
 )
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.ui.pygame.input.key_display import format_key_tuple
-from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 
 from .control_icons import draw_action_icon
 from .text_render_cache import render_text_cached
@@ -121,7 +121,7 @@ def _helper_capabilities(
 def _apply_2d_camera_fallback_bindings(
     action_bindings: dict[str, tuple[int, ...]],
 ) -> None:
-    camera_groups = runtime_binding_groups_for_dimension(3)
+    camera_groups = runtime_binding_groups_for_dimension_runtime(3)
     camera_map = camera_groups.get("camera", {})
     for action in ("overlay_alpha_dec", "overlay_alpha_inc"):
         if action in action_bindings:
@@ -147,7 +147,7 @@ def control_groups_for_dimension(
             include_exploration=include_exploration,
         ),
     )
-    groups = runtime_binding_groups_for_dimension(dim)
+    groups = runtime_binding_groups_for_dimension_runtime(dim)
     action_bindings = _binding_map_for_groups(groups)
     if dim == 2:
         _apply_2d_camera_fallback_bindings(action_bindings)

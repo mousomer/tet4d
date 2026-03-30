@@ -10,6 +10,10 @@ Do not treat it as a second taxonomy or precedence map.
 
 - Routing and ownership: `docs/DOCUMENTATION_MAP.md`
 - Contributor workflow and verification: `docs/RDS_AND_CODEX.md`
+- Config-first keybinding editing: `docs/KEYBINDINGS_EDITING.md`
+- Short practical keybinding guide: `docs/SHORT_KEYBINDINGS_GUIDE.md`
+- Config-first menu editing: `docs/MENU_STRUCTURE_EDITING.md`
+- Focused keybinding contract check: `./scripts/check_keybinding_contract.sh`
 - Current execution state: `CURRENT_STATE.md`, `docs/BACKLOG.md`
 - Active planning: `docs/plans/README.md`
 - Durable product contracts: `docs/rds/README.md`

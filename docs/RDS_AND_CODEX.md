@@ -72,9 +72,11 @@ This workflow is intentionally strict on source-file write safety and full-gate 
    - no literal escape artifacts like `` `r`n ``,
    - focused lint on the touched files.
 11. Keep keybindings/settings/tutorial structure config-backed (non-Python).
-12. Use runtime sanitization helpers for user/external strings.
-13. Keep tunable thresholds in canonical config (avoid magic numbers).
-14. Update docs in the same change when behavior/governance changes:
+12. For keybinding contract work, use `./scripts/check_keybinding_contract.sh`
+   as the focused validation path before the full gate.
+13. Use runtime sanitization helpers for user/external strings.
+14. Keep tunable thresholds in canonical config (avoid magic numbers).
+15. Update docs in the same change when behavior/governance changes:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md` and `docs/PROJECT_STRUCTURE.md` (generated sections
      are maintained by `tools/governance/generate_maintenance_docs.py`)
@@ -83,8 +85,8 @@ This workflow is intentionally strict on source-file write safety and full-gate 
    - `docs/CONFIGURATION_REFERENCE.md` when `config/` changes
    - `docs/USER_SETTINGS_REFERENCE.md` when user-facing settings surfaces change
    - relevant `docs/rds/*`
-13. At the end of staged migration work, provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.
-14. Keep contract files synchronized and valid:
+16. At the end of staged migration work, provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.
+17. Keep contract files synchronized and valid:
    - `config/project/policy/governance.json`
    - `config/project/policy/code_rules.json`
    - `config/project/policy/manifests/canonical_maintenance.json`
@@ -111,6 +113,12 @@ Fast staged local validation before the full gate:
 ```
 
 Use `verify_focus.sh` for focused lint/tests and maintenance-doc checks while a batch is in progress. It does not replace `./scripts/verify.sh` before commit/push.
+
+Focused keybinding contract validation:
+
+```bash
+./scripts/check_keybinding_contract.sh
+```
 
 Full-gate policy:
 

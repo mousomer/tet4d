@@ -53,6 +53,9 @@ These files define durable behavior contracts and product requirements.
 These files define contributor process, policy, and verification workflow.
 
 - `docs/RDS_AND_CODEX.md`
+- `docs/KEYBINDINGS_EDITING.md`
+- `docs/SHORT_KEYBINDINGS_GUIDE.md`
+- `docs/MENU_STRUCTURE_EDITING.md`
 - `docs/policies/*`
 - top-level governance in `config/project/policy/governance.json` and
   `config/project/policy/code_rules.json`
@@ -95,6 +98,9 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
 | Durable product behavior contracts | `docs/rds/*.md` |
 | Contributor workflow and verification sequence | `docs/RDS_AND_CODEX.md` |
+| Config-first keybinding editing workflow | `docs/KEYBINDINGS_EDITING.md` |
+| Short practical keybinding editing checklist | `docs/SHORT_KEYBINDINGS_GUIDE.md` |
+| Config-first menu editing workflow | `docs/MENU_STRUCTURE_EDITING.md` |
 | Historical background and retired plans | `docs/history/*` |
 
 ## Precedence
@@ -153,6 +159,12 @@ It is not the product contract.
 - If you need the current topology-playground shell behavior: use
   `docs/plans/topology_playground_shell_redesign_spec.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
+- If you need to edit keybinding structure or shipped defaults: use
+  `docs/KEYBINDINGS_EDITING.md`.
+- If you need a short practical keybinding edit checklist: use
+  `docs/SHORT_KEYBINDINGS_GUIDE.md`.
+- If you need to edit the menu graph or filtered settings structure: use
+  `docs/MENU_STRUCTURE_EDITING.md`.
 - If you need the live work handoff: use `CURRENT_STATE.md` and
   `docs/BACKLOG.md`.
 - If you need historical context only: use `docs/history/*`.

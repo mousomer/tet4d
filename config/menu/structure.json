@@ -32,7 +32,7 @@
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
         "Enter on width/height/seed to type large numeric values",
-        "Game -> Advanced gameplay... opens a lower-panel submenu for rotation mode, kick permissiveness, 2D/ND rotation tween speeds, translation tween speed, auto speed-up, and lines-per-level",
+        "Game settings inline advanced gameplay and analytics in one section with save, reset, and back",
         "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
@@ -717,6 +717,72 @@
       "action_count": 2,
       "mode_specific": true,
       "top_level": false
+    }
+  },
+  "settings_sections": {
+    "audio": {
+      "title": "Audio settings",
+      "subtitle": "Master volume, SFX volume, mute, save, reset, and back.",
+      "headers": ["Audio"],
+      "row_keys": [
+        "audio_master",
+        "audio_sfx",
+        "audio_mute",
+        "save",
+        "reset",
+        "back"
+      ]
+    },
+    "display": {
+      "title": "Display settings",
+      "subtitle": "Fullscreen, window size, overlay transparency, apply, save, reset, and back.",
+      "headers": ["Display"],
+      "row_keys": [
+        "display_fullscreen",
+        "display_width",
+        "display_height",
+        "display_overlay_transparency",
+        "display_apply",
+        "save",
+        "reset",
+        "back"
+      ]
+    },
+    "gameplay": {
+      "title": "Game settings",
+      "subtitle": "Seed, random type, analytics, advanced gameplay, save, reset, and back.",
+      "headers": ["Game", "Advanced gameplay", "Analytics"],
+      "row_keys": [
+        "game_seed",
+        "game_random_mode",
+        "rotation_animation_mode",
+        "kick_level_index",
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+        "auto_speedup_enabled",
+        "lines_per_level",
+        "topology_cache_measure",
+        "topology_cache_clear",
+        "analytics_score_logging",
+        "save",
+        "reset",
+        "back"
+      ]
+    }
+  },
+  "launcher_settings_routes": {
+    "settings": {
+      "section_id": "gameplay",
+      "initial_row_key": "game_seed"
+    },
+    "settings_display": {
+      "section_id": "display",
+      "initial_row_key": "display_fullscreen"
+    },
+    "settings_audio": {
+      "section_id": "audio",
+      "initial_row_key": "audio_master"
     }
   },
   "setup_hints": {

@@ -25,7 +25,11 @@ from tet4d.engine.runtime.help_topics import (
     help_action_topic_registry,
     help_topics_for_context,
 )
-from tet4d.engine.runtime.menu_config import settings_category_docs
+from tet4d.engine.runtime.api import (
+    active_key_profile_runtime,
+    runtime_binding_groups_for_dimension_runtime,
+)
+from tet4d.engine.runtime.menu_config import settings_help_entries
 from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_action_description,
     binding_group_label,
@@ -34,7 +38,6 @@ from tet4d.engine.ui_logic.keybindings_catalog import (
     gameplay_action_category,
 )
 from tet4d.engine.ui_logic.menu_layout import compute_menu_layout_zones
-from tet4d.ui.pygame.keybindings import active_key_profile, runtime_binding_groups_for_dimension
 from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.render.control_helper import (
@@ -45,7 +48,7 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 _HELP_LAYOUT = help_layout_payload()
-_SETTINGS_DOCS = settings_category_docs()
+_SETTINGS_HELP_ENTRIES = settings_help_entries()
 _RUNTIME_GROUP_ORDER = binding_reference_runtime_order()
 _LIVE_KEY_GROUP_ORDER = binding_reference_live_order()
 _HELP_COLORS = _HELP_LAYOUT["colors"]
@@ -127,7 +130,7 @@ def paginate_help_lines(
 
 
 def _current_binding_text(dimension: int, action: str, *, group: str = "system") -> str:
-    groups = runtime_binding_groups_for_dimension(max(2, min(4, int(dimension))))
+    groups = runtime_binding_groups_for_dimension_runtime(max(2, min(4, int(dimension))))
     keys = tuple(groups.get(group, {}).get(action, ()))
     return format_key_tuple(keys)
 
@@ -336,7 +339,7 @@ def help_topic_action_rows(
     dimension: int,
     include_all: bool,
 ) -> tuple[tuple[str, str, str], ...]:
-    groups = runtime_binding_groups_for_dimension(dimension)
+    groups = runtime_binding_groups_for_dimension_runtime(dimension)
     action_registry = help_action_topic_registry()
     default_topic = str(action_registry["default_topic"])
     action_topics = action_registry["action_topics"]
@@ -415,7 +418,7 @@ def _extend_overview_lines(
         _format_help_lines(
             help_topic_block_lines("overview", compact=compact),
             context_label=context_label,
-            active_key_profile=active_key_profile(),
+            active_key_profile=active_key_profile_runtime(),
             help_key=_current_binding_text(state.dimension, "help"),
         )
     )
@@ -466,7 +469,7 @@ def _extend_features_lines(lines: list[str], *, compact: bool) -> None:
 
 def _extend_settings_lines(lines: list[str], *, compact: bool) -> None:
     lines.extend(help_topic_block_lines("settings_profiles", compact=compact))
-    docs = _SETTINGS_DOCS[:3] if compact else _SETTINGS_DOCS
+    docs = _SETTINGS_HELP_ENTRIES[:3] if compact else _SETTINGS_HELP_ENTRIES
     entry_template = help_value_template(
         "settings_entry_template", default="- {label}: {description}"
     )
@@ -476,7 +479,7 @@ def _extend_settings_lines(lines: list[str], *, compact: bool) -> None:
                 entry_template, label=entry["label"], description=entry["description"]
             )
         )
-    if compact and len(_SETTINGS_DOCS) > len(docs):
+    if compact and len(_SETTINGS_HELP_ENTRIES) > len(docs):
         lines.append(
             help_value_template(
                 "settings_compact_overflow",

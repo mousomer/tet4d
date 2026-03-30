@@ -1,9 +1,73 @@
 {
-  "defaults_version": 1,
-  "dimension": 4,
-  "profile": "small",
   "bindings": {
+    "camera": {
+      "cycle_projection": [
+        "9"
+      ],
+      "overlay_alpha_dec": [
+        "["
+      ],
+      "overlay_alpha_inc": [
+        "]"
+      ],
+      "pitch_neg": [
+        "5"
+      ],
+      "pitch_pos": [
+        "6"
+      ],
+      "reset": [
+        "0"
+      ],
+      "view_xw_neg": [
+        "1"
+      ],
+      "view_xw_pos": [
+        "2"
+      ],
+      "view_zw_neg": [
+        ";"
+      ],
+      "view_zw_pos": [
+        "'"
+      ],
+      "yaw_fine_neg": [
+        "-"
+      ],
+      "yaw_fine_pos": [
+        "="
+      ],
+      "yaw_neg": [
+        "3"
+      ],
+      "yaw_pos": [
+        "4"
+      ],
+      "zoom_in": [
+        "8"
+      ],
+      "zoom_out": [
+        "7"
+      ]
+    },
+    "explorer": {
+      "move_down": [
+        "page down"
+      ],
+      "move_up": [
+        "page up"
+      ]
+    },
     "game": {
+      "hard_drop": [
+        "space"
+      ],
+      "move_w_neg": [
+        "q"
+      ],
+      "move_w_pos": [
+        "e"
+      ],
       "move_x_neg": [
         "a",
         "left"
@@ -20,18 +84,11 @@
         "s",
         "down"
       ],
-      "move_w_neg": [
-        "q"
+      "rotate_xw_neg": [
+        "y"
       ],
-      "move_w_pos": [
-        "e"
-      ],
-      "soft_drop": [
-        "left shift",
-        "right shift"
-      ],
-      "hard_drop": [
-        "space"
+      "rotate_xw_pos": [
+        "u"
       ],
       "rotate_xy_neg": [
         "r"
@@ -45,106 +102,50 @@
       "rotate_xz_pos": [
         "g"
       ],
-      "rotate_yz_neg": [
-        "v"
-      ],
-      "rotate_yz_pos": [
-        "b"
-      ],
-      "rotate_xw_neg": [
-        "y"
-      ],
-      "rotate_xw_pos": [
-        "u"
-      ],
       "rotate_yw_neg": [
         "h"
       ],
       "rotate_yw_pos": [
         "j"
       ],
+      "rotate_yz_neg": [
+        "v"
+      ],
+      "rotate_yz_pos": [
+        "b"
+      ],
       "rotate_zw_neg": [
         "n"
       ],
       "rotate_zw_pos": [
         "m"
-      ]
-    },
-    "explorer": {
-      "move_up": [
-        "page up"
       ],
-      "move_down": [
-        "page down"
-      ]
-    },
-    "camera": {
-      "view_xw_neg": [
-        "1"
-      ],
-      "view_xw_pos": [
-        "2"
-      ],
-      "yaw_neg": [
-        "3"
-      ],
-      "yaw_pos": [
-        "4"
-      ],
-      "pitch_neg": [
-        "5"
-      ],
-      "pitch_pos": [
-        "6"
-      ],
-      "zoom_out": [
-        "7"
-      ],
-      "zoom_in": [
-        "8"
-      ],
-      "cycle_projection": [
-        "9"
-      ],
-      "reset": [
-        "0"
-      ],
-      "view_zw_neg": [
-        ";"
-      ],
-      "view_zw_pos": [
-        "'"
-      ],
-      "yaw_fine_neg": [
-        "-"
-      ],
-      "yaw_fine_pos": [
-        "="
-      ],
-      "overlay_alpha_dec": [
-        "["
-      ],
-      "overlay_alpha_inc": [
-        "]"
+      "soft_drop": [
+        "left shift",
+        "right shift"
       ]
     },
     "system": {
-      "quit": [
-        "escape"
+      "help": [
+        "f1"
       ],
       "menu": [
         "p",
         "f10"
+      ],
+      "quit": [
+        "escape"
       ],
       "restart": [
         "x"
       ],
       "toggle_grid": [
         "c"
-      ],
-      "help": [
-        "f1"
       ]
     }
-  }
+  },
+  "defaults_version": 1,
+  "dimension": 4,
+  "profile": "small",
+  "schema_version": 2
 }

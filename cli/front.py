@@ -62,6 +62,7 @@ from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import (
     branding_copy,
     launcher_menu_id,
+    launcher_settings_routes,
     launcher_route_actions,
     launcher_subtitles,
     menu_graph,
@@ -100,11 +101,7 @@ _TUTORIAL_LESSON_BY_MODE = {
     "3d": "tutorial_3d_core",
     "4d": "tutorial_4d_core",
 }
-_SETTINGS_HUB_ROUTE = {
-    "settings": ("game_seed", "gameplay"),
-    "settings_display": ("display_fullscreen", "display"),
-    "settings_audio": ("audio_master", "audio"),
-}
+_SETTINGS_HUB_ROUTES = launcher_settings_routes()
 _HELP_TOPIC_BY_ACTION = {
     "tutorial_how_to_play": "overview",
     "tutorial_controls_reference": "key_reference",
@@ -694,15 +691,15 @@ def _build_action_registry(
     register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
     register("help", lambda: _menu_action_help(state, session, fonts_nd))
     register("leaderboard", lambda: _menu_action_leaderboard(state, session, fonts_nd))
-    for action_id, (initial_row_key, category_id) in _SETTINGS_HUB_ROUTE.items():
+    for action_id, route in _SETTINGS_HUB_ROUTES.items():
         register(
             action_id,
-            lambda initial_row_key=initial_row_key, category_id=category_id: _menu_action_settings(
+            lambda route=route: _menu_action_settings(
                 state,
                 session,
                 fonts_nd,
-                initial_row_key=initial_row_key,
-                category_id=category_id,
+                initial_row_key=str(route["initial_row_key"]),
+                category_id=str(route["section_id"]),
             ),
         )
     for action_id in ("keybindings", "settings_profiles"):

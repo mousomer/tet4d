@@ -5,25 +5,21 @@ from dataclasses import dataclass
 from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_group_description,
     binding_group_label,
+    binding_scope_menu_sections,
     binding_scope_order,
     gameplay_bucket_label,
     partition_gameplay_actions,
 )
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.ui.pygame.keybindings import (
     keybinding_file_label,
-    runtime_binding_groups_for_dimension,
 )
 
 SCOPE_ORDER = binding_scope_order()
 VALID_SCOPES = tuple(dict.fromkeys((*SCOPE_ORDER, "general", "all")))
-_SECTION_COPY = {
-    "general": ("General Keybindings", "System actions shared across 2D/3D/4D."),
-    "2d": ("2D Keybindings", "2D gameplay controls."),
-    "3d": ("3D Keybindings", "3D gameplay and camera/view controls."),
-    "4d": ("4D Keybindings", "4D gameplay and camera/view controls."),
-}
+_SECTION_COPY = binding_scope_menu_sections()
 SECTION_MENU: tuple[tuple[str, str, str], ...] = tuple(
-    (scope, *_SECTION_COPY[scope])
+    (scope, _SECTION_COPY[scope]["title"], _SECTION_COPY[scope]["description"])
     for scope in SCOPE_ORDER
     if scope in _SECTION_COPY
 )
@@ -105,7 +101,7 @@ def _bucket_actions(
 
 
 def _gameplay_sections_for_dimension(dimension: int) -> list[_SectionSpec]:
-    groups = runtime_binding_groups_for_dimension(dimension)
+    groups = runtime_binding_groups_for_dimension_runtime(dimension)
     game_actions = tuple(groups.get("game", {}).keys())
     sections: list[_SectionSpec] = []
     for bucket in (_BUCKET_TRANSLATION, _BUCKET_ROTATION, _BUCKET_OTHER):
@@ -123,7 +119,7 @@ def _gameplay_sections_for_dimension(dimension: int) -> list[_SectionSpec]:
 
 
 def _sections_for_dimension(*, dimension: int) -> list[_SectionSpec]:
-    groups = runtime_binding_groups_for_dimension(dimension)
+    groups = runtime_binding_groups_for_dimension_runtime(dimension)
     prefix = f"{dimension}D "
     sections: list[_SectionSpec] = []
     if groups.get("game"):
@@ -177,7 +173,7 @@ def rows_for_scope(scope: str) -> tuple[list[RenderedRow], list[BindingRow]]:
 
     for section in sections_for_scope(scope):
         rendered.append(RenderedRow(kind="header", text=section.title))
-        group_bindings = runtime_binding_groups_for_dimension(section.dimension).get(
+        group_bindings = runtime_binding_groups_for_dimension_runtime(section.dimension).get(
             section.group, {}
         )
         if not group_bindings:
@@ -223,7 +219,7 @@ def binding_title(row: BindingRow, scope: str) -> str:
 
 
 def binding_keys(row: BindingRow) -> tuple[int, ...]:
-    groups = runtime_binding_groups_for_dimension(row.dimension)
+    groups = runtime_binding_groups_for_dimension_runtime(row.dimension)
     return tuple(groups.get(row.group, {}).get(row.action, ()))
 
 

@@ -386,7 +386,7 @@ Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu root includes `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`, and `Quit`.
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
-4. `Settings` submenu uses short section labels (`Game`,`Display`,`Audio`,`Controls`,`Profiles`,`Advanced`) while reusing the shared settings/keybindings surfaces underneath.
+4. `Settings` submenu uses short section labels (`Game`,`Display`,`Audio`,`Controls`,`Profiles`,`Legacy Topology Editor Menu`) while reusing the shared settings/keybindings surfaces underneath, with `Advanced gameplay` now rendered inline inside `Game` settings rather than as a separate submenu.
 5. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
 6. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 7. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -402,8 +402,11 @@ Implemented in code:
 14. launcher/settings/keybindings/bot/setup UI copy is sourced from
     `config/menu/structure.json` (`ui_copy`) and consumed via
     `menu_structure_schema.py` + `menu_config.py` accessors in the UI adapters.
-15. User overrides remain in `state/menu_settings.json`.
-16. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
+15. launcher filtered settings sections and launcher settings routes are sourced
+    from `config/menu/structure.json` (`settings_sections`,
+    `launcher_settings_routes`) rather than Python-owned maps.
+16. User overrides remain in `state/menu_settings.json`.
+17. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
 Stabilization details:
 1. Returning from gameplay to menu now reapplies persisted display mode.

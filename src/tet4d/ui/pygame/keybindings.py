@@ -1,25 +1,38 @@
-﻿"""Shared keyboard bindings for 2D/3D/4D frontends."""
+"""Shared keyboard bindings for 2D/3D/4D frontends."""
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
-from tet4d.engine.runtime import keybinding_store as runtime_keybinding_store
+from tet4d.engine.runtime.keybinding_runtime_state import (
+    KEYBINDING_STATE,
+    KEY_PROFILE_ENV,  # noqa: F401 - re-exported for callers
+    PROFILE_FULL,  # noqa: F401 - re-exported for callers
+    PROFILE_MACBOOK,  # noqa: F401 - re-exported for callers
+    PROFILE_TINY,  # noqa: F401 - re-exported for callers
+    REBIND_CONFLICT_CANCEL,  # noqa: F401 - re-exported for callers
+    REBIND_CONFLICT_OPTIONS,  # noqa: F401 - re-exported for callers
+    REBIND_CONFLICT_REPLACE,
+    REBIND_CONFLICT_SWAP,  # noqa: F401 - re-exported for callers
+    KeyBindingMap,
+    KeyTuple,
+    cycle_rebind_conflict_mode,  # noqa: F401 - re-exported for callers
+    normalize_rebind_conflict_mode,
+)
 from tet4d.engine.runtime.keybinding_store import (
     BUILTIN_PROFILES,
+    KEYBINDING_PAYLOAD_SCHEMA_VERSION,
     PROFILE_SMALL,
     SUPPORTED_DIMENSIONS,
-    active_key_profile_from_env,
     clone_keybinding_dimension,
     delete_key_profile as delete_key_profile_files,
-    load_keybinding_defaults_payload,
     keybinding_file_path_for_profile as runtime_keybinding_file_path_for_profile,
     list_key_profiles as list_key_profiles_from_store,
     load_keybindings_payload,
     next_auto_profile_name as next_auto_profile_name_from_store,
-    normalize_builtin_profile,
     normalize_profile_name,
     profile_keybinding_file_path as runtime_profile_keybinding_file_path,
     rename_key_profile as rename_key_profile_files,
@@ -33,121 +46,48 @@ from tet4d.engine.ui_logic.keybindings_catalog import (
 )
 from tet4d.ui.pygame.input.key_display import display_key_name
 
-KeyTuple = Tuple[int, ...]
-KeyBindingMap = Dict[str, KeyTuple]
-
-KEY_PROFILE_ENV = runtime_keybinding_store.KEY_PROFILE_ENV
-PROFILE_FULL = runtime_keybinding_store.PROFILE_FULL
-PROFILE_MACBOOK = runtime_keybinding_store.PROFILE_MACBOOK
-PROFILE_TINY = runtime_keybinding_store.PROFILE_TINY
-
-REBIND_CONFLICT_REPLACE = "replace"
-REBIND_CONFLICT_SWAP = "swap"
-REBIND_CONFLICT_CANCEL = "cancel"
-REBIND_CONFLICT_OPTIONS = (
-    REBIND_CONFLICT_REPLACE,
-    REBIND_CONFLICT_SWAP,
-    REBIND_CONFLICT_CANCEL,
-)
-
-
-def _load_defaults_payload() -> dict:
-    return load_keybinding_defaults_payload()
-
-
-_DEFAULTS = _load_defaults_payload()
-_DEFAULTS_VERSION = int(_DEFAULTS.get("version", 1))
-_PROFILE_MAP = _DEFAULTS.get("profiles", {})
-
-
-def _bindings_for(
-    profile: str, section: str, dim_key: str | None = None
-) -> KeyBindingMap:
-    profile_payload = _PROFILE_MAP.get(profile, {})
-    section_payload = profile_payload.get(section, {})
-    if dim_key is not None:
-        section_payload = section_payload.get(dim_key, {})
-    if not isinstance(section_payload, dict):
-        return {}
-    return {
-        action: tuple(int(k) for k in keys) for action, keys in section_payload.items()
-    }
-
-
 def default_game_bindings_for_profile(
     profile: str,
 ) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
-    return (
-        _bindings_for(profile, "game", "d2"),
-        _bindings_for(profile, "game", "d3"),
-        _bindings_for(profile, "game", "d4"),
-    )
+    return KEYBINDING_STATE.default_game_bindings_for_profile(profile)
 
 
 def default_camera_bindings_for_profile(
     profile: str,
 ) -> tuple[KeyBindingMap, KeyBindingMap]:
-    return (
-        _bindings_for(profile, "camera", "d3"),
-        _bindings_for(profile, "camera", "d4"),
-    )
+    return KEYBINDING_STATE.default_camera_bindings_for_profile(profile)
 
 
 def default_explorer_bindings_for_profile(
     profile: str,
 ) -> tuple[KeyBindingMap, KeyBindingMap, KeyBindingMap]:
-    return (
-        _bindings_for(profile, "explorer", "d2"),
-        _bindings_for(profile, "explorer", "d3"),
-        _bindings_for(profile, "explorer", "d4"),
-    )
+    return KEYBINDING_STATE.default_explorer_bindings_for_profile(profile)
 
 
 def default_system_bindings_for_profile(profile: str) -> KeyBindingMap:
-    return _bindings_for(profile, "system")
+    return KEYBINDING_STATE.default_system_bindings_for_profile(profile)
 
 
-DISABLED_KEYS_2D = tuple(int(k) for k in _DEFAULTS.get("disabled_keys_2d", ()))
-
-
-def _normalize_profile(raw: str | None) -> str:
-    return normalize_builtin_profile(raw)
-
-
-def _normalize_profile_name(raw: str) -> str:
-    return normalize_profile_name(raw)
+_DEFAULTS_VERSION = KEYBINDING_STATE.defaults_version
+DISABLED_KEYS_2D = KEYBINDING_STATE.disabled_keys_2d
 
 
 def get_active_key_profile() -> str:
-    return active_key_profile_from_env()
+    return KEYBINDING_STATE.active_profile
 
 
-ACTIVE_KEY_PROFILE = get_active_key_profile()
+KEYBINDING_STATE.reset_keybindings_to_profile_defaults(
+    reset_camera_key_fallback=pygame.K_BACKSPACE
+)
+ACTIVE_KEY_PROFILE = KEYBINDING_STATE.active_profile
 
 
 def active_key_profile() -> str:
-    return ACTIVE_KEY_PROFILE
+    return KEYBINDING_STATE.active_profile
 
 
 def _selected_profile(profile: str | None = None) -> str:
-    if not profile:
-        return ACTIVE_KEY_PROFILE
-    return _normalize_profile_name(profile)
-
-
-def normalize_rebind_conflict_mode(mode: str | None) -> str:
-    if mode is None:
-        return REBIND_CONFLICT_REPLACE
-    value = mode.strip().lower()
-    if value in REBIND_CONFLICT_OPTIONS:
-        return value
-    return REBIND_CONFLICT_REPLACE
-
-
-def cycle_rebind_conflict_mode(mode: str, step: int = 1) -> str:
-    current = normalize_rebind_conflict_mode(mode)
-    idx = REBIND_CONFLICT_OPTIONS.index(current)
-    return REBIND_CONFLICT_OPTIONS[(idx + step) % len(REBIND_CONFLICT_OPTIONS)]
+    return KEYBINDING_STATE.selected_profile(profile)
 
 
 def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
@@ -168,79 +108,32 @@ def key_matches(bindings: Mapping[str, KeyTuple], action: str, key: int) -> bool
     return key in bindings.get(action, ())
 
 
-def _replace_map(
-    target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]
-) -> None:
-    target.clear()
-    target.update(source)
-
-
-_DEFAULT_KEYS_2D, _DEFAULT_KEYS_3D, _DEFAULT_KEYS_4D = (
-    default_game_bindings_for_profile(ACTIVE_KEY_PROFILE)
-)
-_DEFAULT_CAMERA_KEYS_3D, _DEFAULT_CAMERA_KEYS_4D = default_camera_bindings_for_profile(
-    ACTIVE_KEY_PROFILE
-)
-_DEFAULT_EXPLORER_KEYS_2D, _DEFAULT_EXPLORER_KEYS_3D, _DEFAULT_EXPLORER_KEYS_4D = (
-    default_explorer_bindings_for_profile(ACTIVE_KEY_PROFILE)
-)
-_DEFAULT_SYSTEM_KEYS = default_system_bindings_for_profile(ACTIVE_KEY_PROFILE)
-
-
-SYSTEM_KEYS: KeyBindingMap = dict(_DEFAULT_SYSTEM_KEYS)
-KEYS_2D: KeyBindingMap = dict(_DEFAULT_KEYS_2D)
-KEYS_3D: KeyBindingMap = dict(_DEFAULT_KEYS_3D)
-KEYS_4D: KeyBindingMap = dict(_DEFAULT_KEYS_4D)
-EXPLORER_KEYS_2D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_2D)
-EXPLORER_KEYS_3D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_3D)
-EXPLORER_KEYS_4D: KeyBindingMap = dict(_DEFAULT_EXPLORER_KEYS_4D)
-CAMERA_KEYS_3D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_3D)
-CAMERA_KEYS_4D: KeyBindingMap = dict(_DEFAULT_CAMERA_KEYS_4D)
+SYSTEM_KEYS = KEYBINDING_STATE.system_keys
+KEYS_2D = KEYBINDING_STATE.keys_2d
+KEYS_3D = KEYBINDING_STATE.keys_3d
+KEYS_4D = KEYBINDING_STATE.keys_4d
+EXPLORER_KEYS_2D = KEYBINDING_STATE.explorer_keys_2d
+EXPLORER_KEYS_3D = KEYBINDING_STATE.explorer_keys_3d
+EXPLORER_KEYS_4D = KEYBINDING_STATE.explorer_keys_4d
+CAMERA_KEYS_3D = KEYBINDING_STATE.camera_keys_3d
+CAMERA_KEYS_4D = KEYBINDING_STATE.camera_keys_4d
 
 
 def reset_keybindings_to_profile_defaults(profile: str | None = None) -> None:
-    selected = _selected_profile(profile)
-    keys_2d, keys_3d, keys_4d = default_game_bindings_for_profile(selected)
-    explorer_2d, explorer_3d, explorer_4d = default_explorer_bindings_for_profile(selected)
-    camera_3d, camera_4d = default_camera_bindings_for_profile(selected)
-    system_keys = default_system_bindings_for_profile(selected)
-    _replace_map(SYSTEM_KEYS, system_keys)
-    _replace_map(KEYS_2D, keys_2d)
-    _replace_map(KEYS_3D, keys_3d)
-    _replace_map(KEYS_4D, keys_4d)
-    _replace_map(EXPLORER_KEYS_2D, explorer_2d)
-    _replace_map(EXPLORER_KEYS_3D, explorer_3d)
-    _replace_map(EXPLORER_KEYS_4D, explorer_4d)
-    _replace_map(CAMERA_KEYS_3D, camera_3d)
-    _replace_map(CAMERA_KEYS_4D, camera_4d)
-    _sanitize_runtime_bindings(camera_defaults_4d=camera_4d)
+    KEYBINDING_STATE.reset_keybindings_to_profile_defaults(
+        profile,
+        reset_camera_key_fallback=pygame.K_BACKSPACE,
+    )
 
 
 def _sanitize_runtime_bindings(
     *,
     camera_defaults_4d: Mapping[str, KeyTuple] | None = None,
 ) -> None:
-    fallback_camera_4d = (
-        dict(camera_defaults_4d)
-        if camera_defaults_4d is not None
-        else default_camera_bindings_for_profile(ACTIVE_KEY_PROFILE)[1]
+    KEYBINDING_STATE.sanitize_runtime_bindings(
+        camera_defaults_4d=camera_defaults_4d,
+        reset_camera_key_fallback=pygame.K_BACKSPACE,
     )
-    # 4D gameplay keys must not be shadowed by 4D camera/view keys.
-    occupied = set()
-    for mapping in (KEYS_4D, SYSTEM_KEYS):
-        for keys in mapping.values():
-            occupied.update(keys)
-
-    sanitized_camera_4d: KeyBindingMap = {}
-    for action, keys in CAMERA_KEYS_4D.items():
-        filtered = tuple(key for key in keys if key not in occupied)
-        if not filtered:
-            filtered = fallback_camera_4d.get(action, ())
-            filtered = tuple(key for key in filtered if key not in occupied)
-        if action == "reset" and not filtered:
-            filtered = (pygame.K_BACKSPACE,)
-        sanitized_camera_4d[action] = filtered
-    _replace_map(CAMERA_KEYS_4D, sanitized_camera_4d)
 
 
 def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> Dict[str, List[str]]:
@@ -299,35 +192,8 @@ def _apply_group_payload(
         parsed = _parse_key_list(raw_group[action])
         if parsed is not None:
             updated[action] = parsed
-    _replace_map(target, updated)
-
-
-def _binding_groups_for_dimension(
-    dimension: int,
-) -> Dict[str, MutableMapping[str, KeyTuple]]:
-    group_map: dict[int, Dict[str, MutableMapping[str, KeyTuple]]] = {
-        2: {
-            "game": KEYS_2D,
-            "explorer": EXPLORER_KEYS_2D,
-            "system": SYSTEM_KEYS,
-        },
-        3: {
-            "game": KEYS_3D,
-            "explorer": EXPLORER_KEYS_3D,
-            "camera": CAMERA_KEYS_3D,
-            "system": SYSTEM_KEYS,
-        },
-        4: {
-            "game": KEYS_4D,
-            "explorer": EXPLORER_KEYS_4D,
-            "camera": CAMERA_KEYS_4D,
-            "system": SYSTEM_KEYS,
-        },
-    }
-    groups = group_map.get(dimension)
-    if groups is None:
-        raise ValueError("dimension must be one of: 2, 3, 4")
-    return groups
+    target.clear()
+    target.update(updated)
 
 
 def _resolve_keybindings_io_context(
@@ -336,7 +202,7 @@ def _resolve_keybindings_io_context(
     file_path: str | None,
     profile: str | None,
 ) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str]:
-    groups = _binding_groups_for_dimension(dimension)
+    groups = KEYBINDING_STATE.binding_groups_for_dimension(dimension)
     path, selected_profile = resolve_keybindings_io_path_from_store(
         dimension,
         file_path=file_path,
@@ -349,91 +215,11 @@ def _resolve_keybindings_io_context(
 def runtime_binding_groups_for_dimension(
     dimension: int,
 ) -> Dict[str, Mapping[str, KeyTuple]]:
-    groups = _binding_groups_for_dimension(dimension)
-    return {group: dict(bindings) for group, bindings in groups.items()}
-
+    return KEYBINDING_STATE.runtime_binding_groups_for_dimension(dimension)
 
 
 def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
-    groups = _binding_groups_for_dimension(dimension)
-    return {group: sorted(bindings.keys()) for group, bindings in groups.items()}
-
-
-def _remove_key_from_tuple(keys: KeyTuple, key: int) -> KeyTuple:
-    return tuple(candidate for candidate in keys if candidate != key)
-
-
-def _find_conflicts(
-    groups: Mapping[str, Mapping[str, KeyTuple]],
-    key: int,
-    skip_group: str,
-    skip_action: str,
-) -> list[tuple[str, str]]:
-    conflicts: list[tuple[str, str]] = []
-    for group_name, binding_map in groups.items():
-        for action_name, keys in binding_map.items():
-            if group_name == skip_group and action_name == skip_action:
-                continue
-            if key in keys:
-                conflicts.append((group_name, action_name))
-    return conflicts
-
-
-def _camera_blocked_conflicts(
-    group: str,
-    conflicts: list[tuple[str, str]],
-) -> list[tuple[str, str]]:
-    return (
-        [
-            (conflict_group, conflict_action)
-            for conflict_group, conflict_action in conflicts
-            if conflict_group in {"game", "system"}
-        ]
-        if group == "camera"
-        else []
-    )
-
-
-def _swap_conflicts(
-    groups: Mapping[str, Mapping[str, KeyTuple]],
-    binding_map: Mapping[str, KeyTuple],
-    action: str,
-    key: int,
-    conflicts: list[tuple[str, str]],
-) -> None:
-    first_group, first_action = conflicts[0]
-    first_map = groups[first_group]
-    old_keys = binding_map[action]
-    first_map[first_action] = old_keys
-    for extra_group, extra_action in conflicts[1:]:
-        extra_map = groups[extra_group]
-        extra_map[extra_action] = _remove_key_from_tuple(extra_map[extra_action], key)
-
-
-def _replace_conflicts(
-    groups: Mapping[str, Mapping[str, KeyTuple]],
-    key: int,
-    conflicts: list[tuple[str, str]],
-) -> None:
-    for conflict_group, conflict_action in conflicts:
-        conflict_map = groups[conflict_group]
-        conflict_map[conflict_action] = _remove_key_from_tuple(
-            conflict_map[conflict_action], key
-        )
-
-
-def _apply_rebind_conflicts(
-    groups: Mapping[str, Mapping[str, KeyTuple]],
-    binding_map: Mapping[str, KeyTuple],
-    action: str,
-    key: int,
-    conflicts: list[tuple[str, str]],
-    conflict_mode: str,
-) -> None:
-    if conflicts and conflict_mode == REBIND_CONFLICT_SWAP:
-        _swap_conflicts(groups, binding_map, action, key, conflicts)
-    else:
-        _replace_conflicts(groups, key, conflicts)
+    return KEYBINDING_STATE.binding_actions_for_dimension(dimension)
 
 
 def _rebind_success_message(
@@ -458,44 +244,24 @@ def rebind_action_key(
     *,
     conflict_mode: str = REBIND_CONFLICT_REPLACE,
 ) -> tuple[bool, str]:
-    try:
-        groups = _binding_groups_for_dimension(dimension)
-    except ValueError as exc:
-        return False, str(exc)
-    binding_map = groups.get(group)
-    if binding_map is None:
-        return False, f"unknown binding group: {group}"
-    if action not in binding_map:
-        return False, f"unknown action: {group}.{action}"
-
     selected_mode = normalize_rebind_conflict_mode(conflict_mode)
-    conflicts = _find_conflicts(groups, key, group, action)
-    blocked_conflicts = _camera_blocked_conflicts(group, conflicts)
-    if blocked_conflicts:
-        conflict_refs = ", ".join(f"{g}.{a}" for g, a in blocked_conflicts)
-        return False, f"Camera key cannot override {conflict_refs}"
-    if conflicts and selected_mode == REBIND_CONFLICT_CANCEL:
-        conflict_refs = ", ".join(f"{g}.{a}" for g, a in conflicts)
-        return False, f"Key already used by {conflict_refs}; conflict mode=cancel"
-
-    _apply_rebind_conflicts(
-        groups,
-        binding_map,
+    ok, msg, conflicts = KEYBINDING_STATE.apply_rebind_action_key(
+        dimension,
+        group,
         action,
         key,
-        conflicts,
-        selected_mode,
+        conflict_mode=selected_mode,
+        reset_camera_key_fallback=pygame.K_BACKSPACE,
     )
-    binding_map[action] = (key,)
-
-    _sanitize_runtime_bindings()
+    if not ok:
+        return False, msg
     key_name = display_key_name(key)
     return True, _rebind_success_message(
         group=group,
         action=action,
         key_name=key_name,
         conflict_mode=selected_mode,
-        conflicts=conflicts,
+        conflicts=list(conflicts),
     )
 
 
@@ -520,13 +286,12 @@ def next_auto_profile_name(prefix: str = "custom") -> str:
 
 
 def set_active_key_profile(profile: str) -> tuple[bool, str]:
-    try:
-        normalized = _normalize_profile_name(profile)
-    except ValueError as exc:
-        return False, str(exc)
+    ok, msg = KEYBINDING_STATE.set_active_profile(profile)
+    if not ok:
+        return False, msg
     global ACTIVE_KEY_PROFILE
-    ACTIVE_KEY_PROFILE = normalized
-    return True, f"Active key profile: {normalized}"
+    ACTIVE_KEY_PROFILE = KEYBINDING_STATE.active_profile
+    return True, msg
 
 
 def create_auto_profile(
@@ -542,9 +307,9 @@ def create_auto_profile(
 def clone_key_profile(
     target_profile: str, source_profile: str | None = None
 ) -> tuple[bool, str]:
-    target = _normalize_profile_name(target_profile)
+    target = normalize_profile_name(target_profile)
     source = (
-        _normalize_profile_name(source_profile)
+        normalize_profile_name(source_profile)
         if source_profile
         else ACTIVE_KEY_PROFILE
     )
@@ -561,26 +326,28 @@ def clone_key_profile(
 
 
 def delete_key_profile(profile: str) -> tuple[bool, str]:
-    normalized = _normalize_profile_name(profile)
+    normalized = normalize_profile_name(profile)
     ok, msg = delete_key_profile_files(normalized)
     if not ok:
         return ok, msg
     global ACTIVE_KEY_PROFILE
     if ACTIVE_KEY_PROFILE == normalized:
+        KEYBINDING_STATE.set_active_profile(PROFILE_SMALL)
         ACTIVE_KEY_PROFILE = PROFILE_SMALL
         load_active_profile_bindings()
     return ok, msg
 
 
 def rename_key_profile(profile: str, new_profile: str) -> tuple[bool, str]:
-    source = _normalize_profile_name(profile)
-    target = _normalize_profile_name(new_profile)
+    source = normalize_profile_name(profile)
+    target = normalize_profile_name(new_profile)
     ok, msg = rename_key_profile_files(source, target)
     if not ok:
         return ok, msg
 
     global ACTIVE_KEY_PROFILE
     if ACTIVE_KEY_PROFILE == source:
+        KEYBINDING_STATE.set_active_profile(target)
         ACTIVE_KEY_PROFILE = target
         ok, msg = load_active_profile_bindings()
         if not ok:
@@ -619,9 +386,10 @@ def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, ob
     if bindings is None:
         raise ValueError("dimension must be one of: 2, 3, 4")
     return {
+        "schema_version": KEYBINDING_PAYLOAD_SCHEMA_VERSION,
         "defaults_version": _DEFAULTS_VERSION,
         "dimension": dimension,
-        "profile": _normalize_profile_name(profile),
+        "profile": normalize_profile_name(profile),
         "bindings": {
             group_name: _serialize_binding_group(binding_map)
             for group_name, binding_map in bindings.items()
@@ -676,6 +444,7 @@ def save_keybindings_file(
         return False, str(exc)
 
     payload = {
+        "schema_version": KEYBINDING_PAYLOAD_SCHEMA_VERSION,
         "dimension": dimension,
         "profile": selected_profile,
         "bindings": {
@@ -735,8 +504,15 @@ def load_keybindings_file(
 _KEYBINDINGS_INITIALIZED = False
 
 
+def _remove_obsolete_small_profile_dir() -> None:
+    obsolete_dir = profile_keybinding_file_path(2, PROFILE_FULL).parent.parent / PROFILE_SMALL
+    if not obsolete_dir.exists():
+        return
+    shutil.rmtree(obsolete_dir, ignore_errors=True)
+
+
 def _ensure_profile_files(profile: str) -> None:
-    selected = _normalize_profile_name(profile)
+    selected = normalize_profile_name(profile)
     reset_keybindings_to_profile_defaults(selected)
     for dimension in SUPPORTED_DIMENSIONS:
         preferred = keybinding_file_path_for_profile(dimension, selected)
@@ -762,10 +538,12 @@ def load_active_profile_bindings() -> tuple[bool, str]:
     for dimension in SUPPORTED_DIMENSIONS:
         ok, msg = load_keybindings_file(dimension, profile=selected)
         if not ok:
+            if selected not in BUILTIN_PROFILES:
+                return False, msg
             ok_save, save_msg = save_keybindings_file(dimension, profile=selected)
             if not ok_save:
                 return False, save_msg
-            messages.append(msg)
+            messages.append(f"{msg}; regenerated built-in defaults")
             continue
         messages.append(msg)
     return True, "; ".join(messages)
@@ -775,6 +553,7 @@ def initialize_keybinding_files() -> None:
     global _KEYBINDINGS_INITIALIZED
     if _KEYBINDINGS_INITIALIZED:
         return
+    _remove_obsolete_small_profile_dir()
     for builtin in BUILTIN_PROFILES:
         _ensure_profile_files(builtin)
     load_active_profile_bindings()

@@ -48,7 +48,7 @@ Owns:
 
 1. Core model/state types.
 2. Deterministic gameplay rules and topology.
-3. Runtime config, persistence, validation, tutorial state machinery, and keybinding storage.
+3. Runtime config, persistence, validation, tutorial state machinery, and keybinding storage/state ownership.
 4. Engine-owned convenience exports in `tet4d.engine.api`.
 
 Must not own:
@@ -80,7 +80,7 @@ Owns:
 1. Event loops and runtime bootstrap.
 2. Rendering, layout, and camera/view adapters.
 3. Menu surfaces and gameplay frontends.
-4. Keybinding runtime maps and adapter-local state sync.
+4. Keybinding display/parsing adapters and adapter-local UI sync.
 
 UI may import engine modules directly. It should prefer the narrowest engine
 owner that already exists instead of adding new `engine.api` wrappers.
@@ -125,24 +125,25 @@ creating reverse dependencies.
 4. Shared lock-and-analysis orchestration: `src/tet4d/engine/gameplay/lock_flow.py`
 5. Engine gameplay convenience exports: `src/tet4d/engine/gameplay/api.py`
 6. Runtime-owned keybinding storage: `src/tet4d/engine/runtime/keybinding_store.py`
-7. Engine runtime convenience exports: `src/tet4d/engine/runtime/api.py`
-8. Engine tutorial convenience exports: `src/tet4d/engine/tutorial/api.py`
-9. 2D orchestration frontend: `src/tet4d/ui/pygame/front2d_game.py`
-10. 2D setup/menu owner: `src/tet4d/ui/pygame/front2d_setup.py`
-11. 2D runtime loop orchestration owner: `src/tet4d/ui/pygame/front2d_loop.py`
-12. 2D runtime session/state owner: `src/tet4d/ui/pygame/front2d_session.py`
-13. 2D per-frame/update owner: `src/tet4d/ui/pygame/front2d_frame.py`
-14. 2D results/leaderboard owner: `src/tet4d/ui/pygame/front2d_results.py`
-15. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
-16. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
-17. ND state-construction owner: `src/tet4d/ui/pygame/frontend_nd_state.py`
-18. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd_input.py`
-19. Settings-hub model owner: `src/tet4d/ui/pygame/launch/settings_hub_model.py`
-20. Settings-hub actions owner: `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
-21. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
-22. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
-23. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
-24. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
+7. Runtime-owned keybinding mutable state: `src/tet4d/engine/runtime/keybinding_runtime_state.py`
+8. Engine runtime convenience exports: `src/tet4d/engine/runtime/api.py`
+9. Engine tutorial convenience exports: `src/tet4d/engine/tutorial/api.py`
+10. 2D orchestration frontend: `src/tet4d/ui/pygame/front2d_game.py`
+11. 2D setup/menu owner: `src/tet4d/ui/pygame/front2d_setup.py`
+12. 2D runtime loop orchestration owner: `src/tet4d/ui/pygame/front2d_loop.py`
+13. 2D runtime session/state owner: `src/tet4d/ui/pygame/front2d_session.py`
+14. 2D per-frame/update owner: `src/tet4d/ui/pygame/front2d_frame.py`
+15. 2D results/leaderboard owner: `src/tet4d/ui/pygame/front2d_results.py`
+16. Shared setup-menu runner: `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
+17. ND setup/menu/config owner: `src/tet4d/ui/pygame/frontend_nd_setup.py`
+18. ND state-construction owner: `src/tet4d/ui/pygame/frontend_nd_state.py`
+19. ND gameplay/input owner: `src/tet4d/ui/pygame/frontend_nd_input.py`
+20. Settings-hub model owner: `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+21. Settings-hub actions owner: `src/tet4d/ui/pygame/launch/settings_hub_actions.py`
+22. Settings-hub orchestration/view owner: `src/tet4d/ui/pygame/launch/launcher_settings.py`
+23. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
+24. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
+25. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
 
 ## Enforcement
 

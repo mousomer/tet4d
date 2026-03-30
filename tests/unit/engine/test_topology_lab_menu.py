@@ -30,6 +30,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundPlayabilityAnalysis,
 )
+from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
 from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_2D, KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
@@ -1721,6 +1722,28 @@ class TestTopologyLabMenu(unittest.TestCase):
             ),
             sections["Rotate"],
         )
+
+    def test_workspace_helper_reads_runtime_binding_state(self) -> None:
+        state = self._explorer_state(4)
+        original = tuple(KEYBINDING_STATE.keys_4d["move_w_neg"])
+        try:
+            KEYBINDING_STATE.keys_4d["move_w_neg"] = (pygame.K_SLASH, pygame.K_q)
+            sections = dict(topology_lab_workspace_shell._workspace_helper_sections(state))
+            self.assertIn(
+                (
+                    "W",
+                    topology_lab_workspace_shell.format_key_tuple(
+                        KEYBINDING_STATE.keys_4d["move_w_neg"]
+                    )
+                    + " / "
+                    + topology_lab_workspace_shell.format_key_tuple(
+                        KEYBINDING_STATE.keys_4d["move_w_pos"]
+                    ),
+                ),
+                sections["Move"],
+            )
+        finally:
+            KEYBINDING_STATE.keys_4d["move_w_neg"] = original
 
     def test_workspace_action_buttons_wrap_long_labels_within_button_budget(self) -> None:
         fonts = self._fonts()

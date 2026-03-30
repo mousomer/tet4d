@@ -301,6 +301,120 @@ def parse_settings_category_metrics(
     return metrics
 
 
+def parse_settings_sections(
+    payload: dict[str, Any],
+    *,
+    layout_rows: tuple[dict[str, str], ...],
+) -> dict[str, dict[str, Any]]:
+    layout_headers = {
+        row["label"] for row in layout_rows if row.get("kind") == "header"
+    }
+    layout_item_keys = {
+        row["row_key"] for row in layout_rows if row.get("kind") == "item"
+    }
+    raw_sections = require_object(
+        payload.get("settings_sections"),
+        path="structure.settings_sections",
+    )
+    sections: dict[str, dict[str, Any]] = {}
+    for raw_section_id, raw_section in raw_sections.items():
+        section_id = as_non_empty_string(
+            raw_section_id,
+            path="structure.settings_sections keys",
+        ).lower()
+        section = require_object(
+            raw_section,
+            path=f"structure.settings_sections.{section_id}",
+        )
+        headers = parse_string_list(
+            section.get("headers"),
+            path=f"structure.settings_sections.{section_id}.headers",
+        )
+        row_keys = string_tuple(
+            section.get("row_keys"),
+            path=f"structure.settings_sections.{section_id}.row_keys",
+            normalize_lower=True,
+        )
+        missing_headers = sorted(set(headers) - layout_headers)
+        if missing_headers:
+            raise RuntimeError(
+                "structure.settings_sections."
+                f"{section_id}.headers reference unknown layout headers: "
+                + ", ".join(missing_headers)
+            )
+        missing_row_keys = sorted(set(row_keys) - layout_item_keys)
+        if missing_row_keys:
+            raise RuntimeError(
+                "structure.settings_sections."
+                f"{section_id}.row_keys reference unknown layout row keys: "
+                + ", ".join(missing_row_keys)
+            )
+        sections[section_id] = {
+            "title": as_non_empty_string(
+                section.get("title"),
+                path=f"structure.settings_sections.{section_id}.title",
+            ),
+            "subtitle": as_non_empty_string(
+                section.get("subtitle"),
+                path=f"structure.settings_sections.{section_id}.subtitle",
+            ),
+            "headers": headers,
+            "row_keys": row_keys,
+        }
+    return sections
+
+
+def parse_launcher_settings_routes(
+    payload: dict[str, Any],
+    *,
+    settings_sections: dict[str, dict[str, Any]],
+    launcher_settings_action_ids: set[str],
+) -> dict[str, dict[str, str]]:
+    raw_routes = require_object(
+        payload.get("launcher_settings_routes"),
+        path="structure.launcher_settings_routes",
+    )
+    routes: dict[str, dict[str, str]] = {}
+    for raw_action_id, raw_route in raw_routes.items():
+        action_id = as_non_empty_string(
+            raw_action_id,
+            path="structure.launcher_settings_routes keys",
+        ).lower()
+        if action_id not in launcher_settings_action_ids:
+            raise RuntimeError(
+                "structure.launcher_settings_routes references unknown launcher settings action: "
+                f"{action_id}"
+            )
+        route = require_object(
+            raw_route,
+            path=f"structure.launcher_settings_routes.{action_id}",
+        )
+        section_id = as_non_empty_string(
+            route.get("section_id"),
+            path=f"structure.launcher_settings_routes.{action_id}.section_id",
+        ).lower()
+        if section_id not in settings_sections:
+            raise RuntimeError(
+                "structure.launcher_settings_routes."
+                f"{action_id}.section_id references unknown section: {section_id}"
+            )
+        initial_row_key = as_non_empty_string(
+            route.get("initial_row_key"),
+            path=f"structure.launcher_settings_routes.{action_id}.initial_row_key",
+        ).lower()
+        if initial_row_key not in settings_sections[section_id]["row_keys"]:
+            raise RuntimeError(
+                "structure.launcher_settings_routes."
+                f"{action_id}.initial_row_key must belong to section {section_id}: "
+                f"{initial_row_key}"
+            )
+        routes[action_id] = {
+            "section_id": section_id,
+            "initial_row_key": initial_row_key,
+        }
+    return routes
+
+
 def resolve_field_max(
     raw_max: object,
     piece_set_max: int,

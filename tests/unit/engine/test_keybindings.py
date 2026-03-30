@@ -20,6 +20,7 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
 
 from tet4d.ui.pygame import keybindings
 from tet4d.engine.runtime import keybinding_store, menu_settings_state
+from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
 from tet4d.engine.runtime import menu_config
 from tet4d.engine.runtime.project_config import state_dir_path
 
@@ -72,6 +73,7 @@ class _TempKeybindingRoot:
     def start(self) -> None:
         for p in self.patches:
             p.start()
+        KEYBINDING_STATE.set_active_profile(keybindings.PROFILE_SMALL)
         keybindings.ACTIVE_KEY_PROFILE = keybindings.PROFILE_SMALL
         keybindings._KEYBINDINGS_INITIALIZED = False
         keybindings.initialize_keybinding_files()
@@ -101,9 +103,20 @@ class TestKeybindingProfiles(unittest.TestCase):
                 path = keybindings.profile_keybinding_file_path(dimension, profile)
                 self.assertTrue(path.exists(), f"missing file: {path}")
                 payload = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(
+                    payload.get("schema_version"),
+                    keybinding_store.KEYBINDING_PAYLOAD_SCHEMA_VERSION,
+                )
                 self.assertEqual(payload.get("defaults_version"), 1)
                 self.assertEqual(payload.get("dimension"), dimension)
                 self.assertEqual(payload.get("profile"), profile)
+
+    def test_builtin_profile_files_round_trip_for_all_profiles(self) -> None:
+        for profile in keybindings.BUILTIN_PROFILES:
+            ok, msg = keybindings.set_active_key_profile(profile)
+            self.assertTrue(ok, msg)
+            ok, msg = keybindings.load_active_profile_bindings()
+            self.assertTrue(ok, msg)
 
     def test_initialize_refreshes_stale_builtin_profile_files(self) -> None:
         stale_path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
@@ -118,6 +131,32 @@ class TestKeybindingProfiles(unittest.TestCase):
         refreshed = json.loads(stale_path.read_text(encoding="utf-8"))
         self.assertEqual(refreshed.get("defaults_version"), 1)
         self.assertEqual(refreshed["bindings"]["game"]["move_x_neg"], ["a", "left"])
+
+    def test_initialize_removes_obsolete_small_profile_directory(self) -> None:
+        obsolete_dir = self.tmp_root.keybindings_dir / "profiles" / keybindings.PROFILE_SMALL
+        obsolete_dir.mkdir(parents=True, exist_ok=True)
+        obsolete_file = obsolete_dir / "4d.json"
+        obsolete_file.write_text(
+            json.dumps(
+                {
+                    "dimension": 4,
+                    "profile": keybindings.PROFILE_SMALL,
+                    "bindings": {"game": {"move_w_neg": ["n"]}},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        keybindings._KEYBINDINGS_INITIALIZED = False
+        keybindings.initialize_keybinding_files()
+
+        self.assertFalse(obsolete_dir.exists())
+        canonical_small = keybindings.profile_keybinding_file_path(
+            4, keybindings.PROFILE_SMALL
+        )
+        payload = json.loads(canonical_small.read_text(encoding="utf-8"))
+        self.assertEqual(payload["bindings"]["game"]["move_w_neg"], ["q"])
+        self.assertEqual(payload["bindings"]["game"]["rotate_zw_neg"], ["n"])
 
     def test_numeric_camera_defaults(self) -> None:
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_neg"), (pygame.K_1,))
@@ -218,6 +257,146 @@ class TestKeybindingProfiles(unittest.TestCase):
         ok, msg = keybindings.set_active_key_profile("not a valid profile name!")
         self.assertFalse(ok)
         self.assertIn("invalid profile name", msg)
+
+    def test_defaults_payload_rejects_unknown_action_id(self) -> None:
+        payload = keybinding_store.load_keybinding_defaults_payload()
+        candidate = json.loads(json.dumps(payload))
+        candidate["profiles"]["small"]["game"]["d2"]["unknown_action"] = [97]
+
+        with self.assertRaisesRegex(ValueError, "unknown action id"):
+            keybinding_store.validate_keybinding_defaults_payload(candidate)
+
+    def test_defaults_payload_accepts_key_name_strings(self) -> None:
+        payload = keybinding_store.load_keybinding_defaults_payload()
+        candidate = json.loads(json.dumps(payload))
+        candidate["profiles"]["small"]["game"]["d2"]["hard_drop"] = ["space"]
+        candidate["profiles"]["small"]["system"]["help"] = ["g"]
+        candidate["disabled_keys_2d"] = ["left", "right"]
+
+        validated = keybinding_store.validate_keybinding_defaults_payload(candidate)
+
+        self.assertEqual(
+            validated["profiles"]["small"]["game"]["d2"]["hard_drop"],
+            [pygame.K_SPACE],
+        )
+        self.assertEqual(
+            validated["profiles"]["small"]["system"]["help"],
+            [pygame.K_g],
+        )
+        self.assertEqual(
+            validated["disabled_keys_2d"],
+            [pygame.K_LEFT, pygame.K_RIGHT],
+        )
+
+    def test_defaults_payload_rejects_unknown_key_name_string(self) -> None:
+        payload = keybinding_store.load_keybinding_defaults_payload()
+        candidate = json.loads(json.dumps(payload))
+        candidate["profiles"]["small"]["game"]["d2"]["hard_drop"] = ["spaceship"]
+
+        with self.assertRaisesRegex(ValueError, "unknown key token"):
+            keybinding_store.validate_keybinding_defaults_payload(candidate)
+
+    def test_defaults_payload_rejects_wrong_dimension_action(self) -> None:
+        payload = keybinding_store.load_keybinding_defaults_payload()
+        candidate = json.loads(json.dumps(payload))
+        candidate["profiles"]["small"]["game"]["d2"]["move_w_neg"] = [113]
+
+        with self.assertRaisesRegex(ValueError, "not valid for dimension 2"):
+            keybinding_store.validate_keybinding_defaults_payload(candidate)
+
+    def test_defaults_payload_requires_builtin_completeness(self) -> None:
+        payload = keybinding_store.load_keybinding_defaults_payload()
+        candidate = json.loads(json.dumps(payload))
+        del candidate["profiles"]["small"]["game"]["d2"]["move_x_neg"]
+
+        with self.assertRaisesRegex(ValueError, "missing required actions"):
+            keybinding_store.validate_keybinding_defaults_payload(candidate)
+
+    def test_load_rejects_saved_profile_with_unknown_action(self) -> None:
+        path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["bindings"]["game"]["unknown_action"] = ["a"]
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        self.assertFalse(ok)
+        self.assertIn("unknown action id", msg)
+
+    def test_load_rejects_saved_profile_with_wrong_dimension_action(self) -> None:
+        path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["bindings"]["game"]["move_w_neg"] = ["q"]
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        self.assertFalse(ok)
+        self.assertIn("not valid for dimension 2", msg)
+
+    def test_load_active_custom_profile_does_not_overwrite_invalid_file(self) -> None:
+        ok, msg, profile = keybindings.create_auto_profile()
+        self.assertTrue(ok, msg)
+        assert profile is not None
+        profile_name = str(profile)
+
+        custom_path = keybindings.profile_keybinding_file_path(4, profile_name)
+        original_payload = json.loads(custom_path.read_text(encoding="utf-8"))
+        broken_payload = json.loads(json.dumps(original_payload))
+        broken_payload["bindings"]["game"]["move_w_neg"] = ["spaceship"]
+        custom_path.write_text(json.dumps(broken_payload), encoding="utf-8")
+
+        ok, msg = keybindings.set_active_key_profile(profile_name)
+        self.assertTrue(ok, msg)
+        ok, msg = keybindings.load_active_profile_bindings()
+        self.assertFalse(ok)
+        self.assertIn("unknown key token", msg)
+
+        preserved = json.loads(custom_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            preserved["bindings"]["game"]["move_w_neg"],
+            ["spaceship"],
+        )
+
+    def test_saved_profile_payload_accepts_partial_custom_override(self) -> None:
+        payload = {
+            "dimension": 3,
+            "profile": "custom_partial",
+            "bindings": {
+                "game": {
+                    "move_x_neg": ["a"],
+                }
+            },
+        }
+
+        validated = keybinding_store.validate_keybinding_file_payload(payload)
+        self.assertEqual(validated["profile"], "custom_partial")
+
+    def test_saved_profile_payload_accepts_key_name_strings(self) -> None:
+        payload = {
+            "dimension": 3,
+            "profile": "custom_partial",
+            "bindings": {
+                "game": {
+                    "hard_drop": ["space"],
+                }
+            },
+        }
+
+        validated = keybinding_store.validate_keybinding_file_payload(payload)
+
+        self.assertEqual(
+            validated["bindings"]["game"]["hard_drop"],
+            [pygame.K_SPACE],
+        )
+
+    def test_saved_profile_payload_rejects_newer_schema_version(self) -> None:
+        path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["schema_version"] = keybinding_store.KEYBINDING_PAYLOAD_SCHEMA_VERSION + 1
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        self.assertFalse(ok)
+        self.assertIn("newer than this runtime supports", msg)
 
     def test_rebind_conflict_modes_work(self) -> None:
         original_move_left = keybindings.KEYS_2D["move_x_neg"][0]
