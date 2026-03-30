@@ -176,6 +176,7 @@ def _handle_loop_event_cycle(
     display_settings: DisplaySettings,
     restart_with_record: Callable[[], None],
     record_session: Callable[[str], None],
+    pause_menu_runner: Callable[..., tuple[str, pygame.Surface]],
 ) -> tuple[pygame.Surface, DisplaySettings, bool | None, bool]:
     def _runtime_event_handler(event: pygame.event.Event) -> None:
         nonlocal display_settings
@@ -198,6 +199,7 @@ def _handle_loop_event_cycle(
         screen=screen,
         fonts=fonts,
         loop=loop,
+        pause_menu_runner=pause_menu_runner,
     )
     terminal = _resolve_terminal_status(status, record_session=record_session)
     if terminal is not None:

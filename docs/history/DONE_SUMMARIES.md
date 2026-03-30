@@ -759,7 +759,7 @@ Canonical policy:
 303. synced help/structure docs and RDS cleanup policy wording,
 304. executed full-history purge of removed artifacts across refs and followed with force-push + secret scan sweep.
 305. `DONE` `[BKL-P2-021]` File-fetch lifecycle library RDS + design baseline:
-306. added plan doc `docs/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md` with explicit existing-RDS comparison and scope.
+306. added plan doc `docs/history/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md` with explicit existing-RDS comparison and scope.
 307. added canonical design spec `docs/rds/RDS_FILE_FETCH_LIBRARY.md` covering file action taxonomy (`load`/residency/`save`/cleanup), optimization toolbox, and API contract.
 308. documented runtime optimization strategy recommendation (`adaptive heuristics + optional contextual bandit`) and deferred full RL to future scale-driven milestones.
 309. synced RDS discoverability in documentation indexes (`docs/RDS_AND_CODEX.md`, `docs/README.md`, `docs/PROJECT_STRUCTURE.md`).
@@ -1110,7 +1110,7 @@ Latest checkpoint additions (Stage 716-755):
 `tetris_nd/tests/test_menu_graph_linter.py`,
 `docs/rds/RDS_MENU_STRUCTURE.md`,
 `docs/CHANGELOG.md`,
-`docs/plans/PLAN_MENU_GRAPH_MODULARIZATION_2026-02-21.md`.
+`docs/history/plans/PLAN_MENU_GRAPH_MODULARIZATION_2026-02-21.md`.
 19. Stage-6 icon-pack integration touched:
 `assets/help/icons/transform/svg/*`,
 `config/help/icon_map.json`,
@@ -1137,9 +1137,9 @@ Latest checkpoint additions (Stage 716-755):
 `tetris_nd/front3d_render.py`,
 `front.py`,
 `docs/rds/RDS_TETRIS_GENERAL.md`,
-`docs/plans/PLAN_FONT_PROFILE_UNIFICATION_2026-02-20.md`.
+`docs/history/plans/PLAN_FONT_PROFILE_UNIFICATION_2026-02-20.md`.
 22. File-fetch library RDS + planning touched:
-`docs/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md`,
+`docs/history/plans/PLAN_FILE_FETCH_LIBRARY_RDS_2026-02-20.md`,
 `docs/rds/RDS_FILE_FETCH_LIBRARY.md`,
 `docs/RDS_AND_CODEX.md`,
 `docs/README.md`,

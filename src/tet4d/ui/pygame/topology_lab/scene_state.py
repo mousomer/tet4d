@@ -26,6 +26,7 @@ from tet4d.engine.runtime.topology_playground_state import (
     TOPOLOGY_PLAYGROUND_TOOLS,
     TopologyPlaygroundGluingDraft as RuntimeTopologyPlaygroundGluingDraft,
     TopologyPlaygroundLaunchSettings as RuntimeTopologyPlaygroundLaunchSettings,
+    TopologyPlaygroundPlayabilityAnalysis as RuntimeTopologyPlaygroundPlayabilityAnalysis,
     TopologyPlaygroundPresetMetadata as RuntimeTopologyPlaygroundPresetMetadata,
     TopologyPlaygroundPresetSelection as RuntimeTopologyPlaygroundPresetSelection,
     TopologyPlaygroundProbeState as RuntimeTopologyPlaygroundProbeState,
@@ -53,8 +54,8 @@ PANE_CONTROLS = "controls"
 PANE_SCENE = "scene"
 TOPOLOGY_LAB_PANES = (PANE_CONTROLS, PANE_SCENE)
 PANE_LABELS = {
-    PANE_CONTROLS: "Analysis View",
-    PANE_SCENE: "Explorer Editor",
+    PANE_CONTROLS: "Diagnostics",
+    PANE_SCENE: "Workspace",
 }
 TOPOLOGY_LAB_WORKSPACES = (
     WORKSPACE_EDITOR,
@@ -98,6 +99,12 @@ class ExplorerPreviewCompileArtifacts:
     preview_error: str | None
 
 
+@dataclass(frozen=True)
+class ExplorerPlayabilityArtifacts:
+    signature: ExplorerPreviewCompileSignature
+    analysis: RuntimeTopologyPlaygroundPlayabilityAnalysis
+
+
 @dataclass
 class TopologyPlaygroundState:
     selected: int
@@ -116,6 +123,7 @@ class TopologyPlaygroundState:
     dirty: bool = False
     mouse_targets: list[Any] | None = None
     probe_show_trace: bool = True
+    probe_show_neighbors: bool = False
     probe_frame_permutation: tuple[int, ...] | None = None
     probe_frame_signs: tuple[int, ...] | None = None
     active_tool: str = TOOL_EDIT
@@ -140,6 +148,9 @@ class TopologyPlaygroundState:
     scene_preview_error: str | None = None
     scene_preview_signature: ExplorerPreviewCompileSignature | None = None
     scene_preview_cache: ExplorerPreviewCompileArtifacts | None = None
+    scene_playability_cache: ExplorerPlayabilityArtifacts | None = None
+    scene_pending_playability_signature: ExplorerPreviewCompileSignature | None = None
+    scene_pending_playability_delay_frames: int = 0
     experiment_batch: dict[str, object] | None = None
     interaction_audit: ExplorerInteractionAudit = field(
         default_factory=ExplorerInteractionAudit
@@ -327,6 +338,7 @@ def _runtime_probe_state_from_ui(
         path=path,
         trace=trace,
         show_trace=probe_trace_visible(state),
+        show_neighbors=probe_neighbors_visible(state),
         highlighted_gluing=highlighted_gluing,
         frame_permutation=frame_permutation,
         frame_signs=frame_signs,
@@ -558,6 +570,22 @@ def _replace_canonical_state(
     return state.canonical_state
 
 
+def _runtime_state_for_write(
+    state: TopologyPlaygroundState,
+    *,
+    sync_if_missing: bool = False,
+) -> RuntimeTopologyPlaygroundState | None:
+    if not uses_general_explorer_editor(state):
+        return None
+    runtime_state = state.canonical_state
+    if runtime_state is None and sync_if_missing:
+        sync_canonical_playground_state(state)
+        runtime_state = state.canonical_state
+    if runtime_state is None or runtime_state.dimension != state.dimension:
+        return None
+    return runtime_state
+
+
 def canonical_playground_state(
     state: TopologyPlaygroundState,
 ) -> RuntimeTopologyPlaygroundState | None:
@@ -615,12 +643,12 @@ def set_dirty(state: TopologyPlaygroundState, dirty: bool) -> None:
     if not uses_general_explorer_editor(state):
         state.dirty = normalized
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None and state.canonical_state is None:
         state.dirty = normalized
         sync_canonical_playground_state(state)
         return
-    if runtime_state.dimension != state.dimension:
+    if runtime_state is None:
         state.dirty = normalized
         return
     _replace_canonical_state(state, dirty=normalized)
@@ -633,10 +661,10 @@ def replace_play_settings(
     if not uses_general_explorer_editor(state):
         _remember_play_settings(state, settings)
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None or runtime_state.dimension != state.dimension:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None:
         _remember_play_settings(state, settings)
-        if runtime_state is None:
+        if state.canonical_state is None:
             sync_canonical_playground_state(state)
         return
     axis_sizes = tuple(int(value) for value in settings.board_dims[: state.dimension])
@@ -657,12 +685,12 @@ def replace_explorer_profile(
     if not uses_general_explorer_editor(state):
         state.explorer_profile = explorer_profile
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None and state.canonical_state is None:
         state.explorer_profile = explorer_profile
         sync_canonical_playground_state(state)
         return
-    if runtime_state.dimension != state.dimension:
+    if runtime_state is None:
         state.explorer_profile = explorer_profile
         return
     _replace_canonical_state(
@@ -689,12 +717,12 @@ def replace_explorer_draft(
     if not uses_general_explorer_editor(state):
         state.explorer_draft = explorer_draft
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None and state.canonical_state is None:
         state.explorer_draft = explorer_draft
         sync_canonical_playground_state(state)
         return
-    if runtime_state.dimension != state.dimension:
+    if runtime_state is None:
         state.explorer_draft = explorer_draft
         sync_canonical_playground_state(state)
         return
@@ -758,12 +786,12 @@ def set_selected_boundary_index(
     if not uses_general_explorer_editor(state):
         state.selected_boundary_index = boundary_index
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None and state.canonical_state is None:
         state.selected_boundary_index = boundary_index
         sync_canonical_playground_state(state)
         return
-    if runtime_state.dimension != state.dimension:
+    if runtime_state is None:
         state.selected_boundary_index = boundary_index
         return
     _replace_canonical_state(
@@ -786,12 +814,12 @@ def set_selected_glue_id(
     if not uses_general_explorer_editor(state):
         state.selected_glue_id = glue_id
         return
-    runtime_state = state.canonical_state
-    if runtime_state is None:
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is None and state.canonical_state is None:
         state.selected_glue_id = glue_id
         sync_canonical_playground_state(state)
         return
-    if runtime_state.dimension != state.dimension:
+    if runtime_state is None:
         state.selected_glue_id = glue_id
         return
     _replace_canonical_state(state, selected_gluing=glue_id)
@@ -855,6 +883,13 @@ def probe_trace_visible(state: TopologyPlaygroundState) -> bool:
     return bool(state.probe_show_trace)
 
 
+def probe_neighbors_visible(state: TopologyPlaygroundState) -> bool:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is not None:
+        return bool(runtime_state.probe_state.show_neighbors)
+    return bool(state.probe_show_neighbors)
+
+
 def current_probe_path(state: TopologyPlaygroundState) -> list[tuple[int, ...]]:
     runtime_state = canonical_playground_state(state)
     if runtime_state is not None:
@@ -901,10 +936,7 @@ def replace_probe_state(
         current_permutation if frame_permutation is _UNSET else frame_permutation,
         current_signs if frame_signs is _UNSET else frame_signs,
     )
-    runtime_state = canonical_playground_state(state)
-    if runtime_state is None and uses_general_explorer_editor(state):
-        sync_canonical_playground_state(state)
-        runtime_state = canonical_playground_state(state)
+    runtime_state = _runtime_state_for_write(state, sync_if_missing=True)
     if runtime_state is not None:
         _replace_canonical_state(
             state,
@@ -913,6 +945,7 @@ def replace_probe_state(
                 path=normalized_path,
                 trace=normalized_trace,
                 show_trace=probe_trace_visible(state),
+                show_neighbors=probe_neighbors_visible(state),
                 highlighted_gluing=normalized_highlight,
                 frame_permutation=normalized_permutation,
                 frame_signs=normalized_signs,
@@ -920,6 +953,7 @@ def replace_probe_state(
         )
         return
     state.probe_show_trace = probe_trace_visible(state)
+    state.probe_show_neighbors = probe_neighbors_visible(state)
     state.probe_frame_permutation = normalized_permutation
     state.probe_frame_signs = normalized_signs
     state.highlighted_glue_id = normalized_highlight
@@ -930,7 +964,7 @@ def set_probe_trace_visible(
     enabled: bool,
 ) -> None:
     normalized_enabled = bool(enabled)
-    runtime_state = canonical_playground_state(state)
+    runtime_state = _runtime_state_for_write(state)
     if runtime_state is not None:
         _replace_canonical_state(
             state,
@@ -941,6 +975,26 @@ def set_probe_trace_visible(
         )
         return
     state.probe_show_trace = normalized_enabled
+    if uses_general_explorer_editor(state):
+        sync_canonical_playground_state(state)
+
+
+def set_probe_neighbors_visible(
+    state: TopologyPlaygroundState,
+    enabled: bool,
+) -> None:
+    normalized_enabled = bool(enabled)
+    runtime_state = _runtime_state_for_write(state)
+    if runtime_state is not None:
+        _replace_canonical_state(
+            state,
+            probe_state=replace(
+                runtime_state.probe_state,
+                show_neighbors=normalized_enabled,
+            ),
+        )
+        return
+    state.probe_show_neighbors = normalized_enabled
     if uses_general_explorer_editor(state):
         sync_canonical_playground_state(state)
 
@@ -999,6 +1053,7 @@ def playground_dims_for_state(state: TopologyPlaygroundState) -> tuple[int, ...]
 
 def _normalize_probe_support_state(state: TopologyPlaygroundState) -> None:
     state.probe_show_trace = bool(state.probe_show_trace)
+    state.probe_show_neighbors = bool(state.probe_show_neighbors)
     state.probe_frame_permutation, state.probe_frame_signs = (
         _normalize_probe_frame_value(
             state.dimension,
@@ -1090,10 +1145,7 @@ def ensure_explorer_draft(state: TopologyPlaygroundState) -> None:
 
 
 def ensure_sandbox_state(state: TopologyPlaygroundState) -> None:
-    runtime_state = canonical_playground_state(state)
-    if runtime_state is None and uses_general_explorer_editor(state):
-        sync_canonical_playground_state(state)
-        runtime_state = canonical_playground_state(state)
+    runtime_state = _runtime_state_for_write(state, sync_if_missing=True)
     if runtime_state is not None:
         state.sandbox = runtime_state.sandbox_piece_state
         return
@@ -1139,6 +1191,7 @@ def cycle_active_pane(state: TopologyPlaygroundState, step: int) -> None:
 
 
 __all__ = [
+    "ExplorerPlayabilityArtifacts",
     "ExplorerPlaygroundSettings",
     "PANE_CONTROLS",
     "PANE_LABELS",
@@ -1172,6 +1225,7 @@ __all__ = [
     "current_probe_frame",
     "current_probe_path",
     "current_probe_trace",
+    "probe_neighbors_visible",
     "probe_trace_visible",
     "current_selected_boundary_index",
     "current_selected_glue_id",
@@ -1187,6 +1241,7 @@ __all__ = [
     "select_projection_coord",
     "reset_probe_state",
     "scene_pane_active",
+    "set_probe_neighbors_visible",
     "set_probe_trace_visible",
     "set_active_tool",
     "set_active_workspace",

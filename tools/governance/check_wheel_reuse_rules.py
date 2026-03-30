@@ -9,14 +9,13 @@ import sys
 from typing import Any
 
 if __package__:
-    from ._common import iter_python_files, load_json_object
+    from ._common import iter_python_files, load_unified_code_rules
 else:
     sys.path.append(str(Path(__file__).resolve().parent))
-    from _common import iter_python_files, load_json_object
+    from _common import iter_python_files, load_unified_code_rules
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RULES_PATH = ROOT / "config/project/policy/manifests/wheel_reuse_rules.json"
 
 
 @dataclass(frozen=True)
@@ -35,8 +34,12 @@ class WheelRule:
 
 
 def _load_rules() -> dict[str, Any]:
-    rel = "config/project/policy/manifests/wheel_reuse_rules.json"
-    return load_json_object(RULES_PATH, rel)
+    unified = load_unified_code_rules(ROOT)
+    if isinstance(unified, dict):
+        wheel_rules = unified.get("wheel_reuse")
+        if isinstance(wheel_rules, dict):
+            return wheel_rules
+    raise SystemExit("missing required file: config/project/policy/code_rules.json")
 
 
 def _tracked_python_files() -> list[str]:

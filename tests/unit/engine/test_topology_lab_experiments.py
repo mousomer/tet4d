@@ -22,10 +22,11 @@ class TestTopologyLabExperiments(unittest.TestCase):
             play_settings=launch.settings_snapshot,
         )
 
-    def test_explorer_rows_include_experiment_pack(self) -> None:
+    def test_explorer_rows_do_not_restore_experiment_pack_row(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
-        self.assertIn("experiments", row_keys)
+        self.assertNotIn("experiments", row_keys)
 
     def test_action_buttons_drop_duplicate_experiments(self) -> None:
         state = self._explorer_state(3)
@@ -40,8 +41,8 @@ class TestTopologyLabExperiments(unittest.TestCase):
         batch = {
             "experiment_count": 7,
             "valid_experiment_count": 7,
-            "recommendation": {
-                "label": "Wrap X,Y,Z",
+                "recommendation": {
+                "label": "3-Torus",
                 "reason": "1 component, 96 boundary traversals, no warnings",
             },
         }
@@ -61,7 +62,7 @@ class TestTopologyLabExperiments(unittest.TestCase):
             controls_panel._run_experiments(state)
         self.assertIs(state.experiment_batch, batch)
         self.assertIs(export_batch.call_args.kwargs["batch_payload"], batch)
-        self.assertIn("Next: Wrap X,Y,Z", state.status)
+        self.assertIn("Next: 3-Torus", state.status)
         play_sfx.assert_called_once_with("menu_confirm")
 
     def test_workspace_preview_lines_include_experiment_recommendation(self) -> None:
@@ -69,8 +70,8 @@ class TestTopologyLabExperiments(unittest.TestCase):
         state.experiment_batch = {
             "experiment_count": 7,
             "valid_experiment_count": 6,
-            "recommendation": {
-                "label": "Wrap X,Y,Z",
+                "recommendation": {
+                "label": "3-Torus",
                 "reason": "1 component, 96 boundary traversals, no warnings",
             },
         }
@@ -89,7 +90,7 @@ class TestTopologyLabExperiments(unittest.TestCase):
             preview_error=None,
         )
         self.assertIn("Experiments: 6/7 valid", lines)
-        self.assertIn("Next: Wrap X,Y,Z", lines)
+        self.assertIn("Next: 3-Torus", lines)
 
 
 if __name__ == "__main__":

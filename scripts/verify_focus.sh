@@ -230,13 +230,11 @@ fi
 
 if [[ "$CHECK_DOCS" == "1" ]]; then
 
-  "$PYTHON_BIN" tools/governance/validate_project_contracts.py
+  "$PYTHON_BIN" tools/governance/validate_governance.py
 
   "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
 
   "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
-
-  "$PYTHON_BIN" tools/governance/check_drift_protection.py
 
 fi
 
@@ -263,4 +261,3 @@ fi
 
 
 echo "verify_focus: OK"
-

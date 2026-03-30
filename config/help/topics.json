@@ -252,6 +252,58 @@
       ]
     },
     {
+      "id": "topology_playground_seams",
+      "title": "Topology Playground Seams",
+      "lane": "reference",
+      "priority": 85,
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "contexts": [
+        "launcher",
+        "pause"
+      ],
+      "summary": "Create, edit, and remove seams in Topology Playground Editor mode.",
+      "sections": [
+        {
+          "id": "entry",
+          "title": "Start Here",
+          "lines": [
+            "Open Topology Playground, switch to Editor, and set Tool to Edit.",
+            "Probe is inspection-only. Edit is the mutating seam workflow."
+          ]
+        },
+        {
+          "id": "create",
+          "title": "Create",
+          "lines": [
+            "Click a source boundary, then click a target boundary.",
+            "Adjust the permutation and tangent sign toggles in the transform editor.",
+            "Press Apply to commit the seam."
+          ]
+        },
+        {
+          "id": "edit_remove",
+          "title": "Edit Or Remove",
+          "lines": [
+            "Click a seam, or click one of its boundaries while Tool is Edit, to load that seam into the editor.",
+            "Change permutation or signs and press Apply to update it.",
+            "Press Remove only after the seam is selected."
+          ]
+        },
+        {
+          "id": "checks",
+          "title": "Checks",
+          "lines": [
+            "Use the helper panel to confirm Selected seam and Tool focus before applying changes.",
+            "If no seam is selected, Remove reports No active glue selected."
+          ]
+        }
+      ]
+    },
+    {
       "id": "troubleshooting",
       "title": "Troubleshooting",
       "lane": "reference",

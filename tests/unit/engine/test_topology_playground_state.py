@@ -118,6 +118,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
                 path=((0, 2, 3), (1, 2, 3)),
                 trace=("x+: [0, 2, 3] -> [1, 2, 3]",),
                 show_trace=False,
+                show_neighbors=True,
                 highlighted_gluing=glue.glue_id,
                 frame_permutation=(2, 1, 0),
                 frame_signs=(1, -1, 1),
@@ -177,6 +178,7 @@ class TestTopologyPlaygroundState(unittest.TestCase):
         self.assertEqual(state.active_tool, TOOL_PROBE)
         self.assertEqual(state.probe_state.coord, (1, 2, 3))
         self.assertFalse(state.probe_state.show_trace)
+        self.assertTrue(state.probe_state.show_neighbors)
         self.assertEqual(state.probe_state.frame_permutation, (2, 1, 0))
         self.assertEqual(state.probe_state.frame_signs, (1, -1, 1))
         self.assertEqual(state.sandbox_piece_state.origin, (3, 5, 2))

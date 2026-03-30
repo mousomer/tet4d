@@ -127,12 +127,19 @@ class _UnifiedSettingsState:
     text_mode_replace_on_type: bool = False
     saved: bool = False
     running: bool = True
+    topology_cache_file_count: int = 0
+    topology_cache_size_bytes: int | None = None
 
 
 _UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = settings_hub_layout_rows()
 _UNIFIED_SELECTABLE = tuple(
     idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item"
 )
+_SELECTABLE_INDEX_BY_ROW_KEY = {
+    row_key: selectable_idx
+    for selectable_idx, row_idx in enumerate(_UNIFIED_SELECTABLE)
+    for _kind, _label, row_key in (_UNIFIED_SETTINGS_ROWS[row_idx],)
+}
 
 
 def _configured_top_level_labels() -> tuple[str, ...]:
@@ -278,6 +285,7 @@ def build_unified_settings_state(
     *,
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
+    initial_row_key: str | None = None,
 ) -> _UnifiedSettingsState:
     score_logging_enabled = bool(get_analytics_settings()["score_logging_enabled"])
     overlay_transparency = get_overlay_transparency()
@@ -303,7 +311,7 @@ def build_unified_settings_state(
     translation_animation_duration_ms = int(
         mode_gameplay["translation_animation_duration_ms"]
     )
-    return _UnifiedSettingsState(
+    state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
         overlay_transparency=overlay_transparency,
@@ -333,3 +341,8 @@ def build_unified_settings_state(
         original_translation_animation_duration_ms=translation_animation_duration_ms,
         original_score_logging_enabled=score_logging_enabled,
     )
+    if initial_row_key:
+        selected = _SELECTABLE_INDEX_BY_ROW_KEY.get(str(initial_row_key).strip().lower())
+        if selected is not None:
+            state.selected = selected
+    return state

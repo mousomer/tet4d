@@ -7,14 +7,13 @@ import sys
 from typing import Any
 
 if __package__:
-    from ._common import as_str_list, load_json_object
+    from ._common import as_str_list, load_unified_code_rules
 else:
     sys.path.append(str(Path(__file__).resolve().parent))
-    from _common import as_str_list, load_json_object
+    from _common import as_str_list, load_unified_code_rules
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RULES_PATH = ROOT / "config/project/policy/manifests/policy_runtime_rules.json"
 
 
 @dataclass(frozen=True)
@@ -30,8 +29,10 @@ class RuntimeRuleWarning:
 
 
 def _load_rules() -> dict[str, Any]:
-    rel = "config/project/policy/manifests/policy_runtime_rules.json"
-    return load_json_object(RULES_PATH, rel)
+    unified = load_unified_code_rules(ROOT)
+    if isinstance(unified, dict):
+        return unified
+    raise SystemExit("missing required file: config/project/policy/code_rules.json")
 
 
 def _validate_entry_shape(
@@ -242,8 +243,8 @@ def main() -> int:
         issues.append(RuntimeRuleIssue("schema", "sanitation must be object"))
     else:
         text_issues, text_warnings = _check_text_entrypoints(
-            sanitation.get("text_entrypoints"),
-            section="sanitation.text_entrypoints",
+            sanitation.get("entrypoints", sanitation.get("text_entrypoints")),
+            section="sanitation.entrypoints",
         )
         issues.extend(text_issues)
         warnings.extend(text_warnings)
@@ -253,8 +254,10 @@ def main() -> int:
         issues.append(RuntimeRuleIssue("schema", "magic_numbers must be object"))
     else:
         number_issues, number_warnings = _check_numeric_entrypoints(
-            magic_numbers.get("config_backed_entrypoints"),
-            section="magic_numbers.config_backed_entrypoints",
+            magic_numbers.get(
+                "entrypoints", magic_numbers.get("config_backed_entrypoints")
+            ),
+            section="magic_numbers.entrypoints",
         )
         issues.extend(number_issues)
         warnings.extend(number_warnings)

@@ -32,6 +32,18 @@ from tools.governance.architecture_metric_budget import evaluate_architecture_me
 from tools.governance.folder_balance_budget import evaluate_folder_balance_gate
 from tools.governance.tech_debt_budget import evaluate_tech_debt_gate
 
+
+def _load_tech_debt_cfg() -> dict | None:
+    governance_path = Path("config/project/policy/governance.json")
+    if governance_path.exists():
+        governance = json.loads(governance_path.read_text(encoding="utf-8"))
+        if isinstance(governance, dict):
+            tech_debt_budget = governance.get("tech_debt_budget")
+            if isinstance(tech_debt_budget, dict):
+                return tech_debt_budget
+    return None
+
+
 metrics_path = Path(sys.argv[1])
 metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
 
@@ -45,9 +57,8 @@ try:
         folder_cfg = json.loads(folder_cfg_path.read_text(encoding="utf-8"))
         violations.extend(evaluate_folder_balance_gate(metrics, folder_cfg))
 
-    tech_cfg_path = Path("config/project/policy/manifests/tech_debt_budgets.json")
-    if tech_cfg_path.exists():
-        tech_cfg = json.loads(tech_cfg_path.read_text(encoding="utf-8"))
+    tech_cfg = _load_tech_debt_cfg()
+    if tech_cfg is not None:
         violations.extend(evaluate_tech_debt_gate(metrics, tech_cfg))
 except Exception as exc:
     print(f"ERROR: architecture metrics soft-gate runtime/schema failure: {exc}", file=sys.stderr)

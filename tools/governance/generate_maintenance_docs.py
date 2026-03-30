@@ -328,7 +328,7 @@ def _render_current_state_drift_watch(*, drift_manifest: dict[str, object]) -> s
     lines = [
         "## Live Drift Watch",
         "",
-        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/manifests/drift_protection.json`.",
+        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/governance.json`.",
         "",
         f"Top {top_n} live Python hotspots by real LOC:",
         "",

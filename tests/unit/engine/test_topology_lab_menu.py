@@ -26,14 +26,21 @@ from tet4d.engine.gameplay.topology_designer import (
     default_topology_profile_state,
 )
 from tet4d.engine.runtime.topology_playground_state import (
+    PLAYABILITY_STATUS_ANALYZING,
+    PLAYABILITY_STATUS_PLAYABLE,
     TopologyPlaygroundSandboxPieceState,
+    TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.ui.pygame import frontend_nd_setup
-from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
+from tet4d.ui.pygame.keybindings import KEYS_2D, KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
+from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
+from tet4d.ui.pygame.topology_lab import scene_preview_state as topology_lab_scene_preview_state
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
+from tet4d.ui.pygame.topology_lab import shell_layout as topology_lab_shell_layout
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
+from tet4d.ui.pygame.ui_utils import text_fits, wrap_text_lines
 
 class TestTopologyLabMenu(unittest.TestCase):
     def _current_explorer_profile(
@@ -154,6 +161,292 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(row_keys.count("y_pos"), 1)
         self.assertNotIn("z_neg", row_keys)
 
+    def test_explorer_startup_defers_rigid_playability_analysis(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=2,
+            entry_source="explorer",
+        )
+        calls: list[bool] = []
+
+        def _fake_update(runtime_state, **kwargs):
+            include_rigid_scan = bool(kwargs["include_rigid_scan"])
+            calls.append(include_rigid_scan)
+            analysis = TopologyPlaygroundPlayabilityAnalysis(
+                status=(
+                    PLAYABILITY_STATUS_PLAYABLE
+                    if include_rigid_scan
+                    else PLAYABILITY_STATUS_ANALYZING
+                ),
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability=(
+                    "rigid_playable" if include_rigid_scan else "unknown"
+                ),
+                summary=(
+                    "Valid. Cellwise explorable. Rigid-playable."
+                    if include_rigid_scan
+                    else "Valid. Cellwise explorable. Rigid play analysis pending."
+                ),
+                rigid_reason=(
+                    "Rigid transport is ready."
+                    if include_rigid_scan
+                    else "Rigid transport is still being analyzed."
+                ),
+            )
+            runtime_state.playability_analysis = analysis
+            return analysis
+
+        with patch.object(
+            topology_lab_scene_preview_state,
+            "update_topology_playability_analysis",
+            side_effect=_fake_update,
+        ), patch.object(
+            topology_lab_scene_preview_state,
+            "read_cached_playability_analysis",
+            return_value=None,
+        ):
+            state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+            runtime_state = topology_lab_scene_state.canonical_playground_state(state)
+            assert runtime_state is not None
+
+            self.assertEqual(calls, [False])
+            self.assertEqual(
+                runtime_state.playability_analysis.status,
+                PLAYABILITY_STATUS_ANALYZING,
+            )
+
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            self.assertEqual(calls, [False])
+
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            self.assertEqual(calls, [False, True])
+            self.assertEqual(
+                runtime_state.playability_analysis.status,
+                PLAYABILITY_STATUS_PLAYABLE,
+            )
+            self.assertIsNone(state.scene_pending_playability_signature)
+
+    def test_same_signature_refresh_reuses_cached_playability_analysis(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=2,
+            entry_source="explorer",
+        )
+        calls: list[bool] = []
+
+        def _fake_update(runtime_state, **kwargs):
+            include_rigid_scan = bool(kwargs["include_rigid_scan"])
+            calls.append(include_rigid_scan)
+            analysis = TopologyPlaygroundPlayabilityAnalysis(
+                status=(
+                    PLAYABILITY_STATUS_PLAYABLE
+                    if include_rigid_scan
+                    else PLAYABILITY_STATUS_ANALYZING
+                ),
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability=(
+                    "rigid_playable" if include_rigid_scan else "unknown"
+                ),
+                summary="cached playability test",
+            )
+            runtime_state.playability_analysis = analysis
+            return analysis
+
+        with patch.object(
+            topology_lab_scene_preview_state,
+            "update_topology_playability_analysis",
+            side_effect=_fake_update,
+        ), patch.object(
+            topology_lab_scene_preview_state,
+            "read_cached_playability_analysis",
+            return_value=None,
+        ):
+            state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            self.assertEqual(calls, [False, True])
+
+            topology_lab_menu._refresh_explorer_scene_state(state)
+
+            self.assertEqual(calls, [False, True])
+            self.assertIsNotNone(state.scene_playability_cache)
+            runtime_state = topology_lab_scene_state.canonical_playground_state(state)
+            assert runtime_state is not None
+            self.assertEqual(
+                runtime_state.playability_analysis.status,
+                PLAYABILITY_STATUS_PLAYABLE,
+            )
+
+    def test_pending_playability_analysis_uses_persistent_cache_when_available(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=2,
+            entry_source="explorer",
+        )
+        analysis = TopologyPlaygroundPlayabilityAnalysis(
+            status=PLAYABILITY_STATUS_PLAYABLE,
+            validity="valid",
+            explorer_usability="cellwise_explorable",
+            rigid_playability="rigid_playable",
+            summary="persistent cached playability",
+        )
+
+        def _pending_only(runtime_state, **kwargs):
+            include_rigid_scan = bool(kwargs["include_rigid_scan"])
+            if include_rigid_scan:
+                raise AssertionError("persistent cache should avoid recompute")
+            analysis_pending = TopologyPlaygroundPlayabilityAnalysis(
+                status=PLAYABILITY_STATUS_ANALYZING,
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability="unknown",
+                summary="pending analysis",
+            )
+            runtime_state.playability_analysis = analysis_pending
+            return analysis_pending
+
+        with (
+            patch.object(
+                topology_lab_scene_preview_state,
+                "read_cached_playability_analysis",
+                return_value=analysis,
+            ),
+            patch.object(
+                topology_lab_scene_preview_state,
+                "update_topology_playability_analysis",
+                side_effect=_pending_only,
+            ),
+        ):
+            state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+            runtime_state = topology_lab_scene_state.canonical_playground_state(state)
+            assert runtime_state is not None
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+                state
+            )
+            self.assertEqual(
+                runtime_state.playability_analysis.status,
+                PLAYABILITY_STATUS_PLAYABLE,
+            )
+            self.assertEqual(runtime_state.playability_analysis.summary, analysis.summary)
+
+    def test_play_launch_forces_pending_playability_analysis(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=2,
+            entry_source="explorer",
+        )
+        calls: list[bool] = []
+
+        def _fake_update(runtime_state, **kwargs):
+            include_rigid_scan = bool(kwargs["include_rigid_scan"])
+            calls.append(include_rigid_scan)
+            analysis = TopologyPlaygroundPlayabilityAnalysis(
+                status=(
+                    PLAYABILITY_STATUS_PLAYABLE
+                    if include_rigid_scan
+                    else PLAYABILITY_STATUS_ANALYZING
+                ),
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability=(
+                    "rigid_playable" if include_rigid_scan else "unknown"
+                ),
+                summary="launch cache test",
+            )
+            runtime_state.playability_analysis = analysis
+            return analysis
+
+        screen = pygame.Surface((32, 32))
+        with (
+            patch.object(
+                topology_lab_scene_preview_state,
+                "update_topology_playability_analysis",
+                side_effect=_fake_update,
+            ),
+            patch.object(
+                topology_lab_scene_preview_state,
+                "read_cached_playability_analysis",
+                return_value=None,
+            ),
+            patch.object(
+                topology_lab_controls_panel,
+                "launch_playground_state_gameplay",
+                return_value=(screen, None),
+            ) as launch_gameplay,
+        ):
+            state = topology_lab_menu._initial_topology_lab_state(
+                launch.dimension,
+                gameplay_mode=launch.gameplay_mode,
+                initial_explorer_profile=launch.explorer_profile,
+                initial_tool=launch.initial_tool,
+                play_settings=launch.settings_snapshot,
+            )
+            returned_screen, _display_settings = topology_lab_controls_panel._launch_play_preview(
+                state,
+                screen,
+                SimpleNamespace(),
+            )
+
+        self.assertIs(returned_screen, screen)
+        self.assertEqual(calls, [False, True])
+        launch_gameplay.assert_called_once()
+
+    def test_explorer_rows_do_not_expose_legacy_topology_menu_labels(self) -> None:
+        state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+
+        rows = topology_lab_menu._rows_for_state(state)
+        labels = [row.label for row in rows]
+        keys = [row.key for row in rows]
+
+        self.assertNotIn("Path", labels)
+        self.assertNotIn("Workspace Path", labels)
+        self.assertNotIn("Legacy Topology", labels)
+        self.assertNotIn("gameplay_mode", keys)
+        self.assertNotIn("preset", keys)
+        self.assertNotIn("topology_mode", keys)
+
+    def test_explorer_helper_lines_do_not_advertise_legacy_menu_surface(self) -> None:
+        state = self._explorer_state(3)
+        lines = topology_lab_menu._hint_lines_for_state(state)
+        joined = " ".join(lines)
+        self.assertNotIn("Legacy compatibility", joined)
+        self.assertNotIn("legacy-normal-mode", joined)
+        self.assertNotIn(
+            "Legacy",
+            topology_lab_workspace_shell._workspace_helper_context(state),
+        )
+        helper_sections = topology_lab_workspace_shell._workspace_helper_sections(state)
+        self.assertEqual(helper_sections[0][0], "Move")
+        self.assertEqual(helper_sections[1][0], "Rotate")
+
     def test_cycle_edge_rule_blocks_normal_y_wrap(self) -> None:
         profile = default_topology_profile_state(
             dimension=3,
@@ -228,25 +521,27 @@ class TestTopologyLabMenu(unittest.TestCase):
         export_preview.assert_not_called()
         self.assertIn("legacy exported", state.status)
 
-    def test_analysis_rows_demote_row_based_seam_editing_for_2d(self) -> None:
+    def test_editor_rows_follow_shell_contract_for_2d(self) -> None:
         state = self._explorer_state(2)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         rows = topology_lab_menu._rows_for_state(state)
         row_keys = [row.key for row in rows]
-        self.assertIn("analysis_boundary", row_keys)
-        self.assertIn("analysis_glue", row_keys)
-        self.assertIn("analysis_transform", row_keys)
-        self.assertIn("save_profile", row_keys)
-        self.assertIn("export", row_keys)
-        self.assertIn("experiments", row_keys)
-        self.assertIn("back", row_keys)
-        self.assertNotIn("explorer_source", row_keys)
-        self.assertNotIn("explorer_sign_0", row_keys)
-        self.assertNotIn("apply_glue", row_keys)
-        self.assertNotIn("topology_mode", row_keys)
-        self.assertNotIn("y_neg", row_keys)
+        self.assertEqual(
+            row_keys,
+            [
+                "dimension",
+                "editor_trace",
+                "editor_probe_neighbors",
+                "editor_tool",
+                "board_x",
+                "board_y",
+                "explorer_preset",
+            ],
+        )
 
     def test_analysis_status_rows_are_display_only(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         rows = topology_lab_menu._rows_for_state(state)
         selectable_keys = [
             rows[index].key
@@ -719,12 +1014,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         state.active_pane = topology_lab_menu.PANE_SCENE
+        rotate_xy = KEYS_2D["rotate_xy_pos"][0]
         with patch.object(
             topology_lab_controls_panel,
             "rotate_sandbox_piece_action",
             return_value=(True, "sandbox rotated"),
         ) as rotate_action:
-            topology_lab_menu._dispatch_key(state, pygame.K_q)
+            topology_lab_menu._dispatch_key(state, rotate_xy)
         rotate_action.assert_called_once_with(
             state, state.explorer_profile, "rotate_xy_pos"
         )
@@ -958,10 +1254,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         export_legacy.assert_not_called()
         self.assertIn("preview exported", state.status)
 
-    def test_analysis_rows_demote_row_based_seam_editing_for_3d(self) -> None:
+    def test_editor_rows_drop_diagnostics_and_row_based_seam_editing_for_3d(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
-        self.assertIn("analysis_transform", row_keys)
+        self.assertIn("explorer_preset", row_keys)
+        self.assertNotIn("analysis_transform", row_keys)
         self.assertNotIn("explorer_source", row_keys)
         self.assertNotIn("apply_glue", row_keys)
         self.assertNotIn("topology_mode", row_keys)
@@ -969,25 +1269,36 @@ class TestTopologyLabMenu(unittest.TestCase):
 
     def test_rows_include_play_settings_for_3d_explorer(self) -> None:
         state = self._explorer_state(3)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
-        self.assertIn("editor_tool", row_keys)
+        self.assertIn("dimension", row_keys)
         self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
+        self.assertIn("editor_tool", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
-        self.assertIn("piece_set", row_keys)
-        self.assertIn("speed_level", row_keys)
+        self.assertIn("explorer_preset", row_keys)
+        self.assertNotIn("piece_set", row_keys)
+        self.assertNotIn("speed_level", row_keys)
+        self.assertNotIn("rigid_play_mode", row_keys)
         self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_rows_include_play_settings_for_4d_explorer(self) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+        self.assertIn("dimension", row_keys)
         self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
         self.assertIn("board_x", row_keys)
         self.assertIn("board_y", row_keys)
         self.assertIn("board_z", row_keys)
         self.assertIn("board_w", row_keys)
-        self.assertIn("piece_set", row_keys)
+        self.assertIn("explorer_preset", row_keys)
+        self.assertNotIn("piece_set", row_keys)
+        self.assertNotIn("speed_level", row_keys)
+        self.assertNotIn("rigid_play_mode", row_keys)
         self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_sandbox_rows_expose_neighbors_only_in_sandbox_workspace(self) -> None:
@@ -996,9 +1307,34 @@ class TestTopologyLabMenu(unittest.TestCase):
 
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
 
+        self.assertIn("dimension", row_keys)
+        self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
+        self.assertIn("piece_set", row_keys)
         self.assertIn("sandbox_neighbor_search", row_keys)
         self.assertNotIn("editor_tool", row_keys)
-        self.assertNotIn("editor_trace", row_keys)
+        self.assertNotIn("board_x", row_keys)
+        self.assertNotIn("board_y", row_keys)
+        self.assertNotIn("board_z", row_keys)
+        self.assertNotIn("explorer_preset", row_keys)
+        self.assertNotIn("speed_level", row_keys)
+        self.assertNotIn("rigid_play_mode", row_keys)
+
+    def test_play_rows_expose_speed_and_transport_only_in_play_workspace(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
+
+        row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
+
+        self.assertIn("dimension", row_keys)
+        self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
+        self.assertIn("speed_level", row_keys)
+        self.assertIn("rigid_play_mode", row_keys)
+        self.assertNotIn("editor_tool", row_keys)
+        self.assertNotIn("board_x", row_keys)
+        self.assertNotIn("piece_set", row_keys)
+        self.assertNotIn("sandbox_neighbor_search", row_keys)
 
     def test_editor_trace_row_toggles_editor_owned_trace_state(self) -> None:
         state = self._explorer_state(3)
@@ -1019,6 +1355,26 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertFalse(topology_lab_menu._probe_trace_visible(state))
         self.assertIn("Editor trace hidden", state.status)
+
+    def test_editor_probe_neighbors_row_toggles_editor_owned_probe_overlay(self) -> None:
+        state = self._explorer_state(3)
+        row = next(
+            row
+            for row in topology_lab_menu._rows_for_state(state)
+            if row.key == "editor_probe_neighbors"
+        )
+
+        self.assertFalse(topology_lab_menu._probe_neighbors_visible(state))
+
+        handled = topology_lab_menu._adjust_row(state, row, 1)
+
+        self.assertTrue(handled)
+        self.assertEqual(
+            topology_lab_menu._active_workspace_name(state),
+            topology_lab_menu.WORKSPACE_EDITOR,
+        )
+        self.assertTrue(topology_lab_menu._probe_neighbors_visible(state))
+        self.assertIn("Editor probe neighbors shown", state.status)
 
     def test_sandbox_neighbors_row_toggles_sandbox_owned_neighbor_state(self) -> None:
         state = self._explorer_state(3)
@@ -1078,8 +1434,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         }
         self.assertIn("editor_tool", row_targets)
         self.assertIn("editor_trace", row_targets)
-        self.assertGreater(row_targets["editor_trace"].rect.width, 300)
+        self.assertIn("editor_probe_neighbors", row_targets)
+        self.assertGreater(row_targets["editor_trace"].rect.width, 240)
         self.assertLess(row_targets["editor_trace"].rect.bottom, screen.get_height())
+        self.assertGreater(row_targets["editor_probe_neighbors"].rect.width, 240)
+        self.assertLess(
+            row_targets["editor_probe_neighbors"].rect.bottom,
+            screen.get_height(),
+        )
 
     def test_draw_menu_keeps_sandbox_context_rows_visible(self) -> None:
         screen = pygame.Surface((1280, 900))
@@ -1095,11 +1457,301 @@ class TestTopologyLabMenu(unittest.TestCase):
             if target.kind == "row_select"
         }
         self.assertIn("sandbox_neighbor_search", row_targets)
-        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 300)
+        self.assertGreater(row_targets["sandbox_neighbor_search"].rect.width, 240)
         self.assertLess(
             row_targets["sandbox_neighbor_search"].rect.bottom,
             screen.get_height(),
         )
+
+    def test_compact_shell_layout_keeps_required_top_bar_text_visible(self) -> None:
+        fonts = self._fonts()
+        layout = topology_lab_shell_layout.build_topology_lab_shell_layout(
+            width=1180,
+            height=760,
+            general_editor=True,
+            scene_pane_active=False,
+            row_count=18,
+            dimension_text_width=fonts.hint_font.size("4D")[0],
+            validity_text_width=fonts.hint_font.size("Needs Fix")[0],
+            action_count=6,
+        )
+        assert layout.top_bar is not None
+
+        self.assertTrue(
+            text_fits(
+                fonts.hint_font,
+                "Topology Playground",
+                layout.top_bar.title_rect.width,
+            )
+        )
+        button_w = max(
+            72,
+            (layout.top_bar.ribbon_rect.width - (3 - 1) * 8) // 3,
+        )
+        for label in ("Editor", "Sandbox", "Play"):
+            with self.subTest(label=label):
+                self.assertTrue(text_fits(fonts.hint_font, label, button_w - 10))
+        for label in ("Valid", "Needs Fix", "Unsafe"):
+            with self.subTest(chip=label):
+                self.assertTrue(
+                    text_fits(
+                        fonts.hint_font,
+                        label,
+                        layout.top_bar.validity_chip_rect.width - 12,
+                    )
+                )
+        self.assertTrue(
+            text_fits(
+                fonts.hint_font,
+                "4D",
+                layout.top_bar.dimension_chip_rect.width - 12,
+            )
+        )
+
+    def test_compact_shell_layout_keeps_footer_actions_visible(self) -> None:
+        fonts = self._fonts()
+        layout = topology_lab_shell_layout.build_topology_lab_shell_layout(
+            width=1180,
+            height=760,
+            general_editor=True,
+            scene_pane_active=False,
+            row_count=18,
+            dimension_text_width=fonts.hint_font.size("3D")[0],
+            validity_text_width=fonts.hint_font.size("Valid")[0],
+            action_count=6,
+        )
+        assert layout.footer is not None
+        button_w = max(76, (layout.footer.action_rect.width - (6 - 1) * 8) // 6)
+        for label in (
+            "Spawn",
+            "Prev Piece",
+            "Next Piece",
+            "Rotate",
+            "Show Path",
+            "Reset",
+        ):
+            with self.subTest(label=label):
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
+
+    def test_compact_shell_layout_keeps_required_top_bar_text_visible_at_960_width(
+        self,
+    ) -> None:
+        fonts = self._fonts()
+        layout = topology_lab_shell_layout.build_topology_lab_shell_layout(
+            width=960,
+            height=760,
+            general_editor=True,
+            scene_pane_active=False,
+            row_count=18,
+            dimension_text_width=fonts.hint_font.size("4D")[0],
+            validity_text_width=fonts.hint_font.size("Needs Fix")[0],
+            action_count=2,
+        )
+        assert layout.top_bar is not None
+
+        self.assertTrue(
+            text_fits(
+                fonts.hint_font,
+                "Topology Playground",
+                layout.top_bar.title_rect.width,
+            )
+        )
+        button_w = max(
+            68,
+            (layout.top_bar.ribbon_rect.width - (3 - 1) * 8) // 3,
+        )
+        for label in ("Editor", "Sandbox", "Play"):
+            with self.subTest(label=label):
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
+
+    def test_row_text_budgets_fit_compact_controls_lane(self) -> None:
+        budgets = topology_lab_shell_layout.topology_lab_row_text_budgets(
+            menu_w=296,
+            row_rect_width=268,
+        )
+        self.assertLessEqual(budgets.label_width + budgets.value_width + 48, 268)
+        self.assertGreaterEqual(budgets.value_width, 56)
+
+    def test_compact_controls_lane_wraps_required_row_text_without_overflow(self) -> None:
+        fonts = self._fonts()
+        state = self._explorer_state(4)
+        rows = topology_lab_menu._rows_for_state(state)
+        budgets = topology_lab_shell_layout.topology_lab_row_text_budgets(
+            menu_w=296,
+            row_rect_width=268,
+        )
+        required_labels = {
+            "Topology Preset",
+            "Probe Neighbors",
+            "Board W",
+        }
+        checked = 0
+        for row in rows:
+            if row.label not in required_labels:
+                continue
+            checked += 1
+            label_lines = wrap_text_lines(fonts.menu_font, row.label, budgets.label_width)
+            value_lines = wrap_text_lines(
+                fonts.menu_font,
+                topology_lab_control_values._row_value_text(state, row),
+                budgets.value_width,
+            )
+            with self.subTest(label=row.label):
+                self.assertGreater(len(label_lines), 0)
+                for line in label_lines:
+                    self.assertTrue(text_fits(fonts.menu_font, line, budgets.label_width))
+                for line in value_lines:
+                    self.assertTrue(text_fits(fonts.menu_font, line, budgets.value_width))
+        self.assertEqual(checked, len(required_labels))
+
+    def test_workspace_layout_preserves_readable_helper_width_in_compact_shell(self) -> None:
+        (
+            _tool_rect,
+            top_rect,
+            _editor_rect,
+            helper_rect,
+            _helper_controls_rect,
+            _action_rect,
+        ) = topology_lab_menu._explorer_workspace_layout(
+            panel_x=12,
+            panel_y=80,
+            panel_w=936,
+            panel_h=620,
+            menu_w=296,
+        )
+
+        self.assertGreaterEqual(helper_rect.width, 208)
+        self.assertGreaterEqual(top_rect.width, 340)
+
+    def test_shell_layout_stays_within_viewport_on_narrow_supported_width(self) -> None:
+        fonts = self._fonts()
+        layout = topology_lab_shell_layout.build_topology_lab_shell_layout(
+            width=800,
+            height=680,
+            general_editor=True,
+            scene_pane_active=False,
+            row_count=18,
+            dimension_text_width=fonts.hint_font.size("4D")[0],
+            validity_text_width=fonts.hint_font.size("Needs Fix")[0],
+            action_count=2,
+        )
+        self.assertGreaterEqual(layout.panel_rect.left, 0)
+        self.assertLessEqual(layout.panel_rect.right, 800)
+        self.assertLessEqual(layout.panel_rect.bottom, 680)
+        self.assertLessEqual(layout.menu_w, 320)
+
+    def test_workspace_layout_preserves_helper_lane_on_narrow_supported_width(self) -> None:
+        (
+            _tool_rect,
+            top_rect,
+            _editor_rect,
+            helper_rect,
+            _helper_controls_rect,
+            _action_rect,
+        ) = topology_lab_menu._explorer_workspace_layout(
+            panel_x=12,
+            panel_y=80,
+            panel_w=776,
+            panel_h=620,
+            menu_w=248,
+        )
+        self.assertGreater(helper_rect.left, top_rect.right)
+        self.assertGreaterEqual(helper_rect.width, 160)
+
+    def test_compact_helper_lane_wraps_workspace_guidance_lines(self) -> None:
+        fonts = self._fonts()
+        state = self._explorer_state(4)
+        (
+            _tool_rect,
+            _top_rect,
+            _editor_rect,
+            helper_rect,
+            _helper_controls_rect,
+            _action_rect,
+        ) = topology_lab_menu._explorer_workspace_layout(
+            panel_x=12,
+            panel_y=80,
+            panel_w=936,
+            panel_h=620,
+            menu_w=296,
+        )
+        body_width = helper_rect.width - 20
+        context_width = body_width - 24
+        row_label_width = max(24, min(34, body_width // 5))
+        row_value_width = max(48, body_width - 24 - row_label_width)
+        context = topology_lab_workspace_shell._workspace_helper_context(state)
+        self.assertTrue(text_fits(fonts.hint_font, context, context_width))
+        sections = topology_lab_workspace_shell._workspace_helper_sections(state)
+        self.assertGreater(len(sections), 0)
+        for title, rows in sections:
+            with self.subTest(title=title):
+                self.assertTrue(text_fits(fonts.hint_font, title.upper(), body_width - 20))
+            for label, keys in rows:
+                with self.subTest(label=label, keys=keys):
+                    self.assertTrue(text_fits(fonts.hint_font, label, row_label_width))
+                    wrapped = wrap_text_lines(fonts.hint_font, keys, row_value_width)
+                    self.assertGreater(len(wrapped), 0)
+                    for wrapped_line in wrapped:
+                        self.assertTrue(
+                            text_fits(fonts.hint_font, wrapped_line, row_value_width)
+                        )
+
+    def test_workspace_helper_uses_current_dimension_bindings(self) -> None:
+        state = self._explorer_state(4)
+        sections = dict(topology_lab_workspace_shell._workspace_helper_sections(state))
+        gameplay = topology_lab_workspace_shell._gameplay_bindings_for_dimension(4)
+        explorer = topology_lab_workspace_shell._explorer_bindings_for_dimension(4)
+        self.assertIn(
+            (
+                "X",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['move_x_neg'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['move_x_pos'])}"
+                ),
+            ),
+            sections["Move"],
+        )
+        self.assertIn(
+            (
+                "Y",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(explorer['move_up'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(explorer['move_down'])}"
+                ),
+            ),
+            sections["Move"],
+        )
+        self.assertIn(
+            (
+                "ZW",
+                (
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['rotate_zw_pos'])} / "
+                    f"{topology_lab_workspace_shell.format_key_tuple(gameplay['rotate_zw_neg'])}"
+                ),
+            ),
+            sections["Rotate"],
+        )
+
+    def test_workspace_action_buttons_wrap_long_labels_within_button_budget(self) -> None:
+        fonts = self._fonts()
+        area = pygame.Rect(0, 0, 520, 36)
+        actions = (
+            ("play_preview", "Play This Topology"),
+            ("explore_preview", "Explore This Topology"),
+        )
+        button_w = max(76, (area.width - (len(actions) - 1) * 8) // len(actions))
+        for _action, label in actions:
+            with self.subTest(label=label):
+                wrapped = wrap_text_lines(fonts.hint_font, label, button_w - 10)[:2]
+                self.assertGreater(len(wrapped), 0)
+                for line in wrapped:
+                    self.assertTrue(text_fits(fonts.hint_font, line, button_w - 10))
 
     def test_row_step_target_adjusts_explorer_board_z(self) -> None:
         state = self._explorer_state(3)
@@ -1136,6 +1788,28 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_menu._board_dims_for_state(state),
             (initial_dims[0], initial_dims[1], initial_dims[2] - 1),
         )
+
+    def test_explorer_height_row_allows_lowering_minimum_to_six(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(7, 6, 6)),
+        )
+
+        topology_lab_menu._set_selected_row_by_key(state, "board_y")
+        topology_lab_menu._dispatch_key(state, pygame.K_LEFT)
+
+        self.assertEqual(topology_lab_menu._board_dims_for_state(state), (7, 6, 6))
+
+        topology_lab_controls_panel.replace_play_settings(
+            state,
+            topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(7, 7, 6)),
+        )
+        topology_lab_menu._dispatch_key(state, pygame.K_LEFT)
+
+        self.assertEqual(topology_lab_menu._board_dims_for_state(state), (7, 6, 6))
 
     def test_cycle_dimension_with_invalid_loaded_explorer_profile_does_not_crash(
         self,
@@ -1359,10 +2033,14 @@ class TestTopologyLabMenu(unittest.TestCase):
         export_legacy.assert_not_called()
         self.assertIn("preview exported", state.status)
 
-    def test_analysis_rows_demote_row_based_seam_editing_for_4d(self) -> None:
+    def test_editor_rows_drop_diagnostics_and_row_based_seam_editing_for_4d(
+        self,
+    ) -> None:
         state = self._explorer_state(4)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
-        self.assertIn("analysis_transform", row_keys)
+        self.assertIn("explorer_preset", row_keys)
+        self.assertNotIn("analysis_transform", row_keys)
         self.assertNotIn("explorer_source", row_keys)
         self.assertNotIn("explorer_sign_2", row_keys)
         self.assertNotIn("apply_glue", row_keys)
@@ -1465,27 +2143,25 @@ class TestTopologyLabMenu(unittest.TestCase):
         self,
     ) -> None:
         state = self._explorer_state(2)
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
         topology_lab_controls_panel.replace_explorer_profile(
             state,
             projective_plane_profile_2d(),
         )
         topology_lab_menu._refresh_explorer_scene_state(state)
+        topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+            state
+        )
+        topology_lab_scene_preview_state.advance_pending_explorer_playability_analysis(
+            state
+        )
 
         rows = topology_lab_menu._rows_for_state(state)
         rigid_mode_row = next(row for row in rows if row.key == "rigid_play_mode")
-        rigid_row = next(row for row in rows if row.key == "playability_rigid")
-        reason_row = next(row for row in rows if row.key == "playability_reason")
         self.assertEqual(
             topology_lab_menu._row_value_text(state, rigid_mode_row),
             "Auto (Cellwise)",
-        )
-        self.assertEqual(
-            topology_lab_menu._row_value_text(state, rigid_row),
-            "Not rigid-playable",
-        )
-        self.assertIn(
-            "Rigid transport fails",
-            topology_lab_menu._row_value_text(state, reason_row),
         )
 
         lines = topology_lab_menu._workspace_preview_lines(
@@ -1499,6 +2175,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn(
             "Play: Play uses cellwise seam transport automatically for this topology.",
             lines,
+        )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Unsafe",
         )
 
     def test_playability_preview_lines_show_invalid_topology_state(self) -> None:
@@ -1524,6 +2204,19 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertIn("Preview unavailable until the topology validates.", lines)
         self.assertTrue(
             any("unsupported for current board dimensions" in line for line in lines)
+        )
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Needs Fix",
+        )
+
+    def test_valid_playability_maps_to_valid_shell_chip(self) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu._refresh_explorer_scene_state(state)
+
+        self.assertEqual(
+            topology_lab_control_values._playability_shell_chip_text(state),
+            "Valid",
         )
 
     def test_remove_explorer_glue_drops_selected_gluing(self) -> None:
@@ -1561,10 +2254,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         targets = state.mouse_targets or []
         self.assertTrue(any(target.kind == "boundary_pick" for target in targets))
         self.assertTrue(
-            any(
-                target.kind == "row_step" and target.value == ("explorer_preset", 1)
-                for target in targets
-            )
+            any(target.kind == "workspace_mode" for target in targets)
         )
         self.assertFalse(any(target.kind == "preset_step" for target in targets))
         self.assertTrue(any(target.kind == "glue_slot" for target in targets))
@@ -1607,7 +2297,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             state,
             topology_lab_menu.build_explorer_playground_settings(dimension=3),
         )
-        state.active_pane = topology_lab_menu.PANE_SCENE
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         before = topology_lab_menu._board_dims_for_state(state)
         topology_lab_menu._draw_menu(screen, fonts, state)
         minus_target = next(
@@ -2445,6 +3135,22 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
         self.assertEqual(state.active_tool, launch.initial_tool)
 
+    def test_launcher_entry_defaults_to_scene_pane_and_sandbox_tool(self) -> None:
+        launch = topology_lab_menu.build_explorer_playground_launch(
+            dimension=3,
+            entry_source="launcher",
+        )
+        state = topology_lab_menu._initial_topology_lab_state(
+            launch.dimension,
+            gameplay_mode=launch.gameplay_mode,
+            initial_explorer_profile=launch.explorer_profile,
+            initial_tool=launch.initial_tool,
+            play_settings=launch.settings_snapshot,
+        )
+        self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
+        self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
+        self.assertEqual(state.active_tool, launch.initial_tool)
+
     def test_explorer_entry_rows_include_adjustable_board_controls(self) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(
             dimension=3, entry_source="explorer"
@@ -2456,15 +3162,17 @@ class TestTopologyLabMenu(unittest.TestCase):
             initial_tool=launch.initial_tool,
             play_settings=launch.settings_snapshot,
         )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
         row_keys = [row.key for row in topology_lab_menu._rows_for_state(state)]
         self.assertIn("dimension", row_keys)
-        self.assertIn("board_x", row_keys)
-        self.assertIn("board_y", row_keys)
-        self.assertIn("board_z", row_keys)
+        self.assertIn("editor_trace", row_keys)
+        self.assertIn("editor_probe_neighbors", row_keys)
         self.assertIn("piece_set", row_keys)
-        self.assertIn("speed_level", row_keys)
-        self.assertIn("rigid_play_mode", row_keys)
-        self.assertIn("explorer_preset", row_keys)
+        self.assertIn("sandbox_neighbor_search", row_keys)
+        self.assertNotIn("board_x", row_keys)
+        self.assertNotIn("speed_level", row_keys)
+        self.assertNotIn("rigid_play_mode", row_keys)
+        self.assertNotIn("explorer_preset", row_keys)
 
     def test_explorer_entry_dimension_change_updates_canonical_scene_state(
         self,
@@ -2509,6 +3217,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             play_settings=launch.settings_snapshot,
         )
         state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         old_preview_dims = state.scene_preview_dims
         topology_lab_menu._set_selected_row_by_key(state, "board_z")
         topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
@@ -2559,6 +3268,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             play_settings=launch.settings_snapshot,
         )
         state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
         state.experiment_batch = {"experiment_count": 1, "valid_experiment_count": 1}
         cached_batch = state.experiment_batch
         cached_preview = state.scene_preview
@@ -2635,6 +3345,7 @@ class TestTopologyLabMenu(unittest.TestCase):
             play_settings=launch.settings_snapshot,
         )
         state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PLAY)
         cached_preview = state.scene_preview
         cached_signature = state.scene_preview_signature
         topology_lab_menu._set_selected_row_by_key(state, "rigid_play_mode")
@@ -2767,8 +3478,8 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         state.active_pane = topology_lab_menu.PANE_CONTROLS
         old_profile = self._current_explorer_profile(state)
+        old_preset_id = state.canonical_state.preset_metadata.explorer_preset.preset_id
         old_preview = state.scene_preview
-        old_label = topology_lab_menu._explorer_preset_value_text(state)
         topology_lab_menu._set_selected_row_by_key(state, "explorer_preset")
         topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
         assert state.canonical_state is not None
@@ -2791,7 +3502,11 @@ class TestTopologyLabMenu(unittest.TestCase):
             selected_preset.label,
         )
         self.assertNotEqual(
-            topology_lab_menu._explorer_preset_value_text(state), old_label
+            state.canonical_state.preset_metadata.explorer_preset.preset_id,
+            old_preset_id,
+        )
+        self.assertEqual(
+            topology_lab_menu._explorer_preset_value_text(state), selected_preset.label
         )
         self.assertTrue(
             state.scene_preview is not None or state.scene_preview_error is not None
@@ -2825,6 +3540,8 @@ class TestTopologyLabMenu(unittest.TestCase):
             initial_tool=launch.initial_tool,
             play_settings=launch.settings_snapshot,
         )
+        state.active_pane = topology_lab_menu.PANE_CONTROLS
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         initial_dims = topology_lab_menu._board_dims_for_state(state)
         topology_lab_menu._draw_menu(screen, fonts, state)
         minus_target = next(
@@ -2964,7 +3681,7 @@ class TestTopologyLabMenu(unittest.TestCase):
     def test_hint_lines_do_not_expose_camera_in_2d(self) -> None:
         state = self._explorer_state(2)
         lines = topology_lab_menu._hint_lines_for_state(state)
-        self.assertFalse(any(line.startswith("Projection sync:") for line in lines))
+        self.assertFalse(any("synced" in line for line in lines))
 
     def test_sync_explorer_state_populates_canonical_scene_snapshot(self) -> None:
         state = topology_lab_menu._TopologyLabState(
@@ -3197,8 +3914,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
             patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
-            patch.object(topology_lab_workspace_shell, "draw_action_buttons", return_value=[]),
-            patch.object(topology_lab_workspace_shell, "draw_preview_panel") as draw_preview,
+            patch.object(
+                topology_lab_workspace_shell, "_draw_workspace_helper_panel"
+            ) as draw_helper,
             patch.object(
                 topology_lab_menu, "_draw_probe_controls_if_needed", return_value=[]
             ),
@@ -3223,22 +3941,10 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(kwargs["preview_dims"], state.scene_preview_dims)
         self.assertEqual(kwargs["active_glue_ids"], state.scene_active_glue_ids)
         self.assertEqual(kwargs["basis_arrows"], list(state.scene_basis_arrows))
-        preview_kwargs = draw_preview.call_args.kwargs
-        self.assertEqual(preview_kwargs["title"], "Explorer 3D keys")
-        self.assertTrue(preview_kwargs["lines"])
-        self.assertTrue(preview_kwargs["lines"][0].startswith("Context:"))
-        self.assertTrue(
-            all(
-                line.startswith(("Context:", "Move: ", "Rotate: ", "      ", "        "))
-                for line in preview_kwargs["lines"]
-            )
-        )
-        self.assertFalse(
-            any("Selected boundary:" in line for line in preview_kwargs["lines"])
-        )
-        self.assertFalse(
-            any("Workspace:" in line for line in preview_kwargs["lines"])
-        )
+        helper_kwargs = draw_helper.call_args.kwargs
+        self.assertEqual(helper_kwargs["state"], state)
+        self.assertGreater(helper_kwargs["area"].width, 0)
+        self.assertGreater(helper_kwargs["area"].height, 0)
 
     def test_explorer_entry_scene_glue_path_creates_draft_and_enters_edit(self) -> None:
         profile = ExplorerTopologyProfile(dimension=3, gluings=())

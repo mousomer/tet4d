@@ -11,6 +11,13 @@ def _parse_cli_args(argv=None):
         prog=Path(__file__).name,
         description="tet4d unified launcher",
     )
+    parser.add_argument(
+        "--topology-playground",
+        nargs="?",
+        const="2",
+        metavar="DIM",
+        help="launch Topology Playground directly for dimension 2, 3, or 4",
+    )
     return parser.parse_known_args(argv)[0]
 
 
@@ -30,6 +37,10 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+from tet4d.ui.pygame.topology_lab.entrypoint import (
+    parse_topology_playground_dimension,
+    run_direct_topology_playground,
+)
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
@@ -88,6 +99,15 @@ _TUTORIAL_LESSON_BY_MODE = {
     "2d": "tutorial_2d_core",
     "3d": "tutorial_3d_core",
     "4d": "tutorial_4d_core",
+}
+_SETTINGS_ROW_BY_ACTION = {
+    "settings_display": "display_fullscreen",
+    "settings_audio": "audio_master",
+    "settings_advanced": "gameplay_advanced",
+}
+_HELP_TOPIC_BY_ACTION = {
+    "tutorial_how_to_play": "overview",
+    "tutorial_controls_reference": "key_reference",
 }
 
 
@@ -461,12 +481,15 @@ def _menu_action_settings(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
+    *,
+    initial_row_key: str | None = None,
 ) -> bool:
     result = run_settings_hub_menu(
         session.screen,
         fonts_nd,
         audio_settings=session.audio_settings,
         display_settings=session.display_settings,
+        initial_row_key=initial_row_key,
     )
     session.screen = result.screen
     session.audio_settings = result.audio_settings
@@ -482,6 +505,8 @@ def _menu_action_help(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
+    *,
+    initial_topic_id: str | None = None,
 ) -> bool:
     dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
     session.screen = run_help_menu(
@@ -489,6 +514,7 @@ def _menu_action_help(
         fonts_nd,
         dimension=dimension,
         context_label="Launcher",
+        initial_topic_id=initial_topic_id,
     )
     return False
 
@@ -535,31 +561,40 @@ def _menu_action_topology_lab(
     fonts_2d=None,
 ) -> bool:
     mode = state.last_mode if state.last_mode in {"2d", "3d", "4d"} else "2d"
-    start_dimension = int(mode[0])
     launch = build_explorer_playground_launch(
-        dimension=start_dimension,
-        explorer_profile=load_runtime_explorer_topology_profile(start_dimension),
+        dimension=int(mode[0]),
+        explorer_profile=load_runtime_explorer_topology_profile(int(mode[0])),
         display_settings=session.display_settings,
         fonts_2d=fonts_2d,
         gameplay_mode="explorer",
         entry_source="launcher",
         source_settings=_mode_settings_snapshot(mode),
     )
-    ok, msg = run_explorer_playground(
-        session.screen,
-        fonts_nd,
-        launch=launch,
-    )
+    ok, msg = run_explorer_playground(session.screen, fonts_nd, launch=launch)
     _persist_session_status(state, session)
     state.status = msg
     state.status_error = not ok
     return not session.running
 
+def _menu_action_legacy_topology_editor(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+) -> bool:
+    mode = state.last_mode if state.last_mode in {"2d", "3d", "4d"} else "2d"
+    launch = build_explorer_playground_launch(
+        dimension=int(mode[0]),
+        gameplay_mode="normal",
+        entry_source="launcher",
+    )
+    ok, msg = run_explorer_playground(session.screen, fonts_nd, launch=launch)
+    _persist_session_status(state, session)
+    state.status = msg
+    state.status_error = not ok
+    return not session.running
 
 def _mode_settings_snapshot(mode: str) -> SimpleNamespace:
-    if mode not in {"2d", "3d", "4d"}:
-        mode = "2d"
-    return mode_settings_snapshot_for_dimension(int(mode[0]))
+    return mode_settings_snapshot_for_dimension(int((mode if mode in {"2d", "3d", "4d"} else "2d")[0]))
 
 
 def _menu_action_play_last_custom_topology(
@@ -632,22 +667,20 @@ def _build_action_registry(
     fonts_2d,
 ) -> ActionRegistry:
     registry = ActionRegistry()
-    registry.register(
-        "play", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)
-    )
-    registry.register(
-        "play_2d",
-        lambda: _menu_action_play_dimension("2d", state, session, fonts_nd, fonts_2d),
-    )
-    registry.register(
-        "play_3d",
-        lambda: _menu_action_play_dimension("3d", state, session, fonts_nd, fonts_2d),
-    )
-    registry.register(
-        "play_4d",
-        lambda: _menu_action_play_dimension("4d", state, session, fonts_nd, fonts_2d),
-    )
-    registry.register(
+    register = registry.register
+    register("play", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
+    for action_id, mode in (
+        ("play_2d", "2d"),
+        ("play_3d", "3d"),
+        ("play_4d", "4d"),
+    ):
+        register(
+            action_id,
+            lambda mode=mode: _menu_action_play_dimension(
+                mode, state, session, fonts_nd, fonts_2d
+            ),
+        )
+    register(
         "play_last_custom_topology",
         lambda: _menu_action_play_last_custom_topology(
             state,
@@ -656,46 +689,61 @@ def _build_action_registry(
             fonts_2d,
         ),
     )
-    registry.register(
-        "continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)
-    )
-    registry.register("help", lambda: _menu_action_help(state, session, fonts_nd))
-    registry.register(
-        "leaderboard",
-        lambda: _menu_action_leaderboard(state, session, fonts_nd),
-    )
-    registry.register(
-        "settings", lambda: _menu_action_settings(state, session, fonts_nd)
-    )
-    registry.register(
-        "keybindings", lambda: _menu_action_keybindings(state, session, fonts_nd)
-    )
-    registry.register(
-        "bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd)
-    )
-    registry.register(
+    register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
+    register("help", lambda: _menu_action_help(state, session, fonts_nd))
+    register("leaderboard", lambda: _menu_action_leaderboard(state, session, fonts_nd))
+    register("settings", lambda: _menu_action_settings(state, session, fonts_nd))
+    for action_id in ("settings_display", "settings_audio", "settings_advanced"):
+        register(
+            action_id,
+            lambda action_id=action_id: _menu_action_settings(
+                state,
+                session,
+                fonts_nd,
+                initial_row_key=_SETTINGS_ROW_BY_ACTION[action_id],
+            ),
+        )
+    for action_id in ("keybindings", "settings_profiles"):
+        register(action_id, lambda: _menu_action_keybindings(state, session, fonts_nd))
+    register("bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd))
+    register(
         "topology_lab",
         lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d),
     )
-    registry.register(
-        "tutorial_2d",
-        lambda: _menu_action_tutorial_dimension(
-            "2d", state, session, fonts_nd, fonts_2d
+    register(
+        "settings_legacy_topology_editor",
+        lambda: _menu_action_legacy_topology_editor(state, session, fonts_nd),
+    )
+    for action_id, mode in (
+        ("tutorial_2d", "2d"),
+        ("tutorial_3d", "3d"),
+        ("tutorial_4d", "4d"),
+    ):
+        register(
+            action_id,
+            lambda mode=mode: _menu_action_tutorial_dimension(
+                mode, state, session, fonts_nd, fonts_2d
+            ),
+        )
+    register(
+        "tutorial_how_to_play",
+        lambda: _menu_action_help(
+            state,
+            session,
+            fonts_nd,
+            initial_topic_id=_HELP_TOPIC_BY_ACTION["tutorial_how_to_play"],
         ),
     )
-    registry.register(
-        "tutorial_3d",
-        lambda: _menu_action_tutorial_dimension(
-            "3d", state, session, fonts_nd, fonts_2d
+    register(
+        "tutorial_controls_reference",
+        lambda: _menu_action_help(
+            state,
+            session,
+            fonts_nd,
+            initial_topic_id=_HELP_TOPIC_BY_ACTION["tutorial_controls_reference"],
         ),
     )
-    registry.register(
-        "tutorial_4d",
-        lambda: _menu_action_tutorial_dimension(
-            "4d", state, session, fonts_nd, fonts_2d
-        ),
-    )
-    registry.register("quit", lambda: _menu_action_quit(state, session))
+    register("quit", lambda: _menu_action_quit(state, session))
     return registry
 
 
@@ -875,6 +923,13 @@ def run() -> None:
 
 
 def main(argv=None):
+    parsed_args = _parse_cli_args(sys.argv[1:] if argv is None else argv)
+    direct_dimension = parse_topology_playground_dimension(
+        parsed_args.topology_playground
+    )
+    if direct_dimension is not None:
+        run_direct_topology_playground(direct_dimension)
+        return
     if argv is None:
         if _PREPARSED_ARGS is None:
             _parse_cli_args(sys.argv[1:])

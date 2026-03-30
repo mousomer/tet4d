@@ -64,6 +64,7 @@ TRANSPORT_OWNER_EXPLORER = "explorer_gluing"
 GRAVITY_MODE_FALLING = "falling"
 GRAVITY_MODE_EXPLORATION = "exploration"
 PLAYABILITY_STATUS_UNKNOWN = "unknown"
+PLAYABILITY_STATUS_ANALYZING = "analyzing"
 PLAYABILITY_STATUS_PLAYABLE = "playable"
 PLAYABILITY_STATUS_WARNING = "warning"
 PLAYABILITY_STATUS_BLOCKED = "blocked"
@@ -94,6 +95,7 @@ GravityModeName = Literal[
 ]
 PlayabilityStatus = Literal[
     "unknown",
+    "analyzing",
     "playable",
     "warning",
     "blocked",
@@ -136,6 +138,7 @@ _VALID_GRAVITY_MODES = frozenset((GRAVITY_MODE_FALLING, GRAVITY_MODE_EXPLORATION
 _VALID_PLAYABILITY_STATUSES = frozenset(
     (
         PLAYABILITY_STATUS_UNKNOWN,
+        PLAYABILITY_STATUS_ANALYZING,
         PLAYABILITY_STATUS_PLAYABLE,
         PLAYABILITY_STATUS_WARNING,
         PLAYABILITY_STATUS_BLOCKED,
@@ -337,6 +340,7 @@ class TopologyPlaygroundProbeState:
     path: tuple[Coord, ...] = ()
     trace: tuple[str, ...] = ()
     show_trace: bool = True
+    show_neighbors: bool = False
     highlighted_gluing: str | None = None
     frame_permutation: tuple[int, ...] | None = None
     frame_signs: tuple[int, ...] | None = None
@@ -373,6 +377,7 @@ class TopologyPlaygroundProbeState:
         self.path = tuple(normalized_path)
         self.trace = tuple(str(entry) for entry in self.trace)
         self.show_trace = bool(self.show_trace)
+        self.show_neighbors = bool(self.show_neighbors)
         self.highlighted_gluing = (
             None if self.highlighted_gluing is None else str(self.highlighted_gluing)
         )
@@ -879,6 +884,7 @@ __all__ = [
     "EXPLORER_USABILITY_UNKNOWN",
     "GRAVITY_MODE_EXPLORATION",
     "GRAVITY_MODE_FALLING",
+    "PLAYABILITY_STATUS_ANALYZING",
     "PLAYABILITY_STATUS_BLOCKED",
     "PLAYABILITY_STATUS_PLAYABLE",
     "PLAYABILITY_STATUS_UNKNOWN",

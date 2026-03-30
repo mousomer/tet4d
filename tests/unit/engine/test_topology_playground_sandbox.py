@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import unittest
+from unittest.mock import patch
 
 from tet4d.engine.topology_explorer.transport_resolver import (
     CELLWISE_DEFORMATION,
@@ -19,8 +20,12 @@ from tet4d.engine.runtime.topology_playground_sandbox import (
     spawn_sandbox_piece,
 )
 from tet4d.engine.runtime.topology_playground_state import (
+    PLAYABILITY_STATUS_ANALYZING,
+    RIGID_PLAYABILITY_UNKNOWN,
+    TOPOLOGY_VALIDITY_VALID,
     RIGID_PLAY_MODE_ON,
     TOOL_SANDBOX,
+    TopologyPlaygroundPlayabilityAnalysis,
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState,
     TopologyPlaygroundTopologyConfig,
@@ -138,6 +143,26 @@ class TestTopologyPlaygroundSandbox(unittest.TestCase):
         self.assertTrue(ok, message)
         self.assertEqual(state.sandbox_piece_state.origin, (0, 1))
         self.assertFalse(state.sandbox_piece_state.neighbor_search_enabled)
+
+    def test_sandbox_auto_mode_reuses_pending_playability_analysis_without_rescan(
+        self,
+    ) -> None:
+        state = self._state_2d()
+        state.playability_analysis = TopologyPlaygroundPlayabilityAnalysis(
+            status=PLAYABILITY_STATUS_ANALYZING,
+            validity=TOPOLOGY_VALIDITY_VALID,
+            rigid_playability=RIGID_PLAYABILITY_UNKNOWN,
+        )
+
+        with patch.object(
+            topology_playground_sandbox,
+            "resolve_rigid_play_enabled",
+            side_effect=AssertionError("unexpected rigid-playability rescan"),
+        ):
+            ok, message = move_sandbox_piece(state, "x+")
+
+        self.assertTrue(ok, message)
+        self.assertNotEqual(state.sandbox_piece_state.origin, (2, 2))
 
     def test_move_records_seam_crossing_in_canonical_state(self) -> None:
         state = self._state_2d()

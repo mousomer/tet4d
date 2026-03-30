@@ -14,10 +14,16 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore
 
+if __package__:
+    from ._common import load_unified_governance
+else:
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parent))
+    from _common import load_unified_governance
+
 
 ROOT = Path(__file__).resolve().parents[2]
-RISK_GATES_PATH = ROOT / "config/project/policy/manifests/risk_gates.json"
-DIRECTIVES_PATH = ROOT / "config/project/policy/manifests/contributor_directives.json"
 
 
 @dataclass(frozen=True)
@@ -55,6 +61,8 @@ def _check_contributor_directives(
     required_ids = risk_payload.get("contributor_directives", {}).get(
         "required_ci_enforced_ids", []
     )
+    if not required_ids:
+        required_ids = directives_payload.get("required_ci_enforced_ids", [])
     if not isinstance(required_ids, list):
         return [
             GateIssue("schema", "risk_gates contributor_directives ids must be list")
@@ -318,13 +326,12 @@ def _check_security_ownership(
 
 
 def main() -> int:
-    risk_payload = _load_json(
-        RISK_GATES_PATH, "config/project/policy/manifests/risk_gates.json"
-    )
-    directives_payload = _load_json(
-        DIRECTIVES_PATH,
-        "config/project/policy/manifests/contributor_directives.json",
-    )
+    unified = load_unified_governance(ROOT)
+    if isinstance(unified, dict):
+        risk_payload = unified.get("risk_gates", {})
+        directives_payload = unified.get("contributor_directives", {})
+    else:
+        raise SystemExit("missing required file: config/project/policy/governance.json")
 
     issues: list[GateIssue] = []
     warnings: list[GateWarning] = []

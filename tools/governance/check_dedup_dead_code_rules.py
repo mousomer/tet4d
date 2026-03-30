@@ -2,16 +2,22 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import json
 import re
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
+if __package__:
+    from ._common import load_unified_code_rules
+else:
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parent))
+    from _common import load_unified_code_rules
+
 
 ROOT = Path(__file__).resolve().parents[2]
-RULES_PATH = ROOT / "config/project/policy/manifests/dedup_dead_code_rules.json"
 
 
 @dataclass(frozen=True)
@@ -27,16 +33,16 @@ class DedupWarning:
 
 
 def _load_rules() -> dict[str, Any]:
-    rel = "config/project/policy/manifests/dedup_dead_code_rules.json"
-    try:
-        payload = json.loads(RULES_PATH.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise SystemExit(f"missing required file: {rel}") from exc
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"invalid JSON in {rel}: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise SystemExit(f"{rel} must be a JSON object")
-    return payload
+    unified = load_unified_code_rules(ROOT)
+    if isinstance(unified, dict):
+        dead_code = unified.get("dead_code")
+        if isinstance(dead_code, dict):
+            return {
+                "forbidden_paths": dead_code.get("forbidden_paths", []),
+                "todo_backlog_rule": dead_code.get("todo_rule", {}),
+                "duplicate_functions": dead_code.get("duplicate_functions", {}),
+            }
+    raise SystemExit("missing required file: config/project/policy/code_rules.json")
 
 
 def _repo_files() -> list[str]:

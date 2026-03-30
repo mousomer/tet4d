@@ -10,6 +10,7 @@ from tet4d.ui.pygame.runtime_ui.help_menu import (
     help_topic_action_rows,
     paginate_help_lines,
 )
+from tet4d.ui.pygame.ui_utils import text_fits
 
 
 class TestHelpMenu(unittest.TestCase):
@@ -74,8 +75,60 @@ class TestHelpMenu(unittest.TestCase):
                     self.assertGreaterEqual(state.subpage, 0)
                     self.assertGreater(screen.get_bounding_rect().width, 0)
 
+    def test_initial_topic_selection_targets_requested_topic(self) -> None:
+        state = help_menu._HelpState(dimension=4)
+        help_menu._set_initial_topic(
+            state,
+            context_label="Launcher",
+            topic_id="key_reference",
+        )
+        topic, _topics = help_menu._current_topic(state, "Launcher")
+        self.assertEqual(topic["id"], "key_reference")
+
+    def test_topology_playground_seam_topic_renders_current_edit_flow(self) -> None:
+        state = help_menu._HelpState(dimension=4)
+        help_menu._set_initial_topic(
+            state,
+            context_label="Launcher",
+            topic_id="topology_playground_seams",
+        )
+        topic, topics = help_menu._current_topic(state, "Launcher")
+        lines = help_menu._topic_text_lines(
+            topic=topic,
+            state=state,
+            context_label="Launcher",
+            topics=topics,
+            compact=False,
+        )
+        text = "\n".join(lines)
+        self.assertIn("Open Topology Playground, switch to Editor, and set Tool to Edit.", text)
+        self.assertIn("Press Apply to commit the seam.", text)
+        self.assertIn("Press Remove only after the seam is selected.", text)
+
+    def test_help_header_text_fits_compact_window_budget(self) -> None:
+        screen = pygame.Surface((640, 420), pygame.SRCALPHA)
+        frame_rect, header_rect, _content_rect, footer_rect = help_menu._help_layout_zones(
+            screen, self.fonts
+        )
+        self.assertGreater(frame_rect.width, 0)
+        self.assertGreater(footer_rect.width, 0)
+
+        title_text = help_menu._format_help_line(
+            help_menu._HELP_TITLE_TEMPLATE,
+            context_label="Pause Menu",
+            dimension=4,
+            help_key="F1",
+        )
+        subtitle_text = help_menu._format_help_line(
+            help_menu._HELP_SUBTITLE_COMPACT_TEMPLATE,
+            context_label="Pause Menu",
+            dimension=4,
+            help_key="F1",
+        )
+        title_budget = max(40, header_rect.width - (help_menu._HELP_CONTENT_PAD_X * 2))
+        self.assertTrue(text_fits(self.fonts.title_font, title_text, title_budget))
+        self.assertTrue(text_fits(self.fonts.hint_font, subtitle_text, title_budget))
+
 
 if __name__ == "__main__":
     unittest.main()
-
-

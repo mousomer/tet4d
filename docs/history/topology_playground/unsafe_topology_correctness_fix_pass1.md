@@ -3,8 +3,8 @@
 Status date: 2026-03-12
 Status sources of truth:
 - [`docs/plans/topology_playground_current_authority.md`](topology_playground_current_authority.md)
-- [`docs/plans/unsafe_topology_correctness_audit.md`](unsafe_topology_correctness_audit.md)
-- supporting context only: [`docs/plans/topology_explorer_functional_audit.md`](topology_explorer_functional_audit.md)
+- [`docs/history/topology_playground/unsafe_topology_correctness_audit.md`](unsafe_topology_correctness_audit.md)
+- supporting context only: [`docs/history/topology_playground/topology_explorer_functional_audit.md`](topology_explorer_functional_audit.md)
 - archived migration audit: `docs/history/topology_playground/topology_playground_reality_audit.md`
 
 ## Scope

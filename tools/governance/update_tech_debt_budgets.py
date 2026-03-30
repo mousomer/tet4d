@@ -19,16 +19,9 @@ from tools.governance.tech_debt_budget import refresh_tech_debt_budgets  # noqa:
 
 
 def main() -> int:
-    budgets_path = (
-        REPO_ROOT
-        / "config"
-        / "project"
-        / "policy"
-        / "manifests"
-        / "tech_debt_budgets.json"
-    )
-    if not budgets_path.exists():
-        print(f"Missing config: {budgets_path}", file=sys.stderr)
+    governance_path = REPO_ROOT / "config" / "project" / "policy" / "governance.json"
+    if not governance_path.exists():
+        print(f"Missing config: {governance_path}", file=sys.stderr)
         return 1
 
     metrics_proc = subprocess.run(
@@ -44,9 +37,17 @@ def main() -> int:
         return metrics_proc.returncode
 
     metrics = json.loads(metrics_proc.stdout)
-    gate_config = json.loads(budgets_path.read_text(encoding="utf-8"))
+    governance = json.loads(governance_path.read_text(encoding="utf-8"))
+    gate_config = governance.get("tech_debt_budget")
+    if not isinstance(gate_config, dict):
+        print("Missing tech_debt_budget section in governance.json", file=sys.stderr)
+        return 1
+
     updated = refresh_tech_debt_budgets(metrics, gate_config)
-    budgets_path.write_text(json.dumps(updated, indent=2) + "\n", encoding="utf-8")
+    governance["tech_debt_budget"] = updated
+    governance_path.write_text(
+        json.dumps(governance, indent=2) + "\n", encoding="utf-8"
+    )
     baseline = updated.get("baseline", {})
     if isinstance(baseline, dict):
         print(

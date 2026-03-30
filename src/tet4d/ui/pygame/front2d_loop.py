@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pygame
 
 from tet4d.ai.playbot.types import BotMode
@@ -32,6 +34,7 @@ def run_game_loop(
     bot_profile_index: int = 1,
     bot_budget_ms: int = 12,
     tutorial_lesson_id: str | None = None,
+    pause_menu_runner: Callable[..., tuple[str, pygame.Surface]] | None = None,
 ) -> bool:
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
@@ -103,6 +106,11 @@ def run_game_loop(
                 display_settings=display_settings,
                 restart_with_record=_restart_with_record,
                 record_session=_record_session,
+                pause_menu_runner=(
+                    front2d_results.run_pause_menu
+                    if pause_menu_runner is None
+                    else pause_menu_runner
+                ),
             )
         )
         if terminal is not None:

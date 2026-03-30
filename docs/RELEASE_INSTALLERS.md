@@ -42,6 +42,9 @@ Requirements:
 
 1. `.NET SDK 6+` must be available on `PATH` because the script installs `WiX 6` as a local tool.
 2. The script keeps WiX under `build/packaging/windows/.dotnet-tools` and uses `DOTNET_CLI_HOME` under `build/packaging/windows/.dotnet-cli-home` when not already set.
+3. The Windows WiX build embeds the cabinet payload into the `.msi`, so the
+   release artifact is a single installable file and does not require a
+   sidecar `cab1.cab`.
 
 ## 3. Output artifacts
 

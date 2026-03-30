@@ -9,6 +9,7 @@ from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.launch.settings_hub_model import SettingsHubResult
 from tet4d.ui.pygame.runtime_ui import pause_menu
+from tet4d.ui.pygame.ui_utils import text_fits
 
 
 class TestPauseMenuSettingsRouting(unittest.TestCase):
@@ -216,3 +217,34 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
         self.assertEqual(decision, "quit")
 
+    def test_pause_menu_compact_panel_keeps_required_rows_visible(self) -> None:
+        fonts = type(
+            "_Fonts",
+            (),
+            {
+                "title_font": pygame.font.Font(None, 32),
+                "menu_font": pygame.font.Font(None, 26),
+                "hint_font": pygame.font.Font(None, 20),
+            },
+        )()
+        width = 960
+        panel_w = min(660, max(320, width - 40))
+        label_left = ((width - panel_w) // 2) + 20
+        label_right = ((width - panel_w) // 2) + panel_w - 20
+        value_width = int(panel_w * 0.34)
+
+        for row, value_text in zip(
+            pause_menu._PAUSE_ROWS,
+            pause_menu._pause_menu_values(4),
+            strict=True,
+        ):
+            value_draw_width = (
+                fonts.menu_font.size(value_text)[0] if value_text else 0
+            )
+            value_x = label_right - min(value_draw_width, value_width)
+            label_width = max(
+                64,
+                value_x - label_left - 10 if value_text else panel_w - 52,
+            )
+            with self.subTest(row=row):
+                self.assertTrue(text_fits(fonts.menu_font, row, label_width))

@@ -46,7 +46,10 @@ from tet4d.engine.topology_explorer.presets import (
 from tet4d.ui.pygame.front2d_input import apply_2d_gameplay_action
 from tet4d.ui.pygame import frontend_nd_input
 from tet4d.ui.pygame.keybindings import EXPLORER_KEYS_3D, KEYS_3D
-from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
+from tet4d.ui.pygame.topology_lab.play_launch import (
+    _topology_playground_return_menu,
+    launch_playground_state_gameplay,
+)
 
 
 class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
@@ -708,7 +711,7 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 state,
                 screen,
                 fonts_nd,
-                return_caption="Explorer Playground",
+                return_caption="Topology Playground",
                 fonts_2d=fonts_2d,
                 display_settings=display_settings,
                 exploration_mode=False,
@@ -716,9 +719,15 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
 
         build_cfg.assert_called_once_with(state, exploration_mode=False)
 
-        run_game.assert_called_once_with(screen, cfg, fonts_2d, display_settings)
+        run_game.assert_called_once_with(
+            screen,
+            cfg,
+            fonts_2d,
+            display_settings,
+            pause_menu_runner=None,
+        )
         capture_display.assert_called_once_with(display_settings)
-        open_display.assert_called_once_with("captured", caption="Explorer Playground")
+        open_display.assert_called_once_with("captured", caption="Topology Playground")
         self.assertIs(returned_screen, reopened_screen)
         self.assertEqual(returned_display, "captured")
 
@@ -745,7 +754,7 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 state,
                 screen,
                 fonts_nd,
-                return_caption="Explorer Playground",
+                return_caption="Topology Playground",
                 display_settings=None,
                 exploration_mode=False,
             )
@@ -753,7 +762,12 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
         build_cfg.assert_called_once_with(state, exploration_mode=False)
         run_2d.assert_not_called()
         run_3d.assert_not_called()
-        run_4d.assert_called_once_with(screen, cfg, fonts_nd)
+        run_4d.assert_called_once_with(
+            screen,
+            cfg,
+            fonts_nd,
+            pause_menu_runner=None,
+        )
         self.assertIs(returned_screen, screen)
         self.assertIsNone(returned_display)
 
@@ -790,16 +804,22 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 state,
                 screen,
                 fonts_nd,
-                return_caption="Explorer Playground",
+                return_caption="Topology Playground",
                 fonts_2d=fonts_2d,
                 display_settings=display_settings,
                 exploration_mode=True,
             )
 
         build_cfg.assert_called_once_with(state, exploration_mode=True)
-        run_game.assert_called_once_with(screen, cfg, fonts_2d, display_settings)
+        run_game.assert_called_once_with(
+            screen,
+            cfg,
+            fonts_2d,
+            display_settings,
+            pause_menu_runner=_topology_playground_return_menu,
+        )
         capture_display.assert_called_once_with(display_settings)
-        open_display.assert_called_once_with("captured", caption="Explorer Playground")
+        open_display.assert_called_once_with("captured", caption="Topology Playground")
         self.assertIs(returned_screen, reopened_screen)
         self.assertEqual(returned_display, "captured")
 
@@ -826,7 +846,7 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
                 state,
                 screen,
                 fonts_nd,
-                return_caption="Explorer Playground",
+                return_caption="Topology Playground",
                 display_settings=None,
                 exploration_mode=True,
             )
@@ -834,7 +854,12 @@ class TestTopologyLabPlayLaunch(unittest.TestCase):
         build_cfg.assert_called_once_with(state, exploration_mode=True)
         run_2d.assert_not_called()
         run_3d.assert_not_called()
-        run_4d.assert_called_once_with(screen, cfg, fonts_nd)
+        run_4d.assert_called_once_with(
+            screen,
+            cfg,
+            fonts_nd,
+            pause_menu_runner=_topology_playground_return_menu,
+        )
         self.assertIs(returned_screen, screen)
         self.assertIsNone(returned_display)
 

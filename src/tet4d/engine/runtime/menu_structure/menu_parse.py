@@ -104,11 +104,23 @@ def parse_launcher_subtitles(payload: dict[str, Any]) -> dict[str, str]:
     raw = require_object(
         payload.get("launcher_subtitles"), path="structure.launcher_subtitles"
     )
-    return parse_copy_fields(
+    subtitles = parse_copy_fields(
         raw,
         base_path="structure.launcher_subtitles",
         string_fields=("launcher_root", "launcher_play", "default"),
     )
+    for raw_key, raw_value in raw.items():
+        key = as_non_empty_string(
+            raw_key,
+            path="structure.launcher_subtitles keys",
+        )
+        if key in subtitles:
+            continue
+        subtitles[key] = as_non_empty_string(
+            raw_value,
+            path=f"structure.launcher_subtitles.{key}",
+        )
+    return subtitles
 
 
 def parse_launcher_route_actions(payload: dict[str, Any]) -> dict[str, str]:

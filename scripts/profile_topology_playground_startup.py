@@ -13,7 +13,7 @@ from statistics import mean
 from types import SimpleNamespace
 from unittest import mock
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 _SRC_ROOT = _REPO_ROOT / "src"
 if str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
@@ -29,14 +29,18 @@ except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dep
 from tet4d.engine.runtime.topology_explorer_runtime import (
     compile_runtime_explorer_experiments,
 )
+from tet4d.engine.runtime.settings_schema import atomic_write_text
 from tet4d.engine.runtime.topology_explorer_store import load_explorer_topology_profile
+from tet4d.engine.runtime import topology_playability_signal as playability_mod
 from tet4d.engine.runtime import topology_explorer_preview as preview_mod
 from tet4d.engine.topology_explorer import movement_graph as graph_mod
 from tet4d.engine.topology_explorer.presets import explorer_presets_for_dimension
 from tet4d.ui.pygame.launch import topology_lab_menu
+from tet4d.ui.pygame.launch import topology_lab_state_factory as factory_mod
 from tet4d.ui.pygame.topology_lab import app as app_mod
 from tet4d.ui.pygame.topology_lab import controls_panel as controls_panel_mod
 from tet4d.ui.pygame.topology_lab import piece_sandbox as piece_sandbox_mod
+from tet4d.ui.pygame.topology_lab import scene_preview_state as scene_preview_mod
 from tet4d.ui.pygame.topology_lab import scene_state as scene_state_mod
 from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_launch
 from tet4d.ui.pygame.topology_lab.scene_state import playground_dims_for_state
@@ -210,13 +214,6 @@ def _measure_dimension(
     with ExitStack() as stack:
         stack.enter_context(
             patch_callable(
-                "menu._bind_controls_panel_compat",
-                topology_lab_menu,
-                "_bind_controls_panel_compat",
-            )
-        )
-        stack.enter_context(
-            patch_callable(
                 "app._profile_validation_error",
                 app_mod,
                 "_profile_validation_error",
@@ -224,22 +221,15 @@ def _measure_dimension(
         )
         stack.enter_context(
             patch_callable(
-                "menu.load_topology_profile",
-                topology_lab_menu,
+                "factory.load_topology_profile",
+                factory_mod,
                 "load_topology_profile",
             )
         )
         stack.enter_context(
             patch_callable(
-                "menu.load_runtime_explorer_topology_profile",
-                topology_lab_menu,
-                "load_runtime_explorer_topology_profile",
-            )
-        )
-        stack.enter_context(
-            patch_callable(
-                "cp.recommended_explorer_probe_coord",
-                controls_panel_mod,
+                "ss.recommended_explorer_probe_coord",
+                scene_state_mod,
                 "recommended_explorer_probe_coord",
             )
         )
@@ -259,9 +249,9 @@ def _measure_dimension(
         )
         stack.enter_context(
             patch_callable(
-                "menu.compile_explorer_topology_preview",
-                topology_lab_menu,
-                "compile_explorer_topology_preview",
+                "scene_preview._compile_explorer_preview_payload",
+                scene_preview_mod,
+                "_compile_explorer_preview_payload",
             )
         )
         stack.enter_context(
@@ -330,9 +320,9 @@ def _measure_dimension(
         )
         stack.enter_context(
             patch_callable(
-                "preview._basis_arrow_payload",
+                "preview.basis_arrow_payload",
                 preview_mod,
-                "_basis_arrow_payload",
+                "basis_arrow_payload",
             )
         )
         stack.enter_context(
@@ -341,6 +331,20 @@ def _measure_dimension(
                 graph_mod,
                 "validate_explorer_topology_profile",
                 after=after_validate,
+            )
+        )
+        stack.enter_context(
+            patch_callable(
+                "scene_preview.update_topology_playability_analysis",
+                scene_preview_mod,
+                "update_topology_playability_analysis",
+            )
+        )
+        stack.enter_context(
+            patch_callable(
+                "playability._first_rigid_transport_failure",
+                playability_mod,
+                "_first_rigid_transport_failure",
             )
         )
 
@@ -478,8 +482,7 @@ def main() -> int:
     print(payload)
     if args.output is not None:
         output_path = _resolve_repo_local_path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(payload + "\n", encoding="utf-8")
+        atomic_write_text(output_path, payload + "\n")
         print(f"report written: {output_path}")
     return 0
 

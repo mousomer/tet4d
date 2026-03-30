@@ -23,12 +23,15 @@ def _resolve_loop_decision(
     screen: pygame.Surface,
     fonts: GfxFonts,
     loop: LoopContext2D,
+    pause_menu_runner: Callable[..., tuple[str, pygame.Surface]] | None = None,
 ) -> tuple[str, pygame.Surface]:
     if decision == "quit":
         return "quit", screen
     if decision != "menu":
         return "continue", screen
-    pause_decision, next_screen = run_pause_menu(
+    pause_decision, next_screen = (
+        run_pause_menu if pause_menu_runner is None else pause_menu_runner
+    )(
         screen,
         fonts,
         dimension=2,

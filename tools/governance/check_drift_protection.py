@@ -8,14 +8,24 @@ from tokenize import COMMENT, generate_tokens
 from typing import Any
 
 if __package__:
-    from ._common import as_str_list, iter_python_files, load_json_object
+    from ._common import (
+        as_str_list,
+        iter_python_files,
+        load_json_object,
+        load_unified_governance,
+    )
 else:
     sys.path.append(str(Path(__file__).resolve().parent))
-    from _common import as_str_list, iter_python_files, load_json_object
+    from _common import (
+        as_str_list,
+        iter_python_files,
+        load_json_object,
+        load_unified_governance,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = ROOT / "config/project/policy/manifests/drift_protection.json"
+MANIFEST_PATH = ROOT / "config/project/policy/governance.json"
 
 
 @dataclass(frozen=True)
@@ -25,8 +35,14 @@ class DriftIssue:
 
 
 def _load_manifest() -> dict[str, Any]:
-    rel = "config/project/policy/manifests/drift_protection.json"
-    return load_json_object(MANIFEST_PATH, rel)
+    if MANIFEST_PATH != ROOT / "config/project/policy/governance.json":
+        return load_json_object(MANIFEST_PATH, str(MANIFEST_PATH))
+    unified = load_unified_governance(ROOT)
+    if isinstance(unified, dict):
+        drift_protection = unified.get("drift_protection")
+        if isinstance(drift_protection, dict):
+            return drift_protection
+    raise SystemExit("missing required file: config/project/policy/governance.json")
 
 
 def _comment_line_numbers(text: str) -> set[int]:

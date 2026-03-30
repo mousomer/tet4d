@@ -30,14 +30,14 @@ from .controls_panel_values import (
     _playability_panel_lines,
     _sandbox_neighbor_search_enabled,
 )
-from .explorer_tools import draw_tool_ribbon
+from .explorer_tools import draw_tool_ribbon as _shared_draw_tool_ribbon
 from .piece_sandbox import (
     ensure_piece_sandbox,
     sandbox_cells,
     sandbox_lines,
     sandbox_validity,
 )
-from .preview import build_preview_lines, draw_preview_panel, draw_probe_controls
+from .preview import build_preview_lines, draw_probe_controls
 from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
 from .scene4d import draw_scene as draw_scene_4d
@@ -56,12 +56,14 @@ from .scene_state import (
     current_explorer_profile as _current_explorer_profile,
     current_highlighted_glue_id as _current_highlighted_glue_id,
     current_probe_coord as _current_probe_coord,
+    current_probe_frame as _current_probe_frame,
     current_probe_path as _current_probe_path,
     current_probe_trace as _current_probe_trace,
     current_selected_boundary_index as _current_selected_boundary_index,
     current_selected_glue_id as _current_selected_glue_id,
     ensure_probe_state as _ensure_probe_state,
     playground_dims_for_state as _board_dims_for_state,
+    probe_neighbors_visible as _probe_neighbors_visible,
     probe_trace_visible as _probe_trace_visible,
     scene_pane_active as _scene_pane_active,
     tool_is_edit,
@@ -74,8 +76,18 @@ from .state_ownership import (
     current_sandbox_focus_path as _current_sandbox_focus_path,
     current_sandbox_focus_trace as _current_sandbox_focus_trace,
 )
-from .transform_editor import draw_action_buttons, draw_transform_editor
+from .transform_editor import draw_transform_editor
 from .camera_controls import scene_camera_availability
+from tet4d.ui.pygame.ui_utils import fit_text, wrap_text_lines
+
+
+def draw_tool_ribbon(surface: pygame.Surface, fonts, *, area: pygame.Rect, active_workspace: str):
+    return _shared_draw_tool_ribbon(
+        surface,
+        fonts,
+        area=area,
+        active_workspace=active_workspace,
+    )
 
 
 def _explorer_bindings_for_dimension(dimension: int):
@@ -137,18 +149,19 @@ def _explorer_workspace_layout(
 ]:
     workspace_x = panel_x + menu_w + 18
     workspace_w = panel_w - menu_w - 30
-    header_h = 26
-    tool_h = 34
-    actions_h = 38
+    header_h = 0
+    tool_h = 0
+    actions_h = 36
     gap = 12
-    helper_w = max(176, int(workspace_w * 0.28))
-    helper_w = min(helper_w, max(176, workspace_w - gap - 320))
+    helper_min = 168 if workspace_w < 520 else 208
+    helper_w = max(helper_min, int(workspace_w * 0.29))
+    helper_w = min(helper_w, max(helper_min, workspace_w - gap - 340))
     main_w = workspace_w - helper_w - gap
-    if main_w < 280:
-        helper_w = max(160, workspace_w - gap - 280)
+    if main_w < 400:
+        helper_w = max(helper_min, workspace_w - gap - 390)
         main_w = workspace_w - helper_w - gap
-    if main_w < 240:
-        helper_w = max(144, workspace_w - gap - 240)
+    if main_w < 340:
+        helper_w = max(160, workspace_w - gap - 340)
         main_w = workspace_w - helper_w - gap
     tool_rect = pygame.Rect(workspace_x, panel_y + 14 + header_h, workspace_w, tool_h)
     action_rect = pygame.Rect(
@@ -157,11 +170,11 @@ def _explorer_workspace_layout(
         main_w,
         actions_h,
     )
-    content_y = tool_rect.bottom + gap
-    content_h = max(320, action_rect.y - gap - content_y)
-    top_h = max(212, min(332, int(content_h * 0.6)))
+    content_y = panel_y + 12
+    content_h = max(340, action_rect.y - gap - content_y)
+    editor_h = 132
+    top_h = max(260, content_h - editor_h - gap)
     editor_y = content_y + top_h + gap
-    editor_h = max(170, content_y + content_h - editor_y)
     top_rect = pygame.Rect(workspace_x, content_y, main_w, top_h)
     editor_rect = pygame.Rect(workspace_x, editor_y, main_w, editor_h)
     helper_rect = pygame.Rect(top_rect.right + gap, content_y, helper_w, content_h)
@@ -218,38 +231,71 @@ def _active_workspace_path(state) -> list[tuple[int, ...]]:
     return []
 
 
-def _active_workspace_neighbor_markers(state) -> list[tuple[int, ...]]:
-    if tool_is_sandbox(state.active_tool) and _sandbox_neighbor_search_enabled(state):
-        profile = _current_explorer_profile(state)
-        if profile is None:
-            return []
-        try:
-            resolver = build_explorer_transport_resolver(
-                profile,
-                _board_dims_for_state(state),
-            )
-        except ValueError:
-            return []
-        piece_cells = tuple(
-            tuple(int(value) for value in coord)
-            for coord in (sandbox_cells(state) or ())
+def _editor_probe_neighbor_markers(state) -> list[tuple[int, ...]]:
+    profile = _current_explorer_profile(state)
+    probe_coord = _current_probe_coord(state)
+    if profile is None or probe_coord is None:
+        return []
+    frame_permutation, frame_signs = _current_probe_frame(state)
+    markers: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+    for option in explorer_probe_options(
+        profile,
+        dims=_board_dims_for_state(state),
+        coord=probe_coord,
+        frame_permutation=frame_permutation,
+        frame_signs=frame_signs,
+    ):
+        target = option.get("target")
+        if target is None:
+            continue
+        coord = tuple(int(value) for value in target)
+        if coord in seen or coord == probe_coord:
+            continue
+        seen.add(coord)
+        markers.append(coord)
+    return markers
+
+
+def _sandbox_neighbor_markers(state) -> list[tuple[int, ...]]:
+    profile = _current_explorer_profile(state)
+    if profile is None:
+        return []
+    try:
+        resolver = build_explorer_transport_resolver(
+            profile,
+            _board_dims_for_state(state),
         )
-        if not piece_cells:
-            return []
-        markers: list[tuple[int, ...]] = []
-        seen: set[tuple[int, ...]] = set()
-        occupied = set(piece_cells)
-        for step in movement_steps_for_dimension(state.dimension):
-            result = resolver.resolve_piece_step(piece_cells, step)
-            if result.moved_cells is None:
+    except ValueError:
+        return []
+    piece_cells = tuple(
+        tuple(int(value) for value in coord) for coord in (sandbox_cells(state) or ())
+    )
+    if not piece_cells:
+        return []
+    markers: list[tuple[int, ...]] = []
+    seen: set[tuple[int, ...]] = set()
+    occupied = set(piece_cells)
+    for step in movement_steps_for_dimension(state.dimension):
+        result = resolver.resolve_piece_step(piece_cells, step)
+        if result.moved_cells is None:
+            continue
+        for coord in result.moved_cells:
+            target = tuple(int(value) for value in coord)
+            if target in occupied or target in seen:
                 continue
-            for coord in result.moved_cells:
-                target = tuple(int(value) for value in coord)
-                if target in occupied or target in seen:
-                    continue
-                seen.add(target)
-                markers.append(target)
-        return markers
+            seen.add(target)
+            markers.append(target)
+    return markers
+
+
+def _active_workspace_neighbor_markers(state) -> list[tuple[int, ...]]:
+    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_neighbors_visible(
+        state
+    ):
+        return _editor_probe_neighbor_markers(state)
+    if tool_is_sandbox(state.active_tool) and _sandbox_neighbor_search_enabled(state):
+        return _sandbox_neighbor_markers(state)
     return []
 
 
@@ -403,81 +449,216 @@ def _workspace_helper_lines(state) -> tuple[str, ...]:
     workspace_name = _active_workspace_name(state)
     if workspace_name == WORKSPACE_EDITOR:
         return (
-            "Editor workspace: probe movement is always safe; seam mutation stays behind the explicit Edit tool.",
-            "Editor movement target is the editor probe/selection only.",
-            f"Editor Trace: {'on' if _probe_trace_visible(state) else 'off'}.",
+            (
+                "Editor"
+                f" | {'Edit' if _current_editor_tool(state) == TOOL_EDIT else 'Probe'}"
+            ),
+            f"Trace {'on' if _probe_trace_visible(state) else 'off'}",
         )
     if workspace_name == WORKSPACE_SANDBOX:
         neighbor_text = "on" if _sandbox_neighbor_search_enabled(state) else "off"
         return (
-            "Sandbox workspace: piece controls and transport experiments stay separate from topology editing.",
-            f"Sandbox Neighbors: {neighbor_text}.",
+            "Sandbox",
+            f"Neighbors {neighbor_text}",
         )
     return (
-        "Play workspace: launch and preview use the canonical gameplay runtime.",
-        "Play movement target is the gameplay piece only.",
+        "Play",
+        "Launch from current draft",
     )
 
 
 def _workspace_guidance_lines(state) -> list[str]:
-    def _binding_text(bindings, action: str) -> str:
-        return format_key_tuple(bindings.get(action, ()))
+    lines = [_workspace_helper_context(state)]
+    for title, rows in _workspace_helper_sections(state):
+        lines.append(title)
+        lines.extend(f"  {label} {keys}" for label, keys in rows)
+    return lines
 
-    def _compact_lines(prefix: str, parts: list[str]) -> list[str]:
-        lines: list[str] = []
-        for index in range(0, len(parts), 2):
-            label = prefix if not lines else " " * len(prefix)
-            lines.append(label + "  ".join(parts[index : index + 2]))
-        return lines
 
-    gameplay = _gameplay_bindings_for_dimension(state.dimension)
-    explorer = _explorer_bindings_for_dimension(state.dimension)
+def _binding_text(bindings, action: str) -> str:
+    return format_key_tuple(bindings.get(action, ()))
+
+
+def _workspace_helper_context(state) -> str:
     workspace_name = _active_workspace_name(state)
     if workspace_name == WORKSPACE_EDITOR:
-        context = (
-            "Context: Editor / Edit."
-            if _current_editor_tool(state) == TOOL_EDIT
-            else "Context: Editor / Probe."
-        )
-    elif workspace_name == WORKSPACE_SANDBOX:
-        neighbor_text = "on" if _sandbox_neighbor_search_enabled(state) else "off"
-        context = f"Context: Sandbox. Neighbors {neighbor_text}."
-    else:
-        context = "Context: Play launch."
-    move_parts = [
-        f"X {_binding_text(gameplay, 'move_x_neg')} / {_binding_text(gameplay, 'move_x_pos')}",
-        f"Y {_binding_text(explorer, 'move_up')} / {_binding_text(explorer, 'move_down')}",
+        tool_label = "Edit" if _current_editor_tool(state) == TOOL_EDIT else "Probe"
+        return f"Editor · {tool_label}"
+    if workspace_name == WORKSPACE_SANDBOX:
+        neighbor_text = "On" if _sandbox_neighbor_search_enabled(state) else "Off"
+        return f"Sandbox · Neighbors {neighbor_text}"
+    return "Play · Current Draft"
+
+
+def _workspace_helper_sections(
+    state,
+) -> tuple[tuple[str, tuple[tuple[str, str], ...]], ...]:
+    gameplay = _gameplay_bindings_for_dimension(state.dimension)
+    explorer = _explorer_bindings_for_dimension(state.dimension)
+    movement_rows = [
+        (
+            "X",
+            (
+                f"{_binding_text(gameplay, 'move_x_neg')} / "
+                f"{_binding_text(gameplay, 'move_x_pos')}"
+            ),
+        ),
+        (
+            "Y",
+            (
+                f"{_binding_text(explorer, 'move_up')} / "
+                f"{_binding_text(explorer, 'move_down')}"
+            ),
+        ),
     ]
     if state.dimension >= 3:
-        move_parts.append(
-            f"Z {_binding_text(gameplay, 'move_z_neg')} / {_binding_text(gameplay, 'move_z_pos')}"
+        movement_rows.append(
+            (
+                "Z",
+                (
+                    f"{_binding_text(gameplay, 'move_z_neg')} / "
+                    f"{_binding_text(gameplay, 'move_z_pos')}"
+                ),
+            )
         )
     if state.dimension >= 4:
-        move_parts.append(
-            f"W {_binding_text(gameplay, 'move_w_neg')} / {_binding_text(gameplay, 'move_w_pos')}"
+        movement_rows.append(
+            (
+                "W",
+                (
+                    f"{_binding_text(gameplay, 'move_w_neg')} / "
+                    f"{_binding_text(gameplay, 'move_w_pos')}"
+                ),
+            )
         )
-    rotate_parts = [
-        f"XY {_binding_text(gameplay, 'rotate_xy_pos')} / {_binding_text(gameplay, 'rotate_xy_neg')}",
+    rotation_rows = [
+        (
+            "XY",
+            (
+                f"{_binding_text(gameplay, 'rotate_xy_pos')} / "
+                f"{_binding_text(gameplay, 'rotate_xy_neg')}"
+            ),
+        ),
     ]
     if state.dimension >= 3:
-        rotate_parts.extend(
+        rotation_rows.extend(
             [
-                f"XZ {_binding_text(gameplay, 'rotate_xz_pos')} / {_binding_text(gameplay, 'rotate_xz_neg')}",
-                f"YZ {_binding_text(gameplay, 'rotate_yz_pos')} / {_binding_text(gameplay, 'rotate_yz_neg')}",
+                (
+                    "XZ",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_xz_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_xz_neg')}"
+                    ),
+                ),
+                (
+                    "YZ",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_yz_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_yz_neg')}"
+                    ),
+                ),
             ]
         )
     if state.dimension >= 4:
-        rotate_parts.extend(
+        rotation_rows.extend(
             [
-                f"XW {_binding_text(gameplay, 'rotate_xw_pos')} / {_binding_text(gameplay, 'rotate_xw_neg')}",
-                f"YW {_binding_text(gameplay, 'rotate_yw_pos')} / {_binding_text(gameplay, 'rotate_yw_neg')}",
-                f"ZW {_binding_text(gameplay, 'rotate_zw_pos')} / {_binding_text(gameplay, 'rotate_zw_neg')}",
+                (
+                    "XW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_xw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_xw_neg')}"
+                    ),
+                ),
+                (
+                    "YW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_yw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_yw_neg')}"
+                    ),
+                ),
+                (
+                    "ZW",
+                    (
+                        f"{_binding_text(gameplay, 'rotate_zw_pos')} / "
+                        f"{_binding_text(gameplay, 'rotate_zw_neg')}"
+                    ),
+                ),
             ]
         )
-    lines = [context]
-    lines.extend(_compact_lines("Move: ", move_parts))
-    lines.extend(_compact_lines("Rotate: ", rotate_parts))
-    return lines
+    return (
+        ("Move", tuple(movement_rows)),
+        ("Rotate", tuple(rotation_rows)),
+    )
+
+
+def _draw_workspace_helper_panel(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    area: pygame.Rect,
+    state,
+) -> None:
+    card_rect = area.copy()
+    pygame.draw.rect(surface, (18, 22, 38), card_rect, border_radius=10)
+    pygame.draw.rect(surface, (76, 84, 112), card_rect, 1, border_radius=10)
+    y = card_rect.y + 10
+    title = fit_text(fonts.hint_font, "Controls", card_rect.width - 20)
+    title_surf = fonts.hint_font.render(title, True, (220, 228, 250))
+    surface.blit(title_surf, (card_rect.x + 10, y))
+    y += title_surf.get_height() + 8
+
+    context_text = fit_text(fonts.hint_font, _workspace_helper_context(state), card_rect.width - 24)
+    context_surf = fonts.hint_font.render(context_text, True, (226, 234, 252))
+    context_rect = pygame.Rect(card_rect.x + 10, y, card_rect.width - 20, 24)
+    pygame.draw.rect(surface, (28, 36, 58), context_rect, border_radius=12)
+    pygame.draw.rect(surface, (82, 96, 132), context_rect, 1, border_radius=12)
+    surface.blit(
+        context_surf,
+        (
+            context_rect.x + (context_rect.width - context_surf.get_width()) // 2,
+            context_rect.y + (context_rect.height - context_surf.get_height()) // 2,
+        ),
+    )
+    y += context_rect.height + 10
+
+    row_label_width = max(24, min(34, card_rect.width // 5))
+    row_value_width = max(48, card_rect.width - 24 - row_label_width)
+    for section_title, rows in _workspace_helper_sections(state):
+        heading = fit_text(fonts.hint_font, section_title.upper(), card_rect.width - 20)
+        heading_surf = fonts.hint_font.render(heading, True, (150, 164, 202))
+        surface.blit(heading_surf, (card_rect.x + 10, y))
+        y += heading_surf.get_height() + 6
+        for label, keys in rows:
+            label_surf = fonts.hint_font.render(label, True, (232, 238, 252))
+            key_lines = wrap_text_lines(fonts.hint_font, keys, row_value_width)
+            row_height = max(
+                24,
+                len(key_lines) * (fonts.hint_font.get_linesize() + 1) + 8,
+            )
+            row_rect = pygame.Rect(card_rect.x + 8, y, card_rect.width - 16, row_height)
+            pygame.draw.rect(surface, (22, 28, 48), row_rect, border_radius=8)
+            label_rect = pygame.Rect(
+                row_rect.x + 6,
+                row_rect.y + 4,
+                row_label_width,
+                row_rect.height - 8,
+            )
+            pygame.draw.rect(surface, (54, 66, 98), label_rect, border_radius=7)
+            surface.blit(
+                label_surf,
+                (
+                    label_rect.x + (label_rect.width - label_surf.get_width()) // 2,
+                    label_rect.y + (label_rect.height - label_surf.get_height()) // 2,
+                ),
+            )
+            key_x = label_rect.right + 8
+            key_y = row_rect.y + 4
+            for wrapped in key_lines:
+                key_surf = fonts.hint_font.render(wrapped, True, (204, 214, 236))
+                surface.blit(key_surf, (key_x, key_y))
+                key_y += fonts.hint_font.get_linesize() + 1
+            y += row_rect.height + 6
+        y += 4
 
 
 def _workspace_experiment_lines(state) -> list[str]:
@@ -589,13 +770,24 @@ def _draw_explorer_workspace(
             menu_w=menu_w,
         )
     )
-    main_tool_rect = tool_rect.copy()
-    ribbon_rect = main_tool_rect.copy()
+    if not tool_is_edit(state.active_tool):
+        top_rect = pygame.Rect(
+            top_rect.x,
+            top_rect.y,
+            top_rect.width,
+            editor_rect.bottom - top_rect.y,
+        )
+        helper_rect = pygame.Rect(
+            helper_rect.x,
+            helper_rect.y,
+            helper_rect.width,
+            top_rect.height,
+        )
     main_panel_rect = pygame.Rect(
-        main_tool_rect.x - 8,
-        main_tool_rect.y - 8,
+        top_rect.x - 8,
+        top_rect.y - 8,
         top_rect.width + 16,
-        action_rect.bottom - main_tool_rect.y + 16,
+        action_rect.bottom - top_rect.y + 16,
     )
     workspace_focus_rect = pygame.Rect(
         main_panel_rect.x,
@@ -608,18 +800,7 @@ def _draw_explorer_workspace(
     pygame.draw.rect(screen, focus_color, workspace_focus_rect, 2, border_radius=10)
     pygame.draw.rect(screen, (16, 20, 34), helper_rect, border_radius=12)
     pygame.draw.rect(screen, (96, 112, 152), helper_rect, 1, border_radius=12)
-    scene_header = fonts.hint_font.render(
-        scene_pane_title,
-        True,
-        highlight_color if _scene_pane_active(state) else muted_color,
-    )
-    screen.blit(scene_header, (tool_rect.x + 2, panel_y + 18))
-    hits = draw_tool_ribbon(
-        screen,
-        fonts,
-        area=ribbon_rect,
-        active_workspace=_active_workspace_name(state),
-    )
+    hits: list[TopologyLabHitTarget] = []
     boundaries = _explorer_boundaries(state)
     source_boundary = boundaries[draft.source_index]
     target_boundary = boundaries[draft.target_index]
@@ -645,38 +826,29 @@ def _draw_explorer_workspace(
             sandbox_message=sandbox_message,
         )
     )
-    hits.extend(
-        draw_transform_editor(
-            screen,
-            fonts,
-            area=editor_rect,
-            editable=tool_is_edit(state.active_tool),
-            preset_label=_explorer_preset_value_text(state),
-            glue_labels=_explorer_glue_labels(state),
-            active_slot_index=draft.slot_index,
-            transform_label=_explorer_transform_label(state),
-            permutation_labels=_explorer_permutation_labels(state),
-            selected_permutation_index=draft.permutation_index,
-            signs=draft.signs,
+    if tool_is_edit(state.active_tool):
+        hits.extend(
+            draw_transform_editor(
+                screen,
+                fonts,
+                area=editor_rect,
+                editable=True,
+                preset_label=_explorer_preset_value_text(state),
+                glue_labels=_explorer_glue_labels(state),
+                active_slot_index=draft.slot_index,
+                transform_label=_explorer_transform_label(state),
+                permutation_labels=_explorer_permutation_labels(state),
+                selected_permutation_index=draft.permutation_index,
+                signs=draft.signs,
+            )
         )
-    )
-    hits.extend(
-        draw_action_buttons(
-            screen,
-            fonts,
-            area=action_rect,
-            actions=_action_buttons_for_state(state),
-        )
-    )
     _ensure_probe_state(state)
-    helper_lines = _workspace_guidance_lines(state)
     preview_body_rect = helper_rect.inflate(-10, -10)
-    draw_preview_panel(
+    _draw_workspace_helper_panel(
         screen,
         fonts,
         area=preview_body_rect,
-        title=f"Explorer {state.dimension}D keys",
-        lines=helper_lines,
+        state=state,
     )
     return hits
 
@@ -685,53 +857,12 @@ def _hint_lines_for_state(state) -> tuple[str, ...]:
     if not _uses_general_explorer_editor(state):
         return (
             *_LAB_HINTS,
-            "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Explorer Playground is the primary editor.",
+            "Legacy compatibility: Normal Game keeps the transitional legacy-normal-mode rows and export bridge; Topology Playground is the primary editor.",
         )
-    gameplay = _gameplay_bindings_for_dimension(state.dimension)
-    explorer = _explorer_bindings_for_dimension(state.dimension)
-    pane_label = PANE_LABELS.get(state.active_pane, state.active_pane.title())
-    move_lines = [
-        f"Move X: {format_key_tuple(gameplay.get('move_x_neg', ()))} / {format_key_tuple(gameplay.get('move_x_pos', ()))}",
-        f"Move Y: {format_key_tuple(explorer.get('move_up', ()))} / {format_key_tuple(explorer.get('move_down', ()))}",
-    ]
-    if state.dimension >= 3:
-        move_lines.append(
-            f"Move Z: {format_key_tuple(gameplay.get('move_z_neg', ()))} / {format_key_tuple(gameplay.get('move_z_pos', ()))}"
-        )
-    if state.dimension >= 4:
-        move_lines.append(
-            f"Move W: {format_key_tuple(gameplay.get('move_w_neg', ()))} / {format_key_tuple(gameplay.get('move_w_pos', ()))}"
-        )
-    lines = [
-        "Explorer Playground keeps presets, board size, seam editing, sandbox, and play on one screen.",
-        "Graphical explorer is the primary editor; Analysis View is optional secondary research and diagnostics.",
-        f"Pane: {pane_label}   Tab/Shift+Tab switch pane   E/I choose Editor tool   B Sandbox   P Play   Enter plays from Play",
-        "F8 resets the current dimension's Explorer play settings to the configured defaults",
-        *move_lines,
-    ]
+    lines = list(_workspace_helper_lines(state))
     if _controls_pane_active(state):
-        lines.append(
-            "Analysis view (secondary): adjust settings, workspace-owned contextual controls, and Save/Export/Experiments/Back here   Status rows only report the current seam context"
-        )
-    else:
-        lines.append(
-            "Explorer workspace (primary): the right-side helper stays keys-first, Editor movement always updates the safe probe/selection target, and Edit still requires explicit Apply/Remove"
-        )
+        lines.append(PANE_LABELS.get(state.active_pane, state.active_pane.title()))
     availability = scene_camera_availability(state.dimension)
     if availability.enabled:
-        lines.append(
-            "Projection sync: selecting a cell in any panel updates all visible slices "
-            "and movement previews together"
-        )
-    lines.extend(_workspace_helper_lines(state))
-    if tool_is_sandbox(state.active_tool):
-        lines.append(
-            "Sandbox tool: movement keys and the footer grid move the piece, gameplay rotation keys rotate it, Space or ] next piece, [ previous piece, 0 resets"
-        )
-    lines.append(
-        "Workspace-owned contextual controls live in Analysis View: Editor owns Trace, Sandbox owns Neighbors, and the scene action bar stays focused on probe/apply, piece, or play actions"
-    )
-    lines.append(
-        "Explorer Preset is adjusted from Analysis View   Transform editor only shows the current preset while editing the draft transform"
-    )
+        lines.append(f"{state.dimension}D synced")
     return tuple(lines)

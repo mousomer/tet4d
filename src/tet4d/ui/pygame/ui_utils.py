@@ -33,6 +33,50 @@ def fit_text(font: pygame.font.Font, text: str, max_width: int) -> str:
     return trimmed + ellipsis if trimmed else ""
 
 
+def text_fits(font: pygame.font.Font, text: str, max_width: int) -> bool:
+    if max_width <= 0:
+        return False
+    return font.size(str(text))[0] <= int(max_width)
+
+
+def text_truncates(font: pygame.font.Font, text: str, max_width: int) -> bool:
+    return fit_text(font, str(text), int(max_width)) != str(text)
+
+
+def wrap_text_lines(
+    font: pygame.font.Font,
+    text: str,
+    max_width: int,
+) -> tuple[str, ...]:
+    if max_width <= 8:
+        return ("",)
+    raw = str(text).strip()
+    if not raw:
+        return ("",)
+    if font.size(raw)[0] <= max_width:
+        return (raw,)
+    words = raw.split()
+    if not words:
+        return ("",)
+    lines: list[str] = []
+    current = words[0]
+    for word in words[1:]:
+        candidate = f"{current} {word}"
+        if font.size(candidate)[0] <= max_width:
+            current = candidate
+            continue
+        lines.append(current)
+        current = word
+    lines.append(current)
+    wrapped: list[str] = []
+    for line in lines:
+        if font.size(line)[0] <= max_width:
+            wrapped.append(line)
+            continue
+        wrapped.append(fit_text(font, line, max_width))
+    return tuple(item for item in wrapped if item)
+
+
 def _gradient_surface(
     width: int, height: int, top_color: Color3, bottom_color: Color3
 ) -> pygame.Surface:

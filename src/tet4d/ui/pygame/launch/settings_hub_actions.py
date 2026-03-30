@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import pygame
 
+from tet4d.engine.runtime.topology_cache import (
+    clear_topology_cache,
+    topology_cache_usage,
+)
 from tet4d.engine.runtime.menu_settings_state import (
     ANIMATION_DURATION_MS_STEP,
     DEFAULT_GAME_SEED,
@@ -19,6 +23,10 @@ from tet4d.engine.runtime.menu_settings_state import (
 )
 from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
 from tet4d.engine.runtime.settings_schema import clamp_lines_per_level, sanitize_text
+from tet4d.engine.topology_explorer import movement_graph as movement_graph_module
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.menu.numeric_text_input import (
     append_numeric_text,
@@ -506,6 +514,43 @@ def _mark_advanced_gameplay_updated(state: _UnifiedSettingsState) -> None:
     play_sfx("menu_move")
 
 
+def _format_cache_bytes(total_bytes: int) -> str:
+    size = max(0, int(total_bytes))
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        return f"{size / 1024.0:.1f} KB"
+    return f"{size / (1024.0 * 1024.0):.2f} MB"
+
+
+def _measure_topology_cache(state: _UnifiedSettingsState) -> bool:
+    file_count, total_bytes = topology_cache_usage()
+    state.topology_cache_file_count = int(file_count)
+    state.topology_cache_size_bytes = int(total_bytes)
+    _set_unified_status(
+        state,
+        "Topology cache: "
+        f"{int(file_count)} files, {_format_cache_bytes(int(total_bytes))}",
+    )
+    play_sfx("menu_confirm")
+    return True
+
+
+def _clear_topology_cache_action(state: _UnifiedSettingsState) -> bool:
+    file_count, total_bytes = clear_topology_cache()
+    movement_graph_module._build_movement_graph_rows.cache_clear()
+    build_explorer_transport_resolver.cache_clear()
+    state.topology_cache_file_count = 0
+    state.topology_cache_size_bytes = 0
+    _set_unified_status(
+        state,
+        "Cleared topology cache: "
+        f"{int(file_count)} files, {_format_cache_bytes(int(total_bytes))}",
+    )
+    play_sfx("menu_confirm")
+    return True
+
+
 def _apply_advanced_gameplay_adjustment(
     state: _UnifiedSettingsState,
     *,
@@ -556,6 +601,14 @@ def _handle_advanced_gameplay_event(
         )
         return selected, True
     if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        action_rows = {
+            "topology_cache_measure": _measure_topology_cache,
+            "topology_cache_clear": _clear_topology_cache_action,
+        }
+        action = action_rows.get(row_keys[selected])
+        if action is not None:
+            action(state)
+            return selected, True
         _apply_advanced_gameplay_adjustment(
             state,
             row_key=row_keys[selected],

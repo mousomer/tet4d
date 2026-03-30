@@ -10,11 +10,12 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     normalize_display_settings,
 )
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text, wrap_text_lines
 
 from .settings_hub_actions import (
     _adjust_unified_with_arrows,
     _apply_unified_numeric_text_value,
+    _format_cache_bytes,
     _handle_advanced_gameplay_event,
     _handle_unified_text_input,
     _is_unified_text_mode,
@@ -55,6 +56,81 @@ def _draw_gradient(surface: pygame.Surface) -> None:
 
 def _format_animation_duration(value: int) -> str:
     return "Off" if int(value) <= 0 else f"{int(value)} ms"
+
+
+def _format_topology_cache_measure_value(state: _UnifiedSettingsState) -> str:
+    total_bytes = state.topology_cache_size_bytes
+    if total_bytes is None:
+        return "Enter"
+    return (
+        f"{int(state.topology_cache_file_count)} files / "
+        f"{_format_cache_bytes(int(total_bytes))}"
+    )
+
+
+_ADVANCED_GAMEPLAY_ROWS = (
+    ("rotation_animation_mode", "Rotation animation mode"),
+    ("kick_level_index", "Kick permissiveness"),
+    ("rotation_animation_duration_ms_2d", "2D rotation animation"),
+    ("rotation_animation_duration_ms_nd", "ND rotation animation"),
+    ("translation_animation_duration_ms", "Translation animation"),
+    ("auto_speedup_enabled", "Auto speed-up by clears"),
+    ("lines_per_level", "Lines per level"),
+    ("topology_cache_measure", "Measure topology cache"),
+    ("topology_cache_clear", "Clear topology cache"),
+)
+
+
+def _advanced_gameplay_value_text(
+    state: _UnifiedSettingsState,
+    row_key: str,
+) -> str:
+    if row_key == "kick_level_index":
+        safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
+        return _KICK_LEVEL_LABELS[safe_index]
+    if row_key == "rotation_animation_mode":
+        return rotation_animation_mode_label(state.rotation_animation_mode)
+    if row_key == "rotation_animation_duration_ms_2d":
+        return _format_animation_duration(int(state.rotation_animation_duration_ms_2d))
+    if row_key == "rotation_animation_duration_ms_nd":
+        return _format_animation_duration(int(state.rotation_animation_duration_ms_nd))
+    if row_key == "translation_animation_duration_ms":
+        return _format_animation_duration(int(state.translation_animation_duration_ms))
+    if row_key == "auto_speedup_enabled":
+        return "ON" if int(state.auto_speedup_enabled) else "OFF"
+    if row_key == "topology_cache_measure":
+        return _format_topology_cache_measure_value(state)
+    if row_key == "topology_cache_clear":
+        return "Enter"
+    return str(int(state.lines_per_level))
+
+
+def _wrapped_settings_row_layout(
+    font: pygame.font.Font,
+    *,
+    label: str,
+    value: str,
+    panel_w: int,
+) -> tuple[tuple[str, ...], tuple[str, ...], int]:
+    value_width = int(panel_w * 0.34) if value else 0
+    value_lines = (
+        wrap_text_lines(font, value, value_width)
+        if value
+        else tuple()
+    )
+    value_draw_width = (
+        max(font.size(line)[0] for line in value_lines)
+        if value_lines
+        else 0
+    )
+    label_width = max(
+        80,
+        panel_w - 44 - value_draw_width - 10 if value_draw_width > 0 else panel_w - 44,
+    )
+    label_lines = wrap_text_lines(font, label, label_width)
+    line_count = max(len(label_lines), len(value_lines), 1)
+    row_height = line_count * font.get_height() + max(10, 8 + (line_count - 1) * 3)
+    return label_lines, value_lines, row_height
 
 
 def _handle_unified_enter(
@@ -121,57 +197,55 @@ def _draw_advanced_gameplay_menu(
     screen.blit(title, ((width - title.get_width()) // 2, 60))
     screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 108))
 
-    rows = (
-        ("rotation_animation_mode", "Rotation animation mode"),
-        ("kick_level_index", "Kick permissiveness"),
-        ("rotation_animation_duration_ms_2d", "2D rotation animation"),
-        ("rotation_animation_duration_ms_nd", "ND rotation animation"),
-        ("translation_animation_duration_ms", "Translation animation"),
-        ("auto_speedup_enabled", "Auto speed-up by clears"),
-        ("lines_per_level", "Lines per level"),
-    )
     panel_w = min(760, max(420, width - 40))
-    panel_h = 436
+    required_content_h = sum(
+        _wrapped_settings_row_layout(
+            fonts.menu_font,
+            label=label,
+            value=_advanced_gameplay_value_text(state, row_key),
+            panel_w=panel_w,
+        )[2]
+        + 8
+        for row_key, label in _ADVANCED_GAMEPLAY_ROWS
+    )
+    panel_h = min(max(552, required_content_h + 44), max(420, screen.get_height() - 210))
     panel_x = (width - panel_w) // 2
     panel_y = 170
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
-    line_y = panel_y + 28
-    for idx, (row_key, label) in enumerate(rows):
+    line_y = panel_y + 22
+    row_gap = 8
+    for idx, (row_key, label) in enumerate(_ADVANCED_GAMEPLAY_ROWS):
         is_selected = idx == selected
         color = HIGHLIGHT_COLOR if is_selected else TEXT_COLOR
+        value = _advanced_gameplay_value_text(state, row_key)
+        label_lines, value_lines, row_height = _wrapped_settings_row_layout(
+            fonts.menu_font,
+            label=label,
+            value=value,
+            panel_w=panel_w,
+        )
+        row_rect = pygame.Rect(panel_x + 14, line_y - 5, panel_w - 28, row_height)
         if is_selected:
-            hi = pygame.Surface((panel_w - 28, 44), pygame.SRCALPHA)
+            hi = pygame.Surface((row_rect.width, row_rect.height), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, line_y - 5))
-        if row_key == "kick_level_index":
-            safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-            value = _KICK_LEVEL_LABELS[safe_index]
-        elif row_key == "rotation_animation_mode":
-            value = rotation_animation_mode_label(state.rotation_animation_mode)
-        elif row_key == "rotation_animation_duration_ms_2d":
-            value = _format_animation_duration(
-                int(state.rotation_animation_duration_ms_2d)
+            screen.blit(hi, row_rect.topleft)
+        label_y = line_y
+        for line in label_lines:
+            label_surf = fonts.menu_font.render(line, True, color)
+            screen.blit(label_surf, (panel_x + 22, label_y))
+            label_y += fonts.menu_font.get_height() + 3
+        value_y = line_y
+        for line in value_lines:
+            value_surf = fonts.menu_font.render(line, True, color)
+            screen.blit(
+                value_surf,
+                (panel_x + panel_w - value_surf.get_width() - 22, value_y),
             )
-        elif row_key == "rotation_animation_duration_ms_nd":
-            value = _format_animation_duration(
-                int(state.rotation_animation_duration_ms_nd)
-            )
-        elif row_key == "translation_animation_duration_ms":
-            value = _format_animation_duration(
-                int(state.translation_animation_duration_ms)
-            )
-        elif row_key == "auto_speedup_enabled":
-            value = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        else:
-            value = str(int(state.lines_per_level))
-        label_surf = fonts.menu_font.render(label, True, color)
-        value_surf = fonts.menu_font.render(value, True, color)
-        screen.blit(label_surf, (panel_x + 22, line_y))
-        screen.blit(value_surf, (panel_x + panel_w - value_surf.get_width() - 22, line_y))
-        line_y += 58
+            value_y += fonts.menu_font.get_height() + 3
+        line_y += row_height + row_gap
 
     if state.status:
         color = (255, 150, 150) if state.status_error else (170, 240, 170)
@@ -186,15 +260,7 @@ def run_advanced_gameplay_menu(
     state: _UnifiedSettingsState,
 ) -> pygame.Surface:
     selected = 0
-    row_keys = (
-        "rotation_animation_mode",
-        "kick_level_index",
-        "rotation_animation_duration_ms_2d",
-        "rotation_animation_duration_ms_nd",
-        "translation_animation_duration_ms",
-        "auto_speedup_enabled",
-        "lines_per_level",
-    )
+    row_keys = tuple(row_key for row_key, _label in _ADVANCED_GAMEPLAY_ROWS)
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -252,9 +318,22 @@ def _draw_unified_settings_menu(
         1 for kind, _label, _row_key in _UNIFIED_SETTINGS_ROWS if kind == "item"
     )
     header_step_default = fonts.hint_font.get_height() + 10
-    item_step_default = 46
-    required_default = (
-        18 + (header_count * header_step_default) + (item_count * item_step_default)
+    item_heights_default = [
+        _wrapped_settings_row_layout(
+            fonts.menu_font,
+            label=label,
+            value=_unified_value_text(state, row_key),
+            panel_w=panel_w,
+        )[2]
+        for kind, label, row_key in _UNIFIED_SETTINGS_ROWS
+        if kind == "item"
+    ]
+    item_step_default = max(
+        fonts.menu_font.get_height() + 8,
+        int(sum(item_heights_default) / max(1, len(item_heights_default))),
+    )
+    required_default = 18 + (header_count * header_step_default) + sum(
+        height + 6 for height in item_heights_default
     )
     scale = min(1.0, panel_max_h / max(1, required_default))
     header_step = max(
@@ -293,29 +372,35 @@ def _draw_unified_settings_menu(
         selected = idx == selected_row_idx
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
         if selected:
-            hi = pygame.Surface(
-                (panel_w - 28, fonts.menu_font.get_height() + 10), pygame.SRCALPHA
+            value = _unified_value_text(state, row_key)
+            label_lines, value_lines, row_height = _wrapped_settings_row_layout(
+                fonts.menu_font,
+                label=label,
+                value=value,
+                panel_w=panel_w,
             )
+            hi = pygame.Surface((panel_w - 28, row_height), pygame.SRCALPHA)
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
             screen.blit(hi, (panel_x + 14, y - 4))
-        value = _unified_value_text(state, row_key)
-        value_width = int(panel_w * 0.34) if value else 0
-        value_draw = fit_text(fonts.menu_font, value, value_width)
-        value_surf = (
-            fonts.menu_font.render(value_draw, True, color) if value_draw else None
-        )
-        value_x = label_right - (
-            value_surf.get_width() if value_surf is not None else 0
-        )
-        label_width = max(
-            80, value_x - label_left - 10 if value_surf is not None else panel_w - 44
-        )
-        label_draw = fit_text(fonts.menu_font, label, label_width)
-        label_surf = fonts.menu_font.render(label_draw, True, color)
-        screen.blit(label_surf, (label_left, y))
-        if value_surf is not None:
-            screen.blit(value_surf, (value_x, y))
-        y += item_step
+        else:
+            value = _unified_value_text(state, row_key)
+            label_lines, value_lines, row_height = _wrapped_settings_row_layout(
+                fonts.menu_font,
+                label=label,
+                value=value,
+                panel_w=panel_w,
+            )
+        label_y = y
+        for line in label_lines:
+            label_surf = fonts.menu_font.render(line, True, color)
+            screen.blit(label_surf, (label_left, label_y))
+            label_y += fonts.menu_font.get_height() + 3
+        value_y = y
+        for line in value_lines:
+            value_surf = fonts.menu_font.render(line, True, color)
+            screen.blit(value_surf, (label_right - value_surf.get_width(), value_y))
+            value_y += fonts.menu_font.get_height() + 3
+        y += row_height + max(6, item_step - row_height)
 
     hints = tuple(_SETTINGS_HUB_COPY["hints"])
     hy = panel_y + panel_h + 8
@@ -439,10 +524,12 @@ def run_settings_hub_menu(
     *,
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
+    initial_row_key: str | None = None,
 ) -> SettingsHubResult:
     state = build_unified_settings_state(
         audio_settings=audio_settings,
         display_settings=display_settings,
+        initial_row_key=initial_row_key,
     )
     ok_layout, msg_layout = _validate_unified_layout_against_policy()
     if not ok_layout:

@@ -29,7 +29,7 @@ class TestTopologyExplorerExperiments(unittest.TestCase):
         self.assertEqual(batch["experiment_count"], 7)
         self.assertEqual(batch["valid_experiment_count"], 7)
         self.assertEqual(batch["experiments"][0]["id"], "current_draft")
-        self.assertEqual(batch["recommendation"]["label"], "Wrap X,Y,Z")
+        self.assertEqual(batch["recommendation"]["label"], "3-Torus")
         self.assertIn("boundary traversals", batch["recommendation"]["reason"])
 
     def test_export_parallel_explorer_experiments_uses_precompiled_batch(self) -> None:

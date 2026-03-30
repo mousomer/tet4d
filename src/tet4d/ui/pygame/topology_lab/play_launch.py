@@ -8,6 +8,10 @@ from tet4d.engine.runtime.topology_playground_launch import (
 from tet4d.engine.runtime.topology_playground_state import TopologyPlaygroundState
 
 
+def _topology_playground_return_menu(screen: pygame.Surface, *_args, **_kwargs) -> tuple[str, pygame.Surface]:
+    return "menu", screen
+
+
 def launch_playground_state_gameplay(
     playground_state: TopologyPlaygroundState,
     screen: pygame.Surface,
@@ -25,21 +29,45 @@ def launch_playground_state_gameplay(
         open_display,
     )
 
-    cfg = build_gameplay_config_from_topology_playground_state(playground_state, exploration_mode = exploration_mode)
+    cfg = build_gameplay_config_from_topology_playground_state(
+        playground_state,
+        exploration_mode=exploration_mode,
+    )
+    pause_menu_runner = (
+        _topology_playground_return_menu if bool(exploration_mode) else None
+    )
     if playground_state.dimension == 2:
         play_fonts_2d = (
             fonts_2d if fonts_2d is not None else init_fonts_for_profile("2d")
         )
-        front2d_game.run_game_loop(screen, cfg, play_fonts_2d, display_settings)
+        front2d_game.run_game_loop(
+            screen,
+            cfg,
+            play_fonts_2d,
+            display_settings,
+            pause_menu_runner=pause_menu_runner,
+        )
     elif playground_state.dimension == 3:
-        front3d_game.run_game_loop(screen, cfg, fonts_nd)
+        front3d_game.run_game_loop(
+            screen,
+            cfg,
+            fonts_nd,
+            pause_menu_runner=pause_menu_runner,
+        )
     else:
-        front4d_game.run_game_loop(screen, cfg, fonts_nd)
+        front4d_game.run_game_loop(
+            screen,
+            cfg,
+            fonts_nd,
+            pause_menu_runner=pause_menu_runner,
+        )
 
     if display_settings is not None:
         display_settings = capture_windowed_display_settings(display_settings)
         screen = open_display(display_settings, caption=return_caption)
     return screen, display_settings
 
-
-__all__ = ["launch_playground_state_gameplay"]
+__all__ = [
+    "_topology_playground_return_menu",
+    "launch_playground_state_gameplay",
+]

@@ -61,6 +61,11 @@ class TestHelpTopics(unittest.TestCase):
                 topic_id = action_registry["action_topics"][action]
                 self.assertIn(topic_lanes[topic_id], {"quick", "full"})
 
+    def test_topology_playground_seam_topic_is_available_in_launcher_help(self) -> None:
+        topics = help_topics_for_context(dimension=4, context_label="Launcher")
+        topic_ids = {str(topic["id"]) for topic in topics}
+        self.assertIn("topology_playground_seams", topic_ids)
+
 
 if __name__ == "__main__":
     unittest.main()

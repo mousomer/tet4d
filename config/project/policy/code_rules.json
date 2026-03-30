@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "description": "Unified code rule manifest for sanitation, magic numbers, wheel reuse, dead code, and LOC guidance.",
+  "sanitation": {
+    "entrypoints": [
+      {
+        "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+        "required_any_tokens": [
+          "sanitize_text_runtime",
+          "_sanitize_text("
+        ],
+        "required_all_tokens": [
+          "append_numeric_text",
+          "parse_numeric_text"
+        ],
+        "severity": "error"
+      },
+      {
+        "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
+        "required_any_tokens": [
+          "sanitize_text_runtime"
+        ],
+        "required_all_tokens": [
+          "_sanitize_profile_name"
+        ],
+        "severity": "warning"
+      },
+      {
+        "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
+        "required_any_tokens": [
+          "sanitize_text_runtime"
+        ],
+        "required_all_tokens": [
+          "_NAME_MAX_LENGTH"
+        ],
+        "severity": "warning"
+      },
+      {
+        "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
+        "required_any_tokens": [
+          "sanitize_text("
+        ],
+        "required_all_tokens": [
+          "sanitize_text: SanitizeTextFn"
+        ],
+        "severity": "error"
+      }
+    ]
+  },
+  "magic_numbers": {
+    "entrypoints": [
+      {
+        "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+        "required_all_tokens": [
+          "clamp_game_seed",
+          "clamp_overlay_transparency",
+          "clamp_lines_per_level",
+          "GAME_SEED_STEP"
+        ],
+        "forbidden_regex": [
+          "\\b999_?999_?999\\b",
+          "\\b0\\.85\\b"
+        ],
+        "severity": "error"
+      },
+      {
+        "path": "src/tet4d/engine/runtime/settings_schema.py",
+        "required_all_tokens": [
+          "OVERLAY_TRANSPARENCY_MIN",
+          "OVERLAY_TRANSPARENCY_MAX",
+          "GAME_SEED_MIN",
+          "GAME_SEED_MAX",
+          "LINES_PER_LEVEL_MIN",
+          "LINES_PER_LEVEL_MAX"
+        ],
+        "forbidden_regex": [],
+        "severity": "warning"
+      }
+    ]
+  },
+  "wheel_reuse": {
+    "exception_marker": "Wheel Exception:",
+    "rules": [
+      {
+        "id": "parsing_validation_reuse",
+        "description": "Prefer stdlib or existing repo helpers for parsing and validation rather than ad-hoc local variants.",
+        "scope_globs": [
+          "src/tet4d/ui/pygame/launch/*.py",
+          "src/tet4d/ui/pygame/menu/*.py",
+          "src/tet4d/engine/tutorial/*.py",
+          "tools/**/*.py",
+          "scripts/**/*.py"
+        ],
+        "forbidden_regex": [
+          "\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)",
+          "if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\(",
+          "if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("
+        ],
+        "ast_detectors": [
+          "custom_bool_parser",
+          "custom_numeric_text_parser"
+        ],
+        "prefer_symbols": [
+          "tet4d.engine.runtime.settings_schema",
+          "sanitize_text_runtime",
+          "append_numeric_text",
+          "parse_numeric_text",
+          "tet4d.engine.runtime.project_config"
+        ]
+      },
+      {
+        "id": "normalization_reuse",
+        "description": "Do not duplicate local sanitization and normalization pipelines where shared helpers exist.",
+        "scope_globs": [
+          "src/tet4d/ui/pygame/**/*.py",
+          "src/tet4d/engine/runtime/**/*.py",
+          "tools/governance/*.py"
+        ],
+        "forbidden_regex": [
+          "re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)",
+          "\\.replace\\([^\\n]*\\)\\.replace\\([^\\n]*\\)\\.strip\\(\\)"
+        ],
+        "ast_detectors": [],
+        "prefer_symbols": [
+          "sanitize_text",
+          "sanitize_text_runtime",
+          "sanitize_state_relative_path"
+        ]
+      },
+      {
+        "id": "path_and_config_reuse",
+        "description": "Use existing project config, path, and JSON helper flows before introducing custom wrappers.",
+        "scope_globs": [
+          "src/tet4d/ui/pygame/**/*.py",
+          "src/tet4d/engine/runtime/**/*.py",
+          "tools/governance/*.py",
+          "scripts/**/*.py"
+        ],
+        "forbidden_regex": [
+          "Path\\(__file__\\)\\.parent\\.parent\\.parent",
+          "open\\([^\\n]*\\)\\.read\\(\\)\\s*\\n\\s*json\\.loads\\("
+        ],
+        "ast_detectors": [],
+        "prefer_symbols": [
+          "project_path",
+          "state_relative_path",
+          "read_json_object_or_empty",
+          "atomic_write_json"
+        ]
+      },
+      {
+        "id": "algorithm_utility_reuse",
+        "description": "Prefer stdlib functional utilities over ad-hoc rewrites for common collection transforms.",
+        "scope_globs": [
+          "src/tet4d/engine/runtime/**/*.py",
+          "tools/governance/*.py"
+        ],
+        "forbidden_regex": [
+          "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(",
+          "for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*continue\\s*\\n[ \\t]*\\w+\\.append\\("
+        ],
+        "ast_detectors": [],
+        "prefer_symbols": [
+          "set(",
+          "dict.fromkeys",
+          "collections"
+        ]
+      }
+    ]
+  },
+  "dead_code": {
+    "forbidden_paths": [
+      "tetris_nd/"
+    ],
+    "todo_rule": {
+      "scope_globs": [
+        "src/**/*.py",
+        "tools/**/*.py",
+        "scripts/**/*.py"
+      ],
+      "ignore_globs": [
+        "tools/governance/check_dedup_dead_code_rules.py",
+        "tests/**/*.py"
+      ],
+      "token_regex": "\\b(?:TODO|FIXME)\\b",
+      "required_backlog_regex": "\\[BKL-[^\\]]+\\]"
+    },
+    "duplicate_functions": {
+      "enabled": true,
+      "strict_scope_globs": [
+        "tools/governance/*.py"
+      ],
+      "advisory_scope_globs": [
+        "src/tet4d/engine/runtime/*.py"
+      ],
+      "min_body_lines": 12,
+      "max_allowed_duplicates_per_signature": 1,
+      "exclude_function_names": [
+        "main"
+      ]
+    }
+  },
+  "loc_guidance": {
+    "mode": "soft_warning",
+    "default_batch_type": "mixed",
+    "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
+    "include_extensions": [
+      ".py"
+    ],
+    "buckets": {
+      "src": "src/",
+      "tests": "tests/",
+      "tools_scripts": "tools/|scripts/"
+    },
+    "thresholds": {
+      "feature": {
+        "src": 500,
+        "tests": 250,
+        "tools_scripts": 150
+      },
+      "bugfix": {
+        "src": 250,
+        "tests": 150,
+        "tools_scripts": 120
+      },
+      "refactor_only": {
+        "src": 0,
+        "tests": 0,
+        "tools_scripts": 0
+      },
+      "mixed": {
+        "src": 300,
+        "tests": 180,
+        "tools_scripts": 120
+      },
+      "governance": {
+        "src": 0,
+        "tests": 80,
+        "tools_scripts": 200
+      }
+    }
+  }
+}

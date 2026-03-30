@@ -48,8 +48,8 @@ Last verified: 2026-02-20
 ## 4. Active plan artifacts
 
 1. Help/menu restructuring report and execution plan:
-2. `docs/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
+2. `docs/history/plans/PLAN_HELP_AND_MENU_RESTRUCTURE_2026-02-19.md`
 3. Menu rehaul v2 and macbook no-keypad controls plan:
-4. `docs/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
+4. `docs/history/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`
 5. Unreferenced-helper and dedup follow-up plan:
-6. `docs/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`
+6. `docs/history/plans/PLAN_UNREFERENCED_HELPERS_AND_CODE_REDUCTION_2026-02-19.md`

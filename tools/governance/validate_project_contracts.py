@@ -9,21 +9,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
-PACK_PATH = PROJECT_ROOT / "config/project/policy/pack.json"
+GOVERNANCE_PATH = PROJECT_ROOT / "config/project/policy/governance.json"
+CODE_RULES_PATH = PROJECT_ROOT / "config/project/policy/code_rules.json"
 MANIFEST_PATH = (
     PROJECT_ROOT / "config/project/policy/manifests/canonical_maintenance.json"
-)
-CONTEXT_ROUTER_PATH = (
-    PROJECT_ROOT / "config/project/policy/manifests/context_router_manifest.json"
-)
-CONTRIBUTOR_DIRECTIVES_PATH = (
-    PROJECT_ROOT / "config/project/policy/manifests/contributor_directives.json"
-)
-PROJECT_POLICY_PATH = (
-    PROJECT_ROOT / "config/project/policy/manifests/project_policy.json"
-)
-POLICY_REGISTRY_PATH = (
-    PROJECT_ROOT / "config/project/policy/manifests/policy_registry.json"
 )
 POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
@@ -33,20 +22,6 @@ POLICY_LITERAL_SAFETY_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"/" + r"home/"), "unix_home_path"),
     (re.compile(r"[A-Za-z]:" + r"\\"), "windows_drive_prefix"),
 )
-ALLOWED_CONTEXT_IDS = {
-    "code",
-    "tests",
-    "build_packaging",
-    "policy_contracts",
-    "docs_design",
-    "assets_fixtures",
-    "environment",
-    "git_state",
-    "git_history",
-    "runtime_evidence",
-    "session_decisions",
-    "planning",
-}
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 if str(SRC_ROOT) not in sys.path:
@@ -59,130 +34,14 @@ class ValidationIssue:
     message: str
 
 
-def _load_pack() -> dict[str, object]:
+def _load_json_payload(
+    path: Path, rel: str, issues: list[ValidationIssue]
+) -> object | None:
     try:
-        payload = json.loads(PACK_PATH.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise SystemExit(f"Missing policy pack: {PACK_PATH}") from exc
+        return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"Invalid JSON in {PACK_PATH}: {exc}") from exc
-    return payload
-
-
-def _validate_pack_components(pack: dict[str, object]) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    components = pack.get("components")
-    if not isinstance(components, list):
-        return [ValidationIssue("schema", "'components' must be a list")]
-
-    seen_ids: set[str] = set()
-    for idx, comp in enumerate(components):
-        if not isinstance(comp, dict):
-            issues.append(
-                ValidationIssue("schema", f"components[{idx}] must be an object")
-            )
-            continue
-        comp_id = comp.get("id")
-        comp_path = comp.get("path")
-        context_id = comp.get("context_id")
-        if not isinstance(comp_id, str) or not comp_id:
-            issues.append(
-                ValidationIssue(
-                    "schema", f"components[{idx}].id must be a non-empty string"
-                )
-            )
-        elif comp_id in seen_ids:
-            issues.append(
-                ValidationIssue("duplicate", f"duplicate component id: {comp_id}")
-            )
-        else:
-            seen_ids.add(comp_id)
-        if not isinstance(comp_path, str) or not comp_path:
-            issues.append(
-                ValidationIssue(
-                    "schema", f"components[{idx}].path must be a non-empty string"
-                )
-            )
-        if not isinstance(context_id, str) or context_id not in ALLOWED_CONTEXT_IDS:
-            issues.append(
-                ValidationIssue(
-                    "schema",
-                    f"components[{idx}].context_id must be one of {sorted(ALLOWED_CONTEXT_IDS)}",
-                )
-            )
-    return issues
-
-
-def _load_component_payloads(
-    pack: dict[str, object], issues: list[ValidationIssue]
-) -> dict[str, object]:
-    payloads: dict[str, object] = {}
-    components = pack.get("components")
-    if not isinstance(components, list):
-        return payloads
-    for comp in components:
-        if not isinstance(comp, dict):
-            continue
-        rel = comp.get("path")
-        if not isinstance(rel, str):
-            continue
-        path = PROJECT_ROOT / rel
-        if not path.exists():
-            issues.append(
-                ValidationIssue("missing_component", f"missing component file: {rel}")
-            )
-            continue
-        payload = _load_json_payload(path, rel, issues)
-        if payload is None:
-            continue
-        payloads[rel] = payload
-    return payloads
-
-
-def _walk_strings(
-    obj: object, rel: str, issues: list[ValidationIssue], forbidden_tokens: list[str]
-) -> None:
-    stack: list[object] = [obj]
-    while stack:
-        current = stack.pop()
-        if isinstance(current, dict):
-            stack.extend(current.values())
-        elif isinstance(current, list):
-            stack.extend(current)
-        elif isinstance(current, str):
-            for token in forbidden_tokens:
-                if token and token in current:
-                    issues.append(
-                        ValidationIssue(
-                            "forbidden",
-                            f"{rel} contains forbidden token: {token!r}",
-                        )
-                    )
-
-
-def _validate_pack_constraints(
-    pack: dict[str, object], payloads: dict[str, object]
-) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    constraints = pack.get("constraints", {})
-    if not isinstance(constraints, dict):
-        return [ValidationIssue("schema", "'constraints' must be an object")]
-
-    forbidden_tokens: list[str] = []
-    forbidden_tokens.extend(constraints.get("forbidden_module_prefixes", []) or [])
-    forbidden_tokens.extend(constraints.get("forbidden_paths", []) or [])
-    forbidden_tokens = [t for t in forbidden_tokens if isinstance(t, str) and t]
-
-    if not forbidden_tokens:
-        return issues
-
-    for rel, payload in payloads.items():
-        if rel.endswith("canonical_maintenance.json") or rel.endswith(
-            "dedup_dead_code_rules.json"
-        ):
-            continue
-        _walk_strings(payload, rel, issues, forbidden_tokens)
-    return issues
+        issues.append(ValidationIssue("json", f"{rel} is not valid JSON: {exc}"))
+        return None
 
 
 def _load_manifest() -> dict[str, object]:
@@ -192,6 +51,24 @@ def _load_manifest() -> dict[str, object]:
         raise SystemExit(f"Missing manifest: {MANIFEST_PATH}") from exc
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Invalid JSON in {MANIFEST_PATH}: {exc}") from exc
+    return payload
+
+
+def _load_governance(issues: list[ValidationIssue]) -> dict[str, object] | None:
+    rel = "config/project/policy/governance.json"
+    payload = _load_json_payload(GOVERNANCE_PATH, rel, issues)
+    if not isinstance(payload, dict):
+        issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
+        return None
+    return payload
+
+
+def _load_code_rules(issues: list[ValidationIssue]) -> dict[str, object] | None:
+    rel = "config/project/policy/code_rules.json"
+    payload = _load_json_payload(CODE_RULES_PATH, rel, issues)
+    if not isinstance(payload, dict):
+        issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
+        return None
     return payload
 
 
@@ -246,16 +123,6 @@ def _iter_required_paths(manifest: dict[str, object]) -> list[str]:
     return rels
 
 
-def _load_json_payload(
-    path: Path, rel: str, issues: list[ValidationIssue]
-) -> object | None:
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        issues.append(ValidationIssue("json", f"{rel} is not valid JSON: {exc}"))
-        return None
-
-
 def _validate_schema_payload(
     rel: str, payload: object, issues: list[ValidationIssue]
 ) -> None:
@@ -292,7 +159,6 @@ def _validate_required_json_files(manifest: dict[str, object]) -> list[Validatio
         payload = _load_json_payload(path, rel, issues)
         if payload is None:
             continue
-
         _validate_schema_payload(rel, payload, issues)
         _validate_replay_manifest_payload(rel, payload, issues)
     return issues
@@ -585,592 +451,6 @@ def _validate_canonical_candidates(
     return issues
 
 
-def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    content_rules = manifest.get("content_rules", [])
-    if not isinstance(content_rules, list):
-        return [ValidationIssue("schema", "'content_rules' must be a list")]
-
-    for index, rule in enumerate(content_rules, start=1):
-        parsed = _parse_content_rule(index, rule)
-        if isinstance(parsed, ValidationIssue):
-            issues.append(parsed)
-            continue
-        rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes = parsed
-        path = PROJECT_ROOT / rel
-        if not path.exists():
-            issues.append(
-                ValidationIssue("missing", f"content rule file does not exist: {rel}")
-            )
-            continue
-        _validate_text_rules(
-            path,
-            rel,
-            tokens,
-            forbidden_tokens,
-            required_regexes,
-            forbidden_regexes,
-            issues,
-        )
-    return issues
-
-
-def _validate_backlog_id_uniqueness() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    rel = "docs/BACKLOG.md"
-    path = PROJECT_ROOT / rel
-    if not path.exists():
-        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
-        return issues
-
-    text = path.read_text(encoding="utf-8")
-    ids = re.findall(r"\[(BKL-[A-Z0-9-]+)\]", text)
-    seen: dict[str, int] = {}
-    duplicates: dict[str, int] = {}
-    for backlog_id in ids:
-        seen[backlog_id] = seen.get(backlog_id, 0) + 1
-        if seen[backlog_id] > 1:
-            duplicates[backlog_id] = seen[backlog_id]
-    for backlog_id in sorted(duplicates):
-        issues.append(
-            ValidationIssue(
-                "duplicate",
-                f"{rel} has duplicated backlog id {backlog_id} "
-                f"({duplicates[backlog_id]} occurrences)",
-            )
-        )
-    return issues
-
-
-def _validate_context_entry(
-    idx: int, raw_context: object, issues: list[ValidationIssue], seen_ids: set[str]
-) -> None:
-    if not isinstance(raw_context, dict):
-        issues.append(ValidationIssue("schema", f"contexts[{idx}] must be an object"))
-        return
-    context_id = raw_context.get("id")
-    if not isinstance(context_id, str) or context_id not in ALLOWED_CONTEXT_IDS:
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"contexts[{idx}].id must be one of {sorted(ALLOWED_CONTEXT_IDS)}",
-            )
-        )
-        return
-    if context_id in seen_ids:
-        issues.append(
-            ValidationIssue("duplicate", f"duplicate context id: {context_id}")
-        )
-    seen_ids.add(context_id)
-
-    for field_name in ("include_globs", "exclude_globs"):
-        value = raw_context.get(field_name)
-        if not isinstance(value, list) or any(
-            not isinstance(token, str) for token in value
-        ):
-            issues.append(
-                ValidationIssue(
-                    "schema", f"contexts[{idx}].{field_name} must be a list[str]"
-                )
-            )
-    priority = raw_context.get("priority")
-    if isinstance(priority, bool) or not isinstance(priority, int) or priority < 1:
-        issues.append(
-            ValidationIssue(
-                "schema", f"contexts[{idx}].priority must be an integer >= 1"
-            )
-        )
-    tool_required = raw_context.get("tool_required", False)
-    if not isinstance(tool_required, bool):
-        issues.append(
-            ValidationIssue(
-                "schema", f"contexts[{idx}].tool_required must be a boolean"
-            )
-        )
-    tool_hints = raw_context.get("tool_hints", [])
-    if not isinstance(tool_hints, list) or any(
-        not isinstance(hint, str) for hint in tool_hints
-    ):
-        issues.append(
-            ValidationIssue("schema", f"contexts[{idx}].tool_hints must be list[str]")
-        )
-
-
-def _collect_context_router_ids(
-    payload: dict[str, object], issues: list[ValidationIssue]
-) -> set[str]:
-    contexts = payload.get("contexts")
-    if not isinstance(contexts, list) or not contexts:
-        issues.append(
-            ValidationIssue(
-                "schema", "context_router_manifest.contexts must be a non-empty list"
-            )
-        )
-        return set()
-    seen_ids: set[str] = set()
-    for idx, raw_context in enumerate(contexts, start=1):
-        _validate_context_entry(idx, raw_context, issues, seen_ids)
-    return seen_ids
-
-
-def _validate_context_router_rule(
-    idx: int,
-    raw_rule: object,
-    known_context_ids: set[str],
-    issues: list[ValidationIssue],
-) -> None:
-    if not isinstance(raw_rule, dict):
-        issues.append(
-            ValidationIssue("schema", f"routing_rules[{idx}] must be an object")
-        )
-        return
-    tags = raw_rule.get("when_task_tags_any")
-    if (
-        not isinstance(tags, list)
-        or not tags
-        or any(not isinstance(tag, str) for tag in tags)
-    ):
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"routing_rules[{idx}].when_task_tags_any must be a non-empty list[str]",
-            )
-        )
-    include_contexts = raw_rule.get("include_contexts_ordered")
-    if (
-        not isinstance(include_contexts, list)
-        or not include_contexts
-        or any(not isinstance(context_id, str) for context_id in include_contexts)
-    ):
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"routing_rules[{idx}].include_contexts_ordered must be a non-empty list[str]",
-            )
-        )
-        return
-    unknown = [
-        context_id
-        for context_id in include_contexts
-        if context_id not in known_context_ids
-    ]
-    if unknown:
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"routing_rules[{idx}] references unknown contexts: {', '.join(sorted(set(unknown)))}",
-            )
-        )
-
-
-def _validate_context_router_rules(
-    payload: dict[str, object],
-    *,
-    known_context_ids: set[str],
-    issues: list[ValidationIssue],
-) -> None:
-    routing_rules = payload.get("routing_rules")
-    if not isinstance(routing_rules, list) or not routing_rules:
-        issues.append(
-            ValidationIssue(
-                "schema",
-                "context_router_manifest.routing_rules must be a non-empty list",
-            )
-        )
-        return
-    for idx, raw_rule in enumerate(routing_rules, start=1):
-        _validate_context_router_rule(idx, raw_rule, known_context_ids, issues)
-
-
-def _validate_context_router_manifest() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    rel = "config/project/policy/manifests/context_router_manifest.json"
-    path = CONTEXT_ROUTER_PATH
-    if not path.exists():
-        return [ValidationIssue("missing", f"missing required path: {rel}")]
-    payload = _load_json_payload(path, rel, issues)
-    if not isinstance(payload, dict):
-        return issues
-    schema_version = payload.get("schema_version")
-    if not isinstance(schema_version, str) or not schema_version.strip():
-        issues.append(
-            ValidationIssue("schema", "context_router_manifest.schema_version required")
-        )
-    context_ids = _collect_context_router_ids(payload, issues)
-    _validate_context_router_rules(
-        payload, known_context_ids=context_ids, issues=issues
-    )
-    return issues
-
-
-def _validate_contributor_directives_manifest() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    rel = "config/project/policy/manifests/contributor_directives.json"
-    path = CONTRIBUTOR_DIRECTIVES_PATH
-    if not path.exists():
-        return [ValidationIssue("missing", f"missing required path: {rel}")]
-    payload = _load_json_payload(path, rel, issues)
-    if not isinstance(payload, dict):
-        return issues
-
-    schema_version = payload.get("schema_version")
-    if isinstance(schema_version, bool) or not isinstance(schema_version, int):
-        issues.append(
-            ValidationIssue("schema", f"{rel}.schema_version must be an integer")
-        )
-
-    directives = payload.get("directives")
-    if not isinstance(directives, list) or not directives:
-        issues.append(
-            ValidationIssue("schema", f"{rel}.directives must be a non-empty list")
-        )
-        return issues
-
-    seen_ids: set[str] = set()
-    for idx, raw in enumerate(directives, start=1):
-        _validate_contributor_directive_entry(
-            rel=rel,
-            idx=idx,
-            raw=raw,
-            seen_ids=seen_ids,
-            issues=issues,
-        )
-    return issues
-
-
-def _validate_policy_index_sync() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    policy_rel = "config/project/policy/manifests/project_policy.json"
-    policy_payload = _load_json_payload(PROJECT_POLICY_PATH, policy_rel, issues)
-    if not isinstance(policy_payload, dict):
-        return issues
-
-    index_rel = "docs/policies/INDEX.md"
-    if not POLICY_INDEX_PATH.exists():
-        return [ValidationIssue("missing", f"missing required path: {index_rel}")]
-    index_text = POLICY_INDEX_PATH.read_text(encoding="utf-8")
-
-    policy_pack = policy_payload.get("policy_pack", {})
-    if not isinstance(policy_pack, dict):
-        issues.append(
-            ValidationIssue("schema", f"{policy_rel}.policy_pack must be object")
-        )
-        return issues
-
-    for raw in policy_pack.get("policies", []):
-        if not isinstance(raw, dict):
-            continue
-        policy_id = raw.get("id")
-        if (
-            isinstance(policy_id, str)
-            and policy_id
-            and f"`{policy_id}`" not in index_text
-        ):
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{index_rel} missing policy id token: `{policy_id}`",
-                )
-            )
-
-    for raw in policy_pack.get("contracts", []):
-        if not isinstance(raw, dict):
-            continue
-        contract_path = raw.get("path")
-        if (
-            isinstance(contract_path, str)
-            and contract_path
-            and contract_path not in index_text
-        ):
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{index_rel} missing contract path token: {contract_path}",
-                )
-            )
-    return issues
-
-
-def _normalized_entries(value: object) -> list[tuple[str, str, str]]:
-    if not isinstance(value, list):
-        return []
-    out: list[tuple[str, str, str]] = []
-    for raw in value:
-        if not isinstance(raw, dict):
-            continue
-        item_id = raw.get("id")
-        path = raw.get("path") or raw.get("source")
-        validator = raw.get("validated_by") or ""
-        if not isinstance(item_id, str) or not isinstance(path, str):
-            continue
-        out.append((item_id, path, str(validator)))
-    return sorted(out)
-
-
-def _validate_policy_registry_sync() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    policy_rel = "config/project/policy/manifests/project_policy.json"
-    registry_rel = "config/project/policy/manifests/policy_registry.json"
-    policy_payload = _load_json_payload(PROJECT_POLICY_PATH, policy_rel, issues)
-    registry_payload = _load_json_payload(POLICY_REGISTRY_PATH, registry_rel, issues)
-    if not isinstance(policy_payload, dict) or not isinstance(registry_payload, dict):
-        return issues
-
-    policy_pack = policy_payload.get("policy_pack", {})
-    if not isinstance(policy_pack, dict):
-        issues.append(
-            ValidationIssue("schema", f"{policy_rel}.policy_pack must be object")
-        )
-        return issues
-
-    registry_ref = policy_pack.get("registry_manifest")
-    if registry_ref != registry_rel:
-        issues.append(
-            ValidationIssue(
-                "content",
-                f"{policy_rel}.policy_pack.registry_manifest must be '{registry_rel}'",
-            )
-        )
-
-    policy_policies = _normalized_entries(policy_pack.get("policies"))
-    policy_contracts = _normalized_entries(policy_pack.get("contracts"))
-    registry_policies = _normalized_entries(registry_payload.get("policies"))
-    registry_contracts = _normalized_entries(registry_payload.get("contracts"))
-
-    if policy_policies != registry_policies:
-        issues.append(
-            ValidationIssue(
-                "content",
-                f"{policy_rel}.policy_pack.policies is out of sync with {registry_rel}.policies",
-            )
-        )
-    if policy_contracts != registry_contracts:
-        issues.append(
-            ValidationIssue(
-                "content",
-                f"{policy_rel}.policy_pack.contracts is out of sync with {registry_rel}.contracts",
-            )
-        )
-    return issues
-
-
-def _iter_string_nodes(
-    value: object, *, path_prefix: str = ""
-) -> list[tuple[str, str]]:
-    nodes: list[tuple[str, str]] = []
-    if isinstance(value, dict):
-        for key, nested in value.items():
-            key_text = str(key)
-            nested_prefix = f"{path_prefix}.{key_text}" if path_prefix else key_text
-            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
-        return nodes
-    if isinstance(value, list):
-        for idx, nested in enumerate(value):
-            nested_prefix = f"{path_prefix}[{idx}]"
-            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
-        return nodes
-    if isinstance(value, str):
-        nodes.append((path_prefix or "$", value))
-    return nodes
-
-
-def _policy_manifest_rel_paths() -> list[str]:
-    rels = ["config/project/policy/pack.json"]
-    if POLICY_MANIFEST_DIR.exists():
-        rels.extend(
-            sorted(
-                f"config/project/policy/manifests/{path.name}"
-                for path in POLICY_MANIFEST_DIR.glob("*.json")
-            )
-        )
-    return rels
-
-
-def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    for rel in _policy_manifest_rel_paths():
-        path = PROJECT_ROOT / rel
-        if not path.exists():
-            continue
-        payload = _load_json_payload(path, rel, issues)
-        if payload is None:
-            continue
-        for key_path, text in _iter_string_nodes(payload):
-            for pattern, label in POLICY_LITERAL_SAFETY_PATTERNS:
-                if pattern.search(text) is None:
-                    continue
-                issues.append(
-                    ValidationIssue(
-                        "safety",
-                        (
-                            f"{rel}:{key_path} includes path-like literal "
-                            f"'{label}' that can break sanitation gates"
-                        ),
-                    )
-                )
-                break
-    return issues
-
-
-def _settings_hub_row_keys(menu_payload: dict[str, object]) -> set[str]:
-    keys: set[str] = set()
-    layout = menu_payload.get("settings_hub_layout_rows")
-    if not isinstance(layout, list):
-        return keys
-    for entry in layout:
-        if not isinstance(entry, dict):
-            continue
-        row_key = entry.get("row_key")
-        if isinstance(row_key, str) and row_key:
-            keys.add(row_key)
-    return keys
-
-
-def _setup_field_attrs(menu_payload: dict[str, object]) -> set[str]:
-    attrs: set[str] = set()
-    setup_fields = menu_payload.get("setup_fields")
-    if not isinstance(setup_fields, dict):
-        return attrs
-    for fields in setup_fields.values():
-        if not isinstance(fields, list):
-            continue
-        for field in fields:
-            if not isinstance(field, dict):
-                continue
-            attr = field.get("attr")
-            if isinstance(attr, str) and attr:
-                attrs.add(attr)
-    return attrs
-
-
-def _validate_menu_simplification_rule() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    policy_rel = "config/project/policy/manifests/project_policy.json"
-    policy_payload = _load_json_payload(PROJECT_POLICY_PATH, policy_rel, issues)
-    if not isinstance(policy_payload, dict):
-        return issues
-
-    rule = policy_payload.get("menu_simplification_manifest_rule")
-    if not isinstance(rule, dict):
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"{policy_rel}.menu_simplification_manifest_rule must be an object",
-            )
-        )
-        return issues
-
-    rule_id = rule.get("rule_id")
-    if rule_id != "menu-simplification-common-settings":
-        return issues
-
-    menu_rel = "config/menu/structure.json"
-    menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
-    if not isinstance(menu_payload, dict):
-        return issues
-
-    required_shared_row_keys = {
-        "game_seed",
-        "game_random_mode",
-        "gameplay_advanced",
-    }
-    hub_keys = _settings_hub_row_keys(menu_payload)
-    setup_attrs = _setup_field_attrs(menu_payload)
-
-    for row_key in sorted(required_shared_row_keys):
-        if row_key not in hub_keys:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    (
-                        f"{menu_rel} missing shared gameplay settings row: {row_key} "
-                        f"(required by menu_simplification_manifest_rule)"
-                    ),
-                )
-            )
-        if row_key in setup_attrs:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    (
-                        f"{menu_rel} setup_fields must not contain shared gameplay row: {row_key} "
-                        f"(must be centralized in settings hub)"
-                    ),
-                )
-            )
-    return issues
-
-
-def _is_non_empty_str(value: object) -> bool:
-    return isinstance(value, str) and bool(value.strip())
-
-
-def _is_non_empty_str_list(value: object) -> bool:
-    return (
-        isinstance(value, list)
-        and bool(value)
-        and all(isinstance(token, str) and bool(token.strip()) for token in value)
-    )
-
-
-def _validate_contributor_directive_entry(
-    *,
-    rel: str,
-    idx: int,
-    raw: object,
-    seen_ids: set[str],
-    issues: list[ValidationIssue],
-) -> None:
-    required_fields = ("id", "category", "statement", "source_docs", "enforced_by")
-    if not isinstance(raw, dict):
-        issues.append(
-            ValidationIssue("schema", f"{rel}.directives[{idx}] must be an object")
-        )
-        return
-
-    for field in required_fields:
-        if field not in raw:
-            issues.append(
-                ValidationIssue(
-                    "schema", f"{rel}.directives[{idx}] missing field: {field}"
-                )
-            )
-
-    directive_id = raw.get("id")
-    if not _is_non_empty_str(directive_id):
-        issues.append(
-            ValidationIssue(
-                "schema", f"{rel}.directives[{idx}].id must be a non-empty string"
-            )
-        )
-    elif directive_id in seen_ids:
-        issues.append(
-            ValidationIssue(
-                "duplicate", f"{rel} duplicate directive id: {directive_id}"
-            )
-        )
-    else:
-        seen_ids.add(directive_id)
-
-    for field in ("category", "statement"):
-        if not _is_non_empty_str(raw.get(field)):
-            issues.append(
-                ValidationIssue(
-                    "schema",
-                    f"{rel}.directives[{idx}].{field} must be a non-empty string",
-                )
-            )
-
-    for field in ("source_docs", "enforced_by"):
-        if not _is_non_empty_str_list(raw.get(field)):
-            issues.append(
-                ValidationIssue(
-                    "schema",
-                    f"{rel}.directives[{idx}].{field} must be a non-empty list[str]",
-                )
-            )
-
-
 def _as_string_list(value: object) -> list[str] | None:
     if not isinstance(value, list) or any(
         not isinstance(token, str) for token in value
@@ -1283,13 +563,356 @@ def _compile_pattern(
         return None
 
 
+def _validate_content_rules(manifest: dict[str, object]) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    content_rules = manifest.get("content_rules", [])
+    if not isinstance(content_rules, list):
+        return [ValidationIssue("schema", "'content_rules' must be a list")]
+
+    for index, rule in enumerate(content_rules, start=1):
+        parsed = _parse_content_rule(index, rule)
+        if isinstance(parsed, ValidationIssue):
+            issues.append(parsed)
+            continue
+        rel, tokens, forbidden_tokens, required_regexes, forbidden_regexes = parsed
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            issues.append(
+                ValidationIssue("missing", f"content rule file does not exist: {rel}")
+            )
+            continue
+        _validate_text_rules(
+            path,
+            rel,
+            tokens,
+            forbidden_tokens,
+            required_regexes,
+            forbidden_regexes,
+            issues,
+        )
+    return issues
+
+
+def _validate_backlog_id_uniqueness() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    rel = "docs/BACKLOG.md"
+    path = PROJECT_ROOT / rel
+    if not path.exists():
+        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+        return issues
+
+    text = path.read_text(encoding="utf-8")
+    ids = re.findall(r"\[(BKL-[A-Z0-9-]+)\]", text)
+    seen: dict[str, int] = {}
+    duplicates: dict[str, int] = {}
+    for backlog_id in ids:
+        seen[backlog_id] = seen.get(backlog_id, 0) + 1
+        if seen[backlog_id] > 1:
+            duplicates[backlog_id] = seen[backlog_id]
+    for backlog_id in sorted(duplicates):
+        issues.append(
+            ValidationIssue(
+                "duplicate",
+                f"{rel} has duplicated backlog id {backlog_id} "
+                f"({duplicates[backlog_id]} occurrences)",
+            )
+        )
+    return issues
+
+
+def _is_non_empty_str(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _is_non_empty_str_list(value: object) -> bool:
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(token, str) and bool(token.strip()) for token in value)
+    )
+
+
+def _validate_contributor_directive_entry(
+    *,
+    rel: str,
+    idx: int,
+    raw: object,
+    seen_ids: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    required_fields = ("id", "category", "statement", "source_docs", "enforced_by")
+    if not isinstance(raw, dict):
+        issues.append(
+            ValidationIssue("schema", f"{rel}.directives[{idx}] must be an object")
+        )
+        return
+
+    for field in required_fields:
+        if field not in raw:
+            issues.append(
+                ValidationIssue(
+                    "schema", f"{rel}.directives[{idx}] missing field: {field}"
+                )
+            )
+
+    directive_id = raw.get("id")
+    if not _is_non_empty_str(directive_id):
+        issues.append(
+            ValidationIssue(
+                "schema", f"{rel}.directives[{idx}].id must be a non-empty string"
+            )
+        )
+    elif directive_id in seen_ids:
+        issues.append(
+            ValidationIssue(
+                "duplicate", f"{rel} duplicate directive id: {directive_id}"
+            )
+        )
+    else:
+        seen_ids.add(directive_id)
+
+    for field in ("category", "statement"):
+        if not _is_non_empty_str(raw.get(field)):
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{rel}.directives[{idx}].{field} must be a non-empty string",
+                )
+            )
+
+    for field in ("source_docs", "enforced_by"):
+        if not _is_non_empty_str_list(raw.get(field)):
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{rel}.directives[{idx}].{field} must be a non-empty list[str]",
+                )
+            )
+
+
+def _validate_governance_directives() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    rel = "config/project/policy/governance.json"
+    payload = _load_json_payload(GOVERNANCE_PATH, rel, issues)
+    if not isinstance(payload, dict):
+        return issues
+
+    directives_block = payload.get("contributor_directives")
+    if not isinstance(directives_block, dict):
+        issues.append(
+            ValidationIssue("schema", f"{rel}.contributor_directives must be an object")
+        )
+        return issues
+
+    directives = directives_block.get("directives")
+    if not isinstance(directives, list) or not directives:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{rel}.contributor_directives.directives must be a non-empty list",
+            )
+        )
+        return issues
+
+    seen_ids: set[str] = set()
+    for idx, raw in enumerate(directives, start=1):
+        _validate_contributor_directive_entry(
+            rel=f"{rel}.contributor_directives",
+            idx=idx,
+            raw=raw,
+            seen_ids=seen_ids,
+            issues=issues,
+        )
+    return issues
+
+
+def _validate_policy_index_sync() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    governance = _load_governance(issues)
+    if governance is None:
+        return issues
+
+    index_rel = "docs/policies/INDEX.md"
+    if not POLICY_INDEX_PATH.exists():
+        return [ValidationIssue("missing", f"missing required path: {index_rel}")]
+    index_text = POLICY_INDEX_PATH.read_text(encoding="utf-8")
+
+    required_tokens = [
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
+        "config/project/policy/manifests/canonical_maintenance.json",
+        "config/project/policy/manifests/secret_scan.json",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
+    ]
+    contracts = governance.get("contracts")
+    if isinstance(contracts, dict):
+        required_tokens.extend(
+            value for value in contracts.values() if isinstance(value, str)
+        )
+
+    for token in sorted(set(required_tokens)):
+        if token not in index_text:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{index_rel} missing contract path token: {token}",
+                )
+            )
+    return issues
+
+
+def _iter_string_nodes(
+    value: object, *, path_prefix: str = ""
+) -> list[tuple[str, str]]:
+    nodes: list[tuple[str, str]] = []
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            key_text = str(key)
+            nested_prefix = f"{path_prefix}.{key_text}" if path_prefix else key_text
+            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
+        return nodes
+    if isinstance(value, list):
+        for idx, nested in enumerate(value):
+            nested_prefix = f"{path_prefix}[{idx}]"
+            nodes.extend(_iter_string_nodes(nested, path_prefix=nested_prefix))
+        return nodes
+    if isinstance(value, str):
+        nodes.append((path_prefix or "$", value))
+    return nodes
+
+
+def _policy_manifest_rel_paths() -> list[str]:
+    rels = [
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
+    ]
+    if POLICY_MANIFEST_DIR.exists():
+        rels.extend(
+            sorted(
+                f"config/project/policy/manifests/{path.name}"
+                for path in POLICY_MANIFEST_DIR.glob("*.json")
+            )
+        )
+    return rels
+
+
+def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _policy_manifest_rel_paths():
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            continue
+        payload = _load_json_payload(path, rel, issues)
+        if payload is None:
+            continue
+        for key_path, text in _iter_string_nodes(payload):
+            for pattern, label in POLICY_LITERAL_SAFETY_PATTERNS:
+                if pattern.search(text) is None:
+                    continue
+                issues.append(
+                    ValidationIssue(
+                        "safety",
+                        (
+                            f"{rel}:{key_path} includes path-like literal "
+                            f"'{label}' that can break sanitation gates"
+                        ),
+                    )
+                )
+                break
+    return issues
+
+
+def _settings_hub_row_keys(menu_payload: dict[str, object]) -> set[str]:
+    keys: set[str] = set()
+    layout = menu_payload.get("settings_hub_layout_rows")
+    if not isinstance(layout, list):
+        return keys
+    for entry in layout:
+        if not isinstance(entry, dict):
+            continue
+        row_key = entry.get("row_key")
+        if isinstance(row_key, str) and row_key:
+            keys.add(row_key)
+    return keys
+
+
+def _setup_field_attrs(menu_payload: dict[str, object]) -> set[str]:
+    attrs: set[str] = set()
+    setup_fields = menu_payload.get("setup_fields")
+    if not isinstance(setup_fields, dict):
+        return attrs
+    for fields in setup_fields.values():
+        if not isinstance(fields, list):
+            continue
+        for field in fields:
+            if not isinstance(field, dict):
+                continue
+            attr = field.get("attr")
+            if isinstance(attr, str) and attr:
+                attrs.add(attr)
+    return attrs
+
+
+def _validate_menu_simplification_rule() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    governance = _load_governance(issues)
+    if governance is None:
+        return issues
+
+    rule = governance.get("menu_simplification_manifest_rule")
+    if not isinstance(rule, dict):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                "config/project/policy/governance.json.menu_simplification_manifest_rule must be an object",
+            )
+        )
+        return issues
+
+    rule_id = rule.get("rule_id")
+    if rule_id != "menu-simplification-common-settings":
+        return issues
+
+    menu_rel = "config/menu/structure.json"
+    menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
+    if not isinstance(menu_payload, dict):
+        return issues
+
+    required_shared_row_keys = {
+        "game_seed",
+        "game_random_mode",
+        "gameplay_advanced",
+    }
+    hub_keys = _settings_hub_row_keys(menu_payload)
+    setup_attrs = _setup_field_attrs(menu_payload)
+
+    for row_key in sorted(required_shared_row_keys):
+        if row_key not in hub_keys:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    (
+                        f"{menu_rel} missing shared gameplay settings row: {row_key} "
+                        f"(required by menu_simplification_manifest_rule)"
+                    ),
+                )
+            )
+        if row_key in setup_attrs:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    (
+                        f"{menu_rel} setup_fields must not contain shared gameplay row: {row_key} "
+                        f"(must be centralized in settings hub)"
+                    ),
+                )
+            )
+    return issues
+
+
 def validate_manifest() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    pack = _load_pack()
-    issues.extend(_validate_pack_components(pack))
-    component_payloads = _load_component_payloads(pack, issues)
-    issues.extend(_validate_pack_constraints(pack, component_payloads))
-
     manifest = _load_manifest()
     issues.extend(_validate_required_paths(manifest))
     issues.extend(_validate_required_json_files(manifest))
@@ -1298,12 +921,11 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_canonical_candidates(manifest))
     issues.extend(_validate_content_rules(manifest))
     issues.extend(_validate_backlog_id_uniqueness())
-    issues.extend(_validate_context_router_manifest())
-    issues.extend(_validate_contributor_directives_manifest())
+    issues.extend(_validate_governance_directives())
     issues.extend(_validate_policy_index_sync())
-    issues.extend(_validate_policy_registry_sync())
     issues.extend(_validate_policy_manifest_string_safety())
     issues.extend(_validate_menu_simplification_rule())
+    _load_code_rules(issues)
     return issues
 
 
