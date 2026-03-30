@@ -16,9 +16,9 @@ Coverage:
 - `config/help/action_map.json`
 - `config/help/content/runtime_help_content.json`
 - `config/help/icon_map.json`
-- `config/help/layout/runtime_help_action_layout.json`
 - `config/help/layout/runtime_help_layout.json`
 - `config/help/topics.json`
+- `config/keybindings/catalog.json`
 - `config/keybindings/defaults.json`
 - `config/menu/defaults.json`
 - `config/menu/structure.json`
@@ -38,6 +38,7 @@ Coverage:
 - `config/topology/lab_menu.json`
 - `config/tutorial/lessons.json`
 - `config/tutorial/plan.json`
+- `config/ui/theme.json`
 
 ## Parameters
 
@@ -237,11 +238,8 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/help/content/runtime_help_content.json`
-Top-level keys: `action_group_headings`, `fallback_topic`, `topic_blocks`, `value_templates`, `version`
+Top-level keys: `fallback_topic`, `topic_blocks`, `value_templates`, `version`
 Parameters:
-- `action_group_headings.game_other`: `"Gameplay / Other"` (`string`)
-- `action_group_headings.game_rotation`: `"Gameplay / Rotation"` (`string`)
-- `action_group_headings.game_translation`: `"Gameplay / Translation"` (`string`)
 - `fallback_topic.id`: `"overview"` (`string`)
 - `fallback_topic.sections[]`: array[`object`]
 - `fallback_topic.sections[].id`: `"fallback"` (`string`)
@@ -300,26 +298,6 @@ Parameters:
 - `pack_root`: `"assets/help/icons/transform/svg"` (`string`)
 - `themes[]`: array[`string`]; examples: `"dark"`, `"light"`
 - `version`: `1` (`int`)
-
-### `config/help/layout/runtime_help_action_layout.json`
-Top-level keys: `meta`, `panels`, `tokens`
-Parameters:
-- `meta.schema_version`: `1` (`int`)
-- `panels[]`: array[`object`]
-- `panels[].id`: varies (`string`); examples: `"main"`, `"translation"`, `"rotation"`
-- `panels[].lines[]`: array[`object`]
-- `panels[].lines[].icon_action`: varies (`string`); examples: `"move_x_pos"`, `"move_z_neg"`, `"move_w_pos"`
-- `panels[].lines[].id`: varies (`string`); examples: `"main_menu"`, `"main_help"`, `"main_restart"`
-- `panels[].lines[].key_actions[]`: array[`string`]; examples: `"menu"`, `"help"`, `"restart"`
-- `panels[].lines[].modes[]`: array[`string`]; examples: `"2d"`, `"3d"`, `"4d"`
-- `panels[].lines[].order`: varies (`int`); examples: `10`, `20`, `30`
-- `panels[].lines[].requires[]`: array[`empty, string`]; examples: `"camera.enabled"`, `"slice.w.enabled"`, `"exploration.enabled"`
-- `panels[].lines[].template`: varies (`string`); examples: `"pause menu"`, `"help"`, `"restart"`
-- `panels[].modes[]`: array[`string`]; examples: `"2d"`, `"3d"`, `"4d"`
-- `panels[].order`: varies (`int`); examples: `10`, `20`, `30`
-- `panels[].requires[]`: array[`empty`]
-- `panels[].title`: varies (`string`); examples: `"Main"`, `"Translation"`, `"Rotation"`
-- `tokens.notes`: `"Helper membership/order is data-driven; capability gating is engine-...` (`string`)
 
 ### `config/help/layout/runtime_help_layout.json`
 Top-level keys: `colors`, `controls_helper_layout`, `footer_hints`, `geometry`, `header`, `labels`, `thresholds`, `topic_media_placement`, `topic_rules`, `version`
@@ -382,6 +360,292 @@ Parameters:
 - `topics[].sections[].title`: varies (`string`); examples: `"What"`, `"When to use"`, `"Keys"`
 - `topics[].summary`: varies (`string`); examples: `"Entry point and navigation for help content."`, `"Differences between 2D, 3D, and 4D modes."`, `"Translation, drop, and rotation controls."`
 - `topics[].title`: varies (`string`); examples: `"Help Overview"`, `"Game Types"`, `"Movement and Rotation"`
+- `version`: `1` (`int`)
+
+### `config/keybindings/catalog.json`
+Top-level keys: `actions`, `editor`, `groups`, `helper_layout`, `reference_groups`, `scopes`, `version`
+Parameters:
+- `actions.cycle_projection.description`: `"Cycle projection mode."` (`string`)
+- `actions.cycle_projection.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.cycle_projection.group`: `"camera"` (`string`)
+- `actions.cycle_projection.label`: `"Cycle projection"` (`string`)
+- `actions.cycle_projection.order`: `620` (`int`)
+- `actions.hard_drop.description`: `"Drop piece immediately to lock position."` (`string`)
+- `actions.hard_drop.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.hard_drop.gameplay_bucket`: `"translation"` (`string`)
+- `actions.hard_drop.group`: `"game"` (`string`)
+- `actions.hard_drop.label`: `"Hard drop"` (`string`)
+- `actions.hard_drop.order`: `170` (`int`)
+- `actions.help.description`: `"Open in-game help and explanations."` (`string`)
+- `actions.help.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.help.group`: `"system"` (`string`)
+- `actions.help.label`: `"Help"` (`string`)
+- `actions.help.order`: `20` (`int`)
+- `actions.menu.description`: `"Open the in-game pause menu."` (`string`)
+- `actions.menu.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.menu.group`: `"system"` (`string`)
+- `actions.menu.label`: `"Pause menu"` (`string`)
+- `actions.menu.order`: `10` (`int`)
+- `actions.move_down.description`: `"Explorer mode: move active piece down along the gravity axis."` (`string`)
+- `actions.move_down.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.move_down.group`: `"explorer"` (`string`)
+- `actions.move_down.label`: `"Move down"` (`string`)
+- `actions.move_down.order`: `410` (`int`)
+- `actions.move_up.description`: `"Explorer mode: move active piece up along the gravity axis."` (`string`)
+- `actions.move_up.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.move_up.group`: `"explorer"` (`string`)
+- `actions.move_up.label`: `"Move up"` (`string`)
+- `actions.move_up.order`: `400` (`int`)
+- `actions.move_w_neg.description`: `"Move active piece to previous W-layer board."` (`string`)
+- `actions.move_w_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.move_w_neg.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_w_neg.group`: `"game"` (`string`)
+- `actions.move_w_neg.label`: `"Move w -"` (`string`)
+- `actions.move_w_neg.order`: `140` (`int`)
+- `actions.move_w_pos.description`: `"Move active piece to next W-layer board."` (`string`)
+- `actions.move_w_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.move_w_pos.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_w_pos.group`: `"game"` (`string`)
+- `actions.move_w_pos.label`: `"Move w +"` (`string`)
+- `actions.move_w_pos.order`: `150` (`int`)
+- `actions.move_x_neg.description`: `"Move active piece left on the x axis."` (`string`)
+- `actions.move_x_neg.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.move_x_neg.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_x_neg.group`: `"game"` (`string`)
+- `actions.move_x_neg.label`: `"Move x -"` (`string`)
+- `actions.move_x_neg.order`: `100` (`int`)
+- `actions.move_x_pos.description`: `"Move active piece right on the x axis."` (`string`)
+- `actions.move_x_pos.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.move_x_pos.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_x_pos.group`: `"game"` (`string`)
+- `actions.move_x_pos.label`: `"Move x +"` (`string`)
+- `actions.move_x_pos.order`: `110` (`int`)
+- `actions.move_z_neg.description`: `"Move active piece away from viewer (default view)."` (`string`)
+- `actions.move_z_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.move_z_neg.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_z_neg.group`: `"game"` (`string`)
+- `actions.move_z_neg.label`: `"Move z -"` (`string`)
+- `actions.move_z_neg.order`: `120` (`int`)
+- `actions.move_z_pos.description`: `"Move active piece closer to viewer (default view)."` (`string`)
+- `actions.move_z_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.move_z_pos.gameplay_bucket`: `"translation"` (`string`)
+- `actions.move_z_pos.group`: `"game"` (`string`)
+- `actions.move_z_pos.label`: `"Move z +"` (`string`)
+- `actions.move_z_pos.order`: `130` (`int`)
+- `actions.overlay_alpha_dec.description`: `"Decrease locked-cell transparency."` (`string`)
+- `actions.overlay_alpha_dec.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.overlay_alpha_dec.group`: `"camera"` (`string`)
+- `actions.overlay_alpha_dec.label`: `"Locked cells alpha -"` (`string`)
+- `actions.overlay_alpha_dec.order`: `640` (`int`)
+- `actions.overlay_alpha_inc.description`: `"Increase locked-cell transparency."` (`string`)
+- `actions.overlay_alpha_inc.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.overlay_alpha_inc.group`: `"camera"` (`string`)
+- `actions.overlay_alpha_inc.label`: `"Locked cells alpha +"` (`string`)
+- `actions.overlay_alpha_inc.order`: `650` (`int`)
+- `actions.pitch_neg.description`: `"Pitch camera by -90 degrees."` (`string`)
+- `actions.pitch_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.pitch_neg.group`: `"camera"` (`string`)
+- `actions.pitch_neg.label`: `"Pitch -"` (`string`)
+- `actions.pitch_neg.order`: `540` (`int`)
+- `actions.pitch_pos.description`: `"Pitch camera by +90 degrees."` (`string`)
+- `actions.pitch_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.pitch_pos.group`: `"camera"` (`string`)
+- `actions.pitch_pos.label`: `"Pitch +"` (`string`)
+- `actions.pitch_pos.order`: `550` (`int`)
+- `actions.quit.description`: `"Quit the current game or application flow."` (`string`)
+- `actions.quit.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.quit.group`: `"system"` (`string`)
+- `actions.quit.label`: `"Quit"` (`string`)
+- `actions.quit.order`: `40` (`int`)
+- `actions.reset.description`: `"Reset camera/view transform."` (`string`)
+- `actions.reset.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.reset.group`: `"camera"` (`string`)
+- `actions.reset.label`: `"Reset view"` (`string`)
+- `actions.reset.order`: `630` (`int`)
+- `actions.restart.description`: `"Restart the current run."` (`string`)
+- `actions.restart.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.restart.group`: `"system"` (`string`)
+- `actions.restart.label`: `"Restart"` (`string`)
+- `actions.restart.order`: `30` (`int`)
+- `actions.rotate_xw_neg.description`: `"Rotate piece in x-w plane (-90)."` (`string`)
+- `actions.rotate_xw_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_xw_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xw_neg.group`: `"game"` (`string`)
+- `actions.rotate_xw_neg.label`: `"Rotate x-w -"` (`string`)
+- `actions.rotate_xw_neg.order`: `260` (`int`)
+- `actions.rotate_xw_pos.description`: `"Rotate piece in x-w plane (+90)."` (`string`)
+- `actions.rotate_xw_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_xw_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xw_pos.group`: `"game"` (`string`)
+- `actions.rotate_xw_pos.label`: `"Rotate x-w +"` (`string`)
+- `actions.rotate_xw_pos.order`: `270` (`int`)
+- `actions.rotate_xy_neg.description`: `"Rotate piece in x-y plane (-90)."` (`string`)
+- `actions.rotate_xy_neg.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.rotate_xy_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xy_neg.group`: `"game"` (`string`)
+- `actions.rotate_xy_neg.label`: `"Rotate x-y -"` (`string`)
+- `actions.rotate_xy_neg.order`: `200` (`int`)
+- `actions.rotate_xy_pos.description`: `"Rotate piece in x-y plane (+90)."` (`string`)
+- `actions.rotate_xy_pos.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.rotate_xy_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xy_pos.group`: `"game"` (`string`)
+- `actions.rotate_xy_pos.label`: `"Rotate x-y +"` (`string`)
+- `actions.rotate_xy_pos.order`: `210` (`int`)
+- `actions.rotate_xz_neg.description`: `"Rotate piece in x-z plane (-90)."` (`string`)
+- `actions.rotate_xz_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.rotate_xz_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xz_neg.group`: `"game"` (`string`)
+- `actions.rotate_xz_neg.label`: `"Rotate x-z -"` (`string`)
+- `actions.rotate_xz_neg.order`: `220` (`int`)
+- `actions.rotate_xz_pos.description`: `"Rotate piece in x-z plane (+90)."` (`string`)
+- `actions.rotate_xz_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.rotate_xz_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_xz_pos.group`: `"game"` (`string`)
+- `actions.rotate_xz_pos.label`: `"Rotate x-z +"` (`string`)
+- `actions.rotate_xz_pos.order`: `230` (`int`)
+- `actions.rotate_yw_neg.description`: `"Rotate piece in y-w plane (-90)."` (`string`)
+- `actions.rotate_yw_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_yw_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_yw_neg.group`: `"game"` (`string`)
+- `actions.rotate_yw_neg.label`: `"Rotate y-w -"` (`string`)
+- `actions.rotate_yw_neg.order`: `280` (`int`)
+- `actions.rotate_yw_pos.description`: `"Rotate piece in y-w plane (+90)."` (`string`)
+- `actions.rotate_yw_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_yw_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_yw_pos.group`: `"game"` (`string`)
+- `actions.rotate_yw_pos.label`: `"Rotate y-w +"` (`string`)
+- `actions.rotate_yw_pos.order`: `290` (`int`)
+- `actions.rotate_yz_neg.description`: `"Rotate piece in y-z plane (-90)."` (`string`)
+- `actions.rotate_yz_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.rotate_yz_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_yz_neg.group`: `"game"` (`string`)
+- `actions.rotate_yz_neg.label`: `"Rotate y-z -"` (`string`)
+- `actions.rotate_yz_neg.order`: `240` (`int`)
+- `actions.rotate_yz_pos.description`: `"Rotate piece in y-z plane (+90)."` (`string`)
+- `actions.rotate_yz_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.rotate_yz_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_yz_pos.group`: `"game"` (`string`)
+- `actions.rotate_yz_pos.label`: `"Rotate y-z +"` (`string`)
+- `actions.rotate_yz_pos.order`: `250` (`int`)
+- `actions.rotate_zw_neg.description`: `"Rotate piece in z-w plane (-90)."` (`string`)
+- `actions.rotate_zw_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_zw_neg.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_zw_neg.group`: `"game"` (`string`)
+- `actions.rotate_zw_neg.label`: `"Rotate z-w -"` (`string`)
+- `actions.rotate_zw_neg.order`: `300` (`int`)
+- `actions.rotate_zw_pos.description`: `"Rotate piece in z-w plane (+90)."` (`string`)
+- `actions.rotate_zw_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.rotate_zw_pos.gameplay_bucket`: `"rotation"` (`string`)
+- `actions.rotate_zw_pos.group`: `"game"` (`string`)
+- `actions.rotate_zw_pos.label`: `"Rotate z-w +"` (`string`)
+- `actions.rotate_zw_pos.order`: `310` (`int`)
+- `actions.soft_drop.description`: `"Move piece one gravity step down."` (`string`)
+- `actions.soft_drop.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.soft_drop.gameplay_bucket`: `"translation"` (`string`)
+- `actions.soft_drop.group`: `"game"` (`string`)
+- `actions.soft_drop.label`: `"Soft drop"` (`string`)
+- `actions.soft_drop.order`: `160` (`int`)
+- `actions.toggle_grid.description`: `"Cycle grid display mode."` (`string`)
+- `actions.toggle_grid.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
+- `actions.toggle_grid.group`: `"system"` (`string`)
+- `actions.toggle_grid.label`: `"Grid mode"` (`string`)
+- `actions.toggle_grid.order`: `50` (`int`)
+- `actions.view_xw_neg.description`: `"Turn view in x-w plane by -90 degrees (camera only)."` (`string`)
+- `actions.view_xw_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_xw_neg.group`: `"camera"` (`string`)
+- `actions.view_xw_neg.label`: `"View x-w -"` (`string`)
+- `actions.view_xw_neg.order`: `560` (`int`)
+- `actions.view_xw_pos.description`: `"Turn view in x-w plane by +90 degrees (camera only)."` (`string`)
+- `actions.view_xw_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_xw_pos.group`: `"camera"` (`string`)
+- `actions.view_xw_pos.label`: `"View x-w +"` (`string`)
+- `actions.view_xw_pos.order`: `570` (`int`)
+- `actions.view_zw_neg.description`: `"Turn view in z-w plane by -90 degrees (camera only)."` (`string`)
+- `actions.view_zw_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_zw_neg.group`: `"camera"` (`string`)
+- `actions.view_zw_neg.label`: `"View z-w -"` (`string`)
+- `actions.view_zw_neg.order`: `580` (`int`)
+- `actions.view_zw_pos.description`: `"Turn view in z-w plane by +90 degrees (camera only)."` (`string`)
+- `actions.view_zw_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_zw_pos.group`: `"camera"` (`string`)
+- `actions.view_zw_pos.label`: `"View z-w +"` (`string`)
+- `actions.view_zw_pos.order`: `590` (`int`)
+- `actions.yaw_fine_neg.description`: `"Yaw camera by -15 degrees."` (`string`)
+- `actions.yaw_fine_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.yaw_fine_neg.group`: `"camera"` (`string`)
+- `actions.yaw_fine_neg.label`: `"Yaw fine -"` (`string`)
+- `actions.yaw_fine_neg.order`: `500` (`int`)
+- `actions.yaw_fine_pos.description`: `"Yaw camera by +15 degrees."` (`string`)
+- `actions.yaw_fine_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.yaw_fine_pos.group`: `"camera"` (`string`)
+- `actions.yaw_fine_pos.label`: `"Yaw fine +"` (`string`)
+- `actions.yaw_fine_pos.order`: `510` (`int`)
+- `actions.yaw_neg.description`: `"Yaw camera by -90 degrees."` (`string`)
+- `actions.yaw_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.yaw_neg.group`: `"camera"` (`string`)
+- `actions.yaw_neg.label`: `"Yaw -"` (`string`)
+- `actions.yaw_neg.order`: `520` (`int`)
+- `actions.yaw_pos.description`: `"Yaw camera by +90 degrees."` (`string`)
+- `actions.yaw_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.yaw_pos.group`: `"camera"` (`string`)
+- `actions.yaw_pos.label`: `"Yaw +"` (`string`)
+- `actions.yaw_pos.order`: `530` (`int`)
+- `actions.zoom_in.description`: `"Zoom camera in."` (`string`)
+- `actions.zoom_in.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.zoom_in.group`: `"camera"` (`string`)
+- `actions.zoom_in.label`: `"Zoom in"` (`string`)
+- `actions.zoom_in.order`: `610` (`int`)
+- `actions.zoom_out.description`: `"Zoom camera out."` (`string`)
+- `actions.zoom_out.dimensions[]`: array[`int`]; examples: `3`, `4`
+- `actions.zoom_out.group`: `"camera"` (`string`)
+- `actions.zoom_out.label`: `"Zoom out"` (`string`)
+- `actions.zoom_out.order`: `600` (`int`)
+- `editor.gameplay_buckets.other.description`: `"Gameplay actions that are neither translation nor rotation."` (`string`)
+- `editor.gameplay_buckets.other.label`: `"Gameplay / Other"` (`string`)
+- `editor.gameplay_buckets.other.order`: `30` (`int`)
+- `editor.gameplay_buckets.rotation.description`: `"Piece rotation planes for the active dimension."` (`string`)
+- `editor.gameplay_buckets.rotation.label`: `"Gameplay / Rotation"` (`string`)
+- `editor.gameplay_buckets.rotation.order`: `20` (`int`)
+- `editor.gameplay_buckets.translation.description`: `"Piece translation, gravity/drop, and movement intents."` (`string`)
+- `editor.gameplay_buckets.translation.label`: `"Gameplay / Translation"` (`string`)
+- `editor.gameplay_buckets.translation.order`: `10` (`int`)
+- `groups.camera.description`: `"Board orbit, zoom, projection, and overlay controls."` (`string`)
+- `groups.camera.label`: `"Camera / View"` (`string`)
+- `groups.camera.order`: `40` (`int`)
+- `groups.explorer.description`: `"Explorer-only traversal controls, including upward and downward move...` (`string`)
+- `groups.explorer.label`: `"Explorer Movement"` (`string`)
+- `groups.explorer.order`: `30` (`int`)
+- `groups.game.description`: `"Piece translation, drop, and rotation actions."` (`string`)
+- `groups.game.label`: `"Gameplay"` (`string`)
+- `groups.game.order`: `20` (`int`)
+- `groups.system.description`: `"Global actions available in all modes."` (`string`)
+- `groups.system.label`: `"General / System"` (`string`)
+- `groups.system.order`: `10` (`int`)
+- `helper_layout.meta.schema_version`: `1` (`int`)
+- `helper_layout.panels[]`: array[`object`]
+- `helper_layout.panels[].id`: varies (`string`); examples: `"main"`, `"translation"`, `"rotation"`
+- `helper_layout.panels[].lines[]`: array[`object`]
+- `helper_layout.panels[].lines[].icon_action`: varies (`string`); examples: `"move_x_pos"`, `"move_z_neg"`, `"move_w_pos"`
+- `helper_layout.panels[].lines[].id`: varies (`string`); examples: `"main_menu"`, `"main_help"`, `"main_restart"`
+- `helper_layout.panels[].lines[].key_actions[]`: array[`string`]; examples: `"menu"`, `"help"`, `"restart"`
+- `helper_layout.panels[].lines[].modes[]`: array[`string`]; examples: `"2d"`, `"3d"`, `"4d"`
+- `helper_layout.panels[].lines[].order`: varies (`int`); examples: `10`, `20`, `30`
+- `helper_layout.panels[].lines[].requires[]`: array[`empty, string`]; examples: `"camera.enabled"`, `"slice.w.enabled"`, `"exploration.enabled"`
+- `helper_layout.panels[].lines[].template`: varies (`string`); examples: `"pause menu"`, `"help"`, `"restart"`
+- `helper_layout.panels[].modes[]`: array[`string`]; examples: `"2d"`, `"3d"`, `"4d"`
+- `helper_layout.panels[].order`: varies (`int`); examples: `10`, `20`, `30`
+- `helper_layout.panels[].requires[]`: array[`empty`]
+- `helper_layout.panels[].title`: varies (`string`); examples: `"Main"`, `"Translation"`, `"Rotation"`
+- `helper_layout.tokens.notes`: `"Helper membership/order is data-driven from the keybinding catalog."` (`string`)
+- `reference_groups.headings.camera`: `"Camera / View"` (`string`)
+- `reference_groups.headings.explorer`: `"Explorer Movement"` (`string`)
+- `reference_groups.headings.game_other`: `"Gameplay / Other"` (`string`)
+- `reference_groups.headings.game_rotation`: `"Gameplay / Rotation"` (`string`)
+- `reference_groups.headings.game_translation`: `"Gameplay / Translation"` (`string`)
+- `reference_groups.headings.system`: `"General / System"` (`string`)
+- `reference_groups.live_order[]`: array[`string`]; examples: `"system"`, `"game_translation"`, `"game_rotation"`
+- `reference_groups.runtime_order[]`: array[`string`]; examples: `"system"`, `"game"`, `"explorer"`
+- `scopes.order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `version`: `1` (`int`)
 
 ### `config/keybindings/defaults.json`
@@ -789,21 +1053,12 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/menu/structure.json`
-Top-level keys: `bot_options_rows`, `branding`, `keybinding_category_docs`, `launcher_route_actions`, `launcher_subtitles`, `menu_entrypoints`, `menus`, `pause_copy`, `pause_menu_actions`, `pause_menu_rows`, `settings_category_docs`, `settings_category_metrics`, `settings_hub_layout_rows`, `settings_hub_rows`, `settings_option_labels`, `settings_split_rules`, `setup_fields`, `setup_hints`, `ui_copy`
+Top-level keys: `bot_options_rows`, `branding`, `launcher_route_actions`, `launcher_subtitles`, `menu_entrypoints`, `menus`, `pause_copy`, `pause_menu_actions`, `pause_menu_rows`, `settings_category_docs`, `settings_category_metrics`, `settings_hub_layout_rows`, `settings_hub_rows`, `settings_option_labels`, `settings_split_rules`, `setup_fields`, `setup_hints`, `ui_copy`
 Parameters:
 - `bot_options_rows[]`: array[`string`]; examples: `"Dimension"`, `"Playbot mode"`, `"Bot algorithm"`
 - `branding.game_title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
 - `branding.signature_author`: `"Omer M. Moussaffi (mousomer@gmail.com)"` (`string`)
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
-- `keybinding_category_docs.groups.camera.description`: `"Board orbit, zoom, and projection controls."` (`string`)
-- `keybinding_category_docs.groups.camera.label`: `"Camera / View"` (`string`)
-- `keybinding_category_docs.groups.explorer.description`: `"Explorer-only traversal controls, including upward and downward move...` (`string`)
-- `keybinding_category_docs.groups.explorer.label`: `"Explorer Movement"` (`string`)
-- `keybinding_category_docs.groups.game.description`: `"Piece translation, drop, and rotation actions."` (`string`)
-- `keybinding_category_docs.groups.game.label`: `"Gameplay"` (`string`)
-- `keybinding_category_docs.groups.system.description`: `"Global actions available in all modes."` (`string`)
-- `keybinding_category_docs.groups.system.label`: `"General / System"` (`string`)
-- `keybinding_category_docs.scope_order[]`: array[`string`]; examples: `"general"`, `"2d"`, `"3d"`
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
@@ -1538,3 +1793,14 @@ Parameters:
 - `stages[].stage_id`: varies (`string`); examples: `"move_left"`, `"move_right"`, `"move_depth_away"`
 - `stages[].title`: varies (`string`); examples: `"Move Left"`, `"Move Right"`, `"Move Depth Away"`
 - `title`: `"Interactive Tutorial Stage Plan"` (`string`)
+
+### `config/ui/theme.json`
+Top-level keys: `button`, `panel`, `version`
+Parameters:
+- `button.active[]`: array[`int`]; examples: `86`, `98`, `146`
+- `button.bg[]`: array[`int`]; examples: `38`, `44`, `70`
+- `button.border[]`: array[`int`]; examples: `16`, `18`, `26`
+- `button.text[]`: array[`int`]; examples: `232`, `236`, `248`
+- `panel.bg[]`: array[`int`]; examples: `18`, `22`, `38`
+- `panel.border[]`: array[`int`]; examples: `76`, `84`, `112`
+- `version`: `1` (`int`)

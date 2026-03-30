@@ -1,0 +1,663 @@
+{
+  "version": 1,
+  "scopes": {
+    "order": ["general", "2d", "3d", "4d", "all"]
+  },
+  "groups": {
+    "system": {
+      "order": 10,
+      "label": "General / System",
+      "description": "Global actions available in all modes."
+    },
+    "game": {
+      "order": 20,
+      "label": "Gameplay",
+      "description": "Piece translation, drop, and rotation actions."
+    },
+    "explorer": {
+      "order": 30,
+      "label": "Explorer Movement",
+      "description": "Explorer-only traversal controls, including upward and downward movement."
+    },
+    "camera": {
+      "order": 40,
+      "label": "Camera / View",
+      "description": "Board orbit, zoom, projection, and overlay controls."
+    }
+  },
+  "editor": {
+    "gameplay_buckets": {
+      "translation": {
+        "order": 10,
+        "label": "Gameplay / Translation",
+        "description": "Piece translation, gravity/drop, and movement intents."
+      },
+      "rotation": {
+        "order": 20,
+        "label": "Gameplay / Rotation",
+        "description": "Piece rotation planes for the active dimension."
+      },
+      "other": {
+        "order": 30,
+        "label": "Gameplay / Other",
+        "description": "Gameplay actions that are neither translation nor rotation."
+      }
+    }
+  },
+  "reference_groups": {
+    "runtime_order": ["system", "game", "explorer", "camera"],
+    "live_order": [
+      "system",
+      "game_translation",
+      "game_rotation",
+      "game_other",
+      "explorer",
+      "camera"
+    ],
+    "headings": {
+      "system": "General / System",
+      "game_translation": "Gameplay / Translation",
+      "game_rotation": "Gameplay / Rotation",
+      "game_other": "Gameplay / Other",
+      "explorer": "Explorer Movement",
+      "camera": "Camera / View"
+    }
+  },
+  "actions": {
+    "menu": {
+      "group": "system",
+      "order": 10,
+      "label": "Pause menu",
+      "description": "Open the in-game pause menu.",
+      "dimensions": [2, 3, 4]
+    },
+    "help": {
+      "group": "system",
+      "order": 20,
+      "label": "Help",
+      "description": "Open in-game help and explanations.",
+      "dimensions": [2, 3, 4]
+    },
+    "restart": {
+      "group": "system",
+      "order": 30,
+      "label": "Restart",
+      "description": "Restart the current run.",
+      "dimensions": [2, 3, 4]
+    },
+    "quit": {
+      "group": "system",
+      "order": 40,
+      "label": "Quit",
+      "description": "Quit the current game or application flow.",
+      "dimensions": [2, 3, 4]
+    },
+    "toggle_grid": {
+      "group": "system",
+      "order": 50,
+      "label": "Grid mode",
+      "description": "Cycle grid display mode.",
+      "dimensions": [2, 3, 4]
+    },
+    "move_x_neg": {
+      "group": "game",
+      "order": 100,
+      "label": "Move x -",
+      "description": "Move active piece left on the x axis.",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "move_x_pos": {
+      "group": "game",
+      "order": 110,
+      "label": "Move x +",
+      "description": "Move active piece right on the x axis.",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "move_z_neg": {
+      "group": "game",
+      "order": 120,
+      "label": "Move z -",
+      "description": "Move active piece away from viewer (default view).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "move_z_pos": {
+      "group": "game",
+      "order": 130,
+      "label": "Move z +",
+      "description": "Move active piece closer to viewer (default view).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "move_w_neg": {
+      "group": "game",
+      "order": 140,
+      "label": "Move w -",
+      "description": "Move active piece to previous W-layer board.",
+      "dimensions": [4],
+      "gameplay_bucket": "translation"
+    },
+    "move_w_pos": {
+      "group": "game",
+      "order": 150,
+      "label": "Move w +",
+      "description": "Move active piece to next W-layer board.",
+      "dimensions": [4],
+      "gameplay_bucket": "translation"
+    },
+    "soft_drop": {
+      "group": "game",
+      "order": 160,
+      "label": "Soft drop",
+      "description": "Move piece one gravity step down.",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "hard_drop": {
+      "group": "game",
+      "order": 170,
+      "label": "Hard drop",
+      "description": "Drop piece immediately to lock position.",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "translation"
+    },
+    "rotate_xy_neg": {
+      "group": "game",
+      "order": 200,
+      "label": "Rotate x-y -",
+      "description": "Rotate piece in x-y plane (-90).",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_xy_pos": {
+      "group": "game",
+      "order": 210,
+      "label": "Rotate x-y +",
+      "description": "Rotate piece in x-y plane (+90).",
+      "dimensions": [2, 3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_xz_neg": {
+      "group": "game",
+      "order": 220,
+      "label": "Rotate x-z -",
+      "description": "Rotate piece in x-z plane (-90).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_xz_pos": {
+      "group": "game",
+      "order": 230,
+      "label": "Rotate x-z +",
+      "description": "Rotate piece in x-z plane (+90).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_yz_neg": {
+      "group": "game",
+      "order": 240,
+      "label": "Rotate y-z -",
+      "description": "Rotate piece in y-z plane (-90).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_yz_pos": {
+      "group": "game",
+      "order": 250,
+      "label": "Rotate y-z +",
+      "description": "Rotate piece in y-z plane (+90).",
+      "dimensions": [3, 4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_xw_neg": {
+      "group": "game",
+      "order": 260,
+      "label": "Rotate x-w -",
+      "description": "Rotate piece in x-w plane (-90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_xw_pos": {
+      "group": "game",
+      "order": 270,
+      "label": "Rotate x-w +",
+      "description": "Rotate piece in x-w plane (+90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_yw_neg": {
+      "group": "game",
+      "order": 280,
+      "label": "Rotate y-w -",
+      "description": "Rotate piece in y-w plane (-90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_yw_pos": {
+      "group": "game",
+      "order": 290,
+      "label": "Rotate y-w +",
+      "description": "Rotate piece in y-w plane (+90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_zw_neg": {
+      "group": "game",
+      "order": 300,
+      "label": "Rotate z-w -",
+      "description": "Rotate piece in z-w plane (-90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "rotate_zw_pos": {
+      "group": "game",
+      "order": 310,
+      "label": "Rotate z-w +",
+      "description": "Rotate piece in z-w plane (+90).",
+      "dimensions": [4],
+      "gameplay_bucket": "rotation"
+    },
+    "move_up": {
+      "group": "explorer",
+      "order": 400,
+      "label": "Move up",
+      "description": "Explorer mode: move active piece up along the gravity axis.",
+      "dimensions": [2, 3, 4]
+    },
+    "move_down": {
+      "group": "explorer",
+      "order": 410,
+      "label": "Move down",
+      "description": "Explorer mode: move active piece down along the gravity axis.",
+      "dimensions": [2, 3, 4]
+    },
+    "yaw_fine_neg": {
+      "group": "camera",
+      "order": 500,
+      "label": "Yaw fine -",
+      "description": "Yaw camera by -15 degrees.",
+      "dimensions": [3, 4]
+    },
+    "yaw_fine_pos": {
+      "group": "camera",
+      "order": 510,
+      "label": "Yaw fine +",
+      "description": "Yaw camera by +15 degrees.",
+      "dimensions": [3, 4]
+    },
+    "yaw_neg": {
+      "group": "camera",
+      "order": 520,
+      "label": "Yaw -",
+      "description": "Yaw camera by -90 degrees.",
+      "dimensions": [3, 4]
+    },
+    "yaw_pos": {
+      "group": "camera",
+      "order": 530,
+      "label": "Yaw +",
+      "description": "Yaw camera by +90 degrees.",
+      "dimensions": [3, 4]
+    },
+    "pitch_neg": {
+      "group": "camera",
+      "order": 540,
+      "label": "Pitch -",
+      "description": "Pitch camera by -90 degrees.",
+      "dimensions": [3, 4]
+    },
+    "pitch_pos": {
+      "group": "camera",
+      "order": 550,
+      "label": "Pitch +",
+      "description": "Pitch camera by +90 degrees.",
+      "dimensions": [3, 4]
+    },
+    "view_xw_neg": {
+      "group": "camera",
+      "order": 560,
+      "label": "View x-w -",
+      "description": "Turn view in x-w plane by -90 degrees (camera only).",
+      "dimensions": [4]
+    },
+    "view_xw_pos": {
+      "group": "camera",
+      "order": 570,
+      "label": "View x-w +",
+      "description": "Turn view in x-w plane by +90 degrees (camera only).",
+      "dimensions": [4]
+    },
+    "view_zw_neg": {
+      "group": "camera",
+      "order": 580,
+      "label": "View z-w -",
+      "description": "Turn view in z-w plane by -90 degrees (camera only).",
+      "dimensions": [4]
+    },
+    "view_zw_pos": {
+      "group": "camera",
+      "order": 590,
+      "label": "View z-w +",
+      "description": "Turn view in z-w plane by +90 degrees (camera only).",
+      "dimensions": [4]
+    },
+    "zoom_out": {
+      "group": "camera",
+      "order": 600,
+      "label": "Zoom out",
+      "description": "Zoom camera out.",
+      "dimensions": [3, 4]
+    },
+    "zoom_in": {
+      "group": "camera",
+      "order": 610,
+      "label": "Zoom in",
+      "description": "Zoom camera in.",
+      "dimensions": [3, 4]
+    },
+    "cycle_projection": {
+      "group": "camera",
+      "order": 620,
+      "label": "Cycle projection",
+      "description": "Cycle projection mode.",
+      "dimensions": [3, 4]
+    },
+    "reset": {
+      "group": "camera",
+      "order": 630,
+      "label": "Reset view",
+      "description": "Reset camera/view transform.",
+      "dimensions": [3, 4]
+    },
+    "overlay_alpha_dec": {
+      "group": "camera",
+      "order": 640,
+      "label": "Locked cells alpha -",
+      "description": "Decrease locked-cell transparency.",
+      "dimensions": [3, 4]
+    },
+    "overlay_alpha_inc": {
+      "group": "camera",
+      "order": 650,
+      "label": "Locked cells alpha +",
+      "description": "Increase locked-cell transparency.",
+      "dimensions": [3, 4]
+    }
+  },
+  "helper_layout": {
+    "meta": {
+      "schema_version": 1
+    },
+    "tokens": {
+      "notes": "Helper membership/order is data-driven from the keybinding catalog."
+    },
+    "panels": [
+      {
+        "id": "main",
+        "order": 10,
+        "title": "Main",
+        "modes": ["2d", "3d", "4d"],
+        "requires": [],
+        "lines": [
+          {
+            "id": "main_menu",
+            "order": 10,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["menu"],
+            "template": "pause menu"
+          },
+          {
+            "id": "main_help",
+            "order": 20,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["help"],
+            "template": "help"
+          },
+          {
+            "id": "main_restart",
+            "order": 30,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["restart"],
+            "template": "restart"
+          },
+          {
+            "id": "main_quit",
+            "order": 50,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["quit"],
+            "template": "quit"
+          }
+        ]
+      },
+      {
+        "id": "translation",
+        "order": 20,
+        "title": "Translation",
+        "modes": ["2d", "3d", "4d"],
+        "requires": [],
+        "lines": [
+          {
+            "id": "move_x",
+            "order": 10,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["move_x_neg", "move_x_pos"],
+            "icon_action": "move_x_pos",
+            "template": "move x"
+          },
+          {
+            "id": "move_z",
+            "order": 20,
+            "modes": ["3d", "4d"],
+            "requires": ["camera.enabled"],
+            "key_actions": ["move_z_neg", "move_z_pos"],
+            "icon_action": "move_z_neg",
+            "template": "away/closer"
+          },
+          {
+            "id": "move_w",
+            "order": 30,
+            "modes": ["4d"],
+            "requires": ["slice.w.enabled"],
+            "key_actions": ["move_w_neg", "move_w_pos"],
+            "icon_action": "move_w_pos",
+            "template": "w layer prev/next"
+          },
+          {
+            "id": "move_y_explore",
+            "order": 40,
+            "modes": ["2d", "3d", "4d"],
+            "requires": ["exploration.enabled"],
+            "key_actions": ["move_up", "move_down"],
+            "icon_action": "move_up",
+            "template": "up/down (explore)"
+          },
+          {
+            "id": "soft_drop",
+            "order": 50,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["soft_drop"],
+            "icon_action": "soft_drop",
+            "template": "soft drop"
+          },
+          {
+            "id": "hard_drop",
+            "order": 60,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["hard_drop"],
+            "icon_action": "hard_drop",
+            "template": "hard drop"
+          }
+        ]
+      },
+      {
+        "id": "rotation",
+        "order": 30,
+        "title": "Rotation",
+        "modes": ["2d", "3d", "4d"],
+        "requires": [],
+        "lines": [
+          {
+            "id": "rot_xy",
+            "order": 10,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["rotate_xy_neg", "rotate_xy_pos"],
+            "icon_action": "rotate_xy_pos",
+            "template": "plane x-y"
+          },
+          {
+            "id": "rot_xz",
+            "order": 20,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["rotate_xz_neg", "rotate_xz_pos"],
+            "icon_action": "rotate_xz_pos",
+            "template": "plane x-z"
+          },
+          {
+            "id": "rot_yz",
+            "order": 30,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["rotate_yz_neg", "rotate_yz_pos"],
+            "icon_action": "rotate_yz_pos",
+            "template": "plane y-z"
+          },
+          {
+            "id": "rot_xw",
+            "order": 40,
+            "modes": ["4d"],
+            "requires": ["rotation.nd>=4"],
+            "key_actions": ["rotate_xw_neg", "rotate_xw_pos"],
+            "icon_action": "rotate_xw_pos",
+            "template": "plane x-w"
+          },
+          {
+            "id": "rot_yw",
+            "order": 50,
+            "modes": ["4d"],
+            "requires": ["rotation.nd>=4"],
+            "key_actions": ["rotate_yw_neg", "rotate_yw_pos"],
+            "icon_action": "rotate_yw_pos",
+            "template": "plane y-w"
+          },
+          {
+            "id": "rot_zw",
+            "order": 60,
+            "modes": ["4d"],
+            "requires": ["rotation.nd>=4"],
+            "key_actions": ["rotate_zw_neg", "rotate_zw_pos"],
+            "icon_action": "rotate_zw_pos",
+            "template": "plane z-w"
+          }
+        ]
+      },
+      {
+        "id": "camera",
+        "order": 40,
+        "title": "Camera",
+        "modes": ["2d", "3d", "4d"],
+        "requires": [],
+        "lines": [
+          {
+            "id": "cam_grid_mode",
+            "order": 5,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["toggle_grid"],
+            "template": "grid mode"
+          },
+          {
+            "id": "cam_yaw_fine",
+            "order": 10,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["yaw_fine_neg", "yaw_fine_pos"],
+            "template": "yaw +/-15"
+          },
+          {
+            "id": "cam_yaw",
+            "order": 20,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["yaw_neg", "yaw_pos"],
+            "template": "yaw +/-90"
+          },
+          {
+            "id": "cam_pitch",
+            "order": 30,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["pitch_neg", "pitch_pos"],
+            "template": "pitch +/-90"
+          },
+          {
+            "id": "cam_view_xw",
+            "order": 40,
+            "modes": ["4d"],
+            "requires": [],
+            "key_actions": ["view_xw_neg", "view_xw_pos"],
+            "template": "view x-w +/-90"
+          },
+          {
+            "id": "cam_view_zw",
+            "order": 50,
+            "modes": ["4d"],
+            "requires": [],
+            "key_actions": ["view_zw_neg", "view_zw_pos"],
+            "template": "view z-w +/-90"
+          },
+          {
+            "id": "cam_zoom",
+            "order": 60,
+            "modes": ["3d", "4d"],
+            "requires": [],
+            "key_actions": ["zoom_out", "zoom_in"],
+            "template": "zoom out/in"
+          },
+          {
+            "id": "cam_projection",
+            "order": 70,
+            "modes": ["3d"],
+            "requires": [],
+            "key_actions": ["cycle_projection"],
+            "template": "projection"
+          },
+          {
+            "id": "cam_reset_3d",
+            "order": 72,
+            "modes": ["3d"],
+            "requires": [],
+            "key_actions": ["reset"],
+            "template": "reset view"
+          },
+          {
+            "id": "cam_reset_4d",
+            "order": 75,
+            "modes": ["4d"],
+            "requires": [],
+            "key_actions": ["cycle_projection", "reset"],
+            "template": "projection / reset"
+          },
+          {
+            "id": "cam_overlay_alpha",
+            "order": 80,
+            "modes": ["2d", "3d", "4d"],
+            "requires": [],
+            "key_actions": ["overlay_alpha_dec", "overlay_alpha_inc"],
+            "template": "locked cells alpha [,]"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -56,6 +56,7 @@ def _load_defaults_payload() -> dict:
 
 
 _DEFAULTS = _load_defaults_payload()
+_DEFAULTS_VERSION = int(_DEFAULTS.get("version", 1))
 _PROFILE_MAP = _DEFAULTS.get("profiles", {})
 
 
@@ -618,6 +619,7 @@ def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, ob
     if bindings is None:
         raise ValueError("dimension must be one of: 2, 3, 4")
     return {
+        "defaults_version": _DEFAULTS_VERSION,
         "dimension": dimension,
         "profile": _normalize_profile_name(profile),
         "bindings": {
@@ -625,6 +627,22 @@ def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, ob
             for group_name, binding_map in bindings.items()
         },
     }
+
+
+def _builtin_profile_payload_is_stale(
+    dimension: int,
+    *,
+    profile: str,
+) -> bool:
+    expected = _binding_payload_for_dimension(dimension, profile)
+    ok, _msg, payload = load_keybindings_payload(
+        dimension,
+        profile=profile,
+        active_profile=ACTIVE_KEY_PROFILE,
+    )
+    if not ok or payload is None:
+        return True
+    return payload != expected
 
 
 def _clone_keybinding_dimension(
@@ -665,6 +683,8 @@ def save_keybindings_file(
             for group_name, binding_map in groups.items()
         },
     }
+    if selected_profile in BUILTIN_PROFILES:
+        payload["defaults_version"] = _DEFAULTS_VERSION
     return save_keybindings_payload(
         dimension,
         payload,
@@ -721,6 +741,16 @@ def _ensure_profile_files(profile: str) -> None:
     for dimension in SUPPORTED_DIMENSIONS:
         preferred = keybinding_file_path_for_profile(dimension, selected)
         if preferred.exists():
+            if selected in BUILTIN_PROFILES and _builtin_profile_payload_is_stale(
+                dimension,
+                profile=selected,
+            ):
+                save_keybindings_payload(
+                    dimension,
+                    _binding_payload_for_dimension(dimension, selected),
+                    profile=selected,
+                    active_profile=ACTIVE_KEY_PROFILE,
+                )
             continue
         save_keybindings_file(dimension, profile=selected)
 

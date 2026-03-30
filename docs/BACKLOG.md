@@ -25,6 +25,10 @@ background only unless reactivated by a future task.
 
 Current sub-batch (2026-03-29): shell-preserving topology-playground cleanup.
 
+Parallel governance/runtime follow-up (2026-03-30): keybinding authority
+unification around `config/keybindings/catalog.json`, so help/editor/control
+group structure no longer drifts away from the live runtime binding map.
+
 - Open work:
   1. continue structural simplification of
      `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
@@ -143,6 +147,19 @@ Completed on 2026-03-29:
 - topology-playground dead-code cleanup so the shared side-panel and modern
   explorer-workspace paths no longer carry unused parameters, and the current
   `vulture` sweep is back to clean high-confidence results
+- dead-code pruning follow-up so another small set of unreferenced helpers and
+  stale compatibility leftovers now drops out of playbot, core, gameplay,
+  help, settings, and topology-lab code without changing live behavior
+- `vulture` bucket-1 pruning follow-up so the obvious non-test UI/tooling
+  leftovers identified by the current high-confidence sweep are removed before
+  any deeper verify-first or public-bridge pruning pass
+- dead-wrapper retirement follow-up so test-only topology-lab sidebar/preview/
+  probe-control seams and their wrapper-pinning tests are removed instead of
+  preserved as fake compatibility surfaces
+- config-reference/theme follow-up so `config/ui/theme.json` now participates
+  in the generated configuration reference, project-config tests now pin theme
+  color fallback/validation behavior, and topology-playground color reads stay
+  lazy at the UI seam instead of freezing once at import time
 - topology-playground sandbox-neighbor row click fix so the modern shell now
   toggles Sandbox `Neighbors` directly on mouse click in `3D` / `4D` instead
   of requiring keyboard row adjustment to disable the overlay
@@ -174,6 +191,10 @@ Completed on 2026-03-29:
   standard-first cluster, rotation uses the fixed `RT FG VB YU HJ NM` ladder,
   and 3D/4D camera defaults now share the same core number-row layout with an
   explicit 4D reset on `0`
+- built-in keybinding materialization fix so startup now refreshes stale
+  built-in profile JSON files from the current shipped defaults payload
+  instead of silently consuming older on-disk movement/rotation/camera
+  layouts
 - final governance-pack prune after unified manifest cutover, including
   maintenance-doc regeneration and local gate re-verification
 

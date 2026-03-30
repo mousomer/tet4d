@@ -18,6 +18,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     probe_neighbors_visible,
     replace_play_settings,
     replace_probe_state,
+    sync_canonical_playground_state,
 )
 from tet4d.ui.pygame.topology_lab.state_ownership import (
     current_sandbox_focus_coord,
@@ -37,20 +38,6 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
                 gluings=(),
             ),
         )
-
-    @staticmethod
-    def _preview() -> dict[str, object]:
-        return {
-            "movement_graph": {
-                "cell_count": 1,
-                "directed_edge_count": 0,
-                "boundary_traversal_count": 0,
-                "component_count": 1,
-            },
-            "warnings": (),
-            "sample_boundary_traversals": (),
-            "basis_arrows": (),
-        }
 
     def test_ownership_snapshot_separates_inspector_and_sandbox_transients(self) -> None:
         state = self._state()
@@ -97,50 +84,6 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         self.assertEqual(current_probe_path(state), [(1, 0)])
         self.assertEqual(getattr(state, "sandbox_focus_coord", None), (4, 1))
         self.assertEqual(getattr(state, "sandbox_focus_path", None), [(4, 1)])
-
-    def test_workspace_preview_lines_hide_inspector_probe_trace_in_sandbox_mode(self) -> None:
-        state = self._state()
-        replace_probe_state(
-            state,
-            coord=(1, 1),
-            trace=["probe-step"],
-            path=[(1, 1)],
-            highlighted_glue_id=None,
-        )
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
-        select_sandbox_projection_coord(state, (5, 2))
-
-        lines = topology_lab_menu._workspace_preview_lines(
-            state,
-            preview=self._preview(),
-            preview_error=None,
-        )
-
-        self.assertIn(
-            f"Sandbox focus: {list(current_sandbox_focus_coord(state))}",
-            lines,
-        )
-        self.assertFalse(any(line.startswith("Probe:") for line in lines))
-        self.assertFalse(any("probe-step" in line for line in lines))
-
-    def test_switching_back_to_probe_restores_inspector_state_after_sandbox_focus_change(self) -> None:
-        state = self._state()
-        replace_probe_state(
-            state,
-            coord=(1, 1),
-            trace=["probe-step"],
-            path=[(1, 1)],
-            highlighted_glue_id=None,
-        )
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
-        select_sandbox_projection_coord(state, (6, 0))
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
-
-        lines = topology_lab_menu._workspace_probe_lines(state)
-
-        self.assertEqual(current_probe_coord(state), (1, 1))
-        self.assertIn("Editor cell: [1, 1]", lines)
-        self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
 
     def test_draw_explorer_scene_uses_sandbox_focus_overlay_when_active(self) -> None:
         state = self._state()
@@ -221,41 +164,6 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
         self.assertTrue(kwargs["neighbor_markers"])
         self.assertEqual(kwargs["probe_path"], tuple(current_probe_path(state)))
 
-    def test_sandbox_neighbor_search_toggle_hides_focus_overlay_but_keeps_sandbox_active(self) -> None:
-        state = self._state()
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
-        select_sandbox_projection_coord(state, (2, 3))
-        topology_lab_menu.ensure_piece_sandbox(state)
-        assert state.sandbox is not None
-        state.sandbox.neighbor_search_enabled = False
-
-        lines = topology_lab_menu._workspace_preview_lines(
-            state,
-            preview=self._preview(),
-            preview_error=None,
-        )
-
-        self.assertIn("Sandbox neighbor-search: off", lines)
-        self.assertFalse(any(line.startswith("Sandbox focus:") for line in lines))
-        self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
-
-    def test_sandbox_without_neighbor_overlay_keeps_visible_piece_anchor_selected(self) -> None:
-        state = self._state(dimension=3)
-        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
-        topology_lab_menu.ensure_piece_sandbox(state)
-        assert state.sandbox is not None
-        state.sandbox.neighbor_search_enabled = False
-
-        self.assertIn(
-            topology_lab_menu._active_workspace_coord(state),
-            topology_lab_menu.sandbox_cells(state),
-        )
-        self.assertEqual(topology_lab_menu._active_workspace_path(state), [])
-        self.assertIn(
-            f"Sandbox anchor: {list(topology_lab_menu._active_workspace_coord(state))}",
-            topology_lab_menu._workspace_probe_lines(state),
-        )
-
     def test_sandbox_focus_tracks_visible_piece_cells_after_move(self) -> None:
         for dimension in (3, 4):
             with self.subTest(dimension=dimension):
@@ -295,7 +203,7 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
 
     def test_canonical_topology_state_survives_tool_switches(self) -> None:
         state = self._state(dimension=3)
-        topology_lab_menu._sync_canonical_playground_state(state)
+        sync_canonical_playground_state(state)
         assert state.canonical_state is not None
         expected_axis_sizes = state.canonical_state.axis_sizes
         expected_profile = state.canonical_state.explorer_profile

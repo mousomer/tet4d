@@ -61,11 +61,6 @@ def draw_translucent_faces(
     surface.blit(overlay, (0, 0))
 
 
-def overlay_alpha_label(overlay_transparency: float) -> str:
-    clamped = max(0.0, min(1.0, float(overlay_transparency)))
-    return f"{int(round(clamped * 100.0))}%"
-
-
 def overlay_opacity_scale(overlay_transparency: float) -> float:
     # Settings store transparency; renderer needs opacity.
     clamped = max(0.0, min(1.0, float(overlay_transparency)))

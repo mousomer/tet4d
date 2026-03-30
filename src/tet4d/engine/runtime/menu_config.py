@@ -290,7 +290,15 @@ def setup_fields_for_settings(
 
 
 def keybinding_category_docs() -> dict[str, Any]:
-    return deepcopy(_structure_payload()["keybinding_category_docs"])
+    from tet4d.engine.ui_logic.keybindings_catalog import (
+        binding_group_docs,
+        binding_scope_order,
+    )
+
+    return {
+        "scope_order": binding_scope_order(),
+        "groups": binding_group_docs(),
+    }
 
 
 def settings_category_docs() -> tuple[dict[str, str], ...]:

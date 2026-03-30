@@ -195,10 +195,5 @@
     "settings_entry_template": "- {label}: {description}",
     "settings_compact_overflow": "- Open full-size window to view all category descriptions.",
     "live_keys_heading": "## Live keys (active profile)"
-  },
-  "action_group_headings": {
-    "game_translation": "Gameplay / Translation",
-    "game_rotation": "Gameplay / Rotation",
-    "game_other": "Gameplay / Other"
   }
 }

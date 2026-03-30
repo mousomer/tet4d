@@ -15,12 +15,14 @@ Define keybinding requirements for all game dimensions and keyboard profiles:
 5. Dedicated keybindings setup menu and conflict-safe action routing
 
 Implementation references:
-1. `src/tet4d/ui/pygame/keybindings.py`
-2. `src/tet4d/engine/runtime/keybinding_store.py`
-3. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
-4. `keybindings/2d.json`
-5. `keybindings/3d.json`
-6. `keybindings/4d.json`
+1. `config/keybindings/catalog.json`
+2. `config/keybindings/defaults.json`
+3. `src/tet4d/ui/pygame/keybindings.py`
+4. `src/tet4d/engine/runtime/keybinding_store.py`
+5. `src/tet4d/ui/pygame/menu/menu_keybinding_shortcuts.py`
+6. `keybindings/2d.json`
+7. `keybindings/3d.json`
+8. `keybindings/4d.json`
 
 ## 2. Keyboard Type Profiles
 
@@ -41,6 +43,20 @@ Implementation references:
 3. Practical precedence:
 4. Existing JSON file > profile defaults
 5. Profile defaults > hardcoded fallback
+
+### 2.3 Authoritative structure contract
+
+1. `config/keybindings/catalog.json` is the single structural source of truth for:
+2. action ids
+3. group labels/descriptions
+4. editor scope order and gameplay bucket labels
+5. helper/control panel membership and ordering
+6. help live-key group headings/order
+7. `config/keybindings/defaults.json` is the single shipped-defaults source of truth for built-in presets.
+8. User profile files under `keybindings/` and `keybindings/profiles/` store mutable current bindings and overrides.
+9. Reset-to-defaults restores from preserved built-in defaults; it must not derive defaults from UI code.
+10. Gameplay, camera/view, topology playground, tutorials, help, controls reference, and the keybinding editor must all read the same resolved live action->keys map after preset load plus user overrides.
+11. Help/control/editor surfaces may format or filter the live bindings for context, but must not maintain independent binding structure ownership outside the catalog.
 
 ## 3. Shared System Keys (all dimensions)
 

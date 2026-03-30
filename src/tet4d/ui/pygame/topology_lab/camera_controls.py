@@ -21,23 +21,13 @@ SceneCamera = Camera3D | LayerView3D | None
 @dataclass(frozen=True)
 class CameraAvailability:
     enabled: bool
-    mouse_hint: str = ''
-    key_hint: str = ''
 
 
 def scene_camera_availability(dimension: int) -> CameraAvailability:
     if int(dimension) == 3:
-        return CameraAvailability(
-            enabled=True,
-            mouse_hint='MMB drag orbit, wheel zoom',
-            key_hint='camera keys rotate, zoom, and reset',
-        )
+        return CameraAvailability(enabled=True)
     if int(dimension) == 4:
-        return CameraAvailability(
-            enabled=True,
-            mouse_hint='MMB drag orbit, wheel zoom',
-            key_hint='camera keys rotate, zoom, reset, and turn xw/zw',
-        )
+        return CameraAvailability(enabled=True)
     return CameraAvailability(enabled=False)
 
 

@@ -29,6 +29,8 @@ from tet4d.engine.runtime.menu_config import settings_category_docs
 from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_action_description,
     binding_group_label,
+    binding_reference_live_order,
+    binding_reference_runtime_order,
     gameplay_action_category,
 )
 from tet4d.engine.ui_logic.menu_layout import compute_menu_layout_zones
@@ -44,21 +46,8 @@ from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 _HELP_LAYOUT = help_layout_payload()
 _SETTINGS_DOCS = settings_category_docs()
-_ACTION_GROUPS = _HELP_LAYOUT.get("action_groups") or {}
-_RUNTIME_GROUP_ORDER = tuple(
-    _ACTION_GROUPS.get("runtime_order") or ("system", "game", "explorer", "camera")
-)
-_LIVE_KEY_GROUP_ORDER = tuple(
-    _ACTION_GROUPS.get("live_order")
-    or (
-        "system",
-        "game_translation",
-        "game_rotation",
-        "game_other",
-        "explorer",
-        "camera",
-    )
-)
+_RUNTIME_GROUP_ORDER = binding_reference_runtime_order()
+_LIVE_KEY_GROUP_ORDER = binding_reference_live_order()
 _HELP_COLORS = _HELP_LAYOUT["colors"]
 _BG_TOP = tuple(_HELP_COLORS["bg_top"])
 _BG_BOTTOM = tuple(_HELP_COLORS["bg_bottom"])

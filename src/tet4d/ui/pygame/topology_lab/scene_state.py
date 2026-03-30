@@ -467,10 +467,6 @@ def tool_is_sandbox(tool: str) -> bool:
     return canonical_tool_name(tool) == TOOL_SANDBOX
 
 
-def tool_is_play(tool: str) -> bool:
-    return canonical_tool_name(tool) == TOOL_PLAY
-
-
 def sync_shell_state_from_canonical(state: TopologyPlaygroundState) -> None:
     runtime_state = state.canonical_state
     if runtime_state is None:
@@ -1253,7 +1249,6 @@ __all__ = [
     "sync_shell_state_from_canonical",
     "tool_is_edit",
     "tool_is_probe",
-    "tool_is_play",
     "tool_is_sandbox",
     "update_explorer_draft",
     "uses_general_explorer_editor",

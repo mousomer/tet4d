@@ -6,10 +6,7 @@ from typing import Any, Literal
 import pygame
 
 from tet4d.engine.gameplay.api import compute_speed_level_runtime
-from tet4d.engine.runtime.menu_settings_state import (
-    mode_animation_settings,
-    mode_speedup_settings,
-)
+from tet4d.engine.runtime.menu_settings_state import mode_speedup_settings
 from tet4d.engine.tutorial.api import (
     tutorial_runtime_is_running_runtime,
     tutorial_runtime_restart_runtime,
@@ -35,11 +32,6 @@ def _mode_key_for_dimension(dimension: int) -> str:
 def _load_speedup_settings_for_dimension(dimension: int) -> tuple[int, int]:
     mode_key = _mode_key_for_dimension(dimension)
     return mode_speedup_settings(mode_key)
-
-
-def _load_animation_settings_for_dimension(dimension: int) -> tuple[int, int]:
-    mode_key = _mode_key_for_dimension(dimension)
-    return mode_animation_settings(mode_key)
 
 
 def process_game_events(

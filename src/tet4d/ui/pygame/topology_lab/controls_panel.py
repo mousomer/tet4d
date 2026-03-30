@@ -582,15 +582,6 @@ def _normalize_explorer_draft(state: _TopologyLabState) -> None:
     )
 
 
-def _explorer_slot_label(state: _TopologyLabState) -> str:
-    draft = current_explorer_draft(state)
-    assert draft is not None
-    glues = _explorer_glues(state)
-    if draft.slot_index >= len(glues):
-        return "New glue"
-    return glues[draft.slot_index].glue_id
-
-
 def _select_explorer_draft_slot(state: _TopologyLabState, slot_index: int) -> None:
     draft = current_explorer_draft(state)
     assert draft is not None
@@ -892,13 +883,6 @@ def _apply_profile(state: _TopologyLabState, profile: TopologyProfileState) -> N
     _mark_updated(state)
 
 
-def _reset_to_mode_dimension(state: _TopologyLabState) -> None:
-    _sync_profile(state)
-    _sync_explorer_state(state)
-    set_dirty(state, False)
-    _set_status(state, "")
-
-
 def _cycle_gameplay_mode(state: _TopologyLabState, step: int) -> None:
     idx = TOPOLOGY_GAMEPLAY_MODE_OPTIONS.index(state.gameplay_mode)
     state.gameplay_mode = TOPOLOGY_GAMEPLAY_MODE_OPTIONS[
@@ -972,17 +956,6 @@ def _apply_legacy_row_adjustment(
     return True
 
 
-def _cycle_preset(state: _TopologyLabState, step: int) -> None:
-    _apply_legacy_row_adjustment(
-        state,
-        key="preset",
-        axis=None,
-        side=None,
-        disabled=False,
-        step=step,
-    )
-
-
 def _cycle_explorer_preset(state: _TopologyLabState, step: int) -> None:
     with record_interaction_handler(
         state,
@@ -1012,28 +985,6 @@ def _cycle_explorer_preset(state: _TopologyLabState, step: int) -> None:
         set_highlighted_glue_id(state, None)
         _normalize_explorer_draft(state)
         _mark_updated(state)
-
-
-def _cycle_topology_mode(state: _TopologyLabState, step: int) -> None:
-    _apply_legacy_row_adjustment(
-        state,
-        key="topology_mode",
-        axis=None,
-        side=None,
-        disabled=False,
-        step=step,
-    )
-
-
-def _cycle_edge_rule(state: _TopologyLabState, row: _RowSpec, step: int) -> None:
-    _apply_legacy_row_adjustment(
-        state,
-        key=row.key,
-        axis=row.axis,
-        side=row.side,
-        disabled=row.disabled,
-        step=step,
-    )
 
 
 def _set_explorer_draft_slot(state: _TopologyLabState, step: int) -> None:

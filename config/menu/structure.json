@@ -583,33 +583,6 @@
       }
     ]
   },
-  "keybinding_category_docs": {
-    "scope_order": [
-      "general",
-      "2d",
-      "3d",
-      "4d",
-      "all"
-    ],
-    "groups": {
-      "system": {
-        "label": "General / System",
-        "description": "Global actions available in all modes."
-      },
-      "game": {
-        "label": "Gameplay",
-        "description": "Piece translation, drop, and rotation actions."
-      },
-      "camera": {
-        "label": "Camera / View",
-        "description": "Board orbit, zoom, and projection controls."
-      },
-      "explorer": {
-        "label": "Explorer Movement",
-        "description": "Explorer-only traversal controls, including upward and downward movement."
-      }
-    }
-  },
   "settings_category_docs": [
     {
       "id": "audio",

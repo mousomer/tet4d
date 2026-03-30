@@ -176,10 +176,6 @@ class PlayBotController:
     def controls_descent(self) -> bool:
         return self.mode in {BotMode.AUTO, BotMode.LEARN, BotMode.STEP}
 
-    @property
-    def assist_preview_cells(self) -> tuple[tuple[int, ...], ...]:
-        return self._assist_preview_cells
-
     def cycle_mode(self) -> BotMode:
         self.mode = _next_mode(self.mode)
         self.reset_runtime()

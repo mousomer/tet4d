@@ -2,23 +2,30 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tet4d.engine.runtime.menu_config import keybinding_category_docs
-from tet4d.engine.ui_logic.keybindings_catalog import partition_gameplay_actions
-from tet4d.ui.pygame.keybindings import (
+from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_group_description,
     binding_group_label,
+    binding_scope_order,
+    gameplay_bucket_label,
+    partition_gameplay_actions,
+)
+from tet4d.ui.pygame.keybindings import (
     keybinding_file_label,
     runtime_binding_groups_for_dimension,
 )
 
-CATEGORY_DOCS = keybinding_category_docs()
-SCOPE_ORDER = tuple(CATEGORY_DOCS.get("scope_order", ("all", "2d", "3d", "4d")))
+SCOPE_ORDER = binding_scope_order()
 VALID_SCOPES = tuple(dict.fromkeys((*SCOPE_ORDER, "general", "all")))
-SECTION_MENU: tuple[tuple[str, str, str], ...] = (
-    ("general", "General Keybindings", "System actions shared across 2D/3D/4D."),
-    ("2d", "2D Keybindings", "2D gameplay controls."),
-    ("3d", "3D Keybindings", "3D gameplay and camera/view controls."),
-    ("4d", "4D Keybindings", "4D gameplay and camera/view controls."),
+_SECTION_COPY = {
+    "general": ("General Keybindings", "System actions shared across 2D/3D/4D."),
+    "2d": ("2D Keybindings", "2D gameplay controls."),
+    "3d": ("3D Keybindings", "3D gameplay and camera/view controls."),
+    "4d": ("4D Keybindings", "4D gameplay and camera/view controls."),
+}
+SECTION_MENU: tuple[tuple[str, str, str], ...] = tuple(
+    (scope, *_SECTION_COPY[scope])
+    for scope in SCOPE_ORDER
+    if scope in _SECTION_COPY
 )
 
 
@@ -50,13 +57,6 @@ _BUCKET_OTHER = "other"
 _BUCKET_ALL = "all"
 
 
-_GAME_BUCKET_LABELS = {
-    _BUCKET_TRANSLATION: "Gameplay / Translation",
-    _BUCKET_ROTATION: "Gameplay / Rotation",
-    _BUCKET_OTHER: "Gameplay / Other",
-}
-
-
 def scope_label(scope: str) -> str:
     if scope == "general":
         return "GENERAL"
@@ -78,24 +78,10 @@ def scope_from_dimension(dimension: int) -> str:
 
 
 def _doc_label(group: str) -> str:
-    groups = CATEGORY_DOCS.get("groups", {})
-    if isinstance(groups, dict):
-        raw = groups.get(group)
-        if isinstance(raw, dict):
-            label = raw.get("label")
-            if isinstance(label, str) and label.strip():
-                return label.strip()
     return binding_group_label(group)
 
 
 def _doc_description(group: str) -> str:
-    groups = CATEGORY_DOCS.get("groups", {})
-    if isinstance(groups, dict):
-        raw = groups.get(group)
-        if isinstance(raw, dict):
-            desc = raw.get("description")
-            if isinstance(desc, str) and desc.strip():
-                return desc.strip()
     return binding_group_description(group)
 
 
@@ -127,7 +113,7 @@ def _gameplay_sections_for_dimension(dimension: int) -> list[_SectionSpec]:
             continue
         sections.append(
             _SectionSpec(
-                title=f"{dimension}D {_GAME_BUCKET_LABELS[bucket]}",
+                title=f"{dimension}D {gameplay_bucket_label(bucket)}",
                 dimension=dimension,
                 group="game",
                 action_bucket=bucket,

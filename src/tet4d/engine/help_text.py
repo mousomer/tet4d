@@ -9,12 +9,15 @@ from typing import Any
 
 from .runtime.settings_schema import read_json_value_or_raise
 from .runtime.project_config import project_root_path
-from .ui_logic.keybindings_catalog import binding_action_ids
+from .ui_logic.keybindings_catalog import (
+    binding_action_ids,
+    binding_reference_group_heading,
+    keybinding_helper_layout_payload,
+)
 
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"
 HELP_CONTENT_FILE = HELP_CONFIG_DIR / "content" / "runtime_help_content.json"
 HELP_LAYOUT_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_layout.json"
-HELP_ACTION_LAYOUT_FILE = HELP_CONFIG_DIR / "layout" / "runtime_help_action_layout.json"
 
 HELP_PANEL_MODES = frozenset({"2d", "3d", "4d"})
 HELP_CAPABILITY_KEYS = frozenset(
@@ -710,10 +713,6 @@ def help_content_registry() -> dict[str, Any]:
         "value_templates": _string_map(
             payload.get("value_templates"), path="help_content.value_templates"
         ),
-        "action_group_headings": _string_map(
-            payload.get("action_group_headings"),
-            path="help_content.action_group_headings",
-        ),
         "fallback_topic": _validate_fallback_topic(payload.get("fallback_topic")),
     }
 
@@ -725,7 +724,7 @@ def help_layout_registry() -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def help_action_layout_registry() -> dict[str, Any]:
-    return _validate_action_layout_payload(_read_json_object(HELP_ACTION_LAYOUT_FILE))
+    return _validate_action_layout_payload(keybinding_helper_layout_payload())
 
 
 def help_topic_block_lines(topic_id: str, *, compact: bool) -> tuple[str, ...]:
@@ -765,11 +764,7 @@ def help_value_template(name: str, *, default: str = "") -> str:
 
 
 def help_action_group_heading(group: str) -> str:
-    headings = help_content_registry()["action_group_headings"]
-    key = str(group).strip()
-    if not key:
-        return ""
-    return str(headings.get(key, ""))
+    return binding_reference_group_heading(group)
 
 
 def help_fallback_topic() -> dict[str, Any]:
@@ -907,9 +902,3 @@ def validate_help_text_contract() -> tuple[bool, str]:
     except HelpTextValidationError as exc:
         return False, str(exc)
     return True, "Help text/layout contract validated"
-
-
-def clear_help_text_cache() -> None:
-    help_content_registry.cache_clear()
-    help_layout_registry.cache_clear()
-    help_action_layout_registry.cache_clear()

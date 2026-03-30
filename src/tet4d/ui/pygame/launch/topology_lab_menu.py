@@ -19,7 +19,7 @@ from tet4d.ui.pygame.topology_lab.app import (
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.topology_lab import (
-    ExplorerGlueDraft,
+    ExplorerGlueDraft as _ExplorerGlueDraft,
     ExplorerPlaygroundSettings,
     PANE_CONTROLS,
     PANE_SCENE,
@@ -27,7 +27,7 @@ from tet4d.ui.pygame.topology_lab import (
     TOOL_EDIT,
     TOOL_NAVIGATE,
     TOOL_PLAY,
-    TOOL_PROBE,
+    TOOL_PROBE as _TOOL_PROBE,
     TOOL_SANDBOX,
     TopologyLabHitTarget,
     apply_boundary_edit_pick,
@@ -44,11 +44,10 @@ from tet4d.ui.pygame.topology_lab import (
     rotate_sandbox_piece,
     sandbox_cells,
     spawn_sandbox_piece,
-    set_active_tool,
+    set_active_tool as _set_active_tool,
     step_scene_camera,
     tool_is_edit,
     tool_is_sandbox,
-    transform_preview_label,
     update_hover_target,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
@@ -67,7 +66,7 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     set_probe_neighbors_visible as _set_probe_neighbors_visible,
     set_active_workspace as _set_active_workspace,
     set_probe_trace_visible as _set_probe_trace_visible,
-    sync_canonical_playground_state as _sync_canonical_playground_state,
+    sync_canonical_playground_state as _sync_canonical_state,
     update_explorer_draft as _update_explorer_draft,
     WORKSPACE_EDITOR,
     WORKSPACE_SANDBOX,
@@ -80,14 +79,8 @@ from tet4d.ui.pygame.topology_lab.copy import (
     display_title_for_state as _copy_display_title_for_state,
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_values import (
-    _explorer_active_glue_ids,
-    _explorer_boundaries,
-    _explorer_piece_set_label,
     _playability_shell_chip_text,
     _explorer_preset_value_text,
-    _explorer_preview_payload,
-    _explorer_transform_label,
-    _playability_panel_lines,
     _row_value_text,
     _sandbox_neighbor_search_enabled,
 )
@@ -99,12 +92,8 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _adjust_row,
     _apply_explorer_glue,
     _apply_probe_step,
-    _apply_sandbox_shortcut_step,
     _cycle_dimension,
-    _cycle_edge_rule,
     _cycle_explorer_preset,
-    _ensure_play_settings,
-    _explorer_glues,
     _explorer_presets,
     _handle_enter_key,
     _handle_navigation_key,
@@ -137,13 +126,11 @@ from tet4d.ui.pygame.topology_lab.workspace_shell import (
     _active_workspace_coord,
     _active_workspace_neighbor_markers,
     _active_workspace_path,
-    _draw_explorer_scene,
+    _draw_explorer_scene as _workspace_draw_explorer_scene,
     _draw_explorer_workspace,
-    _draw_probe_controls_if_needed,
-    _explorer_workspace_layout,
+    _explorer_workspace_layout as _workspace_shell_layout,
     _hint_lines_for_state,
     _workspace_preview_lines,
-    _workspace_probe_lines,
 )
 from tet4d.ui.pygame.topology_lab.shell_layout import (
     build_topology_lab_shell_layout,
@@ -156,6 +143,7 @@ from tet4d.ui.pygame.ui_utils import (
     draw_wrapped_label_value_lines,
     draw_vertical_gradient,
     draw_panel_frame,
+    panel_bg,
     wrapped_label_value_layout,
 )
 
@@ -168,16 +156,17 @@ _DISABLED_COLOR = (130, 138, 168)
 _ANALYSIS_PANE_TITLE = "Diagnostics"
 _SCENE_PANE_TITLE = "Workspace"
 
+# Narrow compatibility exports retained for focused tests and legacy callers.
+ExplorerGlueDraft = _ExplorerGlueDraft
+TOOL_PROBE = _TOOL_PROBE
+set_active_tool = _set_active_tool
+_explorer_workspace_layout = _workspace_shell_layout
+_sync_canonical_playground_state = _sync_canonical_state
+_draw_explorer_scene = _workspace_draw_explorer_scene
 
-def _display_title_for_state(state: _TopologyLabState) -> str:
-    return _copy_display_title_for_state(state)
-
-# Re-exported compatibility surface kept for tests while menu cleanup stays
-# in flight.
-_COMPAT_EXPORTS = (
+_TEST_COMPAT_EXPORTS = (
     ExplorerGlueDraft,
     ExplorerPlaygroundSettings,
-    build_explorer_playground_settings,
     PANE_CONTROLS,
     PANE_SCENE,
     TOOL_CREATE,
@@ -187,114 +176,30 @@ _COMPAT_EXPORTS = (
     TOOL_PROBE,
     TOOL_SANDBOX,
     boundaries_for_dimension,
-    set_active_tool,
-    _sync_canonical_playground_state,
-    _apply_sandbox_shortcut_step,
-    _cycle_dimension,
-    _cycle_edge_rule,
-    _explorer_presets,
-    _refresh_explorer_scene_state,
-    _sync_explorer_state,
-    sandbox_cells,
-    _ensure_probe_state,
-    _explorer_preset_value_text,
-    _current_probe_coord,
-    _current_probe_path,
-    _action_buttons_for_state,
+    build_explorer_playground_settings,
     _active_workspace_coord,
     _active_workspace_neighbor_markers,
     _active_workspace_path,
-    _draw_explorer_scene,
-    _draw_probe_controls_if_needed,
+    _board_dims_for_state,
+    _cycle_dimension,
+    _current_probe_coord,
+    _current_probe_path,
+    _ensure_probe_state,
+    _explorer_preset_value_text,
+    _explorer_presets,
     _explorer_workspace_layout,
-    _hint_lines_for_state,
     _workspace_preview_lines,
-    _workspace_probe_lines,
+    _draw_explorer_scene,
+    _refresh_explorer_scene_state,
+    _sync_explorer_state,
+    _sync_canonical_playground_state,
+    sandbox_cells,
+    set_active_tool,
 )
 
 
-def _explorer_boundary_lines(state: _TopologyLabState) -> list[str]:
-    boundary_status = _explorer_active_glue_ids(state)
-    lines = ["Boundaries"]
-    for boundary in _explorer_boundaries(state):
-        lines.append(f"  {boundary.label}: {boundary_status[boundary.label]}")
-    return lines
-
-
-def _explorer_gluing_lines(state: _TopologyLabState) -> list[str]:
-    lines = ["Gluings"]
-    glues = _explorer_glues(state)
-    if not glues:
-        lines.append("  none")
-        return lines
-    for glue in glues:
-        lines.append(
-            "  " + transform_preview_label(glue.source, glue.target, glue.transform)
-        )
-    return lines
-
-
-def _explorer_preview_lines(
-    state: _TopologyLabState, preview: dict[str, object]
-) -> list[str]:
-    graph = preview["movement_graph"]
-    lines = ["Preview"]
-    lines.append(
-        f"  Cells: {graph['cell_count']}  Edges: {graph['directed_edge_count']}"
-    )
-    lines.append(
-        "  Traversals: "
-        f"{graph['boundary_traversal_count']}  Components: {graph['component_count']}"
-    )
-    warnings = preview.get("warnings", ())
-    if warnings:
-        lines.append("  Warnings")
-        for warning in warnings[:3]:
-            lines.append(f"    {warning}")
-    basis_arrows = preview.get("basis_arrows", ())
-    if basis_arrows:
-        lines.append("  Arrow basis")
-        for arrow in basis_arrows[:2]:
-            lines.append(f"    {arrow['crossing']}")
-            for pair in arrow.get("basis_pairs", ())[: max(1, state.dimension - 1)]:
-                lines.append(f"      {pair['from']} -> {pair['to']}")
-    samples = preview["sample_boundary_traversals"]
-    if samples:
-        lines.append("  Samples")
-        for sample in samples[:4]:
-            lines.append(
-                "    "
-                f"{sample['source_boundary']} -> {sample['target_boundary']} via {sample['step']}"
-            )
-    return lines
-
-
-def _explorer_sidebar_lines(state: _TopologyLabState) -> list[str]:
-    profile = _current_explorer_profile(state)
-    assert profile is not None
-    settings = _ensure_play_settings(state)
-    dims = list(_board_dims_for_state(state))
-    lines = [
-        f"Topology Playground {state.dimension}D",
-        "Presets, board size, seam editing, sandbox play, and launch all happen in this shell.",
-        f"Board: {dims}",
-        f"Piece set: {_explorer_piece_set_label(state)}",
-        f"Speed: {settings.speed_level}",
-        _explorer_transform_label(state),
-        "",
-    ]
-    lines.extend(_playability_panel_lines(state))
-    lines.append("")
-    lines.extend(_explorer_boundary_lines(state))
-    lines.append("")
-    lines.extend(_explorer_gluing_lines(state))
-    lines.append("")
-    preview, preview_error = _explorer_preview_payload(state)
-    if preview is None:
-        lines.append("Preview unavailable until the topology validates.")
-        return lines
-    lines.extend(_explorer_preview_lines(state, preview))
-    return lines
+def _display_title_for_state(state: _TopologyLabState) -> str:
+    return _copy_display_title_for_state(state)
 
 
 def _set_selected_row_by_key(state: _TopologyLabState, key: str) -> None:
@@ -875,7 +780,7 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         draw_panel_frame(
             screen,
             rect=controls_rect,
-            fill_color=(18, 22, 38),
+            fill_color=panel_bg(),
             border_color=(
                 (236, 212, 128) if _controls_pane_active(state) else (84, 96, 132)
             ),

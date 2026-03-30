@@ -145,24 +145,27 @@ def _score_violations(
 def evaluate_tech_debt_gate(
     metrics: dict[str, Any], gate_config: dict[str, Any]
 ) -> list[str]:
+    mode = _gate_mode(gate_config)
+    order = _status_order(gate_config)
     baseline_stage, baseline_score, baseline_status = _baseline_state(gate_config)
+    epsilon_raw = gate_config.get("score_epsilon", 0.0)
+    try:
+        epsilon = float(epsilon_raw)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("score_epsilon must be numeric") from exc
+    if epsilon < 0:
+        raise ValueError("score_epsilon must be non-negative")
 
     stage, score, status = _current_state(metrics)
-    mode = _gate_mode(gate_config)
-    epsilon = float(gate_config.get("score_epsilon", 0.0))
-    order = _status_order(gate_config)
     violations = _missing_state_violations(stage, score, status)
     if violations:
         return violations
-
     assert stage is not None
     assert score is not None
     assert status is not None
 
     if stage < baseline_stage:
-        violations.append(f"arch_stage regressed ({stage} < baseline {baseline_stage})")
-    if violations:
-        return violations
+        return [f"arch_stage regressed ({stage} < {baseline_stage})"]
 
     violations.extend(
         _status_violations(
@@ -171,9 +174,6 @@ def evaluate_tech_debt_gate(
             order=order,
         )
     )
-    if violations:
-        return violations
-
     violations.extend(
         _score_violations(
             mode=mode,

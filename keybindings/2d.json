@@ -1,51 +1,58 @@
 {
+  "defaults_version": 1,
+  "dimension": 2,
+  "profile": "small",
   "bindings": {
     "game": {
-      "hard_drop": [
-        "space"
-      ],
       "move_x_neg": [
+        "a",
         "left"
       ],
       "move_x_pos": [
+        "d",
         "right"
       ],
-      "move_y_neg": [
-        "page up"
+      "soft_drop": [
+        "s",
+        "down"
       ],
-      "move_y_pos": [
-        "page down"
+      "hard_drop": [
+        "space"
       ],
       "rotate_xy_neg": [
-        "w"
+        "r"
       ],
       "rotate_xy_pos": [
+        "t"
+      ]
+    },
+    "explorer": {
+      "move_up": [
         "up",
-        "q"
+        "page up"
       ],
-      "soft_drop": [
-        "down"
+      "move_down": [
+        "down",
+        "page down"
       ]
     },
     "system": {
-      "help": [
-        "f1"
-      ],
-      "menu": [
-        "m",
-        "f10"
-      ],
       "quit": [
         "escape"
       ],
+      "menu": [
+        "p",
+        "f10"
+      ],
       "restart": [
-        "y"
+        "x"
       ],
       "toggle_grid": [
         "c"
+      ],
+      "help": [
+        "f1"
       ]
     }
-  },
-  "dimension": 2,
-  "profile": "small"
+  }
 }

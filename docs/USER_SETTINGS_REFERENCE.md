@@ -160,16 +160,16 @@ Piece translation, drop, and rotation actions.
 - 3D: 12 actions
 - 4D: 20 actions
 
-#### Camera / View
-Board orbit, zoom, and projection controls.
-- 3D: 12 actions
-- 4D: 16 actions
-
 #### Explorer Movement
 Explorer-only traversal controls, including upward and downward movement.
 - 2D: 2 actions
 - 3D: 2 actions
 - 4D: 2 actions
+
+#### Camera / View
+Board orbit, zoom, projection, and overlay controls.
+- 3D: 12 actions
+- 4D: 16 actions
 
 
 ### `macbook`
@@ -183,16 +183,16 @@ Piece translation, drop, and rotation actions.
 - 3D: 12 actions
 - 4D: 20 actions
 
-#### Camera / View
-Board orbit, zoom, and projection controls.
-- 3D: 12 actions
-- 4D: 16 actions
-
 #### Explorer Movement
 Explorer-only traversal controls, including upward and downward movement.
 - 2D: 2 actions
 - 3D: 2 actions
 - 4D: 2 actions
+
+#### Camera / View
+Board orbit, zoom, projection, and overlay controls.
+- 3D: 12 actions
+- 4D: 16 actions
 
 
 ### `small`
@@ -206,16 +206,16 @@ Piece translation, drop, and rotation actions.
 - 3D: 12 actions
 - 4D: 20 actions
 
-#### Camera / View
-Board orbit, zoom, and projection controls.
-- 3D: 12 actions
-- 4D: 16 actions
-
 #### Explorer Movement
 Explorer-only traversal controls, including upward and downward movement.
 - 2D: 2 actions
 - 3D: 2 actions
 - 4D: 2 actions
+
+#### Camera / View
+Board orbit, zoom, projection, and overlay controls.
+- 3D: 12 actions
+- 4D: 16 actions
 
 
 ### `tiny`
@@ -229,13 +229,13 @@ Piece translation, drop, and rotation actions.
 - 3D: 12 actions
 - 4D: 20 actions
 
-#### Camera / View
-Board orbit, zoom, and projection controls.
-- 3D: 12 actions
-- 4D: 16 actions
-
 #### Explorer Movement
 Explorer-only traversal controls, including upward and downward movement.
 - 2D: 2 actions
 - 3D: 2 actions
 - 4D: 2 actions
+
+#### Camera / View
+Board orbit, zoom, projection, and overlay controls.
+- 3D: 12 actions
+- 4D: 16 actions

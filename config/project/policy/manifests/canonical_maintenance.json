@@ -77,7 +77,6 @@
       "config/help/icon_map.json",
       "config/help/content/runtime_help_content.json",
       "config/help/layout/runtime_help_layout.json",
-      "config/help/layout/runtime_help_action_layout.json",
       "config/tutorial/lessons.json",
       "config/tutorial/plan.json",
       "config/gameplay/tuning.json",
@@ -663,6 +662,7 @@
       "must_contain": [
         "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
         "config/project/constants.json",
+        "config/keybindings/catalog.json",
         "config/keybindings/defaults.json",
         "config/project/format_allowlist.txt"
       ]

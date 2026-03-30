@@ -78,12 +78,12 @@ def clear_projection_lattice_cache() -> None:
     _PROJECTION_LATTICE_CACHE.clear()
 
 
-def projection_lattice_cache_keys() -> tuple[object, ...]:
-    return tuple(_PROJECTION_LATTICE_CACHE.keys())
-
-
 def projection_lattice_cache_size() -> int:
     return len(_PROJECTION_LATTICE_CACHE)
+
+
+def projection_lattice_cache_keys() -> tuple[object, ...]:
+    return tuple(_PROJECTION_LATTICE_CACHE.keys())
 
 
 def shade_color(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:

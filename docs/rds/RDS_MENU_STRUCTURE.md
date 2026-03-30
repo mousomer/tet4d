@@ -334,8 +334,9 @@ Manual tests:
 3. Profile file actions (`Load`,`Save`,`Save As`,`Reset`) are integrated and consistent.
 4. Keybindings menu parity is enforced between setup and pause routes.
 5. In-game helper panel membership/order is data-driven from
-   `config/help/layout/runtime_help_action_layout.json` using stable
-   panel/line IDs, per-mode includes, and runtime `requires` predicates.
+   `config/keybindings/catalog.json` using stable panel/line IDs,
+   shared action metadata, per-mode includes, and runtime `requires`
+   predicates.
 6. Engine runtime decides helper-line feasibility (capabilities/settings),
    while UI renderer only resolves key labels/tokens and draws the rows.
 7. Runtime side panel uses a unified hierarchy across 2D/3D/4D:

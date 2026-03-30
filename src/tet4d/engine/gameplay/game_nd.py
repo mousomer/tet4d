@@ -392,11 +392,6 @@ class GameStateND:
         self._piece_frame_permutation = permutation
         self._piece_frame_signs = signs
 
-    def _gravity_step(self) -> tuple[int, int]:
-        axis = int(self._piece_frame_permutation[self.config.gravity_axis])
-        delta = int(self._piece_frame_signs[self.config.gravity_axis])
-        return axis, delta
-
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
         if self.config.exploration_mode and _uses_explorer_piece_transport_nd(self.config):
             return piece_cells_in_bounds(piece, dims=self.config.dims)

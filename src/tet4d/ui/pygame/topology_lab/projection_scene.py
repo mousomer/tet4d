@@ -11,7 +11,12 @@ from tet4d.engine.topology_explorer import (
     BoundaryRef,
     ExplorerTopologyProfile,
 )
-from tet4d.ui.pygame.ui_utils import draw_fitted_text_line, draw_panel_frame
+from tet4d.ui.pygame.ui_utils import (
+    draw_fitted_text_line,
+    draw_panel_frame,
+    panel_bg,
+    panel_border,
+)
 
 from .common import (
     TopologyLabHitTarget,
@@ -31,8 +36,8 @@ from .scene_state import (
     canonical_tool_name,
 )
 
-_BACKGROUND = (18, 22, 38)
-_BORDER = (76, 84, 112)
+_BACKGROUND = panel_bg
+_BORDER = panel_border
 _GRID = (42, 50, 74)
 _TEXT = (220, 228, 250)
 _MUTED = (168, 178, 208)
@@ -465,8 +470,8 @@ def _draw_info_panel(
     draw_panel_frame(
         surface,
         rect=rect,
-        fill_color=_BACKGROUND,
-        border_color=_BORDER,
+        fill_color=_BACKGROUND(),
+        border_color=_BORDER(),
     )
     mode_label = _mode_label_for_tool(active_tool)
     lines = [
@@ -624,7 +629,7 @@ def _draw_projection_ribbon(
         surface,
         rect=area,
         fill_color=(16, 20, 34),
-        border_color=_BORDER,
+        border_color=_BORDER(),
     )
     boundary_area = pygame.Rect(
         area.x + _RIBBON_PADDING,
@@ -686,8 +691,8 @@ def _draw_projection_panel(
     draw_panel_frame(
         surface,
         rect=panel.rect,
-        fill_color=_BACKGROUND,
-        border_color=_BORDER,
+        fill_color=_BACKGROUND(),
+        border_color=_BORDER(),
     )
     title = draw_fitted_text_line(
         surface,

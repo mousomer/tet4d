@@ -5,9 +5,34 @@ from typing import Tuple
 
 import pygame
 
-from tet4d.engine.runtime.project_config import project_constant_int
+from tet4d.engine.runtime.project_config import project_constant_color, project_constant_int
 
 Color3 = Tuple[int, int, int]
+
+
+def button_bg() -> Color3:
+    return project_constant_color(("button", "bg"), (38, 44, 70))
+
+
+def button_active() -> Color3:
+    return project_constant_color(("button", "active"), (86, 98, 146))
+
+
+def button_text() -> Color3:
+    return project_constant_color(("button", "text"), (232, 236, 248))
+
+
+def button_border() -> Color3:
+    return project_constant_color(("button", "border"), (16, 18, 26))
+
+
+def panel_bg() -> Color3:
+    return project_constant_color(("panel", "bg"), (18, 22, 38))
+
+
+def panel_border() -> Color3:
+    return project_constant_color(("panel", "border"), (76, 84, 112))
+
 _GRADIENT_CACHE_MAX = project_constant_int(
     ("cache_limits", "gradient_surface_max"),
     16,
@@ -37,10 +62,6 @@ def text_fits(font: pygame.font.Font, text: str, max_width: int) -> bool:
     if max_width <= 0:
         return False
     return font.size(str(text))[0] <= int(max_width)
-
-
-def text_truncates(font: pygame.font.Font, text: str, max_width: int) -> bool:
-    return fit_text(font, str(text), int(max_width)) != str(text)
 
 
 def wrap_text_lines(

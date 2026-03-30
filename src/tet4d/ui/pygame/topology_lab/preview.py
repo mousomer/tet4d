@@ -4,14 +4,17 @@ import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
 from tet4d.ui.pygame.ui_utils import (
+    button_border,
+    button_text,
     draw_centered_wrapped_text,
     draw_fitted_text_line,
     draw_panel_frame,
+    panel_bg,
+    panel_border,
     wrap_text_lines,
 )
 
 _BLOCKED_BUTTON_COLOR = (74, 84, 118)
-_BUTTON_TEXT = (232, 236, 248)
 
 
 def build_preview_lines(preview: dict[str, object], *, dimension: int) -> list[str]:
@@ -55,8 +58,8 @@ def draw_preview_panel(
     draw_panel_frame(
         surface,
         rect=area,
-        fill_color=(18, 22, 38),
-        border_color=(76, 84, 112),
+        fill_color=panel_bg(),
+        border_color=panel_border(),
     )
     title_surf = draw_fitted_text_line(
         surface,
@@ -120,13 +123,13 @@ def draw_probe_controls(
         blocked = bool(option.get("blocked", False))
         color = _BLOCKED_BUTTON_COLOR if blocked else active_color
         pygame.draw.rect(surface, color, rect, border_radius=8)
-        pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
+        pygame.draw.rect(surface, button_border(), rect, 1, border_radius=8)
         draw_centered_wrapped_text(
             surface,
             rect=rect,
             font=fonts.hint_font,
             text=str(option.get("step", "?")),
-            color=_BUTTON_TEXT,
+            color=button_text(),
             max_lines=1,
             text_width_padding=6,
         )

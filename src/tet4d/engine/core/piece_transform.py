@@ -363,33 +363,6 @@ def rotate_blocks_nd(
     turns = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw)
     return _rotate_blocks_nd_cached(coords, axis_a, axis_b, turns % _QUARTER_TURNS)
 
-
-def _calculate_rotation_pivot(
-    blocks: tuple[tuple[float, ...], ...],
-    axis_a: int,
-    axis_b: int,
-) -> tuple[float, float]:
-    """
-    Calculate the pivot point for rotation in the (axis_a, axis_b) plane.
-    Uses true geometric center (matching discrete rotation's pivot calculation).
-    """
-    if not blocks:
-        return (0.0, 0.0)
-
-    # Get min/max along rotation axes
-    a_values = [b[axis_a] for b in blocks]
-    b_values = [b[axis_b] for b in blocks]
-
-    min_a, max_a = min(a_values), max(a_values)
-    min_b, max_b = min(b_values), max(b_values)
-
-    # Use true geometric center (discrete rotation rounds after transformation)
-    pivot_a = (min_a + max_a) / 2.0
-    pivot_b = (min_b + max_b) / 2.0
-
-    return pivot_a, pivot_b
-
-
 def rotate_blocks_nd_continuous(
     blocks: Iterable[Sequence[int | float]],
     axis_a: int,

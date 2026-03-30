@@ -20,6 +20,7 @@ PROJECT_ROOT = _detect_project_root()
 PROJECT_CONFIG_DIR = PROJECT_ROOT / "config" / "project"
 IO_PATHS_FILE = PROJECT_CONFIG_DIR / "io_paths.json"
 CONSTANTS_FILE = PROJECT_CONFIG_DIR / "constants.json"
+UI_THEME_FILE = PROJECT_ROOT / "config" / "ui" / "theme.json"
 
 _DEFAULT_IO_PATHS = {
     "version": 1,
@@ -127,6 +128,11 @@ def io_paths_payload() -> dict[str, Any]:
 def constants_payload() -> dict[str, Any]:
     loaded = _read_json_object(CONSTANTS_FILE)
     return _merge_objects(_DEFAULT_CONSTANTS, loaded)
+
+
+@lru_cache(maxsize=1)
+def ui_theme_payload() -> dict[str, Any]:
+    return _read_json_object(UI_THEME_FILE)
 
 
 def _normalize_relative_path(
@@ -612,3 +618,21 @@ def project_constant_float(
     if max_value is not None and fval > max_value:
         return default
     return fval
+
+
+def project_constant_color(
+    path: tuple[str, ...],
+    default: tuple[int, int, int],
+) -> tuple[int, int, int]:
+    value: object = ui_theme_payload()
+    for key in path:
+        if not isinstance(value, dict):
+            return default
+        value = value.get(key)
+    if (
+        isinstance(value, list)
+        and len(value) == 3
+        and all(isinstance(c, int) and 0 <= c <= 255 for c in value)
+    ):
+        return (value[0], value[1], value[2])
+    return default

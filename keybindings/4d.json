@@ -1,137 +1,150 @@
 {
+  "defaults_version": 1,
+  "dimension": 4,
+  "profile": "small",
   "bindings": {
+    "game": {
+      "move_x_neg": [
+        "a",
+        "left"
+      ],
+      "move_x_pos": [
+        "d",
+        "right"
+      ],
+      "move_z_neg": [
+        "w",
+        "up"
+      ],
+      "move_z_pos": [
+        "s",
+        "down"
+      ],
+      "move_w_neg": [
+        "q"
+      ],
+      "move_w_pos": [
+        "e"
+      ],
+      "soft_drop": [
+        "left shift",
+        "right shift"
+      ],
+      "hard_drop": [
+        "space"
+      ],
+      "rotate_xy_neg": [
+        "r"
+      ],
+      "rotate_xy_pos": [
+        "t"
+      ],
+      "rotate_xz_neg": [
+        "f"
+      ],
+      "rotate_xz_pos": [
+        "g"
+      ],
+      "rotate_yz_neg": [
+        "v"
+      ],
+      "rotate_yz_pos": [
+        "b"
+      ],
+      "rotate_xw_neg": [
+        "y"
+      ],
+      "rotate_xw_pos": [
+        "u"
+      ],
+      "rotate_yw_neg": [
+        "h"
+      ],
+      "rotate_yw_pos": [
+        "j"
+      ],
+      "rotate_zw_neg": [
+        "n"
+      ],
+      "rotate_zw_pos": [
+        "m"
+      ]
+    },
+    "explorer": {
+      "move_up": [
+        "page up"
+      ],
+      "move_down": [
+        "page down"
+      ]
+    },
     "camera": {
-      "cycle_projection": [
-        "[1]"
-      ],
-      "pitch_neg": [
-        "7"
-      ],
-      "pitch_pos": [
-        "8"
-      ],
-      "reset": [
-        "[3]"
-      ],
       "view_xw_neg": [
         "1"
       ],
       "view_xw_pos": [
         "2"
       ],
-      "view_zw_neg": [
+      "yaw_neg": [
         "3"
       ],
-      "view_zw_pos": [
+      "yaw_pos": [
         "4"
       ],
-      "yaw_fine_neg": [
-        "[7]"
-      ],
-      "yaw_fine_pos": [
-        "[9]"
-      ],
-      "yaw_neg": [
+      "pitch_neg": [
         "5"
       ],
-      "yaw_pos": [
+      "pitch_pos": [
         "6"
       ],
+      "zoom_out": [
+        "7"
+      ],
       "zoom_in": [
+        "8"
+      ],
+      "cycle_projection": [
+        "9"
+      ],
+      "reset": [
         "0"
       ],
-      "zoom_out": [
-        "9"
-      ]
-    },
-    "game": {
-      "hard_drop": [
-        "space"
+      "view_zw_neg": [
+        ";"
       ],
-      "move_w_neg": [
-        "n"
+      "view_zw_pos": [
+        "'"
       ],
-      "move_w_pos": [
-        "/"
+      "yaw_fine_neg": [
+        "-"
       ],
-      "move_x_neg": [
-        "left"
+      "yaw_fine_pos": [
+        "="
       ],
-      "move_x_pos": [
-        "right"
+      "overlay_alpha_dec": [
+        "["
       ],
-      "move_y_neg": [
-        "page up"
-      ],
-      "move_y_pos": [
-        "page down"
-      ],
-      "move_z_neg": [
-        "up"
-      ],
-      "move_z_pos": [
-        "down"
-      ],
-      "rotate_xw_neg": [
-        "t"
-      ],
-      "rotate_xw_pos": [
-        "r"
-      ],
-      "rotate_xy_neg": [
-        "w"
-      ],
-      "rotate_xy_pos": [
-        "q"
-      ],
-      "rotate_xz_neg": [
-        "s"
-      ],
-      "rotate_xz_pos": [
-        "a"
-      ],
-      "rotate_yw_neg": [
-        "g"
-      ],
-      "rotate_yw_pos": [
-        "f"
-      ],
-      "rotate_yz_neg": [
-        "x"
-      ],
-      "rotate_yz_pos": [
-        "z"
-      ],
-      "rotate_zw_neg": [
-        "b"
-      ],
-      "rotate_zw_pos": [
-        "v"
-      ],
-      "soft_drop": [
-        "left shift",
-        "right shift"
+      "overlay_alpha_inc": [
+        "]"
       ]
     },
     "system": {
-      "help": [
-        "f1"
-      ],
-      "menu": [
-        "m",
-        "f10"
-      ],
       "quit": [
         "escape"
       ],
+      "menu": [
+        "p",
+        "f10"
+      ],
       "restart": [
-        "y"
+        "x"
       ],
       "toggle_grid": [
         "c"
+      ],
+      "help": [
+        "f1"
       ]
     }
-  },
-  "dimension": 4,
-  "profile": "small"
+  }
 }

@@ -337,19 +337,6 @@ def designer_profile_label_for_index(
     return profile.label
 
 
-def designer_profile_index_by_id(
-    dimension: int,
-    profile_id: str,
-    gameplay_mode: str | None = None,
-) -> int:
-    profiles = designer_profiles_for_dimension(dimension, gameplay_mode)
-    target = profile_id.strip().lower()
-    for idx, profile in enumerate(profiles):
-        if profile.profile_id.strip().lower() == target:
-            return idx
-    return 0
-
-
 def profile_state_from_preset(
     *,
     dimension: int,

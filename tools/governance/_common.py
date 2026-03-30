@@ -1,18 +1,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GOVERNANCE_PATH = REPO_ROOT / "config/project/policy/governance.json"
 CODE_RULES_PATH = REPO_ROOT / "config/project/policy/code_rules.json"
-
-
-@dataclass(frozen=True)
-class CheckIOError:
-    message: str
 
 
 def load_json_object(path: Path, rel: str) -> dict[str, Any]:

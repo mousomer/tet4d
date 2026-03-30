@@ -8,8 +8,7 @@
     "version",
     "fallback_topic",
     "topic_blocks",
-    "value_templates",
-    "action_group_headings"
+    "value_templates"
   ],
   "properties": {
     "version": {
@@ -72,12 +71,6 @@
       }
     },
     "value_templates": {
-      "type": "object",
-      "minProperties": 1,
-      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
-      "additionalProperties": { "type": "string", "minLength": 1 }
-    },
-    "action_group_headings": {
       "type": "object",
       "minProperties": 1,
       "propertyNames": { "pattern": "^[a-z0-9_]+$" },

@@ -283,12 +283,15 @@ def _settings_category_docs_payload() -> dict[str, dict[str, str]]:
 
 
 def _keybinding_category_docs_payload() -> dict[str, object]:
-    from tet4d.engine.runtime.menu_config import keybinding_category_docs
+    from tet4d.engine.ui_logic.keybindings_catalog import (
+        binding_group_docs,
+        binding_scope_order,
+    )
 
-    payload = keybinding_category_docs()
-    if not isinstance(payload, dict):
-        raise RuntimeError("keybinding category docs must be a mapping")
-    return payload
+    return {
+        "scope_order": binding_scope_order(),
+        "groups": binding_group_docs(),
+    }
 
 
 def _topology_mode_labels() -> tuple[str, ...]:

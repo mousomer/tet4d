@@ -12,8 +12,6 @@ class Action(Enum):
     ROTATE_POSITIVE = auto()
     ROTATE_NEGATIVE = auto()
     NONE = auto()  # no user input, just gravity tick
-    ROTATE_CW = ROTATE_POSITIVE
-    ROTATE_CCW = ROTATE_NEGATIVE
 
 
 class GameConfig2DLike(Protocol):

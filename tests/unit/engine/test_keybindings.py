@@ -101,8 +101,23 @@ class TestKeybindingProfiles(unittest.TestCase):
                 path = keybindings.profile_keybinding_file_path(dimension, profile)
                 self.assertTrue(path.exists(), f"missing file: {path}")
                 payload = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(payload.get("defaults_version"), 1)
                 self.assertEqual(payload.get("dimension"), dimension)
                 self.assertEqual(payload.get("profile"), profile)
+
+    def test_initialize_refreshes_stale_builtin_profile_files(self) -> None:
+        stale_path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
+        stale_payload = json.loads(stale_path.read_text(encoding="utf-8"))
+        stale_payload["bindings"]["game"]["move_x_neg"] = ["left"]
+        stale_payload.pop("defaults_version", None)
+        stale_path.write_text(json.dumps(stale_payload, indent=2), encoding="utf-8")
+
+        keybindings._KEYBINDINGS_INITIALIZED = False
+        keybindings.initialize_keybinding_files()
+
+        refreshed = json.loads(stale_path.read_text(encoding="utf-8"))
+        self.assertEqual(refreshed.get("defaults_version"), 1)
+        self.assertEqual(refreshed["bindings"]["game"]["move_x_neg"], ["a", "left"])
 
     def test_numeric_camera_defaults(self) -> None:
         self.assertEqual(keybindings.CAMERA_KEYS_3D.get("yaw_fine_neg"), (pygame.K_1,))

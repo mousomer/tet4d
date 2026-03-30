@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pygame
 
-from tet4d.ui.pygame.ui_utils import draw_centered_wrapped_text
+from tet4d.ui.pygame.ui_utils import (
+    button_active,
+    button_bg,
+    button_border,
+    button_text,
+    draw_centered_wrapped_text,
+)
 
 from .common import TopologyLabHitTarget
 from .scene_state import (
@@ -35,15 +41,15 @@ def draw_tool_ribbon(
     button_w = max(72, (area.width - (count - 1) * gap) // count)
     for index, workspace in enumerate(TOPOLOGY_LAB_WORKSPACES):
         rect = pygame.Rect(area.x + index * (button_w + gap), area.y, button_w, area.height)
-        color = (86, 98, 146) if workspace == active_workspace else (38, 44, 70)
+        color = button_active() if workspace == active_workspace else button_bg()
         pygame.draw.rect(surface, color, rect, border_radius=8)
-        pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
+        pygame.draw.rect(surface, button_border(), rect, 1, border_radius=8)
         draw_centered_wrapped_text(
             surface,
             rect=rect,
             font=fonts.hint_font,
             text=WORKSPACE_LABELS[workspace],
-            color=(232, 236, 248),
+            color=button_text(),
         )
         hits.append(TopologyLabHitTarget("workspace_mode", workspace, rect.copy()))
     return hits

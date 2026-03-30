@@ -43,13 +43,18 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground persistent cache completion follow-up (2026-03-29): the same versioned topology cache file now persists preview payloads, serialized movement-graph rows, and rigid-playability analysis together by effective topology signature, so repeat runs can reuse the full preview/signaling artifact stack rather than only the summary preview payload. Advanced gameplay now also exposes `Measure topology cache` and `Clear topology cache` actions for the persistent topology cache set, while clear also flushes the current process movement-graph and resolver memos.
 - Topology-playground/menu visibility follow-up (2026-03-30): compact control rows in both `Topology Playground` and `Advanced gameplay` now use wrap-aware label/value rendering instead of single-line truncation-only rendering, shared action buttons plus workspace tabs now wrap instead of hard truncating long labels, and the external helper lane now reserves a wider minimum width on supported compact shells so wrapped helper lines stay readable instead of collapsing into an overly narrow sidebar.
 - Topology-playground helper-panel redesign follow-up (2026-03-30): the right helper no longer renders as a generic wrapped hint stack. It now presents a minimal `Controls` card with one short workspace/tool context line plus dedicated `Move` and `Rotate` sections populated from the live current keybinding maps for the active dimension, keeping the helper easy to scan without reintroducing diagnostics or duplicate menu controls.
+- Keybinding authority unification follow-up (2026-03-30): keybinding action/group/editor/helper structure now lives in `config/keybindings/catalog.json` instead of being split across Python constants, menu structure docs, and a separate help-action layout file. Built-in preset defaults remain in `config/keybindings/defaults.json`, user profile files remain the mutable override layer, and runtime help/editor/control surfaces now read the same catalog-backed metadata plus the same resolved live binding map.
 - Topology-playground text-layout dedup follow-up (2026-03-30): shared wrapped-text primitives now centralize multi-line row sizing and centered compact-label rendering in `src/tet4d/ui/pygame/ui_utils.py`, so Topology Playground control rows, launcher settings rows, workspace tabs, and transform/action buttons now reuse the same layout math instead of maintaining near-duplicate wrapping code at each callsite.
 - Topology-playground row-render dedup follow-up (2026-03-30): the shared pygame UI helpers now also centralize selection-highlight drawing plus wrapped label/value row text rendering, so launcher settings and Topology Playground control rows no longer keep parallel per-surface loops for the same highlighted multi-line row presentation.
+- Config-reference/theme follow-up (2026-03-30): `config/ui/theme.json` now participates in the generated configuration-reference contract, focused project-config coverage now pins theme color fallback and validation behavior, and topology-playground color reads now stay lazy at the `pygame` UI seam instead of binding the theme once at `ui_utils.py` import time.
 - Topology-playground panel/text dedup follow-up (2026-03-30): shared pygame UI helpers now centralize common framed-card drawing and centered fitted single-line text rendering, so the helper card, preview panel, and launcher status/title/hint lines reuse the same compact panel/text primitives instead of repeating local fit-and-center boilerplate.
 - Topology-playground compact-chip dedup follow-up (2026-03-30): the shared pygame UI helpers now also centralize centered chip/badge rendering, so the Topology Playground top-bar validity/dimension chips and footer helper chips reuse one compact chip primitive instead of maintaining duplicate fit-center-border drawing logic.
 - Topology-playground fitted-text cleanup follow-up (2026-03-30): the remaining Topology Playground shell callers now route more title/header/button text through the shared fitted-text helpers, so the top-bar title, controls header, helper-card internals, and probe-control labels no longer carry separate local fit-text render boilerplate.
 - Topology-playground duplicate-panel cleanup follow-up (2026-03-30): local framed-panel and fitted-text helpers in `projection_scene.py` and `transform_editor.py` are now removed in favor of the shared pygame UI primitives, so more of the projection/info/transform surfaces now spend down caller-local duplication instead of growing new abstraction layers.
 - Topology-playground dead-code cleanup follow-up (2026-03-30): the shared side-panel path no longer exposes an unused `min_controls_h` parameter, the modern explorer workspace shell no longer accepts stale unused title/color arguments, and `vulture src tests scripts tools --min-confidence 80` is clean again after removing those defunct callsite parameters.
+- Dead-code pruning follow-up (2026-03-30): another small set of unreferenced helpers and stale compatibility leftovers is now removed, including the unused topology-lab `_COMPAT_EXPORTS` tuple, the unused `tool_is_play(...)` export seam, dead internal core/gameplay helpers, and a few unused playbot/help/settings helpers, reducing non-runtime surface area without changing live behavior.
+- Vulture bucket-1 pruning follow-up (2026-03-30): the current high-confidence UI/tooling sweep no longer carries stale topology-lab imports, unused workspace/helper card functions, unused camera-hint fields, orphaned projection/control-icon cache debug helpers, or dead pause/governance helpers, and the non-test `vulture src cli scripts tools --min-confidence 80` pass is again limited to the remaining verify-first surfaces rather than obvious internal leftovers.
+- Dead-wrapper retirement follow-up (2026-03-30): the old topology-lab preview/sidebar/probe-control compatibility helpers and a small set of row-adjustment wrapper functions are now retired entirely instead of being kept alive through test-only seams, and the matching defunct tests were removed or rewritten to assert real owner modules rather than reconstructed dead wrapper behavior.
 - Topology-playground sandbox-neighbor mouse-toggle follow-up (2026-03-29): the Sandbox `Neighbors` control row now toggles directly on mouse click in the modern shell instead of only selecting the row, and focused `3D` / `4D` workspace coverage now pins that click path so neighbor markers can be disabled without relying on keyboard row adjustment.
 - Topology-playground sandbox-move latency fix follow-up (2026-03-30): Sandbox movement in `AUTO` rigid-play mode no longer forces a fresh full rigid-playability scan while the canonical analysis is still in the deferred `analyzing` state, so `4D` Sandbox moves now reuse the pending analysis state instead of stalling for seconds per move.
 - Topology-playground compact-footer action fit follow-up (2026-03-30): the compact shell footer now reserves enough action-lane width for the six-button Sandbox action set so labels such as `Next Piece` and `Show Path` stay visible under the current compact-width layout contract and CI text-fit checks.
@@ -109,7 +114,7 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 189` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 188` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -117,7 +122,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 1.98`
+1. `delivery_size_pressure = 1.99`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -356,13 +361,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3785` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3623` real LOC
 2. `scripts/arch_metrics.py`: `1887` real LOC
-3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1592` real LOC
+3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1553` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1090` real LOC
-6. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `1054` real LOC
-7. `tools/governance/generate_configuration_reference.py`: `982` real LOC
+5. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1087` real LOC
+6. `tools/governance/generate_configuration_reference.py`: `985` real LOC
+7. `src/tet4d/ui/pygame/launch/topology_lab_menu.py`: `967` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `962` real LOC
 
 Thin-wrapper budgets:

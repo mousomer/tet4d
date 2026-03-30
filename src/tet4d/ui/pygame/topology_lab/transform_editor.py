@@ -4,14 +4,17 @@ import pygame
 
 from tet4d.ui.pygame.topology_lab.common import TopologyLabHitTarget
 from tet4d.ui.pygame.ui_utils import (
-    draw_fitted_text_line,
+    button_active,
+    button_bg,
+    button_border,
+    button_text,
     draw_centered_wrapped_text,
+    draw_fitted_text_line,
     draw_panel_frame,
+    panel_bg,
+    panel_border,
 )
 
-_BUTTON_BG = (38, 44, 70)
-_BUTTON_ACTIVE = (86, 98, 146)
-_BUTTON_TEXT = (232, 236, 248)
 _DISPLAY_BG = (24, 29, 47)
 _DISPLAY_BORDER = (84, 96, 132)
 _DISPLAY_CAPTION = (150, 164, 198)
@@ -27,13 +30,13 @@ def _draw_button(
     font,
 ) -> None:
     pygame.draw.rect(surface, color, rect, border_radius=8)
-    pygame.draw.rect(surface, (16, 18, 26), rect, 1, border_radius=8)
+    pygame.draw.rect(surface, button_border(), rect, 1, border_radius=8)
     draw_centered_wrapped_text(
         surface,
         rect=rect,
         font=font,
         text=text,
-        color=_BUTTON_TEXT,
+        color=button_text(),
     )
 
 
@@ -89,8 +92,8 @@ def draw_transform_editor(
     draw_panel_frame(
         surface,
         rect=area,
-        fill_color=(18, 22, 38),
-        border_color=(76, 84, 112),
+        fill_color=panel_bg(),
+        border_color=panel_border(),
     )
     title_text = "Transform editor" if editable else "Transform preview"
     title = draw_fitted_text_line(
@@ -138,7 +141,7 @@ def draw_transform_editor(
                 surface,
                 rect=rect,
                 text=label_text,
-                color=_BUTTON_ACTIVE if index == active_slot_index else _BUTTON_BG,
+                color=button_active() if index == active_slot_index else button_bg(),
                 font=fonts.hint_font,
             )
             if editable:
@@ -162,7 +165,9 @@ def draw_transform_editor(
             surface,
             rect=rect,
             text=text,
-            color=_BUTTON_ACTIVE if index == selected_permutation_index else _BUTTON_BG,
+            color=button_active()
+            if index == selected_permutation_index
+            else button_bg(),
             font=fonts.hint_font,
         )
         if editable:
@@ -176,7 +181,7 @@ def draw_transform_editor(
             surface,
             rect=rect,
             text=label_text,
-            color=_BUTTON_ACTIVE if sign < 0 else _BUTTON_BG,
+            color=button_active() if sign < 0 else button_bg(),
             font=fonts.hint_font,
         )
         if editable:
@@ -212,7 +217,7 @@ def draw_action_buttons(
             surface,
             rect=rect,
             text=label,
-            color=_BUTTON_BG,
+            color=button_bg(),
             font=fonts.hint_font,
         )
         hits.append(TopologyLabHitTarget("action", action, rect.copy()))

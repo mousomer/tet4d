@@ -27,16 +27,14 @@ from .controls_panel_values import (
     _explorer_preset_value_text,
     _explorer_preview_payload,
     _explorer_transform_label,
-    _playability_panel_lines,
     _sandbox_neighbor_search_enabled,
 )
 from .piece_sandbox import (
     ensure_piece_sandbox,
     sandbox_cells,
-    sandbox_lines,
     sandbox_validity,
 )
-from .preview import build_preview_lines, draw_probe_controls
+from .preview import build_preview_lines
 from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
 from .scene4d import draw_scene as draw_scene_4d
@@ -82,6 +80,8 @@ from tet4d.ui.pygame.ui_utils import (
     draw_fitted_text_line,
     draw_panel_frame,
     draw_wrapped_label_value_lines,
+    panel_bg,
+    panel_border,
     wrap_text_lines,
     wrapped_row_height,
 )
@@ -462,14 +462,6 @@ def _workspace_helper_lines(state) -> tuple[str, ...]:
     )
 
 
-def _workspace_guidance_lines(state) -> list[str]:
-    lines = [_workspace_helper_context(state)]
-    for title, rows in _workspace_helper_sections(state):
-        lines.append(title)
-        lines.extend(f"  {label} {keys}" for label, keys in rows)
-    return lines
-
-
 def _binding_text(bindings, action: str) -> str:
     return format_key_tuple(bindings.get(action, ()))
 
@@ -597,8 +589,8 @@ def _draw_workspace_helper_panel(
     draw_panel_frame(
         surface,
         rect=card_rect,
-        fill_color=(18, 22, 38),
-        border_color=(76, 84, 112),
+        fill_color=panel_bg(),
+        border_color=panel_border(),
     )
     y = card_rect.y + 10
     title_surf = draw_fitted_text_line(
@@ -693,66 +685,25 @@ def _workspace_experiment_lines(state) -> list[str]:
 
 def _workspace_preview_lines(
     state,
+    *,
     preview: dict[str, object] | None,
     preview_error: str | None,
 ) -> list[str]:
-    del preview_error
-    lines = list(_playability_panel_lines(state))
-    lines.append("")
-    if preview is None:
-        lines.append("Preview unavailable until the topology validates.")
+    if preview_error:
+        lines = [str(preview_error)]
+    elif not isinstance(preview, dict):
+        lines = []
     else:
-        lines.extend(build_preview_lines(preview, dimension=state.dimension))
-    lines.extend(_workspace_selection_lines(state))
-    lines.extend(_workspace_experiment_lines(state))
-    lines.extend(_workspace_camera_lines(state))
-    lines.extend(_workspace_probe_lines(state))
-    if tool_is_sandbox(state.active_tool):
-        ensure_piece_sandbox(state)
-        profile = _current_explorer_profile(state)
-        assert profile is not None
-        lines.append("")
-        lines.extend(sandbox_lines(state, profile))
-    return lines
+        dimension = int(getattr(state, "dimension", 2))
+        lines = build_preview_lines(preview, dimension=dimension)
 
+    sandbox = getattr(state, "sandbox", None)
+    seam_crossings = getattr(sandbox, "seam_crossings", None)
+    if isinstance(seam_crossings, list) and seam_crossings:
+        lines.append("Seam crossings")
+        lines.extend(str(item) for item in seam_crossings[:3])
 
-def _draw_probe_controls_if_needed(
-    screen: pygame.Surface,
-    fonts,
-    *,
-    state,
-    area: pygame.Rect,
-    preview: dict[str, object] | None,
-) -> list[TopologyLabHitTarget]:
-    workspace_name = _active_workspace_name(state)
-    if preview is None or workspace_name not in {WORKSPACE_EDITOR, WORKSPACE_SANDBOX}:
-        return []
-    profile = _current_explorer_profile(state)
-    assert profile is not None
-    if workspace_name == WORKSPACE_EDITOR and _current_editor_tool(state) != TOOL_PROBE:
-        return []
-    title = (
-        "Sandbox piece moves"
-        if workspace_name == WORKSPACE_SANDBOX
-        else "Editor probe moves"
-    )
-    active_color = (78, 116, 92) if workspace_name == WORKSPACE_SANDBOX else (56, 92, 130)
-    frame_permutation, frame_signs = _active_workspace_probe_frame(state)
-    return draw_probe_controls(
-        screen,
-        fonts,
-        area=area,
-        step_options=explorer_probe_options(
-            profile,
-            dims=_board_dims_for_state(state),
-            coord=_active_workspace_coord(state)
-            or tuple(0 for _ in range(state.dimension)),
-            frame_permutation=frame_permutation,
-            frame_signs=frame_signs,
-        ),
-        title=title,
-        active_color=active_color,
-    )
+    return lines + _workspace_experiment_lines(state)
 
 
 def _draw_explorer_workspace(

@@ -4,6 +4,7 @@ import os
 import unittest
 from unittest import mock
 
+from tet4d.engine.runtime import project_config as project_config_module
 from tet4d.engine.runtime.project_config import (
     PROJECT_ROOT,
     keybindings_dir_relative,
@@ -17,6 +18,7 @@ from tet4d.engine.runtime.project_config import (
     leaderboard_file_default_relative,
     menu_settings_file_path,
     menu_settings_file_relative,
+    project_constant_color,
     project_constant_int,
     resolve_state_relative_path,
     sanitize_state_relative_path,
@@ -130,6 +132,51 @@ class TestProjectConfig(unittest.TestCase):
         self.assertGreater(soft_drop_delay, 0)
         self.assertGreaterEqual(hard_drop_delay, soft_drop_delay)
         self.assertEqual(project_constant_int(("rendering", "missing"), 123), 123)
+
+    def test_project_constant_color_uses_theme_values(self) -> None:
+        project_config_module.ui_theme_payload.cache_clear()
+        try:
+            with mock.patch.object(
+                project_config_module,
+                "_read_json_object",
+                return_value={"button": {"bg": [1, 2, 3]}},
+            ):
+                self.assertEqual(
+                    project_constant_color(("button", "bg"), (9, 9, 9)),
+                    (1, 2, 3),
+                )
+        finally:
+            project_config_module.ui_theme_payload.cache_clear()
+
+    def test_project_constant_color_falls_back_for_invalid_values(self) -> None:
+        project_config_module.ui_theme_payload.cache_clear()
+        try:
+            with mock.patch.object(
+                project_config_module,
+                "_read_json_object",
+                return_value={"button": {"bg": [1, 2, 999]}},
+            ):
+                self.assertEqual(
+                    project_constant_color(("button", "bg"), (9, 9, 9)),
+                    (9, 9, 9),
+                )
+        finally:
+            project_config_module.ui_theme_payload.cache_clear()
+
+    def test_project_constant_color_falls_back_for_missing_path(self) -> None:
+        project_config_module.ui_theme_payload.cache_clear()
+        try:
+            with mock.patch.object(
+                project_config_module,
+                "_read_json_object",
+                return_value={"panel": {"bg": [4, 5, 6]}},
+            ):
+                self.assertEqual(
+                    project_constant_color(("button", "border"), (7, 8, 9)),
+                    (7, 8, 9),
+                )
+        finally:
+            project_config_module.ui_theme_payload.cache_clear()
 
     def test_externalized_relative_paths_keep_expected_prefixes(self) -> None:
         self.assertTrue(

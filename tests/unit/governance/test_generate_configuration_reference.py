@@ -34,6 +34,10 @@ def test_render_configuration_reference_covers_config_tree(
         "docs/*.md\nsrc/**/*.py\n",
     )
     _write_text(
+        config_root / "ui" / "theme.json",
+        '{"panel": {"bg": [18, 22, 38]}}\n',
+    )
+    _write_text(
         config_root / "schema" / "menu_settings.schema.json",
         '{"type": "object"}\n',
     )
@@ -53,6 +57,8 @@ def test_render_configuration_reference_covers_config_tree(
     assert "`140` (`int`)" in rendered
     assert "config/project/format_allowlist.txt" in rendered
     assert "docs/*.md" in rendered
+    assert "config/ui/theme.json" in rendered
+    assert "panel.bg" in rendered
     assert "config/schema/menu_settings.schema.json" not in rendered
 
 
