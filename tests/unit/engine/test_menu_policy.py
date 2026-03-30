@@ -61,13 +61,25 @@ class TestMenuPolicy(unittest.TestCase):
                 if kind == "item"
             )
         )
-        self.assertTrue(
-            any(
-                row_key == "gameplay_advanced"
-                for kind, _label, row_key in rows
-                if kind == "item"
+        for expected_row_key in (
+            "rotation_animation_mode",
+            "kick_level_index",
+            "rotation_animation_duration_ms_2d",
+            "rotation_animation_duration_ms_nd",
+            "translation_animation_duration_ms",
+            "auto_speedup_enabled",
+            "lines_per_level",
+            "topology_cache_measure",
+            "topology_cache_clear",
+        ):
+            self.assertTrue(
+                any(
+                    row_key == expected_row_key
+                    for kind, _label, row_key in rows
+                    if kind == "item"
+                ),
+                expected_row_key,
             )
-        )
 
     def test_settings_hub_headers_align_with_top_level_categories(self) -> None:
         top_level = menu_config.settings_top_level_categories()
@@ -267,7 +279,6 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertIn("launcher_tutorials", subtitles)
         self.assertIn("launcher_tutorials_interactive", subtitles)
         self.assertIn("launcher_settings_root", subtitles)
-        self.assertIn("launcher_settings_advanced", subtitles)
         self.assertIn("default", subtitles)
         self.assertTrue(
             all(isinstance(text, str) and text for text in subtitles.values())
@@ -301,23 +312,22 @@ class TestMenuPolicy(unittest.TestCase):
         labels = [item["label"] for item in settings_menu["items"]]
         self.assertEqual(
             labels,
-            ["Game", "Display", "Audio", "Controls", "Profiles", "Advanced"],
+            [
+                "Game",
+                "Display",
+                "Audio",
+                "Controls",
+                "Profiles",
+                "Legacy Topology Editor Menu",
+            ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["action", "action", "action", "action", "action", "submenu"],
-        )
-        self.assertEqual(settings_menu["items"][-1]["menu_id"], "launcher_settings_advanced")
-
-    def test_advanced_settings_contains_legacy_topology_editor_menu(self) -> None:
-        advanced_menu = menu_config.menu_definition("launcher_settings_advanced")
-        self.assertEqual(
-            [item["label"] for item in advanced_menu["items"]],
-            ["Advanced gameplay", "Legacy Topology Editor Menu"],
+            ["action", "action", "action", "action", "action", "action"],
         )
         self.assertEqual(
-            [item["action_id"] for item in advanced_menu["items"]],
-            ["settings_advanced", "settings_legacy_topology_editor"],
+            settings_menu["items"][-1]["action_id"],
+            "settings_legacy_topology_editor",
         )
 
     def test_topology_playground_has_no_legacy_topology_entry(self) -> None:
@@ -497,24 +507,32 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
 
-    def test_unified_gameplay_summary_includes_animation_durations(self) -> None:
-        state = SimpleNamespace(
-            rotation_animation_mode="rigid_piece_rotation",
-            kick_level_index=2,
-            auto_speedup_enabled=1,
-            lines_per_level=14,
-            rotation_animation_duration_ms_2d=300,
-            rotation_animation_duration_ms_nd=340,
-            translation_animation_duration_ms=120,
-            text_mode_row_key="",
-            text_mode_buffer="",
+    def test_unified_gameplay_rows_include_advanced_value_text(self) -> None:
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
         )
-        summary = settings_hub_model._unified_value_text(state, "gameplay_advanced")
-        self.assertIn("Rigid piece rotation", summary)
-        self.assertIn("Standard", summary)
-        self.assertIn("rot2d 300 ms", summary)
-        self.assertIn("rotnd 340 ms", summary)
-        self.assertIn("move 120 ms", summary)
+        state.rotation_animation_mode = "rigid_piece_rotation"
+        state.kick_level_index = 2
+        state.auto_speedup_enabled = 1
+        state.lines_per_level = 14
+        state.rotation_animation_duration_ms_2d = 300
+        state.rotation_animation_duration_ms_nd = 340
+        state.translation_animation_duration_ms = 120
+        self.assertEqual(
+            settings_hub_model._unified_value_text(state, "rotation_animation_mode"),
+            "Rigid piece rotation",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(state, "kick_level_index"),
+            "Standard",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(
+                state, "rotation_animation_duration_ms_2d"
+            ),
+            "300 ms",
+        )
 
     def test_reset_unified_settings_restores_animation_defaults(self) -> None:
         state = SimpleNamespace(

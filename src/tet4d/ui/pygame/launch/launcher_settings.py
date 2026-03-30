@@ -21,8 +21,9 @@ from tet4d.ui.pygame.ui_utils import (
 from .settings_hub_actions import (
     _adjust_unified_with_arrows,
     _apply_unified_numeric_text_value,
-    _format_cache_bytes,
-    _handle_advanced_gameplay_event,
+    _clear_topology_cache_action,
+    _measure_topology_cache,
+    _adjust_advanced_gameplay_value,
     _handle_unified_text_input,
     _is_unified_text_mode,
     _mark_unified_dirty,
@@ -41,68 +42,18 @@ from .settings_hub_model import (
     MUTED_COLOR,
     TEXT_COLOR,
     SettingsHubResult,
-    _KICK_LEVEL_LABELS,
     _NUMERIC_TEXT_EDIT_ROWS,
     _SETTINGS_HUB_COPY,
-    _UNIFIED_SELECTABLE,
-    _UNIFIED_SETTINGS_ROWS,
     _UnifiedSettingsState,
-    _configured_top_level_labels,
-    _unified_row_key,
     _unified_value_text,
     _validate_unified_layout_against_policy,
     build_unified_settings_state,
-    rotation_animation_mode_label,
+    selectable_index_by_row_key_for_rows,
+    selectable_indexes_for_rows,
+    settings_rows_for_category,
+    settings_subtitle_for_category,
+    settings_title_for_category,
 )
-def _format_animation_duration(value: int) -> str:
-    return "Off" if int(value) <= 0 else f"{int(value)} ms"
-
-
-def _format_topology_cache_measure_value(state: _UnifiedSettingsState) -> str:
-    total_bytes = state.topology_cache_size_bytes
-    if total_bytes is None:
-        return "Enter"
-    return (
-        f"{int(state.topology_cache_file_count)} files / "
-        f"{_format_cache_bytes(int(total_bytes))}"
-    )
-
-
-_ADVANCED_GAMEPLAY_ROWS = (
-    ("rotation_animation_mode", "Rotation animation mode"),
-    ("kick_level_index", "Kick permissiveness"),
-    ("rotation_animation_duration_ms_2d", "2D rotation animation"),
-    ("rotation_animation_duration_ms_nd", "ND rotation animation"),
-    ("translation_animation_duration_ms", "Translation animation"),
-    ("auto_speedup_enabled", "Auto speed-up by clears"),
-    ("lines_per_level", "Lines per level"),
-    ("topology_cache_measure", "Measure topology cache"),
-    ("topology_cache_clear", "Clear topology cache"),
-)
-
-
-def _advanced_gameplay_value_text(
-    state: _UnifiedSettingsState,
-    row_key: str,
-) -> str:
-    if row_key == "kick_level_index":
-        safe_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-        return _KICK_LEVEL_LABELS[safe_index]
-    if row_key == "rotation_animation_mode":
-        return rotation_animation_mode_label(state.rotation_animation_mode)
-    if row_key == "rotation_animation_duration_ms_2d":
-        return _format_animation_duration(int(state.rotation_animation_duration_ms_2d))
-    if row_key == "rotation_animation_duration_ms_nd":
-        return _format_animation_duration(int(state.rotation_animation_duration_ms_nd))
-    if row_key == "translation_animation_duration_ms":
-        return _format_animation_duration(int(state.translation_animation_duration_ms))
-    if row_key == "auto_speedup_enabled":
-        return "ON" if int(state.auto_speedup_enabled) else "OFF"
-    if row_key == "topology_cache_measure":
-        return _format_topology_cache_measure_value(state)
-    if row_key == "topology_cache_clear":
-        return "Enter"
-    return str(int(state.lines_per_level))
 def _draw_wrapped_settings_row(
     screen: pygame.Surface,
     *,
@@ -135,11 +86,19 @@ def _handle_unified_enter(
     screen: pygame.Surface,
     fonts,
     state: _UnifiedSettingsState,
+    *,
+    row_key: str,
 ) -> pygame.Surface:
-    row_key = _unified_row_key(state)
     if row_key in _NUMERIC_TEXT_EDIT_ROWS:
         _start_unified_numeric_text_mode(state, row_key)
         return screen
+    action_screen = _handle_unified_action_row_enter(
+        screen,
+        state,
+        row_key=row_key,
+    )
+    if action_screen is not None:
+        return action_screen
     if row_key in {
         "audio_mute",
         "display_fullscreen",
@@ -149,20 +108,25 @@ def _handle_unified_enter(
         state.pending_reset_confirm = False
         _adjust_unified_with_arrows(state, pygame.K_RIGHT)
         return screen
-    if row_key == "display_apply":
-        state.display_settings = normalize_display_settings(state.display_settings)
-        screen = apply_display_mode(
-            state.display_settings,
-            preferred_windowed_size=state.display_settings.windowed_size,
-        )
-        _mark_unified_dirty(state)
-        state.pending_reset_confirm = False
-        _set_unified_status(state, "Applied display mode")
-        play_sfx("menu_confirm")
+    if row_key in {
+        "rotation_animation_mode",
+        "kick_level_index",
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+        "auto_speedup_enabled",
+        "lines_per_level",
+    }:
+        if _adjust_advanced_gameplay_value(
+            state,
+            row_key,
+            0,
+            enter_pressed=True,
+        ):
+            _mark_unified_dirty(state)
+            _set_unified_status(state, "Advanced gameplay updated (not saved yet)")
+            play_sfx("menu_move")
         return screen
-    if row_key == "gameplay_advanced":
-        state.pending_reset_confirm = False
-        return run_advanced_gameplay_menu(screen, fonts, state)
     if row_key == "save":
         state.pending_reset_confirm = False
         return _save_unified_settings(screen, state)
@@ -177,144 +141,57 @@ def _handle_unified_enter(
         state.running = False
     return screen
 
-def _draw_advanced_gameplay_menu(
+
+def _handle_unified_action_row_enter(
+    screen: pygame.Surface,
+    state: _UnifiedSettingsState,
+    *,
+    row_key: str,
+) -> pygame.Surface | None:
+    if row_key == "display_apply":
+        state.display_settings = normalize_display_settings(state.display_settings)
+        screen = apply_display_mode(
+            state.display_settings,
+            preferred_windowed_size=state.display_settings.windowed_size,
+        )
+        _mark_unified_dirty(state)
+        state.pending_reset_confirm = False
+        _set_unified_status(state, "Applied display mode")
+        play_sfx("menu_confirm")
+        return screen
+    if row_key == "topology_cache_measure":
+        _measure_topology_cache(state)
+        return screen
+    if row_key == "topology_cache_clear":
+        _clear_topology_cache_action(state)
+        return screen
+    return None
+
+
+def _draw_unified_settings_menu(
     screen: pygame.Surface,
     fonts,
     state: _UnifiedSettingsState,
     *,
-    selected: int,
-) -> None:
-    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
-    width, _height = screen.get_size()
-    title_text = "Advanced gameplay"
-    subtitle_text = (
-        "Up/Down select   Left/Right adjust   Enter toggle/cycle   Esc back   Q quit"
-    )
-    draw_fitted_text_line(
-        screen,
-        font=fonts.title_font,
-        text=title_text,
-        color=TEXT_COLOR,
-        max_width=width - 28,
-        center_x=width // 2,
-        y=60,
-    )
-    draw_fitted_text_line(
-        screen,
-        font=fonts.hint_font,
-        text=subtitle_text,
-        color=MUTED_COLOR,
-        max_width=width - 28,
-        center_x=width // 2,
-        y=108,
-    )
-
-    panel_w = min(760, max(420, width - 40))
-    required_content_h = sum(
-        wrapped_label_value_layout(
-            fonts.menu_font,
-            label=label,
-            value=_advanced_gameplay_value_text(state, row_key),
-            total_width=panel_w,
-        )[2]
-        + 8
-        for row_key, label in _ADVANCED_GAMEPLAY_ROWS
-    )
-    panel_h = min(max(552, required_content_h + 44), max(420, screen.get_height() - 210))
-    panel_x = (width - panel_w) // 2
-    panel_y = 170
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
-
-    line_y = panel_y + 22
-    row_gap = 8
-    for idx, (row_key, label) in enumerate(_ADVANCED_GAMEPLAY_ROWS):
-        is_selected = idx == selected
-        color = HIGHLIGHT_COLOR if is_selected else TEXT_COLOR
-        value = _advanced_gameplay_value_text(state, row_key)
-        label_lines, value_lines, row_height = wrapped_label_value_layout(
-            fonts.menu_font,
-            label=label,
-            value=value,
-            total_width=panel_w,
-        )
-        _draw_wrapped_settings_row(
-            screen,
-            fonts=fonts,
-            panel_x=panel_x,
-            panel_w=panel_w,
-            line_y=line_y,
-            label_lines=label_lines,
-            value_lines=value_lines,
-            row_height=row_height,
-            color=color,
-            selected=is_selected,
-        )
-        line_y += row_height + row_gap
-
-    if state.status:
-        color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        draw_fitted_text_line(
-            screen,
-            font=fonts.hint_font,
-            text=state.status,
-            color=color,
-            max_width=width - 28,
-            center_x=width // 2,
-            y=panel_y + panel_h + 18,
-        )
-
-
-def run_advanced_gameplay_menu(
-    screen: pygame.Surface,
-    fonts,
-    state: _UnifiedSettingsState,
-) -> pygame.Surface:
-    selected = 0
-    row_keys = tuple(row_key for row_key, _label in _ADVANCED_GAMEPLAY_ROWS)
-    running = True
-    clock = pygame.time.Clock()
-    while running:
-        _dt = clock.tick(60)
-        for event in pygame.event.get():
-            selected, running = _handle_advanced_gameplay_event(
-                event=event,
-                state=state,
-                selected=selected,
-                row_keys=row_keys,
-            )
-            if not running:
-                break
-        if not running or not state.running:
-            break
-        _draw_advanced_gameplay_menu(screen, fonts, state, selected=selected)
-        pygame.display.flip()
-    return screen
-
-
-
-def _draw_unified_settings_menu(
-    screen: pygame.Surface, fonts, state: _UnifiedSettingsState
+    rows: tuple[tuple[str, str, str], ...],
+    selectable_rows: tuple[int, ...],
+    category_id: str | None,
 ) -> None:
     draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
     width, height = screen.get_size()
     title = draw_fitted_text_line(
         screen,
         font=fonts.title_font,
-        text=_SETTINGS_HUB_COPY["title"],
+        text=settings_title_for_category(category_id),
         color=TEXT_COLOR,
         max_width=width - 28,
         center_x=width // 2,
         y=44,
     )
-    categories = ", ".join(_configured_top_level_labels())
     subtitle = draw_fitted_text_line(
         screen,
         font=fonts.hint_font,
-        text=_SETTINGS_HUB_COPY["subtitle_categories_template"].format(
-            categories=categories
-        ),
+        text=settings_subtitle_for_category(category_id),
         color=MUTED_COLOR,
         max_width=width - 28,
         center_x=width // 2,
@@ -327,12 +204,18 @@ def _draw_unified_settings_menu(
     line_h = fonts.hint_font.get_height() + 3
     panel_top = subtitle_y + subtitle.get_height() + 10
     bottom_lines = 2 + (1 if state.status else 0)
-    panel_max_h = max(180, height - panel_top - (bottom_lines * line_h) - 10)
+    panel_max_h = max(
+        180,
+        height
+        - panel_top
+        - (bottom_lines * line_h)
+        - 10
+    )
     header_count = sum(
-        1 for kind, _label, _row_key in _UNIFIED_SETTINGS_ROWS if kind == "header"
+        1 for kind, _label, _row_key in rows if kind == "header"
     )
     item_count = sum(
-        1 for kind, _label, _row_key in _UNIFIED_SETTINGS_ROWS if kind == "item"
+        1 for kind, _label, _row_key in rows if kind == "item"
     )
     header_step_default = fonts.hint_font.get_height() + 10
     item_heights_default = [
@@ -342,7 +225,7 @@ def _draw_unified_settings_menu(
             value=_unified_value_text(state, row_key),
             total_width=panel_w,
         )[2]
-        for kind, label, row_key in _UNIFIED_SETTINGS_ROWS
+        for kind, label, row_key in rows
         if kind == "item"
     ]
     item_step_default = max(
@@ -369,10 +252,10 @@ def _draw_unified_settings_menu(
     pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
     screen.blit(panel, (panel_x, panel_y))
 
-    selected_row_idx = _UNIFIED_SELECTABLE[state.selected]
+    selected_row_idx = selectable_rows[state.selected]
     y = panel_y + 14
     panel_bottom = panel_y + panel_h - 8
-    for idx, (row_kind, label, row_key) in enumerate(_UNIFIED_SETTINGS_ROWS):
+    for idx, (row_kind, label, row_key) in enumerate(rows):
         if y > panel_bottom:
             break
         if row_kind == "header":
@@ -448,38 +331,62 @@ def _dispatch_unified_key(
     fonts,
     state: _UnifiedSettingsState,
     key: int,
+    *,
+    rows: tuple[tuple[str, str, str], ...],
+    selectable_rows: tuple[int, ...],
 ) -> pygame.Surface:
     text_mode_screen = _dispatch_unified_text_mode_key(screen, state, key)
     if text_mode_screen is not None:
         return text_mode_screen
+    row_key = rows[selectable_rows[state.selected]][2]
     nav_key = normalize_menu_navigation_key(key)
     if _handle_unified_exit_key(state, key=key, nav_key=nav_key):
         state.running = False
         return screen
+    nav_screen = _dispatch_unified_nav_key(
+        screen,
+        state,
+        key=key,
+        nav_key=nav_key,
+        selectable_rows=selectable_rows,
+    )
+    if nav_screen is not None:
+        return nav_screen
+    if _adjust_unified_with_arrows(state, key, row_key=row_key):
+        return screen
+    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        return _handle_unified_enter(screen, fonts, state, row_key=row_key)
+    return screen
+
+
+def _dispatch_unified_nav_key(
+    screen: pygame.Surface,
+    state: _UnifiedSettingsState,
+    *,
+    key: int,
+    nav_key: int,
+    selectable_rows: tuple[int, ...],
+) -> pygame.Surface | None:
     if nav_key == pygame.K_UP:
         state.pending_reset_confirm = False
-        state.selected = (state.selected - 1) % len(_UNIFIED_SELECTABLE)
+        state.selected = (state.selected - 1) % len(selectable_rows)
         play_sfx("menu_move")
         return screen
     if nav_key == pygame.K_DOWN:
         state.pending_reset_confirm = False
-        state.selected = (state.selected + 1) % len(_UNIFIED_SELECTABLE)
+        state.selected = (state.selected + 1) % len(selectable_rows)
         play_sfx("menu_move")
         return screen
     if key == pygame.K_F5:
         state.pending_reset_confirm = False
         return _save_unified_settings(screen, state)
-    if key == pygame.K_F8:
-        if not state.pending_reset_confirm:
-            state.pending_reset_confirm = True
-            _set_unified_status(state, _SETTINGS_HUB_COPY["reset_confirm_f8"])
-            return screen
-        return _reset_unified_settings(screen, state)
-    if _adjust_unified_with_arrows(state, key):
+    if key != pygame.K_F8:
+        return None
+    if not state.pending_reset_confirm:
+        state.pending_reset_confirm = True
+        _set_unified_status(state, _SETTINGS_HUB_COPY["reset_confirm_f8"])
         return screen
-    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        return _handle_unified_enter(screen, fonts, state)
-    return screen
+    return _reset_unified_settings(screen, state)
 
 
 def _handle_unified_exit_key(
@@ -525,6 +432,9 @@ def _process_unified_events(
     screen: pygame.Surface,
     fonts,
     state: _UnifiedSettingsState,
+    *,
+    rows: tuple[tuple[str, str, str], ...],
+    selectable_rows: tuple[int, ...],
 ) -> tuple[pygame.Surface, bool]:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -535,7 +445,14 @@ def _process_unified_events(
             continue
         if event.type != pygame.KEYDOWN:
             continue
-        screen = _dispatch_unified_key(screen, fonts, state, event.key)
+        screen = _dispatch_unified_key(
+            screen,
+            fonts,
+            state,
+            event.key,
+            rows=rows,
+            selectable_rows=selectable_rows,
+        )
         if not state.running:
             break
     return screen, True
@@ -548,14 +465,23 @@ def run_settings_hub_menu(
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
     initial_row_key: str | None = None,
+    category_id: str | None = None,
 ) -> SettingsHubResult:
+    rows = settings_rows_for_category(category_id)
+    selectable_rows = selectable_indexes_for_rows(rows)
     state = build_unified_settings_state(
         audio_settings=audio_settings,
         display_settings=display_settings,
-        initial_row_key=initial_row_key,
     )
+    visible_row_index = selectable_index_by_row_key_for_rows(rows)
+    if initial_row_key:
+        selected = visible_row_index.get(str(initial_row_key).strip().lower())
+        if selected is not None:
+            state.selected = selected
+    if state.selected >= len(selectable_rows):
+        state.selected = 0
     ok_layout, msg_layout = _validate_unified_layout_against_policy()
-    if not ok_layout:
+    if category_id is None and not ok_layout:
         _set_unified_status(state, msg_layout, is_error=True)
     _sync_audio_preview(state.audio_settings)
     _sync_analytics_preview(state.score_logging_enabled)
@@ -564,10 +490,23 @@ def run_settings_hub_menu(
     keep_running = True
     while state.running:
         _dt = clock.tick(60)
-        screen, keep_running = _process_unified_events(screen, fonts, state)
+        screen, keep_running = _process_unified_events(
+            screen,
+            fonts,
+            state,
+            rows=rows,
+            selectable_rows=selectable_rows,
+        )
         if not keep_running or not state.running:
             break
-        _draw_unified_settings_menu(screen, fonts, state)
+        _draw_unified_settings_menu(
+            screen,
+            fonts,
+            state,
+            rows=rows,
+            selectable_rows=selectable_rows,
+            category_id=category_id,
+        )
         pygame.display.flip()
 
     _stop_unified_text_mode(state)

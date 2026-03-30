@@ -344,7 +344,7 @@ def _adjust_unified_gameplay_row(
     if row_key == "game_topology_advanced":
         state.topology_advanced = 0 if int(state.topology_advanced) else 1
         return True
-    return False
+    return _adjust_advanced_gameplay_value(state, row_key, delta_sign)
 
 
 def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) -> bool:
@@ -355,12 +355,17 @@ def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) ->
     return True
 
 
-def _adjust_unified_with_arrows(state: _UnifiedSettingsState, key: int) -> bool:
+def _adjust_unified_with_arrows(
+    state: _UnifiedSettingsState,
+    key: int,
+    *,
+    row_key: str | None = None,
+) -> bool:
     nav_key = normalize_menu_navigation_key(key)
     if nav_key not in (pygame.K_LEFT, pygame.K_RIGHT):
         return False
     delta_sign = -1 if nav_key == pygame.K_LEFT else 1
-    row_key = _unified_row_key(state)
+    row_key = str(row_key or _unified_row_key(state))
     handled = (
         _adjust_unified_audio_row(state, row_key, delta_sign)
         or _adjust_unified_display_row(state, row_key, delta_sign)
@@ -508,12 +513,6 @@ def _adjust_animation_duration_value(
     return True
 
 
-def _mark_advanced_gameplay_updated(state: _UnifiedSettingsState) -> None:
-    _mark_unified_dirty(state)
-    _set_unified_status(state, "Advanced gameplay updated (not saved yet)")
-    play_sfx("menu_move")
-
-
 def _format_cache_bytes(total_bytes: int) -> str:
     size = max(0, int(total_bytes))
     if size < 1024:
@@ -550,69 +549,3 @@ def _clear_topology_cache_action(state: _UnifiedSettingsState) -> bool:
     play_sfx("menu_confirm")
     return True
 
-
-def _apply_advanced_gameplay_adjustment(
-    state: _UnifiedSettingsState,
-    *,
-    row_key: str,
-    delta_sign: int,
-    enter_pressed: bool = False,
-) -> None:
-    if not _adjust_advanced_gameplay_value(
-        state,
-        row_key,
-        delta_sign,
-        enter_pressed=enter_pressed,
-    ):
-        return
-    _mark_advanced_gameplay_updated(state)
-
-
-def _handle_advanced_gameplay_event(
-    *,
-    event: pygame.event.Event,
-    state: _UnifiedSettingsState,
-    selected: int,
-    row_keys: tuple[str, ...],
-) -> tuple[int, bool]:
-    if event.type == pygame.QUIT:
-        state.running = False
-        return selected, False
-    if event.type != pygame.KEYDOWN:
-        return selected, True
-    if event.key == pygame.K_q:
-        state.running = False
-        return selected, False
-    nav_key = normalize_menu_navigation_key(int(event.key))
-    if nav_key == pygame.K_ESCAPE:
-        return selected, False
-    if nav_key == pygame.K_UP:
-        play_sfx("menu_move")
-        return (selected - 1) % len(row_keys), True
-    if nav_key == pygame.K_DOWN:
-        play_sfx("menu_move")
-        return (selected + 1) % len(row_keys), True
-    if nav_key in (pygame.K_LEFT, pygame.K_RIGHT):
-        delta_sign = -1 if nav_key == pygame.K_LEFT else 1
-        _apply_advanced_gameplay_adjustment(
-            state,
-            row_key=row_keys[selected],
-            delta_sign=delta_sign,
-        )
-        return selected, True
-    if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        action_rows = {
-            "topology_cache_measure": _measure_topology_cache,
-            "topology_cache_clear": _clear_topology_cache_action,
-        }
-        action = action_rows.get(row_keys[selected])
-        if action is not None:
-            action(state)
-            return selected, True
-        _apply_advanced_gameplay_adjustment(
-            state,
-            row_key=row_keys[selected],
-            delta_sign=0,
-            enter_pressed=True,
-        )
-    return selected, True

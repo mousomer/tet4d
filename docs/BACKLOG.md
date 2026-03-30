@@ -147,6 +147,13 @@ Completed on 2026-03-29:
 - topology-playground dead-code cleanup so the shared side-panel and modern
   explorer-workspace paths no longer carry unused parameters, and the current
   `vulture` sweep is back to clean high-confidence results
+- launcher settings split fix so top-level `Game`, `Display`, and `Audio`
+  entries now open category-specific settings screens instead of reopening the
+  bundled hub behind separate labels
+- launcher settings IA cleanup so the `Advanced` submenu is retired, `Legacy
+  Topology Editor Menu` moves up to the main settings level, and the old
+  `Game -> Advanced gameplay...` sub-flow is retired in favor of an inline
+  `Advanced gameplay` section inside the game settings screen
 - dead-code pruning follow-up so another small set of unreferenced helpers and
   stale compatibility leftovers now drops out of playbot, core, gameplay,
   help, settings, and topology-lab code without changing live behavior
@@ -229,6 +236,10 @@ Current batch:
   with the existing shared pygame UI primitives
 - removal of dead shared-panel and explorer-workspace parameters confirmed by
   `vulture`
+- launcher settings-hub category filtering plus launcher action routing for
+  separate `Game` / `Display` / `Audio` entry screens
+- retirement of the launcher `Advanced` submenu plus inlined advanced
+  gameplay rows directly inside the game settings screen
 - compact-shell layout rebalance for control rows and helper lane readability
 - profiler-script repair for the current topology-playground startup path
 - focused playability/menu tests plus authority/status doc synchronization

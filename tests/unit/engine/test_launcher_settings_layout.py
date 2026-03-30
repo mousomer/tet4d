@@ -68,7 +68,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                 for line in value_lines:
                     self.assertTrue(text_fits(fonts.menu_font, line, int(panel_w * 0.34)))
 
-    def test_advanced_gameplay_rows_fit_compact_supported_width(self) -> None:
+    def test_inline_game_settings_advanced_rows_fit_compact_supported_width(self) -> None:
         fonts = type(
             "_Fonts",
             (),
@@ -85,8 +85,21 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         width = 960
         panel_w = min(760, max(420, width - 40))
         value_width = int(panel_w * 0.34)
-        for row_key, label in launcher_settings._ADVANCED_GAMEPLAY_ROWS:
-            value = launcher_settings._advanced_gameplay_value_text(state, row_key)
+        advanced_rows = {
+            "rotation_animation_mode",
+            "kick_level_index",
+            "rotation_animation_duration_ms_2d",
+            "rotation_animation_duration_ms_nd",
+            "translation_animation_duration_ms",
+            "auto_speedup_enabled",
+            "lines_per_level",
+            "topology_cache_measure",
+            "topology_cache_clear",
+        }
+        for kind, label, row_key in settings_hub_model.settings_rows_for_category("gameplay"):
+            if kind != "item" or row_key not in advanced_rows:
+                continue
+            value = launcher_settings._unified_value_text(state, row_key)
             label_lines, value_lines, _row_height = wrapped_label_value_layout(
                 fonts.menu_font,
                 label=label,
@@ -99,3 +112,30 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                     self.assertTrue(text_fits(fonts.menu_font, line, panel_w - 44))
                 for line in value_lines:
                     self.assertTrue(text_fits(fonts.menu_font, line, value_width))
+
+    def test_audio_category_rows_exclude_other_settings_sections(self) -> None:
+        rows = settings_hub_model.settings_rows_for_category("audio")
+        labels = [label for kind, label, _row_key in rows if kind == "header"]
+        row_keys = [row_key for kind, _label, row_key in rows if kind == "item"]
+
+        self.assertEqual(labels, ["Audio"])
+        self.assertIn("audio_master", row_keys)
+        self.assertIn("audio_sfx", row_keys)
+        self.assertIn("audio_mute", row_keys)
+        self.assertNotIn("display_fullscreen", row_keys)
+        self.assertNotIn("game_seed", row_keys)
+        self.assertTrue({"save", "reset", "back"}.issubset(set(row_keys)))
+
+    def test_game_category_rows_keep_analytics_with_game_settings(self) -> None:
+        rows = settings_hub_model.settings_rows_for_category("gameplay")
+        labels = [label for kind, label, _row_key in rows if kind == "header"]
+        row_keys = [row_key for kind, _label, row_key in rows if kind == "item"]
+
+        self.assertEqual(labels, ["Game", "Advanced gameplay", "Analytics"])
+        self.assertIn("game_seed", row_keys)
+        self.assertIn("game_random_mode", row_keys)
+        self.assertIn("rotation_animation_mode", row_keys)
+        self.assertIn("kick_level_index", row_keys)
+        self.assertIn("analytics_score_logging", row_keys)
+        self.assertNotIn("audio_master", row_keys)
+        self.assertNotIn("display_fullscreen", row_keys)

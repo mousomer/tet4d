@@ -882,7 +882,15 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     required_shared_row_keys = {
         "game_seed",
         "game_random_mode",
-        "gameplay_advanced",
+        "rotation_animation_mode",
+        "kick_level_index",
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+        "auto_speedup_enabled",
+        "lines_per_level",
+        "topology_cache_measure",
+        "topology_cache_clear",
     }
     hub_keys = _settings_hub_row_keys(menu_payload)
     setup_attrs = _setup_field_attrs(menu_payload)

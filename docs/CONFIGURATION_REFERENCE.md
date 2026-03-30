@@ -1062,8 +1062,7 @@ Parameters:
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
-- `launcher_subtitles.launcher_settings_advanced`: `"Open advanced gameplay tuning or the legacy topology editor compatib...` (`string`)
-- `launcher_subtitles.launcher_settings_root`: `"Open game, display, audio, controls, profiles, or advanced settings."` (`string`)
+- `launcher_subtitles.launcher_settings_root`: `"Open game, display, audio, controls, profiles, or the legacy topolog...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
 - `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
@@ -1079,16 +1078,10 @@ Parameters:
 - `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`, `"launcher_settings_root"`
 - `menus.launcher_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
 - `menus.launcher_root.title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
-- `menus.launcher_settings_advanced.items[]`: array[`object`]
-- `menus.launcher_settings_advanced.items[].action_id`: varies (`string`); examples: `"settings_advanced"`, `"settings_legacy_topology_editor"`
-- `menus.launcher_settings_advanced.items[].label`: varies (`string`); examples: `"Advanced gameplay"`, `"Legacy Topology Editor Menu"`
-- `menus.launcher_settings_advanced.items[].type`: varies (`string`); examples: `"action"`
-- `menus.launcher_settings_advanced.title`: `"Advanced"` (`string`)
 - `menus.launcher_settings_root.items[]`: array[`object`]
 - `menus.launcher_settings_root.items[].action_id`: varies (`string`); examples: `"settings"`, `"settings_display"`, `"settings_audio"`
 - `menus.launcher_settings_root.items[].label`: varies (`string`); examples: `"Game"`, `"Display"`, `"Audio"`
-- `menus.launcher_settings_root.items[].menu_id`: `"launcher_settings_advanced"` (`string`)
-- `menus.launcher_settings_root.items[].type`: varies (`string`); examples: `"action"`, `"submenu"`
+- `menus.launcher_settings_root.items[].type`: varies (`string`); examples: `"action"`
 - `menus.launcher_settings_root.title`: `"Settings"` (`string`)
 - `menus.launcher_tutorials.items[]`: array[`object`]
 - `menus.launcher_tutorials.items[].action_id`: varies (`string`); examples: `"tutorial_how_to_play"`, `"tutorial_controls_reference"`, `"help"`
@@ -1199,7 +1192,7 @@ Parameters:
 - `ui_copy.launcher.escape_hint_quit`: `"Q quit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
-- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game -> Advanced gameplay... controls rotation mode, kick permissive...`
+- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game -> Advanced gameplay... opens a lower-panel submenu for rotatio...`
 - `ui_copy.settings_hub.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Top-level categories: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)

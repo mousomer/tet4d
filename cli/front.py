@@ -100,10 +100,10 @@ _TUTORIAL_LESSON_BY_MODE = {
     "3d": "tutorial_3d_core",
     "4d": "tutorial_4d_core",
 }
-_SETTINGS_ROW_BY_ACTION = {
-    "settings_display": "display_fullscreen",
-    "settings_audio": "audio_master",
-    "settings_advanced": "gameplay_advanced",
+_SETTINGS_HUB_ROUTE = {
+    "settings": ("game_seed", "gameplay"),
+    "settings_display": ("display_fullscreen", "display"),
+    "settings_audio": ("audio_master", "audio"),
 }
 _HELP_TOPIC_BY_ACTION = {
     "tutorial_how_to_play": "overview",
@@ -483,6 +483,7 @@ def _menu_action_settings(
     fonts_nd,
     *,
     initial_row_key: str | None = None,
+    category_id: str | None = None,
 ) -> bool:
     result = run_settings_hub_menu(
         session.screen,
@@ -490,6 +491,7 @@ def _menu_action_settings(
         audio_settings=session.audio_settings,
         display_settings=session.display_settings,
         initial_row_key=initial_row_key,
+        category_id=category_id,
     )
     session.screen = result.screen
     session.audio_settings = result.audio_settings
@@ -692,15 +694,15 @@ def _build_action_registry(
     register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
     register("help", lambda: _menu_action_help(state, session, fonts_nd))
     register("leaderboard", lambda: _menu_action_leaderboard(state, session, fonts_nd))
-    register("settings", lambda: _menu_action_settings(state, session, fonts_nd))
-    for action_id in ("settings_display", "settings_audio", "settings_advanced"):
+    for action_id, (initial_row_key, category_id) in _SETTINGS_HUB_ROUTE.items():
         register(
             action_id,
-            lambda action_id=action_id: _menu_action_settings(
+            lambda initial_row_key=initial_row_key, category_id=category_id: _menu_action_settings(
                 state,
                 session,
                 fonts_nd,
-                initial_row_key=_SETTINGS_ROW_BY_ACTION[action_id],
+                initial_row_key=initial_row_key,
+                category_id=category_id,
             ),
         )
     for action_id in ("keybindings", "settings_profiles"):

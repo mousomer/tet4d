@@ -28,7 +28,6 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "settings_display",
         "settings_audio",
         "settings_profiles",
-        "settings_advanced",
         "settings_legacy_topology_editor",
         "keybindings",
         "help",

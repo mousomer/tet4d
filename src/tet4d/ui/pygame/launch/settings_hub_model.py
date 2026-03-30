@@ -140,6 +140,20 @@ _SELECTABLE_INDEX_BY_ROW_KEY = {
     for selectable_idx, row_idx in enumerate(_UNIFIED_SELECTABLE)
     for _kind, _label, row_key in (_UNIFIED_SETTINGS_ROWS[row_idx],)
 }
+_CATEGORY_ID_BY_HEADER_LABEL = {
+    "Audio": "audio",
+    "Display": "display",
+    "Game": "gameplay",
+    "Advanced gameplay": "gameplay",
+    "Analytics": "analytics",
+}
+_CATEGORY_IDS_BY_FILTER = {
+    "audio": frozenset({"audio"}),
+    "display": frozenset({"display"}),
+    "gameplay": frozenset({"gameplay", "analytics"}),
+}
+_FOOTER_ROW_KEYS = frozenset({"save", "reset", "back"})
+_TOP_LEVEL_HEADER_LABELS = frozenset({"Audio", "Display", "Game", "Analytics"})
 
 
 def _configured_top_level_labels() -> tuple[str, ...]:
@@ -151,7 +165,7 @@ def _layout_top_level_labels() -> tuple[str, ...]:
     return tuple(
         label
         for row_kind, label, _row_key in _UNIFIED_SETTINGS_ROWS
-        if row_kind == "header"
+        if row_kind == "header" and label in _TOP_LEVEL_HEADER_LABELS
     )
 
 
@@ -163,6 +177,71 @@ def _validate_unified_layout_against_policy() -> tuple[bool, str]:
     return False, (
         "Settings layout mismatch: expected top-level categories "
         f"{', '.join(expected)} but UI renders {', '.join(actual)}"
+    )
+
+
+def settings_rows_for_category(
+    category_id: str | None = None,
+) -> tuple[tuple[str, str, str], ...]:
+    clean_category = str(category_id).strip().lower() if category_id else ""
+    visible_categories = _CATEGORY_IDS_BY_FILTER.get(clean_category)
+    if visible_categories is None:
+        return _UNIFIED_SETTINGS_ROWS
+
+    filtered_rows: list[tuple[str, str, str]] = []
+    active_header_category = ""
+    for row_kind, label, row_key in _UNIFIED_SETTINGS_ROWS:
+        if row_kind == "header":
+            active_header_category = _CATEGORY_ID_BY_HEADER_LABEL.get(label, "")
+            if active_header_category in visible_categories:
+                filtered_rows.append((row_kind, label, row_key))
+            continue
+        if row_key in _FOOTER_ROW_KEYS:
+            filtered_rows.append((row_kind, label, row_key))
+            continue
+        if active_header_category in visible_categories:
+            filtered_rows.append((row_kind, label, row_key))
+    return tuple(filtered_rows)
+
+
+def selectable_indexes_for_rows(
+    rows: tuple[tuple[str, str, str], ...],
+) -> tuple[int, ...]:
+    return tuple(idx for idx, row in enumerate(rows) if row[0] == "item")
+
+
+def selectable_index_by_row_key_for_rows(
+    rows: tuple[tuple[str, str, str], ...],
+) -> dict[str, int]:
+    selectable = selectable_indexes_for_rows(rows)
+    return {
+        row_key: selectable_idx
+        for selectable_idx, row_idx in enumerate(selectable)
+        for _kind, _label, row_key in (rows[row_idx],)
+    }
+
+
+def settings_title_for_category(category_id: str | None = None) -> str:
+    clean_category = str(category_id).strip().lower() if category_id else ""
+    titles = {
+        "audio": "Audio settings",
+        "display": "Display settings",
+        "gameplay": "Game settings",
+    }
+    return titles.get(clean_category, _SETTINGS_HUB_COPY["title"])
+
+
+def settings_subtitle_for_category(category_id: str | None = None) -> str:
+    clean_category = str(category_id).strip().lower() if category_id else ""
+    if clean_category == "audio":
+        return "Master volume, SFX volume, mute, save, reset, and back."
+    if clean_category == "display":
+        return "Fullscreen, window size, overlay transparency, apply, save, reset, and back."
+    if clean_category == "gameplay":
+        return "Seed, random type, analytics, advanced gameplay, save, reset, and back."
+    categories = ", ".join(_configured_top_level_labels())
+    return _SETTINGS_HUB_COPY["subtitle_categories_template"].format(
+        categories=categories
     )
 
 
@@ -233,23 +312,21 @@ def _text_mode_numeric_value(state: _UnifiedSettingsState, row_key: str) -> int 
     return None
 
 
+def _format_cache_bytes(total_bytes: int) -> str:
+    size = max(0, int(total_bytes))
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        return f"{size / 1024.0:.1f} KB"
+    return f"{size / (1024.0 * 1024.0):.2f} MB"
+
+
 def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
     def _duration_text(value: int) -> str:
         return "Off" if int(value) <= 0 else f"{int(value)} ms"
 
     if _is_unified_text_mode(state) and row_key == state.text_mode_row_key:
         return f"{state.text_mode_buffer}_"
-    if row_key == "gameplay_advanced":
-        kick_index = max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
-        mode_text = "ON" if int(state.auto_speedup_enabled) else "OFF"
-        rotation_mode_label = rotation_animation_mode_label(state.rotation_animation_mode)
-        return (
-            f"{rotation_mode_label} / {_KICK_LEVEL_LABELS[kick_index]} / {mode_text}"
-            f" / {int(state.lines_per_level)}"
-            f" / rot2d {_duration_text(int(state.rotation_animation_duration_ms_2d))}"
-            f" / rotnd {_duration_text(int(state.rotation_animation_duration_ms_nd))}"
-            f" / move {_duration_text(int(state.translation_animation_duration_ms))}"
-        )
     static_values = {
         "audio_master": f"{int(state.audio_settings.master_volume * 100)}%",
         "audio_sfx": f"{int(state.audio_settings.sfx_volume * 100)}%",
@@ -262,6 +339,30 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         ),
         "game_seed": str(int(state.game_seed)),
         "analytics_score_logging": "ON" if state.score_logging_enabled else "OFF",
+        "rotation_animation_mode": rotation_animation_mode_label(
+            state.rotation_animation_mode
+        ),
+        "kick_level_index": _KICK_LEVEL_LABELS[
+            max(0, min(len(_KICK_LEVEL_LABELS) - 1, int(state.kick_level_index)))
+        ],
+        "rotation_animation_duration_ms_2d": _duration_text(
+            int(state.rotation_animation_duration_ms_2d)
+        ),
+        "rotation_animation_duration_ms_nd": _duration_text(
+            int(state.rotation_animation_duration_ms_nd)
+        ),
+        "translation_animation_duration_ms": _duration_text(
+            int(state.translation_animation_duration_ms)
+        ),
+        "auto_speedup_enabled": "ON" if int(state.auto_speedup_enabled) else "OFF",
+        "lines_per_level": str(int(state.lines_per_level)),
+        "topology_cache_measure": (
+            "Enter"
+            if state.topology_cache_size_bytes is None
+            else f"{int(state.topology_cache_file_count)} files / "
+            f"{_format_cache_bytes(int(state.topology_cache_size_bytes))}"
+        ),
+        "topology_cache_clear": "Enter",
     }
     value = static_values.get(row_key)
     if value is not None:
