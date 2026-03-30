@@ -142,6 +142,8 @@ Windows (PowerShell, `.msi`):
 ```
 
 Build artifacts are written to `artifacts/installers/`.
+The Windows build produces a self-contained `.msi` with the payload cabinet
+embedded, so install does not depend on a sibling `cab1.cab` file.
 Tag pushes matching `v*` also publish the generated installers through `.github/workflows/release-packaging.yml`.
 
 ## Key files

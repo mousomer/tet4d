@@ -79,6 +79,7 @@ if ($LASTEXITCODE -ne 0) {
     Language="1033"
     Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="A newer version of tet4d is already installed." />
+    <MediaTemplate EmbedCab="yes" />
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="tet4d">
         <Files Include="!(bindpath.Payload)\**">

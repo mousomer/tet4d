@@ -142,6 +142,8 @@ Completed on 2026-03-29:
 - topology-playground exploration return-menu fix so `Explore This Topology`
   now exits directly back to the main playground shell on `menu` instead of
   opening the generic independent gameplay pause menu first
+- windows packaging MSI embedding fix so the published Windows installer no
+  longer depends on an external `cab1.cab` sidecar file at install time
 - built-in keybinding defaults redesign so shipped movement uses a compact
   standard-first cluster, rotation uses the fixed `RT FG VB YU HJ NM` ladder,
   and 3D/4D camera defaults now share the same core number-row layout with an

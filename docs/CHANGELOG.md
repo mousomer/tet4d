@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-03-30
+
+### Fixed
+1. Windows packaging now embeds the WiX cabinet payload into the generated
+   `.msi`, so installer runs no longer fail with a missing external
+   `cab1.cab`.
+
 ## 2026-03-21
 
 ### Release
