@@ -50,6 +50,11 @@ Parallel topology-playground keybinding follow-up (2026-03-30): playground
 helper and shortcut surfaces should keep reading runtime binding groups rather
 than reintroducing direct adapter-global ownership in topology UI modules.
 
+Parallel topology-playground 4D binding cleanup follow-up (2026-03-30): the
+playground should not retain local fallback movement bindings that contradict
+the runtime 4D rotation contract, so keys like `N` must route only through
+the canonical runtime-backed gameplay binding map.
+
 Parallel help/menu-contract follow-up (2026-03-30): runtime settings help
 should stay sourced from `settings_sections` rather than the older parallel
 `settings_category_docs` list, and the focused keybinding contract script

@@ -177,8 +177,6 @@ _SANDBOX_STEP_KEYS = {
     pygame.K_DOWN: "y+",
     pygame.K_PAGEUP: "y-",
     pygame.K_PAGEDOWN: "y+",
-    pygame.K_n: "w-",
-    pygame.K_SLASH: "w+",
 }
 _RIGID_PLAY_MODE_SEQUENCE = (
     RIGID_PLAY_MODE_AUTO,

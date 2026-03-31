@@ -1063,6 +1063,26 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertEqual(state.active_tool, topology_lab_menu.TOOL_SANDBOX)
 
+    def test_sandbox_tool_routes_n_to_zw_rotation_not_w_translation(self) -> None:
+        state = self._explorer_state(4)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        with (
+            patch.object(
+                topology_lab_controls_panel, "_apply_sandbox_shortcut_step"
+            ) as apply_step,
+            patch.object(
+                topology_lab_controls_panel,
+                "rotate_sandbox_piece_action",
+                return_value=(True, "sandbox rotated"),
+            ) as rotate_action,
+        ):
+            topology_lab_menu._dispatch_key(state, pygame.K_n)
+        apply_step.assert_not_called()
+        rotate_action.assert_called_once_with(
+            state, state.explorer_profile, "rotate_zw_neg"
+        )
+
     def test_controls_pane_s_shortcut_saves_profile(self) -> None:
         state = self._explorer_state(3)
         state.active_pane = topology_lab_menu.PANE_CONTROLS
