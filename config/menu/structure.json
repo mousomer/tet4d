@@ -8,13 +8,13 @@
     "launcher_play": "Play a standard run, reopen the last custom topology, or use play-adjacent tools.",
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
-    "launcher_settings_root": "Open game, display, audio, controls, profiles, or the legacy topology editor compatibility menu.",
+    "launcher_settings_root": "Open game, display, audio, keybindings, keyboard profiles, or the legacy topology editor compatibility menu.",
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {},
   "branding": {
-    "game_title": "Multi dimensional tetris game (2d/3d/4d)",
-    "signature_author": "Omer M. Moussaffi (mousomer@gmail.com)",
+    "game_title": "Multi Dimensional Tetris Game",
+    "signature_author": "© Omer M. Moussaffi (mousomer@gmail.com)",
     "signature_message": "Enjoy! Please contact me for criticisms, suggestions, requests, partmnetships, and don't hesitate to vent off your frustration."
   },
   "ui_copy": {
@@ -31,14 +31,14 @@
       "subtitle_categories_template": "Top-level categories: {categories}",
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
-        "Enter on width/height/seed to type large numeric values",
-        "Game settings inline advanced gameplay and analytics in one section with save, reset, and back",
+        "Type digits on width, height, seed, or animation timing rows for direct numeric entry",
+        "Game settings keep gameplay, transparency, and analytics in one section with save, reset, and back",
         "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
     },
     "keybindings_menu": {
-      "title": "Keybindings Setup",
+      "title": "Keybindings",
       "subtitle_section_mode": "Up/Down select section, Enter open, Esc back, Q quit",
       "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Esc back, Q quit",
       "hints": [
@@ -67,9 +67,9 @@
       "reset_done_template": "Reset {mode_key} bot settings (not saved yet)"
     },
     "setup_menu": {
-      "title_template": "{dimension}D setup",
-      "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Setup keeps safe presets only; open Explorer Playground or Play Last Custom Topology for custom topology.",
-      "title_2d": "2D setup",
+      "title_template": "{dimension}D Setup",
+      "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Setup keeps safe presets only; open Topology Playground or Play Last Custom Topology for custom topology.",
+      "title_2d": "2D Setup",
       "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Esc back, Q quit.",
       "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
       "compact_controls_hint": "Arrows navigate   Enter start   Esc back   Q quit"
@@ -77,17 +77,12 @@
   },
   "menus": {
     "launcher_root": {
-      "title": "Multi dimensional tetris game (2d/3d/4d)",
+      "title": "Multi Dimensional Tetris Game",
       "items": [
         {
           "type": "submenu",
           "label": "Play",
           "menu_id": "launcher_play"
-        },
-        {
-          "type": "action",
-          "label": "Continue",
-          "action_id": "continue"
         },
         {
           "type": "submenu",
@@ -116,27 +111,27 @@
       "items": [
         {
           "type": "action",
-          "label": "Play 2D",
+          "label": "2D",
           "action_id": "play_2d"
         },
         {
           "type": "action",
-          "label": "Play 3D",
+          "label": "3D",
           "action_id": "play_3d"
         },
         {
           "type": "action",
-          "label": "Play 4D",
+          "label": "4D",
           "action_id": "play_4d"
         },
         {
           "type": "action",
-          "label": "Play Last Custom Topology",
+          "label": "Last Custom Topology",
           "action_id": "play_last_custom_topology"
         },
         {
           "type": "action",
-          "label": "Bot",
+          "label": "Auto Bot Play",
           "action_id": "bot_options"
         },
         {
@@ -211,18 +206,28 @@
         },
         {
           "type": "action",
-          "label": "Controls",
+          "label": "Keybindings",
           "action_id": "keybindings"
         },
         {
-          "type": "action",
-          "label": "Profiles",
-          "action_id": "settings_profiles"
+          "type": "submenu",
+          "label": "Keyboard Profiles",
+          "menu_id": "launcher_settings_profiles"
         },
         {
           "type": "action",
           "label": "Legacy Topology Editor Menu",
           "action_id": "settings_legacy_topology_editor"
+        }
+      ]
+    },
+    "launcher_settings_profiles": {
+      "title": "Keyboard Profiles",
+      "items": [
+        {
+          "type": "action",
+          "label": "Profiles",
+          "action_id": "settings_profiles"
         }
       ]
     },
@@ -246,7 +251,7 @@
         },
         {
           "type": "action",
-          "label": "Controls",
+          "label": "Keybindings",
           "action_id": "keybindings"
         },
         {
@@ -325,11 +330,6 @@
     },
     {
       "kind": "item",
-      "label": "Locked-cell transparency",
-      "row_key": "display_overlay_transparency"
-    },
-    {
-      "kind": "item",
       "label": "Apply display",
       "row_key": "display_apply"
     },
@@ -346,6 +346,11 @@
       "kind": "item",
       "label": "Random type (all modes)",
       "row_key": "game_random_mode"
+    },
+    {
+      "kind": "item",
+      "label": "Locked-cell transparency",
+      "row_key": "display_overlay_transparency"
     },
     {
       "kind": "header",
@@ -452,7 +457,7 @@
     "Resume",
     "Restart Run",
     "Settings",
-    "Controls",
+    "Keybindings",
     "Help",
     "Leaderboard",
     "Bot",
@@ -488,7 +493,7 @@
       {
         "label": "Board height",
         "attr": "height",
-        "min": 12,
+        "min": 6,
         "max": 30
       },
       {
@@ -526,7 +531,7 @@
       {
         "label": "Board height",
         "attr": "height",
-        "min": 12,
+        "min": 6,
         "max": 30
       },
       {
@@ -564,13 +569,13 @@
       {
         "label": "Board width",
         "attr": "width",
-        "min": 6,
+        "min": 4,
         "max": 16
       },
       {
         "label": "Board height",
         "attr": "height",
-        "min": 12,
+        "min": 6,
         "max": 30
       },
       {
@@ -582,7 +587,7 @@
       {
         "label": "Board axis w",
         "attr": "fourth",
-        "min": 3,
+        "min": 4,
         "max": 10
       },
       {
@@ -639,8 +644,8 @@
     },
     {
       "id": "controls",
-      "label": "Controls",
-      "description": "Persistent input configuration, including keybindings, controller mapping, and input preferences."
+      "label": "Keybindings",
+      "description": "Persistent input configuration, including keybindings and input preferences."
     },
     {
       "id": "advanced",
@@ -735,13 +740,12 @@
     },
     "display": {
       "title": "Display settings",
-      "subtitle": "Fullscreen, window size, overlay transparency, apply, save, reset, and back.",
+      "subtitle": "Fullscreen, window size, apply, save, reset, and back.",
       "headers": ["Display"],
       "row_keys": [
         "display_fullscreen",
         "display_width",
         "display_height",
-        "display_overlay_transparency",
         "display_apply",
         "save",
         "reset",
@@ -750,11 +754,12 @@
     },
     "gameplay": {
       "title": "Game settings",
-      "subtitle": "Seed, random type, analytics, advanced gameplay, save, reset, and back.",
+      "subtitle": "Seed, random type, transparency, analytics, advanced gameplay, save, reset, and back.",
       "headers": ["Game", "Advanced gameplay", "Analytics"],
       "row_keys": [
         "game_seed",
         "game_random_mode",
+        "display_overlay_transparency",
         "rotation_animation_mode",
         "kick_level_index",
         "rotation_animation_duration_ms_2d",

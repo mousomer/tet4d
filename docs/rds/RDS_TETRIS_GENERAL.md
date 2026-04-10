@@ -107,7 +107,8 @@ Cross-cutting requirements are defined in:
 7. Gameplay and AI must consume the same canonical kick resolver; AI may import the engine-owned resolver or engine-owned convenience exports directly, but engine must not import AI.
 8. `kick_level` is a gameplay-affecting advanced setting that must be persisted with menu settings and recorded in replay and save metadata.
 9. Score multiplier may include a permissiveness factor keyed by configured `kick_level`, while leaderboard ordering remains score-first and is not bucketed by kick level.
-10. Deterministic replay rule applies to `(seed, topology selection, kick_level, input stream)`.
+10. Leaderboard entries are recorded only for completed standard-play `game_over` sessions, never for explorer-mode runs or quit/menu/restart exits, and storage keeps the top `10` scores per gameplay dimension.
+11. Deterministic replay rule applies to `(seed, topology selection, kick_level, input stream)`.
 
 ## 4. Shared UX Requirements
 
@@ -156,6 +157,9 @@ Cross-cutting requirements are defined in:
 38. In `3D` and `4D`, projected sandbox piece cells must render as clear piece boxes rather than neighbor-style dots.
 39. Neighbor markers must appear as small dots only when the explicit Explorer `neighbor search` control is enabled, and those markers must not replace, hide, or visually masquerade as the sandbox piece.
 40. On the live `Play This Topology` path, move acceptance, continued fall eligibility, support/grounded checks, lock decisions, and active-piece rendering inputs must all derive from the same canonical gameplay state rather than retained shell snapshots, panel-owned selection state, or projection-only coordinates.
+40a. `2D` keeps its simpler cell/grid layering path; projected-depth board-line occlusion machinery is for projected `3D` / `4D` board-box renderers only.
+40b. In projected `3D` / `4D` board-box renderers, board gridlines and box edges must resolve visibility against the active piece per projected fragment based on screen-space overlap plus projected depth, not by one global whole-pass ordering.
+40c. When projected board lines cross the active-piece projection, the renderer must split them into under-piece and over-piece fragments before final draw ordering.
 41. Play-mode movement classes must remain explicit: deliberate translation, rotation, gravity tick, soft drop, and hard drop must not silently share one generic seam-transport rule.
 42. Groundedness and lock in Play must be computed from whether one legal gravity/drop step exists under the Play drop policy; generic adjacency, generic seam existence, and non-drop reachability must not count as fall continuation.
 43. Play drop legality may be stricter than deliberate/topological translation: lateral or other non-drop motion may enter legal bottom-layer space through the topology, while gravity/soft-drop/hard-drop may still be forbidden to continue through a non-trivial gravity-axis seam.

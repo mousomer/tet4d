@@ -39,6 +39,7 @@ def run_game_loop(
     if cfg.exploration_mode:
         bot_mode = BotMode.OFF
     session_start_ms = pygame.time.get_ticks()
+    endgame_session_handled = False
 
     def _record_session(outcome: str) -> None:
         front2d_results._record_leaderboard_session_2d(
@@ -51,9 +52,11 @@ def run_game_loop(
         )
 
     def _restart_with_record() -> None:
+        nonlocal session_start_ms, endgame_session_handled
         if restart_tutorial_if_running_2d(loop):
             return
-        _record_session("restart")
+        session_start_ms = pygame.time.get_ticks()
+        endgame_session_handled = False
         loop.on_restart()
 
     overlay_transparency = _load_overlay_transparency_for_runtime_2d()
@@ -105,7 +108,6 @@ def run_game_loop(
                 loop=loop,
                 display_settings=display_settings,
                 restart_with_record=_restart_with_record,
-                record_session=_record_session,
                 pause_menu_runner=(
                     front2d_results.run_pause_menu
                     if pause_menu_runner is None
@@ -124,3 +126,6 @@ def run_game_loop(
             dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
         )
+        if loop.state.game_over and not endgame_session_handled:
+            _record_session("game_over")
+            endgame_session_handled = True

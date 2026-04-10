@@ -5,6 +5,7 @@ from typing import Callable
 
 import pygame
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
+from tet4d.ui.pygame.ui_utils import default_menu_back_chip_rect
 
 
 ActionHandler = Callable[[], bool]
@@ -106,6 +107,25 @@ class MenuRunner:
                     close = True
                     if self._on_quit_event is not None:
                         close = bool(self._on_quit_event())
+                    if close:
+                        state.running = False
+                        break
+                    continue
+                if (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and int(getattr(event, "button", 0)) == 1
+                    and default_menu_back_chip_rect().collidepoint(
+                        getattr(event, "pos", (-1, -1))
+                    )
+                ):
+                    if len(state.stack) > 1:
+                        state.stack.pop()
+                        if self._on_move is not None:
+                            self._on_move()
+                        break
+                    close = False
+                    if self._on_root_escape is not None:
+                        close = bool(self._on_root_escape())
                     if close:
                         state.running = False
                         break

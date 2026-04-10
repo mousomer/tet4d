@@ -77,6 +77,9 @@ _NUMERIC_TEXT_EDIT_ROWS = {
     "display_width",
     "display_height",
     "game_seed",
+    "rotation_animation_duration_ms_2d",
+    "rotation_animation_duration_ms_nd",
+    "translation_animation_duration_ms",
 }
 _NUMERIC_TEXT_MAX_LENGTH = 16
 
@@ -126,6 +129,8 @@ class _UnifiedSettingsState:
     text_mode_row_key: str = ""
     text_mode_buffer: str = ""
     text_mode_replace_on_type: bool = False
+    flash_row_key: str = ""
+    flash_frames: int = 0
     saved: bool = False
     running: bool = True
     topology_cache_file_count: int = 0
@@ -287,6 +292,12 @@ def _text_mode_numeric_value(state: _UnifiedSettingsState, row_key: str) -> int 
         return int(state.display_settings.windowed_size[1])
     if row_key == "game_seed":
         return int(state.game_seed)
+    if row_key == "rotation_animation_duration_ms_2d":
+        return int(state.rotation_animation_duration_ms_2d)
+    if row_key == "rotation_animation_duration_ms_nd":
+        return int(state.rotation_animation_duration_ms_nd)
+    if row_key == "translation_animation_duration_ms":
+        return int(state.translation_animation_duration_ms)
     return None
 
 

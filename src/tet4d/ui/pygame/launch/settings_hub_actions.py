@@ -71,6 +71,11 @@ def _sanitize_text(value: str, max_length: int) -> str:
     return sanitize_text(value, max_length=max_length)
 
 
+def _flash_row(state: _UnifiedSettingsState, row_key: str) -> None:
+    state.flash_row_key = str(row_key)
+    state.flash_frames = 12
+
+
 def _sync_audio_preview(settings) -> None:
     set_audio_settings(
         master_volume=settings.master_volume,
@@ -146,10 +151,32 @@ def _apply_unified_numeric_text_value(state: _UnifiedSettingsState) -> bool:
                 default=int(DEFAULT_GAME_SEED),
             )
         )
+    elif row_key == "rotation_animation_duration_ms_2d":
+        state.rotation_animation_duration_ms_2d = int(
+            clamp_animation_duration_ms(
+                parsed,
+                default=int(_ROTATION_ANIMATION_DURATION_2D_DEFAULT),
+            )
+        )
+    elif row_key == "rotation_animation_duration_ms_nd":
+        state.rotation_animation_duration_ms_nd = int(
+            clamp_animation_duration_ms(
+                parsed,
+                default=int(_ROTATION_ANIMATION_DURATION_ND_DEFAULT),
+            )
+        )
+    elif row_key == "translation_animation_duration_ms":
+        state.translation_animation_duration_ms = int(
+            clamp_animation_duration_ms(
+                parsed,
+                default=int(_TRANSLATION_ANIMATION_DURATION_DEFAULT),
+            )
+        )
     else:
         return False
 
     _mark_unified_dirty(state)
+    _flash_row(state, row_key)
     _set_unified_status(state, "Updated value (not saved yet)")
     return True
 
@@ -258,6 +285,7 @@ def _reset_unified_settings(
     state.score_logging_enabled = _analytics_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
+    _flash_row(state, "reset")
     _sync_audio_preview(state.audio_settings)
     _sync_analytics_preview(state.score_logging_enabled)
     screen = apply_display_mode(
@@ -277,16 +305,19 @@ def _adjust_unified_audio_row(
             0.0, min(1.0, state.audio_settings.master_volume + delta_sign * 0.05)
         )
         _sync_audio_preview(state.audio_settings)
+        _flash_row(state, row_key)
         return True
     if row_key == "audio_sfx":
         state.audio_settings.sfx_volume = max(
             0.0, min(1.0, state.audio_settings.sfx_volume + delta_sign * 0.05)
         )
         _sync_audio_preview(state.audio_settings)
+        _flash_row(state, row_key)
         return True
     if row_key == "audio_mute":
         state.audio_settings.mute = not state.audio_settings.mute
         _sync_audio_preview(state.audio_settings)
+        _flash_row(state, row_key)
         return True
     return False
 
@@ -299,6 +330,7 @@ def _adjust_unified_display_row(
             not state.display_settings.fullscreen,
             state.display_settings.windowed_size,
         )
+        _flash_row(state, row_key)
         return True
     if row_key == "display_width":
         width, height = state.display_settings.windowed_size
@@ -306,6 +338,7 @@ def _adjust_unified_display_row(
             state.display_settings.fullscreen,
             (max(640, width + delta_sign * 40), height),
         )
+        _flash_row(state, row_key)
         return True
     if row_key == "display_height":
         width, height = state.display_settings.windowed_size
@@ -313,6 +346,7 @@ def _adjust_unified_display_row(
             state.display_settings.fullscreen,
             (width, max(480, height + delta_sign * 40)),
         )
+        _flash_row(state, row_key)
         return True
     if row_key == "display_overlay_transparency":
         display_defaults = default_display_settings()
@@ -321,6 +355,7 @@ def _adjust_unified_display_row(
             + delta_sign * float(OVERLAY_TRANSPARENCY_STEP),
             default=float(display_defaults["overlay_transparency"]),
         )
+        _flash_row(state, row_key)
         return True
     return False
 
@@ -335,14 +370,17 @@ def _adjust_unified_gameplay_row(
                 default=int(DEFAULT_GAME_SEED),
             )
         )
+        _flash_row(state, row_key)
         return True
     if row_key == "game_random_mode":
         state.random_mode_index = (int(state.random_mode_index) + delta_sign) % len(
             _RANDOM_MODE_LABELS
         )
+        _flash_row(state, row_key)
         return True
     if row_key == "game_topology_advanced":
         state.topology_advanced = 0 if int(state.topology_advanced) else 1
+        _flash_row(state, row_key)
         return True
     return _adjust_advanced_gameplay_value(state, row_key, delta_sign)
 
@@ -352,6 +390,7 @@ def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) ->
         return False
     state.score_logging_enabled = not state.score_logging_enabled
     _sync_analytics_preview(state.score_logging_enabled)
+    _flash_row(state, row_key)
     return True
 
 
@@ -548,4 +587,3 @@ def _clear_topology_cache_action(state: _UnifiedSettingsState) -> bool:
     )
     play_sfx("menu_confirm")
     return True
-

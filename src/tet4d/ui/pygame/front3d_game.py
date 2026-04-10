@@ -347,12 +347,6 @@ def handle_camera_key(
         },
     )
     return action is not None
-
-
-def handle_camera_keydown(event: pygame.event.Event, camera: Camera3D) -> bool:
-    return handle_camera_key(event.key, camera)
-
-
 def _camera_action_for_key(key: int) -> str | None:
     return match_bound_action(key, CAMERA_KEYS_3D, _CAMERA_ACTIONS_3D)
 
@@ -780,6 +774,5 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
 
 

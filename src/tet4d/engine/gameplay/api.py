@@ -15,7 +15,12 @@ from .leveling import compute_speed_level
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .speed_curve import gravity_interval_ms
-from .topology import TOPOLOGY_MODE_OPTIONS, map_overlay_cells, topology_mode_from_index, topology_mode_label
+from .topology import (
+    TOPOLOGY_MODE_OPTIONS,
+    map_overlay_cells,
+    topology_mode_from_index,
+    topology_mode_label,
+)
 from .topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,

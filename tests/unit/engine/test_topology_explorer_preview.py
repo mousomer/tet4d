@@ -4,6 +4,7 @@ import shutil
 import unittest
 from unittest import mock
 from uuid import uuid4
+import warnings
 
 from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_WRAP
 from tet4d.engine.gameplay.topology_designer import (
@@ -19,6 +20,7 @@ from tet4d.engine.runtime.project_config import (
 from tet4d.engine.runtime.topology_cache import (
     clear_topology_cache,
     read_cached_graph_rows,
+    read_topology_cache_entry,
     read_cached_playability_analysis,
     topology_cache_usage,
     write_cached_playability_analysis,
@@ -299,6 +301,27 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                 )
             self.assertEqual(cached["source"], "local_cache_hit")
             self.assertEqual(cached["movement_graph"], preview["movement_graph"])
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_missing_local_cache_file_is_silent_cache_miss(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_preview_missing_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                entry = read_topology_cache_entry(
+                    profile,
+                    dims=(6, 6),
+                    root_dir=root,
+                )
+            self.assertIsNone(entry)
+            self.assertEqual(caught, [])
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

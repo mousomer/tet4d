@@ -38,6 +38,31 @@ SETUP_MENU_BLOCKED_ACTIONS = {
 }
 
 
+def _update_selected_flash(
+    state: Any,
+    fields: list[FieldSpec],
+    *,
+    dimension: int,
+) -> None:
+    if state.selected_index >= len(fields):
+        state.selected_index = max(0, len(fields) - 1)
+    selected_attr = fields[state.selected_index][1] if fields else ""
+    before_value = getattr(state.settings, selected_attr) if selected_attr else None
+    apply_menu_actions(
+        state,
+        gather_menu_actions(state, dimension),
+        fields,
+        dimension,
+        blocked_actions=SETUP_MENU_BLOCKED_ACTIONS,
+    )
+    after_value = getattr(state.settings, selected_attr) if selected_attr else None
+    if selected_attr and before_value != after_value:
+        state.flash_selected_frames = 12
+        return
+    if state.flash_selected_frames > 0:
+        state.flash_selected_frames -= 1
+
+
 def run_setup_menu_loop(
     *,
     screen: pygame.Surface,
@@ -60,20 +85,13 @@ def run_setup_menu_loop(
         state.bindings_status_error = True
     if after_load is not None:
         after_load(state)
+    if not hasattr(state, "flash_selected_frames"):
+        state.flash_selected_frames = 0
 
     while state.running and not state.start_game:
         clock.tick(60)
         fields = fields_for_state(state.settings)
-        actions = gather_menu_actions(state, dimension)
-        if state.selected_index >= len(fields):
-            state.selected_index = max(0, len(fields) - 1)
-        apply_menu_actions(
-            state,
-            actions,
-            fields,
-            dimension,
-            blocked_actions=SETUP_MENU_BLOCKED_ACTIONS,
-        )
+        _update_selected_flash(state, fields, dimension=dimension)
         if state.run_dry_run and run_dry_run is not None:
             run_dry_run(state)
         draw_frame(screen, state, fields)

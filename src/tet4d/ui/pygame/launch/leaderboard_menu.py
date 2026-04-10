@@ -61,6 +61,12 @@ def _format_date(timestamp_utc: str) -> str:
     return "n/a"
 
 
+def _session_is_recordable(*, outcome: str, exploration_mode: bool) -> bool:
+    if exploration_mode:
+        return False
+    return sanitize_text(outcome, max_length=24).strip().lower() == "game_over"
+
+
 def _entry_cells(rank: int, entry: dict[str, object]) -> tuple[str, ...]:
     name = (
         sanitize_text(entry.get("player_name"), max_length=64).strip()
@@ -163,7 +169,7 @@ def _draw_leaderboard(
 
     title = fonts.title_font.render("Leaderboard", True, _TEXT_COLOR)
     subtitle = fonts.hint_font.render(
-        "Top session scores across 2D/3D/4D",
+        "Top game-over scores across 2D/3D/4D",
         True,
         _MUTED_COLOR,
     )
@@ -229,7 +235,7 @@ def _draw_leaderboard(
 
     y = table_rect.y + header_h
     if not has_rows:
-        empty_line = "No leaderboard runs yet. Finish a game to record a session."
+        empty_line = "No leaderboard runs yet. Reach game over in standard play to record a session."
         empty_rect = pygame.Rect(table_rect.x, y, table_rect.width, row_h)
         _draw_table_cell(
             screen,
@@ -460,7 +466,10 @@ def maybe_record_leaderboard_session(
     kick_level: str,
     exploration_mode: bool,
 ) -> bool:
-    if exploration_mode:
+    if not _session_is_recordable(
+        outcome=outcome,
+        exploration_mode=exploration_mode,
+    ):
         return False
     qualifies, rank = leaderboard_entry_would_enter(
         dimension=dimension,
@@ -506,4 +515,3 @@ __all__ = [
     "prompt_leaderboard_player_name",
     "run_leaderboard_menu",
 ]
-

@@ -62,14 +62,6 @@ _MOVE_ICON_MAP: dict[str, tuple[str, int]] = {
 }
 
 
-def clear_action_icon_cache() -> None:
-    _ICON_SURFACE_CACHE.clear()
-
-
-def action_icon_cache_size() -> int:
-    return len(_ICON_SURFACE_CACHE)
-
-
 def _read_json_object(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")

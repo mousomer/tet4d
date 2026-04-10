@@ -408,29 +408,29 @@ Parameters:
 - `actions.move_w_pos.group`: `"game"` (`string`)
 - `actions.move_w_pos.label`: `"Move w +"` (`string`)
 - `actions.move_w_pos.order`: `150` (`int`)
-- `actions.move_x_neg.description`: `"Move active piece left on the x axis."` (`string`)
+- `actions.move_x_neg.description`: `"Move active piece left."` (`string`)
 - `actions.move_x_neg.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
 - `actions.move_x_neg.gameplay_bucket`: `"translation"` (`string`)
 - `actions.move_x_neg.group`: `"game"` (`string`)
-- `actions.move_x_neg.label`: `"Move x -"` (`string`)
+- `actions.move_x_neg.label`: `"Move Left"` (`string`)
 - `actions.move_x_neg.order`: `100` (`int`)
-- `actions.move_x_pos.description`: `"Move active piece right on the x axis."` (`string`)
+- `actions.move_x_pos.description`: `"Move active piece right."` (`string`)
 - `actions.move_x_pos.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
 - `actions.move_x_pos.gameplay_bucket`: `"translation"` (`string`)
 - `actions.move_x_pos.group`: `"game"` (`string`)
-- `actions.move_x_pos.label`: `"Move x +"` (`string`)
+- `actions.move_x_pos.label`: `"Move Right"` (`string`)
 - `actions.move_x_pos.order`: `110` (`int`)
-- `actions.move_z_neg.description`: `"Move active piece away from viewer (default view)."` (`string`)
+- `actions.move_z_neg.description`: `"Move active piece forward, away from the viewer in the default view."` (`string`)
 - `actions.move_z_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
 - `actions.move_z_neg.gameplay_bucket`: `"translation"` (`string`)
 - `actions.move_z_neg.group`: `"game"` (`string`)
-- `actions.move_z_neg.label`: `"Move z -"` (`string`)
+- `actions.move_z_neg.label`: `"Move Forward"` (`string`)
 - `actions.move_z_neg.order`: `120` (`int`)
-- `actions.move_z_pos.description`: `"Move active piece closer to viewer (default view)."` (`string`)
+- `actions.move_z_pos.description`: `"Move active piece backward, toward the viewer in the default view."` (`string`)
 - `actions.move_z_pos.dimensions[]`: array[`int`]; examples: `3`, `4`
 - `actions.move_z_pos.gameplay_bucket`: `"translation"` (`string`)
 - `actions.move_z_pos.group`: `"game"` (`string`)
-- `actions.move_z_pos.label`: `"Move z +"` (`string`)
+- `actions.move_z_pos.label`: `"Move Backward"` (`string`)
 - `actions.move_z_pos.order`: `130` (`int`)
 - `actions.overlay_alpha_dec.description`: `"Decrease locked-cell transparency."` (`string`)
 - `actions.overlay_alpha_dec.dimensions[]`: array[`int`]; examples: `3`, `4`
@@ -539,11 +539,11 @@ Parameters:
 - `actions.rotate_zw_pos.group`: `"game"` (`string`)
 - `actions.rotate_zw_pos.label`: `"Rotate z-w +"` (`string`)
 - `actions.rotate_zw_pos.order`: `310` (`int`)
-- `actions.soft_drop.description`: `"Move piece one gravity step down."` (`string`)
+- `actions.soft_drop.description`: `"Move active piece one gravity step down."` (`string`)
 - `actions.soft_drop.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
 - `actions.soft_drop.gameplay_bucket`: `"translation"` (`string`)
 - `actions.soft_drop.group`: `"game"` (`string`)
-- `actions.soft_drop.label`: `"Soft drop"` (`string`)
+- `actions.soft_drop.label`: `"Move Down (Soft Drop)"` (`string`)
 - `actions.soft_drop.order`: `160` (`int`)
 - `actions.toggle_grid.description`: `"Cycle grid display mode."` (`string`)
 - `actions.toggle_grid.dimensions[]`: array[`int`]; examples: `2`, `3`, `4`
@@ -1064,8 +1064,8 @@ Parameters:
 Top-level keys: `bot_options_rows`, `branding`, `launcher_route_actions`, `launcher_settings_routes`, `launcher_subtitles`, `menu_entrypoints`, `menus`, `pause_copy`, `pause_menu_actions`, `pause_menu_rows`, `settings_category_docs`, `settings_category_metrics`, `settings_hub_layout_rows`, `settings_hub_rows`, `settings_option_labels`, `settings_sections`, `settings_split_rules`, `setup_fields`, `setup_hints`, `ui_copy`
 Parameters:
 - `bot_options_rows[]`: array[`string`]; examples: `"Dimension"`, `"Playbot mode"`, `"Bot algorithm"`
-- `branding.game_title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
-- `branding.signature_author`: `"Omer M. Moussaffi (mousomer@gmail.com)"` (`string`)
+- `branding.game_title`: `"Multi Dimensional Tetris Game"` (`string`)
+- `branding.signature_author`: `"\u00a9 Omer M. Moussaffi (mousomer@gmail.com)"` (`string`)
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
 - `launcher_settings_routes.settings.initial_row_key`: `"game_seed"` (`string`)
 - `launcher_settings_routes.settings.section_id`: `"gameplay"` (`string`)
@@ -1076,26 +1076,32 @@ Parameters:
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
-- `launcher_subtitles.launcher_settings_root`: `"Open game, display, audio, controls, profiles, or the legacy topolog...` (`string`)
+- `launcher_subtitles.launcher_settings_root`: `"Open game, display, audio, keybindings, keyboard profiles, or the le...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
 - `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
 - `menu_entrypoints.launcher`: `"launcher_root"` (`string`)
 - `menu_entrypoints.pause`: `"pause_root"` (`string`)
 - `menus.launcher_play.items[]`: array[`object`]
 - `menus.launcher_play.items[].action_id`: varies (`string`); examples: `"play_2d"`, `"play_3d"`, `"play_4d"`
-- `menus.launcher_play.items[].label`: varies (`string`); examples: `"Play 2D"`, `"Play 3D"`, `"Play 4D"`
+- `menus.launcher_play.items[].label`: varies (`string`); examples: `"2D"`, `"3D"`, `"4D"`
 - `menus.launcher_play.items[].type`: varies (`string`); examples: `"action"`
 - `menus.launcher_play.title`: `"Choose Mode"` (`string`)
 - `menus.launcher_root.items[]`: array[`object`]
-- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"quit"`
-- `menus.launcher_root.items[].label`: varies (`string`); examples: `"Play"`, `"Continue"`, `"Tutorials"`
+- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"topology_lab"`, `"quit"`
+- `menus.launcher_root.items[].label`: varies (`string`); examples: `"Play"`, `"Tutorials"`, `"Topology Playground"`
 - `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`, `"launcher_settings_root"`
 - `menus.launcher_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
-- `menus.launcher_root.title`: `"Multi dimensional tetris game (2d/3d/4d)"` (`string`)
+- `menus.launcher_root.title`: `"Multi Dimensional Tetris Game"` (`string`)
+- `menus.launcher_settings_profiles.items[]`: array[`object`]
+- `menus.launcher_settings_profiles.items[].action_id`: `"settings_profiles"` (`string`)
+- `menus.launcher_settings_profiles.items[].label`: `"Profiles"` (`string`)
+- `menus.launcher_settings_profiles.items[].type`: `"action"` (`string`)
+- `menus.launcher_settings_profiles.title`: `"Keyboard Profiles"` (`string`)
 - `menus.launcher_settings_root.items[]`: array[`object`]
 - `menus.launcher_settings_root.items[].action_id`: varies (`string`); examples: `"settings"`, `"settings_display"`, `"settings_audio"`
 - `menus.launcher_settings_root.items[].label`: varies (`string`); examples: `"Game"`, `"Display"`, `"Audio"`
-- `menus.launcher_settings_root.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_settings_root.items[].menu_id`: `"launcher_settings_profiles"` (`string`)
+- `menus.launcher_settings_root.items[].type`: varies (`string`); examples: `"action"`, `"submenu"`
 - `menus.launcher_settings_root.title`: `"Settings"` (`string`)
 - `menus.launcher_tutorials.items[]`: array[`object`]
 - `menus.launcher_tutorials.items[].action_id`: varies (`string`); examples: `"tutorial_how_to_play"`, `"tutorial_controls_reference"`, `"help"`
@@ -1171,11 +1177,11 @@ Parameters:
 - `settings_sections.audio.title`: `"Audio settings"` (`string`)
 - `settings_sections.display.headers[]`: array[`string`]; examples: `"Display"`
 - `settings_sections.display.row_keys[]`: array[`string`]; examples: `"display_fullscreen"`, `"display_width"`, `"display_height"`
-- `settings_sections.display.subtitle`: `"Fullscreen, window size, overlay transparency, apply, save, reset, a...` (`string`)
+- `settings_sections.display.subtitle`: `"Fullscreen, window size, apply, save, reset, and back."` (`string`)
 - `settings_sections.display.title`: `"Display settings"` (`string`)
 - `settings_sections.gameplay.headers[]`: array[`string`]; examples: `"Game"`, `"Advanced gameplay"`, `"Analytics"`
-- `settings_sections.gameplay.row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"rotation_animation_mode"`
-- `settings_sections.gameplay.subtitle`: `"Seed, random type, analytics, advanced gameplay, save, reset, and ba...` (`string`)
+- `settings_sections.gameplay.row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"display_overlay_transparency"`
+- `settings_sections.gameplay.subtitle`: `"Seed, random type, transparency, analytics, advanced gameplay, save,...` (`string`)
 - `settings_sections.gameplay.title`: `"Game settings"` (`string`)
 - `settings_split_rules.max_top_level_actions`: `2` (`int`)
 - `settings_split_rules.max_top_level_fields`: `5` (`int`)
@@ -1184,17 +1190,17 @@ Parameters:
 - `setup_fields.2d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"piece_set_index"`
 - `setup_fields.2d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Piece set"`
 - `setup_fields.2d[].max`: varies (`int, string`); examples: `16`, `30`, `"piece_set_max"`
-- `setup_fields.2d[].min`: varies (`int`); examples: `6`, `12`, `0`
+- `setup_fields.2d[].min`: varies (`int`); examples: `6`, `0`, `1`
 - `setup_fields.3d[]`: array[`object`]
 - `setup_fields.3d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
 - `setup_fields.3d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth"`
 - `setup_fields.3d[].max`: varies (`int, string`); examples: `12`, `30`, `"piece_set_max"`
-- `setup_fields.3d[].min`: varies (`int`); examples: `4`, `12`, `0`
+- `setup_fields.3d[].min`: varies (`int`); examples: `4`, `6`, `0`
 - `setup_fields.4d[]`: array[`object`]
 - `setup_fields.4d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
 - `setup_fields.4d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth (z)"`
 - `setup_fields.4d[].max`: varies (`int, string`); examples: `16`, `30`, `12`
-- `setup_fields.4d[].min`: varies (`int`); examples: `6`, `12`, `4`
+- `setup_fields.4d[].min`: varies (`int`); examples: `4`, `6`, `0`
 - `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
@@ -1211,14 +1217,14 @@ Parameters:
 - `ui_copy.keybindings_menu.subtitle_binding_mode`: `"Up/Down select, Enter rebind, Tab sections, Esc back, Q quit"` (`string`)
 - `ui_copy.keybindings_menu.subtitle_section_mode`: `"Up/Down select section, Enter open, Esc back, Q quit"` (`string`)
 - `ui_copy.keybindings_menu.text_mode_confirm_hint`: `"Enter confirm   Esc cancel"` (`string`)
-- `ui_copy.keybindings_menu.title`: `"Keybindings Setup"` (`string`)
+- `ui_copy.keybindings_menu.title`: `"Keybindings"` (`string`)
 - `ui_copy.launcher.controls_hint_template`: `"Up/Down select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.controls_hint_template_tiny`: `"I/K select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.escape_hint_back`: `"Esc back"` (`string`)
 - `ui_copy.launcher.escape_hint_quit`: `"Q quit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
-- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter on width/height/seed to type large numeric values"`, `"Game settings inline advanced gameplay and analytics in one section ...`
+- `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Type digits on width, height, seed, or animation timing rows for dir...`, `"Game settings keep gameplay, transparency, and analytics in one sect...`
 - `ui_copy.settings_hub.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Top-level categories: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)
@@ -1226,8 +1232,8 @@ Parameters:
 - `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Esc back   Q quit"` (`string`)
 - `ui_copy.setup_menu.subtitle_2d`: `"Use Up/Down to select, Left/Right to change, Enter to start, Esc bac...` (`string`)
 - `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Setup k...` (`string`)
-- `ui_copy.setup_menu.title_2d`: `"2D setup"` (`string`)
-- `ui_copy.setup_menu.title_template`: `"{dimension}D setup"` (`string`)
+- `ui_copy.setup_menu.title_2d`: `"2D Setup"` (`string`)
+- `ui_copy.setup_menu.title_template`: `"{dimension}D Setup"` (`string`)
 
 ### `config/playbot/policy.json`
 Top-level keys: `adaptive_fallback`, `auto_algorithm`, `benchmark`, `board_size_scaling`, `budget_ms`, `clamp`, `controller`, `dry_run`, `learning_mode`, `lookahead`, `version`
@@ -1312,7 +1318,7 @@ Parameters:
 ### `config/project/constants.json`
 Top-level keys: `analytics`, `animation`, `cache_limits`, `layout`, `rendering`, `topology`, `tutorial`, `version`
 Parameters:
-- `analytics.leaderboard_max_entries`: `200` (`int`)
+- `analytics.leaderboard_max_entries`: `10` (`int`)
 - `analytics.leaderboard_name_max_length`: `24` (`int`)
 - `analytics.leaderboard_page_rows`: `12` (`int`)
 - `animation.clear_effect_duration_ms_2d`: `320.0` (`float`)
@@ -1341,6 +1347,9 @@ Parameters:
 - `rendering.4d.layer_gap`: `12` (`int`)
 - `rendering.4d.margin`: `16` (`int`)
 - `rendering.4d.side_panel`: `360` (`int`)
+- `rendering.projected_occlusion.depth_epsilon`: `0.02` (`float`)
+- `rendering.projected_occlusion.point_epsilon_px`: `0.75` (`float`)
+- `rendering.projected_occlusion.split_epsilon_px`: `0.5` (`float`)
 - `topology.explorer_preview_dims.3d[]`: array[`int`]; examples: `4`
 - `topology.explorer_preview_dims.4d[]`: array[`int`]; examples: `4`
 - `tutorial.action_delay_ms.drop`: `500` (`int`)

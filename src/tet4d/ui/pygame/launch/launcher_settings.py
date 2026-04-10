@@ -11,10 +11,16 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 )
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.ui_utils import (
+    default_menu_back_chip_rect,
+    draw_corner_chip,
     draw_fitted_text_line,
     draw_selection_highlight,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    draw_value_slider,
     draw_wrapped_label_value_lines,
-    draw_vertical_gradient,
+    format_menu_title,
+    standard_menu_panel_rect,
     wrapped_label_value_layout,
 )
 
@@ -51,7 +57,6 @@ from .settings_hub_model import (
     selectable_index_by_row_key_for_rows,
     selectable_indexes_for_rows,
     settings_rows_for_category,
-    settings_subtitle_for_category,
     settings_title_for_category,
 )
 
@@ -68,10 +73,19 @@ def _draw_wrapped_settings_row(
     row_height: int,
     color: tuple[int, int, int],
     selected: bool,
+    slider_fraction: float | None = None,
+    flash_strength: float = 0.0,
 ) -> None:
     row_rect = pygame.Rect(panel_x + 14, line_y - 5, panel_w - 28, row_height)
     if selected:
         draw_selection_highlight(screen, rect=row_rect)
+    if flash_strength > 0.0:
+        draw_selection_highlight(
+            screen,
+            rect=row_rect,
+            color=(112, 236, 255, min(112, int(42 + (70 * flash_strength)))),
+            border_radius=10,
+        )
     draw_wrapped_label_value_lines(
         screen,
         font=fonts.menu_font,
@@ -82,6 +96,37 @@ def _draw_wrapped_settings_row(
         top_y=line_y,
         label_color=color,
     )
+    if slider_fraction is not None:
+        slider_w = min(180, max(108, int(panel_w * 0.31)))
+        draw_value_slider(
+            screen,
+            rect=pygame.Rect(
+                panel_x + panel_w - 22 - slider_w,
+                line_y + row_height - 11,
+                slider_w,
+                7,
+            ),
+            fraction=slider_fraction,
+            flash_strength=flash_strength,
+        )
+
+
+def _slider_fraction_for_row(state: _UnifiedSettingsState, row_key: str) -> float | None:
+    if row_key == "audio_master":
+        return float(state.audio_settings.master_volume)
+    if row_key == "audio_sfx":
+        return float(state.audio_settings.sfx_volume)
+    if row_key == "display_overlay_transparency":
+        return float(state.overlay_transparency) / 0.9
+    if row_key == "rotation_animation_duration_ms_2d":
+        return min(1.0, max(0.0, int(state.rotation_animation_duration_ms_2d) / 300.0))
+    if row_key == "rotation_animation_duration_ms_nd":
+        return min(1.0, max(0.0, int(state.rotation_animation_duration_ms_nd) / 300.0))
+    if row_key == "translation_animation_duration_ms":
+        return min(1.0, max(0.0, int(state.translation_animation_duration_ms) / 300.0))
+    if row_key == "lines_per_level":
+        return min(1.0, max(0.0, (int(state.lines_per_level) - 1) / 29.0))
+    return None
 
 
 def _handle_unified_enter(
@@ -126,6 +171,8 @@ def _handle_unified_enter(
             enter_pressed=True,
         ):
             _mark_unified_dirty(state)
+            state.flash_row_key = row_key
+            state.flash_frames = 12
             _set_unified_status(state, "Advanced gameplay updated (not saved yet)")
             play_sfx("menu_move")
         return screen
@@ -158,6 +205,8 @@ def _handle_unified_action_row_enter(
         )
         _mark_unified_dirty(state)
         state.pending_reset_confirm = False
+        state.flash_row_key = row_key
+        state.flash_frames = 12
         _set_unified_status(state, "Applied display mode")
         play_sfx("menu_confirm")
         return screen
@@ -179,32 +228,23 @@ def _draw_unified_settings_menu(
     selectable_rows: tuple[int, ...],
     category_id: str | None,
 ) -> None:
-    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
+    draw_tron_menu_background(screen, top_color=BG_TOP, bottom_color=BG_BOTTOM)
     width, height = screen.get_size()
     title = draw_fitted_text_line(
         screen,
         font=fonts.title_font,
-        text=settings_title_for_category(category_id),
+        text=format_menu_title(settings_title_for_category(category_id)),
         color=TEXT_COLOR,
         max_width=width - 28,
         center_x=width // 2,
         y=44,
     )
-    subtitle = draw_fitted_text_line(
-        screen,
-        font=fonts.hint_font,
-        text=settings_subtitle_for_category(category_id),
-        color=MUTED_COLOR,
-        max_width=width - 28,
-        center_x=width // 2,
-        y=44 + title.get_height() + 8,
-    )
     title_y = 44
-    subtitle_y = title_y + title.get_height() + 8
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     panel_w = min(700, max(360, width - 40))
     line_h = fonts.hint_font.get_height() + 3
-    panel_top = subtitle_y + subtitle.get_height() + 10
+    panel_top = title_y + title.get_height() + 18
     bottom_lines = 2 + (1 if state.status else 0)
     panel_max_h = max(
         180,
@@ -245,14 +285,16 @@ def _draw_unified_settings_menu(
     panel_h = min(
         panel_max_h, 18 + (header_count * header_step) + (item_count * item_step) + 8
     )
-    panel_x = (width - panel_w) // 2
-    panel_y = max(
-        panel_top,
-        min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8),
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=panel_w,
+        panel_h=panel_h,
+        panel_top=panel_top,
+        bottom_reserved=(bottom_lines * line_h),
     )
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
+    panel_x = panel_rect.x
+    panel_y = panel_rect.y
+    draw_tron_panel(screen, rect=panel_rect)
 
     selected_row_idx = selectable_rows[state.selected]
     y = panel_y + 14
@@ -295,6 +337,12 @@ def _draw_unified_settings_menu(
             row_height=row_height,
             color=color,
             selected=selected,
+            slider_fraction=_slider_fraction_for_row(state, row_key),
+            flash_strength=(
+                max(0.0, min(1.0, state.flash_frames / 12.0))
+                if state.flash_row_key == row_key
+                else 0.0
+            ),
         )
         y += row_height + max(6, item_step - row_height)
 
@@ -430,6 +478,32 @@ def _dispatch_unified_text_mode_key(
     return screen
 
 
+def _handle_unified_non_key_event(
+    state: _UnifiedSettingsState,
+    event: pygame.event.Event,
+    *,
+    rows: tuple[tuple[str, str, str], ...],
+    selectable_rows: tuple[int, ...],
+) -> bool:
+    if (
+        event.type == pygame.MOUSEBUTTONDOWN
+        and int(getattr(event, "button", 0)) == 1
+        and default_menu_back_chip_rect().collidepoint(getattr(event, "pos", (-1, -1)))
+    ):
+        state.running = False
+        return True
+    if event.type != pygame.TEXTINPUT:
+        return False
+    if _is_unified_text_mode(state):
+        _handle_unified_text_input(state, event.text)
+        return True
+    row_key = rows[selectable_rows[state.selected]][2]
+    if row_key in _NUMERIC_TEXT_EDIT_ROWS:
+        _start_unified_numeric_text_mode(state, row_key)
+        _handle_unified_text_input(state, event.text)
+    return True
+
+
 def _process_unified_events(
     screen: pygame.Surface,
     fonts,
@@ -442,10 +516,16 @@ def _process_unified_events(
         if event.type == pygame.QUIT:
             state.running = False
             return screen, False
-        if event.type == pygame.TEXTINPUT and _is_unified_text_mode(state):
-            _handle_unified_text_input(state, event.text)
-            continue
         if event.type != pygame.KEYDOWN:
+            if _handle_unified_non_key_event(
+                state,
+                event,
+                rows=rows,
+                selectable_rows=selectable_rows,
+            ):
+                if not state.running:
+                    return screen, True
+                continue
             continue
         screen = _dispatch_unified_key(
             screen,
@@ -457,6 +537,11 @@ def _process_unified_events(
         )
         if not state.running:
             break
+    if state.flash_frames > 0:
+        state.flash_frames -= 1
+        if state.flash_frames <= 0:
+            state.flash_frames = 0
+            state.flash_row_key = ""
     return screen, True
 
 

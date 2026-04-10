@@ -14,26 +14,26 @@ from tet4d.ui.pygame.launch.topology_lab_state_factory import (
 from tet4d.ui.pygame.topology_lab.app import (
     ExplorerPlaygroundLaunch,
     build_explorer_playground_launch,
-    build_explorer_playground_settings,
+    build_explorer_playground_settings,  # noqa: F401 - compatibility re-export
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.topology_lab import (
     ExplorerGlueDraft as _ExplorerGlueDraft,
-    ExplorerPlaygroundSettings,
-    PANE_CONTROLS,
-    PANE_SCENE,
-    TOOL_CREATE,
-    TOOL_EDIT,
-    TOOL_NAVIGATE,
-    TOOL_PLAY,
+    ExplorerPlaygroundSettings,  # noqa: F401 - compatibility re-export
+    PANE_CONTROLS,  # noqa: F401 - compatibility re-export
+    PANE_SCENE,  # noqa: F401 - compatibility re-export
+    TOOL_CREATE,  # noqa: F401 - compatibility re-export
+    TOOL_EDIT,  # noqa: F401 - compatibility re-export
+    TOOL_NAVIGATE,  # noqa: F401 - compatibility re-export
+    TOOL_PLAY,  # noqa: F401 - compatibility re-export
     TOOL_PROBE as _TOOL_PROBE,
-    TOOL_SANDBOX,
+    TOOL_SANDBOX,  # noqa: F401 - compatibility re-export
     TopologyLabHitTarget,
     apply_boundary_edit_pick,
     apply_boundary_pick,
     apply_glue_pick,
-    boundaries_for_dimension,
+    boundaries_for_dimension,  # noqa: F401 - compatibility re-export
     cycle_sandbox_piece,
     draw_action_buttons,
     ensure_piece_sandbox,
@@ -42,7 +42,7 @@ from tet4d.ui.pygame.topology_lab import (
     pick_target,
     reset_sandbox_piece,
     rotate_sandbox_piece,
-    sandbox_cells,
+    sandbox_cells,  # noqa: F401 - compatibility re-export
     spawn_sandbox_piece,
     set_active_tool as _set_active_tool,
     step_scene_camera,
@@ -55,10 +55,10 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_dirty as _current_dirty,
     current_explorer_draft as _current_explorer_draft,
     current_explorer_profile as _current_explorer_profile,
-    current_probe_coord as _current_probe_coord,
-    current_probe_path as _current_probe_path,
-    ensure_probe_state as _ensure_probe_state,
-    playground_dims_for_state as _board_dims_for_state,
+    current_probe_coord as _current_probe_coord,  # noqa: F401 - compatibility re-export
+    current_probe_path as _current_probe_path,  # noqa: F401 - compatibility re-export
+    ensure_probe_state as _ensure_probe_state,  # noqa: F401 - compatibility re-export
+    playground_dims_for_state as _board_dims_for_state,  # noqa: F401 - compatibility re-export
     probe_neighbors_visible as _probe_neighbors_visible,
     probe_trace_visible as _probe_trace_visible,
     scene_pane_active as _scene_pane_active,
@@ -79,8 +79,8 @@ from tet4d.ui.pygame.topology_lab.copy import (
     display_title_for_state as _copy_display_title_for_state,
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_values import (
+    _explorer_preset_value_text,  # noqa: F401 - compatibility re-export
     _playability_shell_chip_text,
-    _explorer_preset_value_text,
     _row_value_text,
     _sandbox_neighbor_search_enabled,
 )
@@ -92,15 +92,15 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _adjust_row,
     _apply_explorer_glue,
     _apply_probe_step,
-    _cycle_dimension,
+    _cycle_dimension,  # noqa: F401 - compatibility re-export
     _cycle_explorer_preset,
-    _explorer_presets,
+    _explorer_presets,  # noqa: F401 - compatibility re-export
     _handle_enter_key,
     _handle_navigation_key,
     _handle_shortcut_key,
     _launch_play_preview,
     _normalize_explorer_draft,
-    _refresh_explorer_scene_state,
+    _refresh_explorer_scene_state,  # noqa: F401 - compatibility re-export
     _remove_explorer_glue,
     _reset_probe,
     _run_export,
@@ -109,7 +109,7 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _select_explorer_draft_slot,
     _set_active_pane_from_target,
     _set_status,
-    _sync_explorer_state,
+    _sync_explorer_state,  # noqa: F401 - compatibility re-export
     _toggle_explorer_sign,
     _toggle_sandbox_neighbor_search,
     _uses_general_explorer_editor,
@@ -123,14 +123,14 @@ from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
 from tet4d.ui.pygame.topology_lab.explorer_tools import draw_tool_ribbon
 from tet4d.ui.pygame.topology_lab.workspace_shell import (
     _action_buttons_for_state,
-    _active_workspace_coord,
-    _active_workspace_neighbor_markers,
-    _active_workspace_path,
+    _active_workspace_coord,  # noqa: F401 - compatibility re-export
+    _active_workspace_neighbor_markers,  # noqa: F401 - compatibility re-export
+    _active_workspace_path,  # noqa: F401 - compatibility re-export
     _draw_explorer_scene as _workspace_draw_explorer_scene,
     _draw_explorer_workspace,
     _explorer_workspace_layout as _workspace_shell_layout,
     _hint_lines_for_state,
-    _workspace_preview_lines,
+    _workspace_preview_lines,  # noqa: F401 - compatibility re-export
 )
 from tet4d.ui.pygame.topology_lab.shell_layout import (
     build_topology_lab_shell_layout,
@@ -163,39 +163,6 @@ set_active_tool = _set_active_tool
 _explorer_workspace_layout = _workspace_shell_layout
 _sync_canonical_playground_state = _sync_canonical_state
 _draw_explorer_scene = _workspace_draw_explorer_scene
-
-_TEST_COMPAT_EXPORTS = (
-    ExplorerGlueDraft,
-    ExplorerPlaygroundSettings,
-    PANE_CONTROLS,
-    PANE_SCENE,
-    TOOL_CREATE,
-    TOOL_EDIT,
-    TOOL_NAVIGATE,
-    TOOL_PLAY,
-    TOOL_PROBE,
-    TOOL_SANDBOX,
-    boundaries_for_dimension,
-    build_explorer_playground_settings,
-    _active_workspace_coord,
-    _active_workspace_neighbor_markers,
-    _active_workspace_path,
-    _board_dims_for_state,
-    _cycle_dimension,
-    _current_probe_coord,
-    _current_probe_path,
-    _ensure_probe_state,
-    _explorer_preset_value_text,
-    _explorer_presets,
-    _explorer_workspace_layout,
-    _workspace_preview_lines,
-    _draw_explorer_scene,
-    _refresh_explorer_scene_state,
-    _sync_explorer_state,
-    _sync_canonical_playground_state,
-    sandbox_cells,
-    set_active_tool,
-)
 
 
 def _display_title_for_state(state: _TopologyLabState) -> str:

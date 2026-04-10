@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-03-29
+Last verified: 2026-04-10
 
 ## 1. Scope
 
@@ -53,6 +53,10 @@ Primary implementation and maintenance files:
 4. Allow quick settings changes without extra navigation depth.
 5. Support safe reset-to-defaults and explicit save state actions.
 6. Ensure display mode transitions never corrupt menu/game layout.
+7. Keep launcher, setup, pause, settings, and keybindings on one shared
+   visual shell with predictable title, panel, footer, and back affordances.
+8. Favor a restrained Tron-1982-inspired presentation without reducing
+   readability or keyboard-first clarity.
 
 ## 3. Research Basis (Best Practices)
 
@@ -83,11 +87,11 @@ This design is based on:
 ```text
 Main Menu
 |-- Play
-|   |-- Play 2D
-|   |-- Play 3D
-|   |-- Play 4D
-|   |-- Play Last Custom Topology
-|   |-- Bot
+|   |-- 2D: Setup & Play
+|   |-- 3D: Setup & Play
+|   |-- 4D: Setup & Play
+|   |-- Last Custom Topology
+|   |-- Auto Bot Play
 |   `-- Leaderboard
 |-- Continue
 |-- Tutorials
@@ -103,11 +107,10 @@ Main Menu
 |   |-- Game
 |   |-- Display
 |   |-- Audio
-|   |-- Controls
-|   |-- Profiles
-|   `-- Advanced
-|       |-- Advanced gameplay
-|       `-- Legacy Topology Editor Menu
+|   |-- Keybindings
+|   |-- Keyboard Profiles
+|   |   `-- Current Keyboard Profiles...
+|   `-- Legacy Topology Editor Menu
 `-- Quit
 ```
 
@@ -118,7 +121,7 @@ Pause Menu
 |-- Resume
 |-- Restart Run
 |-- Settings (same shared sections as launcher)
-|-- Controls
+|-- Keybindings
 |-- Help
 |-- Leaderboard
 |-- Bot
@@ -139,13 +142,13 @@ Pause Menu
 9. Shared settings hub owns `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the hub must not advertise full custom-topology editing.
 10. `Play Last Custom Topology` and the root `Topology Playground` action are the direct launcher routes into custom topology play/edit flows.
 11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
-12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings -> Advanced`.
+12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings`.
 13. `Explorer` / `Path` UI must not expose or route to the legacy topology editor/menu.
 14. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 15. `Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
     sibling destinations.
-16. `Settings -> Controls` is for persistent input configuration only; controls
+16. `Settings -> Keybindings` is for persistent input configuration only; controls
     reference/help content must stay under `Tutorials` or another explicit
     learning/reference surface.
 
@@ -157,6 +160,13 @@ Pause Menu
 2. Header (screen title + current section)
 3. Content panel (focusable options)
 4. Footer (shortcut hints + status messages)
+5. Shared launcher, setup, pause, settings, and keybindings screens use one
+   shell treatment: title-cased headers, no rendered subtitle row, a visible
+   `Back` chip in the upper-left corner, a framed central panel, and footer
+   hints/status below the panel.
+6. Shared shell backgrounds should keep the dark high-contrast base but add a
+   restrained grid/glow treatment that reads as lightly Tron-inspired rather
+   than a flat gradient.
 5. The accepted Topology Playground shell uses:
 6. compact top bar
 7. contextual left sidebar
@@ -167,7 +177,7 @@ Pause Menu
 12. top bar contains only `Topology Playground`, `Editor` / `Sandbox` /
     `Play`, the validity chip, and the current dimension chip
 13. no prose header or default-primary diagnostic rows
-14. Explorer Playground left sidebar follows the accepted shell inventory:
+14. Topology Playground left sidebar follows the accepted shell inventory:
     all workspaces include `Dimension`, `Trace`, optional `Probe Neighbors`,
     edit actions only when directly relevant, and diagnostics collapsed or
     secondary; `Editor` additionally includes `Tool`, `Board X`, `Board Y`,
@@ -181,12 +191,16 @@ Pause Menu
 1. Focused item must have a high-contrast highlight and shape cue (not color-only).
 2. Primary actions (Play, Resume, Save) must be visually stronger than destructive actions.
 3. Related settings must be grouped with clear section labels.
+4. Rows whose values are changing should flash briefly so keyboard-only edits
+   are visible without relying on audio.
 
 ### 5.3 Text/readability
 
 1. Default body text should target at least 18 px equivalent in current window scale.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
+4. Titles should use capitalized display text rather than stacked
+   title/subtitle headers.
 
 ## 6. Navigation and Interaction Model
 
@@ -197,6 +211,8 @@ Pause Menu
 3. `Enter`: activate focused action.
 4. `Esc`: back/cancel (never destructive).
 5. `Tab`: next section when in multi-section settings.
+6. A visible `Back` affordance must be present anywhere `Esc`/cancel returns
+   to the previous menu level.
 
 ### 6.2 Consistency rules
 
@@ -208,6 +224,8 @@ Pause Menu
 
 1. Every action must produce immediate feedback (status line or toast-like message).
 2. Save/load/reset outcomes must show explicit success/failure text.
+3. Value-changing rows should also use a short visual flash so changes remain
+   obvious when numbers or toggles shift by small amounts.
 
 ## 7. Settings Change, Reset, and Save State
 
@@ -226,6 +244,8 @@ Pause Menu
 11. `Toggle Fullscreen`
 12. `Adjust Audio`
 13. `Toggle Score Logging`
+14. Bounded numeric settings should render with inline sliders in addition to
+    text values.
 
 ### 7.2 Persistence model
 
@@ -280,6 +300,8 @@ Add persistent settings file:
 9. Current policy:
 10. `Audio`and`Display`remain top-level in`Settings` while they stay below threshold.
 11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
+12. `display_overlay_transparency` is treated as a gameplay-facing readability
+    control and belongs under `Settings -> Game`, not `Settings -> Display`.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -352,17 +374,17 @@ Manual tests:
 15. `draw_unified_game_side_panel(...)` in `src/tet4d/ui/pygame/render/panel_utils.py`.
 16. Help/Controls includes simple arrow-diagram previews for translation and rotation.
 17. For topology-playground migration/state questions, `docs/plans/topology_playground_current_authority.md` is the current authority; older topology-playground manifests and stage plans are historical unless explicitly reactivated.
-18. Explorer Playground primary workspace controls must expose `Editor`, `Sandbox`, and `Play` as the only top-level workspace buttons.
-19. Explorer Playground helper/status scaffolding must be keyed to the canonical workspace model (`editor`, `sandbox`, `play`) rather than treating legacy `Inspect` / `Edit` labels as the primary top-level structure. New helper code should prefer Editor/Probe/workspace naming, and any retained legacy inspect naming must be limited to compatibility input normalization rather than active runtime/UI flow.
+18. Topology Playground primary workspace controls must expose `Editor`, `Sandbox`, and `Play` as the only top-level workspace buttons.
+19. Topology Playground helper/status scaffolding must be keyed to the canonical workspace model (`editor`, `sandbox`, `play`) rather than treating legacy `Inspect` / `Edit` labels as the primary top-level structure. New helper code should prefer Editor/Probe/workspace naming, and any retained legacy inspect naming must be limited to compatibility input normalization rather than active runtime/UI flow.
 20. Editor-tool selection must live in contextual secondary controls or compatibility shortcuts; selecting an Editor tool must not mutate topology until an explicit apply/place/toggle action is invoked. Contextual row ownership and helper/status copy should stay isolated in dedicated helper modules so `Editor`-owned `Trace`, `Editor`-owned `Probe Neighbors`, and `Sandbox`-owned `Neighbors` remain explicit in code as well as UI, and workspace-shell helpers should read stable scene/value selectors rather than private `controls_panel.py` adjustment helpers. Retired `explorer_profile` / `explorer_draft` shell mirrors must not retake authority through menu/helper code, and probe-state helper/menu code must use canonical probe selectors instead of any resurrected raw probe storage.
 21. The legacy Inspect dot is the Editor probe/dot. Its movement, rendered dot position, and trace must stay consistent across seam traversal and across `2D`, `3D`, and `4D`; the Editor probe must not reuse sandbox-piece box semantics.
 22. Editor trace visibility must be an explicit `Trace` contextual control owned by `Editor`, and disabling trace must not hide or disable the editor probe itself. `Probe Neighbors` must be a distinct Editor-owned optional dot overlay derived from canonical probe state.
-23. Explorer Playground sandbox helper/status content must surface neighbor-search as explicit `Neighbors` `on` / `off` state owned by `Sandbox` instead of hiding it as dimension-specific behavior. Sandbox neighbor markers must appear as small dots only when that control is enabled, remain distinct from sandbox piece boxes, and stay separate from the Editor-owned `Probe Neighbors` overlay.
+23. Topology Playground sandbox helper/status content must surface neighbor-search as explicit `Neighbors` `on` / `off` state owned by `Sandbox` instead of hiding it as dimension-specific behavior. Sandbox neighbor markers must appear as small dots only when that control is enabled, remain distinct from sandbox piece boxes, and stay separate from the Editor-owned `Probe Neighbors` overlay.
 24. Sandbox must show a sandbox piece by default on entry in `2D`, `3D`, and `4D`, and sandbox projection focus must stay coupled to a visible sandbox cell so the `3D`/`4D` piece remains on-screen after entry and movement.
 25. In `3D` and `4D`, projected sandbox piece cells must render as full box-shaped piece cells rather than as neighbor-style dots.
-26. Explorer Playground must keep an explicit right-side helper panel visible in the shell outside the explorer viewport, and that panel must stay concise: minimal movement keys, minimal rotation keys, and at most one short current workspace/tool context line rather than a full status dump or shadow menu.
+26. Topology Playground must keep an explicit right-side helper panel visible in the shell outside the playground viewport, and that panel must stay concise: minimal movement keys, minimal rotation keys, and at most one short current workspace/tool context line rather than a full status dump or shadow menu.
 27. Neighbor dots must remain visually distinct from sandbox piece cells and must disappear entirely when the explicit `Neighbor` control is off.
-28. Menu items and critical workspace controls in the Explorer shell must be fully visible and readable; clipped or partially hidden controls are layout regressions.
+28. Menu items and critical workspace controls in the Topology Playground shell must be fully visible and readable; clipped or partially hidden controls are layout regressions.
 29. The bottom strip is a compact shell footer for short status chips and right-aligned action buttons only; it must not reintroduce explanatory prose or long status rows.
 
 ## 12. Stabilization Additions (Completed)
@@ -386,7 +408,7 @@ Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu root includes `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`, and `Quit`.
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
-4. `Settings` submenu uses short section labels (`Game`,`Display`,`Audio`,`Controls`,`Profiles`,`Legacy Topology Editor Menu`) while reusing the shared settings/keybindings surfaces underneath, with `Advanced gameplay` now rendered inline inside `Game` settings rather than as a separate submenu.
+4. `Settings` submenu uses short section labels (`Game`,`Display`,`Audio`,`Keybindings`,`Keyboard Profiles`,`Legacy Topology Editor Menu`) while reusing the shared settings/keybindings surfaces underneath, with `Advanced gameplay` now rendered inline inside `Game` settings rather than as a separate submenu.
 5. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
 6. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 7. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
@@ -433,11 +455,16 @@ Stabilization details:
 22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
 23. Top-level IA is frozen to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, and `Quit`.
 24. `Tutorials` keeps `Interactive Tutorials`, `How to Play`, `Controls Reference`, and `Help / FAQ` as explicit siblings rather than collapsing help into tutorials.
-25. `Settings -> Controls` and `Tutorials -> Controls Reference` are distinct destinations and must not share one ambiguous `Controls` label.
+25. `Settings -> Keybindings` and `Tutorials -> Controls Reference` are distinct destinations and must not share one ambiguous configuration/reference label.
+26. The launcher settings config may retain a single profile-placeholder row for
+    schema stability, but it must live inside `Settings -> Keyboard Profiles`,
+    and the live launcher must expand that submenu into the current keyboard
+    profiles at runtime instead of rendering a dead generic `Profiles` entry.
 26. `Leaderboard` and `Bot` remain off the root layer and off `Settings`; they live in the play-adjacent launcher flow instead.
 27. Launcher subtitles and route-action mapping are config-driven in
     `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
-    no launcher subtitle copy or route-label mapping remains hardcoded in `front.py`.
+    no launcher route-label mapping remains hardcoded in `front.py`, and the
+    shared menu shell now intentionally suppresses subtitle rendering.
 28. Legacy duplicated `launcher_menu` rows were removed; launcher action rows are
     now derived from graph root menu items (`menus.launcher_root.items`).
 29. Menu graph lint contract is enforced via:
@@ -445,6 +472,15 @@ Stabilization details:
 31. `tools/governance/lint_menu_graph.py`,
 32. `tools/governance/validate_project_contracts.py`,
 33. `scripts/ci_check.sh`.
+34. Shared launcher/setup/pause/settings/keybindings menus now render through
+    one aligned visual treatment: title-cased headers, no subtitle row, upper
+    `Back` chip, framed neon panel, row flash on change, and inline sliders
+    for bounded numeric settings.
+35. Keybinding/editor/help-facing translation labels now prefer plain movement
+    names (`Left`, `Right`, `Forward`, `Backward`, `Down`) over axis-token
+    wording.
+36. `display_overlay_transparency` now lives in the `Game` settings section as
+    the default transparency control instead of the `Display` section.
 
 ## 15. Follow-up Status
 
@@ -536,7 +572,7 @@ Execution artifact:
 
 1. `Topology Playground` is the direct modern playground route.
 2. The old menu-only topology editor is a legacy-only compatibility surface
-   reached through `Settings -> Advanced -> Legacy Topology Editor Menu`, not
+   reached through `Settings -> Legacy Topology Editor Menu`, not
    through the modern playground entry.
 3. Visible and canonical top-level workspaces in the modern playground are
    `Editor`, `Sandbox`, and `Play`.

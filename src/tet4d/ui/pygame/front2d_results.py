@@ -53,14 +53,10 @@ def _resolve_loop_decision(
 
 def _resolve_terminal_status(
     status: str,
-    *,
-    record_session: Callable[[str], None],
 ) -> bool | None:
     if status == "quit":
-        record_session("quit")
         return False
     if status == "menu":
-        record_session("menu")
         return True
     return None
 

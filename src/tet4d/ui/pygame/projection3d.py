@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from collections import OrderedDict
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import pygame
 
@@ -17,6 +18,36 @@ Face = tuple[float, list[Point2], tuple[int, int, int], bool]
 ProjectRawFn = Callable[[Point3], Point2 | None]
 TransformRawFn = Callable[[Point3], Point3]
 Segment2 = tuple[Point2, Point2]
+DepthDenominatorFn = Callable[[float], float]
+
+
+@dataclass(frozen=True)
+class ProjectedLinePrimitive:
+    start: Point2
+    end: Point2
+    start_depth: float
+    end_depth: float
+    start_denominator: float
+    end_denominator: float
+    source_type: str
+
+
+@dataclass(frozen=True)
+class ProjectedLineFragment:
+    start: Point2
+    end: Point2
+    source_type: str
+
+
+@dataclass(frozen=True)
+class ProjectedFacePrimitive:
+    avg_depth: float
+    polygon: tuple[Point2, ...]
+    color: tuple[int, int, int]
+    active: bool
+    vertex_depths: tuple[float, ...]
+    vertex_denominators: tuple[float, ...]
+
 
 _CUBE_VERTS: list[Point3] = [
     (-0.5, -0.5, -0.5),
@@ -70,20 +101,8 @@ _PROJECTION_LATTICE_CACHE_MAX = project_constant_int(
 )
 _PROJECTION_LATTICE_CACHE: OrderedDict[
     object,
-    tuple[tuple[Segment2, ...], tuple[Segment2, ...]],
+    tuple[tuple[ProjectedLinePrimitive, ...], tuple[ProjectedLinePrimitive, ...]],
 ] = OrderedDict()
-
-
-def clear_projection_lattice_cache() -> None:
-    _PROJECTION_LATTICE_CACHE.clear()
-
-
-def projection_lattice_cache_size() -> int:
-    return len(_PROJECTION_LATTICE_CACHE)
-
-
-def projection_lattice_cache_keys() -> tuple[object, ...]:
-    return tuple(_PROJECTION_LATTICE_CACHE.keys())
 
 
 def shade_color(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
@@ -280,60 +299,84 @@ def projection_helper_cache_key(
 def _axis_segments_y(
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     x_marks: set[int] | None,
     z_marks: set[int] | None,
-) -> list[Segment2]:
-    segments: list[Segment2] = []
+) -> list[ProjectedLinePrimitive]:
+    segments: list[ProjectedLinePrimitive] = []
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
         for z in range(dims[2] + 1):
             if z_marks is not None and z not in z_marks:
                 continue
-            p0 = project_raw((x - 0.5, -0.5, z - 0.5))
-            p1 = project_raw((x - 0.5, dims[1] - 0.5, z - 0.5))
-            if p0 is not None and p1 is not None:
-                segments.append((p0, p1))
+            segment = _project_line_primitive(
+                (x - 0.5, -0.5, z - 0.5),
+                (x - 0.5, dims[1] - 0.5, z - 0.5),
+                project_raw=project_raw,
+                transform_raw=transform_raw,
+                depth_denominator=depth_denominator,
+                source_type="gridline",
+            )
+            if segment is not None:
+                segments.append(segment)
     return segments
 
 
 def _axis_segments_x(
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     y_marks: set[int] | None,
     z_marks: set[int] | None,
-) -> list[Segment2]:
-    segments: list[Segment2] = []
+) -> list[ProjectedLinePrimitive]:
+    segments: list[ProjectedLinePrimitive] = []
     for y in range(dims[1] + 1):
         if y_marks is not None and y not in y_marks:
             continue
         for z in range(dims[2] + 1):
             if z_marks is not None and z not in z_marks:
                 continue
-            p0 = project_raw((-0.5, y - 0.5, z - 0.5))
-            p1 = project_raw((dims[0] - 0.5, y - 0.5, z - 0.5))
-            if p0 is not None and p1 is not None:
-                segments.append((p0, p1))
+            segment = _project_line_primitive(
+                (-0.5, y - 0.5, z - 0.5),
+                (dims[0] - 0.5, y - 0.5, z - 0.5),
+                project_raw=project_raw,
+                transform_raw=transform_raw,
+                depth_denominator=depth_denominator,
+                source_type="gridline",
+            )
+            if segment is not None:
+                segments.append(segment)
     return segments
 
 
 def _axis_segments_z(
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     x_marks: set[int] | None,
     y_marks: set[int] | None,
-) -> list[Segment2]:
-    segments: list[Segment2] = []
+) -> list[ProjectedLinePrimitive]:
+    segments: list[ProjectedLinePrimitive] = []
     for x in range(dims[0] + 1):
         if x_marks is not None and x not in x_marks:
             continue
         for y in range(dims[1] + 1):
             if y_marks is not None and y not in y_marks:
                 continue
-            p0 = project_raw((x - 0.5, y - 0.5, -0.5))
-            p1 = project_raw((x - 0.5, y - 0.5, dims[2] - 0.5))
-            if p0 is not None and p1 is not None:
-                segments.append((p0, p1))
+            segment = _project_line_primitive(
+                (x - 0.5, y - 0.5, -0.5),
+                (x - 0.5, y - 0.5, dims[2] - 0.5),
+                project_raw=project_raw,
+                transform_raw=transform_raw,
+                depth_denominator=depth_denominator,
+                source_type="gridline",
+            )
+            if segment is not None:
+                segments.append(segment)
     return segments
 
 
@@ -351,18 +394,56 @@ def _frame_segments(
     return frame_segments
 
 
+def _frame_line_primitives(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+) -> list[ProjectedLinePrimitive]:
+    frame_segments: list[ProjectedLinePrimitive] = []
+    raw_corners = box_raw_corners(dims)
+    for a, b in _BOX_EDGES:
+        segment = _project_line_primitive(
+            raw_corners[a],
+            raw_corners[b],
+            project_raw=project_raw,
+            transform_raw=transform_raw,
+            depth_denominator=depth_denominator,
+            source_type="box_edge",
+        )
+        if segment is not None:
+            frame_segments.append(segment)
+    return frame_segments
+
+
 def _lattice_segments(
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     x_marks: set[int] | None = None,
     y_marks: set[int] | None = None,
     z_marks: set[int] | None = None,
-) -> tuple[tuple[Segment2, ...], tuple[Segment2, ...]]:
-    inner_segments: list[Segment2] = []
-    inner_segments.extend(_axis_segments_y(dims, project_raw, x_marks, z_marks))
-    inner_segments.extend(_axis_segments_x(dims, project_raw, y_marks, z_marks))
-    inner_segments.extend(_axis_segments_z(dims, project_raw, x_marks, y_marks))
-    return tuple(inner_segments), tuple(_frame_segments(dims, project_raw))
+) -> tuple[tuple[ProjectedLinePrimitive, ...], tuple[ProjectedLinePrimitive, ...]]:
+    inner_segments: list[ProjectedLinePrimitive] = []
+    inner_segments.extend(
+        _axis_segments_y(
+            dims, project_raw, transform_raw, depth_denominator, x_marks, z_marks
+        )
+    )
+    inner_segments.extend(
+        _axis_segments_x(
+            dims, project_raw, transform_raw, depth_denominator, y_marks, z_marks
+        )
+    )
+    inner_segments.extend(
+        _axis_segments_z(
+            dims, project_raw, transform_raw, depth_denominator, x_marks, y_marks
+        )
+    )
+    return tuple(inner_segments), tuple(
+        _frame_line_primitives(dims, project_raw, transform_raw, depth_denominator)
+    )
 
 
 def _projection_lattice_segments_cached(
@@ -370,19 +451,37 @@ def _projection_lattice_segments_cached(
     cache_key: object | None,
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     x_marks: set[int] | None = None,
     y_marks: set[int] | None = None,
     z_marks: set[int] | None = None,
-) -> tuple[tuple[Segment2, ...], tuple[Segment2, ...]]:
+) -> tuple[tuple[ProjectedLinePrimitive, ...], tuple[ProjectedLinePrimitive, ...]]:
     if cache_key is None:
-        return _lattice_segments(dims, project_raw, x_marks, y_marks, z_marks)
+        return _lattice_segments(
+            dims,
+            project_raw,
+            transform_raw,
+            depth_denominator,
+            x_marks,
+            y_marks,
+            z_marks,
+        )
 
     cached = _PROJECTION_LATTICE_CACHE.get(cache_key)
     if cached is not None:
         _PROJECTION_LATTICE_CACHE.move_to_end(cache_key)
         return cached
 
-    segments = _lattice_segments(dims, project_raw, x_marks, y_marks, z_marks)
+    segments = _lattice_segments(
+        dims,
+        project_raw,
+        transform_raw,
+        depth_denominator,
+        x_marks,
+        y_marks,
+        z_marks,
+    )
     _PROJECTION_LATTICE_CACHE[cache_key] = segments
     _PROJECTION_LATTICE_CACHE.move_to_end(cache_key)
     while len(_PROJECTION_LATTICE_CACHE) > _PROJECTION_LATTICE_CACHE_MAX:
@@ -394,6 +493,8 @@ def draw_projected_lattice(
     surface: pygame.Surface,
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     inner_color: tuple[int, int, int],
     frame_color: tuple[int, int, int],
     frame_width: int = 2,
@@ -403,17 +504,31 @@ def draw_projected_lattice(
         cache_key=cache_key,
         dims=dims,
         project_raw=project_raw,
+        transform_raw=transform_raw,
+        depth_denominator=depth_denominator,
     )
-    for p0, p1 in inner_segments:
-        pygame.draw.line(surface, inner_color, p0, p1, 1)
-    for p0, p1 in frame_segments:
-        pygame.draw.line(surface, frame_color, p0, p1, frame_width)
+    draw_projected_line_fragments(
+        surface,
+        tuple(
+            ProjectedLineFragment(
+                start=segment.start,
+                end=segment.end,
+                source_type=segment.source_type,
+            )
+            for segment in (*inner_segments, *frame_segments)
+        ),
+        inner_color=inner_color,
+        frame_color=frame_color,
+        frame_width=frame_width,
+    )
 
 
 def draw_projected_helper_lattice(
     surface: pygame.Surface,
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     x_marks: set[int],
     y_marks: set[int],
     z_marks: set[int],
@@ -426,14 +541,26 @@ def draw_projected_helper_lattice(
         cache_key=cache_key,
         dims=dims,
         project_raw=project_raw,
+        transform_raw=transform_raw,
+        depth_denominator=depth_denominator,
         x_marks=_clip_marks(x_marks, dims[0]),
         y_marks=_clip_marks(y_marks, dims[1]),
         z_marks=_clip_marks(z_marks, dims[2]),
     )
-    for p0, p1 in inner_segments:
-        pygame.draw.line(surface, inner_color, p0, p1, 1)
-    for p0, p1 in frame_segments:
-        pygame.draw.line(surface, frame_color, p0, p1, frame_width)
+    draw_projected_line_fragments(
+        surface,
+        tuple(
+            ProjectedLineFragment(
+                start=segment.start,
+                end=segment.end,
+                source_type=segment.source_type,
+            )
+            for segment in (*inner_segments, *frame_segments)
+        ),
+        inner_color=inner_color,
+        frame_color=frame_color,
+        frame_width=frame_width,
+    )
 
 
 def _clip_marks(marks: set[int], max_value: int) -> set[int]:
@@ -444,11 +571,27 @@ def draw_projected_box_edges(
     surface: pygame.Surface,
     dims: Cell3,
     project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
     edge_color: tuple[int, int, int] = (96, 118, 164),
     edge_width: int = 2,
 ) -> None:
-    for p0, p1 in _frame_segments(dims, project_raw):
-        pygame.draw.line(surface, edge_color, p0, p1, edge_width)
+    draw_projected_line_fragments(
+        surface,
+        tuple(
+            ProjectedLineFragment(
+                start=segment.start,
+                end=segment.end,
+                source_type=segment.source_type,
+            )
+            for segment in _frame_line_primitives(
+                dims, project_raw, transform_raw, depth_denominator
+            )
+        ),
+        inner_color=edge_color,
+        frame_color=edge_color,
+        frame_width=edge_width,
+    )
 
 
 def draw_projected_box_shadow(
@@ -504,28 +647,158 @@ def build_cube_faces(
     active_boost: float = 1.08,
     scale: float = 1.0,
 ) -> list[Face]:
+    return [
+        (
+            primitive.avg_depth,
+            list(primitive.polygon),
+            primitive.color,
+            primitive.active,
+        )
+        for primitive in build_cube_face_primitives(
+            cell=cell,
+            color=color,
+            project_raw=project_raw,
+            transform_raw=transform_raw,
+            active=active,
+            active_boost=active_boost,
+            scale=scale,
+            depth_denominator=lambda depth: 1.0,
+        )
+    ]
+
+
+def build_cube_face_primitives(
+    cell: Cell3,
+    color: tuple[int, int, int],
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    active: bool,
+    *,
+    depth_denominator: DepthDenominatorFn,
+    active_boost: float = 1.08,
+    scale: float = 1.0,
+) -> list[ProjectedFacePrimitive]:
     transformed: list[Point3] = []
     projected: list[Point2] = []
+    denominators: list[float] = []
 
-    # Scale the cube around its center
-    # When scale < 1.0, the cube shrinks toward its center
-    # This creates the "emerging" and "eating up" effect for 4D layer transitions
     for ox, oy, oz in _CUBE_VERTS:
-        # Apply scale factor to offset from center
         scaled_ox = ox * scale
         scaled_oy = oy * scale
         scaled_oz = oz * scale
         raw = (cell[0] + scaled_ox, cell[1] + scaled_oy, cell[2] + scaled_oz)
-        transformed.append(transform_raw(raw))
+        transformed_point = transform_raw(raw)
+        transformed.append(transformed_point)
         projected_point = project_raw(raw)
         if projected_point is None:
             return []
         projected.append(projected_point)
+        denominators.append(depth_denominator(transformed_point[2]))
 
-    faces: list[Face] = []
+    faces: list[ProjectedFacePrimitive] = []
     for face_indices, shade_factor in _CUBE_FACES:
-        polygon = [projected[i] for i in face_indices]
+        polygon = tuple(projected[i] for i in face_indices)
         avg_depth = sum(transformed[i][2] for i in face_indices) / 4.0
         factor = shade_factor * (active_boost if active else 1.0)
-        faces.append((avg_depth, polygon, shade_color(color, factor), active))
+        faces.append(
+            ProjectedFacePrimitive(
+                avg_depth=avg_depth,
+                polygon=polygon,
+                color=shade_color(color, factor),
+                active=active,
+                vertex_depths=tuple(transformed[i][2] for i in face_indices),
+                vertex_denominators=tuple(denominators[i] for i in face_indices),
+            )
+        )
     return faces
+
+
+def project_lattice_primitives(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+    *,
+    cache_key: object | None = None,
+) -> tuple[tuple[ProjectedLinePrimitive, ...], tuple[ProjectedLinePrimitive, ...]]:
+    return _projection_lattice_segments_cached(
+        cache_key=cache_key,
+        dims=dims,
+        project_raw=project_raw,
+        transform_raw=transform_raw,
+        depth_denominator=depth_denominator,
+    )
+
+
+def project_helper_lattice_primitives(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+    *,
+    x_marks: set[int],
+    y_marks: set[int],
+    z_marks: set[int],
+    cache_key: object | None = None,
+) -> tuple[tuple[ProjectedLinePrimitive, ...], tuple[ProjectedLinePrimitive, ...]]:
+    return _projection_lattice_segments_cached(
+        cache_key=cache_key,
+        dims=dims,
+        project_raw=project_raw,
+        transform_raw=transform_raw,
+        depth_denominator=depth_denominator,
+        x_marks=_clip_marks(x_marks, dims[0]),
+        y_marks=_clip_marks(y_marks, dims[1]),
+        z_marks=_clip_marks(z_marks, dims[2]),
+    )
+
+
+def project_box_edge_primitives(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+) -> tuple[ProjectedLinePrimitive, ...]:
+    return tuple(
+        _frame_line_primitives(dims, project_raw, transform_raw, depth_denominator)
+    )
+
+
+def draw_projected_line_fragments(
+    surface: pygame.Surface,
+    fragments: tuple[ProjectedLineFragment, ...],
+    *,
+    inner_color: tuple[int, int, int],
+    frame_color: tuple[int, int, int],
+    frame_width: int = 2,
+) -> None:
+    for fragment in fragments:
+        color = inner_color if fragment.source_type == "gridline" else frame_color
+        width = 1 if fragment.source_type == "gridline" else frame_width
+        pygame.draw.line(surface, color, fragment.start, fragment.end, width)
+
+
+def _project_line_primitive(
+    raw_start: Point3,
+    raw_end: Point3,
+    *,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+    source_type: str,
+) -> ProjectedLinePrimitive | None:
+    start = project_raw(raw_start)
+    end = project_raw(raw_end)
+    if start is None or end is None:
+        return None
+    start_transformed = transform_raw(raw_start)
+    end_transformed = transform_raw(raw_end)
+    return ProjectedLinePrimitive(
+        start=start,
+        end=end,
+        start_depth=start_transformed[2],
+        end_depth=end_transformed[2],
+        start_denominator=depth_denominator(start_transformed[2]),
+        end_denominator=depth_denominator(end_transformed[2]),
+        source_type=source_type,
+    )

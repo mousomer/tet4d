@@ -8,6 +8,8 @@ from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
     Point2,
+    ProjectedFacePrimitive,
+    build_cube_face_primitives,
     build_cube_faces,
     draw_projected_lattice,
     fit_orthographic_zoom,
@@ -67,6 +69,20 @@ def project_raw_point(
     return project_point(transform_raw_point(raw, dims, params), params, center_px)
 
 
+def depth_denominator_for_depth(
+    depth: float,
+    params: ProjectionParams3D,
+) -> float:
+    if params.projection_name == "ORTHOGRAPHIC":
+        return 1.0
+    if params.projection_name == "PERSPECTIVE":
+        return max(params.cam_dist + depth, 0.08)
+    return max(
+        1.0 + params.projective_strength * (depth + params.projective_bias),
+        0.15,
+    )
+
+
 def draw_board_grid(
     surface: pygame.Surface,
     dims: Cell3,
@@ -96,6 +112,8 @@ def draw_board_grid(
         surface,
         dims,
         lambda raw: project_raw_point(raw, dims, params, center_px),
+        lambda raw: transform_raw_point(raw, dims, params),
+        lambda depth: depth_denominator_for_depth(depth, params),
         inner_color=inner_color,
         frame_color=frame_color,
         frame_width=frame_width,
@@ -118,6 +136,25 @@ def build_cell_faces(
         project_raw=lambda raw: project_raw_point(raw, dims, params, center_px),
         transform_raw=lambda raw: transform_raw_point(raw, dims, params),
         active=active,
+    )
+
+
+def build_cell_face_primitives(
+    *,
+    cell: Cell3,
+    color: tuple[int, int, int],
+    params: ProjectionParams3D,
+    center_px: Point2,
+    dims: Cell3,
+    active: bool,
+) -> list[ProjectedFacePrimitive]:
+    return build_cube_face_primitives(
+        cell=cell,
+        color=color,
+        project_raw=lambda raw: project_raw_point(raw, dims, params, center_px),
+        transform_raw=lambda raw: transform_raw_point(raw, dims, params),
+        active=active,
+        depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
     )
 
 

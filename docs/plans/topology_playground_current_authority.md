@@ -43,7 +43,7 @@ Transitional debt belongs in
 - The legacy topology editor is not part of `Topology Playground`, `Explorer`,
   or `Path`.
 - The legacy topology editor is reachable only through
-  `Settings -> Advanced -> Legacy Topology Editor Menu`.
+  `Settings -> Legacy Topology Editor Menu`.
 - `Inspect` is not a top-level workspace. It survives only as an
   Editor-internal non-mutating probe/selection flow.
 - `Edit` is not a top-level workspace. It survives only as an Editor-internal
@@ -133,6 +133,10 @@ Transitional debt belongs in
   current sandbox/topology situation.
 - In `3D` and `4D`, projected sandbox piece cells must render as full piece
   boxes, not as neighbor-style dots.
+- If a projected `3D` / `4D` sandbox or play surface uses board-box gridlines
+  or box edges, those lines must resolve against the active piece per projected
+  fragment from screen-space overlap plus projected depth; `2D` keeps the
+  simpler non-projected path.
 - Neighbor markers must appear as small dots only when the explicit sandbox
   neighbor control is enabled.
 - Neighbor markers must not appear by default, must not replace or hide the
@@ -189,7 +193,7 @@ settled Play drop-policy contract.
   modern-vs-legacy submenu split.
 - Keep the legacy topology editor/menu out of `Topology Playground`,
   `Explorer`, and `Path`; expose it only through
-  `Settings -> Advanced -> Legacy Topology Editor Menu`.
+  `Settings -> Legacy Topology Editor Menu`.
 - Keep the direct playground entrypoint available via
   `python -m tet4d.ui.pygame.topology_lab` in addition to the launcher path.
 - Update manifests/docs in the same pass as code changes, prevent drift, and

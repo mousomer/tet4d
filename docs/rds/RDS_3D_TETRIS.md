@@ -109,6 +109,8 @@ Viewer-consistent translation requirement:
 7. Piece rotation uses a soft eased visual tween (`120-180 ms` target) instead of instant snap.
 8. Rotation tween is render-only; rotation legality and gameplay state changes still occur atomically in rules code.
 9. Interruption handling: repeated rotate input while tweening must retarget cleanly (no flicker/back-jump).
+10. Board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
+11. When a projected board line crosses the active-piece projection, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
 
 ## 7. Scoring
 

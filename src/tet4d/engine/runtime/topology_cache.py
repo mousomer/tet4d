@@ -90,9 +90,10 @@ def read_topology_cache_entry(
     cache_version: int = TOPOLOGY_CACHE_VERSION,
     root_dir: Path | None = None,
 ) -> dict[str, Any] | None:
-    payload = read_json_object_or_empty(
-        topology_cache_file_path(profile, dims=dims, root_dir=root_dir)
-    )
+    cache_path = topology_cache_file_path(profile, dims=dims, root_dir=root_dir)
+    if not cache_path.exists():
+        return None
+    payload = read_json_object_or_empty(cache_path)
     if not isinstance(payload, dict) or not payload:
         return None
     if int(payload.get("cache_version", -1)) != int(cache_version):

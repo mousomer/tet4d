@@ -8,7 +8,7 @@ from .content import (
     tutorial_payload_dict,
     tutorial_plan_payload_dict,
 )
-from .runtime import create_tutorial_runtime_session, tutorial_progress_snapshot
+from .runtime import create_tutorial_runtime_session
 from .setup_apply import (
     apply_tutorial_step_setup_2d,
     apply_tutorial_step_setup_nd,
@@ -31,10 +31,6 @@ def tutorial_lesson_ids_runtime() -> tuple[str, ...]:
 
 def tutorial_board_dims_runtime(mode: str) -> tuple[int, ...]:
     return tutorial_board_dims_for_mode(mode)
-
-
-def tutorial_progress_snapshot_runtime() -> dict[str, Any]:
-    return tutorial_progress_snapshot()
 
 
 def tutorial_runtime_create_session_runtime(*, lesson_id: str, mode: str) -> Any:
@@ -81,14 +77,6 @@ def tutorial_runtime_required_action_runtime(session: Any) -> str | None:
 
 def tutorial_runtime_allowed_actions_runtime(session: Any) -> tuple[str, ...]:
     return tuple(session.allowed_actions())
-
-
-def tutorial_runtime_event_log_tail_runtime(
-    session: Any,
-    *,
-    limit: int = 200,
-) -> tuple[dict[str, Any], ...]:
-    return tuple(session.event_log_tail_payload(limit=limit))
 
 
 def tutorial_runtime_consume_pending_setup_runtime(

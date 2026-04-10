@@ -80,6 +80,11 @@ _DEFAULT_CONSTANTS = {
             "margin": 20,
             "side_panel": 360,
         },
+        "projected_occlusion": {
+            "depth_epsilon": 0.02,
+            "point_epsilon_px": 0.75,
+            "split_epsilon_px": 0.5,
+        },
         "3d": {
             "margin": 20,
             "side_panel": 360,
@@ -91,7 +96,7 @@ _DEFAULT_CONSTANTS = {
         },
     },
     "analytics": {
-        "leaderboard_max_entries": 200,
+        "leaderboard_max_entries": 10,
         "leaderboard_page_rows": 12,
         "leaderboard_name_max_length": 24,
     },

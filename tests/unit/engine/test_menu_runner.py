@@ -79,6 +79,40 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         self.assertEqual(calls["root_escape"], 1)
         self.assertEqual(calls["quit"], 0)
 
+    def test_mouse_click_back_hitbox_uses_root_escape_handler(self) -> None:
+        menus = {
+            "root": {
+                "title": "Root",
+                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+            }
+        }
+        registry = ActionRegistry()
+        registry.register("resume", lambda: False)
+        calls = {"root_escape": 0}
+
+        runner = MenuRunner(
+            menus=menus,
+            start_menu_id="root",
+            action_registry=registry,
+            render_menu=lambda *_args: None,
+            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
+            or True,
+        )
+
+        with patch.object(
+            pygame.event,
+            "get",
+            return_value=[
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    {"button": 1, "pos": (24, 24)},
+                )
+            ],
+        ):
+            runner.run()
+
+        self.assertEqual(calls["root_escape"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

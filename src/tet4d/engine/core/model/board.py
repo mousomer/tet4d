@@ -34,12 +34,6 @@ class BoardND:
                 return False
         return True
 
-    def place(self, coords: Iterable[Coord], cell_id: int) -> None:
-        for c in coords:
-            if not self.inside_bounds(c):
-                raise ValueError(f"Trying to place outside board: {c}")
-            self.cells[c] = cell_id
-
     def full_levels(self, gravity_axis: int) -> List[int]:
         from ..rules.board_rules import full_levels as full_levels_rule
 

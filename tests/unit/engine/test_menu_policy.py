@@ -396,18 +396,32 @@ class TestMenuPolicy(unittest.TestCase):
                 "Game",
                 "Display",
                 "Audio",
-                "Controls",
-                "Profiles",
+                "Keybindings",
+                "Keyboard Profiles",
                 "Legacy Topology Editor Menu",
             ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["action", "action", "action", "action", "action", "action"],
+            ["action", "action", "action", "action", "submenu", "action"],
         )
         self.assertEqual(
             settings_menu["items"][-1]["action_id"],
             "settings_legacy_topology_editor",
+        )
+
+    def test_keyboard_profiles_submenu_uses_placeholder_for_runtime_expansion(self) -> None:
+        profiles_menu = menu_config.menu_definition("launcher_settings_profiles")
+        self.assertEqual(profiles_menu["title"], "Keyboard Profiles")
+        self.assertEqual(
+            profiles_menu["items"],
+            (
+                {
+                    "type": "action",
+                    "label": "Profiles",
+                    "action_id": "settings_profiles",
+                },
+            ),
         )
 
     def test_topology_playground_has_no_legacy_topology_entry(self) -> None:
@@ -430,7 +444,7 @@ class TestMenuPolicy(unittest.TestCase):
         )
         settings_menu = menu_config.menu_definition("launcher_settings_root")
         controls_settings = next(
-            item for item in settings_menu["items"] if item["label"] == "Controls"
+            item for item in settings_menu["items"] if item["label"] == "Keybindings"
         )
         self.assertEqual(controls_reference["action_id"], "tutorial_controls_reference")
         self.assertEqual(controls_settings["action_id"], "keybindings")
@@ -586,6 +600,31 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
+
+    def test_unified_settings_manual_numeric_edit_applies_animation_timing(self) -> None:
+        state = SimpleNamespace(
+            display_settings=DisplaySettings(
+                fullscreen=False,
+                windowed_size=(1200, 760),
+            ),
+            game_seed=1337,
+            rotation_animation_duration_ms_2d=120,
+            rotation_animation_duration_ms_nd=140,
+            translation_animation_duration_ms=80,
+            text_mode_row_key="translation_animation_duration_ms",
+            text_mode_buffer="215",
+            text_mode_replace_on_type=False,
+            saved=True,
+            status="",
+            status_error=False,
+            pending_reset_confirm=False,
+            flash_row_key="",
+            flash_frames=0,
+        )
+        self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
+        self.assertEqual(state.translation_animation_duration_ms, 215)
+        self.assertEqual(state.flash_row_key, "translation_animation_duration_ms")
+        self.assertEqual(state.flash_frames, 12)
 
     def test_unified_gameplay_rows_include_advanced_value_text(self) -> None:
         state = settings_hub_model.build_unified_settings_state(

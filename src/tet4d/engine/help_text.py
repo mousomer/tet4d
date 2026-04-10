@@ -892,13 +892,3 @@ def help_topic_media_rule(topic_id: str) -> dict[str, str]:
     if key and key in placement:
         return dict(placement[key])
     return dict(placement["default"])
-
-
-def validate_help_text_contract() -> tuple[bool, str]:
-    try:
-        help_content_registry()
-        help_layout_registry()
-        help_action_layout_registry()
-    except HelpTextValidationError as exc:
-        return False, str(exc)
-    return True, "Help text/layout contract validated"

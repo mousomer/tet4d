@@ -161,6 +161,8 @@ Rotation reliability requirements (4D `z-w`):
 20. Example invariant: dims `(5,4,3,2)` under `xw` quarter-turn must render `5` boards of size `(2,4,3)`.
 21. Exploration-mode rotation overlays must preserve fractional tween coordinates (no integer quantization in render path).
 22. When layer count decreases after view changes, previously drawn extra layer panels must be fully cleared before redraw.
+23. Within each projected 3D layer board, board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
+24. When a projected board line crosses the active-piece projection inside a layer board, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
 
 Implementation structure for view `xw` / `zw`:
 1. Introduce a 4D camera orientation state in renderer/view layer (separate from gameplay state).

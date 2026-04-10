@@ -49,7 +49,15 @@ from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import (
+    draw_corner_chip,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    draw_value_slider,
+    fit_text,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 
 TEXT_COLOR = (230, 230, 230)
@@ -69,7 +77,7 @@ def draw_gradient_background(
     top_color: Tuple[int, int, int],
     bottom_color: Tuple[int, int, int],
 ) -> None:
-    draw_vertical_gradient(surface, top_color, bottom_color)
+    draw_tron_menu_background(surface, top_color=top_color, bottom_color=bottom_color)
 
 
 @dataclass
@@ -152,6 +160,7 @@ class MenuState:
     numeric_text_label: str = ""
     numeric_text_buffer: str = ""
     numeric_text_replace_on_type: bool = False
+    flash_selected_frames: int = 0
 
 
 def menu_fields_for_settings(
@@ -209,27 +218,21 @@ def draw_menu(
     width, height = screen.get_size()
     fields = menu_fields_for_settings(state.settings, dimension)
 
-    title_text = _SETUP_MENU_COPY["title_template"].format(dimension=dimension)
-    subtitle_text = fit_text(
-        fonts.hint_font,
-        _SETUP_MENU_COPY["subtitle_template"],
-        width - 28,
+    title_text = format_menu_title(
+        _SETUP_MENU_COPY["title_template"].format(dimension=dimension)
     )
 
     title_surf = fonts.title_font.render(title_text, True, TEXT_COLOR)
-    subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
 
     title_y = 48
     title_x = (width - title_surf.get_width()) // 2
     screen.blit(title_surf, (title_x, title_y))
-    subtitle_y = title_y + title_surf.get_height() + 8
-    subtitle_x = (width - subtitle_surf.get_width()) // 2
-    screen.blit(subtitle_surf, (subtitle_x, subtitle_y))
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     panel_w = min(max(360, int(width * 0.65)), width - 24)
     hint_line_h = fonts.hint_font.get_height() + 4
     bottom_lines = 4 + (1 if state.bindings_status else 0)
-    panel_top = subtitle_y + subtitle_surf.get_height() + 12
+    panel_top = title_y + title_surf.get_height() + 18
     panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
     row_h = min(
         44,
@@ -238,34 +241,41 @@ def draw_menu(
         ),
     )
     panel_h = min(panel_max_h, 40 + len(fields) * row_h)
-    panel_x = (width - panel_w) // 2
-    panel_y = max(
-        panel_top,
-        min(
-            (height - panel_h) // 2, height - panel_h - (bottom_lines * hint_line_h) - 8
-        ),
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=panel_w,
+        panel_h=panel_h,
+        panel_top=panel_top,
+        bottom_reserved=(bottom_lines * hint_line_h),
     )
+    panel_x = panel_rect.x
+    panel_y = panel_rect.y
 
-    panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(
-        panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16
-    )
-    screen.blit(panel_surf, (panel_x, panel_y))
+    draw_tron_panel(screen, rect=panel_rect)
 
     y = panel_y + 20
     option_x = panel_x + 24
     option_w = panel_w - 48
     option_bottom = panel_y + panel_h - 10
-    for idx, (label, attr_name, _, _) in enumerate(fields):
+    for idx, (label, attr_name, min_value, max_value) in enumerate(fields):
         if y + fonts.menu_font.get_height() > option_bottom:
             break
         value = getattr(state.settings, attr_name)
         value_text = _menu_value_text(dimension, attr_name, value)
-        text = f"{label}: {value_text}"
         selected = idx == state.selected_index
         txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        text_fit = fit_text(fonts.menu_font, text, option_w - 6)
-        text_surf = fonts.menu_font.render(text_fit, True, txt_color)
+        value_col_w = min(180, max(108, int(option_w * 0.31)))
+        label_w = max(80, option_w - value_col_w - 14)
+        text_surf = fonts.menu_font.render(
+            fit_text(fonts.menu_font, label, label_w),
+            True,
+            txt_color,
+        )
+        value_surf = fonts.menu_font.render(
+            fit_text(fonts.menu_font, value_text, value_col_w),
+            True,
+            txt_color,
+        )
         text_rect = text_surf.get_rect(topleft=(option_x, y))
         if selected:
             highlight_rect = pygame.Rect(
@@ -279,7 +289,34 @@ def draw_menu(
                 border_radius=10,
             )
             screen.blit(highlight_surf, highlight_rect.topleft)
+            if state.flash_selected_frames > 0:
+                flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+                pygame.draw.rect(
+                    flash_surf,
+                    (112, 236, 255, min(120, 42 + (state.flash_selected_frames * 6))),
+                    flash_surf.get_rect(),
+                    border_radius=10,
+                )
+                screen.blit(flash_surf, highlight_rect.topleft)
         screen.blit(text_surf, text_rect.topleft)
+        screen.blit(value_surf, (option_x + option_w - value_surf.get_width(), y))
+        if max_value > min_value and isinstance(value, int):
+            draw_value_slider(
+                screen,
+                rect=pygame.Rect(
+                    option_x + option_w - value_col_w,
+                    y + fonts.menu_font.get_height() + 4,
+                    value_col_w,
+                    7,
+                ),
+                fraction=max(
+                    0.0,
+                    min(1.0, (int(value) - int(min_value)) / max(1, int(max_value) - int(min_value))),
+                ),
+                flash_strength=max(0.0, min(1.0, state.flash_selected_frames / 12.0))
+                if selected
+                else 0.0,
+            )
         y += row_h
 
     hint_lines = list(setup_hints_for_dimension(dimension))

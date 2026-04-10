@@ -876,7 +876,7 @@ class TestGameplayReplay(unittest.TestCase):
 
         camera = front3d_game.Camera3D()
         yaw_pos = self._key_for(CAMERA_KEYS_3D, "yaw_pos")
-        self.assertTrue(front3d_game.handle_camera_keydown(_keydown(yaw_pos), camera))
+        self.assertTrue(front3d_game.handle_camera_key(yaw_pos, camera))
         self.assertTrue(camera.animating)
         camera.step_animation(1000)
         self.assertFalse(camera.animating)
@@ -948,27 +948,27 @@ class TestGameplayReplay(unittest.TestCase):
 
         view = front4d_game.LayerView3D()
         pitch_neg = self._key_for(CAMERA_KEYS_4D, "pitch_neg")
-        self.assertTrue(front4d_game.handle_view_keydown(_keydown(pitch_neg), view))
+        self.assertTrue(front4d_game.handle_view_key(pitch_neg, view))
         self.assertTrue(view.animating)
         view.step_animation(1000)
         self.assertFalse(view.animating)
 
         view_xw_pos = self._key_for(CAMERA_KEYS_4D, "view_xw_pos")
-        self.assertTrue(front4d_game.handle_view_keydown(_keydown(view_xw_pos), view))
+        self.assertTrue(front4d_game.handle_view_key(view_xw_pos, view))
         self.assertTrue(view.hyper_animating)
         view.step_animation(1000)
         self.assertFalse(view.hyper_animating)
         self.assertAlmostEqual(view.xw_deg, 90.0, places=3)
 
         view_zw_neg = self._key_for(CAMERA_KEYS_4D, "view_zw_neg")
-        self.assertTrue(front4d_game.handle_view_keydown(_keydown(view_zw_neg), view))
+        self.assertTrue(front4d_game.handle_view_key(view_zw_neg, view))
         self.assertTrue(view.hyper_animating)
         view.step_animation(1000)
         self.assertFalse(view.hyper_animating)
         self.assertAlmostEqual(view.zw_deg, 270.0, places=3)
 
         reset = self._key_for(CAMERA_KEYS_4D, "reset")
-        self.assertTrue(front4d_game.handle_view_keydown(_keydown(reset), view))
+        self.assertTrue(front4d_game.handle_view_key(reset, view))
         self.assertAlmostEqual(view.xw_deg, 0.0, places=3)
         self.assertAlmostEqual(view.zw_deg, 0.0, places=3)
         overlay_inc = self._key_for(CAMERA_KEYS_4D, "overlay_alpha_inc")
@@ -1032,5 +1032,4 @@ class TestGameplayReplay(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 

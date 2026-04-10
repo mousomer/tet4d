@@ -271,18 +271,11 @@ def _handle_runtime_decision(
 
 def _terminal_from_status(
     status: str,
-    *,
-    record_session: Callable[[str], None],
 ) -> bool | None:
     if status == "quit":
-        record_session("quit")
         return False
     if status == "menu":
-        record_session("menu")
         return True
-    if status == "restart":
-        record_session("restart")
-        return None
     return None
 
 
@@ -360,6 +353,7 @@ def run_nd_loop(
     """
     clock = pygame.time.Clock()
     session_start_ms = pygame.time.get_ticks()
+    endgame_session_handled = False
     auto_speedup_enabled, lines_per_level = _load_speedup_settings_for_dimension(
         pause_dimension
     )
@@ -390,9 +384,11 @@ def run_nd_loop(
             return
 
     def _restart_with_record() -> None:
+        nonlocal session_start_ms, endgame_session_handled
         if _restart_tutorial_if_running_nd(loop):
             return
-        _record_session("restart")
+        session_start_ms = pygame.time.get_ticks()
+        endgame_session_handled = False
         loop.on_restart()
 
     while True:
@@ -416,7 +412,7 @@ def run_nd_loop(
             run_pause_menu=run_pause_menu,
             run_help_menu=run_help_menu,
         )
-        terminal = _terminal_from_status(status, record_session=_record_session)
+        terminal = _terminal_from_status(status)
         if terminal is not None:
             return terminal
         if status == "restart":
@@ -458,3 +454,6 @@ def run_nd_loop(
             active_overlay=active_overlay,
             loop=loop,
         )
+        if loop.state.game_over and not endgame_session_handled:
+            _record_session("game_over")
+            endgame_session_handled = True

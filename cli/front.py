@@ -34,7 +34,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     initialize_runtime,
     open_display,
 )
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
 from tet4d.ui.pygame.topology_lab.entrypoint import (
@@ -47,12 +47,25 @@ from tet4d.ui.pygame.topology_lab.app import (
     mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
+from tet4d.ui.pygame.launch.launcher_profile_menu import (
+    expand_settings_profile_rows,
+    profile_action_id,
+    SETTINGS_PROFILES_MENU_ID,
+)
+from tet4d.ui.pygame.launch.launcher_menu_view import draw_main_menu
+from tet4d.ui.pygame.launch.launcher_runtime_helpers import (
+    handle_launcher_profile_cycle_key,
+    handle_launcher_route,
+    handle_missing_action,
+    play_confirm_sfx,
+    play_move_sfx,
+)
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,
-    cycle_key_profile,
+    list_key_profiles,
     load_active_profile_bindings,
     set_active_key_profile,
 )
@@ -64,7 +77,6 @@ from tet4d.engine.runtime.menu_config import (
     launcher_menu_id,
     launcher_settings_routes,
     launcher_route_actions,
-    launcher_subtitles,
     menu_graph,
     ui_copy_section,
 )
@@ -78,7 +90,6 @@ from tet4d.engine.runtime.topology_explorer_runtime import (
     load_runtime_explorer_topology_profile,
 )
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
 
 
 BG_TOP = (14, 18, 44)
@@ -89,7 +100,6 @@ MUTED_COLOR = (192, 200, 228)
 
 _MENU_GRAPH = menu_graph()
 _LAUNCHER_ROOT_MENU_ID = launcher_menu_id()
-_LAUNCHER_SUBTITLES = launcher_subtitles()
 _LAUNCHER_ROUTE_ACTIONS = launcher_route_actions()
 _BRANDING = branding_copy()
 _GAME_TITLE = _BRANDING["game_title"]
@@ -106,6 +116,7 @@ _HELP_TOPIC_BY_ACTION = {
     "tutorial_how_to_play": "overview",
     "tutorial_controls_reference": "key_reference",
 }
+_LAUNCHER_SETTINGS_PROFILES_MENU_ID = SETTINGS_PROFILES_MENU_ID
 
 
 @dataclass
@@ -132,6 +143,32 @@ def _menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
         return tuple()
     return raw_items
 
+def _sync_launcher_settings_profile_rows() -> None:
+    menu = _MENU_GRAPH.get(_LAUNCHER_SETTINGS_PROFILES_MENU_ID)
+    if menu is None:
+        return
+    raw_items = menu.get("items")
+    if not isinstance(raw_items, tuple):
+        return
+    menu["items"] = expand_settings_profile_rows(raw_items)
+
+
+def _sync_launcher_profile_actions(
+    registry: ActionRegistry,
+    state: MainMenuState,
+    session: _LauncherSession,
+) -> None:
+    for profile in list_key_profiles():
+        registry.register(
+            profile_action_id(profile),
+            lambda profile=profile: _menu_action_activate_profile(
+                profile,
+                state,
+                session,
+                registry=registry,
+            ),
+        )
+
 
 def _play_menu_id() -> str | None:
     for item in _menu_items(_LAUNCHER_ROOT_MENU_ID):
@@ -141,130 +178,6 @@ def _play_menu_id() -> str | None:
         if label == "play":
             return str(item.get("menu_id", "")).strip().lower() or None
     return None
-
-
-def _menu_subtitle(menu_id: str) -> str:
-    if menu_id == _LAUNCHER_ROOT_MENU_ID:
-        subtitle_key = "launcher_root"
-    elif menu_id == _play_menu_id():
-        subtitle_key = "launcher_play"
-    else:
-        subtitle_key = f"launcher_{menu_id.removeprefix('launcher_')}"
-    subtitle = str(_LAUNCHER_SUBTITLES.get(subtitle_key, "")).strip()
-    if subtitle:
-        return subtitle
-    return _LAUNCHER_SUBTITLES["default"]
-
-
-def _draw_main_menu(
-    screen: pygame.Surface,
-    fonts,
-    state: MainMenuState,
-    *,
-    menu_title: str,
-    menu_id: str,
-    items: tuple[dict[str, str], ...],
-    selected_index: int,
-    stack_depth: int,
-) -> None:
-    draw_vertical_gradient(screen, BG_TOP, BG_BOTTOM)
-    width, height = screen.get_size()
-    title = fonts.title_font.render(menu_title, True, TEXT_COLOR)
-    subtitle_text = fit_text(
-        fonts.hint_font,
-        _menu_subtitle(menu_id),
-        width - 32,
-    )
-    subtitle = fonts.hint_font.render(subtitle_text, True, MUTED_COLOR)
-    title_y = 40
-    subtitle_y = title_y + title.get_height() + 8
-    screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
-
-    hint_line_h = fonts.hint_font.get_height() + 3
-    bottom_lines = 3 + (1 if state.status else 0)
-    bottom_reserved = bottom_lines * hint_line_h + 14
-    top_reserved = subtitle_y + subtitle.get_height() + 14
-    panel_w = min(620, max(320, width - 40))
-    row_count = max(1, len(items))
-    max_panel_h = max(120, height - top_reserved - bottom_reserved - 10)
-    row_step = min(
-        52, max(fonts.menu_font.get_height() + 8, (max_panel_h - 48) // row_count)
-    )
-    panel_h = min(max_panel_h, 48 + row_count * row_step)
-    panel_x = (width - panel_w) // 2
-    panel_y = max(
-        top_reserved,
-        min((height - panel_h) // 2, height - bottom_reserved - panel_h - 8),
-    )
-
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=14)
-    screen.blit(panel, (panel_x, panel_y))
-
-    y = panel_y + 20
-    row_margin = 28
-    row_right = panel_x + panel_w - row_margin
-    for idx, item in enumerate(items):
-        label = str(item.get("label", ""))
-        selected = idx == selected_index
-        color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        label_text = fit_text(
-            fonts.menu_font, label, row_right - (panel_x + row_margin)
-        )
-        text = fonts.menu_font.render(label_text, True, color)
-        row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
-        if selected:
-            hi = pygame.Surface((panel_w - 32, row_rect.height + 10), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=9)
-            screen.blit(hi, (panel_x + 16, y - 4))
-        screen.blit(text, row_rect.topleft)
-        y += row_step
-
-    escape_hint = (
-        _LAUNCHER_COPY["escape_hint_back"]
-        if stack_depth > 1
-        else _LAUNCHER_COPY["escape_hint_quit"]
-    )
-    info_lines = [
-        _LAUNCHER_COPY["info_active_profile_template"].format(
-            profile=active_key_profile()
-        ),
-        _LAUNCHER_COPY["info_continue_mode_template"].format(
-            mode=state.last_mode.upper()
-        ),
-        _LAUNCHER_COPY[
-            "controls_hint_template_tiny"
-            if active_key_profile() == "tiny"
-            else "controls_hint_template"
-        ].format(escape_hint=escape_hint),
-    ]
-    info_y = panel_y + panel_h + 10
-    max_bottom_lines = max(1, (height - info_y - 8) // max(1, hint_line_h))
-    info_budget = max(1, max_bottom_lines - (1 if state.status else 0))
-    for line in info_lines[:info_budget]:
-        line_draw = fit_text(fonts.hint_font, line, width - 24)
-        text = fonts.hint_font.render(line_draw, True, MUTED_COLOR)
-        screen.blit(text, ((width - text.get_width()) // 2, info_y))
-        info_y += text.get_height() + 3
-
-    if state.status and info_y + hint_line_h <= height - 6:
-        status_color = (255, 150, 150) if state.status_error else (170, 240, 170)
-        status_text = fit_text(fonts.hint_font, state.status, width - 24)
-        status = fonts.hint_font.render(status_text, True, status_color)
-        screen.blit(
-            status, ((width - status.get_width()) // 2, min(height - 34, info_y + 2))
-        )
-        info_y = min(height - 34, info_y + 2) + status.get_height() + 2
-
-    signature_lines = (_SIGNATURE_AUTHOR, _SIGNATURE_MESSAGE)
-    for signature_line in signature_lines:
-        if info_y + hint_line_h > height - 6:
-            break
-        line_draw = fit_text(fonts.hint_font, signature_line, width - 24)
-        text = fonts.hint_font.render(line_draw, True, MUTED_COLOR)
-        screen.blit(text, ((width - text.get_width()) // 2, info_y))
-        info_y += text.get_height() + 2
 
 
 def _persist_global_state(
@@ -466,11 +379,35 @@ def _menu_action_keybindings(
     state: MainMenuState,
     session: _LauncherSession,
     fonts_nd,
+    *,
+    registry: ActionRegistry | None = None,
 ) -> bool:
     dimension = int(state.last_mode[0]) if state.last_mode in {"2d", "3d", "4d"} else 2
     run_keybindings_menu(session.screen, fonts_nd, dimension=dimension, scope="general")
     load_active_profile_bindings()
+    _sync_launcher_settings_profile_rows()
+    if registry is not None:
+        _sync_launcher_profile_actions(registry, state, session)
     _persist_session_status(state, session)
+    return not session.running
+
+
+def _menu_action_activate_profile(
+    profile: str,
+    state: MainMenuState,
+    session: _LauncherSession,
+    *,
+    registry: ActionRegistry | None = None,
+) -> bool:
+    ok, msg = set_active_key_profile(profile)
+    if ok:
+        ok, msg = load_active_profile_bindings()
+    _sync_launcher_settings_profile_rows()
+    if registry is not None:
+        _sync_launcher_profile_actions(registry, state, session)
+    _persist_session_status(state, session)
+    state.status = msg
+    state.status_error = not ok
     return not session.running
 
 
@@ -703,7 +640,16 @@ def _build_action_registry(
             ),
         )
     for action_id in ("keybindings", "settings_profiles"):
-        register(action_id, lambda: _menu_action_keybindings(state, session, fonts_nd))
+        register(
+            action_id,
+            lambda: _menu_action_keybindings(
+                state,
+                session,
+                fonts_nd,
+                registry=registry,
+            ),
+        )
+    _sync_launcher_profile_actions(registry, state, session)
     register("bot_options", lambda: _menu_action_bot_options(state, session, fonts_nd))
     register(
         "topology_lab",
@@ -750,53 +696,16 @@ def _handle_launcher_route(
     route_id: str,
     state: MainMenuState,
     action_registry: ActionRegistry,
-    session: _LauncherSession,
-    fonts_nd,
-    fonts_2d,
+    _session: _LauncherSession,
+    fonts_nd=None,
+    fonts_2d=None,
 ) -> bool:
-    clean_route_id = route_id.strip().lower()
-    action_id = _LAUNCHER_ROUTE_ACTIONS.get(clean_route_id)
-    if not action_id:
-        state.status = f"No action mapped for route '{clean_route_id}'"
-        state.status_error = True
-        return False
-    try:
-        return action_registry.dispatch(action_id)
-    except KeyError:
-        state.status = f"No handler registered for routed action '{action_id}'"
-        state.status_error = True
-        return False
-
-
-def _handle_missing_action(action_id: str, state: MainMenuState) -> bool:
-    state.status = f"No handler registered for action '{action_id}'"
-    state.status_error = True
-    return False
-
-
-def _play_move_sfx() -> bool:
-    play_sfx("menu_move")
-    return False
-
-
-def _play_confirm_sfx() -> bool:
-    play_sfx("menu_confirm")
-    return False
-
-
-def _is_profile_prev_key(key: int) -> bool:
-    return key in (
-        pygame.K_LEFTBRACKET,
-        pygame.K_MINUS,
-        pygame.K_PAGEUP,
-    )
-
-
-def _is_profile_next_key(key: int) -> bool:
-    return key in (
-        pygame.K_RIGHTBRACKET,
-        pygame.K_EQUALS,
-        pygame.K_PAGEDOWN,
+    del fonts_nd, fonts_2d
+    return handle_launcher_route(
+        route_id,
+        route_actions=_LAUNCHER_ROUTE_ACTIONS,
+        state=state,
+        action_registry=action_registry,
     )
 
 
@@ -807,23 +716,15 @@ def _handle_launcher_keydown(
     state: MainMenuState,
     session: _LauncherSession,
 ) -> bool:
-    if menu_id not in _MENU_GRAPH:
-        return False
-    if not (_is_profile_prev_key(key) or _is_profile_next_key(key)):
-        return False
-
-    step = -1 if _is_profile_prev_key(key) else 1
-    ok, msg, profile = cycle_key_profile(step)
-    if not ok:
-        state.status = msg
-        state.status_error = True
-        return True
-
-    _persist_session_status(state, session)
-    state.status = f"Active key profile: {profile}"
-    state.status_error = False
-    play_sfx("menu_move")
-    return True
+    return handle_launcher_profile_cycle_key(
+        menu_id,
+        key,
+        menu_ids=set(_MENU_GRAPH),
+        state=state,
+        session=session,
+        sync_profile_rows=_sync_launcher_settings_profile_rows,
+        persist_session_status=_persist_session_status,
+    )
 
 
 def run() -> None:
@@ -857,6 +758,7 @@ def run() -> None:
     state = MainMenuState(
         last_mode=_mode_from_last_mode(payload.get("last_mode")),
     )
+    _sync_launcher_settings_profile_rows()
     registry = _build_action_registry(state, session, fonts_nd, fonts_2d)
 
     initial_selected = {
@@ -874,15 +776,24 @@ def run() -> None:
         depth: int,
     ) -> None:
         pygame.display.set_caption(_GAME_TITLE)
-        _draw_main_menu(
+        draw_main_menu(
             session.screen,
             fonts_nd,
-            state,
             menu_title=title,
-            menu_id=menu_id,
             items=items,
             selected_index=selected,
             stack_depth=depth,
+            status=state.status,
+            status_error=state.status_error,
+            last_mode=state.last_mode,
+            launcher_copy=_LAUNCHER_COPY,
+            signature_author=_SIGNATURE_AUTHOR,
+            signature_message=_SIGNATURE_MESSAGE,
+            bg_top=BG_TOP,
+            bg_bottom=BG_BOTTOM,
+            text_color=TEXT_COLOR,
+            highlight_color=HIGHLIGHT_COLOR,
+            muted_color=MUTED_COLOR,
         )
         pygame.display.flip()
 
@@ -891,21 +802,19 @@ def run() -> None:
         start_menu_id=_LAUNCHER_ROOT_MENU_ID,
         action_registry=registry,
         render_menu=_render_launcher_menu,
-        handle_route=lambda route_id: _handle_launcher_route(
+        handle_route=lambda route_id: handle_launcher_route(
             route_id,
-            state,
-            registry,
-            session,
-            fonts_nd,
-            fonts_2d,
+            route_actions=_LAUNCHER_ROUTE_ACTIONS,
+            state=state,
+            action_registry=registry,
         ),
-        handle_missing_action=lambda action_id: _handle_missing_action(
-            action_id, state
+        handle_missing_action=lambda action_id: handle_missing_action(
+            action_id, state=state
         ),
         on_root_escape=lambda: _menu_action_quit(state, session),
         on_quit_event=lambda: _menu_action_quit(state, session),
-        on_move=_play_move_sfx,
-        on_confirm=_play_confirm_sfx,
+        on_move=play_move_sfx,
+        on_confirm=play_confirm_sfx,
         on_keydown=lambda menu_id, key, stack_depth: _handle_launcher_keydown(
             menu_id,
             key,

@@ -18,7 +18,15 @@ from tet4d.ui.pygame.render.font_profiles import (
     init_fonts as init_fonts_for_profile,
 )
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.ui_utils import (
+    draw_corner_chip,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    draw_value_slider,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 _SETUP_MENU_COPY = ui_copy_section("setup_menu")
 
@@ -81,7 +89,7 @@ def draw_gradient_background(
     bottom_color: Tuple[int, int, int],
 ) -> None:
     """Simple vertical gradient fill."""
-    draw_vertical_gradient(surface, top_color, bottom_color)
+    draw_tron_menu_background(surface, top_color=top_color, bottom_color=bottom_color)
 
 
 def draw_button_with_arrow(
@@ -166,18 +174,13 @@ def _draw_menu_header(
     bindings_status_error: bool,
 ) -> int:
     width, height = screen.get_size()
-    title_surf = fonts.title_font.render(_SETUP_MENU_COPY["title_2d"], True, TEXT_COLOR)
-    subtitle_text = fit_text(
-        fonts.hint_font,
-        _SETUP_MENU_COPY["subtitle_2d"],
-        width - 28,
+    title_surf = fonts.title_font.render(
+        format_menu_title(_SETUP_MENU_COPY["title_2d"]), True, TEXT_COLOR
     )
-    subtitle_surf = fonts.hint_font.render(subtitle_text, True, (200, 200, 220))
 
     title_y = 46
     screen.blit(title_surf, ((width - title_surf.get_width()) // 2, title_y))
-    subtitle_y = title_y + title_surf.get_height() + 8
-    screen.blit(subtitle_surf, ((width - subtitle_surf.get_width()) // 2, subtitle_y))
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     hint_lines = (
         (
@@ -189,7 +192,7 @@ def _draw_menu_header(
         if bindings_file_hint
         else extra_hint_lines
     )
-    hint_y = subtitle_y + subtitle_surf.get_height() + 10
+    hint_y = title_y + title_surf.get_height() + 18
     line_h = fonts.hint_font.get_height() + 2
     max_hint_bottom = min(height // 2, hint_y + line_h * max(2, len(hint_lines) + 1))
     for line in hint_lines:
@@ -215,6 +218,7 @@ def _draw_menu_settings_panel(
     settings,
     selected_index: int,
     panel_top: int,
+    flash_frames: int = 0,
     menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
     value_formatter: Optional[Callable[[str, object], str]] = None,
 ) -> Tuple[int, int, int, int]:
@@ -238,15 +242,17 @@ def _draw_menu_settings_panel(
     panel_h_default = max(220, 86 + len(labels) * 44)
     panel_max_h = max(140, height - panel_top - 126)
     panel_h = min(panel_h_default, panel_max_h)
-    panel_x = (width - panel_w) // 2
-    panel_y = max(134, panel_top)
-    panel_y = min(panel_y, max(60, height - panel_h - 126))
-
-    panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(
-        panel_surf, (0, 0, 0, 140), panel_surf.get_rect(), border_radius=16
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=panel_w,
+        panel_h=panel_h,
+        panel_top=max(134, panel_top),
+        bottom_reserved=118,
     )
-    screen.blit(panel_surf, (panel_x, panel_y))
+    panel_x = panel_rect.x
+    panel_y = panel_rect.y
+
+    draw_tron_panel(screen, rect=panel_rect)
 
     option_y = panel_y + 24
     option_x = panel_x + 28
@@ -266,8 +272,20 @@ def _draw_menu_settings_panel(
             break
         is_selected = i == selected_index
         txt_color = TEXT_COLOR if not is_selected else HIGHLIGHT_COLOR
-        text_fit = fit_text(fonts.menu_font, text, option_w - 8)
-        text_surf = fonts.menu_font.render(text_fit, True, txt_color)
+        label_text, _separator, value_text = text.partition(":")
+        value_text = value_text.strip()
+        value_col_w = min(180, max(108, int(option_w * 0.31)))
+        label_w = max(80, option_w - value_col_w - 14)
+        text_surf = fonts.menu_font.render(
+            fit_text(fonts.menu_font, label_text.rstrip(":"), label_w),
+            True,
+            txt_color,
+        )
+        value_surf = fonts.menu_font.render(
+            fit_text(fonts.menu_font, value_text, value_col_w),
+            True,
+            txt_color,
+        )
         text_rect = text_surf.get_rect(topleft=(option_x, option_y))
 
         if is_selected:
@@ -282,8 +300,41 @@ def _draw_menu_settings_panel(
                 border_radius=10,
             )
             screen.blit(highlight_surf, highlight_rect.topleft)
+            if flash_frames > 0:
+                flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+                pygame.draw.rect(
+                    flash_surf,
+                    (112, 236, 255, min(120, 42 + (flash_frames * 6))),
+                    flash_surf.get_rect(),
+                    border_radius=10,
+                )
+                screen.blit(flash_surf, highlight_rect.topleft)
 
         screen.blit(text_surf, text_rect.topleft)
+        screen.blit(
+            value_surf,
+            (option_x + option_w - value_surf.get_width(), option_y),
+        )
+        if menu_fields:
+            _label, _attr_name, min_val, max_val = menu_fields[i]
+            raw_value = getattr(settings, _attr_name)
+            if max_val > min_val and isinstance(raw_value, int):
+                draw_value_slider(
+                    screen,
+                    rect=pygame.Rect(
+                        option_x + option_w - value_col_w,
+                        option_y + fonts.menu_font.get_height() + 4,
+                        value_col_w,
+                        7,
+                    ),
+                    fraction=max(
+                        0.0,
+                        min(1.0, (int(raw_value) - int(min_val)) / max(1, int(max_val) - int(min_val))),
+                    ),
+                    flash_strength=max(0.0, min(1.0, flash_frames / 12.0))
+                    if is_selected
+                    else 0.0,
+                )
         option_y += row_h
 
     return panel_x, panel_y, panel_w, panel_h
@@ -396,6 +447,7 @@ def draw_menu(
     extra_hint_lines: Tuple[str, ...] = (),
     bindings_status: str = "",
     bindings_status_error: bool = False,
+    flash_frames: int = 0,
     menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
     value_formatter: Optional[Callable[[str, object], str]] = None,
 ) -> None:
@@ -414,6 +466,7 @@ def draw_menu(
         settings,
         selected_index,
         panel_top=header_bottom + 12,
+        flash_frames=flash_frames,
         menu_fields=menu_fields,
         value_formatter=value_formatter,
     )

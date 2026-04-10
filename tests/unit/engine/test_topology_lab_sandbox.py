@@ -122,17 +122,18 @@ class TestTopologyLabSandbox(unittest.TestCase):
         topology_lab_menu._activate_action(state, "sandbox_trace")
         self.assertTrue(state.sandbox.show_trace)
 
-    def _first_rotatable_shape_index(self, state: TopologyLabState, action: str) -> int:
+    def _first_rotatable_shape_index(self, state: TopologyLabState, key: int) -> int:
         topology_lab_menu.ensure_piece_sandbox(state)
         assert state.sandbox is not None
         for index, shape in enumerate(sandbox_shapes_for_state(state)):
             state.sandbox.piece_index = index
             state.sandbox.local_blocks = shape.blocks
-            from tet4d.ui.pygame.topology_lab.piece_sandbox import _rotate_blocks_for_action
-            result = _rotate_blocks_for_action(state, shape.blocks, action=action)
-            if result is not None and tuple(sorted(result)) != tuple(sorted(shape.blocks)):
+            before = tuple(sorted(sandbox_cells(state)))
+            topology_lab_menu._dispatch_key(state, key)
+            after = tuple(sorted(sandbox_cells(state)))
+            if after != before:
                 return index
-        raise AssertionError(f"no rotatable sandbox shape for {action}")
+        raise AssertionError(f"no rotatable sandbox shape for key {key}")
 
     def test_sandbox_rotation_binding_changes_3d_piece(self) -> None:
         profile = default_topology_profile_state(
@@ -151,7 +152,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
-        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xz_pos")
+        state.sandbox.piece_index = self._first_rotatable_shape_index(
+            state, KEYS_3D["rotate_xz_pos"][0]
+        )
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xz_pos"][0])
@@ -175,7 +178,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
-        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xw_pos")
+        state.sandbox.piece_index = self._first_rotatable_shape_index(
+            state, KEYS_4D["rotate_xw_pos"][0]
+        )
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xw_pos"][0])
@@ -199,7 +204,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
-        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xy_pos")
+        state.sandbox.piece_index = self._first_rotatable_shape_index(
+            state, KEYS_3D["rotate_xy_pos"][0]
+        )
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xy_pos"][0])
@@ -223,7 +230,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.active_pane = topology_lab_menu.PANE_SCENE
         ensure_piece_sandbox(state)
         assert state.sandbox is not None
-        state.sandbox.piece_index = self._first_rotatable_shape_index(state, "rotate_xy_neg")
+        state.sandbox.piece_index = self._first_rotatable_shape_index(
+            state, KEYS_4D["rotate_xy_neg"][0]
+        )
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xy_neg"][0])
@@ -377,7 +386,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         ensure_piece_sandbox(state)
         assert state.canonical_state is not None
         assert state.sandbox is not None
-        state.sandbox.piece_index = self._first_rotatable_shape_index(state, 'rotate_xz_pos')
+        state.sandbox.piece_index = self._first_rotatable_shape_index(
+            state, KEYS_3D["rotate_xz_pos"][0]
+        )
         state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
         before = state.canonical_state.sandbox_piece_state.local_blocks
 

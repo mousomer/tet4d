@@ -11,50 +11,6 @@ from tet4d.ui.pygame.render.control_helper import (
     _planned_group_rows,
     control_groups_for_dimension,
 )
-from tet4d.ui.pygame.render.control_icons import (
-    action_icon_cache_size,
-    clear_action_icon_cache,
-    draw_action_icon,
-)
-
-
-class TestControlIconCaching(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        pygame.init()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        pygame.quit()
-
-    def setUp(self) -> None:
-        clear_action_icon_cache()
-
-    def test_icon_cache_reuses_surface_for_same_action_and_size(self) -> None:
-        surface = pygame.Surface((120, 80), pygame.SRCALPHA)
-        rect = pygame.Rect(8, 8, 20, 20)
-        draw_action_icon(surface, rect=rect, action="move_x_pos")
-        first_size = action_icon_cache_size()
-        draw_action_icon(surface, rect=rect, action="move_x_pos")
-        self.assertEqual(first_size, action_icon_cache_size())
-        self.assertEqual(first_size, 1)
-
-    def test_icon_cache_tracks_size_variants(self) -> None:
-        surface = pygame.Surface((120, 80), pygame.SRCALPHA)
-        draw_action_icon(
-            surface, rect=pygame.Rect(8, 8, 20, 20), action="rotate_xy_pos"
-        )
-        draw_action_icon(
-            surface, rect=pygame.Rect(8, 8, 26, 26), action="rotate_xy_pos"
-        )
-        self.assertEqual(action_icon_cache_size(), 2)
-
-    def test_invalid_action_does_not_create_cache_entry(self) -> None:
-        surface = pygame.Surface((120, 80), pygame.SRCALPHA)
-        draw_action_icon(
-            surface, rect=pygame.Rect(8, 8, 20, 20), action="unknown_action"
-        )
-        self.assertEqual(action_icon_cache_size(), 0)
 
 
 class TestControlGroups(unittest.TestCase):
@@ -69,7 +25,7 @@ class TestControlGroups(unittest.TestCase):
         self.assertIn("\tpause menu\t", main_rows[0])
         self.assertIn("\thelp\t", main_rows[1])
         self.assertIn("\trestart\t", main_rows[2])
-        self.assertTrue(any("\tmove x\t" in row for row in translation_rows))
+        self.assertTrue(any("\tleft/right\t" in row for row in translation_rows))
         self.assertTrue(any("\thard drop\t" in row for row in translation_rows))
         self.assertTrue(any("\tgrid mode\t" in row for row in camera_rows))
         self.assertTrue(

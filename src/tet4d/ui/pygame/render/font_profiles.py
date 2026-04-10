@@ -21,6 +21,16 @@ class GfxFonts:
     panel_font: pygame.font.Font
 
 
+_TITLE_FONT_CANDIDATES = (
+    "orbitron",
+    "eurostile",
+    "bankgothic md bt",
+    "microgramma",
+    "square721 bt",
+    "arial",
+)
+
+
 _FONT_PROFILES: dict[str, _FontProfile] = {
     "2d": _FontProfile(
         title_size=36,
@@ -40,8 +50,16 @@ _FONT_PROFILES: dict[str, _FontProfile] = {
 def init_fonts(profile: str = "nd") -> GfxFonts:
     spec = _FONT_PROFILES.get(profile.strip().lower(), _FONT_PROFILES["nd"])
     try:
+        title_font = None
+        for candidate in _TITLE_FONT_CANDIDATES:
+            matched = pygame.font.match_font(candidate, bold=True)
+            if matched:
+                title_font = pygame.font.Font(matched, spec.title_size)
+                break
+        if title_font is None:
+            title_font = pygame.font.SysFont("arial", spec.title_size, bold=True)
         return GfxFonts(
-            title_font=pygame.font.SysFont("consolas", spec.title_size, bold=True),
+            title_font=title_font,
             menu_font=pygame.font.SysFont("consolas", spec.menu_size),
             hint_font=pygame.font.SysFont("consolas", spec.hint_size),
             panel_font=pygame.font.SysFont("consolas", spec.panel_size),

@@ -120,32 +120,32 @@
     "move_x_neg": {
       "group": "game",
       "order": 100,
-      "label": "Move x -",
-      "description": "Move active piece left on the x axis.",
+      "label": "Move Left",
+      "description": "Move active piece left.",
       "dimensions": [2, 3, 4],
       "gameplay_bucket": "translation"
     },
     "move_x_pos": {
       "group": "game",
       "order": 110,
-      "label": "Move x +",
-      "description": "Move active piece right on the x axis.",
+      "label": "Move Right",
+      "description": "Move active piece right.",
       "dimensions": [2, 3, 4],
       "gameplay_bucket": "translation"
     },
     "move_z_neg": {
       "group": "game",
       "order": 120,
-      "label": "Move z -",
-      "description": "Move active piece away from viewer (default view).",
+      "label": "Move Forward",
+      "description": "Move active piece forward, away from the viewer in the default view.",
       "dimensions": [3, 4],
       "gameplay_bucket": "translation"
     },
     "move_z_pos": {
       "group": "game",
       "order": 130,
-      "label": "Move z +",
-      "description": "Move active piece closer to viewer (default view).",
+      "label": "Move Backward",
+      "description": "Move active piece backward, toward the viewer in the default view.",
       "dimensions": [3, 4],
       "gameplay_bucket": "translation"
     },
@@ -168,8 +168,8 @@
     "soft_drop": {
       "group": "game",
       "order": 160,
-      "label": "Soft drop",
-      "description": "Move piece one gravity step down.",
+      "label": "Move Down (Soft Drop)",
+      "description": "Move active piece one gravity step down.",
       "dimensions": [2, 3, 4],
       "gameplay_bucket": "translation"
     },
@@ -467,7 +467,7 @@
             "requires": [],
             "key_actions": ["move_x_neg", "move_x_pos"],
             "icon_action": "move_x_pos",
-            "template": "move x"
+            "template": "left/right"
           },
           {
             "id": "move_z",
@@ -476,7 +476,7 @@
             "requires": ["camera.enabled"],
             "key_actions": ["move_z_neg", "move_z_pos"],
             "icon_action": "move_z_neg",
-            "template": "away/closer"
+            "template": "forward/backward"
           },
           {
             "id": "move_w",

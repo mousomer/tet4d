@@ -483,15 +483,6 @@ def binding_action_contracts() -> dict[str, dict[str, object]]:
         }
         for action, entry in actions.items()
     }
-
-
-def binding_action_label(action: str) -> str:
-    entry = keybinding_catalog_payload()["actions"].get(action)
-    if entry is None:
-        return action.replace("_", " ")
-    return str(entry["label"])
-
-
 def binding_action_description(action: str) -> str:
     entry = keybinding_catalog_payload()["actions"].get(action)
     if entry is None:
@@ -522,13 +513,6 @@ def gameplay_bucket_label(bucket: str) -> str:
     if entry is None:
         return bucket.replace("_", " ").title()
     return str(entry["label"])
-
-
-def gameplay_bucket_description(bucket: str) -> str:
-    entry = keybinding_catalog_payload()["editor"]["gameplay_buckets"].get(bucket)
-    if entry is None:
-        return ""
-    return str(entry["description"])
 
 
 def _action_sort_key(action: str) -> tuple[int, int, str]:

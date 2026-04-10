@@ -21,7 +21,7 @@ def _record(path: Path, *, score: int, lines: int, dimension: int = 2) -> None:
         start_speed_level=1,
         end_speed_level=2,
         duration_seconds=42.0,
-        outcome="menu",
+        outcome="game_over",
         bot_mode="off",
         grid_mode="full",
         random_mode="fixed_seed",
@@ -49,6 +49,22 @@ def test_leaderboard_records_and_sorts_scores() -> None:
     scores = [int(entry["score"]) for entry in entries]
     assert scores[:3] == [220, 160, 100]
     assert str(entries[0]["player_name"]) == "Tester"
+
+
+def test_leaderboard_keeps_top_ten_per_dimension() -> None:
+    path = _leaderboard_path('leaderboard_per_dimension_limit')
+    for offset in range(12):
+        _record(path, score=300 - offset, lines=offset, dimension=2)
+        _record(path, score=500 - offset, lines=offset, dimension=3)
+
+    entries = leaderboard_top_entries(path=path, limit=40)
+    dim2_scores = [int(entry["score"]) for entry in entries if int(entry["dimension"]) == 2]
+    dim3_scores = [int(entry["score"]) for entry in entries if int(entry["dimension"]) == 3]
+
+    assert len(dim2_scores) == 10
+    assert len(dim3_scores) == 10
+    assert dim2_scores == [300, 299, 298, 297, 296, 295, 294, 293, 292, 291]
+    assert dim3_scores == [500, 499, 498, 497, 496, 495, 494, 493, 492, 491]
 
 
 def test_leaderboard_clamps_invalid_values() -> None:
@@ -134,6 +150,34 @@ def test_leaderboard_entry_would_enter_reports_rank() -> None:
     assert rank == 2
 
 
+def test_leaderboard_rank_ignores_other_dimensions() -> None:
+    path = _leaderboard_path('leaderboard_rank_per_dimension')
+    for offset in range(10):
+        _record(path, score=600 - offset, lines=offset, dimension=3)
+    _record(path, score=190, lines=3, dimension=2)
+    _record(path, score=120, lines=4, dimension=2)
+
+    qualifies, rank = leaderboard_entry_would_enter(
+        path=path,
+        dimension=2,
+        score=150,
+        lines_cleared=2,
+        start_speed_level=1,
+        end_speed_level=2,
+        duration_seconds=9.0,
+        outcome="game_over",
+        bot_mode="off",
+        grid_mode="full",
+        random_mode="fixed_seed",
+        topology_mode="bounded",
+        kick_level="off",
+        exploration_mode=False,
+    )
+
+    assert qualifies is True
+    assert rank == 2
+
+
 def test_leaderboard_payload_falls_back_on_invalid_json() -> None:
     path = _leaderboard_path('leaderboard_invalid_json')
     path.write_text('{invalid', encoding='utf-8')
@@ -176,7 +220,40 @@ def test_explorer_sessions_do_not_prompt_or_record(monkeypatch) -> None:
     assert called == []
 
 
-def test_non_explorer_sessions_still_record_when_qualifying(monkeypatch) -> None:
+def test_non_endgame_sessions_do_not_prompt_or_record(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def _boom(*_args, **_kwargs):
+        calls.append("unexpected")
+        raise AssertionError("non-endgame leaderboard path should short-circuit")
+
+    monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _boom)
+    monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _boom)
+    monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", _boom)
+
+    recorded = leaderboard_menu.maybe_record_leaderboard_session(
+        None,
+        None,
+        dimension=2,
+        score=999,
+        lines_cleared=0,
+        start_speed_level=1,
+        end_speed_level=1,
+        duration_seconds=1.0,
+        outcome="quit",
+        bot_mode="off",
+        grid_mode="full",
+        random_mode="fixed_seed",
+        topology_mode="bounded",
+        kick_level="off",
+        exploration_mode=False,
+    )
+
+    assert recorded is False
+    assert calls == []
+
+
+def test_endgame_sessions_still_record_when_qualifying(monkeypatch) -> None:
     calls: list[str] = []
 
     def _qualifies(*_args, **_kwargs):
@@ -203,7 +280,7 @@ def test_non_explorer_sessions_still_record_when_qualifying(monkeypatch) -> None
         start_speed_level=1,
         end_speed_level=1,
         duration_seconds=1.0,
-        outcome="menu",
+        outcome="game_over",
         bot_mode="off",
         grid_mode="full",
         random_mode="fixed_seed",

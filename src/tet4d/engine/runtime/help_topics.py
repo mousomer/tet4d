@@ -261,12 +261,6 @@ def help_action_topic_registry() -> dict[str, Any]:
     }
 
 
-def help_topic_for_action(action: str) -> str:
-    registry = help_action_topic_registry()
-    mapping = registry["action_topics"]
-    return mapping.get(action, registry["default_topic"])
-
-
 def normalize_help_context(context_label: str) -> str:
     raw = context_label.strip().lower()
     if raw in _ALLOWED_CONTEXTS:
@@ -296,17 +290,3 @@ def help_topics_for_context(
         filtered = [topic for topic in topics if dim in topic["dimensions"]]
     filtered.sort(key=lambda topic: (int(topic["priority"]), topic["id"]))
     return tuple(filtered)
-
-
-def validate_help_topic_contract() -> tuple[bool, str]:
-    try:
-        help_topics_registry()
-        help_action_topic_registry()
-    except HelpTopicsValidationError as exc:
-        return False, str(exc)
-    return True, "Help topics contract validated"
-
-
-def clear_help_topic_caches() -> None:
-    help_topics_registry.cache_clear()
-    help_action_topic_registry.cache_clear()

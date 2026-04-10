@@ -64,6 +64,7 @@ Define requirements for the classic `(x, y)` mode implemented by:
 3. System controls: restart/menu/quit/toggle-grid.
 4. Grid off mode must keep a visible board shadow.
 5. Line clear should be animated.
+6. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
 
 ## 6. Scoring
 

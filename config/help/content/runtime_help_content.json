@@ -101,7 +101,8 @@
         "- Multiplier reflects bot mode, grid mode, kick permissiveness, and speed level.",
         "",
         "## Leaderboard",
-        "- Leaderboard stores finished runs from 2D/3D/4D.",
+        "- Leaderboard stores standard-play game-over runs from 2D/3D/4D.",
+        "- It keeps the top 10 scores per dimension.",
         "- Fields include score, cleared lines/layers, speed progression, and duration."
       ]
     },

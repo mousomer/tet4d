@@ -12,7 +12,7 @@ from .project_config import (
 from .settings_schema import atomic_write_json, read_json_object_or_empty, sanitize_text
 
 _SCHEMA_VERSION = 1
-_DEFAULT_MAX_ENTRIES = 200
+_DEFAULT_MAX_ENTRIES = 10
 
 
 def _now_utc_iso() -> str:
@@ -164,13 +164,30 @@ def _entry_sort_key(entry: dict[str, object]) -> tuple[object, ...]:
     )
 
 
-def _sort_and_trim(
+def _game_type_key(entry: dict[str, object]) -> str:
+    return f"{int(entry['dimension'])}d"
+
+
+def _entries_for_game_type(
+    entries: list[dict[str, object]],
+    *,
+    game_type_key: str,
+) -> list[dict[str, object]]:
+    return [entry for entry in entries if _game_type_key(entry) == game_type_key]
+
+
+def _sort_and_trim_per_game_type(
     entries: list[dict[str, object]],
     *,
     max_entries: int,
 ) -> list[dict[str, object]]:
-    ordered = sorted(entries, key=_entry_sort_key)
-    return ordered[:max_entries]
+    grouped: dict[str, list[dict[str, object]]] = {}
+    for entry in entries:
+        grouped.setdefault(_game_type_key(entry), []).append(entry)
+    trimmed: list[dict[str, object]] = []
+    for grouped_entries in grouped.values():
+        trimmed.extend(sorted(grouped_entries, key=_entry_sort_key)[:max_entries])
+    return sorted(trimmed, key=_entry_sort_key)
 
 
 def _load_payload(path: Path) -> dict[str, Any]:
@@ -191,7 +208,7 @@ def _load_payload(path: Path) -> dict[str, Any]:
             max_length=48,
             fallback=_now_utc_iso(),
         ),
-        "entries": _sort_and_trim(entries, max_entries=max_entries),
+        "entries": _sort_and_trim_per_game_type(entries, max_entries=max_entries),
     }
 
 
@@ -258,7 +275,16 @@ def leaderboard_entry_rank(
             "exploration_mode": exploration_mode,
         }
     )
-    ordered = sorted([*entries, candidate], key=_entry_sort_key)
+    ordered = sorted(
+        [
+            *_entries_for_game_type(
+                entries,
+                game_type_key=_game_type_key(candidate),
+            ),
+            candidate,
+        ],
+        key=_entry_sort_key,
+    )
     for idx, entry in enumerate(ordered):
         if str(entry.get("run_id")) == "__candidate__":
             return idx + 1
@@ -348,7 +374,10 @@ def record_leaderboard_entry(
 
     entries = [_normalize_entry(item) for item in entries_raw]
     entries.append(entry)
-    payload["entries"] = _sort_and_trim(entries, max_entries=_max_entries_limit())
+    payload["entries"] = _sort_and_trim_per_game_type(
+        entries,
+        max_entries=_max_entries_limit(),
+    )
     payload["schema_version"] = _SCHEMA_VERSION
     payload["updated_at_utc"] = _now_utc_iso()
     atomic_write_json(target, payload)

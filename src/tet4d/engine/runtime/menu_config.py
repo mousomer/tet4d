@@ -106,10 +106,6 @@ def menu_graph() -> dict[str, dict[str, Any]]:
     return deepcopy(_structure_payload()["menus"])
 
 
-def menu_entrypoints() -> dict[str, str]:
-    return deepcopy(_structure_payload()["menu_entrypoints"])
-
-
 def launcher_menu_id() -> str:
     return str(_structure_payload()["menu_entrypoints"]["launcher"])
 

@@ -9,28 +9,31 @@ from tet4d.engine.ui_logic.keybindings_catalog import binding_action_description
 from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.menu.keybindings_menu_model import binding_keys, binding_title
 from tet4d.ui.pygame.render.control_icons import draw_action_icon
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import (
+    draw_corner_chip,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    fit_text,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 _KEYBINDINGS_MENU_COPY = ui_copy_section("keybindings_menu")
 
 
 def _draw_background(surface: pygame.Surface) -> None:
-    draw_vertical_gradient(surface, (14, 18, 42), (4, 7, 20))
+    draw_tron_menu_background(surface, top_color=(14, 18, 42), bottom_color=(4, 7, 20))
 
 
 def _draw_menu_header(
     surface: pygame.Surface, fonts, state: Any, scope_label_fn
 ) -> None:
     width, _ = surface.get_size()
-    title = fonts.title_font.render(_KEYBINDINGS_MENU_COPY["title"], True, (232, 232, 240))
-    subtitle_text = (
-        _KEYBINDINGS_MENU_COPY["subtitle_section_mode"]
-        if state.section_mode
-        else _KEYBINDINGS_MENU_COPY["subtitle_binding_mode"]
+    title = fonts.title_font.render(
+        format_menu_title(_KEYBINDINGS_MENU_COPY["title"]), True, (232, 232, 240)
     )
-    subtitle = fonts.hint_font.render(subtitle_text, True, (192, 200, 228))
     surface.blit(title, ((width - title.get_width()) // 2, 28))
-    surface.blit(subtitle, ((width - subtitle.get_width()) // 2, 74))
+    draw_corner_chip(surface, font=fonts.hint_font, text="Back", x=18, y=18)
 
     header = (
         f"Scope: {scope_label_fn(state.scope)}   "
@@ -40,24 +43,27 @@ def _draw_menu_header(
     header_surf = fonts.hint_font.render(
         fit_text(fonts.hint_font, header, width - 28), True, (210, 220, 245)
     )
-    surface.blit(header_surf, ((width - header_surf.get_width()) // 2, 106))
+    surface.blit(header_surf, ((width - header_surf.get_width()) // 2, 74))
 
 
 def _panel_geometry(surface: pygame.Surface) -> tuple[int, int, int, int]:
     width, height = surface.get_size()
     panel_w = min(1120, max(320, width - 40))
     panel_h = min(580, max(220, height - 260))
-    panel_x = (width - panel_w) // 2
-    panel_y = max(122, min(138, height - panel_h - 110))
-    return panel_x, panel_y, panel_w, panel_h
+    rect = standard_menu_panel_rect(
+        surface,
+        panel_w=panel_w,
+        panel_h=panel_h,
+        panel_top=98,
+        bottom_reserved=102,
+    )
+    return rect.x, rect.y, rect.width, rect.height
 
 
 def _draw_panel(
     surface: pygame.Surface, *, panel_x: int, panel_y: int, panel_w: int, panel_h: int
 ) -> None:
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 152), panel.get_rect(), border_radius=14)
-    surface.blit(panel, (panel_x, panel_y))
+    draw_tron_panel(surface, rect=pygame.Rect(panel_x, panel_y, panel_w, panel_h))
 
 
 def _selected_render_index(
@@ -97,10 +103,20 @@ def _draw_row_selection(
     panel_w: int,
     y: int,
     line_h: int,
+    flash_strength: float = 0.0,
 ) -> None:
     hi = pygame.Surface((panel_w - 24, line_h + 4), pygame.SRCALPHA)
     pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
     surface.blit(hi, (panel_x + 12, y - 2))
+    if flash_strength > 0.0:
+        flash = pygame.Surface((panel_w - 24, line_h + 4), pygame.SRCALPHA)
+        pygame.draw.rect(
+            flash,
+            (112, 236, 255, min(120, int(42 + (78 * flash_strength)))),
+            flash.get_rect(),
+            border_radius=8,
+        )
+        surface.blit(flash, (panel_x + 12, y - 2))
 
 
 def _draw_binding_row(
@@ -108,6 +124,7 @@ def _draw_binding_row(
     fonts,
     row: Any,
     *,
+    flash_frames: int,
     selected: bool,
     scope: str,
     panel_x: int,
@@ -118,7 +135,12 @@ def _draw_binding_row(
     color = (255, 224, 130) if selected else (228, 230, 242)
     if selected:
         _draw_row_selection(
-            surface, panel_x=panel_x, panel_w=panel_w, y=y, line_h=row_h - 4
+            surface,
+            panel_x=panel_x,
+            panel_w=panel_w,
+            y=y,
+            line_h=row_h - 4,
+            flash_strength=max(0.0, min(1.0, flash_frames / 12.0)),
         )
 
     label = binding_title(row, scope)
@@ -188,6 +210,7 @@ def _draw_rows(
             surface,
             fonts,
             row.binding,
+            flash_frames=state.flash_selected_frames,
             selected=(row.binding == selected_binding),
             scope=state.scope,
             panel_x=panel_x,

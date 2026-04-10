@@ -21,7 +21,14 @@ from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import (
+    draw_corner_chip,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    fit_text,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 
 PauseDecision = Literal["resume", "restart", "menu", "quit"]
@@ -35,7 +42,6 @@ _BG_BOTTOM = (4, 7, 20)
 _PAUSE_MENU_ID = pause_menu_id()
 _PAUSE_MENU_ITEMS = menu_items(_PAUSE_MENU_ID)
 _PAUSE_COPY = pause_copy()
-_PAUSE_SUBTITLE_TEMPLATE = str(_PAUSE_COPY["subtitle_template"])
 _PAUSE_HINTS = tuple(str(hint) for hint in _PAUSE_COPY["hints"])
 if any(item.get("type") != "action" for item in _PAUSE_MENU_ITEMS):
     raise RuntimeError("pause menu graph currently supports action items only")
@@ -84,7 +90,6 @@ def _draw_list_menu_panel(
     fonts,
     *,
     title: str,
-    subtitle: str,
     rows: tuple[str, ...],
     selected_index: int,
     values: tuple[str, ...],
@@ -93,20 +98,16 @@ def _draw_list_menu_panel(
     status_error: bool,
     panel_w: int = 660,
 ) -> None:
-    draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
+    draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
     width, height = screen.get_size()
-    title_surf = fonts.title_font.render(title, True, _TEXT_COLOR)
-    subtitle_surf = fonts.hint_font.render(
-        fit_text(fonts.hint_font, subtitle, width - 24), True, _MUTED_COLOR
-    )
+    title_surf = fonts.title_font.render(format_menu_title(title), True, _TEXT_COLOR)
     title_y = 40
-    subtitle_y = title_y + title_surf.get_height() + 8
     screen.blit(title_surf, ((width - title_surf.get_width()) // 2, title_y))
-    screen.blit(subtitle_surf, ((width - subtitle_surf.get_width()) // 2, subtitle_y))
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     panel_w = min(panel_w, max(320, width - 40))
     line_h = fonts.hint_font.get_height() + 3
-    panel_top = subtitle_y + subtitle_surf.get_height() + 10
+    panel_top = title_y + title_surf.get_height() + 18
     bottom_lines = len(hints) + (1 if status else 0)
     panel_max_h = max(150, height - panel_top - (bottom_lines * line_h) - 10)
     row_h = min(
@@ -114,14 +115,16 @@ def _draw_list_menu_panel(
         max(fonts.menu_font.get_height() + 8, (panel_max_h - 36) // max(1, len(rows))),
     )
     panel_h = min(panel_max_h, 36 + len(rows) * row_h)
-    panel_x = (width - panel_w) // 2
-    panel_y = max(
-        panel_top,
-        min((height - panel_h) // 2, height - panel_h - (bottom_lines * line_h) - 8),
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=panel_w,
+        panel_h=panel_h,
+        panel_top=panel_top,
+        bottom_reserved=(bottom_lines * line_h),
     )
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
+    panel_x = panel_rect.x
+    panel_y = panel_rect.y
+    draw_tron_panel(screen, rect=panel_rect)
 
     y = panel_y + 14
     option_bottom = panel_y + panel_h - 8
@@ -197,7 +200,6 @@ def _draw_pause_menu(
         screen,
         fonts,
         title=title,
-        subtitle=_PAUSE_SUBTITLE_TEMPLATE.format(dimension=dimension),
         rows=_PAUSE_ROWS,
         selected_index=state.selected,
         values=_pause_menu_values(dimension),

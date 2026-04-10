@@ -294,6 +294,7 @@ def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
             ),
             bindings_status=current_state.bindings_status,
             bindings_status_error=current_state.bindings_status_error,
+            flash_frames=int(getattr(current_state, "flash_selected_frames", 0)),
             menu_fields=fields,
             value_formatter=menu_value_formatter,
         )

@@ -72,10 +72,6 @@ _DEFAULTS_VERSION = KEYBINDING_STATE.defaults_version
 DISABLED_KEYS_2D = KEYBINDING_STATE.disabled_keys_2d
 
 
-def get_active_key_profile() -> str:
-    return KEYBINDING_STATE.active_profile
-
-
 KEYBINDING_STATE.reset_keybindings_to_profile_defaults(
     reset_camera_key_fallback=pygame.K_BACKSPACE
 )
@@ -84,10 +80,6 @@ ACTIVE_KEY_PROFILE = KEYBINDING_STATE.active_profile
 
 def active_key_profile() -> str:
     return KEYBINDING_STATE.active_profile
-
-
-def _selected_profile(profile: str | None = None) -> str:
-    return KEYBINDING_STATE.selected_profile(profile)
 
 
 def profile_keybinding_file_path(dimension: int, profile: str) -> Path:

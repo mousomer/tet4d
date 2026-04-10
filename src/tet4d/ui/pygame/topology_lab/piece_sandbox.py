@@ -8,7 +8,6 @@ from tet4d.engine.runtime.topology_playground_sandbox import (
     reset_sandbox_piece as reset_sandbox_piece_runtime,
     rotate_sandbox_piece as rotate_sandbox_piece_runtime,
     rotate_sandbox_piece_action as rotate_sandbox_piece_action_runtime,
-    rotate_blocks_for_action as rotate_blocks_for_action_runtime,
     sandbox_cells as sandbox_cells_runtime,
     sandbox_lines as sandbox_lines_runtime,
     sandbox_shape as sandbox_shape_runtime,
@@ -85,17 +84,6 @@ def rotate_sandbox_piece_action(
         _runtime_state_for_sandbox(state, profile=profile),
         action,
     )
-
-
-def _rotate_blocks_for_action(
-    state: TopologyLabState,
-    blocks: tuple[tuple[int, ...], ...],
-    *,
-    action: str,
-) -> tuple[tuple[int, ...], ...] | None:
-    return rotate_blocks_for_action_runtime(int(state.dimension), blocks, action=action)
-
-
 def sandbox_validity(
     state: TopologyLabState,
     profile: ExplorerTopologyProfile,

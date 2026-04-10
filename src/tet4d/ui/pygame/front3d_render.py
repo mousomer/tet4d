@@ -11,8 +11,10 @@ from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
     Point2,
+    ProjectedFacePrimitive,
     color_for_cell,
     draw_gradient_background,
+    projection_cache_key,
     projection_helper_cache_key,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -20,20 +22,31 @@ from tet4d.ui.pygame.render.font_profiles import (
     init_fonts as init_fonts_for_profile,
 )
 from tet4d.ui.pygame.render.front3d_cell_render import (
+    draw_sorted_faces,
+    draw_translucent_faces,
     draw_cells as draw_cells_helper,
+    overlay_opacity_scale as overlay_opacity_scale_3d,
+    split_faces_for_cells,
 )
 from tet4d.ui.pygame.render.front3d_projection_helpers import (
     ProjectionParams3D,
+    build_cell_face_primitives as build_cell_face_primitives_helper,
     build_cell_faces as build_cell_faces_helper,
+    depth_denominator_for_depth,
     draw_board_grid as draw_board_grid_helper,
     fit_orthographic_zoom_for_rect,
     project_raw_point as project_raw_point_helper,
     transform_raw_point as transform_raw_point_helper,
 )
-from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
+from tet4d.ui.pygame.render.grid_mode_render import (
+    build_projected_grid_primitives,
+    draw_projected_grid_mode,
+    draw_projected_line_buckets,
+)
 from tet4d.ui.pygame.render.panel_utils import (
     draw_unified_game_side_panel,
 )
+from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
 
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from .frontend_nd_setup import gravity_interval_ms_from_config
@@ -201,6 +214,25 @@ def _build_cell_faces(
     )
 
 
+def _build_cell_face_primitives(
+    cell: Cell3,
+    color: tuple[int, int, int],
+    camera: Camera3D,
+    center_px: Point2,
+    dims: Cell3,
+    active: bool,
+) -> list[ProjectedFacePrimitive]:
+    params = _projection_params(camera)
+    return build_cell_face_primitives_helper(
+        cell=cell,
+        color=color,
+        params=params,
+        center_px=center_px,
+        dims=dims,
+        active=active,
+    )
+
+
 def _collect_visible_cells(
     state: GameStateND,
     active_overlay: ActiveOverlay3D | None = None,
@@ -286,6 +318,88 @@ def _draw_cells(
     )
 
 
+def _active_piece_face_primitives(
+    cells: list[VisibleCell3D],
+    *,
+    camera: Camera3D,
+    center_px: Point2,
+    dims: Cell3,
+) -> tuple[ProjectedFacePrimitive, ...]:
+    primitives: list[ProjectedFacePrimitive] = []
+    for coord, cell_id, active, is_overlay in cells:
+        if not active or is_overlay:
+            continue
+        primitives.extend(
+            _build_cell_face_primitives(
+                cell=coord,
+                color=color_for_cell_3d(cell_id),
+                camera=camera,
+                center_px=center_px,
+                dims=dims,
+                active=True,
+            )
+        )
+    return tuple(primitives)
+
+
+def _draw_cells_with_occluding_board_lines(
+    surface: pygame.Surface,
+    *,
+    cells: list[VisibleCell3D],
+    board_rect: pygame.Rect,
+    camera: Camera3D,
+    dims: Cell3,
+    board_lines_under_piece: tuple,
+    board_lines_over_piece: tuple,
+    overlay_transparency: float,
+) -> None:
+    locked_faces, active_faces, overlay_faces = split_faces_for_cells(
+        cells,
+        build_faces_fn=lambda coord, color, active: _build_cell_faces(
+            cell=coord,
+            color=color,
+            camera=camera,
+            center_px=(board_rect.centerx, board_rect.centery),
+            dims=dims,
+            active=active,
+        ),
+        color_for_cell_fn=color_for_cell_3d,
+    )
+    draw_projected_line_buckets(
+        surface=surface,
+        fragments=board_lines_under_piece,
+        frame_color=GRID_COLOR,
+        inner_color=(52, 64, 95),
+        frame_width=2,
+    )
+    if locked_faces:
+        locked_alpha = overlay_opacity_scale_3d(overlay_transparency)
+        draw_translucent_faces(
+            surface,
+            locked_faces,
+            fill_alpha=int(round(255 * locked_alpha)),
+            outline_alpha=max(70, int(round(255 * min(1.0, locked_alpha + 0.12)))),
+        )
+    if active_faces:
+        draw_sorted_faces(surface, active_faces)
+    if overlay_faces:
+        draw_translucent_faces(
+            surface,
+            overlay_faces,
+            fill_alpha=int(round(255 * _ASSIST_OVERLAY_OPACITY_SCALE)),
+            outline_alpha=max(
+                70, int(round(255 * min(1.0, _ASSIST_OVERLAY_OPACITY_SCALE + 0.12)))
+            ),
+        )
+    draw_projected_line_buckets(
+        surface=surface,
+        fragments=board_lines_over_piece,
+        frame_color=GRID_COLOR,
+        inner_color=(52, 64, 95),
+        frame_width=2,
+    )
+
+
 def _draw_clear_animation(
     surface: pygame.Surface,
     clear_anim: Optional[ClearAnimation3D],
@@ -347,6 +461,20 @@ def _draw_board_3d(
     center_px = (board_rect.centerx, board_rect.centery)
     helper_marks = _helper_grid_marks_3d(state)
     params = _projection_params(camera)
+    full_grid_cache_key = projection_cache_key(
+        prefix="3d-full",
+        dims=dims,
+        center_px=center_px,
+        yaw_deg=params.yaw_deg,
+        pitch_deg=params.pitch_deg,
+        zoom=params.zoom,
+        extras=(
+            params.projection_name,
+            round(params.cam_dist, 3),
+            round(params.projective_strength, 4),
+            round(params.projective_bias, 4),
+        ),
+    )
     helper_cache_key = projection_helper_cache_key(
         prefix="3d-helper",
         dims=dims,
@@ -362,6 +490,49 @@ def _draw_board_3d(
             round(params.projective_bias, 4),
         ),
     )
+    visible_cells = _collect_visible_cells(state, active_overlay)
+    active_piece_faces = _active_piece_face_primitives(
+        visible_cells,
+        camera=camera,
+        center_px=center_px,
+        dims=dims,
+    )
+    if active_piece_faces and grid_mode != GridMode.SHADOW:
+        board_line_primitives = build_projected_grid_primitives(
+            dims=dims,
+            grid_mode=grid_mode,
+            project_raw=lambda raw: project_raw_point_helper(
+                raw, dims, params, center_px
+            ),
+            transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
+            depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
+            helper_marks=helper_marks,
+            helper_cache_key=helper_cache_key,
+            full_grid_cache_key=full_grid_cache_key,
+        )
+        occlusion_buckets = resolve_board_line_occlusion(
+            tuple(board_line_primitives),
+            active_piece_faces,
+        )
+        _draw_cells_with_occluding_board_lines(
+            surface,
+            cells=visible_cells,
+            board_rect=board_rect,
+            camera=camera,
+            dims=dims,
+            board_lines_under_piece=occlusion_buckets.segments_under_piece,
+            board_lines_over_piece=occlusion_buckets.segments_over_piece,
+            overlay_transparency=overlay_transparency,
+        )
+        _draw_clear_animation(
+            surface,
+            clear_anim,
+            camera,
+            center_px,
+            dims,
+            overlay_transparency=overlay_transparency,
+        )
+        return
     draw_projected_grid_mode(
         surface=surface,
         dims=dims,
@@ -369,8 +540,10 @@ def _draw_board_3d(
         draw_full_grid=lambda: _draw_board_grid(surface, dims, camera, board_rect),
         project_raw=lambda raw: project_raw_point_helper(raw, dims, params, center_px),
         transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
+        depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
         helper_marks=helper_marks,
         helper_cache_key=helper_cache_key,
+        full_grid_cache_key=full_grid_cache_key,
         frame_color=GRID_COLOR,
         inner_color=(52, 64, 95),
         frame_width=2,
@@ -379,7 +552,7 @@ def _draw_board_3d(
 
     _draw_cells(
         surface,
-        cells=_collect_visible_cells(state, active_overlay),
+        cells=visible_cells,
         camera=camera,
         center_px=center_px,
         dims=dims,

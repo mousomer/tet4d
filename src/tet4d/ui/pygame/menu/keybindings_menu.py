@@ -63,6 +63,7 @@ class KeybindingsMenuState:
     pending_reset_confirm: bool = False
     text_mode: str = ""
     text_buffer: str = ""
+    flash_selected_frames: int = 0
 
     def __post_init__(self) -> None:
         self.active_profile = active_key_profile()
@@ -249,6 +250,8 @@ def _handle_capture_input(
             conflict_mode=state.conflict_mode,
         )
     _set_status(state, ok, msg)
+    if ok:
+        state.flash_selected_frames = 12
     state.capture_mode = False
     return False
 
@@ -559,6 +562,8 @@ def run_keybindings_menu(
         _sync_selection(state, binding_rows)
         if _process_menu_events(state, binding_rows):
             break
+        if state.flash_selected_frames > 0:
+            state.flash_selected_frames -= 1
 
         if state.section_mode:
             _draw_section_menu(screen, fonts, state)

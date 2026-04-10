@@ -27,6 +27,7 @@ from tet4d.ui.pygame.keybindings import (
     set_active_key_profile,
 )
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
+from tet4d.ui.pygame.ui_utils import default_menu_back_chip_rect
 
 from .menu_keybinding_shortcuts import (
     apply_menu_binding_action,
@@ -322,6 +323,13 @@ def gather_menu_actions(
         if event.type == pygame.QUIT:
             actions.append(MenuAction.QUIT)
             continue
+        if (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and int(getattr(event, "button", 0)) == 1
+            and default_menu_back_chip_rect().collidepoint(getattr(event, "pos", (-1, -1)))
+        ):
+            actions.append(MenuAction.QUIT)
+            continue
         if event.type == pygame.TEXTINPUT:
             if numeric_mode:
                 actions.append(NumericTextAppend(event.text))
@@ -371,6 +379,8 @@ def _handle_rebind_capture(state: Any, dimension: int, capture: RebindCapture) -
     )
     if ok and state.rebind_targets:
         state.rebind_index = (state.rebind_index + 1) % len(state.rebind_targets)
+    if ok and hasattr(state, "flash_selected_frames"):
+        state.flash_selected_frames = 12
     _set_bindings_status(state, ok, msg)
 
 

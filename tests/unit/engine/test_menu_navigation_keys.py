@@ -85,6 +85,28 @@ class TestMenuNavigationKeys(unittest.TestCase):
 
         self.assertTrue(should_exit)
 
+    def test_successful_key_capture_triggers_flash_feedback(self) -> None:
+        state = keybindings_menu.KeybindingsMenuState(
+            section_mode=False,
+            allow_scope_sections=True,
+            selected_binding=0,
+        )
+        rows = keybindings_menu.rows_for_scope("general")[1]
+        with patch.object(
+            keybindings_menu,
+            "rebind_action_key",
+            return_value=(True, "Updated binding"),
+        ):
+            consumed = keybindings_menu._handle_capture_input(
+                state,
+                pygame.K_r,
+                rows,
+            )
+
+        self.assertFalse(consumed)
+        self.assertFalse(state.capture_mode)
+        self.assertEqual(state.flash_selected_frames, 12)
+
 
 if __name__ == "__main__":
     unittest.main()

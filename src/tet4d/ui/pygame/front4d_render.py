@@ -22,7 +22,9 @@ from tet4d.ui.pygame.projection3d import (
     Cell3,
     Face,
     Point2,
+    ProjectedFacePrimitive,
     box_raw_corners,
+    build_cube_face_primitives,
     build_cube_faces,
     color_for_cell,
     draw_gradient_background,
@@ -41,11 +43,16 @@ from tet4d.engine.runtime.project_config import (
     project_constant_int,
 )
 from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
-from tet4d.ui.pygame.render.grid_mode_render import draw_projected_grid_mode
+from tet4d.ui.pygame.render.grid_mode_render import (
+    build_projected_grid_primitives,
+    draw_projected_grid_mode,
+    draw_projected_line_buckets,
+)
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
 from tet4d.engine.gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
+from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
 
 
 MARGIN = project_constant_int(
@@ -400,6 +407,8 @@ def _draw_board_grid(
         surface,
         dims3,
         lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+        lambda raw: _transform_raw_point(raw, dims3, view),
+        _orthographic_depth_denominator,
         inner_color=(52, 64, 95),
         frame_color=GRID_COLOR,
         frame_width=2,
@@ -424,6 +433,27 @@ def _build_cell_faces(
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
         active=active,
         scale=scale,
+    )
+
+
+def _build_cell_face_primitives(
+    cell: tuple[float, float, float],
+    color: tuple[int, int, int],
+    view: LayerView3D,
+    center_px: Point2,
+    dims3: Cell3,
+    zoom: float,
+    active: bool,
+    scale: float = 1.0,
+) -> list[ProjectedFacePrimitive]:
+    return build_cube_face_primitives(
+        cell=cell,
+        color=color,
+        project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        active=active,
+        scale=scale,
+        depth_denominator=_orthographic_depth_denominator,
     )
 
 
@@ -595,8 +625,18 @@ def _draw_layer_grid_or_shadow(
         ),
         project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        depth_denominator=_orthographic_depth_denominator,
         helper_marks=helper_marks,
         helper_cache_key=helper_cache_key,
+        full_grid_cache_key=projection_cache_key(
+            prefix="4d-full",
+            dims=dims3,
+            center_px=center_px,
+            yaw_deg=view.yaw_deg,
+            pitch_deg=view.pitch_deg,
+            zoom=zoom,
+            extras=_projection_extras(basis, dims4, layer_index),
+        ),
         frame_color=GRID_COLOR,
         inner_color=(52, 64, 95),
         frame_width=2,
@@ -676,6 +716,8 @@ def _draw_layer_cells(
     locked_by_layer: LockedLayerCells,
     active_overlay: ActiveOverlay4D | None,
     overlay_transparency: float,
+    board_lines_under_piece: tuple = (),
+    board_lines_over_piece: tuple = (),
 ) -> None:
     solid_faces, overlay_faces = _layer_faces(
         state,
@@ -690,6 +732,13 @@ def _draw_layer_cells(
     )
     locked_faces = [face for face in solid_faces if not face[3]]
     active_faces = [face for face in solid_faces if face[3]]
+    draw_projected_line_buckets(
+        surface=surface,
+        fragments=board_lines_under_piece,
+        frame_color=GRID_COLOR,
+        inner_color=(52, 64, 95),
+        frame_width=2,
+    )
     if locked_faces:
         locked_alpha = _overlay_opacity_scale(overlay_transparency)
         _draw_translucent_faces(
@@ -712,6 +761,13 @@ def _draw_layer_cells(
                 70, int(round(255 * min(1.0, _ASSIST_OVERLAY_OPACITY_SCALE + 0.12)))
             ),
         )
+    draw_projected_line_buckets(
+        surface=surface,
+        fragments=board_lines_over_piece,
+        frame_color=GRID_COLOR,
+        inner_color=(52, 64, 95),
+        frame_width=2,
+    )
 
 
 def _overlay_opacity_scale(overlay_transparency: float) -> float:
@@ -807,33 +863,94 @@ def _draw_layer_board(
     dims3 = basis.dims3
     zoom = _fit_zoom(dims3, view, draw_rect) * view.zoom_scale
     zoom = max(8.0, min(170.0, zoom))
-    _draw_layer_grid_or_shadow(
-        surface,
-        dims3,
-        dims4,
-        layer_index,
-        basis,
-        view,
-        draw_rect,
-        zoom,
-        grid_mode,
-        helper_marks,
-    )
-
     center_px = (draw_rect.centerx, draw_rect.centery)
-    _draw_layer_cells(
-        surface,
-        state=state,
-        layer_index=layer_index,
-        view=view,
-        center_px=center_px,
-        dims3=dims3,
-        basis=basis,
-        zoom=zoom,
-        locked_by_layer=locked_by_layer,
-        active_overlay=active_overlay,
-        overlay_transparency=overlay_transparency,
+    active_piece_faces = _active_layer_face_primitives(
+        state,
+        layer_index,
+        view,
+        center_px,
+        dims3,
+        basis,
+        zoom,
     )
+    if active_piece_faces and grid_mode != GridMode.SHADOW:
+        marks = helper_marks if helper_marks is not None else (set(), set(), set())
+        helper_cache_key = projection_helper_cache_key(
+            prefix="4d-helper",
+            dims=dims3,
+            center_px=center_px,
+            yaw_deg=view.yaw_deg,
+            pitch_deg=view.pitch_deg,
+            zoom=zoom,
+            marks=marks,
+            extras=_projection_extras(basis, dims4, layer_index),
+        )
+        full_grid_cache_key = projection_cache_key(
+            prefix="4d-full",
+            dims=dims3,
+            center_px=center_px,
+            yaw_deg=view.yaw_deg,
+            pitch_deg=view.pitch_deg,
+            zoom=zoom,
+            extras=_projection_extras(basis, dims4, layer_index),
+        )
+        board_line_primitives = build_projected_grid_primitives(
+            dims=dims3,
+            grid_mode=grid_mode,
+            project_raw=lambda raw: _project_raw_point(
+                raw, dims3, view, center_px, zoom
+            ),
+            transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+            depth_denominator=_orthographic_depth_denominator,
+            helper_marks=helper_marks,
+            helper_cache_key=helper_cache_key,
+            full_grid_cache_key=full_grid_cache_key,
+        )
+        occlusion_buckets = resolve_board_line_occlusion(
+            tuple(board_line_primitives),
+            active_piece_faces,
+        )
+        _draw_layer_cells(
+            surface,
+            state=state,
+            layer_index=layer_index,
+            view=view,
+            center_px=center_px,
+            dims3=dims3,
+            basis=basis,
+            zoom=zoom,
+            locked_by_layer=locked_by_layer,
+            active_overlay=active_overlay,
+            overlay_transparency=overlay_transparency,
+            board_lines_under_piece=occlusion_buckets.segments_under_piece,
+            board_lines_over_piece=occlusion_buckets.segments_over_piece,
+        )
+    else:
+        _draw_layer_grid_or_shadow(
+            surface,
+            dims3,
+            dims4,
+            layer_index,
+            basis,
+            view,
+            draw_rect,
+            zoom,
+            grid_mode,
+            helper_marks,
+        )
+        _draw_layer_cells(
+            surface,
+            state=state,
+            layer_index=layer_index,
+            view=view,
+            center_px=center_px,
+            dims3=dims3,
+            basis=basis,
+            zoom=zoom,
+            locked_by_layer=locked_by_layer,
+            active_overlay=active_overlay,
+            overlay_transparency=overlay_transparency,
+        )
     _draw_layer_clear_animation(
         surface,
         clear_anim,
@@ -1070,6 +1187,40 @@ def handle_view_key(
         )
         is not None
     )
+
+
+def _orthographic_depth_denominator(_depth: float) -> float:
+    return 1.0
+
+
+def _active_layer_face_primitives(
+    state: GameStateND,
+    layer_index: int,
+    view: LayerView3D,
+    center_px: Point2,
+    dims3: Cell3,
+    basis: RenderBasis4D,
+    zoom: float,
+) -> tuple[ProjectedFacePrimitive, ...]:
+    primitives: list[ProjectedFacePrimitive] = []
+    for coord3, cell_id, _is_active, _is_overlay, scale in _piece_active_layer_cells(
+        state,
+        layer_index,
+        basis,
+    ):
+        primitives.extend(
+            _build_cell_face_primitives(
+                cell=coord3,
+                color=color_for_cell(cell_id, COLOR_MAP),
+                view=view,
+                center_px=center_px,
+                dims3=dims3,
+                zoom=zoom,
+                active=True,
+                scale=scale,
+            )
+        )
+    return tuple(primitives)
 
 
 def _collect_cleared_ghost_cells(

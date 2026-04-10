@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-03-30  
+Updated: 2026-04-10  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -60,6 +60,12 @@ should stay sourced from `settings_sections` rather than the older parallel
 `settings_category_docs` list, and the focused keybinding contract script
 should continue covering every runtime-seam consumer moved off the pygame
 adapter.
+
+Parallel menu-shell follow-up (2026-04-10): the shared launcher/setup/pause/
+settings/keybindings shell now has one aligned title/back/panel style, and
+future tweaks should stay incremental, keep subtitle-free headers, keep
+bounded numeric rows on sliders, and avoid drifting translation labels or the
+gameplay-owned transparency setting back toward the older split layout.
 
 - Open work:
   1. continue structural simplification of
@@ -121,9 +127,29 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authority.
 - Keep canonical runtime selectors as the only explorer-path input authority.
 - Keep the legacy topology editor isolated to
-  `Settings -> Advanced -> Legacy Topology Editor Menu`.
+  `Settings -> Legacy Topology Editor Menu`.
+- Keep the shared menu shell aligned across launcher, setup, pause, settings,
+  and keybindings; do not reintroduce subtitle-only header variants or move
+  `display_overlay_transparency` back out of gameplay settings, and keep the
+  launcher/pause input-config surface consistently labeled `Keybindings`.
+- Keep `Settings -> Keyboard Profiles` as the chooser entry, and keep that
+  submenu runtime-expanded into current keyboard profiles rather than drifting
+  back to one dead generic `Profiles` row.
 
 ## Recent Completed Work
+
+Completed on 2026-04-10:
+
+- leaderboard contract cleanup so leaderboard prompts now trigger only on
+  completed standard-play `game_over` transitions, never from explorer mode or
+  quit/menu/restart exits, and persisted score storage now keeps the top `10`
+  entries per gameplay dimension instead of one mixed global cap
+- projected `3D` / `4D` active-piece occlusion pass so board gridlines and
+  board-box edges now resolve against the active piece per projected fragment
+  from screen overlap plus projected depth instead of one global draw-order
+  assumption, with shared primitive emission/resolution coverage and `2D`
+  intentionally left on its simpler path
+
 
 Completed on 2026-03-29:
 
@@ -138,6 +164,14 @@ Completed on 2026-03-29:
 - topology-playground local preview cache pass so identical explorer preview
   signatures can reuse a versioned repo-local on-disk cache under `state/`
   instead of rebuilding movement graphs every run
+- dead-seam cleanup pass so unused gameplay/runtime wrapper helpers,
+  test-only help/menu validation seams, and the test-only menu-graph linter
+  no longer stay alive through isolated unit-test coverage; `launcher_play`
+  remains a live launcher dependency and is not part of that removal set
+- dead-test cleanup pass so cache-debug tests no longer pin projection/control
+  icon internals, camera/view key smoke now exercises live routing helpers
+  instead of dead wrapper entrypoints, and topology-lab sandbox tests no
+  longer depend on a dead private rotation helper
 - topology-explorer movement-graph fast path so preview compilation now builds
   graph edges through direct interior-step arithmetic, precomputed boundary
   seam lookups, and same-signature in-process graph-row memoization instead of
@@ -146,6 +180,9 @@ Completed on 2026-03-29:
   topology cache now retains preview payloads, movement-graph rows, and rigid
   playability analysis on disk, and Advanced gameplay exposes cache measure
   plus cache clear actions for that persistent cache set
+- topology-playground cache-miss warning fix so absent repo-local explorer
+  preview cache files now behave as ordinary silent misses while corrupt
+  existing cache files still use the existing warning-and-rebuild path
 - topology-playground/layout visibility pass so compact sidebar rows and
   Advanced gameplay rows now wrap label/value text instead of obscuring it,
   shared action buttons/workspace tabs now wrap instead of hard truncating,
@@ -247,6 +284,10 @@ Completed on 2026-03-29:
   the compact shell layout tested in CI
 - topology-playground authority/spec/status/menu alignment around the settled
   modern `Topology Playground` contract and legacy-editor placement
+- shared menu-shell rework so launcher/setup/pause/settings/keybindings now
+  share title-cased subtitle-free headers, visible `Back` affordances,
+  bounded numeric sliders, flash-on-change row feedback, bulkier title-font
+  selection, and slightly more Tron-1982-inspired panel/background treatment
 - topology-playground shell-layout extraction plus deterministic cross-surface
   text-visibility coverage
 - topology-playground preview/cache extraction and shared canonical-state
@@ -263,6 +304,8 @@ Completed on 2026-03-29:
   opening the generic independent gameplay pause menu first
 - windows packaging MSI embedding fix so the published Windows installer no
   longer depends on an external `cab1.cab` sidecar file at install time
+- dead-code cleanup pass removing zero-reference board/menu/tutorial helper
+  shims plus the unused topology-lab `_TEST_COMPAT_EXPORTS` tuple
 - built-in keybinding defaults redesign so shipped movement uses a compact
   standard-first cluster, rotation uses the fixed `RT FG VB YU HJ NM` ladder,
   and 3D/4D camera defaults now share the same core number-row layout with an

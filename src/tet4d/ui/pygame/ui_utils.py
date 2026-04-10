@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+import re
 from typing import Tuple
 
 import pygame
@@ -319,3 +320,156 @@ def draw_vertical_gradient(
     if width <= 0 or height <= 0:
         return
     surface.blit(_gradient_surface(width, height, top_color, bottom_color), (0, 0))
+
+
+def format_menu_title(text: str) -> str:
+    raw = str(text).strip()
+    if not raw:
+        return ""
+    words = re.split(r"(\s+)", raw)
+    out: list[str] = []
+    for word in words:
+        if not word or word.isspace():
+            out.append(word)
+            continue
+        lower = word.lower()
+        if lower in {"2d", "3d", "4d"}:
+            out.append(lower[:-1] + "D")
+            continue
+        out.append(word[0].upper() + word[1:])
+    return "".join(out)
+
+
+def draw_tron_menu_background(
+    surface: pygame.Surface,
+    *,
+    top_color: Color3 = (10, 18, 44),
+    bottom_color: Color3 = (1, 6, 18),
+    line_color: tuple[int, int, int, int] = (52, 214, 255, 22),
+) -> None:
+    draw_vertical_gradient(surface, top_color, bottom_color)
+    width, height = surface.get_size()
+    if width <= 0 or height <= 0:
+        return
+    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+    spacing = max(28, min(52, width // 18 if width > 0 else 32))
+    for y in range(0, height, spacing):
+        pygame.draw.line(overlay, line_color, (0, y), (width, y), 1)
+    for x in range(0, width, spacing):
+        pygame.draw.line(overlay, line_color, (x, 0), (x, height), 1)
+    pygame.draw.line(
+        overlay,
+        (92, 238, 255, 38),
+        (0, int(height * 0.72)),
+        (width, int(height * 0.62)),
+        2,
+    )
+    surface.blit(overlay, (0, 0))
+
+
+def draw_tron_panel(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    fill_color: tuple[int, int, int, int] = (3, 10, 28, 188),
+    glow_color: tuple[int, int, int, int] = (84, 220, 255, 42),
+    border_color: tuple[int, int, int] = (92, 238, 255),
+    border_radius: int = 14,
+) -> None:
+    panel = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(panel, fill_color, panel.get_rect(), border_radius=border_radius)
+    pygame.draw.rect(panel, glow_color, panel.get_rect(), 3, border_radius=border_radius)
+    pygame.draw.rect(panel, border_color, panel.get_rect(), 1, border_radius=border_radius)
+    surface.blit(panel, rect.topleft)
+
+
+def standard_menu_panel_rect(
+    surface: pygame.Surface,
+    *,
+    panel_w: int,
+    panel_h: int,
+    panel_top: int,
+    bottom_reserved: int,
+    bottom_margin: int = 8,
+) -> pygame.Rect:
+    width, height = surface.get_size()
+    rect = pygame.Rect(0, 0, panel_w, panel_h)
+    rect.x = (width - panel_w) // 2
+    rect.y = max(
+        panel_top,
+        min(
+            (height - panel_h) // 2,
+            height - bottom_reserved - panel_h - bottom_margin,
+        ),
+    )
+    return rect
+
+
+def default_menu_back_chip_rect(
+    *,
+    x: int = 18,
+    y: int = 18,
+    label: str = "Back",
+) -> pygame.Rect:
+    width = max(78, 22 + (len(str(label).strip()) * 10))
+    return pygame.Rect(x, y, width, 34)
+
+
+def draw_corner_chip(
+    surface: pygame.Surface,
+    *,
+    font: pygame.font.Font,
+    text: str,
+    x: int,
+    y: int,
+    fill_color: tuple[int, int, int, int] = (2, 18, 34, 210),
+    border_color: tuple[int, int, int] = (92, 238, 255),
+    text_color: Color3 = (212, 242, 255),
+    border_radius: int = 10,
+) -> pygame.Rect:
+    text_surf = font.render(text, True, text_color)
+    rect = pygame.Rect(x, y, text_surf.get_width() + 18, text_surf.get_height() + 10)
+    chip = pygame.Surface(rect.size, pygame.SRCALPHA)
+    pygame.draw.rect(chip, fill_color, chip.get_rect(), border_radius=border_radius)
+    pygame.draw.rect(chip, border_color, chip.get_rect(), 1, border_radius=border_radius)
+    surface.blit(chip, rect.topleft)
+    surface.blit(text_surf, (rect.x + 9, rect.y + 5))
+    return rect
+
+
+def draw_value_slider(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    fraction: float,
+    flash_strength: float = 0.0,
+    track_color: tuple[int, int, int] = (32, 56, 84),
+    fill_color: tuple[int, int, int] = (78, 222, 255),
+    border_color: tuple[int, int, int] = (124, 244, 255),
+) -> None:
+    clamped = max(0.0, min(1.0, float(fraction)))
+    flash = max(0.0, min(1.0, float(flash_strength)))
+    track = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(track, (*track_color, 220), track.get_rect(), border_radius=6)
+    pygame.draw.rect(track, border_color, track.get_rect(), 1, border_radius=6)
+    fill_width = max(6, int((rect.width - 2) * clamped))
+    fill_rect = pygame.Rect(1, 1, max(0, fill_width), max(0, rect.height - 2))
+    fill = (
+        min(255, int(fill_color[0] + (40 * flash))),
+        min(255, int(fill_color[1] + (30 * flash))),
+        min(255, int(fill_color[2] + (20 * flash))),
+        min(255, int(190 + (50 * flash))),
+    )
+    pygame.draw.rect(track, fill, fill_rect, border_radius=5)
+    knob_x = rect.x + max(0, min(rect.width - 8, fill_width - 4))
+    surface.blit(track, rect.topleft)
+    pygame.draw.rect(
+        surface,
+        (
+            min(255, int(224 + (24 * flash))),
+            min(255, int(248 + (7 * flash))),
+            255,
+        ),
+        pygame.Rect(knob_x, rect.y - 2, 8, rect.height + 4),
+        border_radius=4,
+    )

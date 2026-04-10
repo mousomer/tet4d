@@ -3,22 +3,21 @@ from __future__ import annotations
 import unittest
 
 from tet4d.engine.runtime.help_topics import (
-    clear_help_topic_caches,
     help_action_topic_registry,
     help_topics_for_context,
-    help_topic_for_action,
     help_topics_registry,
-    validate_help_topic_contract,
 )
 from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 
 
 class TestHelpTopics(unittest.TestCase):
     def setUp(self) -> None:
-        clear_help_topic_caches()
+        help_topics_registry.cache_clear()
+        help_action_topic_registry.cache_clear()
 
     def tearDown(self) -> None:
-        clear_help_topic_caches()
+        help_topics_registry.cache_clear()
+        help_action_topic_registry.cache_clear()
 
     def test_help_topics_registry_loads(self) -> None:
         registry = help_topics_registry()
@@ -30,17 +29,6 @@ class TestHelpTopics(unittest.TestCase):
         registry = help_action_topic_registry()
         mapped_actions = set(registry["action_topics"].keys())
         self.assertEqual(mapped_actions, set(binding_action_ids()))
-
-    def test_topic_lookup_for_known_action_returns_existing_topic(self) -> None:
-        topic_registry = help_topics_registry()
-        topic_ids = set(topic_registry["topic_ids"])
-        for action in binding_action_ids():
-            topic_id = help_topic_for_action(action)
-            self.assertIn(topic_id, topic_ids)
-
-    def test_contract_validation_passes(self) -> None:
-        ok, msg = validate_help_topic_contract()
-        self.assertTrue(ok, msg)
 
     def test_help_topics_for_context_are_filtered_and_sorted(self) -> None:
         topics = help_topics_for_context(dimension=3, context_label="Pause Menu")

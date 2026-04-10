@@ -15,7 +15,6 @@ if pygame is None:  # pragma: no cover - exercised in environments without pygam
 
 from tet4d.ui.pygame import front4d_render, frontend_nd_setup, frontend_nd_state
 from tet4d.ui.pygame import front4d_game
-from tet4d.ui.pygame import projection3d
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.projection3d import box_raw_corners, projection_cache_key
@@ -246,64 +245,6 @@ class TestFront4DRender(unittest.TestCase):
         self.assertLessEqual(zoom * (2.0 * max_abs_x), rect.width - 14.0 + 1e-6)
         self.assertLessEqual(zoom * (2.0 * max_abs_y), rect.height - 24.0 + 1e-6)
 
-    def test_draw_frame_cache_keeps_distinct_entries_for_different_w_sizes(
-        self,
-    ) -> None:
-        projection3d.clear_projection_lattice_cache()
-        try:
-            fonts = frontend_nd_setup.init_fonts()
-            screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
-            view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
-
-            cfg_w3 = GameConfigND(dims=(6, 12, 6, 3), gravity_axis=1, speed_level=1)
-            state_w3 = frontend_nd_state.create_initial_state(cfg_w3)
-            front4d_render.draw_game_frame(
-                screen, state_w3, view, fonts, grid_mode=GridMode.FULL
-            )
-            keys_after_w3 = projection3d.projection_lattice_cache_keys()
-            self.assertTrue(
-                any(
-                    isinstance(key, tuple)
-                    and key
-                    and key[0] == "4d-full"
-                    and len(key) > 11
-                    and key[8:12] == (6, 12, 6, 3)
-                    for key in keys_after_w3
-                )
-            )
-
-            cfg_w4 = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
-            state_w4 = frontend_nd_state.create_initial_state(cfg_w4)
-            front4d_render.draw_game_frame(
-                screen, state_w4, view, fonts, grid_mode=GridMode.FULL
-            )
-            keys_after_w4 = projection3d.projection_lattice_cache_keys()
-            self.assertTrue(
-                any(
-                    isinstance(key, tuple)
-                    and key
-                    and key[0] == "4d-full"
-                    and len(key) > 11
-                    and key[8:12] == (6, 12, 6, 3)
-                    for key in keys_after_w4
-                )
-            )
-            self.assertTrue(
-                any(
-                    isinstance(key, tuple)
-                    and key
-                    and key[0] == "4d-full"
-                    and len(key) > 11
-                    and key[8:12] == (6, 12, 6, 4)
-                    for key in keys_after_w4
-                )
-            )
-            self.assertGreater(
-                projection3d.projection_lattice_cache_size(), len(keys_after_w3)
-            )
-        finally:
-            projection3d.clear_projection_lattice_cache()
-
     def test_layer_region_is_cleared_when_layer_count_shrinks(self) -> None:
         cfg = GameConfigND(dims=(5, 4, 3, 2), gravity_axis=1, speed_level=1)
         state = frontend_nd_state.create_initial_state(cfg)
@@ -342,4 +283,3 @@ class TestFront4DRender(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -576,12 +576,6 @@ class LoopContext4D(PanelDragMixin):
         self.view.yaw_deg = yaw_deg
         self.view.pitch_deg = pitch_deg
         self._tutorial_observe_action("mouse_orbit")
-
-
-def handle_view_keydown(event: pygame.event.Event, view: LayerView3D) -> bool:
-    return handle_view_key(event.key, view)
-
-
 def run_game_loop(
     screen: pygame.Surface,
     cfg: GameConfigND,
@@ -748,7 +742,6 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
 
 
 
