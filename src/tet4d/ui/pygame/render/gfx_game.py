@@ -13,19 +13,30 @@ from tet4d.engine.gameplay.rotation_anim import RigidPieceOverlay2D
 from tet4d.engine.runtime.menu_config import ui_copy_section
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameAnimationState,
+    rotate_point,
+    transform_for_cell_fragment,
+    transform_shell_geometry,
+)
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
 )
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
-from tet4d.ui.pygame.ui_utils import fit_text
+from tet4d.ui.pygame.render.panel_utils import draw_game_over_banner
 from tet4d.ui.pygame.ui_utils import (
+    compute_slider_row_layout,
     draw_corner_chip,
     draw_tron_menu_background,
     draw_tron_panel,
     draw_value_slider,
+    draw_wrapped_label_value_lines,
     format_menu_title,
+    fit_text,
+    menu_slider_row_min_total_width,
     standard_menu_panel_rect,
+    wrapped_label_value_layout,
 )
 
 _SETUP_MENU_COPY = ui_copy_section("setup_menu")
@@ -212,6 +223,133 @@ def _draw_menu_header(
     return hint_y
 
 
+def _menu_row_height(
+    font: pygame.font.Font,
+    *,
+    label: str,
+    value_text: str,
+    value: object,
+    min_value: int,
+    max_value: int,
+    total_width: int,
+) -> int:
+    if max_value > min_value and isinstance(value, int):
+        return compute_slider_row_layout(
+            font,
+            label=label,
+            value=value_text,
+            total_width=total_width,
+        ).row_height
+    return wrapped_label_value_layout(
+        font,
+        label=label,
+        value=value_text,
+        total_width=total_width,
+    )[2]
+
+
+def _draw_menu_setting_row(
+    screen: pygame.Surface,
+    *,
+    font: pygame.font.Font,
+    option_x: int,
+    option_w: int,
+    option_y: int,
+    label_text: str,
+    value_text: str,
+    raw_value: object,
+    min_val: int,
+    max_val: int,
+    is_selected: bool,
+    flash_frames: int,
+    min_row_height: int,
+) -> int:
+    txt_color = TEXT_COLOR if not is_selected else HIGHLIGHT_COLOR
+    slider_layout = (
+        compute_slider_row_layout(
+            font,
+            label=label_text,
+            value=value_text,
+            total_width=option_w,
+        )
+        if max_val > min_val and isinstance(raw_value, int)
+        else None
+    )
+    if slider_layout is None:
+        label_lines, value_lines, row_height = wrapped_label_value_layout(
+            font,
+            label=label_text,
+            value=value_text,
+            total_width=option_w,
+        )
+    else:
+        label_lines = slider_layout.label_lines
+        value_lines = slider_layout.value_lines
+        row_height = slider_layout.row_height
+    row_height = max(int(min_row_height), row_height)
+    if slider_layout is None:
+        text_top_y = option_y
+        value_right = option_x + option_w
+    else:
+        text_top_y = option_y + slider_layout.text_top_padding
+        value_right = (
+            option_x
+            + slider_layout.label_width
+            + slider_layout.text_gap
+            + slider_layout.value_width
+        )
+
+    if is_selected:
+        highlight_rect = pygame.Rect(option_x - 8, option_y - 4, option_w + 16, row_height)
+        highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(
+            highlight_surf,
+            (255, 255, 255, 40),
+            highlight_surf.get_rect(),
+            border_radius=10,
+        )
+        screen.blit(highlight_surf, highlight_rect.topleft)
+        if flash_frames > 0:
+            flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+            pygame.draw.rect(
+                flash_surf,
+                (112, 236, 255, min(120, 42 + (flash_frames * 6))),
+                flash_surf.get_rect(),
+                border_radius=10,
+            )
+            screen.blit(flash_surf, highlight_rect.topleft)
+
+    draw_wrapped_label_value_lines(
+        screen,
+        font=font,
+        label_lines=label_lines,
+        value_lines=value_lines,
+        label_x=option_x,
+        value_right=value_right,
+        top_y=text_top_y,
+        label_color=txt_color,
+    )
+    if slider_layout is not None and isinstance(raw_value, int):
+        draw_value_slider(
+            screen,
+            rect=pygame.Rect(
+                option_x + option_w - slider_layout.slider_width,
+                option_y
+                + row_height
+                - slider_layout.row_bottom_padding
+                - slider_layout.slider_height,
+                slider_layout.slider_width,
+                slider_layout.slider_height,
+            ),
+            fraction=max(
+                0.0,
+                min(1.0, (int(raw_value) - int(min_val)) / max(1, int(max_val) - int(min_val))),
+            ),
+            flash_strength=max(0.0, min(1.0, flash_frames / 12.0)) if is_selected else 0.0,
+        )
+    return row_height
+
+
 def _draw_menu_settings_panel(
     screen: pygame.Surface,
     fonts: GfxFonts,
@@ -225,23 +363,49 @@ def _draw_menu_settings_panel(
     width, height = screen.get_size()
     panel_w = min(max(340, int(width * 0.6)), width - 24)
     if menu_fields:
-        labels = []
-        for label, attr_name, _min_val, _max_val in menu_fields:
-            value = getattr(settings, attr_name)
-            value_text = (
-                value_formatter(attr_name, value) if value_formatter else str(value)
+        panel_w = min(
+            width - 24,
+            max(panel_w, min(menu_slider_row_min_total_width() + 84, width - 24)),
+        )
+    if menu_fields:
+        labels = [
+            f"{label}:  "
+            + (value_formatter(attr_name, getattr(settings, attr_name)) if value_formatter else str(getattr(settings, attr_name)))
+            for label, attr_name, _min_val, _max_val in menu_fields
+        ]
+        row_heights = [
+            _menu_row_height(
+                fonts.menu_font,
+                label=label,
+                value_text=(value_formatter(attr_name, getattr(settings, attr_name)) if value_formatter else str(getattr(settings, attr_name))),
+                value=getattr(settings, attr_name),
+                min_value=min_val,
+                max_value=max_val,
+                total_width=panel_w - 56,
             )
-            labels.append(f"{label}:  {value_text}")
+            for label, attr_name, min_val, max_val in menu_fields
+        ]
     else:
         labels = [
             f"Board width:   {settings.width}",
             f"Board height:  {settings.height}",
             f"Speed level:   {settings.speed_level}   (1 = slow, 10 = fast)",
         ]
+        row_heights = [fonts.menu_font.get_height() + 18 for _ in labels]
 
-    panel_h_default = max(220, 86 + len(labels) * 44)
+    row_h_default = fonts.menu_font.get_height() + 18
     panel_max_h = max(140, height - panel_top - 126)
-    panel_h = min(panel_h_default, panel_max_h)
+    row_h = min(
+        max(row_heights) if row_heights else row_h_default,
+        max(
+            fonts.menu_font.get_height() + 8,
+            (panel_max_h - 40) // max(1, len(labels)),
+        ),
+    )
+    panel_h = min(
+        panel_max_h,
+        40 + sum(max(row_height, row_h) for row_height in row_heights),
+    )
     panel_rect = standard_menu_panel_rect(
         screen,
         panel_w=panel_w,
@@ -258,84 +422,34 @@ def _draw_menu_settings_panel(
     option_x = panel_x + 28
     option_w = panel_w - 56
     option_bottom = panel_y + panel_h - 16
-    row_h_default = fonts.menu_font.get_height() + 18
-    row_h = min(
-        row_h_default,
-        max(
-            fonts.menu_font.get_height() + 8,
-            (option_bottom - option_y) // max(1, len(labels)),
-        ),
-    )
 
     for i, text in enumerate(labels):
         if option_y + fonts.menu_font.get_height() > option_bottom:
             break
-        is_selected = i == selected_index
-        txt_color = TEXT_COLOR if not is_selected else HIGHLIGHT_COLOR
         label_text, _separator, value_text = text.partition(":")
         value_text = value_text.strip()
-        value_col_w = min(180, max(108, int(option_w * 0.31)))
-        label_w = max(80, option_w - value_col_w - 14)
-        text_surf = fonts.menu_font.render(
-            fit_text(fonts.menu_font, label_text.rstrip(":"), label_w),
-            True,
-            txt_color,
-        )
-        value_surf = fonts.menu_font.render(
-            fit_text(fonts.menu_font, value_text, value_col_w),
-            True,
-            txt_color,
-        )
-        text_rect = text_surf.get_rect(topleft=(option_x, option_y))
-
-        if is_selected:
-            highlight_rect = pygame.Rect(
-                option_x - 8, option_y - 4, option_w + 16, text_rect.height + 10
-            )
-            highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(
-                highlight_surf,
-                (255, 255, 255, 40),
-                highlight_surf.get_rect(),
-                border_radius=10,
-            )
-            screen.blit(highlight_surf, highlight_rect.topleft)
-            if flash_frames > 0:
-                flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-                pygame.draw.rect(
-                    flash_surf,
-                    (112, 236, 255, min(120, 42 + (flash_frames * 6))),
-                    flash_surf.get_rect(),
-                    border_radius=10,
-                )
-                screen.blit(flash_surf, highlight_rect.topleft)
-
-        screen.blit(text_surf, text_rect.topleft)
-        screen.blit(
-            value_surf,
-            (option_x + option_w - value_surf.get_width(), option_y),
-        )
         if menu_fields:
             _label, _attr_name, min_val, max_val = menu_fields[i]
             raw_value = getattr(settings, _attr_name)
-            if max_val > min_val and isinstance(raw_value, int):
-                draw_value_slider(
-                    screen,
-                    rect=pygame.Rect(
-                        option_x + option_w - value_col_w,
-                        option_y + fonts.menu_font.get_height() + 4,
-                        value_col_w,
-                        7,
-                    ),
-                    fraction=max(
-                        0.0,
-                        min(1.0, (int(raw_value) - int(min_val)) / max(1, int(max_val) - int(min_val))),
-                    ),
-                    flash_strength=max(0.0, min(1.0, flash_frames / 12.0))
-                    if is_selected
-                    else 0.0,
-                )
-        option_y += row_h
+        else:
+            raw_value = value_text
+            min_val = 0
+            max_val = 0
+        option_y += _draw_menu_setting_row(
+            screen,
+            font=fonts.menu_font,
+            option_x=option_x,
+            option_w=option_w,
+            option_y=option_y,
+            label_text=label_text.rstrip(":"),
+            value_text=value_text,
+            raw_value=raw_value,
+            min_val=min_val,
+            max_val=max_val,
+            is_selected=(i == selected_index),
+            flash_frames=flash_frames,
+            min_row_height=row_h,
+        )
 
     return panel_x, panel_y, panel_w, panel_h
 
@@ -1035,6 +1149,96 @@ def _draw_rigid_piece_overlay(
     )
 
 
+def _endgame_screen_points_2d(
+    board_offset: tuple[int, int],
+    points: Sequence[tuple[float, float, float]],
+) -> tuple[tuple[float, float], ...]:
+    return _to_screen_points_2d(
+        board_offset,
+        tuple((float(point[0]) + 0.5, float(point[1]) + 0.5) for point in points),
+    )
+
+
+def _endgame_cell_quad_points_2d(
+    *,
+    center: tuple[float, float, float],
+    rotation_deg: tuple[float, float, float],
+) -> tuple[tuple[float, float, float], ...]:
+    local_corners = (
+        (-0.5, -0.5, 0.0),
+        (0.5, -0.5, 0.0),
+        (0.5, 0.5, 0.0),
+        (-0.5, 0.5, 0.0),
+    )
+    return tuple(
+        (
+            center[0] + rotated[0],
+            center[1] + rotated[1],
+            0.0,
+        )
+        for rotated in (
+            rotate_point(point, rotation_deg) for point in local_corners
+        )
+    )
+
+
+def _draw_endgame_board_2d(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (20, 20, 50), board_rect)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    drag = float(endgame_animation.tuning.drag_per_second)
+
+    for shell_fragment in endgame_animation.shell_fragments:
+        transformed, alpha = transform_shell_geometry(
+            shell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        screen_points = _endgame_screen_points_2d(
+            board_offset,
+            (
+                (transformed[0][0], transformed[0][1], 0.0),
+                (transformed[1][0], transformed[1][1], 0.0),
+            ),
+        )
+        pygame.draw.line(
+            overlay,
+            (*GRID_COLOR, max(0, min(255, int(round(220 * alpha))))),
+            screen_points[0],
+            screen_points[1],
+            2,
+        )
+
+    for cell_fragment in endgame_animation.cell_fragments:
+        position, rotation_deg, alpha = transform_for_cell_fragment(
+            cell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        quad_points = _endgame_screen_points_2d(
+            board_offset,
+            _endgame_cell_quad_points_2d(center=position, rotation_deg=rotation_deg),
+        )
+        color = color_for_cell(int(cell_fragment.color_id))
+        fill_alpha = max(0, min(255, int(round(255 * alpha))))
+        outline_alpha = max(0, min(255, int(round(220 * alpha))))
+        shadow_points = tuple((x + 2.0, y + 2.0) for x, y in quad_points)
+        pygame.draw.polygon(overlay, (0, 0, 0, min(140, fill_alpha)), shadow_points)
+        pygame.draw.polygon(overlay, (*color, fill_alpha), quad_points)
+        pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), quad_points, 2)
+
+    surface.blit(overlay, (0, 0))
+
+
 def draw_board(
     surface: pygame.Surface,
     state: GameState,
@@ -1043,6 +1247,7 @@ def draw_board(
     overlay_transparency: float = 0.25,
     clear_effect: Optional[ClearEffect2D] = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
+    endgame_animation: EndgameAnimationState | None = None,
 ) -> None:
     """Draw grid + locked cells + active piece."""
     ox, oy = board_offset
@@ -1050,6 +1255,14 @@ def draw_board(
 
     # Board background
     board_rect = pygame.Rect(ox, oy, w * CELL_SIZE, h * CELL_SIZE)
+    if endgame_animation is not None and endgame_animation.frozen_render_active:
+        _draw_endgame_board_2d(
+            surface,
+            board_rect=board_rect,
+            board_offset=board_offset,
+            endgame_animation=endgame_animation,
+        )
+        return
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
     _draw_grid_variant(surface, board_rect, state, ox, oy, w, h, grid_mode)
     _draw_locked_cells(
@@ -1131,10 +1344,17 @@ def draw_game_frame(
     overlay_transparency: float = 0.25,
     clear_effect: Optional[ClearEffect2D] = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
+    endgame_animation: EndgameAnimationState | None = None,
 ) -> None:
     """Single call to draw the whole game frame."""
     screen.fill(BG_COLOR)
     board_offset, panel_offset = compute_game_layout(screen, cfg)
+    board_rect = pygame.Rect(
+        board_offset[0],
+        board_offset[1],
+        cfg.width * CELL_SIZE,
+        cfg.height * CELL_SIZE,
+    )
     draw_board(
         screen,
         state,
@@ -1143,7 +1363,14 @@ def draw_game_frame(
         overlay_transparency=overlay_transparency,
         clear_effect=clear_effect,
         active_piece_overlay=active_piece_overlay,
+        endgame_animation=endgame_animation,
     )
+    if state.game_over:
+        draw_game_over_banner(
+            screen,
+            rect=board_rect,
+            fonts=fonts,
+        )
     draw_side_panel(
         screen,
         state,

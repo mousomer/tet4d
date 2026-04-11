@@ -11,6 +11,8 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 )
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings, play_sfx
 from tet4d.ui.pygame.ui_utils import (
+    SliderRowLayout,
+    compute_slider_row_layout,
     default_menu_back_chip_rect,
     draw_corner_chip,
     draw_fitted_text_line,
@@ -75,6 +77,7 @@ def _draw_wrapped_settings_row(
     selected: bool,
     slider_fraction: float | None = None,
     flash_strength: float = 0.0,
+    slider_layout: SliderRowLayout | None = None,
 ) -> None:
     row_rect = pygame.Rect(panel_x + 14, line_y - 5, panel_w - 28, row_height)
     if selected:
@@ -93,18 +96,20 @@ def _draw_wrapped_settings_row(
         value_lines=value_lines,
         label_x=panel_x + 22,
         value_right=panel_x + panel_w - 22,
-        top_y=line_y,
+        top_y=line_y + (slider_layout.text_top_padding if slider_layout is not None else 0),
         label_color=color,
     )
-    if slider_fraction is not None:
-        slider_w = min(180, max(108, int(panel_w * 0.31)))
+    if slider_fraction is not None and slider_layout is not None:
         draw_value_slider(
             screen,
             rect=pygame.Rect(
-                panel_x + panel_w - 22 - slider_w,
-                line_y + row_height - 11,
-                slider_w,
-                7,
+                panel_x + panel_w - 22 - slider_layout.slider_width,
+                line_y
+                + row_height
+                - slider_layout.row_bottom_padding
+                - slider_layout.slider_height,
+                slider_layout.slider_width,
+                slider_layout.slider_height,
             ),
             fraction=slider_fraction,
             flash_strength=flash_strength,
@@ -242,7 +247,8 @@ def _draw_unified_settings_menu(
     title_y = 44
     draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
-    panel_w = min(700, max(360, width - 40))
+    panel_max_w = min(width - 40, 760)
+    panel_w = panel_max_w
     line_h = fonts.hint_font.get_height() + 3
     panel_top = title_y + title.get_height() + 18
     bottom_lines = 2 + (1 if state.status else 0)
@@ -320,12 +326,28 @@ def _draw_unified_settings_menu(
         selected = idx == selected_row_idx
         color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
         value = _unified_value_text(state, row_key)
-        label_lines, value_lines, row_height = wrapped_label_value_layout(
-            fonts.menu_font,
-            label=label,
-            value=value,
-            total_width=panel_w,
+        slider_fraction = _slider_fraction_for_row(state, row_key)
+        slider_layout = (
+            compute_slider_row_layout(
+                fonts.menu_font,
+                label=label,
+                value=value,
+                total_width=panel_w - 44,
+            )
+            if slider_fraction is not None
+            else None
         )
+        if slider_layout is not None:
+            label_lines = slider_layout.label_lines
+            value_lines = slider_layout.value_lines
+            row_height = slider_layout.row_height
+        else:
+            label_lines, value_lines, row_height = wrapped_label_value_layout(
+                fonts.menu_font,
+                label=label,
+                value=value,
+                total_width=panel_w,
+            )
         _draw_wrapped_settings_row(
             screen,
             fonts=fonts,
@@ -337,12 +359,13 @@ def _draw_unified_settings_menu(
             row_height=row_height,
             color=color,
             selected=selected,
-            slider_fraction=_slider_fraction_for_row(state, row_key),
+            slider_fraction=slider_fraction,
             flash_strength=(
                 max(0.0, min(1.0, state.flash_frames / 12.0))
                 if state.flash_row_key == row_key
                 else 0.0
             ),
+            slider_layout=slider_layout,
         )
         y += row_height + max(6, item_step - row_height)
 

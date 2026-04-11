@@ -40,10 +40,11 @@ Primary implementation and maintenance files:
 17. `src/tet4d/ui/pygame/menu/setup_menu_runner.py`
 18. `src/tet4d/engine/runtime/menu_config.py`
 19. `src/tet4d/engine/runtime/help_topics.py`
-20. `config/menu/defaults.json`
-21. `config/menu/structure.json`
-22. `config/help/topics.json`
-23. `config/help/action_map.json`
+20. `src/tet4d/ui/pygame/ui_utils.py`
+21. `config/menu/defaults.json`
+22. `config/menu/structure.json`
+23. `config/help/topics.json`
+24. `config/help/action_map.json`
 
 ## 2. Design Goals
 
@@ -201,6 +202,14 @@ Pause Menu
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked
    title/subtitle headers.
+5. Slider rows must use one shared layout contract that reserves explicit
+   space for label text, right-aligned value text, and the slider track
+   itself; enlarging the slider must not be done as a per-screen geometry
+   tweak.
+6. Slider labels and values must remain fully visible in the supported compact
+   launcher/setup/pause/settings shells; if the larger slider requires more
+   room, the panel or row allocation must widen or grow vertically rather than
+   clipping text.
 
 ## 6. Navigation and Interaction Model
 

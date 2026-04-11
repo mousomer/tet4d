@@ -12,6 +12,14 @@ from tet4d.engine.tutorial.api import (
     tutorial_runtime_restart_runtime,
     tutorial_runtime_skip_runtime,
 )
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameSnapshot,
+    TERMINAL_PHASE_GAME_OVER_COMPLETE,
+    TERMINAL_PHASE_PLAYING,
+    endgame_prompt_ready,
+    endgame_sfx_events_between,
+    ensure_endgame_animation,
+)
 from tet4d.ui.pygame.launch.leaderboard_menu import maybe_record_leaderboard_session
 from tet4d.ui.pygame.runtime_ui.tutorial_overlay import draw_tutorial_overlay
 
@@ -168,6 +176,9 @@ def _advance_simulation_step(
     gravity_interval_ms: int,
     tutorial_step_pause_active: bool = False,
 ) -> None:
+    if getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING) != TERMINAL_PHASE_PLAYING:
+        loop.gravity_accumulator = 0
+        return
     if tutorial_step_pause_active:
         loop.gravity_accumulator = 0
         return
@@ -190,10 +201,39 @@ def _update_loop_effects(
     loop: Any,
     dt: int,
     spawn_clear_animation: Callable[[Any, int], tuple[Any, int]],
+    capture_endgame_snapshot: Callable[[], EndgameSnapshot],
     play_clear_sfx: Callable[[], None],
     play_game_over_sfx: Callable[[], None],
+    play_endgame_sfx: Callable[[str], None],
     step_view: Callable[[float], None],
 ) -> Any:
+    if loop.state.game_over and not loop.was_game_over:
+        play_game_over_sfx()
+    loop.was_game_over = loop.state.game_over
+    loop.endgame_animation = ensure_endgame_animation(
+        getattr(loop, "endgame_animation", None),
+        game_over=bool(loop.state.game_over),
+        snapshot_factory=capture_endgame_snapshot,
+    )
+    if loop.endgame_animation is not None:
+        previous_elapsed_ms = float(loop.endgame_animation.elapsed_ms)
+        loop.endgame_animation.step(float(dt))
+        for event_name in endgame_sfx_events_between(
+            previous_elapsed_ms=previous_elapsed_ms,
+            current_elapsed_ms=float(loop.endgame_animation.elapsed_ms),
+            tuning=loop.endgame_animation.tuning,
+        ):
+            play_endgame_sfx(event_name)
+        loop.terminal_phase = loop.endgame_animation.phase
+        loop.clear_anim = None
+        loop.last_lines_cleared = loop.state.lines_cleared
+        return None
+    loop.terminal_phase = (
+        TERMINAL_PHASE_GAME_OVER_COMPLETE
+        if loop.state.game_over
+        else TERMINAL_PHASE_PLAYING
+    )
+
     new_clear_anim, loop.last_lines_cleared = spawn_clear_animation(
         loop.state,
         loop.last_lines_cleared,
@@ -201,10 +241,6 @@ def _update_loop_effects(
     if new_clear_anim is not None:
         loop.clear_anim = new_clear_anim
         play_clear_sfx()
-
-    if loop.state.game_over and not loop.was_game_over:
-        play_game_over_sfx()
-    loop.was_game_over = loop.state.game_over
 
     step_view(dt)
     loop.clear_anim = _tick_animation(loop.clear_anim, dt)
@@ -338,10 +374,12 @@ def run_nd_loop(
     run_pause_menu: Callable[..., tuple[str, pygame.Surface]],
     run_help_menu: Callable[..., pygame.Surface],
     spawn_clear_animation: Callable[[Any, int], tuple[Any, int]],
+    capture_endgame_snapshot: Callable[[], EndgameSnapshot],
     step_view: Callable[[float], None],
     draw_frame: Callable[[pygame.Surface, Any], None],
     play_clear_sfx: Callable[[], None],
     play_game_over_sfx: Callable[[], None],
+    play_endgame_sfx: Callable[[str], None],
     event_handler: Callable[[pygame.event.Event], None] | None = None,
     tutorial_sync: Callable[[int], bool] | None = None,
 ) -> bool:
@@ -379,6 +417,7 @@ def run_nd_loop(
                 topology_mode=str(loop.state.config.topology_mode),
                 kick_level=str(loop.state.config.kick_level),
                 exploration_mode=bool(loop.state.config.exploration_mode),
+                draw_background=lambda: draw_frame(screen, None),
             )
         except Exception:
             return
@@ -441,8 +480,10 @@ def run_nd_loop(
             loop=loop,
             dt=dt,
             spawn_clear_animation=spawn_clear_animation,
+            capture_endgame_snapshot=capture_endgame_snapshot,
             play_clear_sfx=play_clear_sfx,
             play_game_over_sfx=play_game_over_sfx,
+            play_endgame_sfx=play_endgame_sfx,
             step_view=step_view,
         )
 
@@ -454,6 +495,13 @@ def run_nd_loop(
             active_overlay=active_overlay,
             loop=loop,
         )
-        if loop.state.game_over and not endgame_session_handled:
+        if (
+            not endgame_session_handled
+            and (
+                endgame_prompt_ready(getattr(loop, "endgame_animation", None))
+                or getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING)
+                == TERMINAL_PHASE_GAME_OVER_COMPLETE
+            )
+        ):
             _record_session("game_over")
             endgame_session_handled = True

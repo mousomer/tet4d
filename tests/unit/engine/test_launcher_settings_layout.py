@@ -4,11 +4,17 @@ import unittest
 
 import pygame
 
+from tet4d.engine.runtime.menu_config import setup_fields_for_settings
 from tet4d.ui.pygame.launch import launcher_settings
 from tet4d.ui.pygame.launch import settings_hub_model
+from tet4d.ui.pygame.frontend_nd_setup import GameSettingsND, _menu_value_text
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.ui_utils import text_fits, wrapped_label_value_layout
+from tet4d.ui.pygame.ui_utils import (
+    compute_slider_row_layout,
+    menu_slider_row_min_total_width,
+    text_fits,
+)
 
 
 class TestLauncherSettingsLayout(unittest.TestCase):
@@ -22,8 +28,8 @@ class TestLauncherSettingsLayout(unittest.TestCase):
     def tearDownClass(cls) -> None:
         pygame.quit()
 
-    def test_unified_settings_rows_fit_compact_supported_width(self) -> None:
-        fonts = type(
+    def _fonts(self):
+        return type(
             "_Fonts",
             (),
             {
@@ -32,43 +38,105 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                 "hint_font": pygame.font.Font(None, 20),
             },
         )()
+
+    def _assert_slider_layout_fits(
+        self,
+        *,
+        font: pygame.font.Font,
+        label: str,
+        value: str,
+        total_width: int,
+    ) -> None:
+        layout = compute_slider_row_layout(
+            font,
+            label=label,
+            value=value,
+            total_width=total_width,
+        )
+        self.assertGreaterEqual(layout.slider_height, 12)
+        self.assertGreaterEqual(layout.slider_width, 176)
+        self.assertGreater(layout.row_height, font.get_height() + layout.slider_height)
+        consumed_width = (
+            layout.label_width
+            + layout.slider_width
+            + layout.slider_gap
+            + (
+                layout.value_width + layout.text_gap
+                if layout.value_width > 0
+                else 0
+            )
+        )
+        self.assertLessEqual(consumed_width, total_width)
+        for line in layout.label_lines:
+            self.assertTrue(text_fits(font, line, layout.label_width))
+        for line in layout.value_lines:
+            self.assertTrue(text_fits(font, line, layout.value_width))
+
+    def test_shared_slider_layout_uses_larger_geometry(self) -> None:
+        fonts = self._fonts()
+        layout = compute_slider_row_layout(
+            fonts.menu_font,
+            label="Locked-cell transparency",
+            value="25%",
+            total_width=520,
+        )
+        self.assertGreaterEqual(layout.slider_width, 176)
+        self.assertEqual(layout.slider_height, 12)
+        self.assertGreaterEqual(layout.row_height, 54)
+
+    def test_unified_settings_slider_rows_fit_compact_supported_width(self) -> None:
+        fonts = self._fonts()
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
         )
         width = 960
-        panel_w = min(700, max(360, width - 40))
-        panel_x = (width - panel_w) // 2
-        label_left = panel_x + 22
-        label_right = panel_x + panel_w - 22
+        panel_w = min(width - 40, 760)
+        total_width = panel_w - 44
 
         for row_kind, label, row_key in settings_hub_model._UNIFIED_SETTINGS_ROWS:
             if row_kind != "item":
                 continue
+            if launcher_settings._slider_fraction_for_row(state, row_key) is None:
+                continue
             value = launcher_settings._unified_value_text(state, row_key)
-            label_lines, value_lines, _row_height = (
-                wrapped_label_value_layout(
-                    fonts.menu_font,
+            with self.subTest(label=label):
+                self._assert_slider_layout_fits(
+                    font=fonts.menu_font,
                     label=label,
                     value=value,
-                    total_width=panel_w,
+                    total_width=total_width,
                 )
-            )
-            value_draw_width = (
-                max(fonts.menu_font.size(line)[0] for line in value_lines)
-                if value_lines
-                else 0
-            )
-            value_x = label_right - value_draw_width
-            label_width = max(80, value_x - label_left - 10 if value else panel_w - 44)
-            with self.subTest(label=label):
-                self.assertGreater(len(label_lines), 0)
-                for line in label_lines:
-                    self.assertTrue(text_fits(fonts.menu_font, line, label_width))
-                for line in value_lines:
-                    self.assertTrue(text_fits(fonts.menu_font, line, int(panel_w * 0.34)))
 
-    def test_inline_game_settings_advanced_rows_fit_compact_supported_width(self) -> None:
+    def test_setup_slider_rows_fit_compact_supported_width(self) -> None:
+        fonts = self._fonts()
+        settings = GameSettingsND()
+        width = 960
+        panel_w = min(
+            width - 24,
+            max(
+                360,
+                int(width * 0.65),
+                min(menu_slider_row_min_total_width() + 76, width - 24),
+            ),
+        )
+        total_width = panel_w - 48
+        for label, attr_name, min_value, max_value in setup_fields_for_settings(4):
+            if max_value <= min_value:
+                continue
+            value = getattr(settings, attr_name)
+            if not isinstance(value, int):
+                continue
+            value_text = _menu_value_text(4, attr_name, value)
+            with self.subTest(label=label):
+                self._assert_slider_layout_fits(
+                    font=fonts.menu_font,
+                    label=label,
+                    value=value_text,
+                    total_width=total_width,
+                )
+
+    def test_inline_game_settings_slider_rows_fit_compact_supported_width(self) -> None:
         fonts = type(
             "_Fonts",
             (),
@@ -83,35 +151,27 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             display_settings=DisplaySettings(),
         )
         width = 960
-        panel_w = min(760, max(420, width - 40))
-        value_width = int(panel_w * 0.34)
-        advanced_rows = {
-            "rotation_animation_mode",
-            "kick_level_index",
-            "rotation_animation_duration_ms_2d",
-            "rotation_animation_duration_ms_nd",
-            "translation_animation_duration_ms",
-            "auto_speedup_enabled",
-            "lines_per_level",
-            "topology_cache_measure",
-            "topology_cache_clear",
-        }
+        panel_w = min(
+            width - 24,
+            max(
+                max(340, int(width * 0.6)),
+                min(menu_slider_row_min_total_width() + 84, width - 24),
+            ),
+        )
+        total_width = panel_w - 56
         for kind, label, row_key in settings_hub_model.settings_rows_for_category("gameplay"):
-            if kind != "item" or row_key not in advanced_rows:
+            if kind != "item":
+                continue
+            if launcher_settings._slider_fraction_for_row(state, row_key) is None:
                 continue
             value = launcher_settings._unified_value_text(state, row_key)
-            label_lines, value_lines, _row_height = wrapped_label_value_layout(
-                fonts.menu_font,
-                label=label,
-                value=value,
-                total_width=panel_w,
-            )
             with self.subTest(label=label):
-                self.assertGreater(len(label_lines), 0)
-                for line in label_lines:
-                    self.assertTrue(text_fits(fonts.menu_font, line, panel_w - 44))
-                for line in value_lines:
-                    self.assertTrue(text_fits(fonts.menu_font, line, value_width))
+                self._assert_slider_layout_fits(
+                    font=fonts.menu_font,
+                    label=label,
+                    value=value,
+                    total_width=total_width,
+                )
 
     def test_audio_category_rows_exclude_other_settings_sections(self) -> None:
         rows = settings_hub_model.settings_rows_for_category("audio")

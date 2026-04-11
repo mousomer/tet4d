@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-10  
+Updated: 2026-04-11  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -66,6 +66,10 @@ settings/keybindings shell now has one aligned title/back/panel style, and
 future tweaks should stay incremental, keep subtitle-free headers, keep
 bounded numeric rows on sliders, and avoid drifting translation labels or the
 gameplay-owned transparency setting back toward the older split layout.
+Parallel slider-row follow-up (2026-04-11): larger menu sliders now rely on a
+shared config-backed label/value/track allocation contract, so future slider
+size changes must keep launcher/setup/in-game compact-width text visibility
+aligned instead of reintroducing per-screen row geometry drift.
 
 - Open work:
   1. continue structural simplification of
@@ -140,6 +144,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-10:
 
+- dedicated post-terminal endgame animation phase so `2D`, projected `3D`,
+  and projected `4D` gameplay now freeze a final board snapshot, drive locked
+  cells and shell/frame fragments from deterministic seeded fragment state
+  instead of live-board mutation, and keep leaderboard/session completion tied
+  to the completed terminal transition rather than the first raw `game_over`
+  tick
 - leaderboard contract cleanup so leaderboard prompts now trigger only on
   completed standard-play `game_over` transitions, never from explorer mode or
   quit/menu/restart exits, and persisted score storage now keeps the top `10`
@@ -147,6 +157,20 @@ Completed on 2026-04-10:
 - projected `3D` / `4D` active-piece occlusion pass so board gridlines and
   board-box edges now resolve against the active piece per projected fragment
   from screen overlap plus projected depth instead of one global draw-order
+
+Completed on 2026-04-11:
+
+- leaderboard registration now stays in the post-terminal gameplay flow as a
+  compact modal overlay on top of the existing endgame surface instead of
+  taking over the screen as a dedicated full-page prompt, while preserving the
+  same form-state and persistence authority
+- shared menu-slider layout correction so launcher, setup, and in-game slider
+  rows now use one larger config-backed slider geometry contract with explicit
+  label/value/track allocation, preventing clipping in supported compact menu
+  shells instead of relying on per-screen width guesses
+- post-terminal cleanup follow-up so the helper side panel no longer repeats a
+  separate `GAME OVER` label and the frozen endgame fragments remain visible
+  indefinitely instead of fading away after a fixed lifetime
   assumption, with shared primitive emission/resolution coverage and `2D`
   intentionally left on its simpler path
 

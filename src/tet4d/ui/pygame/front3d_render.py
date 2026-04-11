@@ -12,10 +12,17 @@ from tet4d.ui.pygame.projection3d import (
     Face,
     Point2,
     ProjectedFacePrimitive,
+    build_oriented_cube_faces,
     color_for_cell,
     draw_gradient_background,
     projection_cache_key,
     projection_helper_cache_key,
+)
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameAnimationState,
+    EndgameRenderContext,
+    transform_for_cell_fragment,
+    transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
@@ -44,6 +51,7 @@ from tet4d.ui.pygame.render.grid_mode_render import (
     draw_projected_line_buckets,
 )
 from tet4d.ui.pygame.render.panel_utils import (
+    draw_game_over_banner,
     draw_unified_game_side_panel,
 )
 from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
@@ -176,6 +184,20 @@ def _projection_params(camera: Camera3D) -> ProjectionParams3D:
         cam_dist=camera.cam_dist,
         projective_strength=camera.projective_strength,
         projective_bias=camera.projective_bias,
+    )
+
+
+def _projection_params_from_context(
+    context: EndgameRenderContext,
+) -> ProjectionParams3D:
+    return ProjectionParams3D(
+        projection_name=str(context.projection_name),
+        yaw_deg=float(context.yaw_deg),
+        pitch_deg=float(context.pitch_deg),
+        zoom=float(context.zoom),
+        cam_dist=float(context.cam_dist),
+        projective_strength=float(context.projective_strength),
+        projective_bias=float(context.projective_bias),
     )
 
 
@@ -568,6 +590,75 @@ def _draw_board_3d(
     )
 
 
+def _draw_endgame_board_3d(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    snapshot = endgame_animation.snapshot
+    context = snapshot.render_context
+    dims = snapshot.render_dims
+    center_px = (board_rect.centerx, board_rect.centery)
+    params = _projection_params_from_context(context)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    drag = float(endgame_animation.tuning.drag_per_second)
+
+    for shell_fragment in endgame_animation.shell_fragments:
+        transformed, alpha = transform_shell_geometry(
+            shell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        start = project_raw_point_helper(transformed[0], dims, params, center_px)
+        end = project_raw_point_helper(transformed[1], dims, params, center_px)
+        if start is None or end is None:
+            continue
+        pygame.draw.line(
+            overlay,
+            (*GRID_COLOR, max(0, min(255, int(round(210 * alpha))))),
+            start,
+            end,
+            2,
+        )
+
+    fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
+    for cell_fragment in endgame_animation.cell_fragments:
+        position, rotation_deg, alpha = transform_for_cell_fragment(
+            cell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        faces = build_oriented_cube_faces(
+            center=position,
+            color=color_for_cell_3d(cell_fragment.color_id),
+            project_raw=lambda raw: project_raw_point_helper(
+                raw,
+                dims,
+                params,
+                center_px,
+            ),
+            transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
+            active=True,
+            rotation_deg=rotation_deg,
+        )
+        fragment_faces.extend(
+            (depth, polygon, color, alpha) for depth, polygon, color, _active in faces
+        )
+
+    fragment_faces.sort(key=lambda item: item[0], reverse=True)
+    for _depth, polygon, color, alpha in fragment_faces:
+        fill_alpha = max(0, min(255, int(round(255 * alpha))))
+        outline_alpha = max(0, min(255, int(round(230 * alpha))))
+        pygame.draw.polygon(overlay, (*color, fill_alpha), polygon)
+        pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), polygon, 2)
+    surface.blit(overlay, (0, 0))
+
+
 def _draw_side_panel(
     surface: pygame.Surface,
     state: GameStateND,
@@ -577,10 +668,26 @@ def _draw_side_panel(
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
     overlay_transparency: float = 0.25,
+    frozen_context: EndgameRenderContext | None = None,
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    yaw_deg = (
+        float(frozen_context.yaw_deg)
+        if frozen_context is not None
+        else float(camera.yaw_deg)
+    )
+    pitch_deg = (
+        float(frozen_context.pitch_deg)
+        if frozen_context is not None
+        else float(camera.pitch_deg)
+    )
+    zoom_value = (
+        float(frozen_context.zoom)
+        if frozen_context is not None
+        else float(camera.zoom)
+    )
     extra_state_lines = [
         f"Dims: {state.config.dims}",
         f"Score mod: x{state.score_multiplier:.2f}",
@@ -589,9 +696,9 @@ def _draw_side_panel(
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
         f"Grid: {grid_mode_label(grid_mode)}",
-        f"Yaw: {camera.yaw_deg:.1f}",
-        f"Pitch: {camera.pitch_deg:.1f}",
-        f"Zoom: {camera.zoom:.1f}",
+        f"Yaw: {yaw_deg:.1f}",
+        f"Pitch: {pitch_deg:.1f}",
+        f"Zoom: {zoom_value:.1f}",
     ]
     draw_unified_game_side_panel(
         surface,
@@ -652,6 +759,7 @@ def draw_game_frame(
     active_overlay: ActiveOverlay3D | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
+    endgame_animation: EndgameAnimationState | None = None,
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     window_w, window_h = screen.get_size()
@@ -672,19 +780,37 @@ def draw_game_frame(
         window_h - 2 * MARGIN,
     )
 
-    _auto_fit_orthographic_zoom(camera, state.config.dims, board_rect)
-
     pygame.draw.rect(screen, (16, 20, 40), board_rect, border_radius=10)
-    _draw_board_3d(
-        screen,
-        state,
-        camera,
-        board_rect,
-        grid_mode=grid_mode,
-        clear_anim=clear_anim,
-        active_overlay=active_overlay,
-        overlay_transparency=overlay_transparency,
+    frozen_context = (
+        endgame_animation.snapshot.render_context
+        if endgame_animation is not None and endgame_animation.frozen_render_active
+        else None
     )
+    if endgame_animation is not None and endgame_animation.frozen_render_active:
+        _draw_endgame_board_3d(
+            screen,
+            board_rect=board_rect,
+            endgame_animation=endgame_animation,
+        )
+    else:
+        _auto_fit_orthographic_zoom(camera, state.config.dims, board_rect)
+        _draw_board_3d(
+            screen,
+            state,
+            camera,
+            board_rect,
+            grid_mode=grid_mode,
+            clear_anim=clear_anim,
+            active_overlay=active_overlay,
+            overlay_transparency=overlay_transparency,
+        )
+    if state.game_over:
+        draw_game_over_banner(
+            screen,
+            rect=board_rect,
+            fonts=fonts,
+            subtitle="Frozen board fragments dispersing in projection space",
+        )
     _draw_side_panel(
         screen,
         state,
@@ -694,6 +820,7 @@ def draw_game_frame(
         grid_mode=grid_mode,
         bot_lines=bot_lines,
         overlay_transparency=overlay_transparency,
+        frozen_context=frozen_context,
     )
 
 

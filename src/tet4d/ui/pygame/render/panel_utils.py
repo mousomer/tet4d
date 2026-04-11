@@ -25,6 +25,43 @@ def _draw_panel(
     surface.blit(panel, rect.topleft)
 
 
+def draw_game_over_banner(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    fonts,
+    subtitle: str = "Final board snapshot breaking apart",
+) -> None:
+    banner_w = min(rect.width - 24, max(240, int(rect.width * 0.72)))
+    banner_h = max(72, fonts.title_font.get_height() + fonts.hint_font.get_height() + 24)
+    banner_rect = pygame.Rect(0, 0, banner_w, banner_h)
+    banner_rect.midtop = (rect.centerx, rect.y + 14)
+    banner = pygame.Surface((banner_rect.width, banner_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(banner, (18, 8, 18, 196), banner.get_rect(), border_radius=18)
+    pygame.draw.rect(banner, (255, 104, 112, 232), banner.get_rect(), 2, border_radius=18)
+    title = render_text_cached(
+        font=fonts.title_font,
+        text="GAME OVER",
+        color=(255, 232, 236),
+    )
+    subtitle_surf = render_text_cached(
+        font=fonts.hint_font,
+        text=str(subtitle),
+        color=(255, 188, 196),
+    )
+    title_pos = (
+        (banner_rect.width - title.get_width()) // 2,
+        8,
+    )
+    subtitle_pos = (
+        (banner_rect.width - subtitle_surf.get_width()) // 2,
+        title_pos[1] + title.get_height() - 2,
+    )
+    banner.blit(title, title_pos)
+    banner.blit(subtitle_surf, subtitle_pos)
+    surface.blit(banner, banner_rect.topleft)
+
+
 def _merge_summary_into_main_group(
     *,
     header_lines: Sequence[str],
@@ -185,11 +222,10 @@ def draw_unified_game_side_panel(
         hint=meter_hint,
     )
     controls_top = y + 4
-    reserve_bottom = 26 if game_over else 0
     controls_rect = _compute_controls_rect(
         panel_rect=panel_rect,
         controls_top=controls_top,
-        reserve_bottom=reserve_bottom,
+        reserve_bottom=0,
     )
     draw_grouped_control_helper(
         surface,
@@ -198,10 +234,3 @@ def draw_unified_game_side_panel(
         panel_font=fonts.panel_font,
         hint_font=fonts.hint_font,
     )
-    if game_over:
-        over = render_text_cached(
-            font=fonts.panel_font,
-            text="GAME OVER",
-            color=(255, 80, 80),
-        )
-        surface.blit(over, (panel_rect.x + 12, panel_rect.bottom - 26))

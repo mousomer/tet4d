@@ -50,11 +50,27 @@ not a historical ledger. Long historical migration detail belongs in
   `Left` / `Right` / `Forward` / `Backward` / `Down`, and the default overlay
   transparency control now lives under `Settings -> Game` instead of
   `Settings -> Display`.
+- Shared menu-slider layout follow-up (2026-04-11): slider-bearing launcher,
+  setup, and in-game settings rows now share one config-backed row contract
+  for label/value/track allocation, the slider track/thumb geometry is larger,
+  and compact supported menu widths now grow row/panel allocation instead of
+  clipping slider labels or values.
 - Leaderboard recording contract follow-up (2026-04-10): leaderboard writes now
   happen only on completed standard-play `game_over` transitions, never from
   explorer-mode runs or quit/menu/restart exits, and persisted score trimming
   now keeps the top `10` entries per gameplay dimension instead of one mixed
   global cap.
+- Post-terminal endgame animation follow-up (2026-04-10): gameplay now enters a
+  dedicated `playing` -> `game_over_animating` runtime phase on terminal loss,
+  freezes the final board into a seeded endgame snapshot instead of mutating
+  live gameplay state, and renders deterministic locked-cell plus shell/frame
+  fragments through the simple 2D path and the shared projected 3D/4D
+  renderers as a persistent non-fading post-terminal surface.
+- Leaderboard modal follow-up (2026-04-11): qualifying leaderboard registration
+  now opens as a compact modal overlay over the existing post-terminal gameplay
+  surface instead of repainting a dedicated full-screen registration page, and
+  the live registration form/persistence authority remains centralized in the
+  leaderboard runtime while background gameplay input stays suppressed.
 - Projected active-piece occlusion follow-up (2026-04-10): projected `3D` /
   `4D` board gridlines and board-box edges now resolve against the active piece
   per projected fragment rather than by one global draw-order pass, the shared
@@ -163,16 +179,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 199` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 200` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 3.24` (`low`)
+- `tech_debt.score = 3.41` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.05`
-2. `code_balance = 1.19`
+1. `delivery_size_pressure = 2.09`
+2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_canonical_ownership -->
@@ -364,10 +380,10 @@ Top 8 live Python hotspots by real LOC:
 2. `scripts/arch_metrics.py`: `1887` real LOC
 3. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1540` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `src/tet4d/ui/pygame/front4d_render.py`: `1105` real LOC
-6. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1087` real LOC
-7. `tools/governance/validate_project_contracts.py`: `1067` real LOC
-8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1015` real LOC
+5. `src/tet4d/ui/pygame/front4d_render.py`: `1303` real LOC
+6. `src/tet4d/ui/pygame/render/gfx_game.py`: `1229` real LOC
+7. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1087` real LOC
+8. `tools/governance/validate_project_contracts.py`: `1067` real LOC
 
 Thin-wrapper budgets:
 

@@ -51,6 +51,13 @@ from tet4d.engine.tutorial.api import (
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame import front3d_render, frontend_nd_input, frontend_nd_setup, frontend_nd_state
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameAnimationState,
+    EndgameRenderContext,
+    SnapshotCell,
+    TERMINAL_PHASE_PLAYING,
+    create_snapshot,
+)
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
@@ -351,6 +358,37 @@ def _camera_action_for_key(key: int) -> str | None:
     return match_bound_action(key, CAMERA_KEYS_3D, _CAMERA_ACTIONS_3D)
 
 
+def _capture_endgame_snapshot_3d(
+    loop: "LoopContext3D",
+) -> object:
+    locked_cells = tuple(
+        SnapshotCell(
+            source_coord=tuple(int(axis) for axis in coord),
+            position=(float(coord[0]), float(coord[1]), float(coord[2])),
+            color_id=int(cell_id),
+        )
+        for coord, cell_id in sorted(loop.state.board.cells.items())
+        if len(coord) == 3
+    )
+    return create_snapshot(
+        dimension=3,
+        board_dims=tuple(int(value) for value in loop.cfg.dims),
+        render_dims=tuple(int(value) for value in loop.cfg.dims),
+        locked_cells=locked_cells,
+        base_seed=int(loop.cfg.rng_seed),
+        render_context=EndgameRenderContext(
+            mode_key="3d",
+            projection_name=str(loop.camera.projection.name),
+            yaw_deg=float(loop.camera.yaw_deg),
+            pitch_deg=float(loop.camera.pitch_deg),
+            zoom=float(loop.camera.zoom),
+            cam_dist=float(loop.camera.cam_dist),
+            projective_strength=float(loop.camera.projective_strength),
+            projective_bias=float(loop.camera.projective_bias),
+        ),
+    )
+
+
 def handle_game_keydown(
     event: pygame.event.Event,
     state: GameStateND,
@@ -417,6 +455,8 @@ class LoopContext3D(PanelDragMixin):
     panel_drag_target: str | None = None
     panel_drag_origin_mouse: tuple[int, int] | None = None
     panel_drag_origin_offset: tuple[int, int] | None = None
+    endgame_animation: EndgameAnimationState | None = None
+    terminal_phase: str = TERMINAL_PHASE_PLAYING
 
     @classmethod
     def create(
@@ -482,6 +522,13 @@ class LoopContext3D(PanelDragMixin):
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if self.terminal_phase != TERMINAL_PHASE_PLAYING:
+            return route_nd_keydown(
+                event.key,
+                self.state,
+                allow_gameplay=False,
+                sfx_handler=play_sfx,
+            )
         tutorial_action = self._handle_tutorial_hotkey(event.key)
         if tutorial_action is not None:
             return tutorial_action
@@ -559,6 +606,8 @@ class LoopContext3D(PanelDragMixin):
             create_initial_state=create_initial_state,
             refresh_score_multiplier=self.refresh_score_multiplier,
          )
+        self.endgame_animation = None
+        self.terminal_phase = TERMINAL_PHASE_PLAYING
 
     def on_toggle_grid(self) -> None:
         self.grid_mode = cycle_grid_mode(self.grid_mode)
@@ -724,6 +773,7 @@ def run_game_loop(
             on_escape_back=on_escape_back,
         ),
         spawn_clear_animation=_spawn_clear_animation_if_needed,
+        capture_endgame_snapshot=lambda: _capture_endgame_snapshot_3d(loop),
         step_view=loop.camera.step_animation,
         draw_frame=lambda target, active_overlay: draw_game_frame(
             target,
@@ -736,9 +786,11 @@ def run_game_loop(
             active_overlay=active_overlay,
             overlay_transparency=loop.overlay_transparency,
             side_panel_offset=tuple(loop.helper_panel_offset),
+            endgame_animation=loop.endgame_animation,
         ),
         play_clear_sfx=lambda: play_sfx("clear"),
         play_game_over_sfx=lambda: play_sfx("game_over"),
+        play_endgame_sfx=lambda event_name: play_sfx(event_name),
         event_handler=runtime_event_handler,
         tutorial_sync=_tutorial_sync,
     )
@@ -774,5 +826,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-
-

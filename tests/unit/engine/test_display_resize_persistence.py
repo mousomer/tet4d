@@ -278,10 +278,12 @@ class RuntimeResizePersistenceTests(unittest.TestCase):
                 run_pause_menu=lambda *_args, **_kwargs: ("continue", Mock()),
                 run_help_menu=lambda *_args, **_kwargs: Mock(),
                 spawn_clear_animation=lambda *_args, **_kwargs: (None, 0),
+                capture_endgame_snapshot=lambda: Mock(),
                 step_view=lambda _dt: None,
                 draw_frame=lambda _screen, _overlay: None,
                 play_clear_sfx=lambda: None,
                 play_game_over_sfx=lambda: None,
+                play_endgame_sfx=lambda _event_name: None,
                 event_handler=lambda event: observed.append(event.type),
             )
 

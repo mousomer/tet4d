@@ -713,6 +713,109 @@ def build_cube_face_primitives(
     return faces
 
 
+def _rotate_point_local(point: Point3, rotation_deg: Point3) -> Point3:
+    x, y, z = point
+    rx, ry, rz = (
+        math.radians(rotation_deg[0]),
+        math.radians(rotation_deg[1]),
+        math.radians(rotation_deg[2]),
+    )
+
+    cos_x, sin_x = math.cos(rx), math.sin(rx)
+    y, z = ((y * cos_x) - (z * sin_x), (y * sin_x) + (z * cos_x))
+
+    cos_y, sin_y = math.cos(ry), math.sin(ry)
+    x, z = ((x * cos_y) + (z * sin_y), (-x * sin_y) + (z * cos_y))
+
+    cos_z, sin_z = math.cos(rz), math.sin(rz)
+    x, y = ((x * cos_z) - (y * sin_z), (x * sin_z) + (y * cos_z))
+    return (x, y, z)
+
+
+def build_oriented_cube_face_primitives(
+    center: Point3,
+    color: tuple[int, int, int],
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    active: bool,
+    *,
+    depth_denominator: DepthDenominatorFn,
+    rotation_deg: Point3 = (0.0, 0.0, 0.0),
+    active_boost: float = 1.08,
+    scale: float = 1.0,
+) -> list[ProjectedFacePrimitive]:
+    transformed: list[Point3] = []
+    projected: list[Point2] = []
+    denominators: list[float] = []
+
+    for ox, oy, oz in _CUBE_VERTS:
+        rotated = _rotate_point_local(
+            (ox * scale, oy * scale, oz * scale),
+            rotation_deg,
+        )
+        raw = (
+            center[0] + rotated[0],
+            center[1] + rotated[1],
+            center[2] + rotated[2],
+        )
+        transformed_point = transform_raw(raw)
+        transformed.append(transformed_point)
+        projected_point = project_raw(raw)
+        if projected_point is None:
+            return []
+        projected.append(projected_point)
+        denominators.append(depth_denominator(transformed_point[2]))
+
+    faces: list[ProjectedFacePrimitive] = []
+    for face_indices, shade_factor in _CUBE_FACES:
+        polygon = tuple(projected[i] for i in face_indices)
+        avg_depth = sum(transformed[i][2] for i in face_indices) / 4.0
+        factor = shade_factor * (active_boost if active else 1.0)
+        faces.append(
+            ProjectedFacePrimitive(
+                avg_depth=avg_depth,
+                polygon=polygon,
+                color=shade_color(color, factor),
+                active=active,
+                vertex_depths=tuple(transformed[i][2] for i in face_indices),
+                vertex_denominators=tuple(denominators[i] for i in face_indices),
+            )
+        )
+    return faces
+
+
+def build_oriented_cube_faces(
+    center: Point3,
+    color: tuple[int, int, int],
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    active: bool,
+    *,
+    rotation_deg: Point3 = (0.0, 0.0, 0.0),
+    active_boost: float = 1.08,
+    scale: float = 1.0,
+) -> list[Face]:
+    return [
+        (
+            primitive.avg_depth,
+            list(primitive.polygon),
+            primitive.color,
+            primitive.active,
+        )
+        for primitive in build_oriented_cube_face_primitives(
+            center=center,
+            color=color,
+            project_raw=project_raw,
+            transform_raw=transform_raw,
+            active=active,
+            depth_denominator=lambda depth: 1.0,
+            rotation_deg=rotation_deg,
+            active_boost=active_boost,
+            scale=scale,
+        )
+    ]
+
+
 def project_lattice_primitives(
     dims: Cell3,
     project_raw: ProjectRawFn,

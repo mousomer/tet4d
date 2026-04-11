@@ -24,6 +24,10 @@ from tet4d.engine.runtime.settings_schema import (
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
+from .endgame_animation import (
+    EndgameAnimationState,
+    TERMINAL_PHASE_PLAYING,
+)
 from .front2d_input import handle_game_keydown
 from .front2d_setup import (
     _AUTO_SPEEDUP_ENABLED_DEFAULT,
@@ -74,6 +78,8 @@ class LoopContext2D:
     )
     tutorial_session: object | None = None
     tutorial_action_cooldown_ms: int = 0
+    endgame_animation: EndgameAnimationState | None = None
+    terminal_phase: str = TERMINAL_PHASE_PLAYING
 
     @classmethod
     def create(
@@ -141,6 +147,14 @@ class LoopContext2D:
         )
 
     def keydown_handler(self, event: pygame.event.Event) -> str:
+        if self.terminal_phase != TERMINAL_PHASE_PLAYING:
+            system_only = handle_game_keydown(
+                event,
+                self.state,
+                self.cfg,
+                allow_gameplay=False,
+            )
+            return "continue" if system_only is None else system_only
         tutorial_action = self._handle_tutorial_hotkey(event.key)
         if tutorial_action is not None:
             return tutorial_action
@@ -199,6 +213,8 @@ class LoopContext2D:
         self.bot.reset_runtime()
         self.rotation_anim.reset()
         self.tutorial_action_cooldown_ms = 0
+        self.endgame_animation = None
+        self.terminal_phase = TERMINAL_PHASE_PLAYING
         self.refresh_score_multiplier()
 
     def on_toggle_grid(self) -> None:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 import pygame
 
@@ -36,6 +36,15 @@ class _NamePromptState:
     name: str
     running: bool = True
     accepted: bool = False
+
+
+@dataclass(frozen=True)
+class _NamePromptSummary:
+    dimension: int
+    score: int
+    lines_cleared: int
+    duration_seconds: float
+    rank: int
 
 
 def _safe_int(value: object, *, default: int = 0) -> int:
@@ -345,51 +354,96 @@ def _draw_name_prompt(
     *,
     state: _NamePromptState,
     rank: int,
+    summary: _NamePromptSummary | None = None,
 ) -> None:
-    draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
     width, height = screen.get_size()
+    backdrop = pygame.Surface((width, height), pygame.SRCALPHA)
+    backdrop.fill((4, 8, 18, 150))
+    screen.blit(backdrop, (0, 0))
+
+    panel_w = min(560, max(360, width - 48))
+    summary_rows = 0 if summary is None else 2
+    panel_h = 220 + (summary_rows * (fonts.hint_font.get_height() + 6))
+    panel_x = (width - panel_w) // 2
+    panel_y = max(72, (height - panel_h) // 2)
+    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    pygame.draw.rect(panel, (8, 12, 26, 228), panel.get_rect(), border_radius=18)
+    pygame.draw.rect(panel, (116, 136, 188, 255), panel.get_rect(), 2, border_radius=18)
+    screen.blit(panel, panel_rect.topleft)
 
     title = fonts.title_font.render("Leaderboard Entry", True, _TEXT_COLOR)
-    subtitle_text = f"Rank #{rank} qualifies. Enter player name:"
+    subtitle_text = f"Rank #{rank} qualifies. Enter player name to save this run."
     subtitle = fonts.hint_font.render(
-        fit_text(fonts.hint_font, subtitle_text, width - 32),
+        fit_text(fonts.hint_font, subtitle_text, panel_w - 40),
         True,
         _MUTED_COLOR,
     )
-    title_y = 60
-    subtitle_y = title_y + title.get_height() + 10
-    screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
+    title_y = panel_y + 18
+    subtitle_y = title_y + title.get_height() + 6
+    screen.blit(title, (panel_x + 20, title_y))
+    screen.blit(subtitle, (panel_x + 20, subtitle_y))
 
-    panel_w = min(720, max(360, width - 36))
-    panel_h = 140
-    panel_x = (width - panel_w) // 2
-    panel_y = max(150, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 164), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
+    label_y = subtitle_y + subtitle.get_height() + 14
+    if summary is not None:
+        summary_lines = (
+            f"Score {int(summary.score)}   Lines {int(summary.lines_cleared)}   Rank #{int(summary.rank)}",
+            f"{int(summary.dimension)}D run   Time {_format_duration(float(summary.duration_seconds))}",
+        )
+        for index, line in enumerate(summary_lines):
+            line_surf = fonts.hint_font.render(
+                fit_text(fonts.hint_font, line, panel_w - 40),
+                True,
+                (214, 220, 244),
+            )
+            screen.blit(line_surf, (panel_x + 20, label_y + (index * (line_surf.get_height() + 6))))
+        label_y += len(summary_lines) * (fonts.hint_font.get_height() + 6) + 10
 
     label = fonts.hint_font.render("Name", True, _MUTED_COLOR)
-    screen.blit(label, (panel_x + 20, panel_y + 22))
-    input_rect = pygame.Rect(panel_x + 20, panel_y + 48, panel_w - 40, 48)
-    pygame.draw.rect(screen, (34, 44, 72), input_rect, border_radius=8)
-    pygame.draw.rect(screen, (98, 116, 160), input_rect, 2, border_radius=8)
+    screen.blit(label, (panel_x + 20, label_y))
+    input_rect = pygame.Rect(panel_x + 20, label_y + 26, panel_w - 40, 48)
+    pygame.draw.rect(screen, (34, 44, 72), input_rect, border_radius=10)
+    pygame.draw.rect(screen, (98, 116, 160), input_rect, 2, border_radius=10)
     input_text = state.name
     caret = "_" if (pygame.time.get_ticks() // 450) % 2 else ""
     content = fit_text(fonts.menu_font, input_text + caret, input_rect.width - 16)
     value = fonts.menu_font.render(content, True, _HIGHLIGHT_COLOR)
     screen.blit(value, (input_rect.x + 8, input_rect.y + 11))
 
-    hints = (
-        "Type name, Enter confirm",
-        "Backspace delete, Esc skip leaderboard entry",
+    button_y = input_rect.bottom + 18
+    submit_rect = pygame.Rect(panel_x + 20, button_y, 138, 34)
+    cancel_rect = pygame.Rect(submit_rect.right + 12, button_y, 138, 34)
+    pygame.draw.rect(screen, (50, 110, 88), submit_rect, border_radius=17)
+    pygame.draw.rect(screen, (100, 196, 158), submit_rect, 2, border_radius=17)
+    pygame.draw.rect(screen, (60, 50, 74), cancel_rect, border_radius=17)
+    pygame.draw.rect(screen, (132, 122, 156), cancel_rect, 2, border_radius=17)
+    submit_text = fonts.hint_font.render("Enter Submit", True, _TEXT_COLOR)
+    cancel_text = fonts.hint_font.render("Esc Skip", True, _TEXT_COLOR)
+    screen.blit(
+        submit_text,
+        (
+            submit_rect.centerx - (submit_text.get_width() // 2),
+            submit_rect.centery - (submit_text.get_height() // 2),
+        ),
     )
-    hint_y = panel_y + panel_h + 10
-    for hint in hints:
-        hint_draw = fit_text(fonts.hint_font, hint, width - 24)
-        hint_surf = fonts.hint_font.render(hint_draw, True, _MUTED_COLOR)
-        screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
-        hint_y += hint_surf.get_height() + 3
+    screen.blit(
+        cancel_text,
+        (
+            cancel_rect.centerx - (cancel_text.get_width() // 2),
+            cancel_rect.centery - (cancel_text.get_height() // 2),
+        ),
+    )
+
+    hint = fonts.hint_font.render(
+        fit_text(
+            fonts.hint_font,
+            "Leaderboard registration is modal here; gameplay input stays locked behind the popup.",
+            panel_w - 40,
+        ),
+        True,
+        _MUTED_COLOR,
+    )
+    screen.blit(hint, (panel_x + 20, panel_rect.bottom - hint.get_height() - 16))
 
 
 def _handle_name_prompt_event(event: pygame.event.Event, state: _NamePromptState) -> bool:
@@ -423,6 +477,8 @@ def prompt_leaderboard_player_name(
     fonts: Any,
     *,
     rank: int,
+    draw_background: Callable[[], None] | None = None,
+    summary: _NamePromptSummary | None = None,
 ) -> str | None:
     state = _NamePromptState(name="Player")
     clock = pygame.time.Clock()
@@ -434,7 +490,17 @@ def prompt_leaderboard_player_name(
                 if not _handle_name_prompt_event(event, state):
                     break
 
-            _draw_name_prompt(screen, fonts, state=state, rank=rank)
+            if draw_background is not None:
+                draw_background()
+            else:
+                draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
+            _draw_name_prompt(
+                screen,
+                fonts,
+                state=state,
+                rank=rank,
+                summary=summary,
+            )
             pygame.display.flip()
     finally:
         pygame.key.stop_text_input()
@@ -465,6 +531,7 @@ def maybe_record_leaderboard_session(
     topology_mode: str,
     kick_level: str,
     exploration_mode: bool,
+    draw_background: Callable[[], None] | None = None,
 ) -> bool:
     if not _session_is_recordable(
         outcome=outcome,
@@ -488,7 +555,20 @@ def maybe_record_leaderboard_session(
     )
     if not qualifies:
         return False
-    player_name = prompt_leaderboard_player_name(screen, fonts, rank=rank)
+    summary = _NamePromptSummary(
+        dimension=int(dimension),
+        score=int(score),
+        lines_cleared=int(lines_cleared),
+        duration_seconds=float(duration_seconds),
+        rank=int(rank),
+    )
+    player_name = prompt_leaderboard_player_name(
+        screen,
+        fonts,
+        rank=rank,
+        draw_background=draw_background,
+        summary=summary,
+    )
     if player_name is None:
         return False
     record_leaderboard_entry(

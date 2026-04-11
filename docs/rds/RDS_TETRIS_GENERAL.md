@@ -125,6 +125,10 @@ Cross-cutting requirements are defined in:
 11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
 12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
+14. Terminal game-over presentation must use a dedicated post-terminal phase that moves from `playing` into a frozen snapshot-driven `game_over_animating` state; the animation must render from a frozen endgame snapshot instead of mutating live gameplay entities.
+15. The frozen endgame snapshot must capture locked cells, board dimensions, render-space center, the render context needed to keep projection/camera stable, and a deterministic animation seed derived from stable inputs.
+16. During the post-terminal phase, normal gameplay advancement stops; render authority moves to snapshot-driven cell and shell fragments, and the visible endgame fragments remain opaque/persistent instead of fading away automatically.
+17. When leaderboard registration is offered from the post-terminal path, it must open as a compact modal overlay on top of the existing endgame/post-game surface rather than navigating to a dedicated full-screen registration screen; the existing registration form state and submission authority must remain singular, and background gameplay/menu input must stay suppressed while the modal is open.
 14. Tutorial overlay panel must be enlarged for readability, present one clear plain-language primary action line plus one optional tip line, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
 15. Tutorial progression must expose explicit segment order:
 16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
@@ -258,6 +262,7 @@ Cross-cutting requirements are defined in:
 46. `docs/help/HELP_INDEX.md`
 47. `config/project/policy/manifests/help_assets_manifest.json`
 48. `docs/RELEASE_CHECKLIST.md`
+49. Endgame animation tuning authority lives in `config/project/constants.json` under `animation.endgame`; durations, speed ranges, angular velocity ranges, outward/spread bias, drag/gravity, and the feature enable/seed salt must not be hardcoded only in Python.
 49. Profiler/benchmark tool outputs must be constrained to paths under the project root.
 50. Desktop packaging assets are source-controlled:
 51. `packaging/pyinstaller/tet4d.spec`

@@ -9,6 +9,10 @@ from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.runtime.project_config import project_constant_float
 from tet4d.ui.pygame.render.gfx_game import GfxFonts
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.endgame_animation import (
+    TERMINAL_PHASE_GAME_OVER_COMPLETE,
+    endgame_prompt_ready,
+)
 
 from tet4d.engine.runtime import menu_settings_state
 
@@ -49,6 +53,12 @@ def run_game_loop(
             loop=loop,
             session_start_ms=session_start_ms,
             outcome=outcome,
+            draw_background=lambda: front2d_frame._draw_current_frame_2d(
+                screen=screen,
+                fonts=fonts,
+                loop=loop,
+                clear_anim_duration_ms=clear_anim_duration_ms,
+            ),
         )
 
     def _restart_with_record() -> None:
@@ -126,6 +136,12 @@ def run_game_loop(
             dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
         )
-        if loop.state.game_over and not endgame_session_handled:
+        if (
+            not endgame_session_handled
+            and (
+                endgame_prompt_ready(loop.endgame_animation)
+                or loop.terminal_phase == TERMINAL_PHASE_GAME_OVER_COMPLETE
+            )
+        ):
             _record_session("game_over")
             endgame_session_handled = True

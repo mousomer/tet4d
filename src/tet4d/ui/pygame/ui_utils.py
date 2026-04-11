@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from dataclasses import dataclass
 import re
 from typing import Tuple
 
@@ -152,6 +153,204 @@ def wrapped_label_value_layout(
         max(len(label_lines), len(value_lines), 1),
     )
     return label_lines, value_lines, row_height
+
+
+_MENU_SLIDER_WIDTH_PERCENT = project_constant_int(
+    ("layout", "menu_slider", "track_width_percent"),
+    36,
+    min_value=20,
+    max_value=60,
+)
+_MENU_SLIDER_TRACK_MIN_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "track_min_width"),
+    132,
+    min_value=80,
+    max_value=320,
+)
+_MENU_SLIDER_TRACK_PREFERRED_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "track_preferred_width"),
+    176,
+    min_value=96,
+    max_value=360,
+)
+_MENU_SLIDER_TRACK_MAX_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "track_max_width"),
+    236,
+    min_value=120,
+    max_value=420,
+)
+_MENU_SLIDER_TRACK_HEIGHT = project_constant_int(
+    ("layout", "menu_slider", "track_height"),
+    12,
+    min_value=6,
+    max_value=32,
+)
+_MENU_SLIDER_THUMB_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "thumb_width"),
+    14,
+    min_value=6,
+    max_value=40,
+)
+_MENU_SLIDER_THUMB_OVERHANG = project_constant_int(
+    ("layout", "menu_slider", "thumb_overhang"),
+    3,
+    min_value=0,
+    max_value=12,
+)
+_MENU_SLIDER_LABEL_MIN_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "label_min_width"),
+    104,
+    min_value=40,
+    max_value=240,
+)
+_MENU_SLIDER_VALUE_MIN_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "value_min_width"),
+    96,
+    min_value=40,
+    max_value=240,
+)
+_MENU_SLIDER_VALUE_MAX_WIDTH = project_constant_int(
+    ("layout", "menu_slider", "value_max_width"),
+    196,
+    min_value=60,
+    max_value=320,
+)
+_MENU_SLIDER_TEXT_GAP = project_constant_int(
+    ("layout", "menu_slider", "text_gap"),
+    12,
+    min_value=4,
+    max_value=40,
+)
+_MENU_SLIDER_GAP = project_constant_int(
+    ("layout", "menu_slider", "slider_gap"),
+    16,
+    min_value=4,
+    max_value=48,
+)
+_MENU_SLIDER_TEXT_TOP_PADDING = project_constant_int(
+    ("layout", "menu_slider", "text_top_padding"),
+    4,
+    min_value=0,
+    max_value=20,
+)
+_MENU_SLIDER_TOP_GAP = project_constant_int(
+    ("layout", "menu_slider", "slider_top_gap"),
+    8,
+    min_value=0,
+    max_value=24,
+)
+_MENU_SLIDER_ROW_BOTTOM_PADDING = project_constant_int(
+    ("layout", "menu_slider", "row_bottom_padding"),
+    10,
+    min_value=0,
+    max_value=32,
+)
+
+
+@dataclass(frozen=True)
+class SliderRowLayout:
+    label_lines: tuple[str, ...]
+    value_lines: tuple[str, ...]
+    label_width: int
+    value_width: int
+    slider_width: int
+    slider_height: int
+    row_height: int
+    text_gap: int
+    slider_gap: int
+    text_top_padding: int
+    slider_top_gap: int
+    row_bottom_padding: int
+
+
+def menu_slider_row_min_total_width() -> int:
+    return (
+        int(_MENU_SLIDER_LABEL_MIN_WIDTH)
+        + int(_MENU_SLIDER_TEXT_GAP)
+        + int(_MENU_SLIDER_VALUE_MIN_WIDTH)
+        + int(_MENU_SLIDER_GAP)
+        + int(_MENU_SLIDER_TRACK_MIN_WIDTH)
+    )
+
+
+def compute_slider_row_layout(
+    font: pygame.font.Font,
+    *,
+    label: str,
+    value: str,
+    total_width: int,
+) -> SliderRowLayout:
+    safe_total_width = max(1, int(total_width))
+    text_gap = int(_MENU_SLIDER_TEXT_GAP)
+    slider_gap = int(_MENU_SLIDER_GAP)
+    preferred_slider_width = max(
+        int(_MENU_SLIDER_TRACK_MIN_WIDTH),
+        int((safe_total_width * int(_MENU_SLIDER_WIDTH_PERCENT)) / 100),
+    )
+    slider_width = min(
+        int(_MENU_SLIDER_TRACK_MAX_WIDTH),
+        max(int(_MENU_SLIDER_TRACK_PREFERRED_WIDTH), preferred_slider_width),
+    )
+    max_slider_width = max(
+        int(_MENU_SLIDER_TRACK_MIN_WIDTH),
+        safe_total_width - int(_MENU_SLIDER_LABEL_MIN_WIDTH) - int(_MENU_SLIDER_VALUE_MIN_WIDTH) - text_gap - slider_gap,
+    )
+    slider_width = max(
+        int(_MENU_SLIDER_TRACK_MIN_WIDTH),
+        min(slider_width, max_slider_width),
+    )
+    if slider_width + slider_gap >= safe_total_width:
+        slider_width = max(
+            1,
+            safe_total_width - slider_gap - max(0, text_gap),
+        )
+    available_text_width = max(
+        1,
+        safe_total_width - slider_width - slider_gap,
+    )
+    raw_value_width = font.size(str(value))[0] if str(value).strip() else 0
+    value_width = min(
+        int(_MENU_SLIDER_VALUE_MAX_WIDTH),
+        max(int(_MENU_SLIDER_VALUE_MIN_WIDTH), raw_value_width),
+    )
+    max_value_width = max(0, available_text_width - max(0, int(_MENU_SLIDER_LABEL_MIN_WIDTH) + text_gap))
+    if max_value_width > 0:
+        value_width = min(value_width, max_value_width)
+    if value_width <= 0:
+        value_width = 0
+    label_width = max(
+        1,
+        available_text_width - value_width - (text_gap if value_width > 0 else 0),
+    )
+    label_lines = wrap_text_lines(font, label, label_width)
+    value_lines = wrap_text_lines(font, value, value_width) if value_width > 0 else tuple()
+    text_line_count = max(len(label_lines), len(value_lines), 1)
+    text_block_height = wrapped_row_height(
+        font,
+        text_line_count,
+        min_padding=int(_MENU_SLIDER_TEXT_TOP_PADDING) + 6,
+        base_padding=int(_MENU_SLIDER_TEXT_TOP_PADDING) + 6,
+    )
+    row_height = (
+        text_block_height
+        + int(_MENU_SLIDER_TOP_GAP)
+        + int(_MENU_SLIDER_TRACK_HEIGHT)
+        + int(_MENU_SLIDER_ROW_BOTTOM_PADDING)
+    )
+    return SliderRowLayout(
+        label_lines=label_lines,
+        value_lines=value_lines,
+        label_width=label_width,
+        value_width=value_width,
+        slider_width=slider_width,
+        slider_height=int(_MENU_SLIDER_TRACK_HEIGHT),
+        row_height=row_height,
+        text_gap=text_gap,
+        slider_gap=slider_gap,
+        text_top_padding=int(_MENU_SLIDER_TEXT_TOP_PADDING),
+        slider_top_gap=int(_MENU_SLIDER_TOP_GAP),
+        row_bottom_padding=int(_MENU_SLIDER_ROW_BOTTOM_PADDING),
+    )
 
 
 def draw_centered_wrapped_text(
@@ -450,9 +649,10 @@ def draw_value_slider(
     clamped = max(0.0, min(1.0, float(fraction)))
     flash = max(0.0, min(1.0, float(flash_strength)))
     track = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
-    pygame.draw.rect(track, (*track_color, 220), track.get_rect(), border_radius=6)
-    pygame.draw.rect(track, border_color, track.get_rect(), 1, border_radius=6)
-    fill_width = max(6, int((rect.width - 2) * clamped))
+    track_radius = max(3, rect.height // 2)
+    pygame.draw.rect(track, (*track_color, 220), track.get_rect(), border_radius=track_radius)
+    pygame.draw.rect(track, border_color, track.get_rect(), 1, border_radius=track_radius)
+    fill_width = max(int(_MENU_SLIDER_THUMB_WIDTH // 2), int((rect.width - 2) * clamped))
     fill_rect = pygame.Rect(1, 1, max(0, fill_width), max(0, rect.height - 2))
     fill = (
         min(255, int(fill_color[0] + (40 * flash))),
@@ -460,8 +660,10 @@ def draw_value_slider(
         min(255, int(fill_color[2] + (20 * flash))),
         min(255, int(190 + (50 * flash))),
     )
-    pygame.draw.rect(track, fill, fill_rect, border_radius=5)
-    knob_x = rect.x + max(0, min(rect.width - 8, fill_width - 4))
+    pygame.draw.rect(track, fill, fill_rect, border_radius=max(2, track_radius - 1))
+    thumb_width = max(6, int(_MENU_SLIDER_THUMB_WIDTH))
+    thumb_overhang = max(0, int(_MENU_SLIDER_THUMB_OVERHANG))
+    knob_x = rect.x + max(0, min(rect.width - thumb_width, fill_width - (thumb_width // 2)))
     surface.blit(track, rect.topleft)
     pygame.draw.rect(
         surface,
@@ -470,6 +672,11 @@ def draw_value_slider(
             min(255, int(248 + (7 * flash))),
             255,
         ),
-        pygame.Rect(knob_x, rect.y - 2, 8, rect.height + 4),
-        border_radius=4,
+        pygame.Rect(
+            knob_x,
+            rect.y - thumb_overhang,
+            thumb_width,
+            rect.height + (thumb_overhang * 2),
+        ),
+        border_radius=max(3, thumb_width // 3),
     )

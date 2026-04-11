@@ -4,6 +4,15 @@ from typing import Callable, Optional
 
 import pygame
 
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameRenderContext,
+    SnapshotCell,
+    TERMINAL_PHASE_GAME_OVER_COMPLETE,
+    TERMINAL_PHASE_PLAYING,
+    create_snapshot,
+    endgame_sfx_events_between,
+    ensure_endgame_animation,
+)
 from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
@@ -129,6 +138,9 @@ def _advance_simulation(
     gravity_interval_ms: int,
     tutorial_step_pause_active: bool = False,
 ) -> None:
+    if loop.terminal_phase != TERMINAL_PHASE_PLAYING:
+        loop.gravity_accumulator = 0
+        return
     if tutorial_step_pause_active or loop.cfg.exploration_mode:
         loop.gravity_accumulator = 0
         return
@@ -143,17 +155,63 @@ def _advance_simulation(
     )
 
 
+def _capture_endgame_snapshot_2d(loop: LoopContext2D):
+    locked_cells = tuple(
+        SnapshotCell(
+            source_coord=(int(x), int(y)),
+            position=(float(x), float(y), 0.0),
+            color_id=int(cell_id),
+        )
+        for (x, y), cell_id in sorted(loop.state.board.cells.items())
+    )
+    return create_snapshot(
+        dimension=2,
+        board_dims=(int(loop.cfg.width), int(loop.cfg.height)),
+        render_dims=(int(loop.cfg.width), int(loop.cfg.height), 1),
+        locked_cells=locked_cells,
+        base_seed=int(loop.cfg.rng_seed),
+        render_context=EndgameRenderContext(mode_key="2d"),
+    )
+
+
 def _update_feedback_and_animation(
     *,
     loop: LoopContext2D,
     dt: int,
     clear_anim_duration_ms: float,
 ) -> None:
-    if loop.state.lines_cleared != loop.last_lines_cleared:
+    if (
+        loop.state.lines_cleared != loop.last_lines_cleared
+        and loop.terminal_phase == TERMINAL_PHASE_PLAYING
+    ):
         play_sfx("clear")
     if loop.state.game_over and not loop.was_game_over:
         play_sfx("game_over")
     loop.was_game_over = loop.state.game_over
+    loop.endgame_animation = ensure_endgame_animation(
+        loop.endgame_animation,
+        game_over=bool(loop.state.game_over),
+        snapshot_factory=lambda: _capture_endgame_snapshot_2d(loop),
+    )
+    if loop.endgame_animation is not None:
+        previous_elapsed_ms = float(loop.endgame_animation.elapsed_ms)
+        loop.endgame_animation.step(float(dt))
+        for event_name in endgame_sfx_events_between(
+            previous_elapsed_ms=previous_elapsed_ms,
+            current_elapsed_ms=float(loop.endgame_animation.elapsed_ms),
+            tuning=loop.endgame_animation.tuning,
+        ):
+            play_sfx(event_name)
+        loop.terminal_phase = loop.endgame_animation.phase
+        loop.clear_anim_levels = ()
+        loop.clear_anim_elapsed_ms = 0.0
+        loop.last_lines_cleared = loop.state.lines_cleared
+        return
+    loop.terminal_phase = (
+        TERMINAL_PHASE_GAME_OVER_COMPLETE
+        if loop.state.game_over
+        else TERMINAL_PHASE_PLAYING
+    )
     (
         loop.clear_anim_levels,
         loop.clear_anim_elapsed_ms,
@@ -166,6 +224,36 @@ def _update_feedback_and_animation(
         clear_anim_duration_ms=clear_anim_duration_ms,
         dt_ms=dt,
     )
+
+
+def _draw_current_frame_2d(
+    *,
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    loop: LoopContext2D,
+    clear_anim_duration_ms: float,
+) -> None:
+    clear_effect = _clear_effect(
+        loop.clear_anim_levels,
+        loop.clear_anim_elapsed_ms,
+        clear_anim_duration_ms,
+    )
+    active_overlay = None
+    if loop.endgame_animation is None:
+        active_overlay = loop.rotation_anim.overlay_state(loop.state.current_piece)
+    draw_game_frame(
+        screen,
+        loop.cfg,
+        loop.state,
+        fonts,
+        grid_mode=loop.grid_mode,
+        bot_lines=tuple(loop.bot.status_lines()),
+        overlay_transparency=loop.overlay_transparency,
+        clear_effect=clear_effect,
+        active_piece_overlay=active_overlay,
+        endgame_animation=loop.endgame_animation,
+    )
+    draw_tutorial_overlays_2d(screen, fonts, loop)
 
 
 def _handle_loop_event_cycle(
@@ -247,27 +335,16 @@ def _run_game_frame_2d(
         if not tutorial_runtime_is_running_runtime(loop.tutorial_session):
             loop.tutorial_session = None
             loop.tutorial_action_cooldown_ms = 0
-    clear_effect = _clear_effect(
-        loop.clear_anim_levels,
-        loop.clear_anim_elapsed_ms,
-        clear_anim_duration_ms,
+    if loop.endgame_animation is None:
+        loop.rotation_anim.observe(
+            loop.state.current_piece,
+            dt,
+            animate_translation=loop.state.consume_translation_animation_hint(),
+        )
+    _draw_current_frame_2d(
+        screen=screen,
+        fonts=fonts,
+        loop=loop,
+        clear_anim_duration_ms=clear_anim_duration_ms,
     )
-    loop.rotation_anim.observe(
-        loop.state.current_piece,
-        dt,
-        animate_translation=loop.state.consume_translation_animation_hint(),
-    )
-    active_overlay = loop.rotation_anim.overlay_state(loop.state.current_piece)
-    draw_game_frame(
-        screen,
-        loop.cfg,
-        loop.state,
-        fonts,
-        grid_mode=loop.grid_mode,
-        bot_lines=tuple(loop.bot.status_lines()),
-        overlay_transparency=loop.overlay_transparency,
-        clear_effect=clear_effect,
-        active_piece_overlay=active_overlay,
-    )
-    draw_tutorial_overlays_2d(screen, fonts, loop)
     pygame.display.flip()

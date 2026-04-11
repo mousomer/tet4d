@@ -128,6 +128,9 @@ class TestRuntimeConfig(unittest.TestCase):
         specs = audio_event_specs()
         self.assertIn("move", specs)
         self.assertIn("game_over", specs)
+        self.assertIn("endgame_crack", specs)
+        self.assertIn("endgame_pop", specs)
+        self.assertIn("endgame_boom", specs)
         for frequency_hz, duration_ms, amplitude in specs.values():
             self.assertGreater(frequency_hz, 0.0)
             self.assertGreater(duration_ms, 0)

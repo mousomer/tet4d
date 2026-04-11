@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import pygame
 
@@ -69,6 +69,7 @@ def _record_leaderboard_session_2d(
     loop: LoopContext2D,
     session_start_ms: int,
     outcome: str,
+    draw_background: Callable[[], None] | None = None,
 ) -> None:
     if tutorial_lesson_id:
         return
@@ -90,6 +91,7 @@ def _record_leaderboard_session_2d(
             topology_mode=str(loop.cfg.topology_mode),
             kick_level=str(loop.cfg.kick_level),
             exploration_mode=bool(loop.cfg.exploration_mode),
+            draw_background=draw_background,
         )
     except Exception:
         return

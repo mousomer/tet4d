@@ -85,6 +85,11 @@
           "menu_id": "launcher_play"
         },
         {
+          "type": "action",
+          "label": "Continue",
+          "action_id": "continue"
+        },
+        {
           "type": "submenu",
           "label": "Tutorials",
           "menu_id": "launcher_tutorials"

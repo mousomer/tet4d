@@ -16,6 +16,7 @@ from tet4d.engine.gameplay.game_nd import GameStateND
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.render.panel_utils import (
+    draw_game_over_banner,
     draw_unified_game_side_panel,
 )
 from tet4d.ui.pygame.projection3d import (
@@ -23,6 +24,7 @@ from tet4d.ui.pygame.projection3d import (
     Face,
     Point2,
     ProjectedFacePrimitive,
+    build_oriented_cube_faces,
     box_raw_corners,
     build_cube_face_primitives,
     build_cube_faces,
@@ -37,6 +39,12 @@ from tet4d.ui.pygame.projection3d import (
     raw_to_world,
     smoothstep01,
     transform_point,
+)
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameAnimationState,
+    EndgameRenderContext,
+    transform_for_cell_fragment,
+    transform_shell_geometry,
 )
 from tet4d.engine.runtime.project_config import (
     project_constant_float,
@@ -1007,6 +1015,146 @@ def _layer_rects_by_layer(
     return {layer_index: rect for layer_index, rect in enumerate(rects)}
 
 
+def _transform_raw_point_from_context(
+    raw: tuple[float, float, float],
+    *,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+) -> tuple[float, float, float]:
+    world_xyz = raw_to_world(raw, dims3)
+    return transform_point(world_xyz, context.yaw_deg, context.pitch_deg)
+
+
+def _project_raw_point_from_context(
+    raw: tuple[float, float, float],
+    *,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    center_px: Point2,
+    zoom: float,
+) -> Point2:
+    transformed = _transform_raw_point_from_context(raw, dims3=dims3, context=context)
+    return orthographic_point(transformed, center_px, zoom)
+
+
+def _fit_zoom_from_context(
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    rect: pygame.Rect,
+) -> float:
+    transformed = [
+        _transform_raw_point_from_context(raw, dims3=dims3, context=context)
+        for raw in box_raw_corners(dims3)
+    ]
+    max_abs_x = max(max(abs(point[0]) for point in transformed), 0.01)
+    max_abs_y = max(max(abs(point[1]) for point in transformed), 0.01)
+    fit_x = max(1.0, rect.width - 14.0) / (2.0 * max_abs_x)
+    fit_y = max(1.0, rect.height - 24.0) / (2.0 * max_abs_y)
+    return max(8.0, min(120.0, min(fit_x, fit_y)))
+
+
+def _draw_endgame_layer_board(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    layer_index: int,
+    snapshot,
+    context: EndgameRenderContext,
+    fonts: GfxFonts,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
+    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
+
+    label = render_text_cached(
+        font=fonts.hint_font,
+        text=f"{context.layer_axis_label or 'w'} = {layer_index}",
+        color=LAYER_LABEL,
+    )
+    surface.blit(label, (rect.x + 8, rect.y + 6))
+
+    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
+    dims3 = snapshot.render_dims
+    zoom = _fit_zoom_from_context(dims3, context, draw_rect) * float(context.zoom)
+    zoom = max(8.0, min(170.0, zoom))
+    center_px = (draw_rect.centerx, draw_rect.centery)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    drag = float(endgame_animation.tuning.drag_per_second)
+
+    for shell_fragment in endgame_animation.shell_fragments:
+        if shell_fragment.layer_index != layer_index:
+            continue
+        transformed, alpha = transform_shell_geometry(
+            shell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        start = _project_raw_point_from_context(
+            transformed[0],
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        end = _project_raw_point_from_context(
+            transformed[1],
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        pygame.draw.line(
+            overlay,
+            (*GRID_COLOR, max(0, min(255, int(round(210 * alpha))))),
+            start,
+            end,
+            2,
+        )
+
+    fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
+    for cell_fragment in endgame_animation.cell_fragments:
+        if cell_fragment.layer_index != layer_index:
+            continue
+        position, rotation_deg, alpha = transform_for_cell_fragment(
+            cell_fragment,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+            drag_per_second=drag,
+        )
+        if alpha <= 0.0:
+            continue
+        faces = build_oriented_cube_faces(
+            center=position,
+            color=color_for_cell(cell_fragment.color_id, COLOR_MAP),
+            project_raw=lambda raw: _project_raw_point_from_context(
+                raw,
+                dims3=dims3,
+                context=context,
+                center_px=center_px,
+                zoom=zoom,
+            ),
+            transform_raw=lambda raw: _transform_raw_point_from_context(
+                raw,
+                dims3=dims3,
+                context=context,
+            ),
+            active=True,
+            rotation_deg=rotation_deg,
+        )
+        fragment_faces.extend(
+            (depth, polygon, color, alpha) for depth, polygon, color, _active in faces
+        )
+
+    fragment_faces.sort(key=lambda item: item[0], reverse=True)
+    for _depth, polygon, color, alpha in fragment_faces:
+        fill_alpha = max(0, min(255, int(round(255 * alpha))))
+        outline_alpha = max(0, min(255, int(round(230 * alpha))))
+        pygame.draw.polygon(overlay, (*color, fill_alpha), polygon)
+        pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), polygon, 2)
+    surface.blit(overlay, (0, 0))
+
+
 def _draw_side_panel(
     surface: pygame.Surface,
     state: GameStateND,
@@ -1017,27 +1165,49 @@ def _draw_side_panel(
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
     overlay_transparency: float = 0.25,
+    frozen_context: EndgameRenderContext | None = None,
+    frozen_render_dims: Cell3 | None = None,
 ) -> None:
     gravity_ms = gravity_interval_ms_from_config(state.config)
     rows_per_sec = 1000.0 / gravity_ms if gravity_ms > 0 else 0.0
     analysis_lines = hud_analysis_lines(state.last_score_analysis)
+    board_dims = basis.dims3 if frozen_render_dims is None else frozen_render_dims
+    layer_axis_label = (
+        basis.layer_axis_label
+        if frozen_context is None
+        else (frozen_context.layer_axis_label or basis.layer_axis_label)
+    )
+    layer_count = (
+        basis.layer_count
+        if frozen_context is None
+        else int(frozen_context.layer_count)
+    )
+    yaw_deg = float(view.yaw_deg if frozen_context is None else frozen_context.yaw_deg)
+    pitch_deg = float(
+        view.pitch_deg if frozen_context is None else frozen_context.pitch_deg
+    )
+    xw_deg = float(view.xw_deg if frozen_context is None else frozen_context.xw_deg)
+    zw_deg = float(view.zw_deg if frozen_context is None else frozen_context.zw_deg)
+    zoom_value = float(
+        view.zoom_scale if frozen_context is None else frozen_context.zoom
+    )
     extra_state_lines = [
         f"Dims: {state.config.dims}",
         f"Score mod: x{state.score_multiplier:.2f}",
         "View: basis-mapped 3D layer boards",
-        f"Board dims: {basis.dims3}",
-        f"Layer axis: {basis.layer_axis_label}",
-        f"Layer count: {basis.layer_count}",
+        f"Board dims: {board_dims}",
+        f"Layer axis: {layer_axis_label}",
+        f"Layer count: {layer_count}",
         f"Piece set: {piece_set_4d_label(state.config.piece_set_id)}",
         f"Exploration: {'ON' if state.config.exploration_mode else 'OFF'}",
         f"Challenge layers: {state.config.challenge_layers}",
         f"Fall: {rows_per_sec:.2f}/s",
         f"Grid: {grid_mode_label(grid_mode)}",
-        f"Yaw: {view.yaw_deg:.1f}",
-        f"Pitch: {view.pitch_deg:.1f}",
-        f"XW: {view.xw_deg:.1f}",
-        f"ZW: {view.zw_deg:.1f}",
-        f"Zoom: {view.zoom_scale:.2f}",
+        f"Yaw: {yaw_deg:.1f}",
+        f"Pitch: {pitch_deg:.1f}",
+        f"XW: {xw_deg:.1f}",
+        f"ZW: {zw_deg:.1f}",
+        f"Zoom: {zoom_value:.2f}",
     ]
     draw_unified_game_side_panel(
         surface,
@@ -1070,6 +1240,7 @@ def draw_game_frame(
     active_overlay: ActiveOverlay4D | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
+    endgame_animation: EndgameAnimationState | None = None,
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
@@ -1093,34 +1264,72 @@ def draw_game_frame(
     pygame.draw.rect(screen, (14, 18, 36), layers_rect, border_radius=10)
 
     basis = _basis_for_view(view, state.config.dims)
-    helper_marks_by_layer = (
-        _helper_grid_marks_by_layer(state, basis)
-        if grid_mode == GridMode.HELPER
-        else {}
+    frozen_context = (
+        endgame_animation.snapshot.render_context
+        if endgame_animation is not None and endgame_animation.frozen_render_active
+        else None
     )
-    locked_by_layer = _locked_cells_by_layer(state, basis)
-    layer_rect_by_layer = _layer_rects_by_layer(
-        area=layers_rect,
-        layer_count=basis.layer_count,
+    frozen_render_dims = (
+        endgame_animation.snapshot.render_dims
+        if endgame_animation is not None and endgame_animation.frozen_render_active
+        else None
     )
-    for layer_index in range(basis.layer_count):
-        layer_rect = layer_rect_by_layer.get(layer_index)
-        if layer_rect is None:
-            continue
-        _draw_layer_board(
+    if endgame_animation is not None and endgame_animation.frozen_render_active:
+        layer_rect_by_layer = _layer_rects_by_layer(
+            area=layers_rect,
+            layer_count=max(1, int(endgame_animation.snapshot.render_context.layer_count)),
+        )
+        for layer_index in range(
+            max(1, int(endgame_animation.snapshot.render_context.layer_count))
+        ):
+            layer_rect = layer_rect_by_layer.get(layer_index)
+            if layer_rect is None:
+                continue
+            _draw_endgame_layer_board(
+                screen,
+                rect=layer_rect,
+                layer_index=layer_index,
+                snapshot=endgame_animation.snapshot,
+                context=endgame_animation.snapshot.render_context,
+                fonts=fonts,
+                endgame_animation=endgame_animation,
+            )
+    else:
+        helper_marks_by_layer = (
+            _helper_grid_marks_by_layer(state, basis)
+            if grid_mode == GridMode.HELPER
+            else {}
+        )
+        locked_by_layer = _locked_cells_by_layer(state, basis)
+        layer_rect_by_layer = _layer_rects_by_layer(
+            area=layers_rect,
+            layer_count=basis.layer_count,
+        )
+        for layer_index in range(basis.layer_count):
+            layer_rect = layer_rect_by_layer.get(layer_index)
+            if layer_rect is None:
+                continue
+            _draw_layer_board(
+                screen,
+                state,
+                view,
+                layer_rect,
+                layer_index,
+                basis,
+                fonts,
+                grid_mode=grid_mode,
+                locked_by_layer=locked_by_layer,
+                helper_marks=helper_marks_by_layer.get(layer_index),
+                clear_anim=clear_anim,
+                active_overlay=active_overlay,
+                overlay_transparency=overlay_transparency,
+            )
+    if state.game_over:
+        draw_game_over_banner(
             screen,
-            state,
-            view,
-            layer_rect,
-            layer_index,
-            basis,
-            fonts,
-            grid_mode=grid_mode,
-            locked_by_layer=locked_by_layer,
-            helper_marks=helper_marks_by_layer.get(layer_index),
-            clear_anim=clear_anim,
-            active_overlay=active_overlay,
-            overlay_transparency=overlay_transparency,
+            rect=layers_rect,
+            fonts=fonts,
+            subtitle="Projected terminal fragments continue through the shared 4D view",
         )
 
     _draw_side_panel(
@@ -1133,6 +1342,8 @@ def draw_game_frame(
         grid_mode=grid_mode,
         bot_lines=bot_lines,
         overlay_transparency=overlay_transparency,
+        frozen_context=frozen_context,
+        frozen_render_dims=frozen_render_dims,
     )
 
 

@@ -121,6 +121,13 @@ class TestProjectConfig(unittest.TestCase):
         self.assertGreater(
             project_constant_int(("rendering", "3d", "side_panel"), 0), 0
         )
+        self.assertGreater(
+            project_constant_int(("layout", "menu_slider", "track_height"), 0), 0
+        )
+        self.assertGreater(
+            project_constant_int(("layout", "menu_slider", "track_preferred_width"), 0),
+            0,
+        )
         soft_drop_delay = project_constant_int(
             ("tutorial", "action_delay_ms", "soft_drop"),
             0,

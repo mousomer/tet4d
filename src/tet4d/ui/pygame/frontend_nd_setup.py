@@ -50,13 +50,17 @@ from tet4d.engine.topology_explorer.transport_resolver import (
 )
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.ui.pygame.ui_utils import (
+    compute_slider_row_layout,
     draw_corner_chip,
     draw_tron_menu_background,
     draw_tron_panel,
     draw_value_slider,
+    draw_wrapped_label_value_lines,
     fit_text,
     format_menu_title,
+    menu_slider_row_min_total_width,
     standard_menu_panel_rect,
+    wrapped_label_value_layout,
 )
 
 
@@ -211,6 +215,135 @@ def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
     return str(value)
 
 
+def _setup_row_height(
+    font: pygame.font.Font,
+    *,
+    label: str,
+    value_text: str,
+    value: object,
+    min_value: int,
+    max_value: int,
+    total_width: int,
+) -> int:
+    if max_value > min_value and isinstance(value, int):
+        return compute_slider_row_layout(
+            font,
+            label=label,
+            value=value_text,
+            total_width=total_width,
+        ).row_height
+    return wrapped_label_value_layout(
+        font,
+        label=label,
+        value=value_text,
+        total_width=total_width,
+    )[2]
+
+
+def _draw_setup_menu_row(
+    screen: pygame.Surface,
+    *,
+    font: pygame.font.Font,
+    option_x: int,
+    option_w: int,
+    line_y: int,
+    label: str,
+    value: object,
+    value_text: str,
+    min_value: int,
+    max_value: int,
+    selected: bool,
+    flash_frames: int,
+    min_row_height: int,
+) -> int:
+    txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
+    slider_layout = (
+        compute_slider_row_layout(
+            font,
+            label=label,
+            value=value_text,
+            total_width=option_w,
+        )
+        if max_value > min_value and isinstance(value, int)
+        else None
+    )
+    if slider_layout is None:
+        label_lines, value_lines, row_height = wrapped_label_value_layout(
+            font,
+            label=label,
+            value=value_text,
+            total_width=option_w,
+        )
+    else:
+        label_lines = slider_layout.label_lines
+        value_lines = slider_layout.value_lines
+        row_height = slider_layout.row_height
+    row_height = max(int(min_row_height), row_height)
+    if slider_layout is None:
+        text_top_y = line_y
+        value_right = option_x + option_w
+    else:
+        text_top_y = line_y + slider_layout.text_top_padding
+        value_right = (
+            option_x
+            + slider_layout.label_width
+            + slider_layout.text_gap
+            + slider_layout.value_width
+        )
+    if selected:
+        highlight_rect = pygame.Rect(option_x - 8, line_y - 4, option_w + 16, row_height)
+        highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(
+            highlight_surf,
+            (255, 255, 255, 40),
+            highlight_surf.get_rect(),
+            border_radius=10,
+        )
+        screen.blit(highlight_surf, highlight_rect.topleft)
+        if flash_frames > 0:
+            flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+            pygame.draw.rect(
+                flash_surf,
+                (112, 236, 255, min(120, 42 + (flash_frames * 6))),
+                flash_surf.get_rect(),
+                border_radius=10,
+            )
+            screen.blit(flash_surf, highlight_rect.topleft)
+    draw_wrapped_label_value_lines(
+        screen,
+        font=font,
+        label_lines=label_lines,
+        value_lines=value_lines,
+        label_x=option_x,
+        value_right=value_right,
+        top_y=text_top_y,
+        label_color=txt_color,
+    )
+    if slider_layout is not None:
+        draw_value_slider(
+            screen,
+            rect=pygame.Rect(
+                option_x + option_w - slider_layout.slider_width,
+                line_y
+                + row_height
+                - slider_layout.row_bottom_padding
+                - slider_layout.slider_height,
+                slider_layout.slider_width,
+                slider_layout.slider_height,
+            ),
+            fraction=max(
+                0.0,
+                min(
+                    1.0,
+                    (int(value) - int(min_value))
+                    / max(1, int(max_value) - int(min_value)),
+                ),
+            ),
+            flash_strength=max(0.0, min(1.0, flash_frames / 12.0)) if selected else 0.0,
+        )
+    return row_height
+
+
 def draw_menu(
     screen: pygame.Surface, fonts: GfxFonts, state: MenuState, dimension: int
 ) -> None:
@@ -229,18 +362,36 @@ def draw_menu(
     screen.blit(title_surf, (title_x, title_y))
     draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
-    panel_w = min(max(360, int(width * 0.65)), width - 24)
+    panel_w = min(
+        width - 24,
+        max(360, int(width * 0.65), min(menu_slider_row_min_total_width() + 76, width - 24)),
+    )
     hint_line_h = fonts.hint_font.get_height() + 4
     bottom_lines = 4 + (1 if state.bindings_status else 0)
     panel_top = title_y + title_surf.get_height() + 18
     panel_max_h = max(140, height - panel_top - (bottom_lines * hint_line_h) - 10)
+    slider_row_heights = [
+        _setup_row_height(
+            fonts.menu_font,
+            label=label,
+            value_text=_menu_value_text(dimension, attr_name, getattr(state.settings, attr_name)),
+            value=getattr(state.settings, attr_name),
+            min_value=min_value,
+            max_value=max_value,
+            total_width=max(1, panel_w - 48),
+        )
+        for label, attr_name, min_value, max_value in fields
+    ]
     row_h = min(
-        44,
+        max(slider_row_heights) if slider_row_heights else 44,
         max(
             fonts.menu_font.get_height() + 8, (panel_max_h - 40) // max(1, len(fields))
         ),
     )
-    panel_h = min(panel_max_h, 40 + len(fields) * row_h)
+    panel_h = min(
+        panel_max_h,
+        40 + sum(max(height_value, row_h) for height_value in slider_row_heights),
+    )
     panel_rect = standard_menu_panel_rect(
         screen,
         panel_w=panel_w,
@@ -262,62 +413,21 @@ def draw_menu(
             break
         value = getattr(state.settings, attr_name)
         value_text = _menu_value_text(dimension, attr_name, value)
-        selected = idx == state.selected_index
-        txt_color = HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        value_col_w = min(180, max(108, int(option_w * 0.31)))
-        label_w = max(80, option_w - value_col_w - 14)
-        text_surf = fonts.menu_font.render(
-            fit_text(fonts.menu_font, label, label_w),
-            True,
-            txt_color,
+        y += _draw_setup_menu_row(
+            screen,
+            font=fonts.menu_font,
+            option_x=option_x,
+            option_w=option_w,
+            line_y=y,
+            label=label,
+            value=value,
+            value_text=value_text,
+            min_value=min_value,
+            max_value=max_value,
+            selected=(idx == state.selected_index),
+            flash_frames=state.flash_selected_frames,
+            min_row_height=row_h,
         )
-        value_surf = fonts.menu_font.render(
-            fit_text(fonts.menu_font, value_text, value_col_w),
-            True,
-            txt_color,
-        )
-        text_rect = text_surf.get_rect(topleft=(option_x, y))
-        if selected:
-            highlight_rect = pygame.Rect(
-                option_x - 8, y - 4, option_w + 16, text_rect.height + 10
-            )
-            highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(
-                highlight_surf,
-                (255, 255, 255, 40),
-                highlight_surf.get_rect(),
-                border_radius=10,
-            )
-            screen.blit(highlight_surf, highlight_rect.topleft)
-            if state.flash_selected_frames > 0:
-                flash_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
-                pygame.draw.rect(
-                    flash_surf,
-                    (112, 236, 255, min(120, 42 + (state.flash_selected_frames * 6))),
-                    flash_surf.get_rect(),
-                    border_radius=10,
-                )
-                screen.blit(flash_surf, highlight_rect.topleft)
-        screen.blit(text_surf, text_rect.topleft)
-        screen.blit(value_surf, (option_x + option_w - value_surf.get_width(), y))
-        if max_value > min_value and isinstance(value, int):
-            draw_value_slider(
-                screen,
-                rect=pygame.Rect(
-                    option_x + option_w - value_col_w,
-                    y + fonts.menu_font.get_height() + 4,
-                    value_col_w,
-                    7,
-                ),
-                fraction=max(
-                    0.0,
-                    min(1.0, (int(value) - int(min_value)) / max(1, int(max_value) - int(min_value))),
-                ),
-                flash_strength=max(0.0, min(1.0, state.flash_selected_frames / 12.0))
-                if selected
-                else 0.0,
-            )
-        y += row_h
 
     hint_lines = list(setup_hints_for_dimension(dimension))
     hint_y = panel_y + panel_h + 8
