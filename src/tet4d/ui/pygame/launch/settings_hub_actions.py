@@ -16,6 +16,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     GAME_SEED_STEP,
     OVERLAY_TRANSPARENCY_STEP,
     clamp_animation_duration_ms,
+    clamp_endgame_speed_percent,
     clamp_game_seed,
     clamp_overlay_transparency,
     default_display_settings,
@@ -26,7 +27,11 @@ from tet4d.engine.runtime.menu_settings_state import (
     save_shared_gameplay_settings,
 )
 from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
-from tet4d.engine.runtime.settings_schema import clamp_lines_per_level, sanitize_text
+from tet4d.engine.runtime.settings_schema import (
+    ENDGAME_SPEED_PERCENT_STEP,
+    clamp_lines_per_level,
+    sanitize_text,
+)
 from tet4d.engine.topology_explorer import movement_graph as movement_graph_module
 from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
@@ -52,7 +57,9 @@ from .settings_hub_model import (
     _RANDOM_MODE_DEFAULT,
     _RANDOM_MODE_LABELS,
     _ENDGAME_INTERACTION_MODE_DEFAULT,
+    _ENDGAME_RELIC_SPEED_DEFAULT,
     _ENDGAME_PRESET_DEFAULT,
+    _ENDGAME_SHATTER_SPEED_DEFAULT,
     _ROTATION_ANIMATION_MODE_DEFAULT,
     _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
     _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
@@ -227,6 +234,8 @@ def _save_unified_settings(
         kick_level_index=int(state.kick_level_index),
         endgame_preset_id=str(state.endgame_preset_id),
         endgame_interaction_mode=str(state.endgame_interaction_mode),
+        endgame_relic_speed_percent=int(state.endgame_relic_speed_percent),
+        endgame_shatter_speed_percent=int(state.endgame_shatter_speed_percent),
         auto_speedup_enabled=int(state.auto_speedup_enabled),
         lines_per_level=int(state.lines_per_level),
         rotation_animation_mode=str(state.rotation_animation_mode),
@@ -244,6 +253,12 @@ def _save_unified_settings(
         state.original_kick_level_index = int(state.kick_level_index)
         state.original_endgame_preset_id = str(state.endgame_preset_id)
         state.original_endgame_interaction_mode = str(state.endgame_interaction_mode)
+        state.original_endgame_relic_speed_percent = int(
+            state.endgame_relic_speed_percent
+        )
+        state.original_endgame_shatter_speed_percent = int(
+            state.endgame_shatter_speed_percent
+        )
         state.original_auto_speedup_enabled = int(state.auto_speedup_enabled)
         state.original_lines_per_level = int(state.lines_per_level)
         state.original_rotation_animation_mode = str(state.rotation_animation_mode)
@@ -288,6 +303,8 @@ def _reset_unified_settings(
     state.kick_level_index = _KICK_LEVEL_DEFAULT
     state.endgame_preset_id = _ENDGAME_PRESET_DEFAULT
     state.endgame_interaction_mode = _ENDGAME_INTERACTION_MODE_DEFAULT
+    state.endgame_relic_speed_percent = _ENDGAME_RELIC_SPEED_DEFAULT
+    state.endgame_shatter_speed_percent = _ENDGAME_SHATTER_SPEED_DEFAULT
     state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
     state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
     state.rotation_animation_mode = _ROTATION_ANIMATION_MODE_DEFAULT
@@ -406,6 +423,26 @@ def _adjust_unified_gameplay_row(
             current=str(state.endgame_interaction_mode),
             values=ENDGAME_INTERACTION_MODES,
             delta_sign=delta_sign,
+        )
+        _flash_row(state, row_key)
+        return True
+    if row_key == "endgame_relic_speed_percent":
+        state.endgame_relic_speed_percent = int(
+            clamp_endgame_speed_percent(
+                int(state.endgame_relic_speed_percent)
+                + (delta_sign * int(ENDGAME_SPEED_PERCENT_STEP)),
+                default=_ENDGAME_RELIC_SPEED_DEFAULT,
+            )
+        )
+        _flash_row(state, row_key)
+        return True
+    if row_key == "endgame_shatter_speed_percent":
+        state.endgame_shatter_speed_percent = int(
+            clamp_endgame_speed_percent(
+                int(state.endgame_shatter_speed_percent)
+                + (delta_sign * int(ENDGAME_SPEED_PERCENT_STEP)),
+                default=_ENDGAME_SHATTER_SPEED_DEFAULT,
+            )
         )
         _flash_row(state, row_key)
         return True

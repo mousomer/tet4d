@@ -540,6 +540,7 @@ def run_pause_menu(
         _items: tuple[dict[str, str], ...],
         selected: int,
         _depth: int,
+        _selected_action_indexes: dict[str, int],
     ) -> None:
         state.selected = selected
         _draw_pause_menu(

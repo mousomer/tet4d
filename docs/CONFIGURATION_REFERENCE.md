@@ -271,7 +271,7 @@ Parameters:
 - `topic_blocks.scoring_and_leaderboard.compact_lines[]`: array[`string`]; examples: `""`, `"## Clear points"`, `"- Base: 1=40, 2=100, 3=300, 4=1200, 5+=1200+(n-4)*400."`
 - `topic_blocks.scoring_and_leaderboard.full_lines[]`: array[`string`]; examples: `""`, `"## Base clear points"`, `"- 1 line/layer: +40"`
 - `topic_blocks.settings_profiles.compact_lines[]`: array[`string`]; examples: `""`, `"## Settings categories"`, `"- Open Settings from the launcher or pause menu, then choose a categ...`
-- `topic_blocks.settings_profiles.full_lines[]`: array[`string`]; examples: `""`, `"## Settings categories"`, `"- Settings now uses one shared page tree for Game Settings, Endgame ...`
+- `topic_blocks.settings_profiles.full_lines[]`: array[`string`]; examples: `""`, `"## Settings categories"`, `"- Settings now uses one shared page tree for Game, Display, Audio, d...`
 - `topic_blocks.troubleshooting.compact_lines[]`: array[`string`]; examples: `""`, `"## Quick recovery"`, `"- Re-open Keybindings Setup if controls feel inconsistent."`
 - `topic_blocks.troubleshooting.full_lines[]`: array[`string`]; examples: `""`, `"## Quick recovery"`, `"- Re-open Keybindings Setup if controls feel inconsistent."`
 - `value_templates.live_keys_heading`: `"## Live keys (active profile)"` (`string`)
@@ -999,6 +999,8 @@ Parameters:
 - `settings.2d.challenge_layers`: `0` (`int`)
 - `settings.2d.endgame_interaction_mode`: `"none"` (`string`)
 - `settings.2d.endgame_preset_id`: `"default_orbit"` (`string`)
+- `settings.2d.endgame_relic_speed_percent`: `100` (`int`)
+- `settings.2d.endgame_shatter_speed_percent`: `100` (`int`)
 - `settings.2d.exploration_mode`: `0` (`int`)
 - `settings.2d.explorer_height`: `8` (`int`)
 - `settings.2d.explorer_width`: `8` (`int`)
@@ -1026,6 +1028,8 @@ Parameters:
 - `settings.3d.depth`: `6` (`int`)
 - `settings.3d.endgame_interaction_mode`: `"none"` (`string`)
 - `settings.3d.endgame_preset_id`: `"default_orbit"` (`string`)
+- `settings.3d.endgame_relic_speed_percent`: `100` (`int`)
+- `settings.3d.endgame_shatter_speed_percent`: `100` (`int`)
 - `settings.3d.exploration_mode`: `0` (`int`)
 - `settings.3d.explorer_depth`: `8` (`int`)
 - `settings.3d.explorer_height`: `8` (`int`)
@@ -1053,6 +1057,8 @@ Parameters:
 - `settings.4d.depth`: `6` (`int`)
 - `settings.4d.endgame_interaction_mode`: `"none"` (`string`)
 - `settings.4d.endgame_preset_id`: `"default_orbit"` (`string`)
+- `settings.4d.endgame_relic_speed_percent`: `100` (`int`)
+- `settings.4d.endgame_shatter_speed_percent`: `100` (`int`)
 - `settings.4d.exploration_mode`: `0` (`int`)
 - `settings.4d.explorer_depth`: `8` (`int`)
 - `settings.4d.explorer_fourth`: `8` (`int`)
@@ -1083,7 +1089,7 @@ Parameters:
 - `branding.signature_author`: `"\u00a9 Omer M. Moussaffi (mousomer@gmail.com)"` (`string`)
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
-- `launcher_subtitles.launcher_play`: `"Play a standard run, reopen the last custom topology, or use play-ad...` (`string`)
+- `launcher_subtitles.launcher_play`: `"Choose a dimension, use Left/Right to switch between Play and Setup,...` (`string`)
 - `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
 - `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
@@ -1144,10 +1150,15 @@ Parameters:
 - `menus.keybindings_scope_general.items[].type`: `"keybinding_group"` (`string`)
 - `menus.keybindings_scope_general.title`: `"General"` (`string`)
 - `menus.launcher_play.items[]`: array[`object`]
-- `menus.launcher_play.items[].action_id`: varies (`string`); examples: `"play_2d"`, `"play_3d"`, `"play_4d"`
-- `menus.launcher_play.items[].id`: varies (`string`); examples: `"play_2d"`, `"play_3d"`, `"play_4d"`
+- `menus.launcher_play.items[].action_id`: varies (`string`); examples: `"play_last_custom_topology"`, `"bot_options"`, `"leaderboard"`
+- `menus.launcher_play.items[].actions[]`: array[`object`]
+- `menus.launcher_play.items[].actions[].action_id`: varies (`string`); examples: `"play_2d"`, `"setup_2d"`, `"play_3d"`
+- `menus.launcher_play.items[].actions[].id`: varies (`string`); examples: `"play"`, `"setup"`
+- `menus.launcher_play.items[].actions[].label`: varies (`string`); examples: `"Play"`, `"Setup"`
+- `menus.launcher_play.items[].default_action_id`: varies (`string`); examples: `"play"`
+- `menus.launcher_play.items[].id`: varies (`string`); examples: `"play_2d_row"`, `"play_3d_row"`, `"play_4d_row"`
 - `menus.launcher_play.items[].label`: varies (`string`); examples: `"2D"`, `"3D"`, `"4D"`
-- `menus.launcher_play.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_play.items[].type`: varies (`string`); examples: `"action_group"`, `"action"`
 - `menus.launcher_play.title`: `"Choose Mode"` (`string`)
 - `menus.launcher_root.items[]`: array[`object`]
 - `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"settings"`
@@ -1182,12 +1193,6 @@ Parameters:
 - `menus.settings_audio.items[].setting_id`: varies (`string`); examples: `"audio_master"`, `"audio_sfx"`, `"audio_mute"`
 - `menus.settings_audio.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"toggle"`
 - `menus.settings_audio.title`: `"Audio"` (`string`)
-- `menus.settings_controls.items[]`: array[`object`]
-- `menus.settings_controls.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"back"`
-- `menus.settings_controls.items[].id`: varies (`string`); examples: `"controls_section"`, `"keybindings"`, `"controls_profiles_info"`
-- `menus.settings_controls.items[].label`: varies (`string`); examples: `"Controls"`, `"Keyboard Bindings"`, `"Profile management, save/load, and conflict handling live inside Key...`
-- `menus.settings_controls.items[].type`: varies (`string`); examples: `"section"`, `"action"`, `"info"`
-- `menus.settings_controls.title`: `"Controls"` (`string`)
 - `menus.settings_display.items[]`: array[`object`]
 - `menus.settings_display.items[].action_id`: varies (`string`); examples: `"display_apply"`, `"save"`, `"reset"`
 - `menus.settings_display.items[].id`: varies (`string`); examples: `"display_section"`, `"display_fullscreen"`, `"display_width"`
@@ -1195,78 +1200,30 @@ Parameters:
 - `menus.settings_display.items[].setting_id`: varies (`string`); examples: `"display_fullscreen"`, `"display_width"`, `"display_height"`
 - `menus.settings_display.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"slider"`
 - `menus.settings_display.title`: `"Display"` (`string`)
-- `menus.settings_endgame_effects.items[]`: array[`object`]
-- `menus.settings_endgame_effects.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
-- `menus.settings_endgame_effects.items[].id`: varies (`string`); examples: `"endgame_effects_section"`, `"endgame_preset_id"`, `"endgame_interaction_mode"`
-- `menus.settings_endgame_effects.items[].label`: varies (`string`); examples: `"Endgame Effects"`, `"Relic-field preset"`, `"Relic interaction"`
-- `menus.settings_endgame_effects.items[].setting_id`: varies (`string`); examples: `"endgame_preset_id"`, `"endgame_interaction_mode"`
-- `menus.settings_endgame_effects.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"info"`
-- `menus.settings_endgame_effects.title`: `"Endgame Effects"` (`string`)
-- `menus.settings_game_board_geometry.items[]`: array[`object`]
-- `menus.settings_game_board_geometry.items[].action_id`: varies (`string`); examples: `"topology_cache_measure"`, `"topology_cache_clear"`, `"back"`
-- `menus.settings_game_board_geometry.items[].id`: varies (`string`); examples: `"board_geometry_section"`, `"game_topology_advanced"`, `"board_geometry_info"`
-- `menus.settings_game_board_geometry.items[].label`: varies (`string`); examples: `"Board / Geometry"`, `"Advanced topology controls"`, `"Board dimensions remain in each mode's setup screen; custom topology...`
-- `menus.settings_game_board_geometry.items[].setting_id`: `"game_topology_advanced"` (`string`)
-- `menus.settings_game_board_geometry.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"info"`
-- `menus.settings_game_board_geometry.title`: `"Board / Geometry"` (`string`)
-- `menus.settings_game_difficulty_pace.items[]`: array[`object`]
-- `menus.settings_game_difficulty_pace.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
-- `menus.settings_game_difficulty_pace.items[].id`: varies (`string`); examples: `"difficulty_pace_section"`, `"auto_speedup_enabled"`, `"lines_per_level"`
-- `menus.settings_game_difficulty_pace.items[].label`: varies (`string`); examples: `"Difficulty / Pace"`, `"Auto speed-up by clears"`, `"Lines per level"`
-- `menus.settings_game_difficulty_pace.items[].setting_id`: varies (`string`); examples: `"auto_speedup_enabled"`, `"lines_per_level"`
-- `menus.settings_game_difficulty_pace.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"slider"`
-- `menus.settings_game_difficulty_pace.title`: `"Difficulty / Pace"` (`string`)
-- `menus.settings_game_gameplay.items[]`: array[`object`]
-- `menus.settings_game_gameplay.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
-- `menus.settings_game_gameplay.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
-- `menus.settings_game_gameplay.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
-- `menus.settings_game_gameplay.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
-- `menus.settings_game_gameplay.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"selector"`
-- `menus.settings_game_gameplay.title`: `"Gameplay"` (`string`)
-- `menus.settings_game_movement_rotation.items[]`: array[`object`]
-- `menus.settings_game_movement_rotation.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
-- `menus.settings_game_movement_rotation.items[].id`: varies (`string`); examples: `"movement_rotation_section"`, `"rotation_animation_mode"`, `"kick_level_index"`
-- `menus.settings_game_movement_rotation.items[].label`: varies (`string`); examples: `"Movement / Rotation"`, `"Rotation animation mode"`, `"Kick permissiveness"`
-- `menus.settings_game_movement_rotation.items[].setting_id`: varies (`string`); examples: `"rotation_animation_mode"`, `"kick_level_index"`, `"rotation_animation_duration_ms_2d"`
-- `menus.settings_game_movement_rotation.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"slider"`
-- `menus.settings_game_movement_rotation.title`: `"Movement / Rotation"` (`string`)
 - `menus.settings_game_root.items[]`: array[`object`]
-- `menus.settings_game_root.items[].action_id`: `"back"` (`string`)
-- `menus.settings_game_root.items[].description`: varies (`string`); examples: `"Seed, random mode, and score logging."`, `"Board-structure notes and topology-cache tools."`, `"Kick permissiveness and animation timing."`
-- `menus.settings_game_root.items[].id`: varies (`string`); examples: `"settings_game_gameplay"`, `"settings_game_board_geometry"`, `"settings_game_movement_rotation"`
-- `menus.settings_game_root.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Board / Geometry"`, `"Movement / Rotation"`
-- `menus.settings_game_root.items[].menu_id`: varies (`string`); examples: `"settings_game_gameplay"`, `"settings_game_board_geometry"`, `"settings_game_movement_rotation"`
-- `menus.settings_game_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
-- `menus.settings_game_root.title`: `"Game Settings"` (`string`)
-- `menus.settings_game_visual_animation.items[]`: array[`object`]
-- `menus.settings_game_visual_animation.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
-- `menus.settings_game_visual_animation.items[].id`: varies (`string`); examples: `"visual_animation_section"`, `"display_overlay_transparency"`, `"save"`
-- `menus.settings_game_visual_animation.items[].label`: varies (`string`); examples: `"Visual / Animation"`, `"Locked-cell transparency"`, `"Save"`
-- `menus.settings_game_visual_animation.items[].setting_id`: `"display_overlay_transparency"` (`string`)
-- `menus.settings_game_visual_animation.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"action"`
-- `menus.settings_game_visual_animation.title`: `"Visual / Animation"` (`string`)
-- `menus.settings_legacy.items[]`: array[`object`]
-- `menus.settings_legacy.items[].action_id`: varies (`string`); examples: `"settings_legacy_topology_editor"`, `"back"`
-- `menus.settings_legacy.items[].id`: varies (`string`); examples: `"legacy_section"`, `"settings_legacy_topology_editor"`, `"legacy_topology_editor_info"`
-- `menus.settings_legacy.items[].label`: varies (`string`); examples: `"Legacy"`, `"Legacy Topology Editor Menu"`, `"Compatibility-backed path for the older topology editor shell."`
-- `menus.settings_legacy.items[].type`: varies (`string`); examples: `"section"`, `"legacy_dispatch"`, `"info"`
-- `menus.settings_legacy.title`: `"Legacy"` (`string`)
+- `menus.settings_game_root.items[].action_id`: varies (`string`); examples: `"topology_cache_measure"`, `"topology_cache_clear"`, `"save"`
+- `menus.settings_game_root.items[].description`: `"Overlay transparency for locked cells in gameplay views."` (`string`)
+- `menus.settings_game_root.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
+- `menus.settings_game_root.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
+- `menus.settings_game_root.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
+- `menus.settings_game_root.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"selector"`
+- `menus.settings_game_root.title`: `"Game"` (`string`)
 - `menus.settings_root.items[]`: array[`object`]
-- `menus.settings_root.items[].action_id`: `"back"` (`string`)
-- `menus.settings_root.items[].description`: varies (`string`); examples: `"Gameplay, geometry, movement, visual, and difficulty pages."`, `"Persistent relic-field preset and interaction settings."`, `"Fullscreen, window size, and display application."`
-- `menus.settings_root.items[].id`: varies (`string`); examples: `"settings_game_root"`, `"settings_endgame_effects"`, `"settings_display"`
-- `menus.settings_root.items[].label`: varies (`string`); examples: `"Game Settings"`, `"Endgame Effects"`, `"Display"`
-- `menus.settings_root.items[].menu_id`: varies (`string`); examples: `"settings_game_root"`, `"settings_endgame_effects"`, `"settings_display"`
-- `menus.settings_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
+- `menus.settings_root.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"settings_legacy_topology_editor"`, `"back"`
+- `menus.settings_root.items[].description`: varies (`string`); examples: `"One scrolling gameplay settings page with sections for rules, geomet...`, `"Fullscreen, window size, and display application."`, `"Master volume, SFX volume, and mute."`
+- `menus.settings_root.items[].id`: varies (`string`); examples: `"settings_game_root"`, `"settings_display"`, `"settings_audio"`
+- `menus.settings_root.items[].label`: varies (`string`); examples: `"Game"`, `"Display"`, `"Audio"`
+- `menus.settings_root.items[].menu_id`: varies (`string`); examples: `"settings_game_root"`, `"settings_display"`, `"settings_audio"`
+- `menus.settings_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`, `"legacy_dispatch"`
 - `menus.settings_root.title`: `"Settings"` (`string`)
 - `pause_copy.hints[]`: array[`string`]; examples: `"Up/Down select   Enter apply"`, `"Esc resume   Q quit"`
 - `pause_copy.subtitle_template`: `"{dimension}D in-game controls and settings"` (`string`)
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
 - `settings_category_docs[]`: array[`object`]
-- `settings_category_docs[].description`: varies (`string`); examples: `"Persisted active keybinding profile selection and related profile de...`, `"Split into gameplay, board / geometry, movement / rotation, visual /...`, `"Per-mode board dimensions, piece sets, speed, and setup-only gamepla...`
+- `settings_category_docs[].description`: varies (`string`); examples: `"Persisted active keybinding profile selection and related profile de...`, `"One scrolling gameplay settings page with Gameplay, Board / Geometry...`, `"Per-mode board dimensions, piece sets, speed, and setup-only gamepla...`
 - `settings_category_docs[].id`: varies (`string`); examples: `"profiles"`, `"game_settings"`, `"gameplay_setup"`
-- `settings_category_docs[].label`: varies (`string`); examples: `"Keybinding profiles"`, `"Game Settings"`, `"Gameplay setup"`
+- `settings_category_docs[].label`: varies (`string`); examples: `"Keybinding profiles"`, `"Game"`, `"Gameplay setup"`
 - `settings_category_metrics.audio.action_count`: `3` (`int`)
 - `settings_category_metrics.audio.field_count`: `3` (`int`)
 - `settings_category_metrics.audio.mode_specific`: `false` (`bool`)
@@ -1274,23 +1231,23 @@ Parameters:
 - `settings_category_metrics.controls.action_count`: `1` (`int`)
 - `settings_category_metrics.controls.field_count`: `0` (`int`)
 - `settings_category_metrics.controls.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.controls.top_level`: `true` (`bool`)
+- `settings_category_metrics.controls.top_level`: `false` (`bool`)
 - `settings_category_metrics.display.action_count`: `4` (`int`)
 - `settings_category_metrics.display.field_count`: `3` (`int`)
 - `settings_category_metrics.display.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.display.top_level`: `true` (`bool`)
-- `settings_category_metrics.endgame_effects.action_count`: `3` (`int`)
-- `settings_category_metrics.endgame_effects.field_count`: `2` (`int`)
+- `settings_category_metrics.endgame_effects.action_count`: `0` (`int`)
+- `settings_category_metrics.endgame_effects.field_count`: `4` (`int`)
 - `settings_category_metrics.endgame_effects.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.endgame_effects.top_level`: `true` (`bool`)
-- `settings_category_metrics.game_settings.action_count`: `0` (`int`)
-- `settings_category_metrics.game_settings.field_count`: `0` (`int`)
+- `settings_category_metrics.endgame_effects.top_level`: `false` (`bool`)
+- `settings_category_metrics.game_settings.action_count`: `5` (`int`)
+- `settings_category_metrics.game_settings.field_count`: `16` (`int`)
 - `settings_category_metrics.game_settings.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.game_settings.top_level`: `true` (`bool`)
 - `settings_category_metrics.legacy.action_count`: `1` (`int`)
 - `settings_category_metrics.legacy.field_count`: `0` (`int`)
 - `settings_category_metrics.legacy.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.legacy.top_level`: `true` (`bool`)
+- `settings_category_metrics.legacy.top_level`: `false` (`bool`)
 - `settings_option_labels.game_endgame_interaction_mode[]`: array[`string`]; examples: `"No collisions"`, `"Collide"`
 - `settings_option_labels.game_endgame_preset[]`: array[`string`]; examples: `"Orbit relic field"`, `"Wrap all"`, `"Invert all"`
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
@@ -1331,6 +1288,8 @@ Parameters:
 - `ui_copy.keybindings_menu.subtitle_section_mode`: `"Up/Down select section, Enter open, Esc back, Q quit"` (`string`)
 - `ui_copy.keybindings_menu.text_mode_confirm_hint`: `"Enter confirm   Esc cancel"` (`string`)
 - `ui_copy.keybindings_menu.title`: `"Keybindings"` (`string`)
+- `ui_copy.launcher.controls_hint_action_group_template`: `"Up/Down select   Left/Right choose Play/Setup   Enter open   {escape...` (`string`)
+- `ui_copy.launcher.controls_hint_action_group_template_tiny`: `"I/K select   J/L choose Play/Setup   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.controls_hint_template`: `"Up/Down select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.controls_hint_template_tiny`: `"I/K select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.escape_hint_back`: `"Esc back"` (`string`)
@@ -1938,20 +1897,17 @@ Parameters:
 - `version`: `2` (`int`)
 
 ### `config/topology/lab_menu.json`
-Top-level keys: `hints`, `rows`, `status_copy`, `subtitle`, `title`, `version`
+Top-level keys: `hints`, `status_copy`, `subtitle`, `title`, `version`
 Parameters:
 - `hints[]`: array[`string`]; examples: `"Up/Down select row"`, `"Left/Right change values"`, `"Enter plays from Play tool or triggers Save/Export/Back"`
-- `rows[]`: array[`object`]
-- `rows[].key`: varies (`string`); examples: `"gameplay_mode"`, `"dimension"`, `"preset"`
-- `rows[].label`: varies (`string`); examples: `"Game Type"`, `"Dimension"`, `"Preset"`
 - `status_copy.export_error`: `"{message}"` (`string`)
 - `status_copy.export_ok`: `"{message}"` (`string`)
 - `status_copy.locked`: `"Y boundaries are fixed in Normal Game"` (`string`)
 - `status_copy.save_failed`: `"Failed saving topology profile: {message}"` (`string`)
 - `status_copy.saved`: `"Saved topology profile for {mode_label} {dimension}D"` (`string`)
 - `status_copy.updated`: `"Topology profile updated (not saved yet)"` (`string`)
-- `subtitle`: `"Scene-first explorer playground for live traversal, presets, sandbox...` (`string`)
-- `title`: `"Explorer Playground"` (`string`)
+- `subtitle`: `"Scene-first topology playground shell copy for live traversal, prese...` (`string`)
+- `title`: `"Topology Playground"` (`string`)
 - `version`: `1` (`int`)
 
 ### `config/tutorial/lessons.json`

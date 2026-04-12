@@ -80,7 +80,7 @@ def _merged_mode_settings(mode_key: str) -> dict[str, object]:
     return merged_mode_settings
 
 
-def _tutorial_settings_from_payload(
+def _settings_from_payload(
     settings_type: type[SettingsT],
     mode_key: str,
 ) -> SettingsT:
@@ -108,14 +108,15 @@ def _launch_mode_flow(
     mode_key: str,
     tutorial_settings_type: type[SettingsT] | None = None,
     tutorial_lesson_id: str | None = None,
+    use_persisted_settings: bool = False,
 ) -> LaunchResult:
     settings = None
-    if tutorial_lesson_id:
+    if tutorial_lesson_id or use_persisted_settings:
         if tutorial_settings_type is None:
             raise RuntimeError(
-                f"Tutorial launch requires a settings dataclass for mode {mode_key}"
+                f"Persisted launch requires a settings dataclass for mode {mode_key}"
             )
-        settings = _tutorial_settings_from_payload(tutorial_settings_type, mode_key)
+        settings = _settings_from_payload(tutorial_settings_type, mode_key)
     else:
         screen = open_display(display_settings, caption=setup_caption)
         settings = run_menu_fn(screen, fonts)
@@ -155,6 +156,7 @@ def launch_2d(
     display_settings: DisplaySettings,
     *,
     tutorial_lesson_id: str | None = None,
+    use_persisted_settings: bool = False,
 ) -> LaunchResult:
     from tet4d.ui.pygame import front2d_game
 
@@ -180,6 +182,7 @@ def launch_2d(
         mode_key="2d",
         tutorial_settings_type=front2d_game.GameSettings,
         tutorial_lesson_id=tutorial_lesson_id,
+        use_persisted_settings=use_persisted_settings,
     )
 
 
@@ -189,6 +192,7 @@ def launch_3d(
     display_settings: DisplaySettings,
     *,
     tutorial_lesson_id: str | None = None,
+    use_persisted_settings: bool = False,
 ) -> LaunchResult:
     from tet4d.ui.pygame import front3d_game, frontend_nd_setup
 
@@ -213,6 +217,7 @@ def launch_3d(
         mode_key="3d",
         tutorial_settings_type=frontend_nd_setup.GameSettingsND,
         tutorial_lesson_id=tutorial_lesson_id,
+        use_persisted_settings=use_persisted_settings,
     )
 
 
@@ -222,6 +227,7 @@ def launch_4d(
     display_settings: DisplaySettings,
     *,
     tutorial_lesson_id: str | None = None,
+    use_persisted_settings: bool = False,
 ) -> LaunchResult:
     from tet4d.ui.pygame import front4d_game, frontend_nd_setup
 
@@ -246,4 +252,5 @@ def launch_4d(
         mode_key="4d",
         tutorial_settings_type=frontend_nd_setup.GameSettingsND,
         tutorial_lesson_id=tutorial_lesson_id,
+        use_persisted_settings=use_persisted_settings,
     )

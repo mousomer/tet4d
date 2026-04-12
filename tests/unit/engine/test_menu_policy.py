@@ -32,8 +32,7 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             [entry["label"] for entry in top_level],
             [
-                "Game Settings",
-                "Endgame Effects",
+                "Game",
                 "Display",
                 "Audio",
             ],
@@ -59,6 +58,7 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertTrue(
             {
                 "action",
+                "action_group",
                 "submenu",
                 "section",
                 "info",
@@ -70,60 +70,12 @@ class TestMenuPolicy(unittest.TestCase):
             }.issubset(item_types)
         )
 
-    def test_authored_settings_root_declares_split_subpages_and_legacy_controls(self) -> None:
+    def test_authored_settings_root_declares_flat_game_page_and_direct_controls(self) -> None:
         settings_menu = menu_config.authored_menu_definition(menu_config.settings_menu_id())
         self.assertEqual(
             [item["label"] for item in settings_menu["items"]],
             [
-                "Game Settings",
-                "Endgame Effects",
-                "Display",
-                "Audio",
-                "Controls",
-                "Legacy",
-                "Back",
-            ],
-        )
-
-        game_menu = menu_config.authored_menu_definition("settings_game_root")
-        self.assertEqual(
-            [item["label"] for item in game_menu["items"]],
-            [
-                "Gameplay",
-                "Board / Geometry",
-                "Movement / Rotation",
-                "Visual / Animation",
-                "Difficulty / Pace",
-                "Back",
-            ],
-        )
-
-        controls_menu = menu_config.authored_menu_definition("settings_controls")
-        self.assertEqual(
-            [item["label"] for item in controls_menu["items"]],
-            [
-                "Controls",
-                "Keyboard Bindings",
-                "Profile management, save/load, and conflict handling live inside Keyboard Bindings.",
-                "Back",
-            ],
-        )
-
-        legacy_menu = menu_config.authored_menu_definition("settings_legacy")
-        legacy_rows = [item for item in legacy_menu["items"] if item["type"] == "legacy_dispatch"]
-        self.assertEqual(len(legacy_rows), 1)
-        self.assertEqual(
-            legacy_rows[0]["action_id"],
-            "settings_legacy_topology_editor",
-        )
-
-    def test_runtime_settings_root_collapses_singleton_wrappers(self) -> None:
-        settings_menu = menu_config.menu_definition(menu_config.settings_menu_id())
-        self.assertEqual(
-            [item["label"] for item in settings_menu["items"]],
-            [
-                "Game Settings",
-                "Endgame Effects",
+                "Game",
                 "Display",
                 "Audio",
                 "Keyboard Bindings",
@@ -133,26 +85,71 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
         )
-        self.assertNotIn("settings_controls", menu_config.menu_graph())
-        self.assertNotIn("settings_legacy", menu_config.menu_graph())
-        self.assertNotIn("settings_game_visual_animation", menu_config.menu_graph())
 
-        game_menu = menu_config.menu_definition("settings_game_root")
+        game_menu = menu_config.authored_menu_definition("settings_game_root")
         self.assertEqual(
-            [item["label"] for item in game_menu["items"]],
+            game_menu["title"],
+            "Game",
+        )
+        self.assertEqual(
+            [item["label"] for item in game_menu["items"] if item["type"] == "section"],
             [
                 "Gameplay",
                 "Board / Geometry",
                 "Movement / Rotation",
-                "Locked-cell transparency",
-                "Save",
-                "Reset defaults",
+                "Endgame Effects",
                 "Difficulty / Pace",
+            ],
+        )
+        item_ids = [item["id"] for item in game_menu["items"]]
+        self.assertIn("display_overlay_transparency", item_ids)
+        self.assertIn("endgame_preset_id", item_ids)
+        self.assertIn("save", item_ids)
+        self.assertIn("reset", item_ids)
+        self.assertIn("back", item_ids)
+        self.assertNotIn(
+            "settings_game_gameplay",
+            menu_config.authored_menu_graph(),
+        )
+        self.assertNotIn(
+            "settings_endgame_effects",
+            menu_config.authored_menu_graph(),
+        )
+
+    def test_runtime_settings_root_collapses_singleton_wrappers(self) -> None:
+        settings_menu = menu_config.menu_definition(menu_config.settings_menu_id())
+        self.assertEqual(
+            [item["label"] for item in settings_menu["items"]],
+            [
+                "Game",
+                "Display",
+                "Audio",
+                "Keyboard Bindings",
+                "Legacy Topology Editor Menu",
                 "Back",
             ],
         )
+        self.assertEqual(
+            [item["type"] for item in settings_menu["items"]],
+            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+        )
+        self.assertNotIn("settings_controls", menu_config.menu_graph())
+        self.assertNotIn("settings_legacy", menu_config.menu_graph())
+        self.assertNotIn("settings_game_visual_animation", menu_config.menu_graph())
+        self.assertNotIn("settings_game_gameplay", menu_config.menu_graph())
+        self.assertNotIn("settings_game_board_geometry", menu_config.menu_graph())
+        self.assertNotIn("settings_game_movement_rotation", menu_config.menu_graph())
+        self.assertNotIn("settings_game_difficulty_pace", menu_config.menu_graph())
+        self.assertNotIn("settings_endgame_effects", menu_config.menu_graph())
+
+        game_menu = menu_config.menu_definition("settings_game_root")
+        item_ids = [item["id"] for item in game_menu["items"]]
+        self.assertIn("display_overlay_transparency", item_ids)
+        self.assertIn("endgame_preset_id", item_ids)
+        self.assertIn("topology_cache_measure", item_ids)
+        self.assertIn("save", item_ids)
 
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
@@ -265,14 +262,23 @@ class TestMenuPolicy(unittest.TestCase):
         play_menu_id = play_links[0]["menu_id"]
 
         play_items = menu_config.menu_items(play_menu_id)
-        play_actions = {
+        play_actions: set[str] = {
             item["action_id"] for item in play_items if item["type"] == "action"
         }
+        for item in play_items:
+            if item["type"] != "action_group":
+                continue
+            play_actions.update(
+                action["action_id"] for action in item.get("actions", ())
+            )
         self.assertTrue(
             {
                 "play_2d",
                 "play_3d",
                 "play_4d",
+                "setup_2d",
+                "setup_3d",
+                "setup_4d",
                 "play_last_custom_topology",
                 "bot_options",
                 "leaderboard",
@@ -280,36 +286,38 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertNotIn("topology_lab", play_actions)
 
+    def test_play_menu_uses_action_groups_for_direct_play_and_setup(self) -> None:
+        play_menu = menu_config.authored_menu_definition("launcher_play")
+        dimension_rows = tuple(play_menu["items"][:3])
+        self.assertTrue(all(item["type"] == "action_group" for item in dimension_rows))
+        self.assertEqual([item["label"] for item in dimension_rows], ["2D", "3D", "4D"])
+        for item, play_action_id, setup_action_id in (
+            (dimension_rows[0], "play_2d", "setup_2d"),
+            (dimension_rows[1], "play_3d", "setup_3d"),
+            (dimension_rows[2], "play_4d", "setup_4d"),
+        ):
+            self.assertEqual(item["default_action_id"], "play")
+            self.assertEqual(
+                tuple(action["action_id"] for action in item["actions"]),
+                (play_action_id, setup_action_id),
+            )
+
     def test_play_menu_is_minimal_launcher(self) -> None:
         launcher_play = menu_config.menu_definition("launcher_play")
         self.assertIn(
-            "play-adjacent tools",
+            "switch between Play and Setup",
             menu_config.launcher_subtitles()["launcher_play"],
         )
-        self.assertIn(
-            "play_last_custom_topology",
-            {
-                item["action_id"]
-                for item in launcher_play["items"]
-                if item["type"] == "action"
-            },
-        )
-        self.assertIn(
-            "bot_options",
-            {
-                item["action_id"]
-                for item in launcher_play["items"]
-                if item["type"] == "action"
-            },
-        )
-        self.assertIn(
-            "leaderboard",
-            {
-                item["action_id"]
-                for item in launcher_play["items"]
-                if item["type"] == "action"
-            },
-        )
+        action_ids: set[str] = {
+            item["action_id"] for item in launcher_play["items"] if item["type"] == "action"
+        }
+        for item in launcher_play["items"]:
+            if item["type"] != "action_group":
+                continue
+            action_ids.update(action["action_id"] for action in item["actions"])
+        self.assertIn("play_last_custom_topology", action_ids)
+        self.assertIn("bot_options", action_ids)
+        self.assertIn("leaderboard", action_ids)
 
     def test_topology_playground_is_root_launcher_entry(self) -> None:
         root_items = menu_config.menu_items(menu_config.launcher_menu_id())
@@ -379,8 +387,7 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             labels,
             [
-                "Game Settings",
-                "Endgame Effects",
+                "Game",
                 "Display",
                 "Audio",
                 "Keyboard Bindings",
@@ -390,7 +397,7 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
         )
 
     def test_keybindings_scopes_are_declared_in_canonical_menu_config(self) -> None:
@@ -446,8 +453,15 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             menu_config.resolve_runtime_menu_id(
-                "settings_game_visual_animation",
-                item_id="display_overlay_transparency",
+                "settings_game_movement_rotation",
+                item_id="rotation_animation_mode",
+            ),
+            "settings_game_root",
+        )
+        self.assertEqual(
+            menu_config.resolve_runtime_menu_id(
+                "settings_endgame_effects",
+                item_id="endgame_preset_id",
             ),
             "settings_game_root",
         )
@@ -462,7 +476,16 @@ class TestMenuPolicy(unittest.TestCase):
             nonutility = [
                 item
                 for item in items
-                if item["type"] in {"submenu", "toggle", "selector", "slider", "action", "legacy_dispatch"}
+                if item["type"]
+                in {
+                    "submenu",
+                    "toggle",
+                    "selector",
+                    "slider",
+                    "action",
+                    "action_group",
+                    "legacy_dispatch",
+                }
                 and item.get("action_id") not in {"back", "save", "reset", "display_apply"}
             ]
             submenu_count = sum(1 for item in nonutility if item["type"] == "submenu")
@@ -535,9 +558,13 @@ class TestMenuPolicy(unittest.TestCase):
 
     def test_leaderboard_is_play_adjacent_not_in_settings(self) -> None:
         play_menu = menu_config.menu_definition("launcher_play")
-        play_actions = {
+        play_actions: set[str] = {
             item["action_id"] for item in play_menu["items"] if item["type"] == "action"
         }
+        for item in play_menu["items"]:
+            if item["type"] != "action_group":
+                continue
+            play_actions.update(action["action_id"] for action in item["actions"])
         settings_actions = set(
             menu_config.reachable_action_ids(menu_config.settings_menu_id())
         )
@@ -546,9 +573,13 @@ class TestMenuPolicy(unittest.TestCase):
 
     def test_bot_is_play_adjacent_not_in_settings(self) -> None:
         play_menu = menu_config.menu_definition("launcher_play")
-        play_actions = {
+        play_actions: set[str] = {
             item["action_id"] for item in play_menu["items"] if item["type"] == "action"
         }
+        for item in play_menu["items"]:
+            if item["type"] != "action_group":
+                continue
+            play_actions.update(action["action_id"] for action in item["actions"])
         settings_actions = set(
             menu_config.reachable_action_ids(menu_config.settings_menu_id())
         )
@@ -714,6 +745,8 @@ class TestMenuPolicy(unittest.TestCase):
         )
         state.endgame_preset_id = "sphere"
         state.endgame_interaction_mode = "collide"
+        state.endgame_relic_speed_percent = 145
+        state.endgame_shatter_speed_percent = 85
         state.rotation_animation_mode = "rigid_piece_rotation"
         state.kick_level_index = 2
         state.auto_speedup_enabled = 1
@@ -728,6 +761,18 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             settings_hub_model._unified_value_text(state, "endgame_interaction_mode"),
             "Collide",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(
+                state, "endgame_relic_speed_percent"
+            ),
+            "145%",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(
+                state, "endgame_shatter_speed_percent"
+            ),
+            "85%",
         )
         self.assertEqual(
             settings_hub_model._unified_value_text(state, "rotation_animation_mode"),
@@ -753,6 +798,10 @@ class TestMenuPolicy(unittest.TestCase):
             random_mode_index=1,
             topology_advanced=1,
             kick_level_index=2,
+            endgame_preset_id="sphere",
+            endgame_interaction_mode="collide",
+            endgame_relic_speed_percent=140,
+            endgame_shatter_speed_percent=80,
             auto_speedup_enabled=0,
             lines_per_level=22,
             rotation_animation_mode="cellwise_sliding",
@@ -816,12 +865,22 @@ class TestMenuPolicy(unittest.TestCase):
             state.endgame_interaction_mode,
             settings_hub_model._ENDGAME_INTERACTION_MODE_DEFAULT,
         )
+        self.assertEqual(
+            state.endgame_relic_speed_percent,
+            settings_hub_model._ENDGAME_RELIC_SPEED_DEFAULT,
+        )
+        self.assertEqual(
+            state.endgame_shatter_speed_percent,
+            settings_hub_model._ENDGAME_SHATTER_SPEED_DEFAULT,
+        )
 
     def test_advanced_gameplay_adjusts_animation_rows(self) -> None:
         state = SimpleNamespace(
             kick_level_index=0,
             endgame_preset_id="default_orbit",
             endgame_interaction_mode="none",
+            endgame_relic_speed_percent=100,
+            endgame_shatter_speed_percent=100,
             auto_speedup_enabled=1,
             lines_per_level=10,
             rotation_animation_mode="rigid_piece_rotation",
@@ -848,6 +907,22 @@ class TestMenuPolicy(unittest.TestCase):
             )
         )
         self.assertEqual(state.endgame_interaction_mode, "collide")
+        self.assertTrue(
+            settings_hub_actions._adjust_unified_gameplay_row(
+                state,
+                "endgame_relic_speed_percent",
+                1,
+            )
+        )
+        self.assertEqual(state.endgame_relic_speed_percent, 105)
+        self.assertTrue(
+            settings_hub_actions._adjust_unified_gameplay_row(
+                state,
+                "endgame_shatter_speed_percent",
+                -1,
+            )
+        )
+        self.assertEqual(state.endgame_shatter_speed_percent, 95)
         self.assertTrue(
             settings_hub_actions._adjust_advanced_gameplay_value(
                 state,

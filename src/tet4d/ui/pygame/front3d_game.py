@@ -369,7 +369,12 @@ def _camera_action_for_key(key: int) -> str | None:
 def _capture_endgame_snapshot_3d(
     loop: "LoopContext3D",
 ) -> object:
-    preset_id, interaction_mode = mode_endgame_settings("3d")
+    (
+        preset_id,
+        interaction_mode,
+        relic_speed_percent,
+        shatter_speed_percent,
+    ) = mode_endgame_settings("3d")
     locked_cells = tuple(
         SnapshotCell(
             source_coord=tuple(int(axis) for axis in coord),
@@ -397,6 +402,8 @@ def _capture_endgame_snapshot_3d(
         ),
         preset_id=preset_id,
         interaction_mode=interaction_mode,
+        relic_speed_scale=float(relic_speed_percent) / 100.0,
+        shatter_speed_scale=float(shatter_speed_percent) / 100.0,
     )
 
 

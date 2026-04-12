@@ -19,6 +19,7 @@ from tet4d.engine.runtime.endgame_presets import (
 from tet4d.engine.runtime.project_config import constants_payload
 
 Vec3 = tuple[float, float, float]
+VecN = tuple[float, ...]
 
 TERMINAL_PHASE_PLAYING = "playing"
 TERMINAL_PHASE_ENDGAME_SHATTER = "endgame_shatter"
@@ -457,12 +458,15 @@ class EndgameRenderContext:
     zw_deg: float = 0.0
     layer_axis_label: str = ""
     layer_count: int = 1
+    basis_axis_map: tuple[tuple[int, int], ...] = ()
+    layer_axis: int = 3
+    layer_sign: int = 1
 
 
 @dataclass(frozen=True)
 class SnapshotCell:
     source_coord: tuple[int, ...]
-    position: Vec3
+    position: VecN
     color_id: int
     layer_index: int | None = None
 
@@ -472,12 +476,15 @@ class EndgameSnapshot:
     dimension: int
     board_dims: tuple[int, ...]
     render_dims: tuple[int, int, int]
-    board_center: Vec3
+    board_center: VecN
+    render_center: Vec3
     locked_cells: tuple[SnapshotCell, ...]
     rng_seed: int
     render_context: EndgameRenderContext
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
     interaction_mode: str = ENDGAME_INTERACTION_NONE
+    relic_speed_scale: float = 1.0
+    shatter_speed_scale: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -500,16 +507,16 @@ class ShellFragment:
 class CellRelic:
     source_coord: tuple[int, ...]
     base_geometry: str
-    initial_position: Vec3
-    burst_velocity: Vec3
-    burst_acceleration: Vec3
+    initial_position: VecN
+    burst_velocity: VecN
+    burst_acceleration: VecN
     burst_angular_velocity_deg: Vec3
     detach_start_ms: float
-    capture_anchor: Vec3
+    capture_anchor: VecN
     path_family: str
-    field_basis_u: Vec3
-    field_basis_v: Vec3
-    field_basis_w: Vec3
+    field_basis_u: VecN
+    field_basis_v: VecN
+    field_basis_w: VecN
     field_phase: float
     field_phase_secondary: float
     field_speed: float
@@ -519,14 +526,33 @@ class CellRelic:
     depth_amplitude: float
     relic_spin_deg: Vec3
     color_id: int
+    field_basis_extra: tuple[VecN, ...] = ()
+    field_axis_amplitudes: tuple[float, ...] = ()
     layer_index: int | None = None
     jitter_offset: Vec3 = (0.0, 0.0, 0.0)
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
-    field_drift_velocity: Vec3 = (0.0, 0.0, 0.0)
+    field_drift_velocity: VecN = (0.0, 0.0, 0.0)
     field_radius_band: float = 0.0
     collision_radius: float = 0.38
     collision_mass: float = 1.0
     spin_handedness: float = 1.0
+
+
+@dataclass(frozen=True)
+class CellRelicMotionState:
+    position_nd: VecN
+    rotation_deg: Vec3
+    alpha: float
+    spin_handedness: float
+
+
+@dataclass(frozen=True)
+class EndgameRelicRenderState:
+    position_nd: VecN
+    render_position: Vec3
+    rotation_deg: Vec3
+    alpha: float
+    layer_weights: tuple[tuple[int, float], ...] = ()
 
 
 # Compatibility alias retained for existing imports/tests.
@@ -663,10 +689,17 @@ def create_snapshot(
     render_context: EndgameRenderContext,
     preset_id: str | None = None,
     interaction_mode: str | None = None,
+    relic_speed_scale: float = 1.0,
+    shatter_speed_scale: float = 1.0,
     tuning: EndgameAnimationTuning | None = None,
 ) -> EndgameSnapshot:
     active_tuning = load_endgame_animation_tuning() if tuning is None else tuning
-    board_center = (
+    position_dimension = 4 if int(dimension) >= 4 else 3
+    board_center = tuple(
+        ((float(board_dims[idx]) - 1.0) * 0.5) if idx < len(board_dims) else 0.0
+        for idx in range(position_dimension)
+    )
+    render_center = (
         (float(render_dims[0]) - 1.0) * 0.5,
         (float(render_dims[1]) - 1.0) * 0.5,
         (float(render_dims[2]) - 1.0) * 0.5,
@@ -676,6 +709,7 @@ def create_snapshot(
         board_dims=tuple(int(value) for value in board_dims),
         render_dims=tuple(int(value) for value in render_dims),
         board_center=board_center,
+        render_center=render_center,
         locked_cells=tuple(locked_cells),
         rng_seed=derive_endgame_seed(
             base_seed=int(base_seed),
@@ -692,67 +726,109 @@ def create_snapshot(
             interaction_mode,
             default=active_tuning.default_interaction_mode,
         ),
+        relic_speed_scale=max(0.05, float(relic_speed_scale)),
+        shatter_speed_scale=max(0.05, float(shatter_speed_scale)),
     )
 
 
-def _vec_add(a: Vec3, b: Vec3) -> Vec3:
-    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
+def _vec_add(a: VecN, b: VecN) -> VecN:
+    return tuple(left + right for left, right in zip(a, b))
 
 
-def _vec_sub(a: Vec3, b: Vec3) -> Vec3:
-    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+def _vec_sub(a: VecN, b: VecN) -> VecN:
+    return tuple(left - right for left, right in zip(a, b))
 
 
-def _vec_mul(a: Vec3, scalar: float) -> Vec3:
-    return (a[0] * scalar, a[1] * scalar, a[2] * scalar)
+def _vec_mul(a: VecN, scalar: float) -> VecN:
+    return tuple(component * scalar for component in a)
 
 
-def _vec_dot(a: Vec3, b: Vec3) -> float:
-    return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2])
+def _vec_dot(a: VecN, b: VecN) -> float:
+    return sum(left * right for left, right in zip(a, b))
 
 
-def _vec_cross(a: Vec3, b: Vec3) -> Vec3:
-    return (
-        (a[1] * b[2]) - (a[2] * b[1]),
-        (a[2] * b[0]) - (a[0] * b[2]),
-        (a[0] * b[1]) - (a[1] * b[0]),
+def _vec_lerp(a: VecN, b: VecN, progress: float) -> VecN:
+    return tuple(
+        left + ((right - left) * progress) for left, right in zip(a, b)
     )
 
 
-def _vec_lerp(a: Vec3, b: Vec3, progress: float) -> Vec3:
-    return (
-        a[0] + ((b[0] - a[0]) * progress),
-        a[1] + ((b[1] - a[1]) * progress),
-        a[2] + ((b[2] - a[2]) * progress),
-    )
+def _vec_len(a: VecN) -> float:
+    return math.sqrt(sum(component * component for component in a))
 
 
-def _vec_len(a: Vec3) -> float:
-    return math.sqrt((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]))
-
-
-def _normalize_or_default(a: Vec3, default: Vec3) -> Vec3:
+def _normalize_or_default(a: VecN, default: VecN) -> VecN:
     length = _vec_len(a)
     if length <= 1e-9:
         return default
-    return (a[0] / length, a[1] / length, a[2] / length)
+    return tuple(component / length for component in a)
+
+
+def _pad_vec3(value: VecN) -> Vec3:
+    padded = tuple(value) + (0.0, 0.0, 0.0)
+    return (float(padded[0]), float(padded[1]), float(padded[2]))
+
+
+def _zero_vec(dimension: int) -> VecN:
+    return tuple(0.0 for _ in range(max(0, int(dimension))))
+
+
+def _unit_axis(dimension: int, axis_index: int, *, sign: float = 1.0) -> VecN:
+    return tuple(
+        float(sign if idx == axis_index else 0.0) for idx in range(max(0, dimension))
+    )
 
 
 def _random_signed(randomizer: random.Random) -> float:
     return -1.0 if randomizer.random() < 0.5 else 1.0
 
 
-def _random_unit_vec3(
+def _random_unit_vector(
     randomizer: random.Random,
     *,
-    planar: bool,
-) -> Vec3:
-    vector = (
-        randomizer.uniform(-1.0, 1.0),
-        randomizer.uniform(-1.0, 1.0),
-        0.0 if planar else randomizer.uniform(-1.0, 1.0),
+    dimension: int,
+    planar: bool = False,
+) -> VecN:
+    values = [
+        randomizer.uniform(-1.0, 1.0) for _ in range(max(0, int(dimension)))
+    ]
+    if planar and len(values) >= 3:
+        for idx in range(2, len(values)):
+            values[idx] = 0.0
+    vector = tuple(values)
+    default = _unit_axis(max(1, int(dimension)), 0)
+    if planar and len(default) >= 3:
+        default = tuple(default[idx] if idx < 2 else 0.0 for idx in range(len(default)))
+    return _normalize_or_default(vector, default)
+
+
+def _fragment_direction(
+    *,
+    randomizer: random.Random,
+    origin: VecN,
+    board_center: VecN,
+    dimension: int,
+    outward_bias_strength: float,
+    random_spread_strength: float,
+    planar: bool = False,
+) -> VecN:
+    default_axis = 1 if dimension > 1 else 0
+    outward = _normalize_or_default(
+        _vec_sub(origin, board_center),
+        _unit_axis(dimension, default_axis, sign=-1.0),
     )
-    return _normalize_or_default(vector, (1.0, 0.0, 0.0 if planar else 1.0))
+    random_vec = _random_unit_vector(
+        randomizer,
+        dimension=dimension,
+        planar=planar,
+    )
+    return _normalize_or_default(
+        _vec_add(
+            _vec_mul(outward, float(outward_bias_strength)),
+            _vec_mul(random_vec, float(random_spread_strength)),
+        ),
+        outward,
+    )
 
 
 def _smoothstep01(value: float) -> float:
@@ -762,29 +838,6 @@ def _smoothstep01(value: float) -> float:
 
 def _wrap_phase_radians(value: float) -> float:
     return float(value % _TAU)
-
-
-def _fragment_direction(
-    *,
-    randomizer: random.Random,
-    origin: Vec3,
-    board_center: Vec3,
-    planar: bool,
-    outward_bias_strength: float,
-    random_spread_strength: float,
-) -> Vec3:
-    outward = _normalize_or_default(
-        _vec_sub(origin, board_center),
-        (0.0, -1.0, 0.0),
-    )
-    random_vec = _random_unit_vec3(randomizer, planar=planar)
-    return _normalize_or_default(
-        _vec_add(
-            _vec_mul(outward, float(outward_bias_strength)),
-            _vec_mul(random_vec, float(random_spread_strength)),
-        ),
-        outward,
-    )
 
 
 def _random_angular_velocity(
@@ -828,34 +881,43 @@ def _clamp_point_to_scene(
     return (x, y, z)
 
 
-def _field_basis(
+def _field_basis_vectors(
     *,
     randomizer: random.Random,
-    direction: Vec3,
-    planar: bool,
-) -> tuple[Vec3, Vec3, Vec3]:
-    if planar:
-        primary = _normalize_or_default(
-            (direction[0], direction[1], 0.0), (1.0, 0.0, 0.0)
-        )
-        secondary = (-primary[1], primary[0], 0.0)
-        return (primary, secondary, (0.0, 0.0, 0.0))
-    primary = _normalize_or_default(direction, (1.0, 0.0, 0.0))
-    candidate = _random_unit_vec3(randomizer, planar=False)
-    if abs(_vec_dot(primary, candidate)) > 0.92:
-        candidate = _normalize_or_default(
-            _vec_cross(primary, (0.0, 1.0, 0.0)),
-            (0.0, 0.0, 1.0),
-        )
-    secondary = _normalize_or_default(
-        _vec_cross(candidate, primary),
-        (0.0, 0.0, 1.0),
+    direction: VecN,
+) -> tuple[VecN, ...]:
+    dimension = len(direction)
+    if dimension <= 0:
+        return tuple()
+    basis: list[VecN] = []
+    candidates: list[VecN] = [
+        _normalize_or_default(direction, _unit_axis(dimension, 0)),
+    ]
+    candidates.extend(
+        _random_unit_vector(randomizer, dimension=dimension)
+        for _ in range(dimension * 2)
     )
-    tertiary = _normalize_or_default(
-        _vec_cross(primary, secondary),
-        (0.0, 1.0, 0.0),
-    )
-    return (primary, secondary, tertiary)
+    candidates.extend(_unit_axis(dimension, axis_index) for axis_index in range(dimension))
+    for candidate in candidates:
+        orthogonal = candidate
+        for existing in basis:
+            orthogonal = _vec_sub(
+                orthogonal,
+                _vec_mul(existing, _vec_dot(orthogonal, existing)),
+            )
+        if _vec_len(orthogonal) <= 1e-6:
+            continue
+        basis.append(
+            _normalize_or_default(
+                orthogonal,
+                _unit_axis(dimension, len(basis) % dimension),
+            )
+        )
+        if len(basis) >= dimension:
+            break
+    while len(basis) < dimension:
+        basis.append(_unit_axis(dimension, len(basis)))
+    return tuple(basis)
 
 
 def _choose_path_family(
@@ -886,25 +948,70 @@ def _field_anchor_for_cell(
     *,
     randomizer: random.Random,
     snapshot: EndgameSnapshot,
-    direction: Vec3,
-    planar: bool,
+    direction: VecN,
     tuning: EndgameAnimationTuning,
-) -> Vec3:
+) -> VecN:
+    dimension = len(cell.position)
     bias_toward_source = _vec_lerp(snapshot.board_center, cell.position, 0.42)
     outward = _vec_mul(
         direction,
         randomizer.uniform(0.15, 0.55) * tuning.anchor_spread_radius,
     )
     tangent = _vec_mul(
-        _random_unit_vec3(randomizer, planar=planar),
+        _random_unit_vector(randomizer, dimension=dimension),
         randomizer.uniform(0.0, 0.35) * tuning.anchor_spread_radius,
     )
-    return _clamp_point_to_scene(
-        _vec_add(bias_toward_source, _vec_add(outward, tangent)),
-        snapshot=snapshot,
-        planar=planar,
-        margin=1.25,
+    extents = _field_half_extents(
+        snapshot,
+        tuning=tuning,
+        preset=resolve_endgame_preset_config(snapshot.preset_id, tuning=tuning),
+        dimension=dimension,
     )
+    return _wrap_point_in_box(
+        _vec_add(bias_toward_source, _vec_add(outward, tangent)),
+        center=snapshot.board_center,
+        extents=extents,
+    )
+
+
+def _relic_basis_vectors(relic: CellRelic) -> tuple[VecN, ...]:
+    return tuple(
+        vector
+        for vector in (
+            relic.field_basis_u,
+            relic.field_basis_v,
+            relic.field_basis_w,
+            *relic.field_basis_extra,
+        )
+        if len(vector) > 0
+    )
+
+
+def _relic_axis_amplitudes(relic: CellRelic, *, count: int) -> tuple[float, ...]:
+    if relic.field_axis_amplitudes:
+        values = tuple(float(value) for value in relic.field_axis_amplitudes)
+        if len(values) >= count:
+            return values[:count]
+    fallback = (
+        float(relic.orbit_radius_a),
+        float(relic.orbit_radius_b),
+        float(relic.depth_amplitude),
+        max(0.0, float(relic.orbit_radius_b) * 0.72),
+    )
+    padded = fallback + tuple(0.0 for _ in range(max(0, count - len(fallback))))
+    return padded[:count]
+
+
+def _field_seconds(
+    *,
+    elapsed_ms: float,
+    tuning: EndgameAnimationTuning,
+    speed_scale: float,
+) -> float:
+    return max(
+        0.0,
+        float(elapsed_ms - tuning.capture_start_ms) / 1000.0,
+    ) * max(0.05, float(speed_scale))
 
 
 def _field_offset_for_relic(
@@ -912,37 +1019,45 @@ def _field_offset_for_relic(
     *,
     elapsed_ms: float,
     tuning: EndgameAnimationTuning,
-) -> Vec3:
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
+    speed_scale: float = 1.0,
+) -> VecN:
+    basis_vectors = _relic_basis_vectors(relic)
+    if not basis_vectors:
+        return tuple()
+    amplitudes = _relic_axis_amplitudes(relic, count=len(basis_vectors))
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=speed_scale,
+    )
     phase = _wrap_phase_radians(relic.field_phase + (relic.field_speed * field_seconds))
     precession = _wrap_phase_radians(
         relic.field_phase_secondary + (relic.field_precession_speed * field_seconds)
     )
-    if relic.path_family == "lissajous":
-        local = (
-            relic.orbit_radius_a * math.sin(phase),
-            relic.orbit_radius_b * math.sin((phase * 2.0) + precession),
-            relic.depth_amplitude * math.cos((phase * 3.0) - (precession * 0.5)),
-        )
-    elif relic.path_family == "helix":
-        local = (
-            relic.orbit_radius_a * math.cos(phase),
-            relic.orbit_radius_b * math.sin(phase),
-            relic.depth_amplitude * math.sin((phase * 0.5) + precession),
-        )
-    else:
-        local = (
-            relic.orbit_radius_a * math.cos(phase),
-            relic.orbit_radius_b * math.sin(phase + (0.35 * math.sin(precession))),
-            relic.depth_amplitude * math.sin(precession),
-        )
-    return _vec_add(
-        _vec_add(
-            _vec_mul(relic.field_basis_u, local[0]),
-            _vec_mul(relic.field_basis_v, local[1]),
-        ),
-        _vec_mul(relic.field_basis_w, local[2]),
-    )
+    offset = _zero_vec(len(basis_vectors[0]))
+    for axis_index, basis_vector in enumerate(basis_vectors):
+        amplitude = amplitudes[axis_index]
+        if relic.path_family == "lissajous":
+            coefficient = amplitude * math.sin(
+                (phase * float(axis_index + 1))
+                + (precession * (0.55 + (0.2 * axis_index)))
+            )
+        elif relic.path_family == "helix":
+            coefficient = amplitude * (
+                math.cos(phase + (axis_index * 0.35))
+                if axis_index % 2 == 0
+                else math.sin(phase + (axis_index * 0.35))
+            )
+        else:
+            coefficient = amplitude * (
+                math.cos(phase + (precession * 0.3 * axis_index))
+                if axis_index == 0
+                else math.sin(
+                    precession + (phase * (0.45 + (0.2 * axis_index)))
+                )
+            )
+        offset = _vec_add(offset, _vec_mul(basis_vector, coefficient))
+    return offset
 
 
 def _field_half_extents(
@@ -950,24 +1065,25 @@ def _field_half_extents(
     *,
     tuning: EndgameAnimationTuning,
     preset: EndgamePresetConfig,
-) -> Vec3:
-    scale = max(0.2, float(tuning.field_extent_multiplier * preset.extent_scale))
-    return (
-        max(
-            1.0,
-            ((float(snapshot.render_dims[0]) - 1.0) * 0.5 * scale) + tuning.wrap_margin,
-        ),
-        max(
-            1.0,
-            ((float(snapshot.render_dims[1]) - 1.0) * 0.5 * scale) + tuning.wrap_margin,
-        ),
-        0.0
-        if snapshot.dimension == 2
-        else max(
-            1.0,
-            ((float(snapshot.render_dims[2]) - 1.0) * 0.5 * scale) + tuning.wrap_margin,
-        ),
+    dimension: int | None = None,
+) -> VecN:
+    target_dimension = (
+        len(snapshot.board_center) if dimension is None else max(1, int(dimension))
     )
+    scale = max(0.2, float(tuning.field_extent_multiplier * preset.extent_scale))
+    extents: list[float] = []
+    for axis_index in range(target_dimension):
+        if axis_index >= len(snapshot.board_dims):
+            extents.append(0.0)
+            continue
+        extents.append(
+            max(
+                1.0,
+                ((float(snapshot.board_dims[axis_index]) - 1.0) * 0.5 * scale)
+                + tuning.wrap_margin,
+            )
+        )
+    return tuple(extents)
 
 
 def _wrap_local_axis(value: float, extent: float) -> float:
@@ -978,14 +1094,13 @@ def _wrap_local_axis(value: float, extent: float) -> float:
     return float(wrapped)
 
 
-def _wrap_point_in_box(point: Vec3, *, center: Vec3, extents: Vec3) -> Vec3:
+def _wrap_point_in_box(point: VecN, *, center: VecN, extents: VecN) -> VecN:
     local = _vec_sub(point, center)
     return _vec_add(
         center,
-        (
-            _wrap_local_axis(local[0], extents[0]),
-            _wrap_local_axis(local[1], extents[1]),
-            0.0 if extents[2] <= 0.0 else _wrap_local_axis(local[2], extents[2]),
+        tuple(
+            0.0 if extent <= 0.0 else _wrap_local_axis(local[idx], extent)
+            for idx, extent in enumerate(extents)
         ),
     )
 
@@ -1002,16 +1117,16 @@ def _reflect_local_axis(value: float, extent: float) -> tuple[float, float]:
 
 
 def _reflect_point_in_box(
-    point: Vec3, *, center: Vec3, extents: Vec3
-) -> tuple[Vec3, float]:
+    point: VecN, *, center: VecN, extents: VecN
+) -> tuple[VecN, float]:
     local = _vec_sub(point, center)
-    x, sign_x = _reflect_local_axis(local[0], extents[0])
-    y, sign_y = _reflect_local_axis(local[1], extents[1])
-    if extents[2] <= 0.0:
-        z, sign_z = 0.0, 1.0
-    else:
-        z, sign_z = _reflect_local_axis(local[2], extents[2])
-    return _vec_add(center, (x, y, z)), float(sign_x * sign_y * sign_z)
+    reflected: list[float] = []
+    sign = 1.0
+    for axis_index, extent in enumerate(extents):
+        value, axis_sign = _reflect_local_axis(local[axis_index], extent)
+        reflected.append(value)
+        sign *= axis_sign
+    return _vec_add(center, tuple(reflected)), float(sign)
 
 
 def _sphere_radius_limit(
@@ -1033,14 +1148,23 @@ def _wrap_field_position(
     snapshot: EndgameSnapshot,
     tuning: EndgameAnimationTuning,
     preset: EndgamePresetConfig,
-) -> Vec3:
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
+) -> VecN:
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=snapshot.relic_speed_scale,
+    )
     raw_position = _vec_add(
         relic.capture_anchor,
         _vec_add(
             _vec_mul(relic.field_drift_velocity, field_seconds * preset.drift_scale),
             _vec_mul(
-                _field_offset_for_relic(relic, elapsed_ms=elapsed_ms, tuning=tuning),
+                _field_offset_for_relic(
+                    relic,
+                    elapsed_ms=elapsed_ms,
+                    tuning=tuning,
+                    speed_scale=snapshot.relic_speed_scale,
+                ),
                 preset.oscillation_scale,
             ),
         ),
@@ -1059,14 +1183,23 @@ def _invert_field_position(
     snapshot: EndgameSnapshot,
     tuning: EndgameAnimationTuning,
     preset: EndgamePresetConfig,
-) -> tuple[Vec3, float]:
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
+) -> tuple[VecN, float]:
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=snapshot.relic_speed_scale,
+    )
     raw_position = _vec_add(
         relic.capture_anchor,
         _vec_add(
             _vec_mul(relic.field_drift_velocity, field_seconds * preset.drift_scale),
             _vec_mul(
-                _field_offset_for_relic(relic, elapsed_ms=elapsed_ms, tuning=tuning),
+                _field_offset_for_relic(
+                    relic,
+                    elapsed_ms=elapsed_ms,
+                    tuning=tuning,
+                    speed_scale=snapshot.relic_speed_scale,
+                ),
                 preset.oscillation_scale,
             ),
         ),
@@ -1085,60 +1218,45 @@ def _sphere_field_position(
     snapshot: EndgameSnapshot,
     tuning: EndgameAnimationTuning,
     preset: EndgamePresetConfig,
-) -> Vec3:
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
-    phase = _wrap_phase_radians(relic.field_phase + (relic.field_speed * field_seconds))
-    precession = _wrap_phase_radians(
-        relic.field_phase_secondary + (relic.field_precession_speed * field_seconds)
-    )
-    center = snapshot.board_center
-    radial = _normalize_or_default(
-        _vec_sub(relic.capture_anchor, center),
-        (0.0, -1.0, 0.0),
-    )
-    tangent_u = _normalize_or_default(
-        _vec_sub(
-            relic.field_basis_u, _vec_mul(radial, _vec_dot(relic.field_basis_u, radial))
-        ),
-        (1.0, 0.0, 0.0),
-    )
-    tangent_v = _normalize_or_default(
-        _vec_cross(radial, tangent_u), relic.field_basis_v
+) -> VecN:
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=snapshot.relic_speed_scale,
     )
     radius_limit = _sphere_radius_limit(snapshot, tuning=tuning, preset=preset)
-    base_radius = max(
-        radius_limit * 0.32,
-        min(radius_limit * 0.92, relic.field_radius_band),
-    )
-    tangent = _vec_add(
-        _vec_mul(
-            tangent_u,
-            relic.orbit_radius_a * preset.tangential_bias * math.cos(phase),
+    raw_position = _vec_add(
+        relic.capture_anchor,
+        _vec_add(
+            _vec_mul(relic.field_drift_velocity, field_seconds * preset.drift_scale),
+            _vec_mul(
+                _field_offset_for_relic(
+                    relic,
+                    elapsed_ms=elapsed_ms,
+                    tuning=tuning,
+                    speed_scale=snapshot.relic_speed_scale,
+                ),
+                preset.oscillation_scale,
+            ),
         ),
-        _vec_mul(
-            tangent_v,
-            relic.orbit_radius_b
-            * preset.tangential_bias
-            * math.sin(phase + (0.35 * math.sin(precession))),
-        ),
     )
-    local = _vec_add(
-        _vec_mul(
-            radial,
-            base_radius + (relic.depth_amplitude * 0.22 * math.sin(precession)),
-        ),
-        _vec_mul(tangent, preset.oscillation_scale),
-    )
+    local = _vec_sub(raw_position, snapshot.board_center)
     distance = _vec_len(local)
     if distance <= radius_limit:
-        return _vec_add(center, local)
+        return raw_position
     corrected = max(
         radius_limit * 0.24,
         radius_limit - ((distance - radius_limit) * preset.radial_correction_strength),
     )
     return _vec_add(
-        center,
-        _vec_mul(_normalize_or_default(local, radial), corrected),
+        snapshot.board_center,
+        _vec_mul(
+            _normalize_or_default(
+                local,
+                _unit_axis(len(snapshot.board_center), min(1, len(snapshot.board_center) - 1), sign=-1.0),
+            ),
+            corrected,
+        ),
     )
 
 
@@ -1147,8 +1265,13 @@ def relic_field_phase_radians(
     *,
     elapsed_ms: float,
     tuning: EndgameAnimationTuning,
+    speed_scale: float = 1.0,
 ) -> float:
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=speed_scale,
+    )
     return _wrap_phase_radians(relic.field_phase + (relic.field_speed * field_seconds))
 
 
@@ -1168,21 +1291,85 @@ def resolve_endgame_preset_config(
     return active_tuning.preset_config_for(preset_id)
 
 
+def _layer_weights_for_value(
+    layer_value: float,
+    *,
+    layer_count: int,
+) -> tuple[tuple[int, float], ...]:
+    if layer_count <= 1:
+        return ((0, 1.0),)
+    clamped = max(0.0, min(float(layer_count - 1), float(layer_value)))
+    base_index = int(math.floor(clamped))
+    fraction = clamped - float(base_index)
+    if fraction <= 1e-6 or base_index >= layer_count - 1:
+        return ((base_index, 1.0),)
+    return (
+        (base_index, 1.0 - fraction),
+        (base_index + 1, fraction),
+    )
+
+
+def _render_state_from_motion_state(
+    motion_state: CellRelicMotionState,
+    *,
+    snapshot: EndgameSnapshot | None,
+) -> EndgameRelicRenderState:
+    if snapshot is None or snapshot.dimension < 4:
+        return EndgameRelicRenderState(
+            position_nd=motion_state.position_nd,
+            render_position=_pad_vec3(motion_state.position_nd),
+            rotation_deg=motion_state.rotation_deg,
+            alpha=motion_state.alpha,
+        )
+
+    context = snapshot.render_context
+    axis_map = context.basis_axis_map or ((0, 1), (1, 1), (2, 1), (3, 1))
+    mapped: list[float] = []
+    for axis, sign in axis_map[:4]:
+        size = (
+            float(snapshot.board_dims[axis])
+            if 0 <= axis < len(snapshot.board_dims)
+            else 1.0
+        )
+        value = (
+            float(motion_state.position_nd[axis])
+            if 0 <= axis < len(motion_state.position_nd)
+            else 0.0
+        )
+        mapped.append(value if sign > 0 else (size - 1.0 - value))
+    while len(mapped) < 4:
+        mapped.append(0.0)
+    return EndgameRelicRenderState(
+        position_nd=motion_state.position_nd,
+        render_position=(mapped[0], mapped[1], mapped[2]),
+        rotation_deg=motion_state.rotation_deg,
+        alpha=motion_state.alpha,
+        layer_weights=_layer_weights_for_value(
+            mapped[3],
+            layer_count=max(1, int(context.layer_count)),
+        ),
+    )
+
+
 def _burst_translation(
     *,
-    initial_position: Vec3,
-    velocity: Vec3,
-    acceleration: Vec3,
-    jitter_offset: Vec3,
+    initial_position: VecN,
+    velocity: VecN,
+    acceleration: VecN,
+    jitter_offset: VecN,
     detach_start_ms: float,
     elapsed_ms: float,
     drag_per_second: float,
-) -> Vec3:
+    speed_scale: float = 1.0,
+) -> VecN:
     if elapsed_ms <= detach_start_ms:
         crack_denominator = max(1.0, float(detach_start_ms))
         crack_progress = max(0.0, min(1.0, float(elapsed_ms / crack_denominator)))
         return _vec_add(initial_position, _vec_mul(jitter_offset, crack_progress))
-    travel_seconds = max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
+    travel_seconds = (
+        max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
+        * max(0.05, float(speed_scale))
+    )
     drag = max(0.0, float(drag_per_second))
     linear_scale = (
         travel_seconds
@@ -1211,10 +1398,14 @@ def _burst_rotation_deg(
     angular_velocity_deg: Vec3,
     detach_start_ms: float,
     elapsed_ms: float,
+    speed_scale: float = 1.0,
 ) -> Vec3:
     if elapsed_ms <= detach_start_ms:
         return (0.0, 0.0, 0.0)
-    travel_seconds = max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
+    travel_seconds = (
+        max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
+        * max(0.05, float(speed_scale))
+    )
     return _wrapped_rotation_deg(_vec_mul(angular_velocity_deg, travel_seconds))
 
 
@@ -1255,19 +1446,24 @@ def _cell_relic_from_snapshot_cell(
     tuning: EndgameAnimationTuning,
     planar: bool,
 ) -> CellRelic:
+    dimension = len(cell.position)
     direction = _fragment_direction(
         randomizer=randomizer,
         origin=cell.position,
         board_center=snapshot.board_center,
-        planar=planar,
+        dimension=dimension,
         outward_bias_strength=tuning.outward_bias_strength,
         random_spread_strength=tuning.random_spread_strength,
-    )
-    basis_u, basis_v, basis_w = _field_basis(
-        randomizer=randomizer,
-        direction=direction,
         planar=planar,
     )
+    basis_vectors = _field_basis_vectors(
+        randomizer=randomizer,
+        direction=direction,
+    )
+    basis_u = basis_vectors[0]
+    basis_v = basis_vectors[1] if len(basis_vectors) > 1 else _zero_vec(dimension)
+    basis_w = basis_vectors[2] if len(basis_vectors) > 2 else _zero_vec(dimension)
+    basis_extra = tuple(basis_vectors[3:])
     max_radius = max(
         tuning.orbit_radius_min,
         min(tuning.orbit_radius_max, _scene_extent_limit(snapshot)),
@@ -1298,7 +1494,10 @@ def _cell_relic_from_snapshot_cell(
                 tuning.relic_burst_speed_max,
             ),
         ),
-        burst_acceleration=(0.0, tuning.burst_gravity_per_second, 0.0),
+        burst_acceleration=tuple(
+            tuning.burst_gravity_per_second if axis_index == 1 else 0.0
+            for axis_index in range(dimension)
+        ),
         burst_angular_velocity_deg=_random_angular_velocity(
             randomizer,
             planar=planar,
@@ -1312,7 +1511,6 @@ def _cell_relic_from_snapshot_cell(
             randomizer=randomizer,
             snapshot=snapshot,
             direction=direction,
-            planar=planar,
             tuning=tuning,
         ),
         path_family=_choose_path_family(
@@ -1322,7 +1520,7 @@ def _cell_relic_from_snapshot_cell(
         ),
         field_basis_u=basis_u,
         field_basis_v=basis_v,
-        field_basis_w=basis_w if not planar else (0.0, 0.0, 0.0),
+        field_basis_w=basis_w,
         field_phase=randomizer.uniform(0.0, _TAU),
         field_phase_secondary=randomizer.uniform(0.0, _TAU),
         field_speed=field_speed,
@@ -1339,14 +1537,26 @@ def _cell_relic_from_snapshot_cell(
             maximum=tuning.relic_spin_deg_max,
         ),
         color_id=cell.color_id,
+        field_basis_extra=basis_extra,
+        field_axis_amplitudes=tuple(
+            randomizer.uniform(
+                tuning.orbit_radius_min if axis_index < 2 else 0.0,
+                max_radius if axis_index < 2 else max_depth,
+            )
+            for axis_index in range(dimension)
+        ),
         layer_index=cell.layer_index,
         jitter_offset=_vec_mul(
-            _random_unit_vec3(randomizer, planar=planar),
+            _pad_vec3(_random_unit_vector(randomizer, dimension=3, planar=planar)),
             randomizer.uniform(0.12, 0.65),
         ),
         preset_id=snapshot.preset_id,
         field_drift_velocity=_vec_mul(
-            _random_unit_vec3(randomizer, planar=planar),
+            _random_unit_vector(
+                randomizer,
+                dimension=dimension,
+                planar=planar and dimension == 3,
+            ),
             field_speed * randomizer.uniform(1.05, 1.85),
         ),
         field_radius_band=randomizer.uniform(
@@ -1392,10 +1602,11 @@ def _shell_fragment_from_segment(
     direction = _fragment_direction(
         randomizer=randomizer,
         origin=center,
-        board_center=snapshot.board_center,
-        planar=planar,
+        board_center=snapshot.render_center,
+        dimension=3,
         outward_bias_strength=tuning.outward_bias_strength,
         random_spread_strength=tuning.random_spread_strength,
+        planar=planar,
     )
     speed = randomizer.uniform(
         tuning.shell_fragment_speed_min,
@@ -1421,7 +1632,7 @@ def _shell_fragment_from_segment(
         lifetime_ms=tuning.shell_fragment_lifetime_ms,
         layer_index=layer_index,
         jitter_offset=_vec_mul(
-            _random_unit_vec3(randomizer, planar=planar),
+            _pad_vec3(_random_unit_vector(randomizer, dimension=3, planar=planar)),
             jitter_scale,
         ),
     )
@@ -1635,7 +1846,7 @@ def fragment_rotation_deg(
     )
 
 
-def transform_for_cell_relic(
+def motion_state_for_cell_relic(
     relic: CellRelic,
     *,
     elapsed_ms: float,
@@ -1643,21 +1854,37 @@ def transform_for_cell_relic(
     snapshot: EndgameSnapshot | None = None,
     preset_id: str | None = None,
     spin_handedness: float | None = None,
-) -> tuple[Vec3, Vec3, float]:
+) -> CellRelicMotionState:
     active_preset_id = normalize_endgame_preset_id(
         preset_id if preset_id is not None else relic.preset_id,
         default=tuning.default_preset_id,
     )
     active_snapshot = snapshot
     preset = tuning.preset_config_for(active_preset_id)
+    shatter_speed_scale = (
+        float(active_snapshot.shatter_speed_scale)
+        if active_snapshot is not None
+        else 1.0
+    )
+    relic_speed_scale = (
+        float(active_snapshot.relic_speed_scale)
+        if active_snapshot is not None
+        else 1.0
+    )
     burst_position = _burst_translation(
         initial_position=relic.initial_position,
         velocity=relic.burst_velocity,
         acceleration=relic.burst_acceleration,
-        jitter_offset=relic.jitter_offset,
+        jitter_offset=tuple(
+            float(relic.jitter_offset[idx])
+            if idx < len(relic.jitter_offset)
+            else 0.0
+            for idx in range(len(relic.initial_position))
+        ),
         detach_start_ms=relic.detach_start_ms,
         elapsed_ms=elapsed_ms,
         drag_per_second=tuning.burst_drag_per_second,
+        speed_scale=shatter_speed_scale,
     )
     field_position = _vec_add(
         relic.capture_anchor,
@@ -1665,6 +1892,7 @@ def transform_for_cell_relic(
             relic,
             elapsed_ms=elapsed_ms,
             tuning=tuning,
+            speed_scale=relic_speed_scale,
         ),
     )
     effective_spin_handedness = (
@@ -1704,12 +1932,18 @@ def transform_for_cell_relic(
         angular_velocity_deg=relic.burst_angular_velocity_deg,
         detach_start_ms=relic.detach_start_ms,
         elapsed_ms=elapsed_ms,
+        speed_scale=shatter_speed_scale,
     )
-    field_seconds = max(0.0, float(elapsed_ms - tuning.capture_start_ms) / 1000.0)
+    field_seconds = _field_seconds(
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        speed_scale=relic_speed_scale,
+    )
     field_phase = relic_field_phase_radians(
         relic,
         elapsed_ms=elapsed_ms,
         tuning=tuning,
+        speed_scale=relic_speed_scale,
     )
     field_rotation = _wrapped_rotation_deg(
         (
@@ -1721,12 +1955,38 @@ def transform_for_cell_relic(
             + (24.0 * math.sin((field_phase * 0.75) - relic.field_phase_secondary)),
         )
     )
-    return (
-        _vec_lerp(burst_position, field_position, capture_progress),
-        _wrapped_rotation_deg(
+    return CellRelicMotionState(
+        position_nd=_vec_lerp(burst_position, field_position, capture_progress),
+        rotation_deg=_wrapped_rotation_deg(
             _vec_lerp(burst_rotation, field_rotation, capture_progress)
         ),
-        1.0,
+        alpha=1.0,
+        spin_handedness=effective_spin_handedness,
+    )
+
+
+def transform_for_cell_relic(
+    relic: CellRelic,
+    *,
+    elapsed_ms: float,
+    tuning: EndgameAnimationTuning,
+    snapshot: EndgameSnapshot | None = None,
+    preset_id: str | None = None,
+    spin_handedness: float | None = None,
+) -> tuple[Vec3, Vec3, float]:
+    motion_state = motion_state_for_cell_relic(
+        relic,
+        elapsed_ms=elapsed_ms,
+        tuning=tuning,
+        snapshot=snapshot,
+        preset_id=preset_id,
+        spin_handedness=spin_handedness,
+    )
+    render_state = _render_state_from_motion_state(motion_state, snapshot=snapshot)
+    return (
+        render_state.render_position,
+        render_state.rotation_deg,
+        render_state.alpha,
     )
 
 
@@ -1737,18 +1997,18 @@ def _estimate_relic_velocity(
     tuning: EndgameAnimationTuning,
     snapshot: EndgameSnapshot,
     preset_id: str,
-) -> Vec3:
+) -> VecN:
     sample_ms = float(tuning.collision_velocity_sample_ms)
     if sample_ms <= 0.0:
-        return (0.0, 0.0, 0.0)
-    position_now, _rotation, _alpha = transform_for_cell_relic(
+        return _zero_vec(len(relic.initial_position))
+    motion_now = motion_state_for_cell_relic(
         relic,
         elapsed_ms=elapsed_ms,
         tuning=tuning,
         snapshot=snapshot,
         preset_id=preset_id,
     )
-    position_next, _rotation_next, _alpha_next = transform_for_cell_relic(
+    motion_next = motion_state_for_cell_relic(
         relic,
         elapsed_ms=elapsed_ms + sample_ms,
         tuning=tuning,
@@ -1756,18 +2016,18 @@ def _estimate_relic_velocity(
         preset_id=preset_id,
     )
     return _vec_mul(
-        _vec_sub(position_next, position_now),
+        _vec_sub(motion_next.position_nd, motion_now.position_nd),
         1000.0 / sample_ms,
     )
 
 
 def _apply_boundary_post_collision(
-    position: Vec3,
+    position: VecN,
     *,
     snapshot: EndgameSnapshot,
     tuning: EndgameAnimationTuning,
     preset_id: str,
-) -> tuple[Vec3, float]:
+) -> tuple[VecN, float]:
     preset = tuning.preset_config_for(preset_id)
     if preset.field_kind == "wrap":
         return (
@@ -1793,7 +2053,17 @@ def _apply_boundary_post_collision(
         return (
             _vec_add(
                 snapshot.board_center,
-                _vec_mul(_normalize_or_default(local, (0.0, -1.0, 0.0)), radius_limit),
+                _vec_mul(
+                    _normalize_or_default(
+                        local,
+                        _unit_axis(
+                            len(snapshot.board_center),
+                            min(1, len(snapshot.board_center) - 1),
+                            sign=-1.0,
+                        ),
+                    ),
+                    radius_limit,
+                ),
             ),
             1.0,
         )
@@ -1803,14 +2073,14 @@ def _apply_boundary_post_collision(
 def _apply_relic_collisions(
     relics: tuple[CellRelic, ...],
     *,
-    transforms: list[tuple[Vec3, Vec3, float]],
+    motion_states: list[CellRelicMotionState],
     elapsed_ms: float,
     tuning: EndgameAnimationTuning,
     snapshot: EndgameSnapshot,
     preset_id: str,
-) -> tuple[tuple[Vec3, Vec3, float], ...]:
+) -> tuple[CellRelicMotionState, ...]:
     if len(relics) < 2 or elapsed_ms < float(tuning.shatter_duration_ms):
-        return tuple(transforms)
+        return tuple(motion_states)
     colliding_count = min(len(relics), int(tuning.collision_max_relics))
     indexed = sorted(
         range(colliding_count),
@@ -1819,9 +2089,10 @@ def _apply_relic_collisions(
             int(relics[index].color_id),
         ),
     )
-    positions = [position for position, _rotation, _alpha in transforms]
-    rotations = [rotation for _position, rotation, _alpha in transforms]
-    alphas = [alpha for _position, _rotation, alpha in transforms]
+    positions = [state.position_nd for state in motion_states]
+    rotations = [state.rotation_deg for state in motion_states]
+    alphas = [state.alpha for state in motion_states]
+    spin_handedness = [state.spin_handedness for state in motion_states]
     velocities = [
         _estimate_relic_velocity(
             relics[index],
@@ -1842,13 +2113,14 @@ def _apply_relic_collisions(
             )
             if distance >= min_distance:
                 continue
+            default_normal = _unit_axis(
+                len(positions[left_index]),
+                0,
+                sign=1.0 if (right_index - left_index) % 2 == 0 else -1.0,
+            )
             normal = _normalize_or_default(
                 delta,
-                (
-                    1.0 if (right_index - left_index) % 2 == 0 else -1.0,
-                    0.5,
-                    0.0 if snapshot.dimension == 2 else 0.35,
-                ),
+                default_normal,
             )
             overlap = max(
                 0.0, (min_distance - distance) * tuning.collision_separation_bias
@@ -1893,7 +2165,7 @@ def _apply_relic_collisions(
                 )
             spin_signs[left_index] *= -1.0
             spin_signs[right_index] *= -1.0
-    resolved: list[tuple[Vec3, Vec3, float]] = list(transforms)
+    resolved: list[CellRelicMotionState] = list(motion_states)
     for index in range(colliding_count):
         bounded_position, boundary_spin = _apply_boundary_post_collision(
             positions[index],
@@ -1916,15 +2188,20 @@ def _apply_relic_collisions(
                 ),
             )
         )
-        resolved[index] = (bounded_position, resolved_rotation, alphas[index])
+        resolved[index] = CellRelicMotionState(
+            position_nd=bounded_position,
+            rotation_deg=resolved_rotation,
+            alpha=alphas[index],
+            spin_handedness=spin_handedness[index] * boundary_spin,
+        )
     return tuple(resolved)
 
 
-def transform_relics_for_animation(
+def render_relics_for_animation(
     animation: EndgameAnimationState,
-) -> tuple[tuple[Vec3, Vec3, float], ...]:
-    transforms = [
-        transform_for_cell_relic(
+) -> tuple[EndgameRelicRenderState, ...]:
+    motion_states = [
+        motion_state_for_cell_relic(
             relic,
             elapsed_ms=float(animation.elapsed_ms),
             tuning=animation.tuning,
@@ -1933,15 +2210,29 @@ def transform_relics_for_animation(
         )
         for relic in animation.cell_relics
     ]
-    if animation.interaction_mode != ENDGAME_INTERACTION_COLLIDE:
-        return tuple(transforms)
-    return _apply_relic_collisions(
-        animation.cell_relics,
-        transforms=transforms,
-        elapsed_ms=float(animation.elapsed_ms),
-        tuning=animation.tuning,
-        snapshot=animation.snapshot,
-        preset_id=animation.preset_id,
+    if animation.interaction_mode == ENDGAME_INTERACTION_COLLIDE:
+        motion_states = list(
+            _apply_relic_collisions(
+                animation.cell_relics,
+                motion_states=motion_states,
+                elapsed_ms=float(animation.elapsed_ms),
+                tuning=animation.tuning,
+                snapshot=animation.snapshot,
+                preset_id=animation.preset_id,
+            )
+        )
+    return tuple(
+        _render_state_from_motion_state(state, snapshot=animation.snapshot)
+        for state in motion_states
+    )
+
+
+def transform_relics_for_animation(
+    animation: EndgameAnimationState,
+) -> tuple[tuple[Vec3, Vec3, float], ...]:
+    return tuple(
+        (state.render_position, state.rotation_deg, state.alpha)
+        for state in render_relics_for_animation(animation)
     )
 
 
@@ -2027,10 +2318,12 @@ def transform_shell_geometry(
 __all__ = [
     "CellFragment",
     "CellRelic",
+    "CellRelicMotionState",
     "EndgameAnimationState",
     "EndgameAnimationTuning",
     "EndgamePresetConfig",
     "EndgameRelicFieldState",
+    "EndgameRelicRenderState",
     "EndgameRenderContext",
     "EndgameShatterState",
     "EndgameSnapshot",
@@ -2052,6 +2345,8 @@ __all__ = [
     "fragment_rotation_deg",
     "fragment_translation",
     "load_endgame_animation_tuning",
+    "motion_state_for_cell_relic",
+    "render_relics_for_animation",
     "relic_field_phase_radians",
     "resolve_endgame_preset_config",
     "rotate_point",

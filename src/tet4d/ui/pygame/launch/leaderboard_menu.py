@@ -13,7 +13,14 @@ from tet4d.engine.runtime.leaderboard import (
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.runtime.settings_schema import sanitize_text
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
+from tet4d.ui.pygame.ui_utils import (
+    draw_corner_chip,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    fit_text,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
@@ -173,36 +180,45 @@ def _draw_leaderboard(
     state: _LeaderboardState,
     entries: tuple[dict[str, object], ...],
 ) -> None:
-    draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
+    draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
     width, height = screen.get_size()
 
-    title = fonts.title_font.render("Leaderboard", True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
-        "Top game-over scores across 2D/3D/4D",
+    title = fonts.title_font.render(
+        format_menu_title("Leaderboard"),
         True,
-        _MUTED_COLOR,
+        _TEXT_COLOR,
     )
     title_y = 40
-    subtitle_y = title_y + title.get_height() + 8
     screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, subtitle_y))
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     page_entries, total_pages, start_rank = _entries_page(entries, state.page_index)
-    panel_w = min(1220, max(520, width - 36))
     has_rows = bool(page_entries)
     row_h = fonts.menu_font.get_height() + 12
     table_rows = max(1, len(page_entries))
-    panel_h = min(
-        height - 170,
-        max(220, 88 + (table_rows * row_h) + (36 if not has_rows else 0)),
+    hint_lines = (
+        "Left/Right (or [ / ]) change page",
+        "Esc returns, Q exits, Enter returns",
     )
-    panel_x = (width - panel_w) // 2
-    panel_y = max(130, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 154), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
+    line_h = fonts.hint_font.get_height() + 3
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=min(1220, max(520, width - 36)),
+        panel_h=min(
+            height - 170,
+            max(220, 88 + (table_rows * row_h) + (36 if not has_rows else 0)),
+        ),
+        panel_top=title_y + title.get_height() + 18,
+        bottom_reserved=len(hint_lines) * line_h,
+    )
+    draw_tron_panel(screen, rect=panel_rect)
 
-    table_rect = pygame.Rect(panel_x + 12, panel_y + 14, panel_w - 24, panel_h - 48)
+    table_rect = pygame.Rect(
+        panel_rect.x + 12,
+        panel_rect.y + 14,
+        panel_rect.width - 24,
+        panel_rect.height - 48,
+    )
     header_h = fonts.hint_font.get_height() + 10
     widths = _scaled_column_widths(table_rect.width)
     columns = _table_columns()
@@ -286,15 +302,14 @@ def _draw_leaderboard(
     page_surf = fonts.hint_font.render(page_text, True, _HIGHLIGHT_COLOR)
     screen.blit(
         page_surf,
-        (panel_x + panel_w - page_surf.get_width() - 16, panel_y + panel_h - 30),
+        (
+            panel_rect.right - page_surf.get_width() - 16,
+            panel_rect.bottom - 30,
+        ),
     )
 
-    hints = (
-        "Left/Right (or [ / ]) change page",
-        "Esc returns, Q exits, Enter returns",
-    )
-    hint_y = panel_y + panel_h + 10
-    for hint in hints:
+    hint_y = panel_rect.bottom + 10
+    for hint in hint_lines:
         hint_draw = fit_text(fonts.hint_font, hint, width - 24)
         hint_surf = fonts.hint_font.render(hint_draw, True, _MUTED_COLOR)
         screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
@@ -493,7 +508,11 @@ def prompt_leaderboard_player_name(
             if draw_background is not None:
                 draw_background()
             else:
-                draw_vertical_gradient(screen, _BG_TOP, _BG_BOTTOM)
+                draw_tron_menu_background(
+                    screen,
+                    top_color=_BG_TOP,
+                    bottom_color=_BG_BOTTOM,
+                )
             _draw_name_prompt(
                 screen,
                 fonts,

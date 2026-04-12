@@ -157,7 +157,12 @@ def _advance_simulation(
 
 
 def _capture_endgame_snapshot_2d(loop: LoopContext2D):
-    preset_id, interaction_mode = mode_endgame_settings("2d")
+    (
+        preset_id,
+        interaction_mode,
+        relic_speed_percent,
+        shatter_speed_percent,
+    ) = mode_endgame_settings("2d")
     locked_cells = tuple(
         SnapshotCell(
             source_coord=(int(x), int(y)),
@@ -175,6 +180,8 @@ def _capture_endgame_snapshot_2d(loop: LoopContext2D):
         render_context=EndgameRenderContext(mode_key="2d"),
         preset_id=preset_id,
         interaction_mode=interaction_mode,
+        relic_speed_scale=float(relic_speed_percent) / 100.0,
+        shatter_speed_scale=float(shatter_speed_percent) / 100.0,
     )
 
 

@@ -26,7 +26,18 @@ from tet4d.engine.runtime.menu_settings_state import (
 )
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
-from tet4d.ui.pygame.ui_utils import draw_vertical_gradient
+from tet4d.ui.pygame.ui_utils import (
+    compute_vertical_scroll_metrics,
+    draw_corner_chip,
+    draw_selection_highlight,
+    draw_tron_menu_background,
+    draw_tron_panel,
+    draw_vertical_scrollbar,
+    ensure_scroll_offset_visible,
+    fit_text,
+    format_menu_title,
+    standard_menu_panel_rect,
+)
 
 
 _BG_TOP = (14, 18, 44)
@@ -46,15 +57,12 @@ class _BotMenuState:
     payload: dict[str, object]
     dimension: int = 2
     selected: int = 0
+    scroll_offset: int = 0
     status: str = ""
     status_error: bool = False
     pending_reset_confirm: bool = False
     dirty: bool = False
     running: bool = True
-
-
-def _draw_gradient(surface: pygame.Surface) -> None:
-    draw_vertical_gradient(surface, _BG_TOP, _BG_BOTTOM)
 
 
 def _mode_key_from_dimension(dimension: int) -> str:
@@ -131,53 +139,148 @@ def _reset_bot_defaults(loop: _BotMenuState) -> None:
     play_sfx("menu_move")
 
 
-def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -> None:
-    _draw_gradient(screen)
+def _draw_status(
+    screen: pygame.Surface,
+    fonts,
+    loop: _BotMenuState,
+    *,
+    y: int,
+) -> None:
+    if not loop.status:
+        return
     width, height = screen.get_size()
-    title = fonts.title_font.render(_BOT_COPY["title"], True, _TEXT_COLOR)
-    subtitle = fonts.hint_font.render(
-        _BOT_COPY["subtitle"], True, _MUTED_COLOR
+    if y + fonts.hint_font.get_height() + 4 > height - 6:
+        return
+    color = (255, 150, 150) if loop.status_error else (170, 240, 170)
+    status_text = fit_text(fonts.hint_font, loop.status, width - 36)
+    surf = fonts.hint_font.render(status_text, True, color)
+    screen.blit(surf, ((width - surf.get_width()) // 2, y + 2))
+
+
+def _draw_hints(
+    screen: pygame.Surface,
+    fonts,
+    *,
+    start_y: int,
+    hints: tuple[str, ...],
+    loop: _BotMenuState,
+) -> None:
+    width, height = screen.get_size()
+    line_h = fonts.hint_font.get_height() + 3
+    max_lines = max(0, (height - start_y - 6) // max(1, line_h))
+    status_slots = 1 if loop.status else 0
+    hint_budget = max(0, max_lines - status_slots)
+    y = start_y
+    for line in hints[:hint_budget]:
+        hint_text = fit_text(fonts.hint_font, line, width - 36)
+        surf = fonts.hint_font.render(hint_text, True, _MUTED_COLOR)
+        screen.blit(surf, ((width - surf.get_width()) // 2, y))
+        y += surf.get_height() + 3
+    _draw_status(screen, fonts, loop, y=y)
+
+
+def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -> None:
+    draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
+    width, height = screen.get_size()
+    title = fonts.title_font.render(
+        format_menu_title(_BOT_COPY["title"]), True, _TEXT_COLOR
     )
-    screen.blit(title, ((width - title.get_width()) // 2, 40))
-    screen.blit(subtitle, ((width - subtitle.get_width()) // 2, 88))
+    title_y = 40
+    screen.blit(title, ((width - title.get_width()) // 2, title_y))
+    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
 
     values = _bot_values(loop)
-    panel_w = min(640, width - 40)
-    panel_h = 92 + len(_BOT_MENU_ROWS) * 46
-    panel_x = (width - panel_w) // 2
-    panel_y = max(132, (height - panel_h) // 2)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    pygame.draw.rect(panel, (0, 0, 0, 150), panel.get_rect(), border_radius=12)
-    screen.blit(panel, (panel_x, panel_y))
+    hint_lines = tuple(_BOT_COPY["hints"])
+    line_h = fonts.hint_font.get_height() + 3
+    bottom_lines = len(hint_lines) + (1 if loop.status else 0)
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=min(720, max(320, width - 40)),
+        panel_h=min(
+            max(220, height - 170),
+            max(220, 42 + (len(_BOT_MENU_ROWS) * (fonts.menu_font.get_height() + 12))),
+        ),
+        panel_top=title_y + title.get_height() + 18,
+        bottom_reserved=bottom_lines * line_h,
+    )
+    draw_tron_panel(screen, rect=panel_rect)
 
-    y = panel_y + 24
+    row_h = fonts.menu_font.get_height() + 12
+    viewport_rect = pygame.Rect(
+        panel_rect.x + 16,
+        panel_rect.y + 12,
+        panel_rect.width - 32,
+        panel_rect.height - 20,
+    )
+    content_height = len(_BOT_MENU_ROWS) * row_h
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=loop.scroll_offset,
+    )
+    selected_top = max(0, min(len(_BOT_MENU_ROWS) - 1, loop.selected)) * row_h
+    loop.scroll_offset = ensure_scroll_offset_visible(
+        metrics.scroll_offset,
+        item_top=selected_top,
+        item_bottom=selected_top + row_h,
+        viewport_height=metrics.viewport_height,
+        content_height=content_height,
+    )
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=loop.scroll_offset,
+    )
+    content_rect = viewport_rect.copy()
+    content_rect.width -= metrics.reserved_width
+    previous_clip = screen.get_clip()
+    screen.set_clip(viewport_rect)
     for idx, row in enumerate(_BOT_MENU_ROWS):
+        draw_y = content_rect.y + (idx * row_h) - metrics.scroll_offset
+        draw_rect = pygame.Rect(content_rect.x, draw_y, content_rect.width, row_h)
+        if draw_rect.bottom < viewport_rect.y or draw_rect.top > viewport_rect.bottom:
+            continue
         selected = idx == loop.selected
         color = _HIGHLIGHT_COLOR if selected else _TEXT_COLOR
         if selected:
-            hi = pygame.Surface(
-                (panel_w - 28, fonts.menu_font.get_height() + 8), pygame.SRCALPHA
+            draw_selection_highlight(
+                screen,
+                rect=draw_rect.inflate(0, 4),
+                border_radius=8,
             )
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            screen.blit(hi, (panel_x + 14, y - 3))
-        label = fonts.menu_font.render(row, True, color)
-        screen.blit(label, (panel_x + 20, y))
-        if values[idx]:
-            value = fonts.menu_font.render(values[idx], True, color)
-            screen.blit(value, (panel_x + panel_w - value.get_width() - 20, y))
-        y += 46
-
-    hint_lines = tuple(_BOT_COPY["hints"])
-    hy = panel_y + panel_h + 12
-    for line in hint_lines:
-        surf = fonts.hint_font.render(line, True, _MUTED_COLOR)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy))
-        hy += surf.get_height() + 3
-
-    if loop.status:
-        color = (255, 150, 150) if loop.status_error else (170, 240, 170)
-        surf = fonts.hint_font.render(loop.status, True, color)
-        screen.blit(surf, ((width - surf.get_width()) // 2, hy + 2))
+        label_left = draw_rect.x + 8
+        label_right = draw_rect.right - 8
+        value_text = values[idx]
+        value_width = int(draw_rect.width * 0.34) if value_text else 0
+        value_draw = fit_text(fonts.menu_font, value_text, value_width)
+        value_surf = (
+            fonts.menu_font.render(value_draw, True, color) if value_draw else None
+        )
+        value_x = label_right - (
+            value_surf.get_width() if value_surf is not None else 0
+        )
+        label_width = max(
+            64,
+            (
+                value_x - label_left - 10
+                if value_surf is not None
+                else draw_rect.width - 16
+            ),
+        )
+        label_draw = fit_text(fonts.menu_font, row, label_width)
+        label = fonts.menu_font.render(label_draw, True, color)
+        screen.blit(label, (label_left, draw_rect.y))
+        if value_surf is not None:
+            screen.blit(value_surf, (value_x, draw_rect.y))
+    screen.set_clip(previous_clip)
+    draw_vertical_scrollbar(screen, metrics=metrics)
+    _draw_hints(
+        screen,
+        fonts,
+        start_y=panel_rect.y + panel_rect.height + 10,
+        hints=hint_lines,
+        loop=loop,
+    )
 
 
 def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
@@ -316,7 +419,5 @@ def run_bot_options_menu(
     if loop.status:
         return (not loop.status_error), loop.status
     return True, "Bot options unchanged"
-
-
 
 

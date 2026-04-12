@@ -133,6 +133,63 @@ class TestFront3DSetupDedup(unittest.TestCase):
             (game_screen, cfg, fonts_2d, display_settings),
         )
 
+    def test_launcher_play_2d_direct_mode_uses_persisted_settings(self) -> None:
+        from tet4d.ui.pygame import front2d_game
+
+        game_screen = object()
+        return_screen = object()
+        fonts_2d = object()
+        cfg = SimpleNamespace(width=9, height=21)
+        captured: dict[str, object] = {}
+        display_settings = DisplaySettings(fullscreen=False, windowed_size=(1200, 760))
+
+        def build_cfg(settings):
+            captured["settings"] = settings
+            return cfg
+
+        with (
+            mock.patch.object(
+                launcher_play,
+                "load_app_settings_payload",
+                return_value={
+                    "settings": {
+                        "2d": {
+                            "width": 9,
+                            "height": 21,
+                            "bot_budget_ms": 44,
+                        }
+                    }
+                },
+            ),
+            mock.patch.object(
+                launcher_play,
+                "open_display",
+                side_effect=[game_screen, return_screen],
+            ),
+            mock.patch.object(front2d_game, "run_menu") as run_menu_mock,
+            mock.patch.object(front2d_game, "_config_from_settings", side_effect=build_cfg),
+            mock.patch.object(
+                front2d_game, "run_game_loop", return_value=True
+            ) as run_game_loop_mock,
+            mock.patch.object(
+                launcher_play,
+                "capture_windowed_display_settings",
+                return_value=display_settings,
+            ),
+        ):
+            result = launcher_play.launch_2d(
+                screen=object(),
+                fonts_2d=fonts_2d,
+                display_settings=display_settings,
+                use_persisted_settings=True,
+            )
+
+        self.assertTrue(result.keep_running)
+        run_menu_mock.assert_not_called()
+        self.assertEqual(captured["settings"].width, 9)
+        self.assertEqual(captured["settings"].height, 21)
+        self.assertEqual(run_game_loop_mock.call_args.kwargs["bot_budget_ms"], 44)
+
     def test_tutorial_launch_2d_uses_game_settings_dataclass(self) -> None:
         from tet4d.ui.pygame import front2d_game
 

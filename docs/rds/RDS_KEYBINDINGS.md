@@ -244,7 +244,7 @@ Both menu contexts must expose the same keybinding profile actions:
 
 1. The editor must be reachable from:
 2. Setup menu (`Controls`->`Edit Keybindings`)
-3. Pause menu (`Settings`->`Controls`->`Edit Keybindings`)
+3. Pause menu (`Keybindings`)
 4. The editor must list bindable actions grouped as:
 5. `General / System`
 6. `Gameplay / Translation`
@@ -277,12 +277,13 @@ Both menu contexts must expose the same keybinding profile actions:
 
 ### 5.8 Dedicated keybindings setup menu
 
-1. Launcher `Settings -> Controls` must open the keybindings/input-configuration surface.
-2. Pause menu must include a `Controls` entry that opens the same keybindings surface.
+1. Launcher `Settings -> Keyboard Bindings` must open the keybindings/input-configuration surface.
+2. Pause menu must include a direct `Keybindings` entry that opens the same keybindings surface.
 3. Controls reference/help content must stay separate from controls settings; reference belongs under launcher `Tutorials` / help surfaces, not under keybinding setup.
 4. User can test bindings in a lightweight input-preview subpanel before leaving menu.
 5. Keybinding scope list must present `General` separately from dimension-specific scopes (`2D`,`3D`,`4D`).
 6. `General` scope is for shared/system actions and should not be merged into a combined "all bindings" default view.
+7. The keybindings editor is a menu-family surface and should use the same primary menu typography as launcher/settings/pause for normal rows, keeping any smaller `panel_font` use limited to dense helper/reference panels only.
 
 ### 5.9 Default conflict policy for shipped layouts
 

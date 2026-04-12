@@ -133,14 +133,31 @@ stays synchronized, and the contract validator accepts the backlog shape.
 - Keep the legacy topology editor isolated to
   `Settings -> Legacy Topology Editor Menu`.
 - Keep the shared menu shell aligned across launcher, setup, pause, settings,
-  and keybindings; do not reintroduce subtitle-only header variants or move
-  `display_overlay_transparency` back out of gameplay settings, and keep the
-  launcher/pause input-config surface consistently labeled `Keybindings`.
+  keybindings, leaderboard, and bot options; do not reintroduce subtitle-only
+  header variants or move `display_overlay_transparency` back out of gameplay
+  settings, and keep the launcher/pause input-config surface consistently
+  labeled `Keybindings`.
 - Keep keyboard configuration inside the shared `Settings` flow, and do not
   reintroduce a parallel launcher-only keyboard-profiles submenu or revive the
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-12:
+
+- flattened the authored launcher/settings menu tree so `Play` keeps same-row
+  `Play` / `Setup` actions, `Settings` removes the old single-child wrappers,
+  and `Game` absorbs gameplay-adjacent micro-pages into one shared scrolling
+  settings surface
+- unified remaining menu-family stragglers such as leaderboard and bot options
+  onto the shared shell treatment, while keybindings now uses the same menu
+  typography family as the rest of the launcher/settings/pause shell
+- upgraded the endgame relic field so persistent motion, topology behavior,
+  speed controls, and optional collisions all operate on true ND relic state
+  before projection instead of flattened post-process drift
+- hardened Windows release packaging so stale MSI/CAB outputs are cleaned
+  before each build, external CAB emission is a hard build failure, and the
+  release workflow uploads only MSI artifacts from Windows jobs
 
 Completed on 2026-04-10:
 
@@ -169,7 +186,7 @@ Completed on 2026-04-11:
   preset id plus a separate interaction mode into the endgame snapshot,
   supports the required `wrap_all`, `invert_all`, and `sphere` topology-flavored
   motion fields, and exposes those controls together under
-  `Settings -> Endgame Effects` instead of scattering them across new
+  the `Settings -> Game` endgame section instead of scattering them across new
   menus or multiplying preset ids for collision variants
 - leaderboard registration now stays in the post-terminal gameplay flow as a
   compact modal overlay on top of the existing endgame surface instead of
@@ -183,24 +200,38 @@ Completed on 2026-04-11:
 Completed on 2026-04-12:
 
 - canonical menu-source-of-truth pass so `config/menu/structure.json` now
-  defines the launcher tree, pause tree, settings hierarchy, split
-  `Game Settings` subpages, `Endgame Effects`, keyboard bindings placement,
-  retained legacy placement, and the typed row/component model
+  defines the launcher tree, pause tree, settings hierarchy, the flattened
+  scrolling `Game` page, keyboard bindings placement, retained legacy
+  placement, and the typed row/component model
   without parallel Python-owned settings sections or launcher routes
-- shared menu-overflow pass so settings and keybindings pages now use one
-  auto-scrolling viewport with reserved scrollbar width, selection visibility
-  enforcement, and shared scrollbar geometry instead of clipping oversized
-  menus off-screen
-- settings IA split pass so `Game Settings` is now broken into coherent
-  `Gameplay`, `Board / Geometry`, `Movement / Rotation`, `Visual / Animation`,
-  and `Difficulty / Pace` subpages under the canonical settings tree rather
-  than remaining a single oversized page
+- shared menu-overflow pass so settings, keybindings, and bot options now use
+  one auto-scrolling viewport with reserved scrollbar width, selection
+  visibility enforcement, and shared scrollbar geometry instead of clipping
+  oversized menus off-screen
+- settings IA flattening pass so `Settings -> Game` is now one scrolling page
+  with `Gameplay`, `Board / Geometry`, `Movement / Rotation`,
+  `Endgame Effects`, and `Difficulty / Pace` sections instead of a submenu
+  forest
 - menu normalization pass so runtime launcher/settings/keybindings consumers
   now read a compiled normalized graph rather than the raw authored menu tree,
-  singleton wrappers are collapsed before render/input use, authored
-  `Controls` / `Legacy` wrappers flatten into direct runtime `Settings`
-  entries, and the one-row `Visual / Animation` page no longer survives as a
-  visible runtime submenu
+  singleton wrappers are collapsed before render/input use, and the one-row
+  `Visual / Animation` page no longer survives as a visible runtime submenu
+- authored menu-flattening + direct-play pass so `config/menu/structure.json`
+  now drops the settled `Controls`, `Legacy`, and one-row `Visual /
+  Animation` wrappers entirely, `Play -> 2D/3D/4D` uses same-row
+  `Play` / `Setup` action groups instead of another layer, direct `Play`
+  launches from persisted settings, and `Setup` still routes through the
+  existing setup screens before using the same gameplay launch path
+- ND endgame-motion pass so persistent relic updates now advance and collide in
+  ND state before projection, `wrap_all` / `invert_all` / `sphere` differ by
+  ongoing ND boundary behavior rather than only start layout, 4D relics can
+  traverse hidden axes and blend across frozen layer boards, and the `Game`
+  page now includes separate `Relic field speed` and `Shatter speed` controls
+  instead of baking speed into preset identity
+- shared menu-shell completion pass so leaderboard and bot options now render
+  on the same title/back-chip/framed-panel/footer shell as the other menu
+  surfaces, and keybindings main rows now use the shared menu typography
+  instead of a separate panel-font treatment
 - post-terminal cleanup follow-up so the helper side panel no longer repeats a
   separate `GAME OVER` label and the frozen endgame fragments remain visible
   indefinitely instead of fading away after a fixed lifetime
@@ -359,8 +390,10 @@ Completed on 2026-03-29:
 - topology-playground exploration return-menu fix so `Explore This Topology`
   now exits directly back to the main playground shell on `menu` instead of
   opening the generic independent gameplay pause menu first
-- windows packaging MSI embedding fix so the published Windows installer no
-  longer depends on an external `cab1.cab` sidecar file at install time
+- windows packaging hardening pass so the published Windows installer is
+  enforced as one self-contained `.msi`, stale `*.msi` / `*.cab` outputs are
+  cleaned before each run, external CAB emission now fails the Windows build,
+  and the release workflow uploads only Windows `*.msi` artifacts
 - dead-code cleanup pass removing zero-reference board/menu/tutorial helper
   shims plus the unused topology-lab `_TEST_COMPAT_EXPORTS` tuple
 - built-in keybinding defaults redesign so shipped movement uses a compact

@@ -7,6 +7,7 @@ from .parse_helpers import parse_copy_fields
 
 _MENU_ITEM_TYPES = {
     "action",
+    "action_group",
     "submenu",
     "route",
     "section",
@@ -26,7 +27,56 @@ _DEFAULT_MENU_ENTRYPOINTS = {
 }
 
 
-def parse_menu_item(raw: object, *, path: str) -> dict[str, str]:
+def _parse_action_group_item(item: dict[str, Any], *, path: str) -> dict[str, Any]:
+    default_action_id = as_non_empty_string(
+        item.get("default_action_id"),
+        path=f"{path}.default_action_id",
+    ).lower()
+    raw_actions = item.get("actions")
+    if not isinstance(raw_actions, list) or not raw_actions:
+        raise RuntimeError(f"{path}.actions must be a non-empty list")
+    actions: list[dict[str, str]] = []
+    action_ids: set[str] = set()
+    default_seen = False
+    for action_idx, raw_action in enumerate(raw_actions):
+        action = require_object(raw_action, path=f"{path}.actions[{action_idx}]")
+        nested_id = as_non_empty_string(
+            action.get("id"),
+            path=f"{path}.actions[{action_idx}].id",
+        ).lower()
+        if nested_id in action_ids:
+            raise RuntimeError(
+                f"{path}.actions[{action_idx}] duplicates action id: {nested_id}"
+            )
+        action_ids.add(nested_id)
+        action_label = as_non_empty_string(
+            action.get("label"),
+            path=f"{path}.actions[{action_idx}].label",
+        )
+        action_id = as_non_empty_string(
+            action.get("action_id"),
+            path=f"{path}.actions[{action_idx}].action_id",
+        ).lower()
+        if nested_id == default_action_id:
+            default_seen = True
+        actions.append(
+            {
+                "id": nested_id,
+                "label": action_label,
+                "action_id": action_id,
+            }
+        )
+    if not default_seen:
+        raise RuntimeError(
+            f"{path}.default_action_id must reference one of {path}.actions[*].id"
+        )
+    return {
+        "default_action_id": default_action_id,
+        "actions": tuple(actions),
+    }
+
+
+def parse_menu_item(raw: object, *, path: str) -> dict[str, Any]:
     item = require_object(raw, path=path)
     item_id = as_non_empty_string(item.get("id"), path=f"{path}.id").lower()
     item_type = as_non_empty_string(item.get("type"), path=f"{path}.type").lower()
@@ -52,6 +102,9 @@ def parse_menu_item(raw: object, *, path: str) -> dict[str, str]:
             path=f"{path}.action_id",
         ).lower()
         parsed["action_id"] = action_id
+        return parsed
+    if item_type == "action_group":
+        parsed.update(_parse_action_group_item(item, path=path))
         return parsed
     if item_type == "submenu":
         menu_id = as_non_empty_string(
@@ -96,7 +149,7 @@ def parse_menu_item(raw: object, *, path: str) -> dict[str, str]:
     return parsed
 
 
-def _parse_menu_items(menu_id: str, menu: dict[str, Any]) -> tuple[dict[str, str], ...]:
+def _parse_menu_items(menu_id: str, menu: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     raw_items = menu.get("items")
     if not isinstance(raw_items, list):
         raise RuntimeError(f"structure.menus.{menu_id}.items must be a list")

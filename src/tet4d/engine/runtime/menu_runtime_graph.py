@@ -8,6 +8,7 @@ _HIDDEN_VISIBILITY_VALUES = {"hidden", "never", "false", "0"}
 _UTILITY_ACTION_IDS = {"back", "save", "reset", "display_apply"}
 _ACTIONABLE_ITEM_TYPES = {
     "action",
+    "action_group",
     "submenu",
     "route",
     "toggle",
@@ -219,12 +220,6 @@ def _collapse_result_for_menu(
             kind="alias",
             menu_id=menu_id,
             target_menu_id=str(submenu_items[0].get("menu_id", "")).strip().lower(),
-        )
-    if len(inline_items) == 1:
-        return MenuCompileResult(
-            kind="inline",
-            menu_id=menu_id,
-            inline_items=inline_items,
         )
     if len(inline_items) > 1 and len(nonutility) == 1:
         return MenuCompileResult(

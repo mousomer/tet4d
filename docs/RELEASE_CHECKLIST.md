@@ -33,7 +33,9 @@
    - macOS: `bash packaging/scripts/build_macos.sh` (`.dmg`)
    - Linux: `bash packaging/scripts/build_linux.sh` (`.deb`)
    - Windows: `./packaging/scripts/build_windows.ps1` (`.msi`)
-   - Windows MSI installs from the single generated `.msi` artifact without a
-     required external `cab1.cab`
+   - Windows packaging fails if the expected `.msi` is missing or if any
+     external `*.cab` is emitted under `build/packaging/windows`
+   - Windows release artifacts remain a single generated `.msi` without any
+     sidecar CAB upload
 4. CI workflow is green for the installer matrix: `.github/workflows/release-packaging.yml`.
 5. The tag-triggered release workflow attached the generated installers to the GitHub release.

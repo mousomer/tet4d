@@ -697,6 +697,8 @@ _MODE_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "topology_profile_index",
             "endgame_preset_id",
             "endgame_interaction_mode",
+            "endgame_relic_speed_percent",
+            "endgame_shatter_speed_percent",
             "auto_speedup_enabled",
             "lines_per_level",
             "rotation_animation_mode",

@@ -1,41 +1,7 @@
 {
   "version": 1,
-  "title": "Explorer Playground",
-  "subtitle": "Scene-first explorer playground for live traversal, presets, sandbox play, and seam editing.",
-  "rows": [
-    {
-      "key": "gameplay_mode",
-      "label": "Game Type"
-    },
-    {
-      "key": "dimension",
-      "label": "Dimension"
-    },
-    {
-      "key": "preset",
-      "label": "Preset"
-    },
-    {
-      "key": "topology_mode",
-      "label": "Topology mode"
-    },
-    {
-      "key": "axis_edges",
-      "label": "Boundary seams"
-    },
-    {
-      "key": "save_profile",
-      "label": "Save profile"
-    },
-    {
-      "key": "export",
-      "label": "Export resolved profile"
-    },
-    {
-      "key": "back",
-      "label": "Back"
-    }
-  ],
+  "title": "Topology Playground",
+  "subtitle": "Scene-first topology playground shell copy for live traversal, presets, sandbox play, and seam editing.",
   "hints": [
     "Up/Down select row",
     "Left/Right change values",

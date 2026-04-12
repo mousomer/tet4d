@@ -15,8 +15,8 @@ from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
+    render_relics_for_animation,
     rotate_point,
-    transform_relics_for_animation,
     transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -1228,11 +1228,14 @@ def _draw_endgame_board_2d(
             2,
         )
 
-    relic_transforms = transform_relics_for_animation(endgame_animation)
-    for cell_relic, (position, rotation_deg, alpha) in zip(
+    relic_render_states = render_relics_for_animation(endgame_animation)
+    for cell_relic, relic_state in zip(
         endgame_animation.cell_relics,
-        relic_transforms,
+        relic_render_states,
     ):
+        position = relic_state.render_position
+        rotation_deg = relic_state.rotation_deg
+        alpha = relic_state.alpha
         if alpha <= 0.0:
             continue
         quad_points = _endgame_screen_points_2d(

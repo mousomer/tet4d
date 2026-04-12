@@ -107,6 +107,7 @@ def _draw_binding_row(
     draw_rect: pygame.Rect,
 ) -> None:
     color = (255, 224, 130) if selected else (228, 230, 242)
+    row_font = fonts.menu_font
     if selected:
         _draw_row_selection(
             surface,
@@ -121,17 +122,17 @@ def _draw_binding_row(
     left_x = draw_rect.x + 8
     right_x = draw_rect.right - 8
     max_key_w = max(56, int(draw_rect.width * 0.34))
-    key_draw = fit_text(fonts.panel_font, key_text, max_key_w)
-    key_surf = fonts.panel_font.render(key_draw, True, color)
+    key_draw = fit_text(row_font, key_text, max_key_w)
+    key_surf = row_font.render(key_draw, True, color)
     key_x = right_x - key_surf.get_width()
     label_width = max(0, key_x - left_x - 10)
-    label_draw = fit_text(fonts.panel_font, label, label_width)
-    label_surf = fonts.panel_font.render(label_draw, True, color)
+    label_draw = fit_text(row_font, label, label_width)
+    label_surf = row_font.render(label_draw, True, color)
 
     surface.blit(label_surf, (left_x, draw_rect.y))
     surface.blit(key_surf, (key_x, draw_rect.y))
 
-    desc_y = draw_rect.y + fonts.panel_font.get_height() + 1
+    desc_y = draw_rect.y + row_font.get_height() + 1
     icon_rect = pygame.Rect(left_x, desc_y - 1, 20, fonts.hint_font.get_height() + 2)
     draw_action_icon(surface, rect=icon_rect, action=row.action)
     desc_x = icon_rect.right + 6
@@ -150,7 +151,7 @@ def _draw_binding_rows(
     binding_rows: list[Any],
     viewport_rect: pygame.Rect,
 ) -> None:
-    row_h = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 12
+    row_h = fonts.menu_font.get_height() + fonts.hint_font.get_height() + 12
     content_height = len(rendered_rows) * row_h
     metrics = compute_vertical_scroll_metrics(
         viewport_rect=viewport_rect,
@@ -316,7 +317,7 @@ def draw_section_menu(
     panel_rect = _panel_geometry(surface)
     _draw_panel(surface, panel_rect=panel_rect)
 
-    row_h = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 14
+    row_h = fonts.menu_font.get_height() + fonts.hint_font.get_height() + 14
     viewport_rect = pygame.Rect(
         panel_rect.x + 16,
         panel_rect.y + 12,
@@ -355,8 +356,8 @@ def draw_section_menu(
         color = (255, 224, 130) if selected else (228, 230, 242)
         if selected:
             _draw_row_selection(surface, rect=draw_rect.inflate(0, 4))
-        title_surf = fonts.panel_font.render(
-            fit_text(fonts.panel_font, title, draw_rect.width),
+        title_surf = fonts.menu_font.render(
+            fit_text(fonts.menu_font, title, draw_rect.width),
             True,
             color,
         )
@@ -368,7 +369,7 @@ def draw_section_menu(
         surface.blit(title_surf, (draw_rect.x + 8, draw_rect.y))
         surface.blit(
             desc_surf,
-            (draw_rect.x + 8, draw_rect.y + fonts.panel_font.get_height() + 1),
+            (draw_rect.x + 8, draw_rect.y + fonts.menu_font.get_height() + 1),
         )
     surface.set_clip(previous_clip)
     draw_vertical_scrollbar(surface, metrics=metrics)

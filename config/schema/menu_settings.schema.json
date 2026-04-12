@@ -179,6 +179,8 @@
             "kick_level_index",
             "endgame_preset_id",
             "endgame_interaction_mode",
+            "endgame_relic_speed_percent",
+            "endgame_shatter_speed_percent",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -274,6 +276,16 @@
                 "none",
                 "collide"
               ]
+            },
+            "endgame_relic_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
+            },
+            "endgame_shatter_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
             }
           }
         }
@@ -304,6 +316,8 @@
             "kick_level_index",
             "endgame_preset_id",
             "endgame_interaction_mode",
+            "endgame_relic_speed_percent",
+            "endgame_shatter_speed_percent",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -399,6 +413,16 @@
                 "none",
                 "collide"
               ]
+            },
+            "endgame_relic_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
+            },
+            "endgame_shatter_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
             }
           }
         }
@@ -430,6 +454,8 @@
             "kick_level_index",
             "endgame_preset_id",
             "endgame_interaction_mode",
+            "endgame_relic_speed_percent",
+            "endgame_shatter_speed_percent",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -529,6 +555,16 @@
                 "none",
                 "collide"
               ]
+            },
+            "endgame_relic_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
+            },
+            "endgame_shatter_speed_percent": {
+              "type": "integer",
+              "minimum": 25,
+              "maximum": 200
             }
           }
         }

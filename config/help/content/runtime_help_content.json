@@ -115,8 +115,8 @@
       "full_lines": [
         "",
         "## Settings categories",
-        "- Settings now uses one shared page tree for Game Settings, Endgame Effects, Display, Audio, Controls, and Legacy entries.",
-        "- Keyboard Bindings lives under Controls, and Endgame Effects stays grouped in its own page."
+        "- Settings now uses one shared page tree for Game, Display, Audio, direct Keyboard Bindings, and the Legacy entry.",
+        "- Game keeps Gameplay, Board / Geometry, Movement / Rotation, Endgame Effects, and Difficulty / Pace on one scrolling page."
       ]
     },
     "camera_and_view": {

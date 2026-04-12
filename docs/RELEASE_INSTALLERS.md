@@ -42,9 +42,9 @@ Requirements:
 
 1. `.NET SDK 6+` must be available on `PATH` because the script installs `WiX 6` as a local tool.
 2. The script keeps WiX under `build/packaging/windows/.dotnet-tools` and uses `DOTNET_CLI_HOME` under `build/packaging/windows/.dotnet-cli-home` when not already set.
-3. The Windows WiX build embeds the cabinet payload into the `.msi`, so the
-   release artifact is a single installable file and does not require a
-   sidecar `cab1.cab`.
+3. The Windows WiX build keeps `<MediaTemplate EmbedCab="yes" />`, builds into a temporary output directory under `build/packaging/windows/out`, and only moves the validated MSI into `artifacts/installers` after post-build checks pass.
+4. Before each Windows build, the script removes stale `*.msi` and `*.cab` files from `artifacts/installers` and the packaging build tree under `build/packaging/windows`.
+5. The Windows packaging script now fails hard if the expected MSI is missing or if any external `*.cab` is emitted anywhere under `build/packaging/windows`; shipping a sidecar `cab1.cab` is explicitly not allowed.
 
 ## 3. Output artifacts
 
@@ -76,6 +76,12 @@ Current CI package targets:
 2. Windows x64 (`windows-latest`)
 3. macOS x64 (`macos-15-intel`)
 4. macOS ARM64 (`macos-latest`)
+
+Artifact upload policy:
+
+1. Windows uploads only `artifacts/installers/*.msi`
+2. Linux uploads only `artifacts/installers/*.deb`
+3. macOS uploads only `artifacts/installers/*.dmg`
 
 Tag pushes also publish the generated installers to the matching GitHub release.
 

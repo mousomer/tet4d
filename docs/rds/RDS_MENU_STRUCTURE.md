@@ -88,12 +88,13 @@ This design is based on:
 ```text
 Main Menu
 |-- Play
-|   |-- 2D: Setup & Play
-|   |-- 3D: Setup & Play
-|   |-- 4D: Setup & Play
+|   |-- 2D [Play] [Setup]
+|   |-- 3D [Play] [Setup]
+|   |-- 4D [Play] [Setup]
 |   |-- Last Custom Topology
 |   |-- Auto Bot Play
-|   `-- Leaderboard
+|   |-- Leaderboard
+|   `-- Back
 |-- Continue
 |-- Tutorials
 |   |-- Interactive Tutorials
@@ -105,15 +106,12 @@ Main Menu
 |   `-- Help / FAQ
 |-- Topology Playground
 |-- Settings
-|   |-- Game Settings
+|   |-- Game
 |   |   |-- Gameplay
 |   |   |-- Board / Geometry
 |   |   |-- Movement / Rotation
-|   |   |-- Locked-cell transparency
-|   |   |-- Save
-|   |   |-- Reset defaults
+|   |   |-- Endgame Effects
 |   |   `-- Difficulty / Pace
-|   |-- Endgame Effects
 |   |-- Display
 |   |-- Audio
 |   |-- Keyboard Bindings
@@ -167,7 +165,8 @@ Pause Menu
 2. Header (screen title + current section)
 3. Content panel (focusable options)
 4. Footer (shortcut hints + status messages)
-5. Shared launcher, setup, pause, settings, and keybindings screens use one
+5. Shared launcher, setup, pause, settings, keybindings, leaderboard, and
+   bot-options screens use one
    shell treatment: title-cased headers, no rendered subtitle row, a visible
    `Back` chip in the upper-left corner, a framed central panel, and footer
    hints/status below the panel.
@@ -228,7 +227,7 @@ Pause Menu
 ### 6.1 Input behavior
 
 1. `Up/Down`: move focus between rows.
-2. `Left/Right`: change current setting value.
+2. `Left/Right`: change current setting value or switch the active sub-action on an `action_group` row.
 3. `Enter`: activate focused action.
 4. `Esc`: back/cancel (never destructive).
 5. `Tab`: next section when in multi-section settings.
@@ -322,9 +321,9 @@ Add persistent settings file:
 10. `Audio`and`Display`remain top-level in`Settings` while they stay below threshold.
 11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
 12. `display_overlay_transparency` is treated as a gameplay-facing readability
-    control and belongs under `Settings -> Game Settings`; the authored
-    `Visual / Animation` bucket may exist for editing convenience but must
-    normalize away before runtime if it would only host that single setting.
+    control and belongs under `Settings -> Game`; it should live as a
+    direct row on `Game` rather than behind a one-setting
+    `Visual / Animation` submenu.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -417,11 +416,14 @@ Manual tests:
 3. One canonical authored menu config now defines launcher, pause, settings,
    and keybindings structure through `config/menu/structure.json`, and runtime
    consumers read the compiled normalized graph rather than the raw tree.
-4. Settings uses one shared subtree with `Game Settings`, `Endgame Effects`,
-   `Display`, and `Audio`, plus direct runtime `Keyboard Bindings` and
-   `Legacy Topology Editor Menu` entries after normalization.
-5. Shared display-state manager handles layout refresh after display-mode changes.
-6. Fullscreen return-to-menu shrinkage issue is resolved.
+4. Settings uses one shared subtree with `Game`, `Display`, and `Audio`, plus
+   direct runtime `Keyboard Bindings` and `Legacy Topology Editor Menu`
+   entries after normalization.
+5. `Play -> 2D/3D/4D` uses same-row `Play` / `Setup` action groups: `Play`
+   launches directly from persisted settings and `Setup` opens the existing
+   setup flow before using the same downstream gameplay launch path.
+6. Shared display-state manager handles layout refresh after display-mode changes.
+7. Fullscreen return-to-menu shrinkage issue is resolved.
 ## 13. Acceptance Criteria
 
 1. Menu hierarchy is consistent in 2D/3D/4D entrypoints and pause menu.
@@ -435,20 +437,23 @@ Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu root includes `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`, and `Quit`.
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
-4. `Settings` now routes into the canonical subtree `Game Settings`,
-   `Endgame Effects`, `Display`, and `Audio`, plus direct runtime
-   `Keyboard Bindings` and `Legacy Topology Editor Menu` entries.
-5. `Game Settings` is split into `Gameplay`, `Board / Geometry`,
-   `Movement / Rotation`, direct `Locked-cell transparency`, and
-   `Difficulty / Pace`; the authored one-row `Visual / Animation` page is
-   allowed only in config and must collapse away before runtime use.
-6. `Settings -> Endgame Effects` keeps the persistent relic-field preset and
-   interaction-mode controls together in one dedicated page without creating a
-   separate top-level menu.
-5. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
-6. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
-7. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
-7. Defaults and menu structures are externalized:
+4. `Settings` now routes into the canonical subtree `Game`, `Display`, and
+   `Audio`, plus direct runtime `Keyboard Bindings` and `Legacy Topology
+   Editor Menu` entries.
+5. `Settings -> Game` is one scrolling page with `Gameplay`,
+   `Board / Geometry`, `Movement / Rotation`, `Endgame Effects`, and
+   `Difficulty / Pace` sections; the old gameplay micro-pages and the one-row
+   `Visual / Animation` page are retired from authored config instead of
+   surviving for runtime collapse.
+6. Persistent relic-field preset, interaction-mode, relic-field speed, and
+   shatter-speed controls live in the `Endgame Effects` section inside
+   `Settings -> Game` rather than on a separate tiny settings page.
+7. `Play` rows for `2D` / `3D` / `4D` default to direct gameplay launch from
+   persisted settings while keeping `Setup` reachable on the same screen.
+8. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
+9. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
+10. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
+11. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
 10. typed settings/keybindings rows and page hierarchy are config-defined in

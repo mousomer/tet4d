@@ -4,14 +4,37 @@ $RootDir = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $PythonBin = if ($env:PYTHON_BIN) { $env:PYTHON_BIN } else { "python" }
 $ArtifactDir = Join-Path $RootDir "artifacts\installers"
 $BuildDir = Join-Path $RootDir "build\packaging\windows"
+$TempOutputDir = Join-Path $BuildDir "out"
 $WxsPath = Join-Path $BuildDir "tet4d.wxs"
 $UpgradeCode = "{5B4CD54F-0F11-4D11-8A4E-A2E845E0C4D1}"
 $WixToolDir = Join-Path $BuildDir ".dotnet-tools"
+
+function Remove-PackagingArtifacts {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$Paths
+  )
+
+  foreach ($TargetPath in $Paths) {
+    if (-not (Test-Path $TargetPath)) {
+      continue
+    }
+    Get-ChildItem -Path $TargetPath -Filter *.msi -File -Recurse -ErrorAction SilentlyContinue |
+      Remove-Item -Force -ErrorAction Stop
+    Get-ChildItem -Path $TargetPath -Filter *.cab -File -Recurse -ErrorAction SilentlyContinue |
+      Remove-Item -Force -ErrorAction Stop
+  }
+}
 
 Set-Location $RootDir
 New-Item -ItemType Directory -Path $ArtifactDir -Force | Out-Null
 New-Item -ItemType Directory -Path $BuildDir -Force | Out-Null
 New-Item -ItemType Directory -Path $WixToolDir -Force | Out-Null
+Remove-PackagingArtifacts -Paths @($ArtifactDir, $BuildDir)
+if (Test-Path $TempOutputDir) {
+  Remove-Item $TempOutputDir -Recurse -Force
+}
+New-Item -ItemType Directory -Path $TempOutputDir -Force | Out-Null
 
 if (-not $env:DOTNET_CLI_HOME) {
   $env:DOTNET_CLI_HOME = Join-Path $BuildDir ".dotnet-cli-home"
@@ -92,18 +115,34 @@ if ($LASTEXITCODE -ne 0) {
 "@ | Set-Content -Path $WxsPath -Encoding UTF8
 
 $ArtifactPath = Join-Path $ArtifactDir "tet4d-$Version-windows-x64.msi"
-if (Test-Path $ArtifactPath) {
-  Remove-Item $ArtifactPath -Force
-}
+$TempArtifactPath = Join-Path $TempOutputDir "tet4d-$Version-windows-x64.msi"
 
 & wix build `
   -arch x64 `
   -bindpath "Payload=$(Join-Path $RootDir 'dist\tet4d')" `
-  -out $ArtifactPath `
+  -out $TempArtifactPath `
   $WxsPath
 
 if ($LASTEXITCODE -ne 0) {
   throw "WiX build failed"
+}
+
+if (-not (Test-Path $TempArtifactPath)) {
+  throw "WiX build completed without creating expected MSI: $TempArtifactPath"
+}
+
+$ExternalCabFiles = Get-ChildItem -Path $BuildDir -Filter *.cab -File -Recurse -ErrorAction SilentlyContinue
+if ($ExternalCabFiles) {
+  $CabList = ($ExternalCabFiles | ForEach-Object { $_.FullName }) -join [Environment]::NewLine
+  throw "Windows packaging must produce a single self-contained MSI. Unexpected external CAB output detected:`n$CabList"
+}
+
+Move-Item -Path $TempArtifactPath -Destination $ArtifactPath -Force
+
+$ArtifactCabFiles = Get-ChildItem -Path $ArtifactDir -Filter *.cab -File -Recurse -ErrorAction SilentlyContinue
+if ($ArtifactCabFiles) {
+  $CabList = ($ArtifactCabFiles | ForEach-Object { $_.FullName }) -join [Environment]::NewLine
+  throw "Installer artifact directory must not contain CAB sidecars:`n$CabList"
 }
 
 Write-Host "Created $ArtifactPath"

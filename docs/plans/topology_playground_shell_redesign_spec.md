@@ -55,14 +55,14 @@ constraints that the menu IA must preserve.
 - The old menu-only topology editor is not part of `Topology Playground`,
   `Explorer`, or `Path`.
 - The old menu-only topology editor is reachable only through
-  `Settings -> Advanced -> Legacy Topology Editor Menu`.
+  `Settings -> Legacy Topology Editor Menu`.
 
 ### Adjacent launcher rules
 
 - `Help / FAQ` must stay reachable from the learning/support surface rather
   than only through `Settings`.
-- `Controls Reference` must remain distinct from `Settings -> Controls`.
-- `Settings -> Controls` means persistent input configuration, not help or
+- `Controls Reference` must remain distinct from `Settings -> Keyboard Bindings`.
+- `Settings -> Keyboard Bindings` means persistent input configuration, not help or
   legend/reference content.
 - `Leaderboard` and `Bot` must not return to the launcher root and must not
   live under `Settings`.
@@ -229,7 +229,7 @@ true:
 - launcher root is `Play`, `Continue`, `Tutorials`, `Topology Playground`,
   `Settings`, `Quit`
 - `Topology Playground` is a direct modern entry
-- legacy topology editor placement is only `Settings -> Advanced -> Legacy
+- legacy topology editor placement is only `Settings -> Legacy
   Topology Editor Menu`
 - top bar contains only title, tabs, validity chip, and dimension chip
 - no default prose header is visible

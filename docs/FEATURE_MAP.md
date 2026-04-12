@@ -5,21 +5,22 @@ User-facing feature map for the shipped `tet4d` experience.
 ## 1. Launcher and Menus
 
 - Unified launcher root: `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`,`Quit`.
+- `Play` keeps `2D`,`3D`,`4D` on one screen with same-row `Play` / `Setup` actions; `Play` launches from persisted settings and `Setup` opens the existing setup flow.
 - `Tutorials` is the learning/support branch: `Interactive Tutorials`,`How to Play`,`Controls Reference`,`Help / FAQ`.
-- `Settings` is the configuration branch: `Game Settings`,`Endgame Effects`,`Display`,`Audio`,`Controls`,`Legacy`.
-- `Game Settings` is split into `Gameplay`,`Board / Geometry`,`Movement / Rotation`,`Visual / Animation`, and `Difficulty / Pace`.
-- `Controls Reference` is a help/reference surface, while `Settings -> Controls -> Keyboard Bindings` is persistent input configuration.
+- `Settings` is the configuration branch: `Game`,`Display`,`Audio`,`Keyboard Bindings`,`Legacy Topology Editor Menu`.
+- `Game` is one scrolling page with `Gameplay`,`Board / Geometry`,`Movement / Rotation`,`Endgame Effects`, and `Difficulty / Pace` sections.
+- `Controls Reference` is a help/reference surface, while `Settings -> Keyboard Bindings` is persistent input configuration.
 - `Leaderboard` and `Bot` are play-adjacent launcher entries under `Play`, not root destinations and not `Settings` entries.
 - Pause `Settings` reuses the same canonical settings tree as launcher.
 - Menu structure is fully config-driven from `config/menu/structure.json` (`menu_entrypoints` + `menus`).
-- Oversized settings and keybindings pages use one shared scrolling viewport with an automatic vertical scrollbar.
+- Oversized settings, keybindings, and bot-options pages use one shared scrolling viewport with an automatic vertical scrollbar.
+- Launcher/play, settings, keybindings, pause, leaderboard, and bot-options now share the same framed menu shell treatment.
 - Shared `Settings` pages (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, overlay transparency, apply/save/reset.
-  - Game Settings: seed, random type, topology advanced, animation, kick, pace, analytics, and topology-cache tools split across coherent subpages.
-  - Endgame Effects: relic preset and interaction mode.
-  - Controls: keyboard bindings entry; profile management stays inside the keyboard bindings editor.
-  - Legacy: compatibility-backed topology editor entry.
+  - Game: seed, random type, topology advanced, animation, locked-cell transparency, endgame effects, kick, pace, analytics, and topology-cache tools on one scrolling page.
+  - Keyboard Bindings: direct settings entry; profile management stays inside the keyboard bindings editor.
+  - Legacy Topology Editor Menu: compatibility-backed topology editor entry.
 - Setup menus are dimension-specific and only show per-mode gameplay options.
 - 3D/4D setup flows now share the same ND setup/menu engine (`src/tet4d/ui/pygame/frontend_nd_setup.py`) with gameplay/input routing kept separately in `src/tet4d/ui/pygame/frontend_nd_state.py` and `src/tet4d/ui/pygame/frontend_nd_input.py`.
 - Pause menu is unified across modes: resume/restart/settings/controls/help/bot/back to main/quit.

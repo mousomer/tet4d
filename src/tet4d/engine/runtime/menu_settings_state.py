@@ -7,6 +7,7 @@ from .project_config import menu_settings_file_path, state_dir_path
 from .settings_schema import (
     RuntimeSettingDefaults,
     clamp_animation_duration_ms,
+    clamp_endgame_speed_percent,
     clamp_game_seed,
     clamp_lines_per_level,
     clamp_overlay_transparency,
@@ -316,11 +317,13 @@ def mode_rotation_animation_mode(mode_key: str) -> str:
     return str(settings["rotation_animation_mode"])
 
 
-def mode_endgame_settings(mode_key: str) -> tuple[str, str]:
+def mode_endgame_settings(mode_key: str) -> tuple[str, str, int, int]:
     settings = mode_shared_gameplay_settings(mode_key)
     return (
         str(settings["endgame_preset_id"]),
         str(settings["endgame_interaction_mode"]),
+        int(settings["endgame_relic_speed_percent"]),
+        int(settings["endgame_shatter_speed_percent"]),
     )
 
 
@@ -349,6 +352,8 @@ def save_shared_gameplay_settings(
     rotation_animation_duration_ms_2d: int,
     rotation_animation_duration_ms_nd: int,
     translation_animation_duration_ms: int,
+    endgame_relic_speed_percent: int = 100,
+    endgame_shatter_speed_percent: int = 100,
 ) -> tuple[bool, str]:
     payload = _load_payload()
     raw_values = {
@@ -357,6 +362,12 @@ def save_shared_gameplay_settings(
         "kick_level_index": int(kick_level_index),
         "endgame_preset_id": str(endgame_preset_id),
         "endgame_interaction_mode": str(endgame_interaction_mode),
+        "endgame_relic_speed_percent": int(
+            clamp_endgame_speed_percent(endgame_relic_speed_percent, default=100)
+        ),
+        "endgame_shatter_speed_percent": int(
+            clamp_endgame_speed_percent(endgame_shatter_speed_percent, default=100)
+        ),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
         "rotation_animation_mode": str(rotation_animation_mode),

@@ -113,6 +113,55 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
 
         self.assertEqual(calls["root_escape"], 1)
 
+    def test_action_group_left_right_changes_subaction_before_enter(self) -> None:
+        menus = {
+            "root": {
+                "title": "Root",
+                "items": (
+                    {
+                        "id": "play_2d_row",
+                        "type": "action_group",
+                        "label": "2D",
+                        "default_action_id": "play",
+                        "actions": (
+                            {"id": "play", "label": "Play", "action_id": "play_2d"},
+                            {"id": "setup", "label": "Setup", "action_id": "setup_2d"},
+                        ),
+                    },
+                ),
+            }
+        }
+        registry = ActionRegistry()
+        calls = {"play": 0, "setup": 0}
+        registry.register(
+            "play_2d",
+            lambda: calls.__setitem__("play", calls["play"] + 1) or False,
+        )
+        registry.register(
+            "setup_2d",
+            lambda: calls.__setitem__("setup", calls["setup"] + 1) or True,
+        )
+
+        runner = MenuRunner(
+            menus=menus,
+            start_menu_id="root",
+            action_registry=registry,
+            render_menu=lambda *_args: None,
+        )
+
+        with patch.object(
+            pygame.event,
+            "get",
+            side_effect=[
+                [pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RIGHT})],
+                [pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN})],
+            ],
+        ):
+            runner.run()
+
+        self.assertEqual(calls["play"], 0)
+        self.assertEqual(calls["setup"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

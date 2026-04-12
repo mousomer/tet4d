@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+_UTILITY_ACTION_IDS = {"back", "save", "reset", "display_apply"}
+
 
 def collect_reachable_menu_ids(
     menus: dict[str, dict[str, Any]],
@@ -43,6 +45,12 @@ def collect_actions_for_menu_ids(
             item_field="action_id",
         )
     )
+    action_ids.update(
+        _collect_action_group_action_ids_for_menu_ids(
+            menus,
+            menu_ids=menu_ids,
+        )
+    )
     return action_ids
 
 
@@ -59,6 +67,26 @@ def collect_route_ids_for_menu_ids(
     )
 
 
+def _collect_action_group_action_ids_for_menu_ids(
+    menus: dict[str, dict[str, Any]],
+    *,
+    menu_ids: set[str],
+) -> set[str]:
+    values: set[str] = set()
+    for menu_id in menu_ids:
+        menu = menus.get(menu_id)
+        if menu is None:
+            continue
+        for item in menu["items"]:
+            if item["type"] != "action_group":
+                continue
+            for action in item.get("actions", ()):
+                action_id = str(action.get("action_id", "")).strip().lower()
+                if action_id and action_id not in _UTILITY_ACTION_IDS:
+                    values.add(action_id)
+    return values
+
+
 def _collect_item_values_for_menu_ids(
     menus: dict[str, dict[str, Any]],
     *,
@@ -73,5 +101,8 @@ def _collect_item_values_for_menu_ids(
             continue
         for item in menu["items"]:
             if item["type"] == item_type:
-                values.add(item[item_field])
+                value = item[item_field]
+                if item_type == "action" and value in _UTILITY_ACTION_IDS:
+                    continue
+                values.add(value)
     return values

@@ -53,6 +53,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
 - `settings.2d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.2d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.2d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
+- `settings.2d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.2d.lines_per_level`: `10`
 - `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
@@ -92,6 +94,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.3d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.3d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
+- `settings.3d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.3d.lines_per_level`: `10`
 - `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
@@ -133,6 +137,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.4d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.4d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
+- `settings.4d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.4d.lines_per_level`: `10`
 - `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation

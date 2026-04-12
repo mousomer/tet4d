@@ -43,7 +43,7 @@ from tet4d.ui.pygame.projection3d import (
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
-    transform_relics_for_animation,
+    render_relics_for_animation,
     transform_shell_geometry,
 )
 from tet4d.engine.runtime.project_config import (
@@ -1114,13 +1114,24 @@ def _draw_endgame_layer_board(
         )
 
     fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
-    relic_transforms = transform_relics_for_animation(endgame_animation)
-    for cell_relic, (position, rotation_deg, alpha) in zip(
+    relic_render_states = render_relics_for_animation(endgame_animation)
+    for cell_relic, relic_state in zip(
         endgame_animation.cell_relics,
-        relic_transforms,
+        relic_render_states,
     ):
-        if cell_relic.layer_index != layer_index:
+        layer_alpha_scale = next(
+            (
+                weight
+                for candidate_layer, weight in relic_state.layer_weights
+                if candidate_layer == layer_index
+            ),
+            0.0,
+        )
+        if layer_alpha_scale <= 0.0:
             continue
+        position = relic_state.render_position
+        rotation_deg = relic_state.rotation_deg
+        alpha = relic_state.alpha * layer_alpha_scale
         if alpha <= 0.0:
             continue
         faces = build_oriented_cube_faces(

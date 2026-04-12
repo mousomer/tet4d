@@ -926,7 +926,7 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     settings_keys = _settings_menu_setting_ids(menu_payload)
     action_ids = {
         str(item.get("action_id", "")).strip().lower()
-        for menu_id in ("settings_game_board_geometry",)
+        for menu_id in ("settings_game_root",)
         for item in _menu_items(menu_payload, menu_id)
         if str(item.get("type", "")).strip().lower() == "action"
     }
@@ -1004,9 +1004,20 @@ def _missing_submenu_labels(
     return sorted(required_labels - labels)
 
 
+def _missing_item_labels(
+    menu_payload: dict[str, object],
+    *,
+    menu_id: str,
+    required_labels: set[str],
+) -> list[str]:
+    labels = {str(item.get("label", "")) for item in _menu_items(menu_payload, menu_id)}
+    return sorted(required_labels - labels)
+
+
 def _missing_required_menu_types(menus: dict[str, object]) -> list[str]:
     supported_types = {
         "action",
+        "action_group",
         "submenu",
         "toggle",
         "selector",
@@ -1054,6 +1065,28 @@ def _append_missing_submenu_label_issue(
         )
 
 
+def _append_missing_item_label_issue(
+    issues: list[ValidationIssue],
+    *,
+    menu_rel: str,
+    menu_id: str,
+    required_labels: set[str],
+    menu_payload: dict[str, object],
+) -> None:
+    missing_labels = _missing_item_labels(
+        menu_payload,
+        menu_id=menu_id,
+        required_labels=required_labels,
+    )
+    if missing_labels:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{menu_rel} {menu_id} is missing required item labels: {', '.join(missing_labels)}",
+            )
+        )
+
+
 def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     menu_rel = "config/menu/structure.json"
@@ -1064,9 +1097,6 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     required_menus = {
         "settings_root",
         "settings_game_root",
-        "settings_endgame_effects",
-        "settings_controls",
-        "settings_legacy",
         "keybindings_root",
     }
     menus = menu_payload.get("menus")
@@ -1089,16 +1119,23 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
         menu_rel=menu_rel,
         menu_id="settings_root",
         required_labels={
-            "Game Settings",
-            "Endgame Effects",
+            "Game",
             "Display",
             "Audio",
-            "Controls",
-            "Legacy",
         },
         menu_payload=menu_payload,
     )
-    _append_missing_submenu_label_issue(
+    _append_missing_item_label_issue(
+        issues,
+        menu_rel=menu_rel,
+        menu_id="settings_root",
+        required_labels={
+            "Keyboard Bindings",
+            "Legacy Topology Editor Menu",
+        },
+        menu_payload=menu_payload,
+    )
+    _append_missing_item_label_issue(
         issues,
         menu_rel=menu_rel,
         menu_id="settings_game_root",
@@ -1106,8 +1143,12 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
             "Gameplay",
             "Board / Geometry",
             "Movement / Rotation",
-            "Visual / Animation",
+            "Endgame Effects",
+            "Locked-cell transparency",
             "Difficulty / Pace",
+            "Save",
+            "Reset defaults",
+            "Back",
         },
         menu_payload=menu_payload,
     )

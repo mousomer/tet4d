@@ -28,6 +28,9 @@ ROTATION_ANIMATION_MODE_NAMES = (
 OVERLAY_TRANSPARENCY_MIN = 0.0
 OVERLAY_TRANSPARENCY_MAX = 0.90
 OVERLAY_TRANSPARENCY_STEP = 0.05
+ENDGAME_SPEED_PERCENT_MIN = 25
+ENDGAME_SPEED_PERCENT_MAX = 200
+ENDGAME_SPEED_PERCENT_STEP = 5
 
 GAME_SEED_MIN = 0
 GAME_SEED_MAX = 999_999_999
@@ -194,6 +197,18 @@ def clamp_animation_duration_ms(
     else:
         numeric = int(value)
     return max(ANIMATION_DURATION_MS_MIN, min(ANIMATION_DURATION_MS_MAX, numeric))
+
+
+def clamp_endgame_speed_percent(
+    value: object,
+    *,
+    default: int = 100,
+) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        numeric = int(default)
+    else:
+        numeric = int(value)
+    return max(ENDGAME_SPEED_PERCENT_MIN, min(ENDGAME_SPEED_PERCENT_MAX, numeric))
 
 
 def normalize_windowed_size(

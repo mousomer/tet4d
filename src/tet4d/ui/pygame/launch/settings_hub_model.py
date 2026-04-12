@@ -73,6 +73,12 @@ _ENDGAME_PRESET_DEFAULT = str(
 _ENDGAME_INTERACTION_MODE_DEFAULT = str(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_interaction_mode"]
 )
+_ENDGAME_RELIC_SPEED_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_relic_speed_percent"]
+)
+_ENDGAME_SHATTER_SPEED_DEFAULT = int(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_shatter_speed_percent"]
+)
 _AUTO_SPEEDUP_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["auto_speedup_enabled"]
 )
@@ -122,6 +128,8 @@ class _UnifiedSettingsState:
     kick_level_index: int
     endgame_preset_id: str
     endgame_interaction_mode: str
+    endgame_relic_speed_percent: int
+    endgame_shatter_speed_percent: int
     auto_speedup_enabled: int
     lines_per_level: int
     rotation_animation_mode: str
@@ -138,6 +146,8 @@ class _UnifiedSettingsState:
     original_kick_level_index: int
     original_endgame_preset_id: str
     original_endgame_interaction_mode: str
+    original_endgame_relic_speed_percent: int
+    original_endgame_shatter_speed_percent: int
     original_auto_speedup_enabled: int
     original_lines_per_level: int
     original_rotation_animation_mode: str
@@ -347,6 +357,10 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         "translation_animation_duration_ms": _duration_text(
             int(state.translation_animation_duration_ms)
         ),
+        "endgame_relic_speed_percent": f"{int(state.endgame_relic_speed_percent)}%",
+        "endgame_shatter_speed_percent": (
+            f"{int(state.endgame_shatter_speed_percent)}%"
+        ),
         "auto_speedup_enabled": "ON" if int(state.auto_speedup_enabled) else "OFF",
         "lines_per_level": str(int(state.lines_per_level)),
         "topology_cache_measure": (
@@ -409,6 +423,10 @@ def build_unified_settings_state(
     kick_level_index = int(mode_gameplay["kick_level_index"])
     endgame_preset_id = str(mode_gameplay["endgame_preset_id"])
     endgame_interaction_mode = str(mode_gameplay["endgame_interaction_mode"])
+    endgame_relic_speed_percent = int(mode_gameplay["endgame_relic_speed_percent"])
+    endgame_shatter_speed_percent = int(
+        mode_gameplay["endgame_shatter_speed_percent"]
+    )
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
     rotation_animation_mode = str(mode_gameplay["rotation_animation_mode"])
@@ -438,6 +456,8 @@ def build_unified_settings_state(
         kick_level_index=kick_level_index,
         endgame_preset_id=endgame_preset_id,
         endgame_interaction_mode=endgame_interaction_mode,
+        endgame_relic_speed_percent=endgame_relic_speed_percent,
+        endgame_shatter_speed_percent=endgame_shatter_speed_percent,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
         rotation_animation_mode=rotation_animation_mode,
@@ -454,6 +474,8 @@ def build_unified_settings_state(
         original_kick_level_index=kick_level_index,
         original_endgame_preset_id=endgame_preset_id,
         original_endgame_interaction_mode=endgame_interaction_mode,
+        original_endgame_relic_speed_percent=endgame_relic_speed_percent,
+        original_endgame_shatter_speed_percent=endgame_shatter_speed_percent,
         original_auto_speedup_enabled=auto_speedup_enabled,
         original_lines_per_level=lines_per_level,
         original_rotation_animation_mode=rotation_animation_mode,

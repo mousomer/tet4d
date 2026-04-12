@@ -5,6 +5,10 @@ from typing import Any
 import pygame
 
 from tet4d.engine.runtime.menu_config import menu_item_id, settings_menu_id
+from tet4d.engine.runtime.settings_schema import (
+    ENDGAME_SPEED_PERCENT_MAX,
+    ENDGAME_SPEED_PERCENT_MIN,
+)
 from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
@@ -128,18 +132,43 @@ def _draw_wrapped_settings_row(
 def _slider_fraction_for_row(
     state: _UnifiedSettingsState, row_key: str
 ) -> float | None:
+    def _percent_fraction(value: int, *, minimum: int, maximum: int) -> float:
+        span = max(1, maximum - minimum)
+        return min(1.0, max(0.0, (int(value) - minimum) / span))
+
+    duration_values = {
+        "rotation_animation_duration_ms_2d": int(
+            state.rotation_animation_duration_ms_2d
+        ),
+        "rotation_animation_duration_ms_nd": int(
+            state.rotation_animation_duration_ms_nd
+        ),
+        "translation_animation_duration_ms": int(
+            state.translation_animation_duration_ms
+        ),
+    }
+    duration_value = duration_values.get(row_key)
+    if duration_value is not None:
+        return min(1.0, max(0.0, duration_value / 300.0))
+
+    percent_values = {
+        "endgame_relic_speed_percent": int(state.endgame_relic_speed_percent),
+        "endgame_shatter_speed_percent": int(state.endgame_shatter_speed_percent),
+    }
+    percent_value = percent_values.get(row_key)
+    if percent_value is not None:
+        return _percent_fraction(
+            percent_value,
+            minimum=ENDGAME_SPEED_PERCENT_MIN,
+            maximum=ENDGAME_SPEED_PERCENT_MAX,
+        )
+
     if row_key == "audio_master":
         return float(state.audio_settings.master_volume)
     if row_key == "audio_sfx":
         return float(state.audio_settings.sfx_volume)
     if row_key == "display_overlay_transparency":
         return float(state.overlay_transparency) / 0.9
-    if row_key == "rotation_animation_duration_ms_2d":
-        return min(1.0, max(0.0, int(state.rotation_animation_duration_ms_2d) / 300.0))
-    if row_key == "rotation_animation_duration_ms_nd":
-        return min(1.0, max(0.0, int(state.rotation_animation_duration_ms_nd) / 300.0))
-    if row_key == "translation_animation_duration_ms":
-        return min(1.0, max(0.0, int(state.translation_animation_duration_ms) / 300.0))
     if row_key == "lines_per_level":
         return min(1.0, max(0.0, (int(state.lines_per_level) - 1) / 29.0))
     return None

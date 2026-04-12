@@ -23,6 +23,7 @@ from ..settings_sanitize import (
 from ..settings_schema import (
     MODE_KEYS,
     clamp_animation_duration_ms,
+    clamp_endgame_speed_percent,
     clamp_game_seed,
     clamp_lines_per_level,
     clamp_toggle_index,
@@ -41,6 +42,8 @@ _SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, Any], ...] = (
     ("kick_level_index", None, 0),
     ("endgame_preset_id", None, ENDGAME_PRESET_DEFAULT_ORBIT),
     ("endgame_interaction_mode", None, ENDGAME_INTERACTION_NONE),
+    ("endgame_relic_speed_percent", clamp_endgame_speed_percent, 100),
+    ("endgame_shatter_speed_percent", clamp_endgame_speed_percent, 100),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
     ("lines_per_level", clamp_lines_per_level, 10),
     (

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 import pygame
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
@@ -10,7 +10,10 @@ from tet4d.ui.pygame.ui_utils import default_menu_back_chip_rect
 
 ActionHandler = Callable[[], bool]
 RouteHandler = Callable[[str], bool]
-RenderHandler = Callable[[str, str, tuple[dict[str, str], ...], int, int], None]
+RenderHandler = Callable[
+    [str, str, tuple[dict[str, Any], ...], int, int, dict[str, int]],
+    None,
+]
 SimpleHandler = Callable[[], bool]
 KeydownHandler = Callable[[str, int, int], bool]
 
@@ -40,8 +43,71 @@ class ActionRegistry:
 class _RunnerState:
     stack: list[str]
     selected_by_menu: dict[str, int]
+    selected_action_by_item: dict[str, int]
     running: bool = True
 
+
+def _action_group_actions(item: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    raw_actions = item.get("actions", ())
+    if not isinstance(raw_actions, tuple):
+        return tuple()
+    return tuple(action for action in raw_actions if isinstance(action, dict))
+
+
+def _action_group_state_key(menu_id: str, item_id: str) -> str:
+    return f"{menu_id.strip().lower()}::{item_id.strip().lower()}"
+
+
+def _default_action_group_index(item: dict[str, Any]) -> int:
+    default_action_id = str(item.get("default_action_id", "")).strip().lower()
+    actions = _action_group_actions(item)
+    for idx, action in enumerate(actions):
+        if str(action.get("id", "")).strip().lower() == default_action_id:
+            return idx
+    return 0
+
+
+def _selected_action_group_index(
+    state: _RunnerState,
+    *,
+    menu_id: str,
+    item: dict[str, Any],
+) -> int:
+    actions = _action_group_actions(item)
+    if not actions:
+        return 0
+    item_id = str(item.get("id", "")).strip().lower()
+    state_key = _action_group_state_key(menu_id, item_id)
+    selected = int(
+        state.selected_action_by_item.get(
+            state_key,
+            _default_action_group_index(item),
+        )
+    )
+    selected = max(0, min(len(actions) - 1, selected))
+    state.selected_action_by_item[state_key] = selected
+    return selected
+
+
+def _current_menu_action_group_indexes(
+    state: _RunnerState,
+    *,
+    menu_id: str,
+    items: tuple[dict[str, Any], ...],
+) -> dict[str, int]:
+    indexes: dict[str, int] = {}
+    for item in items:
+        if str(item.get("type", "")).strip().lower() != "action_group":
+            continue
+        item_id = str(item.get("id", "")).strip().lower()
+        if not item_id:
+            continue
+        indexes[item_id] = _selected_action_group_index(
+            state,
+            menu_id=menu_id,
+            item=item,
+        )
+    return indexes
 
 
 class MenuRunner:
@@ -86,6 +152,7 @@ class MenuRunner:
                 menu_id.strip().lower(): int(idx)
                 for menu_id, idx in self._initial_selected.items()
             },
+            selected_action_by_item={},
         )
         clock = pygame.time.Clock()
 
@@ -174,6 +241,28 @@ class MenuRunner:
                     if self._on_move is not None:
                         self._on_move()
                     continue
+                if key in (pygame.K_LEFT, pygame.K_RIGHT):
+                    item = items[selected]
+                    if str(item.get("type", "")).lower() != "action_group":
+                        continue
+                    actions = _action_group_actions(item)
+                    if not actions:
+                        continue
+                    delta = -1 if key == pygame.K_LEFT else 1
+                    action_index = _selected_action_group_index(
+                        state,
+                        menu_id=current_menu_id,
+                        item=item,
+                    )
+                    state.selected_action_by_item[
+                        _action_group_state_key(
+                            current_menu_id,
+                            str(item.get("id", "")),
+                        )
+                    ] = (action_index + delta) % len(actions)
+                    if self._on_move is not None:
+                        self._on_move()
+                    continue
                 if key not in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     continue
 
@@ -195,10 +284,44 @@ class MenuRunner:
                     if self._handle_route(route_id):
                         state.running = False
                     break
+                if item_type == "action_group":
+                    actions = _action_group_actions(item)
+                    if not actions:
+                        break
+                    action = actions[
+                        _selected_action_group_index(
+                            state,
+                            menu_id=current_menu_id,
+                            item=item,
+                        )
+                    ]
+                    action_id = str(action.get("action_id", "")).strip().lower()
+                    try:
+                        close = self._action_registry.dispatch(action_id)
+                    except KeyError:
+                        if self._handle_missing_action is None:
+                            close = False
+                        else:
+                            close = bool(self._handle_missing_action(action_id))
+                    if close:
+                        state.running = False
+                    break
                 if item_type != "action":
                     break
 
                 action_id = str(item.get("action_id", "")).strip().lower()
+                if action_id == "back":
+                    if len(state.stack) > 1:
+                        state.stack.pop()
+                        if self._on_move is not None:
+                            self._on_move()
+                        break
+                    close = False
+                    if self._on_root_escape is not None:
+                        close = bool(self._on_root_escape())
+                    if close:
+                        state.running = False
+                    break
                 try:
                     close = self._action_registry.dispatch(action_id)
                 except KeyError:
@@ -219,4 +342,15 @@ class MenuRunner:
             selected = max(0, min(len(items) - 1, selected))
             state.selected_by_menu[current_menu_id] = selected
             title = str(current_menu.get("title", current_menu_id))
-            self._render_menu(current_menu_id, title, items, selected, len(state.stack))
+            self._render_menu(
+                current_menu_id,
+                title,
+                items,
+                selected,
+                len(state.stack),
+                _current_menu_action_group_indexes(
+                    state,
+                    menu_id=current_menu_id,
+                    items=items,
+                ),
+            )

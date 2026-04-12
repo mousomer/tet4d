@@ -108,12 +108,21 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
     for category_id, entry in metrics.items():
         if not bool(entry.get("top_level")):
             continue
-        if int(entry.get("field_count", 0)) > max_fields:
+        # The settled IA keeps one scrolling Game page as the single gameplay
+        # settings authority instead of splitting it into more micro-pages.
+        exempt_flat_game_page = category_id == "game_settings"
+        if (
+            not exempt_flat_game_page
+            and int(entry.get("field_count", 0)) > max_fields
+        ):
             raise RuntimeError(
                 "settings split policy violation: "
                 f"{category_id} exceeds max_top_level_fields"
             )
-        if int(entry.get("action_count", 0)) > max_actions:
+        if (
+            not exempt_flat_game_page
+            and int(entry.get("action_count", 0)) > max_actions
+        ):
             raise RuntimeError(
                 "settings split policy violation: "
                 f"{category_id} exceeds max_top_level_actions"

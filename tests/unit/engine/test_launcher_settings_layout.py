@@ -7,7 +7,13 @@ import pygame
 
 from tet4d.engine.runtime.menu_config import menu_item_id, setup_fields_for_settings
 from tet4d.ui.pygame.frontend_nd_setup import GameSettingsND, _menu_value_text
-from tet4d.ui.pygame.launch import launcher_settings, settings_hub_model
+from tet4d.ui.pygame.launch import (
+    bot_options_menu,
+    launcher_menu_view,
+    launcher_settings,
+    leaderboard_menu,
+    settings_hub_model,
+)
 from tet4d.ui.pygame.menu import keybindings_menu_view
 from tet4d.ui.pygame.menu.keybindings_menu import KeybindingsMenuState
 from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU, rows_for_scope
@@ -46,10 +52,6 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             "settings_audio",
             "settings_display",
             "settings_game_root",
-            "settings_game_gameplay",
-            "settings_game_movement_rotation",
-            "settings_game_difficulty_pace",
-            "settings_endgame_effects",
         )
         for menu_id in menu_ids:
             for item in settings_hub_model.settings_page_items(menu_id):
@@ -148,7 +150,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                     total_width=total_width,
                 )
 
-    def test_split_game_settings_slider_rows_fit_compact_supported_width(self) -> None:
+    def test_game_settings_slider_rows_fit_compact_supported_width(self) -> None:
         fonts = self._fonts()
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
@@ -164,26 +166,20 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         )
         total_width = panel_w - 56
 
-        for menu_id in (
-            "settings_game_gameplay",
-            "settings_game_movement_rotation",
-            "settings_game_difficulty_pace",
-            "settings_endgame_effects",
-        ):
-            for item in settings_hub_model.settings_page_items(menu_id):
-                if item["type"] != "slider":
-                    continue
-                row_key = menu_item_id(item)
-                if launcher_settings._slider_fraction_for_row(state, row_key) is None:
-                    continue
-                value = launcher_settings._unified_value_text(state, row_key)
-                with self.subTest(label=item["label"]):
-                    self._assert_slider_layout_fits(
-                        font=fonts.menu_font,
-                        label=item["label"],
-                        value=value,
-                        total_width=total_width,
-                    )
+        for item in settings_hub_model.settings_page_items("settings_game_root"):
+            if item["type"] != "slider":
+                continue
+            row_key = menu_item_id(item)
+            if launcher_settings._slider_fraction_for_row(state, row_key) is None:
+                continue
+            value = launcher_settings._unified_value_text(state, row_key)
+            with self.subTest(label=item["label"]):
+                self._assert_slider_layout_fits(
+                    font=fonts.menu_font,
+                    label=item["label"],
+                    value=value,
+                    total_width=total_width,
+                )
 
     def test_audio_page_rows_exclude_other_settings_sections(self) -> None:
         row_keys = {
@@ -198,57 +194,39 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertNotIn("game_seed", row_keys)
         self.assertTrue({"save", "reset", "back"}.issubset(row_keys))
 
-    def test_game_settings_are_split_across_coherent_subpages(self) -> None:
-        gameplay_keys = {
-            menu_item_id(item)
-            for item in settings_hub_model.settings_page_items("settings_game_gameplay")
-            if item["type"] != "section"
-        }
+    def test_game_settings_live_on_one_scrolling_page_with_sections(self) -> None:
         game_root_keys = {
             menu_item_id(item)
             for item in settings_hub_model.settings_page_items("settings_game_root")
             if item["type"] != "section"
         }
-        board_keys = {
-            menu_item_id(item)
-            for item in settings_hub_model.settings_page_items(
-                "settings_game_board_geometry"
-            )
-            if item["type"] != "section"
-        }
-        movement_keys = {
-            menu_item_id(item)
-            for item in settings_hub_model.settings_page_items(
-                "settings_game_movement_rotation"
-            )
-            if item["type"] != "section"
-        }
-        difficulty_keys = {
-            menu_item_id(item)
-            for item in settings_hub_model.settings_page_items(
-                "settings_game_difficulty_pace"
-            )
-            if item["type"] != "section"
-        }
-        endgame_keys = {
-            menu_item_id(item)
-            for item in settings_hub_model.settings_page_items("settings_endgame_effects")
-            if item["type"] != "section"
-        }
-
-        self.assertIn("game_seed", gameplay_keys)
-        self.assertIn("game_random_mode", gameplay_keys)
         self.assertIn("display_overlay_transparency", game_root_keys)
-        self.assertIn("game_topology_advanced", board_keys)
-        self.assertIn("rotation_animation_mode", movement_keys)
-        self.assertIn("kick_level_index", movement_keys)
-        self.assertIn("lines_per_level", difficulty_keys)
-        self.assertIn("endgame_preset_id", endgame_keys)
-        self.assertIn("endgame_interaction_mode", endgame_keys)
-        self.assertNotIn(
-            "audio_master",
-            gameplay_keys | game_root_keys | board_keys | movement_keys,
+        self.assertTrue(
+            {
+                "game_seed",
+                "game_random_mode",
+                "analytics_score_logging",
+                "game_topology_advanced",
+                "topology_cache_measure",
+                "topology_cache_clear",
+                "rotation_animation_mode",
+                "kick_level_index",
+                "rotation_animation_duration_ms_2d",
+                "rotation_animation_duration_ms_nd",
+                "translation_animation_duration_ms",
+                "endgame_preset_id",
+                "endgame_interaction_mode",
+                "endgame_relic_speed_percent",
+                "endgame_shatter_speed_percent",
+                "auto_speedup_enabled",
+                "lines_per_level",
+                "save",
+                "reset",
+                "back",
+            }.issubset(game_root_keys)
         )
+        self.assertNotIn("audio_master", game_root_keys)
+        self.assertNotIn("display_fullscreen", game_root_keys)
 
     def test_overflow_metrics_hide_scrollbar_when_content_fits(self) -> None:
         metrics = compute_vertical_scroll_metrics(
@@ -284,7 +262,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
-            initial_page_id="settings_game_movement_rotation",
+            initial_page_id="settings_game_root",
             initial_item_id="back",
         )
         screen = pygame.Surface((640, 360), pygame.SRCALPHA)
@@ -309,6 +287,44 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         )
         self.assertGreater(state.scroll_offset, 0)
 
+    def test_keybindings_binding_rows_use_menu_font_metrics(self) -> None:
+        fonts = self._fonts()
+        state = KeybindingsMenuState(scope="all", section_mode=False)
+        rendered_rows, binding_rows = rows_for_scope("all")
+        state.selected_binding = max(0, len(binding_rows) - 1)
+        screen = pygame.Surface((640, 360), pygame.SRCALPHA)
+        panel_rect = keybindings_menu_view._panel_geometry(screen)
+        viewport_rect = pygame.Rect(
+            panel_rect.x + 16,
+            panel_rect.y + 12,
+            panel_rect.width - 32,
+            panel_rect.height - 20,
+        )
+        row_h = fonts.menu_font.get_height() + fonts.hint_font.get_height() + 12
+        selected_render_index = keybindings_menu_view._selected_render_index(
+            state,
+            rendered_rows,
+            binding_rows,
+        )
+        expected = ensure_scroll_offset_visible(
+            0,
+            item_top=selected_render_index * row_h,
+            item_bottom=((selected_render_index + 1) * row_h),
+            viewport_height=viewport_rect.height,
+            content_height=len(rendered_rows) * row_h,
+        )
+        keybindings_menu_view.draw_binding_menu(
+            screen,
+            fonts,
+            state,
+            rendered_rows=rendered_rows,
+            binding_rows=binding_rows,
+            scope_label_fn=lambda scope: scope,
+            scope_file_hint_fn=lambda _scope: "",
+            text_mode_label_fn=lambda mode: mode,
+        )
+        self.assertEqual(state.scroll_offset, expected)
+
     def test_keybindings_section_menu_uses_shared_overflow_scroll(self) -> None:
         fonts = self._fonts()
         state = KeybindingsMenuState(section_mode=True)
@@ -323,3 +339,97 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             text_mode_label_fn=lambda mode: mode,
         )
         self.assertGreaterEqual(state.scroll_offset, 0)
+
+    def test_bot_options_menu_uses_shared_shell_and_overflow_scroll(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((640, 360), pygame.SRCALPHA)
+        loop = bot_options_menu._BotMenuState(payload={}, selected=8)
+        with (
+            unittest.mock.patch.object(
+                bot_options_menu,
+                "draw_tron_panel",
+                wraps=bot_options_menu.draw_tron_panel,
+            ) as draw_panel,
+            unittest.mock.patch.object(
+                bot_options_menu,
+                "draw_corner_chip",
+                wraps=bot_options_menu.draw_corner_chip,
+            ) as draw_chip,
+        ):
+            bot_options_menu._draw_bot_options_menu(screen, fonts, loop)
+        draw_panel.assert_called_once()
+        draw_chip.assert_called_once()
+        self.assertGreater(loop.scroll_offset, 0)
+
+    def test_leaderboard_menu_uses_shared_shell_primitives(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640), pygame.SRCALPHA)
+        with (
+            unittest.mock.patch.object(
+                leaderboard_menu,
+                "draw_tron_panel",
+                wraps=leaderboard_menu.draw_tron_panel,
+            ) as draw_panel,
+            unittest.mock.patch.object(
+                leaderboard_menu,
+                "draw_corner_chip",
+                wraps=leaderboard_menu.draw_corner_chip,
+            ) as draw_chip,
+        ):
+            leaderboard_menu._draw_leaderboard(
+                screen,
+                fonts,
+                leaderboard_menu._LeaderboardState(),
+                (),
+            )
+        draw_panel.assert_called_once()
+        draw_chip.assert_called_once()
+
+    def test_launcher_menu_falls_back_when_action_group_hint_copy_is_missing(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640), pygame.SRCALPHA)
+        items = (
+            {
+                "id": "play_2d_row",
+                "type": "action_group",
+                "label": "2D",
+                "default_action_id": "play",
+                "actions": (
+                    {"id": "play", "label": "Play", "action_id": "play_2d"},
+                    {"id": "setup", "label": "Setup", "action_id": "setup_2d"},
+                ),
+            },
+        )
+        launcher_copy = {
+            "info_active_profile_template": "Active key profile: {profile}",
+            "info_continue_mode_template": "Continue mode: {mode}",
+            "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
+            "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
+            "escape_hint_back": "Esc back",
+            "escape_hint_quit": "Q quit",
+        }
+        with unittest.mock.patch.object(
+            launcher_menu_view,
+            "active_key_profile",
+            return_value="default",
+        ):
+            launcher_menu_view.draw_main_menu(
+                screen,
+                fonts,
+                menu_title="Choose Mode",
+                items=items,
+                selected_index=0,
+                selected_action_indexes={"play_2d_row": 0},
+                stack_depth=2,
+                status="",
+                status_error=False,
+                last_mode="2d",
+                launcher_copy=launcher_copy,
+                signature_author="author",
+                signature_message="message",
+                bg_top=(0, 0, 0),
+                bg_bottom=(0, 0, 0),
+                text_color=(255, 255, 255),
+                highlight_color=(255, 224, 128),
+                muted_color=(192, 200, 228),
+            )

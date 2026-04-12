@@ -245,12 +245,19 @@ def _menu_index_for_play_mode(mode: str, fallback: int = 0) -> int:
     play_menu_id = _play_menu_id()
     if not play_menu_id:
         return fallback
-    target = f"play_{mode}"
+    target_actions = {f"play_{mode}", f"setup_{mode}"}
     for idx, item in enumerate(_menu_items(play_menu_id)):
-        if item.get("type") != "action":
-            continue
-        if str(item.get("action_id", "")).strip().lower() == target:
+        item_type = str(item.get("type", "")).strip().lower()
+        if item_type == "action":
+            if str(item.get("action_id", "")).strip().lower() != f"play_{mode}":
+                continue
             return idx
+        if item_type != "action_group":
+            continue
+        for action in item.get("actions", ()):
+            action_id = str(action.get("action_id", "")).strip().lower()
+            if action_id in target_actions:
+                return idx
     return fallback
 
 
@@ -286,6 +293,7 @@ def _launch_mode(
     fonts_2d,
     *,
     tutorial_lesson_id: str | None = None,
+    use_persisted_settings: bool = False,
 ) -> None:
     launchers = {
         "2d": lambda: launch_2d(
@@ -293,18 +301,21 @@ def _launch_mode(
             fonts_2d,
             session.display_settings,
             tutorial_lesson_id=tutorial_lesson_id,
+            use_persisted_settings=use_persisted_settings,
         ),
         "3d": lambda: launch_3d(
             session.screen,
             fonts_nd,
             session.display_settings,
             tutorial_lesson_id=tutorial_lesson_id,
+            use_persisted_settings=use_persisted_settings,
         ),
         "4d": lambda: launch_4d(
             session.screen,
             fonts_nd,
             session.display_settings,
             tutorial_lesson_id=tutorial_lesson_id,
+            use_persisted_settings=use_persisted_settings,
         ),
     }
     launcher = launchers.get(mode)
@@ -328,11 +339,36 @@ def _menu_action_continue(
     fonts_nd,
     fonts_2d,
 ) -> bool:
-    _launch_mode(state.last_mode, state, session, fonts_nd, fonts_2d)
+    _launch_mode(
+        state.last_mode,
+        state,
+        session,
+        fonts_nd,
+        fonts_2d,
+        use_persisted_settings=True,
+    )
     return not session.running
 
 
 def _menu_action_play_dimension(
+    mode: str,
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+    fonts_2d,
+) -> bool:
+    _launch_mode(
+        mode,
+        state,
+        session,
+        fonts_nd,
+        fonts_2d,
+        use_persisted_settings=True,
+    )
+    return not session.running
+
+
+def _menu_action_setup_dimension(
     mode: str,
     state: MainMenuState,
     session: _LauncherSession,
@@ -617,6 +653,17 @@ def _build_action_registry(
                 mode, state, session, fonts_nd, fonts_2d
             ),
         )
+    for action_id, mode in (
+        ("setup_2d", "2d"),
+        ("setup_3d", "3d"),
+        ("setup_4d", "4d"),
+    ):
+        register(
+            action_id,
+            lambda mode=mode: _menu_action_setup_dimension(
+                mode, state, session, fonts_nd, fonts_2d
+            ),
+        )
     register(
         "play_last_custom_topology",
         lambda: _menu_action_play_last_custom_topology(
@@ -770,9 +817,10 @@ def run() -> None:
     def _render_launcher_menu(
         menu_id: str,
         title: str,
-        items: tuple[dict[str, str], ...],
+        items: tuple[dict[str, object], ...],
         selected: int,
         depth: int,
+        selected_action_indexes: dict[str, int],
     ) -> None:
         pygame.display.set_caption(_GAME_TITLE)
         draw_main_menu(
@@ -781,6 +829,7 @@ def run() -> None:
             menu_title=title,
             items=items,
             selected_index=selected,
+            selected_action_indexes=selected_action_indexes,
             stack_depth=depth,
             status=state.status,
             status_error=state.status_error,

@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-04-12
+
+### Release
+1. Published `tet4d 0.7` with the flattened launcher/settings IA, full-ND
+   endgame relic motion, and hardened single-file Windows MSI packaging.
+
+### Changed
+1. `Play` now keeps direct `Play` / `Setup` actions on the same `2D` / `3D` /
+   `4D` rows, while `Settings` now routes through the flatter `Game`,
+   `Display`, `Audio`, `Keyboard Bindings`, and `Legacy Topology Editor Menu`
+   IA without the older wrapper pages.
+2. `Game` settings now keep gameplay, geometry, movement, endgame, and pace
+   controls on one scrolling shared-shell screen, and keybindings now uses the
+   same menu typography family as the rest of the shared menu shell.
+
+### Fixed
+1. Windows packaging now hard-fails if WiX emits any external `*.cab`, builds
+   the MSI through a fresh temporary output directory under
+   `build/packaging/windows/out`, and only moves the validated MSI into
+   `artifacts/installers` after stale-output cleanup and post-build checks.
+2. Release packaging uploads are now installer-type-specific, so the Windows
+   job can publish only `*.msi` artifacts and cannot leak stray CAB sidecars.
+3. Endgame relic motion now advances in full ND state before projection, so
+   ongoing `wrap_all`, `invert_all`, and `sphere` behavior plus optional
+   collisions all operate on the same ND relic positions and velocities.
+
 ## 2026-03-30
 
 ### Fixed

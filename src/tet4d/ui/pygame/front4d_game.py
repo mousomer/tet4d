@@ -356,26 +356,22 @@ def _apply_pending_tutorial_setup(loop: "LoopContext4D") -> None:
 def _capture_endgame_snapshot_4d(
     loop: "LoopContext4D",
 ) -> object:
-    preset_id, interaction_mode = mode_endgame_settings("4d")
+    (
+        preset_id,
+        interaction_mode,
+        relic_speed_percent,
+        shatter_speed_percent,
+    ) = mode_endgame_settings("4d")
     basis = front4d_render._basis_for_view(loop.view, loop.cfg.dims)
     locked_cells = []
     for coord, cell_id in sorted(loop.state.board.cells.items()):
         if len(coord) != 4:
             continue
-        layer_value, cell3 = front4d_render._map_coord_to_layer_cell3(
-            tuple(int(axis) for axis in coord),
-            dims4=loop.cfg.dims,
-            basis=basis,
-        )
-        layer_index = front4d_render._layer_index_if_discrete(layer_value)
-        if layer_index is None:
-            continue
         locked_cells.append(
             SnapshotCell(
                 source_coord=tuple(int(axis) for axis in coord),
-                position=(float(cell3[0]), float(cell3[1]), float(cell3[2])),
+                position=tuple(float(axis) for axis in coord),
                 color_id=int(cell_id),
-                layer_index=int(layer_index),
             )
         )
     return create_snapshot(
@@ -393,9 +389,16 @@ def _capture_endgame_snapshot_4d(
             zw_deg=float(loop.view.zw_deg),
             layer_axis_label=str(basis.layer_axis_label),
             layer_count=int(basis.layer_count),
+            basis_axis_map=tuple(
+                (int(axis), int(sign)) for axis, sign in basis.axis_map
+            ),
+            layer_axis=int(basis.layer_axis),
+            layer_sign=int(basis.layer_sign),
         ),
         preset_id=preset_id,
         interaction_mode=interaction_mode,
+        relic_speed_scale=float(relic_speed_percent) / 100.0,
+        shatter_speed_scale=float(shatter_speed_percent) / 100.0,
     )
 
 

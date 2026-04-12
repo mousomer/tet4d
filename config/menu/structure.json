@@ -7,7 +7,7 @@
   },
   "launcher_subtitles": {
     "launcher_root": "Play, continue, open Tutorials, or jump straight into the Topology Playground.",
-    "launcher_play": "Play a standard run, reopen the last custom topology, or use play-adjacent tools.",
+    "launcher_play": "Choose a dimension, use Left/Right to switch between Play and Setup, reopen the last custom topology, or use play-adjacent tools.",
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
     "default": "Up/Down select and Enter open actions."
@@ -24,6 +24,8 @@
       "info_continue_mode_template": "Continue mode: {mode}",
       "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
       "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
+      "controls_hint_action_group_template": "Up/Down select   Left/Right choose Play/Setup   Enter open   {escape_hint}",
+      "controls_hint_action_group_template_tiny": "I/K select   J/L choose Play/Setup   Enter open   {escape_hint}",
       "escape_hint_back": "Esc back",
       "escape_hint_quit": "Q quit"
     },
@@ -123,22 +125,58 @@
       "title": "Choose Mode",
       "items": [
         {
-          "id": "play_2d",
-          "type": "action",
+          "id": "play_2d_row",
+          "type": "action_group",
           "label": "2D",
-          "action_id": "play_2d"
+          "default_action_id": "play",
+          "actions": [
+            {
+              "id": "play",
+              "label": "Play",
+              "action_id": "play_2d"
+            },
+            {
+              "id": "setup",
+              "label": "Setup",
+              "action_id": "setup_2d"
+            }
+          ]
         },
         {
-          "id": "play_3d",
-          "type": "action",
+          "id": "play_3d_row",
+          "type": "action_group",
           "label": "3D",
-          "action_id": "play_3d"
+          "default_action_id": "play",
+          "actions": [
+            {
+              "id": "play",
+              "label": "Play",
+              "action_id": "play_3d"
+            },
+            {
+              "id": "setup",
+              "label": "Setup",
+              "action_id": "setup_3d"
+            }
+          ]
         },
         {
-          "id": "play_4d",
-          "type": "action",
+          "id": "play_4d_row",
+          "type": "action_group",
           "label": "4D",
-          "action_id": "play_4d"
+          "default_action_id": "play",
+          "actions": [
+            {
+              "id": "play",
+              "label": "Play",
+              "action_id": "play_4d"
+            },
+            {
+              "id": "setup",
+              "label": "Setup",
+              "action_id": "setup_4d"
+            }
+          ]
         },
         {
           "id": "play_last_custom_topology",
@@ -157,6 +195,12 @@
           "type": "action",
           "label": "Leaderboard",
           "action_id": "leaderboard"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
         }
       ]
     },
@@ -218,16 +262,9 @@
         {
           "id": "settings_game_root",
           "type": "submenu",
-          "label": "Game Settings",
-          "description": "Gameplay, geometry, movement, visual, and difficulty pages.",
+          "label": "Game",
+          "description": "One scrolling gameplay settings page with sections for rules, geometry, animation, endgame effects, and pace.",
           "menu_id": "settings_game_root"
-        },
-        {
-          "id": "settings_endgame_effects",
-          "type": "submenu",
-          "label": "Endgame Effects",
-          "description": "Persistent relic-field preset and interaction settings.",
-          "menu_id": "settings_endgame_effects"
         },
         {
           "id": "settings_display",
@@ -244,18 +281,18 @@
           "menu_id": "settings_audio"
         },
         {
-          "id": "settings_controls",
-          "type": "submenu",
-          "label": "Controls",
-          "description": "Keyboard bindings and related input tools.",
-          "menu_id": "settings_controls"
+          "id": "keybindings",
+          "type": "action",
+          "label": "Keyboard Bindings",
+          "description": "Keyboard bindings plus profile management and conflict handling.",
+          "action_id": "keybindings"
         },
         {
-          "id": "settings_legacy",
-          "type": "submenu",
-          "label": "Legacy",
-          "description": "Compatibility-backed settings destinations.",
-          "menu_id": "settings_legacy"
+          "id": "settings_legacy_topology_editor",
+          "type": "legacy_dispatch",
+          "label": "Legacy Topology Editor Menu",
+          "description": "Compatibility-backed path for the older topology editor shell.",
+          "action_id": "settings_legacy_topology_editor"
         },
         {
           "id": "back",
@@ -266,53 +303,7 @@
       ]
     },
     "settings_game_root": {
-      "title": "Game Settings",
-      "items": [
-        {
-          "id": "settings_game_gameplay",
-          "type": "submenu",
-          "label": "Gameplay",
-          "description": "Seed, random mode, and score logging.",
-          "menu_id": "settings_game_gameplay"
-        },
-        {
-          "id": "settings_game_board_geometry",
-          "type": "submenu",
-          "label": "Board / Geometry",
-          "description": "Board-structure notes and topology-cache tools.",
-          "menu_id": "settings_game_board_geometry"
-        },
-        {
-          "id": "settings_game_movement_rotation",
-          "type": "submenu",
-          "label": "Movement / Rotation",
-          "description": "Kick permissiveness and animation timing.",
-          "menu_id": "settings_game_movement_rotation"
-        },
-        {
-          "id": "settings_game_visual_animation",
-          "type": "submenu",
-          "label": "Visual / Animation",
-          "description": "Overlay transparency and related visual pacing.",
-          "menu_id": "settings_game_visual_animation"
-        },
-        {
-          "id": "settings_game_difficulty_pace",
-          "type": "submenu",
-          "label": "Difficulty / Pace",
-          "description": "Auto speed-up and lines-per-level tuning.",
-          "menu_id": "settings_game_difficulty_pace"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_game_gameplay": {
-      "title": "Gameplay",
+      "title": "Game",
       "items": [
         {
           "id": "gameplay_section",
@@ -337,29 +328,6 @@
           "label": "Score logging",
           "setting_id": "analytics_score_logging"
         },
-        {
-          "id": "save",
-          "type": "action",
-          "label": "Save",
-          "action_id": "save"
-        },
-        {
-          "id": "reset",
-          "type": "action",
-          "label": "Reset defaults",
-          "action_id": "reset"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_game_board_geometry": {
-      "title": "Board / Geometry",
-      "items": [
         {
           "id": "board_geometry_section",
           "type": "section",
@@ -388,17 +356,6 @@
           "label": "Clear topology cache",
           "action_id": "topology_cache_clear"
         },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_game_movement_rotation": {
-      "title": "Movement / Rotation",
-      "items": [
         {
           "id": "movement_rotation_section",
           "type": "section",
@@ -435,102 +392,12 @@
           "setting_id": "translation_animation_duration_ms"
         },
         {
-          "id": "save",
-          "type": "action",
-          "label": "Save",
-          "action_id": "save"
-        },
-        {
-          "id": "reset",
-          "type": "action",
-          "label": "Reset defaults",
-          "action_id": "reset"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_game_visual_animation": {
-      "title": "Visual / Animation",
-      "items": [
-        {
-          "id": "visual_animation_section",
-          "type": "section",
-          "label": "Visual / Animation"
-        },
-        {
           "id": "display_overlay_transparency",
           "type": "slider",
           "label": "Locked-cell transparency",
+          "description": "Overlay transparency for locked cells in gameplay views.",
           "setting_id": "display_overlay_transparency"
         },
-        {
-          "id": "save",
-          "type": "action",
-          "label": "Save",
-          "action_id": "save"
-        },
-        {
-          "id": "reset",
-          "type": "action",
-          "label": "Reset defaults",
-          "action_id": "reset"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_game_difficulty_pace": {
-      "title": "Difficulty / Pace",
-      "items": [
-        {
-          "id": "difficulty_pace_section",
-          "type": "section",
-          "label": "Difficulty / Pace"
-        },
-        {
-          "id": "auto_speedup_enabled",
-          "type": "toggle",
-          "label": "Auto speed-up by clears",
-          "setting_id": "auto_speedup_enabled"
-        },
-        {
-          "id": "lines_per_level",
-          "type": "slider",
-          "label": "Lines per level",
-          "setting_id": "lines_per_level"
-        },
-        {
-          "id": "save",
-          "type": "action",
-          "label": "Save",
-          "action_id": "save"
-        },
-        {
-          "id": "reset",
-          "type": "action",
-          "label": "Reset defaults",
-          "action_id": "reset"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_endgame_effects": {
-      "title": "Endgame Effects",
-      "items": [
         {
           "id": "endgame_effects_section",
           "type": "section",
@@ -549,9 +416,38 @@
           "setting_id": "endgame_interaction_mode"
         },
         {
+          "id": "endgame_relic_speed_percent",
+          "type": "slider",
+          "label": "Relic field speed",
+          "setting_id": "endgame_relic_speed_percent"
+        },
+        {
+          "id": "endgame_shatter_speed_percent",
+          "type": "slider",
+          "label": "Shatter speed",
+          "setting_id": "endgame_shatter_speed_percent"
+        },
+        {
           "id": "endgame_effects_info",
           "type": "info",
-          "label": "Board shatter stays finite; the preset governs only the persistent relic field afterward."
+          "label": "Board shatter stays finite; the preset governs persistent ND relic motion afterward, and speed stays independent from preset identity."
+        },
+        {
+          "id": "difficulty_pace_section",
+          "type": "section",
+          "label": "Difficulty / Pace"
+        },
+        {
+          "id": "auto_speedup_enabled",
+          "type": "toggle",
+          "label": "Auto speed-up by clears",
+          "setting_id": "auto_speedup_enabled"
+        },
+        {
+          "id": "lines_per_level",
+          "type": "slider",
+          "label": "Lines per level",
+          "setting_id": "lines_per_level"
         },
         {
           "id": "save",
@@ -662,60 +558,6 @@
           "type": "action",
           "label": "Reset defaults",
           "action_id": "reset"
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_controls": {
-      "title": "Controls",
-      "items": [
-        {
-          "id": "controls_section",
-          "type": "section",
-          "label": "Controls"
-        },
-        {
-          "id": "keybindings",
-          "type": "action",
-          "label": "Keyboard Bindings",
-          "action_id": "keybindings"
-        },
-        {
-          "id": "controls_profiles_info",
-          "type": "info",
-          "label": "Profile management, save/load, and conflict handling live inside Keyboard Bindings."
-        },
-        {
-          "id": "back",
-          "type": "action",
-          "label": "Back",
-          "action_id": "back"
-        }
-      ]
-    },
-    "settings_legacy": {
-      "title": "Legacy",
-      "items": [
-        {
-          "id": "legacy_section",
-          "type": "section",
-          "label": "Legacy"
-        },
-        {
-          "id": "settings_legacy_topology_editor",
-          "type": "legacy_dispatch",
-          "label": "Legacy Topology Editor Menu",
-          "action_id": "settings_legacy_topology_editor"
-        },
-        {
-          "id": "legacy_topology_editor_info",
-          "type": "info",
-          "label": "Compatibility-backed path for the older topology editor shell."
         },
         {
           "id": "back",
@@ -1328,8 +1170,8 @@
     },
     {
       "id": "game_settings",
-      "label": "Game Settings",
-      "description": "Split into gameplay, board / geometry, movement / rotation, visual / animation, and difficulty / pace."
+      "label": "Game",
+      "description": "One scrolling gameplay settings page with Gameplay, Board / Geometry, Movement / Rotation, Endgame Effects, and Difficulty / Pace sections."
     },
     {
       "id": "gameplay_setup",
@@ -1344,7 +1186,7 @@
     {
       "id": "endgame_effects",
       "label": "Endgame Effects",
-      "description": "Persistent post-shatter relic-field preset and interaction controls."
+      "description": "Persistent post-shatter relic preset, interaction, and speed controls grouped inside the Game settings page."
     },
     {
       "id": "display",
@@ -1368,13 +1210,13 @@
     },
     {
       "id": "controls",
-      "label": "Controls",
-      "description": "Keyboard bindings and related input management."
+      "label": "Keyboard Bindings",
+      "description": "Persistent keyboard bindings plus profile management and conflict handling."
     },
     {
       "id": "legacy",
-      "label": "Legacy",
-      "description": "Compatibility-backed settings destinations."
+      "label": "Legacy Topology Editor Menu",
+      "description": "Compatibility-backed path for the older topology editor shell."
     }
   ],
   "settings_split_rules": {
@@ -1382,19 +1224,19 @@
     "max_top_level_actions": 4,
     "split_when_mode_specific": true
   },
-  "settings_category_metrics": {
-    "game_settings": {
-      "field_count": 0,
-      "action_count": 0,
-      "mode_specific": false,
-      "top_level": true
-    },
-    "endgame_effects": {
-      "field_count": 2,
-      "action_count": 3,
-      "mode_specific": false,
-      "top_level": true
-    },
+    "settings_category_metrics": {
+      "game_settings": {
+        "field_count": 16,
+        "action_count": 5,
+        "mode_specific": false,
+        "top_level": true
+      },
+      "endgame_effects": {
+        "field_count": 4,
+        "action_count": 0,
+        "mode_specific": false,
+        "top_level": false
+      },
     "display": {
       "field_count": 3,
       "action_count": 4,
@@ -1411,13 +1253,13 @@
       "field_count": 0,
       "action_count": 1,
       "mode_specific": false,
-      "top_level": true
+      "top_level": false
     },
     "legacy": {
       "field_count": 0,
       "action_count": 1,
       "mode_specific": false,
-      "top_level": true
+      "top_level": false
     }
   },
   "setup_hints": {

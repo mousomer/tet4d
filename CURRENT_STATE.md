@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-04-12  
-Branch: `master`  
+Branch: `codex/endgame-flow-slider-layout`  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -48,8 +48,8 @@ not a historical ledger. Long historical migration detail belongs in
   treatment, flash-on-change feedback, and inline numeric sliders where the
   ranges are bounded. Runtime movement/keybinding copy now prefers
   `Left` / `Right` / `Forward` / `Backward` / `Down`, and the default overlay
-  transparency control now lives under
-  `Settings -> Game Settings -> Visual / Animation` instead of
+  transparency control now lives directly under
+  `Settings -> Game` instead of
   `Settings -> Display`.
 - Shared menu-slider layout follow-up (2026-04-11): slider-bearing launcher,
   setup, and in-game settings rows now share one config-backed row contract
@@ -72,27 +72,44 @@ not a historical ledger. Long historical migration detail belongs in
   freezes a shared preset id plus a separate interaction mode into the endgame
   snapshot, supports the required `wrap_all`, `invert_all`, and `sphere`
   topology-flavored motion fields with deterministic optional collision
-  handling, and exposes those controls together under
-  `Settings -> Endgame Effects`.
+  handling, and exposes those controls together under the
+  `Settings -> Game` endgame section.
 - Canonical menu-structure follow-up (2026-04-12): `config/menu/structure.json`
   is now the sole structural source of truth for launcher, pause, settings,
-  split `Game Settings` subpages, `Endgame Effects`, keyboard bindings, and
-  retained legacy entries. The old split settings row/section/route
-  authorities are removed from live config, and launcher/settings/keybindings
-  rendering now consumes one compiled runtime graph rather than re-authoring
-  page structure in Python.
+  the flattened scrolling `Game` page, keyboard bindings, and retained legacy
+  entries. The old split settings row/section/route authorities are removed
+  from live config, and launcher/settings/keybindings rendering now consumes
+  one compiled runtime graph rather than re-authoring page structure in
+  Python.
 - Menu normalization follow-up (2026-04-12): runtime menu consumers now read a
   normalized graph compiled from `config/menu/structure.json` instead of the
   raw authored tree directly. Hidden rows are stripped first, singleton
   wrappers are collapsed, direct-forward shims are rewritten away, authored
   `Settings -> Controls -> Keyboard Bindings` and `Settings -> Legacy ->
-  Legacy Topology Editor Menu` collapse into direct runtime entries on
-  `Settings`, and the single-setting `Visual / Animation` wrapper is inlined
-  into `Game Settings` instead of surviving as a one-row submenu.
+  Legacy Topology Editor Menu` originally collapsed into direct runtime
+  entries on `Settings`, and the single-setting `Visual / Animation` wrapper
+  originally inlined into `Game` instead of surviving as a one-row submenu.
+- Authored menu-flattening + direct-play follow-up (2026-04-12): the settled
+  `Controls`, `Legacy`, and one-row `Visual / Animation` wrappers are now
+  removed from authored config instead of only collapsing at runtime,
+  `config/menu/structure.json` now carries generic `action_group` rows for
+  `Play -> 2D/3D/4D`, `Play` launches gameplay directly from persisted mode
+  settings, `Setup` stays reachable on the same `Choose Mode` screen, and
+  `config/topology/lab_menu.json` is reduced to Topology Playground shell copy
+  rather than looking like a second visible menu-structure authority.
 - Shared menu-overflow follow-up (2026-04-12): settings and keybindings pages
-  now share one overflow viewport contract with auto-scroll, scrollbar geometry
-  reserved in layout, and selection visibility kept in sync while navigating
-  long pages instead of clipping rows off-screen.
+  now share one overflow viewport contract with auto-scroll, scrollbar
+  geometry reserved in layout, and selection visibility kept in sync while
+  navigating long pages instead of clipping rows off-screen; the same shared
+  overflow path now also covers the compact bot-options surface.
+- ND endgame-motion follow-up (2026-04-12): persistent relic motion now
+  evolves in ND board space before projection instead of only in render-space
+  path surrogates. `wrap_all`, `invert_all`, and `sphere` now govern ongoing
+  ND boundary/field behavior, 4D relics can traverse hidden axes and blend
+  between rendered layer boards from the frozen basis map, and the scrolling
+  `Settings -> Game` page now carries separate `Relic field speed` and
+  `Shatter speed` controls so long-run motion speed is independent from preset
+  identity.
 - Leaderboard modal follow-up (2026-04-11): qualifying leaderboard registration
   now opens as a compact modal overlay over the existing post-terminal gameplay
   surface instead of repainting a dedicated full-screen registration page, and
@@ -117,11 +134,11 @@ not a historical ledger. Long historical migration detail belongs in
 - Keybinding round-trip contract repair follow-up (2026-03-30): the runtime/store key-token parser now accepts the keypad operator token names that the serializer writes into built-in profile files, built-in `full` 4D bindings round-trip cleanly again, and invalid custom profile files now fail load instead of being silently overwritten during normal active-profile initialization.
 - Topology-playground keybinding seam follow-up (2026-03-30): helper-panel movement/rotation labels plus movement/camera shortcut matching in the playground now read the canonical runtime binding groups instead of direct `KEYS_*` / `EXPLORER_KEYS_*` / `CAMERA_KEYS_*` adapter globals, so the playground stays aligned with the active runtime keybinding state.
 - Settings-help contract follow-up (2026-04-12): the runtime help screen’s
-  settings summary now derives from the live `settings_root` subtree in
-  the compiled menu graph sourced from `config/menu/structure.json`, so the
-  current runtime `Game Settings`, `Endgame Effects`, `Display`, and `Audio`
-  categories stay in sync with the shared menu graph instead of drifting
-  through older parallel section docs.
+  settings summary now derives from the live `settings_root` subtree in the
+  compiled menu graph sourced from `config/menu/structure.json`, so the
+  current runtime `Game`, `Display`, and `Audio` categories stay in sync with
+  the shared menu graph instead of drifting through older parallel section
+  docs.
 - Keybinding contract-check follow-up (2026-03-30): the focused `./scripts/check_keybinding_contract.sh` gate now also covers the runtime-seam consumers in menu navigation and tutorial overlays, and `src/tet4d.egg-info/SOURCES.txt` has been regenerated so the deleted legacy keybinding defaults file no longer appears in the packaged source manifest.
 - Topology-playground text-layout dedup follow-up (2026-03-30): shared wrapped-text primitives now centralize multi-line row sizing and centered compact-label rendering in `src/tet4d/ui/pygame/ui_utils.py`, so Topology Playground control rows, launcher settings rows, workspace tabs, and transform/action buttons now reuse the same layout math instead of maintaining near-duplicate wrapping code at each callsite.
 - Topology-playground row-render dedup follow-up (2026-03-30): the shared pygame UI helpers now also centralize selection-highlight drawing plus wrapped label/value row text rendering, so launcher settings and Topology Playground control rows no longer keep parallel per-surface loops for the same highlighted multi-line row presentation.
@@ -146,10 +163,14 @@ not a historical ledger. Long historical migration detail belongs in
 - Dead-seam cleanup follow-up (2026-03-31): another dead-code sweep removed uncalled gameplay/runtime wrapper helpers, test-only help-topic/help-text validator seams, the unused pygame key-profile alias, and the test-only menu-graph linter module; focused tests now target the live help-text/help-topic owners directly instead of preserving those dead wrappers, while `launcher_play` remains an active launcher seam used by `cli/front.py`.
 - Dead-test cleanup follow-up (2026-03-31): cache-debug tests tied only to projection/control-icon internals are now removed, direct test-only calls to unused camera/view keydown wrappers now assert the live key-routing helpers instead, and topology-lab sandbox rotation setup now probes rotatable pieces through real sandbox key dispatch instead of a dead private rotation helper seam.
 - Topology-playground exploration return-menu follow-up (2026-03-30): topology-playground-launched `Explore This Topology` now treats the gameplay `menu` action as a direct return to the main playground shell instead of opening the generic independent pause menu first, while ordinary launcher gameplay keeps the existing pause flow.
-- Windows packaging CAB embedding follow-up (2026-03-30): the WiX-generated
-  Windows installer now embeds its cabinet payload into the published `.msi`,
-  so Windows installs no longer depend on a missing external `cab1.cab`
-  sidecar file.
+- Windows packaging hardening follow-up (2026-04-12): the WiX-generated
+  Windows installer still embeds its cabinet payload into the published
+  `.msi`, but the packaging script now also clears stale `*.msi` / `*.cab`
+  outputs before each run, builds into `build/packaging/windows/out`, fails if
+  the expected MSI is missing, and fails if any external `*.cab` appears
+  anywhere under `build/packaging/windows`; the release workflow correspondingly
+  uploads only `*.msi` from the Windows job so stale or stray CAB files cannot
+  leak into published artifacts.
 - Dead-code cleanup follow-up (2026-03-31): one zero-reference test-only
   topology-lab export tuple plus unused board/menu/tutorial helper shims were
   removed, and focused regression coverage was refreshed so the current
@@ -167,9 +188,14 @@ not a historical ledger. Long historical migration detail belongs in
   `Tutorials` stays a first-class learning/support destination with explicit
   `Interactive Tutorials`, `How to Play`, `Controls Reference`, and
   `Help / FAQ` siblings, while `Settings` now routes into the shared
-  `Game Settings`, `Endgame Effects`, `Display`, and `Audio` categories plus
-  direct `Keyboard Bindings` and `Legacy Topology Editor Menu` entries without
-  reviving a separate launcher-only settings layout.
+  `Game`, `Display`, and `Audio` categories plus direct `Keyboard Bindings`
+  and `Legacy Topology Editor Menu` entries without reviving a separate
+  launcher-only settings layout.
+- Menu-shell unification follow-up (2026-04-12): launcher/play, settings,
+  keybindings, pause, leaderboard, and bot-options now use the same shared
+  title/back-chip/framed-panel/footer shell treatment, and keybindings main
+  rows now render with the shared `menu_font` instead of the denser
+  `panel_font`.
 - Keyboard profile-management follow-up (2026-04-12): direct launcher
   `Keyboard Profiles` submenu placement is retired. Profile creation/rename/
   save/load and conflict handling remain inside the dedicated `Keyboard
@@ -191,7 +217,10 @@ not a historical ledger. Long historical migration detail belongs in
 - Topology-playground plan retirement follow-up (2026-03-22): the old explorer-topology phase plans, menu/startup audits, playability-signaling pass, and unsafe-topology correctness plans now live under `docs/history/topology_playground/`; the active plan layer is reduced to `docs/plans/topology_playground_current_authority.md` plus `docs/plans/topology_playground_shell_redesign_spec.md`.
 - Topology-explorer clean-CI lock follow-up (2026-03-21): the committed shell/runtime contract now matches the accepted sandbox-first explorer entry and current neighbor-marker model in a clean clone as well as the dirty worktree. Workspace switching back to `Editor` preserves the remembered sandbox/topology situation, scene wrappers expose the current neighbor-marker render seam directly, and the focused topology-lab menu/projection tests now pin the current shell labels and workspace behavior instead of older Editor-first assumptions.
 - Local branch integration follow-up (2026-03-21): the later local topology-explorer/gameplay work is now integrated on top of the released branch line. Historical topology-playground plan material was further demoted toward archive status, play move intents are now owned explicitly in `src/tet4d/engine/gameplay/play_move_intents.py`, and matching gameplay/input/playbot/launch coverage now rides on that explicit translation-vs-drop intent split without reopening the settled topology-playground architecture contract.
-- Release follow-up (2026-03-21): the integrated branch state shipped first as `0.6` and then as patch release `0.6.1`; `master`, `origin/master`, and the current local checkout now align on the `0.6.1` release state.
+- Release follow-up (2026-04-12): the current integrated batch is being
+  promoted as `0.7`, carrying the flattened shared-shell menu flow, the
+  full-ND endgame relic-field update, and the hardened single-file Windows MSI
+  packaging contract.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -216,15 +245,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 207` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 208` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.45` (`low`)
+- `tech_debt.score = 4.72` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.14`
+1. `delivery_size_pressure = 2.17`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -414,17 +443,17 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3665` real LOC
-2. `scripts/arch_metrics.py`: `1887` real LOC
-3. `src/tet4d/ui/pygame/endgame_animation.py`: `1873` real LOC
+2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
+3. `scripts/arch_metrics.py`: `1887` real LOC
 4. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1540` real LOC
 5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1302` real LOC
-7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1240` real LOC
-8. `src/tet4d/ui/pygame/topology_lab/scene_state.py`: `1087` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `1313` real LOC
+7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
+8. `tools/governance/validate_project_contracts.py`: `1105` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 760/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 807/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

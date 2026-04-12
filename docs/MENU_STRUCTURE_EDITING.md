@@ -29,9 +29,8 @@ All menu surfaces derive from that same config:
 - launcher
 - pause
 - settings
-- split `Game Settings` subpages
-- `Endgame Effects`
-- `Controls -> Keyboard Bindings`
+- one scrolling `Game` settings page with section headers
+- direct `Keyboard Bindings`
 - retained legacy entries
 
 The runtime compiler removes useless wrappers before the graph reaches UI
@@ -54,6 +53,7 @@ Each menu item must have a stable `id`.
 Supported structural types:
 
 - `action`
+- `action_group`
 - `submenu`
 - `section`
 - `info`
@@ -66,6 +66,7 @@ Supported structural types:
 Use type-specific fields only where they apply:
 
 - `action` / `legacy_dispatch`: `action_id`
+- `action_group`: `default_action_id`, `actions`
 - `submenu`: `menu_id`
 - `toggle` / `selector` / `slider`: `setting_id`
 - `keybinding_group`: `binding_group`, `binding_dimension`, optional `binding_bucket`
@@ -93,16 +94,8 @@ Settings subtree:
 
 - `settings_root`
 - `settings_game_root`
-- `settings_game_gameplay`
-- `settings_game_board_geometry`
-- `settings_game_movement_rotation`
-- `settings_game_visual_animation`
-- `settings_game_difficulty_pace`
-- `settings_endgame_effects`
 - `settings_display`
 - `settings_audio`
-- `settings_controls`
-- `settings_legacy`
 
 Keybindings subtree:
 
@@ -119,11 +112,6 @@ Visible runtime pages intentionally drop collapsed wrappers:
 
 - `settings_root`
 - `settings_game_root`
-- `settings_game_gameplay`
-- `settings_game_board_geometry`
-- `settings_game_movement_rotation`
-- `settings_game_difficulty_pace`
-- `settings_endgame_effects`
 - `settings_display`
 - `settings_audio`
 - `keybindings_root`
@@ -135,12 +123,15 @@ Visible runtime pages intentionally drop collapsed wrappers:
 
 Notable normalized outcomes:
 
-- authored `settings_controls` collapses into the direct runtime
-  `Keyboard Bindings` row on `settings_root`
-- authored `settings_legacy` collapses into the direct runtime
-  `Legacy Topology Editor Menu` row on `settings_root`
-- authored `settings_game_visual_animation` collapses into the direct runtime
-  `Locked-cell transparency` slider on `settings_game_root`
+- authored `Play` rows can keep inline `Play` / `Setup` sub-actions through
+  generic `action_group` rows without creating extra submenu depth
+- authored `Game` settings stay materially flat: gameplay, topology-cache,
+  animation, transparency, endgame, and pace rows live on one scrolling page
+  instead of a submenu forest
+- runtime compilation still removes hidden rows, unary wrappers, and direct
+  forward shims before UI consumers read the graph
+- `config/topology/lab_menu.json` remains copy-only for the specialized
+  Topology Playground shell and is not a parallel visible structure authority
 
 ## What changed
 
@@ -186,6 +177,37 @@ Example:
   "type": "selector",
   "label": "Relic-field preset",
   "setting_id": "endgame_preset_id"
+}
+```
+
+### Add a same-row sub-action group
+
+1. Use `action_group` when one visible row needs multiple explicit actions
+   without another full menu layer.
+2. Keep the row generic; the runtime navigation contract is `Up/Down` select
+   row, `Left/Right` switch sub-action, `Enter` activate selected sub-action.
+3. Use stable nested action ids and keep `default_action_id` explicit.
+
+Example:
+
+```json
+{
+  "id": "play_3d_row",
+  "type": "action_group",
+  "label": "3D",
+  "default_action_id": "play",
+  "actions": [
+    {
+      "id": "play",
+      "label": "Play",
+      "action_id": "play_3d"
+    },
+    {
+      "id": "setup",
+      "label": "Setup",
+      "action_id": "setup_3d"
+    }
+  ]
 }
 ```
 

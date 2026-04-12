@@ -18,6 +18,8 @@ class GfxFonts:
     title_font: pygame.font.Font
     menu_font: pygame.font.Font
     hint_font: pygame.font.Font
+    # Dense helper/reference panels still use this smaller face; primary menu
+    # family rows should render with menu_font.
     panel_font: pygame.font.Font
 
 

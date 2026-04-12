@@ -79,3 +79,59 @@ class TestLauncherFrontSettingsRoutes(unittest.TestCase):
 
         self.assertFalse(should_close)
         legacy_handler.assert_called_once()
+
+    def test_menu_action_play_dimension_launches_direct_from_persisted_settings(
+        self,
+    ) -> None:
+        state = launcher_front.MainMenuState()
+        session = launcher_front._LauncherSession(
+            screen=object(),
+            display_settings=DisplaySettings(),
+            audio_settings=AudioSettings(),
+        )
+        result = SimpleNamespace(
+            screen=session.screen,
+            display_settings=session.display_settings,
+            keep_running=True,
+        )
+        with (
+            patch.object(launcher_front, "launch_2d", return_value=result) as launch_2d,
+            patch.object(launcher_front, "_persist_session_status"),
+        ):
+            should_close = launcher_front._menu_action_play_dimension(
+                "2d",
+                state,
+                session,
+                fonts_nd=object(),
+                fonts_2d=object(),
+            )
+
+        self.assertFalse(should_close)
+        self.assertTrue(launch_2d.call_args.kwargs["use_persisted_settings"])
+
+    def test_menu_action_setup_dimension_routes_through_setup_flow(self) -> None:
+        state = launcher_front.MainMenuState()
+        session = launcher_front._LauncherSession(
+            screen=object(),
+            display_settings=DisplaySettings(),
+            audio_settings=AudioSettings(),
+        )
+        result = SimpleNamespace(
+            screen=session.screen,
+            display_settings=session.display_settings,
+            keep_running=True,
+        )
+        with (
+            patch.object(launcher_front, "launch_3d", return_value=result) as launch_3d,
+            patch.object(launcher_front, "_persist_session_status"),
+        ):
+            should_close = launcher_front._menu_action_setup_dimension(
+                "3d",
+                state,
+                session,
+                fonts_nd=object(),
+                fonts_2d=object(),
+            )
+
+        self.assertFalse(should_close)
+        self.assertFalse(launch_3d.call_args.kwargs["use_persisted_settings"])
