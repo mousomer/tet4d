@@ -19,6 +19,7 @@ from tet4d.ai.playbot.types import (
 )
 from tet4d.engine.core.model import Action
 from tet4d.engine.gameplay.leveling import compute_speed_level
+from tet4d.engine.runtime.menu_settings_state import mode_endgame_settings
 from tet4d.engine.tutorial.api import (
     tutorial_runtime_is_running_runtime,
     tutorial_runtime_sync_and_advance_runtime,
@@ -156,6 +157,7 @@ def _advance_simulation(
 
 
 def _capture_endgame_snapshot_2d(loop: LoopContext2D):
+    preset_id, interaction_mode = mode_endgame_settings("2d")
     locked_cells = tuple(
         SnapshotCell(
             source_coord=(int(x), int(y)),
@@ -171,6 +173,8 @@ def _capture_endgame_snapshot_2d(loop: LoopContext2D):
         locked_cells=locked_cells,
         base_seed=int(loop.cfg.rng_seed),
         render_context=EndgameRenderContext(mode_key="2d"),
+        preset_id=preset_id,
+        interaction_mode=interaction_mode,
     )
 
 

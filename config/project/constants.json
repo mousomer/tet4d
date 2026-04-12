@@ -14,20 +14,71 @@
     "clear_effect_duration_ms_4d": 380.0,
     "endgame": {
       "enabled": true,
-      "total_duration_ms": 1800.0,
       "crack_onset_duration_ms": 220.0,
-      "release_duration_ms": 420.0,
-      "fade_duration_ms": 780.0,
+      "shatter_duration_ms": 1400.0,
+      "capture_transition_duration_ms": 620.0,
+      "shell_fragment_lifetime_ms": 1320.0,
+      "shell_fade_duration_ms": 380.0,
       "shell_fragment_speed_min": 1.4,
-      "shell_fragment_speed_max": 4.6,
-      "cell_fragment_speed_min": 2.8,
-      "cell_fragment_speed_max": 6.6,
-      "angular_velocity_deg_min": 90.0,
-      "angular_velocity_deg_max": 320.0,
+      "shell_fragment_speed_max": 4.9,
+      "relic_burst_speed_min": 3.2,
+      "relic_burst_speed_max": 7.2,
+      "burst_angular_velocity_deg_min": 90.0,
+      "burst_angular_velocity_deg_max": 320.0,
       "outward_bias_strength": 1.0,
       "random_spread_strength": 0.65,
-      "drag_per_second": 0.82,
-      "gravity_per_second": 0.48,
+      "burst_drag_per_second": 0.84,
+      "burst_gravity_per_second": 0.52,
+      "relic_spin_deg_min": 12.0,
+      "relic_spin_deg_max": 44.0,
+      "relic_field_speed_min": 0.42,
+      "relic_field_speed_max": 0.96,
+      "orbit_radius_min": 0.9,
+      "orbit_radius_max": 3.2,
+      "orbit_depth_amplitude_min": 0.35,
+      "orbit_depth_amplitude_max": 1.8,
+      "anchor_spread_radius": 1.7,
+      "default_preset_id": "default_orbit",
+      "default_interaction_mode": "none",
+      "field_extent_multiplier": 1.12,
+      "wrap_margin": 0.85,
+      "collision_radius_min": 0.34,
+      "collision_radius_max": 0.54,
+      "collision_restitution": 0.78,
+      "collision_damping": 0.92,
+      "collision_separation_bias": 1.0,
+      "collision_max_relics": 96,
+      "collision_velocity_sample_ms": 18.0,
+      "path_family_weights": {
+        "ellipse": 4,
+        "helix": 3,
+        "lissajous": 3
+      },
+      "presets": {
+        "default_orbit": {
+          "drift_scale": 0.18,
+          "oscillation_scale": 1.0,
+          "extent_scale": 1.0
+        },
+        "wrap_all": {
+          "drift_scale": 0.92,
+          "oscillation_scale": 0.62,
+          "extent_scale": 1.08
+        },
+        "invert_all": {
+          "drift_scale": 0.84,
+          "oscillation_scale": 0.56,
+          "extent_scale": 1.02
+        },
+        "sphere": {
+          "drift_scale": 0.34,
+          "oscillation_scale": 0.46,
+          "extent_scale": 1.0,
+          "sphere_radius_scale": 0.92,
+          "tangential_bias": 1.08,
+          "radial_correction_strength": 0.42
+        }
+      },
       "seed_salt": 7919
     }
   },
@@ -85,6 +136,12 @@
       "text_top_padding": 4,
       "slider_top_gap": 8,
       "row_bottom_padding": 10
+    },
+    "menu_scrollbar": {
+      "width": 12,
+      "gap": 12,
+      "min_handle_height": 28,
+      "track_padding": 4
     },
     "help": {
       "outer_pad": 20,

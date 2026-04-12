@@ -57,7 +57,9 @@ DEFAULT_GAME_SEED = _RUNTIME_DEFAULTS.game_seed
 
 
 def _default_settings_payload() -> dict[str, Any]:
-    return default_settings_payload_for_runtime(_BASE_DEFAULTS, defaults=_RUNTIME_DEFAULTS)
+    return default_settings_payload_for_runtime(
+        _BASE_DEFAULTS, defaults=_RUNTIME_DEFAULTS
+    )
 
 
 def _load_payload() -> dict[str, Any]:
@@ -314,6 +316,14 @@ def mode_rotation_animation_mode(mode_key: str) -> str:
     return str(settings["rotation_animation_mode"])
 
 
+def mode_endgame_settings(mode_key: str) -> tuple[str, str]:
+    settings = mode_shared_gameplay_settings(mode_key)
+    return (
+        str(settings["endgame_preset_id"]),
+        str(settings["endgame_interaction_mode"]),
+    )
+
+
 def mode_animation_settings(mode_key: str) -> tuple[int, int]:
     settings = mode_shared_gameplay_settings(mode_key)
     rotation_key = (
@@ -331,6 +341,8 @@ def save_shared_gameplay_settings(
     random_mode_index: int,
     topology_advanced: int,
     kick_level_index: int,
+    endgame_preset_id: str,
+    endgame_interaction_mode: str,
     auto_speedup_enabled: int,
     lines_per_level: int,
     rotation_animation_mode: str,
@@ -343,6 +355,8 @@ def save_shared_gameplay_settings(
         "random_mode_index": int(random_mode_index),
         "topology_advanced": int(topology_advanced),
         "kick_level_index": int(kick_level_index),
+        "endgame_preset_id": str(endgame_preset_id),
+        "endgame_interaction_mode": str(endgame_interaction_mode),
         "auto_speedup_enabled": int(auto_speedup_enabled),
         "lines_per_level": int(lines_per_level),
         "rotation_animation_mode": str(rotation_animation_mode),
@@ -399,6 +413,7 @@ __all__ = [
     "load_app_settings_payload",
     "load_menu_settings",
     "mode_animation_settings",
+    "mode_endgame_settings",
     "mode_shared_gameplay_settings",
     "mode_speedup_settings",
     "reset_menu_settings_to_defaults",

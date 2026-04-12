@@ -9,50 +9,8 @@ from ..settings_schema import (
     require_int,
     require_list,
     require_object,
-    string_tuple,
 )
 from .parse_helpers import parse_mode_string_lists, parse_string_list
-
-_SETTINGS_HUB_LAYOUT_KINDS = {"header", "item"}
-
-
-def parse_settings_hub_layout_rows(raw: object) -> tuple[dict[str, str], ...]:
-    rows = require_list(raw, path="structure.settings_hub_layout_rows")
-    if not rows:
-        raise RuntimeError("structure.settings_hub_layout_rows must not be empty")
-
-    parsed: list[dict[str, str]] = []
-    item_rows = 0
-    for idx, raw_row in enumerate(rows):
-        row = require_object(raw_row, path=f"structure.settings_hub_layout_rows[{idx}]")
-        kind = as_non_empty_string(
-            row.get("kind"),
-            path=f"structure.settings_hub_layout_rows[{idx}].kind",
-        )
-        if kind not in _SETTINGS_HUB_LAYOUT_KINDS:
-            raise RuntimeError(
-                "structure.settings_hub_layout_rows kind must be one of: "
-                + ", ".join(sorted(_SETTINGS_HUB_LAYOUT_KINDS))
-            )
-        label = as_non_empty_string(
-            row.get("label"),
-            path=f"structure.settings_hub_layout_rows[{idx}].label",
-        )
-        if kind == "header":
-            parsed.append({"kind": "header", "label": label, "row_key": ""})
-            continue
-        row_key = as_non_empty_string(
-            row.get("row_key"),
-            path=f"structure.settings_hub_layout_rows[{idx}].row_key",
-        ).lower()
-        parsed.append({"kind": "item", "label": label, "row_key": row_key})
-        item_rows += 1
-
-    if item_rows == 0:
-        raise RuntimeError(
-            "structure.settings_hub_layout_rows must include at least one item row"
-        )
-    return tuple(parsed)
 
 
 def parse_pause_copy(payload: dict[str, Any]) -> dict[str, Any]:
@@ -151,52 +109,6 @@ def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str
             "structure.settings_option_labels.game_random_mode must define at least two labels"
         )
     return parsed
-
-
-def parse_keybinding_category_docs(payload: dict[str, Any]) -> dict[str, Any]:
-    raw_docs = payload.get("keybinding_category_docs")
-    if raw_docs is None:
-        return {"scope_order": ("all", "2d", "3d", "4d"), "groups": {}}
-
-    docs = require_object(raw_docs, path="structure.keybinding_category_docs")
-    groups_raw = require_object(
-        docs.get("groups"),
-        path="structure.keybinding_category_docs.groups",
-    )
-    groups: dict[str, dict[str, str]] = {}
-    for raw_group_name, raw_group in groups_raw.items():
-        group_name = as_non_empty_string(
-            raw_group_name,
-            path="structure.keybinding_category_docs.groups keys",
-        ).lower()
-        group_obj = require_object(
-            raw_group,
-            path=f"structure.keybinding_category_docs.groups.{group_name}",
-        )
-        groups[group_name] = {
-            "label": as_non_empty_string(
-                group_obj.get("label"),
-                path=f"structure.keybinding_category_docs.groups.{group_name}.label",
-            ),
-            "description": as_non_empty_string(
-                group_obj.get("description"),
-                path=(
-                    "structure.keybinding_category_docs.groups."
-                    f"{group_name}.description"
-                ),
-            ),
-        }
-
-    return {
-        "scope_order": string_tuple(
-            docs.get("scope_order"),
-            path="structure.keybinding_category_docs.scope_order",
-            normalize_lower=True,
-        ),
-        "groups": groups,
-    }
-
-
 def parse_settings_category_docs(
     payload: dict[str, Any],
 ) -> tuple[dict[str, str], ...]:
@@ -299,120 +211,6 @@ def parse_settings_category_metrics(
             ),
         }
     return metrics
-
-
-def parse_settings_sections(
-    payload: dict[str, Any],
-    *,
-    layout_rows: tuple[dict[str, str], ...],
-) -> dict[str, dict[str, Any]]:
-    layout_headers = {
-        row["label"] for row in layout_rows if row.get("kind") == "header"
-    }
-    layout_item_keys = {
-        row["row_key"] for row in layout_rows if row.get("kind") == "item"
-    }
-    raw_sections = require_object(
-        payload.get("settings_sections"),
-        path="structure.settings_sections",
-    )
-    sections: dict[str, dict[str, Any]] = {}
-    for raw_section_id, raw_section in raw_sections.items():
-        section_id = as_non_empty_string(
-            raw_section_id,
-            path="structure.settings_sections keys",
-        ).lower()
-        section = require_object(
-            raw_section,
-            path=f"structure.settings_sections.{section_id}",
-        )
-        headers = parse_string_list(
-            section.get("headers"),
-            path=f"structure.settings_sections.{section_id}.headers",
-        )
-        row_keys = string_tuple(
-            section.get("row_keys"),
-            path=f"structure.settings_sections.{section_id}.row_keys",
-            normalize_lower=True,
-        )
-        missing_headers = sorted(set(headers) - layout_headers)
-        if missing_headers:
-            raise RuntimeError(
-                "structure.settings_sections."
-                f"{section_id}.headers reference unknown layout headers: "
-                + ", ".join(missing_headers)
-            )
-        missing_row_keys = sorted(set(row_keys) - layout_item_keys)
-        if missing_row_keys:
-            raise RuntimeError(
-                "structure.settings_sections."
-                f"{section_id}.row_keys reference unknown layout row keys: "
-                + ", ".join(missing_row_keys)
-            )
-        sections[section_id] = {
-            "title": as_non_empty_string(
-                section.get("title"),
-                path=f"structure.settings_sections.{section_id}.title",
-            ),
-            "subtitle": as_non_empty_string(
-                section.get("subtitle"),
-                path=f"structure.settings_sections.{section_id}.subtitle",
-            ),
-            "headers": headers,
-            "row_keys": row_keys,
-        }
-    return sections
-
-
-def parse_launcher_settings_routes(
-    payload: dict[str, Any],
-    *,
-    settings_sections: dict[str, dict[str, Any]],
-    launcher_settings_action_ids: set[str],
-) -> dict[str, dict[str, str]]:
-    raw_routes = require_object(
-        payload.get("launcher_settings_routes"),
-        path="structure.launcher_settings_routes",
-    )
-    routes: dict[str, dict[str, str]] = {}
-    for raw_action_id, raw_route in raw_routes.items():
-        action_id = as_non_empty_string(
-            raw_action_id,
-            path="structure.launcher_settings_routes keys",
-        ).lower()
-        if action_id not in launcher_settings_action_ids:
-            raise RuntimeError(
-                "structure.launcher_settings_routes references unknown launcher settings action: "
-                f"{action_id}"
-            )
-        route = require_object(
-            raw_route,
-            path=f"structure.launcher_settings_routes.{action_id}",
-        )
-        section_id = as_non_empty_string(
-            route.get("section_id"),
-            path=f"structure.launcher_settings_routes.{action_id}.section_id",
-        ).lower()
-        if section_id not in settings_sections:
-            raise RuntimeError(
-                "structure.launcher_settings_routes."
-                f"{action_id}.section_id references unknown section: {section_id}"
-            )
-        initial_row_key = as_non_empty_string(
-            route.get("initial_row_key"),
-            path=f"structure.launcher_settings_routes.{action_id}.initial_row_key",
-        ).lower()
-        if initial_row_key not in settings_sections[section_id]["row_keys"]:
-            raise RuntimeError(
-                "structure.launcher_settings_routes."
-                f"{action_id}.initial_row_key must belong to section {section_id}: "
-                f"{initial_row_key}"
-            )
-        routes[action_id] = {
-            "section_id": section_id,
-            "initial_row_key": initial_row_key,
-        }
-    return routes
 
 
 def resolve_field_max(

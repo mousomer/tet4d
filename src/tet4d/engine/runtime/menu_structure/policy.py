@@ -54,12 +54,22 @@ def validate_launcher_route_actions(
 
 
 def enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
-    menus: dict[str, dict[str, Any]] = validated["menus"]
-    entrypoints: dict[str, str] = validated["menu_entrypoints"]
+    menus: dict[str, dict[str, Any]] = validated.get("runtime_menus", validated["menus"])
+    entrypoints: dict[str, str] = validated.get(
+        "runtime_menu_entrypoints",
+        validated["menu_entrypoints"],
+    )
     launcher_actions = _entrypoint_reachability(
         menus, start_menu_id=entrypoints["launcher"]
     )[1]
     pause_actions = _entrypoint_reachability(menus, start_menu_id=entrypoints["pause"])[1]
+    settings_actions = _entrypoint_reachability(
+        menus, start_menu_id=entrypoints["settings"]
+    )[1]
+    if "settings" in launcher_actions:
+        launcher_actions = set(launcher_actions) | set(settings_actions)
+    if "settings" in pause_actions:
+        pause_actions = set(pause_actions) | set(settings_actions)
     required = set(PARITY_ACTION_IDS)
     launcher_missing = sorted(required - launcher_actions)
     pause_missing = sorted(required - pause_actions)
@@ -80,6 +90,14 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
     if not metrics:
         return
 
+    menus: dict[str, dict[str, Any]] = validated.get(
+        "authored_menus",
+        validated["menus"],
+    )
+    entrypoints: dict[str, str] = validated.get(
+        "authored_menu_entrypoints",
+        validated["menu_entrypoints"],
+    )
     rules = validated["settings_split_rules"]
     max_fields = int(rules["max_top_level_fields"])
     max_actions = int(rules["max_top_level_actions"])
@@ -107,24 +125,21 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
             )
         required_top_labels.append(docs[category_id]["label"])
 
-    hub_rows = set(validated["settings_hub_rows"])
-    missing_rows = [label for label in required_top_labels if label not in hub_rows]
-    if missing_rows:
+    settings_root = menus.get(entrypoints["settings"])
+    if not isinstance(settings_root, dict):
         raise RuntimeError(
-            "settings_hub_rows missing top-level categories required by split policy: "
-            + ", ".join(missing_rows)
+            "settings split policy violation: settings entrypoint must resolve to a menu"
         )
-
-    layout_headers = {
-        row["label"]
-        for row in validated["settings_hub_layout_rows"]
-        if row["kind"] == "header"
-    }
-    missing_headers = [
-        label for label in required_top_labels if label not in layout_headers
+    top_level_labels = [
+        str(item.get("label", ""))
+        for item in settings_root.get("items", ())
+        if str(item.get("type", "")).lower() == "submenu"
     ]
-    if missing_headers:
+    missing_labels = [
+        label for label in required_top_labels if label not in set(top_level_labels)
+    ]
+    if missing_labels:
         raise RuntimeError(
-            "settings_hub_layout_rows missing required top-level headers: "
-            + ", ".join(missing_headers)
+            "settings root is missing top-level categories required by split policy: "
+            + ", ".join(missing_labels)
         )

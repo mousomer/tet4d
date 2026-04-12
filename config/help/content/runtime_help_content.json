@@ -110,15 +110,13 @@
       "compact_lines": [
         "",
         "## Settings categories",
-        "- Gameplay settings include random mode, topology advanced, and kick permissiveness."
+        "- Open Settings from the launcher or pause menu, then choose a category."
       ],
       "full_lines": [
         "",
         "## Settings categories",
-        "- Audio: volume, SFX, mute.",
-        "- Display: fullscreen, window size, overlay transparency.",
-        "- Gameplay: random mode, topology advanced, kick permissiveness, auto speed-up, lines per level.",
-        "- Analytics: score-analyzer logging and persistence behavior."
+        "- Settings now uses one shared page tree for Game Settings, Endgame Effects, Display, Audio, Controls, and Legacy entries.",
+        "- Keyboard Bindings lives under Controls, and Endgame Effects stays grouped in its own page."
       ]
     },
     "camera_and_view": {

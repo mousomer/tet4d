@@ -10,9 +10,13 @@ from tet4d.ui.pygame.input.key_display import format_key_tuple
 from tet4d.ui.pygame.menu.keybindings_menu_model import binding_keys, binding_title
 from tet4d.ui.pygame.render.control_icons import draw_action_icon
 from tet4d.ui.pygame.ui_utils import (
+    compute_vertical_scroll_metrics,
     draw_corner_chip,
+    draw_selection_highlight,
     draw_tron_menu_background,
     draw_tron_panel,
+    draw_vertical_scrollbar,
+    ensure_scroll_offset_visible,
     fit_text,
     format_menu_title,
     standard_menu_panel_rect,
@@ -25,9 +29,7 @@ def _draw_background(surface: pygame.Surface) -> None:
     draw_tron_menu_background(surface, top_color=(14, 18, 42), bottom_color=(4, 7, 20))
 
 
-def _draw_menu_header(
-    surface: pygame.Surface, fonts, state: Any, scope_label_fn
-) -> None:
+def _draw_menu_header(surface: pygame.Surface, fonts, state: Any, scope_label_fn) -> None:
     width, _ = surface.get_size()
     title = fonts.title_font.render(
         format_menu_title(_KEYBINDINGS_MENU_COPY["title"]), True, (232, 232, 240)
@@ -46,24 +48,21 @@ def _draw_menu_header(
     surface.blit(header_surf, ((width - header_surf.get_width()) // 2, 74))
 
 
-def _panel_geometry(surface: pygame.Surface) -> tuple[int, int, int, int]:
+def _panel_geometry(surface: pygame.Surface) -> pygame.Rect:
     width, height = surface.get_size()
     panel_w = min(1120, max(320, width - 40))
     panel_h = min(580, max(220, height - 260))
-    rect = standard_menu_panel_rect(
+    return standard_menu_panel_rect(
         surface,
         panel_w=panel_w,
         panel_h=panel_h,
         panel_top=98,
         bottom_reserved=102,
     )
-    return rect.x, rect.y, rect.width, rect.height
 
 
-def _draw_panel(
-    surface: pygame.Surface, *, panel_x: int, panel_y: int, panel_w: int, panel_h: int
-) -> None:
-    draw_tron_panel(surface, rect=pygame.Rect(panel_x, panel_y, panel_w, panel_h))
+def _draw_panel(surface: pygame.Surface, *, panel_rect: pygame.Rect) -> None:
+    draw_tron_panel(surface, rect=panel_rect)
 
 
 def _selected_render_index(
@@ -81,42 +80,20 @@ def _selected_render_index(
     return 0
 
 
-def _sync_scroll_window(
-    state: Any,
-    *,
-    selected_render_index: int,
-    total_rows: int,
-    visible_rows: int,
-) -> None:
-    if selected_render_index < state.scroll_top:
-        state.scroll_top = selected_render_index
-    if selected_render_index >= state.scroll_top + visible_rows:
-        state.scroll_top = selected_render_index - visible_rows + 1
-    max_top = max(0, total_rows - visible_rows)
-    state.scroll_top = max(0, min(max_top, state.scroll_top))
-
-
 def _draw_row_selection(
     surface: pygame.Surface,
     *,
-    panel_x: int,
-    panel_w: int,
-    y: int,
-    line_h: int,
+    rect: pygame.Rect,
     flash_strength: float = 0.0,
 ) -> None:
-    hi = pygame.Surface((panel_w - 24, line_h + 4), pygame.SRCALPHA)
-    pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-    surface.blit(hi, (panel_x + 12, y - 2))
+    draw_selection_highlight(surface, rect=rect, border_radius=8)
     if flash_strength > 0.0:
-        flash = pygame.Surface((panel_w - 24, line_h + 4), pygame.SRCALPHA)
-        pygame.draw.rect(
-            flash,
-            (112, 236, 255, min(120, int(42 + (78 * flash_strength)))),
-            flash.get_rect(),
+        draw_selection_highlight(
+            surface,
+            rect=rect,
+            color=(112, 236, 255, min(120, int(42 + (78 * flash_strength)))),
             border_radius=8,
         )
-        surface.blit(flash, (panel_x + 12, y - 2))
 
 
 def _draw_binding_row(
@@ -127,19 +104,13 @@ def _draw_binding_row(
     flash_frames: int,
     selected: bool,
     scope: str,
-    panel_x: int,
-    panel_w: int,
-    y: int,
-    row_h: int,
+    draw_rect: pygame.Rect,
 ) -> None:
     color = (255, 224, 130) if selected else (228, 230, 242)
     if selected:
         _draw_row_selection(
             surface,
-            panel_x=panel_x,
-            panel_w=panel_w,
-            y=y,
-            line_h=row_h - 4,
+            rect=draw_rect.inflate(0, 4),
             flash_strength=max(0.0, min(1.0, flash_frames / 12.0)),
         )
 
@@ -147,9 +118,9 @@ def _draw_binding_row(
     desc = binding_action_description(row.action)
     key_text = format_key_tuple(binding_keys(row))
 
-    left_x = panel_x + 18
-    right_x = panel_x + panel_w - 18
-    max_key_w = max(56, int(panel_w * 0.34))
+    left_x = draw_rect.x + 8
+    right_x = draw_rect.right - 8
+    max_key_w = max(56, int(draw_rect.width * 0.34))
     key_draw = fit_text(fonts.panel_font, key_text, max_key_w)
     key_surf = fonts.panel_font.render(key_draw, True, color)
     key_x = right_x - key_surf.get_width()
@@ -157,10 +128,10 @@ def _draw_binding_row(
     label_draw = fit_text(fonts.panel_font, label, label_width)
     label_surf = fonts.panel_font.render(label_draw, True, color)
 
-    surface.blit(label_surf, (left_x, y))
-    surface.blit(key_surf, (key_x, y))
+    surface.blit(label_surf, (left_x, draw_rect.y))
+    surface.blit(key_surf, (key_x, draw_rect.y))
 
-    desc_y = y + fonts.panel_font.get_height() + 1
+    desc_y = draw_rect.y + fonts.panel_font.get_height() + 1
     icon_rect = pygame.Rect(left_x, desc_y - 1, 20, fonts.hint_font.get_height() + 2)
     draw_action_icon(surface, rect=icon_rect, action=row.action)
     desc_x = icon_rect.right + 6
@@ -170,41 +141,54 @@ def _draw_binding_row(
     surface.blit(desc_surf, (desc_x, desc_y))
 
 
-def _draw_rows(
+def _draw_binding_rows(
     surface: pygame.Surface,
     fonts,
     *,
     state: Any,
     rendered_rows: list[Any],
     binding_rows: list[Any],
-    panel_x: int,
-    panel_y: int,
-    panel_w: int,
-    panel_h: int,
-) -> int:
+    viewport_rect: pygame.Rect,
+) -> None:
     row_h = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 12
-    visible_rows = max(4, (panel_h - 20) // row_h)
+    content_height = len(rendered_rows) * row_h
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=state.scroll_offset,
+    )
     selected_render_index = _selected_render_index(state, rendered_rows, binding_rows)
-    _sync_scroll_window(
-        state,
-        selected_render_index=selected_render_index,
-        total_rows=len(rendered_rows),
-        visible_rows=visible_rows,
+    selected_top = selected_render_index * row_h
+    state.scroll_offset = ensure_scroll_offset_visible(
+        metrics.scroll_offset,
+        item_top=selected_top,
+        item_bottom=selected_top + row_h,
+        viewport_height=metrics.viewport_height,
+        content_height=content_height,
+    )
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=state.scroll_offset,
     )
 
-    draw_rows = rendered_rows[state.scroll_top : state.scroll_top + visible_rows]
-    y = panel_y + 12
+    content_rect = viewport_rect.copy()
+    content_rect.width -= metrics.reserved_width
+    previous_clip = surface.get_clip()
+    surface.set_clip(viewport_rect)
     selected_binding = binding_rows[state.selected_binding] if binding_rows else None
-    for row in draw_rows:
+    for idx, row in enumerate(rendered_rows):
+        draw_y = content_rect.y + (idx * row_h) - metrics.scroll_offset
+        draw_rect = pygame.Rect(content_rect.x, draw_y, content_rect.width, row_h)
+        if draw_rect.bottom < viewport_rect.y or draw_rect.top > viewport_rect.bottom:
+            continue
         if row.kind == "header":
             header_color = (170, 186, 224) if row.text else (132, 142, 172)
             surf = fonts.hint_font.render(row.text, True, header_color)
-            header_y = y + (row_h - surf.get_height()) // 2
-            surface.blit(surf, (panel_x + 16, header_y))
-            y += row_h
+            header_y = draw_rect.y + (row_h - surf.get_height()) // 2
+            surface.blit(surf, (draw_rect.x + 6, header_y))
             continue
         if row.binding is None:
-            y += row_h
             continue
         _draw_binding_row(
             surface,
@@ -213,13 +197,10 @@ def _draw_rows(
             flash_frames=state.flash_selected_frames,
             selected=(row.binding == selected_binding),
             scope=state.scope,
-            panel_x=panel_x,
-            panel_w=panel_w,
-            y=y,
-            row_h=row_h,
+            draw_rect=draw_rect,
         )
-        y += row_h
-    return y
+    surface.set_clip(previous_clip)
+    draw_vertical_scrollbar(surface, metrics=metrics)
 
 
 def _draw_hints(
@@ -266,23 +247,21 @@ def _draw_capture_hint(
     cap_text = fit_text(
         fonts.hint_font,
         _KEYBINDINGS_MENU_COPY["capture_template"].format(
-            binding_title=binding_title(
-                selected, state.scope
-            )
+            binding_title=binding_title(selected, state.scope)
         ),
         max_w,
     )
-    cap = fonts.hint_font.render(
-        cap_text,
-        True,
-        (255, 226, 144),
-    )
+    cap = fonts.hint_font.render(cap_text, True, (255, 226, 144))
     surface.blit(cap, ((width - cap.get_width()) // 2, hint_y + 2))
     return hint_y + cap.get_height() + 4
 
 
 def _draw_text_mode_hint(
-    surface: pygame.Surface, fonts, state: Any, hint_y: int, text_mode_label_fn
+    surface: pygame.Surface,
+    fonts,
+    state: Any,
+    hint_y: int,
+    text_mode_label_fn,
 ) -> int:
     if not state.text_mode:
         return hint_y
@@ -334,52 +313,74 @@ def draw_section_menu(
 ) -> None:
     _draw_background(surface)
     _draw_menu_header(surface, fonts, state, scope_label_fn)
-    panel_x, panel_y, panel_w, panel_h = _panel_geometry(surface)
-    _draw_panel(
-        surface, panel_x=panel_x, panel_y=panel_y, panel_w=panel_w, panel_h=panel_h
-    )
+    panel_rect = _panel_geometry(surface)
+    _draw_panel(surface, panel_rect=panel_rect)
 
-    row_h_default = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 14
-    row_h = min(
-        row_h_default,
-        max(
-            fonts.panel_font.get_height() + fonts.hint_font.get_height() + 6,
-            (panel_h - 24) // max(1, len(section_menu)),
-        ),
+    row_h = fonts.panel_font.get_height() + fonts.hint_font.get_height() + 14
+    viewport_rect = pygame.Rect(
+        panel_rect.x + 16,
+        panel_rect.y + 12,
+        panel_rect.width - 32,
+        panel_rect.height - 20,
     )
-    y = panel_y + 12
-    row_left = panel_x + 18
-    row_width = panel_w - 36
-    row_bottom = panel_y + panel_h - 8
+    content_height = len(section_menu) * row_h
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=state.scroll_offset,
+    )
+    selected_top = max(0, state.selected_section) * row_h
+    state.scroll_offset = ensure_scroll_offset_visible(
+        metrics.scroll_offset,
+        item_top=selected_top,
+        item_bottom=selected_top + row_h,
+        viewport_height=metrics.viewport_height,
+        content_height=content_height,
+    )
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=state.scroll_offset,
+    )
+    content_rect = viewport_rect.copy()
+    content_rect.width -= metrics.reserved_width
+    previous_clip = surface.get_clip()
+    surface.set_clip(viewport_rect)
     for idx, (_scope, title, description) in enumerate(section_menu):
-        if y + fonts.panel_font.get_height() > row_bottom:
-            break
+        draw_y = content_rect.y + (idx * row_h) - metrics.scroll_offset
+        draw_rect = pygame.Rect(content_rect.x, draw_y, content_rect.width, row_h)
+        if draw_rect.bottom < viewport_rect.y or draw_rect.top > viewport_rect.bottom:
+            continue
         selected = idx == state.selected_section
         color = (255, 224, 130) if selected else (228, 230, 242)
         if selected:
-            hi = pygame.Surface((panel_w - 24, row_h - 2), pygame.SRCALPHA)
-            pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=8)
-            surface.blit(hi, (panel_x + 12, y - 3))
-
+            _draw_row_selection(surface, rect=draw_rect.inflate(0, 4))
         title_surf = fonts.panel_font.render(
-            fit_text(fonts.panel_font, title, row_width), True, color
+            fit_text(fonts.panel_font, title, draw_rect.width),
+            True,
+            color,
         )
         desc_surf = fonts.hint_font.render(
-            fit_text(fonts.hint_font, description, row_width),
+            fit_text(fonts.hint_font, description, draw_rect.width),
             True,
             (168, 182, 215),
         )
-        surface.blit(title_surf, (row_left, y))
-        surface.blit(desc_surf, (row_left, y + fonts.panel_font.get_height() + 1))
-        y += row_h
+        surface.blit(title_surf, (draw_rect.x + 8, draw_rect.y))
+        surface.blit(
+            desc_surf,
+            (draw_rect.x + 8, draw_rect.y + fonts.panel_font.get_height() + 1),
+        )
+    surface.set_clip(previous_clip)
+    draw_vertical_scrollbar(surface, metrics=metrics)
 
     width, height = surface.get_size()
     hints = tuple(_KEYBINDINGS_MENU_COPY["section_hints"])
-    hy = panel_y + panel_h + 10
+    hy = panel_rect.y + panel_rect.height + 10
     line_h = fonts.hint_font.get_height() + 3
     max_lines = max(0, (height - hy - 6) // max(1, line_h))
     hint_budget = max(
-        0, max_lines - (1 if state.text_mode else 0) - (1 if state.status else 0)
+        0,
+        max_lines - (1 if state.text_mode else 0) - (1 if state.status else 0),
     )
     for line in hints[:hint_budget]:
         surf = fonts.hint_font.render(
@@ -405,22 +406,30 @@ def draw_binding_menu(
 ) -> None:
     _draw_background(surface)
     _draw_menu_header(surface, fonts, state, scope_label_fn)
-    panel_x, panel_y, panel_w, panel_h = _panel_geometry(surface)
-    _draw_panel(
-        surface, panel_x=panel_x, panel_y=panel_y, panel_w=panel_w, panel_h=panel_h
+    panel_rect = _panel_geometry(surface)
+    _draw_panel(surface, panel_rect=panel_rect)
+    viewport_rect = pygame.Rect(
+        panel_rect.x + 16,
+        panel_rect.y + 12,
+        panel_rect.width - 32,
+        panel_rect.height - 20,
     )
-    _draw_rows(
+    _draw_binding_rows(
         surface,
         fonts,
         state=state,
         rendered_rows=rendered_rows,
         binding_rows=binding_rows,
-        panel_x=panel_x,
-        panel_y=panel_y,
-        panel_w=panel_w,
-        panel_h=panel_h,
+        viewport_rect=viewport_rect,
     )
-    hint_y = _draw_hints(surface, fonts, state, panel_y, panel_h, scope_file_hint_fn)
+    hint_y = _draw_hints(
+        surface,
+        fonts,
+        state,
+        panel_rect.y,
+        panel_rect.height,
+        scope_file_hint_fn,
+    )
     hint_y = _draw_capture_hint(surface, fonts, state, binding_rows, hint_y)
     hint_y = _draw_text_mode_hint(surface, fonts, state, hint_y, text_mode_label_fn)
     _draw_status(surface, fonts, state, hint_y)

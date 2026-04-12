@@ -28,6 +28,7 @@ def process_menu_events(
                 pygame.key.stop_text_input()
                 return True
             state.section_mode = True
+            state.scroll_offset = 0
             state.capture_mode = False
             state.flash_selected_frames = 0
             state.status = "Returned to keybinding sections"

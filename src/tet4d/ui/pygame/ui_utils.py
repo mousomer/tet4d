@@ -245,6 +245,30 @@ _MENU_SLIDER_ROW_BOTTOM_PADDING = project_constant_int(
     min_value=0,
     max_value=32,
 )
+_MENU_SCROLLBAR_WIDTH = project_constant_int(
+    ("layout", "menu_scrollbar", "width"),
+    12,
+    min_value=8,
+    max_value=32,
+)
+_MENU_SCROLLBAR_GAP = project_constant_int(
+    ("layout", "menu_scrollbar", "gap"),
+    12,
+    min_value=4,
+    max_value=32,
+)
+_MENU_SCROLLBAR_MIN_HANDLE = project_constant_int(
+    ("layout", "menu_scrollbar", "min_handle_height"),
+    28,
+    min_value=12,
+    max_value=96,
+)
+_MENU_SCROLLBAR_TRACK_PADDING = project_constant_int(
+    ("layout", "menu_scrollbar", "track_padding"),
+    4,
+    min_value=0,
+    max_value=20,
+)
 
 
 @dataclass(frozen=True)
@@ -261,6 +285,18 @@ class SliderRowLayout:
     text_top_padding: int
     slider_top_gap: int
     row_bottom_padding: int
+
+
+@dataclass(frozen=True)
+class VerticalScrollMetrics:
+    viewport_height: int
+    content_height: int
+    scroll_offset: int
+    max_scroll: int
+    shows_scrollbar: bool
+    reserved_width: int
+    track_rect: pygame.Rect
+    handle_rect: pygame.Rect
 
 
 def menu_slider_row_min_total_width() -> int:
@@ -391,6 +427,123 @@ def draw_selection_highlight(
     hi = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
     pygame.draw.rect(hi, color, hi.get_rect(), border_radius=border_radius)
     surface.blit(hi, rect.topleft)
+
+
+def menu_scrollbar_reserved_width(*, shows_scrollbar: bool) -> int:
+    if not shows_scrollbar:
+        return 0
+    return int(_MENU_SCROLLBAR_WIDTH) + int(_MENU_SCROLLBAR_GAP)
+
+
+def clamp_scroll_offset(
+    scroll_offset: int,
+    *,
+    content_height: int,
+    viewport_height: int,
+) -> int:
+    max_scroll = max(0, int(content_height) - max(0, int(viewport_height)))
+    return max(0, min(max_scroll, int(scroll_offset)))
+
+
+def ensure_scroll_offset_visible(
+    scroll_offset: int,
+    *,
+    item_top: int,
+    item_bottom: int,
+    viewport_height: int,
+    content_height: int,
+) -> int:
+    safe_offset = clamp_scroll_offset(
+        scroll_offset,
+        content_height=content_height,
+        viewport_height=viewport_height,
+    )
+    if item_top < safe_offset:
+        return clamp_scroll_offset(
+            item_top,
+            content_height=content_height,
+            viewport_height=viewport_height,
+        )
+    if item_bottom > safe_offset + viewport_height:
+        return clamp_scroll_offset(
+            item_bottom - viewport_height,
+            content_height=content_height,
+            viewport_height=viewport_height,
+        )
+    return safe_offset
+
+
+def compute_vertical_scroll_metrics(
+    *,
+    viewport_rect: pygame.Rect,
+    content_height: int,
+    scroll_offset: int,
+) -> VerticalScrollMetrics:
+    viewport_height = max(0, int(viewport_rect.height))
+    safe_content_height = max(0, int(content_height))
+    max_scroll = max(0, safe_content_height - viewport_height)
+    safe_offset = max(0, min(max_scroll, int(scroll_offset)))
+    shows_scrollbar = safe_content_height > viewport_height and viewport_height > 0
+    reserved_width = menu_scrollbar_reserved_width(shows_scrollbar=shows_scrollbar)
+    track_rect = pygame.Rect(0, 0, 0, 0)
+    handle_rect = pygame.Rect(0, 0, 0, 0)
+    if shows_scrollbar:
+        track_rect = pygame.Rect(
+            viewport_rect.right + int(_MENU_SCROLLBAR_GAP),
+            viewport_rect.y + int(_MENU_SCROLLBAR_TRACK_PADDING),
+            int(_MENU_SCROLLBAR_WIDTH),
+            max(1, viewport_rect.height - (int(_MENU_SCROLLBAR_TRACK_PADDING) * 2)),
+        )
+        visible_ratio = max(
+            0.0,
+            min(1.0, viewport_height / max(1, safe_content_height)),
+        )
+        handle_height = max(
+            int(_MENU_SCROLLBAR_MIN_HANDLE),
+            int(round(track_rect.height * visible_ratio)),
+        )
+        handle_height = min(handle_height, track_rect.height)
+        travel = max(0, track_rect.height - handle_height)
+        handle_top = track_rect.y
+        if max_scroll > 0 and travel > 0:
+            handle_top += int(round((safe_offset / max_scroll) * travel))
+        handle_rect = pygame.Rect(
+            track_rect.x,
+            handle_top,
+            track_rect.width,
+            handle_height,
+        )
+    return VerticalScrollMetrics(
+        viewport_height=viewport_height,
+        content_height=safe_content_height,
+        scroll_offset=safe_offset,
+        max_scroll=max_scroll,
+        shows_scrollbar=shows_scrollbar,
+        reserved_width=reserved_width,
+        track_rect=track_rect,
+        handle_rect=handle_rect,
+    )
+
+
+def draw_vertical_scrollbar(
+    surface: pygame.Surface,
+    *,
+    metrics: VerticalScrollMetrics,
+    track_color: tuple[int, int, int] = (36, 54, 92),
+    handle_color: tuple[int, int, int] = (112, 236, 255),
+    border_color: tuple[int, int, int] = (16, 24, 42),
+) -> None:
+    if not metrics.shows_scrollbar:
+        return
+    pygame.draw.rect(surface, track_color, metrics.track_rect, border_radius=6)
+    pygame.draw.rect(
+        surface,
+        border_color,
+        metrics.track_rect,
+        1,
+        border_radius=6,
+    )
+    pygame.draw.rect(surface, handle_color, metrics.handle_rect, border_radius=6)
 
 
 def draw_panel_frame(

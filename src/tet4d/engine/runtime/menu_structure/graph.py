@@ -29,12 +29,21 @@ def collect_actions_for_menu_ids(
     *,
     menu_ids: set[str],
 ) -> set[str]:
-    return _collect_item_values_for_menu_ids(
+    action_ids = _collect_item_values_for_menu_ids(
         menus,
         menu_ids=menu_ids,
         item_type="action",
         item_field="action_id",
     )
+    action_ids.update(
+        _collect_item_values_for_menu_ids(
+            menus,
+            menu_ids=menu_ids,
+            item_type="legacy_dispatch",
+            item_field="action_id",
+        )
+    )
+    return action_ids
 
 
 def collect_route_ids_for_menu_ids(

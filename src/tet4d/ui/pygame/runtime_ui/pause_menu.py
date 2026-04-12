@@ -299,6 +299,13 @@ def _run_pause_settings_hub(
     if not result.keep_running:
         _set_pause_status(state, False, "Settings exited application loop")
         return result.screen, False
+    if result.dispatched_action_id:
+        _set_pause_status(
+            state,
+            False,
+            "Legacy settings destinations are only available from the launcher",
+        )
+        return result.screen, True
     _set_pause_status(state, True, "Returned from settings")
     return result.screen, True
 

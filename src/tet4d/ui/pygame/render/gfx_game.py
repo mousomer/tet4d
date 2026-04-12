@@ -16,7 +16,7 @@ from tet4d.engine.ui_logic.view_modes import GridMode
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     rotate_point,
-    transform_for_cell_fragment,
+    transform_relics_for_animation,
     transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -300,7 +300,9 @@ def _draw_menu_setting_row(
         )
 
     if is_selected:
-        highlight_rect = pygame.Rect(option_x - 8, option_y - 4, option_w + 16, row_height)
+        highlight_rect = pygame.Rect(
+            option_x - 8, option_y - 4, option_w + 16, row_height
+        )
         highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
         pygame.draw.rect(
             highlight_surf,
@@ -343,9 +345,15 @@ def _draw_menu_setting_row(
             ),
             fraction=max(
                 0.0,
-                min(1.0, (int(raw_value) - int(min_val)) / max(1, int(max_val) - int(min_val))),
+                min(
+                    1.0,
+                    (int(raw_value) - int(min_val))
+                    / max(1, int(max_val) - int(min_val)),
+                ),
             ),
-            flash_strength=max(0.0, min(1.0, flash_frames / 12.0)) if is_selected else 0.0,
+            flash_strength=max(0.0, min(1.0, flash_frames / 12.0))
+            if is_selected
+            else 0.0,
         )
     return row_height
 
@@ -370,14 +378,22 @@ def _draw_menu_settings_panel(
     if menu_fields:
         labels = [
             f"{label}:  "
-            + (value_formatter(attr_name, getattr(settings, attr_name)) if value_formatter else str(getattr(settings, attr_name)))
+            + (
+                value_formatter(attr_name, getattr(settings, attr_name))
+                if value_formatter
+                else str(getattr(settings, attr_name))
+            )
             for label, attr_name, _min_val, _max_val in menu_fields
         ]
         row_heights = [
             _menu_row_height(
                 fonts.menu_font,
                 label=label,
-                value_text=(value_formatter(attr_name, getattr(settings, attr_name)) if value_formatter else str(getattr(settings, attr_name))),
+                value_text=(
+                    value_formatter(attr_name, getattr(settings, attr_name))
+                    if value_formatter
+                    else str(getattr(settings, attr_name))
+                ),
                 value=getattr(settings, attr_name),
                 min_value=min_val,
                 max_value=max_val,
@@ -791,9 +807,7 @@ def _shade_color(
     delta: float = 0.0,
     scale: float = 1.0,
 ) -> tuple[int, int, int]:
-    return tuple(
-        _clamp_channel((channel * scale) + delta) for channel in color
-    )
+    return tuple(_clamp_channel((channel * scale) + delta) for channel in color)
 
 
 def _rotated_cell_quad_points(
@@ -1176,9 +1190,7 @@ def _endgame_cell_quad_points_2d(
             center[1] + rotated[1],
             0.0,
         )
-        for rotated in (
-            rotate_point(point, rotation_deg) for point in local_corners
-        )
+        for rotated in (rotate_point(point, rotation_deg) for point in local_corners)
     )
 
 
@@ -1191,7 +1203,7 @@ def _draw_endgame_board_2d(
 ) -> None:
     pygame.draw.rect(surface, (20, 20, 50), board_rect)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    drag = float(endgame_animation.tuning.drag_per_second)
+    drag = float(endgame_animation.tuning.burst_drag_per_second)
 
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
@@ -1216,19 +1228,18 @@ def _draw_endgame_board_2d(
             2,
         )
 
-    for cell_fragment in endgame_animation.cell_fragments:
-        position, rotation_deg, alpha = transform_for_cell_fragment(
-            cell_fragment,
-            elapsed_ms=float(endgame_animation.elapsed_ms),
-            drag_per_second=drag,
-        )
+    relic_transforms = transform_relics_for_animation(endgame_animation)
+    for cell_relic, (position, rotation_deg, alpha) in zip(
+        endgame_animation.cell_relics,
+        relic_transforms,
+    ):
         if alpha <= 0.0:
             continue
         quad_points = _endgame_screen_points_2d(
             board_offset,
             _endgame_cell_quad_points_2d(center=position, rotation_deg=rotation_deg),
         )
-        color = color_for_cell(int(cell_fragment.color_id))
+        color = color_for_cell(int(cell_relic.color_id))
         fill_alpha = max(0, min(255, int(round(255 * alpha))))
         outline_alpha = max(0, min(255, int(round(220 * alpha))))
         shadow_points = tuple((x + 2.0, y + 2.0) for x, y in quad_points)

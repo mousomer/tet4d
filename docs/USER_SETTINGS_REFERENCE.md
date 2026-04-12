@@ -11,30 +11,30 @@ Scope:
 - Fails generation when a persisted setting is not assigned to a documented bucket.
 
 ## Global settings
-### Profiles
-Keybinding profile selection, creation, rename, delete, save, and load.
+### Keybinding profiles
+Persisted active keybinding profile selection and related profile defaults.
 - `active_profile`: `"small"`; string; min length: 1; choices: 0=full, 1=macbook, 2=small, 3=tiny
 
 ### Display
-Fullscreen/windowed mode, window size, locked-cell transparency baseline, and display apply/reset actions.
+Fullscreen, windowed size, and display application.
 - `display.fullscreen`: `false`; boolean
 - `display.windowed_size`: `[1200, 760]`; array; items: 2; item bounds: integer >= 320, integer >= 240
 - `display.overlay_transparency`: `0.25`; number; range: 0.0..0.9
 
 ### Audio
-Master volume, SFX volume, mute toggle, and persistence behavior.
+Master volume, SFX volume, and mute.
 - `audio.master_volume`: `0.8`; number; range: 0.0..1.0
 - `audio.sfx_volume`: `0.7`; number; range: 0.0..1.0
 - `audio.mute`: `false`; boolean
 
 ### Analytics
-Score analyzer logging toggle and telemetry output settings.
+Score logging and related persisted analysis controls.
 - `analytics.score_logging_enabled`: `false`; boolean
 
 
 ## 2D settings
-### Gameplay Setup
-Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
+### Gameplay setup
+Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.2d.width`: `10`; integer; min: 4
 - `settings.2d.height`: `20`; integer; min: 8
 - `settings.2d.explorer_width`: `8`
@@ -44,13 +44,15 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.2d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.2d.speed_level`: `1`; integer; range: 1..10
 
-### Game
-Shared run controls across 2D/3D/4D, including seed and random-type selection.
+### Gameplay
+Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
 - `settings.2d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.2d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
+- `settings.2d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
+- `settings.2d.endgame_interaction_mode`: `"none"`; string; options: none, collide
 - `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.2d.lines_per_level`: `10`
 - `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
@@ -59,8 +61,8 @@ Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.2d.translation_animation_duration_ms`: `120`; integer; range: 0..600
 - `settings.2d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
-### Bot Options
-Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
+### Bot
+Bot mode, algorithm, profile, speed, and budget defaults.
 - `settings.2d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
 - `settings.2d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
 - `settings.2d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA
@@ -69,8 +71,8 @@ Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
 
 
 ## 3D settings
-### Gameplay Setup
-Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
+### Gameplay setup
+Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.3d.width`: `6`; integer; min: 4
 - `settings.3d.height`: `18`; integer; min: 8
 - `settings.3d.depth`: `6`; integer; min: 2
@@ -82,12 +84,14 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.3d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.speed_level`: `1`; integer; range: 1..10
 
-### Game
-Shared run controls across 2D/3D/4D, including seed and random-type selection.
+### Gameplay
+Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
 - `settings.3d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.3d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
+- `settings.3d.endgame_interaction_mode`: `"none"`; string; options: none, collide
 - `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.3d.lines_per_level`: `10`
 - `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
@@ -96,8 +100,8 @@ Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.3d.translation_animation_duration_ms`: `120`; integer; range: 0..600
 - `settings.3d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
-### Bot Options
-Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
+### Bot
+Bot mode, algorithm, profile, speed, and budget defaults.
 - `settings.3d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
 - `settings.3d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
 - `settings.3d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA
@@ -106,8 +110,8 @@ Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
 
 
 ## 4D settings
-### Gameplay Setup
-Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level.
+### Gameplay setup
+Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.4d.width`: `10`; integer; min: 4
 - `settings.4d.height`: `20`; integer; min: 8
 - `settings.4d.depth`: `6`; integer; min: 2
@@ -121,12 +125,14 @@ Dimension-specific board size, piece set, safe topology preset, challenge layers
 - `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.speed_level`: `1`; integer; range: 1..10
 
-### Game
-Shared run controls across 2D/3D/4D, including seed and random-type selection.
+### Gameplay
+Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
 - `settings.4d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.4d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
+- `settings.4d.endgame_interaction_mode`: `"none"`; string; options: none, collide
 - `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
 - `settings.4d.lines_per_level`: `10`
 - `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
@@ -135,8 +141,8 @@ Shared run controls across 2D/3D/4D, including seed and random-type selection.
 - `settings.4d.translation_animation_duration_ms`: `120`; integer; range: 0..600
 - `settings.4d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
-### Bot Options
-Bot mode, algorithm, profile, speed, budget, and reset/save behavior.
+### Bot
+Bot mode, algorithm, profile, speed, and budget defaults.
 - `settings.4d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
 - `settings.4d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
 - `settings.4d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA

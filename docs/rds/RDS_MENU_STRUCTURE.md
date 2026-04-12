@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-04-10
+Last verified: 2026-04-12
 
 ## 1. Scope
 
@@ -105,12 +105,18 @@ Main Menu
 |   `-- Help / FAQ
 |-- Topology Playground
 |-- Settings
-|   |-- Game
+|   |-- Game Settings
+|   |   |-- Gameplay
+|   |   |-- Board / Geometry
+|   |   |-- Movement / Rotation
+|   |   |-- Locked-cell transparency
+|   |   |-- Save
+|   |   |-- Reset defaults
+|   |   `-- Difficulty / Pace
+|   |-- Endgame Effects
 |   |-- Display
 |   |-- Audio
-|   |-- Keybindings
-|   |-- Keyboard Profiles
-|   |   `-- Current Keyboard Profiles...
+|   |-- Keyboard Bindings
 |   `-- Legacy Topology Editor Menu
 `-- Quit
 ```
@@ -121,7 +127,7 @@ Main Menu
 Pause Menu
 |-- Resume
 |-- Restart Run
-|-- Settings (same shared sections as launcher)
+|-- Settings (same shared subtree as launcher)
 |-- Keybindings
 |-- Help
 |-- Leaderboard
@@ -140,7 +146,7 @@ Pause Menu
 6. Setup screens must expose the safe topology preset selector:
 7. `bounded`,`wrap_all`,`invert_all`.
 8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
-9. Shared settings hub owns `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the hub must not advertise full custom-topology editing.
+9. Shared settings pages own `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the settings tree must not advertise full custom-topology editing.
 10. `Play Last Custom Topology` and the root `Topology Playground` action are the direct launcher routes into custom topology play/edit flows.
 11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
 12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings`.
@@ -149,9 +155,9 @@ Pause Menu
 15. `Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
     sibling destinations.
-16. `Settings -> Keybindings` is for persistent input configuration only; controls
-    reference/help content must stay under `Tutorials` or another explicit
-    learning/reference surface.
+16. `Settings -> Keyboard Bindings` is for persistent input configuration
+    only; controls reference/help content must stay under
+    `Tutorials` or another explicit learning/reference surface.
 
 ## 5. Layout and Readability Requirements
 
@@ -168,6 +174,9 @@ Pause Menu
 6. Shared shell backgrounds should keep the dark high-contrast base but add a
    restrained grid/glow treatment that reads as lightly Tron-inspired rather
    than a flat gradient.
+7. When menu content exceeds the available panel height, the menu must switch
+   to a shared scrolling viewport with reserved scrollbar width rather than
+   clipping rows or shrinking text.
 5. The accepted Topology Playground shell uses:
 6. compact top bar
 7. contextual left sidebar
@@ -210,6 +219,9 @@ Pause Menu
    launcher/setup/pause/settings shells; if the larger slider requires more
    room, the panel or row allocation must widen or grow vertically rather than
    clipping text.
+7. Overflowing settings/keybindings pages must show a shared vertical
+   scrollbar only when content exceeds the viewport, and navigation must keep
+   the focused row visible through auto-scroll.
 
 ## 6. Navigation and Interaction Model
 
@@ -310,7 +322,9 @@ Add persistent settings file:
 10. `Audio`and`Display`remain top-level in`Settings` while they stay below threshold.
 11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
 12. `display_overlay_transparency` is treated as a gameplay-facing readability
-    control and belongs under `Settings -> Game`, not `Settings -> Display`.
+    control and belongs under `Settings -> Game Settings`; the authored
+    `Visual / Animation` bucket may exist for editing convenience but must
+    normalize away before runtime if it would only host that single setting.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -400,8 +414,12 @@ Manual tests:
 
 1. Shared startup flow is implemented via unified launcher and mode setup paths.
 2. Dedicated controls-settings screen is implemented (backed by `src/tet4d/ui/pygame/menu/keybindings_menu.py`) for persistent input configuration.
-3. Unified settings hub (`audio/display/game/advanced/analytics` via one shared surface) is implemented.
-4. Display settings (`fullscreen`,`windowed size`,`reset`) are included in the unified hub.
+3. One canonical authored menu config now defines launcher, pause, settings,
+   and keybindings structure through `config/menu/structure.json`, and runtime
+   consumers read the compiled normalized graph rather than the raw tree.
+4. Settings uses one shared subtree with `Game Settings`, `Endgame Effects`,
+   `Display`, and `Audio`, plus direct runtime `Keyboard Bindings` and
+   `Legacy Topology Editor Menu` entries after normalization.
 5. Shared display-state manager handles layout refresh after display-mode changes.
 6. Fullscreen return-to-menu shrinkage issue is resolved.
 ## 13. Acceptance Criteria
@@ -417,14 +435,27 @@ Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu root includes `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`, and `Quit`.
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
-4. `Settings` submenu uses short section labels (`Game`,`Display`,`Audio`,`Keybindings`,`Keyboard Profiles`,`Legacy Topology Editor Menu`) while reusing the shared settings/keybindings surfaces underneath, with `Advanced gameplay` now rendered inline inside `Game` settings rather than as a separate submenu.
+4. `Settings` now routes into the canonical subtree `Game Settings`,
+   `Endgame Effects`, `Display`, and `Audio`, plus direct runtime
+   `Keyboard Bindings` and `Legacy Topology Editor Menu` entries.
+5. `Game Settings` is split into `Gameplay`, `Board / Geometry`,
+   `Movement / Rotation`, direct `Locked-cell transparency`, and
+   `Difficulty / Pace`; the authored one-row `Visual / Animation` page is
+   allowed only in config and must collapse away before runtime use.
+6. `Settings -> Endgame Effects` keeps the persistent relic-field preset and
+   interaction-mode controls together in one dedicated page without creating a
+   separate top-level menu.
 5. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
 6. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 7. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
 7. Defaults and menu structures are externalized:
 8. `config/menu/defaults.json`
 9. `config/menu/structure.json`
-10. settings-hub row layout is config-defined in `config/menu/structure.json` (`settings_hub_layout_rows`) and consumed by `src/tet4d/ui/pygame/launch/settings_hub_model.py` + `src/tet4d/ui/pygame/launch/launcher_settings.py`.
+10. typed settings/keybindings rows and page hierarchy are config-defined in
+    `config/menu/structure.json` (`menus` + `menu_entrypoints`) and consumed by
+    `src/tet4d/ui/pygame/launch/settings_hub_model.py`,
+    `src/tet4d/ui/pygame/launch/launcher_settings.py`, and
+    `src/tet4d/ui/pygame/menu/keybindings_menu_model.py`.
 11. gameplay option labels used across setup/settings (for example random mode) are sourced from `config/menu/structure.json` (`settings_option_labels`) without Python fallback literals.
 12. setup hint copy for `2D/3D/4D` is sourced from
     `config/menu/structure.json` (`setup_hints`) and consumed by `frontend_nd_setup.py`.
@@ -433,9 +464,10 @@ Implemented in code:
 14. launcher/settings/keybindings/bot/setup UI copy is sourced from
     `config/menu/structure.json` (`ui_copy`) and consumed via
     `menu_structure_schema.py` + `menu_config.py` accessors in the UI adapters.
-15. launcher filtered settings sections and launcher settings routes are sourced
-    from `config/menu/structure.json` (`settings_sections`,
-    `launcher_settings_routes`) rather than Python-owned maps.
+15. launcher/settings/keybindings structure is sourced only from
+    `config/menu/structure.json`; no parallel Python-owned settings sections,
+    launcher settings routes, or keyboard-bindings page trees remain as
+    structural authorities.
 16. User overrides remain in `state/menu_settings.json`.
 17. If the user settings file is missing/corrupt, runtime falls back to external defaults (not hardcoded literals).
 
@@ -465,10 +497,9 @@ Stabilization details:
 23. Top-level IA is frozen to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, and `Quit`.
 24. `Tutorials` keeps `Interactive Tutorials`, `How to Play`, `Controls Reference`, and `Help / FAQ` as explicit siblings rather than collapsing help into tutorials.
 25. `Settings -> Keybindings` and `Tutorials -> Controls Reference` are distinct destinations and must not share one ambiguous configuration/reference label.
-26. The launcher settings config may retain a single profile-placeholder row for
-    schema stability, but it must live inside `Settings -> Keyboard Profiles`,
-    and the live launcher must expand that submenu into the current keyboard
-    profiles at runtime instead of rendering a dead generic `Profiles` entry.
+26. Keyboard profile management now lives inside the dedicated keyboard
+    bindings editor; the canonical settings tree must not reintroduce a
+    parallel launcher-only `Keyboard Profiles` submenu.
 26. `Leaderboard` and `Bot` remain off the root layer and off `Settings`; they live in the play-adjacent launcher flow instead.
 27. Launcher subtitles and route-action mapping are config-driven in
     `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
@@ -523,13 +554,21 @@ Stabilization details:
 28. Very-small-window readability tuning for controls/help layouts is implemented.
 29. Maintainability decomposition follow-up for keybinding modules is implemented (`key_display.py`,`keybindings_menu_model.py`, dead-control-line cleanup).
 30. Help coverage expansion and menu parity pages are implemented.
-31. Settings split-policy enforcement is implemented in runtime config validation (`menu_config.py`+`settings_category_metrics`).
+31. Settings split-policy enforcement is implemented in runtime config
+    validation and the canonical menu schema; top-level settings categories and
+    game-settings subpages must remain aligned with the shared menu graph.
 32. Source-of-truth status is synchronized via `docs/BACKLOG.md`.
 33. Closed: advanced topology-designer submenu controls are implemented with hidden-by-default profile selection.
 34. Closed (`BKL-P2-009`): duplicate pause-only settings implementation removed; pause `Settings` now routes through the same shared settings hub used by launcher (`Audio`,`Display`,`Game`,`Analytics`,`Save`,`Reset`,`Back`).
-35. Closed (`BKL-P2-010`): launcher settings rows are now config-driven via `settings_hub_layout_rows` in `config/menu/structure.json`; hardcoded settings row definitions were removed from `src/tet4d/ui/pygame/launch/launcher_settings.py`.
-36. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
-37. Closed (`BKL-P2-023`): Topology Lab interactive workflow is implemented with config-backed copy/layout (`config/topology/lab_menu.json`) and runtime save/export actions (`src/tet4d/ui/pygame/launch/topology_lab_menu.py`).
+35. Closed (`2026-04-12`): menu structure is now sourced from one canonical
+    config tree in `config/menu/structure.json`; the older split
+    `settings_hub_layout_rows`, `settings_sections`, and
+    `launcher_settings_routes` authorities are retired from live config.
+36. Closed (`2026-04-12`): oversized settings and keybindings pages now share
+    one overflow viewport with auto-scroll and a shared scrollbar instead of
+    silently clipping off-screen rows.
+37. Closed (`BKL-P2-022`): menu graph modularization implemented (`menus` graph + `MenuRunner` + `ActionRegistry` + lint/contract hooks), with launcher and pause migrated off hardcoded trees.
+38. Closed (`BKL-P2-023`): Topology Lab interactive workflow is implemented with config-backed copy/layout (`config/topology/lab_menu.json`) and runtime save/export actions (`src/tet4d/ui/pygame/launch/topology_lab_menu.py`).
 
 ## 16. Menu Rehaul v2 (Implemented Background, `BKL-P1-006`)
 
@@ -554,7 +593,7 @@ Implemented IA delta:
 2. `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, `Quit`.
 3. Keep dimension selection under `Play`, keep `Tutorials` as the learning/support umbrella, and keep custom-topology editing under `Topology Playground` without adding extra root clutter.
 4. Keep settings/reference separation explicit:
-5. `Settings -> Controls` means configuration,
+5. `Settings -> Keyboard Bindings` means configuration,
 6. `Tutorials -> Controls Reference` means reference/help.
 7. Keep `Leaderboard` and `Bot` play-adjacent instead of pushing them into `Settings`.
 8. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`) inside per-mode setup screens only.

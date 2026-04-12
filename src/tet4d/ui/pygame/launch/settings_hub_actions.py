@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import pygame
 
+from tet4d.engine.runtime.endgame_presets import (
+    ENDGAME_INTERACTION_MODES,
+    ENDGAME_PRESET_IDS,
+)
 from tet4d.engine.runtime.topology_cache import (
     clear_topology_cache,
     topology_cache_usage,
@@ -47,6 +51,8 @@ from .settings_hub_model import (
     _NUMERIC_TEXT_MAX_LENGTH,
     _RANDOM_MODE_DEFAULT,
     _RANDOM_MODE_LABELS,
+    _ENDGAME_INTERACTION_MODE_DEFAULT,
+    _ENDGAME_PRESET_DEFAULT,
     _ROTATION_ANIMATION_MODE_DEFAULT,
     _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
     _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
@@ -219,6 +225,8 @@ def _save_unified_settings(
         random_mode_index=int(state.random_mode_index),
         topology_advanced=int(state.topology_advanced),
         kick_level_index=int(state.kick_level_index),
+        endgame_preset_id=str(state.endgame_preset_id),
+        endgame_interaction_mode=str(state.endgame_interaction_mode),
         auto_speedup_enabled=int(state.auto_speedup_enabled),
         lines_per_level=int(state.lines_per_level),
         rotation_animation_mode=str(state.rotation_animation_mode),
@@ -234,6 +242,8 @@ def _save_unified_settings(
         state.original_random_mode_index = int(state.random_mode_index)
         state.original_topology_advanced = int(state.topology_advanced)
         state.original_kick_level_index = int(state.kick_level_index)
+        state.original_endgame_preset_id = str(state.endgame_preset_id)
+        state.original_endgame_interaction_mode = str(state.endgame_interaction_mode)
         state.original_auto_speedup_enabled = int(state.auto_speedup_enabled)
         state.original_lines_per_level = int(state.lines_per_level)
         state.original_rotation_animation_mode = str(state.rotation_animation_mode)
@@ -276,6 +286,8 @@ def _reset_unified_settings(
     state.random_mode_index = _RANDOM_MODE_DEFAULT
     state.topology_advanced = _TOPOLOGY_ADVANCED_DEFAULT
     state.kick_level_index = _KICK_LEVEL_DEFAULT
+    state.endgame_preset_id = _ENDGAME_PRESET_DEFAULT
+    state.endgame_interaction_mode = _ENDGAME_INTERACTION_MODE_DEFAULT
     state.auto_speedup_enabled = _AUTO_SPEEDUP_DEFAULT
     state.lines_per_level = _LINES_PER_LEVEL_DEFAULT
     state.rotation_animation_mode = _ROTATION_ANIMATION_MODE_DEFAULT
@@ -351,8 +363,7 @@ def _adjust_unified_display_row(
     if row_key == "display_overlay_transparency":
         display_defaults = default_display_settings()
         state.overlay_transparency = clamp_overlay_transparency(
-            state.overlay_transparency
-            + delta_sign * float(OVERLAY_TRANSPARENCY_STEP),
+            state.overlay_transparency + delta_sign * float(OVERLAY_TRANSPARENCY_STEP),
             default=float(display_defaults["overlay_transparency"]),
         )
         _flash_row(state, row_key)
@@ -380,6 +391,22 @@ def _adjust_unified_gameplay_row(
         return True
     if row_key == "game_topology_advanced":
         state.topology_advanced = 0 if int(state.topology_advanced) else 1
+        _flash_row(state, row_key)
+        return True
+    if row_key == "endgame_preset_id":
+        state.endgame_preset_id = _cycle_text_option(
+            current=str(state.endgame_preset_id),
+            values=ENDGAME_PRESET_IDS,
+            delta_sign=delta_sign,
+        )
+        _flash_row(state, row_key)
+        return True
+    if row_key == "endgame_interaction_mode":
+        state.endgame_interaction_mode = _cycle_text_option(
+            current=str(state.endgame_interaction_mode),
+            values=ENDGAME_INTERACTION_MODES,
+            delta_sign=delta_sign,
+        )
         _flash_row(state, row_key)
         return True
     return _adjust_advanced_gameplay_value(state, row_key, delta_sign)
@@ -464,6 +491,21 @@ def _adjust_advanced_gameplay_value(
     if handler is None:
         return False
     return bool(handler())
+
+
+def _cycle_text_option(
+    *,
+    current: str,
+    values: tuple[str, ...],
+    delta_sign: int,
+) -> str:
+    if not values:
+        return current
+    try:
+        index = values.index(str(current))
+    except ValueError:
+        index = 0
+    return str(values[(index + delta_sign) % len(values)])
 
 
 def _adjust_kick_level_index(

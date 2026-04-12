@@ -21,7 +21,7 @@ from tet4d.ui.pygame.projection3d import (
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
-    transform_for_cell_fragment,
+    transform_relics_for_animation,
     transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -602,7 +602,7 @@ def _draw_endgame_board_3d(
     center_px = (board_rect.centerx, board_rect.centery)
     params = _projection_params_from_context(context)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    drag = float(endgame_animation.tuning.drag_per_second)
+    drag = float(endgame_animation.tuning.burst_drag_per_second)
 
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
@@ -625,17 +625,16 @@ def _draw_endgame_board_3d(
         )
 
     fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
-    for cell_fragment in endgame_animation.cell_fragments:
-        position, rotation_deg, alpha = transform_for_cell_fragment(
-            cell_fragment,
-            elapsed_ms=float(endgame_animation.elapsed_ms),
-            drag_per_second=drag,
-        )
+    relic_transforms = transform_relics_for_animation(endgame_animation)
+    for cell_relic, (position, rotation_deg, alpha) in zip(
+        endgame_animation.cell_relics,
+        relic_transforms,
+    ):
         if alpha <= 0.0:
             continue
         faces = build_oriented_cube_faces(
             center=position,
-            color=color_for_cell_3d(cell_fragment.color_id),
+            color=color_for_cell_3d(cell_relic.color_id),
             project_raw=lambda raw: project_raw_point_helper(
                 raw,
                 dims,
@@ -684,9 +683,7 @@ def _draw_side_panel(
         else float(camera.pitch_deg)
     )
     zoom_value = (
-        float(frozen_context.zoom)
-        if frozen_context is not None
-        else float(camera.zoom)
+        float(frozen_context.zoom) if frozen_context is not None else float(camera.zoom)
     )
     extra_state_lines = [
         f"Dims: {state.config.dims}",

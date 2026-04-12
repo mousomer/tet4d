@@ -6,6 +6,12 @@ from tet4d.engine.gameplay.rotation_anim import (
     ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
     ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
 )
+from tet4d.engine.runtime.endgame_presets import (
+    ENDGAME_INTERACTION_NONE,
+    ENDGAME_PRESET_DEFAULT_ORBIT,
+    normalize_endgame_interaction_mode,
+    normalize_endgame_preset_id,
+)
 
 from .. import settings_schema as _settings_schema
 from ..runtime_config import kick_level_names
@@ -33,6 +39,8 @@ _SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, Any], ...] = (
     ("random_mode_index", clamp_toggle_index, 0),
     ("topology_advanced", clamp_toggle_index, 0),
     ("kick_level_index", None, 0),
+    ("endgame_preset_id", None, ENDGAME_PRESET_DEFAULT_ORBIT),
+    ("endgame_interaction_mode", None, ENDGAME_INTERACTION_NONE),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
     ("lines_per_level", clamp_lines_per_level, 10),
     (
@@ -95,6 +103,18 @@ def coerce_shared_gameplay_settings(
         if setting_name == "kick_level_index":
             normalized[setting_name] = int(
                 clamp_kick_level_index(raw.get(setting_name), default=default_value)
+            )
+            continue
+        if setting_name == "endgame_preset_id":
+            normalized[setting_name] = normalize_endgame_preset_id(
+                raw.get(setting_name),
+                default=str(default_value),
+            )
+            continue
+        if setting_name == "endgame_interaction_mode":
+            normalized[setting_name] = normalize_endgame_interaction_mode(
+                raw.get(setting_name),
+                default=str(default_value),
             )
             continue
         if setting_name == "rotation_animation_mode":

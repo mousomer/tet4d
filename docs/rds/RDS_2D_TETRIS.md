@@ -65,7 +65,7 @@ Define requirements for the classic `(x, y)` mode implemented by:
 4. Grid off mode must keep a visible board shadow.
 5. Line clear should be animated.
 6. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
-7. Terminal game over must enter a dedicated frozen-snapshot animation phase where locked-cell squares and split grid/edge shell segments crack apart and disperse deterministically.
+7. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares survive as deterministic bounded planar relic loops driven by the shared endgame preset system (`wrap_all`, `invert_all`, `sphere`, plus the generic fallback orbit preset) and the separate `none` / `collide` interaction mode.
 
 ## 6. Scoring
 
@@ -95,7 +95,7 @@ Minimum required tests for 2D gameplay changes:
 5. scoring matrix checks,
 6. random/debug piece spawn stability checks.
 7. Bounded/wrap/invert kick-legality parity checks.
-8. Frozen-snapshot endgame animation tests covering deterministic fragment generation, gameplay-freeze handoff, and sparse/dense/near-full render-path regression.
+8. Frozen-snapshot endgame animation tests covering deterministic shell/relic generation, gameplay-freeze handoff, shatter-to-relic-field transition, preset-specific persistent motion, bounded forever-field motion, collision determinism, and sparse/dense/near-full render-path regression.
 
 Relevant test files:
 - `tests/unit/engine/test_game2d.py`
@@ -111,4 +111,4 @@ Relevant test files:
 5. Random-cell 2D piece set is selectable and playable without crashes.
 6. Debug 2D piece set is selectable and supports easy line-fill validation.
 7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
-8. Terminal animation stays simple and readable while remaining snapshot-driven and deterministic.
+8. Terminal animation stays simple and readable while remaining snapshot-driven, deterministic, and permanently populated by bounded planar relic motion after the shell dies.

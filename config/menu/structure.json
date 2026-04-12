@@ -1,14 +1,15 @@
 {
   "menu_entrypoints": {
     "launcher": "launcher_root",
-    "pause": "pause_root"
+    "pause": "pause_root",
+    "settings": "settings_root",
+    "keybindings": "keybindings_root"
   },
   "launcher_subtitles": {
     "launcher_root": "Play, continue, open Tutorials, or jump straight into the Topology Playground.",
     "launcher_play": "Play a standard run, reopen the last custom topology, or use play-adjacent tools.",
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
-    "launcher_settings_root": "Open game, display, audio, keybindings, keyboard profiles, or the legacy topology editor compatibility menu.",
     "default": "Up/Down select and Enter open actions."
   },
   "launcher_route_actions": {},
@@ -28,11 +29,12 @@
     },
     "settings_hub": {
       "title": "Settings",
-      "subtitle_categories_template": "Top-level categories: {categories}",
+      "subtitle_categories_template": "Open settings pages from the unified registry: {categories}",
       "hints": [
         "Up/Down select   Left/Right adjust   Enter activate",
+        "Enter opens subpages, activates actions, or confirms selectors",
         "Type digits on width, height, seed, or animation timing rows for direct numeric entry",
-        "Game settings keep gameplay, transparency, and analytics in one section with save, reset, and back",
+        "Overflowing pages scroll automatically and show a shared scrollbar",
         "F5 save   F8 reset defaults   Esc back   Q quit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
@@ -44,7 +46,7 @@
       "hints": [
         "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
         "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Tab section menu   Esc back   Q quit",
+        "C conflict mode cycle   Enter capture   Tab sections   Esc back   Q quit",
         "{scope_file_hint}"
       ],
       "section_hints": [
@@ -80,31 +82,37 @@
       "title": "Multi Dimensional Tetris Game",
       "items": [
         {
+          "id": "launcher_play",
           "type": "submenu",
           "label": "Play",
           "menu_id": "launcher_play"
         },
         {
+          "id": "launcher_continue",
           "type": "action",
           "label": "Continue",
           "action_id": "continue"
         },
         {
+          "id": "launcher_tutorials",
           "type": "submenu",
           "label": "Tutorials",
           "menu_id": "launcher_tutorials"
         },
         {
+          "id": "launcher_topology_lab",
           "type": "action",
           "label": "Topology Playground",
           "action_id": "topology_lab"
         },
         {
-          "type": "submenu",
+          "id": "launcher_settings",
+          "type": "action",
           "label": "Settings",
-          "menu_id": "launcher_settings_root"
+          "action_id": "settings"
         },
         {
+          "id": "launcher_quit",
           "type": "action",
           "label": "Quit",
           "action_id": "quit"
@@ -115,31 +123,37 @@
       "title": "Choose Mode",
       "items": [
         {
+          "id": "play_2d",
           "type": "action",
           "label": "2D",
           "action_id": "play_2d"
         },
         {
+          "id": "play_3d",
           "type": "action",
           "label": "3D",
           "action_id": "play_3d"
         },
         {
+          "id": "play_4d",
           "type": "action",
           "label": "4D",
           "action_id": "play_4d"
         },
         {
+          "id": "play_last_custom_topology",
           "type": "action",
           "label": "Last Custom Topology",
           "action_id": "play_last_custom_topology"
         },
         {
+          "id": "bot_options",
           "type": "action",
           "label": "Auto Bot Play",
           "action_id": "bot_options"
         },
         {
+          "id": "leaderboard",
           "type": "action",
           "label": "Leaderboard",
           "action_id": "leaderboard"
@@ -150,21 +164,25 @@
       "title": "Tutorials",
       "items": [
         {
+          "id": "interactive_tutorials",
           "type": "submenu",
           "label": "Interactive Tutorials",
           "menu_id": "launcher_tutorials_interactive"
         },
         {
+          "id": "tutorial_how_to_play",
           "type": "action",
           "label": "How to Play",
           "action_id": "tutorial_how_to_play"
         },
         {
+          "id": "tutorial_controls_reference",
           "type": "action",
           "label": "Controls Reference",
           "action_id": "tutorial_controls_reference"
         },
         {
+          "id": "help",
           "type": "action",
           "label": "Help / FAQ",
           "action_id": "help"
@@ -175,64 +193,870 @@
       "title": "Interactive Tutorials",
       "items": [
         {
+          "id": "tutorial_2d",
           "type": "action",
           "label": "Play 2D Tutorial",
           "action_id": "tutorial_2d"
         },
         {
+          "id": "tutorial_3d",
           "type": "action",
           "label": "Play 3D Tutorial",
           "action_id": "tutorial_3d"
         },
         {
+          "id": "tutorial_4d",
           "type": "action",
           "label": "Play 4D Tutorial",
           "action_id": "tutorial_4d"
         }
       ]
     },
-    "launcher_settings_root": {
+    "settings_root": {
       "title": "Settings",
       "items": [
         {
-          "type": "action",
-          "label": "Game",
-          "action_id": "settings"
-        },
-        {
-          "type": "action",
-          "label": "Display",
-          "action_id": "settings_display"
-        },
-        {
-          "type": "action",
-          "label": "Audio",
-          "action_id": "settings_audio"
-        },
-        {
-          "type": "action",
-          "label": "Keybindings",
-          "action_id": "keybindings"
-        },
-        {
+          "id": "settings_game_root",
           "type": "submenu",
-          "label": "Keyboard Profiles",
-          "menu_id": "launcher_settings_profiles"
+          "label": "Game Settings",
+          "description": "Gameplay, geometry, movement, visual, and difficulty pages.",
+          "menu_id": "settings_game_root"
         },
         {
+          "id": "settings_endgame_effects",
+          "type": "submenu",
+          "label": "Endgame Effects",
+          "description": "Persistent relic-field preset and interaction settings.",
+          "menu_id": "settings_endgame_effects"
+        },
+        {
+          "id": "settings_display",
+          "type": "submenu",
+          "label": "Display",
+          "description": "Fullscreen, window size, and display application.",
+          "menu_id": "settings_display"
+        },
+        {
+          "id": "settings_audio",
+          "type": "submenu",
+          "label": "Audio",
+          "description": "Master volume, SFX volume, and mute.",
+          "menu_id": "settings_audio"
+        },
+        {
+          "id": "settings_controls",
+          "type": "submenu",
+          "label": "Controls",
+          "description": "Keyboard bindings and related input tools.",
+          "menu_id": "settings_controls"
+        },
+        {
+          "id": "settings_legacy",
+          "type": "submenu",
+          "label": "Legacy",
+          "description": "Compatibility-backed settings destinations.",
+          "menu_id": "settings_legacy"
+        },
+        {
+          "id": "back",
           "type": "action",
-          "label": "Legacy Topology Editor Menu",
-          "action_id": "settings_legacy_topology_editor"
+          "label": "Back",
+          "action_id": "back"
         }
       ]
     },
-    "launcher_settings_profiles": {
-      "title": "Keyboard Profiles",
+    "settings_game_root": {
+      "title": "Game Settings",
       "items": [
         {
+          "id": "settings_game_gameplay",
+          "type": "submenu",
+          "label": "Gameplay",
+          "description": "Seed, random mode, and score logging.",
+          "menu_id": "settings_game_gameplay"
+        },
+        {
+          "id": "settings_game_board_geometry",
+          "type": "submenu",
+          "label": "Board / Geometry",
+          "description": "Board-structure notes and topology-cache tools.",
+          "menu_id": "settings_game_board_geometry"
+        },
+        {
+          "id": "settings_game_movement_rotation",
+          "type": "submenu",
+          "label": "Movement / Rotation",
+          "description": "Kick permissiveness and animation timing.",
+          "menu_id": "settings_game_movement_rotation"
+        },
+        {
+          "id": "settings_game_visual_animation",
+          "type": "submenu",
+          "label": "Visual / Animation",
+          "description": "Overlay transparency and related visual pacing.",
+          "menu_id": "settings_game_visual_animation"
+        },
+        {
+          "id": "settings_game_difficulty_pace",
+          "type": "submenu",
+          "label": "Difficulty / Pace",
+          "description": "Auto speed-up and lines-per-level tuning.",
+          "menu_id": "settings_game_difficulty_pace"
+        },
+        {
+          "id": "back",
           "type": "action",
-          "label": "Profiles",
-          "action_id": "settings_profiles"
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_game_gameplay": {
+      "title": "Gameplay",
+      "items": [
+        {
+          "id": "gameplay_section",
+          "type": "section",
+          "label": "Gameplay"
+        },
+        {
+          "id": "game_seed",
+          "type": "slider",
+          "label": "Game seed (all modes)",
+          "setting_id": "game_seed"
+        },
+        {
+          "id": "game_random_mode",
+          "type": "selector",
+          "label": "Random type (all modes)",
+          "setting_id": "game_random_mode"
+        },
+        {
+          "id": "analytics_score_logging",
+          "type": "toggle",
+          "label": "Score logging",
+          "setting_id": "analytics_score_logging"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_game_board_geometry": {
+      "title": "Board / Geometry",
+      "items": [
+        {
+          "id": "board_geometry_section",
+          "type": "section",
+          "label": "Board / Geometry"
+        },
+        {
+          "id": "game_topology_advanced",
+          "type": "toggle",
+          "label": "Advanced topology controls",
+          "setting_id": "game_topology_advanced"
+        },
+        {
+          "id": "board_geometry_info",
+          "type": "info",
+          "label": "Board dimensions remain in each mode's setup screen; custom topology editing remains in Topology Playground."
+        },
+        {
+          "id": "topology_cache_measure",
+          "type": "action",
+          "label": "Measure topology cache",
+          "action_id": "topology_cache_measure"
+        },
+        {
+          "id": "topology_cache_clear",
+          "type": "action",
+          "label": "Clear topology cache",
+          "action_id": "topology_cache_clear"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_game_movement_rotation": {
+      "title": "Movement / Rotation",
+      "items": [
+        {
+          "id": "movement_rotation_section",
+          "type": "section",
+          "label": "Movement / Rotation"
+        },
+        {
+          "id": "rotation_animation_mode",
+          "type": "selector",
+          "label": "Rotation animation mode",
+          "setting_id": "rotation_animation_mode"
+        },
+        {
+          "id": "kick_level_index",
+          "type": "selector",
+          "label": "Kick permissiveness",
+          "setting_id": "kick_level_index"
+        },
+        {
+          "id": "rotation_animation_duration_ms_2d",
+          "type": "slider",
+          "label": "2D rotation animation",
+          "setting_id": "rotation_animation_duration_ms_2d"
+        },
+        {
+          "id": "rotation_animation_duration_ms_nd",
+          "type": "slider",
+          "label": "ND rotation animation",
+          "setting_id": "rotation_animation_duration_ms_nd"
+        },
+        {
+          "id": "translation_animation_duration_ms",
+          "type": "slider",
+          "label": "Translation animation",
+          "setting_id": "translation_animation_duration_ms"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_game_visual_animation": {
+      "title": "Visual / Animation",
+      "items": [
+        {
+          "id": "visual_animation_section",
+          "type": "section",
+          "label": "Visual / Animation"
+        },
+        {
+          "id": "display_overlay_transparency",
+          "type": "slider",
+          "label": "Locked-cell transparency",
+          "setting_id": "display_overlay_transparency"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_game_difficulty_pace": {
+      "title": "Difficulty / Pace",
+      "items": [
+        {
+          "id": "difficulty_pace_section",
+          "type": "section",
+          "label": "Difficulty / Pace"
+        },
+        {
+          "id": "auto_speedup_enabled",
+          "type": "toggle",
+          "label": "Auto speed-up by clears",
+          "setting_id": "auto_speedup_enabled"
+        },
+        {
+          "id": "lines_per_level",
+          "type": "slider",
+          "label": "Lines per level",
+          "setting_id": "lines_per_level"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_endgame_effects": {
+      "title": "Endgame Effects",
+      "items": [
+        {
+          "id": "endgame_effects_section",
+          "type": "section",
+          "label": "Endgame Effects"
+        },
+        {
+          "id": "endgame_preset_id",
+          "type": "selector",
+          "label": "Relic-field preset",
+          "setting_id": "endgame_preset_id"
+        },
+        {
+          "id": "endgame_interaction_mode",
+          "type": "selector",
+          "label": "Relic interaction",
+          "setting_id": "endgame_interaction_mode"
+        },
+        {
+          "id": "endgame_effects_info",
+          "type": "info",
+          "label": "Board shatter stays finite; the preset governs only the persistent relic field afterward."
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_display": {
+      "title": "Display",
+      "items": [
+        {
+          "id": "display_section",
+          "type": "section",
+          "label": "Display"
+        },
+        {
+          "id": "display_fullscreen",
+          "type": "toggle",
+          "label": "Fullscreen",
+          "setting_id": "display_fullscreen"
+        },
+        {
+          "id": "display_width",
+          "type": "slider",
+          "label": "Window width",
+          "setting_id": "display_width"
+        },
+        {
+          "id": "display_height",
+          "type": "slider",
+          "label": "Window height",
+          "setting_id": "display_height"
+        },
+        {
+          "id": "display_apply",
+          "type": "action",
+          "label": "Apply display",
+          "action_id": "display_apply"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_audio": {
+      "title": "Audio",
+      "items": [
+        {
+          "id": "audio_section",
+          "type": "section",
+          "label": "Audio"
+        },
+        {
+          "id": "audio_master",
+          "type": "slider",
+          "label": "Master volume",
+          "setting_id": "audio_master"
+        },
+        {
+          "id": "audio_sfx",
+          "type": "slider",
+          "label": "SFX volume",
+          "setting_id": "audio_sfx"
+        },
+        {
+          "id": "audio_mute",
+          "type": "toggle",
+          "label": "Mute",
+          "setting_id": "audio_mute"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_controls": {
+      "title": "Controls",
+      "items": [
+        {
+          "id": "controls_section",
+          "type": "section",
+          "label": "Controls"
+        },
+        {
+          "id": "keybindings",
+          "type": "action",
+          "label": "Keyboard Bindings",
+          "action_id": "keybindings"
+        },
+        {
+          "id": "controls_profiles_info",
+          "type": "info",
+          "label": "Profile management, save/load, and conflict handling live inside Keyboard Bindings."
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_legacy": {
+      "title": "Legacy",
+      "items": [
+        {
+          "id": "legacy_section",
+          "type": "section",
+          "label": "Legacy"
+        },
+        {
+          "id": "settings_legacy_topology_editor",
+          "type": "legacy_dispatch",
+          "label": "Legacy Topology Editor Menu",
+          "action_id": "settings_legacy_topology_editor"
+        },
+        {
+          "id": "legacy_topology_editor_info",
+          "type": "info",
+          "label": "Compatibility-backed path for the older topology editor shell."
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "keybindings_root": {
+      "title": "Keybindings",
+      "items": [
+        {
+          "id": "keybindings_scope_general",
+          "type": "submenu",
+          "label": "General",
+          "description": "Shared system bindings used across dimensions.",
+          "menu_id": "keybindings_scope_general"
+        },
+        {
+          "id": "keybindings_scope_2d",
+          "type": "submenu",
+          "label": "2D",
+          "description": "2D gameplay and explorer bindings.",
+          "menu_id": "keybindings_scope_2d"
+        },
+        {
+          "id": "keybindings_scope_3d",
+          "type": "submenu",
+          "label": "3D",
+          "description": "3D gameplay, explorer, and camera bindings.",
+          "menu_id": "keybindings_scope_3d"
+        },
+        {
+          "id": "keybindings_scope_4d",
+          "type": "submenu",
+          "label": "4D",
+          "description": "4D gameplay, explorer, and camera bindings.",
+          "menu_id": "keybindings_scope_4d"
+        },
+        {
+          "id": "keybindings_scope_all",
+          "type": "submenu",
+          "label": "All",
+          "description": "Shared system plus every dimension-specific binding group.",
+          "menu_id": "keybindings_scope_all"
+        }
+      ]
+    },
+    "keybindings_scope_general": {
+      "title": "General",
+      "items": [
+        {
+          "id": "general_system",
+          "type": "keybinding_group",
+          "label": "General / System",
+          "description": "Menu, profile, and shared command bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "system",
+          "binding_bucket": "all"
+        }
+      ]
+    },
+    "keybindings_scope_2d": {
+      "title": "2D",
+      "items": [
+        {
+          "id": "2d_game_translation",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "2d_game_rotation",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "2d_game_other",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "2d_explorer",
+          "type": "keybinding_group",
+          "label": "2D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        }
+      ]
+    },
+    "keybindings_scope_3d": {
+      "title": "3D",
+      "items": [
+        {
+          "id": "3d_game_translation",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "3d_game_rotation",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "3d_game_other",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "3d_explorer",
+          "type": "keybinding_group",
+          "label": "3D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "3d_camera",
+          "type": "keybinding_group",
+          "label": "3D Camera / View",
+          "description": "Camera and view controls.",
+          "binding_dimension": "3d",
+          "binding_group": "camera",
+          "binding_bucket": "all"
+        }
+      ]
+    },
+    "keybindings_scope_4d": {
+      "title": "4D",
+      "items": [
+        {
+          "id": "4d_game_translation",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "4d_game_rotation",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "4d_game_other",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "4d_explorer",
+          "type": "keybinding_group",
+          "label": "4D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "4d_camera",
+          "type": "keybinding_group",
+          "label": "4D Camera / View",
+          "description": "Camera and view controls.",
+          "binding_dimension": "4d",
+          "binding_group": "camera",
+          "binding_bucket": "all"
+        }
+      ]
+    },
+    "keybindings_scope_all": {
+      "title": "All",
+      "items": [
+        {
+          "id": "all_system",
+          "type": "keybinding_group",
+          "label": "General / System (shared)",
+          "description": "Menu, profile, and shared command bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "system",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "all_2d_game_translation",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "all_2d_game_rotation",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "all_2d_game_other",
+          "type": "keybinding_group",
+          "label": "2D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "2d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "all_2d_explorer",
+          "type": "keybinding_group",
+          "label": "2D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "2d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "all_3d_game_translation",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "all_3d_game_rotation",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "all_3d_game_other",
+          "type": "keybinding_group",
+          "label": "3D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "3d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "all_3d_explorer",
+          "type": "keybinding_group",
+          "label": "3D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "3d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "all_3d_camera",
+          "type": "keybinding_group",
+          "label": "3D Camera / View",
+          "description": "Camera and view controls.",
+          "binding_dimension": "3d",
+          "binding_group": "camera",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "all_4d_game_translation",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Translation",
+          "description": "Movement, drop, and transport bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "translation"
+        },
+        {
+          "id": "all_4d_game_rotation",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Rotation",
+          "description": "Rotation and orientation bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "rotation"
+        },
+        {
+          "id": "all_4d_game_other",
+          "type": "keybinding_group",
+          "label": "4D Gameplay / Other",
+          "description": "Gameplay actions outside translation and rotation.",
+          "binding_dimension": "4d",
+          "binding_group": "game",
+          "binding_bucket": "other"
+        },
+        {
+          "id": "all_4d_explorer",
+          "type": "keybinding_group",
+          "label": "4D Explorer / Sandbox",
+          "description": "Explorer and sandbox bindings.",
+          "binding_dimension": "4d",
+          "binding_group": "explorer",
+          "binding_bucket": "all"
+        },
+        {
+          "id": "all_4d_camera",
+          "type": "keybinding_group",
+          "label": "4D Camera / View",
+          "description": "Camera and view controls.",
+          "binding_dimension": "4d",
+          "binding_group": "camera",
+          "binding_bucket": "all"
         }
       ]
     },
@@ -240,46 +1064,55 @@
       "title": "Pause Menu",
       "items": [
         {
+          "id": "resume",
           "type": "action",
           "label": "Resume",
           "action_id": "resume"
         },
         {
+          "id": "restart",
           "type": "action",
           "label": "Restart Run",
           "action_id": "restart"
         },
         {
+          "id": "settings",
           "type": "action",
           "label": "Settings",
           "action_id": "settings"
         },
         {
+          "id": "keybindings",
           "type": "action",
           "label": "Keybindings",
           "action_id": "keybindings"
         },
         {
+          "id": "help",
           "type": "action",
           "label": "Help",
           "action_id": "help"
         },
         {
+          "id": "leaderboard",
           "type": "action",
           "label": "Leaderboard",
           "action_id": "leaderboard"
         },
         {
+          "id": "bot_options",
           "type": "action",
           "label": "Bot",
           "action_id": "bot_options"
         },
         {
+          "id": "menu",
           "type": "action",
           "label": "Back To Main Menu",
           "action_id": "menu"
         },
         {
+          "id": "quit",
           "type": "action",
           "label": "Quit",
           "action_id": "quit"
@@ -287,150 +1120,6 @@
       ]
     }
   },
-  "settings_hub_rows": [
-    "Audio",
-    "Display",
-    "Game",
-    "Analytics",
-    "Back"
-  ],
-  "settings_hub_layout_rows": [
-    {
-      "kind": "header",
-      "label": "Audio"
-    },
-    {
-      "kind": "item",
-      "label": "Master volume",
-      "row_key": "audio_master"
-    },
-    {
-      "kind": "item",
-      "label": "SFX volume",
-      "row_key": "audio_sfx"
-    },
-    {
-      "kind": "item",
-      "label": "Mute",
-      "row_key": "audio_mute"
-    },
-    {
-      "kind": "header",
-      "label": "Display"
-    },
-    {
-      "kind": "item",
-      "label": "Fullscreen",
-      "row_key": "display_fullscreen"
-    },
-    {
-      "kind": "item",
-      "label": "Window width",
-      "row_key": "display_width"
-    },
-    {
-      "kind": "item",
-      "label": "Window height",
-      "row_key": "display_height"
-    },
-    {
-      "kind": "item",
-      "label": "Apply display",
-      "row_key": "display_apply"
-    },
-    {
-      "kind": "header",
-      "label": "Game"
-    },
-    {
-      "kind": "item",
-      "label": "Game seed (all modes)",
-      "row_key": "game_seed"
-    },
-    {
-      "kind": "item",
-      "label": "Random type (all modes)",
-      "row_key": "game_random_mode"
-    },
-    {
-      "kind": "item",
-      "label": "Locked-cell transparency",
-      "row_key": "display_overlay_transparency"
-    },
-    {
-      "kind": "header",
-      "label": "Advanced gameplay"
-    },
-    {
-      "kind": "item",
-      "label": "Rotation animation mode",
-      "row_key": "rotation_animation_mode"
-    },
-    {
-      "kind": "item",
-      "label": "Kick permissiveness",
-      "row_key": "kick_level_index"
-    },
-    {
-      "kind": "item",
-      "label": "2D rotation animation",
-      "row_key": "rotation_animation_duration_ms_2d"
-    },
-    {
-      "kind": "item",
-      "label": "ND rotation animation",
-      "row_key": "rotation_animation_duration_ms_nd"
-    },
-    {
-      "kind": "item",
-      "label": "Translation animation",
-      "row_key": "translation_animation_duration_ms"
-    },
-    {
-      "kind": "item",
-      "label": "Auto speed-up by clears",
-      "row_key": "auto_speedup_enabled"
-    },
-    {
-      "kind": "item",
-      "label": "Lines per level",
-      "row_key": "lines_per_level"
-    },
-    {
-      "kind": "item",
-      "label": "Measure topology cache",
-      "row_key": "topology_cache_measure"
-    },
-    {
-      "kind": "item",
-      "label": "Clear topology cache",
-      "row_key": "topology_cache_clear"
-    },
-    {
-      "kind": "header",
-      "label": "Analytics"
-    },
-    {
-      "kind": "item",
-      "label": "Score logging",
-      "row_key": "analytics_score_logging"
-    },
-    {
-      "kind": "item",
-      "label": "Save",
-      "row_key": "save"
-    },
-    {
-      "kind": "item",
-      "label": "Reset defaults",
-      "row_key": "reset"
-    },
-    {
-      "kind": "item",
-      "label": "Back",
-      "row_key": "back"
-    }
-  ],
   "settings_option_labels": {
     "game_random_mode": [
       "Fixed seed",
@@ -445,6 +1134,16 @@
     "game_rotation_animation_mode": [
       "Cell sliding",
       "Rigid piece rotation"
+    ],
+    "game_endgame_preset": [
+      "Orbit relic field",
+      "Wrap all",
+      "Invert all",
+      "Sphere"
+    ],
+    "game_endgame_interaction_mode": [
+      "No collisions",
+      "Collide"
     ]
   },
   "bot_options_rows": [
@@ -623,176 +1322,102 @@
   },
   "settings_category_docs": [
     {
-      "id": "audio",
-      "label": "Audio",
-      "description": "Master volume, SFX volume, mute toggle, and persistence behavior."
+      "id": "profiles",
+      "label": "Keybinding profiles",
+      "description": "Persisted active keybinding profile selection and related profile defaults."
+    },
+    {
+      "id": "game_settings",
+      "label": "Game Settings",
+      "description": "Split into gameplay, board / geometry, movement / rotation, visual / animation, and difficulty / pace."
+    },
+    {
+      "id": "gameplay_setup",
+      "label": "Gameplay setup",
+      "description": "Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults."
+    },
+    {
+      "id": "gameplay",
+      "label": "Gameplay",
+      "description": "Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness."
+    },
+    {
+      "id": "endgame_effects",
+      "label": "Endgame Effects",
+      "description": "Persistent post-shatter relic-field preset and interaction controls."
     },
     {
       "id": "display",
       "label": "Display",
-      "description": "Fullscreen/windowed mode, window size, locked-cell transparency baseline, and display apply/reset actions."
+      "description": "Fullscreen, windowed size, and display application."
     },
     {
-      "id": "gameplay",
-      "label": "Game",
-      "description": "Shared run controls across 2D/3D/4D, including seed and random-type selection."
+      "id": "audio",
+      "label": "Audio",
+      "description": "Master volume, SFX volume, and mute."
     },
     {
       "id": "analytics",
       "label": "Analytics",
-      "description": "Score analyzer logging toggle and telemetry output settings."
-    },
-    {
-      "id": "profiles",
-      "label": "Profiles",
-      "description": "Keybinding profile selection, creation, rename, delete, save, and load."
-    },
-    {
-      "id": "controls",
-      "label": "Keybindings",
-      "description": "Persistent input configuration, including keybindings and input preferences."
-    },
-    {
-      "id": "advanced",
-      "label": "Advanced",
-      "description": "Advanced gameplay tuning such as rotation mode, kick permissiveness, animation timings, and lines-per-level."
+      "description": "Score logging and related persisted analysis controls."
     },
     {
       "id": "bot",
-      "label": "Bot Options",
-      "description": "Bot mode, algorithm, profile, speed, budget, and reset/save behavior."
+      "label": "Bot",
+      "description": "Bot mode, algorithm, profile, speed, and budget defaults."
     },
     {
-      "id": "gameplay_setup",
-      "label": "Gameplay Setup",
-      "description": "Dimension-specific board size, piece set, safe topology preset, challenge layers, and speed level."
+      "id": "controls",
+      "label": "Controls",
+      "description": "Keyboard bindings and related input management."
+    },
+    {
+      "id": "legacy",
+      "label": "Legacy",
+      "description": "Compatibility-backed settings destinations."
     }
   ],
   "settings_split_rules": {
     "max_top_level_fields": 5,
-    "max_top_level_actions": 2,
+    "max_top_level_actions": 4,
     "split_when_mode_specific": true
   },
   "settings_category_metrics": {
-    "audio": {
-      "field_count": 3,
-      "action_count": 2,
-      "mode_specific": false,
-      "top_level": true
-    },
-    "display": {
-      "field_count": 5,
-      "action_count": 2,
-      "mode_specific": false,
-      "top_level": true
-    },
-    "gameplay": {
-      "field_count": 2,
+    "game_settings": {
+      "field_count": 0,
       "action_count": 0,
       "mode_specific": false,
       "top_level": true
     },
-    "analytics": {
-      "field_count": 1,
+    "endgame_effects": {
+      "field_count": 2,
+      "action_count": 3,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "display": {
+      "field_count": 3,
+      "action_count": 4,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "audio": {
+      "field_count": 3,
+      "action_count": 3,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "controls": {
+      "field_count": 0,
       "action_count": 1,
       "mode_specific": false,
       "top_level": true
     },
-    "profiles": {
-      "field_count": 3,
-      "action_count": 6,
-      "mode_specific": true,
-      "top_level": false
-    },
-    "controls": {
-      "field_count": 4,
-      "action_count": 4,
+    "legacy": {
+      "field_count": 0,
+      "action_count": 1,
       "mode_specific": false,
-      "top_level": false
-    },
-    "advanced": {
-      "field_count": 7,
-      "action_count": 0,
-      "mode_specific": false,
-      "top_level": false
-    },
-    "bot": {
-      "field_count": 6,
-      "action_count": 3,
-      "mode_specific": true,
-      "top_level": false
-    },
-    "gameplay_setup": {
-      "field_count": 8,
-      "action_count": 2,
-      "mode_specific": true,
-      "top_level": false
-    }
-  },
-  "settings_sections": {
-    "audio": {
-      "title": "Audio settings",
-      "subtitle": "Master volume, SFX volume, mute, save, reset, and back.",
-      "headers": ["Audio"],
-      "row_keys": [
-        "audio_master",
-        "audio_sfx",
-        "audio_mute",
-        "save",
-        "reset",
-        "back"
-      ]
-    },
-    "display": {
-      "title": "Display settings",
-      "subtitle": "Fullscreen, window size, apply, save, reset, and back.",
-      "headers": ["Display"],
-      "row_keys": [
-        "display_fullscreen",
-        "display_width",
-        "display_height",
-        "display_apply",
-        "save",
-        "reset",
-        "back"
-      ]
-    },
-    "gameplay": {
-      "title": "Game settings",
-      "subtitle": "Seed, random type, transparency, analytics, advanced gameplay, save, reset, and back.",
-      "headers": ["Game", "Advanced gameplay", "Analytics"],
-      "row_keys": [
-        "game_seed",
-        "game_random_mode",
-        "display_overlay_transparency",
-        "rotation_animation_mode",
-        "kick_level_index",
-        "rotation_animation_duration_ms_2d",
-        "rotation_animation_duration_ms_nd",
-        "translation_animation_duration_ms",
-        "auto_speedup_enabled",
-        "lines_per_level",
-        "topology_cache_measure",
-        "topology_cache_clear",
-        "analytics_score_logging",
-        "save",
-        "reset",
-        "back"
-      ]
-    }
-  },
-  "launcher_settings_routes": {
-    "settings": {
-      "section_id": "gameplay",
-      "initial_row_key": "game_seed"
-    },
-    "settings_display": {
-      "section_id": "display",
-      "initial_row_key": "display_fullscreen"
-    },
-    "settings_audio": {
-      "section_id": "audio",
-      "initial_row_key": "audio_master"
+      "top_level": true
     }
   },
   "setup_hints": {

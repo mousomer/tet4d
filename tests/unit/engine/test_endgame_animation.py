@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
+import math
 import unittest
 from unittest.mock import Mock, patch
 
@@ -38,7 +40,11 @@ class TestEndgameAnimation(unittest.TestCase):
         return pygame.image.tobytes(surface, "RGBA")
 
     @staticmethod
-    def _sample_snapshot() -> endgame_animation.EndgameSnapshot:
+    def _sample_snapshot(
+        *,
+        preset_id: str = "default_orbit",
+        interaction_mode: str = "none",
+    ) -> endgame_animation.EndgameSnapshot:
         return endgame_animation.create_snapshot(
             dimension=2,
             board_dims=(6, 8),
@@ -57,7 +63,13 @@ class TestEndgameAnimation(unittest.TestCase):
             ),
             base_seed=1337,
             render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            preset_id=preset_id,
+            interaction_mode=interaction_mode,
         )
+
+    @staticmethod
+    def _custom_tuning(**updates: float | bool | int | tuple[tuple[str, int], ...]):
+        return replace(endgame_animation.load_endgame_animation_tuning(), **updates)
 
     def test_terminal_transition_creates_2d_endgame_snapshot(self) -> None:
         loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
@@ -66,7 +78,14 @@ class TestEndgameAnimation(unittest.TestCase):
         loop.state.board.cells[(4, 5)] = 6
         loop.state.game_over = True
 
-        with patch.object(front2d_frame, "play_sfx"):
+        with (
+            patch.object(front2d_frame, "play_sfx"),
+            patch.object(
+                front2d_frame,
+                "mode_endgame_settings",
+                return_value=("wrap_all", "collide"),
+            ),
+        ):
             front2d_frame._update_feedback_and_animation(
                 loop=loop,
                 dt=16,
@@ -76,12 +95,47 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertIsNotNone(loop.endgame_animation)
         assert loop.endgame_animation is not None
         snapshot = loop.endgame_animation.snapshot
-        self.assertEqual(loop.terminal_phase, endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING)
+        self.assertEqual(
+            loop.terminal_phase,
+            endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER,
+        )
         self.assertEqual(snapshot.board_dims, (6, 8))
         self.assertEqual(snapshot.render_dims, (6, 8, 1))
         self.assertEqual(snapshot.locked_cells[0].source_coord, (1, 6))
         self.assertEqual(snapshot.locked_cells[1].source_coord, (4, 5))
         self.assertEqual(snapshot.render_context.mode_key, "2d")
+        self.assertEqual(snapshot.preset_id, "wrap_all")
+        self.assertEqual(snapshot.interaction_mode, "collide")
+
+    def test_preset_registry_resolves_required_relic_field_presets(self) -> None:
+        tuning = endgame_animation.load_endgame_animation_tuning()
+        registry = {
+            config.preset_id: config
+            for config in endgame_animation.endgame_preset_registry(tuning)
+        }
+
+        self.assertEqual(registry["wrap_all"].field_kind, "wrap")
+        self.assertEqual(registry["invert_all"].field_kind, "invert")
+        self.assertEqual(registry["sphere"].field_kind, "sphere")
+
+    def test_interaction_mode_stays_separate_from_preset_identity(self) -> None:
+        wrap_snapshot = self._sample_snapshot(
+            preset_id="wrap_all",
+            interaction_mode="none",
+        )
+        collide_snapshot = self._sample_snapshot(
+            preset_id="wrap_all",
+            interaction_mode="collide",
+        )
+        wrap_animation = endgame_animation.build_endgame_animation_state(wrap_snapshot)
+        collide_animation = endgame_animation.build_endgame_animation_state(
+            collide_snapshot
+        )
+
+        self.assertEqual(wrap_animation.preset_id, "wrap_all")
+        self.assertEqual(collide_animation.preset_id, "wrap_all")
+        self.assertEqual(wrap_animation.interaction_mode, "none")
+        self.assertEqual(collide_animation.interaction_mode, "collide")
 
     def test_fragment_generation_is_deterministic_for_fixed_seed(self) -> None:
         snapshot = self._sample_snapshot()
@@ -90,52 +144,405 @@ class TestEndgameAnimation(unittest.TestCase):
         animation_b = endgame_animation.build_endgame_animation_state(snapshot)
 
         self.assertEqual(animation_a.snapshot.rng_seed, animation_b.snapshot.rng_seed)
-        self.assertEqual(animation_a.cell_fragments, animation_b.cell_fragments)
+        self.assertEqual(animation_a.cell_relics, animation_b.cell_relics)
         self.assertEqual(animation_a.shell_fragments, animation_b.shell_fragments)
 
-    def test_fragment_updates_match_expected_known_timestamp(self) -> None:
-        fragment = endgame_animation.CellFragment(
+    def test_cell_relic_updates_match_expected_known_timestamp(self) -> None:
+        tuning = self._custom_tuning(
+            crack_onset_duration_ms=100.0,
+            shatter_duration_ms=1000.0,
+            capture_transition_duration_ms=300.0,
+            burst_drag_per_second=0.5,
+        )
+        relic = endgame_animation.CellRelic(
             source_coord=(1, 2),
             base_geometry="cell",
             initial_position=(1.0, 2.0, 0.0),
-            velocity=(4.0, 0.0, 0.0),
-            acceleration=(0.0, 1.0, 0.0),
-            angular_velocity_deg=(0.0, 0.0, 90.0),
+            burst_velocity=(4.0, 0.0, 0.0),
+            burst_acceleration=(0.0, 1.0, 0.0),
+            burst_angular_velocity_deg=(0.0, 0.0, 90.0),
             detach_start_ms=100.0,
-            fade_start_ms=400.0,
-            lifetime_ms=700.0,
+            capture_anchor=(5.0, 4.0, 0.0),
+            path_family="ellipse",
+            field_basis_u=(1.0, 0.0, 0.0),
+            field_basis_v=(0.0, 1.0, 0.0),
+            field_basis_w=(0.0, 0.0, 0.0),
+            field_phase=0.0,
+            field_phase_secondary=0.0,
+            field_speed=0.0,
+            field_precession_speed=0.0,
+            orbit_radius_a=1.5,
+            orbit_radius_b=2.0,
+            depth_amplitude=0.0,
+            relic_spin_deg=(10.0, 20.0, 30.0),
             color_id=5,
             jitter_offset=(2.0, 0.0, 0.0),
         )
 
-        position_pre, rotation_pre, alpha_pre = endgame_animation.transform_for_cell_fragment(
-            fragment,
-            elapsed_ms=50.0,
-            drag_per_second=0.5,
+        position_pre, rotation_pre, alpha_pre = (
+            endgame_animation.transform_for_cell_relic(
+                relic,
+                elapsed_ms=50.0,
+                tuning=tuning,
+            )
         )
         self.assertEqual(position_pre, (2.0, 2.0, 0.0))
         self.assertEqual(rotation_pre, (0.0, 0.0, 0.0))
         self.assertEqual(alpha_pre, 1.0)
 
-        position_post, rotation_post, alpha_post = endgame_animation.transform_for_cell_fragment(
-            fragment,
-            elapsed_ms=600.0,
-            drag_per_second=0.5,
+        position_post, rotation_post, alpha_post = (
+            endgame_animation.transform_for_cell_relic(
+                relic,
+                elapsed_ms=1200.0,
+                tuning=tuning,
+            )
         )
-        self.assertAlmostEqual(position_post[0], 2.6)
-        self.assertAlmostEqual(position_post[1], 2.125)
+        self.assertAlmostEqual(position_post[0], 6.5)
+        self.assertAlmostEqual(position_post[1], 4.0)
         self.assertAlmostEqual(position_post[2], 0.0)
-        self.assertAlmostEqual(rotation_post[2], 45.0)
+        self.assertAlmostEqual(rotation_post[0], 5.0)
+        self.assertAlmostEqual(rotation_post[1], 24.0)
+        self.assertAlmostEqual(rotation_post[2], 15.0)
         self.assertAlmostEqual(alpha_post, 1.0)
 
-    def test_normal_gameplay_updates_stop_once_terminal_animation_takes_over(self) -> None:
+    def test_wrap_all_keeps_relics_wrapped_inside_field_bounds(self) -> None:
+        tuning = self._custom_tuning(
+            crack_onset_duration_ms=100.0,
+            shatter_duration_ms=1000.0,
+            capture_transition_duration_ms=200.0,
+        )
+        snapshot = self._sample_snapshot(preset_id="wrap_all")
+        relic = endgame_animation.CellRelic(
+            source_coord=(1, 2),
+            base_geometry="cell",
+            initial_position=(1.0, 2.0, 0.0),
+            burst_velocity=(0.0, 0.0, 0.0),
+            burst_acceleration=(0.0, 0.0, 0.0),
+            burst_angular_velocity_deg=(0.0, 0.0, 0.0),
+            detach_start_ms=100.0,
+            capture_anchor=(8.5, 2.0, 0.0),
+            path_family="ellipse",
+            field_basis_u=(1.0, 0.0, 0.0),
+            field_basis_v=(0.0, 1.0, 0.0),
+            field_basis_w=(0.0, 0.0, 0.0),
+            field_phase=0.0,
+            field_phase_secondary=0.0,
+            field_speed=0.0,
+            field_precession_speed=0.0,
+            orbit_radius_a=0.0,
+            orbit_radius_b=0.0,
+            depth_amplitude=0.0,
+            relic_spin_deg=(0.0, 0.0, 0.0),
+            color_id=2,
+            preset_id="wrap_all",
+            field_drift_velocity=(3.0, 0.0, 0.0),
+        )
+
+        position, _rotation, _alpha = endgame_animation.transform_for_cell_relic(
+            relic,
+            elapsed_ms=2400.0,
+            tuning=tuning,
+            snapshot=snapshot,
+        )
+        preset = endgame_animation.resolve_endgame_preset_config(
+            "wrap_all",
+            tuning=tuning,
+        )
+        max_x = (
+            ((snapshot.render_dims[0] - 1) * 0.5 * tuning.field_extent_multiplier)
+            * preset.extent_scale
+        ) + tuning.wrap_margin
+        self.assertLessEqual(abs(position[0] - snapshot.board_center[0]), max_x + 1e-6)
+
+    def test_invert_all_applies_coherent_reflection_rule(self) -> None:
+        tuning = self._custom_tuning(
+            crack_onset_duration_ms=100.0,
+            shatter_duration_ms=1000.0,
+            capture_transition_duration_ms=200.0,
+        )
+        snapshot = self._sample_snapshot(preset_id="invert_all")
+        relic = endgame_animation.CellRelic(
+            source_coord=(1, 2),
+            base_geometry="cell",
+            initial_position=(1.0, 2.0, 0.0),
+            burst_velocity=(0.0, 0.0, 0.0),
+            burst_acceleration=(0.0, 0.0, 0.0),
+            burst_angular_velocity_deg=(0.0, 0.0, 0.0),
+            detach_start_ms=100.0,
+            capture_anchor=(7.8, 2.0, 0.0),
+            path_family="ellipse",
+            field_basis_u=(1.0, 0.0, 0.0),
+            field_basis_v=(0.0, 1.0, 0.0),
+            field_basis_w=(0.0, 0.0, 0.0),
+            field_phase=0.0,
+            field_phase_secondary=0.0,
+            field_speed=0.0,
+            field_precession_speed=0.0,
+            orbit_radius_a=0.0,
+            orbit_radius_b=0.0,
+            depth_amplitude=0.0,
+            relic_spin_deg=(0.0, 0.0, 18.0),
+            color_id=2,
+            preset_id="invert_all",
+            field_drift_velocity=(3.0, 0.0, 0.0),
+        )
+
+        position, rotation, _alpha = endgame_animation.transform_for_cell_relic(
+            relic,
+            elapsed_ms=2600.0,
+            tuning=tuning,
+            snapshot=snapshot,
+        )
+        self.assertLess(position[0], snapshot.board_center[0] + 2.0)
+        self.assertNotEqual(rotation[2], 0.0)
+
+    def test_sphere_preset_keeps_relics_inside_spherical_field(self) -> None:
+        snapshot = self._sample_snapshot(preset_id="sphere")
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+        relic = animation.cell_relics[0]
+        position, _rotation, _alpha = endgame_animation.transform_for_cell_relic(
+            relic,
+            elapsed_ms=animation.tuning.shatter_duration_ms + 40_000.0,
+            tuning=animation.tuning,
+            snapshot=snapshot,
+        )
+        preset = endgame_animation.resolve_endgame_preset_config(
+            "sphere",
+            tuning=animation.tuning,
+        )
+        radius_limit = (
+            (min(snapshot.render_dims[:2]) * 0.5 * preset.sphere_radius_scale)
+            + animation.tuning.wrap_margin
+            + 0.75
+        )
+        self.assertLessEqual(math.dist(position, snapshot.board_center), radius_limit)
+
+    def test_endgame_transitions_from_shatter_to_relic_field(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+
+        animation.step(animation.tuning.shatter_duration_ms - 1.0)
+        self.assertEqual(
+            animation.phase,
+            endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER,
+        )
+
+        animation.step(1.0)
+        self.assertEqual(
+            animation.phase,
+            endgame_animation.TERMINAL_PHASE_ENDGAME_RELIC_FIELD,
+        )
+
+    def test_endgame_prompt_becomes_ready_when_relic_field_starts(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+
+        animation.step(animation.tuning.shatter_duration_ms)
+
+        self.assertEqual(
+            animation.phase,
+            endgame_animation.TERMINAL_PHASE_ENDGAME_RELIC_FIELD,
+        )
+        self.assertTrue(endgame_animation.endgame_prompt_ready(animation))
+
+    def test_endgame_sfx_events_follow_shared_phase_thresholds(self) -> None:
+        tuning = endgame_animation.load_endgame_animation_tuning()
+        crack_events = endgame_animation.endgame_sfx_events_between(
+            previous_elapsed_ms=0.0,
+            current_elapsed_ms=tuning.crack_onset_duration_ms,
+            tuning=tuning,
+        )
+        pop_events = endgame_animation.endgame_sfx_events_between(
+            previous_elapsed_ms=tuning.crack_onset_duration_ms,
+            current_elapsed_ms=tuning.capture_start_ms,
+            tuning=tuning,
+        )
+        boom_events = endgame_animation.endgame_sfx_events_between(
+            previous_elapsed_ms=tuning.capture_start_ms,
+            current_elapsed_ms=tuning.shatter_duration_ms,
+            tuning=tuning,
+        )
+
+        self.assertEqual(crack_events, ("endgame_crack",))
+        self.assertEqual(pop_events, ("endgame_pop",))
+        self.assertEqual(boom_events, ("endgame_boom",))
+
+    def test_shell_fragments_expire_while_cell_relics_persist(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+        shell_fragment = animation.shell_fragments[0]
+        cell_relic = animation.cell_relics[0]
+        long_elapsed_ms = animation.tuning.shatter_duration_ms + 10_000.0
+
+        _geometry, shell_alpha = endgame_animation.transform_shell_geometry(
+            shell_fragment,
+            elapsed_ms=long_elapsed_ms,
+            drag_per_second=animation.tuning.burst_drag_per_second,
+        )
+        relic_position, _rotation, relic_alpha = (
+            endgame_animation.transform_for_cell_relic(
+                cell_relic,
+                elapsed_ms=long_elapsed_ms,
+                tuning=animation.tuning,
+            )
+        )
+
+        self.assertEqual(shell_alpha, 0.0)
+        self.assertEqual(relic_alpha, 1.0)
+        self.assertTrue(all(math.isfinite(component) for component in relic_position))
+
+    def test_relic_field_wraps_phase_and_stays_bounded(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+        relic = animation.cell_relics[0]
+        huge_elapsed_ms = animation.tuning.shatter_duration_ms + 1_000_000.0
+
+        phase = endgame_animation.relic_field_phase_radians(
+            relic,
+            elapsed_ms=huge_elapsed_ms,
+            tuning=animation.tuning,
+        )
+        position, _rotation, alpha = endgame_animation.transform_for_cell_relic(
+            relic,
+            elapsed_ms=huge_elapsed_ms,
+            tuning=animation.tuning,
+        )
+        max_extent = (
+            max(animation.snapshot.render_dims)
+            + animation.tuning.orbit_radius_max
+            + 4.0
+        )
+
+        self.assertGreaterEqual(phase, 0.0)
+        self.assertLess(phase, math.tau)
+        self.assertEqual(alpha, 1.0)
+        self.assertLessEqual(max(abs(component) for component in position), max_extent)
+
+    def test_collision_mode_is_deterministic_for_fixed_seed_state(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(
+                preset_id="wrap_all",
+                interaction_mode="collide",
+            )
+        )
+        animation.elapsed_ms = animation.tuning.shatter_duration_ms + 5000.0
+
+        transforms_a = endgame_animation.transform_relics_for_animation(animation)
+        transforms_b = endgame_animation.transform_relics_for_animation(animation)
+
+        self.assertEqual(transforms_a, transforms_b)
+
+    def test_non_collision_mode_skips_collision_pass(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(
+                preset_id="wrap_all",
+                interaction_mode="none",
+            )
+        )
+        animation.elapsed_ms = animation.tuning.shatter_duration_ms + 5000.0
+
+        with patch.object(
+            endgame_animation,
+            "_apply_relic_collisions",
+            wraps=endgame_animation._apply_relic_collisions,
+        ) as collision_pass:
+            transforms = endgame_animation.transform_relics_for_animation(animation)
+
+        self.assertEqual(len(transforms), len(animation.cell_relics))
+        collision_pass.assert_not_called()
+
+    def test_selected_presets_change_persistent_relic_motion(self) -> None:
+        wrap_animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(preset_id="wrap_all")
+        )
+        sphere_animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(preset_id="sphere")
+        )
+        elapsed_ms = wrap_animation.tuning.shatter_duration_ms + 3200.0
+        wrap_animation.elapsed_ms = elapsed_ms
+        sphere_animation.elapsed_ms = elapsed_ms
+
+        wrap_position, _rotation, _alpha = (
+            endgame_animation.transform_relics_for_animation(wrap_animation)[0]
+        )
+        sphere_position, _rotation_sphere, _alpha_sphere = (
+            endgame_animation.transform_relics_for_animation(sphere_animation)[0]
+        )
+
+        self.assertNotEqual(wrap_position, sphere_position)
+
+    def test_collision_mode_changes_behavior_without_changing_preset(self) -> None:
+        wrap_none = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(
+                preset_id="wrap_all",
+                interaction_mode="none",
+            )
+        )
+        wrap_collide = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(
+                preset_id="wrap_all",
+                interaction_mode="collide",
+            )
+        )
+        elapsed_ms = wrap_none.tuning.shatter_duration_ms + 6400.0
+        wrap_none.elapsed_ms = elapsed_ms
+        wrap_collide.elapsed_ms = elapsed_ms
+        base_relic = wrap_none.cell_relics[0]
+        overlapping_relics = (
+            replace(
+                base_relic,
+                source_coord=(1, 1),
+                initial_position=(3.0, 3.0, 0.0),
+                capture_anchor=(3.0, 3.0, 0.0),
+                orbit_radius_a=0.0,
+                orbit_radius_b=0.0,
+                depth_amplitude=0.0,
+                field_drift_velocity=(0.0, 0.0, 0.0),
+                collision_radius=0.7,
+            ),
+            replace(
+                base_relic,
+                source_coord=(2, 1),
+                initial_position=(3.2, 3.0, 0.0),
+                capture_anchor=(3.2, 3.0, 0.0),
+                orbit_radius_a=0.0,
+                orbit_radius_b=0.0,
+                depth_amplitude=0.0,
+                field_drift_velocity=(0.0, 0.0, 0.0),
+                collision_radius=0.7,
+            ),
+        )
+        wrap_none.relic_field = replace(
+            wrap_none.relic_field,
+            cell_relics=overlapping_relics,
+        )
+        wrap_collide.relic_field = replace(
+            wrap_collide.relic_field,
+            cell_relics=overlapping_relics,
+        )
+
+        transforms_none = endgame_animation.transform_relics_for_animation(wrap_none)
+        transforms_collide = endgame_animation.transform_relics_for_animation(
+            wrap_collide
+        )
+
+        self.assertEqual(wrap_none.preset_id, wrap_collide.preset_id)
+        self.assertNotEqual(transforms_none, transforms_collide)
+
+    def test_normal_gameplay_updates_stop_once_terminal_animation_takes_over(
+        self,
+    ) -> None:
         state = SimpleNamespace(
             config=SimpleNamespace(exploration_mode=False),
             game_over=False,
             step_gravity=Mock(),
         )
         loop = SimpleNamespace(
-            terminal_phase=endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING,
+            terminal_phase=endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER,
             gravity_accumulator=64,
             bot=SimpleNamespace(tick_nd=Mock(), controls_descent=False),
             state=state,
@@ -150,52 +557,6 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(loop.gravity_accumulator, 0)
         loop.bot.tick_nd.assert_not_called()
         state.step_gravity.assert_not_called()
-
-    def test_endgame_animation_stays_animating_after_configured_duration(self) -> None:
-        animation = endgame_animation.build_endgame_animation_state(self._sample_snapshot())
-
-        animation.step(animation.tuning.total_duration_ms)
-
-        self.assertEqual(
-            animation.phase,
-            endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING,
-        )
-
-    def test_endgame_prompt_becomes_ready_before_animation_completion(self) -> None:
-        animation = endgame_animation.build_endgame_animation_state(self._sample_snapshot())
-
-        animation.step(animation.tuning.crack_onset_duration_ms)
-
-        self.assertEqual(
-            animation.phase,
-            endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING,
-        )
-        self.assertTrue(endgame_animation.endgame_prompt_ready(animation))
-
-    def test_endgame_sfx_events_follow_shared_phase_thresholds(self) -> None:
-        tuning = endgame_animation.load_endgame_animation_tuning()
-        crack_events = endgame_animation.endgame_sfx_events_between(
-            previous_elapsed_ms=0.0,
-            current_elapsed_ms=tuning.crack_onset_duration_ms,
-            tuning=tuning,
-        )
-        pop_events = endgame_animation.endgame_sfx_events_between(
-            previous_elapsed_ms=tuning.crack_onset_duration_ms,
-            current_elapsed_ms=tuning.crack_onset_duration_ms
-            + (tuning.release_duration_ms * 0.5),
-            tuning=tuning,
-        )
-        boom_events = endgame_animation.endgame_sfx_events_between(
-            previous_elapsed_ms=tuning.crack_onset_duration_ms
-            + (tuning.release_duration_ms * 0.5),
-            current_elapsed_ms=tuning.crack_onset_duration_ms
-            + tuning.release_duration_ms,
-            tuning=tuning,
-        )
-
-        self.assertEqual(crack_events, ("endgame_crack",))
-        self.assertEqual(pop_events, ("endgame_pop",))
-        self.assertEqual(boom_events, ("endgame_boom",))
 
     def test_2d_renderer_uses_frozen_snapshot_not_mutated_live_board(self) -> None:
         cfg = GameConfig(width=8, height=10, speed_level=1)
@@ -237,7 +598,9 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(self._surface_bytes(surface_a), self._surface_bytes(surface_b))
 
-    def test_projected_3d_renderer_uses_frozen_snapshot_not_mutated_live_board(self) -> None:
+    def test_projected_3d_renderer_uses_frozen_snapshot_not_mutated_live_board(
+        self,
+    ) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         loop = front3d_game.LoopContext3D.create(cfg)
         loop.state.board.cells.clear()
@@ -247,7 +610,7 @@ class TestEndgameAnimation(unittest.TestCase):
         loop.endgame_animation = endgame_animation.build_endgame_animation_state(
             front3d_game._capture_endgame_snapshot_3d(loop)
         )
-        loop.terminal_phase = endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING
+        loop.terminal_phase = endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER
 
         surface_a = pygame.Surface((1180, 840), pygame.SRCALPHA)
         front3d_render.draw_game_frame(
@@ -274,7 +637,9 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(self._surface_bytes(surface_a), self._surface_bytes(surface_b))
 
-    def test_projected_4d_renderer_uses_frozen_snapshot_not_mutated_live_board(self) -> None:
+    def test_projected_4d_renderer_uses_frozen_snapshot_not_mutated_live_board(
+        self,
+    ) -> None:
         cfg = GameConfigND(dims=(5, 8, 5, 3), gravity_axis=1, speed_level=1)
         loop = front4d_game.LoopContext4D.create(cfg)
         loop.state.board.cells.clear()
@@ -284,7 +649,7 @@ class TestEndgameAnimation(unittest.TestCase):
         loop.endgame_animation = endgame_animation.build_endgame_animation_state(
             front4d_game._capture_endgame_snapshot_4d(loop)
         )
-        loop.terminal_phase = endgame_animation.TERMINAL_PHASE_GAME_OVER_ANIMATING
+        loop.terminal_phase = endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER
 
         surface_a = pygame.Surface((1320, 880), pygame.SRCALPHA)
         front4d_render.draw_game_frame(
@@ -311,16 +676,22 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(self._surface_bytes(surface_a), self._surface_bytes(surface_b))
 
-    def test_regression_scenarios_cover_sparse_dense_near_full_and_projected_3d(self) -> None:
+    def test_regression_scenarios_cover_sparse_dense_near_full_and_projected_3d(
+        self,
+    ) -> None:
         scenarios = {
             "sparse": {(1, 8): 1, (5, 6): 4},
             "dense": {(x, y): (x % 7) + 1 for x in range(8) for y in range(5, 10)},
-            "near_full": {(x, y): ((x + y) % 7) + 1 for x in range(8) for y in range(1, 10)},
+            "near_full": {
+                (x, y): ((x + y) % 7) + 1 for x in range(8) for y in range(1, 10)
+            },
         }
 
         for label, cells in scenarios.items():
             with self.subTest(label=label):
-                loop = LoopContext2D.create(GameConfig(width=8, height=10, speed_level=1))
+                loop = LoopContext2D.create(
+                    GameConfig(width=8, height=10, speed_level=1)
+                )
                 loop.state.board.cells.clear()
                 loop.state.board.cells.update(cells)
                 loop.state.game_over = True
@@ -331,7 +702,7 @@ class TestEndgameAnimation(unittest.TestCase):
                         clear_anim_duration_ms=320.0,
                     )
                 assert loop.endgame_animation is not None
-                self.assertEqual(len(loop.endgame_animation.cell_fragments), len(cells))
+                self.assertEqual(len(loop.endgame_animation.cell_relics), len(cells))
                 self.assertGreater(len(loop.endgame_animation.shell_fragments), 0)
 
         cfg_3d = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
@@ -348,7 +719,7 @@ class TestEndgameAnimation(unittest.TestCase):
         loop_3d.endgame_animation = endgame_animation.build_endgame_animation_state(
             front3d_game._capture_endgame_snapshot_3d(loop_3d)
         )
-        self.assertEqual(len(loop_3d.endgame_animation.cell_fragments), 3)
+        self.assertEqual(len(loop_3d.endgame_animation.cell_relics), 3)
         self.assertGreater(len(loop_3d.endgame_animation.shell_fragments), 0)
 
 

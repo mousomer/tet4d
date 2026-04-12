@@ -74,8 +74,8 @@ from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import (
     branding_copy,
+    settings_menu_id,
     launcher_menu_id,
-    launcher_settings_routes,
     launcher_route_actions,
     menu_graph,
     ui_copy_section,
@@ -111,7 +111,6 @@ _TUTORIAL_LESSON_BY_MODE = {
     "3d": "tutorial_3d_core",
     "4d": "tutorial_4d_core",
 }
-_SETTINGS_HUB_ROUTES = launcher_settings_routes()
 _HELP_TOPIC_BY_ACTION = {
     "tutorial_how_to_play": "overview",
     "tutorial_controls_reference": "key_reference",
@@ -416,16 +415,16 @@ def _menu_action_settings(
     session: _LauncherSession,
     fonts_nd,
     *,
-    initial_row_key: str | None = None,
-    category_id: str | None = None,
+    initial_page_id: str | None = None,
+    initial_item_id: str | None = None,
 ) -> bool:
     result = run_settings_hub_menu(
         session.screen,
         fonts_nd,
         audio_settings=session.audio_settings,
         display_settings=session.display_settings,
-        initial_row_key=initial_row_key,
-        category_id=category_id,
+        initial_page_id=initial_page_id or settings_menu_id(),
+        initial_item_id=initial_item_id,
     )
     session.screen = result.screen
     session.audio_settings = result.audio_settings
@@ -433,6 +432,8 @@ def _menu_action_settings(
     if not result.keep_running:
         session.running = False
         return True
+    if result.dispatched_action_id == "settings_legacy_topology_editor":
+        return _menu_action_legacy_topology_editor(state, session, fonts_nd)
     _persist_session_status(state, session)
     return False
 
@@ -628,18 +629,16 @@ def _build_action_registry(
     register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
     register("help", lambda: _menu_action_help(state, session, fonts_nd))
     register("leaderboard", lambda: _menu_action_leaderboard(state, session, fonts_nd))
-    for action_id, route in _SETTINGS_HUB_ROUTES.items():
-        register(
-            action_id,
-            lambda route=route: _menu_action_settings(
-                state,
-                session,
-                fonts_nd,
-                initial_row_key=str(route["initial_row_key"]),
-                category_id=str(route["section_id"]),
-            ),
-        )
-    for action_id in ("keybindings", "settings_profiles"):
+    register(
+        "settings",
+        lambda: _menu_action_settings(
+            state,
+            session,
+            fonts_nd,
+            initial_page_id=settings_menu_id(),
+        ),
+    )
+    for action_id in ("keybindings",):
         register(
             action_id,
             lambda: _menu_action_keybindings(

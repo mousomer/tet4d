@@ -84,7 +84,7 @@ class TestHelpMenu(unittest.TestCase):
         for label in active_labels:
             with self.subTest(label=label):
                 self.assertIn(label, text)
-        for retired in ("Advanced", "Controls", "Profiles", "Bot Options"):
+        for retired in ("Profiles", "Bot Options"):
             with self.subTest(retired=retired):
                 self.assertNotIn(retired, text)
 

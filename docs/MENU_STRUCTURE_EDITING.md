@@ -1,230 +1,279 @@
 # Menu Structure Editing Guide
 
-This guide explains how to change menu structure in this repo without
-reintroducing Python-owned menu IA.
+This repo now has one canonical authored menu authority plus one compiled
+runtime graph.
 
 Primary rule:
 
-- change menu structure in config first
-- keep Python consumers generic
-- validate through the runtime schema and governance checks
+- edit `config/menu/structure.json`
+- let normalization compile the runtime graph
+- keep Python menu consumers structural-generic
+- do not add a second page tree in renderer, input, or launcher code
 
-## Primary file
+## Canonical authority
 
 Edit `config/menu/structure.json`.
 
-The main sections are:
+Authoring-time structure lives there. Runtime rendering, navigation, and input
+must consume the compiled normalized graph exposed through
+`src/tet4d/engine/runtime/menu_config.py`, not the raw authored tree.
 
-- `menus`: the actual menu graph
-- `menu_entrypoints`: launcher and pause root menu ids
-- `launcher_subtitles`: subtitle copy per launcher menu
-- `launcher_route_actions`: route ids mapped to launcher actions
-- `settings_hub_layout_rows`: visible settings-hub header/item order
-- `settings_sections`: filtered settings-section ownership
-- `launcher_settings_routes`: launcher settings actions mapped to filtered settings sections
+The structural keys are:
 
-## Menu Graph Changes
+- `menu_entrypoints`: root ids for launcher, pause, settings, and keybindings
+- `menus`: every page plus every typed row/item declaration
+- `launcher_subtitles`, `launcher_route_actions`, `ui_copy`: supporting copy and route metadata
 
-### Add or edit a menu
+All menu surfaces derive from that same config:
 
-Every menu under `menus` needs:
+- launcher
+- pause
+- settings
+- split `Game Settings` subpages
+- `Endgame Effects`
+- `Controls -> Keyboard Bindings`
+- retained legacy entries
 
-- `title`
-- `items`
+The runtime compiler removes useless wrappers before the graph reaches UI
+consumers:
 
-Supported item types:
+- hidden rows are removed first
+- empty pages/sections are dropped
+- singleton sections without semantic value are dissolved
+- unary submenu wrappers are collapsed
+- single-setting pages are inlined into a parent runtime page
+- single-forward submenu shims are rewritten to their direct target
+
+Compatibility seams are allowed only at dispatch or page-resolution level. The
+collapsed authored page must not survive as visible runtime structure.
+
+## Supported item types
+
+Each menu item must have a stable `id`.
+
+Supported structural types:
 
 - `action`
 - `submenu`
-- `route`
+- `section`
+- `info`
+- `toggle`
+- `selector`
+- `slider`
+- `keybinding_group`
+- `legacy_dispatch`
 
-### Add an action item
+Use type-specific fields only where they apply:
 
-Use:
+- `action` / `legacy_dispatch`: `action_id`
+- `submenu`: `menu_id`
+- `toggle` / `selector` / `slider`: `setting_id`
+- `keybinding_group`: `binding_group`, `binding_dimension`, optional `binding_bucket`
+
+Optional shared metadata:
+
+- `description`
+- `help_text_key`
+- `visibility`
+- `enabled`
+- `layout_role`
+
+## Current structure
+
+### Authored graph
+
+Top-level entrypoints:
+
+- `launcher_root`
+- `pause_root`
+- `settings_root`
+- `keybindings_root`
+
+Settings subtree:
+
+- `settings_root`
+- `settings_game_root`
+- `settings_game_gameplay`
+- `settings_game_board_geometry`
+- `settings_game_movement_rotation`
+- `settings_game_visual_animation`
+- `settings_game_difficulty_pace`
+- `settings_endgame_effects`
+- `settings_display`
+- `settings_audio`
+- `settings_controls`
+- `settings_legacy`
+
+Keybindings subtree:
+
+- `keybindings_root`
+- `keybindings_scope_general`
+- `keybindings_scope_2d`
+- `keybindings_scope_3d`
+- `keybindings_scope_4d`
+- `keybindings_scope_all`
+
+### Normalized runtime graph
+
+Visible runtime pages intentionally drop collapsed wrappers:
+
+- `settings_root`
+- `settings_game_root`
+- `settings_game_gameplay`
+- `settings_game_board_geometry`
+- `settings_game_movement_rotation`
+- `settings_game_difficulty_pace`
+- `settings_endgame_effects`
+- `settings_display`
+- `settings_audio`
+- `keybindings_root`
+- `keybindings_scope_general`
+- `keybindings_scope_2d`
+- `keybindings_scope_3d`
+- `keybindings_scope_4d`
+- `keybindings_scope_all`
+
+Notable normalized outcomes:
+
+- authored `settings_controls` collapses into the direct runtime
+  `Keyboard Bindings` row on `settings_root`
+- authored `settings_legacy` collapses into the direct runtime
+  `Legacy Topology Editor Menu` row on `settings_root`
+- authored `settings_game_visual_animation` collapses into the direct runtime
+  `Locked-cell transparency` slider on `settings_game_root`
+
+## What changed
+
+The old split settings authorities are retired from live config:
+
+- `settings_hub_rows`
+- `settings_hub_layout_rows`
+- `settings_sections`
+- `launcher_settings_routes`
+
+Do not reintroduce them or replace them with new Python-owned equivalents.
+
+## Editing patterns
+
+### Add a submenu page
+
+1. Add a new menu under `menus`.
+2. Add a `submenu` item in its parent menu.
+3. Keep ordering in the parent menu authoritative; renderers must not reorder rows.
+
+Example:
 
 ```json
 {
-  "type": "action",
-  "label": "Display",
-  "action_id": "settings_display"
-}
-```
-
-Use an existing runtime-handled `action_id`, or add the runtime handling in the
-appropriate action registry if this is a genuinely new action.
-
-### Add a submenu item
-
-Use:
-
-```json
-{
+  "id": "settings_audio",
   "type": "submenu",
-  "label": "Tutorials",
-  "menu_id": "launcher_tutorials"
+  "label": "Audio",
+  "menu_id": "settings_audio"
 }
 ```
 
-The `menu_id` must point to another entry under `menus`.
+### Add a settings control
 
-### Add a route item
+1. Choose the owning settings page under `menus`.
+2. Add a typed `toggle`, `selector`, or `slider` item there.
+3. Reuse an existing `setting_id` already handled by the settings runtime unless this is a real new setting.
 
-Use:
+Example:
 
 ```json
 {
-  "type": "route",
-  "label": "Continue Last",
-  "route_id": "continue_last"
+  "id": "endgame_preset_id",
+  "type": "selector",
+  "label": "Relic-field preset",
+  "setting_id": "endgame_preset_id"
 }
 ```
 
-Then map the route id in `launcher_route_actions`.
+### Add a keybindings group section
 
-## Launcher Settings Changes
-
-Launcher settings now rely on three config layers working together.
-
-### 1. Visible launcher settings entries
-
-Edit `menus.launcher_settings_root.items`.
-
-This controls which top-level settings entries appear in the launcher, for
-example:
-
-- `Game`
-- `Display`
-- `Audio`
-- `Controls`
-- `Profiles`
-- `Legacy Topology Editor Menu`
-
-### 2. Unified settings hub layout
-
-Edit `settings_hub_layout_rows`.
-
-This controls the actual header/item order used by the shared settings screen.
-
-Headers use:
-
-```json
-{ "kind": "header", "label": "Game" }
-```
-
-Rows use:
-
-```json
-{ "kind": "item", "label": "Random type", "row_key": "game_random_mode" }
-```
-
-### 3. Filtered settings sections
-
-Edit `settings_sections`.
-
-Each section defines:
-
-- `title`
-- `subtitle`
-- `headers`
-- `row_keys`
+1. Choose the owning `keybindings_scope_*` page.
+2. Add a `keybinding_group` item.
+3. Keep the runtime binding groups authoritative for the actions inside that group; the menu config only declares placement and grouping.
 
 Example:
 
 ```json
-"display": {
-  "title": "Display settings",
-  "subtitle": "Fullscreen, window size, overlay transparency, apply, save, reset, and back.",
-  "headers": ["Display"],
-  "row_keys": [
-    "display_fullscreen",
-    "display_width",
-    "display_height",
-    "display_overlay_transparency",
-    "display_apply",
-    "save",
-    "reset",
-    "back"
-  ]
+{
+  "id": "keybindings_4d_camera",
+  "type": "keybinding_group",
+  "label": "4D Camera / View",
+  "description": "Projection and view-turn controls.",
+  "binding_group": "camera",
+  "binding_dimension": "4d"
 }
 ```
 
-### Launcher settings routes
+### Add a legacy-backed destination
 
-Edit `launcher_settings_routes`.
-
-This maps launcher settings actions to filtered settings sections and initial
-selected rows.
+1. Place it in the canonical tree where it belongs.
+2. Use `legacy_dispatch`.
+3. Keep the legacy behavior behind the action handler, not in a parallel menu definition.
 
 Example:
 
 ```json
-"settings_display": {
-  "section_id": "display",
-  "initial_row_key": "display_fullscreen"
+{
+  "id": "settings_legacy_topology_editor",
+  "type": "legacy_dispatch",
+  "label": "Legacy Topology Editor Menu",
+  "action_id": "settings_legacy_topology_editor"
 }
 ```
 
-## Current Validation Rules
+## Shared scrolling contract
 
-The config is expected to satisfy all of these:
+Scrolling is not structural authority.
 
-- every `settings_sections.*.headers[]` value must exist as a header in `settings_hub_layout_rows`
-- every `settings_sections.*.row_keys[]` value must exist as an item row in `settings_hub_layout_rows`
-- every `launcher_settings_routes` key must be a real `action_id` in `menus.launcher_settings_root.items`
-- every `launcher_settings_routes.*.section_id` must reference an existing `settings_sections` entry
-- every `launcher_settings_routes.*.initial_row_key` must belong to that section’s `row_keys`
+The config decides:
 
-If any of these fail, runtime config validation and governance validation should
-reject the change.
+- page hierarchy
+- row order
+- item type
+- labels and metadata
 
-## What Not To Hardcode In Python
+The shared menu layout engine decides:
 
-Do not reintroduce private settings IA maps in:
+- viewport size
+- content height
+- scroll offset
+- scrollbar geometry
+- clipping and visible rows
+
+Current shared overflow implementation:
+
+- `src/tet4d/ui/pygame/ui_utils.py`
+- `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- `src/tet4d/ui/pygame/menu/keybindings_menu_view.py`
+
+If a page grows past the available height, use that shared overflow path. Do
+not add page-local scroll math, and do not treat the overflow viewport as a
+second structure authority.
+
+## What not to hardcode in Python
+
+Do not create a second structure authority in:
 
 - `cli/front.py`
 - `src/tet4d/ui/pygame/launch/settings_hub_model.py`
+- `src/tet4d/ui/pygame/launch/launcher_settings.py`
+- `src/tet4d/ui/pygame/menu/keybindings_menu_model.py`
+- `src/tet4d/ui/pygame/menu/keybindings_menu_view.py`
 
-Those modules should consume validated config, not own menu structure.
-
-## Typical Change Patterns
-
-### Add a new launcher submenu
-
-1. Add a new menu under `menus`
-2. Add a `submenu` item pointing to it
-3. Verify the target menu id exists
-
-### Move a settings row between filtered sections
-
-1. Keep the row in `settings_hub_layout_rows`
-2. Move its `row_key` between `settings_sections.*.row_keys`
-3. Update `headers` only if the visible grouped headers should change
-
-### Rename a visible launcher settings label
-
-1. Change the `label` in `menus.launcher_settings_root.items`
-2. Keep the `action_id` stable unless you also intend to change routing/runtime behavior
-
-### Add a new filtered launcher settings entry
-
-1. Add an `action` item to `menus.launcher_settings_root.items`
-2. Add or reuse a `settings_sections` entry
-3. Add a `launcher_settings_routes` entry using that same action id
-4. Ensure the section headers and row keys already exist in `settings_hub_layout_rows`
+Specialized runtime behavior is fine. Re-authored structure is not.
 
 ## Verification
 
 Run:
 
 ```bash
-PYTHONPATH=src .venv/bin/pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_launcher_settings_layout.py tests/unit/engine/test_launcher_front_settings_routes.py
+pytest -q tests/unit/engine/test_menu_policy.py tests/unit/engine/test_launcher_settings_layout.py tests/unit/engine/test_launcher_front_settings_routes.py tests/unit/engine/test_keybindings_menu_model.py
 python3 tools/governance/validate_project_contracts.py
+python3 tools/governance/generate_configuration_reference.py --check
+python3 tools/governance/generate_maintenance_docs.py --check
 CODEX_MODE=1 ./scripts/verify.sh
-```
-
-If `config/menu/structure.json` changed, also refresh generated docs:
-
-```bash
-python3 tools/governance/generate_configuration_reference.py
-python3 tools/governance/generate_maintenance_docs.py
 ```

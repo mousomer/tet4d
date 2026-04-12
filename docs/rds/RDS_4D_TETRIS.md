@@ -163,7 +163,7 @@ Rotation reliability requirements (4D `z-w`):
 22. When layer count decreases after view changes, previously drawn extra layer panels must be fully cleared before redraw.
 23. Within each projected 3D layer board, board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
 24. When a projected board line crosses the active-piece projection inside a layer board, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
-25. Terminal game over must enter a frozen-snapshot animation phase that keeps the current basis/layer decomposition fixed, explodes visible locked-cell render bodies deterministically in the same pre-projection layer-board space, and at minimum carries visible shell/frame fragments through that shared projected renderer without mutating live gameplay state.
+25. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, keep the current basis/layer decomposition fixed, kill visible shell/frame fragments in a finite rupture, and carry visible locked-cell relic bodies through deterministic bounded preset-driven path families in the same pre-projection layer-board space without mutating live gameplay state; the preset system must stay shared with `2D` / `3D`, including separate `none` / `collide` interaction semantics.
 
 Implementation structure for view `xw` / `zw`:
 1. Introduce a 4D camera orientation state in renderer/view layer (separate from gameplay state).
@@ -220,7 +220,7 @@ Minimum required coverage after 4D changes:
 17. dims `(5,4,3,2)` + `zw` regression asserting `layer_count=3` and board dims `(5,4,2)`.
 18. coord-map bijection regression: every valid 4D cell maps to exactly one `(layer,cell3)` and in-bounds.
 19. Bounded/wrap/invert kick-legality parity checks, including seam-straddling `w` cases.
-20. Frozen-snapshot terminal animation coverage for phase transition, deterministic fragments, basis-frozen render authority, and projected layer-board render-path regression.
+20. Frozen-snapshot terminal animation coverage for shatter-to-relic-field transition, deterministic shell/relic generation, bounded long-run relic motion, basis-frozen render authority, and projected layer-board render-path regression.
 
 Relevant tests:
 - `tests/unit/engine/test_game_nd.py`
@@ -240,7 +240,7 @@ Relevant tests:
 9. View `xw` / `zw` turns are camera-only and never alter gameplay outcomes.
 10. Changing total `W` size does not reuse stale projected grid/helper caches.
 11. Outer `w` layers remain in-bounds under hyper-view turns (`xw`/`zw`).
-12. Terminal animation reuses the shared projected layer-board renderer instead of a separate 4D-only effect pipeline.
+12. Terminal animation reuses the shared projected layer-board renderer instead of a separate 4D-only effect pipeline, and the relic field remains populated without drifting into unbounded empty space.
 12. Quarter-turn `xw` / `zw` view turns change board decomposition by axis basis with deterministic layer count/dims mapping.
 
 ## 11. Implementation Status (2026-02-19)

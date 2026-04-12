@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import pygame
 
@@ -8,10 +9,17 @@ from tet4d.engine.gameplay.rotation_anim import (
     ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
     ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
 )
+from tet4d.engine.runtime.endgame_presets import (
+    ENDGAME_INTERACTION_MODES,
+    ENDGAME_PRESET_IDS,
+)
 from tet4d.engine.runtime.menu_config import (
-    settings_hub_layout_rows,
+    menu_definition,
+    menu_item_id,
+    menu_items,
+    resolve_runtime_menu_id,
+    settings_menu_id,
     settings_option_labels,
-    settings_section,
     settings_top_level_categories,
     ui_copy_section,
 )
@@ -41,6 +49,10 @@ _KICK_LEVEL_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_kick_level"])
 _ROTATION_ANIMATION_MODE_LABELS = tuple(
     _SETTINGS_OPTION_LABELS["game_rotation_animation_mode"]
 )
+_ENDGAME_PRESET_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_endgame_preset"])
+_ENDGAME_INTERACTION_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["game_endgame_interaction_mode"]
+)
 _ROTATION_ANIMATION_MODE_VALUES = (
     ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
     ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
@@ -55,6 +67,12 @@ _TOPOLOGY_ADVANCED_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["topology_advanced"]
 )
 _KICK_LEVEL_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["kick_level_index"])
+_ENDGAME_PRESET_DEFAULT = str(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_preset_id"]
+)
+_ENDGAME_INTERACTION_MODE_DEFAULT = str(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_interaction_mode"]
+)
 _AUTO_SPEEDUP_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["auto_speedup_enabled"]
 )
@@ -90,6 +108,7 @@ class SettingsHubResult:
     audio_settings: AudioSettings
     display_settings: DisplaySettings
     keep_running: bool
+    dispatched_action_id: str = ""
 
 
 @dataclass
@@ -101,6 +120,8 @@ class _UnifiedSettingsState:
     random_mode_index: int
     topology_advanced: int
     kick_level_index: int
+    endgame_preset_id: str
+    endgame_interaction_mode: str
     auto_speedup_enabled: int
     lines_per_level: int
     rotation_animation_mode: str
@@ -115,6 +136,8 @@ class _UnifiedSettingsState:
     original_random_mode_index: int
     original_topology_advanced: int
     original_kick_level_index: int
+    original_endgame_preset_id: str
+    original_endgame_interaction_mode: str
     original_auto_speedup_enabled: int
     original_lines_per_level: int
     original_rotation_animation_mode: str
@@ -122,7 +145,11 @@ class _UnifiedSettingsState:
     original_rotation_animation_duration_ms_nd: int
     original_translation_animation_duration_ms: int
     original_score_logging_enabled: bool
+    page_stack: list[str]
+    selected_by_page: dict[str, int]
+    scroll_offset_by_page: dict[str, int]
     selected: int = 0
+    scroll_offset: int = 0
     status: str = ""
     status_error: bool = False
     pending_reset_confirm: bool = False
@@ -133,38 +160,26 @@ class _UnifiedSettingsState:
     flash_frames: int = 0
     saved: bool = False
     running: bool = True
+    dispatched_action_id: str = ""
     topology_cache_file_count: int = 0
     topology_cache_size_bytes: int | None = None
 
 
-_UNIFIED_SETTINGS_ROWS: tuple[tuple[str, str, str], ...] = settings_hub_layout_rows()
-_UNIFIED_SELECTABLE = tuple(
-    idx for idx, row in enumerate(_UNIFIED_SETTINGS_ROWS) if row[0] == "item"
-)
-_SELECTABLE_INDEX_BY_ROW_KEY = {
-    row_key: selectable_idx
-    for selectable_idx, row_idx in enumerate(_UNIFIED_SELECTABLE)
-    for _kind, _label, row_key in (_UNIFIED_SETTINGS_ROWS[row_idx],)
-}
-
-
 def _configured_top_level_labels() -> tuple[str, ...]:
-    entries = settings_top_level_categories()
-    return tuple(entry["label"] for entry in entries)
+    return tuple(entry["label"] for entry in settings_top_level_categories())
 
 
-def _layout_top_level_labels() -> tuple[str, ...]:
-    expected = frozenset(_configured_top_level_labels())
+def _top_level_settings_labels() -> tuple[str, ...]:
     return tuple(
-        label
-        for row_kind, label, _row_key in _UNIFIED_SETTINGS_ROWS
-        if row_kind == "header" and label in expected
+        str(item.get("label", ""))
+        for item in menu_items(settings_menu_id())
+        if str(item.get("type", "")).lower() == "submenu"
     )
 
 
 def _validate_unified_layout_against_policy() -> tuple[bool, str]:
     expected = _configured_top_level_labels()
-    actual = _layout_top_level_labels()
+    actual = _top_level_settings_labels()
     if expected == actual:
         return True, "Settings layout policy verified"
     return False, (
@@ -173,59 +188,32 @@ def _validate_unified_layout_against_policy() -> tuple[bool, str]:
     )
 
 
-def settings_rows_for_category(
-    category_id: str | None = None,
-) -> tuple[tuple[str, str, str], ...]:
-    clean_category = str(category_id).strip().lower() if category_id else ""
-    if not clean_category:
-        return _UNIFIED_SETTINGS_ROWS
-    section = settings_section(clean_category)
-    visible_headers = frozenset(str(label) for label in section["headers"])
-    visible_row_keys = frozenset(str(row_key) for row_key in section["row_keys"])
-
-    filtered_rows: list[tuple[str, str, str]] = []
-    for row_kind, label, row_key in _UNIFIED_SETTINGS_ROWS:
-        if row_kind == "header":
-            if label in visible_headers:
-                filtered_rows.append((row_kind, label, row_key))
-            continue
-        if row_key in visible_row_keys:
-            filtered_rows.append((row_kind, label, row_key))
-    return tuple(filtered_rows)
+def settings_page_items(page_id: str) -> tuple[dict[str, Any], ...]:
+    return tuple(menu_definition(page_id)["items"])
 
 
-def selectable_indexes_for_rows(
-    rows: tuple[tuple[str, str, str], ...],
+def selectable_indexes_for_items(
+    items: tuple[dict[str, Any], ...],
 ) -> tuple[int, ...]:
-    return tuple(idx for idx, row in enumerate(rows) if row[0] == "item")
+    return tuple(
+        idx
+        for idx, item in enumerate(items)
+        if str(item.get("type", "")).lower() not in {"section", "info"}
+    )
 
 
-def selectable_index_by_row_key_for_rows(
-    rows: tuple[tuple[str, str, str], ...],
+def selectable_index_by_item_id_for_items(
+    items: tuple[dict[str, Any], ...],
 ) -> dict[str, int]:
-    selectable = selectable_indexes_for_rows(rows)
+    selectable = selectable_indexes_for_items(items)
     return {
-        row_key: selectable_idx
+        menu_item_id(items[row_idx]): selectable_idx
         for selectable_idx, row_idx in enumerate(selectable)
-        for _kind, _label, row_key in (rows[row_idx],)
     }
 
 
-def settings_title_for_category(category_id: str | None = None) -> str:
-    clean_category = str(category_id).strip().lower() if category_id else ""
-    if not clean_category:
-        return _SETTINGS_HUB_COPY["title"]
-    return str(settings_section(clean_category)["title"])
-
-
-def settings_subtitle_for_category(category_id: str | None = None) -> str:
-    clean_category = str(category_id).strip().lower() if category_id else ""
-    if clean_category:
-        return str(settings_section(clean_category)["subtitle"])
-    categories = ", ".join(_configured_top_level_labels())
-    return _SETTINGS_HUB_COPY["subtitle_categories_template"].format(
-        categories=categories
-    )
+def settings_title_for_page(page_id: str) -> str:
+    return str(menu_definition(page_id)["title"])
 
 
 def _audio_defaults() -> AudioSettings:
@@ -265,9 +253,25 @@ def _clone_display_settings(settings: DisplaySettings) -> DisplaySettings:
     )
 
 
+def current_settings_page_id(state: _UnifiedSettingsState) -> str:
+    return state.page_stack[-1]
+
+
+def current_settings_page_items(state: _UnifiedSettingsState) -> tuple[dict[str, Any], ...]:
+    return settings_page_items(current_settings_page_id(state))
+
+
+def current_page_selectable_indexes(state: _UnifiedSettingsState) -> tuple[int, ...]:
+    return selectable_indexes_for_items(current_settings_page_items(state))
+
+
 def _unified_row_key(state: _UnifiedSettingsState) -> str:
-    row_idx = _UNIFIED_SELECTABLE[state.selected]
-    return _UNIFIED_SETTINGS_ROWS[row_idx][2]
+    items = current_settings_page_items(state)
+    selectable = current_page_selectable_indexes(state)
+    if not selectable:
+        return ""
+    safe_selected = max(0, min(len(selectable) - 1, int(state.selected)))
+    return menu_item_id(items[selectable[safe_selected]])
 
 
 def _set_unified_status(
@@ -362,6 +366,19 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
             min(len(_RANDOM_MODE_LABELS) - 1, int(state.random_mode_index)),
         )
         return _RANDOM_MODE_LABELS[safe_index]
+    if row_key == "endgame_preset_id":
+        label_by_value = dict(zip(ENDGAME_PRESET_IDS, _ENDGAME_PRESET_LABELS))
+        return label_by_value.get(
+            str(state.endgame_preset_id), str(state.endgame_preset_id)
+        )
+    if row_key == "endgame_interaction_mode":
+        label_by_value = dict(
+            zip(ENDGAME_INTERACTION_MODES, _ENDGAME_INTERACTION_LABELS)
+        )
+        return label_by_value.get(
+            str(state.endgame_interaction_mode),
+            str(state.endgame_interaction_mode),
+        )
     if row_key == "game_topology_advanced":
         return "ON" if int(state.topology_advanced) else "OFF"
     return ""
@@ -375,7 +392,8 @@ def build_unified_settings_state(
     *,
     audio_settings: AudioSettings,
     display_settings: DisplaySettings,
-    initial_row_key: str | None = None,
+    initial_page_id: str | None = None,
+    initial_item_id: str | None = None,
 ) -> _UnifiedSettingsState:
     score_logging_enabled = bool(get_analytics_settings()["score_logging_enabled"])
     overlay_transparency = get_overlay_transparency()
@@ -389,6 +407,8 @@ def build_unified_settings_state(
     random_mode_index = int(mode_gameplay["random_mode_index"])
     topology_advanced = int(mode_gameplay["topology_advanced"])
     kick_level_index = int(mode_gameplay["kick_level_index"])
+    endgame_preset_id = str(mode_gameplay["endgame_preset_id"])
+    endgame_interaction_mode = str(mode_gameplay["endgame_interaction_mode"])
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
     rotation_animation_mode = str(mode_gameplay["rotation_animation_mode"])
@@ -401,6 +421,13 @@ def build_unified_settings_state(
     translation_animation_duration_ms = int(
         mode_gameplay["translation_animation_duration_ms"]
     )
+    requested_page = str(initial_page_id or settings_menu_id()).strip().lower()
+    requested_item = str(initial_item_id or "").strip().lower()
+    start_page = resolve_runtime_menu_id(
+        requested_page or settings_menu_id(),
+        item_id=requested_item or None,
+        fallback_menu_id=settings_menu_id(),
+    )
     state = _UnifiedSettingsState(
         audio_settings=_clone_audio_settings(audio_settings),
         display_settings=_clone_display_settings(display_settings),
@@ -409,6 +436,8 @@ def build_unified_settings_state(
         random_mode_index=random_mode_index,
         topology_advanced=topology_advanced,
         kick_level_index=kick_level_index,
+        endgame_preset_id=endgame_preset_id,
+        endgame_interaction_mode=endgame_interaction_mode,
         auto_speedup_enabled=auto_speedup_enabled,
         lines_per_level=lines_per_level,
         rotation_animation_mode=rotation_animation_mode,
@@ -423,6 +452,8 @@ def build_unified_settings_state(
         original_random_mode_index=random_mode_index,
         original_topology_advanced=topology_advanced,
         original_kick_level_index=kick_level_index,
+        original_endgame_preset_id=endgame_preset_id,
+        original_endgame_interaction_mode=endgame_interaction_mode,
         original_auto_speedup_enabled=auto_speedup_enabled,
         original_lines_per_level=lines_per_level,
         original_rotation_animation_mode=rotation_animation_mode,
@@ -430,9 +461,16 @@ def build_unified_settings_state(
         original_rotation_animation_duration_ms_nd=rotation_animation_duration_ms_nd,
         original_translation_animation_duration_ms=translation_animation_duration_ms,
         original_score_logging_enabled=score_logging_enabled,
+        page_stack=[start_page],
+        selected_by_page={},
+        scroll_offset_by_page={},
     )
-    if initial_row_key:
-        selected = _SELECTABLE_INDEX_BY_ROW_KEY.get(str(initial_row_key).strip().lower())
+    items = settings_page_items(start_page)
+    selectable = selectable_index_by_item_id_for_items(items)
+    if initial_item_id:
+        selected = selectable.get(str(initial_item_id).strip().lower())
         if selected is not None:
             state.selected = selected
+    state.selected_by_page[start_page] = int(state.selected)
+    state.scroll_offset_by_page[start_page] = 0
     return state

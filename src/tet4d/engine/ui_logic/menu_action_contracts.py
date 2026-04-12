@@ -3,7 +3,6 @@ from __future__ import annotations
 PARITY_ACTION_IDS: frozenset[str] = frozenset(
     {
         "settings",
-        "keybindings",
         "help",
         "leaderboard",
         "bot_options",
@@ -25,11 +24,6 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "tutorial_how_to_play",
         "tutorial_controls_reference",
         "settings",
-        "settings_display",
-        "settings_audio",
-        "settings_profiles",
-        "settings_legacy_topology_editor",
-        "keybindings",
         "help",
         "leaderboard",
         "bot_options",

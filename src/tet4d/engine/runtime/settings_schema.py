@@ -8,6 +8,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from .endgame_presets import (
+    ENDGAME_INTERACTION_MODES,
+    ENDGAME_PRESET_IDS,
+    normalize_endgame_interaction_mode,
+    normalize_endgame_preset_id,
+)
+
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = ("off", "edge", "full", "helper")
@@ -248,6 +255,39 @@ def sync_runtime_bot_budget(
             mode_settings["bot_budget_ms"] = int(runtime_budget_for_mode_fn(mode_key))
 
 
+def _validated_mode_default_setting(
+    *,
+    mode_key: str,
+    attr_name: str,
+    value: object,
+) -> str | int:
+    setting_path = f"defaults.settings.{mode_key}.{attr_name}"
+    if attr_name == "rotation_animation_mode":
+        normalized_mode = as_non_empty_string(value, path=setting_path).lower()
+        if normalized_mode not in ROTATION_ANIMATION_MODE_NAMES:
+            raise RuntimeError(
+                f"{setting_path} must be one of: "
+                + ", ".join(ROTATION_ANIMATION_MODE_NAMES)
+            )
+        return normalized_mode
+    if attr_name == "endgame_preset_id":
+        normalized_preset = normalize_endgame_preset_id(value)
+        if normalized_preset not in ENDGAME_PRESET_IDS:
+            raise RuntimeError(
+                f"{setting_path} must be one of: " + ", ".join(ENDGAME_PRESET_IDS)
+            )
+        return normalized_preset
+    if attr_name == "endgame_interaction_mode":
+        normalized_mode = normalize_endgame_interaction_mode(value)
+        if normalized_mode not in ENDGAME_INTERACTION_MODES:
+            raise RuntimeError(
+                f"{setting_path} must be one of: "
+                + ", ".join(ENDGAME_INTERACTION_MODES)
+            )
+        return normalized_mode
+    return require_int(value, path=setting_path)
+
+
 def validate_defaults_payload(
     payload: dict[str, Any],
     *,
@@ -326,22 +366,10 @@ def validate_defaults_payload(
         cleaned: dict[str, Any] = {}
         for attr, value in mode_settings.items():
             attr_name = str(attr)
-            if attr_name == "rotation_animation_mode":
-                normalized_mode = as_non_empty_string(
-                    value,
-                    path=f"defaults.settings.{mode_key}.{attr}",
-                ).lower()
-                if normalized_mode not in ROTATION_ANIMATION_MODE_NAMES:
-                    raise RuntimeError(
-                        "defaults.settings."
-                        f"{mode_key}.{attr} must be one of: "
-                        + ", ".join(ROTATION_ANIMATION_MODE_NAMES)
-                    )
-                cleaned[attr_name] = normalized_mode
-                continue
-            cleaned[attr_name] = require_int(
-                value,
-                path=f"defaults.settings.{mode_key}.{attr}",
+            cleaned[attr_name] = _validated_mode_default_setting(
+                mode_key=mode_key,
+                attr_name=attr_name,
+                value=value,
             )
         settings[mode_key] = cleaned
 
@@ -436,6 +464,7 @@ def atomic_write_json(
     temp_path = path.with_suffix(path.suffix + ".tmp")
     temp_path.write_text(encoded, encoding="utf-8")
     temp_path.replace(path)
+
 
 def copy_text_file(src_path: Path, dst_path: Path) -> None:
     dst_path.parent.mkdir(parents=True, exist_ok=True)

@@ -22,6 +22,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     clamp_overlay_transparency,
     get_display_settings,
     mode_animation_settings,
+    mode_endgame_settings,
     mode_rotation_animation_mode,
 )
 from tet4d.engine.runtime.project_config import project_constant_int
@@ -46,7 +47,12 @@ from tet4d.engine.tutorial.api import (
     tutorial_runtime_transition_pending_runtime,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
-from tet4d.ui.pygame import front4d_render, frontend_nd_input, frontend_nd_setup, frontend_nd_state
+from tet4d.ui.pygame import (
+    front4d_render,
+    frontend_nd_input,
+    frontend_nd_setup,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
@@ -117,9 +123,7 @@ tutorial_runtime_create_session = tutorial_runtime_create_session_runtime
 tutorial_runtime_action_allowed = tutorial_runtime_action_allowed_runtime
 tutorial_runtime_observe_action = tutorial_runtime_observe_action_runtime
 tutorial_runtime_sync_and_advance = tutorial_runtime_sync_and_advance_runtime
-tutorial_runtime_consume_pending_setup = (
-    tutorial_runtime_consume_pending_setup_runtime
-)
+tutorial_runtime_consume_pending_setup = tutorial_runtime_consume_pending_setup_runtime
 tutorial_runtime_restart = tutorial_runtime_restart_runtime
 tutorial_runtime_previous_stage = tutorial_runtime_previous_stage_runtime
 tutorial_runtime_next_stage = tutorial_runtime_next_stage_runtime
@@ -219,6 +223,8 @@ _TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
     min_value=0,
     max_value=10,
 )
+
+
 def _tutorial_board_dims_4d() -> tuple[int, int, int, int]:
     dims = tutorial_board_dims_runtime("4d")
     return (int(dims[0]), int(dims[1]), int(dims[2]), int(dims[3]))
@@ -232,7 +238,6 @@ def _apply_tutorial_board_profile_4d(
     if not tutorial_lesson_id:
         return
     cfg.dims = _tutorial_board_dims_4d()
-
 
 
 def _tutorial_required_action_legal_4d(loop: "LoopContext4D", action_id: str) -> bool:
@@ -285,7 +290,8 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
                 min_visible_layer=min_visible_layer,
             )
         ),
-        tutorial_allowed_actions_blocked=lambda curr_loop, session: tutorial_allowed_actions_blocked(
+        tutorial_allowed_actions_blocked=lambda curr_loop,
+        session: tutorial_allowed_actions_blocked(
             session,
             allowed_actions_runtime=tutorial_runtime_allowed_actions_runtime,
             has_legal_action=lambda action_ids: _tutorial_has_legal_action_4d(
@@ -293,7 +299,8 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext4D") -> None:
                 action_ids,
             ),
         ),
-        tutorial_required_action_blocked=lambda curr_loop, session: tutorial_required_action_blocked(
+        tutorial_required_action_blocked=lambda curr_loop,
+        session: tutorial_required_action_blocked(
             session,
             required_action_runtime=tutorial_runtime_required_action_runtime,
             required_action_legal=lambda action_id: _tutorial_required_action_legal_4d(
@@ -349,6 +356,7 @@ def _apply_pending_tutorial_setup(loop: "LoopContext4D") -> None:
 def _capture_endgame_snapshot_4d(
     loop: "LoopContext4D",
 ) -> object:
+    preset_id, interaction_mode = mode_endgame_settings("4d")
     basis = front4d_render._basis_for_view(loop.view, loop.cfg.dims)
     locked_cells = []
     for coord, cell_id in sorted(loop.state.board.cells.items()):
@@ -386,9 +394,9 @@ def _capture_endgame_snapshot_4d(
             layer_axis_label=str(basis.layer_axis_label),
             layer_count=int(basis.layer_count),
         ),
+        preset_id=preset_id,
+        interaction_mode=interaction_mode,
     )
-
-
 
 
 @dataclass
@@ -549,6 +557,7 @@ class LoopContext4D(PanelDragMixin):
             reset_cooldown=lambda: setattr(self, "tutorial_action_cooldown_ms", 0),
             play_sfx=play_sfx,
         )
+
     def _tutorial_action_allowed(self, action_id: str) -> bool:
         if self.tutorial_session is None:
             return True
@@ -576,7 +585,7 @@ class LoopContext4D(PanelDragMixin):
             self,
             create_initial_state=create_initial_state,
             refresh_score_multiplier=self.refresh_score_multiplier,
-         )
+        )
         self.endgame_animation = None
         self.terminal_phase = TERMINAL_PHASE_PLAYING
 
@@ -589,7 +598,7 @@ class LoopContext4D(PanelDragMixin):
             self,
             off_mode=BotMode.OFF,
             combined_score_multiplier=combined_score_multiplier,
-         )
+        )
 
     def _panel_rects(self) -> tuple[pygame.Rect | None, pygame.Rect | None]:
         surface = pygame.display.get_surface()
@@ -637,6 +646,8 @@ class LoopContext4D(PanelDragMixin):
         self.view.yaw_deg = yaw_deg
         self.view.pitch_deg = pitch_deg
         self._tutorial_observe_action("mouse_orbit")
+
+
 def run_game_loop(
     screen: pygame.Surface,
     cfg: GameConfigND,
@@ -724,14 +735,21 @@ def run_game_loop(
             apply_pending_setup=_apply_pending_tutorial_setup,
             tutorial_is_running=tutorial_runtime_is_running_runtime,
         )
+
     return run_nd_loop(
         screen=screen,
         fonts=fonts,
         loop=loop,
         gravity_interval_from_config=gravity_interval_ms_from_config,
         pause_dimension=4,
-        run_pause_menu=run_pause_menu if pause_menu_runner is None else pause_menu_runner,
-        run_help_menu=lambda target, active_fonts, dim, ctx, on_escape_back=None: run_help_menu(
+        run_pause_menu=run_pause_menu
+        if pause_menu_runner is None
+        else pause_menu_runner,
+        run_help_menu=lambda target,
+        active_fonts,
+        dim,
+        ctx,
+        on_escape_back=None: run_help_menu(
             target,
             active_fonts,
             dimension=dim,
@@ -806,4 +824,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit()
-

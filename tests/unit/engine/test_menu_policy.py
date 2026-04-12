@@ -8,7 +8,6 @@ from unittest import mock
 
 from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config
-from tet4d.engine.runtime.menu_structure_schema import validate_structure_payload
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -30,146 +29,130 @@ class TestMenuPolicy(unittest.TestCase):
 
     def test_top_level_categories_match_hub_rows(self) -> None:
         top_level = menu_config.settings_top_level_categories()
-        hub_rows = set(menu_config.settings_hub_rows())
-        for entry in top_level:
-            self.assertIn(entry["label"], hub_rows)
         self.assertEqual(
             [entry["label"] for entry in top_level],
-            ["Audio", "Display", "Game"],
+            [
+                "Game Settings",
+                "Endgame Effects",
+                "Display",
+                "Audio",
+            ],
         )
 
     def test_launcher_settings_layout_matches_policy(self) -> None:
         ok, message = settings_hub_model._validate_unified_layout_against_policy()
         self.assertTrue(ok, message)
 
-    def test_settings_hub_layout_rows_include_item_and_headers(self) -> None:
-        rows = menu_config.settings_hub_layout_rows()
-        self.assertTrue(rows)
-        kinds = {kind for kind, _label, _row_key in rows}
-        self.assertIn("header", kinds)
-        self.assertIn("item", kinds)
-        self.assertTrue(
-            any(row_key == "save" for kind, _label, row_key in rows if kind == "item")
-        )
-        self.assertTrue(
-            any(row_key == "reset" for kind, _label, row_key in rows if kind == "item")
-        )
-        self.assertTrue(
-            any(
-                row_key == "game_seed"
-                for kind, _label, row_key in rows
-                if kind == "item"
-            )
-        )
-        self.assertTrue(
-            any(
-                row_key == "game_random_mode"
-                for kind, _label, row_key in rows
-                if kind == "item"
-            )
-        )
-        self.assertFalse(
-            any(
-                row_key == "game_topology_advanced"
-                for kind, _label, row_key in rows
-                if kind == "item"
-            )
-        )
-        for expected_row_key in (
-            "rotation_animation_mode",
-            "kick_level_index",
-            "rotation_animation_duration_ms_2d",
-            "rotation_animation_duration_ms_nd",
-            "translation_animation_duration_ms",
-            "auto_speedup_enabled",
-            "lines_per_level",
-            "topology_cache_measure",
-            "topology_cache_clear",
-        ):
-            self.assertTrue(
-                any(
-                    row_key == expected_row_key
-                    for kind, _label, row_key in rows
-                    if kind == "item"
-                ),
-                expected_row_key,
-            )
+    def test_canonical_menu_config_replaces_retired_split_settings_keys(self) -> None:
+        payload = self._structure_payload()
+        self.assertNotIn("settings_hub_rows", payload)
+        self.assertNotIn("settings_hub_layout_rows", payload)
+        self.assertNotIn("settings_sections", payload)
+        self.assertNotIn("launcher_settings_routes", payload)
 
-    def test_settings_hub_headers_align_with_top_level_categories(self) -> None:
-        top_level = menu_config.settings_top_level_categories()
-        expected = {entry["label"] for entry in top_level}
-        headers = {
-            label
-            for kind, label, _row_key in menu_config.settings_hub_layout_rows()
-            if kind == "header"
-        }
-        self.assertTrue(expected.issubset(headers))
-
-    def test_settings_sections_define_filtered_hub_contract(self) -> None:
-        audio = menu_config.settings_section("audio")
-        display = menu_config.settings_section("display")
-        gameplay = menu_config.settings_section("gameplay")
-        self.assertEqual(tuple(audio["headers"]), ("Audio",))
-        self.assertEqual(tuple(display["headers"]), ("Display",))
-        self.assertEqual(
-            tuple(gameplay["headers"]),
-            ("Game", "Advanced gameplay", "Analytics"),
-        )
-        self.assertIn("game_seed", gameplay["row_keys"])
-        self.assertIn("rotation_animation_mode", gameplay["row_keys"])
-        self.assertIn("analytics_score_logging", gameplay["row_keys"])
-        self.assertIn("save", gameplay["row_keys"])
-        self.assertIn("reset", gameplay["row_keys"])
-        self.assertIn("back", gameplay["row_keys"])
-
-    def test_launcher_settings_routes_are_config_driven(self) -> None:
-        gameplay_route = menu_config.launcher_settings_route("settings")
-        audio_route = menu_config.launcher_settings_route("settings_audio")
-        display_route = menu_config.launcher_settings_route("settings_display")
-
-        self.assertEqual(
-            gameplay_route,
-            {"section_id": "gameplay", "initial_row_key": "game_seed"},
-        )
-        self.assertEqual(
-            audio_route,
-            {"section_id": "audio", "initial_row_key": "audio_master"},
-        )
-        self.assertEqual(
-            display_route,
-            {"section_id": "display", "initial_row_key": "display_fullscreen"},
-        )
-        settings_actions = {
-            item["action_id"]
-            for item in menu_config.menu_definition("launcher_settings_root")["items"]
-            if item["type"] == "action"
+    def test_canonical_menu_config_supports_required_item_types(self) -> None:
+        item_types = {
+            item["type"]
+            for menu in menu_config.authored_menu_graph().values()
+            for item in menu["items"]
         }
         self.assertTrue(
-            set(menu_config.launcher_settings_routes()).issubset(settings_actions)
+            {
+                "action",
+                "submenu",
+                "section",
+                "info",
+                "toggle",
+                "selector",
+                "slider",
+                "keybinding_group",
+                "legacy_dispatch",
+            }.issubset(item_types)
         )
 
-    def test_settings_sections_fail_validation_on_unknown_layout_header(self) -> None:
-        payload = self._structure_payload()
-        payload["settings_sections"]["audio"]["headers"] = ["Missing Header"]
-        with self.assertRaisesRegex(RuntimeError, "unknown layout headers"):
-            validate_structure_payload(payload)
+    def test_authored_settings_root_declares_split_subpages_and_legacy_controls(self) -> None:
+        settings_menu = menu_config.authored_menu_definition(menu_config.settings_menu_id())
+        self.assertEqual(
+            [item["label"] for item in settings_menu["items"]],
+            [
+                "Game Settings",
+                "Endgame Effects",
+                "Display",
+                "Audio",
+                "Controls",
+                "Legacy",
+                "Back",
+            ],
+        )
 
-    def test_settings_sections_fail_validation_on_unknown_layout_row_key(self) -> None:
-        payload = self._structure_payload()
-        payload["settings_sections"]["audio"]["row_keys"] = ["missing_row"]
-        with self.assertRaisesRegex(RuntimeError, "unknown layout row keys"):
-            validate_structure_payload(payload)
+        game_menu = menu_config.authored_menu_definition("settings_game_root")
+        self.assertEqual(
+            [item["label"] for item in game_menu["items"]],
+            [
+                "Gameplay",
+                "Board / Geometry",
+                "Movement / Rotation",
+                "Visual / Animation",
+                "Difficulty / Pace",
+                "Back",
+            ],
+        )
 
-    def test_launcher_settings_routes_fail_validation_on_unknown_action(self) -> None:
-        payload = self._structure_payload()
-        payload["launcher_settings_routes"]["settings_audo"] = {
-            "section_id": "audio",
-            "initial_row_key": "audio_master",
-        }
-        with self.assertRaisesRegex(
-            RuntimeError, "unknown launcher settings action"
-        ):
-            validate_structure_payload(payload)
+        controls_menu = menu_config.authored_menu_definition("settings_controls")
+        self.assertEqual(
+            [item["label"] for item in controls_menu["items"]],
+            [
+                "Controls",
+                "Keyboard Bindings",
+                "Profile management, save/load, and conflict handling live inside Keyboard Bindings.",
+                "Back",
+            ],
+        )
+
+        legacy_menu = menu_config.authored_menu_definition("settings_legacy")
+        legacy_rows = [item for item in legacy_menu["items"] if item["type"] == "legacy_dispatch"]
+        self.assertEqual(len(legacy_rows), 1)
+        self.assertEqual(
+            legacy_rows[0]["action_id"],
+            "settings_legacy_topology_editor",
+        )
+
+    def test_runtime_settings_root_collapses_singleton_wrappers(self) -> None:
+        settings_menu = menu_config.menu_definition(menu_config.settings_menu_id())
+        self.assertEqual(
+            [item["label"] for item in settings_menu["items"]],
+            [
+                "Game Settings",
+                "Endgame Effects",
+                "Display",
+                "Audio",
+                "Keyboard Bindings",
+                "Legacy Topology Editor Menu",
+                "Back",
+            ],
+        )
+        self.assertEqual(
+            [item["type"] for item in settings_menu["items"]],
+            ["submenu", "submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+        )
+        self.assertNotIn("settings_controls", menu_config.menu_graph())
+        self.assertNotIn("settings_legacy", menu_config.menu_graph())
+        self.assertNotIn("settings_game_visual_animation", menu_config.menu_graph())
+
+        game_menu = menu_config.menu_definition("settings_game_root")
+        self.assertEqual(
+            [item["label"] for item in game_menu["items"]],
+            [
+                "Gameplay",
+                "Board / Geometry",
+                "Movement / Rotation",
+                "Locked-cell transparency",
+                "Save",
+                "Reset defaults",
+                "Difficulty / Pace",
+                "Back",
+            ],
+        )
 
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
@@ -210,10 +193,14 @@ class TestMenuPolicy(unittest.TestCase):
         pause_actions = set(
             menu_config.reachable_action_ids(menu_config.pause_menu_id())
         )
-        required = {"settings", "keybindings", "help", "bot_options", "quit"}
-        required.add("leaderboard")
+        required = {"settings", "help", "bot_options", "quit", "leaderboard"}
         self.assertTrue(required.issubset(launcher_actions))
         self.assertTrue(required.issubset(pause_actions))
+        settings_actions = set(
+            menu_config.reachable_action_ids(menu_config.settings_menu_id())
+        )
+        self.assertIn("keybindings", settings_actions)
+        self.assertIn("settings_legacy_topology_editor", settings_actions)
 
     def test_pause_rows_and_actions_stay_in_sync(self) -> None:
         self.assertEqual(
@@ -358,7 +345,6 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertIn("launcher_play", subtitles)
         self.assertIn("launcher_tutorials", subtitles)
         self.assertIn("launcher_tutorials_interactive", subtitles)
-        self.assertIn("launcher_settings_root", subtitles)
         self.assertIn("default", subtitles)
         self.assertTrue(
             all(isinstance(text, str) and text for text in subtitles.values())
@@ -388,40 +374,33 @@ class TestMenuPolicy(unittest.TestCase):
         )
 
     def test_settings_menu_structure_matches_requested_sections(self) -> None:
-        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_menu = menu_config.menu_definition("settings_root")
         labels = [item["label"] for item in settings_menu["items"]]
         self.assertEqual(
             labels,
             [
-                "Game",
+                "Game Settings",
+                "Endgame Effects",
                 "Display",
                 "Audio",
-                "Keybindings",
-                "Keyboard Profiles",
+                "Keyboard Bindings",
                 "Legacy Topology Editor Menu",
+                "Back",
             ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["action", "action", "action", "action", "submenu", "action"],
-        )
-        self.assertEqual(
-            settings_menu["items"][-1]["action_id"],
-            "settings_legacy_topology_editor",
+            ["submenu", "submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
         )
 
-    def test_keyboard_profiles_submenu_uses_placeholder_for_runtime_expansion(self) -> None:
-        profiles_menu = menu_config.menu_definition("launcher_settings_profiles")
-        self.assertEqual(profiles_menu["title"], "Keyboard Profiles")
+    def test_keybindings_scopes_are_declared_in_canonical_menu_config(self) -> None:
+        keybindings_menu = menu_config.menu_definition(menu_config.keybindings_menu_id())
         self.assertEqual(
-            profiles_menu["items"],
-            (
-                {
-                    "type": "action",
-                    "label": "Profiles",
-                    "action_id": "settings_profiles",
-                },
-            ),
+            [item["label"] for item in keybindings_menu["items"]],
+            ["General", "2D", "3D", "4D", "All"],
+        )
+        self.assertTrue(
+            all(item["type"] == "submenu" for item in keybindings_menu["items"])
         )
 
     def test_topology_playground_has_no_legacy_topology_entry(self) -> None:
@@ -431,20 +410,25 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(topology_item["type"], "action")
         self.assertNotIn("menu_id", topology_item)
-        reachable = set(menu_config.reachable_action_ids(menu_config.launcher_menu_id()))
-        self.assertIn("settings_legacy_topology_editor", reachable)
-        self.assertNotIn("legacy_topology_editor_menu", reachable)
+        launcher_actions = set(
+            item["action_id"]
+            for item in root_items
+            if item["type"] == "action"
+        )
+        self.assertNotIn("settings_legacy_topology_editor", launcher_actions)
+        settings_actions = set(
+            menu_config.reachable_action_ids(menu_config.settings_menu_id())
+        )
+        self.assertIn("settings_legacy_topology_editor", settings_actions)
 
     def test_controls_settings_and_reference_use_distinct_destinations(self) -> None:
         tutorials = menu_config.menu_definition("launcher_tutorials")
         controls_reference = next(
-            item
-            for item in tutorials["items"]
-            if item["label"] == "Controls Reference"
+            item for item in tutorials["items"] if item["label"] == "Controls Reference"
         )
-        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_menu = menu_config.menu_definition("settings_root")
         controls_settings = next(
-            item for item in settings_menu["items"] if item["label"] == "Keybindings"
+            item for item in settings_menu["items"] if item["label"] == "Keyboard Bindings"
         )
         self.assertEqual(controls_reference["action_id"], "tutorial_controls_reference")
         self.assertEqual(controls_settings["action_id"], "keybindings")
@@ -452,12 +436,99 @@ class TestMenuPolicy(unittest.TestCase):
             controls_reference["action_id"], controls_settings["action_id"]
         )
 
+    def test_runtime_menu_resolution_maps_collapsed_authored_pages(self) -> None:
+        self.assertEqual(
+            menu_config.resolve_runtime_menu_id(
+                "settings_legacy",
+                item_id="settings_legacy_topology_editor",
+            ),
+            "settings_root",
+        )
+        self.assertEqual(
+            menu_config.resolve_runtime_menu_id(
+                "settings_game_visual_animation",
+                item_id="display_overlay_transparency",
+            ),
+            "settings_game_root",
+        )
+
+    def test_runtime_menu_graph_avoids_unary_wrappers_and_duplicate_setting_paths(
+        self,
+    ) -> None:
+        runtime_graph = menu_config.menu_graph()
+        seen_setting_ids: dict[str, str] = {}
+        for menu_id, menu in runtime_graph.items():
+            items = tuple(menu["items"])
+            nonutility = [
+                item
+                for item in items
+                if item["type"] in {"submenu", "toggle", "selector", "slider", "action", "legacy_dispatch"}
+                and item.get("action_id") not in {"back", "save", "reset", "display_apply"}
+            ]
+            submenu_count = sum(1 for item in nonutility if item["type"] == "submenu")
+            setting_count = sum(
+                1 for item in nonutility if item["type"] in {"toggle", "selector", "slider"}
+            )
+            if menu_id not in {
+                menu_config.launcher_menu_id(),
+                menu_config.pause_menu_id(),
+                menu_config.settings_menu_id(),
+                menu_config.keybindings_menu_id(),
+            } and not any(item["type"] == "keybinding_group" for item in items):
+                self.assertFalse(
+                    submenu_count == 1 and len(nonutility) == 1,
+                    msg=f"{menu_id} retained a unary submenu wrapper",
+                )
+                self.assertFalse(
+                    setting_count == 1 and len(nonutility) == 1,
+                    msg=f"{menu_id} retained a single-setting wrapper",
+                )
+            for item in items:
+                if item["type"] not in {"toggle", "selector", "slider"}:
+                    continue
+                setting_id = item["setting_id"]
+                owner = seen_setting_ids.setdefault(setting_id, menu_id)
+                self.assertEqual(
+                    owner,
+                    menu_id,
+                    msg=f"{setting_id} drifted into multiple runtime pages",
+                )
+
+    def test_runtime_menu_depth_stays_shallow(self) -> None:
+        runtime_graph = menu_config.menu_graph()
+        exempt_depth_ids = {menu_config.keybindings_menu_id()}
+        pending = [
+            (menu_config.launcher_menu_id(), 1),
+            (menu_config.pause_menu_id(), 1),
+            (menu_config.settings_menu_id(), 1),
+            (menu_config.keybindings_menu_id(), 1),
+        ]
+        seen: set[tuple[str, int]] = set()
+        while pending:
+            menu_id, depth = pending.pop()
+            if (menu_id, depth) in seen:
+                continue
+            seen.add((menu_id, depth))
+            self.assertLessEqual(
+                depth,
+                3,
+                msg=f"{menu_id} exceeded normalized runtime depth budget",
+            )
+            for item in runtime_graph.get(menu_id, {}).get("items", ()):
+                if item["type"] != "submenu":
+                    continue
+                target = item["menu_id"]
+                next_depth = depth + 1
+                if menu_id in exempt_depth_ids:
+                    next_depth = min(next_depth, 3)
+                pending.append((target, next_depth))
+
     def test_help_is_available_from_tutorials_not_only_settings(self) -> None:
         tutorials = menu_config.menu_definition("launcher_tutorials")
         tutorial_actions = {
             item["action_id"] for item in tutorials["items"] if item["type"] == "action"
         }
-        settings_menu = menu_config.menu_definition("launcher_settings_root")
+        settings_menu = menu_config.menu_definition("settings_root")
         settings_labels = [item["label"] for item in settings_menu["items"]]
         self.assertIn("help", tutorial_actions)
         self.assertNotIn("Help", settings_labels)
@@ -467,12 +538,9 @@ class TestMenuPolicy(unittest.TestCase):
         play_actions = {
             item["action_id"] for item in play_menu["items"] if item["type"] == "action"
         }
-        settings_menu = menu_config.menu_definition("launcher_settings_root")
-        settings_actions = {
-            item["action_id"]
-            for item in settings_menu["items"]
-            if item["type"] == "action"
-        }
+        settings_actions = set(
+            menu_config.reachable_action_ids(menu_config.settings_menu_id())
+        )
         self.assertIn("leaderboard", play_actions)
         self.assertNotIn("leaderboard", settings_actions)
 
@@ -481,12 +549,9 @@ class TestMenuPolicy(unittest.TestCase):
         play_actions = {
             item["action_id"] for item in play_menu["items"] if item["type"] == "action"
         }
-        settings_menu = menu_config.menu_definition("launcher_settings_root")
-        settings_actions = {
-            item["action_id"]
-            for item in settings_menu["items"]
-            if item["type"] == "action"
-        }
+        settings_actions = set(
+            menu_config.reachable_action_ids(menu_config.settings_menu_id())
+        )
         self.assertIn("bot_options", play_actions)
         self.assertNotIn("bot_options", settings_actions)
 
@@ -523,6 +588,10 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertGreaterEqual(len(labels["game_kick_level"]), 2)
         self.assertIn("game_rotation_animation_mode", labels)
         self.assertEqual(len(labels["game_rotation_animation_mode"]), 2)
+        self.assertIn("game_endgame_preset", labels)
+        self.assertEqual(len(labels["game_endgame_preset"]), 4)
+        self.assertIn("game_endgame_interaction_mode", labels)
+        self.assertEqual(len(labels["game_endgame_interaction_mode"]), 2)
 
     def test_build_unified_settings_state_uses_persisted_analytics_state(self) -> None:
         with (
@@ -565,17 +634,27 @@ class TestMenuPolicy(unittest.TestCase):
 
         screen = object()
         with (
-            mock.patch.object(settings_hub_actions, "_audio_defaults", return_value=AudioSettings()),
-            mock.patch.object(settings_hub_actions, "_display_defaults", return_value=DisplaySettings()),
+            mock.patch.object(
+                settings_hub_actions, "_audio_defaults", return_value=AudioSettings()
+            ),
+            mock.patch.object(
+                settings_hub_actions,
+                "_display_defaults",
+                return_value=DisplaySettings(),
+            ),
             mock.patch.object(
                 settings_hub_actions,
                 "default_display_settings",
                 return_value={"overlay_transparency": 0.25},
             ),
-            mock.patch.object(settings_hub_actions, "_analytics_defaults", return_value=False),
+            mock.patch.object(
+                settings_hub_actions, "_analytics_defaults", return_value=False
+            ),
             mock.patch.object(settings_hub_actions, "_sync_audio_preview"),
             mock.patch.object(settings_hub_actions, "_sync_analytics_preview"),
-            mock.patch.object(settings_hub_actions, "apply_display_mode", return_value=screen),
+            mock.patch.object(
+                settings_hub_actions, "apply_display_mode", return_value=screen
+            ),
             mock.patch.object(settings_hub_actions, "play_sfx"),
         ):
             returned = settings_hub_actions._reset_unified_settings(screen, state)
@@ -601,7 +680,9 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertTrue(settings_hub_actions._apply_unified_numeric_text_value(state))
         self.assertEqual(state.display_settings.windowed_size[0], 10000)
 
-    def test_unified_settings_manual_numeric_edit_applies_animation_timing(self) -> None:
+    def test_unified_settings_manual_numeric_edit_applies_animation_timing(
+        self,
+    ) -> None:
         state = SimpleNamespace(
             display_settings=DisplaySettings(
                 fullscreen=False,
@@ -631,6 +712,8 @@ class TestMenuPolicy(unittest.TestCase):
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
         )
+        state.endgame_preset_id = "sphere"
+        state.endgame_interaction_mode = "collide"
         state.rotation_animation_mode = "rigid_piece_rotation"
         state.kick_level_index = 2
         state.auto_speedup_enabled = 1
@@ -638,6 +721,14 @@ class TestMenuPolicy(unittest.TestCase):
         state.rotation_animation_duration_ms_2d = 300
         state.rotation_animation_duration_ms_nd = 340
         state.translation_animation_duration_ms = 120
+        self.assertEqual(
+            settings_hub_model._unified_value_text(state, "endgame_preset_id"),
+            "Sphere",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(state, "endgame_interaction_mode"),
+            "Collide",
+        )
         self.assertEqual(
             settings_hub_model._unified_value_text(state, "rotation_animation_mode"),
             "Rigid piece rotation",
@@ -676,17 +767,27 @@ class TestMenuPolicy(unittest.TestCase):
         )
         screen = object()
         with (
-            mock.patch.object(settings_hub_actions, "_audio_defaults", return_value=AudioSettings()),
-            mock.patch.object(settings_hub_actions, "_display_defaults", return_value=DisplaySettings()),
+            mock.patch.object(
+                settings_hub_actions, "_audio_defaults", return_value=AudioSettings()
+            ),
+            mock.patch.object(
+                settings_hub_actions,
+                "_display_defaults",
+                return_value=DisplaySettings(),
+            ),
             mock.patch.object(
                 settings_hub_actions,
                 "default_display_settings",
                 return_value={"overlay_transparency": 0.25},
             ),
-            mock.patch.object(settings_hub_actions, "_analytics_defaults", return_value=False),
+            mock.patch.object(
+                settings_hub_actions, "_analytics_defaults", return_value=False
+            ),
             mock.patch.object(settings_hub_actions, "_sync_audio_preview"),
             mock.patch.object(settings_hub_actions, "_sync_analytics_preview"),
-            mock.patch.object(settings_hub_actions, "apply_display_mode", return_value=screen),
+            mock.patch.object(
+                settings_hub_actions, "apply_display_mode", return_value=screen
+            ),
             mock.patch.object(settings_hub_actions, "play_sfx"),
         ):
             settings_hub_actions._reset_unified_settings(screen, state)
@@ -707,10 +808,20 @@ class TestMenuPolicy(unittest.TestCase):
             state.rotation_animation_mode,
             settings_hub_model._ROTATION_ANIMATION_MODE_DEFAULT,
         )
+        self.assertEqual(
+            state.endgame_preset_id,
+            settings_hub_model._ENDGAME_PRESET_DEFAULT,
+        )
+        self.assertEqual(
+            state.endgame_interaction_mode,
+            settings_hub_model._ENDGAME_INTERACTION_MODE_DEFAULT,
+        )
 
     def test_advanced_gameplay_adjusts_animation_rows(self) -> None:
         state = SimpleNamespace(
             kick_level_index=0,
+            endgame_preset_id="default_orbit",
+            endgame_interaction_mode="none",
             auto_speedup_enabled=1,
             lines_per_level=10,
             rotation_animation_mode="rigid_piece_rotation",
@@ -721,6 +832,22 @@ class TestMenuPolicy(unittest.TestCase):
             status="",
             status_error=False,
         )
+        self.assertTrue(
+            settings_hub_actions._adjust_unified_gameplay_row(
+                state,
+                "endgame_preset_id",
+                1,
+            )
+        )
+        self.assertEqual(state.endgame_preset_id, "wrap_all")
+        self.assertTrue(
+            settings_hub_actions._adjust_unified_gameplay_row(
+                state,
+                "endgame_interaction_mode",
+                1,
+            )
+        )
+        self.assertEqual(state.endgame_interaction_mode, "collide")
         self.assertTrue(
             settings_hub_actions._adjust_advanced_gameplay_value(
                 state,
@@ -754,7 +881,9 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(state.rotation_animation_mode, "cellwise_sliding")
 
-    def test_measure_topology_cache_updates_status_without_dirtying_settings(self) -> None:
+    def test_measure_topology_cache_updates_status_without_dirtying_settings(
+        self,
+    ) -> None:
         state = SimpleNamespace(
             topology_cache_file_count=0,
             topology_cache_size_bytes=None,

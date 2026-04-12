@@ -111,7 +111,7 @@ Viewer-consistent translation requirement:
 9. Interruption handling: repeated rotate input while tweening must retarget cleanly (no flicker/back-jump).
 10. Board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
 11. When a projected board line crosses the active-piece projection, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
-12. Terminal game over must enter a frozen-snapshot animation phase where locked cube fragments and box/frame shell fragments move in board/render space before projection, with deterministic seeded motion and no live-board mutation.
+12. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
 
 ## 7. Scoring
 
@@ -144,7 +144,7 @@ Minimum required coverage after 3D changes:
 5. scoring matrix checks,
 6. random/debug piece spawn stability checks.
 7. Bounded/wrap/invert kick-legality parity checks.
-8. Frozen-snapshot terminal animation coverage for phase transition, deterministic fragments, and projected render-path authority switching.
+8. Frozen-snapshot terminal animation coverage for shatter-to-relic-field transition, deterministic shell/relic generation, bounded long-run relic motion, and projected render-path authority switching.
 
 Relevant tests:
 - `tests/unit/engine/test_game_nd.py`
@@ -160,7 +160,7 @@ Relevant tests:
 5. Embedded 2D and random-cell 3D sets are selectable and playable.
 6. Debug 3D piece set is selectable and supports fast layer-fill validation.
 7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
-8. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path.
+8. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path, and the relic field remains compositionally stable instead of emptying the screen over time.
 
 ## 10. Mode-aware topology split (2026-03-08)
 

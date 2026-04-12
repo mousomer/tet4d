@@ -43,7 +43,7 @@ from tet4d.ui.pygame.projection3d import (
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
-    transform_for_cell_fragment,
+    transform_relics_for_animation,
     transform_shell_geometry,
 )
 from tet4d.engine.runtime.project_config import (
@@ -1079,7 +1079,7 @@ def _draw_endgame_layer_board(
     zoom = max(8.0, min(170.0, zoom))
     center_px = (draw_rect.centerx, draw_rect.centery)
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    drag = float(endgame_animation.tuning.drag_per_second)
+    drag = float(endgame_animation.tuning.burst_drag_per_second)
 
     for shell_fragment in endgame_animation.shell_fragments:
         if shell_fragment.layer_index != layer_index:
@@ -1114,19 +1114,18 @@ def _draw_endgame_layer_board(
         )
 
     fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
-    for cell_fragment in endgame_animation.cell_fragments:
-        if cell_fragment.layer_index != layer_index:
+    relic_transforms = transform_relics_for_animation(endgame_animation)
+    for cell_relic, (position, rotation_deg, alpha) in zip(
+        endgame_animation.cell_relics,
+        relic_transforms,
+    ):
+        if cell_relic.layer_index != layer_index:
             continue
-        position, rotation_deg, alpha = transform_for_cell_fragment(
-            cell_fragment,
-            elapsed_ms=float(endgame_animation.elapsed_ms),
-            drag_per_second=drag,
-        )
         if alpha <= 0.0:
             continue
         faces = build_oriented_cube_faces(
             center=position,
-            color=color_for_cell(cell_fragment.color_id, COLOR_MAP),
+            color=color_for_cell(cell_relic.color_id, COLOR_MAP),
             project_raw=lambda raw: _project_raw_point_from_context(
                 raw,
                 dims3=dims3,
@@ -1178,9 +1177,7 @@ def _draw_side_panel(
         else (frozen_context.layer_axis_label or basis.layer_axis_label)
     )
     layer_count = (
-        basis.layer_count
-        if frozen_context is None
-        else int(frozen_context.layer_count)
+        basis.layer_count if frozen_context is None else int(frozen_context.layer_count)
     )
     yaw_deg = float(view.yaw_deg if frozen_context is None else frozen_context.yaw_deg)
     pitch_deg = float(
@@ -1277,7 +1274,9 @@ def draw_game_frame(
     if endgame_animation is not None and endgame_animation.frozen_render_active:
         layer_rect_by_layer = _layer_rects_by_layer(
             area=layers_rect,
-            layer_count=max(1, int(endgame_animation.snapshot.render_context.layer_count)),
+            layer_count=max(
+                1, int(endgame_animation.snapshot.render_context.layer_count)
+            ),
         )
         for layer_index in range(
             max(1, int(endgame_animation.snapshot.render_context.layer_count))

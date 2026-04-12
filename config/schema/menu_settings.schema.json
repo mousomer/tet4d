@@ -177,6 +177,8 @@
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
             "kick_level_index",
+            "endgame_preset_id",
+            "endgame_interaction_mode",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -256,6 +258,22 @@
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "endgame_preset_id": {
+              "type": "string",
+              "enum": [
+                "default_orbit",
+                "wrap_all",
+                "invert_all",
+                "sphere"
+              ]
+            },
+            "endgame_interaction_mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "collide"
+              ]
             }
           }
         }
@@ -284,6 +302,8 @@
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
             "kick_level_index",
+            "endgame_preset_id",
+            "endgame_interaction_mode",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -363,6 +383,22 @@
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "endgame_preset_id": {
+              "type": "string",
+              "enum": [
+                "default_orbit",
+                "wrap_all",
+                "invert_all",
+                "sphere"
+              ]
+            },
+            "endgame_interaction_mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "collide"
+              ]
             }
           }
         }
@@ -392,6 +428,8 @@
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
             "kick_level_index",
+            "endgame_preset_id",
+            "endgame_interaction_mode",
             "challenge_layers",
             "exploration_mode"
           ],
@@ -475,6 +513,22 @@
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "endgame_preset_id": {
+              "type": "string",
+              "enum": [
+                "default_orbit",
+                "wrap_all",
+                "invert_all",
+                "sphere"
+              ]
+            },
+            "endgame_interaction_mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "collide"
+              ]
             }
           }
         }

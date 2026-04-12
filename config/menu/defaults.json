@@ -43,7 +43,9 @@
       "rotation_animation_duration_ms_2d": 300,
       "rotation_animation_duration_ms_nd": 300,
       "translation_animation_duration_ms": 120,
-      "kick_level_index": 0
+      "kick_level_index": 0,
+      "endgame_preset_id": "default_orbit",
+      "endgame_interaction_mode": "none"
     },
     "3d": {
       "width": 6,
@@ -70,7 +72,9 @@
       "rotation_animation_duration_ms_2d": 300,
       "rotation_animation_duration_ms_nd": 300,
       "translation_animation_duration_ms": 120,
-      "kick_level_index": 0
+      "kick_level_index": 0,
+      "endgame_preset_id": "default_orbit",
+      "endgame_interaction_mode": "none"
     },
     "4d": {
       "width": 10,
@@ -99,7 +103,9 @@
       "rotation_animation_duration_ms_2d": 300,
       "rotation_animation_duration_ms_nd": 300,
       "translation_animation_duration_ms": 120,
-      "kick_level_index": 0
+      "kick_level_index": 0,
+      "endgame_preset_id": "default_orbit",
+      "endgame_interaction_mode": "none"
     }
   }
 }

@@ -54,7 +54,7 @@ class KeybindingsMenuState:
     allow_scope_sections: bool = True
     selected_section: int = 0
     selected_binding: int = 0
-    scroll_top: int = 0
+    scroll_offset: int = 0
     capture_mode: bool = False
     conflict_mode: str = REBIND_CONFLICT_REPLACE
     status: str = ""
@@ -413,11 +413,13 @@ def _run_binding_mode_action(
 
     if nav_key == pygame.K_ESCAPE and state.allow_scope_sections:
         state.section_mode = True
+        state.scroll_offset = 0
         state.capture_mode = False
         _set_status(state, True, "Returned to keybinding sections")
         return False
     if key == pygame.K_TAB and state.allow_scope_sections:
         state.section_mode = True
+        state.scroll_offset = 0
         state.capture_mode = False
         _set_status(state, True, "Opened keybinding sections")
         return False
@@ -479,7 +481,7 @@ def _handle_section_key(
         state.scope = scope
         state.section_mode = False
         state.selected_binding = 0
-        state.scroll_top = 0
+        state.scroll_offset = 0
         state.capture_mode = False
         _set_status(state, True, f"Opened {scope_label(scope)} bindings")
     return False
@@ -507,7 +509,6 @@ def _draw_menu(
 
 
 def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
-    allow_scope_sections = initial_scope in {"all", "general"}
     selected_section = 0
     for idx, (section_scope, _title, _description) in enumerate(SECTION_MENU):
         if section_scope == initial_scope:
@@ -515,8 +516,8 @@ def _build_menu_state(initial_scope: str) -> KeybindingsMenuState:
             break
     return KeybindingsMenuState(
         scope=initial_scope,
-        section_mode=allow_scope_sections,
-        allow_scope_sections=allow_scope_sections,
+        section_mode=True,
+        allow_scope_sections=True,
         selected_section=selected_section,
     )
 

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.rng import RNG_MODE_OPTIONS
+from .endgame_presets import ENDGAME_INTERACTION_MODES, ENDGAME_PRESET_IDS
 from .menu_structure.graph import (
     collect_actions_for_menu_ids,
     collect_reachable_menu_ids,
@@ -75,6 +76,26 @@ def _structure_payload() -> dict[str, Any]:
         raise RuntimeError(
             "structure.settings_option_labels.game_kick_level must match configured kick levels"
         )
+    preset_labels = payload["settings_option_labels"].get("game_endgame_preset")
+    if preset_labels is None:
+        raise RuntimeError(
+            "structure.settings_option_labels must include game_endgame_preset labels"
+        )
+    if len(preset_labels) != len(ENDGAME_PRESET_IDS):
+        raise RuntimeError(
+            "structure.settings_option_labels.game_endgame_preset must match configured endgame presets"
+        )
+    interaction_labels = payload["settings_option_labels"].get(
+        "game_endgame_interaction_mode"
+    )
+    if interaction_labels is None:
+        raise RuntimeError(
+            "structure.settings_option_labels must include game_endgame_interaction_mode labels"
+        )
+    if len(interaction_labels) != len(ENDGAME_INTERACTION_MODES):
+        raise RuntimeError(
+            "structure.settings_option_labels.game_endgame_interaction_mode must match configured endgame interaction modes"
+        )
     return payload
 
 
@@ -102,21 +123,90 @@ def explorer_default_board_dims(dimension: int) -> tuple[int, ...]:
     return tuple(dims)
 
 
+def authored_menu_graph() -> dict[str, dict[str, Any]]:
+    return deepcopy(_structure_payload()["authored_menus"])
+
+
 def menu_graph() -> dict[str, dict[str, Any]]:
-    return deepcopy(_structure_payload()["menus"])
+    return deepcopy(_structure_payload()["runtime_menus"])
 
 
 def launcher_menu_id() -> str:
-    return str(_structure_payload()["menu_entrypoints"]["launcher"])
+    return str(_structure_payload()["runtime_menu_entrypoints"]["launcher"])
 
 
 def pause_menu_id() -> str:
-    return str(_structure_payload()["menu_entrypoints"]["pause"])
+    return str(_structure_payload()["runtime_menu_entrypoints"]["pause"])
+
+
+def settings_menu_id() -> str:
+    return str(_structure_payload()["runtime_menu_entrypoints"]["settings"])
+
+
+def keybindings_menu_id() -> str:
+    return str(_structure_payload()["runtime_menu_entrypoints"]["keybindings"])
+
+
+def authored_menu_definition(menu_id: str) -> dict[str, Any]:
+    clean_menu_id = as_non_empty_string(menu_id, path="menu_id").lower()
+    menu = _structure_payload()["authored_menus"].get(clean_menu_id)
+    if menu is None:
+        raise KeyError(f"Unknown authored menu id: {clean_menu_id}")
+    return deepcopy(menu)
+
+
+def authored_menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
+    return tuple(authored_menu_definition(menu_id)["items"])
+
+
+def runtime_menu_id_for_item(item_id: str) -> str | None:
+    clean_item_id = as_non_empty_string(item_id, path="item_id").lower()
+    for menu_id, menu in _structure_payload()["runtime_menus"].items():
+        items = menu.get("items", ())
+        for item in items:
+            if menu_item_id(item) == clean_item_id:
+                return str(menu_id)
+    return None
+
+
+def resolve_runtime_menu_id(
+    menu_id: str,
+    *,
+    item_id: str | None = None,
+    fallback_menu_id: str | None = None,
+) -> str:
+    clean_menu_id = as_non_empty_string(menu_id, path="menu_id").lower()
+    runtime_menus = _structure_payload()["runtime_menus"]
+    if clean_menu_id in runtime_menus:
+        return clean_menu_id
+
+    clean_item_id = str(item_id or "").strip().lower()
+    if clean_item_id:
+        item_menu_id = runtime_menu_id_for_item(clean_item_id)
+        if item_menu_id is not None:
+            return item_menu_id
+
+    compile_result = _structure_payload()["runtime_menu_compile_results"].get(clean_menu_id)
+    if compile_result is not None:
+        target_menu_id = str(getattr(compile_result, "target_menu_id", "")).strip().lower()
+        if target_menu_id in runtime_menus:
+            return target_menu_id
+        inline_items = tuple(getattr(compile_result, "inline_items", ()))
+        for item in inline_items:
+            item_menu_id = runtime_menu_id_for_item(menu_item_id(item))
+            if item_menu_id is not None:
+                return item_menu_id
+
+    if fallback_menu_id:
+        fallback = as_non_empty_string(fallback_menu_id, path="fallback_menu_id").lower()
+        if fallback in runtime_menus:
+            return fallback
+    return settings_menu_id()
 
 
 def menu_definition(menu_id: str) -> dict[str, Any]:
     clean_menu_id = as_non_empty_string(menu_id, path="menu_id").lower()
-    menu = _structure_payload()["menus"].get(clean_menu_id)
+    menu = _structure_payload()["runtime_menus"].get(clean_menu_id)
     if menu is None:
         raise KeyError(f"Unknown menu id: {clean_menu_id}")
     return deepcopy(menu)
@@ -130,10 +220,13 @@ def reachable_action_ids(start_menu_id: str) -> tuple[str, ...]:
     clean_start = as_non_empty_string(start_menu_id, path="start_menu_id").lower()
     payload = _structure_payload()
     reachable_menus = collect_reachable_menu_ids(
-        payload["menus"],
+        payload["runtime_menus"],
         start_menu_id=clean_start,
     )
-    actions = collect_actions_for_menu_ids(payload["menus"], menu_ids=reachable_menus)
+    actions = collect_actions_for_menu_ids(
+        payload["runtime_menus"],
+        menu_ids=reachable_menus,
+    )
     return tuple(sorted(actions))
 
 
@@ -178,55 +271,25 @@ def ui_copy_section(section: str) -> dict[str, Any]:
     return deepcopy(copy_section)
 
 
-def settings_hub_rows() -> tuple[str, ...]:
-    return tuple(_structure_payload()["settings_hub_rows"])
-
-
 def bot_options_rows() -> tuple[str, ...]:
     return tuple(_structure_payload()["bot_options_rows"])
 
 
-def settings_hub_layout_rows() -> tuple[tuple[str, str, str], ...]:
-    rows = _structure_payload()["settings_hub_layout_rows"]
-    return tuple((row["kind"], row["label"], row["row_key"]) for row in rows)
-
-
-def settings_sections() -> dict[str, dict[str, Any]]:
-    return deepcopy(_structure_payload()["settings_sections"])
-
-
-def settings_section(section_id: str) -> dict[str, Any]:
-    clean_section_id = as_non_empty_string(section_id, path="section_id").lower()
-    section = _structure_payload()["settings_sections"].get(clean_section_id)
-    if not isinstance(section, dict):
-        raise KeyError(f"Unknown settings section: {clean_section_id}")
-    return deepcopy(section)
+def menu_item_id(item: dict[str, Any]) -> str:
+    return str(item.get("id", "")).strip().lower()
 
 
 def settings_help_entries() -> tuple[dict[str, str], ...]:
     entries: list[dict[str, str]] = []
     for category in settings_top_level_categories():
-        section = settings_section(str(category["id"]))
         entries.append(
             {
                 "id": str(category["id"]),
                 "label": str(category["label"]),
-                "description": str(section["subtitle"]),
+                "description": str(category["description"]),
             }
         )
     return tuple(entries)
-
-
-def launcher_settings_routes() -> dict[str, dict[str, str]]:
-    return deepcopy(_structure_payload()["launcher_settings_routes"])
-
-
-def launcher_settings_route(action_id: str) -> dict[str, str]:
-    clean_action_id = as_non_empty_string(action_id, path="action_id").lower()
-    route = _structure_payload()["launcher_settings_routes"].get(clean_action_id)
-    if not isinstance(route, dict):
-        raise KeyError(f"Unknown launcher settings action: {clean_action_id}")
-    return deepcopy(route)
 
 
 def settings_option_labels() -> dict[str, tuple[str, ...]]:
@@ -348,27 +411,21 @@ def settings_category_metrics() -> dict[str, dict[str, Any]]:
 
 
 def settings_top_level_categories() -> tuple[dict[str, str], ...]:
-    payload = _structure_payload()
-    sections: dict[str, dict[str, Any]] = payload["settings_sections"]
-    layout_rows: tuple[dict[str, str], ...] = payload["settings_hub_layout_rows"]
-    layout_header_order = [
-        row["label"] for row in layout_rows if row["kind"] == "header"
-    ]
-    header_index = {label: idx for idx, label in enumerate(layout_header_order)}
     top_level: list[dict[str, str]] = []
-    for section_id, section in sections.items():
-        headers = tuple(str(label) for label in section["headers"])
-        if not headers:
+    for item in menu_items(settings_menu_id()):
+        if str(item.get("type", "")).lower() != "submenu":
             continue
-        first_header = headers[0]
+        target_menu_id = str(item.get("menu_id", "")).strip().lower()
+        target_menu = menu_definition(target_menu_id)
         top_level.append(
             {
-                "id": str(section_id),
-                "label": first_header,
-                "title": str(section["title"]),
+                "id": menu_item_id(item),
+                "label": str(item["label"]),
+                "title": str(target_menu["title"]),
+                "description": str(item.get("description", "")).strip(),
+                "menu_id": target_menu_id,
             }
         )
-    top_level.sort(key=lambda entry: header_index.get(entry["label"], 10**9))
     return tuple(top_level)
 
 

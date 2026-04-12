@@ -823,56 +823,49 @@ def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
     return issues
 
 
-def _settings_hub_row_keys(menu_payload: dict[str, object]) -> set[str]:
-    keys: set[str] = set()
-    layout = menu_payload.get("settings_hub_layout_rows")
-    if not isinstance(layout, list):
-        return keys
-    for entry in layout:
-        if not isinstance(entry, dict):
-            continue
-        row_key = entry.get("row_key")
-        if isinstance(row_key, str) and row_key:
-            keys.add(row_key)
-    return keys
-
-
-def _settings_hub_header_labels(menu_payload: dict[str, object]) -> set[str]:
-    labels: set[str] = set()
-    layout = menu_payload.get("settings_hub_layout_rows")
-    if not isinstance(layout, list):
-        return labels
-    for entry in layout:
-        if not isinstance(entry, dict):
-            continue
-        if entry.get("kind") != "header":
-            continue
-        label = entry.get("label")
-        if isinstance(label, str) and label:
-            labels.add(label)
-    return labels
-
-
-def _launcher_settings_action_ids(menu_payload: dict[str, object]) -> set[str]:
+def _menu_definition(
+    menu_payload: dict[str, object], menu_id: str
+) -> dict[str, object] | None:
     menus = menu_payload.get("menus")
     if not isinstance(menus, dict):
-        return set()
-    launcher_settings = menus.get("launcher_settings_root")
-    if not isinstance(launcher_settings, dict):
-        return set()
-    items = launcher_settings.get("items")
+        return None
+    menu = menus.get(menu_id)
+    return menu if isinstance(menu, dict) else None
+
+
+def _menu_items(
+    menu_payload: dict[str, object], menu_id: str
+) -> list[dict[str, object]]:
+    menu = _menu_definition(menu_payload, menu_id)
+    if not isinstance(menu, dict):
+        return []
+    items = menu.get("items")
     if not isinstance(items, list):
-        return set()
-    action_ids: set[str] = set()
-    for item in items:
-        if not isinstance(item, dict):
+        return []
+    return [item for item in items if isinstance(item, dict)]
+
+
+def _settings_menu_setting_ids(menu_payload: dict[str, object]) -> set[str]:
+    setting_ids: set[str] = set()
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        return setting_ids
+    for menu in menus.values():
+        if not isinstance(menu, dict):
             continue
-        if item.get("type") != "action":
+        items = menu.get("items")
+        if not isinstance(items, list):
             continue
-        action_id = item.get("action_id")
-        if isinstance(action_id, str) and action_id:
-            action_ids.add(action_id)
-    return action_ids
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_type = str(item.get("type", "")).strip().lower()
+            if item_type not in {"toggle", "selector", "slider"}:
+                continue
+            setting_id = item.get("setting_id")
+            if isinstance(setting_id, str) and setting_id:
+                setting_ids.add(setting_id)
+    return setting_ids
 
 
 def _setup_field_attrs(menu_payload: dict[str, object]) -> set[str]:
@@ -930,11 +923,17 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
         "topology_cache_measure",
         "topology_cache_clear",
     }
-    hub_keys = _settings_hub_row_keys(menu_payload)
+    settings_keys = _settings_menu_setting_ids(menu_payload)
+    action_ids = {
+        str(item.get("action_id", "")).strip().lower()
+        for menu_id in ("settings_game_board_geometry",)
+        for item in _menu_items(menu_payload, menu_id)
+        if str(item.get("type", "")).strip().lower() == "action"
+    }
     setup_attrs = _setup_field_attrs(menu_payload)
 
     for row_key in sorted(required_shared_row_keys):
-        if row_key not in hub_keys:
+        if row_key not in settings_keys and row_key not in action_ids:
             issues.append(
                 ValidationIssue(
                     "content",
@@ -960,11 +959,6 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
 def _menu_structure_banned_literals() -> tuple[tuple[Path, str, str], ...]:
     return (
         (
-            PROJECT_ROOT / "cli/front.py",
-            "_SETTINGS_HUB_ROUTE =",
-            "cli/front.py must not hardcode launcher settings routes; use config/menu/structure.json",
-        ),
-        (
             PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
             "_CATEGORY_ID_BY_HEADER_LABEL =",
             "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json",
@@ -987,86 +981,6 @@ def _menu_structure_banned_literals() -> tuple[tuple[Path, str, str], ...]:
     )
 
 
-def _validate_settings_section_membership(
-    *,
-    menu_rel: str,
-    settings_sections: dict[str, object],
-    hub_headers: set[str],
-    hub_row_keys: set[str],
-) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    for section_id, raw_section in settings_sections.items():
-        if not isinstance(raw_section, dict):
-            continue
-        headers = raw_section.get("headers")
-        if isinstance(headers, list):
-            for header in headers:
-                if isinstance(header, str) and header and header not in hub_headers:
-                    issues.append(
-                        ValidationIssue(
-                            "content",
-                            f"{menu_rel} settings_sections.{section_id}.headers references unknown hub header: {header}",
-                        )
-                    )
-        row_keys = raw_section.get("row_keys")
-        if isinstance(row_keys, list):
-            for row_key in row_keys:
-                if isinstance(row_key, str) and row_key and row_key not in hub_row_keys:
-                    issues.append(
-                        ValidationIssue(
-                            "content",
-                            f"{menu_rel} settings_sections.{section_id}.row_keys references unknown hub row: {row_key}",
-                        )
-                    )
-    return issues
-
-
-def _validate_launcher_settings_routes_contract(
-    *,
-    menu_rel: str,
-    settings_sections: dict[str, object],
-    launcher_settings_routes: dict[str, object],
-    launcher_settings_action_ids: set[str],
-) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    for action_id, raw_route in launcher_settings_routes.items():
-        if action_id not in launcher_settings_action_ids:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{menu_rel} launcher_settings_routes.{action_id} must match an action in launcher_settings_root",
-                )
-            )
-            continue
-        if not isinstance(raw_route, dict):
-            continue
-        section_id = raw_route.get("section_id")
-        if not isinstance(section_id, str) or section_id not in settings_sections:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{menu_rel} launcher_settings_routes.{action_id}.section_id must reference an existing settings section",
-                )
-            )
-            continue
-        initial_row_key = raw_route.get("initial_row_key")
-        section = settings_sections.get(section_id)
-        section_row_keys = (
-            set(section.get("row_keys", [])) if isinstance(section, dict) else set()
-        )
-        if (
-            not isinstance(initial_row_key, str)
-            or initial_row_key not in section_row_keys
-        ):
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{menu_rel} launcher_settings_routes.{action_id}.initial_row_key must belong to section {section_id}",
-                )
-            )
-    return issues
-
-
 def _validate_menu_structure_banned_literals() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     for path, literal, message in _menu_structure_banned_literals():
@@ -1076,6 +990,70 @@ def _validate_menu_structure_banned_literals() -> list[ValidationIssue]:
     return issues
 
 
+def _missing_submenu_labels(
+    menu_payload: dict[str, object],
+    *,
+    menu_id: str,
+    required_labels: set[str],
+) -> list[str]:
+    labels = {
+        str(item.get("label", ""))
+        for item in _menu_items(menu_payload, menu_id)
+        if str(item.get("type", "")).strip().lower() == "submenu"
+    }
+    return sorted(required_labels - labels)
+
+
+def _missing_required_menu_types(menus: dict[str, object]) -> list[str]:
+    supported_types = {
+        "action",
+        "submenu",
+        "toggle",
+        "selector",
+        "slider",
+        "keybinding_group",
+        "legacy_dispatch",
+        "info",
+        "section",
+    }
+    seen_types: set[str] = set()
+    for menu in menus.values():
+        if not isinstance(menu, dict):
+            continue
+        items = menu.get("items")
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_type = str(item.get("type", "")).strip().lower()
+            if item_type:
+                seen_types.add(item_type)
+    return sorted(supported_types - seen_types)
+
+
+def _append_missing_submenu_label_issue(
+    issues: list[ValidationIssue],
+    *,
+    menu_rel: str,
+    menu_id: str,
+    required_labels: set[str],
+    menu_payload: dict[str, object],
+) -> None:
+    missing_labels = _missing_submenu_labels(
+        menu_payload,
+        menu_id=menu_id,
+        required_labels=required_labels,
+    )
+    if missing_labels:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{menu_rel} {menu_id} is missing required submenu labels: {', '.join(missing_labels)}",
+            )
+        )
+
+
 def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     menu_rel = "config/menu/structure.json"
@@ -1083,45 +1061,70 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     if not isinstance(menu_payload, dict):
         return issues
 
-    settings_sections = menu_payload.get("settings_sections")
-    if not isinstance(settings_sections, dict) or not settings_sections:
+    required_menus = {
+        "settings_root",
+        "settings_game_root",
+        "settings_endgame_effects",
+        "settings_controls",
+        "settings_legacy",
+        "keybindings_root",
+    }
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        issues.append(
+            ValidationIssue("schema", f"{menu_rel} must define menus as an object")
+        )
+        return issues
+    missing_menus = sorted(required_menus - set(menus))
+    if missing_menus:
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{menu_rel} must define non-empty settings_sections",
+                f"{menu_rel} is missing required canonical menus: {', '.join(missing_menus)}",
             )
         )
 
-    launcher_settings_routes = menu_payload.get("launcher_settings_routes")
-    if not isinstance(launcher_settings_routes, dict) or not launcher_settings_routes:
+    _append_missing_submenu_label_issue(
+        issues,
+        menu_rel=menu_rel,
+        menu_id="settings_root",
+        required_labels={
+            "Game Settings",
+            "Endgame Effects",
+            "Display",
+            "Audio",
+            "Controls",
+            "Legacy",
+        },
+        menu_payload=menu_payload,
+    )
+    _append_missing_submenu_label_issue(
+        issues,
+        menu_rel=menu_rel,
+        menu_id="settings_game_root",
+        required_labels={
+            "Gameplay",
+            "Board / Geometry",
+            "Movement / Rotation",
+            "Visual / Animation",
+            "Difficulty / Pace",
+        },
+        menu_payload=menu_payload,
+    )
+    _append_missing_submenu_label_issue(
+        issues,
+        menu_rel=menu_rel,
+        menu_id="keybindings_root",
+        required_labels={"General", "2D", "3D", "4D", "All"},
+        menu_payload=menu_payload,
+    )
+
+    missing_types = _missing_required_menu_types(menus)
+    if missing_types:
         issues.append(
             ValidationIssue(
-                "schema",
-                f"{menu_rel} must define non-empty launcher_settings_routes",
-            )
-        )
-
-    hub_headers = _settings_hub_header_labels(menu_payload)
-    hub_row_keys = _settings_hub_row_keys(menu_payload)
-    launcher_settings_action_ids = _launcher_settings_action_ids(menu_payload)
-    if isinstance(settings_sections, dict):
-        issues.extend(
-            _validate_settings_section_membership(
-                menu_rel=menu_rel,
-                settings_sections=settings_sections,
-                hub_headers=hub_headers,
-                hub_row_keys=hub_row_keys,
-            )
-        )
-    if isinstance(launcher_settings_routes, dict) and isinstance(
-        settings_sections, dict
-    ):
-        issues.extend(
-            _validate_launcher_settings_routes_contract(
-                menu_rel=menu_rel,
-                settings_sections=settings_sections,
-                launcher_settings_routes=launcher_settings_routes,
-                launcher_settings_action_ids=launcher_settings_action_ids,
+                "content",
+                f"{menu_rel} is missing required menu item types: {', '.join(missing_types)}",
             )
         )
     issues.extend(_validate_menu_structure_banned_literals())

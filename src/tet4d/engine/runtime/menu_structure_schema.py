@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from .menu_runtime_graph import (
+    compile_runtime_menu_graph,
+    validate_runtime_menu_graph,
+)
 from .menu_structure.menu_parse import (
     parse_branding,
     parse_launcher_route_actions,
@@ -17,14 +21,10 @@ from .menu_structure.policy import (
     validate_launcher_route_actions,
 )
 from .menu_structure.settings_parse import (
-    parse_keybinding_category_docs,
-    parse_launcher_settings_routes,
     parse_pause_copy,
     parse_settings_category_docs,
     parse_settings_category_metrics,
-    parse_settings_hub_layout_rows,
     parse_settings_option_labels,
-    parse_settings_sections,
     parse_settings_split_rules,
     parse_setup_fields,
     parse_setup_hints,
@@ -34,15 +34,15 @@ from .settings_schema import string_tuple
 
 
 def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    menus = parse_menus(payload.get("menus"))
-    entrypoints = parse_menu_entrypoints(payload, menus=menus)
+    authored_menus = parse_menus(payload.get("menus"))
+    authored_entrypoints = parse_menu_entrypoints(payload, menus=authored_menus)
     launcher_subtitles = parse_launcher_subtitles(payload)
     launcher_route_actions = parse_launcher_route_actions(payload)
     branding = parse_branding(payload)
     ui_copy = parse_ui_copy(payload)
 
     _, launcher_actions, launcher_route_ids = _entrypoint_reachability(
-        menus, start_menu_id=entrypoints["launcher"]
+        authored_menus, start_menu_id=authored_entrypoints["launcher"]
     )
     validate_launcher_route_actions(
         launcher_route_actions=launcher_route_actions,
@@ -64,39 +64,26 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     settings_docs = parse_settings_category_docs(payload)
-    settings_hub_layout_rows = parse_settings_hub_layout_rows(
-        payload.get("settings_hub_layout_rows")
+    runtime_graph = compile_runtime_menu_graph(
+        authored_menus,
+        authored_entrypoints=authored_entrypoints,
     )
-    settings_sections = parse_settings_sections(
-        payload,
-        layout_rows=settings_hub_layout_rows,
-    )
-    launcher_settings_menu = menus.get("launcher_settings_root", {})
-    launcher_settings_items = launcher_settings_menu.get("items", ())
-    launcher_settings_action_ids = {
-        str(item["action_id"])
-        for item in launcher_settings_items
-        if isinstance(item, dict) and item.get("type") == "action"
-    }
-    launcher_settings_routes = parse_launcher_settings_routes(
-        payload,
-        settings_sections=settings_sections,
-        launcher_settings_action_ids=launcher_settings_action_ids,
+    validate_runtime_menu_graph(
+        runtime_graph["menus"],
+        runtime_entrypoints=runtime_graph["menu_entrypoints"],
     )
     validated = {
-        "menus": menus,
-        "menu_entrypoints": entrypoints,
+        "authored_menus": authored_menus,
+        "authored_menu_entrypoints": authored_entrypoints,
+        "menus": authored_menus,
+        "menu_entrypoints": authored_entrypoints,
+        "runtime_menus": runtime_graph["menus"],
+        "runtime_menu_entrypoints": runtime_graph["menu_entrypoints"],
+        "runtime_menu_compile_results": runtime_graph["compile_results"],
         "launcher_subtitles": launcher_subtitles,
         "launcher_route_actions": launcher_route_actions,
         "branding": branding,
         "ui_copy": ui_copy,
-        "settings_hub_rows": string_tuple(
-            payload.get("settings_hub_rows"),
-            path="structure.settings_hub_rows",
-        ),
-        "settings_hub_layout_rows": settings_hub_layout_rows,
-        "settings_sections": settings_sections,
-        "launcher_settings_routes": launcher_settings_routes,
         "bot_options_rows": string_tuple(
             payload.get("bot_options_rows"),
             path="structure.bot_options_rows",
@@ -107,7 +94,6 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "setup_fields": parse_setup_fields(payload),
         "setup_hints": parse_setup_hints(payload),
         "settings_option_labels": parse_settings_option_labels(payload),
-        "keybinding_category_docs": parse_keybinding_category_docs(payload),
         "settings_category_docs": settings_docs,
         "settings_split_rules": parse_settings_split_rules(payload),
         "settings_category_metrics": parse_settings_category_metrics(

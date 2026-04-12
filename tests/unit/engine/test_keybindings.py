@@ -83,6 +83,7 @@ class _TempKeybindingRoot:
             p.stop()
         shutil.rmtree(self.root, ignore_errors=True)
 
+
 class TestKeybindingProfiles(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -119,7 +120,9 @@ class TestKeybindingProfiles(unittest.TestCase):
             self.assertTrue(ok, msg)
 
     def test_initialize_refreshes_stale_builtin_profile_files(self) -> None:
-        stale_path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
+        stale_path = keybindings.profile_keybinding_file_path(
+            2, keybindings.PROFILE_SMALL
+        )
         stale_payload = json.loads(stale_path.read_text(encoding="utf-8"))
         stale_payload["bindings"]["game"]["move_x_neg"] = ["left"]
         stale_payload.pop("defaults_version", None)
@@ -133,7 +136,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(refreshed["bindings"]["game"]["move_x_neg"], ["a", "left"])
 
     def test_initialize_removes_obsolete_small_profile_directory(self) -> None:
-        obsolete_dir = self.tmp_root.keybindings_dir / "profiles" / keybindings.PROFILE_SMALL
+        obsolete_dir = (
+            self.tmp_root.keybindings_dir / "profiles" / keybindings.PROFILE_SMALL
+        )
         obsolete_dir.mkdir(parents=True, exist_ok=True)
         obsolete_file = obsolete_dir / "4d.json"
         obsolete_file.write_text(
@@ -197,7 +202,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D.get("view_zw_pos"), (pygame.K_QUOTE,)
         )
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_fine_neg"), (pygame.K_MINUS,))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D.get("yaw_fine_neg"), (pygame.K_MINUS,)
+        )
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D.get("yaw_fine_pos"), (pygame.K_EQUALS,)
         )
@@ -318,7 +325,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         payload["bindings"]["game"]["unknown_action"] = ["a"]
         path.write_text(json.dumps(payload), encoding="utf-8")
 
-        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        ok, msg = keybindings.load_keybindings_file(
+            2, profile=keybindings.PROFILE_SMALL
+        )
         self.assertFalse(ok)
         self.assertIn("unknown action id", msg)
 
@@ -328,7 +337,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         payload["bindings"]["game"]["move_w_neg"] = ["q"]
         path.write_text(json.dumps(payload), encoding="utf-8")
 
-        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        ok, msg = keybindings.load_keybindings_file(
+            2, profile=keybindings.PROFILE_SMALL
+        )
         self.assertFalse(ok)
         self.assertIn("not valid for dimension 2", msg)
 
@@ -391,10 +402,14 @@ class TestKeybindingProfiles(unittest.TestCase):
     def test_saved_profile_payload_rejects_newer_schema_version(self) -> None:
         path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)
         payload = json.loads(path.read_text(encoding="utf-8"))
-        payload["schema_version"] = keybinding_store.KEYBINDING_PAYLOAD_SCHEMA_VERSION + 1
+        payload["schema_version"] = (
+            keybinding_store.KEYBINDING_PAYLOAD_SCHEMA_VERSION + 1
+        )
         path.write_text(json.dumps(payload), encoding="utf-8")
 
-        ok, msg = keybindings.load_keybindings_file(2, profile=keybindings.PROFILE_SMALL)
+        ok, msg = keybindings.load_keybindings_file(
+            2, profile=keybindings.PROFILE_SMALL
+        )
         self.assertFalse(ok)
         self.assertIn("newer than this runtime supports", msg)
 
@@ -480,9 +495,7 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["view_zw_neg"], (pygame.K_SEMICOLON,)
         )
-        self.assertEqual(
-            keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_QUOTE,)
-        )
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_QUOTE,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_neg"], (pygame.K_3,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_pos"], (pygame.K_4,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_fine_neg"], (pygame.K_MINUS,))
@@ -530,7 +543,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0,))
         self.assertEqual(keybindings.SYSTEM_KEYS["help"], (pygame.K_TAB,))
 
-    def test_full_profile_preserves_keypad_aliases_with_shared_camera_layout(self) -> None:
+    def test_full_profile_preserves_keypad_aliases_with_shared_camera_layout(
+        self,
+    ) -> None:
         ok, msg = keybindings.set_active_key_profile(keybindings.PROFILE_FULL)
         self.assertTrue(ok, msg)
         ok, msg = keybindings.load_active_profile_bindings()
@@ -572,7 +587,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["cycle_projection"], (pygame.K_9, pygame.K_KP1)
         )
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0, pygame.K_KP3))
+        self.assertEqual(
+            keybindings.CAMERA_KEYS_4D["reset"], (pygame.K_0, pygame.K_KP3)
+        )
         self.assertEqual(
             keybindings.CAMERA_KEYS_4D["overlay_alpha_dec"], (pygame.K_LEFTBRACKET,)
         )
@@ -607,9 +624,7 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D["zoom_out"], (pygame.K_7,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D["zoom_in"], (pygame.K_8,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["zoom_in"], (pygame.K_8,))
-        self.assertEqual(
-            keybindings.CAMERA_KEYS_3D["cycle_projection"], (pygame.K_9,)
-        )
+        self.assertEqual(keybindings.CAMERA_KEYS_3D["cycle_projection"], (pygame.K_9,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["cycle_projection"][0], pygame.K_9)
         self.assertEqual(keybindings.CAMERA_KEYS_3D["reset"], (pygame.K_0,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["reset"][0], pygame.K_0)
@@ -771,6 +786,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn("random_mode_index", settings)
         self.assertIn("topology_advanced", settings)
         self.assertIn("kick_level_index", settings)
+        self.assertIn("endgame_preset_id", settings)
+        self.assertIn("endgame_interaction_mode", settings)
         self.assertIn("rotation_animation_duration_ms_2d", settings)
         self.assertIn("rotation_animation_duration_ms_nd", settings)
         self.assertIn("translation_animation_duration_ms", settings)
@@ -779,6 +796,11 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn(settings["random_mode_index"], (0, 1))
         self.assertIn(settings["topology_advanced"], (0, 1))
         self.assertGreaterEqual(settings["kick_level_index"], 0)
+        self.assertIn(
+            settings["endgame_preset_id"],
+            ("default_orbit", "wrap_all", "invert_all", "sphere"),
+        )
+        self.assertIn(settings["endgame_interaction_mode"], ("none", "collide"))
         self.assertGreaterEqual(settings["lines_per_level"], 1)
         self.assertIn(
             settings["rotation_animation_mode"],
@@ -793,6 +815,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             random_mode_index=1,
             topology_advanced=1,
             kick_level_index=2,
+            endgame_preset_id="sphere",
+            endgame_interaction_mode="collide",
             auto_speedup_enabled=0,
             lines_per_level=17,
             rotation_animation_mode="cellwise_sliding",
@@ -807,9 +831,13 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             self.assertEqual(mode_settings["random_mode_index"], 1)
             self.assertEqual(mode_settings["topology_advanced"], 1)
             self.assertEqual(mode_settings["kick_level_index"], 2)
+            self.assertEqual(mode_settings["endgame_preset_id"], "sphere")
+            self.assertEqual(mode_settings["endgame_interaction_mode"], "collide")
             self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
             self.assertEqual(mode_settings["lines_per_level"], 17)
-            self.assertEqual(mode_settings["rotation_animation_mode"], "cellwise_sliding")
+            self.assertEqual(
+                mode_settings["rotation_animation_mode"], "cellwise_sliding"
+            )
             self.assertEqual(mode_settings["rotation_animation_duration_ms_2d"], 340)
             self.assertEqual(mode_settings["rotation_animation_duration_ms_nd"], 360)
             self.assertEqual(mode_settings["translation_animation_duration_ms"], 140)

@@ -9,10 +9,12 @@ from .menu_action_contracts import (
     PAUSE_ACTION_IDS,
 )
 from ..runtime.menu_config import (
+    keybindings_menu_id,
     launcher_menu_id,
     menu_graph,
     pause_menu_id,
     reachable_action_ids,
+    settings_menu_id,
 )
 
 
@@ -55,7 +57,10 @@ def lint_menu_graph() -> list[MenuGraphIssue]:
     pause_root = pause_menu_id()
     issues: list[MenuGraphIssue] = []
 
-    reachable_menus = _reachable_menu_ids(menus, start_ids=(launch_root, pause_root))
+    reachable_menus = _reachable_menu_ids(
+        menus,
+        start_ids=(launch_root, pause_root, settings_menu_id(), keybindings_menu_id()),
+    )
     unreachable = sorted(set(menus) - reachable_menus)
     if unreachable:
         issues.append(

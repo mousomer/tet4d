@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-11  
+Updated: 2026-04-12  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -55,11 +55,11 @@ playground should not retain local fallback movement bindings that contradict
 the runtime 4D rotation contract, so keys like `N` must route only through
 the canonical runtime-backed gameplay binding map.
 
-Parallel help/menu-contract follow-up (2026-03-30): runtime settings help
-should stay sourced from `settings_sections` rather than the older parallel
-`settings_category_docs` list, and the focused keybinding contract script
-should continue covering every runtime-seam consumer moved off the pygame
-adapter.
+Parallel help/menu-contract follow-up (2026-04-12): runtime settings help
+should stay sourced from the canonical `settings_root` subtree in
+`config/menu/structure.json` rather than older parallel section docs, and the
+focused keybinding contract script should continue covering every runtime-seam
+consumer moved off the pygame adapter.
 
 Parallel menu-shell follow-up (2026-04-10): the shared launcher/setup/pause/
 settings/keybindings shell now has one aligned title/back/panel style, and
@@ -136,9 +136,9 @@ stays synchronized, and the contract validator accepts the backlog shape.
   and keybindings; do not reintroduce subtitle-only header variants or move
   `display_overlay_transparency` back out of gameplay settings, and keep the
   launcher/pause input-config surface consistently labeled `Keybindings`.
-- Keep `Settings -> Keyboard Profiles` as the chooser entry, and keep that
-  submenu runtime-expanded into current keyboard profiles rather than drifting
-  back to one dead generic `Profiles` row.
+- Keep keyboard configuration inside the shared `Settings` flow, and do not
+  reintroduce a parallel launcher-only keyboard-profiles submenu or revive the
+  authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
 
@@ -160,6 +160,17 @@ Completed on 2026-04-10:
 
 Completed on 2026-04-11:
 
+- post-terminal relic-field follow-up so the endgame now splits into finite
+  `endgame_shatter` and persistent `endgame_relic_field` phases, shell/grid/
+  box fragments die after the rupture, and locked-cell debris is captured into
+  deterministic bounded orbit/drift families instead of continuing as one-shot
+  ballistic spray
+- endgame preset follow-up so the persistent relic field now freezes a shared
+  preset id plus a separate interaction mode into the endgame snapshot,
+  supports the required `wrap_all`, `invert_all`, and `sphere` topology-flavored
+  motion fields, and exposes those controls together under
+  `Settings -> Endgame Effects` instead of scattering them across new
+  menus or multiplying preset ids for collision variants
 - leaderboard registration now stays in the post-terminal gameplay flow as a
   compact modal overlay on top of the existing endgame surface instead of
   taking over the screen as a dedicated full-page prompt, while preserving the
@@ -168,6 +179,28 @@ Completed on 2026-04-11:
   rows now use one larger config-backed slider geometry contract with explicit
   label/value/track allocation, preventing clipping in supported compact menu
   shells instead of relying on per-screen width guesses
+
+Completed on 2026-04-12:
+
+- canonical menu-source-of-truth pass so `config/menu/structure.json` now
+  defines the launcher tree, pause tree, settings hierarchy, split
+  `Game Settings` subpages, `Endgame Effects`, keyboard bindings placement,
+  retained legacy placement, and the typed row/component model
+  without parallel Python-owned settings sections or launcher routes
+- shared menu-overflow pass so settings and keybindings pages now use one
+  auto-scrolling viewport with reserved scrollbar width, selection visibility
+  enforcement, and shared scrollbar geometry instead of clipping oversized
+  menus off-screen
+- settings IA split pass so `Game Settings` is now broken into coherent
+  `Gameplay`, `Board / Geometry`, `Movement / Rotation`, `Visual / Animation`,
+  and `Difficulty / Pace` subpages under the canonical settings tree rather
+  than remaining a single oversized page
+- menu normalization pass so runtime launcher/settings/keybindings consumers
+  now read a compiled normalized graph rather than the raw authored menu tree,
+  singleton wrappers are collapsed before render/input use, authored
+  `Controls` / `Legacy` wrappers flatten into direct runtime `Settings`
+  entries, and the one-row `Visual / Animation` page no longer survives as a
+  visible runtime submenu
 - post-terminal cleanup follow-up so the helper side panel no longer repeats a
   separate `GAME OVER` label and the frozen endgame fragments remain visible
   indefinitely instead of fading away after a fixed lifetime

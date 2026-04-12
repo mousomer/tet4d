@@ -5,37 +5,131 @@ from typing import Any
 from ..settings_schema import as_non_empty_string, require_object
 from .parse_helpers import parse_copy_fields
 
-_MENU_ITEM_TYPES = {"action", "submenu", "route"}
-_MENU_ENTRYPOINT_KEYS = ("launcher", "pause")
+_MENU_ITEM_TYPES = {
+    "action",
+    "submenu",
+    "route",
+    "section",
+    "info",
+    "toggle",
+    "selector",
+    "slider",
+    "keybinding_group",
+    "legacy_dispatch",
+}
+_MENU_ENTRYPOINT_KEYS = ("launcher", "pause", "settings", "keybindings")
 _DEFAULT_MENU_ENTRYPOINTS = {
     "launcher": "launcher_root",
     "pause": "pause_root",
+    "settings": "settings_root",
+    "keybindings": "keybindings_root",
 }
 
 
 def parse_menu_item(raw: object, *, path: str) -> dict[str, str]:
     item = require_object(raw, path=path)
+    item_id = as_non_empty_string(item.get("id"), path=f"{path}.id").lower()
     item_type = as_non_empty_string(item.get("type"), path=f"{path}.type").lower()
     label = as_non_empty_string(item.get("label"), path=f"{path}.label")
     if item_type not in _MENU_ITEM_TYPES:
         raise RuntimeError(
             f"{path}.type must be one of: " + ", ".join(sorted(_MENU_ITEM_TYPES))
         )
+    parsed: dict[str, str] = {
+        "id": item_id,
+        "type": item_type,
+        "label": label,
+        "description": str(item.get("description", "")).strip(),
+        "subtitle": str(item.get("subtitle", "")).strip(),
+        "help_text_key": str(item.get("help_text_key", "")).strip().lower(),
+        "visibility": str(item.get("visibility", "always")).strip().lower(),
+        "enabled": str(item.get("enabled", "always")).strip().lower(),
+        "layout_role": str(item.get("layout_role", item_type)).strip().lower(),
+    }
     if item_type == "action":
         action_id = as_non_empty_string(
             item.get("action_id"),
             path=f"{path}.action_id",
         ).lower()
-        return {"type": "action", "label": label, "action_id": action_id}
+        parsed["action_id"] = action_id
+        return parsed
     if item_type == "submenu":
         menu_id = as_non_empty_string(
             item.get("menu_id"), path=f"{path}.menu_id"
         ).lower()
-        return {"type": "submenu", "label": label, "menu_id": menu_id}
-    route_id = as_non_empty_string(
-        item.get("route_id"), path=f"{path}.route_id"
+        parsed["menu_id"] = menu_id
+        return parsed
+    if item_type == "route":
+        route_id = as_non_empty_string(
+            item.get("route_id"), path=f"{path}.route_id"
+        ).lower()
+        parsed["route_id"] = route_id
+        return parsed
+    if item_type in {"section", "info"}:
+        return parsed
+    if item_type in {"toggle", "selector", "slider"}:
+        setting_id = as_non_empty_string(
+            item.get("setting_id"),
+            path=f"{path}.setting_id",
+        ).lower()
+        parsed["setting_id"] = setting_id
+        return parsed
+    if item_type == "legacy_dispatch":
+        action_id = as_non_empty_string(
+            item.get("action_id"),
+            path=f"{path}.action_id",
+        ).lower()
+        parsed["action_id"] = action_id
+        return parsed
+    binding_group = as_non_empty_string(
+        item.get("binding_group"),
+        path=f"{path}.binding_group",
     ).lower()
-    return {"type": "route", "label": label, "route_id": route_id}
+    binding_dimension = as_non_empty_string(
+        item.get("binding_dimension"),
+        path=f"{path}.binding_dimension",
+    ).lower()
+    binding_bucket = str(item.get("binding_bucket", "all")).strip().lower()
+    parsed["binding_group"] = binding_group
+    parsed["binding_dimension"] = binding_dimension
+    parsed["binding_bucket"] = binding_bucket or "all"
+    return parsed
+
+
+def _parse_menu_items(menu_id: str, menu: dict[str, Any]) -> tuple[dict[str, str], ...]:
+    raw_items = menu.get("items")
+    if not isinstance(raw_items, list):
+        raise RuntimeError(f"structure.menus.{menu_id}.items must be a list")
+    if not raw_items:
+        raise RuntimeError(f"structure.menus.{menu_id}.items must not be empty")
+    items = tuple(
+        parse_menu_item(
+            raw_item,
+            path=f"structure.menus.{menu_id}.items[{idx}]",
+        )
+        for idx, raw_item in enumerate(raw_items)
+    )
+    item_ids: set[str] = set()
+    for idx, item in enumerate(items):
+        item_id = str(item["id"])
+        if item_id in item_ids:
+            raise RuntimeError(
+                f"structure.menus.{menu_id}.items[{idx}] duplicates item id: {item_id}"
+            )
+        item_ids.add(item_id)
+    return items
+
+
+def _validate_submenu_targets(menus: dict[str, dict[str, Any]]) -> None:
+    for menu_id, menu in menus.items():
+        for idx, item in enumerate(menu["items"]):
+            if item["type"] != "submenu":
+                continue
+            target = item["menu_id"]
+            if target not in menus:
+                raise RuntimeError(
+                    f"structure.menus.{menu_id}.items[{idx}] references unknown submenu target: {target}"
+                )
 
 
 def parse_menus(raw: object) -> dict[str, dict[str, Any]]:
@@ -51,29 +145,15 @@ def parse_menus(raw: object) -> dict[str, dict[str, Any]]:
             menu.get("title"),
             path=f"structure.menus.{menu_id}.title",
         )
-        raw_items = menu.get("items")
-        if not isinstance(raw_items, list):
-            raise RuntimeError(f"structure.menus.{menu_id}.items must be a list")
-        if not raw_items:
-            raise RuntimeError(f"structure.menus.{menu_id}.items must not be empty")
-        items = tuple(
-            parse_menu_item(
-                raw_item,
-                path=f"structure.menus.{menu_id}.items[{idx}]",
-            )
-            for idx, raw_item in enumerate(raw_items)
-        )
-        menus[menu_id] = {"title": title, "items": items}
+        items = _parse_menu_items(menu_id, menu)
+        menus[menu_id] = {
+            "title": title,
+            "subtitle": str(menu.get("subtitle", "")).strip(),
+            "layout_role": str(menu.get("layout_role", "menu")).strip().lower(),
+            "items": items,
+        }
 
-    for menu_id, menu in menus.items():
-        for idx, item in enumerate(menu["items"]):
-            if item["type"] != "submenu":
-                continue
-            target = item["menu_id"]
-            if target not in menus:
-                raise RuntimeError(
-                    f"structure.menus.{menu_id}.items[{idx}] references unknown submenu target: {target}"
-                )
+    _validate_submenu_targets(menus)
     return menus
 
 
