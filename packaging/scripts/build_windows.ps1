@@ -8,6 +8,8 @@ $TempOutputDir = Join-Path $BuildDir "out"
 $WxsPath = Join-Path $BuildDir "tet4d.wxs"
 $UpgradeCode = "{5B4CD54F-0F11-4D11-8A4E-A2E845E0C4D1}"
 $WixToolDir = Join-Path $BuildDir ".dotnet-tools"
+$WixVersion = "6.0.2"
+$WixUiExtensionPackage = "WixToolset.UI.wixext/$WixVersion"
 
 function Remove-PackagingArtifacts {
   param(
@@ -83,15 +85,15 @@ if ($DotnetMajor -lt 6) {
 & $PythonBin -m PyInstaller --noconfirm --clean packaging/pyinstaller/tet4d.spec
 
 $env:PATH = "$WixToolDir;$env:PATH"
-& dotnet tool update --tool-path $WixToolDir wix --version 6.*
+& dotnet tool update --tool-path $WixToolDir wix --version $WixVersion
 if ($LASTEXITCODE -ne 0) {
-  & dotnet tool install --tool-path $WixToolDir wix --version 6.*
+  & dotnet tool install --tool-path $WixToolDir wix --version $WixVersion
 }
 if ($LASTEXITCODE -ne 0) {
   throw "Failed to install WiX toolset"
 }
 
-& wix extension add -g WixToolset.UI.wixext
+& wix extension add -g $WixUiExtensionPackage
 if ($LASTEXITCODE -ne 0) {
   throw "Failed to add WixToolset.UI.wixext extension"
 }
