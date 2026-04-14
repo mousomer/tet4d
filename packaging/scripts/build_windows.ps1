@@ -11,6 +11,40 @@ $WixToolDir = Join-Path $BuildDir ".dotnet-tools"
 $WixVersion = "6.0.2"
 $WixUiExtensionPackage = "WixToolset.UI.wixext/$WixVersion"
 
+function Escape-WixXml {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Value
+  )
+
+  return [System.Security.SecurityElement]::Escape($Value)
+}
+
+function New-WixId {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Prefix,
+    [Parameter(Mandatory = $true)]
+    [string]$Value
+  )
+
+  $normalized = [regex]::Replace($Value, "[^A-Za-z0-9_]", "_")
+  if ([string]::IsNullOrWhiteSpace($normalized)) {
+    $normalized = "item"
+  }
+  if ($normalized[0] -match "[0-9]") {
+    $normalized = "_$normalized"
+  }
+  if ($normalized.Length -gt 40) {
+    $normalized = $normalized.Substring(0, 40)
+  }
+  $hashBytes = [System.Security.Cryptography.SHA1]::HashData(
+    [System.Text.Encoding]::UTF8.GetBytes("$Prefix|$Value")
+  )
+  $hash = [System.BitConverter]::ToString($hashBytes).Replace("-", "").Substring(0, 10)
+  return "${Prefix}${normalized}${hash}"
+}
+
 function Remove-PackagingArtifacts {
   param(
     [Parameter(Mandatory = $true)]
@@ -98,7 +132,104 @@ if ($LASTEXITCODE -ne 0) {
   throw "Failed to add WixToolset.UI.wixext extension"
 }
 
-@"
+$PayloadRoot = Join-Path $RootDir "dist\tet4d"
+if (-not (Test-Path $PayloadRoot)) {
+  throw "PyInstaller did not create expected payload directory: $PayloadRoot"
+}
+
+$payloadFiles = Get-ChildItem -Path $PayloadRoot -Recurse -File |
+  Where-Object { $_.Extension -ne ".pdb" } |
+  Sort-Object FullName
+if (-not $payloadFiles) {
+  throw "No payload files found under $PayloadRoot"
+}
+
+$directoryIds = @{ "." = "INSTALLFOLDER" }
+foreach ($file in $payloadFiles) {
+  $relativePath = [System.IO.Path]::GetRelativePath($PayloadRoot, $file.FullName).Replace("/", "\")
+  $relativeDir = [System.IO.Path]::GetDirectoryName($relativePath)
+  while (-not [string]::IsNullOrWhiteSpace($relativeDir)) {
+    if (-not $directoryIds.ContainsKey($relativeDir)) {
+      $directoryIds[$relativeDir] = New-WixId "Dir" $relativeDir
+    }
+    $relativeDir = [System.IO.Path]::GetDirectoryName($relativeDir)
+  }
+}
+
+$childDirectories = @{}
+foreach ($relativeDir in ($directoryIds.Keys | Where-Object { $_ -ne "." })) {
+  $parentDir = [System.IO.Path]::GetDirectoryName($relativeDir)
+  if ([string]::IsNullOrWhiteSpace($parentDir)) {
+    $parentDir = "."
+  }
+  if (-not $childDirectories.ContainsKey($parentDir)) {
+    $childDirectories[$parentDir] = New-Object System.Collections.Generic.List[string]
+  }
+  $childDirectories[$parentDir].Add($relativeDir)
+}
+
+$directoryTreeBuilder = New-Object System.Text.StringBuilder
+function Add-WixDirectoryTree {
+  param(
+    [string]$ParentDir,
+    [int]$IndentLevel
+  )
+
+  if (-not $childDirectories.ContainsKey($ParentDir)) {
+    return
+  }
+
+  foreach ($childDir in ($childDirectories[$ParentDir] | Sort-Object)) {
+    $leafName = Split-Path -Path $childDir -Leaf
+    $indent = ("  " * $IndentLevel)
+    [void]$directoryTreeBuilder.AppendLine(
+      "$indent<Directory Id=`"$($directoryIds[$childDir])`" Name=`"$(Escape-WixXml $leafName)`">"
+    )
+    Add-WixDirectoryTree -ParentDir $childDir -IndentLevel ($IndentLevel + 1)
+    [void]$directoryTreeBuilder.AppendLine("$indent</Directory>")
+  }
+}
+Add-WixDirectoryTree -ParentDir "." -IndentLevel 3
+
+$componentsByDirectory = @{}
+$componentRefs = New-Object System.Collections.Generic.List[string]
+foreach ($file in $payloadFiles) {
+  $relativePath = [System.IO.Path]::GetRelativePath($PayloadRoot, $file.FullName).Replace("/", "\")
+  $relativeDir = [System.IO.Path]::GetDirectoryName($relativePath)
+  if ([string]::IsNullOrWhiteSpace($relativeDir)) {
+    $relativeDir = "."
+  }
+  $componentId = New-WixId "Cmp" $relativePath
+  $fileId = New-WixId "Fil" $relativePath
+  $sourcePath = "!(bindpath.Payload)\$relativePath"
+  if (-not $componentsByDirectory.ContainsKey($relativeDir)) {
+    $componentsByDirectory[$relativeDir] = New-Object System.Collections.Generic.List[string]
+  }
+  $componentsByDirectory[$relativeDir].Add(@"
+      <Component Id="$componentId" Guid="*">
+        <File Id="$fileId" Source="$(Escape-WixXml $sourcePath)" KeyPath="yes" />
+      </Component>
+"@.TrimEnd())
+  $componentRefs.Add($componentId)
+}
+
+$payloadDirectoryRefs = New-Object System.Text.StringBuilder
+foreach ($relativeDir in ($componentsByDirectory.Keys | Sort-Object)) {
+  [void]$payloadDirectoryRefs.AppendLine("    <DirectoryRef Id=`"$($directoryIds[$relativeDir])`">")
+  foreach ($componentXml in $componentsByDirectory[$relativeDir]) {
+    [void]$payloadDirectoryRefs.AppendLine($componentXml)
+  }
+  [void]$payloadDirectoryRefs.AppendLine("    </DirectoryRef>")
+}
+
+$payloadComponentGroup = New-Object System.Text.StringBuilder
+[void]$payloadComponentGroup.AppendLine("    <ComponentGroup Id=`"PayloadFiles`">")
+foreach ($componentId in $componentRefs) {
+  [void]$payloadComponentGroup.AppendLine("      <ComponentRef Id=`"$componentId`" />")
+}
+[void]$payloadComponentGroup.AppendLine("    </ComponentGroup>")
+
+$wxsContent = @"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
@@ -113,17 +244,25 @@ if ($LASTEXITCODE -ne 0) {
     <MajorUpgrade DowngradeErrorMessage="A newer version of tet4d is already installed." />
     <MediaTemplate EmbedCab="yes" />
     <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <Feature Id="MainFeature" Title="tet4d" Level="1">
+      <ComponentGroupRef Id="PayloadFiles" />
+      <ComponentRef Id="StartMenuShortcutComponent" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
+  </Package>
+  <Fragment>
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="tet4d" />
+      <Directory Id="INSTALLFOLDER" Name="tet4d">
+$($directoryTreeBuilder.ToString().TrimEnd())
+      </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder">
       <Directory Id="ProgramMenuTet4dFolder" Name="tet4d" />
     </StandardDirectory>
-    <DirectoryRef Id="INSTALLFOLDER">
-      <Files Include="!(bindpath.Payload)\**">
-        <Exclude Files="!(bindpath.Payload)\**\*.pdb" />
-      </Files>
-    </DirectoryRef>
+    <StandardDirectory Id="DesktopFolder" />
+  </Fragment>
+  <Fragment>
+$($payloadDirectoryRefs.ToString().TrimEnd())
     <DirectoryRef Id="ProgramMenuTet4dFolder">
       <Component Id="StartMenuShortcutComponent" Guid="*">
         <Shortcut
@@ -157,13 +296,11 @@ if ($LASTEXITCODE -ne 0) {
           KeyPath="yes" />
       </Component>
     </DirectoryRef>
-    <Feature Id="MainFeature" Title="tet4d" Level="1">
-      <ComponentRef Id="StartMenuShortcutComponent" />
-      <ComponentRef Id="DesktopShortcutComponent" />
-    </Feature>
-  </Package>
+$($payloadComponentGroup.ToString().TrimEnd())
+  </Fragment>
 </Wix>
-"@ | Set-Content -Path $WxsPath -Encoding UTF8
+"@
+$wxsContent | Set-Content -Path $WxsPath -Encoding UTF8
 
 $ArtifactPath = Join-Path $ArtifactDir "tet4d-$Version-windows-x64.msi"
 $TempArtifactPath = Join-Path $TempOutputDir "tet4d-$Version-windows-x64.msi"
