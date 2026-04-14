@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-04-14
+
+### Release
+1. Published `tet4d 0.7.1` as the Windows installer follow-up to `0.7`.
+
+### Fixed
+1. Frozen launcher dispatch now imports packaged `cli.*` modules directly in desktop bundles, so installed Windows builds no longer depend on source-tree `runpy.run_path(...)` execution.
+2. The Windows MSI now uses WiX install-directory UI, so users can choose a non-default install location during setup.
+3. The Windows MSI now creates Start Menu and Desktop shortcuts that target the installed `tet4d.exe` with the correct working directory.
+
 ## 2026-04-12
 
 ### Release

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import importlib as _importlib
 import runpy
 import sys
 from pathlib import Path
+
+_FROZEN = getattr(sys, "frozen", False)
 
 _MAGIC_EXPORT_KEYS = {
     "__name__",
@@ -23,6 +26,12 @@ _FRONTEND_TARGETS = {
     "2d": "front2d.py",
     "3d": "front3d.py",
     "4d": "front4d.py",
+}
+_FRONTEND_MODULES = {
+    "front.py": "cli.front",
+    "front2d.py": "cli.front2d",
+    "front3d.py": "cli.front3d",
+    "front4d.py": "cli.front4d",
 }
 _HELP_FLAGS = {"-h", "--h", "--help"}
 
@@ -62,6 +71,12 @@ def _selector_parser(*, add_help: bool) -> argparse.ArgumentParser:
 
 
 def _export_default_target() -> None:
+    if _FROZEN:
+        exported_module = _importlib.import_module("cli.front")
+        for attr in dir(exported_module):
+            if attr not in _MAGIC_EXPORT_KEYS and not attr.startswith("_"):
+                globals()[attr] = getattr(exported_module, attr)
+        return
     exported = runpy.run_path(str(_target_path("front.py")), run_name=__name__)
     for key in _MAGIC_EXPORT_KEYS:
         exported.pop(key, None)
@@ -93,4 +108,7 @@ else:
         print()
         print(f"[{Path('cli') / target_name} options]")
     sys.argv = [sys.argv[0], *remaining]
-    runpy.run_path(str(_target_path(target_name)), run_name="__main__")
+    if _FROZEN:
+        _importlib.import_module(_FRONTEND_MODULES[target_name]).main()
+    else:
+        runpy.run_path(str(_target_path(target_name)), run_name="__main__")

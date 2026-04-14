@@ -26,10 +26,17 @@ for relative in ("assets", "config", "keybindings", "docs/help"):
 
 a = Analysis(
     [str(ENTRY)],
-    pathex=[str(ROOT)],
+    pathex=[str(ROOT), str(ROOT / "src")],
     binaries=[],
     datas=datas,
-    hiddenimports=["pygame"],
+    hiddenimports=[
+        "pygame",
+        "cli",
+        "cli.front",
+        "cli.front2d",
+        "cli.front3d",
+        "cli.front4d",
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

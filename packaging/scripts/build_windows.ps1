@@ -91,9 +91,16 @@ if ($LASTEXITCODE -ne 0) {
   throw "Failed to install WiX toolset"
 }
 
+& wix extension add -g WixToolset.UI.wixext
+if ($LASTEXITCODE -ne 0) {
+  throw "Failed to add WixToolset.UI.wixext extension"
+}
+
 @"
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package
     Name="tet4d"
     Manufacturer="mousomer"
@@ -103,13 +110,58 @@ if ($LASTEXITCODE -ne 0) {
     Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="A newer version of tet4d is already installed." />
     <MediaTemplate EmbedCab="yes" />
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="tet4d">
+      <Directory Id="INSTALLFOLDER" Name="tet4d" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuTet4dFolder" Name="tet4d" />
+    </StandardDirectory>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <ComponentGroup Id="PayloadFiles">
         <Files Include="!(bindpath.Payload)\**">
           <Exclude Files="!(bindpath.Payload)\**\*.pdb" />
         </Files>
-      </Directory>
-    </StandardDirectory>
+      </ComponentGroup>
+    </DirectoryRef>
+    <DirectoryRef Id="ProgramMenuTet4dFolder">
+      <Component Id="StartMenuShortcutComponent" Guid="*">
+        <Shortcut
+          Id="StartMenuTet4dShortcut"
+          Name="tet4d"
+          Target="[INSTALLFOLDER]tet4d.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveProgramMenuTet4dFolder" On="uninstall" />
+        <RegistryValue
+          Root="HKLM"
+          Key="Software\mousomer\tet4d"
+          Name="StartMenuShortcutInstalled"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcutComponent" Guid="*">
+        <Shortcut
+          Id="DesktopTet4dShortcut"
+          Name="tet4d"
+          Target="[INSTALLFOLDER]tet4d.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue
+          Root="HKLM"
+          Key="Software\mousomer\tet4d"
+          Name="DesktopShortcutInstalled"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <Feature Id="MainFeature" Title="tet4d" Level="1">
+      <ComponentGroupRef Id="PayloadFiles" />
+      <ComponentRef Id="StartMenuShortcutComponent" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
   </Package>
 </Wix>
 "@ | Set-Content -Path $WxsPath -Encoding UTF8
@@ -119,6 +171,7 @@ $TempArtifactPath = Join-Path $TempOutputDir "tet4d-$Version-windows-x64.msi"
 
 & wix build `
   -arch x64 `
+  -ext WixToolset.UI.wixext `
   -bindpath "Payload=$(Join-Path $RootDir 'dist\tet4d')" `
   -out $TempArtifactPath `
   $WxsPath
