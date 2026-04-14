@@ -120,11 +120,9 @@ if ($LASTEXITCODE -ne 0) {
       <Directory Id="ProgramMenuTet4dFolder" Name="tet4d" />
     </StandardDirectory>
     <DirectoryRef Id="INSTALLFOLDER">
-      <ComponentGroup Id="PayloadFiles">
-        <Files Include="!(bindpath.Payload)\**">
-          <Exclude Files="!(bindpath.Payload)\**\*.pdb" />
-        </Files>
-      </ComponentGroup>
+      <Files Include="!(bindpath.Payload)\**">
+        <Exclude Files="!(bindpath.Payload)\**\*.pdb" />
+      </Files>
     </DirectoryRef>
     <DirectoryRef Id="ProgramMenuTet4dFolder">
       <Component Id="StartMenuShortcutComponent" Guid="*">
@@ -160,7 +158,6 @@ if ($LASTEXITCODE -ne 0) {
       </Component>
     </DirectoryRef>
     <Feature Id="MainFeature" Title="tet4d" Level="1">
-      <ComponentGroupRef Id="PayloadFiles" />
       <ComponentRef Id="StartMenuShortcutComponent" />
       <ComponentRef Id="DesktopShortcutComponent" />
     </Feature>
