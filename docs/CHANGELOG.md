@@ -3,6 +3,15 @@
 ## 2026-04-14
 
 ### Release
+1. Published `tet4d 0.7.2` after fixing the remaining Windows MSI packaging path and retiring the Node 20 artifact-action warning in release packaging.
+
+### Fixed
+1. Release packaging now uses current GitHub artifact actions, removing the Node 20 deprecation warning from the installer workflow.
+2. The Windows MSI authoring now generates explicit payload components and feature wiring for the frozen PyInstaller bundle, allowing the Windows installer job to complete and upload the `.msi` artifact.
+
+## 2026-04-14
+
+### Release
 1. Published `tet4d 0.7.1` as the Windows installer follow-up to `0.7`.
 
 ### Fixed
