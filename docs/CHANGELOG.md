@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-15
+
+### Release
+1. Published `tet4d 0.7.3` after redirecting frozen writable state to the user data root and closing the remaining score-analysis path regression.
+
+### Fixed
+1. Frozen installs now route writable runtime state through a platform user-data root while keeping bundled config, assets, and defaults on the bundle root.
+2. Score-analysis logging no longer forces writable outputs back under `PROJECT_ROOT`, and regression tests now reject that path-resolution anti-pattern.
+
 ## 2026-04-14
 
 ### Release

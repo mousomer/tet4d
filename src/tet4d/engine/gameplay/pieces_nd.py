@@ -6,7 +6,6 @@ import random
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import List, Sequence, Tuple
 
 from .pieces2d import get_standard_tetrominoes
@@ -14,10 +13,10 @@ from .pieces_shared import scaled_span
 from ..core.model import Coord
 from ..core.piece_transform import normalize_blocks_nd, rotate_blocks_nd
 from ..core.piece_transform import rotate_point_nd  # noqa: F401
+from ..runtime.project_config import project_root_path
 
 RelCoordND = Coord
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
-_PIECE_CONFIG_PATH = _PROJECT_ROOT / "config" / "gameplay" / "piece_sets_nd.json"
+_PIECE_CONFIG_PATH = project_root_path() / "config" / "gameplay" / "piece_sets_nd.json"
 
 PIECE_SET_3D_STANDARD = "native_3d"
 PIECE_SET_3D_EMBED_2D = "embedded_2d"

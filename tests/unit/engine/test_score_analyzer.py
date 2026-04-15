@@ -5,11 +5,12 @@ import os
 import shutil
 import unittest
 from contextlib import contextmanager
+from pathlib import Path
 from uuid import uuid4
 from unittest import mock
 
 from tet4d.engine.runtime import score_analyzer
-from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.runtime.project_config import PROJECT_ROOT, WRITABLE_ROOT, state_dir_path
 from tet4d.engine.runtime.score_analyzer import (
     analyze_lock_event,
     hud_analysis_lines,
@@ -120,8 +121,13 @@ class TestScoreAnalyzer(unittest.TestCase):
                     encoding="utf-8",
                 )
 
+                override_root = os.path.relpath(tmp_path / "state", PROJECT_ROOT)
                 with (
-                    mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
+                    mock.patch.dict(
+                        os.environ,
+                        {"TET4D_STATE_ROOT": override_root},
+                    ),
+                    mock.patch.object(score_analyzer, "_CONFIG_ROOT", tmp_path),
                     mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
                 ):
                     reset_score_analyzer_runtime_state()
@@ -164,8 +170,13 @@ class TestScoreAnalyzer(unittest.TestCase):
                     encoding="utf-8",
                 )
 
+                override_root = os.path.relpath(tmp_path / "state", PROJECT_ROOT)
                 with (
-                    mock.patch.object(score_analyzer, "_ROOT_DIR", tmp_path),
+                    mock.patch.dict(
+                        os.environ,
+                        {"TET4D_STATE_ROOT": override_root},
+                    ),
+                    mock.patch.object(score_analyzer, "_CONFIG_ROOT", tmp_path),
                     mock.patch.object(score_analyzer, "_CONFIG_PATH", config_path),
                 ):
                     reset_score_analyzer_runtime_state()
@@ -182,6 +193,33 @@ class TestScoreAnalyzer(unittest.TestCase):
                     )
 
                 reset_score_analyzer_runtime_state()
+
+    def test_score_analyzer_outputs_follow_writable_root_by_default(self) -> None:
+        with mock.patch.dict(os.environ, {}, clear=True):
+            events_path = score_analyzer._resolve_output_path(
+                "state/analytics/custom_events.jsonl",
+                "state/analytics/score_events.jsonl",
+            )
+            summary_path = score_analyzer._resolve_output_path(
+                "state/analytics/custom_summary.json",
+                "state/analytics/score_summary.json",
+            )
+            self.assertEqual(
+                events_path,
+                WRITABLE_ROOT.resolve() / "state/analytics/custom_events.jsonl",
+            )
+            self.assertEqual(
+                summary_path,
+                WRITABLE_ROOT.resolve() / "state/analytics/custom_summary.json",
+            )
+
+    def test_score_analyzer_source_does_not_force_project_root_for_state_paths(
+        self,
+    ) -> None:
+        source_path = Path(score_analyzer.__file__)
+        source = source_path.read_text(encoding="utf-8")
+        self.assertNotIn("root_dir=_ROOT_DIR", source)
+        self.assertNotIn("root_dir=PROJECT_ROOT", source)
 
     def test_summary_snapshot_isolated_from_nested_totals_mutation(self) -> None:
         reset_score_analyzer_runtime_state()

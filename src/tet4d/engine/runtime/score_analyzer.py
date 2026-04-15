@@ -31,8 +31,8 @@ from .score_analysis.validate import (
     validate_score_analysis_summary,
 )
 
-_ROOT_DIR = PROJECT_ROOT
-_CONFIG_PATH = _ROOT_DIR / "config" / "gameplay" / "score_analyzer.json"
+_CONFIG_ROOT = PROJECT_ROOT
+_CONFIG_PATH = _CONFIG_ROOT / "config" / "gameplay" / "score_analyzer.json"
 _DEFAULT_EVENTS_PATH = score_events_file_default_relative()
 _DEFAULT_SUMMARY_PATH = score_summary_file_default_relative()
 _LOGGING_ENABLED_OVERRIDE: bool | None = None
@@ -76,11 +76,7 @@ def _sanitize_state_relative_path(raw_path: object, default_relative: str) -> st
 
 
 def _resolve_output_path(raw_path: object, default_relative: str) -> Path:
-    return resolve_state_relative_path(
-        raw_path,
-        default_relative=default_relative,
-        root_dir=_ROOT_DIR,
-    )
+    return resolve_state_relative_path(raw_path, default_relative=default_relative)
 
 
 def _logging_config() -> dict[str, object]:

@@ -251,7 +251,7 @@ Cross-cutting requirements are defined in:
 31. `python3 tools/governance/scan_secrets.py`
 32. Shared safe path/constants loader is:
 33. `src/tet4d/engine/runtime/project_config.py`
-34. Local verification and test harnesses may override the runtime state root through `TET4D_STATE_ROOT`, but resolved override paths must remain under the project root.
+34. Local verification and test harnesses may override the runtime state root through `TET4D_STATE_ROOT`; source-tree defaults remain under the project root, while frozen builds must route writable state under a platform user-data root, and resolved override paths must remain under the selected root.
 35. Repository hygiene must treat IDE state/log files/temporary local asset packs as non-source:
 36. keep them ignored in `.gitignore` and never ship them as runtime contracts.
 37. If such files are accidentally committed (or if sensitive data is introduced), cleanup must include history purge across refs before release.

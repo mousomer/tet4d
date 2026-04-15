@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from functools import lru_cache
 import os
+import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from .settings_schema import read_json_object_or_empty
+
+_FROZEN = getattr(sys, "frozen", False)
 
 
 def _detect_project_root() -> Path:
@@ -16,7 +19,26 @@ def _detect_project_root() -> Path:
     return here.parent.parent
 
 
+def _writable_root() -> Path:
+    """Return a writable root for user state files."""
+    if not _FROZEN:
+        return PROJECT_ROOT
+
+    if sys.platform == "win32":
+        base = Path(
+            os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming"
+        )
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        xdg = os.environ.get("XDG_DATA_HOME")
+        base = Path(xdg) if xdg else Path.home() / ".local" / "share"
+
+    return base / "tet4d"
+
+
 PROJECT_ROOT = _detect_project_root()
+WRITABLE_ROOT = _writable_root()
 PROJECT_CONFIG_DIR = PROJECT_ROOT / "config" / "project"
 IO_PATHS_FILE = PROJECT_CONFIG_DIR / "io_paths.json"
 CONSTANTS_FILE = PROJECT_CONFIG_DIR / "constants.json"
@@ -353,7 +375,7 @@ def state_dir_relative() -> str:
 
 
 def state_dir_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     override_root = _state_root_override_path(root_dir=root)
     if override_root is not None:
         return override_root
@@ -375,7 +397,7 @@ def resolve_state_relative_path(
     default_relative: str,
     root_dir: Path | None = None,
 ) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = sanitize_state_relative_path(raw, default_relative=default_relative)
     return _resolve_state_path_for_root(
         rel,
@@ -406,7 +428,7 @@ def menu_settings_file_relative() -> str:
 
 
 def menu_settings_file_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = menu_settings_file_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -441,7 +463,7 @@ def keybindings_profiles_dir_relative() -> str:
 def keybindings_profiles_dir_path() -> Path:
     rel = keybindings_profiles_dir_relative()
     default_rel = f"{keybindings_dir_relative()}/profiles"
-    return _resolve_repo_relative(rel, default_rel)
+    return _resolve_repo_relative_for_root(rel, default_rel, root_dir=WRITABLE_ROOT)
 
 
 def keybindings_defaults_path() -> Path:
@@ -463,7 +485,7 @@ def playbot_history_file_default_relative() -> str:
 
 
 def playbot_history_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = playbot_history_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -489,7 +511,7 @@ def score_summary_file_default_relative() -> str:
 
 
 def score_events_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = score_events_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -499,7 +521,7 @@ def score_events_file_default_path(*, root_dir: Path | None = None) -> Path:
 
 
 def score_summary_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = score_summary_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -517,7 +539,7 @@ def leaderboard_file_default_relative() -> str:
 
 
 def leaderboard_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = leaderboard_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -535,7 +557,7 @@ def topology_profile_export_file_default_relative() -> str:
 
 
 def topology_profile_export_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = topology_profile_export_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -553,7 +575,7 @@ def topology_profiles_file_default_relative() -> str:
 
 
 def topology_profiles_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = topology_profiles_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -573,7 +595,7 @@ def explorer_topology_profiles_file_default_relative() -> str:
 def explorer_topology_profiles_file_default_path(
     *, root_dir: Path | None = None
 ) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = explorer_topology_profiles_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -593,7 +615,7 @@ def explorer_topology_preview_file_default_relative() -> str:
 def explorer_topology_preview_file_default_path(
     *, root_dir: Path | None = None
 ) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = explorer_topology_preview_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -611,7 +633,7 @@ def explorer_topology_preview_cache_dir_relative() -> str:
 
 
 def explorer_topology_preview_cache_dir_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = explorer_topology_preview_cache_dir_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -631,7 +653,7 @@ def explorer_topology_experiments_file_default_relative() -> str:
 def explorer_topology_experiments_file_default_path(
     *, root_dir: Path | None = None
 ) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = explorer_topology_experiments_file_default_relative()
     return _resolve_state_path_for_root(
         rel,
@@ -670,7 +692,7 @@ def tutorial_progress_file_default_relative() -> str:
 
 
 def tutorial_progress_file_default_path(*, root_dir: Path | None = None) -> Path:
-    root = PROJECT_ROOT if root_dir is None else root_dir
+    root = WRITABLE_ROOT if root_dir is None else root_dir
     rel = tutorial_progress_file_default_relative()
     return _resolve_state_path_for_root(
         rel,

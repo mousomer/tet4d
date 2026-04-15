@@ -2,36 +2,81 @@ from __future__ import annotations
 
 import os
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from tet4d.engine.runtime import project_config as project_config_module
 from tet4d.engine.runtime.project_config import (
     PROJECT_ROOT,
+    WRITABLE_ROOT,
+    _writable_root,
+    explorer_topology_experiments_file_default_path,
+    explorer_topology_profiles_file_default_path,
+    keybindings_defaults_path,
+    keybindings_dir_path,
     keybindings_dir_relative,
+    keybindings_profiles_dir_path,
     explorer_topology_preview_cache_dir_path,
     explorer_topology_preview_cache_dir_relative,
     explorer_topology_preview_dims,
     explorer_topology_preview_file_default_path,
     explorer_topology_preview_file_default_relative,
-    explorer_topology_profiles_file_default_path,
     leaderboard_file_default_path,
     leaderboard_file_default_relative,
     menu_settings_file_path,
     menu_settings_file_relative,
+    playbot_history_file_default_path,
     project_constant_color,
     project_constant_int,
+    project_root_path,
     resolve_state_relative_path,
     sanitize_state_relative_path,
     score_events_file_default_path,
+    score_events_file_default_relative,
     score_summary_file_default_path,
     state_dir_path,
     state_dir_relative,
     topology_profile_export_file_default_relative,
+    topology_profile_export_file_default_path,
+    topology_profiles_file_default_path,
     tutorial_progress_file_default_path,
 )
 
 
 class TestProjectConfig(unittest.TestCase):
+    def test_writable_root_matches_project_root_when_not_frozen(self) -> None:
+        self.assertFalse(project_config_module._FROZEN)
+        self.assertEqual(WRITABLE_ROOT, PROJECT_ROOT)
+        self.assertEqual(_writable_root(), PROJECT_ROOT)
+
+    def test_writable_root_uses_platform_user_data_when_frozen(self) -> None:
+        with (
+            mock.patch.object(project_config_module, "_FROZEN", True),
+            mock.patch("sys.platform", "win32"),
+            mock.patch.dict(os.environ, {"APPDATA": "AppData/Roaming"}),
+        ):
+            self.assertEqual(
+                _writable_root(),
+                Path("AppData/Roaming/tet4d"),
+            )
+
+        with (
+            mock.patch.object(project_config_module, "_FROZEN", True),
+            mock.patch("sys.platform", "darwin"),
+            mock.patch.object(Path, "home", return_value=Path("Users/tester")),
+        ):
+            self.assertEqual(
+                _writable_root(),
+                Path("Users/tester/Library/Application Support/tet4d"),
+            )
+
+        with (
+            mock.patch.object(project_config_module, "_FROZEN", True),
+            mock.patch("sys.platform", "linux"),
+            mock.patch.dict(os.environ, {"XDG_DATA_HOME": "xdg-data"}),
+        ):
+            self.assertEqual(_writable_root(), Path("xdg-data/tet4d"))
+
     def test_state_path_sanitization_rejects_unsafe_values(self) -> None:
         default_rel = "state/analytics/events.jsonl"
         self.assertEqual(
@@ -106,6 +151,81 @@ class TestProjectConfig(unittest.TestCase):
                 ),
                 expected_root / "analytics/custom.jsonl",
             )
+
+    def test_default_state_backed_paths_use_writable_root(self) -> None:
+        with mock.patch.dict(os.environ, {}, clear=True):
+            expected_root = WRITABLE_ROOT.resolve()
+            self.assertEqual(state_dir_path(), expected_root / "state")
+            self.assertEqual(
+                menu_settings_file_path(),
+                expected_root / "state/menu_settings.json",
+            )
+            self.assertEqual(
+                playbot_history_file_default_path(),
+                expected_root / "state/bench/playbot_latency_history.jsonl",
+            )
+            self.assertEqual(
+                score_events_file_default_path(),
+                expected_root / "state/analytics/score_events.jsonl",
+            )
+            self.assertEqual(
+                score_summary_file_default_path(),
+                expected_root / "state/analytics/score_summary.json",
+            )
+            self.assertEqual(
+                leaderboard_file_default_path(),
+                expected_root / "state/analytics/leaderboard.json",
+            )
+            self.assertEqual(
+                topology_profile_export_file_default_path(),
+                expected_root / "state/topology/selected_profile.json",
+            )
+            self.assertEqual(
+                topology_profiles_file_default_path(),
+                expected_root / "state/topology/profiles.json",
+            )
+            self.assertEqual(
+                explorer_topology_profiles_file_default_path(),
+                expected_root / "state/topology/explorer_profiles.json",
+            )
+            self.assertEqual(
+                explorer_topology_preview_file_default_path(),
+                expected_root / "state/topology/explorer_preview.json",
+            )
+            self.assertEqual(
+                explorer_topology_preview_cache_dir_path(),
+                expected_root / "state/topology/cache/explorer_preview",
+            )
+            self.assertEqual(
+                explorer_topology_experiments_file_default_path(),
+                expected_root / "state/topology/explorer_experiments.json",
+            )
+            self.assertEqual(
+                tutorial_progress_file_default_path(),
+                expected_root / "state/tutorial/progress.json",
+            )
+            self.assertEqual(
+                resolve_state_relative_path(
+                    "state/analytics/custom.jsonl",
+                    default_relative=score_events_file_default_relative(),
+                ),
+                expected_root / "state/analytics/custom.jsonl",
+            )
+
+    def test_read_only_project_paths_stay_under_project_root(self) -> None:
+        self.assertEqual(project_root_path(), PROJECT_ROOT)
+        self.assertEqual(
+            keybindings_dir_path(),
+            (PROJECT_ROOT / keybindings_dir_relative()).resolve(),
+        )
+        self.assertEqual(
+            keybindings_defaults_path(),
+            (PROJECT_ROOT / "config/keybindings/defaults.json").resolve(),
+        )
+        self.assertEqual(
+            keybindings_profiles_dir_path(),
+            (WRITABLE_ROOT / "keybindings/profiles").resolve(),
+        )
 
     def test_state_root_override_ignores_out_of_repo_paths(self) -> None:
         with mock.patch.dict(
