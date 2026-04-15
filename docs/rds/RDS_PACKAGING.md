@@ -30,7 +30,10 @@ Define packaging requirements so users can install and run `tet4d` locally witho
 17. Packaging scripts must be source-controlled and runnable locally.
 18. CI must provide a packaging workflow that uploads per-OS artifacts.
 19. Tag-triggered packaging must publish installer assets to the matching GitHub release.
-20. Packaging changes must update:
+20. Local packaging scripts must smoke-run the freshly built packaged runtime
+    through the unified launcher before artifact emission so frozen startup
+    regressions fail on the target OS.
+21. Packaging changes must update:
 21. `README.md`,
 22. `docs/RELEASE_INSTALLERS.md`,
 23. `docs/RELEASE_CHECKLIST.md`,
@@ -54,6 +57,8 @@ Define packaging requirements so users can install and run `tet4d` locally witho
 ## 4. Acceptance criteria
 
 1. Local packaging scripts produce `.dmg`, `.deb`, and `.msi` artifacts on their target OS.
-2. CI packaging workflow uploads installer artifacts for each matrix OS.
-3. Tag-triggered packaging publishes installers to the matching GitHub release.
-4. Core runtime/lint/test gates continue to pass after packaging changes.
+2. Local packaging scripts fail before artifact emission if packaged runtime
+   initialization fails under the target OS smoke check.
+3. CI packaging workflow uploads installer artifacts for each matrix OS.
+4. Tag-triggered packaging publishes installers to the matching GitHub release.
+5. Core runtime/lint/test gates continue to pass after packaging changes.

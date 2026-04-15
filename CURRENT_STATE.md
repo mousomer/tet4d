@@ -36,6 +36,18 @@ not a historical ledger. Long historical migration detail belongs in
   builds from crashing on `ModuleNotFoundError:
   tet4d.ai.playbot.dry_run` when the ND setup path imports playbot dry-run
   helpers through package-level lazy exports.
+- Frozen keybinding split-root follow-up (2026-04-15): keybinding startup and
+  obsolete-profile cleanup now accept the packaged read-only
+  `_internal/keybindings` root plus the writable per-user
+  `keybindings/profiles` root as the two canonical storage authorities,
+  preventing frozen startup from rejecting built-in profile initialization with
+  `ValueError: path must be within keybindings directory`.
+- Release packaging smoke follow-up (2026-04-15): packaging scripts now
+  execute the freshly built packaged launcher with `--runtime-smoke-check`
+  under isolated writable roots and dummy SDL drivers before artifact
+  emission, and focused regression coverage now joins `project_config`
+  frozen-path outputs to keybinding/runtime startup instead of testing those
+  contracts only in separate suites.
 - Governance/planning layer consolidation (2026-03-29): documentation routing is now being compacted around `docs/DOCUMENTATION_MAP.md` as the only docs routing authority, `docs/README.md` is being reduced to a landing page, recent planning-adjacent audits are moving under `docs/plans/audits/`, and the older security/config policy plan is being retired to history while `config/project/policy/governance.json` plus `config/project/policy/code_rules.json` remain the compact top-level governance surface.
 - Topology-playground doc authority alignment (2026-03-29): the accepted visible shell is now documented consistently across the active authority/spec/status/menu files. `Topology Playground` is the direct modern shell entry, the legacy topology editor remains reachable only through `Settings -> Legacy Topology Editor Menu`, the visible workspace model remains `Editor` / `Sandbox` / `Play`, the top bar stays limited to title/tabs/validity/dimension, the left sidebar stays limited to the accepted per-workspace inventories with diagnostics secondary, the right helper remains keys-first and diagnostics-free, and the next phase is shell-preserving implementation simplification centered on `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
 - Topology-playground shell-layout + text-visibility guard pass (2026-03-29): the shell now computes top-bar, footer, and control-row text budgets through explicit internal layout helpers rather than only inline geometry, and focused visibility coverage now checks compact-window required text for the Topology Playground shell, pause/settings/help surfaces, tutorial overlays, and gameplay side-panel bounds without introducing screenshot-based tests or changing the frozen shell contract.
@@ -255,7 +267,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.72` (`low`)
+- `tech_debt.score = 4.73` (`low`)
 
 Dominant remaining pressure:
 
@@ -459,7 +471,7 @@ Top 8 live Python hotspots by real LOC:
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 807/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 819/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

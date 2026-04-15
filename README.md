@@ -147,6 +147,10 @@ embedded, so install does not depend on a sibling `cab1.cab` file.
 The canonical PyInstaller spec also pins lazy `tet4d.ai.playbot.*` modules as
 hidden imports so frozen launcher/setup menus do not fail when playbot helpers
 are loaded through package-level lazy exports.
+The packaging scripts now smoke-run the freshly built packaged runtime with
+`--runtime-smoke-check` under isolated user-data roots plus dummy SDL drivers
+before emitting release artifacts, so frozen startup regressions fail the build
+instead of shipping to installers.
 Tag pushes matching `v*` also publish the generated installers through `.github/workflows/release-packaging.yml`.
 
 ## Key files

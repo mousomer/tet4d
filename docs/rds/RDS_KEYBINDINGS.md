@@ -54,14 +54,15 @@ Implementation references:
 6. help live-key group headings/order
 7. `config/keybindings/defaults.json` is the single shipped-defaults source of truth for built-in presets.
 8. User profile files under `keybindings/` and `keybindings/profiles/` store mutable current bindings and overrides.
-9. Reset-to-defaults restores from preserved built-in defaults; it must not derive defaults from UI code.
-10. Gameplay, camera/view, topology playground, tutorials, help, controls reference, and the keybinding editor must all read the same resolved live action->keys map after preset load plus user overrides.
-11. Help/control/editor surfaces may format or filter the live bindings for context, but must not maintain independent binding structure ownership outside the catalog.
-12. `catalog.json`, `defaults.json`, and persisted profile payloads must validate against the same action/group/dimension contract before runtime use.
-13. Built-in profiles in `config/keybindings/defaults.json` must be complete for all required actions in their declared groups/dimensions.
-14. Persisted custom profiles may remain partial override payloads, but malformed or unsupported-schema payloads must fail cleanly.
-15. The key-token parser must accept every key-name form the runtime serializer writes back to disk, including keypad token names.
-16. Built-in shipped profile files may self-heal when stale or invalid against the current defaults contract, but invalid custom profile files must report failure rather than being silently overwritten.
+9. In frozen installs, shipped built-in binding files stay under the bundled read-only `keybindings/` root while profile directories under `keybindings/profiles/` resolve under the writable per-user data root.
+10. Reset-to-defaults restores from preserved built-in defaults; it must not derive defaults from UI code.
+11. Gameplay, camera/view, topology playground, tutorials, help, controls reference, and the keybinding editor must all read the same resolved live action->keys map after preset load plus user overrides.
+12. Help/control/editor surfaces may format or filter the live bindings for context, but must not maintain independent binding structure ownership outside the catalog.
+13. `catalog.json`, `defaults.json`, and persisted profile payloads must validate against the same action/group/dimension contract before runtime use.
+14. Built-in profiles in `config/keybindings/defaults.json` must be complete for all required actions in their declared groups/dimensions.
+15. Persisted custom profiles may remain partial override payloads, but malformed or unsupported-schema payloads must fail cleanly.
+16. The key-token parser must accept every key-name form the runtime serializer writes back to disk, including keypad token names.
+17. Built-in shipped profile files may self-heal when stale or invalid against the current defaults contract, but invalid custom profile files must report failure rather than being silently overwritten.
 
 ### 2.4 Direct config editing workflow
 

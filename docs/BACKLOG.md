@@ -46,6 +46,18 @@ live grouped bindings or active-profile reads should consume narrow
 engine/runtime accessors instead of importing the broader pygame keybinding
 adapter.
 
+Parallel frozen-keybinding-path follow-up (2026-04-15): startup/profile
+cleanup must continue honoring the split-root contract where bundled defaults
+stay under the read-only packaged `keybindings/` tree and writable profile
+directories live under the per-user data root, without weakening the runtime
+path-containment guard for files outside those canonical roots.
+
+Parallel release-packaging smoke follow-up (2026-04-15): release packaging
+must continue exercising packaged runtime initialization on each target OS
+before emitting installers, and frozen writable-path regression coverage
+should keep the `project_config` / keybinding-store seam under direct test
+instead of only validating those contracts in isolation.
+
 Parallel topology-playground keybinding follow-up (2026-03-30): playground
 helper and shortcut surfaces should keep reading runtime binding groups rather
 than reintroducing direct adapter-global ownership in topology UI modules.

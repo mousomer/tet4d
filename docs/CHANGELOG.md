@@ -3,10 +3,22 @@
 ## 2026-04-15
 
 ### Release
+1. Published `tet4d 0.7.5` as the packaged-runtime smoke and frozen-path regression follow-up to `0.7.4`.
+
+### Fixed
+1. PyInstaller bundles now pin the lazy `tet4d.ai.playbot.*` package exports as hidden imports, so frozen Windows launcher/setup flows no longer crash on `ModuleNotFoundError: tet4d.ai.playbot.dry_run`.
+2. Frozen keybinding startup now accepts the split root contract where bundled defaults stay under `_internal/keybindings` while writable profile directories live under the per-user data root, preventing startup failures like `path must be within keybindings directory`.
+3. Packaging scripts now smoke-run the freshly built packaged runtime through `--runtime-smoke-check`, and focused regression coverage now ties frozen writable-path contracts to the keybinding/runtime startup seam.
+
+## 2026-04-15
+
+### Release
 1. Published `tet4d 0.7.4` as the frozen-packaging follow-up to `0.7.3`.
 
 ### Fixed
 1. PyInstaller bundles now pin the lazy `tet4d.ai.playbot.*` package exports as hidden imports, so frozen Windows launcher/setup flows no longer crash on `ModuleNotFoundError: tet4d.ai.playbot.dry_run`.
+2. Frozen keybinding startup now accepts the split root contract where bundled defaults stay under `_internal/keybindings` while writable profile directories live under the per-user data root, preventing startup failures like `path must be within keybindings directory`.
+3. Packaging scripts now smoke-run the freshly built packaged runtime through `--runtime-smoke-check`, and focused regression coverage now ties frozen writable-path contracts to the keybinding/runtime startup seam.
 
 ## 2026-04-15
 

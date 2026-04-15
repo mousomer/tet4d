@@ -26,6 +26,13 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         args = front._parse_cli_args(["--topology-playground"])
 
         self.assertEqual(args.topology_playground, "2")
+        self.assertFalse(args.runtime_smoke_check)
+
+    def test_parse_runtime_smoke_check_cli_flag(self) -> None:
+        args = front._parse_cli_args(["--runtime-smoke-check"])
+
+        self.assertTrue(args.runtime_smoke_check)
+        self.assertIsNone(args.topology_playground)
 
     def test_parse_topology_playground_dimension_accepts_supported_values(self) -> None:
         self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("2"), 2)
@@ -55,6 +62,16 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             front.main(["--topology-playground", "3"])
 
         run_direct.assert_called_once_with(3)
+
+    def test_main_can_run_runtime_smoke_check_directly_from_cli_option(self) -> None:
+        with (
+            patch.object(front, "initialize_runtime") as initialize_runtime,
+            patch.object(front.pygame, "quit") as pygame_quit,
+        ):
+            front.main(["--runtime-smoke-check"])
+
+        initialize_runtime.assert_called_once_with(sync_audio_state=False)
+        pygame_quit.assert_called_once_with()
 
     def _run_live_topology_lab_launcher_action(
         self,

@@ -28,13 +28,14 @@ PAYLOAD_DIR="${APP_DIR}/Contents/Resources/tet4d-runtime"
 MACOS_DIR="${APP_DIR}/Contents/MacOS"
 DMG_STAGE_DIR="${BUILD_DIR}/dmg-root"
 DMG_PATH="${ARTIFACT_DIR}/tet4d-${VERSION}-macos-${ARCH_LABEL}.dmg"
+SMOKE_HOME="${BUILD_DIR}/smoke-home"
 
 "${PYTHON_BIN}" -m pip install --upgrade pip
 "${PYTHON_BIN}" -m pip install -e . pyinstaller
 "${PYTHON_BIN}" -m PyInstaller --noconfirm --clean packaging/pyinstaller/tet4d.spec
 
-rm -rf "${APP_DIR}" "${DMG_STAGE_DIR}"
-mkdir -p "${PAYLOAD_DIR}" "${MACOS_DIR}" "${DMG_STAGE_DIR}"
+rm -rf "${APP_DIR}" "${DMG_STAGE_DIR}" "${SMOKE_HOME}"
+mkdir -p "${PAYLOAD_DIR}" "${MACOS_DIR}" "${DMG_STAGE_DIR}" "${SMOKE_HOME}"
 cp -R "${ROOT_DIR}/dist/tet4d/." "${PAYLOAD_DIR}/"
 
 cat > "${MACOS_DIR}/tet4d" <<'EOF'
@@ -45,6 +46,12 @@ APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../Resources/tet4d-runtime" && pw
 exec "${APP_ROOT}/tet4d" "$@"
 EOF
 chmod +x "${MACOS_DIR}/tet4d"
+
+env \
+  HOME="${SMOKE_HOME}" \
+  SDL_VIDEODRIVER=dummy \
+  SDL_AUDIODRIVER=dummy \
+  "${MACOS_DIR}/tet4d" --runtime-smoke-check
 
 cat > "${APP_DIR}/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

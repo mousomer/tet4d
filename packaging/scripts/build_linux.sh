@@ -6,6 +6,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 ARTIFACT_DIR="${ROOT_DIR}/artifacts/installers"
 BUILD_DIR="${ROOT_DIR}/build/packaging/linux"
 PKG_ROOT="${BUILD_DIR}/tet4d"
+SMOKE_XDG_DATA_HOME="${BUILD_DIR}/smoke-xdg"
 
 cd "${ROOT_DIR}"
 mkdir -p "${ARTIFACT_DIR}" "${BUILD_DIR}"
@@ -17,6 +18,14 @@ ARTIFACT_PATH="${ARTIFACT_DIR}/tet4d_${VERSION}_${ARCH_LABEL}.deb"
 "${PYTHON_BIN}" -m pip install --upgrade pip
 "${PYTHON_BIN}" -m pip install -e . pyinstaller
 "${PYTHON_BIN}" -m PyInstaller --noconfirm --clean packaging/pyinstaller/tet4d.spec
+
+rm -rf "${SMOKE_XDG_DATA_HOME}"
+mkdir -p "${SMOKE_XDG_DATA_HOME}"
+env \
+  XDG_DATA_HOME="${SMOKE_XDG_DATA_HOME}" \
+  SDL_VIDEODRIVER=dummy \
+  SDL_AUDIODRIVER=dummy \
+  "${ROOT_DIR}/dist/tet4d/tet4d" --runtime-smoke-check
 
 rm -rf "${PKG_ROOT}"
 mkdir -p \

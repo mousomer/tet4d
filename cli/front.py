@@ -12,6 +12,11 @@ def _parse_cli_args(argv=None):
         description="tet4d unified launcher",
     )
     parser.add_argument(
+        "--runtime-smoke-check",
+        action="store_true",
+        help="initialize packaged runtime services and exit",
+    )
+    parser.add_argument(
         "--topology-playground",
         nargs="?",
         const="2",
@@ -878,8 +883,17 @@ def run() -> None:
     sys.exit()
 
 
+def _run_runtime_smoke_check() -> None:
+    initialize_runtime(sync_audio_state=False)
+    pygame.quit()
+    print("runtime smoke check: OK")
+
+
 def main(argv=None):
     parsed_args = _parse_cli_args(sys.argv[1:] if argv is None else argv)
+    if parsed_args.runtime_smoke_check:
+        _run_runtime_smoke_check()
+        return
     direct_dimension = parse_topology_playground_dimension(
         parsed_args.topology_playground
     )

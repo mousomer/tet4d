@@ -31,19 +31,19 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Build installer (Linux)
+      - name: Build installer and packaged runtime smoke check (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           bash packaging/scripts/build_linux.sh
 
-      - name: Build installer (macOS)
+      - name: Build installer and packaged runtime smoke check (macOS)
         if: runner.os == 'macOS'
         shell: bash
         run: |
           bash packaging/scripts/build_macos.sh
 
-      - name: Build installer (Windows)
+      - name: Build installer and packaged runtime smoke check (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |

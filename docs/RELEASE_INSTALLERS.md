@@ -20,6 +20,10 @@ This document defines how to build release installers that do not require a prei
 6. Frozen bundles must include hidden imports for lazy `tet4d.ai.playbot.*`
    package exports, especially the dry-run/setup helpers used by launcher and
    ND setup menus.
+7. Local packaging scripts must smoke-run the freshly built packaged runtime
+   with `--runtime-smoke-check` before publishing artifacts, using isolated
+   per-run user-data roots plus dummy SDL video/audio drivers so frozen startup
+   path regressions fail the build on every target OS.
 
 ## 2. Local build commands
 
@@ -48,6 +52,11 @@ Requirements:
 3. The Windows WiX build keeps `<MediaTemplate EmbedCab="yes" />`, builds into a temporary output directory under `build/packaging/windows/out`, and only moves the validated MSI into `artifacts/installers` after post-build checks pass.
 4. Before each Windows build, the script removes stale `*.msi` and `*.cab` files from `artifacts/installers` and the packaging build tree under `build/packaging/windows`.
 5. The Windows packaging script now fails hard if the expected MSI is missing or if any external `*.cab` is emitted anywhere under `build/packaging/windows`; shipping a sidecar `cab1.cab` is explicitly not allowed.
+6. Every packaging script now runs the packaged launcher with
+   `--runtime-smoke-check` before artifact creation:
+   - macOS uses the assembled `tet4d.app` launcher wrapper
+   - Linux uses the PyInstaller payload binary under `dist/tet4d/`
+   - Windows uses the frozen `tet4d.exe` payload before WiX packaging
 
 ## 3. Output artifacts
 
@@ -87,6 +96,8 @@ Artifact upload policy:
 3. macOS uploads only `artifacts/installers/*.dmg`
 
 Tag pushes also publish the generated installers to the matching GitHub release.
+The same workflow inherits the packaged runtime smoke checks because it invokes
+the canonical per-OS build scripts directly.
 
 ## 5. Follow-up release hardening
 

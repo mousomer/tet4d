@@ -497,11 +497,19 @@ def selected_profile_name(profile: str | None, active_profile: str) -> str:
 
 
 def safe_resolve_keybinding_path(path: Path) -> Path:
-    root = KEYBINDINGS_DIR.resolve()
     resolved = path.expanduser().resolve()
-    if resolved != root and root not in resolved.parents:
-        raise ValueError(f"path must be within keybindings directory: {root}")
-    return resolved
+    roots = tuple(
+        dict.fromkeys(
+            root.resolve()
+            for root in (KEYBINDINGS_DIR, KEYBINDINGS_PROFILES_DIR)
+        )
+    )
+    if any(resolved == root or root in resolved.parents for root in roots):
+        return resolved
+    canonical_roots = ", ".join(str(root) for root in roots)
+    raise ValueError(
+        f"path must be within keybindings directories: {canonical_roots}"
+    )
 
 
 def default_keybinding_file_path(dimension: int) -> Path:

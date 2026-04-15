@@ -6,6 +6,26 @@ import unittest
 
 class TestWindowsPackagingScript(unittest.TestCase):
     @staticmethod
+    def _macos_script() -> str:
+        script_path = (
+            Path(__file__).resolve().parents[3]
+            / "packaging"
+            / "scripts"
+            / "build_macos.sh"
+        )
+        return script_path.read_text(encoding="utf-8")
+
+    @staticmethod
+    def _linux_script() -> str:
+        script_path = (
+            Path(__file__).resolve().parents[3]
+            / "packaging"
+            / "scripts"
+            / "build_linux.sh"
+        )
+        return script_path.read_text(encoding="utf-8")
+
+    @staticmethod
     def _windows_script() -> str:
         script_path = (
             Path(__file__).resolve().parents[3]
@@ -59,6 +79,23 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("must not contain CAB sidecars", script)
         self.assertIn("expected MSI", script)
 
+    def test_packaging_scripts_run_packaged_runtime_smoke_checks(self) -> None:
+        macos = self._macos_script()
+        linux = self._linux_script()
+        windows = self._windows_script()
+
+        self.assertIn('SDL_VIDEODRIVER=dummy', macos)
+        self.assertIn('SDL_AUDIODRIVER=dummy', macos)
+        self.assertIn('"${MACOS_DIR}/tet4d" --runtime-smoke-check', macos)
+        self.assertIn('XDG_DATA_HOME="${SMOKE_XDG_DATA_HOME}"', linux)
+        self.assertIn('SDL_VIDEODRIVER=dummy', linux)
+        self.assertIn('SDL_AUDIODRIVER=dummy', linux)
+        self.assertIn('"${ROOT_DIR}/dist/tet4d/tet4d" --runtime-smoke-check', linux)
+        self.assertIn('$env:APPDATA = $SmokeAppData', windows)
+        self.assertIn('$env:SDL_VIDEODRIVER = "dummy"', windows)
+        self.assertIn('$env:SDL_AUDIODRIVER = "dummy"', windows)
+        self.assertIn('& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check', windows)
+
     def test_release_workflow_uploads_windows_only_as_msi(self) -> None:
         workflow = self._release_workflow()
 
@@ -70,6 +107,13 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("path: artifacts/installers/*.dmg", workflow)
         stripped_lines = {line.strip() for line in workflow.splitlines()}
         self.assertNotIn("path: artifacts/installers/*", stripped_lines)
+
+    def test_release_workflow_uses_canonical_packaging_scripts(self) -> None:
+        workflow = self._release_workflow()
+
+        self.assertIn("bash packaging/scripts/build_linux.sh", workflow)
+        self.assertIn("bash packaging/scripts/build_macos.sh", workflow)
+        self.assertIn("./packaging/scripts/build_windows.ps1", workflow)
 
     def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
         spec = self._pyinstaller_spec()

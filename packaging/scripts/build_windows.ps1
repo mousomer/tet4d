@@ -5,6 +5,7 @@ $PythonBin = if ($env:PYTHON_BIN) { $env:PYTHON_BIN } else { "python" }
 $ArtifactDir = Join-Path $RootDir "artifacts\installers"
 $BuildDir = Join-Path $RootDir "build\packaging\windows"
 $TempOutputDir = Join-Path $BuildDir "out"
+$SmokeAppData = Join-Path $BuildDir "AppData\Roaming"
 $WxsPath = Join-Path $BuildDir "tet4d.wxs"
 $UpgradeCode = "{5B4CD54F-0F11-4D11-8A4E-A2E845E0C4D1}"
 $WixToolDir = Join-Path $BuildDir ".dotnet-tools"
@@ -70,7 +71,11 @@ Remove-PackagingArtifacts -Paths @($ArtifactDir, $BuildDir)
 if (Test-Path $TempOutputDir) {
   Remove-Item $TempOutputDir -Recurse -Force
 }
+if (Test-Path $SmokeAppData) {
+  Remove-Item $SmokeAppData -Recurse -Force
+}
 New-Item -ItemType Directory -Path $TempOutputDir -Force | Out-Null
+New-Item -ItemType Directory -Path $SmokeAppData -Force | Out-Null
 
 if (-not $env:DOTNET_CLI_HOME) {
   $env:DOTNET_CLI_HOME = Join-Path $BuildDir ".dotnet-cli-home"
@@ -135,6 +140,14 @@ if ($LASTEXITCODE -ne 0) {
 $PayloadRoot = Join-Path $RootDir "dist\tet4d"
 if (-not (Test-Path $PayloadRoot)) {
   throw "PyInstaller did not create expected payload directory: $PayloadRoot"
+}
+
+$env:APPDATA = $SmokeAppData
+$env:SDL_VIDEODRIVER = "dummy"
+$env:SDL_AUDIODRIVER = "dummy"
+& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check
+if ($LASTEXITCODE -ne 0) {
+  throw "Packaged runtime smoke check failed for $PayloadRoot\tet4d.exe"
 }
 
 $payloadFiles = Get-ChildItem -Path $PayloadRoot -Recurse -File |

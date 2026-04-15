@@ -84,6 +84,51 @@ class _TempKeybindingRoot:
         shutil.rmtree(self.root, ignore_errors=True)
 
 
+class _SplitRootKeybindingLayout:
+    def __init__(self) -> None:
+        self.root = _new_workspace_temp_dir("keybindings_split")
+        self.bundle_root = self.root / "_internal"
+        self.keybindings_dir = self.bundle_root / "keybindings"
+        self.profiles_dir = (
+            self.root
+            / "AppData"
+            / "Roaming"
+            / "tet4d"
+            / "keybindings"
+            / "profiles"
+        )
+        self.state_dir = self.root / "AppData" / "Roaming" / "tet4d" / "state"
+        self.files = {
+            2: self.keybindings_dir / "2d.json",
+            3: self.keybindings_dir / "3d.json",
+            4: self.keybindings_dir / "4d.json",
+        }
+        self.patches = [
+            patch.object(keybinding_store, "KEYBINDINGS_DIR", self.keybindings_dir),
+            patch.object(
+                keybinding_store, "KEYBINDINGS_PROFILES_DIR", self.profiles_dir
+            ),
+            patch.object(keybinding_store, "KEYBINDING_FILES", self.files),
+            patch.object(menu_settings_state, "STATE_DIR", self.state_dir),
+            patch.object(
+                menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"
+            ),
+        ]
+
+    def start(self) -> None:
+        for p in self.patches:
+            p.start()
+        KEYBINDING_STATE.set_active_profile(keybindings.PROFILE_SMALL)
+        keybindings.ACTIVE_KEY_PROFILE = keybindings.PROFILE_SMALL
+        keybindings._KEYBINDINGS_INITIALIZED = False
+        keybindings.initialize_keybinding_files()
+
+    def stop(self) -> None:
+        for p in reversed(self.patches):
+            p.stop()
+        shutil.rmtree(self.root, ignore_errors=True)
+
+
 class TestKeybindingProfiles(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -258,7 +303,30 @@ class TestKeybindingProfiles(unittest.TestCase):
         outside = self.tmp_root.root.parent / "outside-bindings.json"
         ok, msg = keybindings.save_keybindings_file(2, file_path=str(outside))
         self.assertFalse(ok)
-        self.assertIn("within keybindings directory", msg)
+
+    def test_initialize_allows_split_frozen_profile_root(self) -> None:
+        split_root = _SplitRootKeybindingLayout()
+        split_root.start()
+        self.addCleanup(split_root.stop)
+
+        full_path = keybindings.profile_keybinding_file_path(
+            4, keybindings.PROFILE_FULL
+        )
+        self.assertTrue(full_path.exists())
+        self.assertEqual(
+            full_path.parent,
+            split_root.profiles_dir / keybindings.PROFILE_FULL,
+        )
+
+        obsolete_dir = split_root.profiles_dir / keybindings.PROFILE_SMALL
+        obsolete_dir.mkdir(parents=True, exist_ok=True)
+        (obsolete_dir / "2d.json").write_text("{}", encoding="utf-8")
+
+        keybindings._KEYBINDINGS_INITIALIZED = False
+        keybindings.initialize_keybinding_files()
+
+        self.assertFalse(obsolete_dir.exists())
+        self.assertTrue((split_root.keybindings_dir / "2d.json").exists())
 
     def test_invalid_profile_name_is_rejected(self) -> None:
         ok, msg = keybindings.set_active_key_profile("not a valid profile name!")
