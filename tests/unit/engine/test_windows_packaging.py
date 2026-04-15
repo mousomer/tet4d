@@ -25,6 +25,16 @@ class TestWindowsPackagingScript(unittest.TestCase):
         )
         return workflow_path.read_text(encoding="utf-8")
 
+    @staticmethod
+    def _pyinstaller_spec() -> str:
+        spec_path = (
+            Path(__file__).resolve().parents[3]
+            / "packaging"
+            / "pyinstaller"
+            / "tet4d.spec"
+        )
+        return spec_path.read_text(encoding="utf-8")
+
     def test_windows_msi_embeds_wix_cab_payload(self) -> None:
         script = self._windows_script()
 
@@ -60,6 +70,16 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("path: artifacts/installers/*.dmg", workflow)
         stripped_lines = {line.strip() for line in workflow.splitlines()}
         self.assertNotIn("path: artifacts/installers/*", stripped_lines)
+
+    def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
+        spec = self._pyinstaller_spec()
+
+        self.assertIn('"tet4d.ai.playbot.controller"', spec)
+        self.assertIn('"tet4d.ai.playbot.dry_run"', spec)
+        self.assertIn('"tet4d.ai.playbot.planner_2d"', spec)
+        self.assertIn('"tet4d.ai.playbot.planner_nd"', spec)
+        self.assertIn('"tet4d.ai.playbot.planner_nd_search"', spec)
+        self.assertIn('"tet4d.ai.playbot.types"', spec)
 
 
 if __name__ == "__main__":

@@ -28,6 +28,8 @@
 ## Desktop packaging
 
 1. Packaging spec is up to date: `packaging/pyinstaller/tet4d.spec`.
+   - includes hidden imports for lazy `tet4d.ai.playbot.*` modules used by
+     frozen launcher/setup flows
 2. Packaging docs reflect current flow: `docs/RELEASE_INSTALLERS.md`.
 3. Local installer build is verified for the target release OS:
    - macOS: `bash packaging/scripts/build_macos.sh` (`.dmg`)

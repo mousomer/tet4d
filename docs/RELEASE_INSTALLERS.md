@@ -17,6 +17,9 @@ This document defines how to build release installers that do not require a prei
    - Linux: `.deb`
 5. Build spec:
    - `packaging/pyinstaller/tet4d.spec`
+6. Frozen bundles must include hidden imports for lazy `tet4d.ai.playbot.*`
+   package exports, especially the dry-run/setup helpers used by launcher and
+   ND setup menus.
 
 ## 2. Local build commands
 

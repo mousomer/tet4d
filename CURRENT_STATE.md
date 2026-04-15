@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-12  
+Last updated: 2026-04-15  
 Branch: `codex/endgame-flow-slider-layout`  
 Worktree expectation: clean unless an active batch is in progress
 
@@ -30,6 +30,12 @@ not a historical ledger. Long historical migration detail belongs in
 
 ## Active Batch Note
 
+- Release packaging hidden-import follow-up (2026-04-15): the canonical
+  PyInstaller spec now explicitly includes the lazy `tet4d.ai.playbot.*`
+  modules used by frozen launcher/setup flows, preventing packaged Windows
+  builds from crashing on `ModuleNotFoundError:
+  tet4d.ai.playbot.dry_run` when the ND setup path imports playbot dry-run
+  helpers through package-level lazy exports.
 - Governance/planning layer consolidation (2026-03-29): documentation routing is now being compacted around `docs/DOCUMENTATION_MAP.md` as the only docs routing authority, `docs/README.md` is being reduced to a landing page, recent planning-adjacent audits are moving under `docs/plans/audits/`, and the older security/config policy plan is being retired to history while `config/project/policy/governance.json` plus `config/project/policy/code_rules.json` remain the compact top-level governance surface.
 - Topology-playground doc authority alignment (2026-03-29): the accepted visible shell is now documented consistently across the active authority/spec/status/menu files. `Topology Playground` is the direct modern shell entry, the legacy topology editor remains reachable only through `Settings -> Legacy Topology Editor Menu`, the visible workspace model remains `Editor` / `Sandbox` / `Play`, the top bar stays limited to title/tabs/validity/dimension, the left sidebar stays limited to the accepted per-workspace inventories with diagnostics secondary, the right helper remains keys-first and diagnostics-free, and the next phase is shell-preserving implementation simplification centered on `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
 - Topology-playground shell-layout + text-visibility guard pass (2026-03-29): the shell now computes top-bar, footer, and control-row text budgets through explicit internal layout helpers rather than only inline geometry, and focused visibility coverage now checks compact-window required text for the Topology Playground shell, pause/settings/help surfaces, tutorial overlays, and gameplay side-panel bounds without introducing screenshot-based tests or changing the frozen shell contract.

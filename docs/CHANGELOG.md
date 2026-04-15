@@ -3,6 +3,14 @@
 ## 2026-04-15
 
 ### Release
+1. Published `tet4d 0.7.4` as the frozen-packaging follow-up to `0.7.3`.
+
+### Fixed
+1. PyInstaller bundles now pin the lazy `tet4d.ai.playbot.*` package exports as hidden imports, so frozen Windows launcher/setup flows no longer crash on `ModuleNotFoundError: tet4d.ai.playbot.dry_run`.
+
+## 2026-04-15
+
+### Release
 1. Published `tet4d 0.7.3` after redirecting frozen writable state to the user data root and closing the remaining score-analysis path regression.
 
 ### Fixed

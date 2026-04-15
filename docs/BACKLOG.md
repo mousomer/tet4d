@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-12  
+Updated: 2026-04-15  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -142,6 +142,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-15:
+
+- frozen packaging follow-up so the canonical PyInstaller spec now includes
+  hidden imports for the lazy `tet4d.ai.playbot.*` package surface, preventing
+  Windows frozen launcher/setup imports from failing on missing
+  `tet4d.ai.playbot.dry_run`
 
 Completed on 2026-04-12:
 
