@@ -8,15 +8,17 @@ from tet4d.engine.runtime.topology_playground_state import (
 
 from .scene_state import (
     TopologyLabState,
-    current_highlighted_glue_id,
     current_probe_coord,
     current_probe_frame,
     current_probe_path,
     current_probe_trace,
-    current_selected_boundary_index,
-    current_selected_glue_id,
     playground_dims_for_state,
 )
+from .scene_state_canonical import (
+    current_selected_boundary_index,
+    current_selected_glue_id,
+)
+from .scene_state_probe import current_highlighted_glue_id
 
 _UNSET = object()
 

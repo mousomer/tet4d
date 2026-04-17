@@ -15,9 +15,10 @@ from tet4d.engine.topology_explorer import (
     GluingDescriptor,
 )
 from tet4d.ui.pygame.launch import topology_lab_menu
-from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
+from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_controls_panel_values
 from tet4d.ui.pygame.topology_lab import projection_scene
 from tet4d.ui.pygame.topology_lab import scene2d
+from tet4d.ui.pygame.topology_lab import scene_state_canonical as topology_lab_scene_state_canonical
 from tet4d.ui.pygame.topology_lab.scene2d import draw_scene as draw_scene_2d
 from tet4d.ui.pygame.topology_lab.scene3d import draw_scene as draw_scene_3d
 from tet4d.ui.pygame.topology_lab.scene4d import draw_scene as draw_scene_4d
@@ -609,7 +610,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
 
         self.assertTrue(
-            topology_lab_controls_panel._sandbox_neighbor_search_enabled(state)
+            topology_lab_controls_panel_values._sandbox_neighbor_search_enabled(state)
         )
         topology_lab_menu._activate_action(state, "sandbox_neighbor_search")
         assert state.canonical_state is not None
@@ -763,7 +764,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
                 self.assertTrue(handled)
                 self.assertFalse(
-                    topology_lab_controls_panel._sandbox_neighbor_search_enabled(state)
+                    topology_lab_controls_panel_values._sandbox_neighbor_search_enabled(state)
                 )
                 self.assertEqual(
                     topology_lab_menu._active_workspace_neighbor_markers(state),
@@ -772,7 +773,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
     def test_sandbox_neighbor_toggle_computes_real_neighbor_cells(self) -> None:
         state = self._explorer_state(2)
-        topology_lab_controls_panel.replace_play_settings(
+        topology_lab_scene_state_canonical.replace_play_settings(
             state,
             topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(8, 8)),
         )
@@ -791,7 +792,7 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
     def test_editor_probe_neighbor_overlay_derives_from_canonical_probe_state(self) -> None:
         state = self._explorer_state(2)
-        topology_lab_controls_panel.replace_play_settings(
+        topology_lab_scene_state_canonical.replace_play_settings(
             state,
             topology_lab_menu.ExplorerPlaygroundSettings(board_dims=(8, 8)),
         )

@@ -7,14 +7,16 @@ from .scene_state import (
     current_explorer_draft,
     current_explorer_profile,
     set_active_tool,
-    set_highlighted_glue_id,
-    set_selected_boundary_index,
-    set_selected_glue_id,
     tool_is_edit,
     tool_is_probe,
     update_explorer_draft,
     uses_general_explorer_editor,
 )
+from .scene_state_canonical import (
+    set_selected_boundary_index,
+    set_selected_glue_id,
+)
+from .scene_state_probe import set_highlighted_glue_id
 
 
 def pick_target(

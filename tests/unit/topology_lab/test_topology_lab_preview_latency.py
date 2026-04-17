@@ -13,6 +13,7 @@ from tet4d.engine.runtime.topology_playground_state import (
 )
 from tet4d.engine.topology_explorer.presets import sphere_profile_2d
 from tet4d.ui.pygame.launch import topology_lab_menu
+from tet4d.ui.pygame.topology_lab import controls_panel_actions as topology_lab_controls_panel_actions
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
 from tet4d.ui.pygame.topology_lab import scene_preview_state as topology_lab_scene_preview_state
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
@@ -151,7 +152,7 @@ class TestTopologyLabPreviewLatency(unittest.TestCase):
         current_profile = topology_lab_scene_state.current_explorer_profile(state)
         next_profile = next(
             preset.profile
-            for preset in topology_lab_controls_panel._explorer_presets(state)
+            for preset in topology_lab_controls_panel_actions._explorer_presets(state)
             if preset.profile != current_profile
         )
         topology_lab_scene_state.replace_explorer_profile(state, next_profile)

@@ -225,11 +225,13 @@ settled Play drop-policy contract.
   same signature should reuse the completed cached result.
 - Keep compatibility re-exports thin when launcher/tests still read helper
   seams through `controls_panel.py`; keep routing/command/launch detail in the
-  focused helper modules and do not let that shell facade retake non-shell
-  explorer mutation ownership.
+  focused helper modules, prefer updating callers to the stable owner module
+  when that reduces indirection, and do not let that shell facade retake
+  non-shell explorer mutation ownership.
 - Keep `scene_state.py` as the public state facade, but do not let canonical
-  sync/write logic or probe-state normalization drift back into one mixed file
-  when focused helper modules already own those concerns.
+  sync/write logic, probe-state normalization, or boundary/glue selection
+  helpers drift back into one mixed file when focused helper modules already
+  own those concerns.
 - In future shell follow-up work, keep diagnostics explicitly secondary and do
   not let them drift back into default-primary sidebar content.
 - Keep `Topology Playground` as a direct modern launcher entry with no

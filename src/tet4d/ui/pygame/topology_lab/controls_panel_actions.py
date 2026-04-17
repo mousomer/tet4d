@@ -66,15 +66,17 @@ from .scene_state import (
     replace_play_settings,
     set_active_tool,
     set_dirty,
-    set_highlighted_glue_id,
     set_probe_neighbors_visible,
     set_probe_trace_visible,
-    set_selected_boundary_index,
-    set_selected_glue_id,
     sync_canonical_playground_state,
     update_explorer_draft,
     uses_general_explorer_editor,
 )
+from .scene_state_canonical import (
+    set_selected_boundary_index,
+    set_selected_glue_id,
+)
+from .scene_state_probe import set_highlighted_glue_id
 
 _TopologyLabState = TopologyLabState
 _EDITOR_TOOL_SEQUENCE = (

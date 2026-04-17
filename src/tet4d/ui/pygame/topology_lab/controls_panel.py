@@ -47,19 +47,11 @@ from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
 from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
     _adjust_explorer_row,
     _apply_explorer_glue,
-    _cycle_explorer_preset,  # noqa: F401 - compatibility re-export
-    _explorer_presets,  # noqa: F401 - compatibility re-export
     _mark_updated,
-    _normalize_explorer_draft,
+    _normalize_explorer_draft as _normalize_explorer_draft_action,
     _remove_explorer_glue,
     _reset_explorer_play_settings_to_defaults,
-    _select_explorer_draft_slot,  # noqa: F401 - compatibility re-export
     _set_topology_status_after_refresh,
-    _toggle_explorer_sign,  # noqa: F401 - compatibility re-export
-    _toggle_sandbox_neighbor_search,  # noqa: F401 - compatibility re-export
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_values import (
-    _sandbox_neighbor_search_enabled,  # noqa: F401 - compatibility re-export
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
     run_experiments as _run_experiments_impl,
@@ -104,25 +96,27 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPreviewCompileSignature,
     TOOL_EDIT,
     TopologyLabState,
-    current_explorer_draft,
-    current_explorer_profile,
-    current_play_settings,
-    current_probe_coord,
-    current_probe_path,
-    current_probe_trace,
-    ensure_probe_state as _ensure_probe_state,
     ensure_explorer_draft,
-    playground_dims_for_state,
-    replace_explorer_profile,
-    replace_play_settings,
-    replace_probe_state,
-    reset_probe_state,
-    set_dirty,
-    set_highlighted_glue_id,
-    set_selected_boundary_index,  # noqa: F401 - compatibility re-export
-    set_selected_glue_id,  # noqa: F401 - compatibility re-export
-    sync_canonical_playground_state,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
+    current_explorer_draft as _current_explorer_draft,
+    current_explorer_profile as _current_explorer_profile,
+    current_play_settings as _current_play_settings,
+    replace_explorer_profile as _replace_explorer_profile,
+    replace_play_settings as _replace_play_settings,
+    set_dirty as _set_dirty,
+    sync_canonical_playground_state as _sync_canonical_playground_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
+    current_probe_coord as _current_probe_coord,
+    current_probe_path as _current_probe_path,
+    current_probe_trace as _current_probe_trace,
+    ensure_probe_state as _ensure_probe_state,
+    playground_dims_for_state as _playground_dims_for_state,
+    replace_probe_state as _replace_probe_state,
+    reset_probe_state as _reset_probe_state,
+    set_highlighted_glue_id as _set_highlighted_glue_id,
 )
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_settings,
@@ -147,7 +141,7 @@ class _LegacyRowAdjustment:
 
 
 def _board_dims_for_state(state: _TopologyLabState) -> tuple[int, ...]:
-    return playground_dims_for_state(state)
+    return _playground_dims_for_state(state)
 
 
 def compile_explorer_topology_preview(*args, **kwargs):
@@ -328,21 +322,21 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         setattr(state, "sandbox_focus_frame_signs", None)
         _clear_explorer_scene_state(state)
         return
-    replace_explorer_profile(
+    _replace_explorer_profile(
         state,
         load_runtime_explorer_topology_profile(state.dimension),
     )
-    draft = current_explorer_draft(state)
+    draft = _current_explorer_draft(state)
     if draft is None or len(draft.signs) != state.dimension - 1:
         ensure_explorer_draft(state)
-    _normalize_explorer_draft(state)
+    _normalize_explorer_draft_action(state)
     with record_interaction_phase(
         state,
         "canonical_sync",
         source="sync_explorer_state",
         dimension=state.dimension,
     ):
-        sync_canonical_playground_state(state)
+        _sync_canonical_playground_state(state)
     state.scene_camera = ensure_scene_camera(state.dimension, state.scene_camera)
     state.scene_mouse_orbit = ensure_mouse_orbit_state(state.scene_mouse_orbit)
     with record_interaction_phase(
@@ -368,10 +362,10 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
         step=step_label,
         dimension=state.dimension,
     ):
-        profile = current_explorer_profile(state)
+        profile = _current_explorer_profile(state)
         assert profile is not None
         _ensure_probe_state(state)
-        probe_coord = current_probe_coord(state)
+        probe_coord = _current_probe_coord(state)
         if probe_coord is None:
             _set_status(
                 state,
@@ -392,21 +386,21 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
                 frame_signs=frame_signs,
             )
         except ValueError as exc:
-            set_highlighted_glue_id(state, None)
+            _set_highlighted_glue_id(state, None)
             _set_status(state, str(exc), is_error=True)
             return
         traversal = result.get("traversal")
         highlighted_glue_id = (
             None if traversal is None else str(traversal.get("glue_id"))
         )
-        trace = current_probe_trace(state)
+        trace = _current_probe_trace(state)
         trace.append(str(result["message"]))
-        path = current_probe_path(state) or [start]
+        path = _current_probe_path(state) or [start]
         if not path or path[-1] != start:
             path.append(start)
         if target != start:
             path.append(target)
-        replace_probe_state(
+        _replace_probe_state(
             state,
             coord=target,
             trace=trace[-6:],
@@ -423,11 +417,11 @@ def _apply_probe_step(state: _TopologyLabState, step_label: str) -> None:
 
 
 def _reset_probe(state: _TopologyLabState) -> None:
-    reset_probe_state(state)
+    _reset_probe_state(state)
     _ensure_probe_state(state)
-    probe_coord = current_probe_coord(state)
+    probe_coord = _current_probe_coord(state)
     if probe_coord is None:
-        message = next(iter(current_probe_trace(state) or ()), "Probe unavailable")
+        message = next(iter(_current_probe_trace(state) or ()), "Probe unavailable")
         _set_status(state, message, is_error=True)
         return
     _set_status(state, f"Editor probe reset to {list(probe_coord)}")
@@ -456,12 +450,12 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
         previous_dimension=state.dimension,
     ):
         previous_dimension = state.dimension
-        previous_settings = current_play_settings(state)
+        previous_settings = _current_play_settings(state)
         if previous_settings is not None:
             state.play_settings_by_dimension[previous_dimension] = previous_settings
         idx = _TOPOLOGY_DIMENSIONS.index(state.dimension)
         state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
-        set_dirty(state, True)
+        _set_dirty(state, True)
         state.sandbox = None
         setattr(state, "sandbox_focus_coord", None)
         setattr(state, "sandbox_focus_trace", [])
@@ -475,7 +469,7 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
                 next_settings = _configured_explorer_play_settings_for_dimension(
                     state.dimension,
                 )
-            replace_play_settings(state, next_settings)
+            _replace_play_settings(state, next_settings)
         _sync_explorer_state(state)
         _set_topology_status_after_refresh(
             state,
@@ -591,7 +585,7 @@ def _handle_navigation_key(
 
 
 def _apply_sandbox_shortcut_step(state: _TopologyLabState, step_label: str) -> None:
-    profile = current_explorer_profile(state)
+    profile = _current_explorer_profile(state)
     assert profile is not None
     ok, message = move_sandbox_piece(state, profile, step_label)
     _set_status(state, message, is_error=not ok)

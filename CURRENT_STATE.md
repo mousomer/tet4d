@@ -22,8 +22,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `controls_panel_commands.py` for save/export/experiment command execution,
   `controls_panel_launch.py` for play-preview launch preparation and runtime
   handoff,
-  `controls_panel.py` for the public shell facade and thin compatibility
-  re-exports over those focused helpers,
+  `controls_panel.py` for the public shell facade and only the remaining
+  shell-entry compatibility seams,
   `scene_state.py` for the state shape plus pane/tool/workspace routing,
   `scene_state_canonical.py` for canonical runtime sync/write and fallback
   storage handling,
@@ -71,7 +71,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   results.
 - Do not let `scene_state.py` re-absorb canonical sync/write glue or
   probe-state normalization now owned by `scene_state_canonical.py` and
-  `scene_state_probe.py`.
+  `scene_state_probe.py`, and do not drift boundary/glue selection or
+  highlight-glue helpers back through that facade once callers import the
+  focused owner modules directly.
 - Keep `docs/BACKLOG.md` as the open-work tracker and
   `docs/PROJECT_STRUCTURE.md` as the generated structure/source-of-truth
   inventory.
@@ -105,7 +107,7 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3665` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3667` real LOC
 2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
 3. `scripts/arch_metrics.py`: `1890` real LOC
 4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
@@ -155,9 +157,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 - Continue topology-playground cleanup from `docs/BACKLOG.md` without reopening
   the frozen shell contract.
-- Continue cleanup pressure in `scene_state.py` and in any still-thick
-  `controls_panel.py` compatibility seams without collapsing the new helper
-  splits back into one file.
+- Continue trimming only the remaining real shell-entry seams in
+  `controls_panel.py` and `scene_state.py` without collapsing the focused
+  helper splits back into one file.
 - Keep the hardened preview/playability contract explicit: same-signature
   refreshes restore cached results when available, invalid preview states do
   not queue pointless rigid scans, and play-preview launch only forces

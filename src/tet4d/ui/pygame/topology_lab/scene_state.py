@@ -341,7 +341,8 @@ def scene_pane_active(state: TopologyPlaygroundState) -> bool:
 
 # `scene_state.py` owns the state shape and shell-owned routing fields.
 # Focused helper modules own canonical runtime sync/write logic and probe-state
-# selectors/mutations, then re-export that API back through this module.
+# selectors/mutations. This facade only re-exports the broad state selectors
+# that remain part of the shared shell surface.
 from . import scene_state_canonical as _scene_state_canonical  # noqa: E402
 from . import scene_state_probe as _scene_state_probe  # noqa: E402
 
@@ -359,12 +360,6 @@ replace_play_settings = _scene_state_canonical.replace_play_settings
 replace_explorer_profile = _scene_state_canonical.replace_explorer_profile
 replace_explorer_draft = _scene_state_canonical.replace_explorer_draft
 update_explorer_draft = _scene_state_canonical.update_explorer_draft
-current_selected_boundary_index = _scene_state_canonical.current_selected_boundary_index
-set_selected_boundary_index = _scene_state_canonical.set_selected_boundary_index
-current_selected_glue_id = _scene_state_canonical.current_selected_glue_id
-set_selected_glue_id = _scene_state_canonical.set_selected_glue_id
-
-current_highlighted_glue_id = _scene_state_probe.current_highlighted_glue_id
 current_probe_coord = _scene_state_probe.current_probe_coord
 current_probe_trace = _scene_state_probe.current_probe_trace
 probe_trace_visible = _scene_state_probe.probe_trace_visible
@@ -374,7 +369,6 @@ current_probe_frame = _scene_state_probe.current_probe_frame
 replace_probe_state = _scene_state_probe.replace_probe_state
 set_probe_trace_visible = _scene_state_probe.set_probe_trace_visible
 set_probe_neighbors_visible = _scene_state_probe.set_probe_neighbors_visible
-set_highlighted_glue_id = _scene_state_probe.set_highlighted_glue_id
 select_projection_coord = _scene_state_probe.select_projection_coord
 playground_dims_for_state = _scene_state_probe.playground_dims_for_state
 ensure_probe_state = _scene_state_probe.ensure_probe_state
@@ -462,7 +456,6 @@ __all__ = [
     "current_explorer_draft",
     "current_explorer_profile",
     "current_dirty",
-    "current_highlighted_glue_id",
     "current_play_settings",
     "current_probe_coord",
     "current_probe_frame",
@@ -470,8 +463,6 @@ __all__ = [
     "current_probe_trace",
     "probe_neighbors_visible",
     "probe_trace_visible",
-    "current_selected_boundary_index",
-    "current_selected_glue_id",
     "cycle_active_pane",
     "ensure_explorer_draft",
     "ensure_probe_state",
@@ -489,9 +480,6 @@ __all__ = [
     "set_active_tool",
     "set_active_workspace",
     "set_dirty",
-    "set_highlighted_glue_id",
-    "set_selected_boundary_index",
-    "set_selected_glue_id",
     "sync_canonical_playground_state",
     "sync_shell_state_from_canonical",
     "tool_is_edit",

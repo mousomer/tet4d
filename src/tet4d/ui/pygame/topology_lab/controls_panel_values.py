@@ -40,12 +40,14 @@ from .scene_state import (
     current_explorer_draft,
     current_explorer_profile,
     current_play_settings,
-    current_selected_boundary_index,
-    current_selected_glue_id,
     playground_dims_for_state,
     probe_neighbors_visible,
     probe_trace_visible,
     uses_general_explorer_editor,
+)
+from .scene_state_canonical import (
+    current_selected_boundary_index,
+    current_selected_glue_id,
 )
 
 _PLAYABILITY_VALIDITY_LABELS = {

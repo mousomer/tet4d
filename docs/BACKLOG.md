@@ -119,14 +119,24 @@ results in `scene_preview_state.py` when available, queues deferred rigid
 analysis only for valid unknown-rigid states, and keeps explicit play-preview
 launch forcing completion only when that valid rigid result is still pending.
 
+Batch 7 progress (2026-04-17): residual topology-playground compatibility seam
+cleanup now routes launcher/test access for row-mutation helpers directly to
+`src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, routes
+boundary/glue selection helpers directly to
+`src/tet4d/ui/pygame/topology_lab/scene_state_canonical.py`, and routes
+highlight-glue helpers directly to
+`src/tet4d/ui/pygame/topology_lab/scene_state_probe.py`, leaving
+`controls_panel.py` and `scene_state.py` with fewer fake facade seams without
+changing the frozen shell or the Batch 6 preview/playability contract.
+
 - Open work:
   1. continue structural simplification of remaining
      `src/tet4d/ui/pygame/topology_lab/scene_state.py` routing/facade code and
-     any still-thick compatibility seams without collapsing the new
+     any still-live public compatibility seams without collapsing the new
      `scene_state_canonical.py` / `scene_state_probe.py` ownership split
   2. trim residual `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
-     compatibility seams only when caller complexity drops and visible-shell
-     ownership stays in place
+     shell-entry compatibility seams only when caller complexity drops and
+     visible-shell ownership stays in place
   3. keep the explicit preview/playability signature and deferred-analysis
      contract pinned so future UI-only or non-topological state changes do not
      regress into unnecessary preview/playability recompute

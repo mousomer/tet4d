@@ -16,10 +16,12 @@ from tet4d.ui.pygame.topology_lab import (
     set_active_tool,
 )
 from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_settings
+from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
+    _normalize_explorer_draft,
+)
 from tet4d.ui.pygame.topology_lab.controls_panel import (
     _INITIAL_TOOL_BY_GAMEPLAY_MODE,
     _TopologyLabState,
-    _normalize_explorer_draft,
     _refresh_explorer_scene_state,
     _sync_explorer_state,
 )

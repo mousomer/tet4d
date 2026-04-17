@@ -44,13 +44,10 @@ from .scene_state import (
     current_editor_tool as _current_editor_tool,
     current_explorer_draft as _current_explorer_draft,
     current_explorer_profile as _current_explorer_profile,
-    current_highlighted_glue_id as _current_highlighted_glue_id,
     current_probe_coord as _current_probe_coord,
     current_probe_frame as _current_probe_frame,
     current_probe_path as _current_probe_path,
     current_probe_trace as _current_probe_trace,
-    current_selected_boundary_index as _current_selected_boundary_index,
-    current_selected_glue_id as _current_selected_glue_id,
     ensure_probe_state as _ensure_probe_state,
     playground_dims_for_state as _board_dims_for_state,
     probe_neighbors_visible as _probe_neighbors_visible,
@@ -59,6 +56,13 @@ from .scene_state import (
     tool_is_edit,
     tool_is_sandbox,
     uses_general_explorer_editor as _uses_general_explorer_editor,
+)
+from .scene_state_canonical import (
+    current_selected_boundary_index as _current_selected_boundary_index,
+    current_selected_glue_id as _current_selected_glue_id,
+)
+from .scene_state_probe import (
+    current_highlighted_glue_id as _current_highlighted_glue_id,
 )
 from .state_ownership import (
     current_sandbox_focus_coord as _current_sandbox_focus_coord,

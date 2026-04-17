@@ -7,7 +7,9 @@ from unittest.mock import patch
 import pygame
 
 from tet4d.ui.pygame.launch import topology_lab_menu
+from tet4d.ui.pygame.topology_lab import controls_panel_actions
 from tet4d.ui.pygame.topology_lab import controls_panel, piece_sandbox
+from tet4d.ui.pygame.topology_lab import scene_state_canonical
 from tet4d.ui.pygame.topology_lab.interaction_audit import latest_span_for_phase
 
 
@@ -39,7 +41,7 @@ class TestTopologyLabInteractionAudit(unittest.TestCase):
     def test_preset_change_records_handler_and_preview_compile(self) -> None:
         state = self._explorer_state(3)
 
-        controls_panel._cycle_explorer_preset(state, 1)
+        controls_panel_actions._cycle_explorer_preset(state, 1)
 
         handler_span = latest_span_for_phase(
             state,
@@ -113,7 +115,7 @@ class TestTopologyLabInteractionAudit(unittest.TestCase):
 
     def test_sandbox_move_records_handler_span(self) -> None:
         state = self._explorer_state(3)
-        profile = controls_panel.current_explorer_profile(state)
+        profile = scene_state_canonical.current_explorer_profile(state)
         assert profile is not None
 
         piece_sandbox.move_sandbox_piece(state, profile, "x+")

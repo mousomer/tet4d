@@ -84,6 +84,14 @@ from tet4d.ui.pygame.topology_lab.controls_panel_values import (
     _row_value_text,
     _sandbox_neighbor_search_enabled,
 )
+from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
+    _cycle_explorer_preset,
+    _explorer_presets,  # noqa: F401 - compatibility re-export
+    _normalize_explorer_draft,
+    _select_explorer_draft_slot,
+    _toggle_explorer_sign,
+    _toggle_sandbox_neighbor_search,
+)
 from tet4d.ui.pygame.topology_lab.scene_preview_state import (
     advance_pending_explorer_playability_analysis,
 )
@@ -93,25 +101,19 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _apply_explorer_glue,
     _apply_probe_step,
     _cycle_dimension,  # noqa: F401 - compatibility re-export
-    _cycle_explorer_preset,
-    _explorer_presets,  # noqa: F401 - compatibility re-export
     _handle_enter_key,
     _handle_navigation_key,
     _handle_shortcut_key,
     _launch_play_preview,
-    _normalize_explorer_draft,
     _refresh_explorer_scene_state,  # noqa: F401 - compatibility re-export
     _remove_explorer_glue,
     _reset_probe,
     _run_export,
     _run_experiments,
     _save_profile,
-    _select_explorer_draft_slot,
     _set_active_pane_from_target,
     _set_status,
     _sync_explorer_state,  # noqa: F401 - compatibility re-export
-    _toggle_explorer_sign,
-    _toggle_sandbox_neighbor_search,
     _uses_general_explorer_editor,
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
