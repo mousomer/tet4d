@@ -210,6 +210,19 @@ settled Play drop-policy contract.
 - Keep preview compile immediate, but defer and cache rigid playability
   analysis by effective preview signature so same-signature refreshes reuse the
   last full result.
+- The effective preview/playability signature is explorer topology plus the
+  resolved board dims only. Probe state, sandbox state, helper state, pane
+  selection, and non-topological launch settings must not invalidate cached
+  preview/playability results.
+- Same-signature refresh may restore cached playability results immediately
+  when they are already available in memory or persistent cache; first-frame
+  readiness must still avoid waiting on a new full rigid scan.
+- Deferred rigid analysis should queue only for valid states whose rigid result
+  is still unknown. Invalid preview states should surface their blocked state
+  without scheduling a pointless deferred rigid recompute.
+- Explicit play-preview launch should force completion only when the current
+  valid signature still lacks a resolved rigid result; repeat launches on the
+  same signature should reuse the completed cached result.
 - Keep compatibility re-exports thin when launcher/tests still read helper
   seams through `controls_panel.py`; keep routing/command/launch detail in the
   focused helper modules and do not let that shell facade retake non-shell

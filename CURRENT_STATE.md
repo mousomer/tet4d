@@ -29,6 +29,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   storage handling,
   and `scene_state_probe.py` for probe selectors, probe mutations, and
   probe-state synchronization.
+- Current topology-playground preview/playability contract is:
+  `scene_preview_state.py` treats explorer topology plus resolved board dims as
+  the only preview/playability signature, restores same-signature cached
+  playability results when available, and queues deferred rigid analysis only
+  for valid states whose rigid result is still unknown.
 - Governance after the policy-pack migration stays locked to:
   `config/project/policy_pack.json` for machine-readable policy,
   `docs/WORKFLOW_CODEX.md` for human workflow, and `CURRENT_STATE.md` for
@@ -60,6 +65,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   non-shell explorer mutation helpers; keep any retained compatibility
   re-exports thin and keep deferred playability ownership in
   `scene_preview_state.py`.
+- Do not let probe-only, sandbox-only, helper-only, or non-topological launch
+  state drift into the preview/playability signature; only explorer topology
+  plus resolved board dims should invalidate cached preview/playability
+  results.
 - Do not let `scene_state.py` re-absorb canonical sync/write glue or
   probe-state normalization now owned by `scene_state_canonical.py` and
   `scene_state_probe.py`.
@@ -85,7 +94,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.20`
+1. `delivery_size_pressure = 2.21`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -149,5 +158,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 - Continue cleanup pressure in `scene_state.py` and in any still-thick
   `controls_panel.py` compatibility seams without collapsing the new helper
   splits back into one file.
+- Keep the hardened preview/playability contract explicit: same-signature
+  refreshes restore cached results when available, invalid preview states do
+  not queue pointless rigid scans, and play-preview launch only forces
+  completion when a valid rigid result is still pending.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.

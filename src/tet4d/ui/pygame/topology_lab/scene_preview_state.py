@@ -43,6 +43,13 @@ def clear_explorer_scene_state(state: TopologyLabState) -> None:
 def preview_signature_for_state(
     state: TopologyLabState,
 ) -> ExplorerPreviewCompileSignature | None:
+    """Return the effective preview/playability cache key for the shell state.
+
+    Only explorer topology structure plus the resolved board dimensions
+    participate. Probe, sandbox, helper, pane, and non-topological launch
+    settings intentionally stay out so trivial shell interaction can reuse the
+    last compiled preview and rigid-playability result.
+    """
     profile = current_explorer_profile(state)
     if profile is None:
         return None
@@ -104,6 +111,76 @@ def _cached_playability_artifacts(
     return cached
 
 
+def _clear_pending_playability_analysis(state: TopologyLabState) -> None:
+    state.scene_pending_playability_signature = None
+    state.scene_pending_playability_delay_frames = 0
+
+
+def _queue_pending_playability_analysis(
+    state: TopologyLabState,
+    *,
+    signature: ExplorerPreviewCompileSignature,
+) -> None:
+    state.scene_pending_playability_signature = signature
+    state.scene_pending_playability_delay_frames = 1
+
+
+def _analysis_requires_rigid_scan(analysis) -> bool:
+    return (
+        str(getattr(analysis, "validity", "")) == "valid"
+        and str(getattr(analysis, "rigid_playability", "")) == "unknown"
+    )
+
+
+def _persistent_playability_artifacts(
+    signature: ExplorerPreviewCompileSignature,
+) -> ExplorerPlayabilityArtifacts | None:
+    persistent = read_cached_playability_analysis(
+        signature.profile,
+        dims=signature.dims,
+    )
+    if persistent is None:
+        return None
+    return ExplorerPlayabilityArtifacts(
+        signature=signature,
+        analysis=persistent,
+    )
+
+
+def _resolve_cached_playability_artifacts(
+    state: TopologyLabState,
+    *,
+    signature: ExplorerPreviewCompileSignature,
+) -> ExplorerPlayabilityArtifacts | None:
+    cached = _cached_playability_artifacts(state, signature=signature)
+    if cached is not None:
+        return cached
+    if state.scene_preview_error is not None:
+        return None
+    persistent = _persistent_playability_artifacts(signature)
+    if persistent is None:
+        return None
+    state.scene_playability_cache = persistent
+    return persistent
+
+
+def _restore_cached_playability_analysis(
+    state: TopologyLabState,
+    *,
+    signature: ExplorerPreviewCompileSignature,
+) -> bool:
+    runtime_state = canonical_playground_state(state)
+    if runtime_state is None:
+        _clear_pending_playability_analysis(state)
+        return False
+    cached = _resolve_cached_playability_artifacts(state, signature=signature)
+    if cached is None:
+        return False
+    runtime_state.playability_analysis = cached.analysis
+    _clear_pending_playability_analysis(state)
+    return True
+
+
 def _apply_playability_analysis(
     state: TopologyLabState,
     *,
@@ -112,28 +189,10 @@ def _apply_playability_analysis(
 ) -> None:
     runtime_state = canonical_playground_state(state)
     if runtime_state is None:
-        state.scene_pending_playability_signature = None
-        state.scene_pending_playability_delay_frames = 0
+        _clear_pending_playability_analysis(state)
         return
     if include_rigid_scan:
-        cached = _cached_playability_artifacts(state, signature=signature)
-        if cached is not None:
-            runtime_state.playability_analysis = cached.analysis
-            state.scene_pending_playability_signature = None
-            state.scene_pending_playability_delay_frames = 0
-            return
-        persistent = read_cached_playability_analysis(
-            signature.profile,
-            dims=signature.dims,
-        )
-        if persistent is not None:
-            runtime_state.playability_analysis = persistent
-            state.scene_playability_cache = ExplorerPlayabilityArtifacts(
-                signature=signature,
-                analysis=persistent,
-            )
-            state.scene_pending_playability_signature = None
-            state.scene_pending_playability_delay_frames = 0
+        if _restore_cached_playability_analysis(state, signature=signature):
             return
     analysis = update_topology_playability_analysis(
         runtime_state,
@@ -154,11 +213,12 @@ def _apply_playability_analysis(
             )
         except OSError:
             pass
-        state.scene_pending_playability_signature = None
-        state.scene_pending_playability_delay_frames = 0
+        _clear_pending_playability_analysis(state)
         return
-    state.scene_pending_playability_signature = signature
-    state.scene_pending_playability_delay_frames = 1
+    if _analysis_requires_rigid_scan(analysis):
+        _queue_pending_playability_analysis(state, signature=signature)
+        return
+    _clear_pending_playability_analysis(state)
 
 
 def refresh_explorer_scene_state(state: TopologyLabState) -> None:
@@ -179,6 +239,8 @@ def refresh_explorer_scene_state(state: TopologyLabState) -> None:
     state.scene_active_glue_ids = active_glue_ids
     if state.scene_preview_signature != signature:
         state.experiment_batch = None
+        state.scene_playability_cache = None
+        _clear_pending_playability_analysis(state)
     state.scene_preview_signature = signature
     cached = state.scene_preview_cache
     if cached is not None and cached.signature == signature:
@@ -189,12 +251,7 @@ def refresh_explorer_scene_state(state: TopologyLabState) -> None:
             if cached.preview is None
             else tuple(cached.preview.get("basis_arrows", ()))
         )
-        if _cached_playability_artifacts(state, signature=signature) is not None:
-            _apply_playability_analysis(
-                state,
-                signature=signature,
-                include_rigid_scan=True,
-            )
+        if _restore_cached_playability_analysis(state, signature=signature):
             return
         _apply_playability_analysis(
             state,
@@ -210,6 +267,8 @@ def refresh_explorer_scene_state(state: TopologyLabState) -> None:
         if preview_artifacts.preview is None
         else tuple(preview_artifacts.preview.get("basis_arrows", ()))
     )
+    if _restore_cached_playability_analysis(state, signature=signature):
+        return
     _apply_playability_analysis(
         state,
         signature=signature,
@@ -222,8 +281,7 @@ def advance_pending_explorer_playability_analysis(state: TopologyLabState) -> No
     if signature is None:
         return
     if state.scene_preview_signature != signature:
-        state.scene_pending_playability_signature = None
-        state.scene_pending_playability_delay_frames = 0
+        _clear_pending_playability_analysis(state)
         return
     if state.scene_pending_playability_delay_frames > 0:
         state.scene_pending_playability_delay_frames -= 1

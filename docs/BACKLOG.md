@@ -112,6 +112,13 @@ play-preview launch preparation/runtime handoff in
 `src/tet4d/ui/pygame/topology_lab/controls_panel_launch.py`, leaving
 `controls_panel.py` as a thinner visible-shell facade and compatibility seam.
 
+Batch 6 progress (2026-04-17): topology-playground latency/caching hardening
+now keeps the effective preview/playability signature limited to explorer
+topology plus resolved board dims, restores same-signature cached playability
+results in `scene_preview_state.py` when available, queues deferred rigid
+analysis only for valid unknown-rigid states, and keeps explicit play-preview
+launch forcing completion only when that valid rigid result is still pending.
+
 - Open work:
   1. continue structural simplification of remaining
      `src/tet4d/ui/pygame/topology_lab/scene_state.py` routing/facade code and
@@ -120,9 +127,9 @@ play-preview launch preparation/runtime handoff in
   2. trim residual `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
      compatibility seams only when caller complexity drops and visible-shell
      ownership stays in place
-  3. continue startup/refresh latency cleanup around deferred rigid
-     playability analysis and signature-based cache reuse without reopening the
-     shell contract
+  3. keep the explicit preview/playability signature and deferred-analysis
+     contract pinned so future UI-only or non-topological state changes do not
+     regress into unnecessary preview/playability recompute
   4. keep the shell-layout/text-visibility contract intact across Topology
      Playground, pause/settings/help, tutorial overlays, and gameplay side
      panels
@@ -185,6 +192,10 @@ stays synchronized, and the contract validator accepts the backlog shape.
   in `controls_panel_routing.py` / `controls_panel_commands.py` /
   `controls_panel_launch.py`, and do not drift those responsibilities back
   into `controls_panel.py`.
+- Keep the preview/playability signature limited to explorer topology plus
+  resolved board dims, keep cached same-signature reuse in
+  `scene_preview_state.py`, and do not let probe/sandbox/helper or
+  non-topological launch state trigger new rigid-playability recompute.
 - Keep the `scene_state.py` / `scene_state_canonical.py` /
   `scene_state_probe.py` split intact; do not drift canonical sync/write or
   probe normalization back into one mixed state file.
@@ -203,6 +214,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-17:
 
+- shell-preserving topology-playground latency/caching hardening so
+  `scene_preview_state.py` now treats explorer topology plus resolved board
+  dims as the effective preview/playability signature, restores same-signature
+  cached playability results immediately when available, avoids queueing
+  deferred rigid scans for invalid preview states, and keeps play-preview
+  launch forcing completion only for still-pending valid rigid analysis
 - shell-preserving topology-playground control-shell cleanup so
   `controls_panel_routing.py` now owns navigation/pane/shortcut/enter routing,
   `controls_panel_commands.py` owns save/export/experiment command execution,
