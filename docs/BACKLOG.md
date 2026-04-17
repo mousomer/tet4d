@@ -90,9 +90,16 @@ reusable generated ownership/source-of-truth/verification inventories in
 `docs/PROJECT_STRUCTURE.md` instead of duplicating them across validator code
 or restart docs.
 
+Batch 3 progress (2026-04-17): topology-playground explorer row mutation and
+seam-edit helpers now live in
+`src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, keeping
+`controls_panel.py` focused on shell/input/launch orchestration while
+preserving deferred rigid playability analysis and same-signature cache reuse.
+
 - Open work:
-  1. continue structural simplification of
-     `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
+  1. continue structural simplification of remaining
+     `src/tet4d/ui/pygame/topology_lab/controls_panel.py` shortcut/export/
+     launch orchestration without moving visible-shell ownership
   2. continue structural simplification of
      `src/tet4d/ui/pygame/topology_lab/scene_state.py`
   3. continue startup/refresh latency cleanup around deferred rigid
@@ -155,6 +162,9 @@ stays synchronized, and the contract validator accepts the backlog shape.
 - Do not let historical topology-playground manifests drift back into active
   authority.
 - Keep canonical runtime selectors as the only explorer-path input authority.
+- Keep the `controls_panel_rows.py` / `controls_panel_values.py` /
+  `controls_panel_actions.py` split intact; do not drift non-shell explorer
+  mutations back into `controls_panel.py`.
 - Keep the legacy topology editor isolated to
   `Settings -> Legacy Topology Editor Menu`.
 - Keep the shared menu shell aligned across launcher, setup, pause, settings,
@@ -170,6 +180,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-17:
 
+- shell-preserving topology-playground cleanup so explorer row-mutation and
+  seam-edit helpers now live in
+  `src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, dropping
+  `controls_panel.py` to a smaller shell/orchestration owner while preserving
+  deferred rigid playability analysis, same-signature cache reuse, and the
+  existing launcher/test compatibility seams
 - post-policy-pack hardening so `CURRENT_STATE.md` is restart-only again,
   `docs/WORKFLOW_CODEX.md` now defines explicit `review` / `engine` /
   `menu_ui` / `topology_explorer` / `packaging` / `governance` / `handoff`

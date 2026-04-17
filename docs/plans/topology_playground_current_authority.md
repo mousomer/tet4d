@@ -174,6 +174,16 @@ Primary refactor targets in this phase:
 - `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
 - `src/tet4d/ui/pygame/topology_lab/scene_state.py`
 
+Accepted implementation direction in this phase:
+
+- keep row inventory ownership in `controls_panel_rows.py`
+- keep display/value derivation in `controls_panel_values.py`
+- keep explorer row mutations and seam-edit actions in focused helper modules
+  such as `controls_panel_actions.py`
+- keep shell input/routing, launch flow, and other visible-shell orchestration
+  in `controls_panel.py`
+- keep deferred preview/playability work in `scene_preview_state.py`
+
 This phase must preserve the settled architecture rules above.
 It must not reopen the accepted `Editor` / `Sandbox` / `Play` workspace model,
 the accepted sandbox-first entry path, the current helper/diagnostics contract,
@@ -187,6 +197,9 @@ settled Play drop-policy contract.
 - Keep preview compile immediate, but defer and cache rigid playability
   analysis by effective preview signature so same-signature refreshes reuse the
   last full result.
+- Keep compatibility re-exports thin when launcher/tests still read helper
+  seams through `controls_panel.py`; do not let that shell module retake
+  non-shell explorer mutation ownership.
 - In future shell follow-up work, keep diagnostics explicitly secondary and do
   not let them drift back into default-primary sidebar content.
 - Keep `Topology Playground` as a direct modern launcher entry with no
