@@ -150,6 +150,14 @@ def _piece_has_cells_above_gravity_nd(
     return any(int(coord[int(gravity_axis)]) < 0 for coord in piece.cells())
 
 
+def _explorer_movement_policy_nd(config) -> str:
+    if bool(config.exploration_mode):
+        return explorer_movement_policy_from_rigid_play_enabled(False)
+    return explorer_movement_policy_from_rigid_play_enabled(
+        config.explorer_rigid_play_enabled
+    )
+
+
 def _identity_piece_frame(ndim: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
     return tuple(range(ndim)), tuple(1 for _ in range(ndim))
 
@@ -577,9 +585,7 @@ class GameStateND:
             transport=self.config.explorer_transport,
             axis=axis,
             delta=delta,
-            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
-                self.config.explorer_rigid_play_enabled
-            ),
+            movement_policy=_explorer_movement_policy_nd(self.config),
         )
 
     def _move_axis_with_intent(

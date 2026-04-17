@@ -90,6 +90,17 @@ reusable generated ownership/source-of-truth/verification inventories in
 `docs/PROJECT_STRUCTURE.md` instead of duplicating them across validator code
 or restart docs.
 
+Parallel projected-animation hardening follow-up (2026-04-17): projected `3D`
+and `4D` gameplay renderers must keep board presentation frozen for the full
+active-piece tween, so helper marks, projected grid primitives, layer/board
+anchoring, and locked-cell projection stay stable while only active-piece
+geometry animates.
+Parallel seam-animation hardening follow-up (2026-04-17): active-piece
+translation tweening must preserve gameplay-owned per-cell identity for
+ordinary moves and safe seam traversals, while non-safe seam traversals still
+follow explicit transport semantics instead of rematching destination minos by
+set-based heuristics or shuffling cells across the board mid-tween.
+
 Batch 3 progress (2026-04-17): topology-playground explorer row mutation and
 seam-edit helpers now live in
 `src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, keeping
@@ -128,6 +139,31 @@ highlight-glue helpers directly to
 `src/tet4d/ui/pygame/topology_lab/scene_state_probe.py`, leaving
 `controls_panel.py` and `scene_state.py` with fewer fake facade seams without
 changing the frozen shell or the Batch 6 preview/playability contract.
+
+Batch 8 progress (2026-04-17): projected `3D` / `4D` active-piece animation
+now routes through a shared ND piece render-state split so board presentation
+is built from a frozen per-move snapshot while animated piece geometry is
+rendered separately against that stable presentation; projected board-line
+occlusion now follows animated geometry without rebuilding board fit, helper
+marks, or locked-cell projection from transient tween state.
+
+Batch 9 progress (2026-04-17): translation tweening now keeps gameplay-owned
+piece cell order as the explicit source-to-destination mapping for seam moves,
+so projective/wrapped transport no longer re-pairs destination cells by
+nearest-position heuristics during interpolation; safe seam traversals stay
+coherent by that stable mapping, and non-safe traversals now remain explicitly
+transport-derived instead of drifting into accidental set-based shuffles.
+Regression correction (2026-04-17): `4D` projected gameplay now caches its
+frozen per-move layer presentation once per tween start so stable helper/grid/
+fit/locked-board work no longer rebuilds every tween frame, and explorer-mode
+gameplay once again ignores gameplay-only rigid-play gating for non-safe seam
+traversals while retaining explicit transport-derived animation endpoints.
+
+Regression correction (2026-04-17): projected `3D` / `4D` tween rendering now
+keeps `PieceRenderStateND` active-piece geometry on the opaque active-piece
+path instead of incorrectly routing in-flight tween cells through the
+translucent assist-overlay path, so deliberate translation timing remains
+visibly readable while the frozen board-presentation cache stays in place.
 
 - Open work:
   1. continue structural simplification of remaining

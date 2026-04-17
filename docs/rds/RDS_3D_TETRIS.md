@@ -111,7 +111,8 @@ Viewer-consistent translation requirement:
 9. Interruption handling: repeated rotate input while tweening must retarget cleanly (no flicker/back-jump).
 10. Board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
 11. When a projected board line crosses the active-piece projection, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
-12. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven full-3-axis motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
+12. Active-piece animation must consume a frozen board-presentation snapshot for the full tween; helper marks, projected grid primitives, board anchor, and locked-cell projection must remain stable while only active-piece geometry changes over tween time.
+13. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven full-3-axis motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
 
 ## 7. Scoring
 

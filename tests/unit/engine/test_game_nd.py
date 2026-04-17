@@ -19,6 +19,7 @@ from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     projective_space_profile_3d,
+    projective_space_profile_4d,
     swap_xw_profile_4d,
 )
 from tet4d.engine.core.rules.scoring import score_for_clear
@@ -412,6 +413,33 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(expected.kind, "cellwise_deformation")
         self.assertTrue(state.try_move_axis(0, -1))
 
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())),
+            tuple(sorted(expected.moved_cells)),
+        )
+
+    def test_explorer_mode_allows_non_safe_seam_move_even_when_rigid_flag_is_on(self):
+        cfg = GameConfigND(
+            dims=(4, 4, 4, 4),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=projective_space_profile_4d(),
+            explorer_rigid_play_enabled=True,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        shape = PieceShapeND("pair4", ((0, 0, 0, 0), (1, 0, 0, 0)), color_id=5)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(0, 0, 0, 0))
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertTrue(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertFalse(expected.rigidly_coherent)
+        self.assertTrue(state.try_move_axis(0, -1))
         self.assertEqual(
             tuple(sorted(state.current_piece.cells())),
             tuple(sorted(expected.moved_cells)),

@@ -474,6 +474,30 @@ class TestGame2D(unittest.TestCase):
             tuple(sorted(expected.moved_cells)),
         )
 
+    def test_gameplay_mode_still_blocks_non_safe_seam_move_when_rigid_flag_is_on(self):
+        cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=False,
+            explorer_topology_profile=projective_plane_profile_2d(),
+            explorer_rigid_play_enabled=True,
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        shape = PieceShape2D("pair2", [(0, 0), (1, 0)], color_id=5)
+        state.current_piece = ActivePiece2D(shape=shape, pos=(0, 0), rotation=0)
+
+        expected = cfg.explorer_transport.resolve_piece_step(
+            state.current_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+
+        self.assertTrue(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertFalse(expected.rigidly_coherent)
+        self.assertFalse(state.try_move(-1, 0))
+        self.assertEqual(tuple(sorted(state.current_piece.cells())), ((0, 0), (1, 0)))
+
     def test_repeated_translation_contract_matches_main_and_explorer_2d(self):
         cases = (
             (

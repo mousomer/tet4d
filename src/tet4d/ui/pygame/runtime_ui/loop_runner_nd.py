@@ -249,7 +249,7 @@ def _update_loop_effects(
         dt,
         animate_translation=loop.state.consume_translation_animation_hint(),
     )
-    return loop.rotation_anim.overlay_cells(loop.state.current_piece)
+    return loop.rotation_anim.render_state(loop.state.current_piece)
 
 
 def _maybe_apply_auto_speedup(

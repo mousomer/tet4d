@@ -57,6 +57,7 @@ from tet4d.ui.pygame.render.panel_utils import (
 from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
 
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
 from .frontend_nd_setup import gravity_interval_ms_from_config
 from tet4d.engine.gameplay.pieces_nd import piece_set_label
 from tet4d.engine.gameplay.topology import map_overlay_cells
@@ -98,6 +99,18 @@ _ASSIST_OVERLAY_OPACITY_SCALE = 0.3
 
 ActiveOverlay3D = tuple[tuple[tuple[float, float, float], ...], int]
 VisibleCell3D = tuple[tuple[float, float, float], int, bool, bool]
+MarkSet3Frozen = tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]]
+
+
+@dataclass(frozen=True)
+class BoardPresentation3D:
+    dims: Cell3
+    center_px: Point2
+    params: ProjectionParams3D
+    helper_marks: MarkSet3Frozen
+    full_grid_cache_key: object
+    helper_cache_key: object
+    board_line_primitives: tuple
 
 
 def init_fonts() -> GfxFonts:
@@ -257,7 +270,7 @@ def _build_cell_face_primitives(
 
 def _collect_visible_cells(
     state: GameStateND,
-    active_overlay: ActiveOverlay3D | None = None,
+    active_overlay: ActiveOverlay3D | PieceRenderStateND | None = None,
 ) -> list[VisibleCell3D]:
     dims = state.config.dims
     cells: list[VisibleCell3D] = []
@@ -267,43 +280,83 @@ def _collect_visible_cells(
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
             cells.append(((float(x), float(y), float(z)), cell_id, False, False))
 
-    if active_overlay is not None:
-        overlay_cells, overlay_color = active_overlay
-        if (
-            state.config.exploration_mode
-            and state.config.explorer_topology_profile is not None
-        ):
-            mapped_overlay = tuple(
-                tuple(float(value) for value in coord) for coord in overlay_cells
-            )
-        else:
-            mapped_overlay = map_overlay_cells(
-                state.topology_policy,
-                overlay_cells,
-                allow_above_gravity=False,
-            )
-        for x, y, z in mapped_overlay:
-            if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
-                cells.append(((x, y, z), overlay_color, True, True))
+    piece_render_state = _coerce_piece_render_state_3d(active_overlay)
+    if piece_render_state is None and state.current_piece is not None:
+        current_cells = tuple(
+            tuple(float(value) for value in coord)
+            for coord in state.current_piece_cells_mapped(include_above=False)
+        )
+        piece_render_state = PieceRenderStateND(
+            presentation_cells=current_cells,
+            active_cells=current_cells,
+            color_id=int(state.current_piece.shape.color_id),
+            animation_active=False,
+        )
+    if piece_render_state is None:
         return cells
 
-    if state.current_piece is None:
-        return cells
-
-    piece_id = state.current_piece.shape.color_id
-    for coord in state.current_piece_cells_mapped(include_above=False):
+    if (
+        state.config.exploration_mode
+        and state.config.explorer_topology_profile is not None
+    ):
+        mapped_active = tuple(
+            tuple(float(value) for value in coord)
+            for coord in piece_render_state.active_cells
+        )
+    else:
+        mapped_active = map_overlay_cells(
+            state.topology_policy,
+            piece_render_state.active_cells,
+            allow_above_gravity=False,
+        )
+    for coord in mapped_active:
         x, y, z = coord
-        if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
-            cells.append(((float(x), float(y), float(z)), piece_id, True, False))
+        if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
+            # Frozen presentation cells drive helper/grid stability only. The
+            # live active piece must stay on the opaque active-piece path; only
+            # explicit assist overlays use the translucent overlay path.
+            is_overlay = not piece_render_state.presentation_cells
+            cells.append(
+                (
+                    (float(x), float(y), float(z)),
+                    int(piece_render_state.color_id),
+                    True,
+                    bool(is_overlay),
+                )
+            )
     return cells
 
 
-def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[int]]:
+def _coerce_piece_render_state_3d(
+    active_overlay: ActiveOverlay3D | PieceRenderStateND | None,
+) -> PieceRenderStateND | None:
+    if active_overlay is None or isinstance(active_overlay, PieceRenderStateND):
+        return active_overlay
+    active_cells = tuple(
+        tuple(float(value) for value in coord) for coord in active_overlay[0]
+    )
+    return PieceRenderStateND(
+        presentation_cells=tuple(),
+        active_cells=active_cells,
+        color_id=int(active_overlay[1]),
+        animation_active=False,
+    )
+
+
+def _helper_grid_marks_3d(
+    state: GameStateND,
+    piece_cells: tuple[tuple[float, ...], ...] | None = None,
+) -> tuple[set[int], set[int], set[int]]:
     dims = state.config.dims
     x_marks: set[int] = set()
     y_marks: set[int] = set()
     z_marks: set[int] = set()
-    for x, y, z in state.current_piece_cells_mapped(include_above=False):
+    cells = (
+        tuple(state.current_piece_cells_mapped(include_above=False))
+        if piece_cells is None
+        else piece_cells
+    )
+    for x, y, z in cells:
         if 0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2]:
             x_marks.add(x)
             x_marks.add(x + 1)
@@ -312,6 +365,77 @@ def _helper_grid_marks_3d(state: GameStateND) -> tuple[set[int], set[int], set[i
             z_marks.add(z)
             z_marks.add(z + 1)
     return x_marks, y_marks, z_marks
+
+
+def _freeze_marks_3d(marks: tuple[set[int], set[int], set[int]]) -> MarkSet3Frozen:
+    return tuple(tuple(sorted(axis_marks)) for axis_marks in marks)  # type: ignore[return-value]
+
+
+def _build_board_presentation_3d(
+    state: GameStateND,
+    camera: Camera3D,
+    board_rect: pygame.Rect,
+    *,
+    grid_mode: GridMode,
+    piece_render_state: PieceRenderStateND | None,
+) -> BoardPresentation3D:
+    dims = state.config.dims
+    center_px = (board_rect.centerx, board_rect.centery)
+    params = _projection_params(camera)
+    helper_marks = _freeze_marks_3d(
+        _helper_grid_marks_3d(
+            state,
+            piece_cells=(
+                piece_render_state.presentation_cells
+                if piece_render_state is not None
+                else None
+            ),
+        )
+    )
+    extras = (
+        params.projection_name,
+        round(params.cam_dist, 3),
+        round(params.projective_strength, 4),
+        round(params.projective_bias, 4),
+    )
+    full_grid_cache_key = projection_cache_key(
+        prefix="3d-full",
+        dims=dims,
+        center_px=center_px,
+        yaw_deg=params.yaw_deg,
+        pitch_deg=params.pitch_deg,
+        zoom=params.zoom,
+        extras=extras,
+    )
+    helper_cache_key = projection_helper_cache_key(
+        prefix="3d-helper",
+        dims=dims,
+        center_px=center_px,
+        yaw_deg=params.yaw_deg,
+        pitch_deg=params.pitch_deg,
+        zoom=params.zoom,
+        marks=helper_marks,
+        extras=extras,
+    )
+    board_line_primitives = build_projected_grid_primitives(
+        dims=dims,
+        grid_mode=grid_mode,
+        project_raw=lambda raw: project_raw_point_helper(raw, dims, params, center_px),
+        transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
+        depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
+        helper_marks=helper_marks,
+        helper_cache_key=helper_cache_key,
+        full_grid_cache_key=full_grid_cache_key,
+    )
+    return BoardPresentation3D(
+        dims=dims,
+        center_px=center_px,
+        params=params,
+        helper_marks=helper_marks,
+        full_grid_cache_key=full_grid_cache_key,
+        helper_cache_key=helper_cache_key,
+        board_line_primitives=tuple(board_line_primitives),
+    )
 
 
 def _draw_cells(
@@ -475,65 +599,28 @@ def _draw_board_3d(
     board_rect: pygame.Rect,
     grid_mode: GridMode = GridMode.FULL,
     clear_anim: Optional[ClearAnimation3D] = None,
-    active_overlay: ActiveOverlay3D | None = None,
+    active_overlay: ActiveOverlay3D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
 ) -> None:
-    dims = state.config.dims
-    center_px = (board_rect.centerx, board_rect.centery)
-    helper_marks = _helper_grid_marks_3d(state)
-    params = _projection_params(camera)
-    full_grid_cache_key = projection_cache_key(
-        prefix="3d-full",
-        dims=dims,
-        center_px=center_px,
-        yaw_deg=params.yaw_deg,
-        pitch_deg=params.pitch_deg,
-        zoom=params.zoom,
-        extras=(
-            params.projection_name,
-            round(params.cam_dist, 3),
-            round(params.projective_strength, 4),
-            round(params.projective_bias, 4),
-        ),
+    piece_render_state = _coerce_piece_render_state_3d(active_overlay)
+    presentation = _build_board_presentation_3d(
+        state,
+        camera,
+        board_rect,
+        grid_mode=grid_mode,
+        piece_render_state=piece_render_state,
     )
-    helper_cache_key = projection_helper_cache_key(
-        prefix="3d-helper",
-        dims=dims,
-        center_px=center_px,
-        yaw_deg=params.yaw_deg,
-        pitch_deg=params.pitch_deg,
-        zoom=params.zoom,
-        marks=helper_marks,
-        extras=(
-            params.projection_name,
-            round(params.cam_dist, 3),
-            round(params.projective_strength, 4),
-            round(params.projective_bias, 4),
-        ),
-    )
-    visible_cells = _collect_visible_cells(state, active_overlay)
+    visible_cells = _collect_visible_cells(state, piece_render_state)
     active_piece_faces = _active_piece_face_primitives(
         visible_cells,
         camera=camera,
-        center_px=center_px,
-        dims=dims,
+        center_px=presentation.center_px,
+        dims=presentation.dims,
     )
     if active_piece_faces and grid_mode != GridMode.SHADOW:
-        board_line_primitives = build_projected_grid_primitives(
-            dims=dims,
-            grid_mode=grid_mode,
-            project_raw=lambda raw: project_raw_point_helper(
-                raw, dims, params, center_px
-            ),
-            transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
-            depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
-            helper_marks=helper_marks,
-            helper_cache_key=helper_cache_key,
-            full_grid_cache_key=full_grid_cache_key,
-        )
         occlusion_buckets = resolve_board_line_occlusion(
-            tuple(board_line_primitives),
+            presentation.board_line_primitives,
             active_piece_faces,
         )
         _draw_cells_with_occluding_board_lines(
@@ -541,7 +628,7 @@ def _draw_board_3d(
             cells=visible_cells,
             board_rect=board_rect,
             camera=camera,
-            dims=dims,
+            dims=presentation.dims,
             board_lines_under_piece=occlusion_buckets.segments_under_piece,
             board_lines_over_piece=occlusion_buckets.segments_over_piece,
             overlay_transparency=overlay_transparency,
@@ -550,22 +637,39 @@ def _draw_board_3d(
             surface,
             clear_anim,
             camera,
-            center_px,
-            dims,
+            presentation.center_px,
+            presentation.dims,
             overlay_transparency=overlay_transparency,
         )
         return
     draw_projected_grid_mode(
         surface=surface,
-        dims=dims,
+        dims=presentation.dims,
         grid_mode=grid_mode,
-        draw_full_grid=lambda: _draw_board_grid(surface, dims, camera, board_rect),
-        project_raw=lambda raw: project_raw_point_helper(raw, dims, params, center_px),
-        transform_raw=lambda raw: transform_raw_point_helper(raw, dims, params),
-        depth_denominator=lambda depth: depth_denominator_for_depth(depth, params),
-        helper_marks=helper_marks,
-        helper_cache_key=helper_cache_key,
-        full_grid_cache_key=full_grid_cache_key,
+        draw_full_grid=lambda: _draw_board_grid(
+            surface,
+            presentation.dims,
+            camera,
+            board_rect,
+        ),
+        project_raw=lambda raw: project_raw_point_helper(
+            raw,
+            presentation.dims,
+            presentation.params,
+            presentation.center_px,
+        ),
+        transform_raw=lambda raw: transform_raw_point_helper(
+            raw,
+            presentation.dims,
+            presentation.params,
+        ),
+        depth_denominator=lambda depth: depth_denominator_for_depth(
+            depth,
+            presentation.params,
+        ),
+        helper_marks=presentation.helper_marks,
+        helper_cache_key=presentation.helper_cache_key,
+        full_grid_cache_key=presentation.full_grid_cache_key,
         frame_color=GRID_COLOR,
         inner_color=(52, 64, 95),
         frame_width=2,
@@ -576,16 +680,16 @@ def _draw_board_3d(
         surface,
         cells=visible_cells,
         camera=camera,
-        center_px=center_px,
-        dims=dims,
+        center_px=presentation.center_px,
+        dims=presentation.dims,
         overlay_transparency=overlay_transparency,
     )
     _draw_clear_animation(
         surface,
         clear_anim,
         camera,
-        center_px,
-        dims,
+        presentation.center_px,
+        presentation.dims,
         overlay_transparency=overlay_transparency,
     )
 
@@ -756,7 +860,7 @@ def draw_game_frame(
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
     clear_anim: Optional[ClearAnimation3D] = None,
-    active_overlay: ActiveOverlay3D | None = None,
+    active_overlay: ActiveOverlay3D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
     endgame_animation: EndgameAnimationState | None = None,

@@ -33,6 +33,16 @@ class RigidPieceOverlay2D:
     cells: tuple[Coord2F, ...]
     color_id: int
     angle_deg: float
+
+
+@dataclass(frozen=True)
+class PieceRenderStateND:
+    presentation_cells: tuple[CoordF, ...]
+    active_cells: tuple[CoordF, ...]
+    color_id: int
+    animation_active: bool
+
+
 _DEFAULT_ROTATION_DURATION_MS_2D = project_constant_float(
     ("animation", "piece_rotation_duration_ms_2d"),
     300.0,
@@ -70,28 +80,32 @@ def _screen_rotation_angle_deg(rotation_steps: int, progress: float) -> float:
     return _screen_full_turn_angle_deg(rotation_steps) * _smoothstep01(progress)
 
 
-def _distance_sq(a: CoordF, b: CoordF) -> float:
-    return sum((a[idx] - b[idx]) ** 2 for idx in range(min(len(a), len(b))))
-
-
-def _pair_endpoints(
+def _preserve_cell_identity_endpoints(
     start_rel: tuple[CoordF, ...], end_rel: tuple[CoordF, ...]
 ) -> tuple[CoordF, ...]:
+    """
+    Preserve piece-local cell identity for translation tweens.
+
+    Gameplay/transport owners already keep active-piece cells in a stable order.
+    Translation animation must consume that order directly rather than rematching
+    endpoints by distance or any other set-based heuristic, which can scramble
+    ordinary moves and safe seam traversals. Non-safe seam traversals may still
+    separate visually, but that separation must come from the gameplay/transport
+    destination order rather than accidental re-pairing in the animator.
+    """
     if len(start_rel) != len(end_rel):
         return end_rel
-    remaining = list(end_rel)
-    paired: list[CoordF] = []
-    for start in start_rel:
-        nearest_idx = min(
-            range(len(remaining)),
-            key=lambda idx: _distance_sq(start, remaining[idx]),
-        )
-        paired.append(remaining.pop(nearest_idx))
-    return tuple(paired)
+    return tuple(end_rel)
 
 
 def _lerp_coord(start: CoordF, end: CoordF, t: float) -> CoordF:
     return tuple(start[idx] + (end[idx] - start[idx]) * t for idx in range(len(start)))
+
+
+def _cells_from_rel_and_pos(rel: tuple[CoordF, ...], pos: CoordF) -> tuple[CoordF, ...]:
+    return tuple(
+        tuple(pos[idx] + block[idx] for idx in range(len(pos))) for block in rel
+    )
 
 
 @dataclass
@@ -319,10 +333,10 @@ def _build_tween(
             rotation_pivot=rotation_pivot,
         )
     else:
-        # Use endpoint pairing for linear interpolation
+        # Translation tweens keep the gameplay-provided per-cell correspondence.
         return _RotationTween(
             start_rel=start_rel,
-            end_rel=_pair_endpoints(start_rel, end_rel),
+            end_rel=_preserve_cell_identity_endpoints(start_rel, end_rel),
             start_pos=start_pos,
             end_pos=end_pos,
             duration_ms=duration_ms,
@@ -418,9 +432,17 @@ class PieceRotationAnimator2D:
         curr_pos: Coord2F,
     ) -> None:
         self._tween = _build_tween(
-            self._prev_rel,
+            (
+                self._tween.interpolated_rel()
+                if self._tween is not None
+                else self._prev_rel
+            ),
             curr_rel,
-            start_pos=self._prev_pos,
+            start_pos=(
+                self._tween.interpolated_pos()
+                if self._tween is not None
+                else self._prev_pos
+            ),
             end_pos=curr_pos,
             duration_ms=self.translation_duration_ms,
         )
@@ -481,6 +503,8 @@ class PieceRotationAnimator2D:
 
         if shape_changed:
             self._tween = None
+        elif (rel_changed or pos_changed) and should_animate_translation:
+            self._start_translation_tween(curr_rel=curr_rel, curr_pos=curr_pos)
         elif rel_changed:
             if should_animate_rotation:
                 self._start_rotation_tween(
@@ -493,8 +517,6 @@ class PieceRotationAnimator2D:
         elif pos_changed:
             if self._tween is not None:
                 self._shift_active_tween(curr_pos)
-            elif should_animate_translation:
-                self._start_translation_tween(curr_rel=curr_rel, curr_pos=curr_pos)
 
         self._prev_rel_sig = curr_sig
         self._prev_rel = curr_rel
@@ -555,6 +577,28 @@ class PieceRotationAnimatorND:
         self._prev_pos = tuple()
         self._prev_visible = False
 
+    def _start_translation_tween(
+        self,
+        *,
+        curr_rel: tuple[CoordF, ...],
+        curr_pos: CoordF,
+    ) -> None:
+        self._tween = _build_tween(
+            (
+                self._tween.interpolated_rel()
+                if self._tween is not None
+                else self._prev_rel
+            ),
+            curr_rel,
+            start_pos=(
+                self._tween.interpolated_pos()
+                if self._tween is not None
+                else self._prev_pos
+            ),
+            end_pos=curr_pos,
+            duration_ms=self.translation_duration_ms,
+        )
+
     def _rel_blocks(self, piece: ActivePieceND) -> tuple[CoordF, ...]:
         return tuple(
             tuple(float(value) for value in block) for block in piece.rel_blocks
@@ -596,6 +640,14 @@ class PieceRotationAnimatorND:
 
         if shape_changed:
             self._tween = None
+        elif (
+            (rel_changed or pos_changed)
+            and animate_translation
+            and curr_visible
+            and self._prev_visible
+            and float(self.translation_duration_ms) > 0.0
+        ):
+            self._start_translation_tween(curr_rel=curr_rel, curr_pos=curr_pos)
         elif rel_changed:
             if (
                 curr_visible
@@ -627,19 +679,7 @@ class PieceRotationAnimatorND:
             else:
                 self._tween = None
         elif pos_changed and self._tween is None:
-            if (
-                animate_translation
-                and curr_visible
-                and self._prev_visible
-                and float(self.translation_duration_ms) > 0.0
-            ):
-                self._tween = _build_tween(
-                    self._prev_rel,
-                    curr_rel,
-                    start_pos=self._prev_pos,
-                    end_pos=curr_pos,
-                    duration_ms=self.translation_duration_ms,
-                )
+            pass
         elif pos_changed and self._tween is not None:
             delta = tuple(curr_pos[idx] - self._prev_pos[idx] for idx in range(self.ndim))
             self._tween.start_pos = tuple(
@@ -667,3 +707,32 @@ class PieceRotationAnimatorND:
         for block in rel:
             cells.append(tuple(pos[idx] + block[idx] for idx in range(self.ndim)))
         return tuple(cells), int(piece.shape.color_id)
+
+    def render_state(
+        self,
+        piece: ActivePieceND | None,
+    ) -> PieceRenderStateND | None:
+        if piece is None:
+            return None
+        if self._tween is None:
+            active_cells = tuple(
+                tuple(float(value) for value in coord) for coord in piece.cells()
+            )
+            return PieceRenderStateND(
+                presentation_cells=active_cells,
+                active_cells=active_cells,
+                color_id=int(piece.shape.color_id),
+                animation_active=False,
+            )
+        return PieceRenderStateND(
+            presentation_cells=_cells_from_rel_and_pos(
+                self._tween.start_rel,
+                self._tween.start_pos,
+            ),
+            active_cells=_cells_from_rel_and_pos(
+                self._tween.interpolated_rel(),
+                self._tween.interpolated_pos(),
+            ),
+            color_id=int(piece.shape.color_id),
+            animation_active=True,
+        )

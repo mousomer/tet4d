@@ -34,6 +34,23 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   the only preview/playability signature, restores same-signature cached
   playability results when available, and queues deferred rigid analysis only
   for valid states whose rigid result is still unknown.
+- Current projected gameplay render contract is:
+  active-piece translation/rotation tweening in `3D` / `4D` must render
+  against a frozen board-presentation snapshot, so helper marks, projected
+  grid primitives, anchoring/fit, and locked-cell projection stay stable for
+  the full tween while only active-piece geometry animates; tweened
+  active-piece cells must stay on the opaque active-piece draw path rather
+  than dropping onto the translucent assist-overlay path, and `4D` now caches
+  that frozen layer presentation once per discrete move/tween start instead of
+  rebuilding stable layer presentation work every frame.
+- Current seam-translation animation contract is:
+  translation tweening must keep gameplay-owned piece cell order as the stable
+  source-to-destination correspondence, so ordinary moves and safe seam
+  traversals preserve mino identity while non-safe seam traversals still stay
+  transport-derived instead of rematching destination cells by set-based
+  heuristics; explorer-mode traversal legality still allows those non-safe
+  seam traversals, while gameplay-only rigid restrictions remain gameplay-
+  owned.
 - Governance after the policy-pack migration stays locked to:
   `config/project/policy_pack.json` for machine-readable policy,
   `docs/WORKFLOW_CODEX.md` for human workflow, and `CURRENT_STATE.md` for
@@ -74,6 +91,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `scene_state_probe.py`, and do not drift boundary/glue selection or
   highlight-glue helpers back through that facade once callers import the
   focused owner modules directly.
+- Do not let projected `3D` / `4D` active-piece animation recompute board
+  presentation from transient tween geometry; helper marks, projected
+  gridlines, and locked-cell projection must remain tied to the frozen
+  presentation snapshot for the move.
+- Do not let seam-crossing translation animation rematch destination cells by
+  sorting, canonicalization, nearest-neighbor pairing, or any other unordered
+  endpoint heuristic; gameplay/transport cell order is the animation identity
+  contract.
 - Keep `docs/BACKLOG.md` as the open-work tracker and
   `docs/PROJECT_STRUCTURE.md` as the generated structure/source-of-truth
   inventory.
@@ -88,15 +113,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 216` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 218` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.76` (`low`)
+- `tech_debt.score = 4.78` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.21`
+1. `delivery_size_pressure = 2.22`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -110,9 +135,9 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3667` real LOC
 2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
 3. `scripts/arch_metrics.py`: `1890` real LOC
-4. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-5. `tools/governance/validate_project_contracts.py`: `1368` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1313` real LOC
+4. `src/tet4d/ui/pygame/front4d_render.py`: `1647` real LOC
+5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+6. `tools/governance/validate_project_contracts.py`: `1368` real LOC
 7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
 8. `tools/governance/generate_configuration_reference.py`: `989` real LOC
 
@@ -164,5 +189,14 @@ CODEX_MODE=1 ./scripts/verify.sh
   refreshes restore cached results when available, invalid preview states do
   not queue pointless rigid scans, and play-preview launch only forces
   completion when a valid rigid result is still pending.
+- Keep the projected animation contract explicit: board presentation in `3D` /
+  `4D` remains stable through active-piece tweens, tweened active-piece cells
+  stay opaque, `4D` builds that frozen presentation once per move/tween
+  start, and only the active-piece geometry may vary across tween frames.
+- Keep the seam-translation contract explicit: active-piece tweening preserves
+  stable per-cell identity for ordinary and safe seam traversals, and keeps
+  non-safe seam traversals transport-derived instead of re-pairing cells from
+  unordered destination sets while explorer-mode traversal legality still
+  allows those non-safe crossings.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.

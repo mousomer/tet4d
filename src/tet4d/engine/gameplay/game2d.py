@@ -92,6 +92,14 @@ def _uses_explorer_piece_transport_2d(config) -> bool:
     return config.explorer_topology_profile is not None
 
 
+def _explorer_movement_policy_2d(config) -> str:
+    if bool(config.exploration_mode):
+        return explorer_movement_policy_from_rigid_play_enabled(False)
+    return explorer_movement_policy_from_rigid_play_enabled(
+        config.explorer_rigid_play_enabled
+    )
+
+
 def _piece_cells_in_play_bounds_2d(
     piece: ActivePiece2D,
     *,
@@ -453,9 +461,7 @@ class GameState:
             transport=self.config.explorer_transport,
             dx=dx,
             dy=dy,
-            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
-                self.config.explorer_rigid_play_enabled
-            ),
+            movement_policy=_explorer_movement_policy_2d(self.config),
         )
 
     def _try_move_with_intent(

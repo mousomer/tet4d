@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Callable, Optional
 
@@ -51,6 +51,7 @@ from tet4d.engine.runtime.project_config import (
     project_constant_int,
 )
 from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
+from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
 from tet4d.ui.pygame.render.grid_mode_render import (
     build_projected_grid_primitives,
     draw_projected_grid_mode,
@@ -104,6 +105,17 @@ LockedLayerCells = dict[int, tuple[VisibleLayerCell, ...]]
 AxisMapEntry = tuple[int, int]
 AxisMap4D = tuple[AxisMapEntry, AxisMapEntry, AxisMapEntry, AxisMapEntry]
 Coord4F = tuple[float, float, float, float]
+MarkSet3Frozen = tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]]
+
+
+@dataclass(frozen=True)
+class LayerPresentation4D:
+    center_px: Point2
+    zoom: float
+    helper_marks: MarkSet3Frozen
+    full_grid_cache_key: object
+    helper_cache_key: object
+    board_line_primitives: tuple
 
 
 @dataclass
@@ -118,6 +130,12 @@ class LayerView3D(YawPitchTurnAnimator):
     hyper_start_zw: float = 0.0
     hyper_target_zw: float = 0.0
     hyper_elapsed_ms: float = 0.0
+    frozen_piece_presentation: FrozenAnimationPresentation4D | None = field(
+        default=None,
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def _start_hyper_turn(
         self, *, xw_delta_deg: float = 0.0, zw_delta_deg: float = 0.0
@@ -205,6 +223,21 @@ class RenderBasis4D:
     @property
     def layer_axis_label(self) -> str:
         return "xyzw"[self.layer_axis]
+
+
+@dataclass(frozen=True)
+class FrozenAnimationPresentation4D:
+    dims4: tuple[int, int, int, int]
+    grid_mode: GridMode
+    layers_rect: tuple[int, int, int, int]
+    presentation_cells: tuple[Coord4F, ...]
+    color_id: int
+    view: LayerView3D
+    basis: RenderBasis4D
+    locked_by_layer: LockedLayerCells
+    layer_rect_by_layer: dict[int, pygame.Rect]
+    layer_presentations: dict[int, LayerPresentation4D]
+    locked_faces_by_layer: dict[int, tuple[Face, ...]]
 
 
 def _neg_axis_map(entry: AxisMapEntry) -> AxisMapEntry:
@@ -470,11 +503,11 @@ def _layer_cells(
     layer_index: int,
     locked_by_layer: LockedLayerCells,
     basis: RenderBasis4D,
-    active_overlay: ActiveOverlay4D | None = None,
+    piece_render_state: PieceRenderStateND | None = None,
 ) -> list[VisibleLayerCell]:
     return [
         *locked_by_layer.get(layer_index, ()),
-        *_layer_active_cells(state, layer_index, basis, active_overlay),
+        *_layer_active_cells(state, layer_index, basis, piece_render_state),
     ]
 
 
@@ -498,36 +531,42 @@ def _layer_active_cells(
     state: GameStateND,
     layer_index: int,
     basis: RenderBasis4D,
-    active_overlay: ActiveOverlay4D | None,
+    piece_render_state: PieceRenderStateND | None,
 ) -> list[VisibleLayerCell]:
-    if active_overlay is not None:
-        return _overlay_active_layer_cells(state, layer_index, active_overlay, basis)
-    return _piece_active_layer_cells(state, layer_index, basis)
+    if piece_render_state is None:
+        return _piece_active_layer_cells(state, layer_index, basis)
+    return _active_layer_cells_from_piece_state(
+        state,
+        layer_index,
+        piece_render_state,
+        basis,
+    )
 
 
-def _overlay_active_layer_cells(
+def _active_layer_cells_from_piece_state(
     state: GameStateND,
     layer_index: int,
-    active_overlay: ActiveOverlay4D,
+    piece_render_state: PieceRenderStateND,
     basis: RenderBasis4D,
 ) -> list[VisibleLayerCell]:
     dims4 = state.config.dims
-    overlay_cells, overlay_color = active_overlay
+    is_overlay = not piece_render_state.presentation_cells
     if (
         state.config.exploration_mode
         and state.config.explorer_topology_profile is not None
     ):
-        mapped_overlay = tuple(
-            tuple(float(value) for value in coord) for coord in overlay_cells
+        mapped_active = tuple(
+            tuple(float(value) for value in coord)
+            for coord in piece_render_state.active_cells
         )
     else:
-        mapped_overlay = map_overlay_cells(
+        mapped_active = map_overlay_cells(
             state.topology_policy,
-            overlay_cells,
+            piece_render_state.active_cells,
             allow_above_gravity=False,
         )
     cells: list[VisibleLayerCell] = []
-    for coord4 in mapped_overlay:
+    for coord4 in mapped_active:
         layer_value, cell3 = _map_coord_to_layer_cell3(coord4, dims4=dims4, basis=basis)
 
         # Calculate distance from this layer
@@ -547,21 +586,77 @@ def _overlay_active_layer_cells(
         scale = 1.0 - layer_distance
 
         if _in_bounds_layer_cell(layer_index, cell3, basis):
-            cells.append((cell3, overlay_color, True, True, scale))
+            cells.append(
+                (
+                    cell3,
+                    int(piece_render_state.color_id),
+                    True,
+                    bool(is_overlay),
+                    scale,
+                )
+            )
     return cells
+
+
+def _overlay_active_layer_cells(
+    state: GameStateND,
+    layer_index: int,
+    active_overlay: ActiveOverlay4D,
+    basis: RenderBasis4D,
+) -> list[VisibleLayerCell]:
+    piece_render_state = PieceRenderStateND(
+        presentation_cells=tuple(),
+        active_cells=tuple(
+            tuple(float(value) for value in coord) for coord in active_overlay[0]
+        ),
+        color_id=int(active_overlay[1]),
+        animation_active=False,
+    )
+    return _active_layer_cells_from_piece_state(
+        state,
+        layer_index,
+        piece_render_state,
+        basis,
+    )
+
+
+def _coerce_piece_render_state_4d(
+    active_overlay: ActiveOverlay4D | PieceRenderStateND | None,
+) -> PieceRenderStateND | None:
+    if active_overlay is None or isinstance(active_overlay, PieceRenderStateND):
+        return active_overlay
+    active_cells = tuple(
+        tuple(float(value) for value in coord) for coord in active_overlay[0]
+    )
+    return PieceRenderStateND(
+        presentation_cells=active_cells,
+        active_cells=active_cells,
+        color_id=int(active_overlay[1]),
+        animation_active=False,
+    )
 
 
 def _piece_active_layer_cells(
     state: GameStateND,
     layer_index: int,
     basis: RenderBasis4D,
+    piece_cells: tuple[tuple[float, ...], ...] | None = None,
 ) -> list[VisibleLayerCell]:
-    if state.current_piece is None:
+    if piece_cells is None and state.current_piece is None:
         return []
     dims4 = state.config.dims
-    piece_id = state.current_piece.shape.color_id
+    piece_id = (
+        int(state.current_piece.shape.color_id)
+        if state.current_piece is not None
+        else 0
+    )
+    cells_source = (
+        tuple(state.current_piece_cells_mapped(include_above=False))
+        if piece_cells is None
+        else piece_cells
+    )
     cells: list[VisibleLayerCell] = []
-    for coord in state.current_piece_cells_mapped(include_above=False):
+    for coord in cells_source:
         layer_value, cell3 = _map_coord_to_layer_cell3(coord, dims4=dims4, basis=basis)
         cell_layer = _layer_index_if_discrete(layer_value)
         if cell_layer is None or cell_layer != layer_index:
@@ -574,10 +669,16 @@ def _piece_active_layer_cells(
 def _helper_grid_marks_by_layer(
     state: GameStateND,
     basis: RenderBasis4D,
+    piece_cells: tuple[tuple[float, ...], ...] | None = None,
 ) -> dict[int, tuple[set[int], set[int], set[int]]]:
     dims4 = state.config.dims
     marks_by_layer: dict[int, list[set[int]]] = {}
-    for coord in state.current_piece_cells_mapped(include_above=False):
+    cells_source = (
+        tuple(state.current_piece_cells_mapped(include_above=False))
+        if piece_cells is None
+        else piece_cells
+    )
+    for coord in cells_source:
         layer_value, cell3 = _map_coord_to_layer_cell3(coord, dims4=dims4, basis=basis)
         layer_idx = _layer_index_if_discrete(layer_value)
         cell3_i = _cell3_if_discrete(cell3)
@@ -600,6 +701,217 @@ def _helper_grid_marks_by_layer(
     }
 
 
+def _freeze_marks_4d(marks: tuple[set[int], set[int], set[int]]) -> MarkSet3Frozen:
+    return tuple(tuple(sorted(axis_marks)) for axis_marks in marks)  # type: ignore[return-value]
+
+
+def _build_layer_presentation(
+    *,
+    state: GameStateND,
+    view: LayerView3D,
+    draw_rect: pygame.Rect,
+    layer_index: int,
+    basis: RenderBasis4D,
+    grid_mode: GridMode,
+    piece_render_state: PieceRenderStateND | None,
+) -> LayerPresentation4D:
+    dims4 = state.config.dims
+    dims3 = basis.dims3
+    zoom = _fit_zoom(dims3, view, draw_rect) * view.zoom_scale
+    zoom = max(8.0, min(170.0, zoom))
+    center_px = (draw_rect.centerx, draw_rect.centery)
+    helper_marks = _freeze_marks_4d(
+        _helper_grid_marks_by_layer(
+            state,
+            basis,
+            piece_cells=(
+                piece_render_state.presentation_cells
+                if piece_render_state is not None
+                else None
+            ),
+        ).get(layer_index, (set(), set(), set()))
+    )
+    helper_cache_key = projection_helper_cache_key(
+        prefix="4d-helper",
+        dims=dims3,
+        center_px=center_px,
+        yaw_deg=view.yaw_deg,
+        pitch_deg=view.pitch_deg,
+        zoom=zoom,
+        marks=helper_marks,
+        extras=_projection_extras(basis, dims4, layer_index),
+    )
+    full_grid_cache_key = projection_cache_key(
+        prefix="4d-full",
+        dims=dims3,
+        center_px=center_px,
+        yaw_deg=view.yaw_deg,
+        pitch_deg=view.pitch_deg,
+        zoom=zoom,
+        extras=_projection_extras(basis, dims4, layer_index),
+    )
+    board_line_primitives = build_projected_grid_primitives(
+        dims=dims3,
+        grid_mode=grid_mode,
+        project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+        transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
+        depth_denominator=_orthographic_depth_denominator,
+        helper_marks=helper_marks,
+        helper_cache_key=helper_cache_key,
+        full_grid_cache_key=full_grid_cache_key,
+    )
+    return LayerPresentation4D(
+        center_px=center_px,
+        zoom=zoom,
+        helper_marks=helper_marks,
+        full_grid_cache_key=full_grid_cache_key,
+        helper_cache_key=helper_cache_key,
+        board_line_primitives=tuple(board_line_primitives),
+    )
+
+
+def _copy_frozen_layer_view(view: LayerView3D) -> LayerView3D:
+    frozen_xw_deg, frozen_zw_deg = _effective_hyper_angles(view)
+    return LayerView3D(
+        yaw_deg=float(view.yaw_deg),
+        pitch_deg=float(view.pitch_deg),
+        anim_duration_ms=float(view.anim_duration_ms),
+        zoom_scale=float(view.zoom_scale),
+        xw_deg=float(frozen_xw_deg),
+        zw_deg=float(frozen_zw_deg),
+    )
+
+
+def _rect_token(rect: pygame.Rect) -> tuple[int, int, int, int]:
+    return int(rect.x), int(rect.y), int(rect.width), int(rect.height)
+
+
+def _is_piece_animation_active_4d(
+    piece_render_state: PieceRenderStateND | None,
+) -> bool:
+    return piece_render_state is not None and bool(piece_render_state.animation_active)
+
+
+def _layer_draw_rect(rect: pygame.Rect) -> pygame.Rect:
+    return pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
+
+
+def _build_locked_layer_faces(
+    *,
+    layer_index: int,
+    view: LayerView3D,
+    center_px: Point2,
+    dims3: Cell3,
+    zoom: float,
+    locked_by_layer: LockedLayerCells,
+) -> tuple[Face, ...]:
+    faces: list[Face] = []
+    for coord3, cell_id, _is_active, _is_overlay, scale in locked_by_layer.get(
+        layer_index, ()
+    ):
+        faces.extend(
+            _build_cell_faces(
+                cell=coord3,
+                color=color_for_cell(cell_id, COLOR_MAP),
+                view=view,
+                center_px=center_px,
+                dims3=dims3,
+                zoom=zoom,
+                active=False,
+                scale=scale,
+            )
+        )
+    return tuple(faces)
+
+
+def _build_frozen_animation_presentation_4d(
+    *,
+    state: GameStateND,
+    view: LayerView3D,
+    layers_rect: pygame.Rect,
+    grid_mode: GridMode,
+    piece_render_state: PieceRenderStateND,
+) -> FrozenAnimationPresentation4D:
+    frozen_view = _copy_frozen_layer_view(view)
+    dims4 = state.config.dims
+    basis = _basis_for_view(frozen_view, dims4)
+    locked_by_layer = _locked_cells_by_layer(state, basis)
+    layer_rect_by_layer = _layer_rects_by_layer(
+        area=layers_rect,
+        layer_count=basis.layer_count,
+    )
+    layer_presentations: dict[int, LayerPresentation4D] = {}
+    locked_faces_by_layer: dict[int, tuple[Face, ...]] = {}
+    for layer_index in range(basis.layer_count):
+        layer_rect = layer_rect_by_layer.get(layer_index)
+        if layer_rect is None:
+            continue
+        presentation = _build_layer_presentation(
+            state=state,
+            view=frozen_view,
+            draw_rect=_layer_draw_rect(layer_rect),
+            layer_index=layer_index,
+            basis=basis,
+            grid_mode=grid_mode,
+            piece_render_state=piece_render_state,
+        )
+        layer_presentations[layer_index] = presentation
+        locked_faces_by_layer[layer_index] = _build_locked_layer_faces(
+            layer_index=layer_index,
+            view=frozen_view,
+            center_px=presentation.center_px,
+            dims3=basis.dims3,
+            zoom=presentation.zoom,
+            locked_by_layer=locked_by_layer,
+        )
+    return FrozenAnimationPresentation4D(
+        dims4=dims4,
+        grid_mode=grid_mode,
+        layers_rect=_rect_token(layers_rect),
+        presentation_cells=tuple(piece_render_state.presentation_cells),
+        color_id=int(piece_render_state.color_id),
+        view=frozen_view,
+        basis=basis,
+        locked_by_layer=locked_by_layer,
+        layer_rect_by_layer=layer_rect_by_layer,
+        layer_presentations=layer_presentations,
+        locked_faces_by_layer=locked_faces_by_layer,
+    )
+
+
+def _resolve_frozen_animation_presentation_4d(
+    *,
+    state: GameStateND,
+    view: LayerView3D,
+    layers_rect: pygame.Rect,
+    grid_mode: GridMode,
+    active_overlay: ActiveOverlay4D | PieceRenderStateND | None,
+) -> FrozenAnimationPresentation4D | None:
+    piece_render_state = _coerce_piece_render_state_4d(active_overlay)
+    if not _is_piece_animation_active_4d(piece_render_state):
+        view.frozen_piece_presentation = None
+        return None
+    cache = view.frozen_piece_presentation
+    if (
+        cache is not None
+        and cache.dims4 == tuple(int(value) for value in state.config.dims)
+        and cache.grid_mode == grid_mode
+        and cache.layers_rect == _rect_token(layers_rect)
+        and cache.presentation_cells == tuple(piece_render_state.presentation_cells)
+        and cache.color_id == int(piece_render_state.color_id)
+    ):
+        return cache
+    cache = _build_frozen_animation_presentation_4d(
+        state=state,
+        view=view,
+        layers_rect=layers_rect,
+        grid_mode=grid_mode,
+        piece_render_state=piece_render_state,
+    )
+    view.frozen_piece_presentation = cache
+    return cache
+
+
 def _draw_layer_grid_or_shadow(
     surface: pygame.Surface,
     dims3: Cell3,
@@ -608,43 +920,35 @@ def _draw_layer_grid_or_shadow(
     basis: RenderBasis4D,
     view: LayerView3D,
     draw_rect: pygame.Rect,
-    zoom: float,
+    presentation: LayerPresentation4D,
     grid_mode: GridMode,
-    helper_marks: tuple[set[int], set[int], set[int]] | None = None,
 ) -> None:
-    center_px = (draw_rect.centerx, draw_rect.centery)
-    marks = helper_marks if helper_marks is not None else (set(), set(), set())
-    helper_cache_key = projection_helper_cache_key(
-        prefix="4d-helper",
-        dims=dims3,
-        center_px=center_px,
-        yaw_deg=view.yaw_deg,
-        pitch_deg=view.pitch_deg,
-        zoom=zoom,
-        marks=marks,
-        extras=_projection_extras(basis, dims4, layer_index),
-    )
     draw_projected_grid_mode(
         surface=surface,
         dims=dims3,
         grid_mode=grid_mode,
         draw_full_grid=lambda: _draw_board_grid(
-            surface, dims3, dims4, layer_index, basis, view, draw_rect, zoom
+            surface,
+            dims3,
+            dims4,
+            layer_index,
+            basis,
+            view,
+            draw_rect,
+            presentation.zoom,
         ),
-        project_raw=lambda raw: _project_raw_point(raw, dims3, view, center_px, zoom),
+        project_raw=lambda raw: _project_raw_point(
+            raw,
+            dims3,
+            view,
+            presentation.center_px,
+            presentation.zoom,
+        ),
         transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
         depth_denominator=_orthographic_depth_denominator,
-        helper_marks=helper_marks,
-        helper_cache_key=helper_cache_key,
-        full_grid_cache_key=projection_cache_key(
-            prefix="4d-full",
-            dims=dims3,
-            center_px=center_px,
-            yaw_deg=view.yaw_deg,
-            pitch_deg=view.pitch_deg,
-            zoom=zoom,
-            extras=_projection_extras(basis, dims4, layer_index),
-        ),
+        helper_marks=presentation.helper_marks,
+        helper_cache_key=presentation.helper_cache_key,
+        full_grid_cache_key=presentation.full_grid_cache_key,
         frame_color=GRID_COLOR,
         inner_color=(52, 64, 95),
         frame_width=2,
@@ -661,7 +965,7 @@ def _layer_faces(
     basis: RenderBasis4D,
     zoom: float,
     locked_by_layer: LockedLayerCells,
-    active_overlay: ActiveOverlay4D | None = None,
+    piece_render_state: PieceRenderStateND | None = None,
 ) -> tuple[list[Face], list[Face]]:
     solid_faces: list[Face] = []
     overlay_faces: list[Face] = []
@@ -670,7 +974,45 @@ def _layer_faces(
         layer_index,
         locked_by_layer,
         basis,
-        active_overlay,
+        piece_render_state,
+    ):
+        cell_faces = _build_cell_faces(
+            cell=coord3,
+            color=color_for_cell(cell_id, COLOR_MAP),
+            view=view,
+            center_px=center_px,
+            dims3=dims3,
+            zoom=zoom,
+            active=is_active,
+            scale=scale,
+        )
+        if is_overlay:
+            overlay_faces.extend(cell_faces)
+        else:
+            solid_faces.extend(cell_faces)
+    return solid_faces, overlay_faces
+
+
+def _active_layer_faces(
+    *,
+    state: GameStateND,
+    layer_index: int,
+    view: LayerView3D,
+    center_px: Point2,
+    dims3: Cell3,
+    basis: RenderBasis4D,
+    zoom: float,
+    piece_render_state: PieceRenderStateND | None,
+) -> tuple[list[Face], list[Face]]:
+    if piece_render_state is None:
+        return [], []
+    solid_faces: list[Face] = []
+    overlay_faces: list[Face] = []
+    for coord3, cell_id, is_active, is_overlay, scale in _layer_active_cells(
+        state,
+        layer_index,
+        basis,
+        piece_render_state,
     ):
         cell_faces = _build_cell_faces(
             cell=coord3,
@@ -722,24 +1064,39 @@ def _draw_layer_cells(
     basis: RenderBasis4D,
     zoom: float,
     locked_by_layer: LockedLayerCells,
-    active_overlay: ActiveOverlay4D | None,
+    active_overlay: ActiveOverlay4D | PieceRenderStateND | None,
     overlay_transparency: float,
     board_lines_under_piece: tuple = (),
     board_lines_over_piece: tuple = (),
+    locked_faces: tuple[Face, ...] | None = None,
 ) -> None:
-    solid_faces, overlay_faces = _layer_faces(
-        state,
-        layer_index,
-        view,
-        center_px,
-        dims3,
-        basis,
-        zoom,
-        locked_by_layer,
-        active_overlay=active_overlay,
-    )
-    locked_faces = [face for face in solid_faces if not face[3]]
-    active_faces = [face for face in solid_faces if face[3]]
+    piece_render_state = _coerce_piece_render_state_4d(active_overlay)
+    if locked_faces is None:
+        solid_faces, overlay_faces = _layer_faces(
+            state,
+            layer_index,
+            view,
+            center_px,
+            dims3,
+            basis,
+            zoom,
+            locked_by_layer,
+            piece_render_state=piece_render_state,
+        )
+        locked_faces_list = [face for face in solid_faces if not face[3]]
+        active_faces = [face for face in solid_faces if face[3]]
+    else:
+        active_faces, overlay_faces = _active_layer_faces(
+            state=state,
+            layer_index=layer_index,
+            view=view,
+            center_px=center_px,
+            dims3=dims3,
+            basis=basis,
+            zoom=zoom,
+            piece_render_state=piece_render_state,
+        )
+        locked_faces_list = list(locked_faces)
     draw_projected_line_buckets(
         surface=surface,
         fragments=board_lines_under_piece,
@@ -747,11 +1104,11 @@ def _draw_layer_cells(
         inner_color=(52, 64, 95),
         frame_width=2,
     )
-    if locked_faces:
+    if locked_faces_list:
         locked_alpha = _overlay_opacity_scale(overlay_transparency)
         _draw_translucent_faces(
             surface,
-            locked_faces,
+            locked_faces_list,
             fill_alpha=int(round(255 * locked_alpha)),
             outline_alpha=max(70, int(round(255 * min(1.0, locked_alpha + 0.12)))),
         )
@@ -850,11 +1207,12 @@ def _draw_layer_board(
     fonts: GfxFonts,
     grid_mode: GridMode,
     locked_by_layer: LockedLayerCells,
-    helper_marks: tuple[set[int], set[int], set[int]] | None = None,
     clear_anim: Optional[ClearAnimation4D] = None,
-    active_overlay: ActiveOverlay4D | None = None,
+    active_overlay: ActiveOverlay4D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
+    presentation: LayerPresentation4D | None = None,
+    locked_faces: tuple[Face, ...] | None = None,
 ) -> None:
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
@@ -866,56 +1224,33 @@ def _draw_layer_board(
     )
     surface.blit(label, (rect.x + 8, rect.y + 6))
 
-    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
+    draw_rect = _layer_draw_rect(rect)
     dims4 = state.config.dims
     dims3 = basis.dims3
-    zoom = _fit_zoom(dims3, view, draw_rect) * view.zoom_scale
-    zoom = max(8.0, min(170.0, zoom))
-    center_px = (draw_rect.centerx, draw_rect.centery)
+    piece_render_state = _coerce_piece_render_state_4d(active_overlay)
+    if presentation is None:
+        presentation = _build_layer_presentation(
+            state=state,
+            view=view,
+            draw_rect=draw_rect,
+            layer_index=layer_index,
+            basis=basis,
+            grid_mode=grid_mode,
+            piece_render_state=piece_render_state,
+        )
     active_piece_faces = _active_layer_face_primitives(
         state,
         layer_index,
         view,
-        center_px,
+        presentation.center_px,
         dims3,
         basis,
-        zoom,
+        presentation.zoom,
+        piece_render_state=piece_render_state,
     )
     if active_piece_faces and grid_mode != GridMode.SHADOW:
-        marks = helper_marks if helper_marks is not None else (set(), set(), set())
-        helper_cache_key = projection_helper_cache_key(
-            prefix="4d-helper",
-            dims=dims3,
-            center_px=center_px,
-            yaw_deg=view.yaw_deg,
-            pitch_deg=view.pitch_deg,
-            zoom=zoom,
-            marks=marks,
-            extras=_projection_extras(basis, dims4, layer_index),
-        )
-        full_grid_cache_key = projection_cache_key(
-            prefix="4d-full",
-            dims=dims3,
-            center_px=center_px,
-            yaw_deg=view.yaw_deg,
-            pitch_deg=view.pitch_deg,
-            zoom=zoom,
-            extras=_projection_extras(basis, dims4, layer_index),
-        )
-        board_line_primitives = build_projected_grid_primitives(
-            dims=dims3,
-            grid_mode=grid_mode,
-            project_raw=lambda raw: _project_raw_point(
-                raw, dims3, view, center_px, zoom
-            ),
-            transform_raw=lambda raw: _transform_raw_point(raw, dims3, view),
-            depth_denominator=_orthographic_depth_denominator,
-            helper_marks=helper_marks,
-            helper_cache_key=helper_cache_key,
-            full_grid_cache_key=full_grid_cache_key,
-        )
         occlusion_buckets = resolve_board_line_occlusion(
-            tuple(board_line_primitives),
+            presentation.board_line_primitives,
             active_piece_faces,
         )
         _draw_layer_cells(
@@ -923,15 +1258,16 @@ def _draw_layer_board(
             state=state,
             layer_index=layer_index,
             view=view,
-            center_px=center_px,
+            center_px=presentation.center_px,
             dims3=dims3,
             basis=basis,
-            zoom=zoom,
+            zoom=presentation.zoom,
             locked_by_layer=locked_by_layer,
-            active_overlay=active_overlay,
+            active_overlay=piece_render_state,
             overlay_transparency=overlay_transparency,
             board_lines_under_piece=occlusion_buckets.segments_under_piece,
             board_lines_over_piece=occlusion_buckets.segments_over_piece,
+            locked_faces=locked_faces,
         )
     else:
         _draw_layer_grid_or_shadow(
@@ -942,33 +1278,33 @@ def _draw_layer_board(
             basis,
             view,
             draw_rect,
-            zoom,
+            presentation,
             grid_mode,
-            helper_marks,
         )
         _draw_layer_cells(
             surface,
             state=state,
             layer_index=layer_index,
             view=view,
-            center_px=center_px,
+            center_px=presentation.center_px,
             dims3=dims3,
             basis=basis,
-            zoom=zoom,
+            zoom=presentation.zoom,
             locked_by_layer=locked_by_layer,
-            active_overlay=active_overlay,
+            active_overlay=piece_render_state,
             overlay_transparency=overlay_transparency,
+            locked_faces=locked_faces,
         )
     _draw_layer_clear_animation(
         surface,
         clear_anim,
         layer_index,
         view,
-        center_px,
+        presentation.center_px,
         dims3,
         dims4,
         basis,
-        zoom,
+        presentation.zoom,
         overlay_transparency=overlay_transparency,
     )
 
@@ -1245,7 +1581,7 @@ def draw_game_frame(
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
     clear_anim: Optional[ClearAnimation4D] = None,
-    active_overlay: ActiveOverlay4D | None = None,
+    active_overlay: ActiveOverlay4D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
     endgame_animation: EndgameAnimationState | None = None,
@@ -1271,7 +1607,19 @@ def draw_game_frame(
     screen.fill((14, 18, 36), layers_rect)
     pygame.draw.rect(screen, (14, 18, 36), layers_rect, border_radius=10)
 
-    basis = _basis_for_view(view, state.config.dims)
+    animation_cache = _resolve_frozen_animation_presentation_4d(
+        state=state,
+        view=view,
+        layers_rect=layers_rect,
+        grid_mode=grid_mode,
+        active_overlay=active_overlay,
+    )
+    draw_view = animation_cache.view if animation_cache is not None else view
+    basis = (
+        animation_cache.basis
+        if animation_cache is not None
+        else _basis_for_view(view, state.config.dims)
+    )
     frozen_context = (
         endgame_animation.snapshot.render_context
         if endgame_animation is not None and endgame_animation.frozen_render_active
@@ -1305,16 +1653,20 @@ def draw_game_frame(
                 endgame_animation=endgame_animation,
             )
     else:
-        helper_marks_by_layer = (
-            _helper_grid_marks_by_layer(state, basis)
-            if grid_mode == GridMode.HELPER
-            else {}
+        locked_by_layer = (
+            animation_cache.locked_by_layer
+            if animation_cache is not None
+            else _locked_cells_by_layer(state, basis)
         )
-        locked_by_layer = _locked_cells_by_layer(state, basis)
-        layer_rect_by_layer = _layer_rects_by_layer(
-            area=layers_rect,
-            layer_count=basis.layer_count,
+        layer_rect_by_layer = (
+            animation_cache.layer_rect_by_layer
+            if animation_cache is not None
+            else _layer_rects_by_layer(
+                area=layers_rect,
+                layer_count=basis.layer_count,
+            )
         )
+        piece_render_state = _coerce_piece_render_state_4d(active_overlay)
         for layer_index in range(basis.layer_count):
             layer_rect = layer_rect_by_layer.get(layer_index)
             if layer_rect is None:
@@ -1322,17 +1674,26 @@ def draw_game_frame(
             _draw_layer_board(
                 screen,
                 state,
-                view,
+                draw_view,
                 layer_rect,
                 layer_index,
                 basis,
                 fonts,
                 grid_mode=grid_mode,
                 locked_by_layer=locked_by_layer,
-                helper_marks=helper_marks_by_layer.get(layer_index),
                 clear_anim=clear_anim,
-                active_overlay=active_overlay,
+                active_overlay=piece_render_state,
                 overlay_transparency=overlay_transparency,
+                presentation=(
+                    None
+                    if animation_cache is None
+                    else animation_cache.layer_presentations.get(layer_index)
+                ),
+                locked_faces=(
+                    None
+                    if animation_cache is None
+                    else animation_cache.locked_faces_by_layer.get(layer_index)
+                ),
             )
     if state.game_over:
         draw_game_over_banner(
@@ -1345,7 +1706,7 @@ def draw_game_frame(
     _draw_side_panel(
         screen,
         state,
-        view,
+        draw_view,
         basis,
         panel_rect,
         fonts,
@@ -1422,12 +1783,14 @@ def _active_layer_face_primitives(
     dims3: Cell3,
     basis: RenderBasis4D,
     zoom: float,
+    piece_render_state: PieceRenderStateND | None = None,
 ) -> tuple[ProjectedFacePrimitive, ...]:
     primitives: list[ProjectedFacePrimitive] = []
-    for coord3, cell_id, _is_active, _is_overlay, scale in _piece_active_layer_cells(
+    for coord3, cell_id, _is_active, _is_overlay, scale in _layer_active_cells(
         state,
         layer_index,
         basis,
+        piece_render_state,
     ):
         primitives.extend(
             _build_cell_face_primitives(

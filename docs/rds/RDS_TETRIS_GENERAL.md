@@ -94,7 +94,7 @@ Cross-cutting requirements are defined in:
 9. Explorer-runtime piece transport must classify single-step outcomes as `plain_translation`, `rigid_transform`, or `cellwise_deformation` before mutating active-piece frame state.
 10. `plain_translation` must preserve the existing piece-local frame and any rotation metadata exactly; ordinary movement must not rebase the piece origin through generic min-corner normalization.
 11. `rigid_transform` outcomes may reframe the piece only through an explicit signed-permutation piece-frame transform that preserves coherent later rotations.
-12. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame.
+12. `cellwise_deformation` from unsafe seam crossings must be surfaced explicitly and blocked for rigid-piece gameplay instead of being silently canonicalized into a new local frame. Explorer-mode traversal legality remains cellwise-owned and must continue to allow those non-safe seam traversals.
 
 ### 3.4 Shared rotation-kick rules
 
@@ -199,6 +199,8 @@ Cross-cutting requirements are defined in:
 3. Translation tweening must reuse the same active-piece overlay path as rotation tweening so mapped cells stay topology-correct in all modes.
 4. Shared settings must expose separate persisted durations for `2D rotation`, `ND rotation` (shared by 3D/4D), and deliberate-translation tweens, stored in integer milliseconds and allowing `0` to disable each tween.
 5. When a tweened `2D` translating cell box straddles a topology seam, rendering must clip and map the visible fragments so partial geometry appears in each affected destination grid region rather than snapping to one unsplit destination cell.
+6. During any active-piece translation or rotation tween, board presentation must remain stable for the full tween: viewport fit, board anchoring, projection basis, grid geometry, and locked-cell projection must not be recomputed from transient animated piece geometry. Projected-mode renderers must build that frozen presentation once per discrete move/tween start and then reuse it across tween frames.
+7. Ordinary translations and safe seam traversals must preserve stable per-cell identity from the gameplay/transport path, and non-safe seam traversals must still interpolate from explicit transport-derived correspondence; render interpolation must not rematch destination cells by sorting, canonicalization, nearest-neighbor pairing, or any other unordered-set heuristic. That classification controls presentation/correspondence only; explorer-mode traversal permission must not be blocked by gameplay-only rigid-play constraints.
 
 ## 5. Controls and Keybinding Requirements
 

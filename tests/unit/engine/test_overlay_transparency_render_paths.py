@@ -7,6 +7,7 @@ import pygame
 from tet4d.ui.pygame import front3d_render, front4d_render, frontend_nd_state
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
 from tet4d.ui.pygame import front3d_game, front4d_game
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_3D, CAMERA_KEYS_4D
 from tet4d.ui.pygame.render.front3d_cell_render import (
@@ -71,6 +72,35 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         self.assertTrue(overlay_cells)
         self.assertTrue(all(is_overlay for *_head, is_overlay in overlay_cells))
 
+    def test_front3d_piece_render_state_cells_stay_on_opaque_active_path(self) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=7),
+            pos=(2, 3, 2),
+        )
+        animator = PieceRotationAnimatorND(
+            ndim=3,
+            gravity_axis=cfg.gravity_axis,
+            duration_ms=300.0,
+            translation_duration_ms=120.0,
+        )
+        animator.observe(state.current_piece, 0.0, animate_translation=False)
+        self.assertTrue(state.try_move_axis(0, 1, animate_translation=True))
+        animator.observe(
+            state.current_piece,
+            0.0,
+            animate_translation=state.consume_translation_animation_hint(),
+        )
+        animator.observe(state.current_piece, 60.0, animate_translation=False)
+        mid_state = animator.render_state(state.current_piece)
+        assert mid_state is not None
+
+        cells = front3d_render._collect_visible_cells(state, active_overlay=mid_state)
+        active_cells = [cell for cell in cells if cell[2]]
+        self.assertTrue(active_cells)
+        self.assertTrue(all(not is_overlay for *_rest, is_overlay in active_cells))
+
     def test_front4d_overlay_and_piece_paths_have_distinct_overlay_flags(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd_state.create_initial_state(cfg)
@@ -110,6 +140,47 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         )
         self.assertTrue(overlay_entries)
         self.assertTrue(all(entry[3] for entry in overlay_entries))
+
+    def test_front4d_piece_render_state_cells_stay_on_opaque_active_path(self) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND(
+                "tri4",
+                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+                color_id=5,
+            ),
+            pos=(2, 3, 2, 1),
+        )
+        animator = PieceRotationAnimatorND(
+            ndim=4,
+            gravity_axis=cfg.gravity_axis,
+            duration_ms=300.0,
+            translation_duration_ms=120.0,
+        )
+        basis = front4d_render._basis_for_view(front4d_game.LayerView3D(), cfg.dims)
+        animator.observe(state.current_piece, 0.0, animate_translation=False)
+        self.assertTrue(state.try_move_axis(0, 1, animate_translation=True))
+        animator.observe(
+            state.current_piece,
+            0.0,
+            animate_translation=state.consume_translation_animation_hint(),
+        )
+        animator.observe(state.current_piece, 60.0, animate_translation=False)
+        mid_state = animator.render_state(state.current_piece)
+        assert mid_state is not None
+        layer_value, _cell3 = front4d_render._map_coord_to_layer_cell3(
+            mid_state.active_cells[0],
+            dims4=cfg.dims,
+            basis=basis,
+        )
+        layer_idx = front4d_render._layer_index_if_discrete(layer_value)
+        self.assertIsNotNone(layer_idx)
+        assert layer_idx is not None
+
+        entries = front4d_render._layer_active_cells(state, layer_idx, basis, mid_state)
+        self.assertTrue(entries)
+        self.assertTrue(all(not entry[3] for entry in entries))
 
     def test_3d_overlay_keydown_changes_locked_cell_alpha(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
@@ -211,5 +282,4 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 

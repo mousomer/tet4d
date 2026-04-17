@@ -3,7 +3,10 @@ from __future__ import annotations
 import math
 import unittest
 
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.core.piece_transform import rotate_point_2d
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.rotation_anim import (
@@ -11,6 +14,11 @@ from tet4d.engine.gameplay.rotation_anim import (
     PieceRotationAnimatorND,
     RigidPieceOverlay2D,
     _screen_rotation_angle_deg,
+)
+from tet4d.engine.topology_explorer import MoveStep
+from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
+    projective_space_profile_4d,
 )
 
 
@@ -169,6 +177,155 @@ class TestRotationAnim(unittest.TestCase):
         self.assertAlmostEqual(centroid_mid[0], 3.0, delta=0.6)
         self.assertAlmostEqual(centroid_mid[1], 4.0, delta=1e-4)
         self.assertAlmostEqual(centroid_mid[2], 1.0, delta=1e-4)
+
+    def test_explorer_nd_non_safe_seam_translation_keeps_transport_correspondence(
+        self,
+    ) -> None:
+        cfg = GameConfigND(
+            dims=(4, 4, 4, 4),
+            gravity_axis=1,
+            speed_level=1,
+            exploration_mode=True,
+            explorer_topology_profile=projective_space_profile_4d(),
+            explorer_rigid_play_enabled=True,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims))
+        state.board.cells.clear()
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND(
+                "tri4",
+                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0)),
+                color_id=5,
+            ),
+            pos=(0, 0, 0, 0),
+        )
+        start_piece = state.current_piece
+        assert start_piece is not None
+        expected = cfg.explorer_transport.resolve_piece_step(
+            start_piece.cells(),
+            MoveStep(axis=0, delta=-1),
+        )
+        self.assertTrue(cfg.explorer_rigid_play_enabled)
+        self.assertEqual(expected.kind, "cellwise_deformation")
+        self.assertFalse(expected.rigidly_coherent)
+        expected_source_rel = tuple(
+            tuple(float(value) for value in coord) for coord in start_piece.rel_blocks
+        )
+
+        anim = PieceRotationAnimatorND(
+            ndim=4,
+            gravity_axis=1,
+            duration_ms=200.0,
+            translation_duration_ms=120.0,
+        )
+        anim.observe(start_piece, 0.0)
+
+        self.assertTrue(state.try_move_axis(0, -1, animate_translation=True))
+        moved_piece = state.current_piece
+        assert moved_piece is not None
+        self.assertEqual(tuple(moved_piece.cells()), expected.moved_cells)
+        self.assertEqual(
+            tuple(tuple(float(value) for value in coord) for coord in moved_piece.cells()),
+            (
+                (3.0, 3.0, 3.0, 3.0),
+                (0.0, 0.0, 0.0, 0.0),
+                (3.0, 2.0, 3.0, 3.0),
+            ),
+        )
+
+        anim.observe(
+            moved_piece,
+            0.0,
+            animate_translation=state.consume_translation_animation_hint(),
+        )
+        self.assertIsNotNone(anim._tween)
+        assert anim._tween is not None
+        self.assertEqual(anim._tween.start_rel, expected_source_rel)
+        self.assertEqual(
+            anim._tween.end_rel,
+            tuple(
+                tuple(float(value) for value in block) for block in moved_piece.rel_blocks
+            ),
+        )
+
+        anim._tween.elapsed_ms = anim.translation_duration_ms
+        render_state = anim.render_state(moved_piece)
+        self.assertIsNotNone(render_state)
+        assert render_state is not None
+        self.assertEqual(
+            tuple(round(coord, 4) for coord in render_state.active_cells[1]),
+            (0.0, 0.0, 0.0, 0.0),
+        )
+        self.assertEqual(
+            tuple(round(coord, 4) for coord in render_state.active_cells[2]),
+            (3.0, 2.0, 3.0, 3.0),
+        )
+
+    def test_2d_safe_seam_translation_keeps_rigid_cell_correspondence(self) -> None:
+        cfg = GameConfig(
+            width=4,
+            height=6,
+            exploration_mode=False,
+            explorer_topology_profile=axis_wrap_profile(dimension=2, wrapped_axes=(0,)),
+        )
+        state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)))
+        state.board.cells.clear()
+        state.current_piece = ActivePiece2D(
+            shape=PieceShape2D("tri", [(0, 0), (1, 0), (0, 1)], color_id=5),
+            pos=(2, 2),
+            rotation=0,
+        )
+        start_piece = state.current_piece
+        assert start_piece is not None
+        transport = cfg.explorer_transport
+        assert transport is not None
+        expected = transport.resolve_piece_step(start_piece.cells(), MoveStep(axis=0, delta=1))
+        self.assertTrue(expected.rigidly_coherent)
+
+        anim = PieceRotationAnimator2D(
+            duration_ms=160.0,
+            translation_duration_ms=120.0,
+        )
+        anim.observe(start_piece, 0.0)
+
+        self.assertTrue(state.try_move(1, 0, animate_translation=True))
+        moved_piece = state.current_piece
+        assert moved_piece is not None
+        self.assertEqual(tuple(moved_piece.cells()), expected.moved_cells)
+
+        anim.observe(
+            moved_piece,
+            0.0,
+            animate_translation=state.consume_translation_animation_hint(),
+        )
+        self.assertIsNotNone(anim._tween)
+        assert anim._tween is not None
+        self.assertEqual(
+            anim._tween.start_rel,
+            anim._rel_blocks(start_piece),
+        )
+        self.assertEqual(
+            anim._tween.end_rel,
+            anim._rel_blocks(moved_piece),
+        )
+
+        anim.observe(moved_piece, 60.0)
+        overlay = anim.overlay_cells(moved_piece)
+        self.assertIsNotNone(overlay)
+        assert overlay is not None
+        cells_mid, _ = overlay
+        start_distances = sorted(
+            _pairwise_distance(start_piece.cells()[i], start_piece.cells()[j])
+            for i in range(len(start_piece.cells()))
+            for j in range(i + 1, len(start_piece.cells()))
+        )
+        mid_distances = sorted(
+            _pairwise_distance(cells_mid[i], cells_mid[j])
+            for i in range(len(cells_mid))
+            for j in range(i + 1, len(cells_mid))
+        )
+        for actual, expected_distance in zip(mid_distances, start_distances):
+            self.assertAlmostEqual(actual, expected_distance, places=4)
 
     def test_rotation_after_translation_restarts_from_interpolated_pose(self) -> None:
         shape = PieceShape2D("domino", [(0, 0), (1, 0)], color_id=3)

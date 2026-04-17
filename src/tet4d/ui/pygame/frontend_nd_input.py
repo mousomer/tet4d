@@ -88,6 +88,14 @@ def _piece_has_cells_above_gravity(state: GameStateND) -> bool:
     return any(int(coord[gravity_axis]) < 0 for coord in piece.cells())
 
 
+def _explorer_candidate_movement_policy(cfg: GameConfigND) -> str:
+    if bool(cfg.exploration_mode):
+        return explorer_movement_policy_from_rigid_play_enabled(False)
+    return explorer_movement_policy_from_rigid_play_enabled(
+        cfg.explorer_rigid_play_enabled
+    )
+
+
 def system_key_action(key: int) -> str | None:
     return match_bound_action(key, SYSTEM_KEYS, _SYSTEM_ACTIONS)
 
@@ -292,9 +300,7 @@ def _translated_or_explorer_candidate(
             transport=transport,
             axis=mapped_axis,
             delta=mapped_delta,
-            movement_policy=explorer_movement_policy_from_rigid_play_enabled(
-                state.config.explorer_rigid_play_enabled
-            ),
+            movement_policy=_explorer_candidate_movement_policy(state.config),
         )
     vector = [0] * int(state.config.ndim)
     vector[mapped_axis] = mapped_delta
