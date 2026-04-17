@@ -18,8 +18,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
   `controls_panel_actions.py` for explorer row mutations and seam-edit actions,
-  `controls_panel.py` for shell/input/launch orchestration plus thin
-  compatibility re-exports,
+  `controls_panel_routing.py` for navigation/pane/shortcut/enter routing,
+  `controls_panel_commands.py` for save/export/experiment command execution,
+  `controls_panel_launch.py` for play-preview launch preparation and runtime
+  handoff,
+  `controls_panel.py` for the public shell facade and thin compatibility
+  re-exports over those focused helpers,
   `scene_state.py` for the state shape plus pane/tool/workspace routing,
   `scene_state_canonical.py` for canonical runtime sync/write and fallback
   storage handling,
@@ -52,9 +56,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   policy-shaped inventories that belong in `config/project/policy_pack.json`.
 - Do not let `CURRENT_STATE.md` regrow batch ledgers, validation histories, or
   generated ownership snapshots.
-- Do not let `controls_panel.py` re-absorb non-shell explorer mutation helpers;
-  keep any retained compatibility re-exports thin and keep deferred
-  playability ownership in `scene_preview_state.py`.
+- Do not let `controls_panel.py` re-absorb routing, command, launch, or
+  non-shell explorer mutation helpers; keep any retained compatibility
+  re-exports thin and keep deferred playability ownership in
+  `scene_preview_state.py`.
 - Do not let `scene_state.py` re-absorb canonical sync/write glue or
   probe-state normalization now owned by `scene_state_canonical.py` and
   `scene_state_probe.py`.
@@ -72,15 +77,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 215` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 216` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.74` (`low`)
+- `tech_debt.score = 4.76` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.19`
+1. `delivery_size_pressure = 2.20`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -98,7 +103,7 @@ Top 8 live Python hotspots by real LOC:
 5. `tools/governance/validate_project_contracts.py`: `1368` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1313` real LOC
 7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
-8. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1000` real LOC
+8. `tools/governance/generate_configuration_reference.py`: `989` real LOC
 
 Thin-wrapper budgets:
 
@@ -141,8 +146,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 - Continue topology-playground cleanup from `docs/BACKLOG.md` without reopening
   the frozen shell contract.
-- Continue cleanup pressure in `scene_state.py` and in the remaining
-  shortcut/export/launch orchestration inside `controls_panel.py` without
-  collapsing the new helper splits back into one file.
+- Continue cleanup pressure in `scene_state.py` and in any still-thick
+  `controls_panel.py` compatibility seams without collapsing the new helper
+  splits back into one file.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.

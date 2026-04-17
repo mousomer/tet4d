@@ -16,7 +16,6 @@ from tet4d.engine.gameplay.topology_designer import (
     designer_profiles_for_dimension,
     export_topology_profile_state,
     profile_state_from_preset,
-    topology_gameplay_mode_label,
     validate_topology_profile_state,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
@@ -34,8 +33,6 @@ from tet4d.engine.runtime.topology_profile_store import (
     load_topology_profile,
     save_topology_profile,
 )
-from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
-from tet4d.ui.pygame.input.key_dispatch import match_bound_action
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
 from .interaction_audit import (
@@ -64,6 +61,20 @@ from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
 from tet4d.ui.pygame.topology_lab.controls_panel_values import (
     _sandbox_neighbor_search_enabled,  # noqa: F401 - compatibility re-export
 )
+from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
+    run_experiments as _run_experiments_impl,
+    run_export as _run_export_impl,
+    save_profile as _save_profile_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_launch import (
+    launch_play_preview as _launch_play_preview_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
+    handle_enter_key as _handle_enter_key_impl,
+    handle_navigation_key as _handle_navigation_key_impl,
+    handle_shortcut_key as _handle_shortcut_key_impl,
+    set_active_pane_from_target as _set_active_pane_from_target_impl,
+)
 from tet4d.ui.pygame.topology_lab.camera_controls import (
     ensure_mouse_orbit_state,
     ensure_scene_camera,
@@ -73,7 +84,6 @@ from tet4d.ui.pygame.topology_lab.common import (
     TopologyLabHitTarget,
 )
 from tet4d.ui.pygame.topology_lab.scene_preview_state import (
-    ensure_explorer_playability_analysis as _ensure_explorer_playability_analysis,
     clear_explorer_scene_state as _clear_explorer_scene_state_impl,
     preview_signature_for_state as _preview_signature_for_state_impl,
     refresh_explorer_scene_state as _refresh_explorer_scene_state_impl,
@@ -92,15 +102,8 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
 )
 from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPreviewCompileSignature,
-    PANE_CONTROLS,
-    PANE_SCENE,
     TOOL_EDIT,
-    TOOL_PLAY,
-    TOOL_PROBE,
-    TOOL_SANDBOX,
     TopologyLabState,
-    canonical_playground_state,
-    controls_pane_active as _controls_pane_active,
     current_explorer_draft,
     current_explorer_profile,
     current_play_settings,
@@ -108,7 +111,6 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     current_probe_path,
     current_probe_trace,
     ensure_probe_state as _ensure_probe_state,
-    cycle_active_pane,
     ensure_explorer_draft,
     playground_dims_for_state,
     replace_explorer_profile,
@@ -116,11 +118,9 @@ from tet4d.ui.pygame.topology_lab.scene_state import (
     replace_probe_state,
     reset_probe_state,
     set_dirty,
-    set_active_tool,
     set_highlighted_glue_id,
     set_selected_boundary_index,  # noqa: F401 - compatibility re-export
     set_selected_glue_id,  # noqa: F401 - compatibility re-export
-    scene_pane_active as _scene_pane_active,
     sync_canonical_playground_state,
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
@@ -137,23 +137,6 @@ _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
 }
 _TopologyLabState = TopologyLabState
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
-_TOOL_SHORTCUT_KEYS = {
-    pygame.K_e: TOOL_EDIT,
-    pygame.K_i: TOOL_PROBE,
-    pygame.K_b: TOOL_SANDBOX,
-    pygame.K_p: TOOL_PLAY,
-    pygame.K_g: TOOL_EDIT,
-    pygame.K_t: TOOL_EDIT,
-}
-_PROBE_MOVEMENT_TOOLS = {TOOL_PROBE, TOOL_EDIT}
-_SANDBOX_STEP_KEYS = {
-    pygame.K_LEFT: "x-",
-    pygame.K_RIGHT: "x+",
-    pygame.K_UP: "y-",
-    pygame.K_DOWN: "y+",
-    pygame.K_PAGEUP: "y-",
-    pygame.K_PAGEDOWN: "y+",
-}
 
 
 @dataclass(frozen=True)
@@ -161,43 +144,6 @@ class _LegacyRowAdjustment:
     handled: bool
     profile: TopologyProfileState | None = None
     error: str | None = None
-
-
-def _binding_groups_for_dimension(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
-    return {
-        str(group_name): {
-            str(action): tuple(int(key) for key in keys)
-            for action, keys in dict(binding_map).items()
-        }
-        for group_name, binding_map in runtime_binding_groups_for_dimension_runtime(
-            int(dimension)
-        ).items()
-    }
-
-
-def _explorer_bindings_for_dimension(dimension: int):
-    return _binding_groups_for_dimension(dimension).get("explorer", {})
-
-
-def _gameplay_bindings_for_dimension(dimension: int):
-    return _binding_groups_for_dimension(dimension).get("game", {})
-
-
-def _camera_bindings_for_dimension(dimension: int):
-    return _binding_groups_for_dimension(dimension).get("camera", {})
-
-
-def _explorer_action_to_step_label(action: str) -> str | None:
-    return {
-        "move_x_neg": "x-",
-        "move_x_pos": "x+",
-        "move_up": "y-",
-        "move_down": "y+",
-        "move_z_neg": "z-",
-        "move_z_pos": "z+",
-        "move_w_neg": "w-",
-        "move_w_pos": "w+",
-    }.get(action)
 
 
 def _board_dims_for_state(state: _TopologyLabState) -> tuple[int, ...]:
@@ -331,60 +277,6 @@ def _resolve_legacy_row_adjustment(
     except ValueError as exc:
         return _LegacyRowAdjustment(handled=True, error=str(exc))
     return _LegacyRowAdjustment(handled=False)
-
-
-def _bound_sandbox_rotation_action(state: _TopologyLabState, key: int) -> str | None:
-    rotation_actions = ["rotate_xy_pos", "rotate_xy_neg"]
-    if state.dimension >= 3:
-        rotation_actions.extend(
-            (
-                "rotate_xz_pos",
-                "rotate_xz_neg",
-                "rotate_yz_pos",
-                "rotate_yz_neg",
-            )
-        )
-    if state.dimension >= 4:
-        rotation_actions.extend(
-            (
-                "rotate_xw_pos",
-                "rotate_xw_neg",
-                "rotate_yw_pos",
-                "rotate_yw_neg",
-                "rotate_zw_pos",
-                "rotate_zw_neg",
-            )
-        )
-    return match_bound_action(
-        key,
-        _gameplay_bindings_for_dimension(state.dimension),
-        tuple(rotation_actions),
-    )
-
-
-def _bound_explorer_step_label(state: _TopologyLabState, key: int) -> str | None:
-    movement_actions = [
-        "move_x_neg",
-        "move_x_pos",
-    ]
-    if state.dimension >= 3:
-        movement_actions.extend(("move_z_neg", "move_z_pos"))
-    if state.dimension >= 4:
-        movement_actions.extend(("move_w_neg", "move_w_pos"))
-    action = match_bound_action(
-        key,
-        _gameplay_bindings_for_dimension(state.dimension),
-        tuple(movement_actions),
-    )
-    if action is None:
-        action = match_bound_action(
-            key,
-            _explorer_bindings_for_dimension(state.dimension),
-            ("move_up", "move_down"),
-        )
-    if action is None:
-        return None
-    return _explorer_action_to_step_label(action)
 
 
 def _set_status(
@@ -620,175 +512,32 @@ def _apply_legacy_row_adjustment(
 
 
 def _save_profile(state: _TopologyLabState) -> tuple[bool, str]:
-    if _uses_general_explorer_editor(state):
-        profile = current_explorer_profile(state)
-        assert profile is not None
-        ok, message = save_explorer_topology_profile(profile)
-    else:
-        ok, message = save_topology_profile(state.profile)
-    if ok:
-        set_dirty(state, False)
-        _set_status(
-            state,
-            str(_LAB_STATUS_COPY["saved"]).format(
-                mode_label=topology_gameplay_mode_label(state.gameplay_mode),
-                dimension=state.dimension,
-            ),
-        )
-        return True, message
-    _set_status(
+    return _save_profile_impl(
         state,
-        str(_LAB_STATUS_COPY["save_failed"]).format(message=message),
-        is_error=True,
+        save_explorer_topology_profile=save_explorer_topology_profile,
+        save_topology_profile=save_topology_profile,
+        set_status=_set_status,
     )
-    return False, message
 
 
 def _run_export(state: _TopologyLabState) -> None:
-    with record_interaction_handler(
+    _run_export_impl(
         state,
-        "preview_export",
-        dimension=state.dimension,
-        gameplay_mode=state.gameplay_mode,
-    ):
-        if _uses_general_explorer_editor(state):
-            profile = current_explorer_profile(state)
-            assert profile is not None
-            if state.scene_preview_error is not None:
-                _set_status(state, state.scene_preview_error, is_error=True)
-                return
-            live_preview_payload = None
-            export_signature = _preview_signature_for_state(state)
-            if (
-                export_signature is not None
-                and state.scene_preview_signature == export_signature
-                and state.scene_preview_error is None
-                and state.scene_preview is not None
-            ):
-                live_preview_payload = state.scene_preview
-            with record_interaction_phase(
-                state,
-                "preview_export_call",
-                dimension=state.dimension,
-                dims=_board_dims_for_state(state),
-                glue_count=len(profile.gluings),
-            ):
-                ok, message, _path = export_explorer_topology_preview(
-                    profile,
-                    dims=_board_dims_for_state(state),
-                    source=f"topology_lab_{state.dimension}d_mvp",
-                    preview_payload=live_preview_payload,
-                )
-            if not ok:
-                _set_status(
-                    state,
-                    str(_LAB_STATUS_COPY["export_error"]).format(message=message),
-                    is_error=True,
-                )
-                return
-            _set_status(
-                state, str(_LAB_STATUS_COPY["export_ok"]).format(message=message)
-            )
-            play_sfx("menu_confirm")
-            return
-
-        with record_interaction_phase(
-            state,
-            "legacy_export_call",
-            dimension=state.dimension,
-            gameplay_mode=state.gameplay_mode,
-        ):
-            ok, message, _path = export_topology_profile_state(
-                profile=state.profile,
-                gravity_axis=1,
-            )
-        if not ok:
-            _set_status(
-                state,
-                str(_LAB_STATUS_COPY["export_error"]).format(message=message),
-                is_error=True,
-            )
-            return
-
-        _set_status(
-            state,
-            str(_LAB_STATUS_COPY["export_ok"]).format(message=message),
-        )
-        play_sfx("menu_confirm")
+        export_explorer_topology_preview=export_explorer_topology_preview,
+        export_topology_profile_state=export_topology_profile_state,
+        play_sfx=play_sfx,
+        set_status=_set_status,
+    )
 
 
 def _run_experiments(state: _TopologyLabState) -> None:
-    with record_interaction_handler(
+    _run_experiments_impl(
         state,
-        "experiment_pack_generation",
-        dimension=state.dimension,
-        gameplay_mode=state.gameplay_mode,
-    ):
-        if not _uses_general_explorer_editor(state):
-            _set_status(
-                state,
-                "Experiment packs are only available in Topology Playground",
-                is_error=True,
-            )
-            return
-        profile = current_explorer_profile(state)
-        assert profile is not None
-        if state.scene_preview_error is not None:
-            _set_status(state, state.scene_preview_error, is_error=True)
-            return
-        dims = _board_dims_for_state(state)
-        with record_interaction_phase(
-            state,
-            "experiment_compile",
-            dimension=state.dimension,
-            dims=dims,
-            glue_count=len(profile.gluings),
-        ):
-            batch = compile_runtime_explorer_experiments(
-                profile,
-                dims=dims,
-                source=f"topology_lab_{state.dimension}d_experiments",
-            )
-        state.experiment_batch = batch
-        with record_interaction_phase(
-            state,
-            "experiment_export",
-            dimension=state.dimension,
-            dims=dims,
-            glue_count=len(profile.gluings),
-        ):
-            ok, message, _path = export_runtime_explorer_experiments(
-                profile,
-                dims=dims,
-                source=f"topology_lab_{state.dimension}d_experiments",
-                batch_payload=batch,
-            )
-        recommendation = batch.get("recommendation")
-        if not ok:
-            _set_status(
-                state,
-                str(
-                    _LAB_STATUS_COPY.get(
-                        "experiments_error",
-                        "Failed exporting explorer experiment pack: {message}",
-                    )
-                ).format(message=message),
-                is_error=True,
-            )
-            return
-        status = str(
-            _LAB_STATUS_COPY.get(
-                "experiments_ok",
-                "Explorer experiment pack ready: {message}",
-            )
-        ).format(message=message)
-        if isinstance(recommendation, dict):
-            status += (
-                f" | Next: {recommendation.get('label', 'n/a')}"
-                f" ({recommendation.get('reason', 'no reason')})"
-            )
-        _set_status(state, status)
-        play_sfx("menu_confirm")
+        compile_runtime_explorer_experiments=compile_runtime_explorer_experiments,
+        export_runtime_explorer_experiments=export_runtime_explorer_experiments,
+        play_sfx=play_sfx,
+        set_status=_set_status,
+    )
 
 
 def _adjust_legacy_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
@@ -826,61 +575,19 @@ def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
 def _set_active_pane_from_target(
     state: _TopologyLabState, target: TopologyLabHitTarget
 ) -> None:
-    if target.kind in {"row_select", "row_step"}:
-        state.active_pane = PANE_CONTROLS
-    else:
-        state.active_pane = PANE_SCENE
+    _set_active_pane_from_target_impl(state, target)
 
 
 def _handle_navigation_key(
     state: _TopologyLabState, nav_key: int, selectable: tuple[int, ...]
 ) -> bool:
-    if not _controls_pane_active(state):
-        return False
-    if nav_key == pygame.K_UP:
-        state.selected = (state.selected - 1) % len(selectable)
-        play_sfx("menu_move")
-        return True
-    if nav_key == pygame.K_DOWN:
-        state.selected = (state.selected + 1) % len(selectable)
-        play_sfx("menu_move")
-        return True
-    if nav_key in (pygame.K_LEFT, pygame.K_RIGHT):
-        step = -1 if nav_key == pygame.K_LEFT else 1
-        if _adjust_active_row(state, step):
-            play_sfx("menu_move")
-        return True
-    return False
-
-
-def _handle_save_export_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if _scene_pane_active(state):
-        return False
-    if key == pygame.K_s:
-        _save_profile(state)
-        return True
-    if key == pygame.K_e:
-        _run_export(state)
-        return True
-    return False
-
-
-def _handle_tool_shortcut(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
-    if not _uses_general_explorer_editor(state):
-        return False
-    if key == pygame.K_TAB:
-        cycle_active_pane(state, -1 if (mod & pygame.KMOD_SHIFT) else 1)
-        return True
-    tool_name = _TOOL_SHORTCUT_KEYS.get(key)
-    if tool_name is not None:
-        set_active_tool(state, tool_name)
-        state.active_pane = PANE_SCENE
-        return True
-    if key == pygame.K_F5:
-        state.active_pane = PANE_SCENE
-        state.play_preview_requested = True
-        return True
-    return False
+    return _handle_navigation_key_impl(
+        state,
+        nav_key,
+        selectable,
+        adjust_active_row=_adjust_active_row,
+        play_sfx=play_sfx,
+    )
 
 
 def _apply_sandbox_shortcut_step(state: _TopologyLabState, step_label: str) -> None:
@@ -890,146 +597,42 @@ def _apply_sandbox_shortcut_step(state: _TopologyLabState, step_label: str) -> N
     _set_status(state, message, is_error=not ok)
 
 
-def _sandbox_piece_cycle_step(key: int) -> int | None:
-    if key == pygame.K_LEFTBRACKET:
-        return -1
-    if key in (pygame.K_RIGHTBRACKET, pygame.K_SPACE):
-        return 1
-    return None
-
-
-def _handle_probe_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if (
-        state.active_tool not in _PROBE_MOVEMENT_TOOLS
-        or not _uses_general_explorer_editor(state)
-        or not _scene_pane_active(state)
-    ):
-        return False
-    step_label = _bound_explorer_step_label(state, key)
-    if step_label is None:
-        step_label = _SANDBOX_STEP_KEYS.get(key)
-    if step_label is None:
-        return False
-    _apply_probe_step(state, step_label)
-    return True
-
-
-def _handle_sandbox_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if (
-        state.active_tool != TOOL_SANDBOX
-        or not _uses_general_explorer_editor(state)
-        or not _scene_pane_active(state)
-    ):
-        return False
-    step_label = _bound_explorer_step_label(state, key)
-    if step_label is None:
-        step_label = _SANDBOX_STEP_KEYS.get(key)
-    if step_label is not None:
-        _apply_sandbox_shortcut_step(state, step_label)
-        return True
-    rotation_action = _bound_sandbox_rotation_action(state, key)
-    if rotation_action is not None:
-        profile = current_explorer_profile(state)
-        assert profile is not None
-        ok, message = rotate_sandbox_piece_action(state, profile, rotation_action)
-        _set_status(state, message, is_error=not ok)
-        return True
-    if key == pygame.K_r:
-        profile = current_explorer_profile(state)
-        assert profile is not None
-        ok, message = rotate_sandbox_piece(state, profile)
-        _set_status(state, message, is_error=not ok)
-        return True
-    cycle_step = _sandbox_piece_cycle_step(key)
-    if cycle_step is not None:
-        cycle_sandbox_piece(state, cycle_step)
-        return True
-    if key == pygame.K_0:
-        reset_sandbox_piece(state)
-        _set_status(state, "Sandbox reset")
-        return True
-    if key == pygame.K_t:
-        ensure_piece_sandbox(state)
-        assert state.sandbox is not None
-        state.sandbox.show_trace = not state.sandbox.show_trace
-        _set_status(
-            state, f"Sandbox trace {'shown' if state.sandbox.show_trace else 'hidden'}"
-        )
-        return True
-    return False
-
-
-def _handle_glue_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if not _uses_general_explorer_editor(state):
-        return False
-    if key not in (pygame.K_DELETE, pygame.K_BACKSPACE):
-        return False
-    _remove_explorer_glue(state)
-    return True
-
-
-def _handle_reset_defaults_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if key != pygame.K_F8 or not _uses_general_explorer_editor(state):
-        return False
-    _reset_explorer_play_settings_to_defaults(state)
-    return True
-
-
-def _handle_camera_shortcut(state: _TopologyLabState, key: int) -> bool:
-    if (
-        not _uses_general_explorer_editor(state)
-        or not _scene_pane_active(state)
-        or state.active_tool not in _PROBE_MOVEMENT_TOOLS
-    ):
-        return False
-    camera_bindings = _camera_bindings_for_dimension(state.dimension)
-    if not camera_bindings or match_bound_action(
-        key,
-        camera_bindings,
-        tuple(camera_bindings),
-    ) is None:
-        return False
-    return handle_scene_camera_key(state.dimension, key, state.scene_camera)
-
-
 def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) -> bool:
-    return (
-        _handle_camera_shortcut(state, key)
-        or _handle_probe_shortcut(state, key)
-        or _handle_reset_defaults_shortcut(state, key)
-        or _handle_sandbox_shortcut(state, key)
-        or _handle_save_export_shortcut(state, key)
-        or _handle_tool_shortcut(state, key, mod=mod)
-        or _handle_glue_shortcut(state, key)
+    return _handle_shortcut_key_impl(
+        state,
+        key,
+        mod=mod,
+        apply_probe_step=_apply_probe_step,
+        apply_sandbox_shortcut_step=_apply_sandbox_shortcut_step,
+        cycle_sandbox_piece=cycle_sandbox_piece,
+        ensure_piece_sandbox=ensure_piece_sandbox,
+        handle_scene_camera_key=handle_scene_camera_key,
+        play_sfx=play_sfx,
+        remove_explorer_glue=_remove_explorer_glue,
+        reset_explorer_play_settings_to_defaults=(
+            _reset_explorer_play_settings_to_defaults
+        ),
+        reset_sandbox_piece=reset_sandbox_piece,
+        rotate_sandbox_piece=rotate_sandbox_piece,
+        rotate_sandbox_piece_action=rotate_sandbox_piece_action,
+        run_export=_run_export,
+        save_profile=_save_profile,
+        set_status=_set_status,
     )
 
 
 def _handle_enter_key(state: _TopologyLabState, selectable: tuple[int, ...]) -> None:
-    if _scene_pane_active(state):
-        if _uses_general_explorer_editor(state) and state.active_tool == TOOL_PLAY:
-            state.play_preview_requested = True
-        return
-    row = _rows_for_state(state)[selectable[state.selected]]
-    if row.key == "save_profile":
-        _save_profile(state)
-        return
-    if row.key == "export":
-        _run_export(state)
-        return
-    if row.key == "experiments":
-        _run_experiments(state)
-        return
-    if row.key == "apply_glue":
-        _apply_explorer_glue(state)
-        return
-    if row.key == "remove_glue":
-        _remove_explorer_glue(state)
-        return
-    if row.key == "back":
-        state.running = False
-        return
-    if _adjust_active_row(state, 1):
-        play_sfx("menu_move")
+    _handle_enter_key_impl(
+        state,
+        selectable,
+        adjust_active_row=_adjust_active_row,
+        apply_explorer_glue=_apply_explorer_glue,
+        play_sfx=play_sfx,
+        remove_explorer_glue=_remove_explorer_glue,
+        run_export=_run_export,
+        run_experiments=_run_experiments,
+        save_profile=_save_profile,
+    )
 
 
 def _launch_play_preview(
@@ -1041,77 +644,14 @@ def _launch_play_preview(
     display_settings=None,
     exploration_mode = False,
 ) -> tuple[pygame.Surface, object | None]:
-    profile = current_explorer_profile(state)
-    with record_interaction_handler(
+    return _launch_play_preview_impl(
         state,
-        "play_preview_launch",
-        dimension=state.dimension,
-        glue_count=0 if profile is None else len(profile.gluings),
-    ):
-        runtime_state = canonical_playground_state(state)
-        if _uses_general_explorer_editor(state):
-            if runtime_state is None:
-                with record_interaction_phase(
-                    state,
-                    "canonical_sync",
-                    source="play_preview_launch",
-                    dimension=state.dimension,
-                ):
-                    sync_canonical_playground_state(state)
-                runtime_state = canonical_playground_state(state)
-            expected_signature = _preview_signature_for_state(state)
-            if runtime_state is not None and (
-                state.scene_preview_signature != expected_signature
-                or state.scene_preview_error is not None
-            ):
-                with record_interaction_phase(
-                    state,
-                    "scene_refresh",
-                    source="play_preview_launch",
-                    dimension=state.dimension,
-                ):
-                    _refresh_explorer_scene_state(state)
-                runtime_state = canonical_playground_state(state)
-        if not _uses_general_explorer_editor(state) or runtime_state is None:
-            _set_status(
-                state,
-                "Play preview is unavailable until the canonical playground state is ready",
-                is_error=True,
-            )
-            return screen, display_settings
-        if state.scene_preview_error:
-            _set_status(
-                state,
-                f"Cannot play current topology: {state.scene_preview_error}",
-                is_error=True,
-            )
-            return screen, display_settings
-        with record_interaction_phase(
-            state,
-            "playability_analysis",
-            source="play_preview_launch",
-            dimension=state.dimension,
-        ):
-            _ensure_explorer_playability_analysis(state)
-        try:
-            with record_interaction_phase(
-                state,
-                "play_launch",
-                dimension=state.dimension,
-                dims=_board_dims_for_state(state),
-                glue_count=len(runtime_state.explorer_profile.gluings),
-            ):
-                screen, display_settings = launch_playground_state_gameplay(
-                    runtime_state,
-                    screen,
-                    fonts_nd,
-                    return_caption=_display_title_for_state(state),
-                    fonts_2d=fonts_2d,
-                    display_settings=display_settings,
-                    exploration_mode=exploration_mode,
-                )
-        except Exception as exc:
-            _set_status(state, f"Play preview failed: {exc}", is_error=True)
-            return screen, display_settings
-        _set_status(state, f"Returned from Explorer {state.dimension}D play preview")
-        return screen, display_settings
+        screen,
+        fonts_nd,
+        launch_playground_state_gameplay=launch_playground_state_gameplay,
+        set_status=_set_status,
+        display_title_for_state=_display_title_for_state,
+        fonts_2d=fonts_2d,
+        display_settings=display_settings,
+        exploration_mode=exploration_mode,
+    )

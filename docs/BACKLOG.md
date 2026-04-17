@@ -103,14 +103,23 @@ fallback storage handling, and `scene_state_probe.py` owns probe selectors,
 probe mutations, and probe-state synchronization without moving deferred
 preview/playability work out of `scene_preview_state.py`.
 
+Batch 5 progress (2026-04-17): topology-playground control-shell cleanup now
+keeps navigation/pane/shortcut/enter routing in
+`src/tet4d/ui/pygame/topology_lab/controls_panel_routing.py`, save/export/
+experiment command execution in
+`src/tet4d/ui/pygame/topology_lab/controls_panel_commands.py`, and
+play-preview launch preparation/runtime handoff in
+`src/tet4d/ui/pygame/topology_lab/controls_panel_launch.py`, leaving
+`controls_panel.py` as a thinner visible-shell facade and compatibility seam.
+
 - Open work:
   1. continue structural simplification of remaining
-     `src/tet4d/ui/pygame/topology_lab/controls_panel.py` shortcut/export/
-     launch orchestration without moving visible-shell ownership
-  2. continue structural simplification of remaining
      `src/tet4d/ui/pygame/topology_lab/scene_state.py` routing/facade code and
      any still-thick compatibility seams without collapsing the new
      `scene_state_canonical.py` / `scene_state_probe.py` ownership split
+  2. trim residual `src/tet4d/ui/pygame/topology_lab/controls_panel.py`
+     compatibility seams only when caller complexity drops and visible-shell
+     ownership stays in place
   3. continue startup/refresh latency cleanup around deferred rigid
      playability analysis and signature-based cache reuse without reopening the
      shell contract
@@ -172,8 +181,10 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authority.
 - Keep canonical runtime selectors as the only explorer-path input authority.
 - Keep the `controls_panel_rows.py` / `controls_panel_values.py` /
-  `controls_panel_actions.py` split intact; do not drift non-shell explorer
-  mutations back into `controls_panel.py`.
+  `controls_panel_actions.py` split intact, keep routing/command/launch detail
+  in `controls_panel_routing.py` / `controls_panel_commands.py` /
+  `controls_panel_launch.py`, and do not drift those responsibilities back
+  into `controls_panel.py`.
 - Keep the `scene_state.py` / `scene_state_canonical.py` /
   `scene_state_probe.py` split intact; do not drift canonical sync/write or
   probe normalization back into one mixed state file.
@@ -192,6 +203,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-17:
 
+- shell-preserving topology-playground control-shell cleanup so
+  `controls_panel_routing.py` now owns navigation/pane/shortcut/enter routing,
+  `controls_panel_commands.py` owns save/export/experiment command execution,
+  and `controls_panel_launch.py` owns play-preview launch preparation/runtime
+  handoff, leaving `controls_panel.py` as a thinner visible-shell facade while
+  preserving launcher/test compatibility seams and deferred playability work in
+  `scene_preview_state.py`
 - shell-preserving topology-playground state cleanup so `scene_state.py` now
   keeps the state model plus pane/tool/workspace routing, while
   `scene_state_canonical.py` owns canonical runtime sync/write and fallback

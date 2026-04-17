@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-03-30
+Last updated: 2026-04-17
 
 ## Purpose
 
@@ -180,14 +180,21 @@ Accepted implementation direction in this phase:
 - keep display/value derivation in `controls_panel_values.py`
 - keep explorer row mutations and seam-edit actions in focused helper modules
   such as `controls_panel_actions.py`
+- keep navigation/pane/shortcut/enter routing in focused helper modules such
+  as `controls_panel_routing.py`
+- keep save/export/experiment command execution in focused helper modules such
+  as `controls_panel_commands.py`
+- keep play-preview launch preparation and runtime handoff in focused helper
+  modules such as `controls_panel_launch.py`
 - keep `scene_state.py` focused on the state shape plus shell-owned
   pane/tool/workspace routing
 - keep canonical runtime sync/write helpers in focused modules such as
   `scene_state_canonical.py`
 - keep probe selectors, probe mutations, and probe-state synchronization in
   focused modules such as `scene_state_probe.py`
-- keep shell input/routing, launch flow, and other visible-shell orchestration
-  in `controls_panel.py`
+- keep `controls_panel.py` as the public shell facade for shell
+  input/orchestration entrypoints and compatibility seams over those focused
+  helpers
 - keep deferred preview/playability work in `scene_preview_state.py`
 
 This phase must preserve the settled architecture rules above.
@@ -204,8 +211,9 @@ settled Play drop-policy contract.
   analysis by effective preview signature so same-signature refreshes reuse the
   last full result.
 - Keep compatibility re-exports thin when launcher/tests still read helper
-  seams through `controls_panel.py`; do not let that shell module retake
-  non-shell explorer mutation ownership.
+  seams through `controls_panel.py`; keep routing/command/launch detail in the
+  focused helper modules and do not let that shell facade retake non-shell
+  explorer mutation ownership.
 - Keep `scene_state.py` as the public state facade, but do not let canonical
   sync/write logic or probe-state normalization drift back into one mixed file
   when focused helper modules already own those concerns.
