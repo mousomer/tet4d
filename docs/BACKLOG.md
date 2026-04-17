@@ -96,12 +96,21 @@ seam-edit helpers now live in
 `controls_panel.py` focused on shell/input/launch orchestration while
 preserving deferred rigid playability analysis and same-signature cache reuse.
 
+Batch 4 progress (2026-04-17): topology-playground state ownership is now
+split so `scene_state.py` keeps the state model plus pane/tool/workspace
+routing, `scene_state_canonical.py` owns canonical runtime sync/write and
+fallback storage handling, and `scene_state_probe.py` owns probe selectors,
+probe mutations, and probe-state synchronization without moving deferred
+preview/playability work out of `scene_preview_state.py`.
+
 - Open work:
   1. continue structural simplification of remaining
      `src/tet4d/ui/pygame/topology_lab/controls_panel.py` shortcut/export/
      launch orchestration without moving visible-shell ownership
-  2. continue structural simplification of
-     `src/tet4d/ui/pygame/topology_lab/scene_state.py`
+  2. continue structural simplification of remaining
+     `src/tet4d/ui/pygame/topology_lab/scene_state.py` routing/facade code and
+     any still-thick compatibility seams without collapsing the new
+     `scene_state_canonical.py` / `scene_state_probe.py` ownership split
   3. continue startup/refresh latency cleanup around deferred rigid
      playability analysis and signature-based cache reuse without reopening the
      shell contract
@@ -165,6 +174,9 @@ stays synchronized, and the contract validator accepts the backlog shape.
 - Keep the `controls_panel_rows.py` / `controls_panel_values.py` /
   `controls_panel_actions.py` split intact; do not drift non-shell explorer
   mutations back into `controls_panel.py`.
+- Keep the `scene_state.py` / `scene_state_canonical.py` /
+  `scene_state_probe.py` split intact; do not drift canonical sync/write or
+  probe normalization back into one mixed state file.
 - Keep the legacy topology editor isolated to
   `Settings -> Legacy Topology Editor Menu`.
 - Keep the shared menu shell aligned across launcher, setup, pause, settings,
@@ -180,6 +192,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-17:
 
+- shell-preserving topology-playground state cleanup so `scene_state.py` now
+  keeps the state model plus pane/tool/workspace routing, while
+  `scene_state_canonical.py` owns canonical runtime sync/write and fallback
+  storage handling and `scene_state_probe.py` owns probe selectors/mutations
+  and probe-state synchronization without reopening the shell contract or the
+  deferred preview/playability ownership in `scene_preview_state.py`
 - shell-preserving topology-playground cleanup so explorer row-mutation and
   seam-edit helpers now live in
   `src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, dropping
