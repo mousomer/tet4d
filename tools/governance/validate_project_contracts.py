@@ -32,6 +32,15 @@ class ValidationIssue:
     message: str
 
 
+@dataclass(frozen=True)
+class MenuStructureContract:
+    required_menus: tuple[str, ...]
+    required_submenu_labels: tuple[tuple[str, set[str]], ...]
+    required_item_labels: tuple[tuple[str, set[str]], ...]
+    required_item_types: set[str]
+    banned_literal_rules: tuple[tuple[Path, str, str], ...]
+
+
 def _git_tracked_paths(issues: list[ValidationIssue]) -> set[str] | None:
     result = subprocess.run(
         ["git", "ls-files", "-z"],
@@ -95,6 +104,20 @@ def _load_governance(issues: list[ValidationIssue]) -> dict[str, object] | None:
     if policy_pack is None:
         return None
     payload = policy_pack.get("governance")
+    if not isinstance(payload, dict):
+        issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
+        return None
+    return payload
+
+
+def _load_governance_subsection(
+    issues: list[ValidationIssue], key: str
+) -> dict[str, object] | None:
+    rel = f"{POLICY_PACK_REL}.governance.{key}"
+    governance = _load_governance(issues)
+    if governance is None:
+        return None
+    payload = governance.get(key)
     if not isinstance(payload, dict):
         issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
         return None
@@ -799,7 +822,8 @@ def _validate_governance_directives() -> list[ValidationIssue]:
 def _validate_policy_index_sync() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     governance = _load_governance(issues)
-    if governance is None:
+    policy_index_contract = _load_governance_subsection(issues, "policy_index_contract")
+    if governance is None or policy_index_contract is None:
         return issues
 
     index_rel = "docs/policies/INDEX.md"
@@ -807,12 +831,18 @@ def _validate_policy_index_sync() -> list[ValidationIssue]:
         return [ValidationIssue("missing", f"missing required path: {index_rel}")]
     index_text = POLICY_INDEX_PATH.read_text(encoding="utf-8")
 
-    required_tokens = [
-        "config/project/policy_pack.json",
-        "config/project/policy/manifests/secret_scan.json",
-        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
-        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
-    ]
+    required_tokens = _as_string_list(policy_index_contract.get("required_tokens", []))
+    if required_tokens is None:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                (
+                    f"{POLICY_PACK_REL}.governance.policy_index_contract.required_tokens "
+                    "must be a list[str]"
+                ),
+            )
+        )
+        return issues
     contracts = governance.get("contracts")
     if isinstance(contracts, dict):
         required_tokens.extend(
@@ -1071,24 +1101,24 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     if rule_id != "menu-simplification-common-settings":
         return issues
 
+    required_shared_row_keys = _as_string_list(rule.get("required_shared_row_keys", []))
+    if not required_shared_row_keys:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                (
+                    f"{POLICY_PACK_REL}.governance.menu_simplification_manifest_rule."
+                    "required_shared_row_keys must be a non-empty list[str]"
+                ),
+            )
+        )
+        return issues
+
     menu_rel = "config/menu/structure.json"
     menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
     if not isinstance(menu_payload, dict):
         return issues
 
-    required_shared_row_keys = {
-        "game_seed",
-        "game_random_mode",
-        "rotation_animation_mode",
-        "kick_level_index",
-        "rotation_animation_duration_ms_2d",
-        "rotation_animation_duration_ms_nd",
-        "translation_animation_duration_ms",
-        "auto_speedup_enabled",
-        "lines_per_level",
-        "topology_cache_measure",
-        "topology_cache_clear",
-    }
     settings_keys = _settings_menu_setting_ids(menu_payload)
     action_ids = {
         str(item.get("action_id", "")).strip().lower()
@@ -1122,38 +1152,174 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
     return issues
 
 
-def _menu_structure_banned_literals() -> tuple[tuple[Path, str, str], ...]:
-    return (
-        (
-            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-            "_CATEGORY_ID_BY_HEADER_LABEL =",
-            "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json",
-        ),
-        (
-            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-            "_CATEGORY_IDS_BY_FILTER =",
-            "settings_hub_model.py must not hardcode settings section filters; use config/menu/structure.json",
-        ),
-        (
-            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-            "_FOOTER_ROW_KEYS =",
-            "settings_hub_model.py must not hardcode settings footer row ownership; use config/menu/structure.json",
-        ),
-        (
-            PROJECT_ROOT / "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-            "_TOP_LEVEL_HEADER_LABELS =",
-            "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json",
-        ),
-    )
+def _parse_menu_label_requirements(
+    *,
+    field: str,
+    raw: object,
+    issues: list[ValidationIssue],
+) -> list[tuple[str, set[str]]] | None:
+    if not isinstance(raw, list):
+        issues.append(ValidationIssue("schema", f"{field} must be a list"))
+        return None
+
+    parsed: list[tuple[str, set[str]]] = []
+    for idx, entry in enumerate(raw, start=1):
+        if not isinstance(entry, dict):
+            issues.append(
+                ValidationIssue("schema", f"{field}[{idx}] must be an object")
+            )
+            continue
+        menu_id = entry.get("menu_id")
+        labels = _as_string_list(entry.get("labels", []))
+        if not isinstance(menu_id, str) or not menu_id.strip():
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{field}[{idx}].menu_id must be a non-empty string",
+                )
+            )
+            continue
+        if not labels:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{field}[{idx}].labels must be a non-empty list[str]",
+                )
+            )
+            continue
+        parsed.append((menu_id, set(labels)))
+    return parsed
 
 
-def _validate_menu_structure_banned_literals() -> list[ValidationIssue]:
+def _parse_menu_literal_rules(
+    raw: object, *, field: str, issues: list[ValidationIssue]
+) -> list[tuple[Path, str, str]] | None:
+    if not isinstance(raw, list):
+        issues.append(ValidationIssue("schema", f"{field} must be a list"))
+        return None
+
+    rules: list[tuple[Path, str, str]] = []
+    for idx, entry in enumerate(raw, start=1):
+        if not isinstance(entry, dict):
+            issues.append(
+                ValidationIssue("schema", f"{field}[{idx}] must be an object")
+            )
+            continue
+        rel = entry.get("file")
+        literal = entry.get("literal")
+        message = entry.get("message")
+        if not isinstance(rel, str) or not rel.strip():
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{field}[{idx}].file must be a non-empty string",
+                )
+            )
+            continue
+        if not isinstance(literal, str) or not literal:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{field}[{idx}].literal must be a non-empty string",
+                )
+            )
+            continue
+        if not isinstance(message, str) or not message:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{field}[{idx}].message must be a non-empty string",
+                )
+            )
+            continue
+        rules.append((PROJECT_ROOT / rel, literal, message))
+    return rules
+
+
+def _validate_menu_structure_banned_literals(
+    rules: list[tuple[Path, str, str]],
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    for path, literal, message in _menu_structure_banned_literals():
+    for path, literal, message in rules:
+        if not path.exists():
+            rel = path.relative_to(PROJECT_ROOT).as_posix()
+            issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+            continue
         text = path.read_text(encoding="utf-8")
         if literal in text:
             issues.append(ValidationIssue("drift", message))
     return issues
+
+
+def _load_menu_structure_single_source_contract(
+    issues: list[ValidationIssue],
+) -> MenuStructureContract | None:
+    contract = _load_governance_subsection(issues, "menu_structure_single_source")
+    if contract is None:
+        return None
+
+    required_menus = _as_string_list(contract.get("required_menus", []))
+    if not required_menus:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                (
+                    f"{POLICY_PACK_REL}.governance.menu_structure_single_source."
+                    "required_menus must be a non-empty list[str]"
+                ),
+            )
+        )
+        return None
+
+    required_submenu_labels = _parse_menu_label_requirements(
+        field=(
+            f"{POLICY_PACK_REL}.governance.menu_structure_single_source."
+            "required_submenu_labels"
+        ),
+        raw=contract.get("required_submenu_labels", []),
+        issues=issues,
+    )
+    required_item_labels = _parse_menu_label_requirements(
+        field=(
+            f"{POLICY_PACK_REL}.governance.menu_structure_single_source."
+            "required_item_labels"
+        ),
+        raw=contract.get("required_item_labels", []),
+        issues=issues,
+    )
+    required_item_types = _as_string_list(contract.get("required_item_types", []))
+    if not required_item_types:
+        issues.append(
+            ValidationIssue(
+                "schema",
+                (
+                    f"{POLICY_PACK_REL}.governance.menu_structure_single_source."
+                    "required_item_types must be a non-empty list[str]"
+                ),
+            )
+        )
+        return None
+
+    banned_literal_rules = _parse_menu_literal_rules(
+        contract.get("banned_python_literals", []),
+        field=(
+            f"{POLICY_PACK_REL}.governance.menu_structure_single_source."
+            "banned_python_literals"
+        ),
+        issues=issues,
+    )
+    if required_submenu_labels is None or required_item_labels is None:
+        return None
+    if banned_literal_rules is None:
+        return None
+
+    return MenuStructureContract(
+        required_menus=tuple(required_menus),
+        required_submenu_labels=tuple(required_submenu_labels),
+        required_item_labels=tuple(required_item_labels),
+        required_item_types=set(required_item_types),
+        banned_literal_rules=tuple(banned_literal_rules),
+    )
 
 
 def _missing_submenu_labels(
@@ -1180,19 +1346,9 @@ def _missing_item_labels(
     return sorted(required_labels - labels)
 
 
-def _missing_required_menu_types(menus: dict[str, object]) -> list[str]:
-    supported_types = {
-        "action",
-        "action_group",
-        "submenu",
-        "toggle",
-        "selector",
-        "slider",
-        "keybinding_group",
-        "legacy_dispatch",
-        "info",
-        "section",
-    }
+def _missing_required_menu_types(
+    menus: dict[str, object], required_types: set[str]
+) -> list[str]:
     seen_types: set[str] = set()
     for menu in menus.values():
         if not isinstance(menu, dict):
@@ -1206,7 +1362,7 @@ def _missing_required_menu_types(menus: dict[str, object]) -> list[str]:
             item_type = str(item.get("type", "")).strip().lower()
             if item_type:
                 seen_types.add(item_type)
-    return sorted(supported_types - seen_types)
+    return sorted(required_types - seen_types)
 
 
 def _append_missing_submenu_label_issue(
@@ -1255,23 +1411,22 @@ def _append_missing_item_label_issue(
 
 def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
+    contract = _load_menu_structure_single_source_contract(issues)
+    if contract is None:
+        return issues
+
     menu_rel = "config/menu/structure.json"
     menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
     if not isinstance(menu_payload, dict):
         return issues
 
-    required_menus = {
-        "settings_root",
-        "settings_game_root",
-        "keybindings_root",
-    }
     menus = menu_payload.get("menus")
     if not isinstance(menus, dict):
         issues.append(
             ValidationIssue("schema", f"{menu_rel} must define menus as an object")
         )
         return issues
-    missing_menus = sorted(required_menus - set(menus))
+    missing_menus = sorted(set(contract.required_menus) - set(menus))
     if missing_menus:
         issues.append(
             ValidationIssue(
@@ -1280,53 +1435,24 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
             )
         )
 
-    _append_missing_submenu_label_issue(
-        issues,
-        menu_rel=menu_rel,
-        menu_id="settings_root",
-        required_labels={
-            "Game",
-            "Display",
-            "Audio",
-        },
-        menu_payload=menu_payload,
-    )
-    _append_missing_item_label_issue(
-        issues,
-        menu_rel=menu_rel,
-        menu_id="settings_root",
-        required_labels={
-            "Keyboard Bindings",
-            "Legacy Topology Editor Menu",
-        },
-        menu_payload=menu_payload,
-    )
-    _append_missing_item_label_issue(
-        issues,
-        menu_rel=menu_rel,
-        menu_id="settings_game_root",
-        required_labels={
-            "Gameplay",
-            "Board / Geometry",
-            "Movement / Rotation",
-            "Endgame Effects",
-            "Locked-cell transparency",
-            "Difficulty / Pace",
-            "Save",
-            "Reset defaults",
-            "Back",
-        },
-        menu_payload=menu_payload,
-    )
-    _append_missing_submenu_label_issue(
-        issues,
-        menu_rel=menu_rel,
-        menu_id="keybindings_root",
-        required_labels={"General", "2D", "3D", "4D", "All"},
-        menu_payload=menu_payload,
-    )
+    for menu_id, labels in contract.required_submenu_labels:
+        _append_missing_submenu_label_issue(
+            issues,
+            menu_rel=menu_rel,
+            menu_id=menu_id,
+            required_labels=labels,
+            menu_payload=menu_payload,
+        )
+    for menu_id, labels in contract.required_item_labels:
+        _append_missing_item_label_issue(
+            issues,
+            menu_rel=menu_rel,
+            menu_id=menu_id,
+            required_labels=labels,
+            menu_payload=menu_payload,
+        )
 
-    missing_types = _missing_required_menu_types(menus)
+    missing_types = _missing_required_menu_types(menus, contract.required_item_types)
     if missing_types:
         issues.append(
             ValidationIssue(
@@ -1334,7 +1460,9 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
                 f"{menu_rel} is missing required menu item types: {', '.join(missing_types)}",
             )
         )
-    issues.extend(_validate_menu_structure_banned_literals())
+    issues.extend(
+        _validate_menu_structure_banned_literals(contract.banned_literal_rules)
+    )
     return issues
 
 

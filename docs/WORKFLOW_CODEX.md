@@ -7,6 +7,7 @@ This document explains how to apply the machine rules in
 
 - Machine-readable governance authority: `config/project/policy_pack.json`
 - Thin dispatch file: `AGENTS.md`
+- Human workflow explainer: `docs/WORKFLOW_CODEX.md`
 - Restart handoff only: `CURRENT_STATE.md`
 - Active backlog and scope tracker: `docs/BACKLOG.md`
 - Durable product requirements: `docs/rds/`
@@ -24,6 +25,83 @@ This document explains how to apply the machine rules in
 5. Relevant `docs/rds/*` contracts for product behavior.
 6. `docs/ARCHITECTURE_CONTRACT.md` for dependency and package-boundary rules.
 7. `CURRENT_STATE.md` and `docs/BACKLOG.md` for restart context and open work.
+
+## Context-switch profiles
+
+Use the smallest profile that matches the task. Load the listed authorities
+first, then widen only if the change proves cross-cutting.
+
+### review
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/WORKFLOW_CODEX.md`
+4. the changed diff, touched tests, and the relevant authority for the changed
+   area
+
+### engine
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/ARCHITECTURE_CONTRACT.md`
+4. relevant `docs/rds/*`
+5. touched engine/runtime modules plus their tests
+
+### menu_ui
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/rds/RDS_MENU_STRUCTURE.md`
+4. `docs/MENU_STRUCTURE_EDITING.md`
+5. `config/menu/structure.json` and affected menu/render code
+
+### topology_explorer
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/plans/topology_playground_current_authority.md`
+4. `docs/plans/topology_playground_shell_redesign_spec.md`
+5. `docs/BACKLOG.md` and the touched playground/runtime files
+
+### packaging
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/rds/RDS_PACKAGING.md`
+4. `docs/RELEASE_CHECKLIST.md`
+5. packaging scripts, workflow files, and targeted packaging tests
+
+### governance
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `config/project/policy_pack.json`
+4. `tools/governance/validate_project_contracts.py`
+5. `tools/governance/generate_maintenance_docs.py`
+6. `docs/BACKLOG.md`
+
+### handoff
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/BACKLOG.md`
+4. `docs/PROJECT_STRUCTURE.md`
+5. `git branch --show-current` and `git status --short`
+
+## Boundary model
+
+- Machine-readable policy data belongs in `config/project/policy_pack.json`.
+- `tools/governance/validate_project_contracts.py` owns validation procedure only.
+  It may parse files, compare them to pack data, and report drift; it must not
+  become a second policy inventory.
+- `tools/governance/generate_maintenance_docs.py` owns rendering procedure only.
+  Generated maintenance-doc inputs belong in the `maintenance_docs` section of
+  `config/project/policy_pack.json`.
+- `docs/WORKFLOW_CODEX.md` explains repo workflow only.
+- `CURRENT_STATE.md` owns restart handoff only.
+- `docs/BACKLOG.md` owns open work and current change footprint only.
+- `docs/PROJECT_STRUCTURE.md` owns generated ownership and source-of-truth
+  snapshots only.
 
 ## Required workflow
 
@@ -49,9 +127,9 @@ This document explains how to apply the machine rules in
 9. Keep `CURRENT_STATE.md` as handoff-only; do not reintroduce it as a second
    workflow authority.
 10. At the end of staged migration work, provide a delta report with files
-   added, files modified, files not touched, satisfied acceptance criteria,
-   unsatisfied acceptance criteria, remaining old paths, and follow-up
-   blockers.
+    added, files modified, files not touched, satisfied acceptance criteria,
+    unsatisfied acceptance criteria, remaining old paths, and follow-up
+    blockers.
 
 ## Edit discipline
 

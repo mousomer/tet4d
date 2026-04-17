@@ -11,6 +11,11 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def _write_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def test_policy_index_sync_detects_missing_unified_contract_token(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -40,6 +45,32 @@ def test_policy_index_sync_detects_missing_unified_contract_token(
 
     assert issues
     assert any("policy_pack.json" in issue.message for issue in issues)
+
+
+def test_policy_index_sync_reads_required_tokens_from_policy_pack(
+    tmp_path: Path, monkeypatch
+) -> None:
+    policy_pack_path = tmp_path / "config" / "project" / "policy_pack.json"
+    _write_json(
+        policy_pack_path,
+        {
+            "governance": {
+                "policy_index_contract": {
+                    "required_tokens": ["docs/policies/LOCAL_POLICY.md"]
+                },
+                "contracts": {},
+            }
+        },
+    )
+    index_path = tmp_path / "docs" / "policies" / "INDEX.md"
+    _write_text(index_path, "config/project/policy_pack.json\n")
+
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack_path)
+    monkeypatch.setattr(contracts, "POLICY_INDEX_PATH", index_path)
+
+    issues = contracts._validate_policy_index_sync()
+
+    assert any("docs/policies/LOCAL_POLICY.md" in issue.message for issue in issues)
 
 
 def test_policy_manifest_string_safety_detects_path_like_literals(
@@ -152,7 +183,117 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     assert "Workflow authority" in must_contain
     assert "config/project/policy_pack.json" in must_contain
     assert "Authority files must be tracked in Git" in must_contain
+    assert "## Context-switch profiles" in must_contain
+    assert "## Boundary model" in must_contain
     assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
+
+
+def test_current_state_rule_enforces_restart_only_scope() -> None:
+    manifest = contracts._load_manifest()
+    rules = manifest["content_rules"]
+    current_state_rule = next(rule for rule in rules if rule["file"] == "CURRENT_STATE.md")
+
+    must_contain = set(current_state_rule["must_contain"])
+    must_not_contain = set(current_state_rule["must_not_contain"])
+    must_not_match_regex = set(current_state_rule["must_not_match_regex"])
+
+    assert "## Active Focus" in must_contain
+    assert "## Known Watchouts" in must_contain
+    assert "docs/PROJECT_STRUCTURE.md" in must_contain
+    assert "## Active Batch Note" in must_not_contain
+    assert "## What This Batch Changed" in must_not_contain
+    assert "^Branch:" in must_not_match_regex
+
+
+def test_menu_simplification_rule_reads_required_rows_from_policy_pack(
+    tmp_path: Path, monkeypatch
+) -> None:
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    menu_path = tmp_path / "config" / "menu" / "structure.json"
+    _write_json(
+        policy_pack,
+        {
+            "governance": {
+                "menu_simplification_manifest_rule": {
+                    "rule_id": "menu-simplification-common-settings",
+                    "required_shared_row_keys": ["shared_test_key"],
+                }
+            }
+        },
+    )
+    _write_json(
+        menu_path,
+        {
+            "menus": {"settings_game_root": {"items": []}},
+            "setup_fields": {"runtime": [{"attr": "shared_test_key"}]},
+        },
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+    monkeypatch.setattr(contracts, "MENU_STRUCTURE_PATH", menu_path)
+
+    issues = contracts._validate_menu_simplification_rule()
+
+    assert any("shared_test_key" in issue.message for issue in issues)
+
+
+def test_menu_structure_single_source_reads_policy_pack_contract_data(
+    tmp_path: Path, monkeypatch
+) -> None:
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    menu_path = tmp_path / "config" / "menu" / "structure.json"
+    literal_target = (
+        tmp_path
+        / "src"
+        / "tet4d"
+        / "ui"
+        / "pygame"
+        / "launch"
+        / "settings_hub_model.py"
+    )
+    _write_json(
+        policy_pack,
+        {
+            "governance": {
+                "menu_structure_single_source": {
+                    "required_menus": ["settings_root"],
+                    "required_submenu_labels": [
+                        {"menu_id": "settings_root", "labels": ["Custom"]}
+                    ],
+                    "required_item_labels": [],
+                    "required_item_types": ["submenu"],
+                    "banned_python_literals": [
+                        {
+                            "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+                            "literal": "FORBIDDEN_LITERAL =",
+                            "message": "custom drift",
+                        }
+                    ],
+                }
+            }
+        },
+    )
+    _write_json(
+        menu_path,
+        {
+            "menus": {
+                "settings_root": {
+                    "items": [{"type": "submenu", "label": "Different"}]
+                }
+            }
+        },
+    )
+    _write_text(literal_target, "FORBIDDEN_LITERAL = True\n")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+    monkeypatch.setattr(contracts, "MENU_STRUCTURE_PATH", menu_path)
+
+    issues = contracts._validate_menu_structure_single_source_of_truth()
+
+    assert any("Custom" in issue.message for issue in issues)
+    assert any(issue.message == "custom drift" for issue in issues)
 
 
 def test_deprecated_authority_checks_detect_reintroduced_path(

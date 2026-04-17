@@ -27,11 +27,116 @@
       "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
       "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
     },
+    "policy_index_contract": {
+      "required_tokens": [
+        "config/project/policy_pack.json",
+        "config/project/policy/manifests/secret_scan.json",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
+      ]
+    },
     "menu_simplification_manifest_rule": {
       "rule_id": "menu-simplification-common-settings",
       "statement": "Menus must stay simple; any feature common to 2D/3D/4D menus must live in the shared settings menu unless a very strong mode-specific reason is documented, with custom topology editing owned by the Explorer Playground.",
       "default_action": "centralize_common_features_in_settings_hub",
-      "exception_bar": "very_strong_documented_reason_required"
+      "exception_bar": "very_strong_documented_reason_required",
+      "required_shared_row_keys": [
+        "game_seed",
+        "game_random_mode",
+        "rotation_animation_mode",
+        "kick_level_index",
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+        "auto_speedup_enabled",
+        "lines_per_level",
+        "topology_cache_measure",
+        "topology_cache_clear"
+      ]
+    },
+    "menu_structure_single_source": {
+      "required_menus": [
+        "settings_root",
+        "settings_game_root",
+        "keybindings_root"
+      ],
+      "required_submenu_labels": [
+        {
+          "menu_id": "settings_root",
+          "labels": [
+            "Game",
+            "Display",
+            "Audio"
+          ]
+        },
+        {
+          "menu_id": "keybindings_root",
+          "labels": [
+            "General",
+            "2D",
+            "3D",
+            "4D",
+            "All"
+          ]
+        }
+      ],
+      "required_item_labels": [
+        {
+          "menu_id": "settings_root",
+          "labels": [
+            "Keyboard Bindings",
+            "Legacy Topology Editor Menu"
+          ]
+        },
+        {
+          "menu_id": "settings_game_root",
+          "labels": [
+            "Gameplay",
+            "Board / Geometry",
+            "Movement / Rotation",
+            "Endgame Effects",
+            "Locked-cell transparency",
+            "Difficulty / Pace",
+            "Save",
+            "Reset defaults",
+            "Back"
+          ]
+        }
+      ],
+      "required_item_types": [
+        "action",
+        "action_group",
+        "submenu",
+        "toggle",
+        "selector",
+        "slider",
+        "keybinding_group",
+        "legacy_dispatch",
+        "info",
+        "section"
+      ],
+      "banned_python_literals": [
+        {
+          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+          "literal": "_CATEGORY_ID_BY_HEADER_LABEL =",
+          "message": "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json"
+        },
+        {
+          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+          "literal": "_CATEGORY_IDS_BY_FILTER =",
+          "message": "settings_hub_model.py must not hardcode settings section filters; use config/menu/structure.json"
+        },
+        {
+          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+          "literal": "_FOOTER_ROW_KEYS =",
+          "message": "settings_hub_model.py must not hardcode settings footer row ownership; use config/menu/structure.json"
+        },
+        {
+          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
+          "literal": "_TOP_LEVEL_HEADER_LABELS =",
+          "message": "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json"
+        }
+      ]
     },
     "contributor_directives": {
       "required_ci_enforced_ids": [
@@ -938,6 +1043,18 @@
           "Workflow authority",
           "config/project/policy_pack.json",
           "Authority files must be tracked in Git",
+          "## Context-switch profiles",
+          "### review",
+          "### engine",
+          "### menu_ui",
+          "### topology_explorer",
+          "### packaging",
+          "### governance",
+          "### handoff",
+          "## Boundary model",
+          "Machine-readable policy data belongs in `config/project/policy_pack.json`.",
+          "`tools/governance/validate_project_contracts.py` owns validation procedure only.",
+          "`tools/governance/generate_maintenance_docs.py` owns rendering procedure only.",
           "docs/rds/",
           "CODEX_MODE=1 ./scripts/verify.sh",
           "./scripts/ci_preflight.sh",
@@ -946,6 +1063,7 @@
           "docs/BACKLOG.md"
         ],
         "must_not_match_regex": [
+          "\\btetris_nd\\b",
           "\\b\\d+\\s+passed\\b",
           "\\[[\\s\\d%]+\\]"
         ]
@@ -1045,6 +1163,9 @@
           "config/project/io_paths.json",
           "config/project/constants.json",
           "docs/history/plans/security_and_config_externalization_plan.md"
+        ],
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
         ]
       },
       {
@@ -1308,37 +1429,6 @@
         ]
       },
       {
-        "file": "docs/WORKFLOW_CODEX.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ],
-        "must_contain": [
-          "Workflow authority",
-          "config/project/policy_pack.json",
-          "docs/rds/",
-          "CODEX_MODE=1 ./scripts/verify.sh",
-          "./scripts/ci_preflight.sh",
-          "prefer the current repo virtualenv interpreter when one is available",
-          "CURRENT_STATE.md",
-          "docs/BACKLOG.md"
-        ]
-      },
-      {
-        "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ],
-        "must_contain": [
-          "compatibility redirect only",
-          "config/project/policy_pack.json",
-          "config/project/policy/manifests/secret_scan.json",
-          "tools/governance/scan_secrets.py",
-          "config/project/io_paths.json",
-          "config/project/constants.json",
-          "docs/history/plans/security_and_config_externalization_plan.md"
-        ]
-      },
-      {
         "file": "docs/rds/RDS_TETRIS_GENERAL.md",
         "must_not_match_regex": [
           "\\btetris_nd\\b"
@@ -1403,8 +1493,25 @@
         "file": "CURRENT_STATE.md",
         "must_contain": [
           "tools/governance/generate_maintenance_docs.py",
+          "## Active Focus",
+          "## Known Watchouts",
+          "## Restart Checklist",
+          "docs/PROJECT_STRUCTURE.md",
+          "docs/history/DONE_SUMMARIES.md",
           "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
           "<!-- BEGIN GENERATED:current_state_drift_watch -->"
+        ],
+        "must_not_contain": [
+          "## Active Batch Note",
+          "## What This Batch Changed",
+          "## Validation Status",
+          "## Topology Playground History",
+          "## Transform Ownership Note"
+        ],
+        "must_not_match_regex": [
+          "^Branch:",
+          "\\b\\d+\\s+passed\\b",
+          "\\[[\\s\\d%]+\\]"
         ]
       },
       {

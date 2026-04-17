@@ -162,6 +162,8 @@ It is not the product contract.
   `docs/plans/topology_playground_shell_redesign_spec.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
+- If you need task-specific context loading: use the context-switch profiles in
+  `docs/WORKFLOW_CODEX.md`.
 - If you need to edit keybinding structure or shipped defaults: use
   `docs/KEYBINDINGS_EDITING.md`.
 - If you need a short practical keybinding edit checklist: use

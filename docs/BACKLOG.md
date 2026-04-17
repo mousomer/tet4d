@@ -82,15 +82,13 @@ shared config-backed label/value/track allocation contract, so future slider
 size changes must keep launcher/setup/in-game compact-width text visibility
 aligned instead of reintroducing per-screen row geometry drift.
 
-Parallel policy-pack authority follow-up (2026-04-16, closure pass
-2026-04-17): repo governance is now consolidated under
-`config/project/policy_pack.json`, with `AGENTS.md` reduced to a dispatcher,
-`docs/WORKFLOW_CODEX.md` carrying repo workflow, deprecated split-authority
-files blocked from re-entry by contract checks, and Stage 1 closure requiring
-authority files to be Git-tracked so local-only copies fail repo policy and
-project-contract validation. Reusable generated
-ownership/source-of-truth/verification inventories belong in
-`docs/PROJECT_STRUCTURE.md`; `CURRENT_STATE.md` should stay handoff-only.
+Parallel policy-pack hardening follow-up (2026-04-17): repo governance now
+keeps policy data in `config/project/policy_pack.json`, keeps
+`docs/WORKFLOW_CODEX.md` as the human workflow explainer with explicit
+context-switch profiles, keeps `CURRENT_STATE.md` handoff-only, and keeps
+reusable generated ownership/source-of-truth/verification inventories in
+`docs/PROJECT_STRUCTURE.md` instead of duplicating them across validator code
+or restart docs.
 
 - Open work:
   1. continue structural simplification of
@@ -148,6 +146,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
 - Keep docs/manifests/current-state/backlog synchronized in the same batch as
   code changes.
 - Keep generated maintenance docs current after status-layer edits.
+- Keep policy inventories in `config/project/policy_pack.json`, not in
+  `tools/governance/validate_project_contracts.py`.
+- Keep `CURRENT_STATE.md` limited to restart handoff material; do not
+  reintroduce batch ledgers or validation transcripts there.
+- Keep `docs/WORKFLOW_CODEX.md` context-switch profiles explicit and aligned
+  with the current authority stack.
 - Do not let historical topology-playground manifests drift back into active
   authority.
 - Keep canonical runtime selectors as the only explorer-path input authority.
@@ -163,6 +167,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-17:
+
+- post-policy-pack hardening so `CURRENT_STATE.md` is restart-only again,
+  `docs/WORKFLOW_CODEX.md` now defines explicit `review` / `engine` /
+  `menu_ui` / `topology_explorer` / `packaging` / `governance` / `handoff`
+  context-switch profiles, and project-contract validation now reads menu and
+  policy-index inventories from `config/project/policy_pack.json` instead of
+  Python literals
 
 Completed on 2026-04-15:
 

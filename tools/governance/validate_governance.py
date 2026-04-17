@@ -65,6 +65,9 @@ def _validate_unified_manifest_shape() -> list[str]:
         (
             "verification_command",
             "ci_entrypoint",
+            "policy_index_contract",
+            "menu_simplification_manifest_rule",
+            "menu_structure_single_source",
             "contributor_directives",
             "risk_gates",
             "architecture",

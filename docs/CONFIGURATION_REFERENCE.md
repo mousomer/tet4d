@@ -1764,8 +1764,22 @@ Parameters:
 - `governance.drift_protection.tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
 - `governance.menu_simplification_manifest_rule.default_action`: `"centralize_common_features_in_settings_hub"` (`string`)
 - `governance.menu_simplification_manifest_rule.exception_bar`: `"very_strong_documented_reason_required"` (`string`)
+- `governance.menu_simplification_manifest_rule.required_shared_row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"rotation_animation_mode"`
 - `governance.menu_simplification_manifest_rule.rule_id`: `"menu-simplification-common-settings"` (`string`)
 - `governance.menu_simplification_manifest_rule.statement`: `"Menus must stay simple; any feature common to 2D/3D/4D menus must li...` (`string`)
+- `governance.menu_structure_single_source.banned_python_literals[]`: array[`object`]
+- `governance.menu_structure_single_source.banned_python_literals[].file`: varies (`string`); examples: `"src/tet4d/ui/pygame/launch/settings_hub_model.py"`
+- `governance.menu_structure_single_source.banned_python_literals[].literal`: varies (`string`); examples: `"_CATEGORY_ID_BY_HEADER_LABEL ="`, `"_CATEGORY_IDS_BY_FILTER ="`, `"_FOOTER_ROW_KEYS ="`
+- `governance.menu_structure_single_source.banned_python_literals[].message`: varies (`string`); examples: `"settings_hub_model.py must not hardcode settings section header owne...`, `"settings_hub_model.py must not hardcode settings section filters; us...`, `"settings_hub_model.py must not hardcode settings footer row ownershi...`
+- `governance.menu_structure_single_source.required_item_labels[]`: array[`object`]
+- `governance.menu_structure_single_source.required_item_labels[].labels[]`: array[`string`]; examples: `"Keyboard Bindings"`, `"Legacy Topology Editor Menu"`, `"Gameplay"`
+- `governance.menu_structure_single_source.required_item_labels[].menu_id`: varies (`string`); examples: `"settings_root"`, `"settings_game_root"`
+- `governance.menu_structure_single_source.required_item_types[]`: array[`string`]; examples: `"action"`, `"action_group"`, `"submenu"`
+- `governance.menu_structure_single_source.required_menus[]`: array[`string`]; examples: `"settings_root"`, `"settings_game_root"`, `"keybindings_root"`
+- `governance.menu_structure_single_source.required_submenu_labels[]`: array[`object`]
+- `governance.menu_structure_single_source.required_submenu_labels[].labels[]`: array[`string`]; examples: `"Game"`, `"Display"`, `"Audio"`
+- `governance.menu_structure_single_source.required_submenu_labels[].menu_id`: varies (`string`); examples: `"settings_root"`, `"keybindings_root"`
+- `governance.policy_index_contract.required_tokens[]`: array[`string`]; examples: `"config/project/policy_pack.json"`, `"config/project/policy/manifests/secret_scan.json"`, `"docs/policies/CI_COMPLIANCE_RUNBOOK.md"`
 - `governance.project_name`: `"tet4d"` (`string`)
 - `governance.risk_gates.dependency_policy.blocked_dependencies[]`: array[`string`]; examples: `"pycrypto"`, `"python-jose"`
 - `governance.risk_gates.dependency_policy.pyproject_path`: `"pyproject.toml"` (`string`)
